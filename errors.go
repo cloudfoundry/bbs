@@ -19,8 +19,6 @@ const (
 	UnknownError = "UnknownError"
 	Unauthorized = "Unauthorized"
 
-	ActualLRPIndexNotFound = "ActualLRPIndexNotFound"
-
 	ResourceConflict = "ResourceConflict"
 	RouterError      = "RouterError"
 )
