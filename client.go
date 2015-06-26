@@ -8,6 +8,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/tedsuo/rata"
@@ -31,6 +32,7 @@ const (
 
 type Client interface {
 	Domains() ([]string, error)
+	UpsertDomain(domain string, ttl time.Duration) error
 }
 
 func NewClient(url string) Client {
@@ -53,6 +55,19 @@ func (c *client) Domains() ([]string, error) {
 	var domains []string
 	err := c.doRequest(DomainsRoute, nil, nil, nil, &domains)
 	return domains, err
+}
+
+func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
+	req, err := c.createRequest(UpsertDomainRoute, rata.Params{"domain": domain}, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	if ttl != 0 {
+		req.Header.Set("Cache-Control", fmt.Sprintf("max-age=%d", int(ttl.Seconds())))
+	}
+
+	return c.do(req, nil)
 }
 
 func (c *client) createRequest(requestName string, params rata.Params, queryParams url.Values, request interface{}) (*http.Request, error) {

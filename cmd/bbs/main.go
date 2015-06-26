@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/db"
+	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
@@ -64,7 +64,7 @@ func main() {
 		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
 	}
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
-	db := db.NewETCD(etcdClient)
+	db := etcddb.NewETCD(etcdClient)
 	handler := handlers.New(db, logger)
 
 	members := grouper.Members{

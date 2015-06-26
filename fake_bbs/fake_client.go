@@ -3,6 +3,7 @@ package fake_bbs
 
 import (
 	"sync"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs"
 )
@@ -14,6 +15,15 @@ type FakeClient struct {
 	domainsReturns struct {
 		result1 []string
 		result2 error
+	}
+	UpsertDomainStub        func(domain string, ttl time.Duration) error
+	upsertDomainMutex       sync.RWMutex
+	upsertDomainArgsForCall []struct {
+		domain string
+		ttl    time.Duration
+	}
+	upsertDomainReturns struct {
+		result1 error
 	}
 }
 
@@ -40,6 +50,39 @@ func (fake *FakeClient) DomainsReturns(result1 []string, result2 error) {
 		result1 []string
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) UpsertDomain(domain string, ttl time.Duration) error {
+	fake.upsertDomainMutex.Lock()
+	fake.upsertDomainArgsForCall = append(fake.upsertDomainArgsForCall, struct {
+		domain string
+		ttl    time.Duration
+	}{domain, ttl})
+	fake.upsertDomainMutex.Unlock()
+	if fake.UpsertDomainStub != nil {
+		return fake.UpsertDomainStub(domain, ttl)
+	} else {
+		return fake.upsertDomainReturns.result1
+	}
+}
+
+func (fake *FakeClient) UpsertDomainCallCount() int {
+	fake.upsertDomainMutex.RLock()
+	defer fake.upsertDomainMutex.RUnlock()
+	return len(fake.upsertDomainArgsForCall)
+}
+
+func (fake *FakeClient) UpsertDomainArgsForCall(i int) (string, time.Duration) {
+	fake.upsertDomainMutex.RLock()
+	defer fake.upsertDomainMutex.RUnlock()
+	return fake.upsertDomainArgsForCall[i].domain, fake.upsertDomainArgsForCall[i].ttl
+}
+
+func (fake *FakeClient) UpsertDomainReturns(result1 error) {
+	fake.UpsertDomainStub = nil
+	fake.upsertDomainReturns = struct {
+		result1 error
+	}{result1}
 }
 
 var _ bbs.Client = new(FakeClient)

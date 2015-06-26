@@ -14,7 +14,8 @@ func New(domainDB db.DomainDB, logger lager.Logger) http.Handler {
 
 	actions := rata.Handlers{
 		// Domains
-		bbs.DomainsRoute: route(domainHandler.GetAll),
+		bbs.DomainsRoute:      route(domainHandler.GetAll),
+		bbs.UpsertDomainRoute: route(domainHandler.Upsert),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

@@ -34,3 +34,8 @@ func writeJSONResponse(w http.ResponseWriter, statusCode int, jsonObj interface{
 
 	w.Write(jsonBytes)
 }
+
+func writeEmptyResponse(w http.ResponseWriter, statusCode int) {
+	w.Header().Set("Content-Length", "0")
+	w.WriteHeader(statusCode)
+}

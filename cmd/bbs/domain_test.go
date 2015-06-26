@@ -1,7 +1,9 @@
 package main_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db"
+	"time"
+
+	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -17,6 +19,34 @@ var _ = Describe("Domain API", func() {
 		ginkgomon.Kill(bbsProcess)
 	})
 
+	Describe("PUT /v1/domains/:domain", func() {
+		var existingDomain string
+
+		BeforeEach(func() {
+			existingDomain = "existing-domain"
+			_, err := etcdClient.Set(etcddb.DomainSchemaPath(existingDomain), "", 100)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("updates the TTL when updating an existing domain", func() {
+			err := client.UpsertDomain(existingDomain, 200*time.Second)
+			Expect(err).ToNot(HaveOccurred())
+
+			etcdEntry, err := etcdClient.Get(etcddb.DomainSchemaPath(existingDomain), false, false)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(etcdEntry.Node.TTL).To(BeNumerically(">", 100))
+		})
+
+		It("creates a domain with the desired TTL", func() {
+			err := client.UpsertDomain("new-domain", 54*time.Second)
+			Expect(err).ToNot(HaveOccurred())
+
+			etcdEntry, err := etcdClient.Get(etcddb.DomainSchemaPath("new-domain"), false, false)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(etcdEntry.Node.TTL).To(BeNumerically("<=", 54))
+		})
+	})
+
 	Describe("GET /v1/domains", func() {
 		var expectedDomains []string
 		var actualDomains []string
@@ -25,7 +55,7 @@ var _ = Describe("Domain API", func() {
 		BeforeEach(func() {
 			expectedDomains = []string{"domain-0", "domain-1"}
 			for i, d := range expectedDomains {
-				_, err := etcdClient.Set(db.DomainSchemaPath(d), "", uint64(100*(i+1)))
+				_, err := etcdClient.Set(etcddb.DomainSchemaPath(d), "", uint64(100*(i+1)))
 				Expect(err).NotTo(HaveOccurred())
 			}
 
