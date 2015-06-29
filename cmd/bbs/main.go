@@ -63,6 +63,7 @@ func main() {
 	} else {
 		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
 	}
+	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	db := db.NewETCD(etcdClient)
 	handler := handlers.New(db, logger)
 
