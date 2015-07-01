@@ -9,13 +9,17 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(domainDB db.DomainDB, logger lager.Logger) http.Handler {
-	domainHandler := NewDomainHandler(domainDB, logger)
+func New(db db.DB, logger lager.Logger) http.Handler {
+	domainHandler := NewDomainHandler(db, logger)
+	actualLRPHandler := NewActualLRPHandler(db, logger)
 
 	actions := rata.Handlers{
 		// Domains
 		bbs.DomainsRoute:      route(domainHandler.GetAll),
 		bbs.UpsertDomainRoute: route(domainHandler.Upsert),
+
+		// Actual LRPs
+		bbs.ActualLRPGroupsRoute: route(actualLRPHandler.ActualLRPGroups),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

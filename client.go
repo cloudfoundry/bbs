@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"mime"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf_http"
+	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
 )
 
@@ -26,6 +29,7 @@ const (
 	ContentTypeHeader    = "Content-Type"
 	XCfRouterErrorHeader = "X-Cf-Routererror"
 	JSONContentType      = "application/json"
+	ProtoContentType     = "application/x-protobuf"
 )
 
 //go:generate counterfeiter -o fake_bbs/fake_client.go . Client
@@ -33,6 +37,7 @@ const (
 type Client interface {
 	Domains() ([]string, error)
 	UpsertDomain(domain string, ttl time.Duration) error
+	ActualLRPGroups() (models.ActualLRPGroups, error)
 }
 
 func NewClient(url string) Client {
@@ -49,6 +54,12 @@ type client struct {
 	streamingHTTPClient *http.Client
 
 	reqGen *rata.RequestGenerator
+}
+
+func (c *client) ActualLRPGroups() (models.ActualLRPGroups, error) {
+	var actualLRPGroups models.ActualLRPGroups
+	err := c.doRequest(ActualLRPGroupsRoute, nil, nil, nil, &actualLRPGroups)
+	return actualLRPGroups, err
 }
 
 func (c *client) Domains() ([]string, error) {
@@ -108,27 +119,55 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 	}
 
 	if routerError, ok := res.Header[XCfRouterErrorHeader]; ok {
-		return Error{Type: RouterError, Message: routerError[0]}
+		return Error{Type: proto.String(RouterError), Message: &routerError[0]}
 	}
 
 	if parsedContentType == JSONContentType {
 		return handleJSONResponse(res, responseObject)
+	} else if parsedContentType == ProtoContentType {
+		protoMessage, ok := responseObject.(proto.Message)
+		if !ok {
+			return Error{Type: proto.String(InvalidRequest), Message: proto.String("cannot read response body")}
+		}
+		return handleProtoResponse(res, protoMessage)
 	} else {
 		return handleNonJSONResponse(res)
 	}
+}
+
+func handleProtoResponse(res *http.Response, responseObject proto.Message) error {
+	buf, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return Error{Type: proto.String(InvalidResponse), Message: proto.String(err.Error())}
+	}
+
+	if res.StatusCode > 299 {
+		errResponse := Error{}
+		err = proto.Unmarshal(buf, &errResponse)
+		if err != nil {
+			return Error{Type: proto.String(InvalidProtobufMessage), Message: proto.String(err.Error())}
+		}
+		return errResponse
+	}
+
+	err = proto.Unmarshal(buf, responseObject)
+	if err != nil {
+		return Error{Type: proto.String(InvalidProtobufMessage), Message: proto.String(err.Error())}
+	}
+	return nil
 }
 
 func handleJSONResponse(res *http.Response, responseObject interface{}) error {
 	if res.StatusCode > 299 {
 		errResponse := Error{}
 		if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
-			return Error{Type: InvalidJSON, Message: err.Error()}
+			return Error{Type: proto.String(""), Message: proto.String(err.Error())}
 		}
 		return errResponse
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(responseObject); err != nil {
-		return Error{Type: InvalidJSON, Message: err.Error()}
+		return Error{Type: proto.String(""), Message: proto.String(err.Error())}
 	}
 	return nil
 }
@@ -136,8 +175,8 @@ func handleJSONResponse(res *http.Response, responseObject interface{}) error {
 func handleNonJSONResponse(res *http.Response) error {
 	if res.StatusCode > 299 {
 		return Error{
-			Type:    InvalidResponse,
-			Message: fmt.Sprintf("Invalid Response with status code: %d", res.StatusCode),
+			Type:    proto.String(InvalidResponse),
+			Message: proto.String(fmt.Sprintf("Invalid Response with status code: %d", res.StatusCode)),
 		}
 	}
 	return nil

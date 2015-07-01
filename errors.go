@@ -1,20 +1,15 @@
 package bbs
 
-type Error struct {
-	Type    string `json:"name"`
-	Message string `json:"message"`
-}
-
 func (err Error) Error() string {
-	return err.Message
+	return err.GetMessage()
 }
 
 const (
 	InvalidDomain = "InvalidDomain"
 
-	InvalidJSON     = "InvalidJSON"
-	InvalidRequest  = "InvalidRequest"
-	InvalidResponse = "InvalidResponse"
+	InvalidRequest         = "InvalidRequest"
+	InvalidResponse        = "InvalidResponse"
+	InvalidProtobufMessage = "InvalidProtobufMessage"
 
 	UnknownError = "UnknownError"
 	Unauthorized = "Unauthorized"
