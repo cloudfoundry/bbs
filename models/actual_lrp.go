@@ -20,16 +20,28 @@ var ActualLRPStates = []string{
 	ActualLRPStateCrashed,
 }
 
-func NewActualLRPKey(processGuid string, index int32, domain string) *ActualLRPKey {
-	return &ActualLRPKey{&processGuid, &index, &domain}
+func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
+	return ActualLRPKey{&processGuid, &index, &domain}
 }
 
-func NewActualLRPInstanceKey(instanceGuid string, cellId string) *ActualLRPInstanceKey {
-	return &ActualLRPInstanceKey{&instanceGuid, &cellId}
+func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstanceKey {
+	return ActualLRPInstanceKey{&instanceGuid, &cellId}
 }
 
-func NewActualLRPNetInfo(address string, ports []*PortMapping) *ActualLRPNetInfo {
-	return &ActualLRPNetInfo{&address, ports}
+func NewActualLRPNetInfo(address string, ports []*PortMapping) ActualLRPNetInfo {
+	return ActualLRPNetInfo{&address, ports}
+}
+
+func EmptyActualLRPNetInfo() ActualLRPNetInfo {
+	return NewActualLRPNetInfo("", []*PortMapping{})
+}
+
+func (info ActualLRPNetInfo) Empty() bool {
+	return info.GetAddress() == "" && len(info.GetPorts()) == 0
+}
+
+func (key ActualLRPInstanceKey) Empty() bool {
+	return key.GetInstanceGuid() == "" && key.GetCellId() == ""
 }
 
 func (actual ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator) bool {
@@ -40,8 +52,8 @@ func (actual ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator
 	return calc.ShouldRestart(now.UnixNano(), actual.GetSince(), actual.GetCrashCount())
 }
 
-func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
-	if *before.ActualLRPKey != *lrpKey {
+func (before ActualLRP) AllowsTransitionTo(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, newState string) bool {
+	if before.ActualLRPKey != lrpKey {
 		return false
 	}
 
@@ -51,7 +63,7 @@ func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *Ac
 
 	if (before.GetState() == ActualLRPStateClaimed || before.GetState() == ActualLRPStateRunning) &&
 		(newState == ActualLRPStateClaimed || newState == ActualLRPStateRunning) &&
-		(*before.ActualLRPInstanceKey != *instanceKey) {
+		(before.ActualLRPInstanceKey != instanceKey) {
 		return false
 	}
 
@@ -92,10 +104,10 @@ func (actual ActualLRP) Validate() error {
 
 	switch actual.GetState() {
 	case ActualLRPStateUnclaimed:
-		if actual.ActualLRPInstanceKey != nil {
+		if !actual.ActualLRPInstanceKey.Empty() {
 			validationError = validationError.Append(errors.New("instance key cannot be set when state is unclaimed"))
 		}
-		if actual.ActualLRPNetInfo != nil {
+		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is unclaimed"))
 		}
 
@@ -103,7 +115,7 @@ func (actual ActualLRP) Validate() error {
 		if err := actual.ActualLRPInstanceKey.Validate(); err != nil {
 			validationError = validationError.Append(err)
 		}
-		if actual.ActualLRPNetInfo != nil {
+		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is claimed"))
 		}
 		if strings.TrimSpace(actual.GetPlacementError()) != "" {
@@ -122,10 +134,10 @@ func (actual ActualLRP) Validate() error {
 		}
 
 	case ActualLRPStateCrashed:
-		if actual.ActualLRPInstanceKey != nil {
+		if !actual.ActualLRPInstanceKey.Empty() {
 			validationError = validationError.Append(errors.New("instance key cannot be set when state is crashed"))
 		}
-		if actual.ActualLRPNetInfo != nil {
+		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is crashed"))
 		}
 		if strings.TrimSpace(actual.GetPlacementError()) != "" {
@@ -136,7 +148,7 @@ func (actual ActualLRP) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"state"})
 	}
 
-	if validationError != nil {
+	if !validationError.Empty() {
 		return validationError
 	}
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs"
+	"github.com/cloudfoundry-incubator/bbs/models"
 )
 
 type FakeClient struct {
@@ -24,6 +25,13 @@ type FakeClient struct {
 	}
 	upsertDomainReturns struct {
 		result1 error
+	}
+	ActualLRPGroupsStub        func() (models.ActualLRPGroups, error)
+	actualLRPGroupsMutex       sync.RWMutex
+	actualLRPGroupsArgsForCall []struct{}
+	actualLRPGroupsReturns struct {
+		result1 models.ActualLRPGroups
+		result2 error
 	}
 }
 
@@ -83,6 +91,31 @@ func (fake *FakeClient) UpsertDomainReturns(result1 error) {
 	fake.upsertDomainReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeClient) ActualLRPGroups() (models.ActualLRPGroups, error) {
+	fake.actualLRPGroupsMutex.Lock()
+	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct{}{})
+	fake.actualLRPGroupsMutex.Unlock()
+	if fake.ActualLRPGroupsStub != nil {
+		return fake.ActualLRPGroupsStub()
+	} else {
+		return fake.actualLRPGroupsReturns.result1, fake.actualLRPGroupsReturns.result2
+	}
+}
+
+func (fake *FakeClient) ActualLRPGroupsCallCount() int {
+	fake.actualLRPGroupsMutex.RLock()
+	defer fake.actualLRPGroupsMutex.RUnlock()
+	return len(fake.actualLRPGroupsArgsForCall)
+}
+
+func (fake *FakeClient) ActualLRPGroupsReturns(result1 models.ActualLRPGroups, result2 error) {
+	fake.ActualLRPGroupsStub = nil
+	fake.actualLRPGroupsReturns = struct {
+		result1 models.ActualLRPGroups
+		result2 error
+	}{result1, result2}
 }
 
 var _ bbs.Client = new(FakeClient)

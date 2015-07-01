@@ -196,7 +196,7 @@ var _ = Describe("ActualLRP", func() {
 
 	Describe("ActualLRPKey", func() {
 		Describe("Validate", func() {
-			var actualLRPKey *models.ActualLRPKey
+			var actualLRPKey models.ActualLRPKey
 
 			BeforeEach(func() {
 				actualLRPKey = models.NewActualLRPKey("process-guid", 1, "domain")
@@ -242,7 +242,7 @@ var _ = Describe("ActualLRP", func() {
 
 	Describe("ActualLRPInstanceKey", func() {
 		Describe("Validate", func() {
-			var actualLRPInstanceKey *models.ActualLRPInstanceKey
+			var actualLRPInstanceKey models.ActualLRPInstanceKey
 
 			Context("when both instance guid and cell id are specified", func() {
 				It("returns nil", func() {
@@ -273,6 +273,18 @@ var _ = Describe("ActualLRP", func() {
 				It("returns a validation error", func() {
 					actualLRPInstanceKey = models.NewActualLRPInstanceKey("", "cell-id")
 					Expect(actualLRPInstanceKey.Validate()).To(ConsistOf(models.ErrInvalidField{"instance_guid"}))
+				})
+			})
+		})
+
+		Describe("ActualLRPNetInfo", func() {
+			Describe("EmptyActualLRPNetInfo", func() {
+				It("returns a net info with an empty address and non-nil empty PortMapping slice", func() {
+					netInfo := models.EmptyActualLRPNetInfo()
+
+					Expect(netInfo.GetAddress()).To(BeEmpty())
+					Expect(netInfo.GetPorts()).NotTo(BeNil())
+					Expect(netInfo.GetPorts()).To(HaveLen(0))
 				})
 			})
 		})
@@ -406,9 +418,9 @@ var _ = Describe("ActualLRP", func() {
 
 	Describe("ActualLRP", func() {
 		var lrp models.ActualLRP
-		var lrpKey *models.ActualLRPKey
-		var instanceKey *models.ActualLRPInstanceKey
-		var netInfo *models.ActualLRPNetInfo
+		var lrpKey models.ActualLRPKey
+		var instanceKey models.ActualLRPInstanceKey
+		var netInfo models.ActualLRPNetInfo
 
 		lrpPayload := `{
     "process_guid":"some-guid",
@@ -499,15 +511,15 @@ var _ = Describe("ActualLRP", func() {
 		Describe("AllowsTransitionTo", func() {
 			var (
 				before   *models.ActualLRP
-				afterKey *models.ActualLRPKey
+				afterKey models.ActualLRPKey
 			)
 
 			BeforeEach(func() {
 				before = &models.ActualLRP{
 					ActualLRPKey: models.NewActualLRPKey("fake-process-guid", 1, "fake-domain"),
 				}
-				afterKey = &models.ActualLRPKey{}
-				*afterKey = *before.ActualLRPKey
+				afterKey = models.ActualLRPKey{}
+				afterKey = before.ActualLRPKey
 			})
 
 			Context("when the ProcessGuid fields differ", func() {
@@ -554,8 +566,8 @@ var _ = Describe("ActualLRP", func() {
 				type stateTableEntry struct {
 					BeforeState       string
 					AfterState        string
-					BeforeInstanceKey *models.ActualLRPInstanceKey
-					AfterInstanceKey  *models.ActualLRPInstanceKey
+					BeforeInstanceKey models.ActualLRPInstanceKey
+					AfterInstanceKey  models.ActualLRPInstanceKey
 					Allowed           bool
 				}
 
@@ -716,7 +728,7 @@ func itValidatesPresenceOfTheLRPKey(lrp *models.ActualLRP) {
 
 	Context("when the lrp key is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPKey = &models.ActualLRPKey{}
+			lrp.ActualLRPKey = models.ActualLRPKey{}
 		})
 
 		It("validate returns an error", func() {
@@ -740,7 +752,7 @@ func itValidatesPresenceOfTheInstanceKey(lrp *models.ActualLRP) {
 
 	Context("when the instance key is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPInstanceKey = &models.ActualLRPInstanceKey{}
+			lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
 		})
 
 		It("validate returns an error", func() {
@@ -766,7 +778,7 @@ func itValidatesAbsenceOfTheInstanceKey(lrp *models.ActualLRP) {
 
 	Context("when the instance key is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPInstanceKey = nil
+			lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
 		})
 
 		It("validate does not return an error", func() {
@@ -788,7 +800,7 @@ func itValidatesPresenceOfNetInfo(lrp *models.ActualLRP) {
 
 	Context("when net info is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = &models.ActualLRPNetInfo{}
+			lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 		})
 
 		It("validate returns an error", func() {
@@ -814,7 +826,7 @@ func itValidatesAbsenceOfNetInfo(lrp *models.ActualLRP) {
 
 	Context("when net info is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = nil
+			lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 		})
 
 		It("validate does not return an error", func() {

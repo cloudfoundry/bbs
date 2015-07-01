@@ -45,9 +45,9 @@ var _ = Describe("ActualLRP API", func() {
 			baseLRP       models.ActualLRP
 			evacuatingLRP models.ActualLRP
 
-			baseLRPKey         *models.ActualLRPKey
-			baseLRPInstanceKey *models.ActualLRPInstanceKey
-			netInfo            *models.ActualLRPNetInfo
+			baseLRPKey         models.ActualLRPKey
+			baseLRPInstanceKey models.ActualLRPInstanceKey
+			netInfo            models.ActualLRPNetInfo
 
 			getErr error
 		)

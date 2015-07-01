@@ -36,9 +36,9 @@ message ActualLRPNetInfo {
 }
 
 message ActualLRP {
-  optional ActualLRPKey actual_lrp_key = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  optional ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  optional ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   optional int32 crash_count = 4;
   optional string crash_reason = 5;
   optional string state = 6;

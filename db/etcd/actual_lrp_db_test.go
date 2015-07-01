@@ -36,9 +36,9 @@ var _ = Describe("ActualLRPDB", func() {
 		evacuatingLRP  models.ActualLRP
 		otherDomainLRP models.ActualLRP
 
-		baseLRPKey         *models.ActualLRPKey
-		baseLRPInstanceKey *models.ActualLRPInstanceKey
-		netInfo            *models.ActualLRPNetInfo
+		baseLRPKey         models.ActualLRPKey
+		baseLRPInstanceKey models.ActualLRPInstanceKey
+		netInfo            models.ActualLRPNetInfo
 	)
 
 	BeforeEach(func() {
