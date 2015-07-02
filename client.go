@@ -2,7 +2,6 @@ package bbs
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -28,7 +27,6 @@ var ErrHubAlreadyClosed = errors.New("hub already closed")
 const (
 	ContentTypeHeader    = "Content-Type"
 	XCfRouterErrorHeader = "X-Cf-Routererror"
-	JSONContentType      = "application/json"
 	ProtoContentType     = "application/x-protobuf"
 )
 
@@ -67,9 +65,9 @@ func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.Actua
 }
 
 func (c *client) Domains() ([]string, error) {
-	var domains []string
+	var domains models.Domains
 	err := c.doRequest(DomainsRoute, nil, nil, nil, &domains)
-	return domains, err
+	return domains.GetDomains(), err
 }
 
 func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
@@ -85,29 +83,33 @@ func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
 	return c.do(req, nil)
 }
 
-func (c *client) createRequest(requestName string, params rata.Params, queryParams url.Values, request interface{}) (*http.Request, error) {
-	requestJson, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
+func (c *client) createRequest(requestName string, params rata.Params, queryParams url.Values, message proto.Message) (*http.Request, error) {
+	var messageBody []byte
+	var err error
+	if message != nil {
+		messageBody, err = proto.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	req, err := c.reqGen.CreateRequest(requestName, params, bytes.NewReader(requestJson))
+	req, err := c.reqGen.CreateRequest(requestName, params, bytes.NewReader(messageBody))
 	if err != nil {
 		return nil, err
 	}
 
 	req.URL.RawQuery = queryParams.Encode()
-	req.ContentLength = int64(len(requestJson))
+	req.ContentLength = int64(len(messageBody))
 	req.Header.Set("Content-Type", ProtoContentType)
 	return req, nil
 }
 
-func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, request, response interface{}) error {
+func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, request, message proto.Message) error {
 	req, err := c.createRequest(requestName, params, queryParams, request)
 	if err != nil {
 		return err
 	}
-	return c.do(req, response)
+	return c.do(req, message)
 }
 
 func (c *client) do(req *http.Request, responseObject interface{}) error {
@@ -126,16 +128,14 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 		return Error{Type: proto.String(RouterError), Message: &routerError[0]}
 	}
 
-	if parsedContentType == JSONContentType {
-		return handleJSONResponse(res, responseObject)
-	} else if parsedContentType == ProtoContentType {
+	if parsedContentType == ProtoContentType {
 		protoMessage, ok := responseObject.(proto.Message)
 		if !ok {
 			return Error{Type: proto.String(InvalidRequest), Message: proto.String("cannot read response body")}
 		}
 		return handleProtoResponse(res, protoMessage)
 	} else {
-		return handleNonJSONResponse(res)
+		return handleNonProtoResponse(res)
 	}
 }
 
@@ -161,22 +161,7 @@ func handleProtoResponse(res *http.Response, responseObject proto.Message) error
 	return nil
 }
 
-func handleJSONResponse(res *http.Response, responseObject interface{}) error {
-	if res.StatusCode > 299 {
-		errResponse := Error{}
-		if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
-			return Error{Type: proto.String(""), Message: proto.String(err.Error())}
-		}
-		return errResponse
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(responseObject); err != nil {
-		return Error{Type: proto.String(""), Message: proto.String(err.Error())}
-	}
-	return nil
-}
-
-func handleNonJSONResponse(res *http.Response) error {
+func handleNonProtoResponse(res *http.Response) error {
 	if res.StatusCode > 299 {
 		return Error{
 			Type:    proto.String(InvalidResponse),

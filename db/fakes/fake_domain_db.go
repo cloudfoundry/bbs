@@ -5,14 +5,15 @@ import (
 	"sync"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/models"
 )
 
 type FakeDomainDB struct {
-	GetAllDomainsStub        func() ([]string, error)
+	GetAllDomainsStub        func() (*models.Domains, error)
 	getAllDomainsMutex       sync.RWMutex
 	getAllDomainsArgsForCall []struct{}
 	getAllDomainsReturns struct {
-		result1 []string
+		result1 *models.Domains
 		result2 error
 	}
 	UpsertDomainStub        func(domain string, ttl int) error
@@ -26,7 +27,7 @@ type FakeDomainDB struct {
 	}
 }
 
-func (fake *FakeDomainDB) GetAllDomains() ([]string, error) {
+func (fake *FakeDomainDB) GetAllDomains() (*models.Domains, error) {
 	fake.getAllDomainsMutex.Lock()
 	fake.getAllDomainsArgsForCall = append(fake.getAllDomainsArgsForCall, struct{}{})
 	fake.getAllDomainsMutex.Unlock()
@@ -43,10 +44,10 @@ func (fake *FakeDomainDB) GetAllDomainsCallCount() int {
 	return len(fake.getAllDomainsArgsForCall)
 }
 
-func (fake *FakeDomainDB) GetAllDomainsReturns(result1 []string, result2 error) {
+func (fake *FakeDomainDB) GetAllDomainsReturns(result1 *models.Domains, result2 error) {
 	fake.GetAllDomainsStub = nil
 	fake.getAllDomainsReturns = struct {
-		result1 []string
+		result1 *models.Domains
 		result2 error
 	}{result1, result2}
 }

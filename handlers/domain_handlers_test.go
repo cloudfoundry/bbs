@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -101,7 +101,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		Context("when reading domains from DB succeeds", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns(domains, nil)
+				fakeDomainDB.GetAllDomainsReturns(&models.Domains{Domains: domains}, nil)
 			})
 
 			It("call the DB to retrieve the domains", func() {
@@ -113,17 +113,17 @@ var _ = Describe("Domain Handlers", func() {
 			})
 
 			It("returns a list of domains", func() {
-				response := []string{}
-				err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
+				response := models.Domains{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(ConsistOf(domains))
+				Expect(response.GetDomains()).To(ConsistOf(domains))
 			})
 		})
 
 		Context("when the DB returns no domains", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns([]string{}, nil)
+				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, nil)
 			})
 
 			It("responds with 200 Status OK", func() {
@@ -131,13 +131,17 @@ var _ = Describe("Domain Handlers", func() {
 			})
 
 			It("returns an empty list", func() {
-				Expect(responseRecorder.Body.String()).To(Equal("[]"))
+				response := &models.Domains{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response).To(Equal(&models.Domains{}))
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns([]string{}, errors.New("Something went wrong"))
+				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, errors.New("Something went wrong"))
 			})
 
 			It("responds with an error", func() {

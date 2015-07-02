@@ -39,7 +39,7 @@ func (h *DomainHandler) GetAll(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	writeJSONResponse(w, http.StatusOK, domains)
+	writeProtoResponse(w, http.StatusOK, domains)
 }
 
 func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {

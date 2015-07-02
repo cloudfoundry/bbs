@@ -63,8 +63,8 @@ var _ = Describe("DomainDB", func() {
 				domains, err := db.GetAllDomains()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(domains).To(HaveLen(2))
-				Expect(domains).To(ConsistOf([]string{"domain-1", "domain-2"}))
+				Expect(domains.GetDomains()).To(HaveLen(2))
+				Expect(domains.GetDomains()).To(ConsistOf([]string{"domain-1", "domain-2"}))
 			})
 		})
 
@@ -72,7 +72,7 @@ var _ = Describe("DomainDB", func() {
 			It("returns no domains", func() {
 				domains, err := db.GetAllDomains()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(domains).To(HaveLen(0))
+				Expect(domains.GetDomains()).To(HaveLen(0))
 			})
 		})
 	})

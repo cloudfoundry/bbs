@@ -3,16 +3,17 @@ package db
 import (
 	"path"
 
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
 )
 
 const DomainSchemaRoot = DataSchemaRoot + "domain"
 
-func (db *ETCDDB) GetAllDomains() ([]string, error) {
+func (db *ETCDDB) GetAllDomains() (*models.Domains, error) {
 	response, err := db.client.Get(DomainSchemaRoot, false, true)
 	if err != nil {
 		if err.(*etcd.EtcdError).ErrorCode == 100 {
-			return []string{}, nil
+			return &models.Domains{}, nil
 		}
 		return nil, err
 	}
@@ -22,7 +23,7 @@ func (db *ETCDDB) GetAllDomains() ([]string, error) {
 		domains = append(domains, path.Base(child.Key))
 	}
 
-	return domains, nil
+	return &models.Domains{Domains: domains}, nil
 }
 
 func (db *ETCDDB) UpsertDomain(domain string, ttl int) error {
