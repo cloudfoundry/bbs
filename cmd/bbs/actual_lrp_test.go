@@ -45,7 +45,7 @@ var _ = Describe("ActualLRP API", func() {
 
 		var (
 			expectedActualLRPGroups []*models.ActualLRPGroup
-			actualActualLRPGroups   models.ActualLRPGroups
+			actualActualLRPGroups   []*models.ActualLRPGroup
 
 			baseLRP       models.ActualLRP
 			otherLRP      models.ActualLRP
@@ -109,12 +109,12 @@ var _ = Describe("ActualLRP API", func() {
 
 		Context("when not filtering", func() {
 			It("has the correct number of responses", func() {
-				Expect(actualActualLRPGroups.GetActualLrpGroups()).To(HaveLen(2))
+				Expect(actualActualLRPGroups).To(HaveLen(2))
 			})
 
 			It("returns all actual lrps from the bbs", func() {
 				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}, {Instance: &otherLRP}}
-				Expect(actualActualLRPGroups.GetActualLrpGroups()).To(ConsistOf(expectedActualLRPGroups))
+				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
 
@@ -125,7 +125,7 @@ var _ = Describe("ActualLRP API", func() {
 
 			It("returns all actual lrps from the bbs", func() {
 				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
-				Expect(actualActualLRPGroups.GetActualLrpGroups()).To(ConsistOf(expectedActualLRPGroups))
+				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
 	})

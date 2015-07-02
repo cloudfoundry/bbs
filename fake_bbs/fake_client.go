@@ -26,13 +26,13 @@ type FakeClient struct {
 	upsertDomainReturns struct {
 		result1 error
 	}
-	ActualLRPGroupsStub        func(models.ActualLRPFilter) (models.ActualLRPGroups, error)
+	ActualLRPGroupsStub        func(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 	actualLRPGroupsMutex       sync.RWMutex
 	actualLRPGroupsArgsForCall []struct {
 		arg1 models.ActualLRPFilter
 	}
 	actualLRPGroupsReturns struct {
-		result1 models.ActualLRPGroups
+		result1 []*models.ActualLRPGroup
 		result2 error
 	}
 }
@@ -95,7 +95,7 @@ func (fake *FakeClient) UpsertDomainReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) ActualLRPGroups(arg1 models.ActualLRPFilter) (models.ActualLRPGroups, error) {
+func (fake *FakeClient) ActualLRPGroups(arg1 models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupsMutex.Lock()
 	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct {
 		arg1 models.ActualLRPFilter
@@ -120,10 +120,10 @@ func (fake *FakeClient) ActualLRPGroupsArgsForCall(i int) models.ActualLRPFilter
 	return fake.actualLRPGroupsArgsForCall[i].arg1
 }
 
-func (fake *FakeClient) ActualLRPGroupsReturns(result1 models.ActualLRPGroups, result2 error) {
+func (fake *FakeClient) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup, result2 error) {
 	fake.ActualLRPGroupsStub = nil
 	fake.actualLRPGroupsReturns = struct {
-		result1 models.ActualLRPGroups
+		result1 []*models.ActualLRPGroup
 		result2 error
 	}{result1, result2}
 }
