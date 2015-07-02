@@ -26,9 +26,11 @@ type FakeClient struct {
 	upsertDomainReturns struct {
 		result1 error
 	}
-	ActualLRPGroupsStub        func() (models.ActualLRPGroups, error)
+	ActualLRPGroupsStub        func(models.ActualLRPFilter) (models.ActualLRPGroups, error)
 	actualLRPGroupsMutex       sync.RWMutex
-	actualLRPGroupsArgsForCall []struct{}
+	actualLRPGroupsArgsForCall []struct {
+		arg1 models.ActualLRPFilter
+	}
 	actualLRPGroupsReturns struct {
 		result1 models.ActualLRPGroups
 		result2 error
@@ -93,12 +95,14 @@ func (fake *FakeClient) UpsertDomainReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) ActualLRPGroups() (models.ActualLRPGroups, error) {
+func (fake *FakeClient) ActualLRPGroups(arg1 models.ActualLRPFilter) (models.ActualLRPGroups, error) {
 	fake.actualLRPGroupsMutex.Lock()
-	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct{}{})
+	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct {
+		arg1 models.ActualLRPFilter
+	}{arg1})
 	fake.actualLRPGroupsMutex.Unlock()
 	if fake.ActualLRPGroupsStub != nil {
-		return fake.ActualLRPGroupsStub()
+		return fake.ActualLRPGroupsStub(arg1)
 	} else {
 		return fake.actualLRPGroupsReturns.result1, fake.actualLRPGroupsReturns.result2
 	}
@@ -108,6 +112,12 @@ func (fake *FakeClient) ActualLRPGroupsCallCount() int {
 	fake.actualLRPGroupsMutex.RLock()
 	defer fake.actualLRPGroupsMutex.RUnlock()
 	return len(fake.actualLRPGroupsArgsForCall)
+}
+
+func (fake *FakeClient) ActualLRPGroupsArgsForCall(i int) models.ActualLRPFilter {
+	fake.actualLRPGroupsMutex.RLock()
+	defer fake.actualLRPGroupsMutex.RUnlock()
+	return fake.actualLRPGroupsArgsForCall[i].arg1
 }
 
 func (fake *FakeClient) ActualLRPGroupsReturns(result1 models.ActualLRPGroups, result2 error) {

@@ -32,7 +32,7 @@ func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
 	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPEvacuatingKey)
 }
 
-func (db *ETCDDB) ActualLRPGroups(logger lager.Logger) (*models.ActualLRPGroups, error) {
+func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, error) {
 	logger.Debug("fetching-actual-lrps-from-bbs")
 	response, err := db.client.Get(ActualLRPSchemaRoot, false, true)
 	if etcdErr, ok := err.(*etcd.EtcdError); ok && etcdErr.ErrorCode == 100 {
@@ -69,6 +69,9 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger) (*models.ActualLRPGroups,
 						workErrLock.Lock()
 						workErr = fmt.Errorf("cannot parse lrp JSON for key %s: %s", instanceNode.Key, deserializeErr.Error())
 						workErrLock.Unlock()
+						continue
+					}
+					if filter.Domain != "" && lrp.GetDomain() != filter.Domain {
 						continue
 					}
 

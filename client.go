@@ -37,7 +37,7 @@ const (
 type Client interface {
 	Domains() ([]string, error)
 	UpsertDomain(domain string, ttl time.Duration) error
-	ActualLRPGroups() (models.ActualLRPGroups, error)
+	ActualLRPGroups(models.ActualLRPFilter) (models.ActualLRPGroups, error)
 }
 
 func NewClient(url string) Client {
@@ -56,9 +56,13 @@ type client struct {
 	reqGen *rata.RequestGenerator
 }
 
-func (c *client) ActualLRPGroups() (models.ActualLRPGroups, error) {
+func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) (models.ActualLRPGroups, error) {
 	var actualLRPGroups models.ActualLRPGroups
-	err := c.doRequest(ActualLRPGroupsRoute, nil, nil, nil, &actualLRPGroups)
+	query := url.Values{}
+	if filter.Domain != "" {
+		query.Set("domain", filter.Domain)
+	}
+	err := c.doRequest(ActualLRPGroupsRoute, nil, query, nil, &actualLRPGroups)
 	return actualLRPGroups, err
 }
 
@@ -94,7 +98,7 @@ func (c *client) createRequest(requestName string, params rata.Params, queryPara
 
 	req.URL.RawQuery = queryParams.Encode()
 	req.ContentLength = int64(len(requestJson))
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", ProtoContentType)
 	return req, nil
 }
 

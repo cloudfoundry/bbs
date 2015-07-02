@@ -29,7 +29,7 @@ var _ = Describe("ActualLRPDB", func() {
 	)
 
 	var (
-		db db.ActualLRPDB
+		etcdDB db.ActualLRPDB
 
 		baseLRP        models.ActualLRP
 		otherIndexLRP  models.ActualLRP
@@ -77,10 +77,12 @@ var _ = Describe("ActualLRPDB", func() {
 			Since:                proto.Int64(clock.Now().UnixNano()),
 		}
 
-		db = NewETCD(etcdClient)
+		etcdDB = NewETCD(etcdClient)
 	})
 
 	Describe("ActualLRPGroups", func() {
+		var filter models.ActualLRPFilter
+
 		Context("when there are both /instance and /evacuating LRPs", func() {
 			BeforeEach(func() {
 				testHelper.SetRawActualLRP(baseLRP)
@@ -90,7 +92,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
-				actualLRPGroups, err := db.ActualLRPGroups(logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP},
@@ -98,11 +100,20 @@ var _ = Describe("ActualLRPDB", func() {
 					&models.ActualLRPGroup{Instance: nil, Evacuating: &otherIndexLRP},
 				))
 			})
+
+			It("can filter by domain", func() {
+				filter.Domain = otherDomain
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
+					&models.ActualLRPGroup{Instance: &otherDomainLRP, Evacuating: nil},
+				))
+			})
 		})
 
 		Context("when there are no LRPs", func() {
 			It("returns an empty list", func() {
-				actualLRPGroups, err := db.ActualLRPGroups(logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
@@ -119,7 +130,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns an empty list", func() {
-				actualLRPGroups, err := db.ActualLRPGroups(logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
@@ -134,7 +145,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := db.ActualLRPGroups(logger)
+				_, err := etcdDB.ActualLRPGroups(filter, logger)
 				Expect(err).To(HaveOccurred())
 			})
 		})

@@ -33,7 +33,7 @@ var _ = Describe("BBS Client", func() {
 
 			fakeBBSServer.AppendHandlers(ghttp.CombineHandlers(
 				ghttp.VerifyRequest("GET", "/v1/domains"),
-				ghttp.VerifyContentType(bbs.JSONContentType),
+				ghttp.VerifyContentType(bbs.ProtoContentType),
 				ghttp.RespondWithJSONEncoded(http.StatusOK, domains),
 			))
 		})

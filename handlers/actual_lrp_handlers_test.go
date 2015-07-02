@@ -36,8 +36,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 	})
 
 	Describe("ActualLRPGroups", func() {
+		var request *http.Request
 
 		BeforeEach(func() {
+			request = newTestRequest("")
+
 			actualLRP1 = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
 					"process-guid-0",
@@ -72,10 +75,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.ActualLRPGroups(responseRecorder, newTestRequest(""))
+			handler.ActualLRPGroups(responseRecorder, request)
 		})
 
-		Context("when reading actuallrps from DB succeeds", func() {
+		Context("when reading actual lrps from DB succeeds", func() {
 			var actualLRPGroups *models.ActualLRPGroups
 
 			BeforeEach(func() {
@@ -88,24 +91,42 @@ var _ = Describe("ActualLRP Handlers", func() {
 				fakeActualLRPDB.ActualLRPGroupsReturns(actualLRPGroups, nil)
 			})
 
-			It("call the DB to retrieve the actual lrpGroups", func() {
-				Expect(fakeActualLRPDB.ActualLRPGroupsCallCount()).To(Equal(1))
-			})
-
 			It("responds with 200 Status OK", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
 
-			It("returns a list of actual lrpGroups", func() {
+			It("returns a list of actual lrp groups", func() {
 				response := &models.ActualLRPGroups{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response).To(Equal(actualLRPGroups))
 			})
+
+			Context("and no filter is provided", func() {
+				It("call the DB with no filters to retrieve the actual lrp groups", func() {
+					Expect(fakeActualLRPDB.ActualLRPGroupsCallCount()).To(Equal(1))
+					filter, _ := fakeActualLRPDB.ActualLRPGroupsArgsForCall(0)
+					Expect(filter).To(Equal(models.ActualLRPFilter{}))
+				})
+			})
+
+			Context("and filtering by domain", func() {
+				BeforeEach(func() {
+					var err error
+					request, err = http.NewRequest("", "http://example.com?domain=domain-1", nil)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("call the DB with the domain filter to retrieve the actual lrp groups", func() {
+					Expect(fakeActualLRPDB.ActualLRPGroupsCallCount()).To(Equal(1))
+					filter, _ := fakeActualLRPDB.ActualLRPGroupsArgsForCall(0)
+					Expect(filter.Domain).To(Equal("domain-1"))
+				})
+			})
 		})
 
-		Context("when the DB returns no actual lrpGroups", func() {
+		Context("when the DB returns no actual lrp groups", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.ActualLRPGroupsReturns(&models.ActualLRPGroups{}, nil)
 			})

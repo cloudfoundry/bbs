@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -20,9 +21,13 @@ func NewActualLRPHandler(db db.ActualLRPDB, logger lager.Logger) *ActualLRPHandl
 }
 
 func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("actual-lrp-groups")
+	domain := req.FormValue("domain")
+	logger := h.logger.Session("actual-lrp-groups", lager.Data{
+		"domain": domain,
+	})
 
-	actualLRPGroups, err := h.db.ActualLRPGroups(h.logger)
+	filter := models.ActualLRPFilter{Domain: domain}
+	actualLRPGroups, err := h.db.ActualLRPGroups(filter, h.logger)
 	if err != nil {
 		logger.Error("failed-to-fetch-actual-lrp-groups", err)
 		writeUnknownErrorResponse(w, err)

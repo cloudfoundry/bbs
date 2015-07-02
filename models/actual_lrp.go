@@ -21,6 +21,10 @@ var ActualLRPStates = []string{
 	ActualLRPStateCrashed,
 }
 
+type ActualLRPFilter struct {
+	Domain string
+}
+
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
 	return ActualLRPKey{&processGuid, &index, &domain}
 }

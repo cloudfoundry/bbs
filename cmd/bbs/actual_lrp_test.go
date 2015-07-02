@@ -33,7 +33,12 @@ var _ = Describe("ActualLRP API", func() {
 			baseDomain       = "base-domain"
 			baseInstanceGuid = "base-instance-guid"
 
-			baseIndex = 1
+			otherProcessGuid  = "other-process-guid"
+			otherDomain       = "other-domain"
+			otherInstanceGuid = "other-instance-guid"
+
+			baseIndex  = 1
+			otherIndex = 1
 
 			evacuatingInstanceGuid = "evacuating-instance-guid"
 		)
@@ -43,11 +48,16 @@ var _ = Describe("ActualLRP API", func() {
 			actualActualLRPGroups   models.ActualLRPGroups
 
 			baseLRP       models.ActualLRP
+			otherLRP      models.ActualLRP
 			evacuatingLRP models.ActualLRP
 
-			baseLRPKey         models.ActualLRPKey
-			baseLRPInstanceKey models.ActualLRPInstanceKey
-			netInfo            models.ActualLRPNetInfo
+			baseLRPKey          models.ActualLRPKey
+			baseLRPInstanceKey  models.ActualLRPInstanceKey
+			otherLRPKey         models.ActualLRPKey
+			otherLRPInstanceKey models.ActualLRPInstanceKey
+			netInfo             models.ActualLRPNetInfo
+
+			filter models.ActualLRPFilter
 
 			getErr error
 		)
@@ -55,6 +65,10 @@ var _ = Describe("ActualLRP API", func() {
 		BeforeEach(func() {
 			baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
 			baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
+
+			otherLRPKey = models.NewActualLRPKey(otherProcessGuid, otherIndex, otherDomain)
+			otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, cellID)
+
 			netInfo = models.NewActualLRPNetInfo("127.0.0.1", []*models.PortMapping{{proto.Uint32(8080), proto.Uint32(80)}})
 
 			baseLRP = models.ActualLRP{
@@ -72,23 +86,47 @@ var _ = Describe("ActualLRP API", func() {
 				Since:                proto.Int64(time.Now().UnixNano() - 1000),
 			}
 
-			testHelper.SetRawActualLRP(baseLRP)
-			testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
-			expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
+			otherLRP = models.ActualLRP{
+				ActualLRPKey:         otherLRPKey,
+				ActualLRPInstanceKey: otherLRPInstanceKey,
+				ActualLRPNetInfo:     netInfo,
+				State:                proto.String(models.ActualLRPStateRunning),
+				Since:                proto.Int64(time.Now().UnixNano()),
+			}
 
-			actualActualLRPGroups, getErr = client.ActualLRPGroups()
+			testHelper.SetRawActualLRP(baseLRP)
+			testHelper.SetRawActualLRP(otherLRP)
+			testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+		})
+
+		JustBeforeEach(func() {
+			actualActualLRPGroups, getErr = client.ActualLRPGroups(filter)
 		})
 
 		It("responds without error", func() {
 			Expect(getErr).NotTo(HaveOccurred())
 		})
 
-		It("has the correct number of responses", func() {
-			Expect(actualActualLRPGroups.GetActualLrpGroups()).To(HaveLen(1))
+		Context("when not filtering", func() {
+			It("has the correct number of responses", func() {
+				Expect(actualActualLRPGroups.GetActualLrpGroups()).To(HaveLen(2))
+			})
+
+			It("returns all actual lrps from the bbs", func() {
+				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}, {Instance: &otherLRP}}
+				Expect(actualActualLRPGroups.GetActualLrpGroups()).To(ConsistOf(expectedActualLRPGroups))
+			})
 		})
 
-		It("has the correct actuallrps from the bbs", func() {
-			Expect(actualActualLRPGroups.GetActualLrpGroups()).To(ConsistOf(expectedActualLRPGroups))
+		Context("when filtering by domain", func() {
+			BeforeEach(func() {
+				filter = models.ActualLRPFilter{Domain: baseDomain}
+			})
+
+			It("returns all actual lrps from the bbs", func() {
+				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
+				Expect(actualActualLRPGroups.GetActualLrpGroups()).To(ConsistOf(expectedActualLRPGroups))
+			})
 		})
 	})
 })
