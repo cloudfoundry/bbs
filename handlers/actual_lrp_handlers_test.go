@@ -124,6 +124,35 @@ var _ = Describe("ActualLRP Handlers", func() {
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
+
+			Context("and filtering by cellId", func() {
+				BeforeEach(func() {
+					var err error
+					request, err = http.NewRequest("", "http://example.com?cell_id=cellid-1", nil)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("call the DB with the cell id filter to retrieve the actual lrp groups", func() {
+					Expect(fakeActualLRPDB.ActualLRPGroupsCallCount()).To(Equal(1))
+					filter, _ := fakeActualLRPDB.ActualLRPGroupsArgsForCall(0)
+					Expect(filter.CellID).To(Equal("cellid-1"))
+				})
+			})
+
+			Context("and filtering by cellId and domain", func() {
+				BeforeEach(func() {
+					var err error
+					request, err = http.NewRequest("", "http://example.com?domain=potato&cell_id=cellid-1", nil)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("call the DB with the both filters to retrieve the actual lrp groups", func() {
+					Expect(fakeActualLRPDB.ActualLRPGroupsCallCount()).To(Equal(1))
+					filter, _ := fakeActualLRPDB.ActualLRPGroupsArgsForCall(0)
+					Expect(filter.CellID).To(Equal("cellid-1"))
+					Expect(filter.Domain).To(Equal("potato"))
+				})
+			})
 		})
 
 		Context("when the DB returns no actual lrp groups", func() {

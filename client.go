@@ -60,6 +60,9 @@ func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.Actua
 	if filter.Domain != "" {
 		query.Set("domain", filter.Domain)
 	}
+	if filter.CellID != "" {
+		query.Set("cell_id", filter.CellID)
+	}
 	err := c.doRequest(ActualLRPGroupsRoute, nil, query, nil, &actualLRPGroups)
 	return actualLRPGroups.GetActualLrpGroups(), err
 }

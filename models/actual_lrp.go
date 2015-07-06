@@ -23,6 +23,7 @@ var ActualLRPStates = []string{
 
 type ActualLRPFilter struct {
 	Domain string
+	CellID string
 }
 
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
@@ -58,7 +59,7 @@ func (actual ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator
 }
 
 func (before ActualLRP) AllowsTransitionTo(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, newState string) bool {
-	if before.ActualLRPKey != lrpKey {
+	if !before.ActualLRPKey.Equal(&lrpKey) {
 		return false
 	}
 
@@ -68,7 +69,7 @@ func (before ActualLRP) AllowsTransitionTo(lrpKey ActualLRPKey, instanceKey Actu
 
 	if (before.GetState() == ActualLRPStateClaimed || before.GetState() == ActualLRPStateRunning) &&
 		(newState == ActualLRPStateClaimed || newState == ActualLRPStateRunning) &&
-		(before.ActualLRPInstanceKey != instanceKey) {
+		(!before.ActualLRPInstanceKey.Equal(&instanceKey)) {
 		return false
 	}
 

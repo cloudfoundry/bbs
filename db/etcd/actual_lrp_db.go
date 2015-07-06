@@ -74,6 +74,9 @@ func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Lo
 					if filter.Domain != "" && lrp.GetDomain() != filter.Domain {
 						continue
 					}
+					if filter.CellID != "" && lrp.GetCellId() != filter.CellID {
+						continue
+					}
 
 					if isInstanceActualLRPNode(instanceNode) {
 						group.Instance = &lrp

@@ -1663,3 +1663,348 @@ func encodeVarintActualLrp(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	return offset + 1
 }
+func (this *ActualLRPGroup) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPGroup)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Instance.Equal(that1.Instance) {
+		return false
+	}
+	if !this.Evacuating.Equal(that1.Evacuating) {
+		return false
+	}
+	return true
+}
+func (this *PortMapping) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*PortMapping)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.ContainerPort != nil && that1.ContainerPort != nil {
+		if *this.ContainerPort != *that1.ContainerPort {
+			return false
+		}
+	} else if this.ContainerPort != nil {
+		return false
+	} else if that1.ContainerPort != nil {
+		return false
+	}
+	if this.HostPort != nil && that1.HostPort != nil {
+		if *this.HostPort != *that1.HostPort {
+			return false
+		}
+	} else if this.HostPort != nil {
+		return false
+	} else if that1.HostPort != nil {
+		return false
+	}
+	return true
+}
+func (this *ModificationTag) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ModificationTag)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Epoch != nil && that1.Epoch != nil {
+		if *this.Epoch != *that1.Epoch {
+			return false
+		}
+	} else if this.Epoch != nil {
+		return false
+	} else if that1.Epoch != nil {
+		return false
+	}
+	if this.Index != nil && that1.Index != nil {
+		if *this.Index != *that1.Index {
+			return false
+		}
+	} else if this.Index != nil {
+		return false
+	} else if that1.Index != nil {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPKey) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPKey)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.ProcessGuid != nil && that1.ProcessGuid != nil {
+		if *this.ProcessGuid != *that1.ProcessGuid {
+			return false
+		}
+	} else if this.ProcessGuid != nil {
+		return false
+	} else if that1.ProcessGuid != nil {
+		return false
+	}
+	if this.Index != nil && that1.Index != nil {
+		if *this.Index != *that1.Index {
+			return false
+		}
+	} else if this.Index != nil {
+		return false
+	} else if that1.Index != nil {
+		return false
+	}
+	if this.Domain != nil && that1.Domain != nil {
+		if *this.Domain != *that1.Domain {
+			return false
+		}
+	} else if this.Domain != nil {
+		return false
+	} else if that1.Domain != nil {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPInstanceKey) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPInstanceKey)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.InstanceGuid != nil && that1.InstanceGuid != nil {
+		if *this.InstanceGuid != *that1.InstanceGuid {
+			return false
+		}
+	} else if this.InstanceGuid != nil {
+		return false
+	} else if that1.InstanceGuid != nil {
+		return false
+	}
+	if this.CellId != nil && that1.CellId != nil {
+		if *this.CellId != *that1.CellId {
+			return false
+		}
+	} else if this.CellId != nil {
+		return false
+	} else if that1.CellId != nil {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPNetInfo) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPNetInfo)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Address != nil && that1.Address != nil {
+		if *this.Address != *that1.Address {
+			return false
+		}
+	} else if this.Address != nil {
+		return false
+	} else if that1.Address != nil {
+		return false
+	}
+	if len(this.Ports) != len(that1.Ports) {
+		return false
+	}
+	for i := range this.Ports {
+		if !this.Ports[i].Equal(that1.Ports[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (this *ActualLRP) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRP)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLRPKey.Equal(&that1.ActualLRPKey) {
+		return false
+	}
+	if !this.ActualLRPInstanceKey.Equal(&that1.ActualLRPInstanceKey) {
+		return false
+	}
+	if !this.ActualLRPNetInfo.Equal(&that1.ActualLRPNetInfo) {
+		return false
+	}
+	if this.CrashCount != nil && that1.CrashCount != nil {
+		if *this.CrashCount != *that1.CrashCount {
+			return false
+		}
+	} else if this.CrashCount != nil {
+		return false
+	} else if that1.CrashCount != nil {
+		return false
+	}
+	if this.CrashReason != nil && that1.CrashReason != nil {
+		if *this.CrashReason != *that1.CrashReason {
+			return false
+		}
+	} else if this.CrashReason != nil {
+		return false
+	} else if that1.CrashReason != nil {
+		return false
+	}
+	if this.State != nil && that1.State != nil {
+		if *this.State != *that1.State {
+			return false
+		}
+	} else if this.State != nil {
+		return false
+	} else if that1.State != nil {
+		return false
+	}
+	if this.PlacementError != nil && that1.PlacementError != nil {
+		if *this.PlacementError != *that1.PlacementError {
+			return false
+		}
+	} else if this.PlacementError != nil {
+		return false
+	} else if that1.PlacementError != nil {
+		return false
+	}
+	if this.Since != nil && that1.Since != nil {
+		if *this.Since != *that1.Since {
+			return false
+		}
+	} else if this.Since != nil {
+		return false
+	} else if that1.Since != nil {
+		return false
+	}
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPGroups) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPGroups)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if len(this.ActualLrpGroups) != len(that1.ActualLrpGroups) {
+		return false
+	}
+	for i := range this.ActualLrpGroups {
+		if !this.ActualLrpGroups[i].Equal(that1.ActualLrpGroups[i]) {
+			return false
+		}
+	}
+	return true
+}

@@ -561,6 +561,9 @@ var _ = Describe("ActualLRP", func() {
 					claimedKey               = models.NewActualLRPInstanceKey("some-instance-guid", "some-cell-id")
 					differentInstanceGuidKey = models.NewActualLRPInstanceKey("some-other-instance-guid", "some-cell-id")
 					differentCellIDKey       = models.NewActualLRPInstanceKey("some-instance-guid", "some-other-cell-id")
+
+					equivalentEmptyKey   = models.NewActualLRPInstanceKey("", "")
+					equivalentClaimedKey = models.NewActualLRPInstanceKey("some-instance-guid", "some-cell-id")
 				)
 
 				type stateTableEntry struct {
@@ -575,30 +578,30 @@ var _ = Describe("ActualLRP", func() {
 					return fmt.Sprintf("is %t when the before has state %s and instance guid '%s' and cell id '%s' and the after has state %s and instance guid '%s' and cell id '%s'",
 						entry.Allowed,
 						entry.BeforeState,
-						entry.BeforeInstanceKey.InstanceGuid,
-						entry.BeforeInstanceKey.CellId,
+						entry.BeforeInstanceKey.GetInstanceGuid(),
+						entry.BeforeInstanceKey.GetCellId(),
 						entry.AfterState,
-						entry.AfterInstanceKey.InstanceGuid,
-						entry.AfterInstanceKey.CellId,
+						entry.AfterInstanceKey.GetInstanceGuid(),
+						entry.AfterInstanceKey.GetCellId(),
 					)
 				}
 
 				stateTable := []stateTableEntry{
-					{models.ActualLRPStateUnclaimed, models.ActualLRPStateUnclaimed, emptyKey, emptyKey, true},
+					{models.ActualLRPStateUnclaimed, models.ActualLRPStateUnclaimed, emptyKey, equivalentEmptyKey, true},
 					{models.ActualLRPStateUnclaimed, models.ActualLRPStateClaimed, emptyKey, claimedKey, true},
 					{models.ActualLRPStateUnclaimed, models.ActualLRPStateRunning, emptyKey, claimedKey, true},
 					{models.ActualLRPStateClaimed, models.ActualLRPStateUnclaimed, claimedKey, emptyKey, true},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, claimedKey, claimedKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, claimedKey, equivalentClaimedKey, true},
 					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, claimedKey, differentInstanceGuidKey, false},
 					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, claimedKey, claimedKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, claimedKey, equivalentClaimedKey, true},
 					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, claimedKey, differentInstanceGuidKey, true},
 					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, claimedKey, differentCellIDKey, true},
 					{models.ActualLRPStateRunning, models.ActualLRPStateUnclaimed, claimedKey, emptyKey, true},
-					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, claimedKey, true},
+					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, equivalentClaimedKey, true},
 					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, differentInstanceGuidKey, false},
 					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, claimedKey, claimedKey, true},
+					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, claimedKey, equivalentClaimedKey, true},
 					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, differentInstanceGuidKey, false},
 					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, differentCellIDKey, false},
 				}

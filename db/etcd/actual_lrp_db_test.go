@@ -15,9 +15,10 @@ var _ = Describe("ActualLRPDB", func() {
 		cellID          = "cell-id"
 		noExpirationTTL = 0
 
-		baseProcessGuid  = "base-process-guid"
-		baseDomain       = "base-domain"
-		baseInstanceGuid = "base-instance-guid"
+		baseProcessGuid   = "base-process-guid"
+		baseDomain        = "base-domain"
+		baseInstanceGuid  = "base-instance-guid"
+		otherInstanceGuid = "other-instance-guid"
 
 		baseIndex  = 1
 		otherIndex = 2
@@ -25,7 +26,9 @@ var _ = Describe("ActualLRPDB", func() {
 		evacuatingInstanceGuid = "evacuating-instance-guid"
 
 		otherDomainProcessGuid = "other-domain-process-guid"
-		otherDomain            = "other-domain"
+
+		otherDomain = "other-domain"
+		otherCellID = "other-cell-id"
 	)
 
 	var (
@@ -35,15 +38,19 @@ var _ = Describe("ActualLRPDB", func() {
 		otherIndexLRP  models.ActualLRP
 		evacuatingLRP  models.ActualLRP
 		otherDomainLRP models.ActualLRP
+		otherCellIdLRP models.ActualLRP
 
-		baseLRPKey         models.ActualLRPKey
-		baseLRPInstanceKey models.ActualLRPInstanceKey
-		netInfo            models.ActualLRPNetInfo
+		baseLRPKey          models.ActualLRPKey
+		baseLRPInstanceKey  models.ActualLRPInstanceKey
+		otherLRPInstanceKey models.ActualLRPInstanceKey
+		netInfo             models.ActualLRPNetInfo
 	)
 
 	BeforeEach(func() {
 		baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
+		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
+
 		netInfo = models.NewActualLRPNetInfo("127.0.0.1", []*models.PortMapping{{proto.Uint32(8080), proto.Uint32(80)}})
 
 		baseLRP = models.ActualLRP{
@@ -77,6 +84,13 @@ var _ = Describe("ActualLRPDB", func() {
 			Since:                proto.Int64(clock.Now().UnixNano()),
 		}
 
+		otherCellIdLRP = models.ActualLRP{
+			ActualLRPKey:         models.NewActualLRPKey(otherDomainProcessGuid, otherIndex, otherDomain),
+			ActualLRPInstanceKey: otherLRPInstanceKey,
+			ActualLRPNetInfo:     netInfo,
+			State:                proto.String(models.ActualLRPStateRunning),
+			Since:                proto.Int64(clock.Now().UnixNano()),
+		}
 		etcdDB = NewETCD(etcdClient)
 	})
 
@@ -89,6 +103,7 @@ var _ = Describe("ActualLRPDB", func() {
 				testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
 				testHelper.SetRawActualLRP(otherDomainLRP)
 				testHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
+				testHelper.SetRawActualLRP(otherCellIdLRP)
 			})
 
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
@@ -98,6 +113,7 @@ var _ = Describe("ActualLRPDB", func() {
 					&models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP},
 					&models.ActualLRPGroup{Instance: &otherDomainLRP, Evacuating: nil},
 					&models.ActualLRPGroup{Instance: nil, Evacuating: &otherIndexLRP},
+					&models.ActualLRPGroup{Instance: &otherCellIdLRP, Evacuating: nil},
 				))
 			})
 
@@ -107,6 +123,16 @@ var _ = Describe("ActualLRPDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: &otherDomainLRP, Evacuating: nil},
+					&models.ActualLRPGroup{Instance: &otherCellIdLRP, Evacuating: nil},
+				))
+			})
+
+			It("can filter by cell id", func() {
+				filter.CellID = otherCellID
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
+					&models.ActualLRPGroup{Instance: &otherCellIdLRP, Evacuating: nil},
 				))
 			})
 		})

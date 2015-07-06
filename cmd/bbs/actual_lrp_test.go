@@ -27,6 +27,7 @@ var _ = Describe("ActualLRP API", func() {
 	Describe("GET /v1/actual_lrps_groups", func() {
 		const (
 			cellID          = "cell-id"
+			otherCellID     = "other-cell-id"
 			noExpirationTTL = 0
 
 			baseProcessGuid  = "base-process-guid"
@@ -67,7 +68,7 @@ var _ = Describe("ActualLRP API", func() {
 			baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
 
 			otherLRPKey = models.NewActualLRPKey(otherProcessGuid, otherIndex, otherDomain)
-			otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, cellID)
+			otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
 			netInfo = models.NewActualLRPNetInfo("127.0.0.1", []*models.PortMapping{{proto.Uint32(8080), proto.Uint32(80)}})
 
@@ -123,7 +124,18 @@ var _ = Describe("ActualLRP API", func() {
 				filter = models.ActualLRPFilter{Domain: baseDomain}
 			})
 
-			It("returns all actual lrps from the bbs", func() {
+			It("returns actual lrps from the requested domain", func() {
+				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
+				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
+			})
+		})
+
+		Context("when filtering by cell", func() {
+			BeforeEach(func() {
+				filter = models.ActualLRPFilter{CellID: cellID}
+			})
+
+			It("returns actual lrps from the requested cell", func() {
 				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
