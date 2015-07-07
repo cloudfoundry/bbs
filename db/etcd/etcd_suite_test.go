@@ -48,5 +48,7 @@ var _ = AfterSuite(func() {
 var _ = BeforeEach(func() {
 	etcdRunner.Reset()
 	etcdClient = etcdRunner.Client()
+	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	testHelper = test_helpers.NewTestHelper(etcdClient)
 })
+
