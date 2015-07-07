@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
@@ -295,6 +296,120 @@ var _ = Describe("ActualLRP Handlers", func() {
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(&models.ActualLRPGroups{}, errors.New("Something went wrong"))
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			})
+
+			It("provides relevant error information", func() {
+				var bbsError bbs.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError).To(Equal(bbs.Error{
+					Type:    proto.String(bbs.UnknownError),
+					Message: proto.String("Something went wrong"),
+				}))
+			})
+		})
+	})
+
+	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
+		var request *http.Request
+		var processGuid = "process-guid"
+		var index = 1
+
+		BeforeEach(func() {
+			request = newTestRequest("")
+			request.URL.RawQuery = url.Values{
+				":process_guid": []string{processGuid},
+				":index":        []string{strconv.Itoa(index)},
+			}.Encode()
+
+			actualLRP1 = models.ActualLRP{
+				ActualLRPKey: models.NewActualLRPKey(
+					processGuid,
+					1,
+					"domain-0",
+				),
+				ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
+					"instance-guid-0",
+					"cell-id-0",
+				),
+				State: proto.String(models.ActualLRPStateRunning),
+				Since: proto.Int64(1138),
+			}
+
+			actualLRP2 = models.ActualLRP{
+				ActualLRPKey: models.NewActualLRPKey(
+					"process-guid-1",
+					2,
+					"domain-1",
+				),
+				ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
+					"instance-guid-1",
+					"cell-id-1",
+				),
+				State: proto.String(models.ActualLRPStateClaimed),
+				Since: proto.Int64(4444),
+			}
+
+			evacuatingLRP2 = actualLRP2
+			evacuatingLRP2.State = proto.String(models.ActualLRPStateRunning)
+			evacuatingLRP2.Since = proto.Int64(3417)
+		})
+
+		JustBeforeEach(func() {
+			handler.ActualLRPGroupByProcessGuidAndIndex(responseRecorder, request)
+		})
+
+		Context("when reading actual lrps from DB succeeds", func() {
+			var actualLRPGroup *models.ActualLRPGroup
+
+			BeforeEach(func() {
+				actualLRPGroup = &models.ActualLRPGroup{Instance: &actualLRP1}
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(actualLRPGroup, nil)
+			})
+
+			It("responds with 200 Status OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			It("fetches actual lrp group by process guid and index", func() {
+				Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(1))
+				actualProcessGuid, idx, _ := fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexArgsForCall(0)
+				Expect(actualProcessGuid).To(Equal(processGuid))
+				Expect(idx).To(BeEquivalentTo(index))
+			})
+
+			It("returns an actual lrp group", func() {
+				response := &models.ActualLRPGroup{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response).To(Equal(actualLRPGroup))
+			})
+
+			Context("when there is also an evacuating LRP", func() {
+				BeforeEach(func() {
+					actualLRPGroup = &models.ActualLRPGroup{Instance: &actualLRP2, Evacuating: &evacuatingLRP2}
+					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(actualLRPGroup, nil)
+				})
+
+				It("returns both LRPs in the group", func() {
+					response := &models.ActualLRPGroup{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response).To(Equal(actualLRPGroup))
+				})
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, errors.New("Something went wrong"))
 			})
 
 			It("responds with an error", func() {

@@ -8,6 +8,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -36,7 +37,8 @@ type Client interface {
 	Domains() ([]string, error)
 	UpsertDomain(domain string, ttl time.Duration) error
 	ActualLRPGroups(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
-	ActualLRPGroupsByProcessGuid(string) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
 }
 
 func NewClient(url string) Client {
@@ -72,6 +74,14 @@ func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.Act
 	var actualLRPGroups models.ActualLRPGroups
 	err := c.doRequest(ActualLRPGroupsByProcessGuidRoute, rata.Params{"process_guid": processGuid}, nil, nil, &actualLRPGroups)
 	return actualLRPGroups.GetActualLrpGroups(), err
+}
+
+func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {
+	var actualLRPGroup models.ActualLRPGroup
+	err := c.doRequest(ActualLRPGroupByProcessGuidAndIndexRoute,
+		rata.Params{"process_guid": processGuid, "index": strconv.Itoa(index)},
+		nil, nil, &actualLRPGroup)
+	return &actualLRPGroup, err
 }
 
 func (c *client) Domains() ([]string, error) {

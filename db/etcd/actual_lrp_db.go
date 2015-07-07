@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/runtime-schema/bbs/bbserrors"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
@@ -90,6 +91,37 @@ func (db *ETCDDB) ActualLRPGroupsByProcessGuid(processGuid string, logger lager.
 	}
 
 	return parseActualLRPGroups(node, models.ActualLRPFilter{}, logger)
+}
+
+func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int32, logger lager.Logger) (*models.ActualLRPGroup, error) {
+	node, err := db.fetchRecursiveRaw(ActualLRPIndexDir(processGuid, index), logger)
+	if err != nil {
+		return nil, err
+	}
+
+	group := models.ActualLRPGroup{}
+	for _, instanceNode := range node.Nodes {
+		var lrp models.ActualLRP
+		deserializeErr := models.FromJSON([]byte(instanceNode.Value), &lrp)
+		if deserializeErr != nil {
+			logger.Error("failed-parsing-actual-lrp", deserializeErr)
+			return nil, fmt.Errorf("cannot parse lrp JSON for key %s: %s", instanceNode.Key, deserializeErr.Error())
+		}
+
+		if isInstanceActualLRPNode(instanceNode) {
+			group.Instance = &lrp
+		}
+
+		if isEvacuatingActualLRPNode(instanceNode) {
+			group.Evacuating = &lrp
+		}
+	}
+
+	if group.Evacuating == nil && group.Instance == nil {
+		return nil, bbserrors.ErrStoreResourceNotFound
+	}
+
+	return &group, nil
 }
 
 func parseActualLRPGroups(node *etcd.Node, filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, error) {

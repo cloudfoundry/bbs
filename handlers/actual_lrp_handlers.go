@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -52,4 +53,29 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, r
 	}
 
 	writeProtoResponse(w, http.StatusOK, actualLRPGroups)
+}
+
+func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWriter, req *http.Request) {
+	processGuid := req.FormValue(":process_guid")
+	index := req.FormValue(":index")
+	logger := h.logger.Session("actual-lrp-group-by-process-guid-and-index", lager.Data{
+		"process_guid": processGuid,
+		"index":        index,
+	})
+
+	idx, err := strconv.ParseInt(index, 10, 32)
+	if err != nil {
+		logger.Error("failed-to-parse-index", err)
+		writeUnknownErrorResponse(w, err)
+		return
+	}
+
+	actualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(processGuid, int32(idx), h.logger)
+	if err != nil {
+		logger.Error("failed-to-fetch-actual-lrp-group-by-process-guid-and-index", err)
+		writeUnknownErrorResponse(w, err)
+		return
+	}
+
+	writeProtoResponse(w, http.StatusOK, actualLRPGroup)
 }

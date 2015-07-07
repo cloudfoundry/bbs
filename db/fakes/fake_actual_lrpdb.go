@@ -30,6 +30,17 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRPGroups
 		result2 error
 	}
+	ActualLRPGroupByProcessGuidAndIndexStub        func(string, int32, lager.Logger) (*models.ActualLRPGroup, error)
+	actualLRPGroupByProcessGuidAndIndexMutex       sync.RWMutex
+	actualLRPGroupByProcessGuidAndIndexArgsForCall []struct {
+		arg1 string
+		arg2 int32
+		arg3 lager.Logger
+	}
+	actualLRPGroupByProcessGuidAndIndexReturns struct {
+		result1 *models.ActualLRPGroup
+		result2 error
+	}
 }
 
 func (fake *FakeActualLRPDB) ActualLRPGroups(arg1 models.ActualLRPFilter, arg2 lager.Logger) (*models.ActualLRPGroups, error) {
@@ -96,6 +107,41 @@ func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidReturns(result1 *models
 	fake.ActualLRPGroupsByProcessGuidStub = nil
 	fake.actualLRPGroupsByProcessGuidReturns = struct {
 		result1 *models.ActualLRPGroups
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndex(arg1 string, arg2 int32, arg3 lager.Logger) (*models.ActualLRPGroup, error) {
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.Lock()
+	fake.actualLRPGroupByProcessGuidAndIndexArgsForCall = append(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall, struct {
+		arg1 string
+		arg2 int32
+		arg3 lager.Logger
+	}{arg1, arg2, arg3})
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.Unlock()
+	if fake.ActualLRPGroupByProcessGuidAndIndexStub != nil {
+		return fake.ActualLRPGroupByProcessGuidAndIndexStub(arg1, arg2, arg3)
+	} else {
+		return fake.actualLRPGroupByProcessGuidAndIndexReturns.result1, fake.actualLRPGroupByProcessGuidAndIndexReturns.result2
+	}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexCallCount() int {
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
+	return len(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexArgsForCall(i int) (string, int32, lager.Logger) {
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
+	return fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].arg1, fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].arg2, fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].arg3
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *models.ActualLRPGroup, result2 error) {
+	fake.ActualLRPGroupByProcessGuidAndIndexStub = nil
+	fake.actualLRPGroupByProcessGuidAndIndexReturns = struct {
+		result1 *models.ActualLRPGroup
 		result2 error
 	}{result1, result2}
 }

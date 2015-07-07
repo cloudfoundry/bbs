@@ -236,4 +236,57 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 		})
 	})
+
+	Describe("ActualLRPGroupsByProcessGuidAndIndex", func() {
+		Context("when there are both /instance and /evacuating LRPs", func() {
+			BeforeEach(func() {
+				testHelper.SetRawActualLRP(baseLRP)
+				testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+				testHelper.SetRawActualLRP(otherDomainLRP)
+				testHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
+				testHelper.SetRawActualLRP(otherCellIdLRP)
+			})
+
+			It("returns the /instance LRPs and /evacuating LRPs in the group", func() {
+				actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP}))
+			})
+		})
+
+		Context("when there are no LRPs", func() {
+			It("returns an error", func() {
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when the root node exists with no child nodes", func() {
+			BeforeEach(func() {
+				testHelper.SetRawActualLRP(baseLRP)
+
+				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
+				_, err := etcdClient.Delete(ActualLRPProcessDir(processGuid), true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when there is invalid data", func() {
+			BeforeEach(func() {
+				testHelper.CreateValidActualLRP("some-guid", 0)
+				testHelper.CreateMalformedActualLRP("some-other-guid", 0)
+				testHelper.CreateValidActualLRP("some-third-guid", 0)
+			})
+
+			It("errors", func() {
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex("some-other-guid", 0, logger)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
 })

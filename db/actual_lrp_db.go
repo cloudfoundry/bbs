@@ -9,4 +9,5 @@ import (
 type ActualLRPDB interface {
 	ActualLRPGroups(models.ActualLRPFilter, lager.Logger) (*models.ActualLRPGroups, error)
 	ActualLRPGroupsByProcessGuid(string, lager.Logger) (*models.ActualLRPGroups, error)
+	ActualLRPGroupByProcessGuidAndIndex(string, int32, lager.Logger) (*models.ActualLRPGroup, error)
 }

@@ -35,13 +35,23 @@ type FakeClient struct {
 		result1 []*models.ActualLRPGroup
 		result2 error
 	}
-	ActualLRPGroupsByProcessGuidStub        func(string) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroupsByProcessGuidStub        func(processGuid string) ([]*models.ActualLRPGroup, error)
 	actualLRPGroupsByProcessGuidMutex       sync.RWMutex
 	actualLRPGroupsByProcessGuidArgsForCall []struct {
-		arg1 string
+		processGuid string
 	}
 	actualLRPGroupsByProcessGuidReturns struct {
 		result1 []*models.ActualLRPGroup
+		result2 error
+	}
+	ActualLRPGroupByProcessGuidAndIndexStub        func(processGuid string, index int) (*models.ActualLRPGroup, error)
+	actualLRPGroupByProcessGuidAndIndexMutex       sync.RWMutex
+	actualLRPGroupByProcessGuidAndIndexArgsForCall []struct {
+		processGuid string
+		index       int
+	}
+	actualLRPGroupByProcessGuidAndIndexReturns struct {
+		result1 *models.ActualLRPGroup
 		result2 error
 	}
 }
@@ -137,14 +147,14 @@ func (fake *FakeClient) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup,
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ActualLRPGroupsByProcessGuid(arg1 string) ([]*models.ActualLRPGroup, error) {
+func (fake *FakeClient) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupsByProcessGuidMutex.Lock()
 	fake.actualLRPGroupsByProcessGuidArgsForCall = append(fake.actualLRPGroupsByProcessGuidArgsForCall, struct {
-		arg1 string
-	}{arg1})
+		processGuid string
+	}{processGuid})
 	fake.actualLRPGroupsByProcessGuidMutex.Unlock()
 	if fake.ActualLRPGroupsByProcessGuidStub != nil {
-		return fake.ActualLRPGroupsByProcessGuidStub(arg1)
+		return fake.ActualLRPGroupsByProcessGuidStub(processGuid)
 	} else {
 		return fake.actualLRPGroupsByProcessGuidReturns.result1, fake.actualLRPGroupsByProcessGuidReturns.result2
 	}
@@ -159,13 +169,47 @@ func (fake *FakeClient) ActualLRPGroupsByProcessGuidCallCount() int {
 func (fake *FakeClient) ActualLRPGroupsByProcessGuidArgsForCall(i int) string {
 	fake.actualLRPGroupsByProcessGuidMutex.RLock()
 	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
-	return fake.actualLRPGroupsByProcessGuidArgsForCall[i].arg1
+	return fake.actualLRPGroupsByProcessGuidArgsForCall[i].processGuid
 }
 
 func (fake *FakeClient) ActualLRPGroupsByProcessGuidReturns(result1 []*models.ActualLRPGroup, result2 error) {
 	fake.ActualLRPGroupsByProcessGuidStub = nil
 	fake.actualLRPGroupsByProcessGuidReturns = struct {
 		result1 []*models.ActualLRPGroup
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.Lock()
+	fake.actualLRPGroupByProcessGuidAndIndexArgsForCall = append(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall, struct {
+		processGuid string
+		index       int
+	}{processGuid, index})
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.Unlock()
+	if fake.ActualLRPGroupByProcessGuidAndIndexStub != nil {
+		return fake.ActualLRPGroupByProcessGuidAndIndexStub(processGuid, index)
+	} else {
+		return fake.actualLRPGroupByProcessGuidAndIndexReturns.result1, fake.actualLRPGroupByProcessGuidAndIndexReturns.result2
+	}
+}
+
+func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexCallCount() int {
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
+	return len(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall)
+}
+
+func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexArgsForCall(i int) (string, int) {
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
+	return fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].processGuid, fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].index
+}
+
+func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *models.ActualLRPGroup, result2 error) {
+	fake.ActualLRPGroupByProcessGuidAndIndexStub = nil
+	fake.actualLRPGroupByProcessGuidAndIndexReturns = struct {
+		result1 *models.ActualLRPGroup
 		result2 error
 	}{result1, result2}
 }
