@@ -7,8 +7,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/runtime-schema/bbs/bbserrors"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
@@ -118,7 +118,7 @@ func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index 
 	}
 
 	if group.Evacuating == nil && group.Instance == nil {
-		return nil, bbserrors.ErrStoreResourceNotFound
+		return nil, bbs.ErrResourceNotFound
 	}
 
 	return &group, nil
@@ -169,3 +169,4 @@ func isInstanceActualLRPNode(node *etcd.Node) bool {
 func isEvacuatingActualLRPNode(node *etcd.Node) bool {
 	return path.Base(node.Key) == ActualLRPEvacuatingKey
 }
+

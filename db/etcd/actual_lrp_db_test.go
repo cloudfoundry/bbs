@@ -1,6 +1,7 @@
 package db_test
 
 import (
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -258,6 +259,7 @@ var _ = Describe("ActualLRPDB", func() {
 			It("returns an error", func() {
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
 				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(bbs.ErrResourceNotFound))
 			})
 		})
 
@@ -266,13 +268,14 @@ var _ = Describe("ActualLRPDB", func() {
 				testHelper.SetRawActualLRP(baseLRP)
 
 				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
-				_, err := etcdClient.Delete(ActualLRPProcessDir(processGuid), true)
+				_, err := etcdClient.Delete(ActualLRPSchemaPath(processGuid, baseIndex), true)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns an error", func() {
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
 				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(bbs.ErrResourceNotFound))
 			})
 		})
 
@@ -290,3 +293,4 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 	})
 })
+

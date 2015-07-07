@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
 )
@@ -24,7 +25,7 @@ func (db *ETCDDB) fetchRecursiveRaw(key string, logger lager.Logger) (*etcd.Node
 	response, err := db.client.Get(key, false, true)
 	if etcdErr, ok := err.(*etcd.EtcdError); ok && etcdErr.ErrorCode == ETCDErrKeyNotFound {
 		logger.Debug("no-nodes-to-fetch")
-		return nil, etcdErr
+		return nil, bbs.ErrResourceNotFound
 	} else if err != nil {
 		logger.Error("failed-fetching-recd", err)
 		return nil, err
@@ -32,3 +33,4 @@ func (db *ETCDDB) fetchRecursiveRaw(key string, logger lager.Logger) (*etcd.Node
 	logger.Debug("succeeded-fetching-recursive-from-etcd", lager.Data{"num-lrps": response.Node.Nodes.Len()})
 	return response.Node, nil
 }
+

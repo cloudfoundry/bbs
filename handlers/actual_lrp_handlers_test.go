@@ -407,6 +407,24 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 		})
 
+		Context("when we cannot find the resource", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, bbs.ErrResourceNotFound)
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+			})
+
+			It("provides relevant error information", func() {
+				var bbsError bbs.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError).To(Equal(bbs.ErrResourceNotFound))
+			})
+		})
+
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, errors.New("Something went wrong"))
@@ -429,3 +447,4 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 	})
 })
+

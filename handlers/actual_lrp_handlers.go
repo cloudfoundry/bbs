@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
@@ -48,7 +49,12 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, r
 	actualLRPGroups, err := h.db.ActualLRPGroupsByProcessGuid(processGuid, h.logger)
 	if err != nil {
 		logger.Error("failed-to-fetch-actual-lrp-groups", err)
-		writeUnknownErrorResponse(w, err)
+		switch err {
+		case bbs.ErrResourceNotFound:
+			writeNotFoundResponse(w, err)
+		default:
+			writeUnknownErrorResponse(w, err)
+		}
 		return
 	}
 
@@ -73,9 +79,15 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWr
 	actualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(processGuid, int32(idx), h.logger)
 	if err != nil {
 		logger.Error("failed-to-fetch-actual-lrp-group-by-process-guid-and-index", err)
-		writeUnknownErrorResponse(w, err)
+		switch err {
+		case bbs.ErrResourceNotFound:
+			writeNotFoundResponse(w, err)
+		default:
+			writeUnknownErrorResponse(w, err)
+		}
 		return
 	}
 
 	writeProtoResponse(w, http.StatusOK, actualLRPGroup)
 }
+
