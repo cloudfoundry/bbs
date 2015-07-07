@@ -36,6 +36,7 @@ type Client interface {
 	Domains() ([]string, error)
 	UpsertDomain(domain string, ttl time.Duration) error
 	ActualLRPGroups(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroupsByProcessGuid(string) ([]*models.ActualLRPGroup, error)
 }
 
 func NewClient(url string) Client {
@@ -64,6 +65,12 @@ func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.Actua
 		query.Set("cell_id", filter.CellID)
 	}
 	err := c.doRequest(ActualLRPGroupsRoute, nil, query, nil, &actualLRPGroups)
+	return actualLRPGroups.GetActualLrpGroups(), err
+}
+
+func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {
+	var actualLRPGroups models.ActualLRPGroups
+	err := c.doRequest(ActualLRPGroupsByProcessGuidRoute, rata.Params{"process_guid": processGuid}, nil, nil, &actualLRPGroups)
 	return actualLRPGroups.GetActualLrpGroups(), err
 }
 

@@ -35,6 +35,15 @@ type FakeClient struct {
 		result1 []*models.ActualLRPGroup
 		result2 error
 	}
+	ActualLRPGroupsByProcessGuidStub        func(string) ([]*models.ActualLRPGroup, error)
+	actualLRPGroupsByProcessGuidMutex       sync.RWMutex
+	actualLRPGroupsByProcessGuidArgsForCall []struct {
+		arg1 string
+	}
+	actualLRPGroupsByProcessGuidReturns struct {
+		result1 []*models.ActualLRPGroup
+		result2 error
+	}
 }
 
 func (fake *FakeClient) Domains() ([]string, error) {
@@ -123,6 +132,39 @@ func (fake *FakeClient) ActualLRPGroupsArgsForCall(i int) models.ActualLRPFilter
 func (fake *FakeClient) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup, result2 error) {
 	fake.ActualLRPGroupsStub = nil
 	fake.actualLRPGroupsReturns = struct {
+		result1 []*models.ActualLRPGroup
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) ActualLRPGroupsByProcessGuid(arg1 string) ([]*models.ActualLRPGroup, error) {
+	fake.actualLRPGroupsByProcessGuidMutex.Lock()
+	fake.actualLRPGroupsByProcessGuidArgsForCall = append(fake.actualLRPGroupsByProcessGuidArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.actualLRPGroupsByProcessGuidMutex.Unlock()
+	if fake.ActualLRPGroupsByProcessGuidStub != nil {
+		return fake.ActualLRPGroupsByProcessGuidStub(arg1)
+	} else {
+		return fake.actualLRPGroupsByProcessGuidReturns.result1, fake.actualLRPGroupsByProcessGuidReturns.result2
+	}
+}
+
+func (fake *FakeClient) ActualLRPGroupsByProcessGuidCallCount() int {
+	fake.actualLRPGroupsByProcessGuidMutex.RLock()
+	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
+	return len(fake.actualLRPGroupsByProcessGuidArgsForCall)
+}
+
+func (fake *FakeClient) ActualLRPGroupsByProcessGuidArgsForCall(i int) string {
+	fake.actualLRPGroupsByProcessGuidMutex.RLock()
+	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
+	return fake.actualLRPGroupsByProcessGuidArgsForCall[i].arg1
+}
+
+func (fake *FakeClient) ActualLRPGroupsByProcessGuidReturns(result1 []*models.ActualLRPGroup, result2 error) {
+	fake.ActualLRPGroupsByProcessGuidStub = nil
+	fake.actualLRPGroupsByProcessGuidReturns = struct {
 		result1 []*models.ActualLRPGroup
 		result2 error
 	}{result1, result2}

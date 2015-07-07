@@ -19,7 +19,8 @@ func New(db db.DB, logger lager.Logger) http.Handler {
 		bbs.UpsertDomainRoute: route(domainHandler.Upsert),
 
 		// Actual LRPs
-		bbs.ActualLRPGroupsRoute: route(actualLRPHandler.ActualLRPGroups),
+		bbs.ActualLRPGroupsRoute:              route(actualLRPHandler.ActualLRPGroups),
+		bbs.ActualLRPGroupsByProcessGuidRoute: route(actualLRPHandler.ActualLRPGroupsByProcessGuid),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

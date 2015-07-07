@@ -37,3 +37,19 @@ func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Requ
 
 	writeProtoResponse(w, http.StatusOK, actualLRPGroups)
 }
+
+func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, req *http.Request) {
+	processGuid := req.FormValue(":process_guid")
+	logger := h.logger.Session("actual-lrp-groups-by-process-guid", lager.Data{
+		"process_guid": processGuid,
+	})
+
+	actualLRPGroups, err := h.db.ActualLRPGroupsByProcessGuid(processGuid, h.logger)
+	if err != nil {
+		logger.Error("failed-to-fetch-actual-lrp-groups", err)
+		writeUnknownErrorResponse(w, err)
+		return
+	}
+
+	writeProtoResponse(w, http.StatusOK, actualLRPGroups)
+}

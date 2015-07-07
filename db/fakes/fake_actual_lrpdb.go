@@ -20,6 +20,16 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRPGroups
 		result2 error
 	}
+	ActualLRPGroupsByProcessGuidStub        func(string, lager.Logger) (*models.ActualLRPGroups, error)
+	actualLRPGroupsByProcessGuidMutex       sync.RWMutex
+	actualLRPGroupsByProcessGuidArgsForCall []struct {
+		arg1 string
+		arg2 lager.Logger
+	}
+	actualLRPGroupsByProcessGuidReturns struct {
+		result1 *models.ActualLRPGroups
+		result2 error
+	}
 }
 
 func (fake *FakeActualLRPDB) ActualLRPGroups(arg1 models.ActualLRPFilter, arg2 lager.Logger) (*models.ActualLRPGroups, error) {
@@ -51,6 +61,40 @@ func (fake *FakeActualLRPDB) ActualLRPGroupsArgsForCall(i int) (models.ActualLRP
 func (fake *FakeActualLRPDB) ActualLRPGroupsReturns(result1 *models.ActualLRPGroups, result2 error) {
 	fake.ActualLRPGroupsStub = nil
 	fake.actualLRPGroupsReturns = struct {
+		result1 *models.ActualLRPGroups
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuid(arg1 string, arg2 lager.Logger) (*models.ActualLRPGroups, error) {
+	fake.actualLRPGroupsByProcessGuidMutex.Lock()
+	fake.actualLRPGroupsByProcessGuidArgsForCall = append(fake.actualLRPGroupsByProcessGuidArgsForCall, struct {
+		arg1 string
+		arg2 lager.Logger
+	}{arg1, arg2})
+	fake.actualLRPGroupsByProcessGuidMutex.Unlock()
+	if fake.ActualLRPGroupsByProcessGuidStub != nil {
+		return fake.ActualLRPGroupsByProcessGuidStub(arg1, arg2)
+	} else {
+		return fake.actualLRPGroupsByProcessGuidReturns.result1, fake.actualLRPGroupsByProcessGuidReturns.result2
+	}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidCallCount() int {
+	fake.actualLRPGroupsByProcessGuidMutex.RLock()
+	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
+	return len(fake.actualLRPGroupsByProcessGuidArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidArgsForCall(i int) (string, lager.Logger) {
+	fake.actualLRPGroupsByProcessGuidMutex.RLock()
+	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
+	return fake.actualLRPGroupsByProcessGuidArgsForCall[i].arg1, fake.actualLRPGroupsByProcessGuidArgsForCall[i].arg2
+}
+
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidReturns(result1 *models.ActualLRPGroups, result2 error) {
+	fake.ActualLRPGroupsByProcessGuidStub = nil
+	fake.actualLRPGroupsByProcessGuidReturns = struct {
 		result1 *models.ActualLRPGroups
 		result2 error
 	}{result1, result2}

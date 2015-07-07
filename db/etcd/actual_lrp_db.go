@@ -5,6 +5,7 @@ import (
 	"path"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
@@ -33,66 +34,32 @@ func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
 }
 
 func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, error) {
-	logger.Debug("fetching-actual-lrps-from-bbs")
-	response, err := db.client.Get(ActualLRPSchemaRoot, false, true)
-	if etcdErr, ok := err.(*etcd.EtcdError); ok && etcdErr.ErrorCode == 100 {
-		logger.Debug("no-actual-lrps-to-fetch")
+	node, err := db.fetchRecursiveRaw(ActualLRPSchemaRoot, logger)
+	if err != nil {
 		return &models.ActualLRPGroups{}, nil
-	} else if err != nil {
-		logger.Error("failed-fetching-actual-lrps-from-bbs", err)
-		return &models.ActualLRPGroups{}, err
 	}
-	logger.Debug("succeeded-fetching-actual-lrps-from-bbs", lager.Data{"num-lrps": response.Node.Nodes.Len()})
-
-	if response.Node.Nodes.Len() == 0 {
+	if node.Nodes.Len() == 0 {
 		return &models.ActualLRPGroups{}, nil
 	}
 
 	var groups = &models.ActualLRPGroups{}
 	groupsLock := sync.Mutex{}
-	var workErr error
-	workErrLock := sync.Mutex{}
+	var workErr atomic.Value
 
 	works := []func(){}
 
-	for _, node := range response.Node.Nodes {
+	for _, node := range node.Nodes {
 		node := node
 
 		works = append(works, func() {
-			for _, indexNode := range node.Nodes {
-				group := &models.ActualLRPGroup{}
-				for _, instanceNode := range indexNode.Nodes {
-					var lrp models.ActualLRP
-					deserializeErr := models.FromJSON([]byte(instanceNode.Value), &lrp)
-					if deserializeErr != nil {
-						logger.Error("invalid-instance-node", deserializeErr)
-						workErrLock.Lock()
-						workErr = fmt.Errorf("cannot parse lrp JSON for key %s: %s", instanceNode.Key, deserializeErr.Error())
-						workErrLock.Unlock()
-						continue
-					}
-					if filter.Domain != "" && lrp.GetDomain() != filter.Domain {
-						continue
-					}
-					if filter.CellID != "" && lrp.GetCellId() != filter.CellID {
-						continue
-					}
-
-					if isInstanceActualLRPNode(instanceNode) {
-						group.Instance = &lrp
-					}
-
-					if isEvacuatingActualLRPNode(instanceNode) {
-						group.Evacuating = &lrp
-					}
-				}
-
-				if group.Instance != nil || group.Evacuating != nil {
-					groupsLock.Lock()
-					groups.ActualLrpGroups = append(groups.ActualLrpGroups, group)
-					groupsLock.Unlock()
-				}
+			g, err := parseActualLRPGroups(node, filter, logger)
+			if err != nil {
+				workErr.Store(err)
+				return
 			}
+			groupsLock.Lock()
+			groups.ActualLrpGroups = append(groups.ActualLrpGroups, g.ActualLrpGroups...)
+			groupsLock.Unlock()
 		})
 	}
 
@@ -104,11 +71,61 @@ func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Lo
 
 	logger.Debug("performing-deserialization-work")
 	throttler.Work()
-	if workErr != nil {
-		logger.Error("failed-performing-deserialization-work", workErr)
-		return &models.ActualLRPGroups{}, workErr
+	if err, ok := workErr.Load().(error); ok {
+		logger.Error("failed-performing-deserialization-work", err)
+		return &models.ActualLRPGroups{}, err
 	}
 	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups.GetActualLrpGroups())})
+
+	return groups, nil
+}
+
+func (db *ETCDDB) ActualLRPGroupsByProcessGuid(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, error) {
+	node, err := db.fetchRecursiveRaw(ActualLRPProcessDir(processGuid), logger)
+	if err != nil {
+		return &models.ActualLRPGroups{}, nil
+	}
+	if node.Nodes.Len() == 0 {
+		return &models.ActualLRPGroups{}, nil
+	}
+
+	return parseActualLRPGroups(node, models.ActualLRPFilter{}, logger)
+}
+
+func parseActualLRPGroups(node *etcd.Node, filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, error) {
+	var groups = &models.ActualLRPGroups{}
+
+	logger.Debug("performing-parsing-actual-lrp-groups")
+	for _, indexNode := range node.Nodes {
+		group := &models.ActualLRPGroup{}
+		for _, instanceNode := range indexNode.Nodes {
+			var lrp models.ActualLRP
+			deserializeErr := models.FromJSON([]byte(instanceNode.Value), &lrp)
+			if deserializeErr != nil {
+				logger.Error("failed-parsing-actual-lrp-groups", deserializeErr)
+				return &models.ActualLRPGroups{}, fmt.Errorf("cannot parse lrp JSON for key %s: %s", instanceNode.Key, deserializeErr.Error())
+			}
+			if filter.Domain != "" && lrp.GetDomain() != filter.Domain {
+				continue
+			}
+			if filter.CellID != "" && lrp.GetCellId() != filter.CellID {
+				continue
+			}
+
+			if isInstanceActualLRPNode(instanceNode) {
+				group.Instance = &lrp
+			}
+
+			if isEvacuatingActualLRPNode(instanceNode) {
+				group.Evacuating = &lrp
+			}
+		}
+
+		if group.Instance != nil || group.Evacuating != nil {
+			groups.ActualLrpGroups = append(groups.ActualLrpGroups, group)
+		}
+	}
+	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups.GetActualLrpGroups())})
 
 	return groups, nil
 }

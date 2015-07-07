@@ -176,4 +176,64 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 		})
 	})
+
+	Describe("ActualLRPGroupsByProcessGuid", func() {
+		Context("when there are both /instance and /evacuating LRPs", func() {
+			BeforeEach(func() {
+				testHelper.SetRawActualLRP(baseLRP)
+				testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+				testHelper.SetRawActualLRP(otherDomainLRP)
+				testHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
+				testHelper.SetRawActualLRP(otherCellIdLRP)
+			})
+
+			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
+				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(baseProcessGuid, logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
+					&models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP},
+					&models.ActualLRPGroup{Instance: nil, Evacuating: &otherIndexLRP},
+				))
+			})
+		})
+
+		Context("when there are no LRPs", func() {
+			It("returns an empty list", func() {
+				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(baseProcessGuid, logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroups).NotTo(BeNil())
+				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
+			})
+		})
+
+		Context("when the root node exists with no child nodes", func() {
+			BeforeEach(func() {
+				testHelper.SetRawActualLRP(baseLRP)
+
+				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
+				_, err := etcdClient.Delete(ActualLRPProcessDir(processGuid), true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an empty list", func() {
+				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(baseProcessGuid, logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroups).NotTo(BeNil())
+				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
+			})
+		})
+
+		Context("when there is invalid data", func() {
+			BeforeEach(func() {
+				testHelper.CreateValidActualLRP("some-guid", 0)
+				testHelper.CreateMalformedActualLRP("some-other-guid", 0)
+				testHelper.CreateValidActualLRP("some-third-guid", 0)
+			})
+
+			It("errors", func() {
+				_, err := etcdDB.ActualLRPGroupsByProcessGuid("some-other-guid", logger)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
 })
