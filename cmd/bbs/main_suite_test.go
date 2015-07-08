@@ -68,6 +68,7 @@ var _ = BeforeEach(func() {
 
 	etcdRunner.Reset()
 	etcdClient = etcdRunner.Client()
+	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", 6700+GinkgoParallelNode())
 
