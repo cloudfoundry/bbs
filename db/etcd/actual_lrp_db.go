@@ -43,10 +43,10 @@ func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Lo
 		return &models.ActualLRPGroups{}, nil
 	}
 
-	var groups = &models.ActualLRPGroups{}
+	groups := &models.ActualLRPGroups{}
+
 	groupsLock := sync.Mutex{}
 	var workErr atomic.Value
-
 	works := []func(){}
 
 	for _, node := range node.Nodes {
