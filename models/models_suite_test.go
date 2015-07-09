@@ -3,7 +3,7 @@ package models_test
 import (
 	"testing"
 
-	"github.com/cloudfoundry-incubator/runtime-schema/models"
+	"github.com/cloudfoundry-incubator/bbs/models"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

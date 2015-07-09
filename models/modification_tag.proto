@@ -5,7 +5,10 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.equal_all) = true;
 
-message Domains {
-  repeated string domains = 1;
+message ModificationTag {
+  optional string epoch = 1;
+  optional uint32 index = 2;
 }
+

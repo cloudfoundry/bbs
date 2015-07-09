@@ -7,11 +7,14 @@
 
 	It is generated from these files:
 		actual_lrp.proto
+		desired_lrp.proto
+		modification_tag.proto
+		actions.proto
+		environment_variables.proto
 
 	It has these top-level messages:
 		ActualLRPGroup
 		PortMapping
-		ModificationTag
 		ActualLRPKey
 		ActualLRPInstanceKey
 		ActualLRPNetInfo
@@ -74,29 +77,6 @@ func (m *PortMapping) GetContainerPort() uint32 {
 func (m *PortMapping) GetHostPort() uint32 {
 	if m != nil && m.HostPort != nil {
 		return *m.HostPort
-	}
-	return 0
-}
-
-type ModificationTag struct {
-	Epoch *string `protobuf:"bytes,1,opt,name=epoch" json:"epoch,omitempty"`
-	Index *uint32 `protobuf:"varint,2,opt,name=index" json:"index,omitempty"`
-}
-
-func (m *ModificationTag) Reset()         { *m = ModificationTag{} }
-func (m *ModificationTag) String() string { return proto.CompactTextString(m) }
-func (*ModificationTag) ProtoMessage()    {}
-
-func (m *ModificationTag) GetEpoch() string {
-	if m != nil && m.Epoch != nil {
-		return *m.Epoch
-	}
-	return ""
-}
-
-func (m *ModificationTag) GetIndex() uint32 {
-	if m != nil && m.Index != nil {
-		return *m.Index
 	}
 	return 0
 }
@@ -402,88 +382,6 @@ func (m *PortMapping) Unmarshal(data []byte) error {
 				}
 			}
 			m.HostPort = &v
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipActualLrp(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	return nil
-}
-func (m *ModificationTag) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Epoch", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			s := string(data[iNdEx:postIndex])
-			m.Epoch = &s
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
-			}
-			var v uint32
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				v |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Index = &v
 		default:
 			var sizeOfWire int
 			for {
@@ -1211,19 +1109,6 @@ func (m *PortMapping) Size() (n int) {
 	return n
 }
 
-func (m *ModificationTag) Size() (n int) {
-	var l int
-	_ = l
-	if m.Epoch != nil {
-		l = len(*m.Epoch)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
-	if m.Index != nil {
-		n += 1 + sovActualLrp(uint64(*m.Index))
-	}
-	return n
-}
-
 func (m *ActualLRPKey) Size() (n int) {
 	var l int
 	_ = l
@@ -1392,35 +1277,6 @@ func (m *PortMapping) MarshalTo(data []byte) (n int, err error) {
 		data[i] = 0x10
 		i++
 		i = encodeVarintActualLrp(data, i, uint64(*m.HostPort))
-	}
-	return i, nil
-}
-
-func (m *ModificationTag) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ModificationTag) MarshalTo(data []byte) (n int, err error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Epoch != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.Epoch)))
-		i += copy(data[i:], *m.Epoch)
-	}
-	if m.Index != nil {
-		data[i] = 0x10
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(*m.Index))
 	}
 	return i, nil
 }
@@ -1727,46 +1583,6 @@ func (this *PortMapping) Equal(that interface{}) bool {
 	} else if this.HostPort != nil {
 		return false
 	} else if that1.HostPort != nil {
-		return false
-	}
-	return true
-}
-func (this *ModificationTag) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ModificationTag)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if this.Epoch != nil && that1.Epoch != nil {
-		if *this.Epoch != *that1.Epoch {
-			return false
-		}
-	} else if this.Epoch != nil {
-		return false
-	} else if that1.Epoch != nil {
-		return false
-	}
-	if this.Index != nil && that1.Index != nil {
-		if *this.Index != *that1.Index {
-			return false
-		}
-	} else if this.Index != nil {
-		return false
-	} else if that1.Index != nil {
 		return false
 	}
 	return true

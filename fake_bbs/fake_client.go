@@ -54,6 +54,13 @@ type FakeClient struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
+	DesiredLRPsStub        func() ([]*models.DesiredLRP, error)
+	desiredLRPsMutex       sync.RWMutex
+	desiredLRPsArgsForCall []struct{}
+	desiredLRPsReturns struct {
+		result1 []*models.DesiredLRP
+		result2 error
+	}
 }
 
 func (fake *FakeClient) Domains() ([]string, error) {
@@ -210,6 +217,31 @@ func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *mode
 	fake.ActualLRPGroupByProcessGuidAndIndexStub = nil
 	fake.actualLRPGroupByProcessGuidAndIndexReturns = struct {
 		result1 *models.ActualLRPGroup
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) DesiredLRPs() ([]*models.DesiredLRP, error) {
+	fake.desiredLRPsMutex.Lock()
+	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct{}{})
+	fake.desiredLRPsMutex.Unlock()
+	if fake.DesiredLRPsStub != nil {
+		return fake.DesiredLRPsStub()
+	} else {
+		return fake.desiredLRPsReturns.result1, fake.desiredLRPsReturns.result2
+	}
+}
+
+func (fake *FakeClient) DesiredLRPsCallCount() int {
+	fake.desiredLRPsMutex.RLock()
+	defer fake.desiredLRPsMutex.RUnlock()
+	return len(fake.desiredLRPsArgsForCall)
+}
+
+func (fake *FakeClient) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2 error) {
+	fake.DesiredLRPsStub = nil
+	fake.desiredLRPsReturns = struct {
+		result1 []*models.DesiredLRP
 		result2 error
 	}{result1, result2}
 }

@@ -12,6 +12,7 @@ import (
 func New(db db.DB, logger lager.Logger) http.Handler {
 	domainHandler := NewDomainHandler(db, logger)
 	actualLRPHandler := NewActualLRPHandler(db, logger)
+	desiredLRPHandler := NewDesiredLRPHandler(db, logger)
 
 	actions := rata.Handlers{
 		// Domains
@@ -22,6 +23,9 @@ func New(db db.DB, logger lager.Logger) http.Handler {
 		bbs.ActualLRPGroupsRoute:                     route(actualLRPHandler.ActualLRPGroups),
 		bbs.ActualLRPGroupsByProcessGuidRoute:        route(actualLRPHandler.ActualLRPGroupsByProcessGuid),
 		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex),
+
+		// Desired LRPs
+		bbs.DesiredLRPsRoute: route(desiredLRPHandler.DesiredLRPs),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

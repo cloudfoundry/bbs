@@ -90,4 +90,3 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWr
 
 	writeProtoResponse(w, http.StatusOK, actualLRPGroup)
 }
-

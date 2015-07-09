@@ -46,4 +46,3 @@ func writeEmptyResponse(w http.ResponseWriter, statusCode int) {
 	w.Header().Set("Content-Length", "0")
 	w.WriteHeader(statusCode)
 }
-

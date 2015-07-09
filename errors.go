@@ -28,4 +28,3 @@ var (
 		Message: proto.String("the requested resource could not be found"),
 	}
 )
-

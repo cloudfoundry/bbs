@@ -82,4 +82,3 @@ func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
 
 	writeEmptyResponse(w, http.StatusNoContent)
 }
-

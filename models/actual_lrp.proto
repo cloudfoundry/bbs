@@ -1,6 +1,9 @@
+syntax = "proto2";
+
 package models;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "modification_tag.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.equal_all) = true;
@@ -13,11 +16,6 @@ message ActualLRPGroup {
 message PortMapping {
   optional uint32 container_port = 1;
   optional uint32 host_port = 2;
-}
-
-message ModificationTag {
-  optional string epoch = 1;
-  optional uint32 index = 2;
 }
 
 message ActualLRPKey {

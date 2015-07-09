@@ -51,4 +51,3 @@ var _ = BeforeEach(func() {
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	testHelper = test_helpers.NewTestHelper(etcdClient)
 })
-

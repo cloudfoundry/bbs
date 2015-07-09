@@ -36,9 +36,12 @@ const (
 type Client interface {
 	Domains() ([]string, error)
 	UpsertDomain(domain string, ttl time.Duration) error
+
 	ActualLRPGroups(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
 	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
+
+	DesiredLRPs() ([]*models.DesiredLRP, error)
 }
 
 func NewClient(url string) Client {
@@ -55,6 +58,25 @@ type client struct {
 	streamingHTTPClient *http.Client
 
 	reqGen *rata.RequestGenerator
+}
+
+func (c *client) Domains() ([]string, error) {
+	var domains models.Domains
+	err := c.doRequest(DomainsRoute, nil, nil, nil, &domains)
+	return domains.GetDomains(), err
+}
+
+func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
+	req, err := c.createRequest(UpsertDomainRoute, rata.Params{"domain": domain}, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	if ttl != 0 {
+		req.Header.Set("Cache-Control", fmt.Sprintf("max-age=%d", int(ttl.Seconds())))
+	}
+
+	return c.do(req, nil)
 }
 
 func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
@@ -84,23 +106,10 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index i
 	return &actualLRPGroup, err
 }
 
-func (c *client) Domains() ([]string, error) {
-	var domains models.Domains
-	err := c.doRequest(DomainsRoute, nil, nil, nil, &domains)
-	return domains.GetDomains(), err
-}
-
-func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
-	req, err := c.createRequest(UpsertDomainRoute, rata.Params{"domain": domain}, nil, nil)
-	if err != nil {
-		return err
-	}
-
-	if ttl != 0 {
-		req.Header.Set("Cache-Control", fmt.Sprintf("max-age=%d", int(ttl.Seconds())))
-	}
-
-	return c.do(req, nil)
+func (c *client) DesiredLRPs() ([]*models.DesiredLRP, error) {
+	var desiredLRPs models.DesiredLRPs
+	err := c.doRequest(DesiredLRPsRoute, nil, nil, nil, &desiredLRPs)
+	return desiredLRPs.GetDesiredLrps(), err
 }
 
 func (c *client) createRequest(requestName string, params rata.Params, queryParams url.Values, message proto.Message) (*http.Request, error) {

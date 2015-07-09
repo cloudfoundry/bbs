@@ -33,4 +33,3 @@ func (db *ETCDDB) fetchRecursiveRaw(key string, logger lager.Logger) (*etcd.Node
 	logger.Debug("succeeded-fetching-recursive-from-etcd", lager.Data{"num-lrps": response.Node.Nodes.Len()})
 	return response.Node, nil
 }
-

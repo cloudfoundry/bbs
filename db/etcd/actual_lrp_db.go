@@ -169,4 +169,3 @@ func isInstanceActualLRPNode(node *etcd.Node) bool {
 func isEvacuatingActualLRPNode(node *etcd.Node) bool {
 	return path.Base(node.Key) == ActualLRPEvacuatingKey
 }
-
