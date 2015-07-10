@@ -100,6 +100,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there are both /instance and /evacuating LRPs", func() {
 			BeforeEach(func() {
+				filter = models.ActualLRPFilter{}
 				testHelper.SetRawActualLRP(baseLRP)
 				testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
 				testHelper.SetRawActualLRP(otherDomainLRP)

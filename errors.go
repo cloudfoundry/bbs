@@ -13,6 +13,7 @@ const (
 	InvalidRequest         = "InvalidRequest"
 	InvalidResponse        = "InvalidResponse"
 	InvalidProtobufMessage = "InvalidProtobufMessage"
+	InvalidJSON            = "InvalidJSON"
 
 	UnknownError = "UnknownError"
 	Unauthorized = "Unauthorized"
@@ -23,13 +24,22 @@ const (
 )
 
 var (
-	ErrResourceNotFound = Error{
+	ErrResourceNotFound = &Error{
 		Type:    proto.String(ResourceNotFound),
 		Message: proto.String("the requested resource could not be found"),
 	}
 
-	ErrUnknownError = Error{
+	ErrUnknownError = &Error{
 		Type:    proto.String(UnknownError),
 		Message: proto.String("the request failed for an unknown reason"),
 	}
+
+	ErrDeserializeJSON = &Error{
+		Type:    proto.String(InvalidJSON),
+		Message: proto.String("could not deserialize JSON"),
+	}
 )
+
+func (err *Error) Equal(other *Error) bool {
+	return err.GetType() == other.GetType()
+}

@@ -1,13 +1,14 @@
 package db
 
 import (
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
 //go:generate counterfeiter . ActualLRPDB
 type ActualLRPDB interface {
-	ActualLRPGroups(models.ActualLRPFilter, lager.Logger) (*models.ActualLRPGroups, error)
-	ActualLRPGroupsByProcessGuid(string, lager.Logger) (*models.ActualLRPGroups, error)
-	ActualLRPGroupByProcessGuidAndIndex(string, int32, lager.Logger) (*models.ActualLRPGroup, error)
+	ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, *bbs.Error)
+	ActualLRPGroupsByProcessGuid(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, *bbs.Error)
+	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int32, logger lager.Logger) (*models.ActualLRPGroup, *bbs.Error)
 }

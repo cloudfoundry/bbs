@@ -19,8 +19,8 @@ var _ = Describe("DomainDB", func() {
 		Context("when the domain is not present in the DB", func() {
 			It("inserts a new domain with the requested TTL", func() {
 				domain := "my-awesome-domain"
-				err := db.UpsertDomain(domain, 5432)
-				Expect(err).NotTo(HaveOccurred())
+				bbsErr := db.UpsertDomain(domain, 5432, logger)
+				Expect(bbsErr).NotTo(HaveOccurred())
 
 				etcdEntry, err := etcdClient.Get(DomainSchemaPath(domain), false, false)
 				Expect(err).ToNot(HaveOccurred())
@@ -38,8 +38,8 @@ var _ = Describe("DomainDB", func() {
 			})
 
 			It("updates the TTL on the existing record", func() {
-				err := db.UpsertDomain(existingDomain, 1337)
-				Expect(err).NotTo(HaveOccurred())
+				bbsErr := db.UpsertDomain(existingDomain, 1337, logger)
+				Expect(bbsErr).NotTo(HaveOccurred())
 
 				etcdEntry, err := etcdClient.Get(DomainSchemaPath(existingDomain), false, false)
 				Expect(err).ToNot(HaveOccurred())
@@ -60,7 +60,7 @@ var _ = Describe("DomainDB", func() {
 			})
 
 			It("returns all the existing domains in the DB", func() {
-				domains, err := db.GetAllDomains()
+				domains, err := db.GetAllDomains(logger)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(domains.GetDomains()).To(HaveLen(2))
@@ -70,7 +70,7 @@ var _ = Describe("DomainDB", func() {
 
 		Context("when there are no domains in the DB", func() {
 			It("returns no domains", func() {
-				domains, err := db.GetAllDomains()
+				domains, err := db.GetAllDomains(logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domains.GetDomains()).To(HaveLen(0))
 			})

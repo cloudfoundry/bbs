@@ -4,33 +4,34 @@ package fakes
 import (
 	"sync"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
 type FakeDesiredLRPDB struct {
-	DesiredLRPsStub        func(models.DesiredLRPFilter, lager.Logger) (*models.DesiredLRPs, error)
+	DesiredLRPsStub        func(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *bbs.Error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
-		arg1 models.DesiredLRPFilter
-		arg2 lager.Logger
+		filter models.DesiredLRPFilter
+		logger lager.Logger
 	}
 	desiredLRPsReturns struct {
 		result1 *models.DesiredLRPs
-		result2 error
+		result2 *bbs.Error
 	}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPs(arg1 models.DesiredLRPFilter, arg2 lager.Logger) (*models.DesiredLRPs, error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *bbs.Error) {
 	fake.desiredLRPsMutex.Lock()
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
-		arg1 models.DesiredLRPFilter
-		arg2 lager.Logger
-	}{arg1, arg2})
+		filter models.DesiredLRPFilter
+		logger lager.Logger
+	}{filter, logger})
 	fake.desiredLRPsMutex.Unlock()
 	if fake.DesiredLRPsStub != nil {
-		return fake.DesiredLRPsStub(arg1, arg2)
+		return fake.DesiredLRPsStub(filter, logger)
 	} else {
 		return fake.desiredLRPsReturns.result1, fake.desiredLRPsReturns.result2
 	}
@@ -45,14 +46,14 @@ func (fake *FakeDesiredLRPDB) DesiredLRPsCallCount() int {
 func (fake *FakeDesiredLRPDB) DesiredLRPsArgsForCall(i int) (models.DesiredLRPFilter, lager.Logger) {
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
-	return fake.desiredLRPsArgsForCall[i].arg1, fake.desiredLRPsArgsForCall[i].arg2
+	return fake.desiredLRPsArgsForCall[i].filter, fake.desiredLRPsArgsForCall[i].logger
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, result2 error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, result2 *bbs.Error) {
 	fake.DesiredLRPsStub = nil
 	fake.desiredLRPsReturns = struct {
 		result1 *models.DesiredLRPs
-		result2 error
+		result2 *bbs.Error
 	}{result1, result2}
 }
 

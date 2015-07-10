@@ -20,7 +20,7 @@ func NewETCD(etcdClient *etcd.Client) *ETCDDB {
 	return &ETCDDB{etcdClient}
 }
 
-func (db *ETCDDB) fetchRecursiveRaw(key string, logger lager.Logger) (*etcd.Node, error) {
+func (db *ETCDDB) fetchRecursiveRaw(key string, logger lager.Logger) (*etcd.Node, *bbs.Error) {
 	logger.Debug("fetching-recursive-from-etcd")
 	response, err := db.client.Get(key, false, true)
 	if etcdErr, ok := err.(*etcd.EtcdError); ok && etcdErr.ErrorCode == ETCDErrKeyNotFound {

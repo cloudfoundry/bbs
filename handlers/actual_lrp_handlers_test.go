@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -177,7 +176,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupsReturns(&models.ActualLRPGroups{}, errors.New("Something went wrong"))
+				fakeActualLRPDB.ActualLRPGroupsReturns(&models.ActualLRPGroups{}, bbs.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -189,10 +188,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError).To(Equal(bbs.Error{
-					Type:    proto.String(bbs.UnknownError),
-					Message: proto.String("Something went wrong"),
-				}))
+				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
@@ -295,7 +291,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(&models.ActualLRPGroups{}, errors.New("Something went wrong"))
+				fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(&models.ActualLRPGroups{}, bbs.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -307,10 +303,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError).To(Equal(bbs.Error{
-					Type:    proto.String(bbs.UnknownError),
-					Message: proto.String("Something went wrong"),
-				}))
+				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
@@ -421,13 +414,13 @@ var _ = Describe("ActualLRP Handlers", func() {
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError).To(Equal(bbs.ErrResourceNotFound))
+				Expect(bbsError.Equal(bbs.ErrResourceNotFound)).To(BeTrue())
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, errors.New("Something went wrong"))
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, bbs.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -439,10 +432,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError).To(Equal(bbs.Error{
-					Type:    proto.String(bbs.UnknownError),
-					Message: proto.String("Something went wrong"),
-				}))
+				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})

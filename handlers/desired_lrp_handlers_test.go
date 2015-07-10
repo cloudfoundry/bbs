@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager"
@@ -113,7 +111,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPsReturns(&models.DesiredLRPs{}, errors.New("Something went wrong"))
+				fakeDesiredLRPDB.DesiredLRPsReturns(&models.DesiredLRPs{}, bbs.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -125,10 +123,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError).To(Equal(bbs.Error{
-					Type:    proto.String(bbs.UnknownError),
-					Message: proto.String("Something went wrong"),
-				}))
+				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})

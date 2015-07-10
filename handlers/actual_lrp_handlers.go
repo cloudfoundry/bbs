@@ -76,14 +76,13 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWr
 		return
 	}
 
-	actualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(processGuid, int32(idx), h.logger)
-	if err != nil {
-		logger.Error("failed-to-fetch-actual-lrp-group-by-process-guid-and-index", err)
-		switch err {
-		case bbs.ErrResourceNotFound:
-			writeNotFoundResponse(w, err)
-		default:
-			writeUnknownErrorResponse(w, err)
+	actualLRPGroup, bbsErr := h.db.ActualLRPGroupByProcessGuidAndIndex(processGuid, int32(idx), h.logger)
+	if bbsErr != nil {
+		logger.Error("failed-to-fetch-actual-lrp-group-by-process-guid-and-index", bbsErr)
+		if bbsErr.Equal(bbs.ErrResourceNotFound) {
+			writeNotFoundResponse(w, bbsErr)
+		} else {
+			writeUnknownErrorResponse(w, bbsErr)
 		}
 		return
 	}

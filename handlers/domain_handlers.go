@@ -32,9 +32,8 @@ func NewDomainHandler(db db.DomainDB, logger lager.Logger) *DomainHandler {
 func (h *DomainHandler) GetAll(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("get-all")
 
-	domains, err := h.db.GetAllDomains()
+	domains, err := h.db.GetAllDomains(logger)
 	if err != nil {
-		logger.Error("failed-to-fetch-domains", err)
 		writeUnknownErrorResponse(w, err)
 		return
 	}
@@ -73,9 +72,8 @@ func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	err := h.db.UpsertDomain(domain, ttl)
+	err := h.db.UpsertDomain(domain, ttl, logger)
 	if err != nil {
-		logger.Error("failed-to-upsert-domain", err)
 		writeUnknownErrorResponse(w, err)
 		return
 	}

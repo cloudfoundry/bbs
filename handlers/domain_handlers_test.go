@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -11,7 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager"
@@ -56,7 +54,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("call the DB to upsert the domain", func() {
 				Expect(fakeDomainDB.UpsertDomainCallCount()).To(Equal(1))
-				domainUpserted, ttlUpserted := fakeDomainDB.UpsertDomainArgsForCall(0)
+				domainUpserted, ttlUpserted, _ := fakeDomainDB.UpsertDomainArgsForCall(0)
 				Expect(domainUpserted).To(Equal(domain))
 				Expect(ttlUpserted).To(Equal(ttl))
 			})
@@ -68,7 +66,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDomainDB.UpsertDomainReturns(errors.New("Something went wrong"))
+				fakeDomainDB.UpsertDomainReturns(bbs.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -80,10 +78,7 @@ var _ = Describe("Domain Handlers", func() {
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError).To(Equal(bbs.Error{
-					Type:    proto.String(bbs.UnknownError),
-					Message: proto.String("Something went wrong"),
-				}))
+				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
@@ -141,7 +136,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, errors.New("Something went wrong"))
+				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, bbs.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -153,10 +148,7 @@ var _ = Describe("Domain Handlers", func() {
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError).To(Equal(bbs.Error{
-					Type:    proto.String(bbs.UnknownError),
-					Message: proto.String("Something went wrong"),
-				}))
+				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
