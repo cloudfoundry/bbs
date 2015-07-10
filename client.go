@@ -41,7 +41,7 @@ type Client interface {
 	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
 	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
 
-	DesiredLRPs() ([]*models.DesiredLRP, error)
+	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 }
 
 func NewClient(url string) Client {
@@ -106,9 +106,13 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index i
 	return &actualLRPGroup, err
 }
 
-func (c *client) DesiredLRPs() ([]*models.DesiredLRP, error) {
+func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	var desiredLRPs models.DesiredLRPs
-	err := c.doRequest(DesiredLRPsRoute, nil, nil, nil, &desiredLRPs)
+	query := url.Values{}
+	if filter.Domain != "" {
+		query.Set("domain", filter.Domain)
+	}
+	err := c.doRequest(DesiredLRPsRoute, nil, query, nil, &desiredLRPs)
 	return desiredLRPs.GetDesiredLrps(), err
 }
 

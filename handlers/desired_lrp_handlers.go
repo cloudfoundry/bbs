@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -20,9 +21,12 @@ func NewDesiredLRPHandler(db db.DesiredLRPDB, logger lager.Logger) *DesiredLRPHa
 }
 
 func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("desired-lrp-groups", lager.Data{})
+	domain := req.FormValue("domain")
+	logger := h.logger.Session("desired-lrp-groups", lager.Data{
+		"domain": domain,
+	})
 
-	desiredLRPs, err := h.db.DesiredLRPs(h.logger)
+	desiredLRPs, err := h.db.DesiredLRPs(models.DesiredLRPFilter{Domain: domain}, h.logger)
 	if err != nil {
 		logger.Error("failed-to-fetch-desired-lrps", err)
 		writeUnknownErrorResponse(w, err)

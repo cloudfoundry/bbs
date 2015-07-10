@@ -63,6 +63,9 @@ var _ = Describe("ActualLRP API", func() {
 	)
 
 	BeforeEach(func() {
+		expectedActualLRPGroups = []*models.ActualLRPGroup{}
+		actualActualLRPGroups = []*models.ActualLRPGroup{}
+
 		baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
 

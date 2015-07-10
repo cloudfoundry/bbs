@@ -10,10 +10,11 @@ import (
 )
 
 type FakeDesiredLRPDB struct {
-	DesiredLRPsStub        func(lager.Logger) (*models.DesiredLRPs, error)
+	DesiredLRPsStub        func(models.DesiredLRPFilter, lager.Logger) (*models.DesiredLRPs, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
-		arg1 lager.Logger
+		arg1 models.DesiredLRPFilter
+		arg2 lager.Logger
 	}
 	desiredLRPsReturns struct {
 		result1 *models.DesiredLRPs
@@ -21,14 +22,15 @@ type FakeDesiredLRPDB struct {
 	}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPs(arg1 lager.Logger) (*models.DesiredLRPs, error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPs(arg1 models.DesiredLRPFilter, arg2 lager.Logger) (*models.DesiredLRPs, error) {
 	fake.desiredLRPsMutex.Lock()
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
-		arg1 lager.Logger
-	}{arg1})
+		arg1 models.DesiredLRPFilter
+		arg2 lager.Logger
+	}{arg1, arg2})
 	fake.desiredLRPsMutex.Unlock()
 	if fake.DesiredLRPsStub != nil {
-		return fake.DesiredLRPsStub(arg1)
+		return fake.DesiredLRPsStub(arg1, arg2)
 	} else {
 		return fake.desiredLRPsReturns.result1, fake.desiredLRPsReturns.result2
 	}
@@ -40,10 +42,10 @@ func (fake *FakeDesiredLRPDB) DesiredLRPsCallCount() int {
 	return len(fake.desiredLRPsArgsForCall)
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPsArgsForCall(i int) lager.Logger {
+func (fake *FakeDesiredLRPDB) DesiredLRPsArgsForCall(i int) (models.DesiredLRPFilter, lager.Logger) {
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
-	return fake.desiredLRPsArgsForCall[i].arg1
+	return fake.desiredLRPsArgsForCall[i].arg1, fake.desiredLRPsArgsForCall[i].arg2
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, result2 error) {

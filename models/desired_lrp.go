@@ -7,6 +7,10 @@ import (
 
 var processGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
+type DesiredLRPFilter struct {
+	Domain string
+}
+
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
 

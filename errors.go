@@ -27,4 +27,9 @@ var (
 		Type:    proto.String(ResourceNotFound),
 		Message: proto.String("the requested resource could not be found"),
 	}
+
+	ErrUnknownError = Error{
+		Type:    proto.String(UnknownError),
+		Message: proto.String("the request failed for an unknown reason"),
+	}
 )

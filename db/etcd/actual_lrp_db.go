@@ -36,8 +36,11 @@ func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
 
 func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, error) {
 	node, err := db.fetchRecursiveRaw(ActualLRPSchemaRoot, logger)
-	if err != nil {
+	if err == bbs.ErrResourceNotFound {
 		return &models.ActualLRPGroups{}, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 	if node.Nodes.Len() == 0 {
 		return &models.ActualLRPGroups{}, nil
@@ -83,8 +86,11 @@ func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Lo
 
 func (db *ETCDDB) ActualLRPGroupsByProcessGuid(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, error) {
 	node, err := db.fetchRecursiveRaw(ActualLRPProcessDir(processGuid), logger)
-	if err != nil {
+	if err == bbs.ErrResourceNotFound {
 		return &models.ActualLRPGroups{}, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 	if node.Nodes.Len() == 0 {
 		return &models.ActualLRPGroups{}, nil

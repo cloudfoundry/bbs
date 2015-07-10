@@ -289,6 +289,9 @@ func Serial(actions ...*Action) *Action {
 }
 
 func UnwrapAction(action *Action) ActionInterface {
+	if action == nil {
+		return nil
+	}
 	return action.GetValue().(ActionInterface)
 }
 

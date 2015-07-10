@@ -176,6 +176,21 @@ var _ = Describe("ActualLRPDB", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
+		Context("when etcd is not there", func() {
+			BeforeEach(func() {
+				etcdRunner.Stop()
+			})
+
+			AfterEach(func() {
+				etcdRunner.Start()
+			})
+
+			It("errors", func() {
+				_, err := etcdDB.ActualLRPGroups(filter, logger)
+				Expect(err).To(HaveOccurred())
+			})
+		})
 	})
 
 	Describe("ActualLRPGroupsByProcessGuid", func() {
@@ -229,6 +244,21 @@ var _ = Describe("ActualLRPDB", func() {
 				testHelper.CreateValidActualLRP("some-guid", 0)
 				testHelper.CreateMalformedActualLRP("some-other-guid", 0)
 				testHelper.CreateValidActualLRP("some-third-guid", 0)
+			})
+
+			It("errors", func() {
+				_, err := etcdDB.ActualLRPGroupsByProcessGuid("some-other-guid", logger)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when etcd is not there", func() {
+			BeforeEach(func() {
+				etcdRunner.Stop()
+			})
+
+			AfterEach(func() {
+				etcdRunner.Start()
 			})
 
 			It("errors", func() {

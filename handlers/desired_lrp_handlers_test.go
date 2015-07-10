@@ -69,6 +69,28 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response).To(Equal(desiredLRPs))
 			})
+
+			Context("and no filter is provided", func() {
+				It("call the DB with no filters to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
+					filter, _ := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					Expect(filter).To(Equal(models.DesiredLRPFilter{}))
+				})
+			})
+
+			Context("and filtering by domain", func() {
+				BeforeEach(func() {
+					var err error
+					request, err = http.NewRequest("", "http://example.com?domain=domain-1", nil)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("call the DB with the domain filter to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
+					filter, _ := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					Expect(filter.Domain).To(Equal("domain-1"))
+				})
+			})
 		})
 
 		Context("when the DB returns no desired lrp groups", func() {

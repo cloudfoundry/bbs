@@ -6,6 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"
@@ -22,10 +23,13 @@ func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 	return path.Join(DesiredLRPSchemaRoot, processGuid)
 }
 
-func (db *ETCDDB) DesiredLRPs(logger lager.Logger) (*models.DesiredLRPs, error) {
+func (db *ETCDDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, error) {
 	root, err := db.fetchRecursiveRaw(DesiredLRPSchemaRoot, logger)
-	if err != nil {
+	if err == bbs.ErrResourceNotFound {
 		return &models.DesiredLRPs{}, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 	if root.Nodes.Len() == 0 {
 		return &models.DesiredLRPs{}, nil
@@ -49,9 +53,11 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger) (*models.DesiredLRPs, error) 
 				return
 			}
 
-			lrpsLock.Lock()
-			desiredLRPs.DesiredLrps = append(desiredLRPs.DesiredLrps, &lrp)
-			lrpsLock.Unlock()
+			if filter.Domain == "" || lrp.GetDomain() == filter.Domain {
+				lrpsLock.Lock()
+				desiredLRPs.DesiredLrps = append(desiredLRPs.DesiredLrps, &lrp)
+				lrpsLock.Unlock()
+			}
 		})
 	}
 

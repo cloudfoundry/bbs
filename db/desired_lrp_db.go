@@ -7,5 +7,5 @@ import (
 
 //go:generate counterfeiter . DesiredLRPDB
 type DesiredLRPDB interface {
-	DesiredLRPs(lager.Logger) (*models.DesiredLRPs, error)
+	DesiredLRPs(models.DesiredLRPFilter, lager.Logger) (*models.DesiredLRPs, error)
 }
