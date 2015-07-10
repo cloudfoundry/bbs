@@ -84,4 +84,24 @@ var _ = Describe("DesiredLRP API", func() {
 			})
 		})
 	})
+
+	Describe("GET /v1/desired_lrps/:process_guid", func() {
+		var (
+			desiredLRP         *models.DesiredLRP
+			expectedDesiredLRP *models.DesiredLRP
+		)
+
+		JustBeforeEach(func() {
+			expectedDesiredLRP = desiredLRPs["domain-1"][0]
+			desiredLRP, getErr = client.DesiredLRPByProcessGuid(expectedDesiredLRP.GetProcessGuid())
+		})
+
+		It("responds without error", func() {
+			Expect(getErr).NotTo(HaveOccurred())
+		})
+
+		It("returns all desired lrps from the bbs", func() {
+			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
+		})
+	})
 })

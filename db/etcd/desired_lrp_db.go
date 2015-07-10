@@ -77,3 +77,19 @@ func (db *ETCDDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logge
 
 	return &desiredLRPs, nil
 }
+
+func (db *ETCDDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *bbs.Error) {
+	node, bbsErr := db.fetchRaw(DesiredLRPSchemaPathByProcessGuid(processGuid), logger)
+	if bbsErr != nil {
+		return nil, bbsErr
+	}
+
+	var lrp models.DesiredLRP
+	deserializeErr := models.FromJSON([]byte(node.Value), &lrp)
+	if deserializeErr != nil {
+		logger.Error("failed-parsing-desired-lrp", deserializeErr)
+		return nil, bbs.ErrDeserializeJSON
+	}
+
+	return &lrp, nil
+}

@@ -25,7 +25,8 @@ func New(db db.DB, logger lager.Logger) http.Handler {
 		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex),
 
 		// Desired LRPs
-		bbs.DesiredLRPsRoute: route(desiredLRPHandler.DesiredLRPs),
+		bbs.DesiredLRPsRoute:             route(desiredLRPHandler.DesiredLRPs),
+		bbs.DesiredLRPByProcessGuidRoute: route(desiredLRPHandler.DesiredLRPByProcessGuid),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

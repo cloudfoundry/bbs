@@ -3,11 +3,13 @@ package handlers_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager"
@@ -115,6 +117,83 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 
 			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			})
+
+			It("provides relevant error information", func() {
+				var bbsError bbs.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+			})
+		})
+	})
+
+	Describe("DesiredLRPByProcessGuid", func() {
+		var request *http.Request
+		var processGuid = "process-guid"
+
+		BeforeEach(func() {
+			request = newTestRequest("")
+			request.URL.RawQuery = url.Values{":process_guid": []string{processGuid}}.Encode()
+		})
+
+		JustBeforeEach(func() {
+			handler.DesiredLRPByProcessGuid(responseRecorder, request)
+		})
+
+		Context("when reading desired lrp from DB succeeds", func() {
+			var desiredLRP *models.DesiredLRP
+
+			BeforeEach(func() {
+				desiredLRP = &models.DesiredLRP{ProcessGuid: proto.String(processGuid)}
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
+			})
+
+			It("responds with 200 Status OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			It("fetches desired lrp by process guid", func() {
+				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+				actualProcessGuid, _ := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+				Expect(actualProcessGuid).To(Equal(processGuid))
+			})
+
+			It("returns a the desired lrp", func() {
+				response := &models.DesiredLRP{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response).To(Equal(desiredLRP))
+			})
+		})
+
+		Context("when the DB returns no desired lrp", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, bbs.ErrResourceNotFound)
+			})
+
+			It("responds with 404", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+			})
+
+			It("returns a resource not found error", func() {
+				var bbsError bbs.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError.Equal(bbs.ErrResourceNotFound)).To(BeTrue())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, bbs.ErrUnknownError)
+			})
+
+			It("responds with a 500", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
 			})
 

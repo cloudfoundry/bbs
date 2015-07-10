@@ -9,4 +9,5 @@ import (
 //go:generate counterfeiter . DesiredLRPDB
 type DesiredLRPDB interface {
 	DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *bbs.Error)
+	DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *bbs.Error)
 }

@@ -42,6 +42,7 @@ type Client interface {
 	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
 
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
 }
 
 func NewClient(url string) Client {
@@ -114,6 +115,14 @@ func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredL
 	}
 	err := c.doRequest(DesiredLRPsRoute, nil, query, nil, &desiredLRPs)
 	return desiredLRPs.GetDesiredLrps(), err
+}
+
+func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {
+	var desiredLRP models.DesiredLRP
+	err := c.doRequest(DesiredLRPByProcessGuidRoute,
+		rata.Params{"process_guid": processGuid},
+		nil, nil, &desiredLRP)
+	return &desiredLRP, err
 }
 
 func (c *client) createRequest(requestName string, params rata.Params, queryParams url.Values, message proto.Message) (*http.Request, error) {

@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
@@ -22,7 +23,7 @@ func NewDesiredLRPHandler(db db.DesiredLRPDB, logger lager.Logger) *DesiredLRPHa
 
 func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request) {
 	domain := req.FormValue("domain")
-	logger := h.logger.Session("desired-lrp-groups", lager.Data{
+	logger := h.logger.Session("desired-lrps", lager.Data{
 		"domain": domain,
 	})
 
@@ -34,4 +35,24 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 	}
 
 	writeProtoResponse(w, http.StatusOK, desiredLRPs)
+}
+
+func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *http.Request) {
+	processGuid := req.FormValue(":process_guid")
+	logger := h.logger.Session("desired-lrps-process-guid", lager.Data{
+		"process_guid": processGuid,
+	})
+
+	desiredLRP, err := h.db.DesiredLRPByProcessGuid(processGuid, h.logger)
+	if err == bbs.ErrResourceNotFound {
+		writeNotFoundResponse(w, err)
+		return
+	}
+	if err != nil {
+		logger.Error("failed-to-fetch-desired-lrp", err)
+		writeUnknownErrorResponse(w, err)
+		return
+	}
+
+	writeProtoResponse(w, http.StatusOK, desiredLRP)
 }

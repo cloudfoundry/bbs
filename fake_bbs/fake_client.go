@@ -63,6 +63,15 @@ type FakeClient struct {
 		result1 []*models.DesiredLRP
 		result2 error
 	}
+	DesiredLRPByProcessGuidStub        func(processGuid string) (*models.DesiredLRP, error)
+	desiredLRPByProcessGuidMutex       sync.RWMutex
+	desiredLRPByProcessGuidArgsForCall []struct {
+		processGuid string
+	}
+	desiredLRPByProcessGuidReturns struct {
+		result1 *models.DesiredLRP
+		result2 error
+	}
 }
 
 func (fake *FakeClient) Domains() ([]string, error) {
@@ -252,6 +261,39 @@ func (fake *FakeClient) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2
 	fake.DesiredLRPsStub = nil
 	fake.desiredLRPsReturns = struct {
 		result1 []*models.DesiredLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {
+	fake.desiredLRPByProcessGuidMutex.Lock()
+	fake.desiredLRPByProcessGuidArgsForCall = append(fake.desiredLRPByProcessGuidArgsForCall, struct {
+		processGuid string
+	}{processGuid})
+	fake.desiredLRPByProcessGuidMutex.Unlock()
+	if fake.DesiredLRPByProcessGuidStub != nil {
+		return fake.DesiredLRPByProcessGuidStub(processGuid)
+	} else {
+		return fake.desiredLRPByProcessGuidReturns.result1, fake.desiredLRPByProcessGuidReturns.result2
+	}
+}
+
+func (fake *FakeClient) DesiredLRPByProcessGuidCallCount() int {
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	return len(fake.desiredLRPByProcessGuidArgsForCall)
+}
+
+func (fake *FakeClient) DesiredLRPByProcessGuidArgsForCall(i int) string {
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	return fake.desiredLRPByProcessGuidArgsForCall[i].processGuid
+}
+
+func (fake *FakeClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 error) {
+	fake.DesiredLRPByProcessGuidStub = nil
+	fake.desiredLRPByProcessGuidReturns = struct {
+		result1 *models.DesiredLRP
 		result2 error
 	}{result1, result2}
 }

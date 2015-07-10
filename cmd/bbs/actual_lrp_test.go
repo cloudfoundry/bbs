@@ -164,4 +164,24 @@ var _ = Describe("ActualLRP API", func() {
 			Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 		})
 	})
+
+	Describe("GET /v1/actual_lrps_groups/:process_guid/:index", func() {
+		var (
+			actualLRPGroup         *models.ActualLRPGroup
+			expectedActualLRPGroup *models.ActualLRPGroup
+		)
+
+		JustBeforeEach(func() {
+			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex)
+		})
+
+		It("responds without error", func() {
+			Expect(getErr).NotTo(HaveOccurred())
+		})
+
+		It("returns all actual lrps from the bbs", func() {
+			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP}
+			Expect(actualActualLRPGroups).To(Equal(expectedActualLRPGroups))
+		})
+	})
 })

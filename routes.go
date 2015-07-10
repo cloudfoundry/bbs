@@ -13,7 +13,8 @@ const (
 	ActualLRPGroupByProcessGuidAndIndexRoute = "ActualLRPGroupsByProcessGuidAndIndex"
 
 	// Desired LRPs
-	DesiredLRPsRoute = "DesiredLRPs"
+	DesiredLRPsRoute             = "DesiredLRPs"
+	DesiredLRPByProcessGuidRoute = "DesiredLRPByProcessGuid"
 )
 
 var Routes = rata.Routes{
@@ -28,4 +29,5 @@ var Routes = rata.Routes{
 
 	// Desired LRPs
 	{Path: "/v1/desired_lrps", Method: "GET", Name: DesiredLRPsRoute},
+	{Path: "/v1/desired_lrps/:process_guid", Method: "GET", Name: DesiredLRPByProcessGuidRoute},
 }

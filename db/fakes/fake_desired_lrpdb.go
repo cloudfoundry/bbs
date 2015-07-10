@@ -21,6 +21,16 @@ type FakeDesiredLRPDB struct {
 		result1 *models.DesiredLRPs
 		result2 *bbs.Error
 	}
+	DesiredLRPByProcessGuidStub        func(processGuid string, logger lager.Logger) (*models.DesiredLRP, *bbs.Error)
+	desiredLRPByProcessGuidMutex       sync.RWMutex
+	desiredLRPByProcessGuidArgsForCall []struct {
+		processGuid string
+		logger      lager.Logger
+	}
+	desiredLRPByProcessGuidReturns struct {
+		result1 *models.DesiredLRP
+		result2 *bbs.Error
+	}
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *bbs.Error) {
@@ -53,6 +63,40 @@ func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, re
 	fake.DesiredLRPsStub = nil
 	fake.desiredLRPsReturns = struct {
 		result1 *models.DesiredLRPs
+		result2 *bbs.Error
+	}{result1, result2}
+}
+
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *bbs.Error) {
+	fake.desiredLRPByProcessGuidMutex.Lock()
+	fake.desiredLRPByProcessGuidArgsForCall = append(fake.desiredLRPByProcessGuidArgsForCall, struct {
+		processGuid string
+		logger      lager.Logger
+	}{processGuid, logger})
+	fake.desiredLRPByProcessGuidMutex.Unlock()
+	if fake.DesiredLRPByProcessGuidStub != nil {
+		return fake.DesiredLRPByProcessGuidStub(processGuid, logger)
+	} else {
+		return fake.desiredLRPByProcessGuidReturns.result1, fake.desiredLRPByProcessGuidReturns.result2
+	}
+}
+
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidCallCount() int {
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	return len(fake.desiredLRPByProcessGuidArgsForCall)
+}
+
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidArgsForCall(i int) (string, lager.Logger) {
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	return fake.desiredLRPByProcessGuidArgsForCall[i].processGuid, fake.desiredLRPByProcessGuidArgsForCall[i].logger
+}
+
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 *bbs.Error) {
+	fake.DesiredLRPByProcessGuidStub = nil
+	fake.desiredLRPByProcessGuidReturns = struct {
+		result1 *models.DesiredLRP
 		result2 *bbs.Error
 	}{result1, result2}
 }
