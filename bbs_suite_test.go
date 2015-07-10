@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestBbs(t *testing.T) {
+func TestBBS(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Bbs Suite")
+	RunSpecs(t, "BBS Suite")
 }

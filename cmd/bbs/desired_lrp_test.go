@@ -32,6 +32,7 @@ var _ = Describe("DesiredLRP API", func() {
 	)
 
 	BeforeEach(func() {
+		filter = models.DesiredLRPFilter{}
 		expectedDesiredLRPs = []*models.DesiredLRP{}
 		actualDesiredLRPs = []*models.DesiredLRP{}
 		desiredLRPs = testHelper.CreateDesiredLRPsInDomains(map[string]int{

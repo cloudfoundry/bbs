@@ -24,9 +24,11 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when there are desired LRPs", func() {
 			var expectedDesiredLRPs []*models.DesiredLRP
+
 			BeforeEach(func() {
 				filter = models.DesiredLRPFilter{}
 				expectedDesiredLRPs = []*models.DesiredLRP{}
+
 				desiredLRPsInDomains = testHelper.CreateDesiredLRPsInDomains(map[string]int{
 					"domain-1": 1,
 					"domain-2": 2,

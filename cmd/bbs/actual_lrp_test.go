@@ -63,6 +63,7 @@ var _ = Describe("ActualLRP API", func() {
 	)
 
 	BeforeEach(func() {
+		filter = models.ActualLRPFilter{}
 		expectedActualLRPGroups = []*models.ActualLRPGroup{}
 		actualActualLRPGroups = []*models.ActualLRPGroup{}
 
