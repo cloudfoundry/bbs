@@ -67,24 +67,27 @@ var _ = Describe("Actions", func() {
 					"artifact": "mouse",
 					"from": "web_location",
 					"to": "local_location",
-					"cache_key": "elephant"
+					"cache_key": "elephant",
+					"user": "someone"
 			}`,
 			models.WrapAction(&models.DownloadAction{
 				Artifact: proto.String("mouse"),
 				From:     proto.String("web_location"),
 				To:       proto.String("local_location"),
 				CacheKey: proto.String("elephant"),
+				User:     proto.String("someone"),
 			}),
 		)
 
 		Describe("Validate", func() {
 			var downloadAction models.DownloadAction
 
-			Context("when the action has 'from' and 'to' specified", func() {
+			Context("when the action has 'from', 'to', and 'user' specified", func() {
 				It("is valid", func() {
 					downloadAction = models.DownloadAction{
 						From: proto.String("web_location"),
 						To:   proto.String("local_location"),
+						User: proto.String("someone"),
 					}
 
 					err := downloadAction.Validate()
@@ -105,6 +108,13 @@ var _ = Describe("Actions", func() {
 						From: proto.String("web_location"),
 					},
 				},
+				{
+					"user",
+					models.DownloadAction{
+						From: proto.String("web_location"),
+						To:   proto.String("local_location"),
+					},
+				},
 			} {
 				testValidatorErrorCase(testCase)
 			}
@@ -116,23 +126,26 @@ var _ = Describe("Actions", func() {
 			`{
 					"artifact": "mouse",
 					"from": "local_location",
-					"to": "web_location"
+					"to": "web_location",
+					"user": "someone"
 			}`,
 			models.WrapAction(&models.UploadAction{
 				Artifact: proto.String("mouse"),
 				From:     proto.String("local_location"),
 				To:       proto.String("web_location"),
+				User:     proto.String("someone"),
 			}),
 		)
 
 		Describe("Validate", func() {
 			var uploadAction models.UploadAction
 
-			Context("when the action has 'from' and 'to' specified", func() {
+			Context("when the action has 'from', 'to', and 'user' specified", func() {
 				It("is valid", func() {
 					uploadAction = models.UploadAction{
 						To:   proto.String("web_location"),
 						From: proto.String("local_location"),
+						User: proto.String("someone"),
 					}
 
 					err := uploadAction.Validate()
@@ -150,6 +163,13 @@ var _ = Describe("Actions", func() {
 				{
 					"to",
 					models.UploadAction{
+						From: proto.String("local_location"),
+					},
+				},
+				{
+					"user",
+					models.UploadAction{
+						To:   proto.String("web_location"),
 						From: proto.String("local_location"),
 					},
 				},
@@ -261,6 +281,7 @@ var _ = Describe("Actions", func() {
 							UploadAction: &models.UploadAction{
 								From: proto.String("local_location"),
 								To:   proto.String("web_location"),
+								User: proto.String("someone"),
 							},
 						},
 						Timeout: proto.Int64(int64(time.Second)),
@@ -283,7 +304,8 @@ var _ = Describe("Actions", func() {
 					models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								To: proto.String("web_location"),
+								To:   proto.String("web_location"),
+								User: proto.String("someone"),
 							},
 						},
 						Timeout: proto.Int64(int64(time.Second)),
@@ -296,6 +318,7 @@ var _ = Describe("Actions", func() {
 							UploadAction: &models.UploadAction{
 								From: proto.String("local_location"),
 								To:   proto.String("web_location"),
+								User: proto.String("someone"),
 							},
 						},
 					},
@@ -339,6 +362,7 @@ var _ = Describe("Actions", func() {
 							UploadAction: &models.UploadAction{
 								From: proto.String("local_location"),
 								To:   proto.String("web_location"),
+								User: proto.String("someone"),
 							},
 						},
 					}
@@ -377,7 +401,8 @@ var _ = Describe("Actions", func() {
 							"download": {
 								"cache_key": "elephant",
 								"to": "local_location",
-								"from": "web_location"
+								"from": "web_location",
+								"user": "someone"
 							}
 						},
 						{
@@ -395,6 +420,7 @@ var _ = Describe("Actions", func() {
 						From:     proto.String("web_location"),
 						To:       proto.String("local_location"),
 						CacheKey: proto.String("elephant"),
+						User:     proto.String("someone"),
 					},
 				},
 				&models.Action{
@@ -432,6 +458,7 @@ var _ = Describe("Actions", func() {
 								UploadAction: &models.UploadAction{
 									From: proto.String("local_location"),
 									To:   proto.String("web_location"),
+									User: proto.String("someone"),
 								},
 							},
 						},
@@ -479,7 +506,8 @@ var _ = Describe("Actions", func() {
 							"download": {
 								"cache_key": "elephant",
 								"to": "local_location",
-								"from": "web_location"
+								"from": "web_location",
+								"user": "someone"
 							}
 						},
 						{
@@ -497,6 +525,7 @@ var _ = Describe("Actions", func() {
 						From:     proto.String("web_location"),
 						To:       proto.String("local_location"),
 						CacheKey: proto.String("elephant"),
+						User:     proto.String("someone"),
 					},
 				},
 				&models.Action{
@@ -534,6 +563,7 @@ var _ = Describe("Actions", func() {
 								UploadAction: &models.UploadAction{
 									From: proto.String("local_location"),
 									To:   proto.String("web_location"),
+									User: proto.String("someone"),
 								},
 							},
 						},
@@ -618,6 +648,7 @@ var _ = Describe("Actions", func() {
 							UploadAction: &models.UploadAction{
 								From: proto.String("local_location"),
 								To:   proto.String("web_location"),
+								User: proto.String("someone"),
 							},
 						},
 					}
@@ -656,7 +687,8 @@ var _ = Describe("Actions", func() {
 							"download": {
 								"cache_key": "elephant",
 								"to": "local_location",
-								"from": "web_location"
+								"from": "web_location",
+								"user": "someone"
 							}
 						},
 						{
@@ -674,6 +706,7 @@ var _ = Describe("Actions", func() {
 						From:     proto.String("web_location"),
 						To:       proto.String("local_location"),
 						CacheKey: proto.String("elephant"),
+						User:     proto.String("someone"),
 					},
 				},
 				&models.Action{
@@ -707,6 +740,7 @@ var _ = Describe("Actions", func() {
 								UploadAction: &models.UploadAction{
 									From: proto.String("local_location"),
 									To:   proto.String("web_location"),
+									User: proto.String("someone"),
 								},
 							},
 						},

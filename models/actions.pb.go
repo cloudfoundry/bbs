@@ -101,6 +101,7 @@ type DownloadAction struct {
 	To        *string `protobuf:"bytes,3,opt,name=to" json:"to,omitempty"`
 	CacheKey  *string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key,omitempty"`
 	LogSource *string `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
+	User      *string `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
 }
 
 func (m *DownloadAction) Reset()         { *m = DownloadAction{} }
@@ -142,11 +143,19 @@ func (m *DownloadAction) GetLogSource() string {
 	return ""
 }
 
+func (m *DownloadAction) GetUser() string {
+	if m != nil && m.User != nil {
+		return *m.User
+	}
+	return ""
+}
+
 type UploadAction struct {
 	Artifact  *string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
 	From      *string `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
 	To        *string `protobuf:"bytes,3,opt,name=to" json:"to,omitempty"`
 	LogSource *string `protobuf:"bytes,4,opt,name=log_source" json:"log_source,omitempty"`
+	User      *string `protobuf:"bytes,5,opt,name=user" json:"user,omitempty"`
 }
 
 func (m *UploadAction) Reset()         { *m = UploadAction{} }
@@ -177,6 +186,13 @@ func (m *UploadAction) GetTo() string {
 func (m *UploadAction) GetLogSource() string {
 	if m != nil && m.LogSource != nil {
 		return *m.LogSource
+	}
+	return ""
+}
+
+func (m *UploadAction) GetUser() string {
+	if m != nil && m.User != nil {
+		return *m.User
 	}
 	return ""
 }
@@ -850,6 +866,29 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			s := string(data[iNdEx:postIndex])
 			m.LogSource = &s
 			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			s := string(data[iNdEx:postIndex])
+			m.User = &s
+			iNdEx = postIndex
 		default:
 			var sizeOfWire int
 			for {
@@ -983,6 +1022,29 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			}
 			s := string(data[iNdEx:postIndex])
 			m.LogSource = &s
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			s := string(data[iNdEx:postIndex])
+			m.User = &s
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -2111,6 +2173,10 @@ func (m *DownloadAction) Size() (n int) {
 		l = len(*m.LogSource)
 		n += 1 + l + sovActions(uint64(l))
 	}
+	if m.User != nil {
+		l = len(*m.User)
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2131,6 +2197,10 @@ func (m *UploadAction) Size() (n int) {
 	}
 	if m.LogSource != nil {
 		l = len(*m.LogSource)
+		n += 1 + l + sovActions(uint64(l))
+	}
+	if m.User != nil {
+		l = len(*m.User)
 		n += 1 + l + sovActions(uint64(l))
 	}
 	return n
@@ -2454,6 +2524,12 @@ func (m *DownloadAction) MarshalTo(data []byte) (n int, err error) {
 		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
 		i += copy(data[i:], *m.LogSource)
 	}
+	if m.User != nil {
+		data[i] = 0x32
+		i++
+		i = encodeVarintActions(data, i, uint64(len(*m.User)))
+		i += copy(data[i:], *m.User)
+	}
 	return i, nil
 }
 
@@ -2495,6 +2571,12 @@ func (m *UploadAction) MarshalTo(data []byte) (n int, err error) {
 		i++
 		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
 		i += copy(data[i:], *m.LogSource)
+	}
+	if m.User != nil {
+		data[i] = 0x2a
+		i++
+		i = encodeVarintActions(data, i, uint64(len(*m.User)))
+		i += copy(data[i:], *m.User)
 	}
 	return i, nil
 }
@@ -2975,6 +3057,15 @@ func (this *DownloadAction) Equal(that interface{}) bool {
 	} else if that1.LogSource != nil {
 		return false
 	}
+	if this.User != nil && that1.User != nil {
+		if *this.User != *that1.User {
+			return false
+		}
+	} else if this.User != nil {
+		return false
+	} else if that1.User != nil {
+		return false
+	}
 	return true
 }
 func (this *UploadAction) Equal(that interface{}) bool {
@@ -3031,6 +3122,15 @@ func (this *UploadAction) Equal(that interface{}) bool {
 	} else if this.LogSource != nil {
 		return false
 	} else if that1.LogSource != nil {
+		return false
+	}
+	if this.User != nil && that1.User != nil {
+		if *this.User != *that1.User {
+			return false
+		}
+	} else if this.User != nil {
+		return false
+	} else if that1.User != nil {
 		return false
 	}
 	return true

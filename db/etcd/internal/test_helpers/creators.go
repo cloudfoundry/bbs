@@ -81,6 +81,7 @@ func (t *TestHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 			action.SetValue(&models.DownloadAction{
 				From: proto.String("http://example.com"),
 				To:   proto.String("/tmp/internet"),
+				User: proto.String("someone"),
 			})
 			desiredLRP := models.DesiredLRP{
 				Domain:      proto.String(domain),

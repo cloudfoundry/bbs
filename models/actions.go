@@ -42,6 +42,10 @@ func (a DownloadAction) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"to"})
 	}
 
+	if a.GetUser() == "" {
+		validationError = validationError.Append(ErrInvalidField{"user"})
+	}
+
 	if !validationError.Empty() {
 		return validationError
 	}
@@ -62,6 +66,10 @@ func (a UploadAction) Validate() error {
 
 	if a.GetFrom() == "" {
 		validationError = validationError.Append(ErrInvalidField{"from"})
+	}
+
+	if a.GetUser() == "" {
+		validationError = validationError.Append(ErrInvalidField{"user"})
 	}
 
 	if !validationError.Empty() {

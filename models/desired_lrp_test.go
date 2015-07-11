@@ -22,14 +22,16 @@ var _ = Describe("DesiredLRP", func() {
             "download": {
               "from": "http://file-server.service.consul:8080/v1/static/buildpack_app_lifecycle/buildpack_app_lifecycle.tgz",
               "to": "/tmp/lifecycle",
-              "cache_key": "buildpack-cflinuxfs2-lifecycle"
+              "cache_key": "buildpack-cflinuxfs2-lifecycle",
+							"user": "someone"
             }
           },
           {
             "download": {
               "from": "http://cloud-controller-ng.service.consul:9022/internal/v2/droplets/some-guid/some-guid/download",
               "to": ".",
-              "cache_key": "droplets-some-guid"
+              "cache_key": "droplets-some-guid",
+							"user": "someone"
             }
           }
         ]

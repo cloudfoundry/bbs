@@ -29,6 +29,7 @@ message DownloadAction {
   optional string to = 3;
   optional string cache_key = 4;
   optional string log_source = 5;
+  optional string user = 6;
 }
 
 message UploadAction {
@@ -36,6 +37,7 @@ message UploadAction {
   optional string from = 2;
   optional string to = 3;
   optional string log_source = 4;
+  optional string user = 5;
 }
 
 message RunAction {
