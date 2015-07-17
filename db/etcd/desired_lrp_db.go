@@ -22,8 +22,8 @@ func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 	return path.Join(DesiredLRPSchemaRoot, processGuid)
 }
 
-func (db *ETCDDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *models.Error) {
-	root, bbsErr := db.fetchRecursiveRaw(DesiredLRPSchemaRoot, logger)
+func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) (*models.DesiredLRPs, *models.Error) {
+	root, bbsErr := db.fetchRecursiveRaw(logger, DesiredLRPSchemaRoot)
 	if bbsErr.Equal(models.ErrResourceNotFound) {
 		return &models.DesiredLRPs{}, nil
 	}
@@ -77,8 +77,8 @@ func (db *ETCDDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logge
 	return &desiredLRPs, nil
 }
 
-func (db *ETCDDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *models.Error) {
-	node, bbsErr := db.fetchRaw(DesiredLRPSchemaPathByProcessGuid(processGuid), logger)
+func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error) {
+	node, bbsErr := db.fetchRaw(logger, DesiredLRPSchemaPathByProcessGuid(processGuid))
 	if bbsErr != nil {
 		return nil, bbsErr
 	}

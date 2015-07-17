@@ -41,7 +41,7 @@ var _ = Describe("DesiredLRPDB", func() {
 						expectedDesiredLRPs = append(expectedDesiredLRPs, lrp)
 					}
 				}
-				desiredLRPs, err := etcdDB.DesiredLRPs(filter, logger)
+				desiredLRPs, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPs.GetDesiredLrps()).To(ConsistOf(expectedDesiredLRPs))
 			})
@@ -51,7 +51,7 @@ var _ = Describe("DesiredLRPDB", func() {
 					expectedDesiredLRPs = append(expectedDesiredLRPs, lrp)
 				}
 				filter.Domain = "domain-2"
-				desiredLRPs, err := etcdDB.DesiredLRPs(filter, logger)
+				desiredLRPs, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPs.GetDesiredLrps()).To(ConsistOf(expectedDesiredLRPs))
 			})
@@ -59,7 +59,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when there are no LRPs", func() {
 			It("returns an empty list", func() {
-				desiredLRPs, err := etcdDB.DesiredLRPs(filter, logger)
+				desiredLRPs, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPs).NotTo(BeNil())
 				Expect(desiredLRPs.GetDesiredLrps()).To(BeEmpty())
@@ -74,7 +74,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.DesiredLRPs(filter, logger)
+				_, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -89,7 +89,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.DesiredLRPs(filter, logger)
+				_, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -105,7 +105,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns the desired lrp", func() {
-				lrp, err := etcdDB.DesiredLRPByProcessGuid("process-guid", logger)
+				lrp, err := etcdDB.DesiredLRPByProcessGuid(logger, "process-guid")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(lrp).To(Equal(desiredLRP))
 			})
@@ -113,7 +113,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when there is no LRP", func() {
 			It("returns a ResourceNotFound", func() {
-				_, err := etcdDB.DesiredLRPByProcessGuid("nota-guid", logger)
+				_, err := etcdDB.DesiredLRPByProcessGuid(logger, "nota-guid")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
@@ -124,7 +124,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.DesiredLRPByProcessGuid("some-other-guid", logger)
+				_, err := etcdDB.DesiredLRPByProcessGuid(logger, "some-other-guid")
 				Expect(err).To(Equal(models.ErrDeserializeJSON))
 			})
 		})
@@ -139,7 +139,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.DesiredLRPByProcessGuid("some-other-guid", logger)
+				_, err := etcdDB.DesiredLRPByProcessGuid(logger, "some-other-guid")
 				Expect(err).To(Equal(models.ErrUnknownError))
 			})
 		})

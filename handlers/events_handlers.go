@@ -18,7 +18,7 @@ type EventHandler struct {
 
 var ()
 
-func NewEventHandler(hub events.Hub, logger lager.Logger) *EventHandler {
+func NewEventHandler(logger lager.Logger, hub events.Hub) *EventHandler {
 	return &EventHandler{
 		hub:    hub,
 		logger: logger.Session("domain-handler"),

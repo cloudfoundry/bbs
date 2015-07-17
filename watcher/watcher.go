@@ -24,11 +24,11 @@ type watcher struct {
 }
 
 func NewWatcher(
+	logger lager.Logger,
 	db db.EventDB,
 	hub events.Hub,
 	clock clock.Clock,
 	retryWaitDuration time.Duration,
-	logger lager.Logger,
 ) Watcher {
 	return &watcher{
 		db:                db,

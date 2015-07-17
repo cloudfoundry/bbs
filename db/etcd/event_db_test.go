@@ -55,7 +55,7 @@ var _ = Describe("Watchers", func() {
 		It("sends an event down the pipe for creates", func() {
 			testHelper.SetRawDesiredLRP(lrp)
 
-			desiredLRP, err := db.DesiredLRPByProcessGuid(lrp.GetProcessGuid(), logger)
+			desiredLRP, err := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(creates).Should(Receive(Equal(desiredLRP)))
@@ -66,14 +66,14 @@ var _ = Describe("Watchers", func() {
 
 			Eventually(creates).Should(Receive())
 
-			desiredBeforeUpdate, err := db.DesiredLRPByProcessGuid(lrp.GetProcessGuid(), logger)
+			desiredBeforeUpdate, err := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(err).NotTo(HaveOccurred())
 
 			lrp.Instances = proto.Int32(lrp.GetInstances() + 1)
 			testHelper.SetRawDesiredLRP(lrp)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredAfterUpdate, err := db.DesiredLRPByProcessGuid(lrp.GetProcessGuid(), logger)
+			desiredAfterUpdate, err := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(changes).Should(Receive(Equal(&models.DesiredLRPChange{
@@ -87,7 +87,7 @@ var _ = Describe("Watchers", func() {
 
 			Eventually(creates).Should(Receive())
 
-			desired, bbsErr := db.DesiredLRPByProcessGuid(lrp.GetProcessGuid(), logger)
+			desired, bbsErr := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(bbsErr).NotTo(HaveOccurred())
 
 			_, err := etcdClient.Delete(DesiredLRPSchemaPath(desired), true)

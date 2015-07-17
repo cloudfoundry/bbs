@@ -108,7 +108,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
-				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP},
@@ -120,7 +120,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			It("can filter by domain", func() {
 				filter.Domain = otherDomain
-				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: otherDomainLRP, Evacuating: nil},
@@ -130,7 +130,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			It("can filter by cell id", func() {
 				filter.CellID = otherCellID
-				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: otherCellIdLRP, Evacuating: nil},
@@ -140,7 +140,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there are no LRPs", func() {
 			It("returns an empty list", func() {
-				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
@@ -157,7 +157,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns an empty list", func() {
-				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
@@ -172,7 +172,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.ActualLRPGroups(filter, logger)
+				_, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -187,7 +187,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.ActualLRPGroups(filter, logger)
+				_, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -204,7 +204,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
-				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(baseProcessGuid, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP},
@@ -215,7 +215,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there are no LRPs", func() {
 			It("returns an empty list", func() {
-				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(baseProcessGuid, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
@@ -232,7 +232,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns an empty list", func() {
-				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(baseProcessGuid, logger)
+				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
@@ -247,7 +247,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.ActualLRPGroupsByProcessGuid("some-other-guid", logger)
+				_, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, "some-other-guid")
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -262,7 +262,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.ActualLRPGroupsByProcessGuid("some-other-guid", logger)
+				_, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, "some-other-guid")
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -279,7 +279,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns the /instance LRPs and /evacuating LRPs in the group", func() {
-				actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
+				actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP}))
 			})
@@ -287,7 +287,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there are no LRPs", func() {
 			It("returns an error", func() {
-				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
@@ -303,7 +303,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
@@ -317,7 +317,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex("some-other-guid", 0, logger)
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, "some-other-guid", 0)
 				Expect(err).To(HaveOccurred())
 			})
 		})

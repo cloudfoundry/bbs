@@ -30,7 +30,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewDesiredLRPHandler(fakeDesiredLRPDB, logger)
+		handler = handlers.NewDesiredLRPHandler(logger, fakeDesiredLRPDB)
 	})
 
 	Describe("DesiredLRPs", func() {
@@ -72,7 +72,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			Context("and no filter is provided", func() {
 				It("call the DB with no filters to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					filter, _ := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.DesiredLRPFilter{}))
 				})
 			})
@@ -86,7 +86,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("call the DB with the domain filter to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					filter, _ := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
@@ -156,7 +156,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("fetches desired lrp by process guid", func() {
 				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-				actualProcessGuid, _ := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+				_, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 			})
 

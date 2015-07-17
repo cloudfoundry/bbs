@@ -19,7 +19,7 @@ var _ = Describe("DomainDB", func() {
 		Context("when the domain is not present in the DB", func() {
 			It("inserts a new domain with the requested TTL", func() {
 				domain := "my-awesome-domain"
-				bbsErr := db.UpsertDomain(domain, 5432, logger)
+				bbsErr := db.UpsertDomain(logger, domain, 5432)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
 				etcdEntry, err := etcdClient.Get(DomainSchemaPath(domain), false, false)
@@ -38,7 +38,7 @@ var _ = Describe("DomainDB", func() {
 			})
 
 			It("updates the TTL on the existing record", func() {
-				bbsErr := db.UpsertDomain(existingDomain, 1337, logger)
+				bbsErr := db.UpsertDomain(logger, existingDomain, 1337)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
 				etcdEntry, err := etcdClient.Get(DomainSchemaPath(existingDomain), false, false)

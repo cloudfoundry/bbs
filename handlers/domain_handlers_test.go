@@ -27,7 +27,7 @@ var _ = Describe("Domain Handlers", func() {
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewDomainHandler(fakeDomainDB, logger)
+		handler = handlers.NewDomainHandler(logger, fakeDomainDB)
 	})
 
 	Describe("Upsert", func() {
@@ -53,7 +53,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("call the DB to upsert the domain", func() {
 				Expect(fakeDomainDB.UpsertDomainCallCount()).To(Equal(1))
-				domainUpserted, ttlUpserted, _ := fakeDomainDB.UpsertDomainArgsForCall(0)
+				_, domainUpserted, ttlUpserted := fakeDomainDB.UpsertDomainArgsForCall(0)
 				Expect(domainUpserted).To(Equal(domain))
 				Expect(ttlUpserted).To(Equal(ttl))
 			})

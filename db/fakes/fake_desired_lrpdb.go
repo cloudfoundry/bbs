@@ -10,21 +10,21 @@ import (
 )
 
 type FakeDesiredLRPDB struct {
-	DesiredLRPsStub        func(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *models.Error)
+	DesiredLRPsStub        func(logger lager.Logger, filter models.DesiredLRPFilter) (*models.DesiredLRPs, *models.Error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
-		filter models.DesiredLRPFilter
 		logger lager.Logger
+		filter models.DesiredLRPFilter
 	}
 	desiredLRPsReturns struct {
 		result1 *models.DesiredLRPs
 		result2 *models.Error
 	}
-	DesiredLRPByProcessGuidStub        func(processGuid string, logger lager.Logger) (*models.DesiredLRP, *models.Error)
+	DesiredLRPByProcessGuidStub        func(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error)
 	desiredLRPByProcessGuidMutex       sync.RWMutex
 	desiredLRPByProcessGuidArgsForCall []struct {
-		processGuid string
 		logger      lager.Logger
+		processGuid string
 	}
 	desiredLRPByProcessGuidReturns struct {
 		result1 *models.DesiredLRP
@@ -32,15 +32,15 @@ type FakeDesiredLRPDB struct {
 	}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *models.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) (*models.DesiredLRPs, *models.Error) {
 	fake.desiredLRPsMutex.Lock()
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
-		filter models.DesiredLRPFilter
 		logger lager.Logger
-	}{filter, logger})
+		filter models.DesiredLRPFilter
+	}{logger, filter})
 	fake.desiredLRPsMutex.Unlock()
 	if fake.DesiredLRPsStub != nil {
-		return fake.DesiredLRPsStub(filter, logger)
+		return fake.DesiredLRPsStub(logger, filter)
 	} else {
 		return fake.desiredLRPsReturns.result1, fake.desiredLRPsReturns.result2
 	}
@@ -52,10 +52,10 @@ func (fake *FakeDesiredLRPDB) DesiredLRPsCallCount() int {
 	return len(fake.desiredLRPsArgsForCall)
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPsArgsForCall(i int) (models.DesiredLRPFilter, lager.Logger) {
+func (fake *FakeDesiredLRPDB) DesiredLRPsArgsForCall(i int) (lager.Logger, models.DesiredLRPFilter) {
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
-	return fake.desiredLRPsArgsForCall[i].filter, fake.desiredLRPsArgsForCall[i].logger
+	return fake.desiredLRPsArgsForCall[i].logger, fake.desiredLRPsArgsForCall[i].filter
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, result2 *models.Error) {
@@ -66,15 +66,15 @@ func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, re
 	}{result1, result2}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *models.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error) {
 	fake.desiredLRPByProcessGuidMutex.Lock()
 	fake.desiredLRPByProcessGuidArgsForCall = append(fake.desiredLRPByProcessGuidArgsForCall, struct {
-		processGuid string
 		logger      lager.Logger
-	}{processGuid, logger})
+		processGuid string
+	}{logger, processGuid})
 	fake.desiredLRPByProcessGuidMutex.Unlock()
 	if fake.DesiredLRPByProcessGuidStub != nil {
-		return fake.DesiredLRPByProcessGuidStub(processGuid, logger)
+		return fake.DesiredLRPByProcessGuidStub(logger, processGuid)
 	} else {
 		return fake.desiredLRPByProcessGuidReturns.result1, fake.desiredLRPByProcessGuidReturns.result2
 	}
@@ -86,10 +86,10 @@ func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidCallCount() int {
 	return len(fake.desiredLRPByProcessGuidArgsForCall)
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidArgsForCall(i int) (string, lager.Logger) {
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidArgsForCall(i int) (lager.Logger, string) {
 	fake.desiredLRPByProcessGuidMutex.RLock()
 	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
-	return fake.desiredLRPByProcessGuidArgsForCall[i].processGuid, fake.desiredLRPByProcessGuidArgsForCall[i].logger
+	return fake.desiredLRPByProcessGuidArgsForCall[i].logger, fake.desiredLRPByProcessGuidArgsForCall[i].processGuid
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 *models.Error) {

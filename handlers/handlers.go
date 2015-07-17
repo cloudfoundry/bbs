@@ -10,11 +10,11 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(db db.DB, hub events.Hub, logger lager.Logger) http.Handler {
-	domainHandler := NewDomainHandler(db, logger)
-	actualLRPHandler := NewActualLRPHandler(db, logger)
-	desiredLRPHandler := NewDesiredLRPHandler(db, logger)
-	eventsHandler := NewEventHandler(hub, logger)
+func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
+	domainHandler := NewDomainHandler(logger, db)
+	actualLRPHandler := NewActualLRPHandler(logger, db)
+	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
+	eventsHandler := NewEventHandler(logger, hub)
 
 	actions := rata.Handlers{
 		// Domains
@@ -39,7 +39,7 @@ func New(db db.DB, hub events.Hub, logger lager.Logger) http.Handler {
 		panic("unable to create router: " + err.Error())
 	}
 
-	return LogWrap(handler, logger)
+	return LogWrap(logger, handler)
 }
 
 func route(f func(w http.ResponseWriter, r *http.Request)) http.Handler {

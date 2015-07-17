@@ -7,7 +7,7 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-func LogWrap(handler http.Handler, logger lager.Logger) http.HandlerFunc {
+func LogWrap(logger lager.Logger, handler http.Handler) http.HandlerFunc {
 	handler = dropsonde.InstrumentedHandler(handler)
 
 	return func(w http.ResponseWriter, r *http.Request) {

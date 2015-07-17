@@ -32,8 +32,8 @@ func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
 	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPEvacuatingKey)
 }
 
-func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, *models.Error) {
-	node, bbsErr := db.fetchRecursiveRaw(ActualLRPSchemaRoot, logger)
+func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
+	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
 	if bbsErr.Equal(models.ErrResourceNotFound) {
 		return &models.ActualLRPGroups{}, nil
 	}
@@ -54,7 +54,7 @@ func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Lo
 		node := node
 
 		works = append(works, func() {
-			g, err := parseActualLRPGroups(node, filter, logger)
+			g, err := parseActualLRPGroups(logger, node, filter)
 			if err != nil {
 				workErr.Store(err)
 				return
@@ -82,8 +82,8 @@ func (db *ETCDDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Lo
 	return groups, nil
 }
 
-func (db *ETCDDB) ActualLRPGroupsByProcessGuid(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, *models.Error) {
-	node, bbsErr := db.fetchRecursiveRaw(ActualLRPProcessDir(processGuid), logger)
+func (db *ETCDDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) (*models.ActualLRPGroups, *models.Error) {
+	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPProcessDir(processGuid))
 	if bbsErr.Equal(models.ErrResourceNotFound) {
 		return &models.ActualLRPGroups{}, nil
 	}
@@ -94,11 +94,11 @@ func (db *ETCDDB) ActualLRPGroupsByProcessGuid(processGuid string, logger lager.
 		return &models.ActualLRPGroups{}, nil
 	}
 
-	return parseActualLRPGroups(node, models.ActualLRPFilter{}, logger)
+	return parseActualLRPGroups(logger, node, models.ActualLRPFilter{})
 }
 
-func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int32, logger lager.Logger) (*models.ActualLRPGroup, *models.Error) {
-	node, bbsErr := db.fetchRecursiveRaw(ActualLRPIndexDir(processGuid, index), logger)
+func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, *models.Error) {
+	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPIndexDir(processGuid, index))
 	if bbsErr != nil {
 		return nil, bbsErr
 	}
@@ -128,7 +128,7 @@ func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index 
 	return &group, nil
 }
 
-func parseActualLRPGroups(node *etcd.Node, filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, *models.Error) {
+func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
 	var groups = &models.ActualLRPGroups{}
 
 	logger.Debug("performing-parsing-actual-lrp-groups")

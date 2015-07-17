@@ -72,14 +72,14 @@ func main() {
 	db := etcddb.NewETCD(etcdClient)
 	hub := events.NewHub()
 	watcher := watcher.NewWatcher(
+		logger,
 		db,
 		hub,
 		clock.NewClock(),
 		bbsWatchRetryWaitDuration,
-		logger,
 	)
 
-	handler := handlers.New(db, hub, logger)
+	handler := handlers.New(logger, db, hub)
 
 	members := grouper.Members{
 		{"watcher", watcher},

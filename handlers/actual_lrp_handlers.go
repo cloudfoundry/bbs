@@ -14,7 +14,7 @@ type ActualLRPHandler struct {
 	logger lager.Logger
 }
 
-func NewActualLRPHandler(db db.ActualLRPDB, logger lager.Logger) *ActualLRPHandler {
+func NewActualLRPHandler(logger lager.Logger, db db.ActualLRPDB) *ActualLRPHandler {
 	return &ActualLRPHandler{
 		db:     db,
 		logger: logger.Session("actuallrp-handler"),
@@ -29,7 +29,7 @@ func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Requ
 	})
 
 	filter := models.ActualLRPFilter{Domain: domain, CellID: cellId}
-	actualLRPGroups, err := h.db.ActualLRPGroups(filter, h.logger)
+	actualLRPGroups, err := h.db.ActualLRPGroups(h.logger, filter)
 	if err != nil {
 		logger.Error("failed-to-fetch-actual-lrp-groups", err)
 		writeUnknownErrorResponse(w, err)
@@ -45,7 +45,7 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, r
 		"process_guid": processGuid,
 	})
 
-	actualLRPGroups, err := h.db.ActualLRPGroupsByProcessGuid(processGuid, h.logger)
+	actualLRPGroups, err := h.db.ActualLRPGroupsByProcessGuid(h.logger, processGuid)
 	if err != nil {
 		logger.Error("failed-to-fetch-actual-lrp-groups", err)
 		switch err {
@@ -75,7 +75,7 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWr
 		return
 	}
 
-	actualLRPGroup, bbsErr := h.db.ActualLRPGroupByProcessGuidAndIndex(processGuid, int32(idx), h.logger)
+	actualLRPGroup, bbsErr := h.db.ActualLRPGroupByProcessGuidAndIndex(h.logger, processGuid, int32(idx))
 	if bbsErr != nil {
 		logger.Error("failed-to-fetch-actual-lrp-group-by-process-guid-and-index", bbsErr)
 		if bbsErr.Equal(models.ErrResourceNotFound) {

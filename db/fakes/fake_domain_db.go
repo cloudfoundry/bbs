@@ -19,12 +19,12 @@ type FakeDomainDB struct {
 		result1 *models.Domains
 		result2 *models.Error
 	}
-	UpsertDomainStub        func(domain string, ttl int, lgger lager.Logger) *models.Error
+	UpsertDomainStub        func(lgger lager.Logger, domain string, ttl int) *models.Error
 	upsertDomainMutex       sync.RWMutex
 	upsertDomainArgsForCall []struct {
+		lgger  lager.Logger
 		domain string
 		ttl    int
-		lgger  lager.Logger
 	}
 	upsertDomainReturns struct {
 		result1 *models.Error
@@ -64,16 +64,16 @@ func (fake *FakeDomainDB) GetAllDomainsReturns(result1 *models.Domains, result2 
 	}{result1, result2}
 }
 
-func (fake *FakeDomainDB) UpsertDomain(domain string, ttl int, lgger lager.Logger) *models.Error {
+func (fake *FakeDomainDB) UpsertDomain(lgger lager.Logger, domain string, ttl int) *models.Error {
 	fake.upsertDomainMutex.Lock()
 	fake.upsertDomainArgsForCall = append(fake.upsertDomainArgsForCall, struct {
+		lgger  lager.Logger
 		domain string
 		ttl    int
-		lgger  lager.Logger
-	}{domain, ttl, lgger})
+	}{lgger, domain, ttl})
 	fake.upsertDomainMutex.Unlock()
 	if fake.UpsertDomainStub != nil {
-		return fake.UpsertDomainStub(domain, ttl, lgger)
+		return fake.UpsertDomainStub(lgger, domain, ttl)
 	} else {
 		return fake.upsertDomainReturns.result1
 	}
@@ -85,10 +85,10 @@ func (fake *FakeDomainDB) UpsertDomainCallCount() int {
 	return len(fake.upsertDomainArgsForCall)
 }
 
-func (fake *FakeDomainDB) UpsertDomainArgsForCall(i int) (string, int, lager.Logger) {
+func (fake *FakeDomainDB) UpsertDomainArgsForCall(i int) (lager.Logger, string, int) {
 	fake.upsertDomainMutex.RLock()
 	defer fake.upsertDomainMutex.RUnlock()
-	return fake.upsertDomainArgsForCall[i].domain, fake.upsertDomainArgsForCall[i].ttl, fake.upsertDomainArgsForCall[i].lgger
+	return fake.upsertDomainArgsForCall[i].lgger, fake.upsertDomainArgsForCall[i].domain, fake.upsertDomainArgsForCall[i].ttl
 }
 
 func (fake *FakeDomainDB) UpsertDomainReturns(result1 *models.Error) {

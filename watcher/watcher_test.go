@@ -53,7 +53,7 @@ var _ = Describe("Watcher", func() {
 		db.WatchForDesiredLRPChangesReturns(desiredLRPStop, desiredLRPErrors)
 		db.WatchForActualLRPChangesReturns(actualLRPStop, actualLRPErrors)
 
-		bbsWatcher = watcher.NewWatcher(db, hub, clock, retryWaitDuration, logger)
+		bbsWatcher = watcher.NewWatcher(logger, db, hub, clock, retryWaitDuration)
 	})
 
 	AfterEach(func() {

@@ -13,7 +13,7 @@ type DesiredLRPHandler struct {
 	logger lager.Logger
 }
 
-func NewDesiredLRPHandler(db db.DesiredLRPDB, logger lager.Logger) *DesiredLRPHandler {
+func NewDesiredLRPHandler(logger lager.Logger, db db.DesiredLRPDB) *DesiredLRPHandler {
 	return &DesiredLRPHandler{
 		db:     db,
 		logger: logger.Session("desiredlrp-handler"),
@@ -26,7 +26,7 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 		"domain": domain,
 	})
 
-	desiredLRPs, err := h.db.DesiredLRPs(models.DesiredLRPFilter{Domain: domain}, h.logger)
+	desiredLRPs, err := h.db.DesiredLRPs(h.logger, models.DesiredLRPFilter{Domain: domain})
 	if err != nil {
 		logger.Error("failed-to-fetch-desired-lrps", err)
 		writeUnknownErrorResponse(w, err)
@@ -42,7 +42,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 		"process_guid": processGuid,
 	})
 
-	desiredLRP, err := h.db.DesiredLRPByProcessGuid(processGuid, h.logger)
+	desiredLRP, err := h.db.DesiredLRPByProcessGuid(h.logger, processGuid)
 	if err == models.ErrResourceNotFound {
 		writeNotFoundResponse(w, err)
 		return

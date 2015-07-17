@@ -32,7 +32,7 @@ var _ = Describe("Event Handlers", func() {
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
-		handler = handlers.NewEventHandler(hub, logger)
+		handler = handlers.NewEventHandler(logger, hub)
 	})
 
 	AfterEach(func() {

@@ -22,7 +22,7 @@ var (
 	ErrMaxAgeMissing = errors.New("max-age directive missing from request")
 )
 
-func NewDomainHandler(db db.DomainDB, logger lager.Logger) *DomainHandler {
+func NewDomainHandler(logger lager.Logger, db db.DomainDB) *DomainHandler {
 	return &DomainHandler{
 		db:     db,
 		logger: logger.Session("domain-handler"),
@@ -72,7 +72,7 @@ func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	err := h.db.UpsertDomain(domain, ttl, logger)
+	err := h.db.UpsertDomain(logger, domain, ttl)
 	if err != nil {
 		writeUnknownErrorResponse(w, err)
 		return
