@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -66,7 +65,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDomainDB.UpsertDomainReturns(bbs.ErrUnknownError)
+				fakeDomainDB.UpsertDomainReturns(models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -74,11 +73,11 @@ var _ = Describe("Domain Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
@@ -136,7 +135,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, bbs.ErrUnknownError)
+				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -144,11 +143,11 @@ var _ = Describe("Domain Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})

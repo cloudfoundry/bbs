@@ -6,12 +6,15 @@ import (
 	"time"
 
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
+	"github.com/cloudfoundry-incubator/bbs/watcher"
 	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -34,6 +37,8 @@ var communicationTimeout = flag.Duration(
 const (
 	dropsondeDestination = "localhost:3457"
 	dropsondeOrigin      = "bbs"
+
+	bbsWatchRetryWaitDuration = 3 * time.Second
 )
 
 func main() {
@@ -65,10 +70,21 @@ func main() {
 	}
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	db := etcddb.NewETCD(etcdClient)
-	handler := handlers.New(db, logger)
+	hub := events.NewHub()
+	watcher := watcher.NewWatcher(
+		db,
+		hub,
+		clock.NewClock(),
+		bbsWatchRetryWaitDuration,
+		logger,
+	)
+
+	handler := handlers.New(db, hub, logger)
 
 	members := grouper.Members{
+		{"watcher", watcher},
 		{"server", http_server.New(*serverAddress, handler)},
+		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
 	}
 
 	if dbgAddr := cf_debug_server.DebugAddress(flag.CommandLine); dbgAddr != "" {
@@ -97,4 +113,20 @@ func initializeDropsonde(logger lager.Logger) {
 	if err != nil {
 		logger.Error("failed to initialize dropsonde: %v", err)
 	}
+}
+
+func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
+	return ifrit.RunFunc(func(signals <-chan os.Signal, ready chan<- struct{}) error {
+		logger.Info("starting")
+		defer logger.Info("finished")
+
+		close(ready)
+		logger.Info("started")
+
+		<-signals
+		logger.Info("shutting-down")
+		hub.Close()
+
+		return nil
+	})
 }

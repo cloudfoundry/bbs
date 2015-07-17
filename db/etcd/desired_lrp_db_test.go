@@ -1,7 +1,6 @@
-package db_test
+package etcd_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -98,7 +97,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 	Describe("DesiredLRPByProcessGuid", func() {
 		Context("when there is a desired lrp", func() {
-			var desiredLRP models.DesiredLRP
+			var desiredLRP *models.DesiredLRP
 
 			BeforeEach(func() {
 				desiredLRP = testHelper.NewValidDesiredLRP("process-guid")
@@ -108,14 +107,14 @@ var _ = Describe("DesiredLRPDB", func() {
 			It("returns the desired lrp", func() {
 				lrp, err := etcdDB.DesiredLRPByProcessGuid("process-guid", logger)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(*lrp).To(Equal(desiredLRP))
+				Expect(lrp).To(Equal(desiredLRP))
 			})
 		})
 
 		Context("when there is no LRP", func() {
 			It("returns a ResourceNotFound", func() {
 				_, err := etcdDB.DesiredLRPByProcessGuid("nota-guid", logger)
-				Expect(err).To(Equal(bbs.ErrResourceNotFound))
+				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 
@@ -126,7 +125,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			It("errors", func() {
 				_, err := etcdDB.DesiredLRPByProcessGuid("some-other-guid", logger)
-				Expect(err).To(Equal(bbs.ErrDeserializeJSON))
+				Expect(err).To(Equal(models.ErrDeserializeJSON))
 			})
 		})
 
@@ -141,7 +140,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			It("errors", func() {
 				_, err := etcdDB.DesiredLRPByProcessGuid("some-other-guid", logger)
-				Expect(err).To(Equal(bbs.ErrUnknownError))
+				Expect(err).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})

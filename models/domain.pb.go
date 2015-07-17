@@ -2,15 +2,6 @@
 // source: domain.proto
 // DO NOT EDIT!
 
-/*
-	Package models is a generated protocol buffer package.
-
-	It is generated from these files:
-		domain.proto
-
-	It has these top-level messages:
-		Domains
-*/
 package models
 
 import proto "github.com/gogo/protobuf/proto"

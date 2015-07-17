@@ -4,4 +4,5 @@ type DB interface {
 	DomainDB
 	ActualLRPDB
 	DesiredLRPDB
+	EventDB
 }

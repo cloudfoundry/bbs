@@ -3,12 +3,28 @@ package models
 import (
 	"net/url"
 	"regexp"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 var processGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
+type DesiredLRPChange struct {
+	Before *DesiredLRP
+	After  *DesiredLRP
+}
+
 type DesiredLRPFilter struct {
 	Domain string
+}
+
+func NewDesiredLRP(processGuid, domain, rootfs string, action ActionInterface) *DesiredLRP {
+	return &DesiredLRP{
+		ProcessGuid: proto.String(processGuid),
+		Domain:      proto.String(domain),
+		RootFs:      proto.String(rootfs),
+		Action:      WrapAction(action),
+	}
 }
 
 func (desired DesiredLRP) Validate() error {

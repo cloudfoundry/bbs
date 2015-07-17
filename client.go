@@ -2,7 +2,6 @@ package bbs
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -11,19 +10,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
+	"github.com/vito/go-sse/sse"
 )
-
-var ErrReadFromClosedSource = errors.New("read from closed source")
-var ErrSendToClosedSource = errors.New("send to closed source")
-var ErrSourceAlreadyClosed = errors.New("source already closed")
-var ErrSlowConsumer = errors.New("slow consumer")
-
-var ErrSubscribedToClosedHub = errors.New("subscribed to closed hub")
-var ErrHubAlreadyClosed = errors.New("hub already closed")
 
 const (
 	ContentTypeHeader    = "Content-Type"
@@ -43,6 +36,8 @@ type Client interface {
 
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
+
+	SubscribeToEvents() (events.EventSource, error)
 }
 
 func NewClient(url string) Client {
@@ -125,6 +120,23 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 	return &desiredLRP, err
 }
 
+func (c *client) SubscribeToEvents() (events.EventSource, error) {
+	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
+		request, err := c.reqGen.CreateRequest(EventStreamRoute, nil, nil)
+		if err != nil {
+			panic(err) // totally shouldn't happen
+		}
+
+		return request
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return events.NewEventSource(eventSource), nil
+}
+
 func (c *client) createRequest(requestName string, params rata.Params, queryParams url.Values, message proto.Message) (*http.Request, error) {
 	var messageBody []byte
 	var err error
@@ -167,13 +179,13 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 	}
 
 	if routerError, ok := res.Header[XCfRouterErrorHeader]; ok {
-		return &Error{Type: proto.String(RouterError), Message: &routerError[0]}
+		return &models.Error{Type: proto.String(models.RouterError), Message: &routerError[0]}
 	}
 
 	if parsedContentType == ProtoContentType {
 		protoMessage, ok := responseObject.(proto.Message)
 		if !ok {
-			return &Error{Type: proto.String(InvalidRequest), Message: proto.String("cannot read response body")}
+			return &models.Error{Type: proto.String(models.InvalidRequest), Message: proto.String("cannot read response body")}
 		}
 		return handleProtoResponse(res, protoMessage)
 	} else {
@@ -184,29 +196,29 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 func handleProtoResponse(res *http.Response, responseObject proto.Message) error {
 	buf, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return &Error{Type: proto.String(InvalidResponse), Message: proto.String(err.Error())}
+		return &models.Error{Type: proto.String(models.InvalidResponse), Message: proto.String(err.Error())}
 	}
 
 	if res.StatusCode > 299 {
-		errResponse := &Error{}
+		errResponse := &models.Error{}
 		err = proto.Unmarshal(buf, errResponse)
 		if err != nil {
-			return &Error{Type: proto.String(InvalidProtobufMessage), Message: proto.String(err.Error())}
+			return &models.Error{Type: proto.String(models.InvalidProtobufMessage), Message: proto.String(err.Error())}
 		}
 		return errResponse
 	}
 
 	err = proto.Unmarshal(buf, responseObject)
 	if err != nil {
-		return Error{Type: proto.String(InvalidProtobufMessage), Message: proto.String(err.Error())}
+		return &models.Error{Type: proto.String(models.InvalidProtobufMessage), Message: proto.String(err.Error())}
 	}
 	return nil
 }
 
 func handleNonProtoResponse(res *http.Response) error {
 	if res.StatusCode > 299 {
-		return Error{
-			Type:    proto.String(InvalidResponse),
+		return &models.Error{
+			Type:    proto.String(models.InvalidResponse),
 			Message: proto.String(fmt.Sprintf("Invalid Response with status code: %d", res.StatusCode)),
 		}
 	}

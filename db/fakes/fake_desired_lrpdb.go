@@ -4,14 +4,13 @@ package fakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
 type FakeDesiredLRPDB struct {
-	DesiredLRPsStub        func(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *bbs.Error)
+	DesiredLRPsStub        func(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *models.Error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
 		filter models.DesiredLRPFilter
@@ -19,9 +18,9 @@ type FakeDesiredLRPDB struct {
 	}
 	desiredLRPsReturns struct {
 		result1 *models.DesiredLRPs
-		result2 *bbs.Error
+		result2 *models.Error
 	}
-	DesiredLRPByProcessGuidStub        func(processGuid string, logger lager.Logger) (*models.DesiredLRP, *bbs.Error)
+	DesiredLRPByProcessGuidStub        func(processGuid string, logger lager.Logger) (*models.DesiredLRP, *models.Error)
 	desiredLRPByProcessGuidMutex       sync.RWMutex
 	desiredLRPByProcessGuidArgsForCall []struct {
 		processGuid string
@@ -29,11 +28,11 @@ type FakeDesiredLRPDB struct {
 	}
 	desiredLRPByProcessGuidReturns struct {
 		result1 *models.DesiredLRP
-		result2 *bbs.Error
+		result2 *models.Error
 	}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *bbs.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *models.Error) {
 	fake.desiredLRPsMutex.Lock()
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
 		filter models.DesiredLRPFilter
@@ -59,15 +58,15 @@ func (fake *FakeDesiredLRPDB) DesiredLRPsArgsForCall(i int) (models.DesiredLRPFi
 	return fake.desiredLRPsArgsForCall[i].filter, fake.desiredLRPsArgsForCall[i].logger
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, result2 *bbs.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 *models.DesiredLRPs, result2 *models.Error) {
 	fake.DesiredLRPsStub = nil
 	fake.desiredLRPsReturns = struct {
 		result1 *models.DesiredLRPs
-		result2 *bbs.Error
+		result2 *models.Error
 	}{result1, result2}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *bbs.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *models.Error) {
 	fake.desiredLRPByProcessGuidMutex.Lock()
 	fake.desiredLRPByProcessGuidArgsForCall = append(fake.desiredLRPByProcessGuidArgsForCall, struct {
 		processGuid string
@@ -93,11 +92,11 @@ func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidArgsForCall(i int) (string,
 	return fake.desiredLRPByProcessGuidArgsForCall[i].processGuid, fake.desiredLRPByProcessGuidArgsForCall[i].logger
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 *bbs.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 *models.Error) {
 	fake.DesiredLRPByProcessGuidStub = nil
 	fake.desiredLRPByProcessGuidReturns = struct {
 		result1 *models.DesiredLRP
-		result2 *bbs.Error
+		result2 *models.Error
 	}{result1, result2}
 }
 

@@ -5,14 +5,16 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 )
 
-func New(db db.DB, logger lager.Logger) http.Handler {
+func New(db db.DB, hub events.Hub, logger lager.Logger) http.Handler {
 	domainHandler := NewDomainHandler(db, logger)
 	actualLRPHandler := NewActualLRPHandler(db, logger)
 	desiredLRPHandler := NewDesiredLRPHandler(db, logger)
+	eventsHandler := NewEventHandler(hub, logger)
 
 	actions := rata.Handlers{
 		// Domains
@@ -27,6 +29,9 @@ func New(db db.DB, logger lager.Logger) http.Handler {
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:             route(desiredLRPHandler.DesiredLRPs),
 		bbs.DesiredLRPByProcessGuidRoute: route(desiredLRPHandler.DesiredLRPByProcessGuid),
+
+		// Events
+		bbs.EventStreamRoute: route(eventsHandler.Subscribe),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

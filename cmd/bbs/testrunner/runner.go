@@ -21,6 +21,7 @@ func (args Args) ArgSlice() []string {
 		"-etcdCertFile", args.EtcdClientCert,
 		"-etcdKeyFile", args.EtcdClientKey,
 		"-etcdCaFile", args.EtcdCACert,
+		"-logLevel", "debug",
 	}
 }
 

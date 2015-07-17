@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -20,6 +22,11 @@ var ActualLRPStates = []string{
 	ActualLRPStateCrashed,
 }
 
+type ActualLRPChange struct {
+	Before *ActualLRPGroup
+	After  *ActualLRPGroup
+}
+
 type ActualLRPFilter struct {
 	Domain string
 	CellID string
@@ -33,16 +40,33 @@ func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstan
 	return ActualLRPInstanceKey{&instanceGuid, &cellId}
 }
 
-func NewActualLRPNetInfo(address string, ports []*PortMapping) ActualLRPNetInfo {
+func NewActualLRPNetInfo(address string, ports ...*PortMapping) ActualLRPNetInfo {
+	if ports == nil {
+		ports = []*PortMapping{}
+	}
 	return ActualLRPNetInfo{&address, ports}
 }
 
 func EmptyActualLRPNetInfo() ActualLRPNetInfo {
-	return NewActualLRPNetInfo("", []*PortMapping{})
+	return NewActualLRPNetInfo("")
 }
 
 func (info ActualLRPNetInfo) Empty() bool {
 	return info.GetAddress() == "" && len(info.GetPorts()) == 0
+}
+
+func NewPortMapping(hostPort, containerPort uint32) *PortMapping {
+	var host, container *uint32
+	if hostPort != 0 {
+		host = proto.Uint32(hostPort)
+	}
+	if containerPort != 0 {
+		container = proto.Uint32(containerPort)
+	}
+	return &PortMapping{
+		HostPort:      host,
+		ContainerPort: container,
+	}
 }
 
 func (key ActualLRPInstanceKey) Empty() bool {
@@ -75,23 +99,56 @@ func (before ActualLRP) AllowsTransitionTo(lrpKey ActualLRPKey, instanceKey Actu
 	return true
 }
 
-func (group ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
+func NewRunningActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
+	return &ActualLRPGroup{
+		Instance: actualLRP,
+	}
+}
+
+func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
 	if group.Instance == nil && group.Evacuating == nil {
-		return nil, false, ErrActualLRPGroupInvalid
+		panic(ErrActualLRPGroupInvalid)
 	}
 
 	if group.Instance == nil {
-		return group.Evacuating, true, nil
+		return group.Evacuating, true
 	}
 
 	if group.Evacuating == nil {
-		return group.Instance, false, nil
+		return group.Instance, false
 	}
 
 	if group.Instance.GetState() == ActualLRPStateRunning || group.Instance.GetState() == ActualLRPStateCrashed {
-		return group.Instance, false, nil
+		return group.Instance, false
 	} else {
-		return group.Evacuating, true, nil
+		return group.Evacuating, true
+	}
+}
+
+func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
+	return &ActualLRP{
+		ActualLRPKey: lrpKey,
+		State:        proto.String(ActualLRPStateUnclaimed),
+		Since:        proto.Int64(since),
+	}
+}
+
+func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, since int64) *ActualLRP {
+	return &ActualLRP{
+		ActualLRPKey:         lrpKey,
+		ActualLRPInstanceKey: instanceKey,
+		State:                proto.String(ActualLRPStateClaimed),
+		Since:                proto.Int64(since),
+	}
+}
+
+func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, netInfo ActualLRPNetInfo, since int64) *ActualLRP {
+	return &ActualLRP{
+		ActualLRPKey:         lrpKey,
+		ActualLRPInstanceKey: instanceKey,
+		ActualLRPNetInfo:     netInfo,
+		State:                proto.String(ActualLRPStateRunning),
+		Since:                proto.Int64(since),
 	}
 }
 

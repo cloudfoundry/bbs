@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -58,7 +58,7 @@ func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
 		}
 		if maxAge == "" {
 			logger.Error("missing-max-age-directive", ErrMaxAgeMissing)
-			writeBadRequestResponse(w, bbs.InvalidRequest, ErrMaxAgeMissing)
+			writeBadRequestResponse(w, models.InvalidRequest, ErrMaxAgeMissing)
 			return
 		}
 
@@ -67,7 +67,7 @@ func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			err := fmt.Errorf("invalid-max-age-directive: %s", maxAge)
 			logger.Error("invalid-max-age-directive", err)
-			writeBadRequestResponse(w, bbs.InvalidRequest, err)
+			writeBadRequestResponse(w, models.InvalidRequest, err)
 			return
 		}
 	}

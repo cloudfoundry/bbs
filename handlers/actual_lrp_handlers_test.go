@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -176,7 +175,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupsReturns(&models.ActualLRPGroups{}, bbs.ErrUnknownError)
+				fakeActualLRPDB.ActualLRPGroupsReturns(&models.ActualLRPGroups{}, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -184,11 +183,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
@@ -291,7 +290,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(&models.ActualLRPGroups{}, bbs.ErrUnknownError)
+				fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(&models.ActualLRPGroups{}, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -299,11 +298,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
@@ -402,7 +401,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, bbs.ErrResourceNotFound)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("responds with an error", func() {
@@ -410,17 +409,17 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrResourceNotFound)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrResourceNotFound)).To(BeTrue())
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, bbs.ErrUnknownError)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -428,11 +427,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})

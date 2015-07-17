@@ -2,16 +2,7 @@
 // source: error.proto
 // DO NOT EDIT!
 
-/*
-	Package bbs is a generated protocol buffer package.
-
-	It is generated from these files:
-		error.proto
-
-	It has these top-level messages:
-		Error
-*/
-package bbs
+package models
 
 import proto "github.com/gogo/protobuf/proto"
 import math "math"

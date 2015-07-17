@@ -1,26 +1,13 @@
 package main_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db/etcd/internal/test_helpers"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("DesiredLRP API", func() {
-	var testHelper *test_helpers.TestHelper
-
-	BeforeEach(func() {
-		bbsProcess = ginkgomon.Invoke(bbsRunner)
-		testHelper = test_helpers.NewTestHelper(etcdClient)
-	})
-
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	var (
 		desiredLRPs         map[string][]*models.DesiredLRP
 		expectedDesiredLRPs []*models.DesiredLRP

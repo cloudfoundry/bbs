@@ -6,6 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
+	"github.com/cloudfoundry-incubator/bbs/db/etcd/internal/test_helpers"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -33,6 +34,7 @@ var bbsAddress string
 var bbsArgs testrunner.Args
 var bbsRunner *ginkgomon.Runner
 var bbsProcess ifrit.Process
+var testHelper *test_helpers.TestHelper
 
 func TestBBS(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -84,4 +86,11 @@ var _ = BeforeEach(func() {
 		EtcdCluster: etcdUrl,
 	}
 	bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+
+	bbsProcess = ginkgomon.Invoke(bbsRunner)
+	testHelper = test_helpers.NewTestHelper(etcdClient)
+})
+
+var _ = AfterEach(func() {
+	ginkgomon.Kill(bbsProcess)
 })

@@ -2,6 +2,32 @@
 // source: actions.proto
 // DO NOT EDIT!
 
+/*
+	Package models is a generated protocol buffer package.
+
+	It is generated from these files:
+		actions.proto
+		actual_lrp.proto
+		desired_lrp.proto
+		domain.proto
+		environment_variables.proto
+		error.proto
+		events.proto
+		modification_tag.proto
+
+	It has these top-level messages:
+		Action
+		DownloadAction
+		UploadAction
+		RunAction
+		TimeoutAction
+		EmitProgressAction
+		TryAction
+		ParallelAction
+		SerialAction
+		CodependentAction
+		ResourceLimits
+*/
 package models
 
 import proto "github.com/gogo/protobuf/proto"

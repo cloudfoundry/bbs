@@ -4,26 +4,26 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/cloudfoundry-incubator/bbs"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/gogo/protobuf/proto"
 )
 
 func writeUnknownErrorResponse(w http.ResponseWriter, err error) {
-	writeProtoResponse(w, http.StatusInternalServerError, &bbs.Error{
-		Type:    proto.String(bbs.UnknownError),
+	writeProtoResponse(w, http.StatusInternalServerError, &models.Error{
+		Type:    proto.String(models.UnknownError),
 		Message: proto.String(err.Error()),
 	})
 }
 
 func writeNotFoundResponse(w http.ResponseWriter, err error) {
-	writeProtoResponse(w, http.StatusNotFound, &bbs.Error{
-		Type:    proto.String(bbs.ResourceNotFound),
+	writeProtoResponse(w, http.StatusNotFound, &models.Error{
+		Type:    proto.String(models.ResourceNotFound),
 		Message: proto.String(err.Error()),
 	})
 }
 
 func writeBadRequestResponse(w http.ResponseWriter, errorType string, err error) {
-	writeProtoResponse(w, http.StatusBadRequest, &bbs.Error{
+	writeProtoResponse(w, http.StatusBadRequest, &models.Error{
 		Type:    &errorType,
 		Message: proto.String(err.Error()),
 	})

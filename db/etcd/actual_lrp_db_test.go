@@ -1,7 +1,6 @@
-package db_test
+package etcd_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -35,11 +34,11 @@ var _ = Describe("ActualLRPDB", func() {
 	var (
 		etcdDB db.ActualLRPDB
 
-		baseLRP        models.ActualLRP
-		otherIndexLRP  models.ActualLRP
-		evacuatingLRP  models.ActualLRP
-		otherDomainLRP models.ActualLRP
-		otherCellIdLRP models.ActualLRP
+		baseLRP        *models.ActualLRP
+		otherIndexLRP  *models.ActualLRP
+		evacuatingLRP  *models.ActualLRP
+		otherDomainLRP *models.ActualLRP
+		otherCellIdLRP *models.ActualLRP
 
 		baseLRPKey          models.ActualLRPKey
 		baseLRPInstanceKey  models.ActualLRPInstanceKey
@@ -52,9 +51,9 @@ var _ = Describe("ActualLRPDB", func() {
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
-		netInfo = models.NewActualLRPNetInfo("127.0.0.1", []*models.PortMapping{{proto.Uint32(8080), proto.Uint32(80)}})
+		netInfo = models.NewActualLRPNetInfo("127.0.0.1", models.NewPortMapping(8080, 80))
 
-		baseLRP = models.ActualLRP{
+		baseLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
@@ -62,7 +61,7 @@ var _ = Describe("ActualLRPDB", func() {
 			Since:                proto.Int64(clock.Now().UnixNano()),
 		}
 
-		evacuatingLRP = models.ActualLRP{
+		evacuatingLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID),
 			ActualLRPNetInfo:     netInfo,
@@ -70,14 +69,14 @@ var _ = Describe("ActualLRPDB", func() {
 			Since:                proto.Int64(clock.Now().UnixNano() - 1000),
 		}
 
-		otherIndexLRP = models.ActualLRP{
+		otherIndexLRP = &models.ActualLRP{
 			ActualLRPKey:         models.NewActualLRPKey(baseProcessGuid, otherIndex, baseDomain),
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			State:                proto.String(models.ActualLRPStateClaimed),
 			Since:                proto.Int64(clock.Now().UnixNano()),
 		}
 
-		otherDomainLRP = models.ActualLRP{
+		otherDomainLRP = &models.ActualLRP{
 			ActualLRPKey:         models.NewActualLRPKey(otherDomainProcessGuid, baseIndex, otherDomain),
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
@@ -85,7 +84,7 @@ var _ = Describe("ActualLRPDB", func() {
 			Since:                proto.Int64(clock.Now().UnixNano()),
 		}
 
-		otherCellIdLRP = models.ActualLRP{
+		otherCellIdLRP = &models.ActualLRP{
 			ActualLRPKey:         models.NewActualLRPKey(otherDomainProcessGuid, otherIndex, otherDomain),
 			ActualLRPInstanceKey: otherLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
@@ -112,10 +111,10 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
-					&models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP},
-					&models.ActualLRPGroup{Instance: &otherDomainLRP, Evacuating: nil},
-					&models.ActualLRPGroup{Instance: nil, Evacuating: &otherIndexLRP},
-					&models.ActualLRPGroup{Instance: &otherCellIdLRP, Evacuating: nil},
+					&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP},
+					&models.ActualLRPGroup{Instance: otherDomainLRP, Evacuating: nil},
+					&models.ActualLRPGroup{Instance: nil, Evacuating: otherIndexLRP},
+					&models.ActualLRPGroup{Instance: otherCellIdLRP, Evacuating: nil},
 				))
 			})
 
@@ -124,8 +123,8 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
-					&models.ActualLRPGroup{Instance: &otherDomainLRP, Evacuating: nil},
-					&models.ActualLRPGroup{Instance: &otherCellIdLRP, Evacuating: nil},
+					&models.ActualLRPGroup{Instance: otherDomainLRP, Evacuating: nil},
+					&models.ActualLRPGroup{Instance: otherCellIdLRP, Evacuating: nil},
 				))
 			})
 
@@ -134,7 +133,7 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(filter, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
-					&models.ActualLRPGroup{Instance: &otherCellIdLRP, Evacuating: nil},
+					&models.ActualLRPGroup{Instance: otherCellIdLRP, Evacuating: nil},
 				))
 			})
 		})
@@ -208,8 +207,8 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(baseProcessGuid, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
-					&models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP},
-					&models.ActualLRPGroup{Instance: nil, Evacuating: &otherIndexLRP},
+					&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP},
+					&models.ActualLRPGroup{Instance: nil, Evacuating: otherIndexLRP},
 				))
 			})
 		})
@@ -282,7 +281,7 @@ var _ = Describe("ActualLRPDB", func() {
 			It("returns the /instance LRPs and /evacuating LRPs in the group", func() {
 				actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP}))
+				Expect(actualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP}))
 			})
 		})
 
@@ -290,7 +289,7 @@ var _ = Describe("ActualLRPDB", func() {
 			It("returns an error", func() {
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(bbs.ErrResourceNotFound))
+				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 
@@ -306,7 +305,7 @@ var _ = Describe("ActualLRPDB", func() {
 			It("returns an error", func() {
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex, logger)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(bbs.ErrResourceNotFound))
+				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 

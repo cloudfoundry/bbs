@@ -3,27 +3,14 @@ package main_test
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/db/etcd/internal/test_helpers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/gogo/protobuf/proto"
-	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ActualLRP API", func() {
-	var testHelper *test_helpers.TestHelper
-
-	BeforeEach(func() {
-		bbsProcess = ginkgomon.Invoke(bbsRunner)
-		testHelper = test_helpers.NewTestHelper(etcdClient)
-	})
-
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	const (
 		cellID          = "cell-id"
 		otherCellID     = "other-cell-id"
@@ -47,9 +34,9 @@ var _ = Describe("ActualLRP API", func() {
 		expectedActualLRPGroups []*models.ActualLRPGroup
 		actualActualLRPGroups   []*models.ActualLRPGroup
 
-		baseLRP       models.ActualLRP
-		otherLRP      models.ActualLRP
-		evacuatingLRP models.ActualLRP
+		baseLRP       *models.ActualLRP
+		otherLRP      *models.ActualLRP
+		evacuatingLRP *models.ActualLRP
 
 		baseLRPKey          models.ActualLRPKey
 		baseLRPInstanceKey  models.ActualLRPInstanceKey
@@ -73,16 +60,16 @@ var _ = Describe("ActualLRP API", func() {
 		otherLRPKey = models.NewActualLRPKey(otherProcessGuid, otherIndex, otherDomain)
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
-		netInfo = models.NewActualLRPNetInfo("127.0.0.1", []*models.PortMapping{{proto.Uint32(8080), proto.Uint32(80)}})
+		netInfo = models.NewActualLRPNetInfo("127.0.0.1", models.NewPortMapping(8080, 80))
 
-		baseLRP = models.ActualLRP{
+		baseLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                proto.String(models.ActualLRPStateRunning),
 			Since:                proto.Int64(time.Now().UnixNano()),
 		}
-		evacuatingLRP = models.ActualLRP{
+		evacuatingLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID),
 			ActualLRPNetInfo:     netInfo,
@@ -90,7 +77,7 @@ var _ = Describe("ActualLRP API", func() {
 			Since:                proto.Int64(time.Now().UnixNano() - 1000),
 		}
 
-		otherLRP = models.ActualLRP{
+		otherLRP = &models.ActualLRP{
 			ActualLRPKey:         otherLRPKey,
 			ActualLRPInstanceKey: otherLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
@@ -118,7 +105,7 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns all actual lrps from the bbs", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}, {Instance: &otherLRP}}
+				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}, {Instance: otherLRP}}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
@@ -129,7 +116,7 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested domain", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
+				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
@@ -140,7 +127,7 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested cell", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
+				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
@@ -160,7 +147,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 
 		It("returns all actual lrps from the bbs", func() {
-			expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: &baseLRP, Evacuating: &evacuatingLRP}}
+			expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}}
 			Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 		})
 	})
@@ -180,7 +167,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 
 		It("returns all actual lrps from the bbs", func() {
-			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: &baseLRP, Evacuating: &evacuatingLRP}
+			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP}
 			Expect(actualActualLRPGroups).To(Equal(expectedActualLRPGroups))
 		})
 	})

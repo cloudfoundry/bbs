@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
@@ -44,7 +43,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 	})
 
 	desiredLRP, err := h.db.DesiredLRPByProcessGuid(processGuid, h.logger)
-	if err == bbs.ErrResourceNotFound {
+	if err == models.ErrResourceNotFound {
 		writeNotFoundResponse(w, err)
 		return
 	}

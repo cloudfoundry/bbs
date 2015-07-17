@@ -1,4 +1,4 @@
-package db_test
+package etcd_test
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/db"

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -25,6 +27,14 @@ var ErrInvalidActionType = errors.New("invalid action type")
 type ActionInterface interface {
 	ActionType() string
 	Validator
+}
+
+func Download(from, to, user string) *DownloadAction {
+	return &DownloadAction{
+		From: proto.String("http://example.com"),
+		To:   proto.String("/tmp/internet"),
+		User: proto.String("diego"),
+	}
 }
 
 func (a *DownloadAction) ActionType() string {
@@ -77,6 +87,13 @@ func (a UploadAction) Validate() error {
 	}
 
 	return nil
+}
+
+func Run(path, user string) *RunAction {
+	return &RunAction{
+		Path: proto.String(path),
+		User: proto.String(user),
+	}
 }
 
 func (a *RunAction) ActionType() string {

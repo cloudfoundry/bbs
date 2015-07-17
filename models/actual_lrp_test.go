@@ -300,7 +300,6 @@ var _ = Describe("ActualLRP", func() {
 
 				resolvedLRP *models.ActualLRP
 				evacuating  bool
-				resolveErr  error
 			)
 
 			BeforeEach(func() {
@@ -316,17 +315,7 @@ var _ = Describe("ActualLRP", func() {
 			})
 
 			JustBeforeEach(func() {
-				resolvedLRP, evacuating, resolveErr = group.Resolve()
-			})
-
-			Context("When neither the Instance nor the Evacuating LRP is set", func() {
-				BeforeEach(func() {
-					group = models.ActualLRPGroup{}
-				})
-
-				It("returns ErrActualLRPGroupInvalid", func() {
-					Expect(resolveErr).To(Equal(models.ErrActualLRPGroupInvalid))
-				})
+				resolvedLRP, evacuating = group.Resolve()
 			})
 
 			Context("When only the Instance LRP is set", func() {
@@ -337,7 +326,6 @@ var _ = Describe("ActualLRP", func() {
 				})
 
 				It("returns the Instance LRP", func() {
-					Expect(resolveErr).NotTo(HaveOccurred())
 					Expect(resolvedLRP).To(Equal(instanceLRP))
 					Expect(evacuating).To(BeFalse())
 				})
@@ -351,7 +339,6 @@ var _ = Describe("ActualLRP", func() {
 				})
 
 				It("returns the Evacuating LRP", func() {
-					Expect(resolveErr).NotTo(HaveOccurred())
 					Expect(resolvedLRP).To(Equal(evacuatingLRP))
 					Expect(evacuating).To(BeTrue())
 				})
@@ -371,7 +358,6 @@ var _ = Describe("ActualLRP", func() {
 					})
 
 					It("returns the Evacuating LRP", func() {
-						Expect(resolveErr).NotTo(HaveOccurred())
 						Expect(resolvedLRP).To(Equal(evacuatingLRP))
 						Expect(evacuating).To(BeTrue())
 					})
@@ -383,7 +369,6 @@ var _ = Describe("ActualLRP", func() {
 					})
 
 					It("returns the Evacuating LRP", func() {
-						Expect(resolveErr).NotTo(HaveOccurred())
 						Expect(resolvedLRP).To(Equal(evacuatingLRP))
 						Expect(evacuating).To(BeTrue())
 					})
@@ -395,7 +380,6 @@ var _ = Describe("ActualLRP", func() {
 					})
 
 					It("returns the Instance LRP", func() {
-						Expect(resolveErr).NotTo(HaveOccurred())
 						Expect(resolvedLRP).To(Equal(instanceLRP))
 						Expect(evacuating).To(BeFalse())
 					})
@@ -407,7 +391,6 @@ var _ = Describe("ActualLRP", func() {
 					})
 
 					It("returns the Instance LRP", func() {
-						Expect(resolveErr).NotTo(HaveOccurred())
 						Expect(resolvedLRP).To(Equal(instanceLRP))
 						Expect(evacuating).To(BeFalse())
 					})
@@ -445,10 +428,7 @@ var _ = Describe("ActualLRP", func() {
 		BeforeEach(func() {
 			lrpKey = models.NewActualLRPKey("some-guid", 2, "some-domain")
 			instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", "some-cell-id")
-			netInfo = models.NewActualLRPNetInfo("1.2.3.4", []*models.PortMapping{
-				{ContainerPort: proto.Uint32(8080)},
-				{ContainerPort: proto.Uint32(8081), HostPort: proto.Uint32(1234)},
-			})
+			netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(0, 8080), models.NewPortMapping(1234, 8081))
 
 			lrp = models.ActualLRP{
 				ActualLRPKey:         lrpKey,
@@ -793,7 +773,7 @@ func itValidatesAbsenceOfTheInstanceKey(lrp *models.ActualLRP) {
 func itValidatesPresenceOfNetInfo(lrp *models.ActualLRP) {
 	Context("when net info is set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4", []*models.PortMapping{})
+			lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4")
 		})
 
 		It("validate does not return an error", func() {
@@ -817,7 +797,7 @@ func itValidatesPresenceOfNetInfo(lrp *models.ActualLRP) {
 func itValidatesAbsenceOfNetInfo(lrp *models.ActualLRP) {
 	Context("when net info is set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4", []*models.PortMapping{})
+			lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4")
 		})
 
 		It("validate returns an error", func() {

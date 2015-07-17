@@ -4,14 +4,13 @@ package fakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
 type FakeActualLRPDB struct {
-	ActualLRPGroupsStub        func(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, *bbs.Error)
+	ActualLRPGroupsStub        func(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, *models.Error)
 	actualLRPGroupsMutex       sync.RWMutex
 	actualLRPGroupsArgsForCall []struct {
 		filter models.ActualLRPFilter
@@ -19,9 +18,9 @@ type FakeActualLRPDB struct {
 	}
 	actualLRPGroupsReturns struct {
 		result1 *models.ActualLRPGroups
-		result2 *bbs.Error
+		result2 *models.Error
 	}
-	ActualLRPGroupsByProcessGuidStub        func(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, *bbs.Error)
+	ActualLRPGroupsByProcessGuidStub        func(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, *models.Error)
 	actualLRPGroupsByProcessGuidMutex       sync.RWMutex
 	actualLRPGroupsByProcessGuidArgsForCall []struct {
 		processGuid string
@@ -29,9 +28,9 @@ type FakeActualLRPDB struct {
 	}
 	actualLRPGroupsByProcessGuidReturns struct {
 		result1 *models.ActualLRPGroups
-		result2 *bbs.Error
+		result2 *models.Error
 	}
-	ActualLRPGroupByProcessGuidAndIndexStub        func(processGuid string, index int32, logger lager.Logger) (*models.ActualLRPGroup, *bbs.Error)
+	ActualLRPGroupByProcessGuidAndIndexStub        func(processGuid string, index int32, logger lager.Logger) (*models.ActualLRPGroup, *models.Error)
 	actualLRPGroupByProcessGuidAndIndexMutex       sync.RWMutex
 	actualLRPGroupByProcessGuidAndIndexArgsForCall []struct {
 		processGuid string
@@ -40,11 +39,11 @@ type FakeActualLRPDB struct {
 	}
 	actualLRPGroupByProcessGuidAndIndexReturns struct {
 		result1 *models.ActualLRPGroup
-		result2 *bbs.Error
+		result2 *models.Error
 	}
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, *bbs.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroups(filter models.ActualLRPFilter, logger lager.Logger) (*models.ActualLRPGroups, *models.Error) {
 	fake.actualLRPGroupsMutex.Lock()
 	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct {
 		filter models.ActualLRPFilter
@@ -70,15 +69,15 @@ func (fake *FakeActualLRPDB) ActualLRPGroupsArgsForCall(i int) (models.ActualLRP
 	return fake.actualLRPGroupsArgsForCall[i].filter, fake.actualLRPGroupsArgsForCall[i].logger
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupsReturns(result1 *models.ActualLRPGroups, result2 *bbs.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupsReturns(result1 *models.ActualLRPGroups, result2 *models.Error) {
 	fake.ActualLRPGroupsStub = nil
 	fake.actualLRPGroupsReturns = struct {
 		result1 *models.ActualLRPGroups
-		result2 *bbs.Error
+		result2 *models.Error
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuid(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, *bbs.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuid(processGuid string, logger lager.Logger) (*models.ActualLRPGroups, *models.Error) {
 	fake.actualLRPGroupsByProcessGuidMutex.Lock()
 	fake.actualLRPGroupsByProcessGuidArgsForCall = append(fake.actualLRPGroupsByProcessGuidArgsForCall, struct {
 		processGuid string
@@ -104,15 +103,15 @@ func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidArgsForCall(i int) (str
 	return fake.actualLRPGroupsByProcessGuidArgsForCall[i].processGuid, fake.actualLRPGroupsByProcessGuidArgsForCall[i].logger
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidReturns(result1 *models.ActualLRPGroups, result2 *bbs.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidReturns(result1 *models.ActualLRPGroups, result2 *models.Error) {
 	fake.ActualLRPGroupsByProcessGuidStub = nil
 	fake.actualLRPGroupsByProcessGuidReturns = struct {
 		result1 *models.ActualLRPGroups
-		result2 *bbs.Error
+		result2 *models.Error
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int32, logger lager.Logger) (*models.ActualLRPGroup, *bbs.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int32, logger lager.Logger) (*models.ActualLRPGroup, *models.Error) {
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.Lock()
 	fake.actualLRPGroupByProcessGuidAndIndexArgsForCall = append(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall, struct {
 		processGuid string
@@ -139,11 +138,11 @@ func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexArgsForCall(i in
 	return fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].processGuid, fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].index, fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].logger
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *models.ActualLRPGroup, result2 *bbs.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *models.ActualLRPGroup, result2 *models.Error) {
 	fake.ActualLRPGroupByProcessGuidAndIndexStub = nil
 	fake.actualLRPGroupByProcessGuidAndIndexReturns = struct {
 		result1 *models.ActualLRPGroup
-		result2 *bbs.Error
+		result2 *models.Error
 	}{result1, result2}
 }
 

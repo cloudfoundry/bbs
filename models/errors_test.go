@@ -1,7 +1,7 @@
-package bbs_test
+package models_test
 
 import (
-	. "github.com/cloudfoundry-incubator/bbs"
+	. "github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"

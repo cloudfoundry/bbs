@@ -5,7 +5,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -113,7 +112,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPsReturns(&models.DesiredLRPs{}, bbs.ErrUnknownError)
+				fakeDesiredLRPDB.DesiredLRPsReturns(&models.DesiredLRPs{}, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -121,11 +120,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})
@@ -172,7 +171,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when the DB returns no desired lrp", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, bbs.ErrResourceNotFound)
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("responds with 404", func() {
@@ -180,17 +179,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 
 			It("returns a resource not found error", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrResourceNotFound)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrResourceNotFound)).To(BeTrue())
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, bbs.ErrUnknownError)
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, models.ErrUnknownError)
 			})
 
 			It("responds with a 500", func() {
@@ -198,11 +197,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError bbs.Error
+				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(bbs.ErrUnknownError)).To(BeTrue())
+				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
 			})
 		})
 	})

@@ -2,25 +2,6 @@
 // source: actual_lrp.proto
 // DO NOT EDIT!
 
-/*
-	Package models is a generated protocol buffer package.
-
-	It is generated from these files:
-		actual_lrp.proto
-		desired_lrp.proto
-		modification_tag.proto
-		actions.proto
-		environment_variables.proto
-
-	It has these top-level messages:
-		ActualLRPGroup
-		PortMapping
-		ActualLRPKey
-		ActualLRPInstanceKey
-		ActualLRPNetInfo
-		ActualLRP
-		ActualLRPGroups
-*/
 package models
 
 import proto "github.com/gogo/protobuf/proto"

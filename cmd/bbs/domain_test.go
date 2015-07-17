@@ -4,21 +4,12 @@ import (
 	"time"
 
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Domain API", func() {
-	BeforeEach(func() {
-		bbsProcess = ginkgomon.Invoke(bbsRunner)
-	})
-
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	Describe("PUT /v1/domains/:domain", func() {
 		var existingDomain string
 

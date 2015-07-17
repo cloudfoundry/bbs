@@ -1,4 +1,4 @@
-package db
+package etcd
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"
@@ -15,7 +14,7 @@ import (
 const maxDesiredLRPGetterWorkPoolSize = 50
 const DesiredLRPSchemaRoot = DataSchemaRoot + "desired"
 
-func DesiredLRPSchemaPath(lrp models.DesiredLRP) string {
+func DesiredLRPSchemaPath(lrp *models.DesiredLRP) string {
 	return DesiredLRPSchemaPathByProcessGuid(lrp.GetProcessGuid())
 }
 
@@ -23,9 +22,9 @@ func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 	return path.Join(DesiredLRPSchemaRoot, processGuid)
 }
 
-func (db *ETCDDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *bbs.Error) {
+func (db *ETCDDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logger) (*models.DesiredLRPs, *models.Error) {
 	root, bbsErr := db.fetchRecursiveRaw(DesiredLRPSchemaRoot, logger)
-	if bbsErr.Equal(bbs.ErrResourceNotFound) {
+	if bbsErr.Equal(models.ErrResourceNotFound) {
 		return &models.DesiredLRPs{}, nil
 	}
 	if bbsErr != nil {
@@ -64,21 +63,21 @@ func (db *ETCDDB) DesiredLRPs(filter models.DesiredLRPFilter, logger lager.Logge
 	throttler, err := workpool.NewThrottler(maxDesiredLRPGetterWorkPoolSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": maxDesiredLRPGetterWorkPoolSize, "num-works": len(works)})
-		return &models.DesiredLRPs{}, bbs.ErrUnknownError
+		return &models.DesiredLRPs{}, models.ErrUnknownError
 	}
 
 	logger.Debug("performing-deserialization-work")
 	throttler.Work()
 	if err, ok := workErr.Load().(error); ok {
 		logger.Error("failed-performing-deserialization-work", err)
-		return &models.DesiredLRPs{}, bbs.ErrUnknownError
+		return &models.DesiredLRPs{}, models.ErrUnknownError
 	}
 	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-desired-lrps": len(desiredLRPs.GetDesiredLrps())})
 
 	return &desiredLRPs, nil
 }
 
-func (db *ETCDDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *bbs.Error) {
+func (db *ETCDDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logger) (*models.DesiredLRP, *models.Error) {
 	node, bbsErr := db.fetchRaw(DesiredLRPSchemaPathByProcessGuid(processGuid), logger)
 	if bbsErr != nil {
 		return nil, bbsErr
@@ -88,7 +87,7 @@ func (db *ETCDDB) DesiredLRPByProcessGuid(processGuid string, logger lager.Logge
 	deserializeErr := models.FromJSON([]byte(node.Value), &lrp)
 	if deserializeErr != nil {
 		logger.Error("failed-parsing-desired-lrp", deserializeErr)
-		return nil, bbs.ErrDeserializeJSON
+		return nil, models.ErrDeserializeJSON
 	}
 
 	return &lrp, nil

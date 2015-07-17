@@ -9,17 +9,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func (t *TestHelper) NewValidActualLRP(guid string, index int32) models.ActualLRP {
-	actualLRP := models.ActualLRP{
+func (t *TestHelper) NewValidActualLRP(guid string, index int32) *models.ActualLRP {
+	actualLRP := &models.ActualLRP{
 		ActualLRPKey:         models.NewActualLRPKey(guid, index, "some-domain"),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-guid", "some-cell"),
-		ActualLRPNetInfo: models.NewActualLRPNetInfo("some-address", []*models.PortMapping{
-			{HostPort: proto.Uint32(2222), ContainerPort: proto.Uint32(4444)},
-		}),
-		CrashCount:  proto.Int32(33),
-		CrashReason: proto.String("badness"),
-		State:       proto.String(models.ActualLRPStateRunning),
-		Since:       proto.Int64(1138),
+		ActualLRPNetInfo:     models.NewActualLRPNetInfo("some-address", models.NewPortMapping(2222, 4444)),
+		CrashCount:           proto.Int32(33),
+		CrashReason:          proto.String("badness"),
+		State:                proto.String(models.ActualLRPStateRunning),
+		Since:                proto.Int64(1138),
 		ModificationTag: &models.ModificationTag{
 			Epoch: proto.String("some-epoch"),
 			Index: proto.Uint32(999),
@@ -31,9 +29,9 @@ func (t *TestHelper) NewValidActualLRP(guid string, index int32) models.ActualLR
 	return actualLRP
 }
 
-func (t *TestHelper) NewValidDesiredLRP(guid string) models.DesiredLRP {
+func (t *TestHelper) NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
-	desiredLRP := models.DesiredLRP{
+	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          &guid,
 		Domain:               proto.String("some-domain"),
 		RootFs:               proto.String("some:rootfs"),

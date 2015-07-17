@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func (t *TestHelper) SetRawActualLRP(lrp models.ActualLRP) {
+func (t *TestHelper) SetRawActualLRP(lrp *models.ActualLRP) {
 	value, err := json.Marshal(lrp) // do NOT use models.ToJSON; don't want validations
 	Expect(err).NotTo(HaveOccurred())
 
@@ -20,7 +20,7 @@ func (t *TestHelper) SetRawActualLRP(lrp models.ActualLRP) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func (t *TestHelper) SetRawEvacuatingActualLRP(lrp models.ActualLRP, ttlInSeconds uint64) {
+func (t *TestHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSeconds uint64) {
 	value, err := json.Marshal(lrp) // do NOT use models.ToJSON; don't want validations
 	Expect(err).NotTo(HaveOccurred())
 
@@ -30,7 +30,7 @@ func (t *TestHelper) SetRawEvacuatingActualLRP(lrp models.ActualLRP, ttlInSecond
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func (t *TestHelper) SetRawDesiredLRP(lrp models.DesiredLRP) {
+func (t *TestHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
 	value, err := json.Marshal(lrp) // do NOT use models.ToJSON; don't want validations
 	Expect(err).NotTo(HaveOccurred())
 
@@ -61,7 +61,7 @@ func (t *TestHelper) CreateMalformedEvacuatingLRP(guid string, index int32) {
 }
 
 func (t *TestHelper) CreateMalformedDesiredLRP(guid string) {
-	t.createMalformedValueForKey(etcddb.DesiredLRPSchemaPath(models.DesiredLRP{ProcessGuid: &guid}))
+	t.createMalformedValueForKey(etcddb.DesiredLRPSchemaPath(&models.DesiredLRP{ProcessGuid: &guid}))
 }
 
 func (t *TestHelper) createMalformedValueForKey(key string) {
@@ -83,7 +83,7 @@ func (t *TestHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 				To:   proto.String("/tmp/internet"),
 				User: proto.String("someone"),
 			})
-			desiredLRP := models.DesiredLRP{
+			desiredLRP := &models.DesiredLRP{
 				Domain:      proto.String(domain),
 				ProcessGuid: proto.String(fmt.Sprintf("guid-%d-for-%s", i, domain)),
 				RootFs:      proto.String("some:rootfs"),
@@ -96,7 +96,7 @@ func (t *TestHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 			t.etcdClient.Set(etcddb.DesiredLRPSchemaPath(desiredLRP), string(value), 0)
 			Expect(err).NotTo(HaveOccurred())
 
-			createdDesiredLRPs[domain] = append(createdDesiredLRPs[domain], &desiredLRP)
+			createdDesiredLRPs[domain] = append(createdDesiredLRPs[domain], desiredLRP)
 		}
 	}
 

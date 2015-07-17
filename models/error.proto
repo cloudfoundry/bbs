@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package bbs;
+package models;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
