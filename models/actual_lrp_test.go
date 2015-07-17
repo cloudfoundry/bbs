@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,9 +14,9 @@ import (
 func defaultCrashedActual(crashCount int32, lastCrashed int64) *models.ActualLRP {
 	return &models.ActualLRP{
 		ActualLRPKey: models.NewActualLRPKey("p-guid", 0, "domain"),
-		State:        proto.String(models.ActualLRPStateCrashed),
-		CrashCount:   proto.Int32(crashCount),
-		Since:        proto.Int64(lastCrashed),
+		State:        models.ActualLRPStateCrashed,
+		CrashCount:   crashCount,
+		Since:        lastCrashed,
 	}
 }
 
@@ -183,7 +182,7 @@ var _ = Describe("ActualLRP", func() {
 				actual := defaultCrashedActual(0, now.UnixNano())
 				calc := models.NewDefaultRestartCalculator()
 				for _, state := range models.ActualLRPStates {
-					actual.State = proto.String(state)
+					actual.State = state
 					if state == models.ActualLRPStateCrashed {
 						Expect(actual.ShouldRestartCrash(now, calc)).To(BeTrue(), "should restart CRASHED lrp")
 					} else {
@@ -210,7 +209,7 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when the ProcessGuid is blank", func() {
 				BeforeEach(func() {
-					actualLRPKey.ProcessGuid = proto.String("")
+					actualLRPKey.ProcessGuid = ""
 				})
 
 				It("returns a validation error", func() {
@@ -220,7 +219,7 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when the Domain is blank", func() {
 				BeforeEach(func() {
-					actualLRPKey.Domain = proto.String("")
+					actualLRPKey.Domain = ""
 				})
 
 				It("returns a validation error", func() {
@@ -230,7 +229,7 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when the Index is negative", func() {
 				BeforeEach(func() {
-					actualLRPKey.Index = proto.Int32(-1)
+					actualLRPKey.Index = -1
 				})
 
 				It("returns a validation error", func() {
@@ -306,11 +305,11 @@ var _ = Describe("ActualLRP", func() {
 				lrpKey := models.NewActualLRPKey("process-guid", 1, "domain")
 				instanceLRP = &models.ActualLRP{
 					ActualLRPKey: lrpKey,
-					Since:        proto.Int64(1138),
+					Since:        1138,
 				}
 				evacuatingLRP = &models.ActualLRP{
 					ActualLRPKey: lrpKey,
-					Since:        proto.Int64(3417),
+					Since:        3417,
 				}
 			})
 
@@ -354,7 +353,7 @@ var _ = Describe("ActualLRP", func() {
 
 				Context("When the Instance is UNCLAIMED", func() {
 					BeforeEach(func() {
-						instanceLRP.State = proto.String(models.ActualLRPStateUnclaimed)
+						instanceLRP.State = models.ActualLRPStateUnclaimed
 					})
 
 					It("returns the Evacuating LRP", func() {
@@ -365,7 +364,7 @@ var _ = Describe("ActualLRP", func() {
 
 				Context("When the Instance is CLAIMED", func() {
 					BeforeEach(func() {
-						instanceLRP.State = proto.String(models.ActualLRPStateClaimed)
+						instanceLRP.State = models.ActualLRPStateClaimed
 					})
 
 					It("returns the Evacuating LRP", func() {
@@ -376,7 +375,7 @@ var _ = Describe("ActualLRP", func() {
 
 				Context("When the Instance is RUNNING", func() {
 					BeforeEach(func() {
-						instanceLRP.State = proto.String(models.ActualLRPStateRunning)
+						instanceLRP.State = models.ActualLRPStateRunning
 					})
 
 					It("returns the Instance LRP", func() {
@@ -387,7 +386,7 @@ var _ = Describe("ActualLRP", func() {
 
 				Context("When the Instance is CRASHED", func() {
 					BeforeEach(func() {
-						instanceLRP.State = proto.String(models.ActualLRPStateCrashed)
+						instanceLRP.State = models.ActualLRPStateCrashed
 					})
 
 					It("returns the Instance LRP", func() {
@@ -410,7 +409,7 @@ var _ = Describe("ActualLRP", func() {
     "instance_guid":"some-instance-guid",
     "address": "1.2.3.4",
     "ports": [
-      { "container_port": 8080 },
+		  { "container_port": 8080, "host_port": 5678 },
       { "container_port": 8081, "host_port": 1234 }
     ],
     "index": 2,
@@ -419,6 +418,8 @@ var _ = Describe("ActualLRP", func() {
     "cell_id":"some-cell-id",
     "domain":"some-domain",
 		"crash_count": 1,
+		"crash_reason": "",
+		"placement_error": "",
 		"modification_tag": {
 			"epoch": "some-guid",
 			"index": 50
@@ -428,18 +429,18 @@ var _ = Describe("ActualLRP", func() {
 		BeforeEach(func() {
 			lrpKey = models.NewActualLRPKey("some-guid", 2, "some-domain")
 			instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", "some-cell-id")
-			netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(0, 8080), models.NewPortMapping(1234, 8081))
+			netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 8080), models.NewPortMapping(1234, 8081))
 
 			lrp = models.ActualLRP{
 				ActualLRPKey:         lrpKey,
 				ActualLRPInstanceKey: instanceKey,
 				ActualLRPNetInfo:     netInfo,
-				CrashCount:           proto.Int32(1),
-				State:                proto.String(models.ActualLRPStateRunning),
-				Since:                proto.Int64(1138),
+				CrashCount:           1,
+				State:                models.ActualLRPStateRunning,
+				Since:                1138,
 				ModificationTag: &models.ModificationTag{
-					Epoch: proto.String("some-guid"),
-					Index: proto.Uint32(50),
+					Epoch: "some-guid",
+					Index: 50,
 				},
 			}
 		})
@@ -504,8 +505,8 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when the ProcessGuid fields differ", func() {
 				BeforeEach(func() {
-					before.ProcessGuid = proto.String("some-process-guid")
-					afterKey.ProcessGuid = proto.String("another-process-guid")
+					before.ProcessGuid = "some-process-guid"
+					afterKey.ProcessGuid = "another-process-guid"
 				})
 
 				It("is not allowed", func() {
@@ -515,8 +516,8 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when the Index fields differ", func() {
 				BeforeEach(func() {
-					before.Index = proto.Int32(1138)
-					afterKey.Index = proto.Int32(3417)
+					before.Index = 1138
+					afterKey.Index = 3417
 				})
 
 				It("is not allowed", func() {
@@ -526,8 +527,8 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when the Domain fields differ", func() {
 				BeforeEach(func() {
-					before.Domain = proto.String("some-domain")
-					afterKey.Domain = proto.String("another-domain")
+					before.Domain = "some-domain"
+					afterKey.Domain = "another-domain"
 				})
 
 				It("is not allowed", func() {
@@ -589,7 +590,7 @@ var _ = Describe("ActualLRP", func() {
 				for _, entry := range stateTable {
 					entry := entry
 					It(EntryToString(entry), func() {
-						before.State = proto.String(entry.BeforeState)
+						before.State = entry.BeforeState
 						before.ActualLRPInstanceKey = entry.BeforeInstanceKey
 						Expect(before.AllowsTransitionTo(before.ActualLRPKey, entry.AfterInstanceKey, entry.AfterState)).To(Equal(entry.Allowed))
 					})
@@ -603,8 +604,8 @@ var _ = Describe("ActualLRP", func() {
 				BeforeEach(func() {
 					lrp = models.ActualLRP{
 						ActualLRPKey: lrpKey,
-						State:        proto.String(models.ActualLRPStateUnclaimed),
-						Since:        proto.Int64(1138),
+						State:        models.ActualLRPStateUnclaimed,
+						Since:        1138,
 					}
 				})
 
@@ -619,8 +620,8 @@ var _ = Describe("ActualLRP", func() {
 					lrp = models.ActualLRP{
 						ActualLRPKey:         lrpKey,
 						ActualLRPInstanceKey: instanceKey,
-						State:                proto.String(models.ActualLRPStateClaimed),
-						Since:                proto.Int64(1138),
+						State:                models.ActualLRPStateClaimed,
+						Since:                1138,
 					}
 				})
 
@@ -636,8 +637,8 @@ var _ = Describe("ActualLRP", func() {
 						ActualLRPKey:         lrpKey,
 						ActualLRPInstanceKey: instanceKey,
 						ActualLRPNetInfo:     netInfo,
-						State:                proto.String(models.ActualLRPStateRunning),
-						Since:                proto.Int64(1138),
+						State:                models.ActualLRPStateRunning,
+						Since:                1138,
 					}
 				})
 
@@ -651,8 +652,8 @@ var _ = Describe("ActualLRP", func() {
 				BeforeEach(func() {
 					lrp = models.ActualLRP{
 						ActualLRPKey: lrpKey,
-						State:        proto.String(""),
-						Since:        proto.Int64(1138),
+						State:        "",
+						Since:        1138,
 					}
 				})
 
@@ -668,8 +669,8 @@ var _ = Describe("ActualLRP", func() {
 				BeforeEach(func() {
 					lrp = models.ActualLRP{
 						ActualLRPKey: lrpKey,
-						State:        proto.String(models.ActualLRPStateUnclaimed),
-						Since:        proto.Int64(0),
+						State:        models.ActualLRPStateUnclaimed,
+						Since:        0,
 					}
 				})
 
@@ -684,8 +685,8 @@ var _ = Describe("ActualLRP", func() {
 				BeforeEach(func() {
 					lrp = models.ActualLRP{
 						ActualLRPKey: lrpKey,
-						State:        proto.String(models.ActualLRPStateCrashed),
-						Since:        proto.Int64(1138),
+						State:        models.ActualLRPStateCrashed,
+						Since:        1138,
 					}
 				})
 
@@ -821,7 +822,7 @@ func itValidatesAbsenceOfNetInfo(lrp *models.ActualLRP) {
 func itValidatesPresenceOfPlacementError(lrp *models.ActualLRP) {
 	Context("when placement error is set", func() {
 		BeforeEach(func() {
-			lrp.PlacementError = proto.String("insufficient capacity")
+			lrp.PlacementError = "insufficient capacity"
 		})
 
 		It("validate does not return an error", func() {
@@ -831,7 +832,7 @@ func itValidatesPresenceOfPlacementError(lrp *models.ActualLRP) {
 
 	Context("when placement error is not set", func() {
 		BeforeEach(func() {
-			lrp.PlacementError = proto.String("")
+			lrp.PlacementError = ""
 		})
 
 		It("validate does not return an error", func() {
@@ -843,7 +844,7 @@ func itValidatesPresenceOfPlacementError(lrp *models.ActualLRP) {
 func itValidatesAbsenceOfPlacementError(lrp *models.ActualLRP) {
 	Context("when placement error is set", func() {
 		BeforeEach(func() {
-			lrp.PlacementError = proto.String("insufficient capacity")
+			lrp.PlacementError = "insufficient capacity"
 		})
 
 		It("validate returns an error", func() {
@@ -855,7 +856,7 @@ func itValidatesAbsenceOfPlacementError(lrp *models.ActualLRP) {
 
 	Context("when placement error is not set", func() {
 		BeforeEach(func() {
-			lrp.PlacementError = proto.String("")
+			lrp.PlacementError = ""
 		})
 
 		It("validate does not return an error", func() {

@@ -17,8 +17,8 @@ var _ = proto.Marshal
 var _ = math.Inf
 
 type ModificationTag struct {
-	Epoch *string `protobuf:"bytes,1,opt,name=epoch" json:"epoch,omitempty"`
-	Index *uint32 `protobuf:"varint,2,opt,name=index" json:"index,omitempty"`
+	Epoch string `protobuf:"bytes,1,opt,name=epoch" json:"epoch"`
+	Index uint32 `protobuf:"varint,2,opt,name=index" json:"index"`
 }
 
 func (m *ModificationTag) Reset()         { *m = ModificationTag{} }
@@ -26,15 +26,15 @@ func (m *ModificationTag) String() string { return proto.CompactTextString(m) }
 func (*ModificationTag) ProtoMessage()    {}
 
 func (m *ModificationTag) GetEpoch() string {
-	if m != nil && m.Epoch != nil {
-		return *m.Epoch
+	if m != nil {
+		return m.Epoch
 	}
 	return ""
 }
 
 func (m *ModificationTag) GetIndex() uint32 {
-	if m != nil && m.Index != nil {
-		return *m.Index
+	if m != nil {
+		return m.Index
 	}
 	return 0
 }
@@ -80,26 +80,23 @@ func (m *ModificationTag) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Epoch = &s
+			m.Epoch = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
 			}
-			var v uint32
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (uint32(b) & 0x7F) << shift
+				m.Index |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Index = &v
 		default:
 			var sizeOfWire int
 			for {
@@ -210,13 +207,9 @@ func skipModificationTag(data []byte) (n int, err error) {
 func (m *ModificationTag) Size() (n int) {
 	var l int
 	_ = l
-	if m.Epoch != nil {
-		l = len(*m.Epoch)
-		n += 1 + l + sovModificationTag(uint64(l))
-	}
-	if m.Index != nil {
-		n += 1 + sovModificationTag(uint64(*m.Index))
-	}
+	l = len(m.Epoch)
+	n += 1 + l + sovModificationTag(uint64(l))
+	n += 1 + sovModificationTag(uint64(m.Index))
 	return n
 }
 
@@ -248,17 +241,13 @@ func (m *ModificationTag) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Epoch != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintModificationTag(data, i, uint64(len(*m.Epoch)))
-		i += copy(data[i:], *m.Epoch)
-	}
-	if m.Index != nil {
-		data[i] = 0x10
-		i++
-		i = encodeVarintModificationTag(data, i, uint64(*m.Index))
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintModificationTag(data, i, uint64(len(m.Epoch)))
+	i += copy(data[i:], m.Epoch)
+	data[i] = 0x10
+	i++
+	i = encodeVarintModificationTag(data, i, uint64(m.Index))
 	return i, nil
 }
 
@@ -309,22 +298,10 @@ func (this *ModificationTag) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Epoch != nil && that1.Epoch != nil {
-		if *this.Epoch != *that1.Epoch {
-			return false
-		}
-	} else if this.Epoch != nil {
-		return false
-	} else if that1.Epoch != nil {
+	if this.Epoch != that1.Epoch {
 		return false
 	}
-	if this.Index != nil && that1.Index != nil {
-		if *this.Index != *that1.Index {
-			return false
-		}
-	} else if this.Index != nil {
-		return false
-	} else if that1.Index != nil {
+	if this.Index != that1.Index {
 		return false
 	}
 	return true

@@ -24,66 +24,66 @@ message Action {
 }
 
 message DownloadAction {
-  optional string artifact = 1;
-  optional string from = 2;
-  optional string to = 3;
-  optional string cache_key = 4;
-  optional string log_source = 5;
-  optional string user = 6;
+  optional string artifact = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "artifact,omitempty"];
+  optional string from = 2 [(gogoproto.nullable) = false];
+  optional string to = 3 [(gogoproto.nullable) = false];
+  optional string cache_key = 4 [(gogoproto.nullable) = false];
+  optional string log_source = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
+  optional string user = 6 [(gogoproto.nullable) = false];
 }
 
 message UploadAction {
-  optional string artifact = 1;
-  optional string from = 2;
-  optional string to = 3;
-  optional string log_source = 4;
-  optional string user = 5;
+  optional string artifact = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "artifact,omitempty"];
+  optional string from = 2 [(gogoproto.nullable) = false];
+  optional string to = 3 [(gogoproto.nullable) = false];
+  optional string log_source = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
+  optional string user = 5 [(gogoproto.nullable) = false];
 }
 
 message RunAction {
-  optional string path = 1;
+  optional string path = 1 [(gogoproto.nullable) = false];
   repeated string args = 2;
-  optional string dir = 3;
+  optional string dir = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "dir,omitempty"];
   repeated EnvironmentVariable env = 4;
   optional ResourceLimits resource_limits = 5;
-  optional string user = 6;
-  optional string log_source = 7;
+  optional string user = 6 [(gogoproto.nullable) = false];
+  optional string log_source = 7 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message TimeoutAction {
   optional Action action = 1;
-  optional int64 timeout = 2;
-  optional string log_source = 3;
+  optional int64 timeout = 2 [(gogoproto.nullable) = false];
+  optional string log_source = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message EmitProgressAction {
   optional Action action = 1;
-  optional string start_message = 2;
-  optional string success_message = 3;
-  optional string failure_message_prefix = 4;
-  optional string log_source = 5;
+  optional string start_message = 2 [(gogoproto.nullable) = false];
+  optional string success_message = 3 [(gogoproto.nullable) = false];
+  optional string failure_message_prefix = 4 [(gogoproto.nullable) = false];
+  optional string log_source = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message TryAction {
   optional Action action = 1;
-  optional string log_source = 2;
+  optional string log_source = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message ParallelAction {
   repeated Action actions = 1;
-  optional string log_source = 2;
+  optional string log_source = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message SerialAction {
   repeated Action actions = 1;
-  optional string log_source = 2;
+  optional string log_source = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message CodependentAction {
   repeated Action actions = 1;
-  optional string log_source = 2;
+  optional string log_source = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message ResourceLimits {
-  optional uint64 nofile = 1;
+  optional uint64 nofile = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nofile,omitempty"];
 }

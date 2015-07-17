@@ -2,7 +2,6 @@ package models_test
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -22,13 +21,13 @@ var _ = Describe("SecurityGroupRule", func() {
 
 	BeforeEach(func() {
 		rule = models.SecurityGroupRule{
-			Protocol:     proto.String(models.TCPProtocol),
+			Protocol:     models.TCPProtocol,
 			Destinations: []string{"1.2.3.4/16"},
 			PortRange: &models.PortRange{
-				Start: proto.Uint32(1),
-				End:   proto.Uint32(1024),
+				Start: 1,
+				End:   1024,
 			},
-			Log: proto.Bool(false),
+			Log: false,
 		}
 	})
 
@@ -41,15 +40,18 @@ var _ = Describe("SecurityGroupRule", func() {
 
 		It("should JSONify icmp info", func() {
 			icmpRule := models.SecurityGroupRule{
-				Protocol:     proto.String(models.ICMPProtocol),
+				Protocol:     models.ICMPProtocol,
 				Destinations: []string{"1.2.3.4/16"},
-				IcmpInfo:     &models.ICMPInfo{},
-				Log:          proto.Bool(false),
+				IcmpInfo: &models.ICMPInfo{
+					Type: 3,
+					Code: 2,
+				},
+				Log: false,
 			}
 
 			json, err := models.ToJSON(&icmpRule)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(string(json)).To(MatchJSON(`{"protocol": "icmp", "destinations": ["1.2.3.4/16"], "icmp_info": {}, "log":false }`))
+			Expect(string(json)).To(MatchJSON(`{"protocol": "icmp", "destinations": ["1.2.3.4/16"], "icmp_info": {"type": 3, "code": 2}, "log":false }`))
 		})
 	})
 
@@ -80,12 +82,12 @@ var _ = Describe("SecurityGroupRule", func() {
 
 		JustBeforeEach(func() {
 			rule = models.SecurityGroupRule{
-				Protocol:     proto.String(protocol),
+				Protocol:     protocol,
 				Destinations: []string{destination},
 				Ports:        ports,
 				PortRange:    portRange,
 				IcmpInfo:     icmpInfo,
-				Log:          proto.Bool(log),
+				Log:          log,
 			}
 
 			validationErr = rule.Validate()
@@ -132,7 +134,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when it is a valid port range", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{proto.Uint32(1), proto.Uint32(65535)}
+						portRange = &models.PortRange{1, 65535}
 					})
 
 					It("passes validation and does not return an error", func() {
@@ -143,7 +145,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when port range has a start value greater than the end value", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{proto.Uint32(1024), proto.Uint32(1)}
+						portRange = &models.PortRange{1024, 1}
 					})
 
 					It("returns an error", func() {
@@ -154,7 +156,7 @@ var _ = Describe("SecurityGroupRule", func() {
 
 			Context("when ports and port range are provided", func() {
 				BeforeEach(func() {
-					portRange = &models.PortRange{proto.Uint32(1), proto.Uint32(65535)}
+					portRange = &models.PortRange{1, 65535}
 					ports = []uint32{1}
 				})
 
@@ -203,7 +205,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			Context("when Port range is provided", func() {
 				BeforeEach(func() {
 					ports = nil
-					portRange = &models.PortRange{proto.Uint32(1), proto.Uint32(65535)}
+					portRange = &models.PortRange{1, 65535}
 				})
 
 				It("fails", func() {
@@ -386,7 +388,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			BeforeEach(func() {
 				protocol = "tcp"
 				destination = "garbage"
-				portRange = &models.PortRange{proto.Uint32(443), proto.Uint32(80)}
+				portRange = &models.PortRange{443, 80}
 			})
 
 			It("aggregates validation errors", func() {

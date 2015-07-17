@@ -6,7 +6,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -69,7 +68,7 @@ var _ = Describe("Watchers", func() {
 			desiredBeforeUpdate, err := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(err).NotTo(HaveOccurred())
 
-			lrp.Instances = proto.Int32(lrp.GetInstances() + 1)
+			lrp.Instances = lrp.GetInstances() + 1
 			testHelper.SetRawDesiredLRP(lrp)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -155,8 +154,8 @@ var _ = Describe("Watchers", func() {
 				Instance: &models.ActualLRP{
 					ActualLRPKey:         models.NewActualLRPKey(lrpProcessGuid, lrpIndex, lrpDomain),
 					ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", lrpCellId),
-					State:                proto.String(models.ActualLRPStateClaimed),
-					Since:                proto.Int64(clock.Now().UnixNano()),
+					State:                models.ActualLRPStateClaimed,
+					Since:                clock.Now().UnixNano(),
 				},
 			}
 			testHelper.SetRawActualLRP(updatedGroup.Instance)
@@ -206,8 +205,8 @@ var _ = Describe("Watchers", func() {
 						ActualLRPKey:         key,
 						ActualLRPInstanceKey: instanceKey,
 						ActualLRPNetInfo:     netInfo,
-						State:                proto.String(models.ActualLRPStateRunning),
-						Since:                proto.Int64(clock.Now().UnixNano()),
+						State:                models.ActualLRPStateRunning,
+						Since:                clock.Now().UnixNano(),
 					},
 				}
 
@@ -220,8 +219,8 @@ var _ = Describe("Watchers", func() {
 						ActualLRPKey:         key,
 						ActualLRPInstanceKey: instanceKey,
 						ActualLRPNetInfo:     models.NewActualLRPNetInfo("2.2.2.2", nil),
-						State:                proto.String(models.ActualLRPStateRunning),
-						Since:                proto.Int64(clock.Now().UnixNano()),
+						State:                models.ActualLRPStateRunning,
+						Since:                clock.Now().UnixNano(),
 					},
 				}
 				testHelper.SetRawEvacuatingActualLRP(updatedGroup.Evacuating, 0)

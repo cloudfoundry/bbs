@@ -282,7 +282,7 @@ var _ = Describe("DesiredLRP", func() {
 			for _, validGuid := range validGuids {
 				func(validGuid string) {
 					It(fmt.Sprintf("'%s' is a valid process_guid", validGuid), func() {
-						desiredLRP.ProcessGuid = proto.String(validGuid)
+						desiredLRP.ProcessGuid = validGuid
 						err := desiredLRP.Validate()
 						Expect(err).NotTo(HaveOccurred())
 					})
@@ -293,7 +293,7 @@ var _ = Describe("DesiredLRP", func() {
 			for _, invalidGuid := range invalidGuids {
 				func(invalidGuid string) {
 					It(fmt.Sprintf("'%s' is an invalid process_guid", invalidGuid), func() {
-						desiredLRP.ProcessGuid = proto.String(invalidGuid)
+						desiredLRP.ProcessGuid = invalidGuid
 						assertDesiredLRPValidationFailsWithMessage(desiredLRP, "process_guid")
 					})
 				}(invalidGuid)
@@ -301,35 +301,35 @@ var _ = Describe("DesiredLRP", func() {
 		})
 
 		It("requires a positive nonzero number of instances", func() {
-			desiredLRP.Instances = proto.Int32(-1)
+			desiredLRP.Instances = -1
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "instances")
 
-			desiredLRP.Instances = proto.Int32(0)
+			desiredLRP.Instances = 0
 			validationErr := desiredLRP.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 
-			desiredLRP.Instances = proto.Int32(1)
+			desiredLRP.Instances = 1
 			validationErr = desiredLRP.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 		})
 
 		It("requires a domain", func() {
-			desiredLRP.Domain = proto.String("")
+			desiredLRP.Domain = ""
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "domain")
 		})
 
 		It("requires a rootfs", func() {
-			desiredLRP.RootFs = proto.String("")
+			desiredLRP.RootFs = ""
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "rootfs")
 		})
 
 		It("requires a valid URL with a non-empty scheme for the rootfs", func() {
-			desiredLRP.RootFs = proto.String(":not-a-url")
+			desiredLRP.RootFs = ":not-a-url"
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "rootfs")
 		})
 
 		It("requires a valid absolute URL for the rootfs", func() {
-			desiredLRP.RootFs = proto.String("not-an-absolute-url")
+			desiredLRP.RootFs = "not-an-absolute-url"
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "rootfs")
 		})
 
@@ -341,7 +341,7 @@ var _ = Describe("DesiredLRP", func() {
 		It("requires a valid action", func() {
 			desiredLRP.Action = &models.Action{
 				UploadAction: &models.UploadAction{
-					From: proto.String("web_location"),
+					From: "web_location",
 				},
 			}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
@@ -350,7 +350,7 @@ var _ = Describe("DesiredLRP", func() {
 		It("requires a valid setup action if specified", func() {
 			desiredLRP.Setup = &models.Action{
 				UploadAction: &models.UploadAction{
-					From: proto.String("web_location"),
+					From: "web_location",
 				},
 			}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
@@ -359,21 +359,21 @@ var _ = Describe("DesiredLRP", func() {
 		It("requires a valid monitor action if specified", func() {
 			desiredLRP.Monitor = &models.Action{
 				UploadAction: &models.UploadAction{
-					From: proto.String("web_location"),
+					From: "web_location",
 				},
 			}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
 		})
 
 		It("requires a valid CPU weight", func() {
-			desiredLRP.CpuWeight = proto.Uint32(101)
+			desiredLRP.CpuWeight = 101
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "cpu_weight")
 		})
 
 		Context("when security group is present", func() {
 			It("must be valid", func() {
 				desiredLRP.EgressRules = []*models.SecurityGroupRule{{
-					Protocol: proto.String("foo"),
+					Protocol: "foo",
 				}}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "egress_rules")
 			})

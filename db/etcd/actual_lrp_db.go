@@ -77,7 +77,7 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFi
 		logger.Error("failed-performing-deserialization-work", err)
 		return &models.ActualLRPGroups{}, models.ErrUnknownError
 	}
-	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups.GetActualLrpGroups())})
+	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups.ActualLrpGroups)})
 
 	return groups, nil
 }
@@ -141,10 +141,10 @@ func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.Ac
 				logger.Error("failed-parsing-actual-lrp-groups", deserializeErr, lager.Data{"key": instanceNode.Key})
 				return &models.ActualLRPGroups{}, models.ErrDeserializeJSON
 			}
-			if filter.Domain != "" && lrp.GetDomain() != filter.Domain {
+			if filter.Domain != "" && lrp.Domain != filter.Domain {
 				continue
 			}
-			if filter.CellID != "" && lrp.GetCellId() != filter.CellID {
+			if filter.CellID != "" && lrp.CellId != filter.CellID {
 				continue
 			}
 
@@ -161,7 +161,7 @@ func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.Ac
 			groups.ActualLrpGroups = append(groups.ActualLrpGroups, group)
 		}
 	}
-	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups.GetActualLrpGroups())})
+	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups.ActualLrpGroups)})
 
 	return groups, nil
 }

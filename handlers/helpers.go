@@ -10,22 +10,22 @@ import (
 
 func writeUnknownErrorResponse(w http.ResponseWriter, err error) {
 	writeProtoResponse(w, http.StatusInternalServerError, &models.Error{
-		Type:    proto.String(models.UnknownError),
-		Message: proto.String(err.Error()),
+		Type:    models.UnknownError,
+		Message: err.Error(),
 	})
 }
 
 func writeNotFoundResponse(w http.ResponseWriter, err error) {
 	writeProtoResponse(w, http.StatusNotFound, &models.Error{
-		Type:    proto.String(models.ResourceNotFound),
-		Message: proto.String(err.Error()),
+		Type:    models.ResourceNotFound,
+		Message: err.Error(),
 	})
 }
 
 func writeBadRequestResponse(w http.ResponseWriter, errorType string, err error) {
 	writeProtoResponse(w, http.StatusBadRequest, &models.Error{
-		Type:    &errorType,
-		Message: proto.String(err.Error()),
+		Type:    errorType,
+		Message: err.Error(),
 	})
 }
 

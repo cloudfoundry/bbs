@@ -17,8 +17,8 @@ var _ = proto.Marshal
 var _ = math.Inf
 
 type EnvironmentVariable struct {
-	Name  *string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Value *string `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
+	Name  string `protobuf:"bytes,1,opt,name=name" json:"name"`
+	Value string `protobuf:"bytes,2,opt,name=value" json:"value"`
 }
 
 func (m *EnvironmentVariable) Reset()         { *m = EnvironmentVariable{} }
@@ -26,15 +26,15 @@ func (m *EnvironmentVariable) String() string { return proto.CompactTextString(m
 func (*EnvironmentVariable) ProtoMessage()    {}
 
 func (m *EnvironmentVariable) GetName() string {
-	if m != nil && m.Name != nil {
-		return *m.Name
+	if m != nil {
+		return m.Name
 	}
 	return ""
 }
 
 func (m *EnvironmentVariable) GetValue() string {
-	if m != nil && m.Value != nil {
-		return *m.Value
+	if m != nil {
+		return m.Value
 	}
 	return ""
 }
@@ -80,8 +80,7 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Name = &s
+			m.Name = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -103,8 +102,7 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Value = &s
+			m.Value = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -216,14 +214,10 @@ func skipEnvironmentVariables(data []byte) (n int, err error) {
 func (m *EnvironmentVariable) Size() (n int) {
 	var l int
 	_ = l
-	if m.Name != nil {
-		l = len(*m.Name)
-		n += 1 + l + sovEnvironmentVariables(uint64(l))
-	}
-	if m.Value != nil {
-		l = len(*m.Value)
-		n += 1 + l + sovEnvironmentVariables(uint64(l))
-	}
+	l = len(m.Name)
+	n += 1 + l + sovEnvironmentVariables(uint64(l))
+	l = len(m.Value)
+	n += 1 + l + sovEnvironmentVariables(uint64(l))
 	return n
 }
 
@@ -255,18 +249,14 @@ func (m *EnvironmentVariable) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Name != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEnvironmentVariables(data, i, uint64(len(*m.Name)))
-		i += copy(data[i:], *m.Name)
-	}
-	if m.Value != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEnvironmentVariables(data, i, uint64(len(*m.Value)))
-		i += copy(data[i:], *m.Value)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintEnvironmentVariables(data, i, uint64(len(m.Name)))
+	i += copy(data[i:], m.Name)
+	data[i] = 0x12
+	i++
+	i = encodeVarintEnvironmentVariables(data, i, uint64(len(m.Value)))
+	i += copy(data[i:], m.Value)
 	return i, nil
 }
 
@@ -317,22 +307,10 @@ func (this *EnvironmentVariable) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Name != nil && that1.Name != nil {
-		if *this.Name != *that1.Name {
-			return false
-		}
-	} else if this.Name != nil {
-		return false
-	} else if that1.Name != nil {
+	if this.Name != that1.Name {
 		return false
 	}
-	if this.Value != nil && that1.Value != nil {
-		if *this.Value != *that1.Value {
-			return false
-		}
-	} else if this.Value != nil {
-		return false
-	} else if that1.Value != nil {
+	if this.Value != that1.Value {
 		return false
 	}
 	return true

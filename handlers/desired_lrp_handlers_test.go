@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager"
@@ -146,7 +145,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			var desiredLRP *models.DesiredLRP
 
 			BeforeEach(func() {
-				desiredLRP = &models.DesiredLRP{ProcessGuid: proto.String(processGuid)}
+				desiredLRP = &models.DesiredLRP{ProcessGuid: processGuid}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 			})
 

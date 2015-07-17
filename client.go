@@ -179,13 +179,13 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 	}
 
 	if routerError, ok := res.Header[XCfRouterErrorHeader]; ok {
-		return &models.Error{Type: proto.String(models.RouterError), Message: &routerError[0]}
+		return &models.Error{Type: models.RouterError, Message: routerError[0]}
 	}
 
 	if parsedContentType == ProtoContentType {
 		protoMessage, ok := responseObject.(proto.Message)
 		if !ok {
-			return &models.Error{Type: proto.String(models.InvalidRequest), Message: proto.String("cannot read response body")}
+			return &models.Error{Type: models.InvalidRequest, Message: "cannot read response body"}
 		}
 		return handleProtoResponse(res, protoMessage)
 	} else {
@@ -196,21 +196,21 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 func handleProtoResponse(res *http.Response, responseObject proto.Message) error {
 	buf, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return &models.Error{Type: proto.String(models.InvalidResponse), Message: proto.String(err.Error())}
+		return &models.Error{Type: models.InvalidResponse, Message: err.Error()}
 	}
 
 	if res.StatusCode > 299 {
 		errResponse := &models.Error{}
 		err = proto.Unmarshal(buf, errResponse)
 		if err != nil {
-			return &models.Error{Type: proto.String(models.InvalidProtobufMessage), Message: proto.String(err.Error())}
+			return &models.Error{Type: models.InvalidProtobufMessage, Message: err.Error()}
 		}
 		return errResponse
 	}
 
 	err = proto.Unmarshal(buf, responseObject)
 	if err != nil {
-		return &models.Error{Type: proto.String(models.InvalidProtobufMessage), Message: proto.String(err.Error())}
+		return &models.Error{Type: models.InvalidProtobufMessage, Message: err.Error()}
 	}
 	return nil
 }
@@ -218,8 +218,8 @@ func handleProtoResponse(res *http.Response, responseObject proto.Message) error
 func handleNonProtoResponse(res *http.Response) error {
 	if res.StatusCode > 299 {
 		return &models.Error{
-			Type:    proto.String(models.InvalidResponse),
-			Message: proto.String(fmt.Sprintf("Invalid Response with status code: %d", res.StatusCode)),
+			Type:    models.InvalidResponse,
+			Message: fmt.Sprintf("Invalid Response with status code: %d", res.StatusCode),
 		}
 	}
 	return nil

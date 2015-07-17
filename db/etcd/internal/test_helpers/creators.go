@@ -6,7 +6,6 @@ import (
 
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/gomega"
 )
 
@@ -61,7 +60,7 @@ func (t *TestHelper) CreateMalformedEvacuatingLRP(guid string, index int32) {
 }
 
 func (t *TestHelper) CreateMalformedDesiredLRP(guid string) {
-	t.createMalformedValueForKey(etcddb.DesiredLRPSchemaPath(&models.DesiredLRP{ProcessGuid: &guid}))
+	t.createMalformedValueForKey(etcddb.DesiredLRPSchemaPath(&models.DesiredLRP{ProcessGuid: guid}))
 }
 
 func (t *TestHelper) createMalformedValueForKey(key string) {
@@ -79,15 +78,15 @@ func (t *TestHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 		for i := 0; i < count; i++ {
 			action := &models.Action{}
 			action.SetValue(&models.DownloadAction{
-				From: proto.String("http://example.com"),
-				To:   proto.String("/tmp/internet"),
-				User: proto.String("someone"),
+				From: "http://example.com",
+				To:   "/tmp/internet",
+				User: "someone",
 			})
 			desiredLRP := &models.DesiredLRP{
-				Domain:      proto.String(domain),
-				ProcessGuid: proto.String(fmt.Sprintf("guid-%d-for-%s", i, domain)),
-				RootFs:      proto.String("some:rootfs"),
-				Instances:   proto.Int32(1),
+				Domain:      domain,
+				ProcessGuid: fmt.Sprintf("guid-%d-for-%s", i, domain),
+				RootFs:      "some:rootfs",
+				Instances:   1,
 				Action:      action,
 			}
 			value, err := models.ToJSON(desiredLRP)

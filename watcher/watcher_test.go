@@ -9,7 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
@@ -258,11 +257,11 @@ var _ = Describe("Watcher", func() {
 			BeforeEach(func() {
 				desiredLRP = &models.DesiredLRP{
 					Action: models.WrapAction(&models.RunAction{
-						User: proto.String("me"),
-						Path: proto.String("ls"),
+						User: "me",
+						Path: "ls",
 					}),
-					Domain:      proto.String("tests"),
-					ProcessGuid: proto.String(expectedProcessGuid),
+					Domain:      "tests",
+					ProcessGuid: expectedProcessGuid,
 				}
 			})
 

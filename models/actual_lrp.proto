@@ -14,23 +14,23 @@ message ActualLRPGroup {
 }
 
 message PortMapping {
-  optional uint32 container_port = 1;
-  optional uint32 host_port = 2;
+  optional uint32 container_port = 1 [(gogoproto.nullable) = false];
+  optional uint32 host_port = 2 [(gogoproto.nullable) = false];
 }
 
 message ActualLRPKey {
-  optional string process_guid = 1;
-  optional int32 index = 2;
-  optional string domain = 3;
+  optional string process_guid = 1 [(gogoproto.nullable) = false];
+  optional int32 index = 2 [(gogoproto.nullable) = false];
+  optional string domain = 3 [(gogoproto.nullable) = false];
 }
 
 message ActualLRPInstanceKey {
-  optional string instance_guid = 1;
-  optional string cell_id = 2;
+  optional string instance_guid = 1 [(gogoproto.nullable) = false];
+  optional string cell_id = 2 [(gogoproto.nullable) = false];
 }
 
 message ActualLRPNetInfo {
-  optional string address = 1;
+  optional string address = 1 [(gogoproto.nullable) = false];
   repeated PortMapping ports = 2;
 }
 
@@ -38,11 +38,11 @@ message ActualLRP {
   optional ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   optional ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   optional ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  optional int32 crash_count = 4;
-  optional string crash_reason = 5;
-  optional string state = 6;
-  optional string placement_error = 7;
-  optional int64 since = 8;
+  optional int32 crash_count = 4 [(gogoproto.nullable) = false];
+  optional string crash_reason = 5 [(gogoproto.nullable) = false];
+  optional string state = 6 [(gogoproto.nullable) = false];
+  optional string placement_error = 7 [(gogoproto.nullable) = false];
+  optional int64 since = 8 [(gogoproto.nullable) = false];
   optional ModificationTag modification_tag = 9;
 }
 

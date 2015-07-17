@@ -1,10 +1,6 @@
 package models
 
-import (
-	"errors"
-
-	"github.com/gogo/protobuf/proto"
-)
+import "errors"
 
 func (err Error) Error() string {
 	return err.GetMessage()
@@ -28,18 +24,18 @@ const (
 
 var (
 	ErrResourceNotFound = &Error{
-		Type:    proto.String(ResourceNotFound),
-		Message: proto.String("the requested resource could not be found"),
+		Type:    ResourceNotFound,
+		Message: "the requested resource could not be found",
 	}
 
 	ErrUnknownError = &Error{
-		Type:    proto.String(UnknownError),
-		Message: proto.String("the request failed for an unknown reason"),
+		Type:    UnknownError,
+		Message: "the request failed for an unknown reason",
 	}
 
 	ErrDeserializeJSON = &Error{
-		Type:    proto.String(InvalidJSON),
-		Message: proto.String("could not deserialize JSON"),
+		Type:    InvalidJSON,
+		Message: "could not deserialize JSON",
 	}
 )
 

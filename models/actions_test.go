@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -71,11 +70,11 @@ var _ = Describe("Actions", func() {
 					"user": "someone"
 			}`,
 			models.WrapAction(&models.DownloadAction{
-				Artifact: proto.String("mouse"),
-				From:     proto.String("web_location"),
-				To:       proto.String("local_location"),
-				CacheKey: proto.String("elephant"),
-				User:     proto.String("someone"),
+				Artifact: "mouse",
+				From:     "web_location",
+				To:       "local_location",
+				CacheKey: "elephant",
+				User:     "someone",
 			}),
 		)
 
@@ -85,9 +84,9 @@ var _ = Describe("Actions", func() {
 			Context("when the action has 'from', 'to', and 'user' specified", func() {
 				It("is valid", func() {
 					downloadAction = models.DownloadAction{
-						From: proto.String("web_location"),
-						To:   proto.String("local_location"),
-						User: proto.String("someone"),
+						From: "web_location",
+						To:   "local_location",
+						User: "someone",
 					}
 
 					err := downloadAction.Validate()
@@ -99,20 +98,20 @@ var _ = Describe("Actions", func() {
 				{
 					"from",
 					models.DownloadAction{
-						To: proto.String("local_location"),
+						To: "local_location",
 					},
 				},
 				{
 					"to",
 					models.DownloadAction{
-						From: proto.String("web_location"),
+						From: "web_location",
 					},
 				},
 				{
 					"user",
 					models.DownloadAction{
-						From: proto.String("web_location"),
-						To:   proto.String("local_location"),
+						From: "web_location",
+						To:   "local_location",
 					},
 				},
 			} {
@@ -130,10 +129,10 @@ var _ = Describe("Actions", func() {
 					"user": "someone"
 			}`,
 			models.WrapAction(&models.UploadAction{
-				Artifact: proto.String("mouse"),
-				From:     proto.String("local_location"),
-				To:       proto.String("web_location"),
-				User:     proto.String("someone"),
+				Artifact: "mouse",
+				From:     "local_location",
+				To:       "web_location",
+				User:     "someone",
 			}),
 		)
 
@@ -143,9 +142,9 @@ var _ = Describe("Actions", func() {
 			Context("when the action has 'from', 'to', and 'user' specified", func() {
 				It("is valid", func() {
 					uploadAction = models.UploadAction{
-						To:   proto.String("web_location"),
-						From: proto.String("local_location"),
-						User: proto.String("someone"),
+						To:   "web_location",
+						From: "local_location",
+						User: "someone",
 					}
 
 					err := uploadAction.Validate()
@@ -157,20 +156,20 @@ var _ = Describe("Actions", func() {
 				{
 					"from",
 					models.UploadAction{
-						To: proto.String("web_location"),
+						To: "web_location",
 					},
 				},
 				{
 					"to",
 					models.UploadAction{
-						From: proto.String("local_location"),
+						From: "local_location",
 					},
 				},
 				{
 					"user",
 					models.UploadAction{
-						To:   proto.String("web_location"),
-						From: proto.String("local_location"),
+						To:   "web_location",
+						From: "local_location",
 					},
 				},
 			} {
@@ -190,18 +189,18 @@ var _ = Describe("Actions", func() {
 						{"name":"FOO", "value":"1"},
 						{"name":"BAR", "value":"2"}
 					],
-					"resource_limits":{}
+					"resource_limits":{"nofile": 10}
 			}`,
 			models.WrapAction(&models.RunAction{
-				User: proto.String("me"),
-				Path: proto.String("rm"),
-				Dir:  proto.String("./some-dir"),
+				User: "me",
+				Path: "rm",
+				Dir:  "./some-dir",
 				Args: []string{"-rf", "/"},
 				Env: []*models.EnvironmentVariable{
-					{proto.String("FOO"), proto.String("1")},
-					{proto.String("BAR"), proto.String("2")},
+					{"FOO", "1"},
+					{"BAR", "2"},
 				},
-				ResourceLimits: &models.ResourceLimits{},
+				ResourceLimits: &models.ResourceLimits{Nofile: 10},
 			}),
 		)
 
@@ -211,8 +210,8 @@ var _ = Describe("Actions", func() {
 			Context("when the action has the required fields", func() {
 				It("is valid", func() {
 					runAction = models.RunAction{
-						Path: proto.String("ls"),
-						User: proto.String("foo"),
+						Path: "ls",
+						User: "foo",
 					}
 
 					err := runAction.Validate()
@@ -224,13 +223,13 @@ var _ = Describe("Actions", func() {
 				{
 					"path",
 					models.RunAction{
-						User: proto.String("me"),
+						User: "me",
 					},
 				},
 				{
 					"user",
 					models.RunAction{
-						Path: proto.String("ls"),
+						Path: "ls",
 					},
 				},
 			} {
@@ -246,16 +245,18 @@ var _ = Describe("Actions", func() {
 					"run": {
 						"path": "echo",
 						"user": "someone",
-						"resource_limits":{}
+						"resource_limits":{
+							"nofile": 10	
+						}
 					}
 				},
 				"timeout": 10000000
 			}`,
 			models.Timeout(
 				models.WrapAction(&models.RunAction{
-					Path:           proto.String("echo"),
-					User:           proto.String("someone"),
-					ResourceLimits: &models.ResourceLimits{},
+					Path:           "echo",
+					User:           "someone",
+					ResourceLimits: &models.ResourceLimits{Nofile: 10},
 				}),
 				10*time.Millisecond,
 			),
@@ -279,12 +280,12 @@ var _ = Describe("Actions", func() {
 					timeoutAction = models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								From: proto.String("local_location"),
-								To:   proto.String("web_location"),
-								User: proto.String("someone"),
+								From: "local_location",
+								To:   "web_location",
+								User: "someone",
 							},
 						},
-						Timeout: proto.Int64(int64(time.Second)),
+						Timeout: int64(time.Second),
 					}
 
 					err := timeoutAction.Validate()
@@ -296,7 +297,7 @@ var _ = Describe("Actions", func() {
 				{
 					"action",
 					models.TimeoutAction{
-						Timeout: proto.Int64(int64(time.Second)),
+						Timeout: int64(time.Second),
 					},
 				},
 				{
@@ -304,11 +305,11 @@ var _ = Describe("Actions", func() {
 					models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								To:   proto.String("web_location"),
-								User: proto.String("someone"),
+								To:   "web_location",
+								User: "someone",
 							},
 						},
-						Timeout: proto.Int64(int64(time.Second)),
+						Timeout: int64(time.Second),
 					},
 				},
 				{
@@ -316,9 +317,9 @@ var _ = Describe("Actions", func() {
 					models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								From: proto.String("local_location"),
-								To:   proto.String("web_location"),
-								User: proto.String("someone"),
+								From: "local_location",
+								To:   "web_location",
+								User: "someone",
 							},
 						},
 					},
@@ -341,8 +342,8 @@ var _ = Describe("Actions", func() {
 					}
 			}`,
 			models.Try(&models.Action{RunAction: &models.RunAction{
-				Path:           proto.String("echo"),
-				User:           proto.String("me"),
+				Path:           "echo",
+				User:           "me",
 				ResourceLimits: &models.ResourceLimits{},
 			}}),
 		)
@@ -360,9 +361,9 @@ var _ = Describe("Actions", func() {
 					tryAction = models.TryAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								From: proto.String("local_location"),
-								To:   proto.String("web_location"),
-								User: proto.String("someone"),
+								From: "local_location",
+								To:   "web_location",
+								User: "someone",
 							},
 						},
 					}
@@ -382,7 +383,7 @@ var _ = Describe("Actions", func() {
 					models.TryAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								To: proto.String("web_location"),
+								To: "web_location",
 							},
 						},
 					},
@@ -417,17 +418,17 @@ var _ = Describe("Actions", func() {
 			models.Parallel(
 				&models.Action{
 					DownloadAction: &models.DownloadAction{
-						From:     proto.String("web_location"),
-						To:       proto.String("local_location"),
-						CacheKey: proto.String("elephant"),
-						User:     proto.String("someone"),
+						From:     "web_location",
+						To:       "local_location",
+						CacheKey: "elephant",
+						User:     "someone",
 					},
 				},
 				&models.Action{
 					RunAction: &models.RunAction{
-						Path:           proto.String("echo"),
-						User:           proto.String("me"),
-						ResourceLimits: &models.ResourceLimits{},
+						Path:           "echo",
+						User:           "me",
+						ResourceLimits: &models.ResourceLimits{Nofile: 0},
 					},
 				},
 			),
@@ -456,9 +457,9 @@ var _ = Describe("Actions", func() {
 						Actions: []*models.Action{
 							&models.Action{
 								UploadAction: &models.UploadAction{
-									From: proto.String("local_location"),
-									To:   proto.String("web_location"),
-									User: proto.String("someone"),
+									From: "local_location",
+									To:   "web_location",
+									User: "someone",
 								},
 							},
 						},
@@ -486,7 +487,7 @@ var _ = Describe("Actions", func() {
 						Actions: []*models.Action{
 							&models.Action{
 								UploadAction: &models.UploadAction{
-									To: proto.String("web_location"),
+									To: "web_location",
 								},
 							},
 						},
@@ -522,16 +523,16 @@ var _ = Describe("Actions", func() {
 			models.Serial(
 				&models.Action{
 					DownloadAction: &models.DownloadAction{
-						From:     proto.String("web_location"),
-						To:       proto.String("local_location"),
-						CacheKey: proto.String("elephant"),
-						User:     proto.String("someone"),
+						From:     "web_location",
+						To:       "local_location",
+						CacheKey: "elephant",
+						User:     "someone",
 					},
 				},
 				&models.Action{
 					RunAction: &models.RunAction{
-						Path:           proto.String("echo"),
-						User:           proto.String("me"),
+						Path:           "echo",
+						User:           "me",
 						ResourceLimits: &models.ResourceLimits{},
 					},
 				},
@@ -561,9 +562,9 @@ var _ = Describe("Actions", func() {
 						Actions: []*models.Action{
 							&models.Action{
 								UploadAction: &models.UploadAction{
-									From: proto.String("local_location"),
-									To:   proto.String("web_location"),
-									User: proto.String("someone"),
+									From: "local_location",
+									To:   "web_location",
+									User: "someone",
 								},
 							},
 						},
@@ -590,7 +591,7 @@ var _ = Describe("Actions", func() {
 					models.SerialAction{
 						Actions: []*models.Action{
 							{UploadAction: &models.UploadAction{
-								To: proto.String("web_location"),
+								To: "web_location",
 							}},
 							nil,
 						},
@@ -618,8 +619,8 @@ var _ = Describe("Actions", func() {
 			}`,
 			models.EmitProgressFor(
 				models.WrapAction(&models.RunAction{
-					Path:           proto.String("echo"),
-					User:           proto.String("me"),
+					Path:           "echo",
+					User:           "me",
 					ResourceLimits: &models.ResourceLimits{},
 				}),
 				"reticulating splines", "reticulated splines", "reticulation failed",
@@ -646,9 +647,9 @@ var _ = Describe("Actions", func() {
 					emitProgressAction = models.EmitProgressAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								From: proto.String("local_location"),
-								To:   proto.String("web_location"),
-								User: proto.String("someone"),
+								From: "local_location",
+								To:   "web_location",
+								User: "someone",
 							},
 						},
 					}
@@ -668,7 +669,7 @@ var _ = Describe("Actions", func() {
 					models.EmitProgressAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
-								To: proto.String("web_location"),
+								To: "web_location",
 							},
 						},
 					},
@@ -703,14 +704,14 @@ var _ = Describe("Actions", func() {
 			models.Codependent(
 				&models.Action{
 					DownloadAction: &models.DownloadAction{
-						From:     proto.String("web_location"),
-						To:       proto.String("local_location"),
-						CacheKey: proto.String("elephant"),
-						User:     proto.String("someone"),
+						From:     "web_location",
+						To:       "local_location",
+						CacheKey: "elephant",
+						User:     "someone",
 					},
 				},
 				&models.Action{
-					RunAction: &models.RunAction{Path: proto.String("echo"), User: proto.String("me"), ResourceLimits: &models.ResourceLimits{}},
+					RunAction: &models.RunAction{Path: "echo", User: "me", ResourceLimits: &models.ResourceLimits{}},
 				},
 			),
 		)
@@ -738,9 +739,9 @@ var _ = Describe("Actions", func() {
 						Actions: []*models.Action{
 							&models.Action{
 								UploadAction: &models.UploadAction{
-									From: proto.String("local_location"),
-									To:   proto.String("web_location"),
-									User: proto.String("someone"),
+									From: "local_location",
+									To:   "web_location",
+									User: "someone",
 								},
 							},
 						},
@@ -770,7 +771,7 @@ var _ = Describe("Actions", func() {
 						Actions: []*models.Action{
 							&models.Action{
 								UploadAction: &models.UploadAction{
-									To: proto.String("web_location"),
+									To: "web_location",
 								},
 							},
 						},

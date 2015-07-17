@@ -40,8 +40,8 @@ func (m *ActualLRPGroup) GetEvacuating() *ActualLRP {
 }
 
 type PortMapping struct {
-	ContainerPort *uint32 `protobuf:"varint,1,opt,name=container_port" json:"container_port,omitempty"`
-	HostPort      *uint32 `protobuf:"varint,2,opt,name=host_port" json:"host_port,omitempty"`
+	ContainerPort uint32 `protobuf:"varint,1,opt,name=container_port" json:"container_port"`
+	HostPort      uint32 `protobuf:"varint,2,opt,name=host_port" json:"host_port"`
 }
 
 func (m *PortMapping) Reset()         { *m = PortMapping{} }
@@ -49,23 +49,23 @@ func (m *PortMapping) String() string { return proto.CompactTextString(m) }
 func (*PortMapping) ProtoMessage()    {}
 
 func (m *PortMapping) GetContainerPort() uint32 {
-	if m != nil && m.ContainerPort != nil {
-		return *m.ContainerPort
+	if m != nil {
+		return m.ContainerPort
 	}
 	return 0
 }
 
 func (m *PortMapping) GetHostPort() uint32 {
-	if m != nil && m.HostPort != nil {
-		return *m.HostPort
+	if m != nil {
+		return m.HostPort
 	}
 	return 0
 }
 
 type ActualLRPKey struct {
-	ProcessGuid *string `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid,omitempty"`
-	Index       *int32  `protobuf:"varint,2,opt,name=index" json:"index,omitempty"`
-	Domain      *string `protobuf:"bytes,3,opt,name=domain" json:"domain,omitempty"`
+	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Index       int32  `protobuf:"varint,2,opt,name=index" json:"index"`
+	Domain      string `protobuf:"bytes,3,opt,name=domain" json:"domain"`
 }
 
 func (m *ActualLRPKey) Reset()         { *m = ActualLRPKey{} }
@@ -73,29 +73,29 @@ func (m *ActualLRPKey) String() string { return proto.CompactTextString(m) }
 func (*ActualLRPKey) ProtoMessage()    {}
 
 func (m *ActualLRPKey) GetProcessGuid() string {
-	if m != nil && m.ProcessGuid != nil {
-		return *m.ProcessGuid
+	if m != nil {
+		return m.ProcessGuid
 	}
 	return ""
 }
 
 func (m *ActualLRPKey) GetIndex() int32 {
-	if m != nil && m.Index != nil {
-		return *m.Index
+	if m != nil {
+		return m.Index
 	}
 	return 0
 }
 
 func (m *ActualLRPKey) GetDomain() string {
-	if m != nil && m.Domain != nil {
-		return *m.Domain
+	if m != nil {
+		return m.Domain
 	}
 	return ""
 }
 
 type ActualLRPInstanceKey struct {
-	InstanceGuid *string `protobuf:"bytes,1,opt,name=instance_guid" json:"instance_guid,omitempty"`
-	CellId       *string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id,omitempty"`
+	InstanceGuid string `protobuf:"bytes,1,opt,name=instance_guid" json:"instance_guid"`
+	CellId       string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
 }
 
 func (m *ActualLRPInstanceKey) Reset()         { *m = ActualLRPInstanceKey{} }
@@ -103,21 +103,21 @@ func (m *ActualLRPInstanceKey) String() string { return proto.CompactTextString(
 func (*ActualLRPInstanceKey) ProtoMessage()    {}
 
 func (m *ActualLRPInstanceKey) GetInstanceGuid() string {
-	if m != nil && m.InstanceGuid != nil {
-		return *m.InstanceGuid
+	if m != nil {
+		return m.InstanceGuid
 	}
 	return ""
 }
 
 func (m *ActualLRPInstanceKey) GetCellId() string {
-	if m != nil && m.CellId != nil {
-		return *m.CellId
+	if m != nil {
+		return m.CellId
 	}
 	return ""
 }
 
 type ActualLRPNetInfo struct {
-	Address *string        `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
+	Address string         `protobuf:"bytes,1,opt,name=address" json:"address"`
 	Ports   []*PortMapping `protobuf:"bytes,2,rep,name=ports" json:"ports,omitempty"`
 }
 
@@ -126,8 +126,8 @@ func (m *ActualLRPNetInfo) String() string { return proto.CompactTextString(m) }
 func (*ActualLRPNetInfo) ProtoMessage()    {}
 
 func (m *ActualLRPNetInfo) GetAddress() string {
-	if m != nil && m.Address != nil {
-		return *m.Address
+	if m != nil {
+		return m.Address
 	}
 	return ""
 }
@@ -143,11 +143,11 @@ type ActualLRP struct {
 	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,embedded=actual_lrp_key" json:""`
 	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,embedded=actual_lrp_instance_key" json:""`
 	ActualLRPNetInfo     `protobuf:"bytes,3,opt,name=actual_lrp_net_info,embedded=actual_lrp_net_info" json:""`
-	CrashCount           *int32           `protobuf:"varint,4,opt,name=crash_count" json:"crash_count,omitempty"`
-	CrashReason          *string          `protobuf:"bytes,5,opt,name=crash_reason" json:"crash_reason,omitempty"`
-	State                *string          `protobuf:"bytes,6,opt,name=state" json:"state,omitempty"`
-	PlacementError       *string          `protobuf:"bytes,7,opt,name=placement_error" json:"placement_error,omitempty"`
-	Since                *int64           `protobuf:"varint,8,opt,name=since" json:"since,omitempty"`
+	CrashCount           int32            `protobuf:"varint,4,opt,name=crash_count" json:"crash_count"`
+	CrashReason          string           `protobuf:"bytes,5,opt,name=crash_reason" json:"crash_reason"`
+	State                string           `protobuf:"bytes,6,opt,name=state" json:"state"`
+	PlacementError       string           `protobuf:"bytes,7,opt,name=placement_error" json:"placement_error"`
+	Since                int64            `protobuf:"varint,8,opt,name=since" json:"since"`
 	ModificationTag      *ModificationTag `protobuf:"bytes,9,opt,name=modification_tag" json:"modification_tag,omitempty"`
 }
 
@@ -156,36 +156,36 @@ func (m *ActualLRP) String() string { return proto.CompactTextString(m) }
 func (*ActualLRP) ProtoMessage()    {}
 
 func (m *ActualLRP) GetCrashCount() int32 {
-	if m != nil && m.CrashCount != nil {
-		return *m.CrashCount
+	if m != nil {
+		return m.CrashCount
 	}
 	return 0
 }
 
 func (m *ActualLRP) GetCrashReason() string {
-	if m != nil && m.CrashReason != nil {
-		return *m.CrashReason
+	if m != nil {
+		return m.CrashReason
 	}
 	return ""
 }
 
 func (m *ActualLRP) GetState() string {
-	if m != nil && m.State != nil {
-		return *m.State
+	if m != nil {
+		return m.State
 	}
 	return ""
 }
 
 func (m *ActualLRP) GetPlacementError() string {
-	if m != nil && m.PlacementError != nil {
-		return *m.PlacementError
+	if m != nil {
+		return m.PlacementError
 	}
 	return ""
 }
 
 func (m *ActualLRP) GetSince() int64 {
-	if m != nil && m.Since != nil {
-		return *m.Since
+	if m != nil {
+		return m.Since
 	}
 	return 0
 }
@@ -333,36 +333,32 @@ func (m *PortMapping) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ContainerPort", wireType)
 			}
-			var v uint32
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (uint32(b) & 0x7F) << shift
+				m.ContainerPort |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.ContainerPort = &v
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field HostPort", wireType)
 			}
-			var v uint32
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (uint32(b) & 0x7F) << shift
+				m.HostPort |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.HostPort = &v
 		default:
 			var sizeOfWire int
 			for {
@@ -425,26 +421,23 @@ func (m *ActualLRPKey) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.ProcessGuid = &s
+			m.ProcessGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
 			}
-			var v int32
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (int32(b) & 0x7F) << shift
+				m.Index |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Index = &v
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
@@ -465,8 +458,7 @@ func (m *ActualLRPKey) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Domain = &s
+			m.Domain = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -530,8 +522,7 @@ func (m *ActualLRPInstanceKey) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.InstanceGuid = &s
+			m.InstanceGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -553,8 +544,7 @@ func (m *ActualLRPInstanceKey) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.CellId = &s
+			m.CellId = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -618,8 +608,7 @@ func (m *ActualLRPNetInfo) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Address = &s
+			m.Address = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -764,19 +753,17 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CrashCount", wireType)
 			}
-			var v int32
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (int32(b) & 0x7F) << shift
+				m.CrashCount |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.CrashCount = &v
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CrashReason", wireType)
@@ -797,8 +784,7 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.CrashReason = &s
+			m.CrashReason = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
@@ -820,8 +806,7 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.State = &s
+			m.State = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
@@ -843,26 +828,23 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.PlacementError = &s
+			m.PlacementError = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Since", wireType)
 			}
-			var v int64
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (int64(b) & 0x7F) << shift
+				m.Since |= (int64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Since = &v
 		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ModificationTag", wireType)
@@ -1081,53 +1063,37 @@ func (m *ActualLRPGroup) Size() (n int) {
 func (m *PortMapping) Size() (n int) {
 	var l int
 	_ = l
-	if m.ContainerPort != nil {
-		n += 1 + sovActualLrp(uint64(*m.ContainerPort))
-	}
-	if m.HostPort != nil {
-		n += 1 + sovActualLrp(uint64(*m.HostPort))
-	}
+	n += 1 + sovActualLrp(uint64(m.ContainerPort))
+	n += 1 + sovActualLrp(uint64(m.HostPort))
 	return n
 }
 
 func (m *ActualLRPKey) Size() (n int) {
 	var l int
 	_ = l
-	if m.ProcessGuid != nil {
-		l = len(*m.ProcessGuid)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
-	if m.Index != nil {
-		n += 1 + sovActualLrp(uint64(*m.Index))
-	}
-	if m.Domain != nil {
-		l = len(*m.Domain)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
+	l = len(m.ProcessGuid)
+	n += 1 + l + sovActualLrp(uint64(l))
+	n += 1 + sovActualLrp(uint64(m.Index))
+	l = len(m.Domain)
+	n += 1 + l + sovActualLrp(uint64(l))
 	return n
 }
 
 func (m *ActualLRPInstanceKey) Size() (n int) {
 	var l int
 	_ = l
-	if m.InstanceGuid != nil {
-		l = len(*m.InstanceGuid)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
-	if m.CellId != nil {
-		l = len(*m.CellId)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
+	l = len(m.InstanceGuid)
+	n += 1 + l + sovActualLrp(uint64(l))
+	l = len(m.CellId)
+	n += 1 + l + sovActualLrp(uint64(l))
 	return n
 }
 
 func (m *ActualLRPNetInfo) Size() (n int) {
 	var l int
 	_ = l
-	if m.Address != nil {
-		l = len(*m.Address)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
+	l = len(m.Address)
+	n += 1 + l + sovActualLrp(uint64(l))
 	if len(m.Ports) > 0 {
 		for _, e := range m.Ports {
 			l = e.Size()
@@ -1146,24 +1112,14 @@ func (m *ActualLRP) Size() (n int) {
 	n += 1 + l + sovActualLrp(uint64(l))
 	l = m.ActualLRPNetInfo.Size()
 	n += 1 + l + sovActualLrp(uint64(l))
-	if m.CrashCount != nil {
-		n += 1 + sovActualLrp(uint64(*m.CrashCount))
-	}
-	if m.CrashReason != nil {
-		l = len(*m.CrashReason)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
-	if m.State != nil {
-		l = len(*m.State)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
-	if m.PlacementError != nil {
-		l = len(*m.PlacementError)
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
-	if m.Since != nil {
-		n += 1 + sovActualLrp(uint64(*m.Since))
-	}
+	n += 1 + sovActualLrp(uint64(m.CrashCount))
+	l = len(m.CrashReason)
+	n += 1 + l + sovActualLrp(uint64(l))
+	l = len(m.State)
+	n += 1 + l + sovActualLrp(uint64(l))
+	l = len(m.PlacementError)
+	n += 1 + l + sovActualLrp(uint64(l))
+	n += 1 + sovActualLrp(uint64(m.Since))
 	if m.ModificationTag != nil {
 		l = m.ModificationTag.Size()
 		n += 1 + l + sovActualLrp(uint64(l))
@@ -1249,16 +1205,12 @@ func (m *PortMapping) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.ContainerPort != nil {
-		data[i] = 0x8
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(*m.ContainerPort))
-	}
-	if m.HostPort != nil {
-		data[i] = 0x10
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(*m.HostPort))
-	}
+	data[i] = 0x8
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(m.ContainerPort))
+	data[i] = 0x10
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(m.HostPort))
 	return i, nil
 }
 
@@ -1277,23 +1229,17 @@ func (m *ActualLRPKey) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.ProcessGuid != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.ProcessGuid)))
-		i += copy(data[i:], *m.ProcessGuid)
-	}
-	if m.Index != nil {
-		data[i] = 0x10
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(*m.Index))
-	}
-	if m.Domain != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.Domain)))
-		i += copy(data[i:], *m.Domain)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.ProcessGuid)))
+	i += copy(data[i:], m.ProcessGuid)
+	data[i] = 0x10
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(m.Index))
+	data[i] = 0x1a
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.Domain)))
+	i += copy(data[i:], m.Domain)
 	return i, nil
 }
 
@@ -1312,18 +1258,14 @@ func (m *ActualLRPInstanceKey) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.InstanceGuid != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.InstanceGuid)))
-		i += copy(data[i:], *m.InstanceGuid)
-	}
-	if m.CellId != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.CellId)))
-		i += copy(data[i:], *m.CellId)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.InstanceGuid)))
+	i += copy(data[i:], m.InstanceGuid)
+	data[i] = 0x12
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.CellId)))
+	i += copy(data[i:], m.CellId)
 	return i, nil
 }
 
@@ -1342,12 +1284,10 @@ func (m *ActualLRPNetInfo) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Address != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.Address)))
-		i += copy(data[i:], *m.Address)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.Address)))
+	i += copy(data[i:], m.Address)
 	if len(m.Ports) > 0 {
 		for _, msg := range m.Ports {
 			data[i] = 0x12
@@ -1402,34 +1342,24 @@ func (m *ActualLRP) MarshalTo(data []byte) (n int, err error) {
 		return 0, err
 	}
 	i += n5
-	if m.CrashCount != nil {
-		data[i] = 0x20
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(*m.CrashCount))
-	}
-	if m.CrashReason != nil {
-		data[i] = 0x2a
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.CrashReason)))
-		i += copy(data[i:], *m.CrashReason)
-	}
-	if m.State != nil {
-		data[i] = 0x32
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.State)))
-		i += copy(data[i:], *m.State)
-	}
-	if m.PlacementError != nil {
-		data[i] = 0x3a
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(len(*m.PlacementError)))
-		i += copy(data[i:], *m.PlacementError)
-	}
-	if m.Since != nil {
-		data[i] = 0x40
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(*m.Since))
-	}
+	data[i] = 0x20
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(m.CrashCount))
+	data[i] = 0x2a
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.CrashReason)))
+	i += copy(data[i:], m.CrashReason)
+	data[i] = 0x32
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.State)))
+	i += copy(data[i:], m.State)
+	data[i] = 0x3a
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.PlacementError)))
+	i += copy(data[i:], m.PlacementError)
+	data[i] = 0x40
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(m.Since))
 	if m.ModificationTag != nil {
 		data[i] = 0x4a
 		i++
@@ -1548,22 +1478,10 @@ func (this *PortMapping) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.ContainerPort != nil && that1.ContainerPort != nil {
-		if *this.ContainerPort != *that1.ContainerPort {
-			return false
-		}
-	} else if this.ContainerPort != nil {
-		return false
-	} else if that1.ContainerPort != nil {
+	if this.ContainerPort != that1.ContainerPort {
 		return false
 	}
-	if this.HostPort != nil && that1.HostPort != nil {
-		if *this.HostPort != *that1.HostPort {
-			return false
-		}
-	} else if this.HostPort != nil {
-		return false
-	} else if that1.HostPort != nil {
+	if this.HostPort != that1.HostPort {
 		return false
 	}
 	return true
@@ -1588,31 +1506,13 @@ func (this *ActualLRPKey) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.ProcessGuid != nil && that1.ProcessGuid != nil {
-		if *this.ProcessGuid != *that1.ProcessGuid {
-			return false
-		}
-	} else if this.ProcessGuid != nil {
-		return false
-	} else if that1.ProcessGuid != nil {
+	if this.ProcessGuid != that1.ProcessGuid {
 		return false
 	}
-	if this.Index != nil && that1.Index != nil {
-		if *this.Index != *that1.Index {
-			return false
-		}
-	} else if this.Index != nil {
-		return false
-	} else if that1.Index != nil {
+	if this.Index != that1.Index {
 		return false
 	}
-	if this.Domain != nil && that1.Domain != nil {
-		if *this.Domain != *that1.Domain {
-			return false
-		}
-	} else if this.Domain != nil {
-		return false
-	} else if that1.Domain != nil {
+	if this.Domain != that1.Domain {
 		return false
 	}
 	return true
@@ -1637,22 +1537,10 @@ func (this *ActualLRPInstanceKey) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.InstanceGuid != nil && that1.InstanceGuid != nil {
-		if *this.InstanceGuid != *that1.InstanceGuid {
-			return false
-		}
-	} else if this.InstanceGuid != nil {
-		return false
-	} else if that1.InstanceGuid != nil {
+	if this.InstanceGuid != that1.InstanceGuid {
 		return false
 	}
-	if this.CellId != nil && that1.CellId != nil {
-		if *this.CellId != *that1.CellId {
-			return false
-		}
-	} else if this.CellId != nil {
-		return false
-	} else if that1.CellId != nil {
+	if this.CellId != that1.CellId {
 		return false
 	}
 	return true
@@ -1677,13 +1565,7 @@ func (this *ActualLRPNetInfo) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Address != nil && that1.Address != nil {
-		if *this.Address != *that1.Address {
-			return false
-		}
-	} else if this.Address != nil {
-		return false
-	} else if that1.Address != nil {
+	if this.Address != that1.Address {
 		return false
 	}
 	if len(this.Ports) != len(that1.Ports) {
@@ -1725,49 +1607,19 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	if !this.ActualLRPNetInfo.Equal(&that1.ActualLRPNetInfo) {
 		return false
 	}
-	if this.CrashCount != nil && that1.CrashCount != nil {
-		if *this.CrashCount != *that1.CrashCount {
-			return false
-		}
-	} else if this.CrashCount != nil {
-		return false
-	} else if that1.CrashCount != nil {
+	if this.CrashCount != that1.CrashCount {
 		return false
 	}
-	if this.CrashReason != nil && that1.CrashReason != nil {
-		if *this.CrashReason != *that1.CrashReason {
-			return false
-		}
-	} else if this.CrashReason != nil {
-		return false
-	} else if that1.CrashReason != nil {
+	if this.CrashReason != that1.CrashReason {
 		return false
 	}
-	if this.State != nil && that1.State != nil {
-		if *this.State != *that1.State {
-			return false
-		}
-	} else if this.State != nil {
-		return false
-	} else if that1.State != nil {
+	if this.State != that1.State {
 		return false
 	}
-	if this.PlacementError != nil && that1.PlacementError != nil {
-		if *this.PlacementError != *that1.PlacementError {
-			return false
-		}
-	} else if this.PlacementError != nil {
-		return false
-	} else if that1.PlacementError != nil {
+	if this.PlacementError != that1.PlacementError {
 		return false
 	}
-	if this.Since != nil && that1.Since != nil {
-		if *this.Since != *that1.Since {
-			return false
-		}
-	} else if this.Since != nil {
-		return false
-	} else if that1.Since != nil {
+	if this.Since != that1.Since {
 		return false
 	}
 	if !this.ModificationTag.Equal(that1.ModificationTag) {

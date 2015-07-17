@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/gomega"
 )
 
@@ -14,13 +13,13 @@ func (t *TestHelper) NewValidActualLRP(guid string, index int32) *models.ActualL
 		ActualLRPKey:         models.NewActualLRPKey(guid, index, "some-domain"),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-guid", "some-cell"),
 		ActualLRPNetInfo:     models.NewActualLRPNetInfo("some-address", models.NewPortMapping(2222, 4444)),
-		CrashCount:           proto.Int32(33),
-		CrashReason:          proto.String("badness"),
-		State:                proto.String(models.ActualLRPStateRunning),
-		Since:                proto.Int64(1138),
+		CrashCount:           33,
+		CrashReason:          "badness",
+		State:                models.ActualLRPStateRunning,
+		Since:                1138,
 		ModificationTag: &models.ModificationTag{
-			Epoch: proto.String("some-epoch"),
-			Index: proto.Uint32(999),
+			Epoch: "some-epoch",
+			Index: 999,
 		},
 	}
 	err := actualLRP.Validate()
@@ -32,35 +31,35 @@ func (t *TestHelper) NewValidActualLRP(guid string, index int32) *models.ActualL
 func (t *TestHelper) NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	desiredLRP := &models.DesiredLRP{
-		ProcessGuid:          &guid,
-		Domain:               proto.String("some-domain"),
-		RootFs:               proto.String("some:rootfs"),
-		Instances:            proto.Int32(1),
-		EnvironmentVariables: []*models.EnvironmentVariable{{Name: proto.String("FOO"), Value: proto.String("bar")}},
-		Setup:                &models.Action{RunAction: &models.RunAction{Path: proto.String("ls"), User: proto.String("name")}},
-		Action:               &models.Action{RunAction: &models.RunAction{Path: proto.String("ls"), User: proto.String("name")}},
-		StartTimeout:         proto.Uint32(15),
+		ProcessGuid:          guid,
+		Domain:               "some-domain",
+		RootFs:               "some:rootfs",
+		Instances:            1,
+		EnvironmentVariables: []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
+		Setup:                &models.Action{RunAction: &models.RunAction{Path: "ls", User: "name"}},
+		Action:               &models.Action{RunAction: &models.RunAction{Path: "ls", User: "name"}},
+		StartTimeout:         15,
 		Monitor: models.EmitProgressFor(
 			models.Timeout(models.Try(models.Parallel(models.Serial(
-				models.WrapAction(&models.RunAction{Path: proto.String("ls"), User: proto.String("name")})))),
+				models.WrapAction(&models.RunAction{Path: "ls", User: "name"})))),
 				10*time.Second,
 			),
 			"start-message",
 			"success-message",
 			"failure-message",
 		),
-		DiskMb:      proto.Int32(512),
-		MemoryMb:    proto.Int32(1024),
-		CpuWeight:   proto.Uint32(42),
+		DiskMb:      512,
+		MemoryMb:    1024,
+		CpuWeight:   42,
 		Routes:      &models.Routes{"my-router": &myRouterJSON},
-		LogSource:   proto.String("some-log-source"),
-		LogGuid:     proto.String("some-log-guid"),
-		MetricsGuid: proto.String("some-metrics-guid"),
-		Annotation:  proto.String("some-annotation"),
+		LogSource:   "some-log-source",
+		LogGuid:     "some-log-guid",
+		MetricsGuid: "some-metrics-guid",
+		Annotation:  "some-annotation",
 		EgressRules: []*models.SecurityGroupRule{{
-			Protocol:     proto.String(models.TCPProtocol),
+			Protocol:     models.TCPProtocol,
 			Destinations: []string{"1.1.1.1/32", "2.2.2.2/32"},
-			PortRange:    &models.PortRange{Start: proto.Uint32(10), End: proto.Uint32(16000)},
+			PortRange:    &models.PortRange{Start: 10, End: 16000},
 		}},
 	}
 	err := desiredLRP.Validate()

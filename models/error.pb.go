@@ -17,8 +17,8 @@ var _ = proto.Marshal
 var _ = math.Inf
 
 type Error struct {
-	Type    *string `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
-	Message *string `protobuf:"bytes,2,opt,name=message" json:"message,omitempty"`
+	Type    string `protobuf:"bytes,1,opt,name=type" json:"type"`
+	Message string `protobuf:"bytes,2,opt,name=message" json:"message"`
 }
 
 func (m *Error) Reset()         { *m = Error{} }
@@ -26,15 +26,15 @@ func (m *Error) String() string { return proto.CompactTextString(m) }
 func (*Error) ProtoMessage()    {}
 
 func (m *Error) GetType() string {
-	if m != nil && m.Type != nil {
-		return *m.Type
+	if m != nil {
+		return m.Type
 	}
 	return ""
 }
 
 func (m *Error) GetMessage() string {
-	if m != nil && m.Message != nil {
-		return *m.Message
+	if m != nil {
+		return m.Message
 	}
 	return ""
 }
@@ -80,8 +80,7 @@ func (m *Error) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Type = &s
+			m.Type = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -103,8 +102,7 @@ func (m *Error) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Message = &s
+			m.Message = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -216,14 +214,10 @@ func skipError(data []byte) (n int, err error) {
 func (m *Error) Size() (n int) {
 	var l int
 	_ = l
-	if m.Type != nil {
-		l = len(*m.Type)
-		n += 1 + l + sovError(uint64(l))
-	}
-	if m.Message != nil {
-		l = len(*m.Message)
-		n += 1 + l + sovError(uint64(l))
-	}
+	l = len(m.Type)
+	n += 1 + l + sovError(uint64(l))
+	l = len(m.Message)
+	n += 1 + l + sovError(uint64(l))
 	return n
 }
 
@@ -255,18 +249,14 @@ func (m *Error) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Type != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintError(data, i, uint64(len(*m.Type)))
-		i += copy(data[i:], *m.Type)
-	}
-	if m.Message != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintError(data, i, uint64(len(*m.Message)))
-		i += copy(data[i:], *m.Message)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintError(data, i, uint64(len(m.Type)))
+	i += copy(data[i:], m.Type)
+	data[i] = 0x12
+	i++
+	i = encodeVarintError(data, i, uint64(len(m.Message)))
+	i += copy(data[i:], m.Message)
 	return i, nil
 }
 

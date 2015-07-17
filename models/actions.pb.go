@@ -122,12 +122,12 @@ func (m *Action) GetCodependentAction() *CodependentAction {
 }
 
 type DownloadAction struct {
-	Artifact  *string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
-	From      *string `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
-	To        *string `protobuf:"bytes,3,opt,name=to" json:"to,omitempty"`
-	CacheKey  *string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key,omitempty"`
-	LogSource *string `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
-	User      *string `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
+	Artifact  string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
+	From      string `protobuf:"bytes,2,opt,name=from" json:"from"`
+	To        string `protobuf:"bytes,3,opt,name=to" json:"to"`
+	CacheKey  string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key"`
+	LogSource string `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
+	User      string `protobuf:"bytes,6,opt,name=user" json:"user"`
 }
 
 func (m *DownloadAction) Reset()         { *m = DownloadAction{} }
@@ -135,53 +135,53 @@ func (m *DownloadAction) String() string { return proto.CompactTextString(m) }
 func (*DownloadAction) ProtoMessage()    {}
 
 func (m *DownloadAction) GetArtifact() string {
-	if m != nil && m.Artifact != nil {
-		return *m.Artifact
+	if m != nil {
+		return m.Artifact
 	}
 	return ""
 }
 
 func (m *DownloadAction) GetFrom() string {
-	if m != nil && m.From != nil {
-		return *m.From
+	if m != nil {
+		return m.From
 	}
 	return ""
 }
 
 func (m *DownloadAction) GetTo() string {
-	if m != nil && m.To != nil {
-		return *m.To
+	if m != nil {
+		return m.To
 	}
 	return ""
 }
 
 func (m *DownloadAction) GetCacheKey() string {
-	if m != nil && m.CacheKey != nil {
-		return *m.CacheKey
+	if m != nil {
+		return m.CacheKey
 	}
 	return ""
 }
 
 func (m *DownloadAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 func (m *DownloadAction) GetUser() string {
-	if m != nil && m.User != nil {
-		return *m.User
+	if m != nil {
+		return m.User
 	}
 	return ""
 }
 
 type UploadAction struct {
-	Artifact  *string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
-	From      *string `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
-	To        *string `protobuf:"bytes,3,opt,name=to" json:"to,omitempty"`
-	LogSource *string `protobuf:"bytes,4,opt,name=log_source" json:"log_source,omitempty"`
-	User      *string `protobuf:"bytes,5,opt,name=user" json:"user,omitempty"`
+	Artifact  string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
+	From      string `protobuf:"bytes,2,opt,name=from" json:"from"`
+	To        string `protobuf:"bytes,3,opt,name=to" json:"to"`
+	LogSource string `protobuf:"bytes,4,opt,name=log_source" json:"log_source,omitempty"`
+	User      string `protobuf:"bytes,5,opt,name=user" json:"user"`
 }
 
 func (m *UploadAction) Reset()         { *m = UploadAction{} }
@@ -189,48 +189,48 @@ func (m *UploadAction) String() string { return proto.CompactTextString(m) }
 func (*UploadAction) ProtoMessage()    {}
 
 func (m *UploadAction) GetArtifact() string {
-	if m != nil && m.Artifact != nil {
-		return *m.Artifact
+	if m != nil {
+		return m.Artifact
 	}
 	return ""
 }
 
 func (m *UploadAction) GetFrom() string {
-	if m != nil && m.From != nil {
-		return *m.From
+	if m != nil {
+		return m.From
 	}
 	return ""
 }
 
 func (m *UploadAction) GetTo() string {
-	if m != nil && m.To != nil {
-		return *m.To
+	if m != nil {
+		return m.To
 	}
 	return ""
 }
 
 func (m *UploadAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 func (m *UploadAction) GetUser() string {
-	if m != nil && m.User != nil {
-		return *m.User
+	if m != nil {
+		return m.User
 	}
 	return ""
 }
 
 type RunAction struct {
-	Path           *string                `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
+	Path           string                 `protobuf:"bytes,1,opt,name=path" json:"path"`
 	Args           []string               `protobuf:"bytes,2,rep,name=args" json:"args,omitempty"`
-	Dir            *string                `protobuf:"bytes,3,opt,name=dir" json:"dir,omitempty"`
+	Dir            string                 `protobuf:"bytes,3,opt,name=dir" json:"dir,omitempty"`
 	Env            []*EnvironmentVariable `protobuf:"bytes,4,rep,name=env" json:"env,omitempty"`
 	ResourceLimits *ResourceLimits        `protobuf:"bytes,5,opt,name=resource_limits" json:"resource_limits,omitempty"`
-	User           *string                `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
-	LogSource      *string                `protobuf:"bytes,7,opt,name=log_source" json:"log_source,omitempty"`
+	User           string                 `protobuf:"bytes,6,opt,name=user" json:"user"`
+	LogSource      string                 `protobuf:"bytes,7,opt,name=log_source" json:"log_source,omitempty"`
 }
 
 func (m *RunAction) Reset()         { *m = RunAction{} }
@@ -238,8 +238,8 @@ func (m *RunAction) String() string { return proto.CompactTextString(m) }
 func (*RunAction) ProtoMessage()    {}
 
 func (m *RunAction) GetPath() string {
-	if m != nil && m.Path != nil {
-		return *m.Path
+	if m != nil {
+		return m.Path
 	}
 	return ""
 }
@@ -252,8 +252,8 @@ func (m *RunAction) GetArgs() []string {
 }
 
 func (m *RunAction) GetDir() string {
-	if m != nil && m.Dir != nil {
-		return *m.Dir
+	if m != nil {
+		return m.Dir
 	}
 	return ""
 }
@@ -273,23 +273,23 @@ func (m *RunAction) GetResourceLimits() *ResourceLimits {
 }
 
 func (m *RunAction) GetUser() string {
-	if m != nil && m.User != nil {
-		return *m.User
+	if m != nil {
+		return m.User
 	}
 	return ""
 }
 
 func (m *RunAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 type TimeoutAction struct {
 	Action    *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	Timeout   *int64  `protobuf:"varint,2,opt,name=timeout" json:"timeout,omitempty"`
-	LogSource *string `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
+	Timeout   int64   `protobuf:"varint,2,opt,name=timeout" json:"timeout"`
+	LogSource string  `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
 }
 
 func (m *TimeoutAction) Reset()         { *m = TimeoutAction{} }
@@ -304,25 +304,25 @@ func (m *TimeoutAction) GetAction() *Action {
 }
 
 func (m *TimeoutAction) GetTimeout() int64 {
-	if m != nil && m.Timeout != nil {
-		return *m.Timeout
+	if m != nil {
+		return m.Timeout
 	}
 	return 0
 }
 
 func (m *TimeoutAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 type EmitProgressAction struct {
 	Action               *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	StartMessage         *string `protobuf:"bytes,2,opt,name=start_message" json:"start_message,omitempty"`
-	SuccessMessage       *string `protobuf:"bytes,3,opt,name=success_message" json:"success_message,omitempty"`
-	FailureMessagePrefix *string `protobuf:"bytes,4,opt,name=failure_message_prefix" json:"failure_message_prefix,omitempty"`
-	LogSource            *string `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
+	StartMessage         string  `protobuf:"bytes,2,opt,name=start_message" json:"start_message"`
+	SuccessMessage       string  `protobuf:"bytes,3,opt,name=success_message" json:"success_message"`
+	FailureMessagePrefix string  `protobuf:"bytes,4,opt,name=failure_message_prefix" json:"failure_message_prefix"`
+	LogSource            string  `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
 }
 
 func (m *EmitProgressAction) Reset()         { *m = EmitProgressAction{} }
@@ -337,36 +337,36 @@ func (m *EmitProgressAction) GetAction() *Action {
 }
 
 func (m *EmitProgressAction) GetStartMessage() string {
-	if m != nil && m.StartMessage != nil {
-		return *m.StartMessage
+	if m != nil {
+		return m.StartMessage
 	}
 	return ""
 }
 
 func (m *EmitProgressAction) GetSuccessMessage() string {
-	if m != nil && m.SuccessMessage != nil {
-		return *m.SuccessMessage
+	if m != nil {
+		return m.SuccessMessage
 	}
 	return ""
 }
 
 func (m *EmitProgressAction) GetFailureMessagePrefix() string {
-	if m != nil && m.FailureMessagePrefix != nil {
-		return *m.FailureMessagePrefix
+	if m != nil {
+		return m.FailureMessagePrefix
 	}
 	return ""
 }
 
 func (m *EmitProgressAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 type TryAction struct {
 	Action    *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	LogSource *string `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string  `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
 func (m *TryAction) Reset()         { *m = TryAction{} }
@@ -381,15 +381,15 @@ func (m *TryAction) GetAction() *Action {
 }
 
 func (m *TryAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 type ParallelAction struct {
 	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource *string   `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
 func (m *ParallelAction) Reset()         { *m = ParallelAction{} }
@@ -404,15 +404,15 @@ func (m *ParallelAction) GetActions() []*Action {
 }
 
 func (m *ParallelAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 type SerialAction struct {
 	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource *string   `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
 func (m *SerialAction) Reset()         { *m = SerialAction{} }
@@ -427,15 +427,15 @@ func (m *SerialAction) GetActions() []*Action {
 }
 
 func (m *SerialAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 type CodependentAction struct {
 	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource *string   `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
 func (m *CodependentAction) Reset()         { *m = CodependentAction{} }
@@ -450,14 +450,14 @@ func (m *CodependentAction) GetActions() []*Action {
 }
 
 func (m *CodependentAction) GetLogSource() string {
-	if m != nil && m.LogSource != nil {
-		return *m.LogSource
+	if m != nil {
+		return m.LogSource
 	}
 	return ""
 }
 
 type ResourceLimits struct {
-	Nofile *uint64 `protobuf:"varint,1,opt,name=nofile" json:"nofile,omitempty"`
+	Nofile uint64 `protobuf:"varint,1,opt,name=nofile" json:"nofile,omitempty"`
 }
 
 func (m *ResourceLimits) Reset()         { *m = ResourceLimits{} }
@@ -465,8 +465,8 @@ func (m *ResourceLimits) String() string { return proto.CompactTextString(m) }
 func (*ResourceLimits) ProtoMessage()    {}
 
 func (m *ResourceLimits) GetNofile() uint64 {
-	if m != nil && m.Nofile != nil {
-		return *m.Nofile
+	if m != nil {
+		return m.Nofile
 	}
 	return 0
 }
@@ -797,8 +797,7 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Artifact = &s
+			m.Artifact = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -820,8 +819,7 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.From = &s
+			m.From = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -843,8 +841,7 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.To = &s
+			m.To = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -866,8 +863,7 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.CacheKey = &s
+			m.CacheKey = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -889,8 +885,7 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
@@ -912,8 +907,7 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.User = &s
+			m.User = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -977,8 +971,7 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Artifact = &s
+			m.Artifact = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1000,8 +993,7 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.From = &s
+			m.From = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1023,8 +1015,7 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.To = &s
+			m.To = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1046,8 +1037,7 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -1069,8 +1059,7 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.User = &s
+			m.User = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1134,8 +1123,7 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Path = &s
+			m.Path = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1179,8 +1167,7 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.Dir = &s
+			m.Dir = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1254,8 +1241,7 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.User = &s
+			m.User = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
@@ -1277,8 +1263,7 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1353,19 +1338,17 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
 			}
-			var v int64
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (int64(b) & 0x7F) << shift
+				m.Timeout |= (int64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Timeout = &v
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LogSource", wireType)
@@ -1386,8 +1369,7 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1478,8 +1460,7 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.StartMessage = &s
+			m.StartMessage = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1501,8 +1482,7 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.SuccessMessage = &s
+			m.SuccessMessage = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1524,8 +1504,7 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.FailureMessagePrefix = &s
+			m.FailureMessagePrefix = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -1547,8 +1526,7 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1639,8 +1617,7 @@ func (m *TryAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1729,8 +1706,7 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1819,8 +1795,7 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1909,8 +1884,7 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(data[iNdEx:postIndex])
-			m.LogSource = &s
+			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -1958,19 +1932,17 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Nofile", wireType)
 			}
-			var v uint64
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				v |= (uint64(b) & 0x7F) << shift
+				m.Nofile |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Nofile = &v
 		default:
 			var sizeOfWire int
 			for {
@@ -2179,76 +2151,50 @@ func (m *Action) Size() (n int) {
 func (m *DownloadAction) Size() (n int) {
 	var l int
 	_ = l
-	if m.Artifact != nil {
-		l = len(*m.Artifact)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.From != nil {
-		l = len(*m.From)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.To != nil {
-		l = len(*m.To)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.CacheKey != nil {
-		l = len(*m.CacheKey)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.User != nil {
-		l = len(*m.User)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.Artifact)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.From)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.To)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.CacheKey)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.User)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
 func (m *UploadAction) Size() (n int) {
 	var l int
 	_ = l
-	if m.Artifact != nil {
-		l = len(*m.Artifact)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.From != nil {
-		l = len(*m.From)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.To != nil {
-		l = len(*m.To)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.User != nil {
-		l = len(*m.User)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.Artifact)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.From)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.To)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.User)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
 func (m *RunAction) Size() (n int) {
 	var l int
 	_ = l
-	if m.Path != nil {
-		l = len(*m.Path)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.Path)
+	n += 1 + l + sovActions(uint64(l))
 	if len(m.Args) > 0 {
 		for _, s := range m.Args {
 			l = len(s)
 			n += 1 + l + sovActions(uint64(l))
 		}
 	}
-	if m.Dir != nil {
-		l = len(*m.Dir)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.Dir)
+	n += 1 + l + sovActions(uint64(l))
 	if len(m.Env) > 0 {
 		for _, e := range m.Env {
 			l = e.Size()
@@ -2259,14 +2205,10 @@ func (m *RunAction) Size() (n int) {
 		l = m.ResourceLimits.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
-	if m.User != nil {
-		l = len(*m.User)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.User)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
@@ -2277,13 +2219,9 @@ func (m *TimeoutAction) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
-	if m.Timeout != nil {
-		n += 1 + sovActions(uint64(*m.Timeout))
-	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	n += 1 + sovActions(uint64(m.Timeout))
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
@@ -2294,22 +2232,14 @@ func (m *EmitProgressAction) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
-	if m.StartMessage != nil {
-		l = len(*m.StartMessage)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.SuccessMessage != nil {
-		l = len(*m.SuccessMessage)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.FailureMessagePrefix != nil {
-		l = len(*m.FailureMessagePrefix)
-		n += 1 + l + sovActions(uint64(l))
-	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.StartMessage)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.SuccessMessage)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.FailureMessagePrefix)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
@@ -2320,10 +2250,8 @@ func (m *TryAction) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
@@ -2336,10 +2264,8 @@ func (m *ParallelAction) Size() (n int) {
 			n += 1 + l + sovActions(uint64(l))
 		}
 	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
@@ -2352,10 +2278,8 @@ func (m *SerialAction) Size() (n int) {
 			n += 1 + l + sovActions(uint64(l))
 		}
 	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
@@ -2368,19 +2292,15 @@ func (m *CodependentAction) Size() (n int) {
 			n += 1 + l + sovActions(uint64(l))
 		}
 	}
-	if m.LogSource != nil {
-		l = len(*m.LogSource)
-		n += 1 + l + sovActions(uint64(l))
-	}
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
 func (m *ResourceLimits) Size() (n int) {
 	var l int
 	_ = l
-	if m.Nofile != nil {
-		n += 1 + sovActions(uint64(*m.Nofile))
-	}
+	n += 1 + sovActions(uint64(m.Nofile))
 	return n
 }
 
@@ -2520,42 +2440,30 @@ func (m *DownloadAction) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Artifact != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.Artifact)))
-		i += copy(data[i:], *m.Artifact)
-	}
-	if m.From != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.From)))
-		i += copy(data[i:], *m.From)
-	}
-	if m.To != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.To)))
-		i += copy(data[i:], *m.To)
-	}
-	if m.CacheKey != nil {
-		data[i] = 0x22
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.CacheKey)))
-		i += copy(data[i:], *m.CacheKey)
-	}
-	if m.LogSource != nil {
-		data[i] = 0x2a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
-	if m.User != nil {
-		data[i] = 0x32
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.User)))
-		i += copy(data[i:], *m.User)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.Artifact)))
+	i += copy(data[i:], m.Artifact)
+	data[i] = 0x12
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.From)))
+	i += copy(data[i:], m.From)
+	data[i] = 0x1a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.To)))
+	i += copy(data[i:], m.To)
+	data[i] = 0x22
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.CacheKey)))
+	i += copy(data[i:], m.CacheKey)
+	data[i] = 0x2a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
+	data[i] = 0x32
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.User)))
+	i += copy(data[i:], m.User)
 	return i, nil
 }
 
@@ -2574,36 +2482,26 @@ func (m *UploadAction) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Artifact != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.Artifact)))
-		i += copy(data[i:], *m.Artifact)
-	}
-	if m.From != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.From)))
-		i += copy(data[i:], *m.From)
-	}
-	if m.To != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.To)))
-		i += copy(data[i:], *m.To)
-	}
-	if m.LogSource != nil {
-		data[i] = 0x22
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
-	if m.User != nil {
-		data[i] = 0x2a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.User)))
-		i += copy(data[i:], *m.User)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.Artifact)))
+	i += copy(data[i:], m.Artifact)
+	data[i] = 0x12
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.From)))
+	i += copy(data[i:], m.From)
+	data[i] = 0x1a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.To)))
+	i += copy(data[i:], m.To)
+	data[i] = 0x22
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
+	data[i] = 0x2a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.User)))
+	i += copy(data[i:], m.User)
 	return i, nil
 }
 
@@ -2622,12 +2520,10 @@ func (m *RunAction) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Path != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.Path)))
-		i += copy(data[i:], *m.Path)
-	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.Path)))
+	i += copy(data[i:], m.Path)
 	if len(m.Args) > 0 {
 		for _, s := range m.Args {
 			data[i] = 0x12
@@ -2643,12 +2539,10 @@ func (m *RunAction) MarshalTo(data []byte) (n int, err error) {
 			i += copy(data[i:], s)
 		}
 	}
-	if m.Dir != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.Dir)))
-		i += copy(data[i:], *m.Dir)
-	}
+	data[i] = 0x1a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.Dir)))
+	i += copy(data[i:], m.Dir)
 	if len(m.Env) > 0 {
 		for _, msg := range m.Env {
 			data[i] = 0x22
@@ -2671,18 +2565,14 @@ func (m *RunAction) MarshalTo(data []byte) (n int, err error) {
 		}
 		i += n10
 	}
-	if m.User != nil {
-		data[i] = 0x32
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.User)))
-		i += copy(data[i:], *m.User)
-	}
-	if m.LogSource != nil {
-		data[i] = 0x3a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
+	data[i] = 0x32
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.User)))
+	i += copy(data[i:], m.User)
+	data[i] = 0x3a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
 	return i, nil
 }
 
@@ -2711,17 +2601,13 @@ func (m *TimeoutAction) MarshalTo(data []byte) (n int, err error) {
 		}
 		i += n11
 	}
-	if m.Timeout != nil {
-		data[i] = 0x10
-		i++
-		i = encodeVarintActions(data, i, uint64(*m.Timeout))
-	}
-	if m.LogSource != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
+	data[i] = 0x10
+	i++
+	i = encodeVarintActions(data, i, uint64(m.Timeout))
+	data[i] = 0x1a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
 	return i, nil
 }
 
@@ -2750,30 +2636,22 @@ func (m *EmitProgressAction) MarshalTo(data []byte) (n int, err error) {
 		}
 		i += n12
 	}
-	if m.StartMessage != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.StartMessage)))
-		i += copy(data[i:], *m.StartMessage)
-	}
-	if m.SuccessMessage != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.SuccessMessage)))
-		i += copy(data[i:], *m.SuccessMessage)
-	}
-	if m.FailureMessagePrefix != nil {
-		data[i] = 0x22
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.FailureMessagePrefix)))
-		i += copy(data[i:], *m.FailureMessagePrefix)
-	}
-	if m.LogSource != nil {
-		data[i] = 0x2a
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
+	data[i] = 0x12
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.StartMessage)))
+	i += copy(data[i:], m.StartMessage)
+	data[i] = 0x1a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.SuccessMessage)))
+	i += copy(data[i:], m.SuccessMessage)
+	data[i] = 0x22
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.FailureMessagePrefix)))
+	i += copy(data[i:], m.FailureMessagePrefix)
+	data[i] = 0x2a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
 	return i, nil
 }
 
@@ -2802,12 +2680,10 @@ func (m *TryAction) MarshalTo(data []byte) (n int, err error) {
 		}
 		i += n13
 	}
-	if m.LogSource != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
+	data[i] = 0x12
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
 	return i, nil
 }
 
@@ -2838,12 +2714,10 @@ func (m *ParallelAction) MarshalTo(data []byte) (n int, err error) {
 			i += n
 		}
 	}
-	if m.LogSource != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
+	data[i] = 0x12
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
 	return i, nil
 }
 
@@ -2874,12 +2748,10 @@ func (m *SerialAction) MarshalTo(data []byte) (n int, err error) {
 			i += n
 		}
 	}
-	if m.LogSource != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
+	data[i] = 0x12
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
 	return i, nil
 }
 
@@ -2910,12 +2782,10 @@ func (m *CodependentAction) MarshalTo(data []byte) (n int, err error) {
 			i += n
 		}
 	}
-	if m.LogSource != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(len(*m.LogSource)))
-		i += copy(data[i:], *m.LogSource)
-	}
+	data[i] = 0x12
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
 	return i, nil
 }
 
@@ -2934,11 +2804,9 @@ func (m *ResourceLimits) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Nofile != nil {
-		data[i] = 0x8
-		i++
-		i = encodeVarintActions(data, i, uint64(*m.Nofile))
-	}
+	data[i] = 0x8
+	i++
+	i = encodeVarintActions(data, i, uint64(m.Nofile))
 	return i, nil
 }
 
@@ -3038,58 +2906,22 @@ func (this *DownloadAction) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Artifact != nil && that1.Artifact != nil {
-		if *this.Artifact != *that1.Artifact {
-			return false
-		}
-	} else if this.Artifact != nil {
-		return false
-	} else if that1.Artifact != nil {
+	if this.Artifact != that1.Artifact {
 		return false
 	}
-	if this.From != nil && that1.From != nil {
-		if *this.From != *that1.From {
-			return false
-		}
-	} else if this.From != nil {
-		return false
-	} else if that1.From != nil {
+	if this.From != that1.From {
 		return false
 	}
-	if this.To != nil && that1.To != nil {
-		if *this.To != *that1.To {
-			return false
-		}
-	} else if this.To != nil {
-		return false
-	} else if that1.To != nil {
+	if this.To != that1.To {
 		return false
 	}
-	if this.CacheKey != nil && that1.CacheKey != nil {
-		if *this.CacheKey != *that1.CacheKey {
-			return false
-		}
-	} else if this.CacheKey != nil {
-		return false
-	} else if that1.CacheKey != nil {
+	if this.CacheKey != that1.CacheKey {
 		return false
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
-	if this.User != nil && that1.User != nil {
-		if *this.User != *that1.User {
-			return false
-		}
-	} else if this.User != nil {
-		return false
-	} else if that1.User != nil {
+	if this.User != that1.User {
 		return false
 	}
 	return true
@@ -3114,49 +2946,19 @@ func (this *UploadAction) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Artifact != nil && that1.Artifact != nil {
-		if *this.Artifact != *that1.Artifact {
-			return false
-		}
-	} else if this.Artifact != nil {
-		return false
-	} else if that1.Artifact != nil {
+	if this.Artifact != that1.Artifact {
 		return false
 	}
-	if this.From != nil && that1.From != nil {
-		if *this.From != *that1.From {
-			return false
-		}
-	} else if this.From != nil {
-		return false
-	} else if that1.From != nil {
+	if this.From != that1.From {
 		return false
 	}
-	if this.To != nil && that1.To != nil {
-		if *this.To != *that1.To {
-			return false
-		}
-	} else if this.To != nil {
-		return false
-	} else if that1.To != nil {
+	if this.To != that1.To {
 		return false
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
-	if this.User != nil && that1.User != nil {
-		if *this.User != *that1.User {
-			return false
-		}
-	} else if this.User != nil {
-		return false
-	} else if that1.User != nil {
+	if this.User != that1.User {
 		return false
 	}
 	return true
@@ -3181,13 +2983,7 @@ func (this *RunAction) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Path != nil && that1.Path != nil {
-		if *this.Path != *that1.Path {
-			return false
-		}
-	} else if this.Path != nil {
-		return false
-	} else if that1.Path != nil {
+	if this.Path != that1.Path {
 		return false
 	}
 	if len(this.Args) != len(that1.Args) {
@@ -3198,13 +2994,7 @@ func (this *RunAction) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if this.Dir != nil && that1.Dir != nil {
-		if *this.Dir != *that1.Dir {
-			return false
-		}
-	} else if this.Dir != nil {
-		return false
-	} else if that1.Dir != nil {
+	if this.Dir != that1.Dir {
 		return false
 	}
 	if len(this.Env) != len(that1.Env) {
@@ -3218,22 +3008,10 @@ func (this *RunAction) Equal(that interface{}) bool {
 	if !this.ResourceLimits.Equal(that1.ResourceLimits) {
 		return false
 	}
-	if this.User != nil && that1.User != nil {
-		if *this.User != *that1.User {
-			return false
-		}
-	} else if this.User != nil {
-		return false
-	} else if that1.User != nil {
+	if this.User != that1.User {
 		return false
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
 	return true
@@ -3261,22 +3039,10 @@ func (this *TimeoutAction) Equal(that interface{}) bool {
 	if !this.Action.Equal(that1.Action) {
 		return false
 	}
-	if this.Timeout != nil && that1.Timeout != nil {
-		if *this.Timeout != *that1.Timeout {
-			return false
-		}
-	} else if this.Timeout != nil {
-		return false
-	} else if that1.Timeout != nil {
+	if this.Timeout != that1.Timeout {
 		return false
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
 	return true
@@ -3304,40 +3070,16 @@ func (this *EmitProgressAction) Equal(that interface{}) bool {
 	if !this.Action.Equal(that1.Action) {
 		return false
 	}
-	if this.StartMessage != nil && that1.StartMessage != nil {
-		if *this.StartMessage != *that1.StartMessage {
-			return false
-		}
-	} else if this.StartMessage != nil {
-		return false
-	} else if that1.StartMessage != nil {
+	if this.StartMessage != that1.StartMessage {
 		return false
 	}
-	if this.SuccessMessage != nil && that1.SuccessMessage != nil {
-		if *this.SuccessMessage != *that1.SuccessMessage {
-			return false
-		}
-	} else if this.SuccessMessage != nil {
-		return false
-	} else if that1.SuccessMessage != nil {
+	if this.SuccessMessage != that1.SuccessMessage {
 		return false
 	}
-	if this.FailureMessagePrefix != nil && that1.FailureMessagePrefix != nil {
-		if *this.FailureMessagePrefix != *that1.FailureMessagePrefix {
-			return false
-		}
-	} else if this.FailureMessagePrefix != nil {
-		return false
-	} else if that1.FailureMessagePrefix != nil {
+	if this.FailureMessagePrefix != that1.FailureMessagePrefix {
 		return false
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
 	return true
@@ -3365,13 +3107,7 @@ func (this *TryAction) Equal(that interface{}) bool {
 	if !this.Action.Equal(that1.Action) {
 		return false
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
 	return true
@@ -3404,13 +3140,7 @@ func (this *ParallelAction) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
 	return true
@@ -3443,13 +3173,7 @@ func (this *SerialAction) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
 	return true
@@ -3482,13 +3206,7 @@ func (this *CodependentAction) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if this.LogSource != nil && that1.LogSource != nil {
-		if *this.LogSource != *that1.LogSource {
-			return false
-		}
-	} else if this.LogSource != nil {
-		return false
-	} else if that1.LogSource != nil {
+	if this.LogSource != that1.LogSource {
 		return false
 	}
 	return true
@@ -3513,13 +3231,7 @@ func (this *ResourceLimits) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Nofile != nil && that1.Nofile != nil {
-		if *this.Nofile != *that1.Nofile {
-			return false
-		}
-	} else if this.Nofile != nil {
-		return false
-	} else if that1.Nofile != nil {
+	if this.Nofile != that1.Nofile {
 		return false
 	}
 	return true

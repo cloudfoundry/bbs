@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -53,15 +52,15 @@ var _ = Describe("Events API", func() {
 
 			rawMessage := json.RawMessage([]byte(`{"port":8080,"hosts":["primer-route"]}`))
 			primerLRP := &models.DesiredLRP{
-				ProcessGuid: proto.String("primer-guid"),
-				Domain:      proto.String("primer-domain"),
-				RootFs:      proto.String("primer:rootfs"),
+				ProcessGuid: "primer-guid",
+				Domain:      "primer-domain",
+				RootFs:      "primer:rootfs",
 				Routes: &models.Routes{
 					"router": &rawMessage,
 				},
 				Action: models.WrapAction(&models.RunAction{
-					User: proto.String("me"),
-					Path: proto.String("true"),
+					User: "me",
+					Path: "true",
 				}),
 			}
 
@@ -87,8 +86,8 @@ var _ = Describe("Events API", func() {
 				ActualLRPKey:         key,
 				ActualLRPInstanceKey: instanceKey,
 				ActualLRPNetInfo:     netInfo,
-				State:                proto.String(models.ActualLRPStateRunning),
-				Since:                proto.Int64(time.Now().UnixNano()),
+				State:                models.ActualLRPStateRunning,
+				Since:                time.Now().UnixNano(),
 			}
 		})
 

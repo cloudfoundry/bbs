@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"reflect"
 	"time"
-
-	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -31,9 +29,9 @@ type ActionInterface interface {
 
 func Download(from, to, user string) *DownloadAction {
 	return &DownloadAction{
-		From: proto.String("http://example.com"),
-		To:   proto.String("/tmp/internet"),
-		User: proto.String("diego"),
+		From: from,
+		To:   to,
+		User: user,
 	}
 }
 
@@ -91,8 +89,8 @@ func (a UploadAction) Validate() error {
 
 func Run(path, user string) *RunAction {
 	return &RunAction{
-		Path: proto.String(path),
-		User: proto.String(user),
+		Path: path,
+		User: user,
 	}
 }
 
@@ -284,16 +282,16 @@ func (a EmitProgressAction) Validate() error {
 func EmitProgressFor(action *Action, startMessage string, successMessage string, failureMessagePrefix string) *Action {
 	return WrapAction(&EmitProgressAction{
 		Action:               action,
-		StartMessage:         &startMessage,
-		SuccessMessage:       &successMessage,
-		FailureMessagePrefix: &failureMessagePrefix,
+		StartMessage:         startMessage,
+		SuccessMessage:       successMessage,
+		FailureMessagePrefix: failureMessagePrefix,
 	})
 }
 
 func Timeout(action *Action, timeout time.Duration) *Action {
 	return WrapAction(&TimeoutAction{
 		Action:  action,
-		Timeout: (*int64)(&timeout),
+		Timeout: (int64)(timeout),
 	})
 }
 

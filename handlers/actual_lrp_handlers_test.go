@@ -9,7 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager"
@@ -51,8 +50,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 					"instance-guid-0",
 					"cell-id-0",
 				),
-				State: proto.String(models.ActualLRPStateRunning),
-				Since: proto.Int64(1138),
+				State: models.ActualLRPStateRunning,
+				Since: 1138,
 			}
 
 			actualLRP2 = models.ActualLRP{
@@ -65,13 +64,13 @@ var _ = Describe("ActualLRP Handlers", func() {
 					"instance-guid-1",
 					"cell-id-1",
 				),
-				State: proto.String(models.ActualLRPStateClaimed),
-				Since: proto.Int64(4444),
+				State: models.ActualLRPStateClaimed,
+				Since: 4444,
 			}
 
 			evacuatingLRP2 = actualLRP2
-			evacuatingLRP2.State = proto.String(models.ActualLRPStateRunning)
-			evacuatingLRP2.Since = proto.Int64(3417)
+			evacuatingLRP2.State = models.ActualLRPStateRunning
+			evacuatingLRP2.Since = 3417
 		})
 
 		JustBeforeEach(func() {
@@ -210,8 +209,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 					"instance-guid-0",
 					"cell-id-0",
 				),
-				State: proto.String(models.ActualLRPStateRunning),
-				Since: proto.Int64(1138),
+				State: models.ActualLRPStateRunning,
+				Since: 1138,
 			}
 
 			actualLRP2 = models.ActualLRP{
@@ -224,13 +223,13 @@ var _ = Describe("ActualLRP Handlers", func() {
 					"instance-guid-1",
 					"cell-id-1",
 				),
-				State: proto.String(models.ActualLRPStateClaimed),
-				Since: proto.Int64(4444),
+				State: models.ActualLRPStateClaimed,
+				Since: 4444,
 			}
 
 			evacuatingLRP2 = actualLRP2
-			evacuatingLRP2.State = proto.String(models.ActualLRPStateRunning)
-			evacuatingLRP2.Since = proto.Int64(3417)
+			evacuatingLRP2.State = models.ActualLRPStateRunning
+			evacuatingLRP2.Since = 3417
 		})
 
 		JustBeforeEach(func() {
@@ -329,8 +328,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 					"instance-guid-0",
 					"cell-id-0",
 				),
-				State: proto.String(models.ActualLRPStateRunning),
-				Since: proto.Int64(1138),
+				State: models.ActualLRPStateRunning,
+				Since: 1138,
 			}
 
 			actualLRP2 = models.ActualLRP{
@@ -343,13 +342,13 @@ var _ = Describe("ActualLRP Handlers", func() {
 					"instance-guid-1",
 					"cell-id-1",
 				),
-				State: proto.String(models.ActualLRPStateClaimed),
-				Since: proto.Int64(4444),
+				State: models.ActualLRPStateClaimed,
+				Since: 4444,
 			}
 
 			evacuatingLRP2 = actualLRP2
-			evacuatingLRP2.State = proto.String(models.ActualLRPStateRunning)
-			evacuatingLRP2.Since = proto.Int64(3417)
+			evacuatingLRP2.State = models.ActualLRPStateRunning
+			evacuatingLRP2.Since = 3417
 		})
 
 		JustBeforeEach(func() {

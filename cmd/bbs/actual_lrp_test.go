@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -66,23 +65,23 @@ var _ = Describe("ActualLRP API", func() {
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
-			State:                proto.String(models.ActualLRPStateRunning),
-			Since:                proto.Int64(time.Now().UnixNano()),
+			State:                models.ActualLRPStateRunning,
+			Since:                time.Now().UnixNano(),
 		}
 		evacuatingLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID),
 			ActualLRPNetInfo:     netInfo,
-			State:                proto.String(models.ActualLRPStateRunning),
-			Since:                proto.Int64(time.Now().UnixNano() - 1000),
+			State:                models.ActualLRPStateRunning,
+			Since:                time.Now().UnixNano() - 1000,
 		}
 
 		otherLRP = &models.ActualLRP{
 			ActualLRPKey:         otherLRPKey,
 			ActualLRPInstanceKey: otherLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
-			State:                proto.String(models.ActualLRPStateRunning),
-			Since:                proto.Int64(time.Now().UnixNano()),
+			State:                models.ActualLRPStateRunning,
+			Since:                time.Now().UnixNano(),
 		}
 
 		testHelper.SetRawActualLRP(baseLRP)

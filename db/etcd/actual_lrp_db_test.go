@@ -4,7 +4,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -57,39 +56,39 @@ var _ = Describe("ActualLRPDB", func() {
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
-			State:                proto.String(models.ActualLRPStateRunning),
-			Since:                proto.Int64(clock.Now().UnixNano()),
+			State:                models.ActualLRPStateRunning,
+			Since:                clock.Now().UnixNano(),
 		}
 
 		evacuatingLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID),
 			ActualLRPNetInfo:     netInfo,
-			State:                proto.String(models.ActualLRPStateRunning),
-			Since:                proto.Int64(clock.Now().UnixNano() - 1000),
+			State:                models.ActualLRPStateRunning,
+			Since:                clock.Now().UnixNano() - 1000,
 		}
 
 		otherIndexLRP = &models.ActualLRP{
 			ActualLRPKey:         models.NewActualLRPKey(baseProcessGuid, otherIndex, baseDomain),
 			ActualLRPInstanceKey: baseLRPInstanceKey,
-			State:                proto.String(models.ActualLRPStateClaimed),
-			Since:                proto.Int64(clock.Now().UnixNano()),
+			State:                models.ActualLRPStateClaimed,
+			Since:                clock.Now().UnixNano(),
 		}
 
 		otherDomainLRP = &models.ActualLRP{
 			ActualLRPKey:         models.NewActualLRPKey(otherDomainProcessGuid, baseIndex, otherDomain),
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
-			State:                proto.String(models.ActualLRPStateRunning),
-			Since:                proto.Int64(clock.Now().UnixNano()),
+			State:                models.ActualLRPStateRunning,
+			Since:                clock.Now().UnixNano(),
 		}
 
 		otherCellIdLRP = &models.ActualLRP{
 			ActualLRPKey:         models.NewActualLRPKey(otherDomainProcessGuid, otherIndex, otherDomain),
 			ActualLRPInstanceKey: otherLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
-			State:                proto.String(models.ActualLRPStateRunning),
-			Since:                proto.Int64(clock.Now().UnixNano()),
+			State:                models.ActualLRPStateRunning,
+			Since:                clock.Now().UnixNano(),
 		}
 		etcdDB = NewETCD(etcdClient)
 	})
