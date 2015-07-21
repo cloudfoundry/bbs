@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Actions", func() {
-	itSerializes := func(actionPayload string, a *models.Action) {
+	itSerializes := func(actionPayload string, a interface{}) {
 		action := models.UnwrapAction(a)
 		It("Action -> JSON for "+string(action.ActionType()), func() {
 			By("marshalling to JSON", func() {
@@ -253,11 +253,11 @@ var _ = Describe("Actions", func() {
 				"timeout": 10000000
 			}`,
 			models.Timeout(
-				models.WrapAction(&models.RunAction{
+				&models.RunAction{
 					Path:           "echo",
 					User:           "someone",
 					ResourceLimits: &models.ResourceLimits{Nofile: 10},
-				}),
+				},
 				10*time.Millisecond,
 			),
 		)
@@ -416,20 +416,16 @@ var _ = Describe("Actions", func() {
 					]
 			}`,
 			models.Parallel(
-				&models.Action{
-					DownloadAction: &models.DownloadAction{
-						From:     "web_location",
-						To:       "local_location",
-						CacheKey: "elephant",
-						User:     "someone",
-					},
+				&models.DownloadAction{
+					From:     "web_location",
+					To:       "local_location",
+					CacheKey: "elephant",
+					User:     "someone",
 				},
-				&models.Action{
-					RunAction: &models.RunAction{
-						Path:           "echo",
-						User:           "me",
-						ResourceLimits: &models.ResourceLimits{Nofile: 0},
-					},
+				&models.RunAction{
+					Path:           "echo",
+					User:           "me",
+					ResourceLimits: &models.ResourceLimits{Nofile: 0},
 				},
 			),
 		)
@@ -443,9 +439,7 @@ var _ = Describe("Actions", func() {
 			`{
 				"actions": [null]
 			}`,
-			models.WrapAction(&models.ParallelAction{
-				Actions: []*models.Action{nil},
-			}),
+			models.Parallel(nil),
 		)
 
 		Describe("Validate", func() {
@@ -548,9 +542,7 @@ var _ = Describe("Actions", func() {
 			`{
 				"actions": [null]
 			}`,
-			models.WrapAction(&models.SerialAction{
-				Actions: []*models.Action{nil},
-			}),
+			models.Serial(nil),
 		)
 
 		Describe("Validate", func() {
@@ -558,18 +550,13 @@ var _ = Describe("Actions", func() {
 
 			Context("when the action has 'actions' as a slice of valid actions", func() {
 				It("is valid", func() {
-					serialAction = models.SerialAction{
-						Actions: []*models.Action{
-							&models.Action{
-								UploadAction: &models.UploadAction{
-									From: "local_location",
-									To:   "web_location",
-									User: "someone",
-								},
-							},
+					serialAction = *models.Serial(
+						&models.UploadAction{
+							From: "local_location",
+							To:   "web_location",
+							User: "someone",
 						},
-					}
-
+					).SerialAction
 					err := serialAction.Validate()
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -588,14 +575,11 @@ var _ = Describe("Actions", func() {
 				},
 				{
 					"from",
-					models.SerialAction{
-						Actions: []*models.Action{
-							{UploadAction: &models.UploadAction{
-								To: "web_location",
-							}},
-							nil,
+					*models.Serial(
+						&models.UploadAction{
+							To: "web_location",
 						},
-					},
+					).SerialAction,
 				},
 			} {
 				testValidatorErrorCase(testCase)
@@ -618,11 +602,11 @@ var _ = Describe("Actions", func() {
 					}
 			}`,
 			models.EmitProgressFor(
-				models.WrapAction(&models.RunAction{
+				&models.RunAction{
 					Path:           "echo",
 					User:           "me",
 					ResourceLimits: &models.ResourceLimits{},
-				}),
+				},
 				"reticulating splines", "reticulated splines", "reticulation failed",
 			),
 		)
@@ -644,15 +628,14 @@ var _ = Describe("Actions", func() {
 
 			Context("when the action has 'action' specified", func() {
 				It("is valid", func() {
-					emitProgressAction = models.EmitProgressAction{
-						Action: &models.Action{
-							UploadAction: &models.UploadAction{
-								From: "local_location",
-								To:   "web_location",
-								User: "someone",
-							},
+					emitProgressAction = *models.EmitProgressFor(
+						&models.UploadAction{
+							From: "local_location",
+							To:   "web_location",
+							User: "someone",
 						},
-					}
+						"", "", "",
+					).EmitProgressAction
 
 					err := emitProgressAction.Validate()
 					Expect(err).NotTo(HaveOccurred())
@@ -666,13 +649,12 @@ var _ = Describe("Actions", func() {
 				},
 				{
 					"from",
-					models.EmitProgressAction{
-						Action: &models.Action{
-							UploadAction: &models.UploadAction{
-								To: "web_location",
-							},
+					*models.EmitProgressFor(
+						&models.UploadAction{
+							To: "web_location",
 						},
-					},
+						"", "", "",
+					).EmitProgressAction,
 				},
 			} {
 				testValidatorErrorCase(testCase)
@@ -702,17 +684,13 @@ var _ = Describe("Actions", func() {
 					]
 			}`,
 			models.Codependent(
-				&models.Action{
-					DownloadAction: &models.DownloadAction{
-						From:     "web_location",
-						To:       "local_location",
-						CacheKey: "elephant",
-						User:     "someone",
-					},
+				&models.DownloadAction{
+					From:     "web_location",
+					To:       "local_location",
+					CacheKey: "elephant",
+					User:     "someone",
 				},
-				&models.Action{
-					RunAction: &models.RunAction{Path: "echo", User: "me", ResourceLimits: &models.ResourceLimits{}},
-				},
+				&models.RunAction{Path: "echo", User: "me", ResourceLimits: &models.ResourceLimits{}},
 			),
 		)
 
@@ -725,9 +703,7 @@ var _ = Describe("Actions", func() {
 			`{
 				"actions": [null]
 			}`,
-			models.WrapAction(&models.CodependentAction{
-				Actions: []*models.Action{nil},
-			}),
+			models.Codependent(nil),
 		)
 
 		Describe("Validate", func() {
@@ -735,17 +711,13 @@ var _ = Describe("Actions", func() {
 
 			Context("when the action has 'actions' as a slice of valid actions", func() {
 				It("is valid", func() {
-					codependentAction = models.CodependentAction{
-						Actions: []*models.Action{
-							&models.Action{
-								UploadAction: &models.UploadAction{
-									From: "local_location",
-									To:   "web_location",
-									User: "someone",
-								},
-							},
+					codependentAction = *models.Codependent(
+						&models.UploadAction{
+							From: "local_location",
+							To:   "web_location",
+							User: "someone",
 						},
-					}
+					).CodependentAction
 
 					err := codependentAction.Validate()
 					Expect(err).NotTo(HaveOccurred())
@@ -759,23 +731,13 @@ var _ = Describe("Actions", func() {
 				},
 				{
 					"action at index 0",
-					models.CodependentAction{
-						Actions: []*models.Action{
-							nil,
-						},
-					},
+					*models.Codependent(nil).CodependentAction,
 				},
 				{
 					"from",
-					models.CodependentAction{
-						Actions: []*models.Action{
-							&models.Action{
-								UploadAction: &models.UploadAction{
-									To: "web_location",
-								},
-							},
-						},
-					},
+					*models.Codependent(&models.UploadAction{
+						To: "web_location",
+					}).CodependentAction,
 				},
 			} {
 				testValidatorErrorCase(testCase)
