@@ -5,6 +5,8 @@ import (
 	"regexp"
 )
 
+const PreloadedRootFSScheme = "preloaded"
+
 var processGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 type DesiredLRPChange struct {
@@ -23,6 +25,13 @@ func NewDesiredLRP(processGuid, domain, rootfs string, action ActionInterface) *
 		RootFs:      rootfs,
 		Action:      WrapAction(action),
 	}
+}
+
+func PreloadedRootFS(stack string) string {
+	return (&url.URL{
+		Scheme: PreloadedRootFSScheme,
+		Opaque: stack,
+	}).String()
 }
 
 func (desired DesiredLRP) Validate() error {
