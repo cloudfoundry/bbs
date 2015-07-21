@@ -27,14 +27,6 @@ type ActionInterface interface {
 	Validator
 }
 
-func Download(from, to, user string) *DownloadAction {
-	return &DownloadAction{
-		From: from,
-		To:   to,
-		User: user,
-	}
-}
-
 func (a *DownloadAction) ActionType() string {
 	return ActionTypeDownload
 }
@@ -85,13 +77,6 @@ func (a UploadAction) Validate() error {
 	}
 
 	return nil
-}
-
-func Run(path, user string) *RunAction {
-	return &RunAction{
-		Path: path,
-		User: user,
-	}
 }
 
 func (a *RunAction) ActionType() string {

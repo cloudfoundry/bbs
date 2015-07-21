@@ -18,15 +18,6 @@ type DesiredLRPFilter struct {
 	Domain string
 }
 
-func NewDesiredLRP(processGuid, domain, rootfs string, action ActionInterface) *DesiredLRP {
-	return &DesiredLRP{
-		ProcessGuid: processGuid,
-		Domain:      domain,
-		RootFs:      rootfs,
-		Action:      WrapAction(action),
-	}
-}
-
 func PreloadedRootFS(stack string) string {
 	return (&url.URL{
 		Scheme: PreloadedRootFSScheme,

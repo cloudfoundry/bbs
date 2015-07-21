@@ -28,12 +28,15 @@ var _ = Describe("EventSource", func() {
 			var desiredLRP *models.DesiredLRP
 
 			BeforeEach(func() {
-				desiredLRP = models.NewDesiredLRP(
-					"some-guid",
-					"some-domain",
-					"some-rootfs",
-					models.Run("true", "theuser"),
-				)
+				desiredLRP = &models.DesiredLRP{
+					ProcessGuid: "some-guid",
+					Domain:      "some-domain",
+					RootFs:      "some-rootfs",
+					Action: models.WrapAction(&models.RunAction{
+						Path: "true",
+						User: "theuser",
+					}),
+				}
 			})
 
 			Context("when receiving a DesiredLRPCreatedEvent", func() {

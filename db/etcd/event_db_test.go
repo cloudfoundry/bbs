@@ -30,9 +30,18 @@ var _ = Describe("Watchers", func() {
 		)
 
 		BeforeEach(func() {
-			lrp = models.NewDesiredLRP("some-process-guid", "tests", "some:rootfs", models.Download("http://example.com", "/tmp/internet", "diego"))
 			routePayload := json.RawMessage(`{"port":8080,"hosts":["route-1","route-2"]}`)
-			lrp.Routes = &models.Routes{"router": &routePayload}
+			lrp = &models.DesiredLRP{
+				ProcessGuid: "some-process-guid",
+				Domain:      "tests",
+				RootFs:      "some:rootfs",
+				Action: models.WrapAction(&models.DownloadAction{
+					From: "http://example.com",
+					To:   "/tmp/internet",
+					User: "diego",
+				}),
+				Routes: &models.Routes{"router": &routePayload},
+			}
 
 			creates = make(chan *models.DesiredLRP)
 			changes = make(chan *models.DesiredLRPChange)
