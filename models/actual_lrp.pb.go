@@ -7,10 +7,17 @@ package models
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
 
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto/gogo.pb"
+// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
 import io "io"
 import fmt "fmt"
+
+import strings "strings"
+import reflect "reflect"
+
+import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+import sort "sort"
+import strconv "strconv"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -21,9 +28,8 @@ type ActualLRPGroup struct {
 	Evacuating *ActualLRP `protobuf:"bytes,2,opt,name=evacuating" json:"evacuating,omitempty"`
 }
 
-func (m *ActualLRPGroup) Reset()         { *m = ActualLRPGroup{} }
-func (m *ActualLRPGroup) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPGroup) ProtoMessage()    {}
+func (m *ActualLRPGroup) Reset()      { *m = ActualLRPGroup{} }
+func (*ActualLRPGroup) ProtoMessage() {}
 
 func (m *ActualLRPGroup) GetInstance() *ActualLRP {
 	if m != nil {
@@ -44,9 +50,8 @@ type PortMapping struct {
 	HostPort      uint32 `protobuf:"varint,2,opt,name=host_port" json:"host_port"`
 }
 
-func (m *PortMapping) Reset()         { *m = PortMapping{} }
-func (m *PortMapping) String() string { return proto.CompactTextString(m) }
-func (*PortMapping) ProtoMessage()    {}
+func (m *PortMapping) Reset()      { *m = PortMapping{} }
+func (*PortMapping) ProtoMessage() {}
 
 func (m *PortMapping) GetContainerPort() uint32 {
 	if m != nil {
@@ -68,9 +73,8 @@ type ActualLRPKey struct {
 	Domain      string `protobuf:"bytes,3,opt,name=domain" json:"domain"`
 }
 
-func (m *ActualLRPKey) Reset()         { *m = ActualLRPKey{} }
-func (m *ActualLRPKey) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPKey) ProtoMessage()    {}
+func (m *ActualLRPKey) Reset()      { *m = ActualLRPKey{} }
+func (*ActualLRPKey) ProtoMessage() {}
 
 func (m *ActualLRPKey) GetProcessGuid() string {
 	if m != nil {
@@ -98,9 +102,8 @@ type ActualLRPInstanceKey struct {
 	CellId       string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
 }
 
-func (m *ActualLRPInstanceKey) Reset()         { *m = ActualLRPInstanceKey{} }
-func (m *ActualLRPInstanceKey) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPInstanceKey) ProtoMessage()    {}
+func (m *ActualLRPInstanceKey) Reset()      { *m = ActualLRPInstanceKey{} }
+func (*ActualLRPInstanceKey) ProtoMessage() {}
 
 func (m *ActualLRPInstanceKey) GetInstanceGuid() string {
 	if m != nil {
@@ -121,9 +124,8 @@ type ActualLRPNetInfo struct {
 	Ports   []*PortMapping `protobuf:"bytes,2,rep,name=ports" json:"ports,omitempty"`
 }
 
-func (m *ActualLRPNetInfo) Reset()         { *m = ActualLRPNetInfo{} }
-func (m *ActualLRPNetInfo) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPNetInfo) ProtoMessage()    {}
+func (m *ActualLRPNetInfo) Reset()      { *m = ActualLRPNetInfo{} }
+func (*ActualLRPNetInfo) ProtoMessage() {}
 
 func (m *ActualLRPNetInfo) GetAddress() string {
 	if m != nil {
@@ -151,9 +153,8 @@ type ActualLRP struct {
 	ModificationTag      *ModificationTag `protobuf:"bytes,9,opt,name=modification_tag" json:"modification_tag,omitempty"`
 }
 
-func (m *ActualLRP) Reset()         { *m = ActualLRP{} }
-func (m *ActualLRP) String() string { return proto.CompactTextString(m) }
-func (*ActualLRP) ProtoMessage()    {}
+func (m *ActualLRP) Reset()      { *m = ActualLRP{} }
+func (*ActualLRP) ProtoMessage() {}
 
 func (m *ActualLRP) GetCrashCount() int32 {
 	if m != nil {
@@ -201,9 +202,8 @@ type ActualLRPGroups struct {
 	ActualLrpGroups []*ActualLRPGroup `protobuf:"bytes,1,rep,name=actual_lrp_groups" json:"actual_lrp_groups,omitempty"`
 }
 
-func (m *ActualLRPGroups) Reset()         { *m = ActualLRPGroups{} }
-func (m *ActualLRPGroups) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPGroups) ProtoMessage()    {}
+func (m *ActualLRPGroups) Reset()      { *m = ActualLRPGroups{} }
+func (*ActualLRPGroups) ProtoMessage() {}
 
 func (m *ActualLRPGroups) GetActualLrpGroups() []*ActualLRPGroup {
 	if m != nil {
@@ -212,8 +212,6 @@ func (m *ActualLRPGroups) GetActualLrpGroups() []*ActualLRPGroup {
 	return nil
 }
 
-func init() {
-}
 func (m *ActualLRPGroup) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -333,6 +331,7 @@ func (m *PortMapping) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ContainerPort", wireType)
 			}
+			m.ContainerPort = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -348,6 +347,7 @@ func (m *PortMapping) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field HostPort", wireType)
 			}
+			m.HostPort = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -427,6 +427,7 @@ func (m *ActualLRPKey) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
 			}
+			m.Index = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -753,6 +754,7 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CrashCount", wireType)
 			}
+			m.CrashCount = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -834,6 +836,7 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Since", wireType)
 			}
+			m.Since = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1045,6 +1048,98 @@ func skipActualLrp(data []byte) (n int, err error) {
 		}
 	}
 	panic("unreachable")
+}
+func (this *ActualLRPGroup) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroup{`,
+		`Instance:` + strings.Replace(fmt.Sprintf("%v", this.Instance), "ActualLRP", "ActualLRP", 1) + `,`,
+		`Evacuating:` + strings.Replace(fmt.Sprintf("%v", this.Evacuating), "ActualLRP", "ActualLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *PortMapping) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&PortMapping{`,
+		`ContainerPort:` + fmt.Sprintf("%v", this.ContainerPort) + `,`,
+		`HostPort:` + fmt.Sprintf("%v", this.HostPort) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPKey) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPKey{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPInstanceKey) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPInstanceKey{`,
+		`InstanceGuid:` + fmt.Sprintf("%v", this.InstanceGuid) + `,`,
+		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPNetInfo) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPNetInfo{`,
+		`Address:` + fmt.Sprintf("%v", this.Address) + `,`,
+		`Ports:` + strings.Replace(fmt.Sprintf("%v", this.Ports), "PortMapping", "PortMapping", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRP) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRP{`,
+		`ActualLRPKey:` + strings.Replace(strings.Replace(this.ActualLRPKey.String(), "ActualLRPKey", "ActualLRPKey", 1), `&`, ``, 1) + `,`,
+		`ActualLRPInstanceKey:` + strings.Replace(strings.Replace(this.ActualLRPInstanceKey.String(), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1), `&`, ``, 1) + `,`,
+		`ActualLRPNetInfo:` + strings.Replace(strings.Replace(this.ActualLRPNetInfo.String(), "ActualLRPNetInfo", "ActualLRPNetInfo", 1), `&`, ``, 1) + `,`,
+		`CrashCount:` + fmt.Sprintf("%v", this.CrashCount) + `,`,
+		`CrashReason:` + fmt.Sprintf("%v", this.CrashReason) + `,`,
+		`State:` + fmt.Sprintf("%v", this.State) + `,`,
+		`PlacementError:` + fmt.Sprintf("%v", this.PlacementError) + `,`,
+		`Since:` + fmt.Sprintf("%v", this.Since) + `,`,
+		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPGroups) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroups{`,
+		`ActualLrpGroups:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroups), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringActualLrp(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
 }
 func (m *ActualLRPGroup) Size() (n int) {
 	var l int
@@ -1429,6 +1524,101 @@ func encodeVarintActualLrp(data []byte, offset int, v uint64) int {
 	}
 	data[offset] = uint8(v)
 	return offset + 1
+}
+func (this *ActualLRPGroup) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPGroup{` +
+		`Instance:` + fmt.Sprintf("%#v", this.Instance),
+		`Evacuating:` + fmt.Sprintf("%#v", this.Evacuating) + `}`}, ", ")
+	return s
+}
+func (this *PortMapping) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.PortMapping{` +
+		`ContainerPort:` + fmt.Sprintf("%#v", this.ContainerPort),
+		`HostPort:` + fmt.Sprintf("%#v", this.HostPort) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPKey{` +
+		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
+		`Index:` + fmt.Sprintf("%#v", this.Index),
+		`Domain:` + fmt.Sprintf("%#v", this.Domain) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPInstanceKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPInstanceKey{` +
+		`InstanceGuid:` + fmt.Sprintf("%#v", this.InstanceGuid),
+		`CellId:` + fmt.Sprintf("%#v", this.CellId) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPNetInfo) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPNetInfo{` +
+		`Address:` + fmt.Sprintf("%#v", this.Address),
+		`Ports:` + fmt.Sprintf("%#v", this.Ports) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRP) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRP{` +
+		`ActualLRPKey:` + strings.Replace(this.ActualLRPKey.GoString(), `&`, ``, 1),
+		`ActualLRPInstanceKey:` + strings.Replace(this.ActualLRPInstanceKey.GoString(), `&`, ``, 1),
+		`ActualLRPNetInfo:` + strings.Replace(this.ActualLRPNetInfo.GoString(), `&`, ``, 1),
+		`CrashCount:` + fmt.Sprintf("%#v", this.CrashCount),
+		`CrashReason:` + fmt.Sprintf("%#v", this.CrashReason),
+		`State:` + fmt.Sprintf("%#v", this.State),
+		`PlacementError:` + fmt.Sprintf("%#v", this.PlacementError),
+		`Since:` + fmt.Sprintf("%#v", this.Since),
+		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPGroups) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPGroups{` +
+		`ActualLrpGroups:` + fmt.Sprintf("%#v", this.ActualLrpGroups) + `}`}, ", ")
+	return s
+}
+func valueToGoStringActualLrp(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringActualLrp(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
 }
 func (this *ActualLRPGroup) Equal(that interface{}) bool {
 	if that == nil {

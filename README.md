@@ -13,7 +13,7 @@ brew install protobuf --devel
 You also need the `gogoproto` compiler in you path:
 
 ```
-go get github.com/gogo/protobuf/protoc-gen-gogofast
+go get github.com/gogo/protobuf/protoc-gen-gogoslick
 ```
 
 We generate code from the .proto (protobuf) files. We also generate a set of fakes from the interfaces we have.

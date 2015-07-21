@@ -7,10 +7,17 @@ package models
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
 
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto/gogo.pb"
+// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
 import io "io"
 import fmt "fmt"
+
+import strings "strings"
+import reflect "reflect"
+
+import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+import sort "sort"
+import strconv "strconv"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -21,9 +28,8 @@ type Error struct {
 	Message string `protobuf:"bytes,2,opt,name=message" json:"message"`
 }
 
-func (m *Error) Reset()         { *m = Error{} }
-func (m *Error) String() string { return proto.CompactTextString(m) }
-func (*Error) ProtoMessage()    {}
+func (m *Error) Reset()      { *m = Error{} }
+func (*Error) ProtoMessage() {}
 
 func (m *Error) GetType() string {
 	if m != nil {
@@ -39,8 +45,6 @@ func (m *Error) GetMessage() string {
 	return ""
 }
 
-func init() {
-}
 func (m *Error) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -211,6 +215,25 @@ func skipError(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
+func (this *Error) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Error{`,
+		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringError(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
+}
 func (m *Error) Size() (n int) {
 	var l int
 	_ = l
@@ -286,4 +309,38 @@ func encodeVarintError(data []byte, offset int, v uint64) int {
 	}
 	data[offset] = uint8(v)
 	return offset + 1
+}
+func (this *Error) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Error{` +
+		`Type:` + fmt.Sprintf("%#v", this.Type),
+		`Message:` + fmt.Sprintf("%#v", this.Message) + `}`}, ", ")
+	return s
+}
+func valueToGoStringError(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringError(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
 }

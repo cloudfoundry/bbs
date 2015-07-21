@@ -7,33 +7,30 @@ import "modification_tag.proto";
 import "actions.proto";
 import "environment_variables.proto";
 
-option (gogoproto.goproto_unrecognized_all) = false;
-option (gogoproto.equal_all) = true;
-
 message DesiredLRPs {
   repeated DesiredLRP desired_lrps = 1;
 }
 
 message DesiredLRP {
-  optional string process_guid = 2 [(gogoproto.nullable) = false];
-  optional string domain = 3 [(gogoproto.nullable) = false];
-  optional string root_fs = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rootfs"];
-  optional int32 instances = 5 [(gogoproto.nullable) = false];
+  optional string process_guid = 2;
+  optional string domain = 3;
+  optional string root_fs = 4 [(gogoproto.jsontag) = "rootfs"];
+  optional int32 instances = 5;
   repeated EnvironmentVariable environment_variables = 6 [(gogoproto.jsontag) = "env"];
   optional Action setup = 7;
   optional Action action = 8;
-  optional uint32 start_timeout = 9 [(gogoproto.nullable) = false];
+  optional uint32 start_timeout = 9;
   optional Action monitor = 10;
-  optional int32 disk_mb = 11 [(gogoproto.nullable) = false];
-  optional int32 memory_mb = 12 [(gogoproto.nullable) = false];
-  optional uint32 cpu_weight = 13 [(gogoproto.nullable) = false];
-  optional bool privileged = 14 [(gogoproto.nullable) = false];
+  optional int32 disk_mb = 11;
+  optional int32 memory_mb = 12;
+  optional uint32 cpu_weight = 13;
+  optional bool privileged = 14;
   repeated uint32 ports = 15;
-  optional bytes routes = 16 [(gogoproto.customtype) = "Routes"];
-  optional string log_source = 17 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "log_source,omitempty"];
-  optional string log_guid = 18 [(gogoproto.nullable) = false];
-  optional string metrics_guid = 19 [(gogoproto.nullable) = false];
-  optional string annotation = 20 [(gogoproto.nullable) = false];
+  optional bytes routes = 16 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+  optional string log_source = 17 [(gogoproto.jsontag) = "log_source,omitempty"];
+  optional string log_guid = 18;
+  optional string metrics_guid = 19;
+  optional string annotation = 20;
   repeated SecurityGroupRule egress_rules = 21;
   optional ModificationTag modification_tag = 22;
 }
@@ -44,20 +41,20 @@ message proto_routes {
 }
 
 message PortRange {
-  optional uint32 start = 1 [(gogoproto.nullable) = false];
-  optional uint32 end = 2 [(gogoproto.nullable) = false];
+  optional uint32 start = 1;
+  optional uint32 end = 2;
 }
 
 message ICMPInfo {
-  optional int32 type = 1 [(gogoproto.nullable) = false];
-  optional int32 code = 2 [(gogoproto.nullable) = false];
+  optional int32 type = 1;
+  optional int32 code = 2;
 }
 
 message SecurityGroupRule {
-  optional string protocol = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "protocol,omitempty"];
+  optional string protocol = 1 [(gogoproto.jsontag) = "protocol,omitempty"];
   repeated string destinations = 2;
   repeated uint32 ports = 3;
   optional PortRange port_range = 4;
   optional ICMPInfo icmp_info = 5;
-  optional bool log = 6 [(gogoproto.nullable) = false];
+  optional bool log = 6;
 }

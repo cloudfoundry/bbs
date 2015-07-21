@@ -7,10 +7,17 @@ package models
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
 
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto/gogo.pb"
+// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
 import io "io"
 import fmt "fmt"
+
+import strings "strings"
+import reflect "reflect"
+
+import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+import sort "sort"
+import strconv "strconv"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -20,9 +27,8 @@ type ActualLRPCreatedEvent struct {
 	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group" json:"actual_lrp_group,omitempty"`
 }
 
-func (m *ActualLRPCreatedEvent) Reset()         { *m = ActualLRPCreatedEvent{} }
-func (m *ActualLRPCreatedEvent) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPCreatedEvent) ProtoMessage()    {}
+func (m *ActualLRPCreatedEvent) Reset()      { *m = ActualLRPCreatedEvent{} }
+func (*ActualLRPCreatedEvent) ProtoMessage() {}
 
 func (m *ActualLRPCreatedEvent) GetActualLrpGroup() *ActualLRPGroup {
 	if m != nil {
@@ -36,9 +42,8 @@ type ActualLRPChangedEvent struct {
 	After  *ActualLRPGroup `protobuf:"bytes,2,opt,name=after" json:"after,omitempty"`
 }
 
-func (m *ActualLRPChangedEvent) Reset()         { *m = ActualLRPChangedEvent{} }
-func (m *ActualLRPChangedEvent) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPChangedEvent) ProtoMessage()    {}
+func (m *ActualLRPChangedEvent) Reset()      { *m = ActualLRPChangedEvent{} }
+func (*ActualLRPChangedEvent) ProtoMessage() {}
 
 func (m *ActualLRPChangedEvent) GetBefore() *ActualLRPGroup {
 	if m != nil {
@@ -58,9 +63,8 @@ type ActualLRPRemovedEvent struct {
 	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group" json:"actual_lrp_group,omitempty"`
 }
 
-func (m *ActualLRPRemovedEvent) Reset()         { *m = ActualLRPRemovedEvent{} }
-func (m *ActualLRPRemovedEvent) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPRemovedEvent) ProtoMessage()    {}
+func (m *ActualLRPRemovedEvent) Reset()      { *m = ActualLRPRemovedEvent{} }
+func (*ActualLRPRemovedEvent) ProtoMessage() {}
 
 func (m *ActualLRPRemovedEvent) GetActualLrpGroup() *ActualLRPGroup {
 	if m != nil {
@@ -73,9 +77,8 @@ type DesiredLRPCreatedEvent struct {
 	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp" json:"desired_lrp,omitempty"`
 }
 
-func (m *DesiredLRPCreatedEvent) Reset()         { *m = DesiredLRPCreatedEvent{} }
-func (m *DesiredLRPCreatedEvent) String() string { return proto.CompactTextString(m) }
-func (*DesiredLRPCreatedEvent) ProtoMessage()    {}
+func (m *DesiredLRPCreatedEvent) Reset()      { *m = DesiredLRPCreatedEvent{} }
+func (*DesiredLRPCreatedEvent) ProtoMessage() {}
 
 func (m *DesiredLRPCreatedEvent) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
@@ -89,9 +92,8 @@ type DesiredLRPChangedEvent struct {
 	After  *DesiredLRP `protobuf:"bytes,2,opt,name=after" json:"after,omitempty"`
 }
 
-func (m *DesiredLRPChangedEvent) Reset()         { *m = DesiredLRPChangedEvent{} }
-func (m *DesiredLRPChangedEvent) String() string { return proto.CompactTextString(m) }
-func (*DesiredLRPChangedEvent) ProtoMessage()    {}
+func (m *DesiredLRPChangedEvent) Reset()      { *m = DesiredLRPChangedEvent{} }
+func (*DesiredLRPChangedEvent) ProtoMessage() {}
 
 func (m *DesiredLRPChangedEvent) GetBefore() *DesiredLRP {
 	if m != nil {
@@ -111,9 +113,8 @@ type DesiredLRPRemovedEvent struct {
 	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp" json:"desired_lrp,omitempty"`
 }
 
-func (m *DesiredLRPRemovedEvent) Reset()         { *m = DesiredLRPRemovedEvent{} }
-func (m *DesiredLRPRemovedEvent) String() string { return proto.CompactTextString(m) }
-func (*DesiredLRPRemovedEvent) ProtoMessage()    {}
+func (m *DesiredLRPRemovedEvent) Reset()      { *m = DesiredLRPRemovedEvent{} }
+func (*DesiredLRPRemovedEvent) ProtoMessage() {}
 
 func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
@@ -122,8 +123,6 @@ func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 	return nil
 }
 
-func init() {
-}
 func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -676,6 +675,76 @@ func skipEvents(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
+func (this *ActualLRPCreatedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPCreatedEvent{`,
+		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPChangedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPChangedEvent{`,
+		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPRemovedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPRemovedEvent{`,
+		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPCreatedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPCreatedEvent{`,
+		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPChangedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPChangedEvent{`,
+		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPRemovedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPRemovedEvent{`,
+		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringEvents(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
+}
 func (m *ActualLRPCreatedEvent) Size() (n int) {
 	var l int
 	_ = l
@@ -971,6 +1040,81 @@ func encodeVarintEvents(data []byte, offset int, v uint64) int {
 	}
 	data[offset] = uint8(v)
 	return offset + 1
+}
+func (this *ActualLRPCreatedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPCreatedEvent{` +
+		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPChangedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPChangedEvent{` +
+		`Before:` + fmt.Sprintf("%#v", this.Before),
+		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPRemovedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPRemovedEvent{` +
+		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPCreatedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPCreatedEvent{` +
+		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPChangedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPChangedEvent{` +
+		`Before:` + fmt.Sprintf("%#v", this.Before),
+		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPRemovedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPRemovedEvent{` +
+		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
+	return s
+}
+func valueToGoStringEvents(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringEvents(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
 }
 func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 	if that == nil {

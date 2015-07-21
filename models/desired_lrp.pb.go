@@ -7,12 +7,18 @@ package models
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
 
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto/gogo.pb"
+// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
 import io "io"
 import fmt "fmt"
 
+import strings "strings"
+import reflect "reflect"
 import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
+
+import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+import sort "sort"
+import strconv "strconv"
 
 import bytes "bytes"
 
@@ -24,9 +30,8 @@ type DesiredLRPs struct {
 	DesiredLrps []*DesiredLRP `protobuf:"bytes,1,rep,name=desired_lrps" json:"desired_lrps,omitempty"`
 }
 
-func (m *DesiredLRPs) Reset()         { *m = DesiredLRPs{} }
-func (m *DesiredLRPs) String() string { return proto.CompactTextString(m) }
-func (*DesiredLRPs) ProtoMessage()    {}
+func (m *DesiredLRPs) Reset()      { *m = DesiredLRPs{} }
+func (*DesiredLRPs) ProtoMessage() {}
 
 func (m *DesiredLRPs) GetDesiredLrps() []*DesiredLRP {
 	if m != nil {
@@ -59,9 +64,8 @@ type DesiredLRP struct {
 	ModificationTag      *ModificationTag       `protobuf:"bytes,22,opt,name=modification_tag" json:"modification_tag,omitempty"`
 }
 
-func (m *DesiredLRP) Reset()         { *m = DesiredLRP{} }
-func (m *DesiredLRP) String() string { return proto.CompactTextString(m) }
-func (*DesiredLRP) ProtoMessage()    {}
+func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
+func (*DesiredLRP) ProtoMessage() {}
 
 func (m *DesiredLRP) GetProcessGuid() string {
 	if m != nil {
@@ -208,9 +212,8 @@ type ProtoRoutes struct {
 	Routes map[string][]byte `protobuf:"bytes,1,rep,name=routes" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *ProtoRoutes) Reset()         { *m = ProtoRoutes{} }
-func (m *ProtoRoutes) String() string { return proto.CompactTextString(m) }
-func (*ProtoRoutes) ProtoMessage()    {}
+func (m *ProtoRoutes) Reset()      { *m = ProtoRoutes{} }
+func (*ProtoRoutes) ProtoMessage() {}
 
 func (m *ProtoRoutes) GetRoutes() map[string][]byte {
 	if m != nil {
@@ -224,9 +227,8 @@ type PortRange struct {
 	End   uint32 `protobuf:"varint,2,opt,name=end" json:"end"`
 }
 
-func (m *PortRange) Reset()         { *m = PortRange{} }
-func (m *PortRange) String() string { return proto.CompactTextString(m) }
-func (*PortRange) ProtoMessage()    {}
+func (m *PortRange) Reset()      { *m = PortRange{} }
+func (*PortRange) ProtoMessage() {}
 
 func (m *PortRange) GetStart() uint32 {
 	if m != nil {
@@ -247,9 +249,8 @@ type ICMPInfo struct {
 	Code int32 `protobuf:"varint,2,opt,name=code" json:"code"`
 }
 
-func (m *ICMPInfo) Reset()         { *m = ICMPInfo{} }
-func (m *ICMPInfo) String() string { return proto.CompactTextString(m) }
-func (*ICMPInfo) ProtoMessage()    {}
+func (m *ICMPInfo) Reset()      { *m = ICMPInfo{} }
+func (*ICMPInfo) ProtoMessage() {}
 
 func (m *ICMPInfo) GetType() int32 {
 	if m != nil {
@@ -274,9 +275,8 @@ type SecurityGroupRule struct {
 	Log          bool       `protobuf:"varint,6,opt,name=log" json:"log"`
 }
 
-func (m *SecurityGroupRule) Reset()         { *m = SecurityGroupRule{} }
-func (m *SecurityGroupRule) String() string { return proto.CompactTextString(m) }
-func (*SecurityGroupRule) ProtoMessage()    {}
+func (m *SecurityGroupRule) Reset()      { *m = SecurityGroupRule{} }
+func (*SecurityGroupRule) ProtoMessage() {}
 
 func (m *SecurityGroupRule) GetProtocol() string {
 	if m != nil {
@@ -320,8 +320,6 @@ func (m *SecurityGroupRule) GetLog() bool {
 	return false
 }
 
-func init() {
-}
 func (m *DesiredLRPs) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -478,6 +476,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Instances", wireType)
 			}
+			m.Instances = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -572,6 +571,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StartTimeout", wireType)
 			}
+			m.StartTimeout = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -614,6 +614,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DiskMb", wireType)
 			}
+			m.DiskMb = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -629,6 +630,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MemoryMb", wireType)
 			}
+			m.MemoryMb = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -644,6 +646,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CpuWeight", wireType)
 			}
+			m.CpuWeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1029,6 +1032,7 @@ func (m *PortRange) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Start", wireType)
 			}
+			m.Start = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1044,6 +1048,7 @@ func (m *PortRange) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field End", wireType)
 			}
+			m.End = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1101,6 +1106,7 @@ func (m *ICMPInfo) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
 			}
+			m.Type = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1116,6 +1122,7 @@ func (m *ICMPInfo) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
 			}
+			m.Code = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1407,6 +1414,111 @@ func skipDesiredLrp(data []byte) (n int, err error) {
 		}
 	}
 	panic("unreachable")
+}
+func (this *DesiredLRPs) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPs{`,
+		`DesiredLrps:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrps), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRP) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRP{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
+		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
+		`Instances:` + fmt.Sprintf("%v", this.Instances) + `,`,
+		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
+		`Setup:` + strings.Replace(fmt.Sprintf("%v", this.Setup), "Action", "Action", 1) + `,`,
+		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
+		`StartTimeout:` + fmt.Sprintf("%v", this.StartTimeout) + `,`,
+		`Monitor:` + strings.Replace(fmt.Sprintf("%v", this.Monitor), "Action", "Action", 1) + `,`,
+		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
+		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
+		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
+		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
+		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
+		`Routes:` + valueToStringDesiredLrp(this.Routes) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`LogGuid:` + fmt.Sprintf("%v", this.LogGuid) + `,`,
+		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
+		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
+		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
+		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ProtoRoutes) String() string {
+	if this == nil {
+		return "nil"
+	}
+	keysForRoutes := make([]string, 0, len(this.Routes))
+	for k, _ := range this.Routes {
+		keysForRoutes = append(keysForRoutes, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForRoutes)
+	mapStringForRoutes := "map[string][]byte{"
+	for _, k := range keysForRoutes {
+		mapStringForRoutes += fmt.Sprintf("%v: %v,", k, this.Routes[k])
+	}
+	mapStringForRoutes += "}"
+	s := strings.Join([]string{`&ProtoRoutes{`,
+		`Routes:` + mapStringForRoutes + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *PortRange) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&PortRange{`,
+		`Start:` + fmt.Sprintf("%v", this.Start) + `,`,
+		`End:` + fmt.Sprintf("%v", this.End) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ICMPInfo) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ICMPInfo{`,
+		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
+		`Code:` + fmt.Sprintf("%v", this.Code) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SecurityGroupRule) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SecurityGroupRule{`,
+		`Protocol:` + fmt.Sprintf("%v", this.Protocol) + `,`,
+		`Destinations:` + fmt.Sprintf("%v", this.Destinations) + `,`,
+		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
+		`PortRange:` + strings.Replace(fmt.Sprintf("%v", this.PortRange), "PortRange", "PortRange", 1) + `,`,
+		`IcmpInfo:` + strings.Replace(fmt.Sprintf("%v", this.IcmpInfo), "ICMPInfo", "ICMPInfo", 1) + `,`,
+		`Log:` + fmt.Sprintf("%v", this.Log) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringDesiredLrp(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
 }
 func (m *DesiredLRPs) Size() (n int) {
 	var l int
@@ -1934,6 +2046,116 @@ func encodeVarintDesiredLrp(data []byte, offset int, v uint64) int {
 	}
 	data[offset] = uint8(v)
 	return offset + 1
+}
+func (this *DesiredLRPs) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPs{` +
+		`DesiredLrps:` + fmt.Sprintf("%#v", this.DesiredLrps) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRP) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRP{` +
+		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
+		`Domain:` + fmt.Sprintf("%#v", this.Domain),
+		`RootFs:` + fmt.Sprintf("%#v", this.RootFs),
+		`Instances:` + fmt.Sprintf("%#v", this.Instances),
+		`EnvironmentVariables:` + fmt.Sprintf("%#v", this.EnvironmentVariables),
+		`Setup:` + fmt.Sprintf("%#v", this.Setup),
+		`Action:` + fmt.Sprintf("%#v", this.Action),
+		`StartTimeout:` + fmt.Sprintf("%#v", this.StartTimeout),
+		`Monitor:` + fmt.Sprintf("%#v", this.Monitor),
+		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
+		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
+		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
+		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
+		`Ports:` + fmt.Sprintf("%#v", this.Ports),
+		`Routes:` + valueToGoStringDesiredLrp(this.Routes, "Routes"),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
+		`LogGuid:` + fmt.Sprintf("%#v", this.LogGuid),
+		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
+		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
+		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
+		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag) + `}`}, ", ")
+	return s
+}
+func (this *ProtoRoutes) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	keysForRoutes := make([]string, 0, len(this.Routes))
+	for k, _ := range this.Routes {
+		keysForRoutes = append(keysForRoutes, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForRoutes)
+	mapStringForRoutes := "map[string][]byte{"
+	for _, k := range keysForRoutes {
+		mapStringForRoutes += fmt.Sprintf("%#v: %#v,", k, this.Routes[k])
+	}
+	mapStringForRoutes += "}"
+	s := strings.Join([]string{`&models.ProtoRoutes{` +
+		`Routes:` + mapStringForRoutes + `}`}, ", ")
+	return s
+}
+func (this *PortRange) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.PortRange{` +
+		`Start:` + fmt.Sprintf("%#v", this.Start),
+		`End:` + fmt.Sprintf("%#v", this.End) + `}`}, ", ")
+	return s
+}
+func (this *ICMPInfo) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ICMPInfo{` +
+		`Type:` + fmt.Sprintf("%#v", this.Type),
+		`Code:` + fmt.Sprintf("%#v", this.Code) + `}`}, ", ")
+	return s
+}
+func (this *SecurityGroupRule) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.SecurityGroupRule{` +
+		`Protocol:` + fmt.Sprintf("%#v", this.Protocol),
+		`Destinations:` + fmt.Sprintf("%#v", this.Destinations),
+		`Ports:` + fmt.Sprintf("%#v", this.Ports),
+		`PortRange:` + fmt.Sprintf("%#v", this.PortRange),
+		`IcmpInfo:` + fmt.Sprintf("%#v", this.IcmpInfo),
+		`Log:` + fmt.Sprintf("%#v", this.Log) + `}`}, ", ")
+	return s
+}
+func valueToGoStringDesiredLrp(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringDesiredLrp(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
 }
 func (this *DesiredLRPs) Equal(that interface{}) bool {
 	if that == nil {

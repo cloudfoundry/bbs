@@ -4,7 +4,7 @@ package models;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.equal_all) = false;
 
 message Error {
   optional string type = 1 [(gogoproto.nullable) = false];

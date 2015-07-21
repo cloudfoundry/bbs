@@ -6,9 +6,6 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actual_lrp.proto";
 import "desired_lrp.proto";
 
-option (gogoproto.goproto_unrecognized_all) = false;
-option (gogoproto.equal_all) = true;
-
 message ActualLRPCreatedEvent  {
   optional ActualLRPGroup actual_lrp_group = 1;
 }

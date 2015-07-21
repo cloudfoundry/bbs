@@ -33,10 +33,17 @@ package models
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
 
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto/gogo.pb"
+// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
 import io "io"
 import fmt "fmt"
+
+import strings "strings"
+import reflect "reflect"
+
+import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+import sort "sort"
+import strconv "strconv"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -54,9 +61,8 @@ type Action struct {
 	CodependentAction  *CodependentAction  `protobuf:"bytes,9,opt,name=codependent_action" json:"codependent,omitempty"`
 }
 
-func (m *Action) Reset()         { *m = Action{} }
-func (m *Action) String() string { return proto.CompactTextString(m) }
-func (*Action) ProtoMessage()    {}
+func (m *Action) Reset()      { *m = Action{} }
+func (*Action) ProtoMessage() {}
 
 func (m *Action) GetDownloadAction() *DownloadAction {
 	if m != nil {
@@ -130,9 +136,8 @@ type DownloadAction struct {
 	User      string `protobuf:"bytes,6,opt,name=user" json:"user"`
 }
 
-func (m *DownloadAction) Reset()         { *m = DownloadAction{} }
-func (m *DownloadAction) String() string { return proto.CompactTextString(m) }
-func (*DownloadAction) ProtoMessage()    {}
+func (m *DownloadAction) Reset()      { *m = DownloadAction{} }
+func (*DownloadAction) ProtoMessage() {}
 
 func (m *DownloadAction) GetArtifact() string {
 	if m != nil {
@@ -184,9 +189,8 @@ type UploadAction struct {
 	User      string `protobuf:"bytes,5,opt,name=user" json:"user"`
 }
 
-func (m *UploadAction) Reset()         { *m = UploadAction{} }
-func (m *UploadAction) String() string { return proto.CompactTextString(m) }
-func (*UploadAction) ProtoMessage()    {}
+func (m *UploadAction) Reset()      { *m = UploadAction{} }
+func (*UploadAction) ProtoMessage() {}
 
 func (m *UploadAction) GetArtifact() string {
 	if m != nil {
@@ -233,9 +237,8 @@ type RunAction struct {
 	LogSource      string                 `protobuf:"bytes,7,opt,name=log_source" json:"log_source,omitempty"`
 }
 
-func (m *RunAction) Reset()         { *m = RunAction{} }
-func (m *RunAction) String() string { return proto.CompactTextString(m) }
-func (*RunAction) ProtoMessage()    {}
+func (m *RunAction) Reset()      { *m = RunAction{} }
+func (*RunAction) ProtoMessage() {}
 
 func (m *RunAction) GetPath() string {
 	if m != nil {
@@ -292,9 +295,8 @@ type TimeoutAction struct {
 	LogSource string  `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
 }
 
-func (m *TimeoutAction) Reset()         { *m = TimeoutAction{} }
-func (m *TimeoutAction) String() string { return proto.CompactTextString(m) }
-func (*TimeoutAction) ProtoMessage()    {}
+func (m *TimeoutAction) Reset()      { *m = TimeoutAction{} }
+func (*TimeoutAction) ProtoMessage() {}
 
 func (m *TimeoutAction) GetAction() *Action {
 	if m != nil {
@@ -325,9 +327,8 @@ type EmitProgressAction struct {
 	LogSource            string  `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
 }
 
-func (m *EmitProgressAction) Reset()         { *m = EmitProgressAction{} }
-func (m *EmitProgressAction) String() string { return proto.CompactTextString(m) }
-func (*EmitProgressAction) ProtoMessage()    {}
+func (m *EmitProgressAction) Reset()      { *m = EmitProgressAction{} }
+func (*EmitProgressAction) ProtoMessage() {}
 
 func (m *EmitProgressAction) GetAction() *Action {
 	if m != nil {
@@ -369,9 +370,8 @@ type TryAction struct {
 	LogSource string  `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
-func (m *TryAction) Reset()         { *m = TryAction{} }
-func (m *TryAction) String() string { return proto.CompactTextString(m) }
-func (*TryAction) ProtoMessage()    {}
+func (m *TryAction) Reset()      { *m = TryAction{} }
+func (*TryAction) ProtoMessage() {}
 
 func (m *TryAction) GetAction() *Action {
 	if m != nil {
@@ -392,9 +392,8 @@ type ParallelAction struct {
 	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
-func (m *ParallelAction) Reset()         { *m = ParallelAction{} }
-func (m *ParallelAction) String() string { return proto.CompactTextString(m) }
-func (*ParallelAction) ProtoMessage()    {}
+func (m *ParallelAction) Reset()      { *m = ParallelAction{} }
+func (*ParallelAction) ProtoMessage() {}
 
 func (m *ParallelAction) GetActions() []*Action {
 	if m != nil {
@@ -415,9 +414,8 @@ type SerialAction struct {
 	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
-func (m *SerialAction) Reset()         { *m = SerialAction{} }
-func (m *SerialAction) String() string { return proto.CompactTextString(m) }
-func (*SerialAction) ProtoMessage()    {}
+func (m *SerialAction) Reset()      { *m = SerialAction{} }
+func (*SerialAction) ProtoMessage() {}
 
 func (m *SerialAction) GetActions() []*Action {
 	if m != nil {
@@ -438,9 +436,8 @@ type CodependentAction struct {
 	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
 }
 
-func (m *CodependentAction) Reset()         { *m = CodependentAction{} }
-func (m *CodependentAction) String() string { return proto.CompactTextString(m) }
-func (*CodependentAction) ProtoMessage()    {}
+func (m *CodependentAction) Reset()      { *m = CodependentAction{} }
+func (*CodependentAction) ProtoMessage() {}
 
 func (m *CodependentAction) GetActions() []*Action {
 	if m != nil {
@@ -460,9 +457,8 @@ type ResourceLimits struct {
 	Nofile uint64 `protobuf:"varint,1,opt,name=nofile" json:"nofile,omitempty"`
 }
 
-func (m *ResourceLimits) Reset()         { *m = ResourceLimits{} }
-func (m *ResourceLimits) String() string { return proto.CompactTextString(m) }
-func (*ResourceLimits) ProtoMessage()    {}
+func (m *ResourceLimits) Reset()      { *m = ResourceLimits{} }
+func (*ResourceLimits) ProtoMessage() {}
 
 func (m *ResourceLimits) GetNofile() uint64 {
 	if m != nil {
@@ -471,8 +467,6 @@ func (m *ResourceLimits) GetNofile() uint64 {
 	return 0
 }
 
-func init() {
-}
 func (m *Action) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -1338,6 +1332,7 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
 			}
+			m.Timeout = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1932,6 +1927,7 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Nofile", wireType)
 			}
+			m.Nofile = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2105,6 +2101,157 @@ func (this *Action) SetValue(value interface{}) bool {
 		return false
 	}
 	return true
+}
+func (this *Action) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action{`,
+		`DownloadAction:` + strings.Replace(fmt.Sprintf("%v", this.DownloadAction), "DownloadAction", "DownloadAction", 1) + `,`,
+		`UploadAction:` + strings.Replace(fmt.Sprintf("%v", this.UploadAction), "UploadAction", "UploadAction", 1) + `,`,
+		`RunAction:` + strings.Replace(fmt.Sprintf("%v", this.RunAction), "RunAction", "RunAction", 1) + `,`,
+		`TimeoutAction:` + strings.Replace(fmt.Sprintf("%v", this.TimeoutAction), "TimeoutAction", "TimeoutAction", 1) + `,`,
+		`EmitProgressAction:` + strings.Replace(fmt.Sprintf("%v", this.EmitProgressAction), "EmitProgressAction", "EmitProgressAction", 1) + `,`,
+		`TryAction:` + strings.Replace(fmt.Sprintf("%v", this.TryAction), "TryAction", "TryAction", 1) + `,`,
+		`ParallelAction:` + strings.Replace(fmt.Sprintf("%v", this.ParallelAction), "ParallelAction", "ParallelAction", 1) + `,`,
+		`SerialAction:` + strings.Replace(fmt.Sprintf("%v", this.SerialAction), "SerialAction", "SerialAction", 1) + `,`,
+		`CodependentAction:` + strings.Replace(fmt.Sprintf("%v", this.CodependentAction), "CodependentAction", "CodependentAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DownloadAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DownloadAction{`,
+		`Artifact:` + fmt.Sprintf("%v", this.Artifact) + `,`,
+		`From:` + fmt.Sprintf("%v", this.From) + `,`,
+		`To:` + fmt.Sprintf("%v", this.To) + `,`,
+		`CacheKey:` + fmt.Sprintf("%v", this.CacheKey) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`User:` + fmt.Sprintf("%v", this.User) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *UploadAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&UploadAction{`,
+		`Artifact:` + fmt.Sprintf("%v", this.Artifact) + `,`,
+		`From:` + fmt.Sprintf("%v", this.From) + `,`,
+		`To:` + fmt.Sprintf("%v", this.To) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`User:` + fmt.Sprintf("%v", this.User) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *RunAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&RunAction{`,
+		`Path:` + fmt.Sprintf("%v", this.Path) + `,`,
+		`Args:` + fmt.Sprintf("%v", this.Args) + `,`,
+		`Dir:` + fmt.Sprintf("%v", this.Dir) + `,`,
+		`Env:` + strings.Replace(fmt.Sprintf("%v", this.Env), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
+		`ResourceLimits:` + strings.Replace(fmt.Sprintf("%v", this.ResourceLimits), "ResourceLimits", "ResourceLimits", 1) + `,`,
+		`User:` + fmt.Sprintf("%v", this.User) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TimeoutAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TimeoutAction{`,
+		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
+		`Timeout:` + fmt.Sprintf("%v", this.Timeout) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EmitProgressAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EmitProgressAction{`,
+		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
+		`StartMessage:` + fmt.Sprintf("%v", this.StartMessage) + `,`,
+		`SuccessMessage:` + fmt.Sprintf("%v", this.SuccessMessage) + `,`,
+		`FailureMessagePrefix:` + fmt.Sprintf("%v", this.FailureMessagePrefix) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TryAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TryAction{`,
+		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ParallelAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ParallelAction{`,
+		`Actions:` + strings.Replace(fmt.Sprintf("%v", this.Actions), "Action", "Action", 1) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SerialAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SerialAction{`,
+		`Actions:` + strings.Replace(fmt.Sprintf("%v", this.Actions), "Action", "Action", 1) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *CodependentAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&CodependentAction{`,
+		`Actions:` + strings.Replace(fmt.Sprintf("%v", this.Actions), "Action", "Action", 1) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ResourceLimits) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ResourceLimits{`,
+		`Nofile:` + fmt.Sprintf("%v", this.Nofile) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringActions(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
 }
 func (m *Action) Size() (n int) {
 	var l int
@@ -2836,6 +2983,152 @@ func encodeVarintActions(data []byte, offset int, v uint64) int {
 	}
 	data[offset] = uint8(v)
 	return offset + 1
+}
+func (this *Action) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action{` +
+		`DownloadAction:` + fmt.Sprintf("%#v", this.DownloadAction),
+		`UploadAction:` + fmt.Sprintf("%#v", this.UploadAction),
+		`RunAction:` + fmt.Sprintf("%#v", this.RunAction),
+		`TimeoutAction:` + fmt.Sprintf("%#v", this.TimeoutAction),
+		`EmitProgressAction:` + fmt.Sprintf("%#v", this.EmitProgressAction),
+		`TryAction:` + fmt.Sprintf("%#v", this.TryAction),
+		`ParallelAction:` + fmt.Sprintf("%#v", this.ParallelAction),
+		`SerialAction:` + fmt.Sprintf("%#v", this.SerialAction),
+		`CodependentAction:` + fmt.Sprintf("%#v", this.CodependentAction) + `}`}, ", ")
+	return s
+}
+func (this *DownloadAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DownloadAction{` +
+		`Artifact:` + fmt.Sprintf("%#v", this.Artifact),
+		`From:` + fmt.Sprintf("%#v", this.From),
+		`To:` + fmt.Sprintf("%#v", this.To),
+		`CacheKey:` + fmt.Sprintf("%#v", this.CacheKey),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
+		`User:` + fmt.Sprintf("%#v", this.User) + `}`}, ", ")
+	return s
+}
+func (this *UploadAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.UploadAction{` +
+		`Artifact:` + fmt.Sprintf("%#v", this.Artifact),
+		`From:` + fmt.Sprintf("%#v", this.From),
+		`To:` + fmt.Sprintf("%#v", this.To),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
+		`User:` + fmt.Sprintf("%#v", this.User) + `}`}, ", ")
+	return s
+}
+func (this *RunAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.RunAction{` +
+		`Path:` + fmt.Sprintf("%#v", this.Path),
+		`Args:` + fmt.Sprintf("%#v", this.Args),
+		`Dir:` + fmt.Sprintf("%#v", this.Dir),
+		`Env:` + fmt.Sprintf("%#v", this.Env),
+		`ResourceLimits:` + fmt.Sprintf("%#v", this.ResourceLimits),
+		`User:` + fmt.Sprintf("%#v", this.User),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *TimeoutAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.TimeoutAction{` +
+		`Action:` + fmt.Sprintf("%#v", this.Action),
+		`Timeout:` + fmt.Sprintf("%#v", this.Timeout),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *EmitProgressAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.EmitProgressAction{` +
+		`Action:` + fmt.Sprintf("%#v", this.Action),
+		`StartMessage:` + fmt.Sprintf("%#v", this.StartMessage),
+		`SuccessMessage:` + fmt.Sprintf("%#v", this.SuccessMessage),
+		`FailureMessagePrefix:` + fmt.Sprintf("%#v", this.FailureMessagePrefix),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *TryAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.TryAction{` +
+		`Action:` + fmt.Sprintf("%#v", this.Action),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *ParallelAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ParallelAction{` +
+		`Actions:` + fmt.Sprintf("%#v", this.Actions),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *SerialAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.SerialAction{` +
+		`Actions:` + fmt.Sprintf("%#v", this.Actions),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *CodependentAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.CodependentAction{` +
+		`Actions:` + fmt.Sprintf("%#v", this.Actions),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *ResourceLimits) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ResourceLimits{` +
+		`Nofile:` + fmt.Sprintf("%#v", this.Nofile) + `}`}, ", ")
+	return s
+}
+func valueToGoStringActions(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringActions(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
 }
 func (this *Action) Equal(that interface{}) bool {
 	if that == nil {

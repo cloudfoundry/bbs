@@ -4,10 +4,7 @@ package models;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-option (gogoproto.goproto_unrecognized_all) = false;
-option (gogoproto.equal_all) = true;
-
 message EnvironmentVariable {
-  optional string name = 1 [(gogoproto.nullable) = false];
-  optional string value = 2 [(gogoproto.nullable) = false];
+  optional string name = 1;
+  optional string value = 2;
 }
