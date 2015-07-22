@@ -14,6 +14,8 @@
 		error.proto
 		events.proto
 		modification_tag.proto
+		security_group.proto
+		task.proto
 
 	It has these top-level messages:
 		Action
