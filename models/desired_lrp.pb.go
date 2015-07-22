@@ -41,27 +41,27 @@ func (m *DesiredLRPs) GetDesiredLrps() []*DesiredLRP {
 }
 
 type DesiredLRP struct {
-	ProcessGuid          string                 `protobuf:"bytes,2,opt,name=process_guid" json:"process_guid"`
-	Domain               string                 `protobuf:"bytes,3,opt,name=domain" json:"domain"`
-	RootFs               string                 `protobuf:"bytes,4,opt,name=root_fs" json:"rootfs"`
-	Instances            int32                  `protobuf:"varint,5,opt,name=instances" json:"instances"`
-	EnvironmentVariables []*EnvironmentVariable `protobuf:"bytes,6,rep,name=environment_variables" json:"env"`
-	Setup                *Action                `protobuf:"bytes,7,opt,name=setup" json:"setup,omitempty"`
-	Action               *Action                `protobuf:"bytes,8,opt,name=action" json:"action,omitempty"`
-	StartTimeout         uint32                 `protobuf:"varint,9,opt,name=start_timeout" json:"start_timeout"`
-	Monitor              *Action                `protobuf:"bytes,10,opt,name=monitor" json:"monitor,omitempty"`
-	DiskMb               int32                  `protobuf:"varint,11,opt,name=disk_mb" json:"disk_mb"`
-	MemoryMb             int32                  `protobuf:"varint,12,opt,name=memory_mb" json:"memory_mb"`
-	CpuWeight            uint32                 `protobuf:"varint,13,opt,name=cpu_weight" json:"cpu_weight"`
-	Privileged           bool                   `protobuf:"varint,14,opt,name=privileged" json:"privileged"`
-	Ports                []uint32               `protobuf:"varint,15,rep,name=ports" json:"ports,omitempty"`
-	Routes               *Routes                `protobuf:"bytes,16,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
-	LogSource            string                 `protobuf:"bytes,17,opt,name=log_source" json:"log_source,omitempty"`
-	LogGuid              string                 `protobuf:"bytes,18,opt,name=log_guid" json:"log_guid"`
-	MetricsGuid          string                 `protobuf:"bytes,19,opt,name=metrics_guid" json:"metrics_guid"`
-	Annotation           string                 `protobuf:"bytes,20,opt,name=annotation" json:"annotation"`
-	EgressRules          []*SecurityGroupRule   `protobuf:"bytes,21,rep,name=egress_rules" json:"egress_rules,omitempty"`
-	ModificationTag      *ModificationTag       `protobuf:"bytes,22,opt,name=modification_tag" json:"modification_tag,omitempty"`
+	ProcessGuid          string                 `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Domain               string                 `protobuf:"bytes,2,opt,name=domain" json:"domain"`
+	RootFs               string                 `protobuf:"bytes,3,opt,name=root_fs" json:"rootfs"`
+	Instances            int32                  `protobuf:"varint,4,opt,name=instances" json:"instances"`
+	EnvironmentVariables []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables" json:"env"`
+	Setup                *Action                `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
+	Action               *Action                `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
+	StartTimeout         uint32                 `protobuf:"varint,8,opt,name=start_timeout" json:"start_timeout"`
+	Monitor              *Action                `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
+	DiskMb               int32                  `protobuf:"varint,10,opt,name=disk_mb" json:"disk_mb"`
+	MemoryMb             int32                  `protobuf:"varint,11,opt,name=memory_mb" json:"memory_mb"`
+	CpuWeight            uint32                 `protobuf:"varint,12,opt,name=cpu_weight" json:"cpu_weight"`
+	Privileged           bool                   `protobuf:"varint,13,opt,name=privileged" json:"privileged"`
+	Ports                []uint32               `protobuf:"varint,14,rep,name=ports" json:"ports,omitempty"`
+	Routes               *Routes                `protobuf:"bytes,15,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
+	LogSource            string                 `protobuf:"bytes,16,opt,name=log_source" json:"log_source"`
+	LogGuid              string                 `protobuf:"bytes,17,opt,name=log_guid" json:"log_guid"`
+	MetricsGuid          string                 `protobuf:"bytes,18,opt,name=metrics_guid" json:"metrics_guid"`
+	Annotation           string                 `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
+	EgressRules          []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
+	ModificationTag      *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -406,7 +406,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		switch fieldNum {
-		case 2:
+		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProcessGuid", wireType)
 			}
@@ -428,7 +428,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.ProcessGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
 			}
@@ -450,7 +450,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.Domain = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RootFs", wireType)
 			}
@@ -472,7 +472,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.RootFs = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Instances", wireType)
 			}
@@ -488,7 +488,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EnvironmentVariables", wireType)
 			}
@@ -513,7 +513,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Setup", wireType)
 			}
@@ -540,7 +540,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 8:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
 			}
@@ -567,7 +567,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 9:
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StartTimeout", wireType)
 			}
@@ -583,7 +583,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-		case 10:
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Monitor", wireType)
 			}
@@ -610,7 +610,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 11:
+		case 10:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DiskMb", wireType)
 			}
@@ -626,7 +626,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-		case 12:
+		case 11:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MemoryMb", wireType)
 			}
@@ -642,7 +642,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-		case 13:
+		case 12:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CpuWeight", wireType)
 			}
@@ -658,7 +658,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-		case 14:
+		case 13:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Privileged", wireType)
 			}
@@ -675,7 +675,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				}
 			}
 			m.Privileged = bool(v != 0)
-		case 15:
+		case 14:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
 			}
@@ -692,7 +692,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				}
 			}
 			m.Ports = append(m.Ports, v)
-		case 16:
+		case 15:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Routes", wireType)
 			}
@@ -718,7 +718,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 17:
+		case 16:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LogSource", wireType)
 			}
@@ -740,7 +740,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 18:
+		case 17:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LogGuid", wireType)
 			}
@@ -762,7 +762,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.LogGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 19:
+		case 18:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MetricsGuid", wireType)
 			}
@@ -784,7 +784,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.MetricsGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 20:
+		case 19:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Annotation", wireType)
 			}
@@ -806,7 +806,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.Annotation = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 21:
+		case 20:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EgressRules", wireType)
 			}
@@ -831,7 +831,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 22:
+		case 21:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ModificationTag", wireType)
 			}
@@ -1572,7 +1572,7 @@ func (m *DesiredLRP) Size() (n int) {
 	}
 	if m.Routes != nil {
 		l = m.Routes.Size()
-		n += 2 + l + sovDesiredLrp(uint64(l))
+		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
 	l = len(m.LogSource)
 	n += 2 + l + sovDesiredLrp(uint64(l))
@@ -1711,24 +1711,24 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0x12
+	data[i] = 0xa
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.ProcessGuid)))
 	i += copy(data[i:], m.ProcessGuid)
-	data[i] = 0x1a
+	data[i] = 0x12
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.Domain)))
 	i += copy(data[i:], m.Domain)
-	data[i] = 0x22
+	data[i] = 0x1a
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.RootFs)))
 	i += copy(data[i:], m.RootFs)
-	data[i] = 0x28
+	data[i] = 0x20
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.Instances))
 	if len(m.EnvironmentVariables) > 0 {
 		for _, msg := range m.EnvironmentVariables {
-			data[i] = 0x32
+			data[i] = 0x2a
 			i++
 			i = encodeVarintDesiredLrp(data, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(data[i:])
@@ -1739,7 +1739,7 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 		}
 	}
 	if m.Setup != nil {
-		data[i] = 0x3a
+		data[i] = 0x32
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Setup.Size()))
 		n1, err := m.Setup.MarshalTo(data[i:])
@@ -1749,7 +1749,7 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 		i += n1
 	}
 	if m.Action != nil {
-		data[i] = 0x42
+		data[i] = 0x3a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Action.Size()))
 		n2, err := m.Action.MarshalTo(data[i:])
@@ -1758,11 +1758,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 		}
 		i += n2
 	}
-	data[i] = 0x48
+	data[i] = 0x40
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.StartTimeout))
 	if m.Monitor != nil {
-		data[i] = 0x52
+		data[i] = 0x4a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Monitor.Size()))
 		n3, err := m.Monitor.MarshalTo(data[i:])
@@ -1771,16 +1771,16 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 		}
 		i += n3
 	}
-	data[i] = 0x58
+	data[i] = 0x50
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.DiskMb))
-	data[i] = 0x60
+	data[i] = 0x58
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.MemoryMb))
-	data[i] = 0x68
+	data[i] = 0x60
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.CpuWeight))
-	data[i] = 0x70
+	data[i] = 0x68
 	i++
 	if m.Privileged {
 		data[i] = 1
@@ -1790,15 +1790,13 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 	i++
 	if len(m.Ports) > 0 {
 		for _, num := range m.Ports {
-			data[i] = 0x78
+			data[i] = 0x70
 			i++
 			i = encodeVarintDesiredLrp(data, i, uint64(num))
 		}
 	}
 	if m.Routes != nil {
-		data[i] = 0x82
-		i++
-		data[i] = 0x1
+		data[i] = 0x7a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Routes.Size()))
 		n4, err := m.Routes.MarshalTo(data[i:])
@@ -1807,25 +1805,25 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 		}
 		i += n4
 	}
-	data[i] = 0x8a
+	data[i] = 0x82
 	i++
 	data[i] = 0x1
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.LogSource)))
 	i += copy(data[i:], m.LogSource)
-	data[i] = 0x92
+	data[i] = 0x8a
 	i++
 	data[i] = 0x1
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.LogGuid)))
 	i += copy(data[i:], m.LogGuid)
-	data[i] = 0x9a
+	data[i] = 0x92
 	i++
 	data[i] = 0x1
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.MetricsGuid)))
 	i += copy(data[i:], m.MetricsGuid)
-	data[i] = 0xa2
+	data[i] = 0x9a
 	i++
 	data[i] = 0x1
 	i++
@@ -1833,7 +1831,7 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 	i += copy(data[i:], m.Annotation)
 	if len(m.EgressRules) > 0 {
 		for _, msg := range m.EgressRules {
-			data[i] = 0xaa
+			data[i] = 0xa2
 			i++
 			data[i] = 0x1
 			i++
@@ -1846,7 +1844,7 @@ func (m *DesiredLRP) MarshalTo(data []byte) (n int, err error) {
 		}
 	}
 	if m.ModificationTag != nil {
-		data[i] = 0xb2
+		data[i] = 0xaa
 		i++
 		data[i] = 0x1
 		i++
