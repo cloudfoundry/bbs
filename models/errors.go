@@ -9,6 +9,7 @@ func (err Error) Error() string {
 const (
 	InvalidDomain = "InvalidDomain"
 
+	InvalidRecord          = "InvalidRecord"
 	InvalidRequest         = "InvalidRequest"
 	InvalidResponse        = "InvalidResponse"
 	InvalidProtobufMessage = "InvalidProtobufMessage"
@@ -20,6 +21,8 @@ const (
 	ResourceConflict = "ResourceConflict"
 	ResourceNotFound = "ResourceNotFound"
 	RouterError      = "RouterError"
+
+	ActualLRPCannotBeClaimed = "ActualLRPCannotBeClaimed"
 )
 
 var (
@@ -28,14 +31,29 @@ var (
 		Message: "the requested resource could not be found",
 	}
 
+	ErrBadRequest = &Error{
+		Type:    InvalidRequest,
+		Message: "the request received is invalid",
+	}
+
 	ErrUnknownError = &Error{
 		Type:    UnknownError,
 		Message: "the request failed for an unknown reason",
 	}
 
+	ErrSerializeJSON = &Error{
+		Type:    InvalidJSON,
+		Message: "could not serialize JSON",
+	}
+
 	ErrDeserializeJSON = &Error{
 		Type:    InvalidJSON,
 		Message: "could not deserialize JSON",
+	}
+
+	ErrActualLRPCannotBeClaimed = &Error{
+		Type:    ActualLRPCannotBeClaimed,
+		Message: "cannot claim actual LRP",
 	}
 )
 

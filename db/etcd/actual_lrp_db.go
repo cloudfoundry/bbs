@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"encoding/json"
 	"path"
 	"strconv"
 	"sync"
@@ -98,9 +99,14 @@ func (db *ETCDDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid 
 }
 
 func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, *models.Error) {
+	group, _, err := db.rawActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+	return group, err
+}
+
+func (db *ETCDDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, uint64, *models.Error) {
 	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPIndexDir(processGuid, index))
 	if bbsErr != nil {
-		return nil, bbsErr
+		return nil, 0, bbsErr
 	}
 
 	group := models.ActualLRPGroup{}
@@ -109,7 +115,7 @@ func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proce
 		deserializeErr := models.FromJSON([]byte(instanceNode.Value), &lrp)
 		if deserializeErr != nil {
 			logger.Error("failed-parsing-actual-lrp", deserializeErr, lager.Data{"key": instanceNode.Key})
-			return nil, models.ErrDeserializeJSON
+			return nil, 0, models.ErrDeserializeJSON
 		}
 
 		if isInstanceActualLRPNode(instanceNode) {
@@ -122,10 +128,65 @@ func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proce
 	}
 
 	if group.Evacuating == nil && group.Instance == nil {
-		return nil, models.ErrResourceNotFound
+		return nil, 0, models.ErrResourceNotFound
 	}
 
-	return &group, nil
+	return &group, node.ModifiedIndex, nil
+}
+
+func (db *ETCDDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, *models.Error) {
+	node, bbsErr := db.fetchRaw(logger, ActualLRPSchemaPath(processGuid, index))
+	if bbsErr != nil {
+		return nil, 0, bbsErr
+	}
+
+	var lrp models.ActualLRP
+	deserializeErr := json.Unmarshal([]byte(node.Value), &lrp)
+	if deserializeErr != nil {
+		return nil, 0, models.ErrDeserializeJSON
+	}
+
+	return &lrp, node.ModifiedIndex, nil
+}
+
+func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey models.ActualLRPInstanceKey) (*models.ActualLRP, *models.Error) {
+	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
+	if bbsErr != nil {
+		return nil, bbsErr
+	}
+
+	prevValue, err := json.Marshal(lrp)
+	if err != nil {
+		return nil, models.ErrSerializeJSON
+	}
+
+	if !lrp.AllowsTransitionTo(lrp.ActualLRPKey, instanceKey, models.ActualLRPStateClaimed) {
+		return nil, models.ErrActualLRPCannotBeClaimed
+	}
+
+	lrp.PlacementError = ""
+	lrp.State = models.ActualLRPStateClaimed
+	lrp.ActualLRPInstanceKey = instanceKey
+	lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
+	lrp.ModificationTag.Increment()
+
+	err = lrp.Validate()
+	if err != nil {
+		return nil, &models.Error{Type: models.InvalidRecord, Message: err.Error()}
+	}
+
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		return nil, models.ErrSerializeJSON
+	}
+
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(processGuid, index), string(lrpRawJSON), 0, string(prevValue), prevIndex)
+	if err != nil {
+		println(err.Error())
+		return nil, models.ErrActualLRPCannotBeClaimed
+	}
+
+	return lrp, nil
 }
 
 func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {

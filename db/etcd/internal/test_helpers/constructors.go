@@ -17,7 +17,7 @@ func (t *TestHelper) NewValidActualLRP(guid string, index int32) *models.ActualL
 		CrashReason:          "badness",
 		State:                models.ActualLRPStateRunning,
 		Since:                1138,
-		ModificationTag: &models.ModificationTag{
+		ModificationTag: models.ModificationTag{
 			Epoch: "some-epoch",
 			Index: 999,
 		},

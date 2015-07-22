@@ -2,11 +2,11 @@ package handlers_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -25,10 +25,12 @@ func newTestRequest(body interface{}) *http.Request {
 		reader = strings.NewReader(body)
 	case []byte:
 		reader = bytes.NewReader(body)
-	default:
-		jsonBytes, err := json.Marshal(body)
+	case proto.Message:
+		protoBytes, err := proto.Marshal(body)
 		Expect(err).NotTo(HaveOccurred())
-		reader = bytes.NewReader(jsonBytes)
+		reader = bytes.NewReader(protoBytes)
+	default:
+		panic("cannot create test request")
 	}
 
 	request, err := http.NewRequest("", "", reader)

@@ -55,6 +55,17 @@ type FakeClient struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
+	ClaimActualLRPStub        func(processGuid string, index int, instanceKey models.ActualLRPInstanceKey) (*models.ActualLRP, error)
+	claimActualLRPMutex       sync.RWMutex
+	claimActualLRPArgsForCall []struct {
+		processGuid string
+		index       int
+		instanceKey models.ActualLRPInstanceKey
+	}
+	claimActualLRPReturns struct {
+		result1 *models.ActualLRP
+		result2 error
+	}
 	DesiredLRPsStub        func(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
@@ -236,6 +247,41 @@ func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *mode
 	fake.ActualLRPGroupByProcessGuidAndIndexStub = nil
 	fake.actualLRPGroupByProcessGuidAndIndexReturns = struct {
 		result1 *models.ActualLRPGroup
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKey models.ActualLRPInstanceKey) (*models.ActualLRP, error) {
+	fake.claimActualLRPMutex.Lock()
+	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
+		processGuid string
+		index       int
+		instanceKey models.ActualLRPInstanceKey
+	}{processGuid, index, instanceKey})
+	fake.claimActualLRPMutex.Unlock()
+	if fake.ClaimActualLRPStub != nil {
+		return fake.ClaimActualLRPStub(processGuid, index, instanceKey)
+	} else {
+		return fake.claimActualLRPReturns.result1, fake.claimActualLRPReturns.result2
+	}
+}
+
+func (fake *FakeClient) ClaimActualLRPCallCount() int {
+	fake.claimActualLRPMutex.RLock()
+	defer fake.claimActualLRPMutex.RUnlock()
+	return len(fake.claimActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) ClaimActualLRPArgsForCall(i int) (string, int, models.ActualLRPInstanceKey) {
+	fake.claimActualLRPMutex.RLock()
+	defer fake.claimActualLRPMutex.RUnlock()
+	return fake.claimActualLRPArgsForCall[i].processGuid, fake.claimActualLRPArgsForCall[i].index, fake.claimActualLRPArgsForCall[i].instanceKey
+}
+
+func (fake *FakeClient) ClaimActualLRPReturns(result1 *models.ActualLRP, result2 error) {
+	fake.ClaimActualLRPStub = nil
+	fake.claimActualLRPReturns = struct {
+		result1 *models.ActualLRP
 		result2 error
 	}{result1, result2}
 }

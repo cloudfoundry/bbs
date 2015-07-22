@@ -121,7 +121,7 @@ func (m *ActualLRPInstanceKey) GetCellId() string {
 
 type ActualLRPNetInfo struct {
 	Address string         `protobuf:"bytes,1,opt,name=address" json:"address"`
-	Ports   []*PortMapping `protobuf:"bytes,2,rep,name=ports" json:"ports,omitempty"`
+	Ports   []*PortMapping `protobuf:"bytes,2,rep,name=ports" json:"ports"`
 }
 
 func (m *ActualLRPNetInfo) Reset()      { *m = ActualLRPNetInfo{} }
@@ -145,12 +145,12 @@ type ActualLRP struct {
 	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,embedded=actual_lrp_key" json:""`
 	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,embedded=actual_lrp_instance_key" json:""`
 	ActualLRPNetInfo     `protobuf:"bytes,3,opt,name=actual_lrp_net_info,embedded=actual_lrp_net_info" json:""`
-	CrashCount           int32            `protobuf:"varint,4,opt,name=crash_count" json:"crash_count"`
-	CrashReason          string           `protobuf:"bytes,5,opt,name=crash_reason" json:"crash_reason"`
-	State                string           `protobuf:"bytes,6,opt,name=state" json:"state"`
-	PlacementError       string           `protobuf:"bytes,7,opt,name=placement_error" json:"placement_error"`
-	Since                int64            `protobuf:"varint,8,opt,name=since" json:"since"`
-	ModificationTag      *ModificationTag `protobuf:"bytes,9,opt,name=modification_tag" json:"modification_tag,omitempty"`
+	CrashCount           int32           `protobuf:"varint,4,opt,name=crash_count" json:"crash_count"`
+	CrashReason          string          `protobuf:"bytes,5,opt,name=crash_reason" json:"crash_reason,omitempty"`
+	State                string          `protobuf:"bytes,6,opt,name=state" json:"state"`
+	PlacementError       string          `protobuf:"bytes,7,opt,name=placement_error" json:"placement_error,omitempty"`
+	Since                int64           `protobuf:"varint,8,opt,name=since" json:"since"`
+	ModificationTag      ModificationTag `protobuf:"bytes,9,opt,name=modification_tag" json:"modification_tag"`
 }
 
 func (m *ActualLRP) Reset()      { *m = ActualLRP{} }
@@ -191,11 +191,11 @@ func (m *ActualLRP) GetSince() int64 {
 	return 0
 }
 
-func (m *ActualLRP) GetModificationTag() *ModificationTag {
+func (m *ActualLRP) GetModificationTag() ModificationTag {
 	if m != nil {
 		return m.ModificationTag
 	}
-	return nil
+	return ModificationTag{}
 }
 
 type ActualLRPGroups struct {
@@ -868,9 +868,6 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ModificationTag == nil {
-				m.ModificationTag = &ModificationTag{}
-			}
 			if err := m.ModificationTag.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1118,7 +1115,7 @@ func (this *ActualLRP) String() string {
 		`State:` + fmt.Sprintf("%v", this.State) + `,`,
 		`PlacementError:` + fmt.Sprintf("%v", this.PlacementError) + `,`,
 		`Since:` + fmt.Sprintf("%v", this.Since) + `,`,
-		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
+		`ModificationTag:` + strings.Replace(strings.Replace(this.ModificationTag.String(), "ModificationTag", "ModificationTag", 1), `&`, ``, 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1215,10 +1212,8 @@ func (m *ActualLRP) Size() (n int) {
 	l = len(m.PlacementError)
 	n += 1 + l + sovActualLrp(uint64(l))
 	n += 1 + sovActualLrp(uint64(m.Since))
-	if m.ModificationTag != nil {
-		l = m.ModificationTag.Size()
-		n += 1 + l + sovActualLrp(uint64(l))
-	}
+	l = m.ModificationTag.Size()
+	n += 1 + l + sovActualLrp(uint64(l))
 	return n
 }
 
@@ -1455,16 +1450,14 @@ func (m *ActualLRP) MarshalTo(data []byte) (n int, err error) {
 	data[i] = 0x40
 	i++
 	i = encodeVarintActualLrp(data, i, uint64(m.Since))
-	if m.ModificationTag != nil {
-		data[i] = 0x4a
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(m.ModificationTag.Size()))
-		n6, err := m.ModificationTag.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n6
+	data[i] = 0x4a
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(m.ModificationTag.Size()))
+	n6, err := m.ModificationTag.MarshalTo(data[i:])
+	if err != nil {
+		return 0, err
 	}
+	i += n6
 	return i, nil
 }
 
@@ -1584,7 +1577,7 @@ func (this *ActualLRP) GoString() string {
 		`State:` + fmt.Sprintf("%#v", this.State),
 		`PlacementError:` + fmt.Sprintf("%#v", this.PlacementError),
 		`Since:` + fmt.Sprintf("%#v", this.Since),
-		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag) + `}`}, ", ")
+		`ModificationTag:` + strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1) + `}`}, ", ")
 	return s
 }
 func (this *ActualLRPGroups) GoString() string {
@@ -1812,7 +1805,7 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	if this.Since != that1.Since {
 		return false
 	}
-	if !this.ModificationTag.Equal(that1.ModificationTag) {
+	if !this.ModificationTag.Equal(&that1.ModificationTag) {
 		return false
 	}
 	return true

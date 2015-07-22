@@ -23,8 +23,12 @@ var _ = Describe("ActualLRP API", func() {
 		otherDomain       = "other-domain"
 		otherInstanceGuid = "other-instance-guid"
 
-		baseIndex  = 1
-		otherIndex = 1
+		unclaimedProcessGuid = "unclaimed-process-guid"
+		unclaimedDomain      = "unclaimed-domain"
+
+		baseIndex      = 1
+		otherIndex     = 1
+		unclaimedIndex = 2
 
 		evacuatingInstanceGuid = "evacuating-instance-guid"
 	)
@@ -36,12 +40,14 @@ var _ = Describe("ActualLRP API", func() {
 		baseLRP       *models.ActualLRP
 		otherLRP      *models.ActualLRP
 		evacuatingLRP *models.ActualLRP
+		unclaimedLRP  *models.ActualLRP
 
 		baseLRPKey          models.ActualLRPKey
 		baseLRPInstanceKey  models.ActualLRPInstanceKey
 		otherLRPKey         models.ActualLRPKey
 		otherLRPInstanceKey models.ActualLRPInstanceKey
 		netInfo             models.ActualLRPNetInfo
+		unclaimedLRPKey     models.ActualLRPKey
 
 		filter models.ActualLRPFilter
 
@@ -60,6 +66,8 @@ var _ = Describe("ActualLRP API", func() {
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
 		netInfo = models.NewActualLRPNetInfo("127.0.0.1", models.NewPortMapping(8080, 80))
+
+		unclaimedLRPKey = models.NewActualLRPKey(unclaimedProcessGuid, unclaimedIndex, unclaimedDomain)
 
 		baseLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
@@ -84,9 +92,16 @@ var _ = Describe("ActualLRP API", func() {
 			Since:                time.Now().UnixNano(),
 		}
 
+		unclaimedLRP = &models.ActualLRP{
+			ActualLRPKey: unclaimedLRPKey,
+			State:        models.ActualLRPStateUnclaimed,
+			Since:        time.Now().UnixNano(),
+		}
+
 		testHelper.SetRawActualLRP(baseLRP)
 		testHelper.SetRawActualLRP(otherLRP)
 		testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+		testHelper.SetRawActualLRP(unclaimedLRP)
 	})
 
 	Describe("GET /v1/actual_lrps_groups", func() {
@@ -99,12 +114,13 @@ var _ = Describe("ActualLRP API", func() {
 		})
 
 		Context("when not filtering", func() {
-			It("has the correct number of responses", func() {
-				Expect(actualActualLRPGroups).To(HaveLen(2))
-			})
-
 			It("returns all actual lrps from the bbs", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}, {Instance: otherLRP}}
+				Expect(actualActualLRPGroups).To(HaveLen(3))
+				expectedActualLRPGroups = []*models.ActualLRPGroup{
+					{Instance: baseLRP, Evacuating: evacuatingLRP},
+					{Instance: otherLRP},
+					{Instance: unclaimedLRP},
+				}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
@@ -137,21 +153,15 @@ var _ = Describe("ActualLRP API", func() {
 			actualActualLRPGroups, getErr = client.ActualLRPGroupsByProcessGuid(baseProcessGuid)
 		})
 
-		It("responds without error", func() {
-			Expect(getErr).NotTo(HaveOccurred())
-		})
-
-		It("has the correct number of responses", func() {
-			Expect(actualActualLRPGroups).To(HaveLen(1))
-		})
-
 		It("returns all actual lrps from the bbs", func() {
+			Expect(getErr).NotTo(HaveOccurred())
+			Expect(actualActualLRPGroups).To(HaveLen(1))
 			expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}}
 			Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 		})
 	})
 
-	Describe("GET /v1/actual_lrps_groups/:process_guid/:index", func() {
+	Describe("GET /v1/actual_lrps_groups/:process_guid/index/:index", func() {
 		var (
 			actualLRPGroup         *models.ActualLRPGroup
 			expectedActualLRPGroup *models.ActualLRPGroup
@@ -168,6 +178,40 @@ var _ = Describe("ActualLRP API", func() {
 		It("returns all actual lrps from the bbs", func() {
 			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP}
 			Expect(actualActualLRPGroups).To(Equal(expectedActualLRPGroups))
+		})
+	})
+
+	Describe("POST /v1/actual_lrps/:process_guid/index/:index/claim", func() {
+		var (
+			actualLRP   *models.ActualLRP
+			instanceKey models.ActualLRPInstanceKey
+			claimErr    error
+		)
+
+		JustBeforeEach(func() {
+			instanceKey = models.ActualLRPInstanceKey{
+				CellId:       "my-cell-id",
+				InstanceGuid: "my-instance-guid",
+			}
+			actualLRP, claimErr = client.ClaimActualLRP(unclaimedProcessGuid, unclaimedIndex, instanceKey)
+		})
+
+		It("claims the actual_lrp", func() {
+			Expect(claimErr).NotTo(HaveOccurred())
+
+			expectedActualLRP := *unclaimedLRP
+			expectedActualLRP.State = models.ActualLRPStateClaimed
+			expectedActualLRP.ActualLRPInstanceKey = instanceKey
+			expectedActualLRP.ModificationTag.Increment()
+			Expect(*actualLRP).To(Equal(expectedActualLRP))
+
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			Expect(err).NotTo(HaveOccurred())
+
+			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
+			Expect(evacuating).To(BeFalse())
+
+			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
 		})
 	})
 })

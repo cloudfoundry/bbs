@@ -418,8 +418,6 @@ var _ = Describe("ActualLRP", func() {
     "cell_id":"some-cell-id",
     "domain":"some-domain",
 		"crash_count": 1,
-		"crash_reason": "",
-		"placement_error": "",
 		"modification_tag": {
 			"epoch": "some-guid",
 			"index": 50
@@ -438,7 +436,7 @@ var _ = Describe("ActualLRP", func() {
 				CrashCount:           1,
 				State:                models.ActualLRPStateRunning,
 				Since:                1138,
-				ModificationTag: &models.ModificationTag{
+				ModificationTag: models.ModificationTag{
 					Epoch: "some-guid",
 					Index: 50,
 				},
