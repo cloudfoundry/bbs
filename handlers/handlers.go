@@ -15,6 +15,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 	actualLRPHandler := NewActualLRPHandler(logger, db)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db)
 	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
+	taskHandler := NewTaskHandler(logger, db)
 	eventsHandler := NewEventHandler(logger, hub)
 
 	actions := rata.Handlers{
@@ -34,6 +35,10 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:             route(desiredLRPHandler.DesiredLRPs),
 		bbs.DesiredLRPByProcessGuidRoute: route(desiredLRPHandler.DesiredLRPByProcessGuid),
+
+		// Tasks
+		bbs.TasksRoute:      route(taskHandler.Tasks),
+		bbs.TaskByGuidRoute: route(taskHandler.TaskByGuid),
 
 		// Events
 		bbs.EventStreamRoute: route(eventsHandler.Subscribe),

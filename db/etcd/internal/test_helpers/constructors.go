@@ -66,3 +66,67 @@ func (t *TestHelper) NewValidDesiredLRP(guid string) *models.DesiredLRP {
 
 	return desiredLRP
 }
+
+func (t *TestHelper) NewValidTask(guid string) *models.Task {
+	task := &models.Task{
+		TaskGuid: guid,
+		Domain:   "some-domain",
+		RootFs:   "docker:///docker.com/docker",
+		EnvironmentVariables: []*models.EnvironmentVariable{
+			{
+				Name:  "ENV_VAR_NAME",
+				Value: "an environmment value",
+			},
+		},
+		Action: models.WrapAction(&models.DownloadAction{
+			From:     "old_location",
+			To:       "new_location",
+			CacheKey: "the-cache-key",
+			User:     "someone",
+		}),
+		MemoryMb:         256,
+		DiskMb:           1024,
+		CpuWeight:        42,
+		Privileged:       true,
+		LogGuid:          "123",
+		LogSource:        "APP",
+		MetricsGuid:      "456",
+		CreatedAt:        time.Date(2014, time.February, 25, 23, 46, 11, 00, time.UTC).UnixNano(),
+		UpdatedAt:        time.Date(2014, time.February, 25, 23, 46, 11, 10, time.UTC).UnixNano(),
+		FirstCompletedAt: time.Date(2014, time.February, 25, 23, 46, 11, 30, time.UTC).UnixNano(),
+		ResultFile:       "some-file.txt",
+		State:            models.Task_Pending,
+		CellId:           "cell",
+
+		Result:        "turboencabulated",
+		Failed:        true,
+		FailureReason: "because i said so",
+
+		EgressRules: []*models.SecurityGroupRule{
+			{
+				Protocol:     "tcp",
+				Destinations: []string{"0.0.0.0/0"},
+				PortRange: &models.PortRange{
+					Start: 1,
+					End:   1024,
+				},
+				Log: true,
+			},
+			{
+				Protocol:     "udp",
+				Destinations: []string{"8.8.0.0/16"},
+				Ports:        []uint32{53},
+			},
+		},
+
+		Annotation: `[{"anything": "you want!"}]... dude`,
+		// TODO: UNCOMMENT ME ONCE YOU SWITCH TO PROTOBUFS
+		//CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
+		CompletionCallbackUrl: "http://@a.b.c/d/e/f",
+	}
+
+	err := task.Validate()
+	Expect(err).NotTo(HaveOccurred())
+
+	return task
+}

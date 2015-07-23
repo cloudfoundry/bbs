@@ -113,6 +113,40 @@ type FakeClient struct {
 		result1 *models.DesiredLRP
 		result2 error
 	}
+	TasksStub        func() ([]*models.Task, error)
+	tasksMutex       sync.RWMutex
+	tasksArgsForCall []struct{}
+	tasksReturns struct {
+		result1 []*models.Task
+		result2 error
+	}
+	TasksByDomainStub        func(domain string) ([]*models.Task, error)
+	tasksByDomainMutex       sync.RWMutex
+	tasksByDomainArgsForCall []struct {
+		domain string
+	}
+	tasksByDomainReturns struct {
+		result1 []*models.Task
+		result2 error
+	}
+	TasksByCellIDStub        func(cellId string) ([]*models.Task, error)
+	tasksByCellIDMutex       sync.RWMutex
+	tasksByCellIDArgsForCall []struct {
+		cellId string
+	}
+	tasksByCellIDReturns struct {
+		result1 []*models.Task
+		result2 error
+	}
+	TaskByGuidStub        func(guid string) (*models.Task, error)
+	taskByGuidMutex       sync.RWMutex
+	taskByGuidArgsForCall []struct {
+		guid string
+	}
+	taskByGuidReturns struct {
+		result1 *models.Task
+		result2 error
+	}
 	SubscribeToEventsStub        func() (events.EventSource, error)
 	subscribeToEventsMutex       sync.RWMutex
 	subscribeToEventsArgsForCall []struct{}
@@ -478,6 +512,130 @@ func (fake *FakeClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLR
 	fake.DesiredLRPByProcessGuidStub = nil
 	fake.desiredLRPByProcessGuidReturns = struct {
 		result1 *models.DesiredLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) Tasks() ([]*models.Task, error) {
+	fake.tasksMutex.Lock()
+	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct{}{})
+	fake.tasksMutex.Unlock()
+	if fake.TasksStub != nil {
+		return fake.TasksStub()
+	} else {
+		return fake.tasksReturns.result1, fake.tasksReturns.result2
+	}
+}
+
+func (fake *FakeClient) TasksCallCount() int {
+	fake.tasksMutex.RLock()
+	defer fake.tasksMutex.RUnlock()
+	return len(fake.tasksArgsForCall)
+}
+
+func (fake *FakeClient) TasksReturns(result1 []*models.Task, result2 error) {
+	fake.TasksStub = nil
+	fake.tasksReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) TasksByDomain(domain string) ([]*models.Task, error) {
+	fake.tasksByDomainMutex.Lock()
+	fake.tasksByDomainArgsForCall = append(fake.tasksByDomainArgsForCall, struct {
+		domain string
+	}{domain})
+	fake.tasksByDomainMutex.Unlock()
+	if fake.TasksByDomainStub != nil {
+		return fake.TasksByDomainStub(domain)
+	} else {
+		return fake.tasksByDomainReturns.result1, fake.tasksByDomainReturns.result2
+	}
+}
+
+func (fake *FakeClient) TasksByDomainCallCount() int {
+	fake.tasksByDomainMutex.RLock()
+	defer fake.tasksByDomainMutex.RUnlock()
+	return len(fake.tasksByDomainArgsForCall)
+}
+
+func (fake *FakeClient) TasksByDomainArgsForCall(i int) string {
+	fake.tasksByDomainMutex.RLock()
+	defer fake.tasksByDomainMutex.RUnlock()
+	return fake.tasksByDomainArgsForCall[i].domain
+}
+
+func (fake *FakeClient) TasksByDomainReturns(result1 []*models.Task, result2 error) {
+	fake.TasksByDomainStub = nil
+	fake.tasksByDomainReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) TasksByCellID(cellId string) ([]*models.Task, error) {
+	fake.tasksByCellIDMutex.Lock()
+	fake.tasksByCellIDArgsForCall = append(fake.tasksByCellIDArgsForCall, struct {
+		cellId string
+	}{cellId})
+	fake.tasksByCellIDMutex.Unlock()
+	if fake.TasksByCellIDStub != nil {
+		return fake.TasksByCellIDStub(cellId)
+	} else {
+		return fake.tasksByCellIDReturns.result1, fake.tasksByCellIDReturns.result2
+	}
+}
+
+func (fake *FakeClient) TasksByCellIDCallCount() int {
+	fake.tasksByCellIDMutex.RLock()
+	defer fake.tasksByCellIDMutex.RUnlock()
+	return len(fake.tasksByCellIDArgsForCall)
+}
+
+func (fake *FakeClient) TasksByCellIDArgsForCall(i int) string {
+	fake.tasksByCellIDMutex.RLock()
+	defer fake.tasksByCellIDMutex.RUnlock()
+	return fake.tasksByCellIDArgsForCall[i].cellId
+}
+
+func (fake *FakeClient) TasksByCellIDReturns(result1 []*models.Task, result2 error) {
+	fake.TasksByCellIDStub = nil
+	fake.tasksByCellIDReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) TaskByGuid(guid string) (*models.Task, error) {
+	fake.taskByGuidMutex.Lock()
+	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
+		guid string
+	}{guid})
+	fake.taskByGuidMutex.Unlock()
+	if fake.TaskByGuidStub != nil {
+		return fake.TaskByGuidStub(guid)
+	} else {
+		return fake.taskByGuidReturns.result1, fake.taskByGuidReturns.result2
+	}
+}
+
+func (fake *FakeClient) TaskByGuidCallCount() int {
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	return len(fake.taskByGuidArgsForCall)
+}
+
+func (fake *FakeClient) TaskByGuidArgsForCall(i int) string {
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	return fake.taskByGuidArgsForCall[i].guid
+}
+
+func (fake *FakeClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
+	fake.TaskByGuidStub = nil
+	fake.taskByGuidReturns = struct {
+		result1 *models.Task
 		result2 error
 	}{result1, result2}
 }

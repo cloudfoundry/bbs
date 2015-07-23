@@ -39,6 +39,16 @@ func (t *TestHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
+func (t *TestHelper) SetRawTask(task *models.Task) {
+	value, err := json.Marshal(task) // do NOT use models.ToJSON; don't want validations
+	Expect(err).NotTo(HaveOccurred())
+
+	key := etcddb.TaskSchemaPath(task)
+	_, err = t.etcdClient.Set(key, string(value), 0)
+
+	Expect(err).NotTo(HaveOccurred())
+}
+
 func (t *TestHelper) CreateValidActualLRP(guid string, index int32) {
 	t.SetRawActualLRP(t.NewValidActualLRP(guid, index))
 }
@@ -51,6 +61,10 @@ func (t *TestHelper) CreateValidDesiredLRP(guid string) {
 	t.SetRawDesiredLRP(t.NewValidDesiredLRP(guid))
 }
 
+func (t *TestHelper) CreateValidTask(guid string) {
+	t.SetRawTask(t.NewValidTask(guid))
+}
+
 func (t *TestHelper) CreateMalformedActualLRP(guid string, index int32) {
 	t.createMalformedValueForKey(etcddb.ActualLRPSchemaPath(guid, index))
 }
@@ -61,6 +75,10 @@ func (t *TestHelper) CreateMalformedEvacuatingLRP(guid string, index int32) {
 
 func (t *TestHelper) CreateMalformedDesiredLRP(guid string) {
 	t.createMalformedValueForKey(etcddb.DesiredLRPSchemaPath(&models.DesiredLRP{ProcessGuid: guid}))
+}
+
+func (t *TestHelper) CreateMalformedTask(guid string) {
+	t.createMalformedValueForKey(etcddb.TaskSchemaPath(&models.Task{TaskGuid: guid}))
 }
 
 func (t *TestHelper) createMalformedValueForKey(key string) {

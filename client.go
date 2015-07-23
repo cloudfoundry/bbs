@@ -43,6 +43,11 @@ type Client interface {
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
 
+	Tasks() ([]*models.Task, error)
+	TasksByDomain(domain string) ([]*models.Task, error)
+	TasksByCellID(cellId string) ([]*models.Task, error)
+	TaskByGuid(guid string) (*models.Task, error)
+
 	SubscribeToEvents() (events.EventSource, error)
 }
 
@@ -160,6 +165,36 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 		rata.Params{"process_guid": processGuid},
 		nil, nil, &desiredLRP)
 	return &desiredLRP, err
+}
+
+func (c *client) Tasks() ([]*models.Task, error) {
+	var tasks models.Tasks
+	err := c.doRequest(TasksRoute, nil, nil, nil, &tasks)
+	return tasks.Tasks, err
+}
+
+func (c *client) TasksByDomain(domain string) ([]*models.Task, error) {
+	var tasks models.Tasks
+	query := url.Values{}
+	query.Set("domain", domain)
+	err := c.doRequest(TasksRoute, nil, query, nil, &tasks)
+	return tasks.Tasks, err
+}
+
+func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
+	var tasks models.Tasks
+	query := url.Values{}
+	query.Set("cell_id", cellId)
+	err := c.doRequest(TasksRoute, nil, query, nil, &tasks)
+	return tasks.Tasks, err
+}
+
+func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
+	var task models.Task
+	err := c.doRequest(TaskByGuidRoute,
+		rata.Params{"task_guid": taskGuid},
+		nil, nil, &task)
+	return &task, err
 }
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {

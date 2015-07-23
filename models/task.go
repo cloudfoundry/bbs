@@ -23,11 +23,11 @@ func (task Task) Validate() error {
 
 	if task.RootFs == "" {
 		validationError = validationError.Append(ErrInvalidField{"rootfs"})
-	}
-
-	rootFsURL, err := url.Parse(task.RootFs)
-	if err != nil || rootFsURL.Scheme == "" {
-		validationError = validationError.Append(ErrInvalidField{"rootfs"})
+	} else {
+		rootFsURL, err := url.Parse(task.RootFs)
+		if err != nil || rootFsURL.Scheme == "" {
+			validationError = validationError.Append(ErrInvalidField{"rootfs"})
+		}
 	}
 
 	if task.Action == nil {
@@ -161,7 +161,9 @@ func (task *Task) UnmarshalJSON(data []byte) error {
 	task.State = Task_State(oldtask.State)
 	task.Annotation = oldtask.Annotation
 	task.EgressRules = newEgressRules
-	task.CompletionCallbackUrl = oldtask.CompletionCallbackURL.String()
+	if oldtask.CompletionCallbackURL != nil {
+		task.CompletionCallbackUrl = oldtask.CompletionCallbackURL.String()
+	}
 
 	return nil
 }
