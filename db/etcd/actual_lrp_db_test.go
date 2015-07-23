@@ -581,4 +581,59 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 		})
 	})
+
+	Describe("RemoveActualLRP", func() {
+		var (
+			actualLRP *models.ActualLRP
+			removeErr *models.Error
+
+			lrpKey models.ActualLRPKey
+
+			processGuid string
+			index       int32
+			domain      string
+		)
+
+		JustBeforeEach(func() {
+			removeErr = etcdDB.RemoveActualLRP(logger, processGuid, index)
+		})
+
+		Context("when the actual LRP exists", func() {
+			BeforeEach(func() {
+				processGuid = "some-process-guid"
+				index = 1
+				domain = "some-domain"
+
+				lrpKey = models.NewActualLRPKey(processGuid, index, domain)
+				actualLRP = &models.ActualLRP{
+					ActualLRPKey: lrpKey,
+					State:        models.ActualLRPStateUnclaimed,
+					Since:        clock.Now().UnixNano(),
+				}
+
+				testHelper.SetRawActualLRP(actualLRP)
+			})
+
+			It("does not error", func() {
+				Expect(removeErr).NotTo(HaveOccurred())
+			})
+
+			It("removes the actual LRP", func() {
+				lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+				Expect(lrpGroupInBBS).To(BeNil())
+			})
+		})
+
+		Context("when the actual LRP does not exist", func() {
+			BeforeEach(func() {
+				// Do not make a lrp.
+			})
+
+			It("cannot remove the LRP", func() {
+				Expect(removeErr).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+	})
 })

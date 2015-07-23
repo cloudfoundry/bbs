@@ -140,4 +140,92 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			})
 		})
 	})
+
+	Describe("RemoveActualLRP", func() {
+		var (
+			request     *http.Request
+			processGuid = "process-guid"
+			index       = 1
+			instanceKey models.ActualLRPInstanceKey
+			indexParam  string
+		)
+
+		BeforeEach(func() {
+			indexParam = strconv.Itoa(index)
+			instanceKey = models.NewActualLRPInstanceKey(
+				"instance-guid-0",
+				"cell-id-0",
+			)
+			actualLRP = models.ActualLRP{
+				ActualLRPKey: models.NewActualLRPKey(
+					processGuid,
+					1,
+					"domain-0",
+				),
+				State: models.ActualLRPStateUnclaimed,
+				Since: 1138,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request = newTestRequest("")
+			request.URL.RawQuery = url.Values{
+				":process_guid": []string{processGuid},
+				":index":        []string{indexParam},
+			}.Encode()
+
+			handler.RemoveActualLRP(responseRecorder, request)
+		})
+
+		Context("when removing the actual lrp in the DB succeeds", func() {
+			var removedActualLRP models.ActualLRP
+
+			BeforeEach(func() {
+				removedActualLRP = actualLRP
+				removedActualLRP.ActualLRPInstanceKey = instanceKey
+				fakeActualLRPDB.RemoveActualLRPReturns(nil)
+			})
+
+			It("responds with 204 Status No Content", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
+			})
+
+			It("removes the actual lrp by process guid and index", func() {
+				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
+				_, actualProcessGuid, idx := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+				Expect(actualProcessGuid).To(Equal(processGuid))
+				Expect(idx).To(BeEquivalentTo(index))
+			})
+		})
+
+		Context("when parsing the index fails", func() {
+			BeforeEach(func() {
+				indexParam = "this is not an index?"
+			})
+
+			It("responds with 400 Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("when removing the actual lrp fails", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.RemoveActualLRPReturns(models.ErrUnknownError)
+			})
+
+			It("responds with 500 Internal Server Error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			})
+		})
+
+		Context("when we cannot find the resource", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.RemoveActualLRPReturns(models.ErrResourceNotFound)
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+			})
+		})
+	})
 })

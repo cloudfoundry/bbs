@@ -180,13 +180,37 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 		return nil, models.ErrSerializeJSON
 	}
 
+	logger.Info("starting")
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(processGuid, index), string(lrpRawJSON), 0, string(prevValue), prevIndex)
 	if err != nil {
-		println(err.Error())
+		logger.Error("failed", err)
 		return nil, models.ErrActualLRPCannotBeClaimed
 	}
+	logger.Info("succeeded")
 
 	return lrp, nil
+}
+
+func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) *models.Error {
+	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
+	if bbsErr != nil {
+		return bbsErr
+	}
+
+	prevValue, err := json.Marshal(lrp)
+	if err != nil {
+		return models.ErrSerializeJSON
+	}
+
+	logger.Info("starting")
+	_, err = db.client.CompareAndDelete(ActualLRPSchemaPath(processGuid, index), string(prevValue), prevIndex)
+	if err != nil {
+		logger.Error("failed", err)
+		return models.ErrActualLRPCannotBeRemoved
+	}
+	logger.Info("succeeded")
+
+	return nil
 }
 
 func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {

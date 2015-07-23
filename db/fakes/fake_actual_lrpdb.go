@@ -53,6 +53,16 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}
+	RemoveActualLRPStub        func(logger lager.Logger, processGuid string, index int32) *models.Error
+	removeActualLRPMutex       sync.RWMutex
+	removeActualLRPArgsForCall []struct {
+		logger      lager.Logger
+		processGuid string
+		index       int32
+	}
+	removeActualLRPReturns struct {
+		result1 *models.Error
+	}
 }
 
 func (fake *FakeActualLRPDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
@@ -192,6 +202,40 @@ func (fake *FakeActualLRPDB) ClaimActualLRPReturns(result1 *models.ActualLRP, re
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) *models.Error {
+	fake.removeActualLRPMutex.Lock()
+	fake.removeActualLRPArgsForCall = append(fake.removeActualLRPArgsForCall, struct {
+		logger      lager.Logger
+		processGuid string
+		index       int32
+	}{logger, processGuid, index})
+	fake.removeActualLRPMutex.Unlock()
+	if fake.RemoveActualLRPStub != nil {
+		return fake.RemoveActualLRPStub(logger, processGuid, index)
+	} else {
+		return fake.removeActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeActualLRPDB) RemoveActualLRPCallCount() int {
+	fake.removeActualLRPMutex.RLock()
+	defer fake.removeActualLRPMutex.RUnlock()
+	return len(fake.removeActualLRPArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) RemoveActualLRPArgsForCall(i int) (lager.Logger, string, int32) {
+	fake.removeActualLRPMutex.RLock()
+	defer fake.removeActualLRPMutex.RUnlock()
+	return fake.removeActualLRPArgsForCall[i].logger, fake.removeActualLRPArgsForCall[i].processGuid, fake.removeActualLRPArgsForCall[i].index
+}
+
+func (fake *FakeActualLRPDB) RemoveActualLRPReturns(result1 *models.Error) {
+	fake.RemoveActualLRPStub = nil
+	fake.removeActualLRPReturns = struct {
+		result1 *models.Error
+	}{result1}
 }
 
 var _ db.ActualLRPDB = new(FakeActualLRPDB)

@@ -214,4 +214,27 @@ var _ = Describe("ActualLRP API", func() {
 			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
 		})
 	})
+
+	Describe("DELETE /v1/actual_lrps/:process_guid/index/:index", func() {
+		var (
+			instanceKey models.ActualLRPInstanceKey
+			removeErr   error
+		)
+
+		JustBeforeEach(func() {
+			instanceKey = models.ActualLRPInstanceKey{
+				CellId:       "my-cell-id",
+				InstanceGuid: "my-instance-guid",
+			}
+			removeErr = client.RemoveActualLRP(otherProcessGuid, otherIndex)
+		})
+
+		It("removes the actual_lrp", func() {
+			Expect(removeErr).NotTo(HaveOccurred())
+
+			_, err := client.ActualLRPGroupByProcessGuidAndIndex(otherProcessGuid, otherIndex)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(models.ErrResourceNotFound))
+		})
+	})
 })

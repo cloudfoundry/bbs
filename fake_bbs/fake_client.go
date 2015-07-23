@@ -66,6 +66,15 @@ type FakeClient struct {
 		result1 *models.ActualLRP
 		result2 error
 	}
+	RemoveActualLRPStub        func(processGuid string, index int) error
+	removeActualLRPMutex       sync.RWMutex
+	removeActualLRPArgsForCall []struct {
+		processGuid string
+		index       int
+	}
+	removeActualLRPReturns struct {
+		result1 error
+	}
 	DesiredLRPsStub        func(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
@@ -284,6 +293,39 @@ func (fake *FakeClient) ClaimActualLRPReturns(result1 *models.ActualLRP, result2
 		result1 *models.ActualLRP
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) RemoveActualLRP(processGuid string, index int) error {
+	fake.removeActualLRPMutex.Lock()
+	fake.removeActualLRPArgsForCall = append(fake.removeActualLRPArgsForCall, struct {
+		processGuid string
+		index       int
+	}{processGuid, index})
+	fake.removeActualLRPMutex.Unlock()
+	if fake.RemoveActualLRPStub != nil {
+		return fake.RemoveActualLRPStub(processGuid, index)
+	} else {
+		return fake.removeActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeClient) RemoveActualLRPCallCount() int {
+	fake.removeActualLRPMutex.RLock()
+	defer fake.removeActualLRPMutex.RUnlock()
+	return len(fake.removeActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) RemoveActualLRPArgsForCall(i int) (string, int) {
+	fake.removeActualLRPMutex.RLock()
+	defer fake.removeActualLRPMutex.RUnlock()
+	return fake.removeActualLRPArgsForCall[i].processGuid, fake.removeActualLRPArgsForCall[i].index
+}
+
+func (fake *FakeClient) RemoveActualLRPReturns(result1 error) {
+	fake.RemoveActualLRPStub = nil
+	fake.removeActualLRPReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeClient) DesiredLRPs(arg1 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
