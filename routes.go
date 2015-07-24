@@ -36,7 +36,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrp_groups/:process_guid/index/:index", Method: "GET", Name: ActualLRPGroupByProcessGuidAndIndexRoute},
 
 	// Actual LRP Lifecycle
-	{Path: "/v1/actual_lrps/:process_guid/index/:index/claim", Method: "POST", Name: ClaimActualLRPRoute},
+	{Path: "/v1/actual_lrps/claim", Method: "POST", Name: ClaimActualLRPRoute},
 	{Path: "/v1/actual_lrps/start", Method: "POST", Name: StartActualLRPRoute},
 	{Path: "/v1/actual_lrps/:process_guid/index/:index", Method: "DELETE", Name: RemoveActualLRPRoute},
 

@@ -55,12 +55,12 @@ type FakeClient struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
-	ClaimActualLRPStub        func(processGuid string, index int, instanceKey models.ActualLRPInstanceKey) (*models.ActualLRP, error)
+	ClaimActualLRPStub        func(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error)
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
 		processGuid string
 		index       int
-		instanceKey models.ActualLRPInstanceKey
+		instanceKey *models.ActualLRPInstanceKey
 	}
 	claimActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -271,12 +271,12 @@ func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *mode
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKey models.ActualLRPInstanceKey) (*models.ActualLRP, error) {
+func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error) {
 	fake.claimActualLRPMutex.Lock()
 	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
 		processGuid string
 		index       int
-		instanceKey models.ActualLRPInstanceKey
+		instanceKey *models.ActualLRPInstanceKey
 	}{processGuid, index, instanceKey})
 	fake.claimActualLRPMutex.Unlock()
 	if fake.ClaimActualLRPStub != nil {
@@ -292,7 +292,7 @@ func (fake *FakeClient) ClaimActualLRPCallCount() int {
 	return len(fake.claimActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) ClaimActualLRPArgsForCall(i int) (string, int, models.ActualLRPInstanceKey) {
+func (fake *FakeClient) ClaimActualLRPArgsForCall(i int) (string, int, *models.ActualLRPInstanceKey) {
 	fake.claimActualLRPMutex.RLock()
 	defer fake.claimActualLRPMutex.RUnlock()
 	return fake.claimActualLRPArgsForCall[i].processGuid, fake.claimActualLRPArgsForCall[i].index, fake.claimActualLRPArgsForCall[i].instanceKey

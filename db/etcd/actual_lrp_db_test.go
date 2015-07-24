@@ -337,7 +337,7 @@ var _ = Describe("ActualLRPDB", func() {
 		)
 
 		JustBeforeEach(func() {
-			claimedActualLRP, claimErr = etcdDB.ClaimActualLRP(logger, processGuid, index, instanceKey)
+			claimedActualLRP, claimErr = etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -405,7 +405,8 @@ var _ = Describe("ActualLRPDB", func() {
 
 				BeforeEach(func() {
 					instanceGuid = "some-instance-guid"
-					_, err := etcdDB.ClaimActualLRP(logger, processGuid, index, models.NewActualLRPInstanceKey(instanceGuid, cellID))
+					instanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
+					_, err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -679,11 +680,12 @@ var _ = Describe("ActualLRPDB", func() {
 
 				BeforeEach(func() {
 					instanceGuid = "some-instance-guid"
+					instanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
 					_, err := etcdDB.ClaimActualLRP(
 						logger,
 						actualLRP.ProcessGuid,
 						actualLRP.Index,
-						models.NewActualLRPInstanceKey(instanceGuid, cellID),
+						&instanceKey,
 					)
 					Expect(err).NotTo(HaveOccurred())
 				})

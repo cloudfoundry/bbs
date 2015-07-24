@@ -23,19 +23,7 @@ func NewActualLRPLifecycleHandler(logger lager.Logger, db db.ActualLRPDB) *Actua
 }
 
 func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *http.Request) {
-	processGuid := req.FormValue(":process_guid")
-	index := req.FormValue(":index")
-	logger := h.logger.Session("claim-actual-lrp", lager.Data{
-		"process_guid": processGuid,
-		"index":        index,
-	})
-
-	idx, err := strconv.ParseInt(index, 10, 32)
-	if err != nil {
-		logger.Error("failed-to-parse-index", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return
-	}
+	logger := h.logger.Session("claim-actual-lrp")
 
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -44,15 +32,16 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
-	instanceKey := &models.ActualLRPInstanceKey{}
-	err = instanceKey.Unmarshal(data)
+	request := &models.ClaimActualLRPRequest{}
+	err = request.Unmarshal(data)
 	if err != nil {
 		logger.Error("failed-to-parse-request-body", err)
 		writeBadRequestResponse(w, models.InvalidRequest, err)
 		return
 	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
 
-	actualLRP, bbsErr := h.db.ClaimActualLRP(logger, processGuid, int32(idx), *instanceKey)
+	actualLRP, bbsErr := h.db.ClaimActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
 	if bbsErr != nil {
 		logger.Error("failed-to-claim-actual-lrp", bbsErr)
 		if bbsErr.Equal(models.ErrResourceNotFound) {

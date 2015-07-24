@@ -47,6 +47,12 @@ message ActualLRPGroups {
   repeated ActualLRPGroup actual_lrp_groups = 1;
 }
 
+message ClaimActualLRPRequest {
+  optional string process_guid = 1;
+  optional int32 index = 2;
+  optional ActualLRPInstanceKey actual_lrp_instance_key = 3;
+}
+
 message StartActualLRPRequest {
   optional ActualLRPKey actual_lrp_key = 1;
   optional ActualLRPInstanceKey actual_lrp_instance_key = 2;

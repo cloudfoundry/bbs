@@ -181,7 +181,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("POST /v1/actual_lrps/:process_guid/index/:index/claim", func() {
+	Describe("POST /v1/actual_lrps/claim", func() {
 		var (
 			actualLRP   *models.ActualLRP
 			instanceKey models.ActualLRPInstanceKey
@@ -193,7 +193,7 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			actualLRP, claimErr = client.ClaimActualLRP(unclaimedProcessGuid, unclaimedIndex, instanceKey)
+			actualLRP, claimErr = client.ClaimActualLRP(unclaimedProcessGuid, unclaimedIndex, &instanceKey)
 		})
 
 		It("claims the actual_lrp", func() {

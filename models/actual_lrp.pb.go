@@ -212,6 +212,36 @@ func (m *ActualLRPGroups) GetActualLrpGroups() []*ActualLRPGroup {
 	return nil
 }
 
+type ClaimActualLRPRequest struct {
+	ProcessGuid          string                `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Index                int32                 `protobuf:"varint,2,opt,name=index" json:"index"`
+	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,3,opt,name=actual_lrp_instance_key" json:"actual_lrp_instance_key,omitempty"`
+}
+
+func (m *ClaimActualLRPRequest) Reset()      { *m = ClaimActualLRPRequest{} }
+func (*ClaimActualLRPRequest) ProtoMessage() {}
+
+func (m *ClaimActualLRPRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+
+func (m *ClaimActualLRPRequest) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+func (m *ClaimActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+
 type StartActualLRPRequest struct {
 	ActualLrpKey         *ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key" json:"actual_lrp_key,omitempty"`
 	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key" json:"actual_lrp_instance_key,omitempty"`
@@ -992,6 +1022,113 @@ func (m *ActualLRPGroups) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *ClaimActualLRPRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProcessGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProcessGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+			}
+			m.Index = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.Index |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActualLrpInstanceKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ActualLrpInstanceKey == nil {
+				m.ActualLrpInstanceKey = &ActualLRPInstanceKey{}
+			}
+			if err := m.ActualLrpInstanceKey.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipActualLrp(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func (m *StartActualLRPRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -1283,6 +1420,18 @@ func (this *ActualLRPGroups) String() string {
 	}, "")
 	return s
 }
+func (this *ClaimActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ClaimActualLRPRequest{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func (this *StartActualLRPRequest) String() string {
 	if this == nil {
 		return "nil"
@@ -1390,6 +1539,19 @@ func (m *ActualLRPGroups) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovActualLrp(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *ClaimActualLRPRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.ProcessGuid)
+	n += 1 + l + sovActualLrp(uint64(l))
+	n += 1 + sovActualLrp(uint64(m.Index))
+	if m.ActualLrpInstanceKey != nil {
+		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovActualLrp(uint64(l))
 	}
 	return n
 }
@@ -1674,6 +1836,41 @@ func (m *ActualLRPGroups) MarshalTo(data []byte) (n int, err error) {
 	return i, nil
 }
 
+func (m *ClaimActualLRPRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ClaimActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(len(m.ProcessGuid)))
+	i += copy(data[i:], m.ProcessGuid)
+	data[i] = 0x10
+	i++
+	i = encodeVarintActualLrp(data, i, uint64(m.Index))
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintActualLrp(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n7, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	return i, nil
+}
+
 func (m *StartActualLRPRequest) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -1693,31 +1890,31 @@ func (m *StartActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActualLrp(data, i, uint64(m.ActualLrpKey.Size()))
-		n7, err := m.ActualLrpKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n7
-	}
-	if m.ActualLrpInstanceKey != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActualLrp(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n8, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		n8, err := m.ActualLrpKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n8
 	}
-	if m.ActualLrpNetInfo != nil {
-		data[i] = 0x1a
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x12
 		i++
-		i = encodeVarintActualLrp(data, i, uint64(m.ActualLrpNetInfo.Size()))
-		n9, err := m.ActualLrpNetInfo.MarshalTo(data[i:])
+		i = encodeVarintActualLrp(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n9, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n9
+	}
+	if m.ActualLrpNetInfo != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintActualLrp(data, i, uint64(m.ActualLrpNetInfo.Size()))
+		n10, err := m.ActualLrpNetInfo.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
 	}
 	return i, nil
 }
@@ -1817,6 +2014,16 @@ func (this *ActualLRPGroups) GoString() string {
 	}
 	s := strings.Join([]string{`&models.ActualLRPGroups{` +
 		`ActualLrpGroups:` + fmt.Sprintf("%#v", this.ActualLrpGroups) + `}`}, ", ")
+	return s
+}
+func (this *ClaimActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ClaimActualLRPRequest{` +
+		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
+		`Index:` + fmt.Sprintf("%#v", this.Index),
+		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
 	return s
 }
 func (this *StartActualLRPRequest) GoString() string {
@@ -2078,6 +2285,37 @@ func (this *ActualLRPGroups) Equal(that interface{}) bool {
 		if !this.ActualLrpGroups[i].Equal(that1.ActualLrpGroups[i]) {
 			return false
 		}
+	}
+	return true
+}
+func (this *ClaimActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ClaimActualLRPRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
 	}
 	return true
 }

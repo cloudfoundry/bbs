@@ -35,20 +35,23 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 	Describe("ClaimActualLRP", func() {
 		var (
 			request     *http.Request
-			processGuid = "process-guid"
-			index       = 1
+			processGuid       = "process-guid"
+			index       int32 = 1
 			instanceKey models.ActualLRPInstanceKey
-			indexParam  string
 			requestBody interface{}
 		)
 
 		BeforeEach(func() {
-			indexParam = strconv.Itoa(index)
 			instanceKey = models.NewActualLRPInstanceKey(
 				"instance-guid-0",
 				"cell-id-0",
 			)
 			requestBody = &instanceKey
+			requestBody = &models.ClaimActualLRPRequest{
+				ProcessGuid:          processGuid,
+				Index:                index,
+				ActualLrpInstanceKey: &instanceKey,
+			}
 			actualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
 					processGuid,
@@ -62,11 +65,6 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
-			request.URL.RawQuery = url.Values{
-				":process_guid": []string{processGuid},
-				":index":        []string{indexParam},
-			}.Encode()
-
 			handler.ClaimActualLRP(responseRecorder, request)
 		})
 
@@ -88,7 +86,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				_, actualProcessGuid, idx, actualInstanceKey := fakeActualLRPDB.ClaimActualLRPArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 				Expect(idx).To(BeEquivalentTo(index))
-				Expect(actualInstanceKey).To(Equal(instanceKey))
+				Expect(*actualInstanceKey).To(Equal(instanceKey))
 			})
 
 			It("returns the claimed actual lrp", func() {
@@ -97,16 +95,6 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(*response).To(Equal(claimedActualLRP))
-			})
-		})
-
-		Context("when parsing the index fails", func() {
-			BeforeEach(func() {
-				indexParam = "this is not an index?"
-			})
-
-			It("responds with 400 Bad Request", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 			})
 		})
 

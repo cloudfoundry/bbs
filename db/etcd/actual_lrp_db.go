@@ -150,7 +150,7 @@ func (db *ETCDDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, process
 	return &lrp, node.ModifiedIndex, nil
 }
 
-func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey models.ActualLRPInstanceKey) (*models.ActualLRP, *models.Error) {
+func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, *models.Error) {
 	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if bbsErr != nil {
 		return nil, bbsErr
@@ -161,13 +161,13 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 		return nil, models.ErrSerializeJSON
 	}
 
-	if !lrp.AllowsTransitionTo(lrp.ActualLRPKey, instanceKey, models.ActualLRPStateClaimed) {
+	if !lrp.AllowsTransitionTo(lrp.ActualLRPKey, *instanceKey, models.ActualLRPStateClaimed) {
 		return nil, models.ErrActualLRPCannotBeClaimed
 	}
 
 	lrp.PlacementError = ""
 	lrp.State = models.ActualLRPStateClaimed
-	lrp.ActualLRPInstanceKey = instanceKey
+	lrp.ActualLRPInstanceKey = *instanceKey
 	lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 	lrp.ModificationTag.Increment()
 
