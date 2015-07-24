@@ -14,6 +14,7 @@ const (
 
 	// Actual LRP Lifecycle
 	ClaimActualLRPRoute  = "ClaimActualLRP"
+	StartActualLRPRoute  = "StartActualLRP"
 	RemoveActualLRPRoute = "RemoveActualLRP"
 
 	// Desired LRPs
@@ -36,6 +37,7 @@ var Routes = rata.Routes{
 
 	// Actual LRP Lifecycle
 	{Path: "/v1/actual_lrps/:process_guid/index/:index/claim", Method: "POST", Name: ClaimActualLRPRoute},
+	{Path: "/v1/actual_lrps/start", Method: "POST", Name: StartActualLRPRoute},
 	{Path: "/v1/actual_lrps/:process_guid/index/:index", Method: "DELETE", Name: RemoveActualLRPRoute},
 
 	// Desired LRPs

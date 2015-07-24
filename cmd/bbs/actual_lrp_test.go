@@ -215,6 +215,43 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
+	Describe("POST /v1/actual_lrps/start", func() {
+		var (
+			actualLRP   *models.ActualLRP
+			instanceKey models.ActualLRPInstanceKey
+			startErr    error
+		)
+
+		JustBeforeEach(func() {
+			instanceKey = models.ActualLRPInstanceKey{
+				CellId:       "my-cell-id",
+				InstanceGuid: "my-instance-guid",
+			}
+			actualLRP, startErr = client.StartActualLRP(&unclaimedLRPKey, &instanceKey, &netInfo)
+		})
+
+		It("starts the actual_lrp", func() {
+			Expect(startErr).NotTo(HaveOccurred())
+
+			expectedActualLRP := *unclaimedLRP
+			expectedActualLRP.State = models.ActualLRPStateRunning
+			expectedActualLRP.ActualLRPInstanceKey = instanceKey
+			expectedActualLRP.ActualLRPNetInfo = netInfo
+			expectedActualLRP.Since = 0
+			actualLRP.Since = 0
+			Expect(*actualLRP).To(Equal(expectedActualLRP))
+
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			Expect(err).NotTo(HaveOccurred())
+
+			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
+			Expect(evacuating).To(BeFalse())
+			fetchedActualLRP.Since = 0
+
+			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
+		})
+	})
+
 	Describe("DELETE /v1/actual_lrps/:process_guid/index/:index", func() {
 		var (
 			instanceKey models.ActualLRPInstanceKey

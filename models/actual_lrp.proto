@@ -47,3 +47,8 @@ message ActualLRPGroups {
   repeated ActualLRPGroup actual_lrp_groups = 1;
 }
 
+message StartActualLRPRequest {
+  optional ActualLRPKey actual_lrp_key = 1;
+  optional ActualLRPInstanceKey actual_lrp_instance_key = 2;
+  optional ActualLRPNetInfo actual_lrp_net_info = 3;
+}

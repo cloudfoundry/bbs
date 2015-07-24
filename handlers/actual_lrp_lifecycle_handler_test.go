@@ -141,6 +141,115 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 	})
 
+	Describe("StartActualLRP", func() {
+		var (
+			request     *http.Request
+			processGuid = "process-guid"
+			index       = int32(1)
+
+			key         models.ActualLRPKey
+			instanceKey models.ActualLRPInstanceKey
+			netInfo     models.ActualLRPNetInfo
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			key = models.NewActualLRPKey(
+				processGuid,
+				index,
+				"domain-0",
+			)
+			instanceKey = models.NewActualLRPInstanceKey(
+				"instance-guid-0",
+				"cell-id-0",
+			)
+			netInfo = models.NewActualLRPNetInfo("1.1.1.1", models.NewPortMapping(10, 20))
+			requestBody = &models.StartActualLRPRequest{
+				ActualLrpKey:         &key,
+				ActualLrpInstanceKey: &instanceKey,
+				ActualLrpNetInfo:     &netInfo,
+			}
+
+			actualLRP = models.ActualLRP{
+				ActualLRPKey: key,
+				State:        models.ActualLRPStateUnclaimed,
+				Since:        1138,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request = newTestRequest(requestBody)
+			handler.StartActualLRP(responseRecorder, request)
+		})
+
+		Context("when starting the actual lrp in the DB succeeds", func() {
+			var startedActualLRP models.ActualLRP
+
+			BeforeEach(func() {
+				fakeActualLRPDB.StartActualLRPReturns(&startedActualLRP, nil)
+			})
+
+			It("responds with 200 Status OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			It("starts the actual lrp by process guid and index", func() {
+				Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
+				_, actualRequest := fakeActualLRPDB.StartActualLRPArgsForCall(0)
+				Expect(actualRequest).To(Equal(requestBody))
+			})
+
+			It("returns the started actual lrp", func() {
+				response := &models.ActualLRP{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(*response).To(Equal(startedActualLRP))
+			})
+		})
+
+		Context("when the request is invalid", func() {
+			BeforeEach(func() {
+				requestBody = &models.StartActualLRPRequest{}
+			})
+
+			It("responds with 400 Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("when parsing the body fails", func() {
+			BeforeEach(func() {
+				requestBody = "beep boop beep boop -- i am a robot"
+			})
+
+			It("responds with 400 Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("when starting the actual lrp fails", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.StartActualLRPReturns(nil, models.ErrUnknownError)
+			})
+
+			It("responds with 500 Internal Server Error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			})
+		})
+
+		Context("when we cannot find the resource", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.StartActualLRPReturns(nil, models.ErrResourceNotFound)
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+			})
+		})
+	})
+
 	Describe("RemoveActualLRP", func() {
 		var (
 			request     *http.Request

@@ -193,6 +193,86 @@ var _ = Describe("ActualLRP", func() {
 		})
 	})
 
+	Describe("StartActualLRPRequest", func() {
+		Describe("Validate", func() {
+			var request models.StartActualLRPRequest
+
+			BeforeEach(func() {
+				request = models.StartActualLRPRequest{
+					ActualLrpKey:         &models.ActualLRPKey{ProcessGuid: "p-guid", Index: 2, Domain: "domain"},
+					ActualLrpInstanceKey: &models.ActualLRPInstanceKey{InstanceGuid: "i-guid", CellId: "c-id"},
+					ActualLrpNetInfo:     &models.ActualLRPNetInfo{Address: "addr"},
+				}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+
+			Context("when the ActualLrpKey is blank", func() {
+				BeforeEach(func() {
+					request.ActualLrpKey = nil
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"actual_lrp_key"}))
+				})
+			})
+
+			Context("when the ActualLrpKey is invalid", func() {
+				BeforeEach(func() {
+					request.ActualLrpKey.ProcessGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"process_guid"}))
+				})
+			})
+
+			Context("when the ActualLrpInstanceKey is blank", func() {
+				BeforeEach(func() {
+					request.ActualLrpInstanceKey = nil
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"actual_lrp_instance_key"}))
+				})
+			})
+
+			Context("when the ActualLrpInstanceKey is invalid", func() {
+				BeforeEach(func() {
+					request.ActualLrpInstanceKey.InstanceGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"instance_guid"}))
+				})
+			})
+
+			Context("when the ActualLrpNetInfo is blank", func() {
+				BeforeEach(func() {
+					request.ActualLrpNetInfo = nil
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"actual_lrp_net_info"}))
+				})
+			})
+
+			Context("when the ActualLrpNetInfo is invalid", func() {
+				BeforeEach(func() {
+					request.ActualLrpNetInfo.Address = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"address"}))
+				})
+			})
+		})
+	})
+
 	Describe("ActualLRPKey", func() {
 		Describe("Validate", func() {
 			var actualLRPKey models.ActualLRPKey
@@ -597,7 +677,6 @@ var _ = Describe("ActualLRP", func() {
 		})
 
 		Describe("Validate", func() {
-
 			Context("when state is unclaimed", func() {
 				BeforeEach(func() {
 					lrp = models.ActualLRP{

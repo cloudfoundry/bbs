@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -17,12 +18,13 @@ const (
 
 type ETCDDB struct {
 	client            *etcd.Client
+	clock             clock.Clock
 	inflightWatches   map[chan bool]bool
 	inflightWatchLock *sync.Mutex
 }
 
-func NewETCD(etcdClient *etcd.Client) *ETCDDB {
-	return &ETCDDB{etcdClient, map[chan bool]bool{}, &sync.Mutex{}}
+func NewETCD(etcdClient *etcd.Client, clock clock.Clock) *ETCDDB {
+	return &ETCDDB{etcdClient, clock, map[chan bool]bool{}, &sync.Mutex{}}
 }
 
 func (db *ETCDDB) fetchRecursiveRaw(logger lager.Logger, key string) (*etcd.Node, *models.Error) {

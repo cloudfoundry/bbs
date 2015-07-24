@@ -36,6 +36,7 @@ type Client interface {
 
 	// ActualLRP Lifecycle
 	ClaimActualLRP(processGuid string, index int, instanceKey models.ActualLRPInstanceKey) (*models.ActualLRP, error)
+	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error)
 	RemoveActualLRP(processGuid string, index int) error
 
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
@@ -111,6 +112,17 @@ func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey model
 	err := c.doRequest(ClaimActualLRPRoute,
 		rata.Params{"process_guid": processGuid, "index": strconv.Itoa(index)},
 		nil, &instanceKey, &actualLRP)
+	return &actualLRP, err
+}
+
+func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
+	var actualLRP models.ActualLRP
+	request := models.StartActualLRPRequest{
+		ActualLrpKey:         key,
+		ActualLrpInstanceKey: instanceKey,
+		ActualLrpNetInfo:     netInfo,
+	}
+	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, &actualLRP)
 	return &actualLRP, err
 }
 

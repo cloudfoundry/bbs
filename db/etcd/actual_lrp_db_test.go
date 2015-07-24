@@ -90,7 +90,7 @@ var _ = Describe("ActualLRPDB", func() {
 			State:                models.ActualLRPStateRunning,
 			Since:                clock.Now().UnixNano(),
 		}
-		etcdDB = NewETCD(etcdClient)
+		etcdDB = NewETCD(etcdClient, clock)
 	})
 
 	Describe("ActualLRPGroups", func() {
@@ -578,6 +578,298 @@ var _ = Describe("ActualLRPDB", func() {
 			It("does not create an actual LRP", func() {
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, "process-guid", 1)
 				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("StartActualLRP", func() {
+		var (
+			startErr         *models.Error
+			request          models.StartActualLRPRequest
+			startedActualLRP *models.ActualLRP
+
+			lrpKey      models.ActualLRPKey
+			instanceKey models.ActualLRPInstanceKey
+			netInfo     models.ActualLRPNetInfo
+		)
+
+		JustBeforeEach(func() {
+			request.ActualLrpKey = &lrpKey
+			request.ActualLrpInstanceKey = &instanceKey
+			request.ActualLrpNetInfo = &netInfo
+			startedActualLRP, startErr = etcdDB.StartActualLRP(logger, &request)
+		})
+
+		Context("when the actual LRP exists", func() {
+			var (
+				processGuid string
+				index       int32
+				actualLRP   *models.ActualLRP
+			)
+
+			BeforeEach(func() {
+				index = 1
+				processGuid = "some-process-guid"
+				key := models.NewActualLRPKey(processGuid, index, "domain")
+				actualLRP = &models.ActualLRP{
+					ActualLRPKey: key,
+					State:        models.ActualLRPStateUnclaimed,
+					Since:        123,
+				}
+
+				testHelper.SetRawActualLRP(actualLRP)
+			})
+
+			Context("when the existing ActualLRP is Unclaimed", func() {
+				BeforeEach(func() {
+					lrpKey = actualLRP.ActualLRPKey
+					instanceKey = models.NewActualLRPInstanceKey("some-guid", cellID)
+					netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+				})
+
+				It("does not error", func() {
+					Expect(startErr).NotTo(HaveOccurred())
+				})
+
+				It("starts the actual LRP", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateRunning))
+				})
+
+				Context("when there is a placement error", func() {
+					BeforeEach(func() {
+						actualLRP.PlacementError = "insufficient resources"
+						testHelper.SetRawActualLRP(actualLRP)
+					})
+
+					It("should clear placement error", func() {
+						Expect(startErr).NotTo(HaveOccurred())
+						Expect(startedActualLRP.PlacementError).To(BeEmpty())
+						lrp, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(lrp.Instance.PlacementError).To(BeEmpty())
+					})
+				})
+			})
+
+			Context("when the domain differs", func() {
+				BeforeEach(func() {
+					lrpKey = actualLRP.ActualLRPKey
+					lrpKey.Domain = "some-other-domain"
+					instanceKey = models.NewActualLRPInstanceKey("some-guid", cellID)
+					netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+				})
+
+				It("returns an error", func() {
+					Expect(startErr).To(Equal(models.ErrActualLRPCannotBeStarted))
+				})
+
+				It("does not modify the persisted actual LRP", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+				})
+			})
+
+			Context("when the existing ActualLRP is Claimed", func() {
+				var instanceGuid string
+
+				BeforeEach(func() {
+					instanceGuid = "some-instance-guid"
+					_, err := etcdDB.ClaimActualLRP(
+						logger,
+						actualLRP.ProcessGuid,
+						actualLRP.Index,
+						models.NewActualLRPInstanceKey(instanceGuid, cellID),
+					)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("with the same cell and instance guid", func() {
+					BeforeEach(func() {
+						lrpKey = actualLRP.ActualLRPKey
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
+						netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+					})
+
+					It("does not return an error", func() {
+						Expect(startErr).NotTo(HaveOccurred())
+					})
+
+					It("promotes the persisted LRP to RUNNING", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateRunning))
+					})
+				})
+
+				Context("with a different cell", func() {
+					BeforeEach(func() {
+						lrpKey = actualLRP.ActualLRPKey
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, "another-cell-id")
+						netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+					})
+
+					It("does not return an error", func() {
+						Expect(startErr).NotTo(HaveOccurred())
+					})
+
+					It("promotes the persisted LRP to RUNNING", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateRunning))
+					})
+				})
+
+				Context("when the instance guid differs", func() {
+					BeforeEach(func() {
+						lrpKey = actualLRP.ActualLRPKey
+						instanceKey = models.NewActualLRPInstanceKey("another-instance-guid", cellID)
+						netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+					})
+
+					It("does not return an error", func() {
+						Expect(startErr).NotTo(HaveOccurred())
+					})
+
+					It("promotes the persisted LRP to RUNNING", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateRunning))
+					})
+				})
+			})
+
+			Context("when the existing ActualLRP is Running", func() {
+				var instanceGuid string
+
+				BeforeEach(func() {
+					instanceGuid = "some-instance-guid"
+
+					existingLRPRequest := &models.StartActualLRPRequest{}
+					existingLRPRequest.ActualLrpKey = &actualLRP.ActualLRPKey
+					existingInstanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
+					existingLRPRequest.ActualLrpInstanceKey = &existingInstanceKey
+					existingNetInfo := models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+					existingLRPRequest.ActualLrpNetInfo = &existingNetInfo
+
+					_, err := etcdDB.StartActualLRP(logger, existingLRPRequest)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("with the same cell and instance guid", func() {
+					BeforeEach(func() {
+						lrpKey = actualLRP.ActualLRPKey
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
+						netInfo = models.NewActualLRPNetInfo("5.6.7.8", models.NewPortMapping(4321, 4567))
+					})
+
+					It("does not return an error", func() {
+						Expect(startErr).NotTo(HaveOccurred())
+					})
+
+					It("does not alter the state of the persisted LRP", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateRunning))
+					})
+
+					It("updates the net info", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.ActualLRPNetInfo).To(Equal(netInfo))
+					})
+
+					Context("and the same net info", func() {
+						var previousTime int64
+						BeforeEach(func() {
+							netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+
+							previousTime = clock.Now().UnixNano()
+							clock.IncrementBySeconds(1)
+						})
+
+						It("does not update the timestamp of the persisted actual lrp", func() {
+							lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+							Expect(err).NotTo(HaveOccurred())
+
+							Expect(lrpGroupInBBS.Instance.Since).To(Equal(previousTime))
+						})
+					})
+				})
+
+				Context("with a different cell", func() {
+					BeforeEach(func() {
+						lrpKey = actualLRP.ActualLRPKey
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, "another-cell-id")
+						netInfo = models.NewActualLRPNetInfo("5.6.7.8", models.NewPortMapping(4321, 4567))
+					})
+
+					It("returns an error", func() {
+						Expect(startErr).To(Equal(models.ErrActualLRPCannotBeStarted))
+					})
+
+					It("does not alter the existing LRP", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.CellId).To(Equal(cellID))
+					})
+				})
+
+				Context("when the instance guid differs", func() {
+					BeforeEach(func() {
+						lrpKey = actualLRP.ActualLRPKey
+						instanceKey = models.NewActualLRPInstanceKey("another-instance-guid", cellID)
+						netInfo = models.NewActualLRPNetInfo("5.6.7.8", models.NewPortMapping(4321, 4567))
+					})
+
+					It("returns an error", func() {
+						Expect(startErr).To(Equal(models.ErrActualLRPCannotBeStarted))
+					})
+
+					It("does not alter the existing actual", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.InstanceGuid).To(Equal(instanceGuid))
+					})
+				})
+			})
+		})
+
+		Context("when the actual LRP does not exist", func() {
+			BeforeEach(func() {
+				lrpKey = models.NewActualLRPKey("process-guid", 1, "domain")
+				instanceKey = models.NewActualLRPInstanceKey("instance-guid", cellID)
+				netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+			})
+
+			It("starts the LRP", func() {
+				Expect(startErr).NotTo(HaveOccurred())
+			})
+
+			It("sets the State", func() {
+				lrpGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, "process-guid", 1)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lrpGroup.Instance.State).To(Equal(models.ActualLRPStateRunning))
+			})
+
+			It("sets the ModificationTag", func() {
+				lrpGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, "process-guid", 1)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lrpGroup.Instance.ModificationTag.Epoch).NotTo(BeEmpty())
+				Expect(lrpGroup.Instance.ModificationTag.Index).To(BeEquivalentTo(0))
 			})
 		})
 	})

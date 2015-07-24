@@ -23,6 +23,7 @@ const (
 	RouterError      = "RouterError"
 
 	ActualLRPCannotBeClaimed = "ActualLRPCannotBeClaimed"
+	ActualLRPCannotBeStarted = "ActualLRPCannotBeStarted"
 	ActualLRPCannotBeRemoved = "ActualLRPCannotBeRemoved"
 )
 
@@ -55,6 +56,11 @@ var (
 	ErrActualLRPCannotBeClaimed = &Error{
 		Type:    ActualLRPCannotBeClaimed,
 		Message: "cannot claim actual LRP",
+	}
+
+	ErrActualLRPCannotBeStarted = &Error{
+		Type:    ActualLRPCannotBeStarted,
+		Message: "cannot start actual LRP",
 	}
 
 	ErrActualLRPCannotBeRemoved = &Error{

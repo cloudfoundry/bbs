@@ -27,6 +27,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		bbs.ActualLRPGroupsByProcessGuidRoute:        route(actualLRPHandler.ActualLRPGroupsByProcessGuid),
 		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex),
 		bbs.ClaimActualLRPRoute:                      route(actualLRPLifecycleHandler.ClaimActualLRP),
+		bbs.StartActualLRPRoute:                      route(actualLRPLifecycleHandler.StartActualLRP),
 		bbs.RemoveActualLRPRoute:                     route(actualLRPLifecycleHandler.RemoveActualLRP),
 
 		// Desired LRPs

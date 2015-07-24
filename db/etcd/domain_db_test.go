@@ -12,7 +12,7 @@ var _ = Describe("DomainDB", func() {
 	var db db.DomainDB
 
 	BeforeEach(func() {
-		db = NewETCD(etcdClient)
+		db = NewETCD(etcdClient, clock)
 	})
 
 	Describe("UpsertDomain", func() {

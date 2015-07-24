@@ -66,6 +66,17 @@ type FakeClient struct {
 		result1 *models.ActualLRP
 		result2 error
 	}
+	StartActualLRPStub        func(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error)
+	startActualLRPMutex       sync.RWMutex
+	startActualLRPArgsForCall []struct {
+		key         *models.ActualLRPKey
+		instanceKey *models.ActualLRPInstanceKey
+		netInfo     *models.ActualLRPNetInfo
+	}
+	startActualLRPReturns struct {
+		result1 *models.ActualLRP
+		result2 error
+	}
 	RemoveActualLRPStub        func(processGuid string, index int) error
 	removeActualLRPMutex       sync.RWMutex
 	removeActualLRPArgsForCall []struct {
@@ -290,6 +301,41 @@ func (fake *FakeClient) ClaimActualLRPArgsForCall(i int) (string, int, models.Ac
 func (fake *FakeClient) ClaimActualLRPReturns(result1 *models.ActualLRP, result2 error) {
 	fake.ClaimActualLRPStub = nil
 	fake.claimActualLRPReturns = struct {
+		result1 *models.ActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
+	fake.startActualLRPMutex.Lock()
+	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
+		key         *models.ActualLRPKey
+		instanceKey *models.ActualLRPInstanceKey
+		netInfo     *models.ActualLRPNetInfo
+	}{key, instanceKey, netInfo})
+	fake.startActualLRPMutex.Unlock()
+	if fake.StartActualLRPStub != nil {
+		return fake.StartActualLRPStub(key, instanceKey, netInfo)
+	} else {
+		return fake.startActualLRPReturns.result1, fake.startActualLRPReturns.result2
+	}
+}
+
+func (fake *FakeClient) StartActualLRPCallCount() int {
+	fake.startActualLRPMutex.RLock()
+	defer fake.startActualLRPMutex.RUnlock()
+	return len(fake.startActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) StartActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
+	fake.startActualLRPMutex.RLock()
+	defer fake.startActualLRPMutex.RUnlock()
+	return fake.startActualLRPArgsForCall[i].key, fake.startActualLRPArgsForCall[i].instanceKey, fake.startActualLRPArgsForCall[i].netInfo
+}
+
+func (fake *FakeClient) StartActualLRPReturns(result1 *models.ActualLRP, result2 error) {
+	fake.StartActualLRPStub = nil
+	fake.startActualLRPReturns = struct {
 		result1 *models.ActualLRP
 		result2 error
 	}{result1, result2}

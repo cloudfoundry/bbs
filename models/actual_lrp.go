@@ -143,6 +143,34 @@ func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, 
 	}
 }
 
+func (request StartActualLRPRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ActualLrpKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_key"})
+	} else if err := request.ActualLrpKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if request.ActualLrpInstanceKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_instance_key"})
+	} else if err := request.ActualLrpInstanceKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if request.ActualLrpNetInfo == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_net_info"})
+	} else if err := request.ActualLrpNetInfo.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
 func (actual ActualLRP) Validate() error {
 	var validationError ValidationError
 

@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
+	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -188,6 +189,89 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 	}
 	logger.Info("succeeded")
 
+	return lrp, nil
+}
+
+func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, *models.Error) {
+	guid, err := uuid.NewV4()
+	if err != nil {
+		return nil, models.ErrActualLRPCannotBeStarted
+	}
+	lrp := &models.ActualLRP{
+		ActualLRPKey:         *key,
+		ActualLRPInstanceKey: *instanceKey,
+		ActualLRPNetInfo:     *netInfo,
+		Since:                db.clock.Now().UnixNano(),
+		State:                models.ActualLRPStateRunning,
+		ModificationTag: models.ModificationTag{
+			Epoch: guid.String(),
+			Index: 0,
+		},
+	}
+
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		return nil, models.ErrSerializeJSON
+	}
+
+	_, err = db.client.Set(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0)
+	if err != nil {
+		logger.Error("failed", err)
+		return nil, models.ErrActualLRPCannotBeStarted
+	}
+	return lrp, nil
+}
+
+func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error) {
+	key := request.ActualLrpKey
+	instanceKey := request.ActualLrpInstanceKey
+	netInfo := request.ActualLrpNetInfo
+
+	logger.Info("starting")
+	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+	if bbsErr == models.ErrResourceNotFound {
+		return db.createRunningActualLRP(logger, key, instanceKey, netInfo)
+	} else if bbsErr != nil {
+		logger.Error("failed-to-get-actual-lrp", bbsErr)
+		return nil, bbsErr
+	}
+
+	prevValue, err := json.Marshal(lrp)
+	if err != nil {
+		return nil, models.ErrSerializeJSON
+	}
+
+	if lrp.ActualLRPKey.Equal(key) &&
+		lrp.ActualLRPInstanceKey.Equal(instanceKey) &&
+		lrp.ActualLRPNetInfo.Equal(netInfo) &&
+		lrp.State == models.ActualLRPStateRunning {
+		logger.Info("succeeded")
+		return lrp, nil
+	}
+
+	if !lrp.AllowsTransitionTo(*key, *instanceKey, models.ActualLRPStateRunning) {
+		logger.Error("failed-to-transition-actual-lrp-to-started", nil)
+		return nil, models.ErrActualLRPCannotBeStarted
+	}
+
+	lrp.State = models.ActualLRPStateRunning
+	lrp.Since = db.clock.Now().UnixNano()
+	lrp.ActualLRPInstanceKey = *instanceKey
+	lrp.ActualLRPNetInfo = *netInfo
+	lrp.PlacementError = ""
+
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		return nil, models.ErrSerializeJSON
+	}
+
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0, string(prevValue), prevIndex)
+	if err != nil {
+		logger.Error("failed", err)
+		return nil, models.ErrActualLRPCannotBeStarted
+	}
+
+	logger.Info("succeeded")
 	return lrp, nil
 }
 

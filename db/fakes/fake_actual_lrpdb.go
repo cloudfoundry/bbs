@@ -53,6 +53,16 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}
+	StartActualLRPStub        func(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error)
+	startActualLRPMutex       sync.RWMutex
+	startActualLRPArgsForCall []struct {
+		logger  lager.Logger
+		request *models.StartActualLRPRequest
+	}
+	startActualLRPReturns struct {
+		result1 *models.ActualLRP
+		result2 *models.Error
+	}
 	RemoveActualLRPStub        func(logger lager.Logger, processGuid string, index int32) *models.Error
 	removeActualLRPMutex       sync.RWMutex
 	removeActualLRPArgsForCall []struct {
@@ -199,6 +209,40 @@ func (fake *FakeActualLRPDB) ClaimActualLRPArgsForCall(i int) (lager.Logger, str
 func (fake *FakeActualLRPDB) ClaimActualLRPReturns(result1 *models.ActualLRP, result2 *models.Error) {
 	fake.ClaimActualLRPStub = nil
 	fake.claimActualLRPReturns = struct {
+		result1 *models.ActualLRP
+		result2 *models.Error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error) {
+	fake.startActualLRPMutex.Lock()
+	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
+		logger  lager.Logger
+		request *models.StartActualLRPRequest
+	}{logger, request})
+	fake.startActualLRPMutex.Unlock()
+	if fake.StartActualLRPStub != nil {
+		return fake.StartActualLRPStub(logger, request)
+	} else {
+		return fake.startActualLRPReturns.result1, fake.startActualLRPReturns.result2
+	}
+}
+
+func (fake *FakeActualLRPDB) StartActualLRPCallCount() int {
+	fake.startActualLRPMutex.RLock()
+	defer fake.startActualLRPMutex.RUnlock()
+	return len(fake.startActualLRPArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) StartActualLRPArgsForCall(i int) (lager.Logger, *models.StartActualLRPRequest) {
+	fake.startActualLRPMutex.RLock()
+	defer fake.startActualLRPMutex.RUnlock()
+	return fake.startActualLRPArgsForCall[i].logger, fake.startActualLRPArgsForCall[i].request
+}
+
+func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.ActualLRP, result2 *models.Error) {
+	fake.StartActualLRPStub = nil
+	fake.startActualLRPReturns = struct {
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}{result1, result2}
