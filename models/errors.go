@@ -75,8 +75,11 @@ var (
 	}
 )
 
-func (err *Error) Equal(other *Error) bool {
-	return err.GetType() == other.GetType()
+func (err *Error) Equal(other error) bool {
+	if e, ok := other.(*Error); ok {
+		return e.GetType() == err.GetType()
+	}
+	return false
 }
 
 type ErrInvalidField struct {
