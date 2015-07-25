@@ -77,6 +77,15 @@ type FakeClient struct {
 		result1 *models.ActualLRP
 		result2 error
 	}
+	FailActualLRPStub        func(key *models.ActualLRPKey, errorMessage string) error
+	failActualLRPMutex       sync.RWMutex
+	failActualLRPArgsForCall []struct {
+		key          *models.ActualLRPKey
+		errorMessage string
+	}
+	failActualLRPReturns struct {
+		result1 error
+	}
 	RemoveActualLRPStub        func(processGuid string, index int) error
 	removeActualLRPMutex       sync.RWMutex
 	removeActualLRPArgsForCall []struct {
@@ -339,6 +348,39 @@ func (fake *FakeClient) StartActualLRPReturns(result1 *models.ActualLRP, result2
 		result1 *models.ActualLRP
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
+	fake.failActualLRPMutex.Lock()
+	fake.failActualLRPArgsForCall = append(fake.failActualLRPArgsForCall, struct {
+		key          *models.ActualLRPKey
+		errorMessage string
+	}{key, errorMessage})
+	fake.failActualLRPMutex.Unlock()
+	if fake.FailActualLRPStub != nil {
+		return fake.FailActualLRPStub(key, errorMessage)
+	} else {
+		return fake.failActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeClient) FailActualLRPCallCount() int {
+	fake.failActualLRPMutex.RLock()
+	defer fake.failActualLRPMutex.RUnlock()
+	return len(fake.failActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) FailActualLRPArgsForCall(i int) (*models.ActualLRPKey, string) {
+	fake.failActualLRPMutex.RLock()
+	defer fake.failActualLRPMutex.RUnlock()
+	return fake.failActualLRPArgsForCall[i].key, fake.failActualLRPArgsForCall[i].errorMessage
+}
+
+func (fake *FakeClient) FailActualLRPReturns(result1 error) {
+	fake.FailActualLRPStub = nil
+	fake.failActualLRPReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeClient) RemoveActualLRP(processGuid string, index int) error {

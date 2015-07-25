@@ -254,6 +254,7 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActua
 		return nil, models.ErrActualLRPCannotBeStarted
 	}
 
+	lrp.ModificationTag.Increment()
 	lrp.State = models.ActualLRPStateRunning
 	lrp.Since = db.clock.Now().UnixNano()
 	lrp.ActualLRPInstanceKey = *instanceKey
@@ -273,6 +274,45 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActua
 
 	logger.Info("succeeded")
 	return lrp, nil
+}
+
+func (db *ETCDDB) FailActualLRP(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error {
+	key := request.ActualLrpKey
+	errorMessage := request.ErrorMessage
+
+	logger.Info("failing")
+	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+	if bbsErr != nil {
+		logger.Error("failed-to-get-actual-lrp", bbsErr)
+		return bbsErr
+	}
+
+	prevValue, err := json.Marshal(lrp)
+	if err != nil {
+		return models.ErrSerializeJSON
+	}
+
+	if lrp.State != models.ActualLRPStateUnclaimed {
+		return models.ErrActualLRPCannotBeFailed
+	}
+
+	lrp.ModificationTag.Increment()
+	lrp.PlacementError = errorMessage
+	lrp.Since = db.clock.Now().UnixNano()
+
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		return models.ErrSerializeJSON
+	}
+
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0, string(prevValue), prevIndex)
+	if err != nil {
+		logger.Error("failed", err)
+		return models.ErrActualLRPCannotBeFailed
+	}
+
+	logger.Info("succeeded")
+	return nil
 }
 
 func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) *models.Error {

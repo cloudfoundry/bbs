@@ -37,6 +37,7 @@ type Client interface {
 	// ActualLRP Lifecycle
 	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error)
 	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error)
+	FailActualLRP(key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(processGuid string, index int) error
 
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
@@ -127,6 +128,13 @@ func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 	}
 	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, &actualLRP)
 	return &actualLRP, err
+}
+func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
+	request := models.FailActualLRPRequest{
+		ActualLrpKey: key,
+		ErrorMessage: errorMessage,
+	}
+	return c.doRequest(FailActualLRPRoute, nil, nil, &request, nil)
 }
 
 func (c *client) RemoveActualLRP(processGuid string, index int) error {

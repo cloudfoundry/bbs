@@ -237,6 +237,7 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.State = models.ActualLRPStateRunning
 			expectedActualLRP.ActualLRPInstanceKey = instanceKey
 			expectedActualLRP.ActualLRPNetInfo = netInfo
+			expectedActualLRP.ModificationTag.Increment()
 			expectedActualLRP.Since = 0
 			actualLRP.Since = 0
 			Expect(*actualLRP).To(Equal(expectedActualLRP))
@@ -249,6 +250,33 @@ var _ = Describe("ActualLRP API", func() {
 			fetchedActualLRP.Since = 0
 
 			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
+		})
+	})
+
+	Describe("POST /v1/actual_lrps/fail", func() {
+		var (
+			instanceKey  models.ActualLRPInstanceKey
+			errorMessage string
+			failErr      error
+		)
+
+		JustBeforeEach(func() {
+			errorMessage = "some bad ocurred"
+			instanceKey = models.ActualLRPInstanceKey{
+				CellId:       "my-cell-id",
+				InstanceGuid: "my-instance-guid",
+			}
+			failErr = client.FailActualLRP(&unclaimedLRPKey, errorMessage)
+		})
+
+		It("fails the actual_lrp", func() {
+			Expect(failErr).NotTo(HaveOccurred())
+
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			Expect(err).NotTo(HaveOccurred())
+
+			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
+			Expect(fetchedActualLRP.PlacementError).To(Equal(errorMessage))
 		})
 	})
 

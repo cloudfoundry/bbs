@@ -58,3 +58,9 @@ message StartActualLRPRequest {
   optional ActualLRPInstanceKey actual_lrp_instance_key = 2;
   optional ActualLRPNetInfo actual_lrp_net_info = 3;
 }
+
+message FailActualLRPRequest {
+  optional ActualLRPKey actual_lrp_key = 1;
+  optional string error_message = 2;
+}
+

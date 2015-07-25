@@ -876,6 +876,97 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 	})
 
+	Describe("FailActualLRP", func() {
+		var (
+			request   models.FailActualLRPRequest
+			failErr   *models.Error
+			actualLRP *models.ActualLRP
+
+			lrpKey       models.ActualLRPKey
+			instanceKey  models.ActualLRPInstanceKey
+			errorMessage string
+
+			processGuid string
+			index       int32
+			domain      string
+		)
+
+		JustBeforeEach(func() {
+			request.ActualLrpKey = &lrpKey
+			request.ErrorMessage = errorMessage
+			failErr = etcdDB.FailActualLRP(logger, &request)
+		})
+
+		Context("when the actual LRP exists", func() {
+			BeforeEach(func() {
+				processGuid = "some-process-guid"
+				index = 1
+				domain = "some-domain"
+				errorMessage = "some-error"
+
+				lrpKey = models.NewActualLRPKey(processGuid, index, domain)
+				actualLRP = &models.ActualLRP{
+					ActualLRPKey: lrpKey,
+					State:        models.ActualLRPStateUnclaimed,
+					Since:        clock.Now().UnixNano(),
+				}
+
+				testHelper.SetRawActualLRP(actualLRP)
+			})
+
+			Context("when the existing ActualLRP is Unclaimed", func() {
+				It("does not error", func() {
+					Expect(failErr).NotTo(HaveOccurred())
+				})
+
+				It("fails the actual LRP", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lrpGroupInBBS.Instance.PlacementError).To(Equal(errorMessage))
+				})
+
+				It("updates the ModificationIndex", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lrpGroupInBBS.Instance.ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + 1))
+				})
+			})
+
+			Context("when the existing ActualLRP is not Unclaimed", func() {
+				var instanceGuid string
+
+				BeforeEach(func() {
+					instanceGuid = "some-instance-guid"
+					instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
+
+					actualLRP.State = models.ActualLRPStateRunning
+					actualLRP.ActualLRPInstanceKey = instanceKey
+					actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{Address: "1"}
+
+					Expect(actualLRP.Validate()).NotTo(HaveOccurred())
+
+					testHelper.SetRawActualLRP(actualLRP)
+				})
+
+				It("returns an error", func() {
+					Expect(failErr).To(Equal(models.ErrActualLRPCannotBeFailed))
+				})
+			})
+		})
+
+		Context("when the actual LRP does not exist", func() {
+			BeforeEach(func() {
+				// Do not make a lrp.
+			})
+
+			It("cannot fail the LRP", func() {
+				Expect(failErr).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+	})
+
 	Describe("RemoveActualLRP", func() {
 		var (
 			actualLRP *models.ActualLRP

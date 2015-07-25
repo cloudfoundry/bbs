@@ -273,6 +273,55 @@ var _ = Describe("ActualLRP", func() {
 		})
 	})
 
+	Describe("FailActualLRPRequest", func() {
+		Describe("Validate", func() {
+			var request models.FailActualLRPRequest
+
+			BeforeEach(func() {
+				request = models.FailActualLRPRequest{
+					ActualLrpKey: &models.ActualLRPKey{ProcessGuid: "p-guid", Index: 2, Domain: "domain"},
+					ErrorMessage: "string",
+				}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+
+			Context("when the ActualLrpKey is blank", func() {
+				BeforeEach(func() {
+					request.ActualLrpKey = nil
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"actual_lrp_key"}))
+				})
+			})
+
+			Context("when the ActualLrpKey is invalid", func() {
+				BeforeEach(func() {
+					request.ActualLrpKey.ProcessGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"process_guid"}))
+				})
+			})
+
+			Context("when the ErrorMessage is blank", func() {
+				BeforeEach(func() {
+					request.ErrorMessage = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"error_message"}))
+				})
+			})
+		})
+	})
+
 	Describe("ActualLRPKey", func() {
 		Describe("Validate", func() {
 			var actualLRPKey models.ActualLRPKey

@@ -63,6 +63,15 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}
+	FailActualLRPStub        func(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error
+	failActualLRPMutex       sync.RWMutex
+	failActualLRPArgsForCall []struct {
+		logger  lager.Logger
+		request *models.FailActualLRPRequest
+	}
+	failActualLRPReturns struct {
+		result1 *models.Error
+	}
 	RemoveActualLRPStub        func(logger lager.Logger, processGuid string, index int32) *models.Error
 	removeActualLRPMutex       sync.RWMutex
 	removeActualLRPArgsForCall []struct {
@@ -246,6 +255,39 @@ func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.ActualLRP, re
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) FailActualLRP(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error {
+	fake.failActualLRPMutex.Lock()
+	fake.failActualLRPArgsForCall = append(fake.failActualLRPArgsForCall, struct {
+		logger  lager.Logger
+		request *models.FailActualLRPRequest
+	}{logger, request})
+	fake.failActualLRPMutex.Unlock()
+	if fake.FailActualLRPStub != nil {
+		return fake.FailActualLRPStub(logger, request)
+	} else {
+		return fake.failActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeActualLRPDB) FailActualLRPCallCount() int {
+	fake.failActualLRPMutex.RLock()
+	defer fake.failActualLRPMutex.RUnlock()
+	return len(fake.failActualLRPArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) FailActualLRPArgsForCall(i int) (lager.Logger, *models.FailActualLRPRequest) {
+	fake.failActualLRPMutex.RLock()
+	defer fake.failActualLRPMutex.RUnlock()
+	return fake.failActualLRPArgsForCall[i].logger, fake.failActualLRPArgsForCall[i].request
+}
+
+func (fake *FakeActualLRPDB) FailActualLRPReturns(result1 *models.Error) {
+	fake.FailActualLRPStub = nil
+	fake.failActualLRPReturns = struct {
+		result1 *models.Error
+	}{result1}
 }
 
 func (fake *FakeActualLRPDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) *models.Error {

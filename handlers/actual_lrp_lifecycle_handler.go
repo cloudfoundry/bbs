@@ -93,6 +93,44 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 	writeProtoResponse(w, http.StatusOK, actualLRP)
 }
 
+func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("fail-actual-lrp")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeUnknownErrorResponse(w, err)
+		return
+	}
+
+	request := &models.FailActualLRPRequest{}
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-parse-request-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return
+	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	if err := request.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return
+	}
+
+	bbsErr := h.db.FailActualLRP(logger, request)
+	if bbsErr != nil {
+		logger.Error("failed-to-fail-actual-lrp", bbsErr)
+		if bbsErr.Equal(models.ErrResourceNotFound) {
+			writeNotFoundResponse(w, bbsErr)
+		} else {
+			writeUnknownErrorResponse(w, bbsErr)
+		}
+		return
+	}
+
+	writeEmptyResponse(w, http.StatusNoContent)
+}
+
 func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *http.Request) {
 	processGuid := req.FormValue(":process_guid")
 	index := req.FormValue(":index")

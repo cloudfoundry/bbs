@@ -238,6 +238,99 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 	})
 
+	Describe("FailActualLRP", func() {
+		var (
+			request     *http.Request
+			processGuid = "process-guid"
+			index       = int32(1)
+
+			key          models.ActualLRPKey
+			errorMessage string
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			key = models.NewActualLRPKey(
+				processGuid,
+				index,
+				"domain-0",
+			)
+			errorMessage = "something went wrong"
+			requestBody = &models.FailActualLRPRequest{
+				ActualLrpKey: &key,
+				ErrorMessage: errorMessage,
+			}
+
+			actualLRP = models.ActualLRP{
+				ActualLRPKey: key,
+				State:        models.ActualLRPStateUnclaimed,
+				Since:        1138,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request = newTestRequest(requestBody)
+			handler.FailActualLRP(responseRecorder, request)
+		})
+
+		Context("when failing the actual lrp in the DB succeeds", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.FailActualLRPReturns(nil)
+			})
+
+			It("responds with 204 No Content", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
+			})
+
+			It("fails the actual lrp by process guid and index", func() {
+				Expect(fakeActualLRPDB.FailActualLRPCallCount()).To(Equal(1))
+				_, actualRequest := fakeActualLRPDB.FailActualLRPArgsForCall(0)
+				Expect(actualRequest).To(Equal(requestBody))
+			})
+		})
+
+		Context("when the request is invalid", func() {
+			BeforeEach(func() {
+				requestBody = &models.FailActualLRPRequest{}
+			})
+
+			It("responds with 400 Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("when parsing the body fails", func() {
+			BeforeEach(func() {
+				requestBody = "beep boop beep boop -- i am a robot"
+			})
+
+			It("responds with 400 Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("when failing the actual lrp fails", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.FailActualLRPReturns(models.ErrUnknownError)
+			})
+
+			It("responds with 500 Internal Server Error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			})
+		})
+
+		Context("when we cannot find the resource", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.FailActualLRPReturns(models.ErrResourceNotFound)
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+			})
+		})
+	})
+
 	Describe("RemoveActualLRP", func() {
 		var (
 			request     *http.Request
