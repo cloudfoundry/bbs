@@ -46,7 +46,7 @@ func (t *TestHelper) NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			"start-message",
 			"success-message",
 			"failure-message",
-		),
+		)),
 		DiskMb:      512,
 		MemoryMb:    1024,
 		CpuWeight:   42,
