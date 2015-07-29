@@ -16,7 +16,7 @@ var _ = Describe("Watchers", func() {
 	var db db.DB
 
 	BeforeEach(func() {
-		db = NewETCD(etcdClient, clock)
+		db = NewETCD(etcdClient, auctioneerClient, clock)
 	})
 
 	Describe("WatchForDesiredLRPChanges", func() {

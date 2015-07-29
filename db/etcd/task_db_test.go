@@ -15,7 +15,7 @@ var _ = Describe("TaskDB", func() {
 	)
 
 	BeforeEach(func() {
-		etcdDB = NewETCD(etcdClient, clock)
+		etcdDB = NewETCD(etcdClient, auctioneerClient, clock)
 	})
 
 	Describe("Tasks", func() {

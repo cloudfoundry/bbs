@@ -91,13 +91,12 @@ var _ = Describe("Events API", func() {
 			}
 		})
 
-		PIt("receives events", func() {
+		It("receives events", func() {
 			By("creating a ActualLRP")
 			testHelper.SetRawActualLRP(baseLRP)
 
 			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(processGuid, 0)
 			Expect(err).NotTo(HaveOccurred())
-			// actualLRP := *actualLRPGroup.GetInstance()
 
 			var event models.Event
 			Eventually(func() models.Event {
@@ -108,23 +107,24 @@ var _ = Describe("Events API", func() {
 			actualLRPCreatedEvent := event.(*models.ActualLRPCreatedEvent)
 			Expect(actualLRPCreatedEvent.ActualLrpGroup).To(Equal(actualLRPGroup))
 
-			// By("updating the existing ActualLRP")
-			// err = legacyBBS.ClaimActualLRP(logger, key, instanceKey)
-			// Expect(err).NotTo(HaveOccurred())
+			By("updating the existing ActualLRP")
+			_, err = client.ClaimActualLRP(processGuid, int(key.Index), &instanceKey)
+			Expect(err).NotTo(HaveOccurred())
 
-			// before := actualLRP
-			// actualLRPGroup, err = bbsClient.ActualLRPGroupByProcessGuidAndIndex(desiredLRP.ProcessGuid, 0)
-			// Expect(err).NotTo(HaveOccurred())
-			// actualLRP = *actualLRPGroup.GetInstance()
+			before := actualLRPGroup
+			actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
 
-			// Eventually(func() receptor.Event {
-			// 	Eventually(events).Should(Receive(&event))
-			// 	return event
-			// }).Should(BeAssignableToTypeOf(receptor.ActualLRPChangedEvent{}))
+			Eventually(func() models.Event {
+				Eventually(eventChannel).Should(Receive(&event))
+				return event
+			}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
-			// actualLRPChangedEvent := event.(receptor.ActualLRPChangedEvent)
-			// Expect(actualLRPChangedEvent.Before).To(Equal(serialization.ActualLRPProtoToResponse(before, false)))
-			// Expect(actualLRPChangedEvent.After).To(Equal(serialization.ActualLRPProtoToResponse(actualLRP, false)))
+			actualLRPChangedEvent := event.(*models.ActualLRPChangedEvent)
+			Expect(actualLRPChangedEvent.Before).To(Equal(before))
+			Expect(actualLRPChangedEvent.After).To(Equal(actualLRPGroup))
+
+			Skip("not possible to fully implement this yet")
 
 			// By("evacuating the ActualLRP")
 			// _, err = legacyBBS.EvacuateRunningActualLRP(logger, key, instanceKey, netInfo, 0)

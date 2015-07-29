@@ -24,6 +24,7 @@ const (
 
 	ActualLRPCannotBeClaimed = "ActualLRPCannotBeClaimed"
 	ActualLRPCannotBeStarted = "ActualLRPCannotBeStarted"
+	ActualLRPCannotBeCrashed = "ActualLRPCannotBeCrashed"
 	ActualLRPCannotBeFailed  = "ActualLRPCannotBeFailed"
 	ActualLRPCannotBeRemoved = "ActualLRPCannotBeRemoved"
 )
@@ -62,6 +63,11 @@ var (
 	ErrActualLRPCannotBeStarted = &Error{
 		Type:    ActualLRPCannotBeStarted,
 		Message: "cannot start actual LRP",
+	}
+
+	ErrActualLRPCannotBeCrashed = &Error{
+		Type:    ActualLRPCannotBeCrashed,
+		Message: "cannot crash actual LRP",
 	}
 
 	ErrActualLRPCannotBeFailed = &Error{

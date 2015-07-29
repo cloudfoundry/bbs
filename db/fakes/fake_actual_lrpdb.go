@@ -63,6 +63,15 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}
+	CrashActualLRPStub        func(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error
+	crashActualLRPMutex       sync.RWMutex
+	crashActualLRPArgsForCall []struct {
+		logger  lager.Logger
+		request *models.CrashActualLRPRequest
+	}
+	crashActualLRPReturns struct {
+		result1 *models.Error
+	}
 	FailActualLRPStub        func(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error
 	failActualLRPMutex       sync.RWMutex
 	failActualLRPArgsForCall []struct {
@@ -255,6 +264,39 @@ func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.ActualLRP, re
 		result1 *models.ActualLRP
 		result2 *models.Error
 	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) CrashActualLRP(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error {
+	fake.crashActualLRPMutex.Lock()
+	fake.crashActualLRPArgsForCall = append(fake.crashActualLRPArgsForCall, struct {
+		logger  lager.Logger
+		request *models.CrashActualLRPRequest
+	}{logger, request})
+	fake.crashActualLRPMutex.Unlock()
+	if fake.CrashActualLRPStub != nil {
+		return fake.CrashActualLRPStub(logger, request)
+	} else {
+		return fake.crashActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeActualLRPDB) CrashActualLRPCallCount() int {
+	fake.crashActualLRPMutex.RLock()
+	defer fake.crashActualLRPMutex.RUnlock()
+	return len(fake.crashActualLRPArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) CrashActualLRPArgsForCall(i int) (lager.Logger, *models.CrashActualLRPRequest) {
+	fake.crashActualLRPMutex.RLock()
+	defer fake.crashActualLRPMutex.RUnlock()
+	return fake.crashActualLRPArgsForCall[i].logger, fake.crashActualLRPArgsForCall[i].request
+}
+
+func (fake *FakeActualLRPDB) CrashActualLRPReturns(result1 *models.Error) {
+	fake.CrashActualLRPStub = nil
+	fake.crashActualLRPReturns = struct {
+		result1 *models.Error
+	}{result1}
 }
 
 func (fake *FakeActualLRPDB) FailActualLRP(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error {

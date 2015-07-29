@@ -11,6 +11,8 @@ const (
 	ActualLRPStateClaimed   = "CLAIMED"
 	ActualLRPStateRunning   = "RUNNING"
 	ActualLRPStateCrashed   = "CRASHED"
+
+	CrashResetTimeout = 5 * time.Minute
 )
 
 var ActualLRPStates = []string{
@@ -62,6 +64,14 @@ func NewPortMapping(hostPort, containerPort uint32) *PortMapping {
 
 func (key ActualLRPInstanceKey) Empty() bool {
 	return key.InstanceGuid == "" && key.CellId == ""
+}
+
+func (actual ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
+	if actual.State != ActualLRPStateCrashed {
+		return false
+	}
+
+	return calc.ShouldRestart(0, 0, actual.CrashCount)
 }
 
 func (actual ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator) bool {
@@ -162,6 +172,32 @@ func (request StartActualLRPRequest) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"actual_lrp_net_info"})
 	} else if err := request.ActualLrpNetInfo.Validate(); err != nil {
 		validationError = validationError.Append(err)
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
+func (request CrashActualLRPRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ActualLrpKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_key"})
+	} else if err := request.ActualLrpKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if request.ActualLrpInstanceKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_instance_key"})
+	} else if err := request.ActualLrpInstanceKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if request.ErrorMessage == "" {
+		validationError = validationError.Append(ErrInvalidField{"error_message"})
 	}
 
 	if !validationError.Empty() {

@@ -37,6 +37,7 @@ type Client interface {
 	// ActualLRP Lifecycle
 	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error)
 	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error)
+	CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(processGuid string, index int) error
 
@@ -134,6 +135,16 @@ func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, &actualLRP)
 	return &actualLRP, err
 }
+
+func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+	request := models.CrashActualLRPRequest{
+		ActualLrpKey:         key,
+		ActualLrpInstanceKey: instanceKey,
+		ErrorMessage:         errorMessage,
+	}
+	return c.doRequest(CrashActualLRPRoute, nil, nil, &request, nil)
+}
+
 func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
 	request := models.FailActualLRPRequest{
 		ActualLrpKey: key,
@@ -261,7 +272,7 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 
 	if parsedContentType == ProtoContentType {
 		protoMessage, ok := responseObject.(proto.Message)
-		if !ok {
+		if !ok && responseObject != nil {
 			return &models.Error{Type: models.InvalidRequest, Message: "cannot read response body"}
 		}
 		return handleProtoResponse(res, protoMessage)

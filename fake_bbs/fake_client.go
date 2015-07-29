@@ -77,6 +77,16 @@ type FakeClient struct {
 		result1 *models.ActualLRP
 		result2 error
 	}
+	CrashActualLRPStub        func(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
+	crashActualLRPMutex       sync.RWMutex
+	crashActualLRPArgsForCall []struct {
+		key          *models.ActualLRPKey
+		instanceKey  *models.ActualLRPInstanceKey
+		errorMessage string
+	}
+	crashActualLRPReturns struct {
+		result1 error
+	}
 	FailActualLRPStub        func(key *models.ActualLRPKey, errorMessage string) error
 	failActualLRPMutex       sync.RWMutex
 	failActualLRPArgsForCall []struct {
@@ -382,6 +392,40 @@ func (fake *FakeClient) StartActualLRPReturns(result1 *models.ActualLRP, result2
 		result1 *models.ActualLRP
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+	fake.crashActualLRPMutex.Lock()
+	fake.crashActualLRPArgsForCall = append(fake.crashActualLRPArgsForCall, struct {
+		key          *models.ActualLRPKey
+		instanceKey  *models.ActualLRPInstanceKey
+		errorMessage string
+	}{key, instanceKey, errorMessage})
+	fake.crashActualLRPMutex.Unlock()
+	if fake.CrashActualLRPStub != nil {
+		return fake.CrashActualLRPStub(key, instanceKey, errorMessage)
+	} else {
+		return fake.crashActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeClient) CrashActualLRPCallCount() int {
+	fake.crashActualLRPMutex.RLock()
+	defer fake.crashActualLRPMutex.RUnlock()
+	return len(fake.crashActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) CrashActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
+	fake.crashActualLRPMutex.RLock()
+	defer fake.crashActualLRPMutex.RUnlock()
+	return fake.crashActualLRPArgsForCall[i].key, fake.crashActualLRPArgsForCall[i].instanceKey, fake.crashActualLRPArgsForCall[i].errorMessage
+}
+
+func (fake *FakeClient) CrashActualLRPReturns(result1 error) {
+	fake.CrashActualLRPStub = nil
+	fake.crashActualLRPReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeClient) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {

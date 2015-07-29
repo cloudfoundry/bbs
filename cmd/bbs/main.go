@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -32,6 +34,12 @@ var communicationTimeout = flag.Duration(
 	"communicationTimeout",
 	10*time.Second,
 	"Timeout applied to all HTTP requests.",
+)
+
+var auctioneerAddress = flag.String(
+	"auctioneerAddress",
+	"",
+	"The address to the auctioneer api server",
 )
 
 const (
@@ -69,7 +77,13 @@ func main() {
 		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
 	}
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
-	db := etcddb.NewETCD(etcdClient, clock.NewClock())
+
+	err = validateAuctioneerFlag()
+	if err != nil {
+		logger.Fatal("auctioneer-address-validation-failed", err)
+	}
+	auctioneerClient := auctioneer.NewClient(*auctioneerAddress)
+	db := etcddb.NewETCD(etcdClient, auctioneerClient, clock.NewClock())
 	hub := events.NewHub()
 	watcher := watcher.NewWatcher(
 		logger,
@@ -106,6 +120,13 @@ func main() {
 	}
 
 	logger.Info("exited")
+}
+
+func validateAuctioneerFlag() error {
+	if *auctioneerAddress == "" {
+		return errors.New("auctioneerAddress is required")
+	}
+	return nil
 }
 
 func initializeDropsonde(logger lager.Logger) {

@@ -15,7 +15,7 @@ var _ = Describe("DesiredLRPDB", func() {
 	)
 
 	BeforeEach(func() {
-		etcdDB = NewETCD(etcdClient, clock)
+		etcdDB = NewETCD(etcdClient, auctioneerClient, clock)
 	})
 
 	Describe("DesiredLRPs", func() {

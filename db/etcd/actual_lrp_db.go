@@ -2,10 +2,12 @@ package etcd
 
 import (
 	"encoding/json"
+	"fmt"
 	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
@@ -26,6 +28,7 @@ func ActualLRPProcessDir(processGuid string) string {
 func ActualLRPIndexDir(processGuid string, index int32) string {
 	return path.Join(ActualLRPProcessDir(processGuid), strconv.Itoa(int(index)))
 }
+
 func ActualLRPSchemaPath(processGuid string, index int32) string {
 	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPInstanceKey)
 }
@@ -274,6 +277,102 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActua
 
 	logger.Info("succeeded")
 	return lrp, nil
+}
+
+func (db *ETCDDB) CrashActualLRP(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error {
+	key := request.ActualLrpKey
+	instanceKey := request.ActualLrpInstanceKey
+	errorMessage := request.ErrorMessage
+	logger.Info("starting")
+
+	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+	if bbsErr != nil {
+		logger.Error("failed-to-get-actual-lrp", bbsErr)
+		return bbsErr
+	}
+
+	prevValue, err := json.Marshal(lrp)
+	if err != nil {
+		return models.ErrSerializeJSON
+	}
+
+	latestChangeTime := time.Duration(db.clock.Now().UnixNano() - lrp.Since)
+
+	var newCrashCount int32
+	if latestChangeTime > models.CrashResetTimeout && lrp.State == models.ActualLRPStateRunning {
+		newCrashCount = 1
+	} else {
+		newCrashCount = lrp.CrashCount + 1
+	}
+
+	logger.Debug("retrieved-lrp")
+	if !lrp.AllowsTransitionTo(*key, *instanceKey, models.ActualLRPStateCrashed) {
+		err := fmt.Errorf("cannot transition crashed lrp from state %s to state %s", lrp.State, models.ActualLRPStateCrashed)
+		logger.Error("failed-to-transition-actual", err)
+		return models.ErrActualLRPCannotBeCrashed
+	}
+
+	if lrp.State == models.ActualLRPStateUnclaimed || lrp.State == models.ActualLRPStateCrashed ||
+		((lrp.State == models.ActualLRPStateClaimed || lrp.State == models.ActualLRPStateRunning) &&
+			!lrp.ActualLRPInstanceKey.Equal(instanceKey)) {
+		return models.ErrActualLRPCannotBeCrashed
+	}
+
+	lrp.State = models.ActualLRPStateCrashed
+	lrp.Since = db.clock.Now().UnixNano()
+	lrp.CrashCount = newCrashCount
+	lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+	lrp.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
+	lrp.ModificationTag.Increment()
+	lrp.CrashReason = errorMessage
+
+	var immediateRestart bool
+	if lrp.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
+		lrp.State = models.ActualLRPStateUnclaimed
+		immediateRestart = true
+	}
+
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		return models.ErrSerializeJSON
+	}
+
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0, string(prevValue), prevIndex)
+	if err != nil {
+		logger.Error("failed", err)
+		return models.ErrActualLRPCannotBeCrashed
+	}
+
+	if immediateRestart {
+		auctionErr := db.requestLRPAuctionForLRPKey(logger, key)
+		if err != nil {
+			return auctionErr
+		}
+	}
+
+	logger.Info("succeeded")
+	return nil
+}
+
+func (db *ETCDDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.ActualLRPKey) *models.Error {
+	desiredLRP, bbsErr := db.DesiredLRPByProcessGuid(logger, key.ProcessGuid)
+	if bbsErr == models.ErrResourceNotFound {
+		_, err := db.client.Delete(ActualLRPSchemaPath(key.ProcessGuid, key.Index), false)
+		if err != nil {
+			logger.Error("failed-to-delete-actual", err)
+			return models.ErrUnknownError
+		}
+	} else if bbsErr != nil {
+		return bbsErr
+	}
+
+	lrpStart := models.NewLRPStartRequest(desiredLRP, uint(key.Index))
+	err := db.auctioneerClient.RequestLRPAuctions([]*models.LRPStartRequest{&lrpStart})
+	if err != nil {
+		logger.Error("failed-to-request-auction", err)
+		return models.ErrUnknownError
+	}
+	return nil
 }
 
 func (db *ETCDDB) FailActualLRP(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error {

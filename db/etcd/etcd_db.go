@@ -3,6 +3,8 @@ package etcd
 import (
 	"sync"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
+
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
@@ -21,10 +23,16 @@ type ETCDDB struct {
 	clock             clock.Clock
 	inflightWatches   map[chan bool]bool
 	inflightWatchLock *sync.Mutex
+	auctioneerClient  auctioneer.Client
 }
 
-func NewETCD(etcdClient *etcd.Client, clock clock.Clock) *ETCDDB {
-	return &ETCDDB{etcdClient, clock, map[chan bool]bool{}, &sync.Mutex{}}
+func NewETCD(etcdClient *etcd.Client, auctioneerClient auctioneer.Client, clock clock.Clock) *ETCDDB {
+	return &ETCDDB{etcdClient,
+		clock,
+		map[chan bool]bool{},
+		&sync.Mutex{},
+		auctioneerClient,
+	}
 }
 
 func (db *ETCDDB) fetchRecursiveRaw(logger lager.Logger, key string) (*etcd.Node, *models.Error) {

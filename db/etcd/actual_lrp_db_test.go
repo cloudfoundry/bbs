@@ -90,7 +90,7 @@ var _ = Describe("ActualLRPDB", func() {
 			State:                models.ActualLRPStateRunning,
 			Since:                clock.Now().UnixNano(),
 		}
-		etcdDB = NewETCD(etcdClient, clock)
+		etcdDB = NewETCD(etcdClient, auctioneerClient, clock)
 	})
 
 	Describe("ActualLRPGroups", func() {

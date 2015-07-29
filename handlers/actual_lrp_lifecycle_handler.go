@@ -93,6 +93,44 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 	writeProtoResponse(w, http.StatusOK, actualLRP)
 }
 
+func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("crash-actual-lrp")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("crashed-to-read-body", err)
+		writeUnknownErrorResponse(w, err)
+		return
+	}
+
+	request := &models.CrashActualLRPRequest{}
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("crashed-to-parse-request-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return
+	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	if err := request.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return
+	}
+
+	bbsErr := h.db.CrashActualLRP(logger, request)
+	if bbsErr != nil {
+		logger.Error("crashed-to-crash-actual-lrp", bbsErr)
+		if bbsErr.Equal(models.ErrResourceNotFound) {
+			writeNotFoundResponse(w, bbsErr)
+		} else {
+			writeUnknownErrorResponse(w, bbsErr)
+		}
+		return
+	}
+
+	writeEmptyResponse(w, http.StatusNoContent)
+}
+
 func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("fail-actual-lrp")
 

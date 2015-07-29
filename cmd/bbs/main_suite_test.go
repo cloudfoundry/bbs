@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/cloudfoundry-incubator/bbs"
@@ -12,6 +13,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
@@ -35,6 +37,7 @@ var bbsArgs testrunner.Args
 var bbsRunner *ginkgomon.Runner
 var bbsProcess ifrit.Process
 var testHelper *test_helpers.TestHelper
+var auctioneerServer *ghttp.Server
 
 func TestBBS(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -55,12 +58,16 @@ var _ = SynchronizedBeforeSuite(
 		etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
 		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
 
+		auctioneerServer = ghttp.NewServer()
+		auctioneerServer.AppendHandlers(ghttp.RespondWith(http.StatusAccepted, nil))
+
 		etcdRunner.Start()
 	},
 )
 
 var _ = SynchronizedAfterSuite(func() {
 	etcdRunner.Stop()
+	auctioneerServer.Close()
 }, func() {
 	gexec.CleanupBuildArtifacts()
 })
@@ -82,8 +89,9 @@ var _ = BeforeEach(func() {
 	client = bbs.NewClient(bbsURL.String())
 
 	bbsArgs = testrunner.Args{
-		Address:     bbsAddress,
-		EtcdCluster: etcdUrl,
+		Address:           bbsAddress,
+		AuctioneerAddress: auctioneerServer.URL(),
+		EtcdCluster:       etcdUrl,
 	}
 	bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 

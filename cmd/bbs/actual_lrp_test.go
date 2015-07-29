@@ -26,9 +26,14 @@ var _ = Describe("ActualLRP API", func() {
 		unclaimedProcessGuid = "unclaimed-process-guid"
 		unclaimedDomain      = "unclaimed-domain"
 
+		crashingProcessGuid  = "crashing-process-guid"
+		crashingDomain       = "crashing-domain"
+		crashingInstanceGuid = "crashing-instance-guid"
+
 		baseIndex      = 1
 		otherIndex     = 1
 		unclaimedIndex = 2
+		crashingIndex  = 1
 
 		evacuatingInstanceGuid = "evacuating-instance-guid"
 	)
@@ -41,13 +46,19 @@ var _ = Describe("ActualLRP API", func() {
 		otherLRP      *models.ActualLRP
 		evacuatingLRP *models.ActualLRP
 		unclaimedLRP  *models.ActualLRP
+		crashingLRP   *models.ActualLRP
 
-		baseLRPKey          models.ActualLRPKey
-		baseLRPInstanceKey  models.ActualLRPInstanceKey
+		baseLRPKey         models.ActualLRPKey
+		baseLRPInstanceKey models.ActualLRPInstanceKey
+
 		otherLRPKey         models.ActualLRPKey
 		otherLRPInstanceKey models.ActualLRPInstanceKey
-		netInfo             models.ActualLRPNetInfo
-		unclaimedLRPKey     models.ActualLRPKey
+
+		crashingLRPKey         models.ActualLRPKey
+		crashingLRPInstanceKey models.ActualLRPInstanceKey
+
+		netInfo         models.ActualLRPNetInfo
+		unclaimedLRPKey models.ActualLRPKey
 
 		filter models.ActualLRPFilter
 
@@ -68,6 +79,9 @@ var _ = Describe("ActualLRP API", func() {
 		netInfo = models.NewActualLRPNetInfo("127.0.0.1", models.NewPortMapping(8080, 80))
 
 		unclaimedLRPKey = models.NewActualLRPKey(unclaimedProcessGuid, unclaimedIndex, unclaimedDomain)
+
+		crashingLRPKey = models.NewActualLRPKey(crashingProcessGuid, crashingIndex, crashingDomain)
+		crashingLRPInstanceKey = models.NewActualLRPInstanceKey(crashingInstanceGuid, otherCellID)
 
 		baseLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
@@ -98,10 +112,20 @@ var _ = Describe("ActualLRP API", func() {
 			Since:        time.Now().UnixNano(),
 		}
 
+		crashingLRP = &models.ActualLRP{
+			ActualLRPKey:         crashingLRPKey,
+			ActualLRPInstanceKey: crashingLRPInstanceKey,
+			ActualLRPNetInfo:     netInfo,
+			State:                models.ActualLRPStateRunning,
+			CrashCount:           100,
+			Since:                time.Now().UnixNano(),
+		}
+
 		testHelper.SetRawActualLRP(baseLRP)
 		testHelper.SetRawActualLRP(otherLRP)
 		testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
 		testHelper.SetRawActualLRP(unclaimedLRP)
+		testHelper.SetRawActualLRP(crashingLRP)
 	})
 
 	Describe("GET /v1/actual_lrps_groups", func() {
@@ -115,11 +139,12 @@ var _ = Describe("ActualLRP API", func() {
 
 		Context("when not filtering", func() {
 			It("returns all actual lrps from the bbs", func() {
-				Expect(actualActualLRPGroups).To(HaveLen(3))
+				Expect(actualActualLRPGroups).To(HaveLen(4))
 				expectedActualLRPGroups = []*models.ActualLRPGroup{
 					{Instance: baseLRP, Evacuating: evacuatingLRP},
 					{Instance: otherLRP},
 					{Instance: unclaimedLRP},
+					{Instance: crashingLRP},
 				}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
@@ -277,6 +302,30 @@ var _ = Describe("ActualLRP API", func() {
 
 			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
 			Expect(fetchedActualLRP.PlacementError).To(Equal(errorMessage))
+		})
+	})
+
+	Describe("POST /v1/actual_lrps/crash", func() {
+		var (
+			errorMessage string
+			crashErr     error
+		)
+
+		JustBeforeEach(func() {
+			errorMessage = "some bad ocurred"
+			crashErr = client.CrashActualLRP(&crashingLRPKey, &crashingLRPInstanceKey, errorMessage)
+		})
+
+		It("crashes the actual_lrp", func() {
+			Expect(crashErr).NotTo(HaveOccurred())
+
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(crashingProcessGuid, crashingIndex)
+			Expect(err).NotTo(HaveOccurred())
+
+			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
+			Expect(fetchedActualLRP.State).To(Equal(models.ActualLRPStateCrashed))
+			Expect(fetchedActualLRP.CrashCount).To(Equal(int32(101)))
+			Expect(fetchedActualLRP.CrashReason).To(Equal(errorMessage))
 		})
 	})
 
