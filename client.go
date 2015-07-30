@@ -271,7 +271,7 @@ func (c *client) doRequest(requestName string, params rata.Params, queryParams u
 	return c.do(req, message)
 }
 
-func (c *client) do(req *http.Request, responseObject interface{}) error {
+func (c *client) do(req *http.Request, responseObject proto.Message) error {
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
@@ -288,35 +288,40 @@ func (c *client) do(req *http.Request, responseObject interface{}) error {
 	}
 
 	if parsedContentType == ProtoContentType {
-		protoMessage, ok := responseObject.(proto.Message)
-		if !ok && responseObject != nil {
-			return &models.Error{Type: models.InvalidRequest, Message: "cannot read response body"}
+		if res.StatusCode > 299 {
+			return handleErrorResponse(res)
+		} else {
+			return handleProtoResponse(res, responseObject)
 		}
-		return handleProtoResponse(res, protoMessage)
 	} else {
 		return handleNonProtoResponse(res)
 	}
 }
 
-func handleProtoResponse(res *http.Response, responseObject proto.Message) error {
-	buf, err := ioutil.ReadAll(res.Body)
+func handleErrorResponse(res *http.Response) error {
+	errResponse := &models.Error{}
+	err := handleProtoResponse(res, errResponse)
 	if err != nil {
-		return &models.Error{Type: models.InvalidResponse, Message: err.Error()}
+		return &models.Error{Type: models.InvalidProtobufMessage, Message: err.Error()}
+	}
+	return errResponse
+}
+
+func handleProtoResponse(res *http.Response, responseObject proto.Message) error {
+	if responseObject == nil {
+		return &models.Error{Type: models.InvalidRequest, Message: "responseObject cannot be nil"}
 	}
 
-	if res.StatusCode > 299 {
-		errResponse := &models.Error{}
-		err = proto.Unmarshal(buf, errResponse)
-		if err != nil {
-			return &models.Error{Type: models.InvalidProtobufMessage, Message: err.Error()}
-		}
-		return errResponse
+	buf, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return &models.Error{Type: models.InvalidResponse, Message: fmt.Sprint("failed to read body: ", err.Error())}
 	}
 
 	err = proto.Unmarshal(buf, responseObject)
 	if err != nil {
-		return &models.Error{Type: models.InvalidProtobufMessage, Message: err.Error()}
+		return &models.Error{Type: models.InvalidProtobufMessage, Message: fmt.Sprintf("failed to unmarshal proto", err.Error())}
 	}
+
 	return nil
 }
 
