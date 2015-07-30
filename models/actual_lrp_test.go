@@ -321,23 +321,13 @@ var _ = Describe("ActualLRP", func() {
 				})
 			})
 
-			Context("when the ActualLrpInstanceKey is invalid", func() {
-				BeforeEach(func() {
-					request.ActualLrpInstanceKey.InstanceGuid = ""
-				})
-
-				It("returns a validation error", func() {
-					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"instance_guid"}))
-				})
-			})
-
 			Context("when the ErrorMessage is blank", func() {
 				BeforeEach(func() {
 					request.ErrorMessage = ""
 				})
 
-				It("returns a validation error", func() {
-					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"error_message"}))
+				It("is still valid", func() {
+					Expect(request.Validate()).To(BeNil())
 				})
 			})
 		})

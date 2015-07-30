@@ -196,10 +196,6 @@ func (request CrashActualLRPRequest) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
-	if request.ErrorMessage == "" {
-		validationError = validationError.Append(ErrInvalidField{"error_message"})
-	}
-
 	if !validationError.Empty() {
 		return validationError
 	}
