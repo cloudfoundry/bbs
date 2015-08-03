@@ -3,7 +3,6 @@ package etcd_test
 import (
 	"encoding/json"
 
-	"github.com/cloudfoundry-incubator/bbs/db"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
@@ -13,12 +12,6 @@ import (
 )
 
 var _ = Describe("Watchers", func() {
-	var db db.DB
-
-	BeforeEach(func() {
-		db = NewETCD(etcdClient, auctioneerClient, clock)
-	})
-
 	Describe("WatchForDesiredLRPChanges", func() {
 		var (
 			creates chan *models.DesiredLRP
@@ -47,7 +40,7 @@ var _ = Describe("Watchers", func() {
 			changes = make(chan *models.DesiredLRPChange)
 			deletes = make(chan *models.DesiredLRP)
 
-			stop, errors = db.WatchForDesiredLRPChanges(logger,
+			stop, errors = etcdDB.WatchForDesiredLRPChanges(logger,
 				func(created *models.DesiredLRP) { creates <- created },
 				func(changed *models.DesiredLRPChange) { changes <- changed },
 				func(deleted *models.DesiredLRP) { deletes <- deleted },
@@ -61,27 +54,27 @@ var _ = Describe("Watchers", func() {
 		})
 
 		It("sends an event down the pipe for creates", func() {
-			testHelper.SetRawDesiredLRP(lrp)
+			etcdHelper.SetRawDesiredLRP(lrp)
 
-			desiredLRP, err := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
+			desiredLRP, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(creates).Should(Receive(Equal(desiredLRP)))
 		})
 
 		It("sends an event down the pipe for updates", func() {
-			testHelper.SetRawDesiredLRP(lrp)
+			etcdHelper.SetRawDesiredLRP(lrp)
 
 			Eventually(creates).Should(Receive())
 
-			desiredBeforeUpdate, err := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
+			desiredBeforeUpdate, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(err).NotTo(HaveOccurred())
 
 			lrp.Instances = lrp.GetInstances() + 1
-			testHelper.SetRawDesiredLRP(lrp)
+			etcdHelper.SetRawDesiredLRP(lrp)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredAfterUpdate, err := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
+			desiredAfterUpdate, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(changes).Should(Receive(Equal(&models.DesiredLRPChange{
@@ -91,11 +84,11 @@ var _ = Describe("Watchers", func() {
 		})
 
 		It("sends an event down the pipe for deletes", func() {
-			testHelper.SetRawDesiredLRP(lrp)
+			etcdHelper.SetRawDesiredLRP(lrp)
 
 			Eventually(creates).Should(Receive())
 
-			desired, bbsErr := db.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
+			desired, bbsErr := etcdDB.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(bbsErr).NotTo(HaveOccurred())
 
 			_, err := etcdClient.Delete(DesiredLRPSchemaPath(desired), true)
@@ -134,7 +127,7 @@ var _ = Describe("Watchers", func() {
 			deletesCh := make(chan *models.ActualLRPGroup)
 			deletes = deletesCh
 
-			stop, errors = db.WatchForActualLRPChanges(logger,
+			stop, errors = etcdDB.WatchForActualLRPChanges(logger,
 				func(created *models.ActualLRPGroup) { createsCh <- created },
 				func(changed *models.ActualLRPChange) { changesCh <- changed },
 				func(deleted *models.ActualLRPGroup) { deletesCh <- deleted },
@@ -151,12 +144,12 @@ var _ = Describe("Watchers", func() {
 		})
 
 		It("sends an event down the pipe for create", func() {
-			testHelper.SetRawActualLRP(actualLRPGroup.Instance)
+			etcdHelper.SetRawActualLRP(actualLRPGroup.Instance)
 			Eventually(creates).Should(Receive(Equal(actualLRPGroup)))
 		})
 
 		It("sends an event down the pipe for updates", func() {
-			testHelper.SetRawActualLRP(actualLRPGroup.Instance)
+			etcdHelper.SetRawActualLRP(actualLRPGroup.Instance)
 			Eventually(creates).Should(Receive())
 
 			updatedGroup := &models.ActualLRPGroup{
@@ -167,7 +160,7 @@ var _ = Describe("Watchers", func() {
 					Since:                clock.Now().UnixNano(),
 				},
 			}
-			testHelper.SetRawActualLRP(updatedGroup.Instance)
+			etcdHelper.SetRawActualLRP(updatedGroup.Instance)
 
 			var actualLRPChange *models.ActualLRPChange
 			Eventually(changes).Should(Receive(&actualLRPChange))
@@ -178,7 +171,7 @@ var _ = Describe("Watchers", func() {
 		})
 
 		It("sends an event down the pipe for delete", func() {
-			testHelper.SetRawActualLRP(actualLRPGroup.Instance)
+			etcdHelper.SetRawActualLRP(actualLRPGroup.Instance)
 			Eventually(creates).Should(Receive())
 
 			key := actualLRPGroup.Instance.ActualLRPKey
@@ -189,7 +182,7 @@ var _ = Describe("Watchers", func() {
 		})
 
 		It("ignores delete events for directories", func() {
-			testHelper.SetRawActualLRP(actualLRPGroup.Instance)
+			etcdHelper.SetRawActualLRP(actualLRPGroup.Instance)
 			Eventually(creates).Should(Receive())
 
 			key := actualLRPGroup.Instance.ActualLRPKey
@@ -219,7 +212,7 @@ var _ = Describe("Watchers", func() {
 					},
 				}
 
-				testHelper.SetRawEvacuatingActualLRP(evacuatedLRPGroup.Evacuating, 0)
+				etcdHelper.SetRawEvacuatingActualLRP(evacuatedLRPGroup.Evacuating, 0)
 
 				Eventually(creates).Should(Receive(Equal(evacuatedLRPGroup)))
 
@@ -232,7 +225,7 @@ var _ = Describe("Watchers", func() {
 						Since:                clock.Now().UnixNano(),
 					},
 				}
-				testHelper.SetRawEvacuatingActualLRP(updatedGroup.Evacuating, 0)
+				etcdHelper.SetRawEvacuatingActualLRP(updatedGroup.Evacuating, 0)
 
 				var actualLRPChange *models.ActualLRPChange
 				Eventually(changes).Should(Receive(&actualLRPChange))

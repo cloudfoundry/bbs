@@ -297,7 +297,14 @@ func Serial(actions ...ActionInterface) *SerialAction {
 }
 
 func UnwrapAction(action *Action) ActionInterface {
-	return action.GetValue().(ActionInterface)
+	if action == nil {
+		return nil
+	}
+	a := action.GetValue()
+	if a == nil {
+		return nil
+	}
+	return a.(ActionInterface)
 }
 
 func WrapActions(actions []ActionInterface) []*Action {

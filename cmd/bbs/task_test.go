@@ -3,6 +3,7 @@ package main_test
 import (
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -21,11 +22,11 @@ var _ = Describe("Task API", func() {
 	BeforeEach(func() {
 		filter = nil
 		actualTasks = nil
-		expectedTasks = []*models.Task{testHelper.NewValidTask("a-guid"), testHelper.NewValidTask("b-guid")}
+		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
 		expectedTasks[1].Domain = "b-domain"
 		expectedTasks[1].CellId = "b-cell"
 		for _, t := range expectedTasks {
-			testHelper.SetRawTask(t)
+			etcdHelper.SetRawTask(t)
 		}
 	})
 

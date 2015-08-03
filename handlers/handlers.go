@@ -30,6 +30,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		bbs.ClaimActualLRPRoute:                      route(actualLRPLifecycleHandler.ClaimActualLRP),
 		bbs.StartActualLRPRoute:                      route(actualLRPLifecycleHandler.StartActualLRP),
 		bbs.CrashActualLRPRoute:                      route(actualLRPLifecycleHandler.CrashActualLRP),
+		bbs.RetireActualLRPRoute:                     route(actualLRPLifecycleHandler.RetireActualLRP),
 		bbs.FailActualLRPRoute:                       route(actualLRPLifecycleHandler.FailActualLRP),
 		bbs.RemoveActualLRPRoute:                     route(actualLRPLifecycleHandler.RemoveActualLRP),
 

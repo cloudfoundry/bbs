@@ -40,6 +40,7 @@ type Client interface {
 	CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(processGuid string, index int) error
+	RetireActualLRP(key *models.ActualLRPKey) error
 
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
@@ -158,6 +159,13 @@ func (c *client) RemoveActualLRP(processGuid string, index int) error {
 		rata.Params{"process_guid": processGuid, "index": strconv.Itoa(index)},
 		nil, nil, nil)
 	return err
+}
+
+func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
+	request := models.RetireActualLRPRequest{
+		ActualLrpKey: key,
+	}
+	return c.doRequest(RetireActualLRPRoute, nil, nil, &request, nil)
 }
 
 func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

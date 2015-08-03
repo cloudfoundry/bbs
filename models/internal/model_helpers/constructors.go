@@ -1,4 +1,4 @@
-package test_helpers
+package model_helpers
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func (t *TestHelper) NewValidActualLRP(guid string, index int32) *models.ActualLRP {
+func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := &models.ActualLRP{
 		ActualLRPKey:         models.NewActualLRPKey(guid, index, "some-domain"),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-guid", "some-cell"),
@@ -28,7 +28,7 @@ func (t *TestHelper) NewValidActualLRP(guid string, index int32) *models.ActualL
 	return actualLRP
 }
 
-func (t *TestHelper) NewValidDesiredLRP(guid string) *models.DesiredLRP {
+func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          guid,
@@ -67,7 +67,7 @@ func (t *TestHelper) NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	return desiredLRP
 }
 
-func (t *TestHelper) NewValidTask(guid string) *models.Task {
+func NewValidTask(guid string) *models.Task {
 	task := &models.Task{
 		TaskGuid: guid,
 		Domain:   "some-domain",

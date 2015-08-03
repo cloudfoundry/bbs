@@ -9,6 +9,7 @@ import (
 type Args struct {
 	Address           string
 	AuctioneerAddress string
+	ConsulCluster     string
 	EtcdCluster       string
 	EtcdClientCert    string
 	EtcdClientKey     string
@@ -19,6 +20,7 @@ func (args Args) ArgSlice() []string {
 	return []string{
 		"-address", args.Address,
 		"-auctioneerAddress", args.AuctioneerAddress,
+		"-consulCluster", args.ConsulCluster,
 		"-etcdCluster", args.EtcdCluster,
 		"-etcdCertFile", args.EtcdClientCert,
 		"-etcdKeyFile", args.EtcdClientKey,

@@ -18,6 +18,7 @@ const (
 	CrashActualLRPRoute  = "CrashActualLRP"
 	FailActualLRPRoute   = "FailActualLRP"
 	RemoveActualLRPRoute = "RemoveActualLRP"
+	RetireActualLRPRoute = "RetireActualLRP"
 
 	// Desired LRPs
 	DesiredLRPsRoute             = "DesiredLRPs"
@@ -47,6 +48,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrps/crash", Method: "POST", Name: CrashActualLRPRoute},
 	{Path: "/v1/actual_lrps/fail", Method: "POST", Name: FailActualLRPRoute},
 	{Path: "/v1/actual_lrps/:process_guid/index/:index", Method: "DELETE", Name: RemoveActualLRPRoute},
+	{Path: "/v1/actual_lrps/retire", Method: "POST", Name: RetireActualLRPRoute},
 
 	// Desired LRPs
 	{Path: "/v1/desired_lrps", Method: "GET", Name: DesiredLRPsRoute},

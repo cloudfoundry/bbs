@@ -7,10 +7,13 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/db/etcd/internal/test_helpers"
+	"github.com/cloudfoundry-incubator/bbs/db/etcd/internal/etcd_helpers"
+	"github.com/cloudfoundry-incubator/consuladapter"
+	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
@@ -36,7 +39,9 @@ var bbsAddress string
 var bbsArgs testrunner.Args
 var bbsRunner *ginkgomon.Runner
 var bbsProcess ifrit.Process
-var testHelper *test_helpers.TestHelper
+var consulSession *consuladapter.Session
+var consulRunner *consulrunner.ClusterRunner
+var etcdHelper *etcd_helpers.ETCDHelper
 var auctioneerServer *ghttp.Server
 
 func TestBBS(t *testing.T) {
@@ -58,15 +63,23 @@ var _ = SynchronizedBeforeSuite(
 		etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
 		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
 
+		consulRunner = consulrunner.NewClusterRunner(
+			9001+config.GinkgoConfig.ParallelNode*consulrunner.PortOffsetLength,
+			1,
+			"http",
+		)
+
 		auctioneerServer = ghttp.NewServer()
 		auctioneerServer.AppendHandlers(ghttp.RespondWith(http.StatusAccepted, nil))
 
 		etcdRunner.Start()
+		consulRunner.Start()
 	},
 )
 
 var _ = SynchronizedAfterSuite(func() {
 	etcdRunner.Stop()
+	consulRunner.Stop()
 	auctioneerServer.Close()
 }, func() {
 	gexec.CleanupBuildArtifacts()
@@ -78,6 +91,8 @@ var _ = BeforeEach(func() {
 	etcdRunner.Reset()
 	etcdClient = etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
+
+	consulRunner.Reset()
 
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", 6700+GinkgoParallelNode())
 
@@ -92,11 +107,12 @@ var _ = BeforeEach(func() {
 		Address:           bbsAddress,
 		AuctioneerAddress: auctioneerServer.URL(),
 		EtcdCluster:       etcdUrl,
+		ConsulCluster:     consulRunner.ConsulCluster(),
 	}
 	bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 
 	bbsProcess = ginkgomon.Invoke(bbsRunner)
-	testHelper = test_helpers.NewTestHelper(etcdClient)
+	etcdHelper = etcd_helpers.NewETCDHelper(etcdClient)
 })
 
 var _ = AfterEach(func() {

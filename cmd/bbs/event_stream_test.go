@@ -70,7 +70,7 @@ var _ = Describe("Events API", func() {
 				case <-eventChannel:
 					break PRIMING
 				case <-time.After(50 * time.Millisecond):
-					testHelper.SetRawDesiredLRP(primerLRP)
+					etcdHelper.SetRawDesiredLRP(primerLRP)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -93,7 +93,7 @@ var _ = Describe("Events API", func() {
 
 		It("receives events", func() {
 			By("creating a ActualLRP")
-			testHelper.SetRawActualLRP(baseLRP)
+			etcdHelper.SetRawActualLRP(baseLRP)
 
 			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(processGuid, 0)
 			Expect(err).NotTo(HaveOccurred())
@@ -130,7 +130,7 @@ var _ = Describe("Events API", func() {
 			// _, err = legacyBBS.EvacuateRunningActualLRP(logger, key, instanceKey, netInfo, 0)
 			// Expect(err).To(Equal(bbserrors.ErrServiceUnavailable))
 
-			// testHelper.SetRawEvacuatingActualLRP(baseLRP, noExpirationTTL)
+			// etcdHelper.SetRawEvacuatingActualLRP(baseLRP, noExpirationTTL)
 			// evacuatingLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(processGuid, 0)
 			// Expect(err).NotTo(HaveOccurred())
 			// evacuatingLRP := *evacuatingLRPGroup.GetEvacuating()

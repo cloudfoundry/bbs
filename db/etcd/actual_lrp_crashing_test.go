@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
@@ -159,11 +158,9 @@ func (t crashTest) Test() {
 			instanceKey              *models.ActualLRPInstanceKey
 			initialTimestamp         int64
 			initialModificationIndex uint32
-			etcdDB                   db.DB
 		)
 
 		BeforeEach(func() {
-			etcdDB = etcd.NewETCD(etcdClient, auctioneerClient, clock)
 			actualLRP := t.LRP()
 			actualLRPKey = &actualLRP.ActualLRPKey
 			instanceKey = &actualLRP.ActualLRPInstanceKey
@@ -185,8 +182,8 @@ func (t crashTest) Test() {
 				ErrorMessage:         "crashed",
 			}
 
-			testHelper.SetRawDesiredLRP(&desiredLRP)
-			testHelper.SetRawActualLRP(&actualLRP)
+			etcdHelper.SetRawDesiredLRP(&desiredLRP)
+			etcdHelper.SetRawActualLRP(&actualLRP)
 		})
 
 		JustBeforeEach(func() {
@@ -205,45 +202,45 @@ func (t crashTest) Test() {
 		}
 
 		It(fmt.Sprintf("has crash count %d", t.Result.CrashCount), func() {
-			actualLRP, err := testHelper.GetInstanceActualLRP(actualLRPKey)
+			actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualLRP.CrashCount).To(Equal(t.Result.CrashCount))
 		})
 
 		It(fmt.Sprintf("has crash reason %s", t.Result.CrashReason), func() {
-			actualLRP, err := testHelper.GetInstanceActualLRP(actualLRPKey)
+			actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualLRP.CrashReason).To(Equal(t.Result.CrashReason))
 		})
 
 		if t.Result.ShouldUpdate {
 			It("updates the Since", func() {
-				actualLRP, err := testHelper.GetInstanceActualLRP(actualLRPKey)
+				actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRP.Since).To(Equal(clock.Now().UnixNano()))
 			})
 
 			It("updates the ModificationIndex", func() {
-				actualLRP, err := testHelper.GetInstanceActualLRP(actualLRPKey)
+				actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRP.ModificationTag.Index).To(Equal(initialModificationIndex + 1))
 			})
 		} else {
 			It("does not update the Since", func() {
-				actualLRP, err := testHelper.GetInstanceActualLRP(actualLRPKey)
+				actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRP.Since).To(Equal(initialTimestamp))
 			})
 
 			It("does not update the ModificationIndex", func() {
-				actualLRP, err := testHelper.GetInstanceActualLRP(actualLRPKey)
+				actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRP.ModificationTag.Index).To(Equal(initialModificationIndex))
 			})
 		}
 
 		It(fmt.Sprintf("CAS to %s", t.Result.State), func() {
-			actualLRP, err := testHelper.GetInstanceActualLRP(actualLRPKey)
+			actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualLRP.State).To(Equal(t.Result.State))
 		})

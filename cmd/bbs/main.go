@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
+	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -14,6 +15,8 @@ import (
 	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
+	"github.com/cloudfoundry-incubator/consuladapter"
+	"github.com/cloudfoundry-incubator/rep"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
@@ -40,6 +43,24 @@ var auctioneerAddress = flag.String(
 	"auctioneerAddress",
 	"",
 	"The address to the auctioneer api server",
+)
+
+var sessionName = flag.String(
+	"sessionName",
+	"rep",
+	"consul session name",
+)
+
+var consulCluster = flag.String(
+	"consulCluster",
+	"",
+	"comma-separated list of consul server URLs (scheme://ip:port)",
+)
+
+var lockTTL = flag.Duration(
+	"lockTTL",
+	10*time.Second,
+	"TTL for service lock",
 )
 
 const (
@@ -83,7 +104,10 @@ func main() {
 		logger.Fatal("auctioneer-address-validation-failed", err)
 	}
 	auctioneerClient := auctioneer.NewClient(*auctioneerAddress)
-	db := etcddb.NewETCD(etcdClient, auctioneerClient, clock.NewClock())
+	consulSession := initializeConsul(logger)
+	consulDB := consuldb.NewConsul(consulSession)
+	cellClient := rep.NewCellClient()
+	db := etcddb.NewETCD(etcdClient, auctioneerClient, cellClient, consulDB, clock.NewClock())
 	hub := events.NewHub()
 	watcher := watcher.NewWatcher(
 		logger,
@@ -150,4 +174,18 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 
 		return nil
 	})
+}
+
+func initializeConsul(logger lager.Logger) *consuladapter.Session {
+	client, err := consuladapter.NewClient(*consulCluster)
+	if err != nil {
+		logger.Fatal("new-client-failed", err)
+	}
+
+	sessionMgr := consuladapter.NewSessionManager(client)
+	consulSession, err := consuladapter.NewSessionNoChecks(*sessionName, *lockTTL, client, sessionMgr)
+	if err != nil {
+		logger.Fatal("consul-session-failed", err)
+	}
+	return consulSession
 }

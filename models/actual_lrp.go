@@ -12,7 +12,8 @@ const (
 	ActualLRPStateRunning   = "RUNNING"
 	ActualLRPStateCrashed   = "CRASHED"
 
-	CrashResetTimeout = 5 * time.Minute
+	CrashResetTimeout            = 5 * time.Minute
+	RetireActualLRPRetryAttempts = 5
 )
 
 var ActualLRPStates = []string{
@@ -214,6 +215,22 @@ func (request FailActualLRPRequest) Validate() error {
 
 	if request.ErrorMessage == "" {
 		validationError = validationError.Append(ErrInvalidField{"error_message"})
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
+func (request RetireActualLRPRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ActualLrpKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_key"})
+	} else if err := request.ActualLrpKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
 	}
 
 	if !validationError.Empty() {

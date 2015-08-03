@@ -420,19 +420,75 @@ func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index
 		return bbsErr
 	}
 
+	return db.removeActualLRP(logger, lrp, prevIndex)
+}
+
+func (db *ETCDDB) RetireActualLRP(logger lager.Logger, request *models.RetireActualLRPRequest) *models.Error {
+	var err *models.Error
+	var prevIndex uint64
+	var lrp *models.ActualLRP
+	processGuid := request.ActualLrpKey.ProcessGuid
+	index := request.ActualLrpKey.Index
+
+	for i := 0; i < models.RetireActualLRPRetryAttempts; i++ {
+		lrp, prevIndex, err = db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
+		if err != nil {
+			break
+		}
+
+		switch lrp.State {
+		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
+			err = db.removeActualLRP(logger, lrp, prevIndex)
+		default:
+			var cell *models.CellPresence
+			key := lrp.ActualLRPKey
+			instanceKey := lrp.ActualLRPInstanceKey
+			cell, err = db.cellDB.CellById(logger, instanceKey.CellId)
+			if err != nil {
+				if err == models.ErrResourceNotFound {
+					err = db.removeActualLRP(logger, lrp, prevIndex)
+				}
+				err = err
+				break
+			}
+
+			logger.Info("stopping-lrp-instance", lager.Data{
+				"actual-lrp-key": key,
+			})
+			cellErr := db.cellClient.StopLRPInstance(cell.RepAddress, key, instanceKey)
+			if cellErr != nil {
+				err = models.ErrActualLRPCannotBeStopped
+			}
+		}
+
+		if err == nil {
+			break
+		}
+
+		if i+1 < models.RetireActualLRPRetryAttempts {
+			logger.Error("retrying-failed-retire-of-actual-lrp", err, lager.Data{
+				"actual-lrp-key": request.ActualLrpKey,
+				"attempt":        i + 1,
+			})
+		}
+	}
+
+	return err
+}
+
+func (db *ETCDDB) removeActualLRP(logger lager.Logger, lrp *models.ActualLRP, prevIndex uint64) *models.Error {
 	prevValue, err := json.Marshal(lrp)
 	if err != nil {
 		return models.ErrSerializeJSON
 	}
 
 	logger.Info("starting")
-	_, err = db.client.CompareAndDelete(ActualLRPSchemaPath(processGuid, index), string(prevValue), prevIndex)
+	_, err = db.client.CompareAndDelete(ActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), string(prevValue), prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeRemoved
 	}
 	logger.Info("succeeded")
-
 	return nil
 }
 

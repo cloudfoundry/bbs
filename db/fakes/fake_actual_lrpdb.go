@@ -91,6 +91,15 @@ type FakeActualLRPDB struct {
 	removeActualLRPReturns struct {
 		result1 *models.Error
 	}
+	RetireActualLRPStub        func(logger lager.Logger, request *models.RetireActualLRPRequest) *models.Error
+	retireActualLRPMutex       sync.RWMutex
+	retireActualLRPArgsForCall []struct {
+		logger  lager.Logger
+		request *models.RetireActualLRPRequest
+	}
+	retireActualLRPReturns struct {
+		result1 *models.Error
+	}
 }
 
 func (fake *FakeActualLRPDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
@@ -362,6 +371,39 @@ func (fake *FakeActualLRPDB) RemoveActualLRPArgsForCall(i int) (lager.Logger, st
 func (fake *FakeActualLRPDB) RemoveActualLRPReturns(result1 *models.Error) {
 	fake.RemoveActualLRPStub = nil
 	fake.removeActualLRPReturns = struct {
+		result1 *models.Error
+	}{result1}
+}
+
+func (fake *FakeActualLRPDB) RetireActualLRP(logger lager.Logger, request *models.RetireActualLRPRequest) *models.Error {
+	fake.retireActualLRPMutex.Lock()
+	fake.retireActualLRPArgsForCall = append(fake.retireActualLRPArgsForCall, struct {
+		logger  lager.Logger
+		request *models.RetireActualLRPRequest
+	}{logger, request})
+	fake.retireActualLRPMutex.Unlock()
+	if fake.RetireActualLRPStub != nil {
+		return fake.RetireActualLRPStub(logger, request)
+	} else {
+		return fake.retireActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeActualLRPDB) RetireActualLRPCallCount() int {
+	fake.retireActualLRPMutex.RLock()
+	defer fake.retireActualLRPMutex.RUnlock()
+	return len(fake.retireActualLRPArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) RetireActualLRPArgsForCall(i int) (lager.Logger, *models.RetireActualLRPRequest) {
+	fake.retireActualLRPMutex.RLock()
+	defer fake.retireActualLRPMutex.RUnlock()
+	return fake.retireActualLRPArgsForCall[i].logger, fake.retireActualLRPArgsForCall[i].request
+}
+
+func (fake *FakeActualLRPDB) RetireActualLRPReturns(result1 *models.Error) {
+	fake.RetireActualLRPStub = nil
+	fake.retireActualLRPReturns = struct {
 		result1 *models.Error
 	}{result1}
 }

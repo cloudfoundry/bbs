@@ -1,23 +1,14 @@
 package etcd_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db"
-	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("DesiredLRPDB", func() {
-	var (
-		etcdDB db.DesiredLRPDB
-	)
-
-	BeforeEach(func() {
-		etcdDB = NewETCD(etcdClient, auctioneerClient, clock)
-	})
-
 	Describe("DesiredLRPs", func() {
 		var filter models.DesiredLRPFilter
 		var desiredLRPsInDomains map[string][]*models.DesiredLRP
@@ -29,7 +20,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				filter = models.DesiredLRPFilter{}
 				expectedDesiredLRPs = []*models.DesiredLRP{}
 
-				desiredLRPsInDomains = testHelper.CreateDesiredLRPsInDomains(map[string]int{
+				desiredLRPsInDomains = etcdHelper.CreateDesiredLRPsInDomains(map[string]int{
 					"domain-1": 1,
 					"domain-2": 2,
 				})
@@ -68,9 +59,9 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				testHelper.CreateValidDesiredLRP("some-guid")
-				testHelper.CreateMalformedDesiredLRP("some-other-guid")
-				testHelper.CreateValidDesiredLRP("some-third-guid")
+				etcdHelper.CreateValidDesiredLRP("some-guid")
+				etcdHelper.CreateMalformedDesiredLRP("some-other-guid")
+				etcdHelper.CreateValidDesiredLRP("some-third-guid")
 			})
 
 			It("errors", func() {
@@ -100,8 +91,8 @@ var _ = Describe("DesiredLRPDB", func() {
 			var desiredLRP *models.DesiredLRP
 
 			BeforeEach(func() {
-				desiredLRP = testHelper.NewValidDesiredLRP("process-guid")
-				testHelper.SetRawDesiredLRP(desiredLRP)
+				desiredLRP = model_helpers.NewValidDesiredLRP("process-guid")
+				etcdHelper.SetRawDesiredLRP(desiredLRP)
 			})
 
 			It("returns the desired lrp", func() {
@@ -120,7 +111,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				testHelper.CreateMalformedDesiredLRP("some-other-guid")
+				etcdHelper.CreateMalformedDesiredLRP("some-other-guid")
 			})
 
 			It("errors", func() {

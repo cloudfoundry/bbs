@@ -4,7 +4,9 @@ import (
 	"sync"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
+	"github.com/cloudfoundry-incubator/rep"
 
+	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
@@ -24,14 +26,19 @@ type ETCDDB struct {
 	inflightWatches   map[chan bool]bool
 	inflightWatchLock *sync.Mutex
 	auctioneerClient  auctioneer.Client
+	cellClient        rep.CellClient
+
+	cellDB db.CellDB
 }
 
-func NewETCD(etcdClient *etcd.Client, auctioneerClient auctioneer.Client, clock clock.Clock) *ETCDDB {
+func NewETCD(etcdClient *etcd.Client, auctioneerClient auctioneer.Client, cellClient rep.CellClient, cellDB db.CellDB, clock clock.Clock) *ETCDDB {
 	return &ETCDDB{etcdClient,
 		clock,
 		map[chan bool]bool{},
 		&sync.Mutex{},
 		auctioneerClient,
+		cellClient,
+		cellDB,
 	}
 }
 

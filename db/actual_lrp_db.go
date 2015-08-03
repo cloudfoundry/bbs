@@ -16,4 +16,5 @@ type ActualLRPDB interface {
 	CrashActualLRP(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error
 	FailActualLRP(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error
 	RemoveActualLRP(logger lager.Logger, processGuid string, index int32) *models.Error
+	RetireActualLRP(logger lager.Logger, request *models.RetireActualLRPRequest) *models.Error
 }

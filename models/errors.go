@@ -27,6 +27,7 @@ const (
 	ActualLRPCannotBeCrashed = "ActualLRPCannotBeCrashed"
 	ActualLRPCannotBeFailed  = "ActualLRPCannotBeFailed"
 	ActualLRPCannotBeRemoved = "ActualLRPCannotBeRemoved"
+	ActualLRPCannotBeStopped = "ActualLRPCannotBeStopped"
 )
 
 var (
@@ -78,6 +79,11 @@ var (
 	ErrActualLRPCannotBeRemoved = &Error{
 		Type:    ActualLRPCannotBeRemoved,
 		Message: "cannot remove actual LRP",
+	}
+
+	ErrActualLRPCannotBeStopped = &Error{
+		Type:    ActualLRPCannotBeStopped,
+		Message: "cannot stop actual LRP",
 	}
 )
 

@@ -70,3 +70,6 @@ message FailActualLRPRequest {
   optional string error_message = 2;
 }
 
+message RetireActualLRPRequest {
+  optional ActualLRPKey actual_lrp_key = 1;
+}

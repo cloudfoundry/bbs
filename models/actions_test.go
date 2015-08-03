@@ -178,6 +178,7 @@ var _ = Describe("Actions", func() {
 	})
 
 	Describe("Run", func() {
+		var nofile uint64 = 10
 		itSerializesAndDeserializes(
 			`{	
 					"user": "me",
@@ -199,7 +200,7 @@ var _ = Describe("Actions", func() {
 					{"FOO", "1"},
 					{"BAR", "2"},
 				},
-				ResourceLimits: &models.ResourceLimits{Nofile: 10},
+				ResourceLimits: &models.ResourceLimits{Nofile: &nofile},
 			}),
 		)
 
@@ -238,6 +239,7 @@ var _ = Describe("Actions", func() {
 	})
 
 	Describe("Timeout", func() {
+		var nofile uint64 = 10
 		itSerializesAndDeserializes(
 			`{
 				"action": {
@@ -256,7 +258,7 @@ var _ = Describe("Actions", func() {
 					&models.RunAction{
 						Path:           "echo",
 						User:           "someone",
-						ResourceLimits: &models.ResourceLimits{Nofile: 10},
+						ResourceLimits: &models.ResourceLimits{Nofile: &nofile},
 					},
 					10*time.Millisecond,
 				)),
@@ -410,7 +412,7 @@ var _ = Describe("Actions", func() {
 				&models.RunAction{
 					Path:           "echo",
 					User:           "me",
-					ResourceLimits: &models.ResourceLimits{Nofile: 0},
+					ResourceLimits: &models.ResourceLimits{},
 				},
 			)),
 		)

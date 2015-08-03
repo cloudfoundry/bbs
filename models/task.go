@@ -30,10 +30,11 @@ func (task Task) Validate() error {
 		}
 	}
 
-	if task.Action == nil {
+	action := UnwrapAction(task.Action)
+	if action == nil {
 		validationError = validationError.Append(ErrInvalidActionType)
 	} else {
-		err := UnwrapAction(task.Action).Validate()
+		err := action.Validate()
 		if err != nil {
 			validationError = validationError.Append(err)
 		}
@@ -66,9 +67,12 @@ func (task *Task) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	oldAction, err := oldmodels.UnmarshalAction(b)
-	if err != nil {
-		return nil, err
+	var oldAction oldmodels.Action
+	if UnwrapAction(task.Action) != nil {
+		oldAction, err = oldmodels.UnmarshalAction(b)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	b, err = json.Marshal(task.EgressRules)
@@ -115,7 +119,7 @@ func (task *Task) MarshalJSON() ([]byte, error) {
 
 func (task *Task) UnmarshalJSON(data []byte) error {
 	var oldtask oldmodels.Task
-	err := oldmodels.FromJSON(data, &oldtask)
+	err := json.Unmarshal(data, &oldtask)
 	if err != nil {
 		return err
 	}

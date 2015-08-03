@@ -1,7 +1,6 @@
 package etcd_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 
 	. "github.com/onsi/ginkgo"
@@ -9,17 +8,11 @@ import (
 )
 
 var _ = Describe("DomainDB", func() {
-	var db db.DomainDB
-
-	BeforeEach(func() {
-		db = NewETCD(etcdClient, auctioneerClient, clock)
-	})
-
 	Describe("UpsertDomain", func() {
 		Context("when the domain is not present in the DB", func() {
 			It("inserts a new domain with the requested TTL", func() {
 				domain := "my-awesome-domain"
-				bbsErr := db.UpsertDomain(logger, domain, 5432)
+				bbsErr := etcdDB.UpsertDomain(logger, domain, 5432)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
 				etcdEntry, err := etcdClient.Get(DomainSchemaPath(domain), false, false)
@@ -38,7 +31,7 @@ var _ = Describe("DomainDB", func() {
 			})
 
 			It("updates the TTL on the existing record", func() {
-				bbsErr := db.UpsertDomain(logger, existingDomain, 1337)
+				bbsErr := etcdDB.UpsertDomain(logger, existingDomain, 1337)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
 				etcdEntry, err := etcdClient.Get(DomainSchemaPath(existingDomain), false, false)
@@ -60,7 +53,7 @@ var _ = Describe("DomainDB", func() {
 			})
 
 			It("returns all the existing domains in the DB", func() {
-				domains, err := db.GetAllDomains(logger)
+				domains, err := etcdDB.GetAllDomains(logger)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(domains.GetDomains()).To(HaveLen(2))
@@ -70,7 +63,7 @@ var _ = Describe("DomainDB", func() {
 
 		Context("when there are no domains in the DB", func() {
 			It("returns no domains", func() {
-				domains, err := db.GetAllDomains(logger)
+				domains, err := etcdDB.GetAllDomains(logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domains.GetDomains()).To(HaveLen(0))
 			})

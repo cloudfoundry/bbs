@@ -1,4 +1,4 @@
-package test_helpers
+package etcd_helpers
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func (t *TestHelper) GetInstanceActualLRP(lrpKey *models.ActualLRPKey) (*models.ActualLRP, error) {
+func (t *ETCDHelper) GetInstanceActualLRP(lrpKey *models.ActualLRPKey) (*models.ActualLRP, error) {
 	resp, err := t.etcdClient.Get(etcd.ActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, false)
 	if err == storeadapter.ErrorKeyNotFound {
 		return &models.ActualLRP{}, bbserrors.ErrStoreResourceNotFound

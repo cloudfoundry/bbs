@@ -1,7 +1,9 @@
 package etcd_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db"
+	"errors"
+
+	"github.com/cloudfoundry-incubator/bbs/db/consul"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
@@ -31,8 +33,6 @@ var _ = Describe("ActualLRPDB", func() {
 	)
 
 	var (
-		etcdDB db.ActualLRPDB
-
 		baseLRP        *models.ActualLRP
 		otherIndexLRP  *models.ActualLRP
 		evacuatingLRP  *models.ActualLRP
@@ -90,7 +90,6 @@ var _ = Describe("ActualLRPDB", func() {
 			State:                models.ActualLRPStateRunning,
 			Since:                clock.Now().UnixNano(),
 		}
-		etcdDB = NewETCD(etcdClient, auctioneerClient, clock)
 	})
 
 	Describe("ActualLRPGroups", func() {
@@ -99,11 +98,11 @@ var _ = Describe("ActualLRPDB", func() {
 		Context("when there are both /instance and /evacuating LRPs", func() {
 			BeforeEach(func() {
 				filter = models.ActualLRPFilter{}
-				testHelper.SetRawActualLRP(baseLRP)
-				testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
-				testHelper.SetRawActualLRP(otherDomainLRP)
-				testHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
-				testHelper.SetRawActualLRP(otherCellIdLRP)
+				etcdHelper.SetRawActualLRP(baseLRP)
+				etcdHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+				etcdHelper.SetRawActualLRP(otherDomainLRP)
+				etcdHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
+				etcdHelper.SetRawActualLRP(otherCellIdLRP)
 			})
 
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
@@ -148,7 +147,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the root node exists with no child nodes", func() {
 			BeforeEach(func() {
-				testHelper.SetRawActualLRP(baseLRP)
+				etcdHelper.SetRawActualLRP(baseLRP)
 
 				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
 				_, err := etcdClient.Delete(ActualLRPProcessDir(processGuid), true)
@@ -165,9 +164,9 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				testHelper.CreateValidActualLRP("some-guid", 0)
-				testHelper.CreateMalformedActualLRP("some-other-guid", 0)
-				testHelper.CreateValidActualLRP("some-third-guid", 0)
+				etcdHelper.CreateValidActualLRP("some-guid", 0)
+				etcdHelper.CreateMalformedActualLRP("some-other-guid", 0)
+				etcdHelper.CreateValidActualLRP("some-third-guid", 0)
 			})
 
 			It("errors", func() {
@@ -195,11 +194,11 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("ActualLRPGroupsByProcessGuid", func() {
 		Context("when there are both /instance and /evacuating LRPs", func() {
 			BeforeEach(func() {
-				testHelper.SetRawActualLRP(baseLRP)
-				testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
-				testHelper.SetRawActualLRP(otherDomainLRP)
-				testHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
-				testHelper.SetRawActualLRP(otherCellIdLRP)
+				etcdHelper.SetRawActualLRP(baseLRP)
+				etcdHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+				etcdHelper.SetRawActualLRP(otherDomainLRP)
+				etcdHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
+				etcdHelper.SetRawActualLRP(otherCellIdLRP)
 			})
 
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
@@ -223,7 +222,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the root node exists with no child nodes", func() {
 			BeforeEach(func() {
-				testHelper.SetRawActualLRP(baseLRP)
+				etcdHelper.SetRawActualLRP(baseLRP)
 
 				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
 				_, err := etcdClient.Delete(ActualLRPProcessDir(processGuid), true)
@@ -240,9 +239,9 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				testHelper.CreateValidActualLRP("some-guid", 0)
-				testHelper.CreateMalformedActualLRP("some-other-guid", 0)
-				testHelper.CreateValidActualLRP("some-third-guid", 0)
+				etcdHelper.CreateValidActualLRP("some-guid", 0)
+				etcdHelper.CreateMalformedActualLRP("some-other-guid", 0)
+				etcdHelper.CreateValidActualLRP("some-third-guid", 0)
 			})
 
 			It("errors", func() {
@@ -270,11 +269,11 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("ActualLRPGroupsByProcessGuidAndIndex", func() {
 		Context("when there are both /instance and /evacuating LRPs", func() {
 			BeforeEach(func() {
-				testHelper.SetRawActualLRP(baseLRP)
-				testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
-				testHelper.SetRawActualLRP(otherDomainLRP)
-				testHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
-				testHelper.SetRawActualLRP(otherCellIdLRP)
+				etcdHelper.SetRawActualLRP(baseLRP)
+				etcdHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+				etcdHelper.SetRawActualLRP(otherDomainLRP)
+				etcdHelper.SetRawEvacuatingActualLRP(otherIndexLRP, noExpirationTTL)
+				etcdHelper.SetRawActualLRP(otherCellIdLRP)
 			})
 
 			It("returns the /instance LRPs and /evacuating LRPs in the group", func() {
@@ -294,7 +293,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the root node exists with no child nodes", func() {
 			BeforeEach(func() {
-				testHelper.SetRawActualLRP(baseLRP)
+				etcdHelper.SetRawActualLRP(baseLRP)
 
 				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
 				_, err := etcdClient.Delete(ActualLRPSchemaPath(processGuid, baseIndex), true)
@@ -310,9 +309,9 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				testHelper.CreateValidActualLRP("some-guid", 0)
-				testHelper.CreateMalformedActualLRP("some-other-guid", 0)
-				testHelper.CreateValidActualLRP("some-third-guid", 0)
+				etcdHelper.CreateValidActualLRP("some-guid", 0)
+				etcdHelper.CreateMalformedActualLRP("some-other-guid", 0)
+				etcdHelper.CreateValidActualLRP("some-third-guid", 0)
 			})
 
 			It("errors", func() {
@@ -353,7 +352,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Since:        clock.Now().UnixNano(),
 				}
 
-				testHelper.SetRawActualLRP(actualLRP)
+				etcdHelper.SetRawActualLRP(actualLRP)
 			})
 
 			Context("when the instance key is invalid", func() {
@@ -487,7 +486,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 					Expect(actualLRP.Validate()).NotTo(HaveOccurred())
 
-					testHelper.SetRawActualLRP(actualLRP)
+					etcdHelper.SetRawActualLRP(actualLRP)
 				})
 
 				Context("with the same cell and instance guid", func() {
@@ -554,7 +553,7 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", cellID)
 					actualLRP.PlacementError = "insufficient resources"
-					testHelper.SetRawActualLRP(actualLRP)
+					etcdHelper.SetRawActualLRP(actualLRP)
 				})
 
 				It("should clear placement error", func() {
@@ -618,7 +617,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Since:        123,
 				}
 
-				testHelper.SetRawActualLRP(actualLRP)
+				etcdHelper.SetRawActualLRP(actualLRP)
 			})
 
 			Context("when the existing ActualLRP is Unclaimed", func() {
@@ -642,7 +641,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("when there is a placement error", func() {
 					BeforeEach(func() {
 						actualLRP.PlacementError = "insufficient resources"
-						testHelper.SetRawActualLRP(actualLRP)
+						etcdHelper.SetRawActualLRP(actualLRP)
 					})
 
 					It("should clear placement error", func() {
@@ -876,6 +875,410 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 	})
 
+	Describe("ClaimActualLRP", func() {
+		var (
+			actualLRP        *models.ActualLRP
+			claimedActualLRP *models.ActualLRP
+			claimErr         *models.Error
+
+			lrpKey      models.ActualLRPKey
+			instanceKey models.ActualLRPInstanceKey
+
+			processGuid string
+			index       int32
+			domain      string
+		)
+
+		JustBeforeEach(func() {
+			claimedActualLRP, claimErr = etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
+		})
+
+		Context("when the actual LRP exists", func() {
+			BeforeEach(func() {
+				processGuid = "some-process-guid"
+				index = 1
+				domain = "some-domain"
+
+				lrpKey = models.NewActualLRPKey(processGuid, index, domain)
+				actualLRP = &models.ActualLRP{
+					ActualLRPKey: lrpKey,
+					State:        models.ActualLRPStateUnclaimed,
+					Since:        clock.Now().UnixNano(),
+				}
+
+				etcdHelper.SetRawActualLRP(actualLRP)
+			})
+
+			Context("when the instance key is invalid", func() {
+				BeforeEach(func() {
+					instanceKey = models.NewActualLRPInstanceKey(
+						"", // invalid InstanceGuid
+						cellID,
+					)
+				})
+
+				It("returns a validation error", func() {
+					Expect(claimErr.Type).To(Equal(models.InvalidRecord))
+				})
+
+				It("does not modify the persisted actual LRP", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+				})
+			})
+
+			Context("when the existing ActualLRP is Unclaimed", func() {
+				BeforeEach(func() {
+					instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", cellID)
+				})
+
+				It("does not error", func() {
+					Expect(claimErr).NotTo(HaveOccurred())
+				})
+
+				It("claims the actual LRP", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateClaimed))
+				})
+
+				It("updates the ModificationIndex", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lrpGroupInBBS.Instance.ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + 1))
+				})
+			})
+
+			Context("when the existing ActualLRP is Claimed", func() {
+				var instanceGuid string
+
+				BeforeEach(func() {
+					instanceGuid = "some-instance-guid"
+					instanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
+					_, err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("with the same cell and instance guid", func() {
+					var previousTime int64
+
+					BeforeEach(func() {
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
+
+						previousTime = clock.Now().UnixNano()
+						clock.IncrementBySeconds(1)
+					})
+
+					It("does not return an error", func() {
+						Expect(claimErr).NotTo(HaveOccurred())
+					})
+
+					It("does not alter the state of the persisted LRP", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateClaimed))
+					})
+
+					It("does not update the timestamp of the persisted actual lrp", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.Since).To(Equal(previousTime))
+					})
+				})
+
+				Context("with a different cell", func() {
+					BeforeEach(func() {
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, "another-cell-id")
+					})
+
+					It("returns an error", func() {
+						Expect(claimErr).To(Equal(models.ErrActualLRPCannotBeClaimed))
+					})
+
+					It("does not alter the existing LRP", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.CellId).To(Equal(cellID))
+					})
+				})
+
+				Context("when the instance guid differs", func() {
+					BeforeEach(func() {
+						instanceKey = models.NewActualLRPInstanceKey("another-instance-guid", cellID)
+					})
+
+					It("returns an error", func() {
+						Expect(claimErr).To(Equal(models.ErrActualLRPCannotBeClaimed))
+					})
+
+					It("does not alter the existing actual", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.InstanceGuid).To(Equal(instanceGuid))
+					})
+				})
+			})
+
+			Context("when the existing ActualLRP is Running", func() {
+				var instanceGuid string
+
+				BeforeEach(func() {
+					instanceGuid = "some-instance-guid"
+					instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
+
+					actualLRP.State = models.ActualLRPStateRunning
+					actualLRP.ActualLRPInstanceKey = instanceKey
+					actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{Address: "1"}
+
+					Expect(actualLRP.Validate()).NotTo(HaveOccurred())
+
+					etcdHelper.SetRawActualLRP(actualLRP)
+				})
+
+				Context("with the same cell and instance guid", func() {
+					BeforeEach(func() {
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
+					})
+
+					It("does not return an error", func() {
+						Expect(claimErr).NotTo(HaveOccurred())
+					})
+
+					It("reverts the persisted LRP to the CLAIMED state", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateClaimed))
+					})
+
+					It("clears the net info", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.Address).To(BeEmpty())
+						Expect(lrpGroupInBBS.Instance.Ports).To(BeEmpty())
+					})
+				})
+
+				Context("with a different cell", func() {
+					BeforeEach(func() {
+						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, "another-cell-id")
+					})
+
+					It("returns an error", func() {
+						Expect(claimErr).To(Equal(models.ErrActualLRPCannotBeClaimed))
+					})
+
+					It("does not alter the existing LRP", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.CellId).To(Equal(cellID))
+					})
+				})
+
+				Context("when the instance guid differs", func() {
+					BeforeEach(func() {
+						instanceKey = models.NewActualLRPInstanceKey("another-instance-guid", cellID)
+					})
+
+					It("returns an error", func() {
+						Expect(claimErr).To(Equal(models.ErrActualLRPCannotBeClaimed))
+					})
+
+					It("does not alter the existing actual", func() {
+						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lrpGroupInBBS.Instance.InstanceGuid).To(Equal(instanceGuid))
+					})
+				})
+			})
+
+			Context("when there is a placement error", func() {
+				BeforeEach(func() {
+					instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", cellID)
+					actualLRP.PlacementError = "insufficient resources"
+					etcdHelper.SetRawActualLRP(actualLRP)
+				})
+
+				It("should clear placement error", func() {
+					Expect(claimErr).NotTo(HaveOccurred())
+					Expect(claimedActualLRP.PlacementError).To(BeEmpty())
+					lrp, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(lrp.Instance.PlacementError).To(BeEmpty())
+				})
+			})
+		})
+
+		Context("when the actual LRP does not exist", func() {
+			BeforeEach(func() {
+				// Do not make a lrp.
+			})
+
+			It("cannot claim the LRP", func() {
+				Expect(claimErr).To(Equal(models.ErrResourceNotFound))
+			})
+
+			It("does not create an actual LRP", func() {
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, "process-guid", 1)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("RetireActualLRPs", func() {
+		var (
+			actualLRP *models.ActualLRP
+			retireErr *models.Error
+
+			lrpKey models.ActualLRPKey
+
+			request models.RetireActualLRPRequest
+
+			processGuid string
+			index       int32
+		)
+
+		BeforeEach(func() {
+			processGuid = "some-process-guid"
+			index = 1
+			domain := "domain"
+
+			lrpKey = models.NewActualLRPKey(processGuid, index, domain)
+
+			request = models.RetireActualLRPRequest{
+				ActualLrpKey: &lrpKey,
+			}
+		})
+
+		Context("with an Unclaimed LRP", func() {
+			BeforeEach(func() {
+				actualLRP = &models.ActualLRP{
+					ActualLRPKey: lrpKey,
+					State:        models.ActualLRPStateUnclaimed,
+					Since:        123,
+				}
+
+				etcdHelper.SetRawActualLRP(actualLRP)
+			})
+
+			It("deletes the LRP", func() {
+				retireErr = etcdDB.RetireActualLRP(logger, &request)
+				Expect(retireErr).NotTo(HaveOccurred())
+
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the LRP is Crashed", func() {
+			BeforeEach(func() {
+				actualLRP = &models.ActualLRP{
+					ActualLRPKey: lrpKey,
+					CrashCount:   1,
+					State:        models.ActualLRPStateCrashed,
+					Since:        777,
+				}
+				etcdHelper.SetRawActualLRP(actualLRP)
+			})
+
+			It("should remove the actual", func() {
+				retireErr = etcdDB.RetireActualLRP(logger, &request)
+				Expect(retireErr).NotTo(HaveOccurred())
+
+				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the LRP is not Unclaimed", func() {
+			var (
+				cellPresence models.CellPresence
+				instanceKey  models.ActualLRPInstanceKey
+			)
+
+			BeforeEach(func() {
+				instanceKey = models.NewActualLRPInstanceKey("instance-guid", "cell-id")
+				actualLRP = &models.ActualLRP{
+					ActualLRPKey:         lrpKey,
+					ActualLRPInstanceKey: instanceKey,
+					State:                models.ActualLRPStateClaimed,
+					Since:                777,
+				}
+				etcdHelper.SetRawActualLRP(actualLRP)
+			})
+
+			JustBeforeEach(func() {
+				etcdDB.RetireActualLRP(logger, &request)
+			})
+
+			Context("when the cell", func() {
+				Context("is present", func() {
+					BeforeEach(func() {
+						cellPresence = models.NewCellPresence(
+							cellID,
+							"cell.example.com",
+							"the-zone",
+							models.NewCellCapacity(128, 1024, 6),
+							[]string{},
+							[]string{},
+						)
+						consulHelper.RegisterCell(cellPresence)
+					})
+
+					It("stops the LRPs", func() {
+						Eventually(cellClient.StopLRPInstanceCallCount).Should(Equal(1))
+
+						addr, stoppedKey, stoppedInstanceKey := cellClient.StopLRPInstanceArgsForCall(0)
+
+						Expect(addr).To(Equal(cellPresence.RepAddress))
+
+						Expect(stoppedKey).To(Equal(lrpKey))
+						Expect(stoppedInstanceKey).To(Equal(instanceKey))
+					})
+
+					Context("when stopping the LRP fails", func() {
+						BeforeEach(func() {
+							cellClient.StopLRPInstanceReturns(errors.New("something is terrible"))
+						})
+
+						It("retries", func() {
+							Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(models.RetireActualLRPRetryAttempts))
+						})
+					})
+				})
+
+				Context("is not present", func() {
+					It("removes the LRPs", func() {
+						_, err := etcdClient.Get(ActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
+						Expect(err).To(HaveOccurred())
+					})
+				})
+
+				Context("cannot be retrieved", func() {
+					BeforeEach(func() {
+						_, err := consulSession.SetPresence(consul.CellSchemaPath(cellID), []byte("abcd"))
+						Expect(err).NotTo(HaveOccurred())
+					})
+
+					It("does not stop the instances", func() {
+						Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(0))
+					})
+				})
+			})
+		})
+	})
+
 	Describe("FailActualLRP", func() {
 		var (
 			request   models.FailActualLRPRequest
@@ -911,7 +1314,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Since:        clock.Now().UnixNano(),
 				}
 
-				testHelper.SetRawActualLRP(actualLRP)
+				etcdHelper.SetRawActualLRP(actualLRP)
 			})
 
 			Context("when the existing ActualLRP is Unclaimed", func() {
@@ -947,7 +1350,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 					Expect(actualLRP.Validate()).NotTo(HaveOccurred())
 
-					testHelper.SetRawActualLRP(actualLRP)
+					etcdHelper.SetRawActualLRP(actualLRP)
 				})
 
 				It("returns an error", func() {
@@ -996,7 +1399,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Since:        clock.Now().UnixNano(),
 				}
 
-				testHelper.SetRawActualLRP(actualLRP)
+				etcdHelper.SetRawActualLRP(actualLRP)
 			})
 
 			It("does not error", func() {

@@ -121,11 +121,11 @@ var _ = Describe("ActualLRP API", func() {
 			Since:                time.Now().UnixNano(),
 		}
 
-		testHelper.SetRawActualLRP(baseLRP)
-		testHelper.SetRawActualLRP(otherLRP)
-		testHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
-		testHelper.SetRawActualLRP(unclaimedLRP)
-		testHelper.SetRawActualLRP(crashingLRP)
+		etcdHelper.SetRawActualLRP(baseLRP)
+		etcdHelper.SetRawActualLRP(otherLRP)
+		etcdHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
+		etcdHelper.SetRawActualLRP(unclaimedLRP)
+		etcdHelper.SetRawActualLRP(crashingLRP)
 	})
 
 	Describe("GET /v1/actual_lrps_groups", func() {
@@ -326,6 +326,23 @@ var _ = Describe("ActualLRP API", func() {
 			Expect(fetchedActualLRP.State).To(Equal(models.ActualLRPStateCrashed))
 			Expect(fetchedActualLRP.CrashCount).To(Equal(int32(101)))
 			Expect(fetchedActualLRP.CrashReason).To(Equal(errorMessage))
+		})
+	})
+
+	Describe("POST /v1/actual_lrps/retire", func() {
+		var (
+			retireErr error
+		)
+
+		JustBeforeEach(func() {
+			retireErr = client.RetireActualLRP(&unclaimedLRPKey)
+		})
+
+		It("retires the actual_lrp", func() {
+			Expect(retireErr).NotTo(HaveOccurred())
+
+			_, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			Expect(err).To(Equal(models.ErrResourceNotFound))
 		})
 	})
 

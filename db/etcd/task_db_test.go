@@ -1,34 +1,25 @@
 package etcd_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db"
-	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("TaskDB", func() {
-	var (
-		etcdDB db.TaskDB
-	)
-
-	BeforeEach(func() {
-		etcdDB = NewETCD(etcdClient, auctioneerClient, clock)
-	})
-
 	Describe("Tasks", func() {
 		Context("when there are tasks", func() {
 			var expectedTasks []*models.Task
 
 			BeforeEach(func() {
 				expectedTasks = []*models.Task{
-					testHelper.NewValidTask("a-guid"), testHelper.NewValidTask("b-guid"),
+					model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid"),
 				}
 
 				for _, t := range expectedTasks {
-					testHelper.SetRawTask(t)
+					etcdHelper.SetRawTask(t)
 				}
 			})
 
@@ -57,9 +48,9 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				testHelper.CreateValidTask("some-guid")
-				testHelper.CreateMalformedTask("some-other-guid")
-				testHelper.CreateValidTask("some-third-guid")
+				etcdHelper.CreateValidTask("some-guid")
+				etcdHelper.CreateMalformedTask("some-other-guid")
+				etcdHelper.CreateValidTask("some-third-guid")
 			})
 
 			It("errors", func() {
@@ -89,8 +80,8 @@ var _ = Describe("TaskDB", func() {
 			var expectedTask *models.Task
 
 			BeforeEach(func() {
-				expectedTask = testHelper.NewValidTask("task-guid")
-				testHelper.SetRawTask(expectedTask)
+				expectedTask = model_helpers.NewValidTask("task-guid")
+				etcdHelper.SetRawTask(expectedTask)
 			})
 
 			It("returns the task", func() {
@@ -109,7 +100,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				testHelper.CreateMalformedTask("some-other-guid")
+				etcdHelper.CreateMalformedTask("some-other-guid")
 			})
 
 			It("errors", func() {

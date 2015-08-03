@@ -22,7 +22,7 @@ var _ = Describe("DesiredLRP API", func() {
 		filter = models.DesiredLRPFilter{}
 		expectedDesiredLRPs = []*models.DesiredLRP{}
 		actualDesiredLRPs = []*models.DesiredLRP{}
-		desiredLRPs = testHelper.CreateDesiredLRPsInDomains(map[string]int{
+		desiredLRPs = etcdHelper.CreateDesiredLRPsInDomains(map[string]int{
 			"domain-1": 2,
 			"domain-2": 3,
 		})

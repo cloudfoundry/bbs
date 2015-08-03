@@ -333,6 +333,43 @@ var _ = Describe("ActualLRP", func() {
 		})
 	})
 
+	Describe("RetireActualLRPRequest", func() {
+		Describe("Validate", func() {
+			var request models.RetireActualLRPRequest
+
+			BeforeEach(func() {
+				request = models.RetireActualLRPRequest{
+					ActualLrpKey: &models.ActualLRPKey{ProcessGuid: "p-guid", Index: 2, Domain: "domain"},
+				}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+
+			Context("when the ActualLrpKey is blank", func() {
+				BeforeEach(func() {
+					request.ActualLrpKey = nil
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"actual_lrp_key"}))
+				})
+			})
+
+			Context("when the ActualLrpKey is invalid", func() {
+				BeforeEach(func() {
+					request.ActualLrpKey.ProcessGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"process_guid"}))
+				})
+			})
+		})
+	})
 	Describe("FailActualLRPRequest", func() {
 		Describe("Validate", func() {
 			var request models.FailActualLRPRequest

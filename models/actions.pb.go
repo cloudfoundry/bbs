@@ -456,15 +456,15 @@ func (m *CodependentAction) GetLogSource() string {
 }
 
 type ResourceLimits struct {
-	Nofile uint64 `protobuf:"varint,1,opt,name=nofile" json:"nofile,omitempty"`
+	Nofile *uint64 `protobuf:"varint,1,opt,name=nofile" json:"nofile,omitempty"`
 }
 
 func (m *ResourceLimits) Reset()      { *m = ResourceLimits{} }
 func (*ResourceLimits) ProtoMessage() {}
 
 func (m *ResourceLimits) GetNofile() uint64 {
-	if m != nil {
-		return m.Nofile
+	if m != nil && m.Nofile != nil {
+		return *m.Nofile
 	}
 	return 0
 }
@@ -1929,18 +1929,19 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Nofile", wireType)
 			}
-			m.Nofile = 0
+			var v uint64
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				m.Nofile |= (uint64(b) & 0x7F) << shift
+				v |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			m.Nofile = &v
 		default:
 			var sizeOfWire int
 			for {
@@ -2242,7 +2243,7 @@ func (this *ResourceLimits) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&ResourceLimits{`,
-		`Nofile:` + fmt.Sprintf("%v", this.Nofile) + `,`,
+		`Nofile:` + valueToStringActions(this.Nofile) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2449,7 +2450,9 @@ func (m *CodependentAction) Size() (n int) {
 func (m *ResourceLimits) Size() (n int) {
 	var l int
 	_ = l
-	n += 1 + sovActions(uint64(m.Nofile))
+	if m.Nofile != nil {
+		n += 1 + sovActions(uint64(*m.Nofile))
+	}
 	return n
 }
 
@@ -2953,9 +2956,11 @@ func (m *ResourceLimits) MarshalTo(data []byte) (n int, err error) {
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0x8
-	i++
-	i = encodeVarintActions(data, i, uint64(m.Nofile))
+	if m.Nofile != nil {
+		data[i] = 0x8
+		i++
+		i = encodeVarintActions(data, i, uint64(*m.Nofile))
+	}
 	return i, nil
 }
 
@@ -3104,7 +3109,7 @@ func (this *ResourceLimits) GoString() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&models.ResourceLimits{` +
-		`Nofile:` + fmt.Sprintf("%#v", this.Nofile) + `}`}, ", ")
+		`Nofile:` + valueToGoStringActions(this.Nofile, "uint64") + `}`}, ", ")
 	return s
 }
 func valueToGoStringActions(v interface{}, typ string) string {
@@ -3526,7 +3531,13 @@ func (this *ResourceLimits) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Nofile != that1.Nofile {
+	if this.Nofile != nil && that1.Nofile != nil {
+		if *this.Nofile != *that1.Nofile {
+			return false
+		}
+	} else if this.Nofile != nil {
+		return false
+	} else if that1.Nofile != nil {
 		return false
 	}
 	return true

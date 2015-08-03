@@ -324,6 +324,20 @@ func (m *FailActualLRPRequest) GetErrorMessage() string {
 	return ""
 }
 
+type RetireActualLRPRequest struct {
+	ActualLrpKey *ActualLRPKey `protobuf:"bytes,1,opt,name=actual_lrp_key" json:"actual_lrp_key,omitempty"`
+}
+
+func (m *RetireActualLRPRequest) Reset()      { *m = RetireActualLRPRequest{} }
+func (*RetireActualLRPRequest) ProtoMessage() {}
+
+func (m *RetireActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+
 func (m *ActualLRPGroup) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -1513,6 +1527,75 @@ func (m *FailActualLRPRequest) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *RetireActualLRPRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActualLrpKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ActualLrpKey == nil {
+				m.ActualLrpKey = &ActualLRPKey{}
+			}
+			if err := m.ActualLrpKey.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipActualLrp(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func skipActualLrp(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -1728,6 +1811,16 @@ func (this *FailActualLRPRequest) String() string {
 	}, "")
 	return s
 }
+func (this *RetireActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&RetireActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func valueToStringActualLrp(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1883,6 +1976,16 @@ func (m *FailActualLRPRequest) Size() (n int) {
 	}
 	l = len(m.ErrorMessage)
 	n += 1 + l + sovActualLrp(uint64(l))
+	return n
+}
+
+func (m *RetireActualLRPRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		l = m.ActualLrpKey.Size()
+		n += 1 + l + sovActualLrp(uint64(l))
+	}
 	return n
 }
 
@@ -2305,6 +2408,34 @@ func (m *FailActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
 	return i, nil
 }
 
+func (m *RetireActualLRPRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *RetireActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintActualLrp(data, i, uint64(m.ActualLrpKey.Size()))
+		n14, err := m.ActualLrpKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	return i, nil
+}
+
 func encodeFixed64ActualLrp(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -2439,6 +2570,14 @@ func (this *FailActualLRPRequest) GoString() string {
 	s := strings.Join([]string{`&models.FailActualLRPRequest{` +
 		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
 		`ErrorMessage:` + fmt.Sprintf("%#v", this.ErrorMessage) + `}`}, ", ")
+	return s
+}
+func (this *RetireActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.RetireActualLRPRequest{` +
+		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey) + `}`}, ", ")
 	return s
 }
 func valueToGoStringActualLrp(v interface{}, typ string) string {
@@ -2810,6 +2949,31 @@ func (this *FailActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 	if this.ErrorMessage != that1.ErrorMessage {
+		return false
+	}
+	return true
+}
+func (this *RetireActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*RetireActualLRPRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
 		return false
 	}
 	return true

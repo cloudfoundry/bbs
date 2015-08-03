@@ -1,4 +1,4 @@
-package test_helpers
+package etcd_helpers
 
 import (
 	"encoding/json"
@@ -6,10 +6,11 @@ import (
 
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 	. "github.com/onsi/gomega"
 )
 
-func (t *TestHelper) SetRawActualLRP(lrp *models.ActualLRP) {
+func (t *ETCDHelper) SetRawActualLRP(lrp *models.ActualLRP) {
 	value, err := json.Marshal(lrp) // do NOT use models.ToJSON; don't want validations
 	Expect(err).NotTo(HaveOccurred())
 
@@ -19,7 +20,7 @@ func (t *TestHelper) SetRawActualLRP(lrp *models.ActualLRP) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func (t *TestHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSeconds uint64) {
+func (t *ETCDHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSeconds uint64) {
 	value, err := json.Marshal(lrp) // do NOT use models.ToJSON; don't want validations
 	Expect(err).NotTo(HaveOccurred())
 
@@ -29,7 +30,7 @@ func (t *TestHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSecon
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func (t *TestHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
+func (t *ETCDHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
 	value, err := json.Marshal(lrp) // do NOT use models.ToJSON; don't want validations
 	Expect(err).NotTo(HaveOccurred())
 
@@ -39,7 +40,7 @@ func (t *TestHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func (t *TestHelper) SetRawTask(task *models.Task) {
+func (t *ETCDHelper) SetRawTask(task *models.Task) {
 	value, err := json.Marshal(task) // do NOT use models.ToJSON; don't want validations
 	Expect(err).NotTo(HaveOccurred())
 
@@ -49,45 +50,45 @@ func (t *TestHelper) SetRawTask(task *models.Task) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func (t *TestHelper) CreateValidActualLRP(guid string, index int32) {
-	t.SetRawActualLRP(t.NewValidActualLRP(guid, index))
+func (t *ETCDHelper) CreateValidActualLRP(guid string, index int32) {
+	t.SetRawActualLRP(model_helpers.NewValidActualLRP(guid, index))
 }
 
-func (t *TestHelper) CreateValidEvacuatingLRP(guid string, index int32) {
-	t.SetRawEvacuatingActualLRP(t.NewValidActualLRP(guid, index), 100)
+func (t *ETCDHelper) CreateValidEvacuatingLRP(guid string, index int32) {
+	t.SetRawEvacuatingActualLRP(model_helpers.NewValidActualLRP(guid, index), 100)
 }
 
-func (t *TestHelper) CreateValidDesiredLRP(guid string) {
-	t.SetRawDesiredLRP(t.NewValidDesiredLRP(guid))
+func (t *ETCDHelper) CreateValidDesiredLRP(guid string) {
+	t.SetRawDesiredLRP(model_helpers.NewValidDesiredLRP(guid))
 }
 
-func (t *TestHelper) CreateValidTask(guid string) {
-	t.SetRawTask(t.NewValidTask(guid))
+func (t *ETCDHelper) CreateValidTask(guid string) {
+	t.SetRawTask(model_helpers.NewValidTask(guid))
 }
 
-func (t *TestHelper) CreateMalformedActualLRP(guid string, index int32) {
+func (t *ETCDHelper) CreateMalformedActualLRP(guid string, index int32) {
 	t.createMalformedValueForKey(etcddb.ActualLRPSchemaPath(guid, index))
 }
 
-func (t *TestHelper) CreateMalformedEvacuatingLRP(guid string, index int32) {
+func (t *ETCDHelper) CreateMalformedEvacuatingLRP(guid string, index int32) {
 	t.createMalformedValueForKey(etcddb.EvacuatingActualLRPSchemaPath(guid, index))
 }
 
-func (t *TestHelper) CreateMalformedDesiredLRP(guid string) {
+func (t *ETCDHelper) CreateMalformedDesiredLRP(guid string) {
 	t.createMalformedValueForKey(etcddb.DesiredLRPSchemaPath(&models.DesiredLRP{ProcessGuid: guid}))
 }
 
-func (t *TestHelper) CreateMalformedTask(guid string) {
+func (t *ETCDHelper) CreateMalformedTask(guid string) {
 	t.createMalformedValueForKey(etcddb.TaskSchemaPath(&models.Task{TaskGuid: guid}))
 }
 
-func (t *TestHelper) createMalformedValueForKey(key string) {
+func (t *ETCDHelper) createMalformedValueForKey(key string) {
 	_, err := t.etcdClient.Create(key, "ßßßßßß", 0)
 
 	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("error occurred at key '%s'", key))
 }
 
-func (t *TestHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map[string][]*models.DesiredLRP {
+func (t *ETCDHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map[string][]*models.DesiredLRP {
 	createdDesiredLRPs := map[string][]*models.DesiredLRP{}
 
 	for domain, count := range domainCounts {
