@@ -30,6 +30,17 @@ type FakeTaskDB struct {
 		result1 *models.Task
 		result2 *models.Error
 	}
+	DesireTaskStub        func(logger lager.Logger, guid, domain string, def *models.TaskDefinition) error
+	desireTaskMutex       sync.RWMutex
+	desireTaskArgsForCall []struct {
+		logger lager.Logger
+		guid   string
+		domain string
+		def    *models.TaskDefinition
+	}
+	desireTaskReturns struct {
+		result1 error
+	}
 }
 
 func (fake *FakeTaskDB) Tasks(logger lager.Logger, filter db.TaskFilter) (*models.Tasks, *models.Error) {
@@ -98,6 +109,41 @@ func (fake *FakeTaskDB) TaskByGuidReturns(result1 *models.Task, result2 *models.
 		result1 *models.Task
 		result2 *models.Error
 	}{result1, result2}
+}
+
+func (fake *FakeTaskDB) DesireTask(logger lager.Logger, guid string, domain string, def *models.TaskDefinition) error {
+	fake.desireTaskMutex.Lock()
+	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
+		logger lager.Logger
+		guid   string
+		domain string
+		def    *models.TaskDefinition
+	}{logger, guid, domain, def})
+	fake.desireTaskMutex.Unlock()
+	if fake.DesireTaskStub != nil {
+		return fake.DesireTaskStub(logger, guid, domain, def)
+	} else {
+		return fake.desireTaskReturns.result1
+	}
+}
+
+func (fake *FakeTaskDB) DesireTaskCallCount() int {
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	return len(fake.desireTaskArgsForCall)
+}
+
+func (fake *FakeTaskDB) DesireTaskArgsForCall(i int) (lager.Logger, string, string, *models.TaskDefinition) {
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	return fake.desireTaskArgsForCall[i].logger, fake.desireTaskArgsForCall[i].guid, fake.desireTaskArgsForCall[i].domain, fake.desireTaskArgsForCall[i].def
+}
+
+func (fake *FakeTaskDB) DesireTaskReturns(result1 error) {
+	fake.DesireTaskStub = nil
+	fake.desireTaskReturns = struct {
+		result1 error
+	}{result1}
 }
 
 var _ db.TaskDB = new(FakeTaskDB)

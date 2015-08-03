@@ -30,6 +30,7 @@ const (
 	// Desired LRPs
 	TasksRoute      = "Tasks"
 	TaskByGuidRoute = "TaskByGuid"
+	DesireTaskRoute = "DesireTask"
 
 	// Event Streaming
 	EventStreamRoute = "EventStream"
@@ -61,6 +62,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrps/:process_guid", Method: "GET", Name: DesiredLRPByProcessGuidRoute},
 
 	// Tasks
+	{Path: "/v1/tasks", Method: "POST", Name: DesireTaskRoute},
 	{Path: "/v1/tasks", Method: "GET", Name: TasksRoute},
 	{Path: "/v1/tasks/:task_guid", Method: "GET", Name: TaskByGuidRoute},
 

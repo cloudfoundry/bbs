@@ -142,6 +142,8 @@ func (task *Task) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	task.TaskDefinition = &TaskDefinition{}
+
 	task.TaskGuid = oldtask.TaskGuid
 	task.Domain = oldtask.Domain
 	task.RootFs = oldtask.RootFS

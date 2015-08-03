@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -18,7 +19,9 @@ var _ = Describe("Task Handlers", func() {
 		logger           lager.Logger
 		fakeTaskDB       *fakes.FakeTaskDB
 		responseRecorder *httptest.ResponseRecorder
-		handler          *handlers.TaskHandler
+		request          *http.Request
+
+		handler *handlers.TaskHandler
 
 		task1 models.Task
 		task2 models.Task
@@ -29,12 +32,11 @@ var _ = Describe("Task Handlers", func() {
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
+		request = nil
 		handler = handlers.NewTaskHandler(logger, fakeTaskDB)
 	})
 
 	Describe("Tasks", func() {
-		var request *http.Request
-
 		BeforeEach(func() {
 			request = newTestRequest("")
 
@@ -137,7 +139,6 @@ var _ = Describe("Task Handlers", func() {
 	})
 
 	Describe("TaskByGuid", func() {
-		var request *http.Request
 		var taskGuid = "task-guid"
 
 		BeforeEach(func() {
@@ -209,6 +210,60 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+			})
+		})
+	})
+
+	Describe("DesireTask", func() {
+		JustBeforeEach(func() {
+			handler.DesireTask(responseRecorder, request)
+		})
+
+		Context("when the desire is successful", func() {
+			BeforeEach(func() {
+				request = newTestRequest(&models.TaskDefinition{})
+			})
+
+			It("responds with 201 CREATED", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
+			})
+		})
+
+		Context("when the request body is not a TaskDefinition", func() {
+			BeforeEach(func() {
+				request = newTestRequest("foo")
+			})
+
+			It("responds with 400 BAD REQUEST", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+
+			It("returns an Invalid Request error", func() {
+				var bbsError models.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
+				Expect(bbsError.Message).To(ContainSubstring("unmarshal"))
+			})
+		})
+
+		Context("when the request body fails to stream", func() {
+			BeforeEach(func() {
+				request = newTestRequest(newExplodingReader(errors.New("foobar")))
+			})
+
+			It("responds with 400 BAD REQUEST", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+
+			It("returns an Invalid Request error", func() {
+				var bbsError models.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
+				Expect(bbsError.Message).To(ContainSubstring("foobar"))
 			})
 		})
 	})

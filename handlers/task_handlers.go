@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
@@ -77,4 +79,33 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 	}
 
 	writeProtoResponse(w, http.StatusOK, task)
+}
+
+func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("desire-task")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	logger.Info("data", lager.Data{"data": data})
+	taskReq := &models.DesireTaskRequest{}
+	err = taskReq.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal-task", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal TaskDescription: %s", err))
+		return
+	}
+
+	err = h.db.DesireTask(logger, taskReq.TaskGuid, taskReq.Domain, taskReq.TaskDefinition)
+	if err != nil {
+		logger.Error("failed-to-desire-task", err)
+		writeUnknownErrorResponse(w, err)
+		return
+	}
+
+	writeEmptyResponse(w, http.StatusCreated)
 }

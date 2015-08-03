@@ -47,6 +47,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		// Tasks
 		bbs.TasksRoute:      route(taskHandler.Tasks),
 		bbs.TaskByGuidRoute: route(taskHandler.TaskByGuid),
+		bbs.DesireTaskRoute: route(taskHandler.DesireTask),
 
 		// Events
 		bbs.EventStreamRoute: route(eventsHandler.Subscribe),

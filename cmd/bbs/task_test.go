@@ -1,7 +1,6 @@
 package main_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 
@@ -10,69 +9,65 @@ import (
 )
 
 var _ = Describe("Task API", func() {
-	var (
-		actualTasks   []*models.Task
-		expectedTasks []*models.Task
+	Context("Getters", func() {
+		var expectedTasks []*models.Task
 
-		filter db.TaskFilter
+		BeforeEach(func() {
+			expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
+			expectedTasks[1].Domain = "b-domain"
+			expectedTasks[1].CellId = "b-cell"
+			for _, t := range expectedTasks {
+				etcdHelper.SetRawTask(t)
+			}
+		})
 
-		getErr error
-	)
-
-	BeforeEach(func() {
-		filter = nil
-		actualTasks = nil
-		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
-		expectedTasks[1].Domain = "b-domain"
-		expectedTasks[1].CellId = "b-cell"
-		for _, t := range expectedTasks {
-			etcdHelper.SetRawTask(t)
-		}
-	})
-
-	Describe("GET /v1/tasks", func() {
-		Context("all tasks", func() {
-			BeforeEach(func() {
-				actualTasks, getErr = client.Tasks()
+		Describe("GET /v1/tasks", func() {
+			Context("all tasks", func() {
+				It("has the correct number of responses", func() {
+					actualTasks, err := client.Tasks()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualTasks).To(ConsistOf(expectedTasks))
+				})
 			})
 
-			It("responds without error", func() {
-				Expect(getErr).NotTo(HaveOccurred())
+			Context("when filtering by domain", func() {
+				It("has the correct number of responses", func() {
+					domain := expectedTasks[0].Domain
+					actualTasks, err := client.TasksByDomain(domain)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualTasks).To(ConsistOf(expectedTasks[0]))
+				})
 			})
 
-			It("has the correct number of responses", func() {
-				Expect(actualTasks).To(ConsistOf(expectedTasks))
+			Context("when filtering by cell", func() {
+				It("has the correct number of responses", func() {
+					actualTasks, err := client.TasksByCellID("b-cell")
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualTasks).To(ConsistOf(expectedTasks[1]))
+				})
 			})
 		})
 
-		Context("when filtering by domain", func() {
-			var domain string
-			BeforeEach(func() {
-				domain = expectedTasks[0].Domain
-				actualTasks, getErr = client.TasksByDomain(domain)
-			})
-
-			It("has the correct number of responses", func() {
-				Expect(actualTasks).To(ConsistOf(expectedTasks[0]))
-			})
-		})
-
-		Context("when filtering by cell", func() {
-			BeforeEach(func() {
-				actualTasks, getErr = client.TasksByCellID("b-cell")
-			})
-
-			It("has the correct number of responses", func() {
-				Expect(actualTasks).To(ConsistOf(expectedTasks[1]))
+		Describe("GET /v1/tasks/:task_guid", func() {
+			It("returns the task", func() {
+				task, err := client.TaskByGuid(expectedTasks[0].TaskGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task).To(Equal(expectedTasks[0]))
 			})
 		})
 	})
 
-	Describe("GET /v1/tasks/:task_guid", func() {
-		It("returns the task", func() {
-			task, getErr := client.TaskByGuid(expectedTasks[0].TaskGuid)
-			Expect(getErr).NotTo(HaveOccurred())
-			Expect(task).To(Equal(expectedTasks[0]))
+	Context("Setters", func() {
+		Describe("POST /v1/tasks/", func() {
+			It("adds the desired task", func() {
+				expectedTask := model_helpers.NewValidTask("task-1")
+				err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
+				Expect(err).NotTo(HaveOccurred())
+
+				task, err := client.TaskByGuid(expectedTask.TaskGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task.TaskDefinition).To(Equal(expectedTask.TaskDefinition))
+			})
 		})
 	})
 })

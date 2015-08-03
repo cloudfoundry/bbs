@@ -21,6 +21,8 @@ func TestHandlers(t *testing.T) {
 func newTestRequest(body interface{}) *http.Request {
 	var reader io.Reader
 	switch body := body.(type) {
+	case io.Reader:
+		reader = body
 	case string:
 		reader = strings.NewReader(body)
 	case []byte:
@@ -36,4 +38,16 @@ func newTestRequest(body interface{}) *http.Request {
 	request, err := http.NewRequest("", "", reader)
 	Expect(err).NotTo(HaveOccurred())
 	return request
+}
+
+type explodingReader struct {
+	ReadError error
+}
+
+func newExplodingReader(readErr error) explodingReader {
+	return explodingReader{readErr}
+}
+
+func (rc explodingReader) Read([]byte) (int, error) {
+	return 0, rc.ReadError
 }

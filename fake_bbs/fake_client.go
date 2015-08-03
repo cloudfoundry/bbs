@@ -174,6 +174,16 @@ type FakeClient struct {
 		result1 *models.Task
 		result2 error
 	}
+	DesireTaskStub        func(guid, domain string, def *models.TaskDefinition) error
+	desireTaskMutex       sync.RWMutex
+	desireTaskArgsForCall []struct {
+		guid   string
+		domain string
+		def    *models.TaskDefinition
+	}
+	desireTaskReturns struct {
+		result1 error
+	}
 	SubscribeToEventsStub        func() (events.EventSource, error)
 	subscribeToEventsMutex       sync.RWMutex
 	subscribeToEventsArgsForCall []struct{}
@@ -764,6 +774,40 @@ func (fake *FakeClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
 		result1 *models.Task
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) DesireTask(guid string, domain string, def *models.TaskDefinition) error {
+	fake.desireTaskMutex.Lock()
+	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
+		guid   string
+		domain string
+		def    *models.TaskDefinition
+	}{guid, domain, def})
+	fake.desireTaskMutex.Unlock()
+	if fake.DesireTaskStub != nil {
+		return fake.DesireTaskStub(guid, domain, def)
+	} else {
+		return fake.desireTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) DesireTaskCallCount() int {
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	return len(fake.desireTaskArgsForCall)
+}
+
+func (fake *FakeClient) DesireTaskArgsForCall(i int) (string, string, *models.TaskDefinition) {
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	return fake.desireTaskArgsForCall[i].guid, fake.desireTaskArgsForCall[i].domain, fake.desireTaskArgsForCall[i].def
+}
+
+func (fake *FakeClient) DesireTaskReturns(result1 error) {
+	fake.DesireTaskStub = nil
+	fake.desireTaskReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeClient) SubscribeToEvents() (events.EventSource, error) {

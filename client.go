@@ -50,7 +50,7 @@ type Client interface {
 	TasksByDomain(domain string) ([]*models.Task, error)
 	TasksByCellID(cellId string) ([]*models.Task, error)
 	TaskByGuid(guid string) (*models.Task, error)
-
+	DesireTask(guid, domain string, def *models.TaskDefinition) error
 	SubscribeToEvents() (events.EventSource, error)
 }
 
@@ -225,6 +225,15 @@ func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
 	return &task, err
 }
 
+func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinition) error {
+	req := &models.DesireTaskRequest{
+		TaskGuid:       taskGuid,
+		Domain:         domain,
+		TaskDefinition: taskDef,
+	}
+	return c.doRequest(DesireTaskRoute, nil, nil, req, nil)
+}
+
 func (c *client) SubscribeToEvents() (events.EventSource, error) {
 	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
 		request, err := c.reqGen.CreateRequest(EventStreamRoute, nil, nil)
@@ -263,12 +272,12 @@ func (c *client) createRequest(requestName string, params rata.Params, queryPara
 	return req, nil
 }
 
-func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, request, message proto.Message) error {
-	req, err := c.createRequest(requestName, params, queryParams, request)
+func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, requestBody, responseBody proto.Message) error {
+	req, err := c.createRequest(requestName, params, queryParams, requestBody)
 	if err != nil {
 		return err
 	}
-	return c.do(req, message)
+	return c.do(req, responseBody)
 }
 
 func (c *client) do(req *http.Request, responseObject proto.Message) error {

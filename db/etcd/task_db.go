@@ -67,3 +67,48 @@ func (db *ETCDDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task
 
 	return &task, nil
 }
+
+func (db *ETCDDB) DesireTask(logger lager.Logger, taskGuid, domain string, taskDef *models.TaskDefinition) error {
+	taskLogger := logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
+
+	taskLogger.Info("starting")
+	defer taskLogger.Info("finished")
+
+	task := &models.Task{
+		TaskDefinition: taskDef,
+		TaskGuid:       taskGuid,
+		Domain:         domain,
+		State:          models.Task_Pending,
+		CreatedAt:      db.clock.Now().UnixNano(),
+		UpdatedAt:      db.clock.Now().UnixNano(),
+	}
+
+	err := task.Validate()
+	if err != nil {
+		return err
+	}
+
+	value, err := models.ToJSON(task)
+	if err != nil {
+		return err
+	}
+
+	taskLogger.Debug("persisting-task")
+	_, err = db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), string(value), 0)
+	if err != nil {
+		taskLogger.Error("failed-persisting-task", err)
+		return ErrorFromEtcdError(logger, err)
+	}
+	taskLogger.Debug("succeeded-persisting-task")
+
+	taskLogger.Debug("requesting-task-auction")
+	err = db.auctioneerClient.RequestTaskAuctions([]*models.Task{task})
+	if err != nil {
+		taskLogger.Error("failed-requesting-task-auction", err)
+		// The creation succeeded, the auction request error can be dropped
+	} else {
+		taskLogger.Debug("succeeded-requesting-task-auction")
+	}
+
+	return nil
+}
