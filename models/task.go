@@ -63,26 +63,33 @@ func (task Task) Validate() error {
 }
 
 func (task *Task) MarshalJSON() ([]byte, error) {
-	b, err := json.Marshal(task.Action)
+	var taskDef *TaskDefinition
+	if task.TaskDefinition != nil {
+		taskDef = task.TaskDefinition
+	} else {
+		taskDef = &TaskDefinition{}
+	}
+
+	b, err := json.Marshal(taskDef.Action)
 	if err != nil {
 		return nil, err
 	}
 	var oldAction oldmodels.Action
-	if UnwrapAction(task.Action) != nil {
+	if UnwrapAction(taskDef.Action) != nil {
 		oldAction, err = oldmodels.UnmarshalAction(b)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	b, err = json.Marshal(task.EgressRules)
+	b, err = json.Marshal(taskDef.EgressRules)
 	if err != nil {
 		return nil, err
 	}
 	var oldEgress []oldmodels.SecurityGroupRule
 	err = json.Unmarshal(b, &oldEgress)
 
-	oldUrl, err := url.Parse(task.CompletionCallbackUrl)
+	oldUrl, err := url.Parse(taskDef.CompletionCallbackUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -90,26 +97,26 @@ func (task *Task) MarshalJSON() ([]byte, error) {
 	oldtask := oldmodels.Task{
 		TaskGuid:              task.TaskGuid,
 		Domain:                task.Domain,
-		RootFS:                task.RootFs,
-		EnvironmentVariables:  EnvironmentVariablesFromProto(task.EnvironmentVariables),
+		RootFS:                taskDef.RootFs,
+		EnvironmentVariables:  EnvironmentVariablesFromProto(taskDef.EnvironmentVariables),
 		CellID:                task.CellId,
 		Action:                oldAction,
-		ResultFile:            task.ResultFile,
+		ResultFile:            taskDef.ResultFile,
 		Result:                task.Result,
 		Failed:                task.Failed,
 		FailureReason:         task.FailureReason,
-		MemoryMB:              int(task.MemoryMb),
-		DiskMB:                int(task.DiskMb),
-		CPUWeight:             uint(task.CpuWeight),
-		Privileged:            task.Privileged,
-		LogGuid:               task.LogGuid,
-		LogSource:             task.LogSource,
-		MetricsGuid:           task.MetricsGuid,
+		MemoryMB:              int(taskDef.MemoryMb),
+		DiskMB:                int(taskDef.DiskMb),
+		CPUWeight:             uint(taskDef.CpuWeight),
+		Privileged:            taskDef.Privileged,
+		LogGuid:               taskDef.LogGuid,
+		LogSource:             taskDef.LogSource,
+		MetricsGuid:           taskDef.MetricsGuid,
 		CreatedAt:             task.CreatedAt,
 		UpdatedAt:             task.UpdatedAt,
 		FirstCompletedAt:      task.FirstCompletedAt,
 		State:                 oldmodels.TaskState(Task_State_value[task.State.String()]),
-		Annotation:            task.Annotation,
+		Annotation:            taskDef.Annotation,
 		EgressRules:           oldEgress,
 		CompletionCallbackURL: oldUrl,
 	}
