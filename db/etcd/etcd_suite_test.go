@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	fakeauctioneer "github.com/cloudfoundry-incubator/auctioneer/fakes"
+	fakeauctioneer "github.com/cloudfoundry-incubator/bbs/auctionhandlers/fakes"
+	fakecellhandlers "github.com/cloudfoundry-incubator/bbs/cellhandlers/fakes"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/consul"
 	"github.com/cloudfoundry-incubator/bbs/db/consul/internal/consul_helpers"
@@ -12,7 +13,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/internal/etcd_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
-	fakerep "github.com/cloudfoundry-incubator/rep/fakes"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -33,7 +33,7 @@ var consulRunner *consulrunner.ClusterRunner
 var consulSession *consuladapter.Session
 
 var auctioneerClient *fakeauctioneer.FakeClient
-var cellClient *fakerep.FakeCellClient
+var cellClient *fakecellhandlers.FakeClient
 
 var logger *lagertest.TestLogger
 var clock *fakeclock.FakeClock
@@ -78,7 +78,7 @@ var _ = AfterSuite(func() {
 
 var _ = BeforeEach(func() {
 	auctioneerClient = new(fakeauctioneer.FakeClient)
-	cellClient = new(fakerep.FakeCellClient)
+	cellClient = new(fakecellhandlers.FakeClient)
 	etcdRunner.Reset()
 
 	consulRunner.Reset()

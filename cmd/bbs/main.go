@@ -6,7 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
+	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
+	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/events"
@@ -16,7 +17,6 @@ import (
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
-	"github.com/cloudfoundry-incubator/rep"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
@@ -103,10 +103,10 @@ func main() {
 	if err != nil {
 		logger.Fatal("auctioneer-address-validation-failed", err)
 	}
-	auctioneerClient := auctioneer.NewClient(*auctioneerAddress)
+	auctioneerClient := auctionhandlers.NewClient(*auctioneerAddress)
 	consulSession := initializeConsul(logger)
 	consulDB := consuldb.NewConsul(consulSession)
-	cellClient := rep.NewCellClient()
+	cellClient := cellhandlers.NewClient()
 	db := etcddb.NewETCD(etcdClient, auctioneerClient, cellClient, consulDB, clock.NewClock())
 	hub := events.NewHub()
 	watcher := watcher.NewWatcher(
