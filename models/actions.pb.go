@@ -8,6 +8,7 @@
 	It is generated from these files:
 		actions.proto
 		actual_lrp.proto
+		actual_lrp_requests.proto
 		desired_lrp.proto
 		domain.proto
 		environment_variables.proto
