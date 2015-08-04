@@ -193,6 +193,56 @@ var _ = Describe("ActualLRP", func() {
 		})
 	})
 
+	Describe("ClaimActualLRPRequest", func() {
+		Describe("Validate", func() {
+			var request models.ClaimActualLRPRequest
+
+			BeforeEach(func() {
+				request = models.ClaimActualLRPRequest{
+					ProcessGuid:          "p-guid",
+					Index:                2,
+					ActualLrpInstanceKey: &models.ActualLRPInstanceKey{InstanceGuid: "i-guid", CellId: "c-id"},
+				}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+
+			Context("when the ProcessGuid is blank", func() {
+				BeforeEach(func() {
+					request.ProcessGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"process_guid"}))
+				})
+			})
+
+			Context("when the ActualLrpInstanceKey is blank", func() {
+				BeforeEach(func() {
+					request.ActualLrpInstanceKey = nil
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"actual_lrp_instance_key"}))
+				})
+			})
+
+			Context("when the ActualLrpInstanceKey is invalid", func() {
+				BeforeEach(func() {
+					request.ActualLrpInstanceKey.InstanceGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"instance_guid"}))
+				})
+			})
+		})
+	})
+
 	Describe("StartActualLRPRequest", func() {
 		Describe("Validate", func() {
 			var request models.StartActualLRPRequest
@@ -370,6 +420,7 @@ var _ = Describe("ActualLRP", func() {
 			})
 		})
 	})
+
 	Describe("FailActualLRPRequest", func() {
 		Describe("Validate", func() {
 			var request models.FailActualLRPRequest
@@ -734,7 +785,7 @@ var _ = Describe("ActualLRP", func() {
 				})
 
 				It("is not allowed", func() {
-					Expect(before.AllowsTransitionTo(afterKey, before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
+					Expect(before.AllowsTransitionTo(&afterKey, &before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
 				})
 			})
 
@@ -745,7 +796,7 @@ var _ = Describe("ActualLRP", func() {
 				})
 
 				It("is not allowed", func() {
-					Expect(before.AllowsTransitionTo(afterKey, before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
+					Expect(before.AllowsTransitionTo(&afterKey, &before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
 				})
 			})
 
@@ -756,7 +807,7 @@ var _ = Describe("ActualLRP", func() {
 				})
 
 				It("is not allowed", func() {
-					Expect(before.AllowsTransitionTo(afterKey, before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
+					Expect(before.AllowsTransitionTo(&afterKey, &before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
 				})
 			})
 
@@ -816,7 +867,7 @@ var _ = Describe("ActualLRP", func() {
 					It(EntryToString(entry), func() {
 						before.State = entry.BeforeState
 						before.ActualLRPInstanceKey = entry.BeforeInstanceKey
-						Expect(before.AllowsTransitionTo(before.ActualLRPKey, entry.AfterInstanceKey, entry.AfterState)).To(Equal(entry.Allowed))
+						Expect(before.AllowsTransitionTo(&before.ActualLRPKey, &entry.AfterInstanceKey, entry.AfterState)).To(Equal(entry.Allowed))
 					})
 				}
 			})

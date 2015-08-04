@@ -40,8 +40,13 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	if err := request.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return
+	}
 
-	actualLRP, bbsErr := h.db.ClaimActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
+	actualLRP, bbsErr := h.db.ClaimActualLRP(logger, request)
 	if bbsErr != nil {
 		logger.Error("failed-to-claim-actual-lrp", bbsErr)
 		if bbsErr.Equal(models.ErrResourceNotFound) {

@@ -41,13 +41,11 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRPGroup
 		result2 *models.Error
 	}
-	ClaimActualLRPStub        func(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, *models.Error)
+	ClaimActualLRPStub        func(logger lager.Logger, request *models.ClaimActualLRPRequest) (*models.ActualLRP, *models.Error)
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
-		logger      lager.Logger
-		processGuid string
-		index       int32
-		instanceKey *models.ActualLRPInstanceKey
+		logger  lager.Logger
+		request *models.ClaimActualLRPRequest
 	}
 	claimActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -205,17 +203,15 @@ func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexReturns(result1 
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, *models.Error) {
+func (fake *FakeActualLRPDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActualLRPRequest) (*models.ActualLRP, *models.Error) {
 	fake.claimActualLRPMutex.Lock()
 	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
-		logger      lager.Logger
-		processGuid string
-		index       int32
-		instanceKey *models.ActualLRPInstanceKey
-	}{logger, processGuid, index, instanceKey})
+		logger  lager.Logger
+		request *models.ClaimActualLRPRequest
+	}{logger, request})
 	fake.claimActualLRPMutex.Unlock()
 	if fake.ClaimActualLRPStub != nil {
-		return fake.ClaimActualLRPStub(logger, processGuid, index, instanceKey)
+		return fake.ClaimActualLRPStub(logger, request)
 	} else {
 		return fake.claimActualLRPReturns.result1, fake.claimActualLRPReturns.result2
 	}
@@ -227,10 +223,10 @@ func (fake *FakeActualLRPDB) ClaimActualLRPCallCount() int {
 	return len(fake.claimActualLRPArgsForCall)
 }
 
-func (fake *FakeActualLRPDB) ClaimActualLRPArgsForCall(i int) (lager.Logger, string, int32, *models.ActualLRPInstanceKey) {
+func (fake *FakeActualLRPDB) ClaimActualLRPArgsForCall(i int) (lager.Logger, *models.ClaimActualLRPRequest) {
 	fake.claimActualLRPMutex.RLock()
 	defer fake.claimActualLRPMutex.RUnlock()
-	return fake.claimActualLRPArgsForCall[i].logger, fake.claimActualLRPArgsForCall[i].processGuid, fake.claimActualLRPArgsForCall[i].index, fake.claimActualLRPArgsForCall[i].instanceKey
+	return fake.claimActualLRPArgsForCall[i].logger, fake.claimActualLRPArgsForCall[i].request
 }
 
 func (fake *FakeActualLRPDB) ClaimActualLRPReturns(result1 *models.ActualLRP, result2 *models.Error) {

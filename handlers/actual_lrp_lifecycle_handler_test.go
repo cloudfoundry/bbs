@@ -83,10 +83,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("claims the actual lrp by process guid and index", func() {
 				Expect(fakeActualLRPDB.ClaimActualLRPCallCount()).To(Equal(1))
-				_, actualProcessGuid, idx, actualInstanceKey := fakeActualLRPDB.ClaimActualLRPArgsForCall(0)
-				Expect(actualProcessGuid).To(Equal(processGuid))
-				Expect(idx).To(BeEquivalentTo(index))
-				Expect(*actualInstanceKey).To(Equal(instanceKey))
+				_, request := fakeActualLRPDB.ClaimActualLRPArgsForCall(0)
+				Expect(request.ProcessGuid).To(Equal(processGuid))
+				Expect(request.Index).To(BeEquivalentTo(index))
+				Expect(*request.ActualLrpInstanceKey).To(Equal(instanceKey))
 			})
 
 			It("returns the claimed actual lrp", func() {
@@ -95,6 +95,16 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(*response).To(Equal(claimedActualLRP))
+			})
+		})
+
+		Context("when the request is invalid", func() {
+			BeforeEach(func() {
+				requestBody = &models.ClaimActualLRPRequest{}
+			})
+
+			It("responds with 400 Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 			})
 		})
 

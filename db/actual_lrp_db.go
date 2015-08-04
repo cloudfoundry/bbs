@@ -11,7 +11,7 @@ type ActualLRPDB interface {
 	ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) (*models.ActualLRPGroups, *models.Error)
 	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, *models.Error)
 
-	ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, *models.Error)
+	ClaimActualLRP(logger lager.Logger, request *models.ClaimActualLRPRequest) (*models.ActualLRP, *models.Error)
 	StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error)
 	CrashActualLRP(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error
 	FailActualLRP(logger lager.Logger, request *models.FailActualLRPRequest) *models.Error
