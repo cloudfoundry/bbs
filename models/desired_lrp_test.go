@@ -28,7 +28,7 @@ var _ = Describe("DesiredLRP", func() {
           },
           {
             "download": {
-              "from": "http://cloud-controller-ng.service.cf.internal:9022/internal/v2/droplets/some-guid/some-guid/download",
+              "from": "http://cloud-controller-ng.service.cf.internal:9022/v3/internal/droplets/some-guid/some-guid/download",
               "to": ".",
               "cache_key": "droplets-some-guid",
 							"user": "someone"
