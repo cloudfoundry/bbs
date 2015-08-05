@@ -9,7 +9,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	"github.com/cloudfoundry-incubator/rep/lrp_stopper/fake_lrp_stopper"
-	"github.com/cloudfoundry-incubator/runtime-schema/models"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 
@@ -43,21 +42,16 @@ var _ = Describe("StopLRPInstanceHandler", func() {
 	})
 
 	Context("when the request is valid", func() {
-		var actualLRP models.ActualLRP
+		var processGuid string
+		var instanceGuid string
 
 		BeforeEach(func() {
-			actualLRP = models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid", 1, "domain"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", "cell-id"),
-				ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", []models.PortMapping{}),
-				State:                models.ActualLRPStateRunning,
-				Since:                5000,
-			}
-			Expect(actualLRP.Validate()).NotTo(HaveOccurred())
+			processGuid = "process-guid"
+			instanceGuid = "instance-guid"
 
 			values := make(url.Values)
-			values.Set(":process_guid", actualLRP.ProcessGuid)
-			values.Set(":instance_guid", actualLRP.InstanceGuid)
+			values.Set(":process_guid", processGuid)
+			values.Set(":instance_guid", instanceGuid)
 			req.URL.RawQuery = values.Encode()
 		})
 
@@ -69,8 +63,8 @@ var _ = Describe("StopLRPInstanceHandler", func() {
 			Eventually(fakeStopper.StopInstanceCallCount).Should(Equal(1))
 
 			processGuid, instanceGuid := fakeStopper.StopInstanceArgsForCall(0)
-			Expect(processGuid).To(Equal(actualLRP.ProcessGuid))
-			Expect(instanceGuid).To(Equal(actualLRP.InstanceGuid))
+			Expect(processGuid).To(Equal(processGuid))
+			Expect(instanceGuid).To(Equal(instanceGuid))
 		})
 	})
 
