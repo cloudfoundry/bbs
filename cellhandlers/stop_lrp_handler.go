@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/rep/lrp_stopper"
-	"github.com/cloudfoundry-incubator/runtime-schema/bbs/bbserrors"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -48,9 +47,6 @@ func (h StopLRPInstanceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 
 	go func() {
 		err := h.stopper.StopInstance(processGuid, instanceGuid)
-		if err == bbserrors.ErrStoreComparisonFailed {
-			return
-		}
 
 		if err != nil {
 			logger.Error("failed-to-stop", err)
