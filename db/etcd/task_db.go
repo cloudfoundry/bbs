@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"fmt"
 	"path"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
@@ -53,22 +54,27 @@ func (db *ETCDDB) Tasks(logger lager.Logger, taskFilter db.TaskFilter) (*models.
 }
 
 func (db *ETCDDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, *models.Error) {
+	task, _, err := db.taskByGuidWithIndex(logger, taskGuid)
+	return task, err
+}
+
+func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*models.Task, uint64, *models.Error) {
 	node, bbsErr := db.fetchRaw(logger, TaskSchemaPathByGuid(taskGuid))
 	if bbsErr != nil {
-		return nil, bbsErr
+		return nil, 0, bbsErr
 	}
 
 	var task models.Task
 	deserializeErr := models.FromJSON([]byte(node.Value), &task)
 	if deserializeErr != nil {
 		logger.Error("failed-parsing-desired-task", deserializeErr)
-		return nil, models.ErrDeserializeJSON
+		return nil, 0, models.ErrDeserializeJSON
 	}
 
-	return &task, nil
+	return &task, node.ModifiedIndex, nil
 }
 
-func (db *ETCDDB) DesireTask(logger lager.Logger, taskGuid, domain string, taskDef *models.TaskDefinition) error {
+func (db *ETCDDB) DesireTask(logger lager.Logger, taskGuid, domain string, taskDef *models.TaskDefinition) *models.Error {
 	taskLogger := logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
 
 	taskLogger.Info("starting")
@@ -83,14 +89,9 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskGuid, domain string, taskD
 		UpdatedAt:      db.clock.Now().UnixNano(),
 	}
 
-	err := task.Validate()
-	if err != nil {
-		return err
-	}
-
 	value, err := models.ToJSON(task)
 	if err != nil {
-		return err
+		return models.NewError(models.InvalidRecord, err.Error())
 	}
 
 	taskLogger.Debug("persisting-task")
@@ -111,4 +112,67 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskGuid, domain string, taskD
 	}
 
 	return nil
+}
+
+func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, *models.Error) {
+	if taskGuid == "" {
+		return false, &models.Error{Type: models.InvalidRequest, Message: "missing task guid"}
+	}
+	if cellID == "" {
+		return false, &models.Error{Type: models.InvalidRequest, Message: "missing cellId"}
+	}
+
+	logger = logger.WithData(lager.Data{"requested-task-guid": taskGuid, "requested-cell-id": cellID})
+
+	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
+	if modelErr != nil {
+		logger.Error("failed-to-fetch-task", modelErr)
+		return false, modelErr
+	}
+
+	logger = logger.WithData(lager.Data{"task": task.LagerData()})
+
+	if task.State == models.Task_Running && task.CellId == cellID {
+		logger.Info("task-already-running")
+		return false, nil
+	}
+
+	modelErr = validateStateTransition(task.State, models.Task_Running)
+	if modelErr != nil {
+		logger.Error("invalid-state-transition", modelErr)
+		return false, modelErr
+	}
+
+	task.UpdatedAt = db.clock.Now().UnixNano()
+	task.State = models.Task_Running
+	task.CellId = cellID
+
+	value, err := models.ToJSON(task)
+	if err != nil {
+		logger.Error("failed-converting-to-json", err)
+		return false, models.NewError(models.InvalidRecord, err.Error())
+	}
+
+	logger.Info("persisting-task")
+	_, err = db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), string(value), 0, "", index)
+	if err != nil {
+		logger.Error("failed-persisting-task", err)
+		return false, ErrorFromEtcdError(logger, err)
+	}
+	logger.Info("succeeded-persisting-task")
+
+	return true, nil
+}
+
+func validateStateTransition(from, to models.Task_State) *models.Error {
+	if (from == models.Task_Pending && to == models.Task_Running) ||
+		(from == models.Task_Running && to == models.Task_Completed) ||
+		(from == models.Task_Completed && to == models.Task_Resolving) {
+		return nil
+	} else {
+		return &models.Error{
+			Type:    models.InvalidStateTransition,
+			Message: fmt.Sprintf("Cannot transition from %s to %s", from.String(), to.String()),
+		}
+	}
 }

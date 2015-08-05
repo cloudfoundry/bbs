@@ -8,11 +8,16 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-func writeUnknownErrorResponse(w http.ResponseWriter, err error) {
-	writeProtoResponse(w, http.StatusInternalServerError, &models.Error{
-		Type:    models.UnknownError,
-		Message: err.Error(),
-	})
+func writeInternalServerErrorResponse(w http.ResponseWriter, err error) {
+	switch err := err.(type) {
+	case *models.Error:
+		writeProtoResponse(w, http.StatusInternalServerError, err)
+	default:
+		writeProtoResponse(w, http.StatusInternalServerError, &models.Error{
+			Type:    models.UnknownError,
+			Message: err.Error(),
+		})
+	}
 }
 
 func writeNotFoundResponse(w http.ResponseWriter, err error) {

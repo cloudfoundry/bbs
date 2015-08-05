@@ -29,7 +29,7 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 	desiredLRPs, err := h.db.DesiredLRPs(h.logger, models.DesiredLRPFilter{Domain: domain})
 	if err != nil {
 		logger.Error("failed-to-fetch-desired-lrps", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 	}
 	if err != nil {
 		logger.Error("failed-to-fetch-desired-lrp", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 

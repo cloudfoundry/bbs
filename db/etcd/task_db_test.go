@@ -241,7 +241,97 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(errDesire).To(ContainElement(models.ErrInvalidField{"rootfs"}))
+				err := models.ErrInvalidField{"rootfs"}
+				Expect(errDesire).To(ContainSubstring(err.Error()))
+			})
+		})
+	})
+	Describe("StartTask", func() {
+		var taskDef *models.TaskDefinition
+		const taskGuid = "some-guid"
+		const cellId = "cell-id"
+
+		BeforeEach(func() {
+			taskDef = model_helpers.NewValidTaskDefinition()
+		})
+
+		Context("when starting a pending Task", func() {
+			BeforeEach(func() {
+				err := etcdDB.DesireTask(logger, taskGuid, "domain", taskDef)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns shouldStart as true", func() {
+				started, err := etcdDB.StartTask(logger, taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(started).To(BeTrue())
+			})
+
+			It("correctly updates the task record", func() {
+				clock.IncrementBySeconds(1)
+
+				_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+
+				task, err := etcdDB.TaskByGuid(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(task.TaskGuid).To(Equal(taskGuid))
+				Expect(task.State).To(Equal(models.Task_Running))
+				Expect(*task.TaskDefinition).To(Equal(*taskDef))
+				Expect(task.UpdatedAt).To(Equal(clock.Now().UnixNano()))
+			})
+		})
+
+		Context("When starting a Task that is already started", func() {
+			BeforeEach(func() {
+				err := etcdDB.DesireTask(logger, taskGuid, "domain", taskDef)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("on the same cell", func() {
+				It("returns shouldStart as false", func() {
+					changed, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(changed).To(BeFalse())
+				})
+
+				It("does not change the Task in the store", func() {
+					previousTime := clock.Now().UnixNano()
+					clock.IncrementBySeconds(1)
+
+					_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					Expect(err).NotTo(HaveOccurred())
+
+					task, err := etcdDB.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(task.UpdatedAt).To(Equal(previousTime))
+				})
+			})
+
+			Context("on another cell", func() {
+				It("returns an error", func() {
+					_, err := etcdDB.StartTask(logger, taskGuid, "another-cell-ID")
+					Expect(err).NotTo(BeNil())
+					Expect(err.Type).To(Equal(models.InvalidStateTransition))
+				})
+
+				It("does not change the Task in the store", func() {
+					previousTime := clock.Now().UnixNano()
+					clock.IncrementBySeconds(1)
+
+					_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					Expect(err).NotTo(HaveOccurred())
+
+					task, err := etcdDB.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(task.UpdatedAt).To(Equal(previousTime))
+				})
 			})
 		})
 	})

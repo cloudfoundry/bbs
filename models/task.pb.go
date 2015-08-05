@@ -314,6 +314,42 @@ func (m *DesireTaskRequest) GetDomain() string {
 	return ""
 }
 
+type StartTaskRequest struct {
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+	CellId   string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
+}
+
+func (m *StartTaskRequest) Reset()      { *m = StartTaskRequest{} }
+func (*StartTaskRequest) ProtoMessage() {}
+
+func (m *StartTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+
+func (m *StartTaskRequest) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+
+type StartTaskResponse struct {
+	ShouldStart bool `protobuf:"varint,1,opt,name=should_start" json:"should_start"`
+}
+
+func (m *StartTaskResponse) Reset()      { *m = StartTaskResponse{} }
+func (*StartTaskResponse) ProtoMessage() {}
+
+func (m *StartTaskResponse) GetShouldStart() bool {
+	if m != nil {
+		return m.ShouldStart
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterEnum("models.Task_State", Task_State_name, Task_State_value)
 }
@@ -1095,6 +1131,151 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *StartTaskRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaskGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TaskGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CellId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CellId = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *StartTaskResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShouldStart", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ShouldStart = bool(v != 0)
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func skipTask(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -1244,6 +1425,27 @@ func (this *DesireTaskRequest) String() string {
 	}, "")
 	return s
 }
+func (this *StartTaskRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&StartTaskRequest{`,
+		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
+		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *StartTaskResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&StartTaskResponse{`,
+		`ShouldStart:` + fmt.Sprintf("%v", this.ShouldStart) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func valueToStringTask(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1340,6 +1542,23 @@ func (m *DesireTaskRequest) Size() (n int) {
 	n += 1 + l + sovTask(uint64(l))
 	l = len(m.Domain)
 	n += 1 + l + sovTask(uint64(l))
+	return n
+}
+
+func (m *StartTaskRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.TaskGuid)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.CellId)
+	n += 1 + l + sovTask(uint64(l))
+	return n
+}
+
+func (m *StartTaskResponse) Size() (n int) {
+	var l int
+	_ = l
+	n += 2
 	return n
 }
 
@@ -1587,6 +1806,58 @@ func (m *DesireTaskRequest) MarshalTo(data []byte) (n int, err error) {
 	return i, nil
 }
 
+func (m *StartTaskRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *StartTaskRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.TaskGuid)))
+	i += copy(data[i:], m.TaskGuid)
+	data[i] = 0x12
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.CellId)))
+	i += copy(data[i:], m.CellId)
+	return i, nil
+}
+
+func (m *StartTaskResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *StartTaskResponse) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0x8
+	i++
+	if m.ShouldStart {
+		data[i] = 1
+	} else {
+		data[i] = 0
+	}
+	i++
+	return i, nil
+}
+
 func encodeFixed64Task(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -1669,6 +1940,23 @@ func (this *DesireTaskRequest) GoString() string {
 		`TaskDefinition:` + fmt.Sprintf("%#v", this.TaskDefinition),
 		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
 		`Domain:` + fmt.Sprintf("%#v", this.Domain) + `}`}, ", ")
+	return s
+}
+func (this *StartTaskRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.StartTaskRequest{` +
+		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
+		`CellId:` + fmt.Sprintf("%#v", this.CellId) + `}`}, ", ")
+	return s
+}
+func (this *StartTaskResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.StartTaskResponse{` +
+		`ShouldStart:` + fmt.Sprintf("%#v", this.ShouldStart) + `}`}, ", ")
 	return s
 }
 func valueToGoStringTask(v interface{}, typ string) string {
@@ -1882,6 +2170,59 @@ func (this *DesireTaskRequest) Equal(that interface{}) bool {
 		return false
 	}
 	if this.Domain != that1.Domain {
+		return false
+	}
+	return true
+}
+func (this *StartTaskRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*StartTaskRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	return true
+}
+func (this *StartTaskResponse) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*StartTaskResponse)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.ShouldStart != that1.ShouldStart {
 		return false
 	}
 	return true

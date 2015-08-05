@@ -39,7 +39,7 @@ func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
 	tasks, err := h.db.Tasks(h.logger, taskFilter(domain, cellID))
 	if err != nil {
 		logger.Error("failed-to-fetch-tasks", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 	}
 	if err != nil {
 		logger.Error("failed-to-fetch-task", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -100,12 +100,52 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = h.db.DesireTask(logger, taskReq.TaskGuid, taskReq.Domain, taskReq.TaskDefinition)
-	if err != nil {
-		logger.Error("failed-to-desire-task", err)
-		writeUnknownErrorResponse(w, err)
+	desireErr := h.db.DesireTask(logger, taskReq.TaskGuid, taskReq.Domain, taskReq.TaskDefinition)
+	if desireErr != nil {
+		logger.Error("failed-to-desire-task", desireErr)
+		writeInternalServerErrorResponse(w, desireErr)
 		return
 	}
 
 	writeEmptyResponse(w, http.StatusCreated)
+}
+
+func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("start-task")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	startReq := &models.StartTaskRequest{}
+	err = startReq.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal: %s", err))
+		return
+	}
+	if startReq.TaskGuid == "" {
+		writeBadRequestResponse(w, models.InvalidRequest, errors.New("missing task guid"))
+		return
+	}
+	if startReq.CellId == "" {
+		writeBadRequestResponse(w, models.InvalidRequest, errors.New("missing cell id"))
+		return
+	}
+
+	taskGuid := startReq.TaskGuid
+	cellID := startReq.CellId
+	logger = logger.WithData(lager.Data{"task-guid": taskGuid, "cell-id": cellID})
+
+	shouldStart, startErr := h.db.StartTask(logger, taskGuid, cellID)
+	if startErr != nil {
+		logger.Error("failed-to-start-task", startErr)
+		writeInternalServerErrorResponse(w, startErr)
+		return
+	}
+	logger.Info("succeeded-start-task")
+	writeProtoResponse(w, http.StatusOK, &models.StartTaskResponse{ShouldStart: shouldStart})
 }

@@ -6,11 +6,21 @@ import (
 	"regexp"
 
 	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
+	"github.com/pivotal-golang/lager"
 )
 
 var taskGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
-func (task Task) Validate() error {
+func (t *Task) LagerData() lager.Data {
+	return lager.Data{
+		"task-guid": t.TaskGuid,
+		"domain":    t.Domain,
+		"state":     t.State,
+		"cell-id":   t.CellId,
+	}
+}
+
+func (task *Task) Validate() error {
 	var validationError ValidationError
 
 	if task.Domain == "" {

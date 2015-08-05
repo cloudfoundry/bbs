@@ -191,6 +191,16 @@ type FakeClient struct {
 		result1 events.EventSource
 		result2 error
 	}
+	StartTaskStub        func(taskGuid string, cellID string) (bool, error)
+	startTaskMutex       sync.RWMutex
+	startTaskArgsForCall []struct {
+		taskGuid string
+		cellID   string
+	}
+	startTaskReturns struct {
+		result1 bool
+		result2 error
+	}
 }
 
 func (fake *FakeClient) Domains() ([]string, error) {
@@ -831,6 +841,40 @@ func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, res
 	fake.SubscribeToEventsStub = nil
 	fake.subscribeToEventsReturns = struct {
 		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) StartTask(taskGuid string, cellID string) (bool, error) {
+	fake.startTaskMutex.Lock()
+	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
+		taskGuid string
+		cellID   string
+	}{taskGuid, cellID})
+	fake.startTaskMutex.Unlock()
+	if fake.StartTaskStub != nil {
+		return fake.StartTaskStub(taskGuid, cellID)
+	} else {
+		return fake.startTaskReturns.result1, fake.startTaskReturns.result2
+	}
+}
+
+func (fake *FakeClient) StartTaskCallCount() int {
+	fake.startTaskMutex.RLock()
+	defer fake.startTaskMutex.RUnlock()
+	return len(fake.startTaskArgsForCall)
+}
+
+func (fake *FakeClient) StartTaskArgsForCall(i int) (string, string) {
+	fake.startTaskMutex.RLock()
+	defer fake.startTaskMutex.RUnlock()
+	return fake.startTaskArgsForCall[i].taskGuid, fake.startTaskArgsForCall[i].cellID
+}
+
+func (fake *FakeClient) StartTaskReturns(result1 bool, result2 error) {
+	fake.StartTaskStub = nil
+	fake.startTaskReturns = struct {
+		result1 bool
 		result2 error
 	}{result1, result2}
 }

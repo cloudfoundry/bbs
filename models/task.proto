@@ -61,3 +61,12 @@ message DesireTaskRequest {
   optional string task_guid = 2;
   optional string domain = 3;
 }
+
+message StartTaskRequest {
+  optional string task_guid = 1;
+  optional string cell_id = 2;
+}
+
+message StartTaskResponse {
+  optional bool should_start = 1;
+}

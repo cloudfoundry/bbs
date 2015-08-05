@@ -32,7 +32,7 @@ func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Requ
 	actualLRPGroups, err := h.db.ActualLRPGroups(h.logger, filter)
 	if err != nil {
 		logger.Error("failed-to-fetch-actual-lrp-groups", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, r
 		case models.ErrResourceNotFound:
 			writeNotFoundResponse(w, err)
 		default:
-			writeUnknownErrorResponse(w, err)
+			writeInternalServerErrorResponse(w, err)
 		}
 		return
 	}
@@ -71,7 +71,7 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWr
 	idx, err := strconv.ParseInt(index, 10, 32)
 	if err != nil {
 		logger.Error("failed-to-parse-index", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWr
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}

@@ -34,7 +34,7 @@ func (h *DomainHandler) GetAll(w http.ResponseWriter, req *http.Request) {
 
 	domains, err := h.db.GetAllDomains(logger)
 	if err != nil {
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
 
 	err := h.db.UpsertDomain(logger, domain, ttl)
 	if err != nil {
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 

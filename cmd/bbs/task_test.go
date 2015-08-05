@@ -58,7 +58,7 @@ var _ = Describe("Task API", func() {
 	})
 
 	Context("Setters", func() {
-		Describe("POST /v1/tasks/", func() {
+		Describe("DesireTask", func() {
 			It("adds the desired task", func() {
 				expectedTask := model_helpers.NewValidTask("task-1")
 				err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
@@ -67,6 +67,36 @@ var _ = Describe("Task API", func() {
 				task, err := client.TaskByGuid(expectedTask.TaskGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.TaskDefinition).To(Equal(expectedTask.TaskDefinition))
+			})
+		})
+
+		Describe("StartTask", func() {
+			var taskDef = model_helpers.NewValidTaskDefinition()
+			const taskGuid = "task-1"
+			const cellId = "cell-1"
+
+			BeforeEach(func() {
+				err := client.DesireTask(taskGuid, "test", taskDef)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("changes the task state from pending to running", func() {
+				task, err := client.TaskByGuid(taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task.State).To(Equal(models.Task_Pending))
+
+				_, err = client.StartTask(taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+
+				task, err = client.TaskByGuid(taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task.State).To(Equal(models.Task_Running))
+			})
+
+			It("shouldStart is true", func() {
+				shouldStart, err := client.StartTask(taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(shouldStart).To(BeTrue())
 			})
 		})
 	})

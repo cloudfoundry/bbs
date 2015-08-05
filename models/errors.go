@@ -2,6 +2,13 @@ package models
 
 import "errors"
 
+func NewError(errType string, msg string) *Error {
+	return &Error{
+		Type:    errType,
+		Message: msg,
+	}
+}
+
 func (err Error) Error() string {
 	return err.GetMessage()
 }
@@ -14,6 +21,7 @@ const (
 	InvalidResponse        = "InvalidResponse"
 	InvalidProtobufMessage = "InvalidProtobufMessage"
 	InvalidJSON            = "InvalidJSON"
+	InvalidStateTransition = "InvalidStateTransition"
 
 	UnknownError = "UnknownError"
 	Unauthorized = "Unauthorized"

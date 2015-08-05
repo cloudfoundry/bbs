@@ -8,6 +8,7 @@ import (
 	fake_auction_runner "github.com/cloudfoundry-incubator/auction/auctiontypes/fakes"
 	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 
@@ -37,16 +38,9 @@ var _ = Describe("TaskAuctionHandler", func() {
 			var tasks []*models.Task
 
 			BeforeEach(func() {
-				tasks = []*models.Task{{
-					TaskGuid: "the-task-guid",
-					Domain:   "some-domain",
-					RootFs:   "some:rootfs",
-					Action: models.WrapAction(&models.RunAction{
-						User:           "me",
-						Path:           "ls",
-						ResourceLimits: &models.ResourceLimits{},
-					}),
-				}}
+				tasks = []*models.Task{
+					model_helpers.NewValidTask("the-task-guid"),
+				}
 
 				handler.Create(responseRecorder, newTestRequest(tasks), logger)
 			})

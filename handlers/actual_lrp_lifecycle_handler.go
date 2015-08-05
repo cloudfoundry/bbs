@@ -28,7 +28,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-to-read-body", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}
@@ -66,7 +66,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-to-read-body", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}
@@ -104,7 +104,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("crashed-to-read-body", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}
@@ -142,7 +142,7 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *ht
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-to-read-body", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -166,7 +166,7 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *ht
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}
@@ -195,7 +195,7 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}
@@ -209,7 +209,7 @@ func (h *ActualLRPLifecycleHandler) RetireActualLRP(w http.ResponseWriter, req *
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-to-read-body", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -233,7 +233,7 @@ func (h *ActualLRPLifecycleHandler) RetireActualLRP(w http.ResponseWriter, req *
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}

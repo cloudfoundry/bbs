@@ -46,12 +46,16 @@ type Client interface {
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
 
+	// Public Task Methods
 	Tasks() ([]*models.Task, error)
 	TasksByDomain(domain string) ([]*models.Task, error)
 	TasksByCellID(cellId string) ([]*models.Task, error)
 	TaskByGuid(guid string) (*models.Task, error)
 	DesireTask(guid, domain string, def *models.TaskDefinition) error
 	SubscribeToEvents() (events.EventSource, error)
+
+	// Internal Task Methods
+	StartTask(taskGuid string, cellID string) (bool, error)
 }
 
 func NewClient(url string) Client {
@@ -232,6 +236,16 @@ func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinit
 		TaskDefinition: taskDef,
 	}
 	return c.doRequest(DesireTaskRoute, nil, nil, req, nil)
+}
+
+func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
+	req := &models.StartTaskRequest{
+		TaskGuid: taskGuid,
+		CellId:   cellId,
+	}
+	res := &models.StartTaskResponse{}
+	err := c.doRequest(StartTaskRoute, nil, nil, req, res)
+	return res.GetShouldStart(), err
 }
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {

@@ -9,6 +9,7 @@ import (
 	fake_auction_runner "github.com/cloudfoundry-incubator/auction/auctiontypes/fakes"
 	. "github.com/cloudfoundry-incubator/bbs/auctionhandlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/rata"
@@ -37,15 +38,9 @@ var _ = Describe("Auction Handlers", func() {
 	Describe("Task Handler", func() {
 		Context("with a valid task", func() {
 			BeforeEach(func() {
-				tasks := []models.Task{{
-					TaskGuid: "the-task-guid",
-					Domain:   "some-domain",
-					RootFs:   "some:rootfs",
-					Action: models.WrapAction(&models.RunAction{
-						User: "me",
-						Path: "ls",
-					}),
-				}}
+				tasks := []*models.Task{
+					model_helpers.NewValidTask("the-task-guid"),
+				}
 
 				reqGen := rata.NewRequestGenerator("http://localhost", Routes)
 

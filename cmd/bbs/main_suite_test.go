@@ -69,9 +69,6 @@ var _ = SynchronizedBeforeSuite(
 			"http",
 		)
 
-		auctioneerServer = ghttp.NewServer()
-		auctioneerServer.AppendHandlers(ghttp.RespondWith(http.StatusAccepted, nil))
-
 		etcdRunner.Start()
 		consulRunner.Start()
 	},
@@ -80,7 +77,6 @@ var _ = SynchronizedBeforeSuite(
 var _ = SynchronizedAfterSuite(func() {
 	etcdRunner.Stop()
 	consulRunner.Stop()
-	auctioneerServer.Close()
 }, func() {
 	gexec.CleanupBuildArtifacts()
 })
@@ -93,6 +89,9 @@ var _ = BeforeEach(func() {
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	consulRunner.Reset()
+
+	auctioneerServer = ghttp.NewServer()
+	auctioneerServer.AppendHandlers(ghttp.RespondWith(http.StatusAccepted, nil))
 
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", 6700+GinkgoParallelNode())
 
@@ -117,4 +116,5 @@ var _ = BeforeEach(func() {
 
 var _ = AfterEach(func() {
 	ginkgomon.Kill(bbsProcess)
+	auctioneerServer.Close()
 })

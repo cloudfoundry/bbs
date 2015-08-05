@@ -27,7 +27,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-to-read-body", err)
-		writeUnknownErrorResponse(w, err)
+		writeInternalServerErrorResponse(w, err)
 		return
 	}
 
@@ -51,7 +51,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req
 		if bbsErr.Equal(models.ErrResourceNotFound) {
 			writeNotFoundResponse(w, bbsErr)
 		} else {
-			writeUnknownErrorResponse(w, bbsErr)
+			writeInternalServerErrorResponse(w, bbsErr)
 		}
 		return
 	}

@@ -8,14 +8,13 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf_http"
-	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 	"github.com/tedsuo/rata"
 )
 
 //go:generate counterfeiter . Client
 type Client interface {
 	RequestLRPAuctions(lrpStart []*models.LRPStartRequest) error
-	RequestTaskAuctions(tasks []oldmodels.Task) error
+	RequestTaskAuctions(tasks []*models.Task) error
 }
 
 type auctioneerClient struct {
@@ -58,7 +57,7 @@ func (c *auctioneerClient) RequestLRPAuctions(lrpStarts []*models.LRPStartReques
 	return nil
 }
 
-func (c *auctioneerClient) RequestTaskAuctions(tasks []oldmodels.Task) error {
+func (c *auctioneerClient) RequestTaskAuctions(tasks []*models.Task) error {
 	reqGen := rata.NewRequestGenerator(c.url, Routes)
 
 	payload, err := json.Marshal(tasks)

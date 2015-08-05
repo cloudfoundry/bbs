@@ -72,15 +72,15 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		RootFs: "docker:///docker.com/docker",
 		EnvironmentVariables: []*models.EnvironmentVariable{
 			{
-				Name:  "ENV_VAR_NAME",
-				Value: "an environmment value",
+				Name:  "FOO",
+				Value: "BAR",
 			},
 		},
-		Action: models.WrapAction(&models.DownloadAction{
-			From:     "old_location",
-			To:       "new_location",
-			CacheKey: "the-cache-key",
-			User:     "someone",
+		Action: models.WrapAction(&models.RunAction{
+			User:           "user",
+			Path:           "echo",
+			Args:           []string{"hello world"},
+			ResourceLimits: &models.ResourceLimits{},
 		}),
 		MemoryMb:    256,
 		DiskMb:      1024,
@@ -108,9 +108,6 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		},
 
 		Annotation: `[{"anything": "you want!"}]... dude`,
-		// TODO: UNCOMMENT ME ONCE YOU SWITCH TO PROTOBUFS
-		//CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
-		CompletionCallbackUrl: "http://@a.b.c/d/e/f",
 	}
 }
 
@@ -132,7 +129,8 @@ func NewValidTask(guid string) *models.Task {
 	}
 
 	err := task.Validate()
-	Expect(err).NotTo(HaveOccurred())
-
+	if err != nil {
+		panic(err)
+	}
 	return task
 }

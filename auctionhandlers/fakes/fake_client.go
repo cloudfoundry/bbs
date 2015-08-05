@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 )
 
 type FakeClient struct {
@@ -18,10 +17,10 @@ type FakeClient struct {
 	requestLRPAuctionsReturns struct {
 		result1 error
 	}
-	RequestTaskAuctionsStub        func(tasks []oldmodels.Task) error
+	RequestTaskAuctionsStub        func(tasks []*models.Task) error
 	requestTaskAuctionsMutex       sync.RWMutex
 	requestTaskAuctionsArgsForCall []struct {
-		tasks []oldmodels.Task
+		tasks []*models.Task
 	}
 	requestTaskAuctionsReturns struct {
 		result1 error
@@ -60,10 +59,10 @@ func (fake *FakeClient) RequestLRPAuctionsReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) RequestTaskAuctions(tasks []oldmodels.Task) error {
+func (fake *FakeClient) RequestTaskAuctions(tasks []*models.Task) error {
 	fake.requestTaskAuctionsMutex.Lock()
 	fake.requestTaskAuctionsArgsForCall = append(fake.requestTaskAuctionsArgsForCall, struct {
-		tasks []oldmodels.Task
+		tasks []*models.Task
 	}{tasks})
 	fake.requestTaskAuctionsMutex.Unlock()
 	if fake.RequestTaskAuctionsStub != nil {
@@ -79,7 +78,7 @@ func (fake *FakeClient) RequestTaskAuctionsCallCount() int {
 	return len(fake.requestTaskAuctionsArgsForCall)
 }
 
-func (fake *FakeClient) RequestTaskAuctionsArgsForCall(i int) []oldmodels.Task {
+func (fake *FakeClient) RequestTaskAuctionsArgsForCall(i int) []*models.Task {
 	fake.requestTaskAuctionsMutex.RLock()
 	defer fake.requestTaskAuctionsMutex.RUnlock()
 	return fake.requestTaskAuctionsArgsForCall[i].tasks
