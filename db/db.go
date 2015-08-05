@@ -6,4 +6,5 @@ type DB interface {
 	DesiredLRPDB
 	TaskDB
 	EventDB
+	EvacuationDB
 }

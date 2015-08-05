@@ -14,6 +14,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db)
+	evacuationHandler := NewEvacuationHandler(logger, db)
 	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
 	taskHandler := NewTaskHandler(logger, db)
 	eventsHandler := NewEventHandler(logger, hub)
@@ -27,12 +28,17 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		bbs.ActualLRPGroupsRoute:                     route(actualLRPHandler.ActualLRPGroups),
 		bbs.ActualLRPGroupsByProcessGuidRoute:        route(actualLRPHandler.ActualLRPGroupsByProcessGuid),
 		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex),
-		bbs.ClaimActualLRPRoute:                      route(actualLRPLifecycleHandler.ClaimActualLRP),
-		bbs.StartActualLRPRoute:                      route(actualLRPLifecycleHandler.StartActualLRP),
-		bbs.CrashActualLRPRoute:                      route(actualLRPLifecycleHandler.CrashActualLRP),
-		bbs.RetireActualLRPRoute:                     route(actualLRPLifecycleHandler.RetireActualLRP),
-		bbs.FailActualLRPRoute:                       route(actualLRPLifecycleHandler.FailActualLRP),
-		bbs.RemoveActualLRPRoute:                     route(actualLRPLifecycleHandler.RemoveActualLRP),
+
+		// Actual LRP Lifecycle
+		bbs.ClaimActualLRPRoute:  route(actualLRPLifecycleHandler.ClaimActualLRP),
+		bbs.StartActualLRPRoute:  route(actualLRPLifecycleHandler.StartActualLRP),
+		bbs.CrashActualLRPRoute:  route(actualLRPLifecycleHandler.CrashActualLRP),
+		bbs.RetireActualLRPRoute: route(actualLRPLifecycleHandler.RetireActualLRP),
+		bbs.FailActualLRPRoute:   route(actualLRPLifecycleHandler.FailActualLRP),
+		bbs.RemoveActualLRPRoute: route(actualLRPLifecycleHandler.RemoveActualLRP),
+
+		// Evacuation
+		bbs.RemoveEvacuatingActualLRPRoute: route(evacuationHandler.RemoveEvacuatingActualLRP),
 
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:             route(desiredLRPHandler.DesiredLRPs),

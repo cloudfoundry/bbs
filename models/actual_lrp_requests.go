@@ -105,3 +105,25 @@ func (request RetireActualLRPRequest) Validate() error {
 
 	return nil
 }
+
+func (request RemoveEvacuatingActualLRPRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ActualLrpKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_key"})
+	} else if err := request.ActualLrpKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if request.ActualLrpInstanceKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_instance_key"})
+	} else if err := request.ActualLrpInstanceKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}

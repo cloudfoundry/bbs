@@ -19,21 +19,34 @@ const (
 	Unauthorized = "Unauthorized"
 
 	ResourceConflict = "ResourceConflict"
+	ResourceExists   = "ResourceExists"
 	ResourceNotFound = "ResourceNotFound"
 	RouterError      = "RouterError"
 
-	ActualLRPCannotBeClaimed = "ActualLRPCannotBeClaimed"
-	ActualLRPCannotBeStarted = "ActualLRPCannotBeStarted"
-	ActualLRPCannotBeCrashed = "ActualLRPCannotBeCrashed"
-	ActualLRPCannotBeFailed  = "ActualLRPCannotBeFailed"
-	ActualLRPCannotBeRemoved = "ActualLRPCannotBeRemoved"
-	ActualLRPCannotBeStopped = "ActualLRPCannotBeStopped"
+	ActualLRPCannotBeClaimed   = "ActualLRPCannotBeClaimed"
+	ActualLRPCannotBeStarted   = "ActualLRPCannotBeStarted"
+	ActualLRPCannotBeCrashed   = "ActualLRPCannotBeCrashed"
+	ActualLRPCannotBeFailed    = "ActualLRPCannotBeFailed"
+	ActualLRPCannotBeRemoved   = "ActualLRPCannotBeRemoved"
+	ActualLRPCannotBeStopped   = "ActualLRPCannotBeStopped"
+	ActualLRPCannotBeUnclaimed = "ActualLRPCannotBeUnclaimed"
+	ActualLRPCannotBeEvacuated = "ActualLRPCannotBeEvacuated"
 )
 
 var (
 	ErrResourceNotFound = &Error{
 		Type:    ResourceNotFound,
 		Message: "the requested resource could not be found",
+	}
+
+	ErrResourceExists = &Error{
+		Type:    ResourceExists,
+		Message: "the requested resource already exists",
+	}
+
+	ErrResourceConflict = &Error{
+		Type:    ResourceConflict,
+		Message: "the requested resource is in a conflicting state",
 	}
 
 	ErrBadRequest = &Error{
@@ -84,6 +97,16 @@ var (
 	ErrActualLRPCannotBeStopped = &Error{
 		Type:    ActualLRPCannotBeStopped,
 		Message: "cannot stop actual LRP",
+	}
+
+	ErrActualLRPCannotBeUnclaimed = &Error{
+		Type:    ActualLRPCannotBeUnclaimed,
+		Message: "cannot unclaim actual LRP",
+	}
+
+	ErrActualLRPCannotBeEvacuated = &Error{
+		Type:    ActualLRPCannotBeEvacuated,
+		Message: "cannot evacuate actual LRP",
 	}
 )
 

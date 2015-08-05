@@ -51,6 +51,8 @@ var _ = Describe("ActualLRP API", func() {
 		baseLRPKey         models.ActualLRPKey
 		baseLRPInstanceKey models.ActualLRPInstanceKey
 
+		evacuatingLRPInstanceKey models.ActualLRPInstanceKey
+
 		otherLRPKey         models.ActualLRPKey
 		otherLRPInstanceKey models.ActualLRPInstanceKey
 
@@ -73,6 +75,7 @@ var _ = Describe("ActualLRP API", func() {
 		baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
 
+		evacuatingLRPInstanceKey = models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID)
 		otherLRPKey = models.NewActualLRPKey(otherProcessGuid, otherIndex, otherDomain)
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
@@ -90,9 +93,10 @@ var _ = Describe("ActualLRP API", func() {
 			State:                models.ActualLRPStateRunning,
 			Since:                time.Now().UnixNano(),
 		}
+
 		evacuatingLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
-			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID),
+			ActualLRPInstanceKey: evacuatingLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
 			Since:                time.Now().UnixNano() - 1000,
@@ -366,6 +370,24 @@ var _ = Describe("ActualLRP API", func() {
 			_, err := client.ActualLRPGroupByProcessGuidAndIndex(otherProcessGuid, otherIndex)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(models.ErrResourceNotFound))
+		})
+	})
+
+	Describe("POST /v1/evacuating_actual_lrps/remove", func() {
+		var (
+			removeErr error
+		)
+
+		JustBeforeEach(func() {
+			removeErr = client.RemoveEvacuatingActualLRP(&baseLRP.ActualLRPKey, &evacuatingLRPInstanceKey)
+		})
+
+		It("removes the evacuating actual_lrp", func() {
+			Expect(removeErr).NotTo(HaveOccurred())
+
+			group, err := client.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(group.Evacuating).To(BeNil())
 		})
 	})
 })

@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"fmt"
-	"path"
 	"sync"
 	"sync/atomic"
 
@@ -10,17 +9,6 @@ import (
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"
 )
-
-const maxDesiredLRPGetterWorkPoolSize = 50
-const DesiredLRPSchemaRoot = DataSchemaRoot + "desired"
-
-func DesiredLRPSchemaPath(lrp *models.DesiredLRP) string {
-	return DesiredLRPSchemaPathByProcessGuid(lrp.GetProcessGuid())
-}
-
-func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
-	return path.Join(DesiredLRPSchemaRoot, processGuid)
-}
 
 func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) (*models.DesiredLRPs, *models.Error) {
 	root, bbsErr := db.fetchRecursiveRaw(logger, DesiredLRPSchemaRoot)

@@ -34,13 +34,14 @@ type Client interface {
 	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
 	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
 
-	// ActualLRP Lifecycle
 	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error)
 	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error)
 	CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(processGuid string, index int) error
 	RetireActualLRP(key *models.ActualLRPKey) error
+
+	RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
@@ -166,6 +167,14 @@ func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
 		ActualLrpKey: key,
 	}
 	return c.doRequest(RetireActualLRPRoute, nil, nil, &request, nil)
+}
+
+func (c *client) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+	request := models.RemoveEvacuatingActualLRPRequest{
+		ActualLrpKey:         key,
+		ActualLrpInstanceKey: instanceKey,
+	}
+	return c.doRequest(RemoveEvacuatingActualLRPRoute, nil, nil, &request, nil)
 }
 
 func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

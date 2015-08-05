@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,27 +14,6 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
-
-const maxActualGroupGetterWorkPoolSize = 50
-const ActualLRPSchemaRoot = DataSchemaRoot + "actual"
-const ActualLRPInstanceKey = "instance"
-const ActualLRPEvacuatingKey = "evacuating"
-
-func ActualLRPProcessDir(processGuid string) string {
-	return path.Join(ActualLRPSchemaRoot, processGuid)
-}
-
-func ActualLRPIndexDir(processGuid string, index int32) string {
-	return path.Join(ActualLRPProcessDir(processGuid), strconv.Itoa(int(index)))
-}
-
-func ActualLRPSchemaPath(processGuid string, index int32) string {
-	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPInstanceKey)
-}
-
-func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
-	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPEvacuatingKey)
-}
 
 func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
 	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
@@ -190,12 +168,13 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActua
 	return lrp, nil
 }
 
-func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, *models.Error) {
+func (db *ETCDDB) newRunningActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
 	guid, err := uuid.NewV4()
 	if err != nil {
-		return nil, models.ErrActualLRPCannotBeStarted
+		return nil, err
 	}
-	lrp := &models.ActualLRP{
+
+	return &models.ActualLRP{
 		ActualLRPKey:         *key,
 		ActualLRPInstanceKey: *instanceKey,
 		ActualLRPNetInfo:     *netInfo,
@@ -205,6 +184,13 @@ func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.Actual
 			Epoch: guid.String(),
 			Index: 0,
 		},
+	}, nil
+}
+
+func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, *models.Error) {
+	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
+	if err != nil {
+		return nil, models.ErrActualLRPCannotBeStarted
 	}
 
 	lrpRawJSON, err := json.Marshal(lrp)
@@ -217,7 +203,30 @@ func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.Actual
 		logger.Error("failed", err)
 		return nil, models.ErrActualLRPCannotBeStarted
 	}
+
 	return lrp, nil
+}
+
+func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) *models.Error {
+	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
+	if err != nil {
+		return models.ErrActualLRPCannotBeStarted
+	}
+
+	lrp.ModificationTag.Increment()
+
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		return models.ErrSerializeJSON
+	}
+
+	_, err = db.client.Create(EvacuatingActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), evacuatingTTLInSeconds)
+	if err != nil {
+		logger.Error("failed", err)
+		return models.ErrActualLRPCannotBeStarted
+	}
+
+	return nil
 }
 
 func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error) {
@@ -330,7 +339,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, request *models.CrashActua
 
 	if immediateRestart {
 		auctionErr := db.requestLRPAuctionForLRPKey(logger, key)
-		if err != nil {
+		if auctionErr != nil {
 			return auctionErr
 		}
 	}

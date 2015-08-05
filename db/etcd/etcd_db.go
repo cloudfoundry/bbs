@@ -1,6 +1,8 @@
 package etcd
 
 import (
+	"path"
+	"strconv"
 	"sync"
 
 	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
@@ -18,6 +20,38 @@ const (
 	ETCDErrKeyNotFound  = 100
 	ETCDErrIndexCleared = 401
 )
+
+const maxActualGroupGetterWorkPoolSize = 50
+const ActualLRPSchemaRoot = DataSchemaRoot + "actual"
+const ActualLRPInstanceKey = "instance"
+const ActualLRPEvacuatingKey = "evacuating"
+
+func ActualLRPProcessDir(processGuid string) string {
+	return path.Join(ActualLRPSchemaRoot, processGuid)
+}
+
+func ActualLRPIndexDir(processGuid string, index int32) string {
+	return path.Join(ActualLRPProcessDir(processGuid), strconv.Itoa(int(index)))
+}
+
+func ActualLRPSchemaPath(processGuid string, index int32) string {
+	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPInstanceKey)
+}
+
+func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
+	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPEvacuatingKey)
+}
+
+const maxDesiredLRPGetterWorkPoolSize = 50
+const DesiredLRPSchemaRoot = DataSchemaRoot + "desired"
+
+func DesiredLRPSchemaPath(lrp *models.DesiredLRP) string {
+	return DesiredLRPSchemaPathByProcessGuid(lrp.GetProcessGuid())
+}
+
+func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
+	return path.Join(DesiredLRPSchemaRoot, processGuid)
+}
 
 type ETCDDB struct {
 	client            *etcd.Client

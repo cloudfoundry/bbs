@@ -113,6 +113,15 @@ type FakeClient struct {
 	retireActualLRPReturns struct {
 		result1 error
 	}
+	RemoveEvacuatingActualLRPStub        func(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
+	removeEvacuatingActualLRPMutex       sync.RWMutex
+	removeEvacuatingActualLRPArgsForCall []struct {
+		key         *models.ActualLRPKey
+		instanceKey *models.ActualLRPInstanceKey
+	}
+	removeEvacuatingActualLRPReturns struct {
+		result1 error
+	}
 	DesiredLRPsStub        func(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
@@ -530,6 +539,39 @@ func (fake *FakeClient) RetireActualLRPArgsForCall(i int) *models.ActualLRPKey {
 func (fake *FakeClient) RetireActualLRPReturns(result1 error) {
 	fake.RetireActualLRPStub = nil
 	fake.retireActualLRPReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+	fake.removeEvacuatingActualLRPMutex.Lock()
+	fake.removeEvacuatingActualLRPArgsForCall = append(fake.removeEvacuatingActualLRPArgsForCall, struct {
+		key         *models.ActualLRPKey
+		instanceKey *models.ActualLRPInstanceKey
+	}{key, instanceKey})
+	fake.removeEvacuatingActualLRPMutex.Unlock()
+	if fake.RemoveEvacuatingActualLRPStub != nil {
+		return fake.RemoveEvacuatingActualLRPStub(key, instanceKey)
+	} else {
+		return fake.removeEvacuatingActualLRPReturns.result1
+	}
+}
+
+func (fake *FakeClient) RemoveEvacuatingActualLRPCallCount() int {
+	fake.removeEvacuatingActualLRPMutex.RLock()
+	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
+	return len(fake.removeEvacuatingActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) RemoveEvacuatingActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+	fake.removeEvacuatingActualLRPMutex.RLock()
+	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
+	return fake.removeEvacuatingActualLRPArgsForCall[i].key, fake.removeEvacuatingActualLRPArgsForCall[i].instanceKey
+}
+
+func (fake *FakeClient) RemoveEvacuatingActualLRPReturns(result1 error) {
+	fake.RemoveEvacuatingActualLRPStub = nil
+	fake.removeEvacuatingActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
