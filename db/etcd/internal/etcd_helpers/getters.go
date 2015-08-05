@@ -3,7 +3,6 @@ package etcd_helpers
 import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/runtime-schema/bbs/bbserrors"
 	"github.com/cloudfoundry/storeadapter"
 
 	. "github.com/onsi/gomega"
@@ -12,7 +11,7 @@ import (
 func (t *ETCDHelper) GetInstanceActualLRP(lrpKey *models.ActualLRPKey) (*models.ActualLRP, error) {
 	resp, err := t.etcdClient.Get(etcd.ActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, false)
 	if err == storeadapter.ErrorKeyNotFound {
-		return &models.ActualLRP{}, bbserrors.ErrStoreResourceNotFound
+		return &models.ActualLRP{}, models.ErrResourceNotFound
 	}
 	Expect(err).NotTo(HaveOccurred())
 
