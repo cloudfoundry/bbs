@@ -22,6 +22,8 @@ const (
 	ContentTypeHeader    = "Content-Type"
 	XCfRouterErrorHeader = "X-Cf-Routererror"
 	ProtoContentType     = "application/x-protobuf"
+	KeepContainer        = true
+	DeleteContainer      = false
 )
 
 //go:generate counterfeiter -o fake_bbs/fake_client.go . Client
@@ -41,7 +43,11 @@ type Client interface {
 	RemoveActualLRP(processGuid string, index int) error
 	RetireActualLRP(key *models.ActualLRPKey) error
 
-	RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
+	EvacuateClaimedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateRunningActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, error)
+	EvacuateStoppedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateCrashedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
+	RemoveEvacuatingActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
@@ -176,6 +182,37 @@ func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
 		ActualLrpKey: key,
 	}
 	return c.doRequest(RetireActualLRPRoute, nil, nil, &request, nil)
+}
+
+func (c *client) EvacuateClaimedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
+	return c.doEvacRequest(EvacuateClaimedActualLRPRoute, KeepContainer, &models.EvacuateClaimedActualLRPRequest{
+		ActualLrpKey:         key,
+		ActualLrpInstanceKey: instanceKey,
+	})
+}
+
+func (c *client) EvacuateCrashedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, error) {
+	return c.doEvacRequest(EvacuateCrashedActualLRPRoute, DeleteContainer, &models.EvacuateCrashedActualLRPRequest{
+		ActualLrpKey:         key,
+		ActualLrpInstanceKey: instanceKey,
+		ErrorMessage:         errorMessage,
+	})
+}
+
+func (c *client) EvacuateStoppedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
+	return c.doEvacRequest(EvacuateStoppedActualLRPRoute, DeleteContainer, &models.EvacuateStoppedActualLRPRequest{
+		ActualLrpKey:         key,
+		ActualLrpInstanceKey: instanceKey,
+	})
+}
+
+func (c *client) EvacuateRunningActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, ttl uint64) (bool, error) {
+	return c.doEvacRequest(EvacuateRunningActualLRPRoute, KeepContainer, &models.EvacuateRunningActualLRPRequest{
+		ActualLrpKey:         key,
+		ActualLrpInstanceKey: instanceKey,
+		ActualLrpNetInfo:     netInfo,
+		Ttl:                  ttl,
+	})
 }
 
 func (c *client) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
@@ -329,6 +366,16 @@ func (c *client) createRequest(requestName string, params rata.Params, queryPara
 	req.ContentLength = int64(len(messageBody))
 	req.Header.Set("Content-Type", ProtoContentType)
 	return req, nil
+}
+
+func (c *client) doEvacRequest(route string, defaultKeepContainer bool, request proto.Message) (bool, error) {
+	var response models.EvacuationResponse
+	err := c.doRequest(route, nil, nil, request, &response)
+	if err != nil {
+		return defaultKeepContainer, err
+	}
+
+	return response.KeepContainer, response.Error.ToError()
 }
 
 func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, requestBody, responseBody proto.Message) error {

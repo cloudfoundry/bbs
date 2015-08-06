@@ -39,6 +39,10 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 
 		// Evacuation
 		bbs.RemoveEvacuatingActualLRPRoute: route(evacuationHandler.RemoveEvacuatingActualLRP),
+		bbs.EvacuateClaimedActualLRPRoute:  route(evacuationHandler.EvacuateClaimedActualLRP),
+		bbs.EvacuateCrashedActualLRPRoute:  route(evacuationHandler.EvacuateCrashedActualLRP),
+		bbs.EvacuateStoppedActualLRPRoute:  route(evacuationHandler.EvacuateStoppedActualLRP),
+		bbs.EvacuateRunningActualLRPRoute:  route(evacuationHandler.EvacuateRunningActualLRP),
 
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:             route(desiredLRPHandler.DesiredLRPs),

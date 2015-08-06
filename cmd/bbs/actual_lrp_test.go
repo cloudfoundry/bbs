@@ -125,6 +125,9 @@ var _ = Describe("ActualLRP API", func() {
 			Since:                time.Now().UnixNano(),
 		}
 
+		etcdHelper.CreateValidDesiredLRP(baseLRP.ActualLRPKey.ProcessGuid)
+		etcdHelper.CreateValidDesiredLRP(otherLRP.ActualLRPKey.ProcessGuid)
+
 		etcdHelper.SetRawActualLRP(baseLRP)
 		etcdHelper.SetRawActualLRP(otherLRP)
 		etcdHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
@@ -370,24 +373,6 @@ var _ = Describe("ActualLRP API", func() {
 			_, err := client.ActualLRPGroupByProcessGuidAndIndex(otherProcessGuid, otherIndex)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(models.ErrResourceNotFound))
-		})
-	})
-
-	Describe("POST /v1/evacuating_actual_lrps/remove", func() {
-		var (
-			removeErr error
-		)
-
-		JustBeforeEach(func() {
-			removeErr = client.RemoveEvacuatingActualLRP(&baseLRP.ActualLRPKey, &evacuatingLRPInstanceKey)
-		})
-
-		It("removes the evacuating actual_lrp", func() {
-			Expect(removeErr).NotTo(HaveOccurred())
-
-			group, err := client.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(group.Evacuating).To(BeNil())
 		})
 	})
 })

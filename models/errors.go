@@ -12,7 +12,14 @@ func NewError(errType string, msg string) *Error {
 	}
 }
 
-func (err Error) Error() string {
+func (err *Error) ToError() error {
+	if err == nil {
+		return nil
+	}
+	return err
+}
+
+func (err *Error) Error() string {
 	return err.GetMessage()
 }
 

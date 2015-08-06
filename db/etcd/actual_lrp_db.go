@@ -117,6 +117,7 @@ func (db *ETCDDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pr
 }
 
 func (db *ETCDDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, *models.Error) {
+	logger.Debug("raw-actual-lrp-by-process-guid-and-index")
 	node, bbsErr := db.fetchRaw(logger, ActualLRPSchemaPath(processGuid, index))
 	if bbsErr != nil {
 		return nil, 0, bbsErr
@@ -207,7 +208,9 @@ func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.Actual
 	return lrp, nil
 }
 
-func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) *models.Error {
+func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) (modelErr *models.Error) {
+	logger.Debug("create-evacuating-actual-lrp")
+	defer logger.Debug("create-evacuating-actual-lrp-complete", lager.Data{"error": modelErr})
 	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
 	if err != nil {
 		return models.ErrActualLRPCannotBeStarted
@@ -282,6 +285,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, request *models.CrashActua
 	key := request.ActualLrpKey
 	instanceKey := request.ActualLrpInstanceKey
 	errorMessage := request.ErrorMessage
+	logger = logger.Session("crashing", lager.Data{"request": request})
 	logger.Info("starting")
 
 	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
@@ -309,6 +313,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, request *models.CrashActua
 	if lrp.State == models.ActualLRPStateUnclaimed || lrp.State == models.ActualLRPStateCrashed ||
 		((lrp.State == models.ActualLRPStateClaimed || lrp.State == models.ActualLRPStateRunning) &&
 			!lrp.ActualLRPInstanceKey.Equal(instanceKey)) {
+		logger.Debug("cannot-be-crashed", lager.Data{"state": lrp.State, "same-instance-key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
 		return models.ErrActualLRPCannotBeCrashed
 	}
 

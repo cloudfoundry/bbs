@@ -22,6 +22,10 @@ const (
 
 	// Evacuation
 	RemoveEvacuatingActualLRPRoute = "RemoveEvacuatingActualLRP"
+	EvacuateClaimedActualLRPRoute  = "EvacuateClaimedActualLRP"
+	EvacuateCrashedActualLRPRoute  = "EvacuateCrashedActualLRP"
+	EvacuateStoppedActualLRPRoute  = "EvacuateStoppedActualLRP"
+	EvacuateRunningActualLRPRoute  = "EvacuateRunningActualLRP"
 
 	// Desired LRPs
 	DesiredLRPsRoute             = "DesiredLRPs"
@@ -62,6 +66,10 @@ var Routes = rata.Routes{
 
 	// Evacuation
 	{Path: "/v1/evacuating_actual_lrps/remove", Method: "POST", Name: RemoveEvacuatingActualLRPRoute},
+	{Path: "/v1/actual_lrps/evacuate_claimed", Method: "POST", Name: EvacuateClaimedActualLRPRoute},
+	{Path: "/v1/actual_lrps/evacuate_crashed", Method: "POST", Name: EvacuateCrashedActualLRPRoute},
+	{Path: "/v1/actual_lrps/evacuate_stopped", Method: "POST", Name: EvacuateStoppedActualLRPRoute},
+	{Path: "/v1/actual_lrps/evacuate_running", Method: "POST", Name: EvacuateRunningActualLRPRoute},
 
 	// Desired LRPs
 	{Path: "/v1/desired_lrps", Method: "GET", Name: DesiredLRPsRoute},

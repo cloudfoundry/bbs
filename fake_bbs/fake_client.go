@@ -113,11 +113,54 @@ type FakeClient struct {
 	retireActualLRPReturns struct {
 		result1 error
 	}
-	RemoveEvacuatingActualLRPStub        func(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
+	EvacuateClaimedActualLRPStub        func(*models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	evacuateClaimedActualLRPMutex       sync.RWMutex
+	evacuateClaimedActualLRPArgsForCall []struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+	}
+	evacuateClaimedActualLRPReturns struct {
+		result1 bool
+		result2 error
+	}
+	EvacuateRunningActualLRPStub        func(*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, error)
+	evacuateRunningActualLRPMutex       sync.RWMutex
+	evacuateRunningActualLRPArgsForCall []struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+		arg3 *models.ActualLRPNetInfo
+		arg4 uint64
+	}
+	evacuateRunningActualLRPReturns struct {
+		result1 bool
+		result2 error
+	}
+	EvacuateStoppedActualLRPStub        func(*models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	evacuateStoppedActualLRPMutex       sync.RWMutex
+	evacuateStoppedActualLRPArgsForCall []struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+	}
+	evacuateStoppedActualLRPReturns struct {
+		result1 bool
+		result2 error
+	}
+	EvacuateCrashedActualLRPStub        func(*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
+	evacuateCrashedActualLRPMutex       sync.RWMutex
+	evacuateCrashedActualLRPArgsForCall []struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+		arg3 string
+	}
+	evacuateCrashedActualLRPReturns struct {
+		result1 bool
+		result2 error
+	}
+	RemoveEvacuatingActualLRPStub        func(*models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	removeEvacuatingActualLRPMutex       sync.RWMutex
 	removeEvacuatingActualLRPArgsForCall []struct {
-		key         *models.ActualLRPKey
-		instanceKey *models.ActualLRPInstanceKey
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
 	}
 	removeEvacuatingActualLRPReturns struct {
 		result1 error
@@ -608,15 +651,154 @@ func (fake *FakeClient) RetireActualLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+func (fake *FakeClient) EvacuateClaimedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) (bool, error) {
+	fake.evacuateClaimedActualLRPMutex.Lock()
+	fake.evacuateClaimedActualLRPArgsForCall = append(fake.evacuateClaimedActualLRPArgsForCall, struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+	}{arg1, arg2})
+	fake.evacuateClaimedActualLRPMutex.Unlock()
+	if fake.EvacuateClaimedActualLRPStub != nil {
+		return fake.EvacuateClaimedActualLRPStub(arg1, arg2)
+	} else {
+		return fake.evacuateClaimedActualLRPReturns.result1, fake.evacuateClaimedActualLRPReturns.result2
+	}
+}
+
+func (fake *FakeClient) EvacuateClaimedActualLRPCallCount() int {
+	fake.evacuateClaimedActualLRPMutex.RLock()
+	defer fake.evacuateClaimedActualLRPMutex.RUnlock()
+	return len(fake.evacuateClaimedActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) EvacuateClaimedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+	fake.evacuateClaimedActualLRPMutex.RLock()
+	defer fake.evacuateClaimedActualLRPMutex.RUnlock()
+	return fake.evacuateClaimedActualLRPArgsForCall[i].arg1, fake.evacuateClaimedActualLRPArgsForCall[i].arg2
+}
+
+func (fake *FakeClient) EvacuateClaimedActualLRPReturns(result1 bool, result2 error) {
+	fake.EvacuateClaimedActualLRPStub = nil
+	fake.evacuateClaimedActualLRPReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) EvacuateRunningActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey, arg3 *models.ActualLRPNetInfo, arg4 uint64) (bool, error) {
+	fake.evacuateRunningActualLRPMutex.Lock()
+	fake.evacuateRunningActualLRPArgsForCall = append(fake.evacuateRunningActualLRPArgsForCall, struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+		arg3 *models.ActualLRPNetInfo
+		arg4 uint64
+	}{arg1, arg2, arg3, arg4})
+	fake.evacuateRunningActualLRPMutex.Unlock()
+	if fake.EvacuateRunningActualLRPStub != nil {
+		return fake.EvacuateRunningActualLRPStub(arg1, arg2, arg3, arg4)
+	} else {
+		return fake.evacuateRunningActualLRPReturns.result1, fake.evacuateRunningActualLRPReturns.result2
+	}
+}
+
+func (fake *FakeClient) EvacuateRunningActualLRPCallCount() int {
+	fake.evacuateRunningActualLRPMutex.RLock()
+	defer fake.evacuateRunningActualLRPMutex.RUnlock()
+	return len(fake.evacuateRunningActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) EvacuateRunningActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) {
+	fake.evacuateRunningActualLRPMutex.RLock()
+	defer fake.evacuateRunningActualLRPMutex.RUnlock()
+	return fake.evacuateRunningActualLRPArgsForCall[i].arg1, fake.evacuateRunningActualLRPArgsForCall[i].arg2, fake.evacuateRunningActualLRPArgsForCall[i].arg3, fake.evacuateRunningActualLRPArgsForCall[i].arg4
+}
+
+func (fake *FakeClient) EvacuateRunningActualLRPReturns(result1 bool, result2 error) {
+	fake.EvacuateRunningActualLRPStub = nil
+	fake.evacuateRunningActualLRPReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) EvacuateStoppedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) (bool, error) {
+	fake.evacuateStoppedActualLRPMutex.Lock()
+	fake.evacuateStoppedActualLRPArgsForCall = append(fake.evacuateStoppedActualLRPArgsForCall, struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+	}{arg1, arg2})
+	fake.evacuateStoppedActualLRPMutex.Unlock()
+	if fake.EvacuateStoppedActualLRPStub != nil {
+		return fake.EvacuateStoppedActualLRPStub(arg1, arg2)
+	} else {
+		return fake.evacuateStoppedActualLRPReturns.result1, fake.evacuateStoppedActualLRPReturns.result2
+	}
+}
+
+func (fake *FakeClient) EvacuateStoppedActualLRPCallCount() int {
+	fake.evacuateStoppedActualLRPMutex.RLock()
+	defer fake.evacuateStoppedActualLRPMutex.RUnlock()
+	return len(fake.evacuateStoppedActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) EvacuateStoppedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+	fake.evacuateStoppedActualLRPMutex.RLock()
+	defer fake.evacuateStoppedActualLRPMutex.RUnlock()
+	return fake.evacuateStoppedActualLRPArgsForCall[i].arg1, fake.evacuateStoppedActualLRPArgsForCall[i].arg2
+}
+
+func (fake *FakeClient) EvacuateStoppedActualLRPReturns(result1 bool, result2 error) {
+	fake.EvacuateStoppedActualLRPStub = nil
+	fake.evacuateStoppedActualLRPReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) EvacuateCrashedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey, arg3 string) (bool, error) {
+	fake.evacuateCrashedActualLRPMutex.Lock()
+	fake.evacuateCrashedActualLRPArgsForCall = append(fake.evacuateCrashedActualLRPArgsForCall, struct {
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.evacuateCrashedActualLRPMutex.Unlock()
+	if fake.EvacuateCrashedActualLRPStub != nil {
+		return fake.EvacuateCrashedActualLRPStub(arg1, arg2, arg3)
+	} else {
+		return fake.evacuateCrashedActualLRPReturns.result1, fake.evacuateCrashedActualLRPReturns.result2
+	}
+}
+
+func (fake *FakeClient) EvacuateCrashedActualLRPCallCount() int {
+	fake.evacuateCrashedActualLRPMutex.RLock()
+	defer fake.evacuateCrashedActualLRPMutex.RUnlock()
+	return len(fake.evacuateCrashedActualLRPArgsForCall)
+}
+
+func (fake *FakeClient) EvacuateCrashedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
+	fake.evacuateCrashedActualLRPMutex.RLock()
+	defer fake.evacuateCrashedActualLRPMutex.RUnlock()
+	return fake.evacuateCrashedActualLRPArgsForCall[i].arg1, fake.evacuateCrashedActualLRPArgsForCall[i].arg2, fake.evacuateCrashedActualLRPArgsForCall[i].arg3
+}
+
+func (fake *FakeClient) EvacuateCrashedActualLRPReturns(result1 bool, result2 error) {
+	fake.EvacuateCrashedActualLRPStub = nil
+	fake.evacuateCrashedActualLRPReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) RemoveEvacuatingActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) error {
 	fake.removeEvacuatingActualLRPMutex.Lock()
 	fake.removeEvacuatingActualLRPArgsForCall = append(fake.removeEvacuatingActualLRPArgsForCall, struct {
-		key         *models.ActualLRPKey
-		instanceKey *models.ActualLRPInstanceKey
-	}{key, instanceKey})
+		arg1 *models.ActualLRPKey
+		arg2 *models.ActualLRPInstanceKey
+	}{arg1, arg2})
 	fake.removeEvacuatingActualLRPMutex.Unlock()
 	if fake.RemoveEvacuatingActualLRPStub != nil {
-		return fake.RemoveEvacuatingActualLRPStub(key, instanceKey)
+		return fake.RemoveEvacuatingActualLRPStub(arg1, arg2)
 	} else {
 		return fake.removeEvacuatingActualLRPReturns.result1
 	}
@@ -631,7 +813,7 @@ func (fake *FakeClient) RemoveEvacuatingActualLRPCallCount() int {
 func (fake *FakeClient) RemoveEvacuatingActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.removeEvacuatingActualLRPMutex.RLock()
 	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
-	return fake.removeEvacuatingActualLRPArgsForCall[i].key, fake.removeEvacuatingActualLRPArgsForCall[i].instanceKey
+	return fake.removeEvacuatingActualLRPArgsForCall[i].arg1, fake.removeEvacuatingActualLRPArgsForCall[i].arg2
 }
 
 func (fake *FakeClient) RemoveEvacuatingActualLRPReturns(result1 error) {
