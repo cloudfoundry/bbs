@@ -103,7 +103,11 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 	desireErr := h.db.DesireTask(logger, taskReq.TaskGuid, taskReq.Domain, taskReq.TaskDefinition)
 	if desireErr != nil {
 		logger.Error("failed-to-desire-task", desireErr)
-		writeInternalServerErrorResponse(w, desireErr)
+		if desireErr.Type == models.InvalidRecord {
+			writeBadRequestResponse(w, models.InvalidRecord, err)
+		} else {
+			writeInternalServerErrorResponse(w, desireErr)
+		}
 		return
 	}
 
