@@ -39,12 +39,11 @@ type FakeTaskDB struct {
 	desireTaskReturns struct {
 		result1 *models.Error
 	}
-	StartTaskStub        func(logger lager.Logger, taskGuid string, cellID string) (bool, *models.Error)
+	StartTaskStub        func(logger lager.Logger, request *models.StartTaskRequest) (bool, *models.Error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
-		logger   lager.Logger
-		taskGuid string
-		cellID   string
+		logger  lager.Logger
+		request *models.StartTaskRequest
 	}
 	startTaskReturns struct {
 		result1 bool
@@ -153,16 +152,15 @@ func (fake *FakeTaskDB) DesireTaskReturns(result1 *models.Error) {
 	}{result1}
 }
 
-func (fake *FakeTaskDB) StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, *models.Error) {
+func (fake *FakeTaskDB) StartTask(logger lager.Logger, request *models.StartTaskRequest) (bool, *models.Error) {
 	fake.startTaskMutex.Lock()
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
-		logger   lager.Logger
-		taskGuid string
-		cellID   string
-	}{logger, taskGuid, cellID})
+		logger  lager.Logger
+		request *models.StartTaskRequest
+	}{logger, request})
 	fake.startTaskMutex.Unlock()
 	if fake.StartTaskStub != nil {
-		return fake.StartTaskStub(logger, taskGuid, cellID)
+		return fake.StartTaskStub(logger, request)
 	} else {
 		return fake.startTaskReturns.result1, fake.startTaskReturns.result2
 	}
@@ -174,10 +172,10 @@ func (fake *FakeTaskDB) StartTaskCallCount() int {
 	return len(fake.startTaskArgsForCall)
 }
 
-func (fake *FakeTaskDB) StartTaskArgsForCall(i int) (lager.Logger, string, string) {
+func (fake *FakeTaskDB) StartTaskArgsForCall(i int) (lager.Logger, *models.StartTaskRequest) {
 	fake.startTaskMutex.RLock()
 	defer fake.startTaskMutex.RUnlock()
-	return fake.startTaskArgsForCall[i].logger, fake.startTaskArgsForCall[i].taskGuid, fake.startTaskArgsForCall[i].cellID
+	return fake.startTaskArgsForCall[i].logger, fake.startTaskArgsForCall[i].request
 }
 
 func (fake *FakeTaskDB) StartTaskReturns(result1 bool, result2 *models.Error) {

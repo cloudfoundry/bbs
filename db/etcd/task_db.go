@@ -117,7 +117,9 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, request *models.DesireTaskRequ
 	return nil
 }
 
-func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, *models.Error) {
+func (db *ETCDDB) StartTask(logger lager.Logger, request *models.StartTaskRequest) (bool, *models.Error) {
+	taskGuid := request.TaskGuid
+	cellID := request.CellId
 	if taskGuid == "" {
 		return false, &models.Error{Type: models.InvalidRequest, Message: "missing task guid"}
 	}

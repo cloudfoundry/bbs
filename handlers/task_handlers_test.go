@@ -302,10 +302,10 @@ var _ = Describe("Task Handlers", func() {
 			It("calls StartTask", func() {
 				handler.StartTask(responseRecorder, request)
 				Expect(fakeTaskDB.StartTaskCallCount()).To(Equal(1))
-				taskLogger, taskGuid, cellId := fakeTaskDB.StartTaskArgsForCall(0)
+				taskLogger, startTaskRequest := fakeTaskDB.StartTaskArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("start-task"))
-				Expect(taskGuid).To(Equal("task-guid"))
-				Expect(cellId).To(Equal("cell-id"))
+				Expect(startTaskRequest.TaskGuid).To(Equal("task-guid"))
+				Expect(startTaskRequest.CellId).To(Equal("cell-id"))
 			})
 
 			It("responds with true when the task should start", func() {

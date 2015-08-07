@@ -137,12 +137,9 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal: %s", err))
 		return
 	}
-	if startReq.TaskGuid == "" {
-		writeBadRequestResponse(w, models.InvalidRequest, errors.New("missing task guid"))
-		return
-	}
-	if startReq.CellId == "" {
-		writeBadRequestResponse(w, models.InvalidRequest, errors.New("missing cell id"))
+	if err := startReq.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
 		return
 	}
 
@@ -150,7 +147,7 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 	cellID := startReq.CellId
 	logger = logger.WithData(lager.Data{"task-guid": taskGuid, "cell-id": cellID})
 
-	shouldStart, startErr := h.db.StartTask(logger, taskGuid, cellID)
+	shouldStart, startErr := h.db.StartTask(logger, startReq)
 	if startErr != nil {
 		logger.Error("failed-to-start-task", startErr)
 		writeInternalServerErrorResponse(w, startErr)

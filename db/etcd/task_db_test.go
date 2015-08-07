@@ -239,27 +239,32 @@ var _ = Describe("TaskDB", func() {
 	})
 
 	Describe("StartTask", func() {
+		var startRequest *models.StartTaskRequest
 		var taskDef *models.TaskDefinition
 		const taskGuid = "some-guid"
 		const cellId = "cell-id"
 
 		BeforeEach(func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
+			startRequest = &models.StartTaskRequest{
+				TaskGuid: taskGuid,
+				CellId:   "cell-id",
+			}
 		})
 
 		Context("when starting a pending Task", func() {
 			BeforeEach(func() {
-				request := models.DesireTaskRequest{
+				desireRequest := models.DesireTaskRequest{
 					Domain:         "domain",
 					TaskGuid:       taskGuid,
 					TaskDefinition: taskDef,
 				}
-				err := etcdDB.DesireTask(logger, &request)
+				err := etcdDB.DesireTask(logger, &desireRequest)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns shouldStart as true", func() {
-				started, err := etcdDB.StartTask(logger, taskGuid, cellId)
+				started, err := etcdDB.StartTask(logger, startRequest)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(started).To(BeTrue())
 			})
@@ -267,7 +272,7 @@ var _ = Describe("TaskDB", func() {
 			It("correctly updates the task record", func() {
 				clock.IncrementBySeconds(1)
 
-				_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+				_, err := etcdDB.StartTask(logger, startRequest)
 				Expect(err).NotTo(HaveOccurred())
 
 				task, err := etcdDB.TaskByGuid(logger, taskGuid)
@@ -290,13 +295,13 @@ var _ = Describe("TaskDB", func() {
 				err := etcdDB.DesireTask(logger, &request)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, err = etcdDB.StartTask(logger, startRequest)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("on the same cell", func() {
 				It("returns shouldStart as false", func() {
-					changed, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					changed, err := etcdDB.StartTask(logger, startRequest)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(changed).To(BeFalse())
 				})
@@ -305,7 +310,7 @@ var _ = Describe("TaskDB", func() {
 					previousTime := clock.Now().UnixNano()
 					clock.IncrementBySeconds(1)
 
-					_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					_, err := etcdDB.StartTask(logger, startRequest)
 					Expect(err).NotTo(HaveOccurred())
 
 					task, err := etcdDB.TaskByGuid(logger, taskGuid)
@@ -317,7 +322,8 @@ var _ = Describe("TaskDB", func() {
 
 			Context("on another cell", func() {
 				It("returns an error", func() {
-					_, err := etcdDB.StartTask(logger, taskGuid, "another-cell-ID")
+					startRequest.CellId = "some-other-cell"
+					_, err := etcdDB.StartTask(logger, startRequest)
 					Expect(err).NotTo(BeNil())
 					Expect(err.Type).To(Equal(models.InvalidStateTransition))
 				})
@@ -326,7 +332,7 @@ var _ = Describe("TaskDB", func() {
 					previousTime := clock.Now().UnixNano()
 					clock.IncrementBySeconds(1)
 
-					_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					_, err := etcdDB.StartTask(logger, startRequest)
 					Expect(err).NotTo(HaveOccurred())
 
 					task, err := etcdDB.TaskByGuid(logger, taskGuid)

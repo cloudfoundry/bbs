@@ -231,6 +231,23 @@ func (req *DesireTaskRequest) Validate() error {
 	return nil
 }
 
+func (req *StartTaskRequest) Validate() error {
+	var validationError ValidationError
+
+	if !taskGuidPattern.MatchString(req.TaskGuid) {
+		validationError = validationError.Append(ErrInvalidField{"task_guid"})
+	}
+	if req.CellId == "" {
+		validationError = validationError.Append(ErrInvalidField{"cell_id"})
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
 func EnvironmentVariablesFromProto(envVars []*EnvironmentVariable) []oldmodels.EnvironmentVariable {
 	if envVars == nil {
 		return nil
