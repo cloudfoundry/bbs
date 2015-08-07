@@ -74,7 +74,10 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 	return &task, node.ModifiedIndex, nil
 }
 
-func (db *ETCDDB) DesireTask(logger lager.Logger, taskGuid, domain string, taskDef *models.TaskDefinition) *models.Error {
+func (db *ETCDDB) DesireTask(logger lager.Logger, request *models.DesireTaskRequest) *models.Error {
+	taskGuid := request.TaskGuid
+	domain := request.Domain
+	taskDef := request.TaskDefinition
 	taskLogger := logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
 
 	taskLogger.Info("starting")

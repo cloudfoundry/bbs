@@ -11,6 +11,6 @@ type TaskFilter func(t *models.Task) bool
 type TaskDB interface {
 	Tasks(logger lager.Logger, filter TaskFilter) (*models.Tasks, *models.Error)
 	TaskByGuid(logger lager.Logger, processGuid string) (*models.Task, *models.Error)
-	DesireTask(logger lager.Logger, guid, domain string, def *models.TaskDefinition) *models.Error
+	DesireTask(logger lager.Logger, request *models.DesireTaskRequest) *models.Error
 	StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, *models.Error)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager"
@@ -215,55 +216,68 @@ var _ = Describe("Task Handlers", func() {
 	})
 
 	Describe("DesireTask", func() {
+		var (
+			request  *http.Request
+			taskGuid = "task-guid"
+			domain   = "domain"
+			taskDef  *models.TaskDefinition
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			taskDef = model_helpers.NewValidTaskDefinition()
+			requestBody = &models.DesireTaskRequest{
+				TaskGuid:       taskGuid,
+				Domain:         domain,
+				TaskDefinition: taskDef,
+			}
+		})
+
 		JustBeforeEach(func() {
+			request = newTestRequest(requestBody)
 			handler.DesireTask(responseRecorder, request)
 		})
 
 		Context("when the desire is successful", func() {
-			BeforeEach(func() {
-				request = newTestRequest(&models.TaskDefinition{})
-			})
-
-			It("responds with 201 CREATED", func() {
+			It("responds with 201 Status Created", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
 			})
-		})
 
-		Context("when the request body is not a TaskDefinition", func() {
-			BeforeEach(func() {
-				request = newTestRequest("foo")
-			})
-
-			It("responds with 400 BAD REQUEST", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("returns an Invalid Request error", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("unmarshal"))
+			It("desires the task with the requested definitions", func() {
+				Expect(fakeTaskDB.DesireTaskCallCount()).To(Equal(1))
+				_, actualRequest := fakeTaskDB.DesireTaskArgsForCall(0)
+				Expect(actualRequest).To(Equal(requestBody))
 			})
 		})
 
-		Context("when the request body fails to stream", func() {
+		Context("when request is invalid", func() {
 			BeforeEach(func() {
-				request = newTestRequest(newExplodingReader(errors.New("foobar")))
+				requestBody = &models.DesireTaskRequest{}
 			})
 
-			It("responds with 400 BAD REQUEST", func() {
+			It("responds with 400 Bad Request", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 			})
+		})
 
-			It("returns an Invalid Request error", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
+		Context("when parsing the body fails", func() {
+			BeforeEach(func() {
+				requestBody = "beep boop beep boop -- i am a robot"
+			})
 
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("foobar"))
+			It("responds with 400 Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("when desiring the task fails", func() {
+			BeforeEach(func() {
+				fakeTaskDB.DesireTaskReturns(models.ErrUnknownError)
+			})
+
+			It("responds with 500 Internal Server Error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
 			})
 		})
 	})

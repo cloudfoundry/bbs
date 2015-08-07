@@ -92,19 +92,25 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 	}
 
 	logger.Info("data", lager.Data{"data": data})
-	taskReq := &models.DesireTaskRequest{}
-	err = taskReq.Unmarshal(data)
+	request := &models.DesireTaskRequest{}
+	err = request.Unmarshal(data)
 	if err != nil {
 		logger.Error("failed-to-unmarshal-task", err)
 		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal TaskDescription: %s", err))
 		return
 	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	if err := request.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return
+	}
 
-	desireErr := h.db.DesireTask(logger, taskReq.TaskGuid, taskReq.Domain, taskReq.TaskDefinition)
+	desireErr := h.db.DesireTask(logger, request)
 	if desireErr != nil {
 		logger.Error("failed-to-desire-task", desireErr)
 		if desireErr.Type == models.InvalidRecord {
-			writeBadRequestResponse(w, models.InvalidRecord, err)
+			writeBadRequestResponse(w, models.InvalidRecord, desireErr)
 		} else {
 			writeInternalServerErrorResponse(w, desireErr)
 		}

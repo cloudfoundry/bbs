@@ -128,124 +128,116 @@ var _ = Describe("TaskDB", func() {
 	})
 
 	Describe("DesireTask", func() {
-		var errDesire error
-		var taskDef *models.TaskDefinition
-		const taskGuid = "some-guid"
-		const domain = "some-domain"
+		const (
+			taskGuid = "some-guid"
+			domain   = "some-domain"
+		)
+
+		var (
+			taskDef   *models.TaskDefinition
+			errDesire *models.Error
+		)
 
 		JustBeforeEach(func() {
-			errDesire = etcdDB.DesireTask(logger, taskGuid, domain, taskDef)
+			request := models.DesireTaskRequest{
+				Domain:         domain,
+				TaskGuid:       taskGuid,
+				TaskDefinition: taskDef,
+			}
+			errDesire = etcdDB.DesireTask(logger, &request)
 		})
 
-		Context("when given a valid task", func() {
-			BeforeEach(func() {
-				taskDef = model_helpers.NewValidTaskDefinition()
+		BeforeEach(func() {
+			taskDef = model_helpers.NewValidTaskDefinition()
+		})
+
+		Context("when a task is not already present at the desired key", func() {
+			It("does not error", func() {
+				Expect(errDesire).NotTo(HaveOccurred())
 			})
 
-			Context("when a task is not already present at the desired key", func() {
-				It("does not error", func() {
-					Expect(errDesire).NotTo(HaveOccurred())
-				})
+			It("persists the task", func() {
+				persistedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
 
-				It("persists the task", func() {
-					persistedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(persistedTask.Domain).To(Equal(domain))
-					Expect(*persistedTask.TaskDefinition).To(Equal(*taskDef))
-				})
-
-				It("provides a CreatedAt time", func() {
-					persistedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(persistedTask.CreatedAt).To(Equal(clock.Now().UnixNano()))
-				})
-
-				It("sets the UpdatedAt time", func() {
-					persistedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(persistedTask.UpdatedAt).To(Equal(clock.Now().UnixNano()))
-				})
-
-				Context("when able to fetch the Auctioneer address", func() {
-					It("requests an auction", func() {
-						Expect(auctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
-
-						requestedTasks := auctioneerClient.RequestTaskAuctionsArgsForCall(0)
-						Expect(requestedTasks).To(HaveLen(1))
-						Expect(*requestedTasks[0].TaskDefinition).To(Equal(*taskDef))
-					})
-
-					Context("when requesting a task auction succeeds", func() {
-						BeforeEach(func() {
-							auctioneerClient.RequestTaskAuctionsReturns(nil)
-						})
-
-						It("does not return an error", func() {
-							Expect(errDesire).NotTo(HaveOccurred())
-						})
-					})
-
-					Context("when requesting a task auction fails", func() {
-						BeforeEach(func() {
-							auctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
-						})
-
-						It("does not return an error", func() {
-							// The creation succeeded, we can ignore the auction request error (converger will eventually do it)
-							Expect(errDesire).NotTo(HaveOccurred())
-						})
-					})
-				})
+				Expect(persistedTask.Domain).To(Equal(domain))
+				Expect(*persistedTask.TaskDefinition).To(Equal(*taskDef))
 			})
 
-			Context("when a task is already present at the desired key", func() {
-				const otherDomain = "other-domain"
+			It("provides a CreatedAt time", func() {
+				persistedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(persistedTask.CreatedAt).To(Equal(clock.Now().UnixNano()))
+			})
 
-				BeforeEach(func() {
-					err := etcdDB.DesireTask(logger, taskGuid, otherDomain, taskDef)
-					Expect(err).NotTo(HaveOccurred())
+			It("sets the UpdatedAt time", func() {
+				persistedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(persistedTask.UpdatedAt).To(Equal(clock.Now().UnixNano()))
+			})
+
+			Context("when able to fetch the Auctioneer address", func() {
+				It("requests an auction", func() {
+					Expect(auctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+
+					requestedTasks := auctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					Expect(requestedTasks).To(HaveLen(1))
+					Expect(*requestedTasks[0].TaskDefinition).To(Equal(*taskDef))
 				})
 
-				It("does not persist a second task", func() {
-					tasks, err := etcdDB.Tasks(logger, nil)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(tasks.GetTasks()).To(HaveLen(1))
-					Expect(tasks.GetTasks()[0].Domain).To(Equal(otherDomain))
+				Context("when requesting a task auction succeeds", func() {
+					BeforeEach(func() {
+						auctioneerClient.RequestTaskAuctionsReturns(nil)
+					})
+
+					It("does not return an error", func() {
+						Expect(errDesire).NotTo(HaveOccurred())
+					})
 				})
 
-				It("does not request a second auction", func() {
-					Consistently(auctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
-				})
+				Context("when requesting a task auction fails", func() {
+					BeforeEach(func() {
+						auctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
+					})
 
-				It("returns an error", func() {
-					Expect(errDesire).To(Equal(models.ErrResourceExists))
+					It("does not return an error", func() {
+						// The creation succeeded, we can ignore the auction request error (converger will eventually do it)
+						Expect(errDesire).NotTo(HaveOccurred())
+					})
 				})
 			})
 		})
 
-		Context("when given an invalid task", func() {
+		Context("when a task is already present at the desired key", func() {
+			const otherDomain = "other-domain"
+
 			BeforeEach(func() {
-				taskDef = &models.TaskDefinition{}
+				request := models.DesireTaskRequest{
+					Domain:         otherDomain,
+					TaskGuid:       taskGuid,
+					TaskDefinition: taskDef,
+				}
+				err := etcdDB.DesireTask(logger, &request)
+				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("does not persist a task", func() {
-				Consistently(func() ([]*models.Task, error) {
-					tasks, err := etcdDB.Tasks(logger, nil)
-					return tasks.GetTasks(), err
-				}).Should(BeEmpty())
+			It("does not persist a second task", func() {
+				tasks, err := etcdDB.Tasks(logger, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tasks.GetTasks()).To(HaveLen(1))
+				Expect(tasks.GetTasks()[0].Domain).To(Equal(otherDomain))
 			})
 
-			It("does not request an auction", func() {
-				Consistently(auctioneerClient.RequestTaskAuctionsCallCount).Should(BeZero())
+			It("does not request a second auction", func() {
+				Consistently(auctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
 			})
 
 			It("returns an error", func() {
-				err := models.ErrInvalidField{"rootfs"}
-				Expect(errDesire).To(ContainSubstring(err.Error()))
+				Expect(errDesire).To(Equal(models.ErrResourceExists))
 			})
 		})
 	})
+
 	Describe("StartTask", func() {
 		var taskDef *models.TaskDefinition
 		const taskGuid = "some-guid"
@@ -257,7 +249,12 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when starting a pending Task", func() {
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, taskGuid, "domain", taskDef)
+				request := models.DesireTaskRequest{
+					Domain:         "domain",
+					TaskGuid:       taskGuid,
+					TaskDefinition: taskDef,
+				}
+				err := etcdDB.DesireTask(logger, &request)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -285,7 +282,12 @@ var _ = Describe("TaskDB", func() {
 
 		Context("When starting a Task that is already started", func() {
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, taskGuid, "domain", taskDef)
+				request := models.DesireTaskRequest{
+					Domain:         "domain",
+					TaskGuid:       taskGuid,
+					TaskDefinition: taskDef,
+				}
+				err := etcdDB.DesireTask(logger, &request)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = etcdDB.StartTask(logger, taskGuid, cellId)

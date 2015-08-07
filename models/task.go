@@ -31,16 +31,32 @@ func (task *Task) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"task_guid"})
 	}
 
-	if task.RootFs == "" {
+	if task.TaskDefinition == nil {
+		validationError = validationError.Append(ErrInvalidField{"task_definition"})
+	} else if defErr := task.TaskDefinition.Validate(); defErr != nil {
+		validationError = validationError.Append(defErr)
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
+func (def *TaskDefinition) Validate() error {
+	var validationError ValidationError
+
+	if def.RootFs == "" {
 		validationError = validationError.Append(ErrInvalidField{"rootfs"})
 	} else {
-		rootFsURL, err := url.Parse(task.RootFs)
+		rootFsURL, err := url.Parse(def.RootFs)
 		if err != nil || rootFsURL.Scheme == "" {
 			validationError = validationError.Append(ErrInvalidField{"rootfs"})
 		}
 	}
 
-	action := UnwrapAction(task.Action)
+	action := UnwrapAction(def.Action)
 	if action == nil {
 		validationError = validationError.Append(ErrInvalidActionType)
 	} else {
@@ -50,15 +66,15 @@ func (task *Task) Validate() error {
 		}
 	}
 
-	if task.CpuWeight > 100 {
+	if def.CpuWeight > 100 {
 		validationError = validationError.Append(ErrInvalidField{"cpu_weight"})
 	}
 
-	if len(task.Annotation) > maximumAnnotationLength {
+	if len(def.Annotation) > maximumAnnotationLength {
 		validationError = validationError.Append(ErrInvalidField{"annotation"})
 	}
 
-	for _, rule := range task.EgressRules {
+	for _, rule := range def.EgressRules {
 		err := rule.Validate()
 		if err != nil {
 			validationError = validationError.Append(ErrInvalidField{"egress_rules"})
@@ -186,6 +202,30 @@ func (task *Task) UnmarshalJSON(data []byte) error {
 	task.EgressRules = newEgressRules
 	if oldtask.CompletionCallbackURL != nil {
 		task.CompletionCallbackUrl = oldtask.CompletionCallbackURL.String()
+	}
+
+	return nil
+}
+
+func (req *DesireTaskRequest) Validate() error {
+	var validationError ValidationError
+
+	if !taskGuidPattern.MatchString(req.TaskGuid) {
+		validationError = validationError.Append(ErrInvalidField{"task_guid"})
+	}
+
+	if req.Domain == "" {
+		validationError = validationError.Append(ErrInvalidField{"domain"})
+	}
+
+	if req.TaskDefinition == nil {
+		validationError = validationError.Append(ErrInvalidField{"task_definition"})
+	} else if defErr := req.TaskDefinition.Validate(); defErr != nil {
+		validationError = validationError.Append(defErr)
+	}
+
+	if !validationError.Empty() {
+		return validationError
 	}
 
 	return nil
