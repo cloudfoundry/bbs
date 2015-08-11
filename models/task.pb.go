@@ -350,6 +350,134 @@ func (m *StartTaskResponse) GetShouldStart() bool {
 	return false
 }
 
+type FailTaskRequest struct {
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+	FailureReason string `protobuf:"bytes,2,opt,name=failure_reason" json:"failure_reason"`
+}
+
+func (m *FailTaskRequest) Reset()      { *m = FailTaskRequest{} }
+func (*FailTaskRequest) ProtoMessage() {}
+
+func (m *FailTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+
+func (m *FailTaskRequest) GetFailureReason() string {
+	if m != nil {
+		return m.FailureReason
+	}
+	return ""
+}
+
+type TaskGuidRequest struct {
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+}
+
+func (m *TaskGuidRequest) Reset()      { *m = TaskGuidRequest{} }
+func (*TaskGuidRequest) ProtoMessage() {}
+
+func (m *TaskGuidRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+
+type CompleteTaskRequest struct {
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+	CellId        string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
+	Failed        bool   `protobuf:"varint,3,opt,name=failed" json:"failed"`
+	FailureReason string `protobuf:"bytes,4,opt,name=failure_reason" json:"failure_reason"`
+	Result        string `protobuf:"bytes,5,opt,name=result" json:"result"`
+}
+
+func (m *CompleteTaskRequest) Reset()      { *m = CompleteTaskRequest{} }
+func (*CompleteTaskRequest) ProtoMessage() {}
+
+func (m *CompleteTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+
+func (m *CompleteTaskRequest) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+
+func (m *CompleteTaskRequest) GetFailed() bool {
+	if m != nil {
+		return m.Failed
+	}
+	return false
+}
+
+func (m *CompleteTaskRequest) GetFailureReason() string {
+	if m != nil {
+		return m.FailureReason
+	}
+	return ""
+}
+
+func (m *CompleteTaskRequest) GetResult() string {
+	if m != nil {
+		return m.Result
+	}
+	return ""
+}
+
+type TaskCallbackResponse struct {
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+	Failed        bool   `protobuf:"varint,2,opt,name=failed" json:"failed"`
+	FailureReason string `protobuf:"bytes,3,opt,name=failure_reason" json:"failure_reason"`
+	Result        string `protobuf:"bytes,4,opt,name=result" json:"result"`
+	Annotation    string `protobuf:"bytes,5,opt,name=annotation" json:"annotation,omitempty"`
+}
+
+func (m *TaskCallbackResponse) Reset()      { *m = TaskCallbackResponse{} }
+func (*TaskCallbackResponse) ProtoMessage() {}
+
+func (m *TaskCallbackResponse) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+
+func (m *TaskCallbackResponse) GetFailed() bool {
+	if m != nil {
+		return m.Failed
+	}
+	return false
+}
+
+func (m *TaskCallbackResponse) GetFailureReason() string {
+	if m != nil {
+		return m.FailureReason
+	}
+	return ""
+}
+
+func (m *TaskCallbackResponse) GetResult() string {
+	if m != nil {
+		return m.Result
+	}
+	return ""
+}
+
+func (m *TaskCallbackResponse) GetAnnotation() string {
+	if m != nil {
+		return m.Annotation
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterEnum("models.Task_State", Task_State_name, Task_State_value)
 }
@@ -1276,6 +1404,450 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *FailTaskRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaskGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TaskGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FailureReason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FailureReason = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *TaskGuidRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaskGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TaskGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaskGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TaskGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CellId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CellId = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Failed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Failed = bool(v != 0)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FailureReason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FailureReason = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Result = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaskGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TaskGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Failed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Failed = bool(v != 0)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FailureReason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FailureReason = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Result = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Annotation", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Annotation = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func skipTask(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -1446,6 +2018,55 @@ func (this *StartTaskResponse) String() string {
 	}, "")
 	return s
 }
+func (this *FailTaskRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&FailTaskRequest{`,
+		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
+		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TaskGuidRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TaskGuidRequest{`,
+		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *CompleteTaskRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&CompleteTaskRequest{`,
+		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
+		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
+		`Failed:` + fmt.Sprintf("%v", this.Failed) + `,`,
+		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
+		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TaskCallbackResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TaskCallbackResponse{`,
+		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
+		`Failed:` + fmt.Sprintf("%v", this.Failed) + `,`,
+		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
+		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
+		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func valueToStringTask(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1559,6 +2180,54 @@ func (m *StartTaskResponse) Size() (n int) {
 	var l int
 	_ = l
 	n += 2
+	return n
+}
+
+func (m *FailTaskRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.TaskGuid)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.FailureReason)
+	n += 1 + l + sovTask(uint64(l))
+	return n
+}
+
+func (m *TaskGuidRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.TaskGuid)
+	n += 1 + l + sovTask(uint64(l))
+	return n
+}
+
+func (m *CompleteTaskRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.TaskGuid)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.CellId)
+	n += 1 + l + sovTask(uint64(l))
+	n += 2
+	l = len(m.FailureReason)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.Result)
+	n += 1 + l + sovTask(uint64(l))
+	return n
+}
+
+func (m *TaskCallbackResponse) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.TaskGuid)
+	n += 1 + l + sovTask(uint64(l))
+	n += 2
+	l = len(m.FailureReason)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.Result)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.Annotation)
+	n += 1 + l + sovTask(uint64(l))
 	return n
 }
 
@@ -1858,6 +2527,138 @@ func (m *StartTaskResponse) MarshalTo(data []byte) (n int, err error) {
 	return i, nil
 }
 
+func (m *FailTaskRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *FailTaskRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.TaskGuid)))
+	i += copy(data[i:], m.TaskGuid)
+	data[i] = 0x12
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.FailureReason)))
+	i += copy(data[i:], m.FailureReason)
+	return i, nil
+}
+
+func (m *TaskGuidRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *TaskGuidRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.TaskGuid)))
+	i += copy(data[i:], m.TaskGuid)
+	return i, nil
+}
+
+func (m *CompleteTaskRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *CompleteTaskRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.TaskGuid)))
+	i += copy(data[i:], m.TaskGuid)
+	data[i] = 0x12
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.CellId)))
+	i += copy(data[i:], m.CellId)
+	data[i] = 0x18
+	i++
+	if m.Failed {
+		data[i] = 1
+	} else {
+		data[i] = 0
+	}
+	i++
+	data[i] = 0x22
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.FailureReason)))
+	i += copy(data[i:], m.FailureReason)
+	data[i] = 0x2a
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.Result)))
+	i += copy(data[i:], m.Result)
+	return i, nil
+}
+
+func (m *TaskCallbackResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *TaskCallbackResponse) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.TaskGuid)))
+	i += copy(data[i:], m.TaskGuid)
+	data[i] = 0x10
+	i++
+	if m.Failed {
+		data[i] = 1
+	} else {
+		data[i] = 0
+	}
+	i++
+	data[i] = 0x1a
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.FailureReason)))
+	i += copy(data[i:], m.FailureReason)
+	data[i] = 0x22
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.Result)))
+	i += copy(data[i:], m.Result)
+	data[i] = 0x2a
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.Annotation)))
+	i += copy(data[i:], m.Annotation)
+	return i, nil
+}
+
 func encodeFixed64Task(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -1957,6 +2758,47 @@ func (this *StartTaskResponse) GoString() string {
 	}
 	s := strings.Join([]string{`&models.StartTaskResponse{` +
 		`ShouldStart:` + fmt.Sprintf("%#v", this.ShouldStart) + `}`}, ", ")
+	return s
+}
+func (this *FailTaskRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.FailTaskRequest{` +
+		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
+		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason) + `}`}, ", ")
+	return s
+}
+func (this *TaskGuidRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.TaskGuidRequest{` +
+		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid) + `}`}, ", ")
+	return s
+}
+func (this *CompleteTaskRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.CompleteTaskRequest{` +
+		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
+		`CellId:` + fmt.Sprintf("%#v", this.CellId),
+		`Failed:` + fmt.Sprintf("%#v", this.Failed),
+		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason),
+		`Result:` + fmt.Sprintf("%#v", this.Result) + `}`}, ", ")
+	return s
+}
+func (this *TaskCallbackResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.TaskCallbackResponse{` +
+		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
+		`Failed:` + fmt.Sprintf("%#v", this.Failed),
+		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason),
+		`Result:` + fmt.Sprintf("%#v", this.Result),
+		`Annotation:` + fmt.Sprintf("%#v", this.Annotation) + `}`}, ", ")
 	return s
 }
 func valueToGoStringTask(v interface{}, typ string) string {
@@ -2223,6 +3065,133 @@ func (this *StartTaskResponse) Equal(that interface{}) bool {
 		return false
 	}
 	if this.ShouldStart != that1.ShouldStart {
+		return false
+	}
+	return true
+}
+func (this *FailTaskRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*FailTaskRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	return true
+}
+func (this *TaskGuidRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*TaskGuidRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	return true
+}
+func (this *CompleteTaskRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*CompleteTaskRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	if this.Failed != that1.Failed {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	if this.Result != that1.Result {
+		return false
+	}
+	return true
+}
+func (this *TaskCallbackResponse) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*TaskCallbackResponse)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.Failed != that1.Failed {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	if this.Result != that1.Result {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
 		return false
 	}
 	return true

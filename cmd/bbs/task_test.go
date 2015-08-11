@@ -58,7 +58,7 @@ var _ = Describe("Task API", func() {
 	})
 
 	Context("Setters", func() {
-		Describe("DesireTask", func() {
+		Describe("POST /v1/tasks", func() {
 			It("adds the desired task", func() {
 				expectedTask := model_helpers.NewValidTask("task-1")
 				err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
@@ -70,7 +70,7 @@ var _ = Describe("Task API", func() {
 			})
 		})
 
-		Describe("StartTask", func() {
+		Describe("POST /v1/tasks/start", func() {
 			var taskDef = model_helpers.NewValidTaskDefinition()
 			const taskGuid = "task-1"
 			const cellId = "cell-1"
@@ -97,6 +97,21 @@ var _ = Describe("Task API", func() {
 				shouldStart, err := client.StartTask(taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(shouldStart).To(BeTrue())
+			})
+		})
+
+		Describe("POST /v1/tasks/cancel", func() {
+			It("cancel the desired task", func() {
+				expectedTask := model_helpers.NewValidTask("task-1")
+				err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.CancelTask(expectedTask.TaskGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				task, err := client.TaskByGuid(expectedTask.TaskGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task.FailureReason).To(Equal("task was cancelled"))
 			})
 		})
 	})

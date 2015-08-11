@@ -1,6 +1,9 @@
 package models
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 func NewError(errType string, msg string) *Error {
 	return &Error{
@@ -39,6 +42,8 @@ const (
 	ActualLRPCannotBeStopped   = "ActualLRPCannotBeStopped"
 	ActualLRPCannotBeUnclaimed = "ActualLRPCannotBeUnclaimed"
 	ActualLRPCannotBeEvacuated = "ActualLRPCannotBeEvacuated"
+
+	RunningOnDifferentCell = "RunningOnDifferentCell"
 )
 
 var (
@@ -142,3 +147,17 @@ func (err ErrInvalidModification) Error() string {
 }
 
 var ErrActualLRPGroupInvalid = errors.New("ActualLRPGroup invalid")
+
+func NewTaskTransitionError(from, to Task_State) *Error {
+	return &Error{
+		Type:    InvalidStateTransition,
+		Message: fmt.Sprintf("Cannot transition from %s to %s", from.String(), to.String()),
+	}
+}
+
+func NewRunningOnDifferentCellError(expectedCellId, actualCellId string) *Error {
+	return &Error{
+		Type:    RunningOnDifferentCell,
+		Message: fmt.Sprintf("Running on cell %s not %s", actualCellId, expectedCellId),
+	}
+}

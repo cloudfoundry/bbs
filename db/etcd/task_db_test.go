@@ -11,6 +11,23 @@ import (
 )
 
 var _ = Describe("TaskDB", func() {
+	const (
+		taskGuid = "some-guid"
+		domain   = "some-domain"
+		cellId   = "cell-id"
+	)
+	var (
+		taskDef *models.TaskDefinition
+	)
+
+	filterByState := func(state models.Task_State) *models.Tasks {
+		tasks, err := etcdDB.Tasks(logger, func(t *models.Task) bool {
+			return t.State == state
+		})
+		Expect(err).NotTo(HaveOccurred())
+		return tasks
+	}
+
 	Describe("Tasks", func() {
 		Context("when there are tasks", func() {
 			var expectedTasks []*models.Task
@@ -128,15 +145,7 @@ var _ = Describe("TaskDB", func() {
 	})
 
 	Describe("DesireTask", func() {
-		const (
-			taskGuid = "some-guid"
-			domain   = "some-domain"
-		)
-
-		var (
-			taskDef   *models.TaskDefinition
-			errDesire *models.Error
-		)
+		var errDesire *models.Error
 
 		JustBeforeEach(func() {
 			request := models.DesireTaskRequest{
@@ -240,22 +249,19 @@ var _ = Describe("TaskDB", func() {
 
 	Describe("StartTask", func() {
 		var startRequest *models.StartTaskRequest
-		var taskDef *models.TaskDefinition
-		const taskGuid = "some-guid"
-		const cellId = "cell-id"
 
 		BeforeEach(func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
 			startRequest = &models.StartTaskRequest{
 				TaskGuid: taskGuid,
-				CellId:   "cell-id",
+				CellId:   cellId,
 			}
 		})
 
 		Context("when starting a pending Task", func() {
 			BeforeEach(func() {
 				desireRequest := models.DesireTaskRequest{
-					Domain:         "domain",
+					Domain:         domain,
 					TaskGuid:       taskGuid,
 					TaskDefinition: taskDef,
 				}
@@ -340,6 +346,706 @@ var _ = Describe("TaskDB", func() {
 
 					Expect(task.UpdatedAt).To(Equal(previousTime))
 				})
+			})
+		})
+	})
+
+	Describe("CancelTask", func() {
+		Context("when the store is reachable", func() {
+			var cancelError error
+			var taskAfterCancel *models.Task
+
+			JustBeforeEach(func() {
+				cancelError = etcdDB.CancelTask(logger, taskGuid)
+				taskAfterCancel, _ = etcdDB.TaskByGuid(logger, taskGuid)
+			})
+
+			itMarksTaskAsCancelled := func() {
+				It("does not error", func() {
+					Expect(cancelError).NotTo(HaveOccurred())
+				})
+
+				It("marks the task as completed", func() {
+					Expect(taskAfterCancel.State).To(Equal(models.Task_Completed))
+				})
+
+				It("marks the task as failed", func() {
+					Expect(taskAfterCancel.Failed).To(BeTrue())
+				})
+
+				It("sets the failure reason to cancelled", func() {
+					Expect(taskAfterCancel.FailureReason).To(Equal("task was cancelled"))
+				})
+
+				It("bumps UpdatedAt", func() {
+					Expect(taskAfterCancel.UpdatedAt).To(Equal(clock.Now().UnixNano()))
+				})
+			}
+
+			Context("when the task is in pending state", func() {
+				BeforeEach(func() {
+					taskDef = model_helpers.NewValidTaskDefinition()
+					request := models.DesireTaskRequest{
+						Domain:         domain,
+						TaskGuid:       taskGuid,
+						TaskDefinition: taskDef,
+					}
+					err := etcdDB.DesireTask(logger, &request)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				itMarksTaskAsCancelled()
+
+				It("does not cancel the task", func() {
+					Expect(cellClient.CancelTaskCallCount()).To(Equal(0))
+				})
+			})
+
+			Context("when the task is in running state", func() {
+				BeforeEach(func() {
+					taskDef = model_helpers.NewValidTaskDefinition()
+					startRequest := &models.StartTaskRequest{
+						TaskGuid: taskGuid,
+						CellId:   cellId,
+					}
+					desireRequest := &models.DesireTaskRequest{
+						TaskDefinition: taskDef,
+						TaskGuid:       taskGuid,
+						Domain:         domain,
+					}
+					err := etcdDB.DesireTask(logger, desireRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = etcdDB.StartTask(logger, startRequest)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				itMarksTaskAsCancelled()
+
+				Context("when the cell is present", func() {
+					var cellPresence models.CellPresence
+
+					BeforeEach(func() {
+						cellPresence = models.NewCellPresence(cellId, "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 6), []string{}, []string{})
+						registerCell(cellPresence)
+					})
+
+					It("cancels the task", func() {
+						Expect(cellClient.CancelTaskCallCount()).To(Equal(1))
+
+						addr, cancelledTaskGuid := cellClient.CancelTaskArgsForCall(0)
+						Expect(addr).To(Equal(cellPresence.RepAddress))
+						Expect(cancelledTaskGuid).To(Equal(taskGuid))
+					})
+				})
+
+				Context("when the cell is not present", func() {
+					It("does not cancel the task", func() {
+						Expect(cellClient.CancelTaskCallCount()).To(Equal(0))
+					})
+
+					It("logs the error", func() {
+						Eventually(logger.TestSink.LogMessages).Should(ContainElement("test.cancel-task.failed-getting-cell-info"))
+					})
+				})
+			})
+
+			Context("when the task is in completed state", func() {
+				BeforeEach(func() {
+					taskDef = model_helpers.NewValidTaskDefinition()
+					startRequest := &models.StartTaskRequest{
+						TaskGuid: taskGuid,
+						CellId:   cellId,
+					}
+					desireRequest := &models.DesireTaskRequest{
+						TaskDefinition: taskDef,
+						TaskGuid:       taskGuid,
+						Domain:         domain,
+					}
+					err := etcdDB.DesireTask(logger, desireRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = etcdDB.StartTask(logger, startRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+						TaskGuid:      taskGuid,
+						CellId:        cellId,
+						Failed:        false,
+						FailureReason: "",
+						Result:        "",
+					})
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns an error", func() {
+					Expect(cancelError).To(HaveOccurred())
+					Expect(cancelError).To(Equal(models.NewTaskTransitionError(models.Task_Completed, models.Task_Completed)))
+				})
+			})
+
+			Context("when the task is in resolving state", func() {
+				BeforeEach(func() {
+					taskDef = model_helpers.NewValidTaskDefinition()
+					startRequest := &models.StartTaskRequest{
+						TaskGuid: taskGuid,
+						CellId:   cellId,
+					}
+					desireRequest := &models.DesireTaskRequest{
+						TaskDefinition: taskDef,
+						TaskGuid:       taskGuid,
+						Domain:         domain,
+					}
+					err := etcdDB.DesireTask(logger, desireRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = etcdDB.StartTask(logger, startRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+						TaskGuid:      taskGuid,
+						CellId:        cellId,
+						Failed:        false,
+						FailureReason: "",
+						Result:        "",
+					})
+					Expect(err).NotTo(HaveOccurred())
+
+					err = etcdDB.ResolvingTask(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns an error", func() {
+					Expect(cancelError).To(HaveOccurred())
+					Expect(cancelError).To(Equal(models.NewTaskTransitionError(models.Task_Resolving, models.Task_Completed)))
+				})
+			})
+
+			Context("when the task does not exist", func() {
+				It("returns an error", func() {
+					Expect(cancelError).To(HaveOccurred())
+					Expect(cancelError).To(Equal(models.ErrResourceNotFound))
+				})
+			})
+
+			Context("when the store returns some error other than key not found or timeout", func() {
+				BeforeEach(func() {
+					etcdRunner.Stop()
+				})
+
+				AfterEach(func() {
+					etcdRunner.Start()
+				})
+
+				It("returns an error", func() {
+					Expect(cancelError).To(HaveOccurred())
+					Expect(cancelError).To(Equal(models.ErrUnknownError))
+				})
+			})
+		})
+	})
+
+	Describe("CompleteTask", func() {
+		Context("when completing a pending Task", func() {
+			JustBeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				desireRequest := &models.DesireTaskRequest{
+					TaskDefinition: taskDef,
+					TaskGuid:       taskGuid,
+					Domain:         domain,
+				}
+				err := etcdDB.DesireTask(logger, desireRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+					TaskGuid:      taskGuid,
+					CellId:        cellId,
+					Failed:        true,
+					FailureReason: "another failure reason",
+					Result:        "",
+				})
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when completing a running Task", func() {
+			var (
+				startRequest  *models.StartTaskRequest
+				desireRequest *models.DesireTaskRequest
+			)
+
+			BeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				startRequest = &models.StartTaskRequest{
+					TaskGuid: taskGuid,
+					CellId:   cellId,
+				}
+				desireRequest = &models.DesireTaskRequest{
+					TaskDefinition: taskDef,
+					TaskGuid:       taskGuid,
+					Domain:         domain,
+				}
+			})
+
+			JustBeforeEach(func() {
+				err := etcdDB.DesireTask(logger, desireRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = etcdDB.StartTask(logger, startRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when the cell id is not the same", func() {
+				It("returns an error", func() {
+					err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+						TaskGuid:      taskGuid,
+						CellId:        "another-cell",
+						Failed:        true,
+						FailureReason: "another failure reason",
+						Result:        "",
+					})
+					Expect(err).To(Equal(models.NewRunningOnDifferentCellError("another-cell", cellId)))
+				})
+			})
+
+			Context("when the cell id is the same", func() {
+				It("sets the Task in the completed state", func() {
+					clock.IncrementBySeconds(1)
+
+					err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+						TaskGuid:      taskGuid,
+						CellId:        cellId,
+						Failed:        true,
+						FailureReason: "because i said so",
+						Result:        "a result",
+					})
+					Expect(err).NotTo(HaveOccurred())
+
+					tasks := filterByState(models.Task_Completed)
+
+					task := tasks.Tasks[0]
+					Expect(task.Failed).To(BeTrue())
+					Expect(task.FailureReason).To(Equal("because i said so"))
+					Expect(task.UpdatedAt).To(Equal(clock.Now().UnixNano()))
+					Expect(task.FirstCompletedAt).To(Equal(clock.Now().UnixNano()))
+				})
+
+				Context("when a receptor is present", func() {
+					Context("and completing succeeds", func() {
+						Context("and the task has a complete URL", func() {
+							BeforeEach(func() {
+								taskDef.CompletionCallbackUrl = "bogus"
+							})
+
+							It("eventually causes the workpool to complete its callback work", func() {
+								err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+									TaskGuid:      taskGuid,
+									CellId:        cellId,
+									Failed:        true,
+									FailureReason: "because i said so",
+									Result:        "a result",
+								})
+								Expect(err).NotTo(HaveOccurred())
+								Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(1))
+
+							})
+						})
+
+						Context("but the task has no complete URL", func() {
+							BeforeEach(func() {
+								taskDef.CompletionCallbackUrl = ""
+							})
+
+							It("does not complete the task via the receptor", func() {
+								err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+									TaskGuid:      taskGuid,
+									CellId:        cellId,
+									Failed:        true,
+									FailureReason: "because i said so",
+									Result:        "a result",
+								})
+								Expect(err).NotTo(HaveOccurred())
+								Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(0))
+							})
+						})
+					})
+				})
+			})
+		})
+
+		Context("When completing a Task that is already completed", func() {
+			BeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				startRequest := &models.StartTaskRequest{
+					TaskGuid: taskGuid,
+					CellId:   cellId,
+				}
+				desireRequest := &models.DesireTaskRequest{
+					TaskDefinition: taskDef,
+					TaskGuid:       taskGuid,
+					Domain:         domain,
+				}
+				err := etcdDB.DesireTask(logger, desireRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = etcdDB.StartTask(logger, startRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+					TaskGuid:      taskGuid,
+					CellId:        cellId,
+					Failed:        true,
+					FailureReason: "some failure reason",
+					Result:        "",
+				})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+					TaskGuid:      taskGuid,
+					CellId:        cellId,
+					Failed:        true,
+					FailureReason: "another failure reason",
+					Result:        "",
+				})
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("When completing a Task that is resolving", func() {
+			BeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				startRequest := &models.StartTaskRequest{
+					TaskGuid: taskGuid,
+					CellId:   cellId,
+				}
+				desireRequest := &models.DesireTaskRequest{
+					TaskDefinition: taskDef,
+					TaskGuid:       taskGuid,
+					Domain:         domain,
+				}
+				err := etcdDB.DesireTask(logger, desireRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = etcdDB.StartTask(logger, startRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+					TaskGuid:      taskGuid,
+					CellId:        cellId,
+					Failed:        false,
+					FailureReason: "",
+					Result:        "",
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				err = etcdDB.ResolvingTask(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+					TaskGuid:      taskGuid,
+					CellId:        cellId,
+					Failed:        false,
+					FailureReason: "",
+					Result:        "",
+				})
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("FailTask", func() {
+		var desireRequest *models.DesireTaskRequest
+		BeforeEach(func() {
+			taskDef = model_helpers.NewValidTaskDefinition()
+			desireRequest = &models.DesireTaskRequest{
+				TaskDefinition: taskDef,
+				TaskGuid:       taskGuid,
+				Domain:         domain,
+			}
+		})
+
+		Context("when failing a Task", func() {
+			Context("when the task is pending", func() {
+				JustBeforeEach(func() {
+					err := etcdDB.DesireTask(logger, desireRequest)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("sets the Task in the completed state", func() {
+					clock.IncrementBySeconds(1)
+
+					err := etcdDB.FailTask(logger, &models.FailTaskRequest{
+						TaskGuid:      taskGuid,
+						FailureReason: "because i said so",
+					})
+					Expect(err).NotTo(HaveOccurred())
+
+					tasks := filterByState(models.Task_Completed)
+
+					task := tasks.Tasks[0]
+
+					Expect(task.Failed).To(BeTrue())
+					Expect(task.FailureReason).To(Equal("because i said so"))
+					Expect(task.UpdatedAt).To(Equal(clock.Now().UnixNano()))
+					Expect(task.FirstCompletedAt).To(Equal(clock.Now().UnixNano()))
+				})
+
+				// Context("when a receptor is present", func() {
+				// 	Context("and failing succeeds", func() {
+				// 		BeforeEach(func() {
+				// 			fakeTaskClient.CompleteTasksReturns(nil)
+				// 		})
+
+				// 		Context("and the task has a complete URL", func() {
+				// 			BeforeEach(func() {
+				// 				task.CompletionCallbackURL = &url.URL{Host: "bogus"}
+				// 			})
+
+				// 			It("completes the task using its address", func() {
+				// 				err := bbs.FailTask(logger, task.TaskGuid, "because")
+				// 				Expect(err).NotTo(HaveOccurred())
+
+				// 				Expect(fakeTaskClient.CompleteTasksCallCount()).To(Equal(1))
+				// 				url, completedTasks := fakeTaskClient.CompleteTasksArgsForCall(0)
+				// 				Expect(url).To(Equal(receptorURL))
+				// 				Expect(completedTasks).To(HaveLen(1))
+				// 				Expect(completedTasks[0].TaskGuid).To(Equal(task.TaskGuid))
+				// 				Expect(completedTasks[0].Failed).To(BeTrue())
+				// 				Expect(completedTasks[0].FailureReason).To(Equal("because"))
+				// 				Expect(completedTasks[0].Result).To(BeEmpty())
+				// 			})
+				// 		})
+
+				// 		Context("but the task has no complete URL", func() {
+				// 			BeforeEach(func() {
+				// 				task.CompletionCallbackURL = nil
+				// 			})
+
+				// 			It("does not complete the task via the receptor", func() {
+				// 				err := bbs.FailTask(logger, task.TaskGuid, "because")
+				// 				Expect(err).NotTo(HaveOccurred())
+
+				// 				Expect(fakeTaskClient.CompleteTasksCallCount()).To(BeZero())
+				// 			})
+				// 		})
+				// 	})
+
+				// 	Context("and failing fails", func() {
+				// 		BeforeEach(func() {
+				// 			fakeTaskClient.CompleteTasksReturns(errors.New("welp"))
+				// 		})
+
+				// 		It("swallows the error, as we'll retry again eventually (via convergence)", func() {
+				// 			err := bbs.FailTask(logger, task.TaskGuid, "because")
+				// 			Expect(err).NotTo(HaveOccurred())
+				// 		})
+				// 	})
+				// })
+			})
+
+			Context("when the task is completed", func() {
+				JustBeforeEach(func() {
+					taskDef = model_helpers.NewValidTaskDefinition()
+					startRequest := &models.StartTaskRequest{
+						TaskGuid: taskGuid,
+						CellId:   cellId,
+					}
+					desireRequest := &models.DesireTaskRequest{
+						TaskDefinition: taskDef,
+						TaskGuid:       taskGuid,
+						Domain:         domain,
+					}
+					err := etcdDB.DesireTask(logger, desireRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = etcdDB.StartTask(logger, startRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+						TaskGuid:      taskGuid,
+						CellId:        cellId,
+						Failed:        true,
+						FailureReason: "some failure reason",
+						Result:        "",
+					})
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("fails", func() {
+					err := etcdDB.FailTask(logger, &models.FailTaskRequest{
+						TaskGuid:      taskGuid,
+						FailureReason: "because i said so",
+					})
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
+			Context("when the task is resolving", func() {
+				JustBeforeEach(func() {
+					taskDef = model_helpers.NewValidTaskDefinition()
+					startRequest := &models.StartTaskRequest{
+						TaskGuid: taskGuid,
+						CellId:   cellId,
+					}
+					desireRequest := &models.DesireTaskRequest{
+						TaskDefinition: taskDef,
+						TaskGuid:       taskGuid,
+						Domain:         domain,
+					}
+					err := etcdDB.DesireTask(logger, desireRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = etcdDB.StartTask(logger, startRequest)
+					Expect(err).NotTo(HaveOccurred())
+
+					err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+						TaskGuid:      taskGuid,
+						CellId:        cellId,
+						Failed:        true,
+						FailureReason: "some failure reason",
+						Result:        "",
+					})
+					Expect(err).NotTo(HaveOccurred())
+					err = etcdDB.ResolvingTask(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("fails", func() {
+					err := etcdDB.FailTask(logger, &models.FailTaskRequest{
+						TaskGuid:      taskGuid,
+						FailureReason: "because i said so",
+					})
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
+	})
+
+	Describe("ResolvingTask", func() {
+		BeforeEach(func() {
+			taskDef = model_helpers.NewValidTaskDefinition()
+			startRequest := &models.StartTaskRequest{
+				TaskGuid: taskGuid,
+				CellId:   cellId,
+			}
+			desireRequest := &models.DesireTaskRequest{
+				TaskDefinition: taskDef,
+				TaskGuid:       taskGuid,
+				Domain:         domain,
+			}
+			err := etcdDB.DesireTask(logger, desireRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = etcdDB.StartTask(logger, startRequest)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when the task is complete", func() {
+			BeforeEach(func() {
+				err := etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+					TaskGuid:      taskGuid,
+					CellId:        cellId,
+					Failed:        true,
+					FailureReason: "because i said so",
+					Result:        "a result",
+				})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("swaps /task/<guid>'s state to resolving", func() {
+				err := etcdDB.ResolvingTask(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				tasks := filterByState(models.Task_Resolving)
+				Expect(tasks.Tasks[0].TaskGuid).To(Equal(taskGuid))
+				Expect(tasks.Tasks[0].State).To(Equal(models.Task_Resolving))
+			})
+
+			It("bumps UpdatedAt", func() {
+				clock.IncrementBySeconds(1)
+
+				err := etcdDB.ResolvingTask(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				tasks := filterByState(models.Task_Resolving)
+				Expect(tasks.Tasks[0].UpdatedAt).To(Equal(clock.Now().UnixNano()))
+			})
+
+			Context("when the Task is already resolving", func() {
+				BeforeEach(func() {
+					err := etcdDB.ResolvingTask(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("fails", func() {
+					err := etcdDB.ResolvingTask(logger, taskGuid)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
+
+		Context("when the task is not complete", func() {
+			It("should fail", func() {
+				err := etcdDB.ResolvingTask(logger, taskGuid)
+				Expect(err).To(Equal(models.NewTaskTransitionError(models.Task_Running, models.Task_Resolving)))
+			})
+		})
+	})
+
+	Describe("ResolveTask", func() {
+		BeforeEach(func() {
+			taskDef = model_helpers.NewValidTaskDefinition()
+			startRequest := &models.StartTaskRequest{
+				TaskGuid: taskGuid,
+				CellId:   cellId,
+			}
+			desireRequest := &models.DesireTaskRequest{
+				TaskDefinition: taskDef,
+				TaskGuid:       taskGuid,
+				Domain:         domain,
+			}
+			err := etcdDB.DesireTask(logger, desireRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = etcdDB.StartTask(logger, startRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
+				TaskGuid:      taskGuid,
+				CellId:        cellId,
+				Failed:        true,
+				FailureReason: "because i said so",
+				Result:        "a result",
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when the task is resolving", func() {
+			BeforeEach(func() {
+				err := etcdDB.ResolvingTask(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should remove /task/<guid>", func() {
+				err := etcdDB.ResolveTask(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				tasks, err := etcdDB.Tasks(logger, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tasks.Tasks).To(BeEmpty())
+			})
+		})
+
+		Context("when the task is not resolving", func() {
+			It("should fail", func() {
+				err := etcdDB.ResolveTask(logger, taskGuid)
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})

@@ -52,6 +52,11 @@ type Client interface {
 	TasksByCellID(cellId string) ([]*models.Task, error)
 	TaskByGuid(guid string) (*models.Task, error)
 	DesireTask(guid, domain string, def *models.TaskDefinition) error
+	CancelTask(taskGuid string) error
+	FailTask(taskGuid, failureReason string) error
+	CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error
+	ResolvingTask(taskGuid string) error
+	ResolveTask(taskGuid string) error
 	SubscribeToEvents() (events.EventSource, error)
 
 	// Internal Task Methods
@@ -246,6 +251,46 @@ func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
 	res := &models.StartTaskResponse{}
 	err := c.doRequest(StartTaskRoute, nil, nil, req, res)
 	return res.GetShouldStart(), err
+}
+
+func (c *client) CancelTask(taskGuid string) error {
+	req := &models.TaskGuidRequest{
+		TaskGuid: taskGuid,
+	}
+	return c.doRequest(CancelTaskRoute, nil, nil, req, nil)
+}
+
+func (c *client) ResolvingTask(taskGuid string) error {
+	req := &models.TaskGuidRequest{
+		TaskGuid: taskGuid,
+	}
+	return c.doRequest(ResolvingTaskRoute, nil, nil, req, nil)
+}
+
+func (c *client) ResolveTask(taskGuid string) error {
+	req := &models.TaskGuidRequest{
+		TaskGuid: taskGuid,
+	}
+	return c.doRequest(ResolveTaskRoute, nil, nil, req, nil)
+}
+
+func (c *client) FailTask(taskGuid, failureReason string) error {
+	req := &models.FailTaskRequest{
+		TaskGuid:      taskGuid,
+		FailureReason: failureReason,
+	}
+	return c.doRequest(FailTaskRoute, nil, nil, req, nil)
+}
+
+func (c *client) CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error {
+	req := &models.CompleteTaskRequest{
+		TaskGuid:      taskGuid,
+		CellId:        cellId,
+		Failed:        failed,
+		FailureReason: failureReason,
+		Result:        result,
+	}
+	return c.doRequest(CompleteTaskRoute, nil, nil, req, nil)
 }
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {

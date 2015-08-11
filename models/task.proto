@@ -70,3 +70,28 @@ message StartTaskRequest {
 message StartTaskResponse {
   optional bool should_start = 1;
 }
+
+message FailTaskRequest {
+  optional string task_guid = 1;
+  optional string failure_reason = 2;
+}
+
+message TaskGuidRequest {
+  optional string task_guid = 1;
+}
+
+message CompleteTaskRequest {
+  optional string task_guid = 1;
+  optional string cell_id = 2;
+  optional bool failed = 3;
+  optional string failure_reason = 4;
+  optional string result = 5;
+}
+
+message TaskCallbackResponse {
+  optional string task_guid = 1;
+  optional bool failed = 2;
+  optional string failure_reason = 3;
+  optional string result = 4;
+  optional string annotation = 5 [(gogoproto.jsontag) = "annotation,omitempty"];
+}

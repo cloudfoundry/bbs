@@ -8,6 +8,7 @@ import (
 )
 
 func (t *ConsulHelper) RegisterCell(cell models.CellPresence) {
+	var err error
 	jsonBytes, err := models.ToJSON(cell)
 	Expect(err).NotTo(HaveOccurred())
 

@@ -106,13 +106,13 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	desireErr := h.db.DesireTask(logger, request)
-	if desireErr != nil {
-		logger.Error("failed-to-desire-task", desireErr)
-		if desireErr.Type == models.InvalidRecord {
-			writeBadRequestResponse(w, models.InvalidRecord, desireErr)
+	modelErr := h.db.DesireTask(logger, request)
+	if modelErr != nil {
+		logger.Error("failed-to-desire-task", modelErr)
+		if modelErr.Type == models.InvalidRecord {
+			writeBadRequestResponse(w, models.InvalidRecord, modelErr)
 		} else {
-			writeInternalServerErrorResponse(w, desireErr)
+			writeInternalServerErrorResponse(w, modelErr)
 		}
 		return
 	}
@@ -137,6 +137,7 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal: %s", err))
 		return
 	}
+
 	if err := startReq.Validate(); err != nil {
 		logger.Error("invalid-request", err)
 		writeBadRequestResponse(w, models.InvalidRequest, err)
@@ -155,4 +156,188 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 	}
 	logger.Info("succeeded-start-task")
 	writeProtoResponse(w, http.StatusOK, &models.StartTaskResponse{ShouldStart: shouldStart})
+}
+
+func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("cancel-task")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	request := &models.TaskGuidRequest{}
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal-task", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal cancel task request: %s", err))
+		return
+	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	// if err := request.Validate(); err != nil {
+	// 	logger.Error("invalid-request", err)
+	// 	writeBadRequestResponse(w, models.InvalidRequest, err)
+	// 	return
+	// }
+
+	modelErr := h.db.CancelTask(logger, request.TaskGuid)
+	if modelErr != nil {
+		logger.Error("failed-to-cancel-task", modelErr)
+		if modelErr.Type == models.InvalidRecord {
+			writeBadRequestResponse(w, models.InvalidRecord, modelErr)
+		} else {
+			writeInternalServerErrorResponse(w, modelErr)
+		}
+		return
+	}
+
+	writeEmptyResponse(w, http.StatusNoContent)
+}
+
+func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("fail-task")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	dbReq := &models.FailTaskRequest{}
+	err = dbReq.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal: %s", err))
+		return
+	}
+	// if err := dbReq.Validate(); err != nil {
+	// 	logger.Error("invalid-request", err)
+	// 	writeBadRequestResponse(w, models.InvalidRequest, err)
+	// 	return
+	// }
+
+	logger.Debug("parsed-request-body", lager.Data{"request": dbReq})
+
+	modelErr := h.db.FailTask(logger, dbReq)
+	if modelErr != nil {
+		logger.Error("failed-to-fail-task", modelErr)
+		writeInternalServerErrorResponse(w, modelErr)
+		return
+	}
+	logger.Info("succeeded-fail-task")
+	writeEmptyResponse(w, http.StatusNoContent)
+}
+
+func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("complete-task")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	dbReq := &models.CompleteTaskRequest{}
+	err = dbReq.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal: %s", err))
+		return
+	}
+	// if err := dbReq.Validate(); err != nil {
+	// 	logger.Error("invalid-request", err)
+	// 	writeBadRequestResponse(w, models.InvalidRequest, err)
+	// 	return
+	// }
+
+	logger.Debug("parsed-request-body", lager.Data{"request": dbReq})
+
+	modelErr := h.db.CompleteTask(logger, dbReq)
+	if modelErr != nil {
+		logger.Error("failed-to-complete-task", modelErr)
+		writeInternalServerErrorResponse(w, modelErr)
+		return
+	}
+	logger.Info("succeeded-complete-task")
+	writeEmptyResponse(w, http.StatusNoContent)
+}
+
+func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("resolving-task")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	request := &models.TaskGuidRequest{}
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal-task", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal reesolving task request: %s", err))
+		return
+	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	// if err := request.Validate(); err != nil {
+	// 	logger.Error("invalid-request", err)
+	// 	writeBadRequestResponse(w, models.InvalidRequest, err)
+	// 	return
+	// }
+
+	modelErr := h.db.ResolvingTask(logger, request.TaskGuid)
+	if modelErr != nil {
+		logger.Error("failed-resolving-task", modelErr)
+		if modelErr.Type == models.InvalidRecord {
+			writeBadRequestResponse(w, models.InvalidRecord, modelErr)
+		} else {
+			writeInternalServerErrorResponse(w, modelErr)
+		}
+		return
+	}
+
+	writeEmptyResponse(w, http.StatusNoContent)
+}
+
+func (h *TaskHandler) ResolveTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("resolve-task")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	request := &models.TaskGuidRequest{}
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal-task", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal resolve task request: %s", err))
+		return
+	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	// if err := request.Validate(); err != nil {
+	// 	logger.Error("invalid-request", err)
+	// 	writeBadRequestResponse(w, models.InvalidRequest, err)
+	// 	return
+	// }
+
+	modelErr := h.db.ResolveTask(logger, request.TaskGuid)
+	if modelErr != nil {
+		logger.Error("failed-to-resolve-task", modelErr)
+		if modelErr.Type == models.InvalidRecord {
+			writeBadRequestResponse(w, models.InvalidRecord, modelErr)
+		} else {
+			writeInternalServerErrorResponse(w, modelErr)
+		}
+		return
+	}
+
+	writeEmptyResponse(w, http.StatusNoContent)
 }

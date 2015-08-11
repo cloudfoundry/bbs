@@ -18,6 +18,7 @@ import (
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry/dropsonde"
+	"github.com/cloudfoundry/gunk/workpool"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
@@ -107,7 +108,11 @@ func main() {
 	consulSession := initializeConsul(logger)
 	consulDB := consuldb.NewConsul(consulSession)
 	cellClient := cellhandlers.NewClient()
-	db := etcddb.NewETCD(etcdClient, auctioneerClient, cellClient, consulDB, clock.NewClock())
+	cbWorkPool, err := workpool.NewWorkPool(etcddb.TASK_CB_WORKERS)
+	if err != nil {
+		logger.Fatal("callback-workpool-creation-failed", err)
+	}
+	db := etcddb.NewETCD(etcdClient, auctioneerClient, cellClient, "", consulDB, clock.NewClock(), cbWorkPool, etcddb.CompleteTaskWork)
 	hub := events.NewHub()
 	watcher := watcher.NewWatcher(
 		logger,
@@ -119,7 +124,16 @@ func main() {
 
 	handler := handlers.New(logger, db, hub)
 
+	workPoolRunner := func(signals <-chan os.Signal, ready chan<- struct{}) error {
+		close(ready)
+		<-signals
+		go cbWorkPool.Stop()
+
+		return nil
+	}
+
 	members := grouper.Members{
+		{"workPool", ifrit.RunFunc(workPoolRunner)},
 		{"watcher", watcher},
 		{"server", http_server.New(*serverAddress, handler)},
 		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},

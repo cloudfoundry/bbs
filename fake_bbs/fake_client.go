@@ -184,6 +184,51 @@ type FakeClient struct {
 	desireTaskReturns struct {
 		result1 error
 	}
+	CancelTaskStub        func(taskGuid string) error
+	cancelTaskMutex       sync.RWMutex
+	cancelTaskArgsForCall []struct {
+		taskGuid string
+	}
+	cancelTaskReturns struct {
+		result1 error
+	}
+	FailTaskStub        func(taskGuid, failureReason string) error
+	failTaskMutex       sync.RWMutex
+	failTaskArgsForCall []struct {
+		taskGuid      string
+		failureReason string
+	}
+	failTaskReturns struct {
+		result1 error
+	}
+	CompleteTaskStub        func(taskGuid, cellId string, failed bool, failureReason, result string) error
+	completeTaskMutex       sync.RWMutex
+	completeTaskArgsForCall []struct {
+		taskGuid      string
+		cellId        string
+		failed        bool
+		failureReason string
+		result        string
+	}
+	completeTaskReturns struct {
+		result1 error
+	}
+	ResolvingTaskStub        func(taskGuid string) error
+	resolvingTaskMutex       sync.RWMutex
+	resolvingTaskArgsForCall []struct {
+		taskGuid string
+	}
+	resolvingTaskReturns struct {
+		result1 error
+	}
+	ResolveTaskStub        func(taskGuid string) error
+	resolveTaskMutex       sync.RWMutex
+	resolveTaskArgsForCall []struct {
+		taskGuid string
+	}
+	resolveTaskReturns struct {
+		result1 error
+	}
 	SubscribeToEventsStub        func() (events.EventSource, error)
 	subscribeToEventsMutex       sync.RWMutex
 	subscribeToEventsArgsForCall []struct{}
@@ -816,6 +861,171 @@ func (fake *FakeClient) DesireTaskArgsForCall(i int) (string, string, *models.Ta
 func (fake *FakeClient) DesireTaskReturns(result1 error) {
 	fake.DesireTaskStub = nil
 	fake.desireTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) CancelTask(taskGuid string) error {
+	fake.cancelTaskMutex.Lock()
+	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
+		taskGuid string
+	}{taskGuid})
+	fake.cancelTaskMutex.Unlock()
+	if fake.CancelTaskStub != nil {
+		return fake.CancelTaskStub(taskGuid)
+	} else {
+		return fake.cancelTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) CancelTaskCallCount() int {
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	return len(fake.cancelTaskArgsForCall)
+}
+
+func (fake *FakeClient) CancelTaskArgsForCall(i int) string {
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	return fake.cancelTaskArgsForCall[i].taskGuid
+}
+
+func (fake *FakeClient) CancelTaskReturns(result1 error) {
+	fake.CancelTaskStub = nil
+	fake.cancelTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) FailTask(taskGuid string, failureReason string) error {
+	fake.failTaskMutex.Lock()
+	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
+		taskGuid      string
+		failureReason string
+	}{taskGuid, failureReason})
+	fake.failTaskMutex.Unlock()
+	if fake.FailTaskStub != nil {
+		return fake.FailTaskStub(taskGuid, failureReason)
+	} else {
+		return fake.failTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) FailTaskCallCount() int {
+	fake.failTaskMutex.RLock()
+	defer fake.failTaskMutex.RUnlock()
+	return len(fake.failTaskArgsForCall)
+}
+
+func (fake *FakeClient) FailTaskArgsForCall(i int) (string, string) {
+	fake.failTaskMutex.RLock()
+	defer fake.failTaskMutex.RUnlock()
+	return fake.failTaskArgsForCall[i].taskGuid, fake.failTaskArgsForCall[i].failureReason
+}
+
+func (fake *FakeClient) FailTaskReturns(result1 error) {
+	fake.FailTaskStub = nil
+	fake.failTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) CompleteTask(taskGuid string, cellId string, failed bool, failureReason string, result string) error {
+	fake.completeTaskMutex.Lock()
+	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
+		taskGuid      string
+		cellId        string
+		failed        bool
+		failureReason string
+		result        string
+	}{taskGuid, cellId, failed, failureReason, result})
+	fake.completeTaskMutex.Unlock()
+	if fake.CompleteTaskStub != nil {
+		return fake.CompleteTaskStub(taskGuid, cellId, failed, failureReason, result)
+	} else {
+		return fake.completeTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) CompleteTaskCallCount() int {
+	fake.completeTaskMutex.RLock()
+	defer fake.completeTaskMutex.RUnlock()
+	return len(fake.completeTaskArgsForCall)
+}
+
+func (fake *FakeClient) CompleteTaskArgsForCall(i int) (string, string, bool, string, string) {
+	fake.completeTaskMutex.RLock()
+	defer fake.completeTaskMutex.RUnlock()
+	return fake.completeTaskArgsForCall[i].taskGuid, fake.completeTaskArgsForCall[i].cellId, fake.completeTaskArgsForCall[i].failed, fake.completeTaskArgsForCall[i].failureReason, fake.completeTaskArgsForCall[i].result
+}
+
+func (fake *FakeClient) CompleteTaskReturns(result1 error) {
+	fake.CompleteTaskStub = nil
+	fake.completeTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ResolvingTask(taskGuid string) error {
+	fake.resolvingTaskMutex.Lock()
+	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
+		taskGuid string
+	}{taskGuid})
+	fake.resolvingTaskMutex.Unlock()
+	if fake.ResolvingTaskStub != nil {
+		return fake.ResolvingTaskStub(taskGuid)
+	} else {
+		return fake.resolvingTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) ResolvingTaskCallCount() int {
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	return len(fake.resolvingTaskArgsForCall)
+}
+
+func (fake *FakeClient) ResolvingTaskArgsForCall(i int) string {
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	return fake.resolvingTaskArgsForCall[i].taskGuid
+}
+
+func (fake *FakeClient) ResolvingTaskReturns(result1 error) {
+	fake.ResolvingTaskStub = nil
+	fake.resolvingTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ResolveTask(taskGuid string) error {
+	fake.resolveTaskMutex.Lock()
+	fake.resolveTaskArgsForCall = append(fake.resolveTaskArgsForCall, struct {
+		taskGuid string
+	}{taskGuid})
+	fake.resolveTaskMutex.Unlock()
+	if fake.ResolveTaskStub != nil {
+		return fake.ResolveTaskStub(taskGuid)
+	} else {
+		return fake.resolveTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) ResolveTaskCallCount() int {
+	fake.resolveTaskMutex.RLock()
+	defer fake.resolveTaskMutex.RUnlock()
+	return len(fake.resolveTaskArgsForCall)
+}
+
+func (fake *FakeClient) ResolveTaskArgsForCall(i int) string {
+	fake.resolveTaskMutex.RLock()
+	defer fake.resolveTaskMutex.RUnlock()
+	return fake.resolveTaskArgsForCall[i].taskGuid
+}
+
+func (fake *FakeClient) ResolveTaskReturns(result1 error) {
+	fake.ResolveTaskStub = nil
+	fake.resolveTaskReturns = struct {
 		result1 error
 	}{result1}
 }

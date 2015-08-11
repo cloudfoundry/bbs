@@ -11,8 +11,11 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/consul/internal/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/internal/etcd_helpers"
+	fakeHelpers "github.com/cloudfoundry-incubator/bbs/db/etcd/internal/etcd_helpers/fakes"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
+	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -23,6 +26,8 @@ import (
 
 	"testing"
 )
+
+const receptorURL = "http://some-receptor-url"
 
 var etcdPort int
 var etcdUrl string
@@ -42,6 +47,9 @@ var consulHelper *consul_helpers.ConsulHelper
 
 var cellDB db.CellDB
 var etcdDB db.DB
+var taskCBWorkPool *workpool.WorkPool
+var workPoolCreateError error
+var fakeTaskCBFactory *fakeHelpers.FakeTaskCallbackFactory
 
 func TestDB(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -69,11 +77,15 @@ var _ = BeforeSuite(func() {
 	consulRunner.WaitUntilReady()
 
 	etcdRunner.Start()
+
+	taskCBWorkPool, workPoolCreateError = workpool.NewWorkPool(1)
+	Expect(workPoolCreateError).ToNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 	consulRunner.Stop()
+	taskCBWorkPool.Stop()
 })
 
 var _ = BeforeEach(func() {
@@ -89,5 +101,17 @@ var _ = BeforeEach(func() {
 	etcdHelper = etcd_helpers.NewETCDHelper(etcdClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 	cellDB = consul.NewConsul(consulSession)
-	etcdDB = etcd.NewETCD(etcdClient, auctioneerClient, cellClient, cellDB, clock)
+	fakeTaskCBFactory = new(fakeHelpers.FakeTaskCallbackFactory)
+	fakeTaskCBFactory.TaskCallbackWorkReturns(func() {})
+
+	etcdDB = etcd.NewETCD(etcdClient, auctioneerClient, cellClient, receptorURL, cellDB, clock, taskCBWorkPool, fakeTaskCBFactory.TaskCallbackWork)
 })
+
+func registerCell(cell models.CellPresence) {
+	var err error
+	jsonBytes, err := models.ToJSON(cell)
+	Expect(err).NotTo(HaveOccurred())
+
+	_, err = consulSession.SetPresence(consul.CellSchemaPath(cell.CellID), jsonBytes)
+	Expect(err).NotTo(HaveOccurred())
+}

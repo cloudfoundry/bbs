@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
@@ -20,6 +21,7 @@ const (
 	ETCDErrKeyNotFound  = 100
 	ETCDErrKeyExists    = 105
 	ETCDErrIndexCleared = 401
+	TASK_CB_WORKERS     = 20
 )
 
 const maxActualGroupGetterWorkPoolSize = 50
@@ -62,16 +64,25 @@ type ETCDDB struct {
 	auctioneerClient  auctionhandlers.Client
 	cellClient        cellhandlers.Client
 
+	receptorTaskHandlerURL string
+	taskCallbackFactory    db.CompleteTaskWork
+	callbackWorkPool       *workpool.WorkPool
+
 	cellDB db.CellDB
 }
 
-func NewETCD(etcdClient *etcd.Client, auctioneerClient auctionhandlers.Client, cellClient cellhandlers.Client, cellDB db.CellDB, clock clock.Clock) *ETCDDB {
+func NewETCD(etcdClient *etcd.Client,
+	auctioneerClient auctionhandlers.Client, cellClient cellhandlers.Client,
+	receptorTaskHandlerURL string, cellDB db.CellDB, clock clock.Clock, cbWorkPool *workpool.WorkPool, taskCBFactory db.CompleteTaskWork) *ETCDDB {
 	return &ETCDDB{etcdClient,
 		clock,
 		map[chan bool]bool{},
 		&sync.Mutex{},
 		auctioneerClient,
 		cellClient,
+		receptorTaskHandlerURL,
+		taskCBFactory,
+		cbWorkPool,
 		cellDB,
 	}
 }
@@ -97,6 +108,10 @@ func (db *ETCDDB) fetchRaw(logger lager.Logger, key string) (*etcd.Node, *models
 }
 
 func ErrorFromEtcdError(logger lager.Logger, err error) *models.Error {
+	if err == nil {
+		return nil
+	}
+
 	switch etcdErrCode(err) {
 	case ETCDErrKeyNotFound:
 		logger.Debug("no-node-to-fetch")
@@ -104,7 +119,7 @@ func ErrorFromEtcdError(logger lager.Logger, err error) *models.Error {
 	case ETCDErrKeyExists:
 		return models.ErrResourceExists
 	default:
-		logger.Error("failed-fetching-from-etcd", err)
+		logger.Error("failed-etcd-operation", err)
 		return models.ErrUnknownError
 	}
 }

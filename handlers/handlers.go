@@ -45,10 +45,15 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		bbs.DesiredLRPByProcessGuidRoute: route(desiredLRPHandler.DesiredLRPByProcessGuid),
 
 		// Tasks
-		bbs.TasksRoute:      route(taskHandler.Tasks),
-		bbs.TaskByGuidRoute: route(taskHandler.TaskByGuid),
-		bbs.DesireTaskRoute: route(taskHandler.DesireTask),
-		bbs.StartTaskRoute:  route(taskHandler.StartTask),
+		bbs.TasksRoute:         route(taskHandler.Tasks),
+		bbs.TaskByGuidRoute:    route(taskHandler.TaskByGuid),
+		bbs.DesireTaskRoute:    route(taskHandler.DesireTask),
+		bbs.StartTaskRoute:     route(taskHandler.StartTask),
+		bbs.CancelTaskRoute:    route(taskHandler.CancelTask),
+		bbs.FailTaskRoute:      route(taskHandler.FailTask),
+		bbs.CompleteTaskRoute:  route(taskHandler.CompleteTask),
+		bbs.ResolvingTaskRoute: route(taskHandler.ResolvingTask),
+		bbs.ResolveTaskRoute:   route(taskHandler.ResolveTask),
 
 		// Events
 		bbs.EventStreamRoute: route(eventsHandler.Subscribe),

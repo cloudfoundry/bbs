@@ -28,10 +28,15 @@ const (
 	DesiredLRPByProcessGuidRoute = "DesiredLRPByProcessGuid"
 
 	// Tasks
-	TasksRoute      = "Tasks"
-	TaskByGuidRoute = "TaskByGuid"
-	DesireTaskRoute = "DesireTask"
-	StartTaskRoute  = "StartTask"
+	TasksRoute         = "Tasks"
+	TaskByGuidRoute    = "TaskByGuid"
+	DesireTaskRoute    = "DesireTask"
+	StartTaskRoute     = "StartTask"
+	CancelTaskRoute    = "CancelTask"
+	FailTaskRoute      = "FailTask"
+	CompleteTaskRoute  = "CompleteTask"
+	ResolvingTaskRoute = "ResolvingTask"
+	ResolveTaskRoute   = "ResolveTask"
 
 	// Event Streaming
 	EventStreamRoute = "EventStream"
@@ -66,7 +71,14 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks", Method: "POST", Name: DesireTaskRoute},
 	{Path: "/v1/tasks", Method: "GET", Name: TasksRoute},
 	{Path: "/v1/tasks/:task_guid", Method: "GET", Name: TaskByGuidRoute},
+
+	// Task Lifecycle
 	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
+	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute},
+	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
+	{Path: "/v1/tasks/complete", Method: "POST", Name: CompleteTaskRoute},
+	{Path: "/v1/tasks/resolving", Method: "POST", Name: ResolvingTaskRoute},
+	{Path: "/v1/tasks/resolve", Method: "POST", Name: ResolveTaskRoute},
 
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute},
