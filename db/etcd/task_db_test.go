@@ -630,6 +630,7 @@ var _ = Describe("TaskDB", func() {
 					Expect(task.FailureReason).To(Equal("because i said so"))
 					Expect(task.UpdatedAt).To(Equal(clock.Now().UnixNano()))
 					Expect(task.FirstCompletedAt).To(Equal(clock.Now().UnixNano()))
+					Expect(task.CellId).To(BeEmpty())
 				})
 
 				Context("when a receptor is present", func() {

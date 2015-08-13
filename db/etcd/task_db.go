@@ -130,7 +130,10 @@ func (db *ETCDDB) StartTask(logger lager.Logger, request *models.StartTaskReques
 		return false, &models.Error{Type: models.InvalidRequest, Message: "missing cellId"}
 	}
 
-	logger = logger.WithData(lager.Data{"requested-task-guid": taskGuid, "requested-cell-id": cellID})
+	logger = logger.Session("start-task", lager.Data{"task-guid": taskGuid, "cell-id": cellID})
+
+	logger.Info("starting")
+	defer logger.Info("finished")
 
 	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
 	if modelErr != nil {
@@ -161,13 +164,11 @@ func (db *ETCDDB) StartTask(logger lager.Logger, request *models.StartTaskReques
 		return false, modelErr
 	}
 
-	logger.Info("persisting-task")
 	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), string(value), NO_TTL, "", index)
 	if err != nil {
 		logger.Error("failed-persisting-task", err)
 		return false, ErrorFromEtcdError(logger, err)
 	}
-	logger.Info("succeeded-persisting-task")
 
 	return true, nil
 }
@@ -195,6 +196,7 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error
 	}
 
 	logger.Info("completing-task")
+	cellId := task.CellId
 	modelErr = db.completeTask(logger, task, index, &models.CompleteTaskRequest{
 		Failed:        true,
 		FailureReason: "task was cancelled",
@@ -206,12 +208,12 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error
 	}
 	logger.Info("succeeded-completing-task")
 
-	if task.CellId == "" {
+	if cellId == "" {
 		return nil
 	}
 
 	logger.Info("getting-cell-info")
-	cellPresence, modelErr := db.cellDB.CellById(logger, task.CellId)
+	cellPresence, modelErr := db.cellDB.CellById(logger, cellId)
 	if modelErr != nil {
 		logger.Error("failed-getting-cell-info", modelErr)
 		return nil
@@ -317,6 +319,7 @@ func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uin
 
 func (db *ETCDDB) markTaskCompleted(task *models.Task, request *models.CompleteTaskRequest) {
 	now := db.clock.Now().UnixNano()
+	task.CellId = ""
 	task.UpdatedAt = now
 	task.FirstCompletedAt = now
 	task.State = models.Task_Completed
