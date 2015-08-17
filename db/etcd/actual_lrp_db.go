@@ -210,7 +210,7 @@ func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.Actual
 
 func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) (modelErr *models.Error) {
 	logger.Debug("create-evacuating-actual-lrp")
-	defer logger.Debug("create-evacuating-actual-lrp-complete", lager.Data{"error": modelErr})
+	defer func() { logger.Debug("create-evacuating-actual-lrp-complete", lager.Data{"error": modelErr}) }()
 	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
 	if err != nil {
 		return models.ErrActualLRPCannotBeStarted
