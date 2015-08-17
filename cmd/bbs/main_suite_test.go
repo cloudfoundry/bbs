@@ -91,7 +91,8 @@ var _ = BeforeEach(func() {
 	consulRunner.Reset()
 
 	auctioneerServer = ghttp.NewServer()
-	auctioneerServer.AppendHandlers(ghttp.RespondWith(http.StatusAccepted, nil))
+	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
+	auctioneerServer.AllowUnhandledRequests = true
 
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", 6700+GinkgoParallelNode())
 
