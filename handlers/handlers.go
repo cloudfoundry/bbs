@@ -58,6 +58,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		bbs.CompleteTaskRoute:  route(taskHandler.CompleteTask),
 		bbs.ResolvingTaskRoute: route(taskHandler.ResolvingTask),
 		bbs.ResolveTaskRoute:   route(taskHandler.ResolveTask),
+		bbs.ConvergeTasksRoute: route(taskHandler.ConvergeTasks),
 
 		// Events
 		bbs.EventStreamRoute: route(eventsHandler.Subscribe),

@@ -70,7 +70,7 @@ func HandleCompletedTask(logger lager.Logger, taskDB db.TaskDB, task *models.Tas
 			if shouldResolve(statusCode) {
 				modelErr := taskDB.ResolveTask(logger, task.TaskGuid)
 				if modelErr != nil {
-					logger.Error("resolving-task-failed", modelErr)
+					logger.Error("resolve-task-failed", modelErr)
 					return
 				}
 

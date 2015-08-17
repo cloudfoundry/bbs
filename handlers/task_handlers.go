@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -339,5 +340,38 @@ func (h *TaskHandler) ResolveTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	writeEmptyResponse(w, http.StatusNoContent)
+}
+
+func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("converge-tasks")
+
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
+		return
+	}
+
+	request := &models.ConvergeTasksRequest{}
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-unmarshal-task", err)
+		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal converge tasks request: %s", err))
+		return
+	}
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	// if err := request.Validate(); err != nil {
+	// 	logger.Error("invalid-request", err)
+	// 	writeBadRequestResponse(w, models.InvalidRequest, err)
+	// 	return
+	// }
+
+	h.db.ConvergeTasks(
+		logger,
+		time.Duration(request.KickTaskDuration),
+		time.Duration(request.ExpirePendingTaskDuration),
+		time.Duration(request.ExpireCompletedTaskDuration),
+	)
 	writeEmptyResponse(w, http.StatusNoContent)
 }

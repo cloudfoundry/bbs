@@ -16,6 +16,7 @@ type ETCDHelper struct {
 }
 
 //go:generate counterfeiter . TaskCallbackFactory
+
 type TaskCallbackFactory interface {
 	TaskCallbackWork(logger lager.Logger, taskDB db.TaskDB, task *models.Task) func()
 }

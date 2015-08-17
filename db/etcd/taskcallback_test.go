@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,7 +20,7 @@ import (
 var _ = Describe("TaskWorker", func() {
 	var (
 		fakeServer *ghttp.Server
-		logger     lager.Logger
+		logger     *lagertest.TestLogger
 		timeout    time.Duration
 	)
 
@@ -28,9 +29,8 @@ var _ = Describe("TaskWorker", func() {
 		cf_http.Initialize(timeout)
 		fakeServer = ghttp.NewServer()
 
-		logger = lager.NewLogger("task-callback-test")
+		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
-
 	})
 
 	AfterEach(func() {
@@ -176,6 +176,18 @@ var _ = Describe("TaskWorker", func() {
 							Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
 							Consistently(fakeServer.ReceivedRequests, 0.25).Should(HaveLen(3))
 						})
+					})
+				})
+
+				Context("when ResolveTask fails", func() {
+					It("logs an error and returns", func() {
+						taskDB.ResolveTaskReturns(&models.Error{})
+						go simulateTaskCompleting()
+						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
+						statusCodes <- 200
+
+						Eventually(taskDB.ResolveTaskCallCount).Should(Equal(1))
+						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.resolve-task-failed"))
 					})
 				})
 

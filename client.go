@@ -64,6 +64,9 @@ type Client interface {
 	ResolvingTask(taskGuid string) error
 	ResolveTask(taskGuid string) error
 	SubscribeToEvents() (events.EventSource, error)
+	ConvergeTasks(
+		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
+	) error
 
 	// Internal Task Methods
 	StartTask(taskGuid string, cellID string) (bool, error)
@@ -328,6 +331,17 @@ func (c *client) CompleteTask(taskGuid, cellId string, failed bool, failureReaso
 		Result:        result,
 	}
 	return c.doRequest(CompleteTaskRoute, nil, nil, req, nil)
+}
+
+func (c *client) ConvergeTasks(
+	kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
+) error {
+	req := &models.ConvergeTasksRequest{
+		KickTaskDuration:            kickTaskDuration.Nanoseconds(),
+		ExpirePendingTaskDuration:   expirePendingTaskDuration.Nanoseconds(),
+		ExpireCompletedTaskDuration: expireCompletedTaskDuration.Nanoseconds(),
+	}
+	return c.doRequest(ConvergeTasksRoute, nil, nil, req, nil)
 }
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {

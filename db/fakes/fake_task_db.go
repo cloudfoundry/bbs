@@ -3,6 +3,7 @@ package fakes
 
 import (
 	"sync"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -93,6 +94,14 @@ type FakeTaskDB struct {
 	}
 	resolveTaskReturns struct {
 		result1 *models.Error
+	}
+	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration)
+	convergeTasksMutex       sync.RWMutex
+	convergeTasksArgsForCall []struct {
+		logger                      lager.Logger
+		kickTaskDuration            time.Duration
+		expirePendingTaskDuration   time.Duration
+		expireCompletedTaskDuration time.Duration
 	}
 }
 
@@ -394,6 +403,32 @@ func (fake *FakeTaskDB) ResolveTaskReturns(result1 *models.Error) {
 	fake.resolveTaskReturns = struct {
 		result1 *models.Error
 	}{result1}
+}
+
+func (fake *FakeTaskDB) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) {
+	fake.convergeTasksMutex.Lock()
+	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
+		logger                      lager.Logger
+		kickTaskDuration            time.Duration
+		expirePendingTaskDuration   time.Duration
+		expireCompletedTaskDuration time.Duration
+	}{logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
+	fake.convergeTasksMutex.Unlock()
+	if fake.ConvergeTasksStub != nil {
+		fake.ConvergeTasksStub(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+	}
+}
+
+func (fake *FakeTaskDB) ConvergeTasksCallCount() int {
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	return len(fake.convergeTasksArgsForCall)
+}
+
+func (fake *FakeTaskDB) ConvergeTasksArgsForCall(i int) (lager.Logger, time.Duration, time.Duration, time.Duration) {
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	return fake.convergeTasksArgsForCall[i].logger, fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
 }
 
 var _ db.TaskDB = new(FakeTaskDB)

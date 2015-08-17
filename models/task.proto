@@ -95,3 +95,9 @@ message TaskCallbackResponse {
   optional string result = 4;
   optional string annotation = 5 [(gogoproto.jsontag) = "annotation,omitempty"];
 }
+
+message ConvergeTasksRequest {
+  optional int64 kick_task_duration = 1;
+  optional int64 expire_pending_task_duration = 2;
+  optional int64 expire_completed_task_duration = 3;
+}

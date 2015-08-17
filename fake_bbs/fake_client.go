@@ -279,6 +279,16 @@ type FakeClient struct {
 		result1 events.EventSource
 		result2 error
 	}
+	ConvergeTasksStub        func(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+	convergeTasksMutex       sync.RWMutex
+	convergeTasksArgsForCall []struct {
+		kickTaskDuration            time.Duration
+		expirePendingTaskDuration   time.Duration
+		expireCompletedTaskDuration time.Duration
+	}
+	convergeTasksReturns struct {
+		result1 error
+	}
 	StartTaskStub        func(taskGuid string, cellID string) (bool, error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
@@ -1235,6 +1245,40 @@ func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, res
 		result1 events.EventSource
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) ConvergeTasks(kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) error {
+	fake.convergeTasksMutex.Lock()
+	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
+		kickTaskDuration            time.Duration
+		expirePendingTaskDuration   time.Duration
+		expireCompletedTaskDuration time.Duration
+	}{kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
+	fake.convergeTasksMutex.Unlock()
+	if fake.ConvergeTasksStub != nil {
+		return fake.ConvergeTasksStub(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+	} else {
+		return fake.convergeTasksReturns.result1
+	}
+}
+
+func (fake *FakeClient) ConvergeTasksCallCount() int {
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	return len(fake.convergeTasksArgsForCall)
+}
+
+func (fake *FakeClient) ConvergeTasksArgsForCall(i int) (time.Duration, time.Duration, time.Duration) {
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	return fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
+}
+
+func (fake *FakeClient) ConvergeTasksReturns(result1 error) {
+	fake.ConvergeTasksStub = nil
+	fake.convergeTasksReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeClient) StartTask(taskGuid string, cellID string) (bool, error) {

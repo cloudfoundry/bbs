@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -745,6 +746,77 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns an Invalid Request error", func() {
 				handler.ResolveTask(responseRecorder, request)
+				var bbsError models.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
+				Expect(bbsError.Message).To(ContainSubstring("foobar"))
+			})
+		})
+	})
+
+	Describe("ConvergeTasks", func() {
+		Context("when the request is normal", func() {
+			var expected *models.ConvergeTasksRequest
+			BeforeEach(func() {
+				expected = &models.ConvergeTasksRequest{
+					KickTaskDuration:            int64(10 * time.Second),
+					ExpirePendingTaskDuration:   int64(10 * time.Second),
+					ExpireCompletedTaskDuration: int64(10 * time.Second),
+				}
+				request = newTestRequest(expected)
+			})
+
+			It("responds with 200 OK", func() {
+				handler.ConvergeTasks(responseRecorder, request)
+				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
+			})
+
+			It("calls ConvergeTasks", func() {
+				handler.ConvergeTasks(responseRecorder, request)
+				Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
+				taskLogger, kickDuration, pendingDuration, completedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
+				Expect(taskLogger.SessionName()).To(ContainSubstring("converge-tasks"))
+				Expect(kickDuration).To(BeEquivalentTo(expected.KickTaskDuration))
+				Expect(pendingDuration).To(BeEquivalentTo(expected.ExpirePendingTaskDuration))
+				Expect(completedDuration).To(BeEquivalentTo(expected.ExpireCompletedTaskDuration))
+			})
+		})
+
+		Context("when the request body is not a TaskGuidRequest", func() {
+			BeforeEach(func() {
+				request = newTestRequest("foo")
+			})
+
+			It("responds with 400 BAD REQUEST", func() {
+				handler.ConvergeTasks(responseRecorder, request)
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+
+			It("returns an Invalid Request error", func() {
+				handler.ConvergeTasks(responseRecorder, request)
+				var bbsError models.Error
+				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
+				Expect(bbsError.Message).To(ContainSubstring("unmarshal"))
+			})
+		})
+
+		Context("when the request body resolves to stream", func() {
+			BeforeEach(func() {
+				request = newTestRequest(newExplodingReader(errors.New("foobar")))
+			})
+
+			It("responds with 400 BAD REQUEST", func() {
+				handler.ConvergeTasks(responseRecorder, request)
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+
+			It("returns an Invalid Request error", func() {
+				handler.ConvergeTasks(responseRecorder, request)
 				var bbsError models.Error
 				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())

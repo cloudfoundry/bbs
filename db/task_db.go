@@ -1,6 +1,8 @@
 package db
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -20,4 +22,9 @@ type TaskDB interface {
 	CompleteTask(logger lager.Logger, request *models.CompleteTaskRequest) *models.Error
 	ResolvingTask(logger lager.Logger, taskGuid string) *models.Error
 	ResolveTask(logger lager.Logger, taskGuid string) *models.Error
+
+	ConvergeTasks(
+		logger lager.Logger,
+		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
+	)
 }

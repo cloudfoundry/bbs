@@ -57,8 +57,6 @@ func TestDB(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	logger = lagertest.NewTestLogger("test")
-
 	clock = fakeclock.NewFakeClock(time.Unix(0, 1138))
 
 	etcdPort = 4001 + GinkgoParallelNode()
@@ -70,8 +68,6 @@ var _ = BeforeSuite(func() {
 		1,
 		"http",
 	)
-
-	logger = lagertest.NewTestLogger("test")
 
 	consulRunner.Start()
 	consulRunner.WaitUntilReady()
@@ -89,6 +85,8 @@ var _ = AfterSuite(func() {
 })
 
 var _ = BeforeEach(func() {
+	logger = lagertest.NewTestLogger("test")
+
 	auctioneerClient = new(fakeauctioneer.FakeClient)
 	cellClient = new(fakecellhandlers.FakeClient)
 	etcdRunner.Reset()
@@ -104,7 +102,7 @@ var _ = BeforeEach(func() {
 	fakeTaskCBFactory = new(fakeHelpers.FakeTaskCallbackFactory)
 	fakeTaskCBFactory.TaskCallbackWorkReturns(func() {})
 
-	etcdDB = etcd.NewETCD(etcdClient, auctioneerClient, cellClient, receptorURL, cellDB, clock, taskCBWorkPool, fakeTaskCBFactory.TaskCallbackWork)
+	etcdDB = etcd.NewETCD(etcdClient, auctioneerClient, cellClient, cellDB, clock, taskCBWorkPool, fakeTaskCBFactory.TaskCallbackWork)
 })
 
 func registerCell(cell models.CellPresence) {

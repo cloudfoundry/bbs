@@ -478,6 +478,36 @@ func (m *TaskCallbackResponse) GetAnnotation() string {
 	return ""
 }
 
+type ConvergeTasksRequest struct {
+	KickTaskDuration            int64 `protobuf:"varint,1,opt,name=kick_task_duration" json:"kick_task_duration"`
+	ExpirePendingTaskDuration   int64 `protobuf:"varint,2,opt,name=expire_pending_task_duration" json:"expire_pending_task_duration"`
+	ExpireCompletedTaskDuration int64 `protobuf:"varint,3,opt,name=expire_completed_task_duration" json:"expire_completed_task_duration"`
+}
+
+func (m *ConvergeTasksRequest) Reset()      { *m = ConvergeTasksRequest{} }
+func (*ConvergeTasksRequest) ProtoMessage() {}
+
+func (m *ConvergeTasksRequest) GetKickTaskDuration() int64 {
+	if m != nil {
+		return m.KickTaskDuration
+	}
+	return 0
+}
+
+func (m *ConvergeTasksRequest) GetExpirePendingTaskDuration() int64 {
+	if m != nil {
+		return m.ExpirePendingTaskDuration
+	}
+	return 0
+}
+
+func (m *ConvergeTasksRequest) GetExpireCompletedTaskDuration() int64 {
+	if m != nil {
+		return m.ExpireCompletedTaskDuration
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterEnum("models.Task_State", Task_State_name, Task_State_value)
 }
@@ -1848,6 +1878,96 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KickTaskDuration", wireType)
+			}
+			m.KickTaskDuration = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.KickTaskDuration |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpirePendingTaskDuration", wireType)
+			}
+			m.ExpirePendingTaskDuration = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.ExpirePendingTaskDuration |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpireCompletedTaskDuration", wireType)
+			}
+			m.ExpireCompletedTaskDuration = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.ExpireCompletedTaskDuration |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func skipTask(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -2067,6 +2187,18 @@ func (this *TaskCallbackResponse) String() string {
 	}, "")
 	return s
 }
+func (this *ConvergeTasksRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ConvergeTasksRequest{`,
+		`KickTaskDuration:` + fmt.Sprintf("%v", this.KickTaskDuration) + `,`,
+		`ExpirePendingTaskDuration:` + fmt.Sprintf("%v", this.ExpirePendingTaskDuration) + `,`,
+		`ExpireCompletedTaskDuration:` + fmt.Sprintf("%v", this.ExpireCompletedTaskDuration) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func valueToStringTask(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -2228,6 +2360,15 @@ func (m *TaskCallbackResponse) Size() (n int) {
 	n += 1 + l + sovTask(uint64(l))
 	l = len(m.Annotation)
 	n += 1 + l + sovTask(uint64(l))
+	return n
+}
+
+func (m *ConvergeTasksRequest) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovTask(uint64(m.KickTaskDuration))
+	n += 1 + sovTask(uint64(m.ExpirePendingTaskDuration))
+	n += 1 + sovTask(uint64(m.ExpireCompletedTaskDuration))
 	return n
 }
 
@@ -2659,6 +2800,33 @@ func (m *TaskCallbackResponse) MarshalTo(data []byte) (n int, err error) {
 	return i, nil
 }
 
+func (m *ConvergeTasksRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ConvergeTasksRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0x8
+	i++
+	i = encodeVarintTask(data, i, uint64(m.KickTaskDuration))
+	data[i] = 0x10
+	i++
+	i = encodeVarintTask(data, i, uint64(m.ExpirePendingTaskDuration))
+	data[i] = 0x18
+	i++
+	i = encodeVarintTask(data, i, uint64(m.ExpireCompletedTaskDuration))
+	return i, nil
+}
+
 func encodeFixed64Task(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -2799,6 +2967,16 @@ func (this *TaskCallbackResponse) GoString() string {
 		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason),
 		`Result:` + fmt.Sprintf("%#v", this.Result),
 		`Annotation:` + fmt.Sprintf("%#v", this.Annotation) + `}`}, ", ")
+	return s
+}
+func (this *ConvergeTasksRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ConvergeTasksRequest{` +
+		`KickTaskDuration:` + fmt.Sprintf("%#v", this.KickTaskDuration),
+		`ExpirePendingTaskDuration:` + fmt.Sprintf("%#v", this.ExpirePendingTaskDuration),
+		`ExpireCompletedTaskDuration:` + fmt.Sprintf("%#v", this.ExpireCompletedTaskDuration) + `}`}, ", ")
 	return s
 }
 func valueToGoStringTask(v interface{}, typ string) string {
@@ -3192,6 +3370,37 @@ func (this *TaskCallbackResponse) Equal(that interface{}) bool {
 		return false
 	}
 	if this.Annotation != that1.Annotation {
+		return false
+	}
+	return true
+}
+func (this *ConvergeTasksRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ConvergeTasksRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.KickTaskDuration != that1.KickTaskDuration {
+		return false
+	}
+	if this.ExpirePendingTaskDuration != that1.ExpirePendingTaskDuration {
+		return false
+	}
+	if this.ExpireCompletedTaskDuration != that1.ExpireCompletedTaskDuration {
 		return false
 	}
 	return true

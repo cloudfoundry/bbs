@@ -59,23 +59,21 @@ type ETCDDB struct {
 	auctioneerClient  auctionhandlers.Client
 	cellClient        cellhandlers.Client
 
-	receptorTaskHandlerURL string
-	taskCallbackFactory    db.CompleteTaskWork
-	callbackWorkPool       *workpool.WorkPool
+	taskCallbackFactory db.CompleteTaskWork
+	callbackWorkPool    *workpool.WorkPool
 
 	cellDB db.CellDB
 }
 
 func NewETCD(etcdClient *etcd.Client,
 	auctioneerClient auctionhandlers.Client, cellClient cellhandlers.Client,
-	receptorTaskHandlerURL string, cellDB db.CellDB, clock clock.Clock, cbWorkPool *workpool.WorkPool, taskCBFactory db.CompleteTaskWork) *ETCDDB {
+	cellDB db.CellDB, clock clock.Clock, cbWorkPool *workpool.WorkPool, taskCBFactory db.CompleteTaskWork) *ETCDDB {
 	return &ETCDDB{etcdClient,
 		clock,
 		map[chan bool]bool{},
 		&sync.Mutex{},
 		auctioneerClient,
 		cellClient,
-		receptorTaskHandlerURL,
 		taskCBFactory,
 		cbWorkPool,
 		cellDB,

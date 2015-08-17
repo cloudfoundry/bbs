@@ -10,6 +10,14 @@ import (
 )
 
 type FakeCellDB struct {
+	NewCellsLoaderStub        func(logger lager.Logger) db.CellsLoader
+	newCellsLoaderMutex       sync.RWMutex
+	newCellsLoaderArgsForCall []struct {
+		logger lager.Logger
+	}
+	newCellsLoaderReturns struct {
+		result1 db.CellsLoader
+	}
 	CellByIdStub        func(logger lager.Logger, cellId string) (*models.CellPresence, *models.Error)
 	cellByIdMutex       sync.RWMutex
 	cellByIdArgsForCall []struct {
@@ -20,6 +28,38 @@ type FakeCellDB struct {
 		result1 *models.CellPresence
 		result2 *models.Error
 	}
+}
+
+func (fake *FakeCellDB) NewCellsLoader(logger lager.Logger) db.CellsLoader {
+	fake.newCellsLoaderMutex.Lock()
+	fake.newCellsLoaderArgsForCall = append(fake.newCellsLoaderArgsForCall, struct {
+		logger lager.Logger
+	}{logger})
+	fake.newCellsLoaderMutex.Unlock()
+	if fake.NewCellsLoaderStub != nil {
+		return fake.NewCellsLoaderStub(logger)
+	} else {
+		return fake.newCellsLoaderReturns.result1
+	}
+}
+
+func (fake *FakeCellDB) NewCellsLoaderCallCount() int {
+	fake.newCellsLoaderMutex.RLock()
+	defer fake.newCellsLoaderMutex.RUnlock()
+	return len(fake.newCellsLoaderArgsForCall)
+}
+
+func (fake *FakeCellDB) NewCellsLoaderArgsForCall(i int) lager.Logger {
+	fake.newCellsLoaderMutex.RLock()
+	defer fake.newCellsLoaderMutex.RUnlock()
+	return fake.newCellsLoaderArgsForCall[i].logger
+}
+
+func (fake *FakeCellDB) NewCellsLoaderReturns(result1 db.CellsLoader) {
+	fake.NewCellsLoaderStub = nil
+	fake.newCellsLoaderReturns = struct {
+		result1 db.CellsLoader
+	}{result1}
 }
 
 func (fake *FakeCellDB) CellById(logger lager.Logger, cellId string) (*models.CellPresence, *models.Error) {

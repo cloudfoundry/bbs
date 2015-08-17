@@ -112,7 +112,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("callback-workpool-creation-failed", err)
 	}
-	db := etcddb.NewETCD(etcdClient, auctioneerClient, cellClient, "", consulDB, clock.NewClock(), cbWorkPool, etcddb.CompleteTaskWork)
+	db := etcddb.NewETCD(etcdClient, auctioneerClient, cellClient, consulDB, clock.NewClock(), cbWorkPool, etcddb.CompleteTaskWork)
 	hub := events.NewHub()
 	watcher := watcher.NewWatcher(
 		logger,

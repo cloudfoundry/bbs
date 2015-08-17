@@ -292,7 +292,7 @@ func (db *ETCDDB) CompleteTask(logger lager.Logger, request *models.CompleteTask
 }
 
 func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uint64, request *models.CompleteTaskRequest) *models.Error {
-	db.markTaskCompleted(task, request)
+	db.markTaskCompleted(task, request.Failed, request.FailureReason, request.Result)
 
 	value, modelErr := models.ToJSON(task)
 	if modelErr != nil {
@@ -317,15 +317,15 @@ func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uin
 	return nil
 }
 
-func (db *ETCDDB) markTaskCompleted(task *models.Task, request *models.CompleteTaskRequest) {
+func (db *ETCDDB) markTaskCompleted(task *models.Task, failed bool, failureReason, result string) {
 	now := db.clock.Now().UnixNano()
 	task.CellId = ""
 	task.UpdatedAt = now
 	task.FirstCompletedAt = now
 	task.State = models.Task_Completed
-	task.Failed = request.Failed
-	task.FailureReason = request.FailureReason
-	task.Result = request.Result
+	task.Failed = failed
+	task.FailureReason = failureReason
+	task.Result = result
 }
 
 // The stager calls this when it wants to claim a completed task.  This ensures that only one

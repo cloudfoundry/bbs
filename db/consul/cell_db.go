@@ -12,6 +12,30 @@ func CellSchemaPath(cellID string) string {
 	return path.Join(CellSchemaRoot, cellID)
 }
 
+func (db *ConsulDB) Cells(logger lager.Logger) ([]*models.CellPresence, *models.Error) {
+	cells, err := db.session.ListAcquiredValues(CellSchemaRoot)
+	if err != nil {
+		modelErr := convertConsulError(err)
+		if modelErr != models.ErrResourceNotFound {
+			return nil, modelErr
+		}
+	}
+
+	cellPresences := []*models.CellPresence{}
+	for _, cell := range cells {
+		cellPresence := &models.CellPresence{}
+		err := models.FromJSON(cell, cellPresence)
+		if err != nil {
+			logger.Error("failed-to-unmarshal-cells-json", err)
+			continue
+		}
+
+		cellPresences = append(cellPresences, cellPresence)
+	}
+
+	return cellPresences, nil
+}
+
 func (db *ConsulDB) CellById(logger lager.Logger, cellId string) (*models.CellPresence, *models.Error) {
 	cellPresence := models.CellPresence{}
 
