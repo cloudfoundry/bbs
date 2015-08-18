@@ -35,11 +35,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 	})
 
 	Describe("ActualLRPGroups", func() {
-		var request *http.Request
+		var requestBody interface{}
 
 		BeforeEach(func() {
-			request = newTestRequest("")
-
+			requestBody = &models.ActualLRPGroupsRequest{}
 			actualLRP1 = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
 					"process-guid-0",
@@ -74,32 +73,30 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
 			handler.ActualLRPGroups(responseRecorder, request)
 		})
 
 		Context("when reading actual lrps from DB succeeds", func() {
-			var actualLRPGroups *models.ActualLRPGroups
+			var actualLRPGroups []*models.ActualLRPGroup
 
 			BeforeEach(func() {
-				actualLRPGroups = &models.ActualLRPGroups{
+				actualLRPGroups =
 					[]*models.ActualLRPGroup{
 						{Instance: &actualLRP1},
 						{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
-					},
-				}
+					}
 				fakeActualLRPDB.ActualLRPGroupsReturns(actualLRPGroups, nil)
 			})
 
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-			})
-
 			It("returns a list of actual lrp groups", func() {
-				response := &models.ActualLRPGroups{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(actualLRPGroups))
+				Expect(response.Error).To(BeNil())
+				Expect(response.ActualLrpGroups).To(Equal(actualLRPGroups))
 			})
 
 			Context("and no filter is provided", func() {
@@ -112,9 +109,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by domain", func() {
 				BeforeEach(func() {
-					var err error
-					request, err = http.NewRequest("", "http://example.com?domain=domain-1", nil)
-					Expect(err).NotTo(HaveOccurred())
+					requestBody = &models.ActualLRPGroupsRequest{Domain: "domain-1"}
 				})
 
 				It("call the DB with the domain filter to retrieve the actual lrp groups", func() {
@@ -126,9 +121,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by cellId", func() {
 				BeforeEach(func() {
-					var err error
-					request, err = http.NewRequest("", "http://example.com?cell_id=cellid-1", nil)
-					Expect(err).NotTo(HaveOccurred())
+					requestBody = &models.ActualLRPGroupsRequest{CellId: "cellid-1"}
 				})
 
 				It("call the DB with the cell id filter to retrieve the actual lrp groups", func() {
@@ -140,9 +133,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by cellId and domain", func() {
 				BeforeEach(func() {
-					var err error
-					request, err = http.NewRequest("", "http://example.com?domain=potato&cell_id=cellid-1", nil)
-					Expect(err).NotTo(HaveOccurred())
+					requestBody = &models.ActualLRPGroupsRequest{Domain: "potato", CellId: "cellid-1"}
 				})
 
 				It("call the DB with the both filters to retrieve the actual lrp groups", func() {
@@ -156,37 +147,32 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the DB returns no actual lrp groups", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupsReturns(&models.ActualLRPGroups{}, nil)
-			})
-
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				fakeActualLRPDB.ActualLRPGroupsReturns([]*models.ActualLRPGroup{}, nil)
 			})
 
 			It("returns an empty list", func() {
-				response := &models.ActualLRPGroups{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(&models.ActualLRPGroups{}))
+				Expect(response.Error).To(BeNil())
+				Expect(response.ActualLrpGroups).To(BeNil())
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupsReturns(&models.ActualLRPGroups{}, models.ErrUnknownError)
-			})
-
-			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+				fakeActualLRPDB.ActualLRPGroupsReturns([]*models.ActualLRPGroup{}, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPGroupsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})

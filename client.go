@@ -111,16 +111,17 @@ func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
 }
 
 func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
-	var actualLRPGroups models.ActualLRPGroups
-	query := url.Values{}
-	if filter.Domain != "" {
-		query.Set("domain", filter.Domain)
+	request := models.ActualLRPGroupsRequest{
+		Domain: filter.Domain,
+		CellId: filter.CellID,
 	}
-	if filter.CellID != "" {
-		query.Set("cell_id", filter.CellID)
+	response := models.ActualLRPGroupsResponse{}
+	err := c.doRequest(ActualLRPGroupsRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
 	}
-	err := c.doRequest(ActualLRPGroupsRoute, nil, query, nil, &actualLRPGroups)
-	return actualLRPGroups.GetActualLrpGroups(), err
+
+	return response.ActualLrpGroups, response.Error
 }
 
 func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {

@@ -15,19 +15,19 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
+func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, *models.Error) {
 	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
 	if bbsErr.Equal(models.ErrResourceNotFound) {
-		return &models.ActualLRPGroups{}, nil
+		return []*models.ActualLRPGroup{}, nil
 	}
 	if bbsErr != nil {
 		return nil, bbsErr
 	}
 	if node.Nodes.Len() == 0 {
-		return &models.ActualLRPGroups{}, nil
+		return []*models.ActualLRPGroup{}, nil
 	}
 
-	groups := &models.ActualLRPGroups{}
+	groups := []*models.ActualLRPGroup{}
 
 	groupsLock := sync.Mutex{}
 	var workErr atomic.Value
@@ -43,7 +43,7 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFi
 				return
 			}
 			groupsLock.Lock()
-			groups.ActualLrpGroups = append(groups.ActualLrpGroups, g.ActualLrpGroups...)
+			groups = append(groups, g.ActualLrpGroups...)
 			groupsLock.Unlock()
 		})
 	}
@@ -51,16 +51,16 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFi
 	throttler, err := workpool.NewThrottler(maxActualGroupGetterWorkPoolSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": maxActualGroupGetterWorkPoolSize, "num-works": len(works)})
-		return &models.ActualLRPGroups{}, models.ErrUnknownError
+		return []*models.ActualLRPGroup{}, models.ErrUnknownError
 	}
 
 	logger.Debug("performing-deserialization-work")
 	throttler.Work()
 	if err, ok := workErr.Load().(error); ok {
 		logger.Error("failed-performing-deserialization-work", err)
-		return &models.ActualLRPGroups{}, models.ErrUnknownError
+		return []*models.ActualLRPGroup{}, models.ErrUnknownError
 	}
-	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups.ActualLrpGroups)})
+	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups)})
 
 	return groups, nil
 }

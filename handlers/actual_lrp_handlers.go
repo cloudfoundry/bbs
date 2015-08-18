@@ -22,21 +22,18 @@ func NewActualLRPHandler(logger lager.Logger, db db.ActualLRPDB) *ActualLRPHandl
 }
 
 func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Request) {
-	domain := req.FormValue("domain")
-	cellId := req.FormValue("cell_id")
-	logger := h.logger.Session("actual-lrp-groups", lager.Data{
-		"domain": domain, "cell_id": cellId,
-	})
+	logger := h.logger.Session("actual-lrp-groups")
 
-	filter := models.ActualLRPFilter{Domain: domain, CellID: cellId}
-	actualLRPGroups, err := h.db.ActualLRPGroups(h.logger, filter)
-	if err != nil {
-		logger.Error("failed-to-fetch-actual-lrp-groups", err)
-		writeInternalServerErrorResponse(w, err)
-		return
+	request := &models.ActualLRPGroupsRequest{}
+	response := &models.ActualLRPGroupsResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId}
+		response.ActualLrpGroups, response.Error = h.db.ActualLRPGroups(h.logger, filter)
 	}
 
-	writeProtoResponse(w, http.StatusOK, actualLRPGroups)
+	writeResponse(w, response)
 }
 
 func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, req *http.Request) {

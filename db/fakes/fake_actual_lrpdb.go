@@ -10,14 +10,14 @@ import (
 )
 
 type FakeActualLRPDB struct {
-	ActualLRPGroupsStub        func(logger lager.Logger, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error)
+	ActualLRPGroupsStub        func(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, *models.Error)
 	actualLRPGroupsMutex       sync.RWMutex
 	actualLRPGroupsArgsForCall []struct {
 		logger lager.Logger
 		filter models.ActualLRPFilter
 	}
 	actualLRPGroupsReturns struct {
-		result1 *models.ActualLRPGroups
+		result1 []*models.ActualLRPGroup
 		result2 *models.Error
 	}
 	ActualLRPGroupsByProcessGuidStub        func(logger lager.Logger, processGuid string) (*models.ActualLRPGroups, *models.Error)
@@ -98,7 +98,7 @@ type FakeActualLRPDB struct {
 	}
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, *models.Error) {
 	fake.actualLRPGroupsMutex.Lock()
 	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct {
 		logger lager.Logger
@@ -124,10 +124,10 @@ func (fake *FakeActualLRPDB) ActualLRPGroupsArgsForCall(i int) (lager.Logger, mo
 	return fake.actualLRPGroupsArgsForCall[i].logger, fake.actualLRPGroupsArgsForCall[i].filter
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupsReturns(result1 *models.ActualLRPGroups, result2 *models.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup, result2 *models.Error) {
 	fake.ActualLRPGroupsStub = nil
 	fake.actualLRPGroupsReturns = struct {
-		result1 *models.ActualLRPGroups
+		result1 []*models.ActualLRPGroup
 		result2 *models.Error
 	}{result1, result2}
 }

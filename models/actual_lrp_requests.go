@@ -1,5 +1,9 @@
 package models
 
+func (request *ActualLRPGroupsRequest) Validate() error {
+	return nil
+}
+
 func (request *StartActualLRPRequest) Validate() error {
 	var validationError ValidationError
 

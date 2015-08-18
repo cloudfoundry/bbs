@@ -8,6 +8,22 @@ import (
 )
 
 var _ = Describe("ActualLRP Requests", func() {
+	Describe("ActualLRPGroupsRequest", func() {
+		Describe("Validate", func() {
+			var request models.ActualLRPGroupsRequest
+
+			BeforeEach(func() {
+				request = models.ActualLRPGroupsRequest{}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+		})
+	})
+
 	Describe("ClaimActualLRPRequest", func() {
 		Describe("Validate", func() {
 			var request models.ClaimActualLRPRequest

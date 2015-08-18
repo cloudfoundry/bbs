@@ -108,7 +108,7 @@ var _ = Describe("ActualLRPDB", func() {
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
+				Expect(actualLRPGroups).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP},
 					&models.ActualLRPGroup{Instance: otherDomainLRP, Evacuating: nil},
 					&models.ActualLRPGroup{Instance: nil, Evacuating: otherIndexLRP},
@@ -120,7 +120,7 @@ var _ = Describe("ActualLRPDB", func() {
 				filter.Domain = otherDomain
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
+				Expect(actualLRPGroups).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: otherDomainLRP, Evacuating: nil},
 					&models.ActualLRPGroup{Instance: otherCellIdLRP, Evacuating: nil},
 				))
@@ -130,7 +130,7 @@ var _ = Describe("ActualLRPDB", func() {
 				filter.CellID = otherCellID
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
+				Expect(actualLRPGroups).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: otherCellIdLRP, Evacuating: nil},
 				))
 			})
@@ -141,7 +141,7 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
+				Expect(actualLRPGroups).To(BeEmpty())
 			})
 		})
 
@@ -158,7 +158,7 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroups(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
+				Expect(actualLRPGroups).To(BeEmpty())
 			})
 		})
 
