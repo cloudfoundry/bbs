@@ -28,7 +28,7 @@ func (db *ETCDDB) GetAllDomains(logger lager.Logger) (*models.Domains, *models.E
 	return &models.Domains{Domains: domains}, nil
 }
 
-func (db *ETCDDB) UpsertDomain(logger lager.Logger, domain string, ttl int) *models.Error {
+func (db *ETCDDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) *models.Error {
 	_, err := db.client.Set(DomainSchemaPath(domain), []byte{}, uint64(ttl))
 	if err != nil {
 		logger.Error("failed-to-upsert-domain", err)

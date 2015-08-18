@@ -49,8 +49,8 @@ const (
 
 var Routes = rata.Routes{
 	// Domains
-	{Path: "/v1/domains", Method: "GET", Name: DomainsRoute},
-	{Path: "/v1/domains/:domain", Method: "PUT", Name: UpsertDomainRoute},
+	{Path: "/v1/domains/list", Method: "POST", Name: DomainsRoute},
+	{Path: "/v1/domains/upsert", Method: "POST", Name: UpsertDomainRoute},
 
 	// Actual LRPs
 	{Path: "/v1/actual_lrp_groups", Method: "GET", Name: ActualLRPGroupsRoute},

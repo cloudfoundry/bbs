@@ -3,8 +3,6 @@ package handlers_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -20,6 +18,7 @@ var _ = Describe("Domain Handlers", func() {
 		fakeDomainDB     *fakes.FakeDomainDB
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DomainHandler
+		requestBody      interface{}
 	)
 
 	BeforeEach(func() {
@@ -31,19 +30,24 @@ var _ = Describe("Domain Handlers", func() {
 	})
 
 	Describe("Upsert", func() {
-		var domain string
-		var ttl int
+		var (
+			domain string
+			ttl    uint32
+		)
 
 		BeforeEach(func() {
 			domain = "domain-to-add"
 			ttl = 12345
+
+			requestBody = &models.UpsertDomainRequest{
+				Domain: domain,
+				Ttl:    ttl,
+			}
 		})
 
 		JustBeforeEach(func() {
-			req := newTestRequest("")
-			req.URL.RawQuery = url.Values{":domain": []string{domain}}.Encode()
-			req.Header["Cache-Control"] = []string{"public", "max-age=" + strconv.Itoa(ttl)}
-			handler.Upsert(responseRecorder, req)
+			request := newTestRequest(requestBody)
+			handler.Upsert(responseRecorder, request)
 		})
 
 		Context("when upserting domain to DB succeeds", func() {
@@ -58,8 +62,50 @@ var _ = Describe("Domain Handlers", func() {
 				Expect(ttlUpserted).To(Equal(ttl))
 			})
 
-			It("responds with 204 Status No Content", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
+			It("responds with 200 OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			It("responds with no error", func() {
+				var upsertDomainResponse models.UpsertDomainResponse
+				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(upsertDomainResponse.Error).To(BeNil())
+			})
+		})
+
+		Context("when the request is invalid", func() {
+			BeforeEach(func() {
+				requestBody = &models.UpsertDomainRequest{}
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var upsertDomainResponse models.UpsertDomainResponse
+				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(upsertDomainResponse.Error).NotTo(BeNil())
+				Expect(upsertDomainResponse.Error.Type).To(Equal(models.InvalidRequest))
+			})
+		})
+
+		Context("when parsing the body crashs", func() {
+			BeforeEach(func() {
+				requestBody = "beep boop beep boop -- i am a robot"
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var upsertDomainResponse models.UpsertDomainResponse
+				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(upsertDomainResponse.Error).NotTo(BeNil())
+				Expect(upsertDomainResponse.Error).To(Equal(models.ErrBadRequest))
 			})
 		})
 
@@ -68,16 +114,15 @@ var _ = Describe("Domain Handlers", func() {
 				fakeDomainDB.UpsertDomainReturns(models.ErrUnknownError)
 			})
 
-			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
-			})
-
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var upsertDomainResponse models.UpsertDomainResponse
+				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+				Expect(upsertDomainResponse.Error).NotTo(BeNil())
+				Expect(upsertDomainResponse.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})

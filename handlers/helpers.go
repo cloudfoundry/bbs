@@ -51,3 +51,16 @@ func writeEmptyResponse(w http.ResponseWriter, statusCode int) {
 	w.Header().Set("Content-Length", "0")
 	w.WriteHeader(statusCode)
 }
+
+func writeResponse(w http.ResponseWriter, message proto.Message) {
+	responseBytes, err := proto.Marshal(message)
+	if err != nil {
+		panic("Unable to encode Proto: " + err.Error())
+	}
+
+	w.Header().Set("Content-Length", strconv.Itoa(len(responseBytes)))
+	w.Header().Set("Content-Type", "application/x-protobuf")
+	w.WriteHeader(http.StatusOK)
+
+	w.Write(responseBytes)
+}

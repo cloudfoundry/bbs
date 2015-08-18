@@ -95,16 +95,16 @@ func (c *client) Domains() ([]string, error) {
 }
 
 func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
-	req, err := c.createRequest(UpsertDomainRoute, rata.Params{"domain": domain}, nil, nil)
+	request := models.UpsertDomainRequest{
+		Domain: domain,
+		Ttl:    uint32(ttl.Seconds()),
+	}
+	response := models.UpsertDomainResponse{}
+	err := c.doRequest(UpsertDomainRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 	}
-
-	if ttl != 0 {
-		req.Header.Set("Cache-Control", fmt.Sprintf("max-age=%d", int(ttl.Seconds())))
-	}
-
-	return c.do(req, nil)
+	return response.Error
 }
 
 func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {

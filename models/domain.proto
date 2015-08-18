@@ -3,7 +3,19 @@ syntax = "proto2";
 package models;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "error.proto";
+
+option (gogoproto.equal_all) = false;
 
 message Domains {
   repeated string domains = 1;
+}
+
+message UpsertDomainResponse {
+  optional Error error = 1;
+}
+
+message UpsertDomainRequest {
+  optional string domain = 1;
+  optional uint32 ttl = 2;
 }

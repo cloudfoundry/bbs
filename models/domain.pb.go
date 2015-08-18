@@ -37,6 +37,42 @@ func (m *Domains) GetDomains() []string {
 	return nil
 }
 
+type UpsertDomainResponse struct {
+	Error *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+}
+
+func (m *UpsertDomainResponse) Reset()      { *m = UpsertDomainResponse{} }
+func (*UpsertDomainResponse) ProtoMessage() {}
+
+func (m *UpsertDomainResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+
+type UpsertDomainRequest struct {
+	Domain string `protobuf:"bytes,1,opt,name=domain" json:"domain"`
+	Ttl    uint32 `protobuf:"varint,2,opt,name=ttl" json:"ttl"`
+}
+
+func (m *UpsertDomainRequest) Reset()      { *m = UpsertDomainRequest{} }
+func (*UpsertDomainRequest) ProtoMessage() {}
+
+func (m *UpsertDomainRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+
+func (m *UpsertDomainRequest) GetTtl() uint32 {
+	if m != nil {
+		return m.Ttl
+	}
+	return 0
+}
+
 func (m *Domains) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -94,6 +130,155 @@ func (m *Domains) Unmarshal(data []byte) error {
 			}
 			if skippy < 0 {
 				return ErrInvalidLengthDomain
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *UpsertDomainResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Error == nil {
+				m.Error = &Error{}
+			}
+			if err := m.Error.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipDomain(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Domain = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ttl", wireType)
+			}
+			m.Ttl = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.Ttl |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipDomain(data[iNdEx:])
+			if err != nil {
+				return err
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -206,6 +391,27 @@ func (this *Domains) String() string {
 	}, "")
 	return s
 }
+func (this *UpsertDomainResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&UpsertDomainResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *UpsertDomainRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&UpsertDomainRequest{`,
+		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
+		`Ttl:` + fmt.Sprintf("%v", this.Ttl) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func valueToStringDomain(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -223,6 +429,25 @@ func (m *Domains) Size() (n int) {
 			n += 1 + l + sovDomain(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *UpsertDomainResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
+		n += 1 + l + sovDomain(uint64(l))
+	}
+	return n
+}
+
+func (m *UpsertDomainRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Domain)
+	n += 1 + l + sovDomain(uint64(l))
+	n += 1 + sovDomain(uint64(m.Ttl))
 	return n
 }
 
@@ -272,6 +497,59 @@ func (m *Domains) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *UpsertDomainResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *UpsertDomainResponse) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintDomain(data, i, uint64(m.Error.Size()))
+		n1, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	return i, nil
+}
+
+func (m *UpsertDomainRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *UpsertDomainRequest) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintDomain(data, i, uint64(len(m.Domain)))
+	i += copy(data[i:], m.Domain)
+	data[i] = 0x10
+	i++
+	i = encodeVarintDomain(data, i, uint64(m.Ttl))
+	return i, nil
+}
+
 func encodeFixed64Domain(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -307,6 +585,23 @@ func (this *Domains) GoString() string {
 		`Domains:` + fmt.Sprintf("%#v", this.Domains) + `}`}, ", ")
 	return s
 }
+func (this *UpsertDomainResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.UpsertDomainResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
+	return s
+}
+func (this *UpsertDomainRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.UpsertDomainRequest{` +
+		`Domain:` + fmt.Sprintf("%#v", this.Domain),
+		`Ttl:` + fmt.Sprintf("%#v", this.Ttl) + `}`}, ", ")
+	return s
+}
 func valueToGoStringDomain(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -331,34 +626,4 @@ func extensionToGoStringDomain(e map[int32]github_com_gogo_protobuf_proto.Extens
 	}
 	s += strings.Join(ss, ",") + "}"
 	return s
-}
-func (this *Domains) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*Domains)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if len(this.Domains) != len(that1.Domains) {
-		return false
-	}
-	for i := range this.Domains {
-		if this.Domains[i] != that1.Domains[i] {
-			return false
-		}
-	}
-	return true
 }

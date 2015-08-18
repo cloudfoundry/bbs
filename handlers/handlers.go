@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"io/ioutil"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/events"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 )
@@ -74,4 +76,53 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 
 func route(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(f)
+}
+
+func parseRequestAndWrite(logger lager.Logger, w http.ResponseWriter, req *http.Request, request MessageValidator) bool {
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		writeInternalServerErrorResponse(w, err)
+		return false
+	}
+
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-parse-request-body", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return false
+	}
+
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	if err := request.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		writeBadRequestResponse(w, models.InvalidRequest, err)
+		return false
+	}
+	return true
+}
+
+func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) *models.Error {
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		return models.ErrUnknownError
+	}
+
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-parse-request-body", err)
+		return models.ErrBadRequest
+	}
+
+	logger.Debug("parsed-request-body", lager.Data{"request": request})
+	if err := request.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		return &models.Error{
+			Type:    models.InvalidRequest,
+			Message: err.Error(),
+		}
+	}
+
+	return nil
 }

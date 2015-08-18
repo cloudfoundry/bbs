@@ -2,10 +2,7 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -43,40 +40,14 @@ func (h *DomainHandler) GetAll(w http.ResponseWriter, req *http.Request) {
 
 func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("upsert")
-	domain := req.FormValue(":domain")
 
-	ttl := 0
+	request := &models.UpsertDomainRequest{}
+	response := &models.UpsertDomainResponse{}
 
-	cacheControl := req.Header["Cache-Control"]
-	if cacheControl != nil {
-		var maxAge string
-		for _, directive := range cacheControl {
-			if strings.HasPrefix(directive, "max-age=") {
-				maxAge = directive
-				break
-			}
-		}
-		if maxAge == "" {
-			logger.Error("missing-max-age-directive", ErrMaxAgeMissing)
-			writeBadRequestResponse(w, models.InvalidRequest, ErrMaxAgeMissing)
-			return
-		}
-
-		var err error
-		ttl, err = strconv.Atoi(maxAge[8:])
-		if err != nil {
-			err := fmt.Errorf("invalid-max-age-directive: %s", maxAge)
-			logger.Error("invalid-max-age-directive", err)
-			writeBadRequestResponse(w, models.InvalidRequest, err)
-			return
-		}
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Error = h.db.UpsertDomain(logger, request.Domain, request.Ttl)
 	}
 
-	err := h.db.UpsertDomain(logger, domain, ttl)
-	if err != nil {
-		writeInternalServerErrorResponse(w, err)
-		return
-	}
-
-	writeEmptyResponse(w, http.StatusNoContent)
+	writeResponse(w, response)
 }

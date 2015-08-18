@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
@@ -28,35 +27,11 @@ type MessageValidator interface {
 	Unmarshal(data []byte) error
 }
 
-func parseRequest(logger lager.Logger, w http.ResponseWriter, req *http.Request, request MessageValidator) bool {
-	data, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		logger.Error("failed-to-read-body", err)
-		writeInternalServerErrorResponse(w, err)
-		return false
-	}
-
-	err = request.Unmarshal(data)
-	if err != nil {
-		logger.Error("failed-to-parse-request-body", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return false
-	}
-
-	logger.Debug("parsed-request-body", lager.Data{"request": request})
-	if err := request.Validate(); err != nil {
-		logger.Error("invalid-request", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return false
-	}
-	return true
-}
-
 func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("remove-evacuating-actual-lrp")
 
 	request := &models.RemoveEvacuatingActualLRPRequest{}
-	if !parseRequest(logger, w, req, request) {
+	if !parseRequestAndWrite(logger, w, req, request) {
 		return
 	}
 
@@ -78,7 +53,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req 
 	logger := h.logger.Session("evacuate-claimed-actual-lrp")
 
 	request := &models.EvacuateClaimedActualLRPRequest{}
-	if !parseRequest(logger, w, req, request) {
+	if !parseRequestAndWrite(logger, w, req, request) {
 		return
 	}
 
@@ -94,7 +69,7 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req 
 	logger := h.logger.Session("evacuate-crashed-actual-lrp")
 
 	request := &models.EvacuateCrashedActualLRPRequest{}
-	if !parseRequest(logger, w, req, request) {
+	if !parseRequestAndWrite(logger, w, req, request) {
 		return
 	}
 
@@ -110,7 +85,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 	logger := h.logger.Session("evacuate-running-actual-lrp")
 
 	request := &models.EvacuateRunningActualLRPRequest{}
-	if !parseRequest(logger, w, req, request) {
+	if !parseRequestAndWrite(logger, w, req, request) {
 		return
 	}
 
@@ -126,7 +101,7 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req 
 	logger := h.logger.Session("evacuate-stopped-actual-lrp")
 
 	request := &models.EvacuateStoppedActualLRPRequest{}
-	if !parseRequest(logger, w, req, request) {
+	if !parseRequestAndWrite(logger, w, req, request) {
 		return
 	}
 
