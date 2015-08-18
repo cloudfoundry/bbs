@@ -26,16 +26,11 @@ func NewDomainHandler(logger lager.Logger, db db.DomainDB) *DomainHandler {
 	}
 }
 
-func (h *DomainHandler) GetAll(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("get-all")
-
-	domains, err := h.db.GetAllDomains(logger)
-	if err != nil {
-		writeInternalServerErrorResponse(w, err)
-		return
-	}
-
-	writeProtoResponse(w, http.StatusOK, domains)
+func (h *DomainHandler) Domains(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("domains")
+	response := &models.DomainsResponse{}
+	response.Domains, response.Error = h.db.Domains(logger)
+	writeResponse(w, response)
 }
 
 func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {

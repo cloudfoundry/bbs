@@ -127,7 +127,7 @@ var _ = Describe("Domain Handlers", func() {
 		})
 	})
 
-	Describe("GetAll", func() {
+	Describe("Domains", func() {
 		var domains []string
 
 		BeforeEach(func() {
@@ -135,64 +135,61 @@ var _ = Describe("Domain Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.GetAll(responseRecorder, newTestRequest(""))
+			handler.Domains(responseRecorder, newTestRequest(""))
 		})
 
 		Context("when reading domains from DB succeeds", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns(&models.Domains{Domains: domains}, nil)
+				fakeDomainDB.DomainsReturns(domains, nil)
 			})
 
 			It("call the DB to retrieve the domains", func() {
-				Expect(fakeDomainDB.GetAllDomainsCallCount()).To(Equal(1))
-			})
-
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				Expect(fakeDomainDB.DomainsCallCount()).To(Equal(1))
 			})
 
 			It("returns a list of domains", func() {
-				response := models.Domains{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				response := &models.DomainsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response.GetDomains()).To(ConsistOf(domains))
+				Expect(response.Error).To(BeNil())
+				Expect(response.Domains).To(ConsistOf(domains))
 			})
 		})
 
 		Context("when the DB returns no domains", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, nil)
-			})
-
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				fakeDomainDB.DomainsReturns([]string{}, nil)
 			})
 
 			It("returns an empty list", func() {
-				response := &models.Domains{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				response := &models.DomainsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(&models.Domains{}))
+				Expect(response.Error).To(BeNil())
+				Expect(response.Domains).To(BeNil())
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDomainDB.GetAllDomainsReturns(&models.Domains{}, models.ErrUnknownError)
-			})
-
-			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+				fakeDomainDB.DomainsReturns([]string{}, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				response := &models.DomainsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+				Expect(response.Domains).To(BeNil())
 			})
 		})
 	})

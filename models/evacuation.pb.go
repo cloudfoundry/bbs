@@ -24,25 +24,25 @@ var _ = proto.Marshal
 var _ = math.Inf
 
 type EvacuationResponse struct {
-	KeepContainer bool   `protobuf:"varint,1,opt,name=keep_container" json:"keep_container"`
-	Error         *Error `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
+	Error         *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+	KeepContainer bool   `protobuf:"varint,2,opt,name=keep_container" json:"keep_container"`
 }
 
 func (m *EvacuationResponse) Reset()      { *m = EvacuationResponse{} }
 func (*EvacuationResponse) ProtoMessage() {}
-
-func (m *EvacuationResponse) GetKeepContainer() bool {
-	if m != nil {
-		return m.KeepContainer
-	}
-	return false
-}
 
 func (m *EvacuationResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
 	}
 	return nil
+}
+
+func (m *EvacuationResponse) GetKeepContainer() bool {
+	if m != nil {
+		return m.KeepContainer
+	}
+	return false
 }
 
 type EvacuateClaimedActualLRPRequest struct {
@@ -199,23 +199,6 @@ func (m *EvacuationResponse) Unmarshal(data []byte) error {
 		wireType := int(wire & 0x7)
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeepContainer", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.KeepContainer = bool(v != 0)
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
 			}
@@ -245,6 +228,23 @@ func (m *EvacuationResponse) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeepContainer", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.KeepContainer = bool(v != 0)
 		default:
 			var sizeOfWire int
 			for {
@@ -961,8 +961,8 @@ func (this *EvacuationResponse) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&EvacuationResponse{`,
-		`KeepContainer:` + fmt.Sprintf("%v", this.KeepContainer) + `,`,
 		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`KeepContainer:` + fmt.Sprintf("%v", this.KeepContainer) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1036,11 +1036,11 @@ func valueToStringEvacuation(v interface{}) string {
 func (m *EvacuationResponse) Size() (n int) {
 	var l int
 	_ = l
-	n += 2
 	if m.Error != nil {
 		l = m.Error.Size()
 		n += 1 + l + sovEvacuation(uint64(l))
 	}
+	n += 2
 	return n
 }
 
@@ -1149,16 +1149,8 @@ func (m *EvacuationResponse) MarshalTo(data []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0x8
-	i++
-	if m.KeepContainer {
-		data[i] = 1
-	} else {
-		data[i] = 0
-	}
-	i++
 	if m.Error != nil {
-		data[i] = 0x12
+		data[i] = 0xa
 		i++
 		i = encodeVarintEvacuation(data, i, uint64(m.Error.Size()))
 		n1, err := m.Error.MarshalTo(data[i:])
@@ -1167,6 +1159,14 @@ func (m *EvacuationResponse) MarshalTo(data []byte) (int, error) {
 		}
 		i += n1
 	}
+	data[i] = 0x10
+	i++
+	if m.KeepContainer {
+		data[i] = 1
+	} else {
+		data[i] = 0
+	}
+	i++
 	return i, nil
 }
 
@@ -1409,8 +1409,8 @@ func (this *EvacuationResponse) GoString() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&models.EvacuationResponse{` +
-		`KeepContainer:` + fmt.Sprintf("%#v", this.KeepContainer),
-		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
+		`Error:` + fmt.Sprintf("%#v", this.Error),
+		`KeepContainer:` + fmt.Sprintf("%#v", this.KeepContainer) + `}`}, ", ")
 	return s
 }
 func (this *EvacuateClaimedActualLRPRequest) GoString() string {

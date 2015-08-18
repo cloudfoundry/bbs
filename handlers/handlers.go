@@ -23,7 +23,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 
 	actions := rata.Handlers{
 		// Domains
-		bbs.DomainsRoute:      route(domainHandler.GetAll),
+		bbs.DomainsRoute:      route(domainHandler.Domains),
 		bbs.UpsertDomainRoute: route(domainHandler.Upsert),
 
 		// Actual LRPs

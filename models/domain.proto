@@ -7,8 +7,9 @@ import "error.proto";
 
 option (gogoproto.equal_all) = false;
 
-message Domains {
-  repeated string domains = 1;
+message DomainsResponse {
+  optional Error error = 1;
+  repeated string domains = 2;
 }
 
 message UpsertDomainResponse {

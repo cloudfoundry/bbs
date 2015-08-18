@@ -89,9 +89,12 @@ type client struct {
 }
 
 func (c *client) Domains() ([]string, error) {
-	var domains models.Domains
-	err := c.doRequest(DomainsRoute, nil, nil, nil, &domains)
-	return domains.GetDomains(), err
+	response := models.DomainsResponse{}
+	err := c.doRequest(DomainsRoute, nil, nil, nil, &response)
+	if err != nil {
+		return nil, err
+	}
+	return response.Domains, response.Error
 }
 
 func (c *client) UpsertDomain(domain string, ttl time.Duration) error {

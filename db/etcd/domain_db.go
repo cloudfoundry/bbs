@@ -10,11 +10,11 @@ import (
 
 const DomainSchemaRoot = DataSchemaRoot + "domain"
 
-func (db *ETCDDB) GetAllDomains(logger lager.Logger) (*models.Domains, *models.Error) {
+func (db *ETCDDB) Domains(logger lager.Logger) ([]string, *models.Error) {
 	response, err := db.client.Get(DomainSchemaRoot, false, true)
 	if err != nil {
 		if err.(*etcd.EtcdError).ErrorCode == ETCDErrKeyNotFound {
-			return &models.Domains{}, nil
+			return []string{}, nil
 		}
 		logger.Error("failed-to-fetch-domains", err)
 		return nil, models.ErrUnknownError
@@ -25,7 +25,7 @@ func (db *ETCDDB) GetAllDomains(logger lager.Logger) (*models.Domains, *models.E
 		domains = append(domains, path.Base(child.Key))
 	}
 
-	return &models.Domains{Domains: domains}, nil
+	return domains, nil
 }
 
 func (db *ETCDDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) *models.Error {

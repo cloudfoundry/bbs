@@ -42,7 +42,7 @@ var _ = Describe("DomainDB", func() {
 		})
 	})
 
-	Describe("GetAllDomains", func() {
+	Describe("Domains", func() {
 		Context("when there are domains in the DB", func() {
 			BeforeEach(func() {
 				var err error
@@ -53,19 +53,19 @@ var _ = Describe("DomainDB", func() {
 			})
 
 			It("returns all the existing domains in the DB", func() {
-				domains, err := etcdDB.GetAllDomains(logger)
+				domains, err := etcdDB.Domains(logger)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(domains.GetDomains()).To(HaveLen(2))
-				Expect(domains.GetDomains()).To(ConsistOf([]string{"domain-1", "domain-2"}))
+				Expect(domains).To(HaveLen(2))
+				Expect(domains).To(ConsistOf([]string{"domain-1", "domain-2"}))
 			})
 		})
 
 		Context("when there are no domains in the DB", func() {
 			It("returns no domains", func() {
-				domains, err := etcdDB.GetAllDomains(logger)
+				domains, err := etcdDB.Domains(logger)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(domains.GetDomains()).To(HaveLen(0))
+				Expect(domains).To(HaveLen(0))
 			})
 		})
 	})

@@ -10,13 +10,13 @@ import (
 )
 
 type FakeDomainDB struct {
-	GetAllDomainsStub        func(logger lager.Logger) (*models.Domains, *models.Error)
-	getAllDomainsMutex       sync.RWMutex
-	getAllDomainsArgsForCall []struct {
+	DomainsStub        func(logger lager.Logger) ([]string, *models.Error)
+	domainsMutex       sync.RWMutex
+	domainsArgsForCall []struct {
 		logger lager.Logger
 	}
-	getAllDomainsReturns struct {
-		result1 *models.Domains
+	domainsReturns struct {
+		result1 []string
 		result2 *models.Error
 	}
 	UpsertDomainStub        func(lgger lager.Logger, domain string, ttl uint32) *models.Error
@@ -31,35 +31,35 @@ type FakeDomainDB struct {
 	}
 }
 
-func (fake *FakeDomainDB) GetAllDomains(logger lager.Logger) (*models.Domains, *models.Error) {
-	fake.getAllDomainsMutex.Lock()
-	fake.getAllDomainsArgsForCall = append(fake.getAllDomainsArgsForCall, struct {
+func (fake *FakeDomainDB) Domains(logger lager.Logger) ([]string, *models.Error) {
+	fake.domainsMutex.Lock()
+	fake.domainsArgsForCall = append(fake.domainsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.getAllDomainsMutex.Unlock()
-	if fake.GetAllDomainsStub != nil {
-		return fake.GetAllDomainsStub(logger)
+	fake.domainsMutex.Unlock()
+	if fake.DomainsStub != nil {
+		return fake.DomainsStub(logger)
 	} else {
-		return fake.getAllDomainsReturns.result1, fake.getAllDomainsReturns.result2
+		return fake.domainsReturns.result1, fake.domainsReturns.result2
 	}
 }
 
-func (fake *FakeDomainDB) GetAllDomainsCallCount() int {
-	fake.getAllDomainsMutex.RLock()
-	defer fake.getAllDomainsMutex.RUnlock()
-	return len(fake.getAllDomainsArgsForCall)
+func (fake *FakeDomainDB) DomainsCallCount() int {
+	fake.domainsMutex.RLock()
+	defer fake.domainsMutex.RUnlock()
+	return len(fake.domainsArgsForCall)
 }
 
-func (fake *FakeDomainDB) GetAllDomainsArgsForCall(i int) lager.Logger {
-	fake.getAllDomainsMutex.RLock()
-	defer fake.getAllDomainsMutex.RUnlock()
-	return fake.getAllDomainsArgsForCall[i].logger
+func (fake *FakeDomainDB) DomainsArgsForCall(i int) lager.Logger {
+	fake.domainsMutex.RLock()
+	defer fake.domainsMutex.RUnlock()
+	return fake.domainsArgsForCall[i].logger
 }
 
-func (fake *FakeDomainDB) GetAllDomainsReturns(result1 *models.Domains, result2 *models.Error) {
-	fake.GetAllDomainsStub = nil
-	fake.getAllDomainsReturns = struct {
-		result1 *models.Domains
+func (fake *FakeDomainDB) DomainsReturns(result1 []string, result2 *models.Error) {
+	fake.DomainsStub = nil
+	fake.domainsReturns = struct {
+		result1 []string
 		result2 *models.Error
 	}{result1, result2}
 }
