@@ -135,7 +135,7 @@ var _ = Describe("ActualLRP API", func() {
 		etcdHelper.SetRawActualLRP(crashingLRP)
 	})
 
-	Describe("GET /v1/actual_lrps_groups", func() {
+	Describe("ActualLRPGroups", func() {
 		JustBeforeEach(func() {
 			actualActualLRPGroups, getErr = client.ActualLRPGroups(filter)
 		})
@@ -180,7 +180,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("GET /v1/actual_lrps_groups/:process_guid", func() {
+	Describe("ActualLRPGroupsByProcessGuid", func() {
 		JustBeforeEach(func() {
 			actualActualLRPGroups, getErr = client.ActualLRPGroupsByProcessGuid(baseProcessGuid)
 		})
@@ -193,7 +193,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("GET /v1/actual_lrps_groups/:process_guid/index/:index", func() {
+	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
 		var (
 			actualLRPGroup         *models.ActualLRPGroup
 			expectedActualLRPGroup *models.ActualLRPGroup
@@ -213,7 +213,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("POST /v1/actual_lrps/claim", func() {
+	Describe("ClaimActualLRP", func() {
 		var (
 			instanceKey models.ActualLRPInstanceKey
 			claimErr    error
@@ -245,7 +245,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("POST /v1/actual_lrps/start", func() {
+	Describe("StartActualLRP", func() {
 		var (
 			instanceKey models.ActualLRPInstanceKey
 			startErr    error
@@ -280,7 +280,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("POST /v1/actual_lrps/fail", func() {
+	Describe("FailActualLRP", func() {
 		var (
 			instanceKey  models.ActualLRPInstanceKey
 			errorMessage string
@@ -307,7 +307,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("POST /v1/actual_lrps/crash", func() {
+	Describe("CrashActualLRP", func() {
 		var (
 			errorMessage string
 			crashErr     error
@@ -331,7 +331,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("POST /v1/actual_lrps/retire", func() {
+	Describe("RetireActualLRP", func() {
 		var (
 			retireErr error
 		)
@@ -348,7 +348,7 @@ var _ = Describe("ActualLRP API", func() {
 		})
 	})
 
-	Describe("DELETE /v1/actual_lrps/:process_guid/index/:index", func() {
+	Describe("RemoveActualLRP", func() {
 		var (
 			instanceKey models.ActualLRPInstanceKey
 			removeErr   error

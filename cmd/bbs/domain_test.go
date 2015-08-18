@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("Domain API", func() {
-	Describe("PUT /v1/domains/:domain", func() {
+	Describe("UpsertDomain", func() {
 		var existingDomain string
 
 		BeforeEach(func() {
@@ -38,7 +38,7 @@ var _ = Describe("Domain API", func() {
 		})
 	})
 
-	Describe("GET /v1/domains", func() {
+	Describe("Domains", func() {
 		var expectedDomains []string
 		var actualDomains []string
 		var getErr error

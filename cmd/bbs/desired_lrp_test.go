@@ -28,7 +28,7 @@ var _ = Describe("DesiredLRP API", func() {
 		})
 	})
 
-	Describe("GET /v1/desired_lrps", func() {
+	Describe("DesiredLRPs", func() {
 		JustBeforeEach(func() {
 			actualDesiredLRPs, getErr = client.DesiredLRPs(filter)
 		})
@@ -72,7 +72,7 @@ var _ = Describe("DesiredLRP API", func() {
 		})
 	})
 
-	Describe("GET /v1/desired_lrps/:process_guid", func() {
+	Describe("DesiredLRPByProcessGuid", func() {
 		var (
 			desiredLRP         *models.DesiredLRP
 			expectedDesiredLRP *models.DesiredLRP
