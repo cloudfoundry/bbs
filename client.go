@@ -64,9 +64,7 @@ type Client interface {
 	ResolvingTask(taskGuid string) error
 	ResolveTask(taskGuid string) error
 	SubscribeToEvents() (events.EventSource, error)
-	ConvergeTasks(
-		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-	) error
+	ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
 
 	// Internal Task Methods
 	StartTask(taskGuid string, cellID string) (bool, error)
@@ -138,11 +136,17 @@ func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.Act
 }
 
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {
-	var actualLRPGroup models.ActualLRPGroup
-	err := c.doRequest(ActualLRPGroupByProcessGuidAndIndexRoute,
-		rata.Params{"process_guid": processGuid, "index": strconv.Itoa(index)},
-		nil, nil, &actualLRPGroup)
-	return &actualLRPGroup, err
+	request := models.ActualLRPGroupByProcessGuidAndIndexRequest{
+		ProcessGuid: processGuid,
+		Index:       int32(index),
+	}
+	response := models.ActualLRPGroupResponse{}
+	err := c.doRequest(ActualLRPGroupByProcessGuidAndIndexRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ActualLrpGroup, response.Error
 }
 
 func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {

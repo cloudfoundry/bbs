@@ -11,6 +11,11 @@ message ActualLRPGroupsResponse {
   repeated ActualLRPGroup actual_lrp_groups = 2;
 }
 
+message ActualLRPGroupResponse {
+  optional Error error = 1;
+  optional ActualLRPGroup actual_lrp_group = 2;
+}
+
 message ActualLRPGroupsRequest {
   optional string domain = 1;
   optional string cell_id = 2;
@@ -18,6 +23,11 @@ message ActualLRPGroupsRequest {
 
 message ActualLRPGroupsByProcessGuidRequest {
   optional string process_guid = 1;
+}
+
+message ActualLRPGroupByProcessGuidAndIndexRequest {
+  optional string process_guid = 1;
+  optional int32 index = 2;
 }
 
 message ClaimActualLRPRequest {

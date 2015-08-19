@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -51,30 +50,15 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, r
 }
 
 func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWriter, req *http.Request) {
-	processGuid := req.FormValue(":process_guid")
-	index := req.FormValue(":index")
-	logger := h.logger.Session("actual-lrp-group-by-process-guid-and-index", lager.Data{
-		"process_guid": processGuid,
-		"index":        index,
-	})
+	logger := h.logger.Session("actual-lrp-group-by-process-guid-and-index")
 
-	idx, err := strconv.ParseInt(index, 10, 32)
-	if err != nil {
-		logger.Error("failed-to-parse-index", err)
-		writeInternalServerErrorResponse(w, err)
-		return
+	request := &models.ActualLRPGroupByProcessGuidAndIndexRequest{}
+	response := &models.ActualLRPGroupResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.ActualLrpGroup, response.Error = h.db.ActualLRPGroupByProcessGuidAndIndex(h.logger, request.ProcessGuid, request.Index)
 	}
 
-	actualLRPGroup, bbsErr := h.db.ActualLRPGroupByProcessGuidAndIndex(h.logger, processGuid, int32(idx))
-	if bbsErr != nil {
-		logger.Error("failed-to-fetch-actual-lrp-group-by-process-guid-and-index", bbsErr)
-		if bbsErr.Equal(models.ErrResourceNotFound) {
-			writeNotFoundResponse(w, bbsErr)
-		} else {
-			writeInternalServerErrorResponse(w, bbsErr)
-		}
-		return
-	}
-
-	writeProtoResponse(w, http.StatusOK, actualLRPGroup)
+	writeResponse(w, response)
 }

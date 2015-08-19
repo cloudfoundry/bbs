@@ -45,6 +45,28 @@ func (m *ActualLRPGroupsResponse) GetActualLrpGroups() []*ActualLRPGroup {
 	return nil
 }
 
+type ActualLRPGroupResponse struct {
+	Error          *Error          `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,2,opt,name=actual_lrp_group" json:"actual_lrp_group,omitempty"`
+}
+
+func (m *ActualLRPGroupResponse) Reset()      { *m = ActualLRPGroupResponse{} }
+func (*ActualLRPGroupResponse) ProtoMessage() {}
+
+func (m *ActualLRPGroupResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+
+func (m *ActualLRPGroupResponse) GetActualLrpGroup() *ActualLRPGroup {
+	if m != nil {
+		return m.ActualLrpGroup
+	}
+	return nil
+}
+
 type ActualLRPGroupsRequest struct {
 	Domain string `protobuf:"bytes,1,opt,name=domain" json:"domain"`
 	CellId string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
@@ -79,6 +101,30 @@ func (m *ActualLRPGroupsByProcessGuidRequest) GetProcessGuid() string {
 		return m.ProcessGuid
 	}
 	return ""
+}
+
+type ActualLRPGroupByProcessGuidAndIndexRequest struct {
+	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Index       int32  `protobuf:"varint,2,opt,name=index" json:"index"`
+}
+
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) Reset() {
+	*m = ActualLRPGroupByProcessGuidAndIndexRequest{}
+}
+func (*ActualLRPGroupByProcessGuidAndIndexRequest) ProtoMessage() {}
+
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
 }
 
 type ClaimActualLRPRequest struct {
@@ -310,6 +356,111 @@ func (m *ActualLRPGroupsResponse) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *ActualLRPGroupResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActualLrpRequests
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Error == nil {
+				m.Error = &Error{}
+			}
+			if err := m.Error.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActualLrpGroup", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActualLrpRequests
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ActualLrpGroup == nil {
+				m.ActualLrpGroup = &ActualLRPGroup{}
+			}
+			if err := m.ActualLrpGroup.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipActualLrpRequests(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthActualLrpRequests
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func (m *ActualLRPGroupsRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -440,6 +591,89 @@ func (m *ActualLRPGroupsByProcessGuidRequest) Unmarshal(data []byte) error {
 			}
 			m.ProcessGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipActualLrpRequests(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthActualLrpRequests
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProcessGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProcessGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+			}
+			m.Index = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.Index |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			var sizeOfWire int
 			for {
@@ -1116,6 +1350,17 @@ func (this *ActualLRPGroupsResponse) String() string {
 	}, "")
 	return s
 }
+func (this *ActualLRPGroupResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroupResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func (this *ActualLRPGroupsRequest) String() string {
 	if this == nil {
 		return "nil"
@@ -1133,6 +1378,17 @@ func (this *ActualLRPGroupsByProcessGuidRequest) String() string {
 	}
 	s := strings.Join([]string{`&ActualLRPGroupsByProcessGuidRequest{`,
 		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPGroupByProcessGuidAndIndexRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroupByProcessGuidAndIndexRequest{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1218,6 +1474,20 @@ func (m *ActualLRPGroupsResponse) Size() (n int) {
 	return n
 }
 
+func (m *ActualLRPGroupResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
+		n += 1 + l + sovActualLrpRequests(uint64(l))
+	}
+	if m.ActualLrpGroup != nil {
+		l = m.ActualLrpGroup.Size()
+		n += 1 + l + sovActualLrpRequests(uint64(l))
+	}
+	return n
+}
+
 func (m *ActualLRPGroupsRequest) Size() (n int) {
 	var l int
 	_ = l
@@ -1233,6 +1503,15 @@ func (m *ActualLRPGroupsByProcessGuidRequest) Size() (n int) {
 	_ = l
 	l = len(m.ProcessGuid)
 	n += 1 + l + sovActualLrpRequests(uint64(l))
+	return n
+}
+
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.ProcessGuid)
+	n += 1 + l + sovActualLrpRequests(uint64(l))
+	n += 1 + sovActualLrpRequests(uint64(m.Index))
 	return n
 }
 
@@ -1358,6 +1637,44 @@ func (m *ActualLRPGroupsResponse) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *ActualLRPGroupResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ActualLRPGroupResponse) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintActualLrpRequests(data, i, uint64(m.Error.Size()))
+		n2, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	if m.ActualLrpGroup != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpGroup.Size()))
+		n3, err := m.ActualLrpGroup.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	return i, nil
+}
+
 func (m *ActualLRPGroupsRequest) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -1406,6 +1723,31 @@ func (m *ActualLRPGroupsByProcessGuidRequest) MarshalTo(data []byte) (int, error
 	return i, nil
 }
 
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintActualLrpRequests(data, i, uint64(len(m.ProcessGuid)))
+	i += copy(data[i:], m.ProcessGuid)
+	data[i] = 0x10
+	i++
+	i = encodeVarintActualLrpRequests(data, i, uint64(m.Index))
+	return i, nil
+}
+
 func (m *ClaimActualLRPRequest) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -1432,11 +1774,11 @@ func (m *ClaimActualLRPRequest) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x1a
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n2, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		n4, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n4
 	}
 	return i, nil
 }
@@ -1460,31 +1802,31 @@ func (m *StartActualLRPRequest) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpKey.Size()))
-		n3, err := m.ActualLrpKey.MarshalTo(data[i:])
+		n5, err := m.ActualLrpKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n5
 	}
 	if m.ActualLrpInstanceKey != nil {
 		data[i] = 0x12
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n4, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		n6, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n6
 	}
 	if m.ActualLrpNetInfo != nil {
 		data[i] = 0x1a
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpNetInfo.Size()))
-		n5, err := m.ActualLrpNetInfo.MarshalTo(data[i:])
+		n7, err := m.ActualLrpNetInfo.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n7
 	}
 	return i, nil
 }
@@ -1508,21 +1850,21 @@ func (m *CrashActualLRPRequest) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpKey.Size()))
-		n6, err := m.ActualLrpKey.MarshalTo(data[i:])
+		n8, err := m.ActualLrpKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n8
 	}
 	if m.ActualLrpInstanceKey != nil {
 		data[i] = 0x12
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n7, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		n9, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n9
 	}
 	data[i] = 0x1a
 	i++
@@ -1550,11 +1892,11 @@ func (m *FailActualLRPRequest) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpKey.Size()))
-		n8, err := m.ActualLrpKey.MarshalTo(data[i:])
+		n10, err := m.ActualLrpKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n10
 	}
 	data[i] = 0x12
 	i++
@@ -1582,11 +1924,11 @@ func (m *RetireActualLRPRequest) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpKey.Size()))
-		n9, err := m.ActualLrpKey.MarshalTo(data[i:])
+		n11, err := m.ActualLrpKey.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n11
 	}
 	return i, nil
 }
@@ -1627,6 +1969,15 @@ func (this *ActualLRPGroupsResponse) GoString() string {
 		`ActualLrpGroups:` + fmt.Sprintf("%#v", this.ActualLrpGroups) + `}`}, ", ")
 	return s
 }
+func (this *ActualLRPGroupResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPGroupResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error),
+		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
+	return s
+}
 func (this *ActualLRPGroupsRequest) GoString() string {
 	if this == nil {
 		return "nil"
@@ -1642,6 +1993,15 @@ func (this *ActualLRPGroupsByProcessGuidRequest) GoString() string {
 	}
 	s := strings.Join([]string{`&models.ActualLRPGroupsByProcessGuidRequest{` +
 		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPGroupByProcessGuidAndIndexRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPGroupByProcessGuidAndIndexRequest{` +
+		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
+		`Index:` + fmt.Sprintf("%#v", this.Index) + `}`}, ", ")
 	return s
 }
 func (this *ClaimActualLRPRequest) GoString() string {
@@ -1749,6 +2109,34 @@ func (this *ActualLRPGroupsResponse) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *ActualLRPGroupResponse) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPGroupResponse)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+		return false
+	}
+	return true
+}
 func (this *ActualLRPGroupsRequest) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -1798,6 +2186,34 @@ func (this *ActualLRPGroupsByProcessGuidRequest) Equal(that interface{}) bool {
 		return false
 	}
 	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPGroupByProcessGuidAndIndexRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPGroupByProcessGuidAndIndexRequest)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
 		return false
 	}
 	return true

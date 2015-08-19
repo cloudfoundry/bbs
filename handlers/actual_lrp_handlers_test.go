@@ -3,8 +3,6 @@ package handlers_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -290,16 +288,18 @@ var _ = Describe("ActualLRP Handlers", func() {
 	})
 
 	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
-		var request *http.Request
-		var processGuid = "process-guid"
-		var index = 1
+		var (
+			processGuid       = "process-guid"
+			index       int32 = 1
+
+			requestBody interface{}
+		)
 
 		BeforeEach(func() {
-			request = newTestRequest("")
-			request.URL.RawQuery = url.Values{
-				":process_guid": []string{processGuid},
-				":index":        []string{strconv.Itoa(index)},
-			}.Encode()
+			requestBody = &models.ActualLRPGroupByProcessGuidAndIndexRequest{
+				ProcessGuid: processGuid,
+				Index:       index,
+			}
 
 			actualLRP1 = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
@@ -335,6 +335,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
 			handler.ActualLRPGroupByProcessGuidAndIndex(responseRecorder, request)
 		})
 
@@ -346,10 +347,6 @@ var _ = Describe("ActualLRP Handlers", func() {
 				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(actualLRPGroup, nil)
 			})
 
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-			})
-
 			It("fetches actual lrp group by process guid and index", func() {
 				Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(1))
 				_, actualProcessGuid, idx := fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexArgsForCall(0)
@@ -358,11 +355,14 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 
 			It("returns an actual lrp group", func() {
-				response := &models.ActualLRPGroup{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				response := &models.ActualLRPGroupResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(actualLRPGroup))
+				Expect(response.Error).To(BeNil())
+				Expect(response.ActualLrpGroup).To(Equal(actualLRPGroup))
 			})
 
 			Context("when there is also an evacuating LRP", func() {
@@ -372,11 +372,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 				})
 
 				It("returns both LRPs in the group", func() {
-					response := &models.ActualLRPGroup{}
+					response := &models.ActualLRPGroupResponse{}
 					err := response.Unmarshal(responseRecorder.Body.Bytes())
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(response).To(Equal(actualLRPGroup))
+					Expect(response.Error).To(BeNil())
+					Expect(response.ActualLrpGroup).To(Equal(actualLRPGroup))
 				})
 			})
 		})
@@ -386,16 +387,13 @@ var _ = Describe("ActualLRP Handlers", func() {
 				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
 			})
 
-			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
-			})
-
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPGroupResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrResourceNotFound)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 
@@ -404,16 +402,13 @@ var _ = Describe("ActualLRP Handlers", func() {
 				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrUnknownError)
 			})
 
-			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
-			})
-
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPGroupResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})
