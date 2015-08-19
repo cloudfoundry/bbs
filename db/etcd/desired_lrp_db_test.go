@@ -34,7 +34,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				}
 				desiredLRPs, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(desiredLRPs.GetDesiredLrps()).To(ConsistOf(expectedDesiredLRPs))
+				Expect(desiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 			})
 
 			It("can filter by domain", func() {
@@ -44,7 +44,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				filter.Domain = "domain-2"
 				desiredLRPs, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(desiredLRPs.GetDesiredLrps()).To(ConsistOf(expectedDesiredLRPs))
+				Expect(desiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 			})
 		})
 
@@ -53,7 +53,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				desiredLRPs, err := etcdDB.DesiredLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPs).NotTo(BeNil())
-				Expect(desiredLRPs.GetDesiredLrps()).To(BeEmpty())
+				Expect(desiredLRPs).To(BeEmpty())
 			})
 		})
 

@@ -33,39 +33,35 @@ var _ = Describe("DesiredLRP Handlers", func() {
 	})
 
 	Describe("DesiredLRPs", func() {
-		var request *http.Request
+		var requestBody interface{}
 
 		BeforeEach(func() {
-			request = newTestRequest("")
-
+			requestBody = &models.DesiredLRPsRequest{}
 			desiredLRP1 = models.DesiredLRP{}
 			desiredLRP2 = models.DesiredLRP{}
 		})
 
 		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
 			handler.DesiredLRPs(responseRecorder, request)
 		})
 
 		Context("when reading desired lrps from DB succeeds", func() {
-			var desiredLRPs *models.DesiredLRPs
+			var desiredLRPs []*models.DesiredLRP
 
 			BeforeEach(func() {
-				desiredLRPs = &models.DesiredLRPs{
-					[]*models.DesiredLRP{&desiredLRP1, &desiredLRP2},
-				}
+				desiredLRPs = []*models.DesiredLRP{&desiredLRP1, &desiredLRP2}
 				fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPs, nil)
 			})
 
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-			})
-
 			It("returns a list of desired lrp groups", func() {
-				response := &models.DesiredLRPs{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(desiredLRPs))
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrps).To(Equal(desiredLRPs))
 			})
 
 			Context("and no filter is provided", func() {
@@ -78,9 +74,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			Context("and filtering by domain", func() {
 				BeforeEach(func() {
-					var err error
-					request, err = http.NewRequest("", "http://example.com?domain=domain-1", nil)
-					Expect(err).NotTo(HaveOccurred())
+					requestBody = &models.DesiredLRPsRequest{Domain: "domain-1"}
 				})
 
 				It("call the DB with the domain filter to retrieve the desired lrps", func() {
@@ -93,37 +87,32 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when the DB returns no desired lrp groups", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPsReturns(&models.DesiredLRPs{}, nil)
-			})
-
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, nil)
 			})
 
 			It("returns an empty list", func() {
-				response := &models.DesiredLRPs{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(&models.DesiredLRPs{}))
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrps).To(BeEmpty())
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPsReturns(&models.DesiredLRPs{}, models.ErrUnknownError)
-			})
-
-			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})

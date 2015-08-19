@@ -10,6 +10,7 @@
 		actual_lrp.proto
 		actual_lrp_requests.proto
 		desired_lrp.proto
+		desired_lrp_requests.proto
 		domain.proto
 		environment_variables.proto
 		error.proto

@@ -10,19 +10,19 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) (*models.DesiredLRPs, *models.Error) {
+func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, *models.Error) {
 	root, bbsErr := db.fetchRecursiveRaw(logger, DesiredLRPSchemaRoot)
 	if bbsErr.Equal(models.ErrResourceNotFound) {
-		return &models.DesiredLRPs{}, nil
+		return []*models.DesiredLRP{}, nil
 	}
 	if bbsErr != nil {
 		return nil, bbsErr
 	}
 	if root.Nodes.Len() == 0 {
-		return &models.DesiredLRPs{}, nil
+		return []*models.DesiredLRP{}, nil
 	}
 
-	desiredLRPs := models.DesiredLRPs{}
+	desiredLRPs := []*models.DesiredLRP{}
 
 	lrpsLock := sync.Mutex{}
 	var workErr atomic.Value
@@ -42,7 +42,7 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 
 			if filter.Domain == "" || lrp.GetDomain() == filter.Domain {
 				lrpsLock.Lock()
-				desiredLRPs.DesiredLrps = append(desiredLRPs.DesiredLrps, &lrp)
+				desiredLRPs = append(desiredLRPs, &lrp)
 				lrpsLock.Unlock()
 			}
 		})
@@ -51,18 +51,18 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 	throttler, err := workpool.NewThrottler(maxDesiredLRPGetterWorkPoolSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": maxDesiredLRPGetterWorkPoolSize, "num-works": len(works)})
-		return &models.DesiredLRPs{}, models.ErrUnknownError
+		return []*models.DesiredLRP{}, models.ErrUnknownError
 	}
 
 	logger.Debug("performing-deserialization-work")
 	throttler.Work()
 	if err, ok := workErr.Load().(error); ok {
 		logger.Error("failed-performing-deserialization-work", err)
-		return &models.DesiredLRPs{}, models.ErrUnknownError
+		return []*models.DesiredLRP{}, models.ErrUnknownError
 	}
-	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-desired-lrps": len(desiredLRPs.GetDesiredLrps())})
+	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-desired-lrps": len(desiredLRPs)})
 
-	return &desiredLRPs, nil
+	return desiredLRPs, nil
 }
 
 func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error) {

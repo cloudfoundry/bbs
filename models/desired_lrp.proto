@@ -8,10 +8,6 @@ import "actions.proto";
 import "security_group.proto";
 import "environment_variables.proto";
 
-message DesiredLRPs {
-  repeated DesiredLRP desired_lrps = 1;
-}
-
 message DesiredLRP {
   optional string process_guid = 1;
   optional string domain = 2;

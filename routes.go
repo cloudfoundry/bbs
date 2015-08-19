@@ -73,7 +73,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrps/evacuate_running", Method: "POST", Name: EvacuateRunningActualLRPRoute},
 
 	// Desired LRPs
-	{Path: "/v1/desired_lrps", Method: "GET", Name: DesiredLRPsRoute},
+	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute},
 	{Path: "/v1/desired_lrps/:process_guid", Method: "GET", Name: DesiredLRPByProcessGuidRoute},
 
 	// Tasks

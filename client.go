@@ -279,13 +279,16 @@ func (c *client) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey
 }
 
 func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
-	var desiredLRPs models.DesiredLRPs
-	query := url.Values{}
-	if filter.Domain != "" {
-		query.Set("domain", filter.Domain)
+	request := models.DesiredLRPsRequest{
+		Domain: filter.Domain,
 	}
-	err := c.doRequest(DesiredLRPsRoute, nil, query, nil, &desiredLRPs)
-	return desiredLRPs.GetDesiredLrps(), err
+	response := models.DesiredLRPsResponse{}
+	err := c.doRequest(DesiredLRPsRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.DesiredLrps, response.Error
 }
 
 func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {

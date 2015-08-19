@@ -21,19 +21,18 @@ func NewDesiredLRPHandler(logger lager.Logger, db db.DesiredLRPDB) *DesiredLRPHa
 }
 
 func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request) {
-	domain := req.FormValue("domain")
-	logger := h.logger.Session("desired-lrps", lager.Data{
-		"domain": domain,
-	})
+	logger := h.logger.Session("desired-lrps")
 
-	desiredLRPs, err := h.db.DesiredLRPs(h.logger, models.DesiredLRPFilter{Domain: domain})
-	if err != nil {
-		logger.Error("failed-to-fetch-desired-lrps", err)
-		writeInternalServerErrorResponse(w, err)
-		return
+	request := &models.DesiredLRPsRequest{}
+	response := &models.DesiredLRPsResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		filter := models.DesiredLRPFilter{Domain: request.Domain}
+		response.DesiredLrps, response.Error = h.db.DesiredLRPs(h.logger, filter)
 	}
 
-	writeProtoResponse(w, http.StatusOK, desiredLRPs)
+	writeResponse(w, response)
 }
 
 func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *http.Request) {
