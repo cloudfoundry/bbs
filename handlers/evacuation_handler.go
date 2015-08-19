@@ -49,7 +49,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req 
 		return
 	}
 
-	keepContainer, bbsErr := h.db.EvacuateClaimedActualLRP(logger, request)
+	keepContainer, bbsErr := h.db.EvacuateClaimedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 
 	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
 		KeepContainer: keepContainer,
@@ -65,7 +65,7 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req 
 		return
 	}
 
-	keepContainer, bbsErr := h.db.EvacuateCrashedActualLRP(logger, request)
+	keepContainer, bbsErr := h.db.EvacuateCrashedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
 
 	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
 		KeepContainer: keepContainer,
@@ -81,7 +81,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 		return
 	}
 
-	keepContainer, bbsErr := h.db.EvacuateRunningActualLRP(logger, request)
+	keepContainer, bbsErr := h.db.EvacuateRunningActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
 
 	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
 		KeepContainer: keepContainer,
@@ -97,7 +97,7 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req 
 		return
 	}
 
-	keepContainer, bbsErr := h.db.EvacuateStoppedActualLRP(logger, request)
+	keepContainer, bbsErr := h.db.EvacuateStoppedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 
 	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
 		KeepContainer: keepContainer,

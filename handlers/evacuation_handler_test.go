@@ -163,9 +163,9 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		It("sends the request to the db", func() {
 			Expect(fakeEvacuationDB.EvacuateClaimedActualLRPCallCount()).To(Equal(1))
-			_, req := fakeEvacuationDB.EvacuateClaimedActualLRPArgsForCall(0)
-			Expect(*req.ActualLrpKey).To(Equal(actual.ActualLRPKey))
-			Expect(*req.ActualLrpInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
+			_, key, instanceKey := fakeEvacuationDB.EvacuateClaimedActualLRPArgsForCall(0)
+			Expect(*key).To(Equal(actual.ActualLRPKey))
+			Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
 		})
 
 		Context("when the db returns an error", func() {
@@ -230,10 +230,10 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		It("sends the request to the db", func() {
 			Expect(fakeEvacuationDB.EvacuateCrashedActualLRPCallCount()).To(Equal(1))
-			_, req := fakeEvacuationDB.EvacuateCrashedActualLRPArgsForCall(0)
-			Expect(*req.ActualLrpKey).To(Equal(actual.ActualLRPKey))
-			Expect(*req.ActualLrpInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-			Expect(req.ErrorMessage).To(Equal(expectedErrorMessage))
+			_, key, instanceKey, errorMessage := fakeEvacuationDB.EvacuateCrashedActualLRPArgsForCall(0)
+			Expect(*key).To(Equal(actual.ActualLRPKey))
+			Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
+			Expect(errorMessage).To(Equal(expectedErrorMessage))
 		})
 
 		Context("when the db returns an error", func() {
@@ -298,10 +298,10 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		It("sends the request to the db", func() {
 			Expect(fakeEvacuationDB.EvacuateRunningActualLRPCallCount()).To(Equal(1))
-			_, req := fakeEvacuationDB.EvacuateRunningActualLRPArgsForCall(0)
-			Expect(*req.ActualLrpKey).To(Equal(actual.ActualLRPKey))
-			Expect(*req.ActualLrpInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-			Expect(*req.ActualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
+			_, key, instanceKey, netInfo, _ := fakeEvacuationDB.EvacuateRunningActualLRPArgsForCall(0)
+			Expect(*key).To(Equal(actual.ActualLRPKey))
+			Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
+			Expect(*netInfo).To(Equal(actual.ActualLRPNetInfo))
 		})
 
 		Context("when the db returns an error", func() {
@@ -362,9 +362,9 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		It("sends the request to the db", func() {
 			Expect(fakeEvacuationDB.EvacuateStoppedActualLRPCallCount()).To(Equal(1))
-			_, req := fakeEvacuationDB.EvacuateStoppedActualLRPArgsForCall(0)
-			Expect(*req.ActualLrpKey).To(Equal(actual.ActualLRPKey))
-			Expect(*req.ActualLrpInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
+			_, key, instanceKey := fakeEvacuationDB.EvacuateStoppedActualLRPArgsForCall(0)
+			Expect(*key).To(Equal(actual.ActualLRPKey))
+			Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
 		})
 
 		Context("when the db returns an error", func() {

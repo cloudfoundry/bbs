@@ -8,9 +8,9 @@ import (
 //go:generate counterfeiter . EvacuationDB
 
 type EvacuationDB interface {
-	EvacuateClaimedActualLRP(lager.Logger, *models.EvacuateClaimedActualLRPRequest) (bool, *models.Error)
-	EvacuateRunningActualLRP(lager.Logger, *models.EvacuateRunningActualLRPRequest) (bool, *models.Error)
-	EvacuateStoppedActualLRP(lager.Logger, *models.EvacuateStoppedActualLRPRequest) (bool, *models.Error)
-	EvacuateCrashedActualLRP(lager.Logger, *models.EvacuateCrashedActualLRPRequest) (bool, *models.Error)
+	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, *models.Error)
+	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, *models.Error)
+	EvacuateStoppedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, *models.Error)
+	EvacuateCrashedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, *models.Error)
 	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) *models.Error
 }

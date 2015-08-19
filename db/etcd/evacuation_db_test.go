@@ -15,14 +15,10 @@ import (
 var _ = Describe("Evacuation", func() {
 	Describe("Tabular tests", func() {
 		claimedTest := func(base evacuationTest) evacuationTest {
-			request := models.EvacuateClaimedActualLRPRequest{
-				ActualLrpKey:         &lrpKey,
-				ActualLrpInstanceKey: &alphaInstanceKey,
-			}
 			return evacuationTest{
 				Name: base.Name,
 				Subject: func() (bool, error) {
-					return etcdDB.EvacuateClaimedActualLRP(logger, &request)
+					return etcdDB.EvacuateClaimedActualLRP(logger, &lrpKey, &alphaInstanceKey)
 				},
 				InstanceLRP:   base.InstanceLRP,
 				EvacuatingLRP: base.EvacuatingLRP,
@@ -31,16 +27,10 @@ var _ = Describe("Evacuation", func() {
 		}
 
 		runningTest := func(base evacuationTest) evacuationTest {
-			request := models.EvacuateRunningActualLRPRequest{
-				ActualLrpKey:         &lrpKey,
-				ActualLrpInstanceKey: &alphaInstanceKey,
-				ActualLrpNetInfo:     &alphaNetInfo,
-				Ttl:                  alphaEvacuationTTL,
-			}
 			return evacuationTest{
 				Name: base.Name,
 				Subject: func() (bool, error) {
-					return etcdDB.EvacuateRunningActualLRP(logger, &request)
+					return etcdDB.EvacuateRunningActualLRP(logger, &lrpKey, &alphaInstanceKey, &alphaNetInfo, alphaEvacuationTTL)
 				},
 				InstanceLRP:   base.InstanceLRP,
 				EvacuatingLRP: base.EvacuatingLRP,
@@ -49,14 +39,10 @@ var _ = Describe("Evacuation", func() {
 		}
 
 		stoppedTest := func(base evacuationTest) evacuationTest {
-			request := models.EvacuateStoppedActualLRPRequest{
-				ActualLrpKey:         &lrpKey,
-				ActualLrpInstanceKey: &alphaInstanceKey,
-			}
 			return evacuationTest{
 				Name: base.Name,
 				Subject: func() (bool, error) {
-					return etcdDB.EvacuateStoppedActualLRP(logger, &request)
+					return etcdDB.EvacuateStoppedActualLRP(logger, &lrpKey, &alphaInstanceKey)
 				},
 				InstanceLRP:   base.InstanceLRP,
 				EvacuatingLRP: base.EvacuatingLRP,
@@ -65,15 +51,10 @@ var _ = Describe("Evacuation", func() {
 		}
 
 		crashedTest := func(base evacuationTest) evacuationTest {
-			request := models.EvacuateCrashedActualLRPRequest{
-				ActualLrpKey:         &lrpKey,
-				ActualLrpInstanceKey: &alphaInstanceKey,
-				ErrorMessage:         "crashed",
-			}
 			return evacuationTest{
 				Name: base.Name,
 				Subject: func() (bool, error) {
-					return etcdDB.EvacuateCrashedActualLRP(logger, &request)
+					return etcdDB.EvacuateCrashedActualLRP(logger, &lrpKey, &alphaInstanceKey, "crashed")
 				},
 				InstanceLRP:   base.InstanceLRP,
 				EvacuatingLRP: base.EvacuatingLRP,
