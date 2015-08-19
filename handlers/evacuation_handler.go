@@ -31,22 +31,14 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req
 	logger := h.logger.Session("remove-evacuating-actual-lrp")
 
 	request := &models.RemoveEvacuatingActualLRPRequest{}
-	if !parseRequestAndWrite(logger, w, req, request) {
-		return
+	response := &models.RemoveEvacuatingActualLRPResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Error = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	}
 
-	bbsErr := h.db.RemoveEvacuatingActualLRP(logger, request)
-	if bbsErr != nil {
-		logger.Error("failed-to-remove-evacuating-actual-lrp", bbsErr)
-		if bbsErr.Equal(models.ErrResourceNotFound) {
-			writeNotFoundResponse(w, bbsErr)
-		} else {
-			writeInternalServerErrorResponse(w, bbsErr)
-		}
-		return
-	}
-
-	writeEmptyResponse(w, http.StatusNoContent)
+	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req *http.Request) {

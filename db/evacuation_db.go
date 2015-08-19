@@ -12,5 +12,5 @@ type EvacuationDB interface {
 	EvacuateRunningActualLRP(lager.Logger, *models.EvacuateRunningActualLRPRequest) (bool, *models.Error)
 	EvacuateStoppedActualLRP(lager.Logger, *models.EvacuateStoppedActualLRPRequest) (bool, *models.Error)
 	EvacuateCrashedActualLRP(lager.Logger, *models.EvacuateCrashedActualLRPRequest) (bool, *models.Error)
-	RemoveEvacuatingActualLRP(lager.Logger, *models.RemoveEvacuatingActualLRPRequest) *models.Error
+	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) *models.Error
 }

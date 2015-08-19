@@ -31,7 +31,6 @@ var _ = Describe("Evacuation Handlers", func() {
 
 	Describe("RemoveEvacuatingActualLRP", func() {
 		var (
-			request     *http.Request
 			processGuid = "process-guid"
 			index       = int32(1)
 
@@ -55,7 +54,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request = newTestRequest(requestBody)
+			request := newTestRequest(requestBody)
 			handler.RemoveEvacuatingActualLRP(responseRecorder, request)
 		})
 
@@ -64,14 +63,13 @@ var _ = Describe("Evacuation Handlers", func() {
 				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(nil)
 			})
 
-			It("responds with 204 No Content", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
-			})
-
 			It("removeEvacuatings the actual lrp by process guid and index", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
 				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-				_, actualRequest := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(actualRequest).To(Equal(requestBody))
+				_, actualKey, actualInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+				Expect(*actualKey).To(Equal(key))
+				Expect(*actualInstanceKey).To(Equal(instanceKey))
 			})
 		})
 
@@ -80,8 +78,15 @@ var _ = Describe("Evacuation Handlers", func() {
 				requestBody = &models.RemoveEvacuatingActualLRPRequest{}
 			})
 
-			It("responds with 400 Bad Request", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var response models.RemoveEvacuatingActualLRPResponse
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error.Type).To(Equal(models.InvalidRequest))
 			})
 		})
 
@@ -90,18 +95,32 @@ var _ = Describe("Evacuation Handlers", func() {
 				requestBody = "beep boop beep boop -- i am a robot"
 			})
 
-			It("responds with 400 Bad Request", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var response models.RemoveEvacuatingActualLRPResponse
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error).To(Equal(models.ErrBadRequest))
 			})
 		})
 
-		Context("when retiring the actual lrp fails", func() {
+		Context("when DB errors out", func() {
 			BeforeEach(func() {
 				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrUnknownError)
 			})
 
-			It("responds with 500 Internal Server Error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var response models.RemoveEvacuatingActualLRPResponse
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 
@@ -111,7 +130,14 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var response models.RemoveEvacuatingActualLRPResponse
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 	})

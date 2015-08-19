@@ -50,11 +50,12 @@ type FakeEvacuationDB struct {
 		result1 bool
 		result2 *models.Error
 	}
-	RemoveEvacuatingActualLRPStub        func(lager.Logger, *models.RemoveEvacuatingActualLRPRequest) *models.Error
+	RemoveEvacuatingActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) *models.Error
 	removeEvacuatingActualLRPMutex       sync.RWMutex
 	removeEvacuatingActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.RemoveEvacuatingActualLRPRequest
+		arg2 *models.ActualLRPKey
+		arg3 *models.ActualLRPInstanceKey
 	}
 	removeEvacuatingActualLRPReturns struct {
 		result1 *models.Error
@@ -197,15 +198,16 @@ func (fake *FakeEvacuationDB) EvacuateCrashedActualLRPReturns(result1 bool, resu
 	}{result1, result2}
 }
 
-func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRP(arg1 lager.Logger, arg2 *models.RemoveEvacuatingActualLRPRequest) *models.Error {
+func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) *models.Error {
 	fake.removeEvacuatingActualLRPMutex.Lock()
 	fake.removeEvacuatingActualLRPArgsForCall = append(fake.removeEvacuatingActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.RemoveEvacuatingActualLRPRequest
-	}{arg1, arg2})
+		arg2 *models.ActualLRPKey
+		arg3 *models.ActualLRPInstanceKey
+	}{arg1, arg2, arg3})
 	fake.removeEvacuatingActualLRPMutex.Unlock()
 	if fake.RemoveEvacuatingActualLRPStub != nil {
-		return fake.RemoveEvacuatingActualLRPStub(arg1, arg2)
+		return fake.RemoveEvacuatingActualLRPStub(arg1, arg2, arg3)
 	} else {
 		return fake.removeEvacuatingActualLRPReturns.result1
 	}
@@ -217,10 +219,10 @@ func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRPCallCount() int {
 	return len(fake.removeEvacuatingActualLRPArgsForCall)
 }
 
-func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRPArgsForCall(i int) (lager.Logger, *models.RemoveEvacuatingActualLRPRequest) {
+func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.removeEvacuatingActualLRPMutex.RLock()
 	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
-	return fake.removeEvacuatingActualLRPArgsForCall[i].arg1, fake.removeEvacuatingActualLRPArgsForCall[i].arg2
+	return fake.removeEvacuatingActualLRPArgsForCall[i].arg1, fake.removeEvacuatingActualLRPArgsForCall[i].arg2, fake.removeEvacuatingActualLRPArgsForCall[i].arg3
 }
 
 func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRPReturns(result1 *models.Error) {

@@ -82,14 +82,10 @@ var _ = Describe("Evacuation", func() {
 		}
 
 		removalTest := func(base evacuationTest) evacuationTest {
-			request := models.RemoveEvacuatingActualLRPRequest{
-				ActualLrpKey:         &lrpKey,
-				ActualLrpInstanceKey: &alphaInstanceKey,
-			}
 			return evacuationTest{
 				Name: base.Name,
 				Subject: func() (bool, error) {
-					err := etcdDB.RemoveEvacuatingActualLRP(logger, &request)
+					err := etcdDB.RemoveEvacuatingActualLRP(logger, &lrpKey, &alphaInstanceKey)
 					return false, err
 				},
 				InstanceLRP:   base.InstanceLRP,

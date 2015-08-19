@@ -179,6 +179,20 @@ func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPI
 	return nil
 }
 
+type RemoveEvacuatingActualLRPResponse struct {
+	Error *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+}
+
+func (m *RemoveEvacuatingActualLRPResponse) Reset()      { *m = RemoveEvacuatingActualLRPResponse{} }
+func (*RemoveEvacuatingActualLRPResponse) ProtoMessage() {}
+
+func (m *RemoveEvacuatingActualLRPResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+
 func (m *EvacuationResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -864,6 +878,75 @@ func (m *RemoveEvacuatingActualLRPRequest) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *RemoveEvacuatingActualLRPResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Error == nil {
+				m.Error = &Error{}
+			}
+			if err := m.Error.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipEvacuation(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func skipEvacuation(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -1025,6 +1108,16 @@ func (this *RemoveEvacuatingActualLRPRequest) String() string {
 	}, "")
 	return s
 }
+func (this *RemoveEvacuatingActualLRPResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&RemoveEvacuatingActualLRPResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func valueToStringEvacuation(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1116,6 +1209,16 @@ func (m *RemoveEvacuatingActualLRPRequest) Size() (n int) {
 	}
 	if m.ActualLrpInstanceKey != nil {
 		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	return n
+}
+
+func (m *RemoveEvacuatingActualLRPResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
 		n += 1 + l + sovEvacuation(uint64(l))
 	}
 	return n
@@ -1377,6 +1480,34 @@ func (m *RemoveEvacuatingActualLRPRequest) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *RemoveEvacuatingActualLRPResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *RemoveEvacuatingActualLRPResponse) MarshalTo(data []byte) (n int, err error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.Error.Size()))
+		n13, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
+	return i, nil
+}
+
 func encodeFixed64Evacuation(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -1459,6 +1590,14 @@ func (this *RemoveEvacuatingActualLRPRequest) GoString() string {
 	s := strings.Join([]string{`&models.RemoveEvacuatingActualLRPRequest{` +
 		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
 		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
+	return s
+}
+func (this *RemoveEvacuatingActualLRPResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.RemoveEvacuatingActualLRPResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
 	return s
 }
 func valueToGoStringEvacuation(v interface{}, typ string) string {

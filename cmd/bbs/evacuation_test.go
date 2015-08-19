@@ -42,20 +42,6 @@ var _ = Describe("Evacuation API", func() {
 		})
 
 		It("removes the claimed actual_lrp without evacuating", func() {
-			// Note: the docs say keepContainer should be true, but the previous implementation in runtime-schema didn't match this
-			// Docs are here: https://github.com/cloudfoundry-incubator/diego-dev-notes
-			// Uncomment this when #101227992 is complete.
-			//
-			// keepContainer, evacuateErr := client.EvacuateClaimedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
-			// Expect(keepContainer).To(BeTrue())
-			// actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(actual.ProcessGuid, int(actual.Index))
-			// Expect(err).NotTo(HaveOccurred())
-			// Expect(actualLRPGroup.Evacuating).NotTo(BeNil())
-			// Expect(actualLRPGroup.Instance).NotTo(BeNil())
-			// Expect(actualLRPGroup.Evacuating.State).To(Equal(models.ActualLRPStateRunning))
-			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
-
-			// This test represents the current implementation from runtime-schema
 			keepContainer, evacuateErr := client.EvacuateClaimedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
 			Expect(keepContainer).To(BeFalse())
 			Expect(evacuateErr).NotTo(HaveOccurred())

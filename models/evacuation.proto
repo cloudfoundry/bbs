@@ -40,3 +40,7 @@ message RemoveEvacuatingActualLRPRequest {
   optional ActualLRPKey actual_lrp_key = 1;
   optional ActualLRPInstanceKey actual_lrp_instance_key = 2;
 }
+
+message RemoveEvacuatingActualLRPResponse {
+  optional Error error = 1;
+}

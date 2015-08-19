@@ -225,7 +225,14 @@ func (c *client) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 	}
-	return c.doRequest(RemoveEvacuatingActualLRPRoute, nil, nil, &request, nil)
+
+	response := models.RemoveEvacuatingActualLRPResponse{}
+	err := c.doRequest(RemoveEvacuatingActualLRPRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+	}
+
+	return response.Error
 }
 
 func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
