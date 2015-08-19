@@ -172,11 +172,7 @@ func (db *ETCDDB) EvacuateCrashedActualLRP(logger lager.Logger, key *models.Actu
 		logger.Debug("failed-to-remove-evacuating-actual-lrp", lager.Data{"error": err})
 	}
 
-	err = db.CrashActualLRP(logger, &models.CrashActualLRPRequest{
-		ActualLrpKey:         key,
-		ActualLrpInstanceKey: instanceKey,
-		ErrorMessage:         errorMessage,
-	})
+	err = db.CrashActualLRP(logger, key, instanceKey, errorMessage)
 	if err == models.ErrResourceNotFound {
 		return false, nil
 	} else if err != nil {

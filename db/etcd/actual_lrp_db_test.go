@@ -335,12 +335,7 @@ var _ = Describe("ActualLRPDB", func() {
 		)
 
 		JustBeforeEach(func() {
-			request := &models.ClaimActualLRPRequest{
-				ProcessGuid:          processGuid,
-				Index:                index,
-				ActualLrpInstanceKey: &instanceKey,
-			}
-			claimErr = etcdDB.ClaimActualLRP(logger, request)
+			claimErr = etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -409,12 +404,7 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					instanceGuid = "some-instance-guid"
 					instanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
-					request := &models.ClaimActualLRPRequest{
-						ProcessGuid:          processGuid,
-						Index:                index,
-						ActualLrpInstanceKey: &instanceKey,
-					}
-					err := etcdDB.ClaimActualLRP(logger, request)
+					err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -593,7 +583,6 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("StartActualLRP", func() {
 		var (
 			startErr *models.Error
-			request  models.StartActualLRPRequest
 
 			lrpKey      models.ActualLRPKey
 			instanceKey models.ActualLRPInstanceKey
@@ -601,10 +590,7 @@ var _ = Describe("ActualLRPDB", func() {
 		)
 
 		JustBeforeEach(func() {
-			request.ActualLrpKey = &lrpKey
-			request.ActualLrpInstanceKey = &instanceKey
-			request.ActualLrpNetInfo = &netInfo
-			startErr = etcdDB.StartActualLRP(logger, &request)
+			startErr = etcdDB.StartActualLRP(logger, &lrpKey, &instanceKey, &netInfo)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -686,12 +672,7 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					instanceGuid = "some-instance-guid"
 					instanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
-					request := &models.ClaimActualLRPRequest{
-						ProcessGuid:          processGuid,
-						Index:                index,
-						ActualLrpInstanceKey: &instanceKey,
-					}
-					err := etcdDB.ClaimActualLRP(logger, request)
+					err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -759,14 +740,10 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					instanceGuid = "some-instance-guid"
 
-					existingLRPRequest := &models.StartActualLRPRequest{}
-					existingLRPRequest.ActualLrpKey = &actualLRP.ActualLRPKey
 					existingInstanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
-					existingLRPRequest.ActualLrpInstanceKey = &existingInstanceKey
 					existingNetInfo := models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
-					existingLRPRequest.ActualLrpNetInfo = &existingNetInfo
 
-					err := etcdDB.StartActualLRP(logger, existingLRPRequest)
+					err := etcdDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, &existingInstanceKey, &existingNetInfo)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -918,7 +895,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("deletes the LRP", func() {
-				retireErr = etcdDB.RetireActualLRP(logger, &request)
+				retireErr = etcdDB.RetireActualLRP(logger, &lrpKey)
 				Expect(retireErr).NotTo(HaveOccurred())
 
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
@@ -938,7 +915,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("should remove the actual", func() {
-				retireErr = etcdDB.RetireActualLRP(logger, &request)
+				retireErr = etcdDB.RetireActualLRP(logger, &lrpKey)
 				Expect(retireErr).NotTo(HaveOccurred())
 
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
@@ -964,7 +941,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			JustBeforeEach(func() {
-				etcdDB.RetireActualLRP(logger, &request)
+				etcdDB.RetireActualLRP(logger, &lrpKey)
 			})
 
 			Context("when the cell", func() {
@@ -1026,7 +1003,6 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("FailActualLRP", func() {
 		var (
-			request   models.FailActualLRPRequest
 			failErr   *models.Error
 			actualLRP *models.ActualLRP
 
@@ -1040,9 +1016,7 @@ var _ = Describe("ActualLRPDB", func() {
 		)
 
 		JustBeforeEach(func() {
-			request.ActualLrpKey = &lrpKey
-			request.ErrorMessage = errorMessage
-			failErr = etcdDB.FailActualLRP(logger, &request)
+			failErr = etcdDB.FailActualLRP(logger, &lrpKey, errorMessage)
 		})
 
 		Context("when the actual LRP exists", func() {

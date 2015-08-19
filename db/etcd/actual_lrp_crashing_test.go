@@ -153,7 +153,6 @@ func (t crashTest) Test() {
 	Context(t.Name, func() {
 		var (
 			crashErr                 error
-			crashRequest             *models.CrashActualLRPRequest
 			actualLRPKey             *models.ActualLRPKey
 			instanceKey              *models.ActualLRPInstanceKey
 			initialTimestamp         int64
@@ -176,19 +175,13 @@ func (t crashTest) Test() {
 				Action:      models.WrapAction(&models.RunAction{Path: "true", User: "me"}),
 			}
 
-			crashRequest = &models.CrashActualLRPRequest{
-				ActualLrpKey:         &actualLRP.ActualLRPKey,
-				ActualLrpInstanceKey: &actualLRP.ActualLRPInstanceKey,
-				ErrorMessage:         "crashed",
-			}
-
 			etcdHelper.SetRawDesiredLRP(&desiredLRP)
 			etcdHelper.SetRawActualLRP(&actualLRP)
 		})
 
 		JustBeforeEach(func() {
 			clock.Increment(600)
-			crashErr = etcdDB.CrashActualLRP(logger, crashRequest)
+			crashErr = etcdDB.CrashActualLRP(logger, actualLRPKey, instanceKey, "crashed")
 		})
 
 		if t.Result.ReturnedErr == nil {

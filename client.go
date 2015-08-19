@@ -154,8 +154,12 @@ func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *mode
 		Index:                int32(index),
 		ActualLrpInstanceKey: instanceKey,
 	}
-	err := c.doRequest(ClaimActualLRPRoute, nil, nil, &request, nil)
-	return err
+	response := models.ActualLRPLifecycleResponse{}
+	err := c.doRequest(ClaimActualLRPRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+	}
+	return response.Error
 }
 
 func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
@@ -164,8 +168,13 @@ func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 		ActualLrpInstanceKey: instanceKey,
 		ActualLrpNetInfo:     netInfo,
 	}
-	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, nil)
-	return err
+	response := models.ActualLRPLifecycleResponse{}
+	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+
+	}
+	return response.Error
 }
 
 func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
@@ -174,7 +183,13 @@ func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 		ActualLrpInstanceKey: instanceKey,
 		ErrorMessage:         errorMessage,
 	}
-	return c.doRequest(CrashActualLRPRoute, nil, nil, &request, nil)
+	response := models.ActualLRPLifecycleResponse{}
+	err := c.doRequest(CrashActualLRPRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+
+	}
+	return response.Error
 }
 
 func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
@@ -182,7 +197,26 @@ func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) er
 		ActualLrpKey: key,
 		ErrorMessage: errorMessage,
 	}
-	return c.doRequest(FailActualLRPRoute, nil, nil, &request, nil)
+	response := models.ActualLRPLifecycleResponse{}
+	err := c.doRequest(FailActualLRPRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+
+	}
+	return response.Error
+}
+
+func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
+	request := models.RetireActualLRPRequest{
+		ActualLrpKey: key,
+	}
+	response := models.ActualLRPLifecycleResponse{}
+	err := c.doRequest(RetireActualLRPRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+
+	}
+	return response.Error
 }
 
 func (c *client) RemoveActualLRP(processGuid string, index int) error {
@@ -195,15 +229,7 @@ func (c *client) RemoveActualLRP(processGuid string, index int) error {
 	if err != nil {
 		return err
 	}
-
 	return response.Error
-}
-
-func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
-	request := models.RetireActualLRPRequest{
-		ActualLrpKey: key,
-	}
-	return c.doRequest(RetireActualLRPRoute, nil, nil, &request, nil)
 }
 
 func (c *client) EvacuateClaimedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
