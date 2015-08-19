@@ -62,7 +62,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrps/start", Method: "POST", Name: StartActualLRPRoute},
 	{Path: "/v1/actual_lrps/crash", Method: "POST", Name: CrashActualLRPRoute},
 	{Path: "/v1/actual_lrps/fail", Method: "POST", Name: FailActualLRPRoute},
-	{Path: "/v1/actual_lrps/:process_guid/index/:index", Method: "DELETE", Name: RemoveActualLRPRoute},
+	{Path: "/v1/actual_lrps/remove", Method: "POST", Name: RemoveActualLRPRoute},
 	{Path: "/v1/actual_lrps/retire", Method: "POST", Name: RetireActualLRPRoute},
 
 	// Evacuation

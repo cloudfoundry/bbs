@@ -3,7 +3,6 @@ package handlers
 import (
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -175,32 +174,17 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *ht
 }
 
 func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *http.Request) {
-	processGuid := req.FormValue(":process_guid")
-	index := req.FormValue(":index")
-	logger := h.logger.Session("remove-actual-lrp", lager.Data{
-		"process_guid": processGuid,
-		"index":        index,
-	})
+	logger := h.logger.Session("remove-actual-lrp")
 
-	idx, err := strconv.ParseInt(index, 10, 32)
-	if err != nil {
-		logger.Error("failed-to-parse-index", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return
+	request := &models.RemoveActualLRPRequest{}
+	response := &models.ActualLRPLifecycleResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Error = h.db.RemoveActualLRP(h.logger, request.ProcessGuid, request.Index)
 	}
 
-	bbsErr := h.db.RemoveActualLRP(logger, processGuid, int32(idx))
-	if bbsErr != nil {
-		logger.Error("failed-to-remove-actual-lrp", bbsErr)
-		if bbsErr.Equal(models.ErrResourceNotFound) {
-			writeNotFoundResponse(w, bbsErr)
-		} else {
-			writeInternalServerErrorResponse(w, bbsErr)
-		}
-		return
-	}
-
-	writeEmptyResponse(w, http.StatusNoContent)
+	writeResponse(w, response)
 }
 
 func (h *ActualLRPLifecycleHandler) RetireActualLRP(w http.ResponseWriter, req *http.Request) {

@@ -7,7 +7,6 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/events"
@@ -187,10 +186,17 @@ func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) er
 }
 
 func (c *client) RemoveActualLRP(processGuid string, index int) error {
-	err := c.doRequest(RemoveActualLRPRoute,
-		rata.Params{"process_guid": processGuid, "index": strconv.Itoa(index)},
-		nil, nil, nil)
-	return err
+	request := models.RemoveActualLRPRequest{
+		ProcessGuid: processGuid,
+		Index:       int32(index),
+	}
+	response := models.ActualLRPLifecycleResponse{}
+	err := c.doRequest(RemoveActualLRPRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+	}
+
+	return response.Error
 }
 
 func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {

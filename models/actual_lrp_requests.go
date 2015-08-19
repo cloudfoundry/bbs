@@ -36,6 +36,24 @@ func (request *ActualLRPGroupByProcessGuidAndIndexRequest) Validate() error {
 	return nil
 }
 
+func (request *RemoveActualLRPRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ProcessGuid == "" {
+		validationError = validationError.Append(ErrInvalidField{"process_guid"})
+	}
+
+	if request.Index < 0 {
+		validationError = validationError.Append(ErrInvalidField{"index"})
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
 func (request *StartActualLRPRequest) Validate() error {
 	var validationError ValidationError
 

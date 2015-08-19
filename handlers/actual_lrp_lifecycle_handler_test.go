@@ -3,8 +3,6 @@ package handlers_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -509,15 +507,20 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 	Describe("RemoveActualLRP", func() {
 		var (
-			request     *http.Request
-			processGuid = "process-guid"
-			index       = 1
+			processGuid       = "process-guid"
+			index       int32 = 1
+
 			instanceKey models.ActualLRPInstanceKey
-			indexParam  string
+
+			requestBody interface{}
 		)
 
 		BeforeEach(func() {
-			indexParam = strconv.Itoa(index)
+			requestBody = &models.RemoveActualLRPRequest{
+				ProcessGuid: processGuid,
+				Index:       index,
+			}
+
 			instanceKey = models.NewActualLRPInstanceKey(
 				"instance-guid-0",
 				"cell-id-0",
@@ -534,12 +537,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request = newTestRequest("")
-			request.URL.RawQuery = url.Values{
-				":process_guid": []string{processGuid},
-				":index":        []string{indexParam},
-			}.Encode()
-
+			request := newTestRequest(requestBody)
 			handler.RemoveActualLRP(responseRecorder, request)
 		})
 
@@ -552,25 +550,21 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				fakeActualLRPDB.RemoveActualLRPReturns(nil)
 			})
 
-			It("responds with 204 Status No Content", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
-			})
-
 			It("removes the actual lrp by process guid and index", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 				_, actualProcessGuid, idx := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 				Expect(idx).To(BeEquivalentTo(index))
 			})
-		})
 
-		Context("when parsing the index fails", func() {
-			BeforeEach(func() {
-				indexParam = "this is not an index?"
-			})
+			It("response with no error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
 
-			It("responds with 400 Bad Request", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+				Expect(response.Error).To(BeNil())
 			})
 		})
 
@@ -579,8 +573,13 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				fakeActualLRPDB.RemoveActualLRPReturns(models.ErrUnknownError)
 			})
 
-			It("responds with 500 Internal Server Error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 
@@ -590,7 +589,12 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			})
 
 			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 	})
