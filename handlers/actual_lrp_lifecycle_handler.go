@@ -46,7 +46,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
-	actualLRP, bbsErr := h.db.ClaimActualLRP(logger, request)
+	bbsErr := h.db.ClaimActualLRP(logger, request)
 	if bbsErr != nil {
 		logger.Error("failed-to-claim-actual-lrp", bbsErr)
 		if bbsErr.Equal(models.ErrResourceNotFound) {
@@ -57,7 +57,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
-	writeProtoResponse(w, http.StatusOK, actualLRP)
+	writeEmptyResponse(w, http.StatusOK)
 }
 
 func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *http.Request) {
@@ -84,7 +84,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
-	actualLRP, bbsErr := h.db.StartActualLRP(logger, request)
+	bbsErr := h.db.StartActualLRP(logger, request)
 	if bbsErr != nil {
 		logger.Error("failed-to-start-actual-lrp", bbsErr)
 		if bbsErr.Equal(models.ErrResourceNotFound) {
@@ -95,7 +95,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
-	writeProtoResponse(w, http.StatusOK, actualLRP)
+	writeEmptyResponse(w, http.StatusOK)
 }
 
 func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *http.Request) {

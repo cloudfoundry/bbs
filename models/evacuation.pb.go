@@ -232,6 +232,9 @@ func (m *EvacuationResponse) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -255,6 +258,9 @@ func (m *EvacuationResponse) Unmarshal(data []byte) error {
 			skippy, err := skipEvacuation(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvacuation
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -301,6 +307,9 @@ func (m *EvacuateClaimedActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -328,6 +337,9 @@ func (m *EvacuateClaimedActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -351,6 +363,9 @@ func (m *EvacuateClaimedActualLRPRequest) Unmarshal(data []byte) error {
 			skippy, err := skipEvacuation(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvacuation
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -397,6 +412,9 @@ func (m *EvacuateRunningActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -424,6 +442,9 @@ func (m *EvacuateRunningActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -451,6 +472,9 @@ func (m *EvacuateRunningActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -490,6 +514,9 @@ func (m *EvacuateRunningActualLRPRequest) Unmarshal(data []byte) error {
 			skippy, err := skipEvacuation(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvacuation
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -536,6 +563,9 @@ func (m *EvacuateStoppedActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -563,6 +593,9 @@ func (m *EvacuateStoppedActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -586,6 +619,9 @@ func (m *EvacuateStoppedActualLRPRequest) Unmarshal(data []byte) error {
 			skippy, err := skipEvacuation(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvacuation
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -632,6 +668,9 @@ func (m *EvacuateCrashedActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -659,6 +698,9 @@ func (m *EvacuateCrashedActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -705,6 +747,9 @@ func (m *EvacuateCrashedActualLRPRequest) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -750,6 +795,9 @@ func (m *RemoveEvacuatingActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -777,6 +825,9 @@ func (m *RemoveEvacuatingActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -800,6 +851,9 @@ func (m *RemoveEvacuatingActualLRPRequest) Unmarshal(data []byte) error {
 			skippy, err := skipEvacuation(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvacuation
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -856,6 +910,9 @@ func skipEvacuation(data []byte) (n int, err error) {
 				}
 			}
 			iNdEx += length
+			if length < 0 {
+				return 0, ErrInvalidLengthEvacuation
+			}
 			return iNdEx, nil
 		case 3:
 			for {
@@ -894,6 +951,11 @@ func skipEvacuation(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
+
+var (
+	ErrInvalidLengthEvacuation = fmt.Errorf("proto: negative length found during unmarshaling")
+)
+
 func (this *EvacuationResponse) String() string {
 	if this == nil {
 		return "nil"
@@ -1082,7 +1144,7 @@ func (m *EvacuationResponse) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *EvacuationResponse) MarshalTo(data []byte) (n int, err error) {
+func (m *EvacuationResponse) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1118,7 +1180,7 @@ func (m *EvacuateClaimedActualLRPRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *EvacuateClaimedActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *EvacuateClaimedActualLRPRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1156,7 +1218,7 @@ func (m *EvacuateRunningActualLRPRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *EvacuateRunningActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *EvacuateRunningActualLRPRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1207,7 +1269,7 @@ func (m *EvacuateStoppedActualLRPRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *EvacuateStoppedActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *EvacuateStoppedActualLRPRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1245,7 +1307,7 @@ func (m *EvacuateCrashedActualLRPRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *EvacuateCrashedActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *EvacuateCrashedActualLRPRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1287,7 +1349,7 @@ func (m *RemoveEvacuatingActualLRPRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *RemoveEvacuatingActualLRPRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *RemoveEvacuatingActualLRPRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int

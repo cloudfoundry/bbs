@@ -323,9 +323,8 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("ClaimActualLRP", func() {
 		var (
-			actualLRP        *models.ActualLRP
-			claimedActualLRP *models.ActualLRP
-			claimErr         *models.Error
+			actualLRP *models.ActualLRP
+			claimErr  *models.Error
 
 			lrpKey      models.ActualLRPKey
 			instanceKey models.ActualLRPInstanceKey
@@ -341,7 +340,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Index:                index,
 				ActualLrpInstanceKey: &instanceKey,
 			}
-			claimedActualLRP, claimErr = etcdDB.ClaimActualLRP(logger, request)
+			claimErr = etcdDB.ClaimActualLRP(logger, request)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -415,7 +414,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Index:                index,
 						ActualLrpInstanceKey: &instanceKey,
 					}
-					_, err := etcdDB.ClaimActualLRP(logger, request)
+					err := etcdDB.ClaimActualLRP(logger, request)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -568,7 +567,6 @@ var _ = Describe("ActualLRPDB", func() {
 
 				It("should clear placement error", func() {
 					Expect(claimErr).NotTo(HaveOccurred())
-					Expect(claimedActualLRP.PlacementError).To(BeEmpty())
 					lrp, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(lrp.Instance.PlacementError).To(BeEmpty())
@@ -594,9 +592,8 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("StartActualLRP", func() {
 		var (
-			startErr         *models.Error
-			request          models.StartActualLRPRequest
-			startedActualLRP *models.ActualLRP
+			startErr *models.Error
+			request  models.StartActualLRPRequest
 
 			lrpKey      models.ActualLRPKey
 			instanceKey models.ActualLRPInstanceKey
@@ -607,7 +604,7 @@ var _ = Describe("ActualLRPDB", func() {
 			request.ActualLrpKey = &lrpKey
 			request.ActualLrpInstanceKey = &instanceKey
 			request.ActualLrpNetInfo = &netInfo
-			startedActualLRP, startErr = etcdDB.StartActualLRP(logger, &request)
+			startErr = etcdDB.StartActualLRP(logger, &request)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -656,7 +653,6 @@ var _ = Describe("ActualLRPDB", func() {
 
 					It("should clear placement error", func() {
 						Expect(startErr).NotTo(HaveOccurred())
-						Expect(startedActualLRP.PlacementError).To(BeEmpty())
 						lrp, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(lrp.Instance.PlacementError).To(BeEmpty())
@@ -695,7 +691,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Index:                index,
 						ActualLrpInstanceKey: &instanceKey,
 					}
-					_, err := etcdDB.ClaimActualLRP(logger, request)
+					err := etcdDB.ClaimActualLRP(logger, request)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -770,7 +766,7 @@ var _ = Describe("ActualLRPDB", func() {
 					existingNetInfo := models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
 					existingLRPRequest.ActualLrpNetInfo = &existingNetInfo
 
-					_, err := etcdDB.StartActualLRP(logger, existingLRPRequest)
+					err := etcdDB.StartActualLRP(logger, existingLRPRequest)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

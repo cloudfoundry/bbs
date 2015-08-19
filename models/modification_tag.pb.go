@@ -116,6 +116,9 @@ func (m *ModificationTag) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthModificationTag
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -171,6 +174,9 @@ func skipModificationTag(data []byte) (n int, err error) {
 				}
 			}
 			iNdEx += length
+			if length < 0 {
+				return 0, ErrInvalidLengthModificationTag
+			}
 			return iNdEx, nil
 		case 3:
 			for {
@@ -209,6 +215,11 @@ func skipModificationTag(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
+
+var (
+	ErrInvalidLengthModificationTag = fmt.Errorf("proto: negative length found during unmarshaling")
+)
+
 func (this *ModificationTag) String() string {
 	if this == nil {
 		return "nil"
@@ -260,7 +271,7 @@ func (m *ModificationTag) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *ModificationTag) MarshalTo(data []byte) (n int, err error) {
+func (m *ModificationTag) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int

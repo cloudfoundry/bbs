@@ -122,6 +122,9 @@ func (m *Error) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthError
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -177,6 +180,9 @@ func skipError(data []byte) (n int, err error) {
 				}
 			}
 			iNdEx += length
+			if length < 0 {
+				return 0, ErrInvalidLengthError
+			}
 			return iNdEx, nil
 		case 3:
 			for {
@@ -215,6 +221,11 @@ func skipError(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
+
+var (
+	ErrInvalidLengthError = fmt.Errorf("proto: negative length found during unmarshaling")
+)
+
 func (this *Error) String() string {
 	if this == nil {
 		return "nil"
@@ -267,7 +278,7 @@ func (m *Error) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *Error) MarshalTo(data []byte) (n int, err error) {
+func (m *Error) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int

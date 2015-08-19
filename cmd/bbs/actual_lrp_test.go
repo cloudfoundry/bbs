@@ -215,7 +215,6 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("POST /v1/actual_lrps/claim", func() {
 		var (
-			actualLRP   *models.ActualLRP
 			instanceKey models.ActualLRPInstanceKey
 			claimErr    error
 		)
@@ -225,7 +224,7 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			actualLRP, claimErr = client.ClaimActualLRP(unclaimedProcessGuid, unclaimedIndex, &instanceKey)
+			claimErr = client.ClaimActualLRP(unclaimedProcessGuid, unclaimedIndex, &instanceKey)
 		})
 
 		It("claims the actual_lrp", func() {
@@ -235,7 +234,6 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.State = models.ActualLRPStateClaimed
 			expectedActualLRP.ActualLRPInstanceKey = instanceKey
 			expectedActualLRP.ModificationTag.Increment()
-			Expect(*actualLRP).To(Equal(expectedActualLRP))
 
 			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())
@@ -249,7 +247,6 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("POST /v1/actual_lrps/start", func() {
 		var (
-			actualLRP   *models.ActualLRP
 			instanceKey models.ActualLRPInstanceKey
 			startErr    error
 		)
@@ -259,7 +256,7 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			actualLRP, startErr = client.StartActualLRP(&unclaimedLRPKey, &instanceKey, &netInfo)
+			startErr = client.StartActualLRP(&unclaimedLRPKey, &instanceKey, &netInfo)
 		})
 
 		It("starts the actual_lrp", func() {
@@ -271,8 +268,6 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.ActualLRPNetInfo = netInfo
 			expectedActualLRP.ModificationTag.Increment()
 			expectedActualLRP.Since = 0
-			actualLRP.Since = 0
-			Expect(*actualLRP).To(Equal(expectedActualLRP))
 
 			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())

@@ -41,25 +41,23 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRPGroup
 		result2 *models.Error
 	}
-	ClaimActualLRPStub        func(logger lager.Logger, request *models.ClaimActualLRPRequest) (*models.ActualLRP, *models.Error)
+	ClaimActualLRPStub        func(logger lager.Logger, request *models.ClaimActualLRPRequest) *models.Error
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
 		logger  lager.Logger
 		request *models.ClaimActualLRPRequest
 	}
 	claimActualLRPReturns struct {
-		result1 *models.ActualLRP
-		result2 *models.Error
+		result1 *models.Error
 	}
-	StartActualLRPStub        func(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error)
+	StartActualLRPStub        func(logger lager.Logger, request *models.StartActualLRPRequest) *models.Error
 	startActualLRPMutex       sync.RWMutex
 	startActualLRPArgsForCall []struct {
 		logger  lager.Logger
 		request *models.StartActualLRPRequest
 	}
 	startActualLRPReturns struct {
-		result1 *models.ActualLRP
-		result2 *models.Error
+		result1 *models.Error
 	}
 	CrashActualLRPStub        func(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error
 	crashActualLRPMutex       sync.RWMutex
@@ -203,7 +201,7 @@ func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexReturns(result1 
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActualLRPRequest) (*models.ActualLRP, *models.Error) {
+func (fake *FakeActualLRPDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActualLRPRequest) *models.Error {
 	fake.claimActualLRPMutex.Lock()
 	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
 		logger  lager.Logger
@@ -213,7 +211,7 @@ func (fake *FakeActualLRPDB) ClaimActualLRP(logger lager.Logger, request *models
 	if fake.ClaimActualLRPStub != nil {
 		return fake.ClaimActualLRPStub(logger, request)
 	} else {
-		return fake.claimActualLRPReturns.result1, fake.claimActualLRPReturns.result2
+		return fake.claimActualLRPReturns.result1
 	}
 }
 
@@ -229,15 +227,14 @@ func (fake *FakeActualLRPDB) ClaimActualLRPArgsForCall(i int) (lager.Logger, *mo
 	return fake.claimActualLRPArgsForCall[i].logger, fake.claimActualLRPArgsForCall[i].request
 }
 
-func (fake *FakeActualLRPDB) ClaimActualLRPReturns(result1 *models.ActualLRP, result2 *models.Error) {
+func (fake *FakeActualLRPDB) ClaimActualLRPReturns(result1 *models.Error) {
 	fake.ClaimActualLRPStub = nil
 	fake.claimActualLRPReturns = struct {
-		result1 *models.ActualLRP
-		result2 *models.Error
-	}{result1, result2}
+		result1 *models.Error
+	}{result1}
 }
 
-func (fake *FakeActualLRPDB) StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error) {
+func (fake *FakeActualLRPDB) StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) *models.Error {
 	fake.startActualLRPMutex.Lock()
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
 		logger  lager.Logger
@@ -247,7 +244,7 @@ func (fake *FakeActualLRPDB) StartActualLRP(logger lager.Logger, request *models
 	if fake.StartActualLRPStub != nil {
 		return fake.StartActualLRPStub(logger, request)
 	} else {
-		return fake.startActualLRPReturns.result1, fake.startActualLRPReturns.result2
+		return fake.startActualLRPReturns.result1
 	}
 }
 
@@ -263,12 +260,11 @@ func (fake *FakeActualLRPDB) StartActualLRPArgsForCall(i int) (lager.Logger, *mo
 	return fake.startActualLRPArgsForCall[i].logger, fake.startActualLRPArgsForCall[i].request
 }
 
-func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.ActualLRP, result2 *models.Error) {
+func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.Error) {
 	fake.StartActualLRPStub = nil
 	fake.startActualLRPReturns = struct {
-		result1 *models.ActualLRP
-		result2 *models.Error
-	}{result1, result2}
+		result1 *models.Error
+	}{result1}
 }
 
 func (fake *FakeActualLRPDB) CrashActualLRP(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error {

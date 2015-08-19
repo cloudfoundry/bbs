@@ -132,14 +132,14 @@ func (db *ETCDDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, process
 	return &lrp, node.ModifiedIndex, nil
 }
 
-func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActualLRPRequest) (*models.ActualLRP, *models.Error) {
+func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActualLRPRequest) *models.Error {
 	lrp, prevIndex, bbsErr := db.rawActuaLLRPByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
 	if bbsErr != nil {
-		return nil, bbsErr
+		return bbsErr
 	}
 
 	if !lrp.AllowsTransitionTo(&lrp.ActualLRPKey, request.ActualLrpInstanceKey, models.ActualLRPStateClaimed) {
-		return nil, models.ErrActualLRPCannotBeClaimed
+		return models.ErrActualLRPCannotBeClaimed
 	}
 
 	lrp.PlacementError = ""
@@ -150,23 +150,23 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActua
 
 	err := lrp.Validate()
 	if err != nil {
-		return nil, &models.Error{Type: models.InvalidRecord, Message: err.Error()}
+		return &models.Error{Type: models.InvalidRecord, Message: err.Error()}
 	}
 
 	lrpRawJSON, err := json.Marshal(lrp)
 	if err != nil {
-		return nil, models.ErrSerializeJSON
+		return models.ErrSerializeJSON
 	}
 
 	logger.Info("starting")
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(request.ProcessGuid, request.Index), string(lrpRawJSON), 0, "", prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, models.ErrActualLRPCannotBeClaimed
+		return models.ErrActualLRPCannotBeClaimed
 	}
 	logger.Info("succeeded")
 
-	return lrp, nil
+	return nil
 }
 
 func (db *ETCDDB) newRunningActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
@@ -188,24 +188,24 @@ func (db *ETCDDB) newRunningActualLRP(key *models.ActualLRPKey, instanceKey *mod
 	}, nil
 }
 
-func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, *models.Error) {
+func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) *models.Error {
 	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
 	if err != nil {
-		return nil, models.ErrActualLRPCannotBeStarted
+		return models.ErrActualLRPCannotBeStarted
 	}
 
 	lrpRawJSON, err := json.Marshal(lrp)
 	if err != nil {
-		return nil, models.ErrSerializeJSON
+		return models.ErrSerializeJSON
 	}
 
 	_, err = db.client.Set(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, models.ErrActualLRPCannotBeStarted
+		return models.ErrActualLRPCannotBeStarted
 	}
 
-	return lrp, nil
+	return nil
 }
 
 func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) (modelErr *models.Error) {
@@ -232,7 +232,7 @@ func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.Act
 	return nil
 }
 
-func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) (*models.ActualLRP, *models.Error) {
+func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActualLRPRequest) *models.Error {
 	key := request.ActualLrpKey
 	instanceKey := request.ActualLrpInstanceKey
 	netInfo := request.ActualLrpNetInfo
@@ -243,7 +243,7 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActua
 		return db.createRunningActualLRP(logger, key, instanceKey, netInfo)
 	} else if bbsErr != nil {
 		logger.Error("failed-to-get-actual-lrp", bbsErr)
-		return nil, bbsErr
+		return bbsErr
 	}
 
 	if lrp.ActualLRPKey.Equal(key) &&
@@ -251,12 +251,12 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActua
 		lrp.ActualLRPNetInfo.Equal(netInfo) &&
 		lrp.State == models.ActualLRPStateRunning {
 		logger.Info("succeeded")
-		return lrp, nil
+		return nil
 	}
 
 	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateRunning) {
 		logger.Error("failed-to-transition-actual-lrp-to-started", nil)
-		return nil, models.ErrActualLRPCannotBeStarted
+		return models.ErrActualLRPCannotBeStarted
 	}
 
 	lrp.ModificationTag.Increment()
@@ -268,17 +268,17 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActua
 
 	lrpRawJSON, err := json.Marshal(lrp)
 	if err != nil {
-		return nil, models.ErrSerializeJSON
+		return models.ErrSerializeJSON
 	}
 
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0, "", prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, models.ErrActualLRPCannotBeStarted
+		return models.ErrActualLRPCannotBeStarted
 	}
 
 	logger.Info("succeeded")
-	return lrp, nil
+	return nil
 }
 
 func (db *ETCDDB) CrashActualLRP(logger lager.Logger, request *models.CrashActualLRPRequest) *models.Error {

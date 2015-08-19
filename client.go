@@ -36,8 +36,8 @@ type Client interface {
 	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
 	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
 
-	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error)
-	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error)
+	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
+	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
 	CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(processGuid string, index int) error
@@ -134,26 +134,24 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index i
 	return &actualLRPGroup, err
 }
 
-func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error) {
-	var actualLRP models.ActualLRP
+func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
 	request := models.ClaimActualLRPRequest{
 		ProcessGuid:          processGuid,
 		Index:                int32(index),
 		ActualLrpInstanceKey: instanceKey,
 	}
-	err := c.doRequest(ClaimActualLRPRoute, nil, nil, &request, &actualLRP)
-	return &actualLRP, err
+	err := c.doRequest(ClaimActualLRPRoute, nil, nil, &request, nil)
+	return err
 }
 
-func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
-	var actualLRP models.ActualLRP
+func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
 	request := models.StartActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 		ActualLrpNetInfo:     netInfo,
 	}
-	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, &actualLRP)
-	return &actualLRP, err
+	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, nil)
+	return err
 }
 
 func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {

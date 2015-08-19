@@ -547,6 +547,9 @@ func (m *Tasks) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -568,6 +571,9 @@ func (m *Tasks) Unmarshal(data []byte) error {
 			skippy, err := skipTask(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -636,6 +642,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -661,6 +670,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -885,6 +897,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -906,6 +921,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			skippy, err := skipTask(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -952,6 +970,9 @@ func (m *Task) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1167,6 +1188,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1212,6 +1236,9 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1279,6 +1306,9 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 			skippy, err := skipTask(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1366,6 +1396,9 @@ func (m *StartTaskRequest) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1424,6 +1457,9 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 			skippy, err := skipTask(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1511,6 +1547,9 @@ func (m *FailTaskRequest) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1574,6 +1613,9 @@ func (m *TaskGuidRequest) Unmarshal(data []byte) error {
 			skippy, err := skipTask(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1722,6 +1764,9 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1869,6 +1914,9 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1959,6 +2007,9 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2014,6 +2065,9 @@ func skipTask(data []byte) (n int, err error) {
 				}
 			}
 			iNdEx += length
+			if length < 0 {
+				return 0, ErrInvalidLengthTask
+			}
 			return iNdEx, nil
 		case 3:
 			for {
@@ -2052,6 +2106,11 @@ func skipTask(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
+
+var (
+	ErrInvalidLengthTask = fmt.Errorf("proto: negative length found during unmarshaling")
+)
+
 func (this *Tasks) String() string {
 	if this == nil {
 		return "nil"
@@ -2395,7 +2454,7 @@ func (m *Tasks) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *Tasks) MarshalTo(data []byte) (n int, err error) {
+func (m *Tasks) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2425,7 +2484,7 @@ func (m *TaskDefinition) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *TaskDefinition) MarshalTo(data []byte) (n int, err error) {
+func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2522,7 +2581,7 @@ func (m *Task) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *Task) MarshalTo(data []byte) (n int, err error) {
+func (m *Task) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2590,7 +2649,7 @@ func (m *DesireTaskRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *DesireTaskRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *DesireTaskRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2626,7 +2685,7 @@ func (m *StartTaskRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *StartTaskRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *StartTaskRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2652,7 +2711,7 @@ func (m *StartTaskResponse) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *StartTaskResponse) MarshalTo(data []byte) (n int, err error) {
+func (m *StartTaskResponse) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2678,7 +2737,7 @@ func (m *FailTaskRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *FailTaskRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *FailTaskRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2704,7 +2763,7 @@ func (m *TaskGuidRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *TaskGuidRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *TaskGuidRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2726,7 +2785,7 @@ func (m *CompleteTaskRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *CompleteTaskRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *CompleteTaskRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2768,7 +2827,7 @@ func (m *TaskCallbackResponse) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *TaskCallbackResponse) MarshalTo(data []byte) (n int, err error) {
+func (m *TaskCallbackResponse) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2810,7 +2869,7 @@ func (m *ConvergeTasksRequest) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *ConvergeTasksRequest) MarshalTo(data []byte) (n int, err error) {
+func (m *ConvergeTasksRequest) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int

@@ -120,7 +120,7 @@ var _ = Describe("Events API", func() {
 			Expect(actualLRPCreatedEvent.ActualLrpGroup).To(Equal(actualLRPGroup))
 
 			By("updating the existing ActualLRP")
-			_, err = client.ClaimActualLRP(processGuid, int(key.Index), &instanceKey)
+			err = client.ClaimActualLRP(processGuid, int(key.Index), &instanceKey)
 			Expect(err).NotTo(HaveOccurred())
 
 			before := actualLRPGroup
@@ -164,7 +164,7 @@ var _ = Describe("Events API", func() {
 			}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 			By("starting and then evacuating the ActualLRP on another cell")
-			_, err = client.StartActualLRP(&key, &newInstanceKey, &netInfo)
+			err = client.StartActualLRP(&key, &newInstanceKey, &netInfo)
 			Expect(err).NotTo(HaveOccurred())
 
 			// discard instance -> RUNNING

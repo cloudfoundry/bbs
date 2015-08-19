@@ -69,12 +69,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 
 		Context("when claiming the actual lrp in the DB succeeds", func() {
-			var claimedActualLRP models.ActualLRP
-
 			BeforeEach(func() {
-				claimedActualLRP = actualLRP
-				claimedActualLRP.ActualLRPInstanceKey = instanceKey
-				fakeActualLRPDB.ClaimActualLRPReturns(&claimedActualLRP, nil)
+				fakeActualLRPDB.ClaimActualLRPReturns(nil)
 			})
 
 			It("responds with 200 Status OK", func() {
@@ -87,14 +83,6 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(request.ProcessGuid).To(Equal(processGuid))
 				Expect(request.Index).To(BeEquivalentTo(index))
 				Expect(*request.ActualLrpInstanceKey).To(Equal(instanceKey))
-			})
-
-			It("returns the claimed actual lrp", func() {
-				response := &models.ActualLRP{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(*response).To(Equal(claimedActualLRP))
 			})
 		})
 
@@ -120,7 +108,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when claiming the actual lrp fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ClaimActualLRPReturns(nil, models.ErrUnknownError)
+				fakeActualLRPDB.ClaimActualLRPReturns(models.ErrUnknownError)
 			})
 
 			It("responds with 500 Internal Server Error", func() {
@@ -130,7 +118,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ClaimActualLRPReturns(nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.ClaimActualLRPReturns(models.ErrResourceNotFound)
 			})
 
 			It("responds with an error", func() {
@@ -182,10 +170,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 
 		Context("when starting the actual lrp in the DB succeeds", func() {
-			var startedActualLRP models.ActualLRP
-
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(&startedActualLRP, nil)
+				fakeActualLRPDB.StartActualLRPReturns(nil)
 			})
 
 			It("responds with 200 Status OK", func() {
@@ -196,14 +182,6 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
 				_, actualRequest := fakeActualLRPDB.StartActualLRPArgsForCall(0)
 				Expect(actualRequest).To(Equal(requestBody))
-			})
-
-			It("returns the started actual lrp", func() {
-				response := &models.ActualLRP{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(*response).To(Equal(startedActualLRP))
 			})
 		})
 
@@ -229,7 +207,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when starting the actual lrp fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(nil, models.ErrUnknownError)
+				fakeActualLRPDB.StartActualLRPReturns(models.ErrUnknownError)
 			})
 
 			It("responds with 500 Internal Server Error", func() {
@@ -239,7 +217,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.StartActualLRPReturns(models.ErrResourceNotFound)
 			})
 
 			It("responds with an error", func() {

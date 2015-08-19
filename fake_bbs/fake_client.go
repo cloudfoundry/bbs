@@ -55,7 +55,7 @@ type FakeClient struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
-	ClaimActualLRPStub        func(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error)
+	ClaimActualLRPStub        func(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
 		processGuid string
@@ -63,10 +63,9 @@ type FakeClient struct {
 		instanceKey *models.ActualLRPInstanceKey
 	}
 	claimActualLRPReturns struct {
-		result1 *models.ActualLRP
-		result2 error
+		result1 error
 	}
-	StartActualLRPStub        func(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error)
+	StartActualLRPStub        func(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
 	startActualLRPMutex       sync.RWMutex
 	startActualLRPArgsForCall []struct {
 		key         *models.ActualLRPKey
@@ -74,8 +73,7 @@ type FakeClient struct {
 		netInfo     *models.ActualLRPNetInfo
 	}
 	startActualLRPReturns struct {
-		result1 *models.ActualLRP
-		result2 error
+		result1 error
 	}
 	CrashActualLRPStub        func(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	crashActualLRPMutex       sync.RWMutex
@@ -459,7 +457,7 @@ func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *mode
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, error) {
+func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
 	fake.claimActualLRPMutex.Lock()
 	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
 		processGuid string
@@ -470,7 +468,7 @@ func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKe
 	if fake.ClaimActualLRPStub != nil {
 		return fake.ClaimActualLRPStub(processGuid, index, instanceKey)
 	} else {
-		return fake.claimActualLRPReturns.result1, fake.claimActualLRPReturns.result2
+		return fake.claimActualLRPReturns.result1
 	}
 }
 
@@ -486,15 +484,14 @@ func (fake *FakeClient) ClaimActualLRPArgsForCall(i int) (string, int, *models.A
 	return fake.claimActualLRPArgsForCall[i].processGuid, fake.claimActualLRPArgsForCall[i].index, fake.claimActualLRPArgsForCall[i].instanceKey
 }
 
-func (fake *FakeClient) ClaimActualLRPReturns(result1 *models.ActualLRP, result2 error) {
+func (fake *FakeClient) ClaimActualLRPReturns(result1 error) {
 	fake.ClaimActualLRPStub = nil
 	fake.claimActualLRPReturns = struct {
-		result1 *models.ActualLRP
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeClient) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
+func (fake *FakeClient) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
 	fake.startActualLRPMutex.Lock()
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
 		key         *models.ActualLRPKey
@@ -505,7 +502,7 @@ func (fake *FakeClient) StartActualLRP(key *models.ActualLRPKey, instanceKey *mo
 	if fake.StartActualLRPStub != nil {
 		return fake.StartActualLRPStub(key, instanceKey, netInfo)
 	} else {
-		return fake.startActualLRPReturns.result1, fake.startActualLRPReturns.result2
+		return fake.startActualLRPReturns.result1
 	}
 }
 
@@ -521,12 +518,11 @@ func (fake *FakeClient) StartActualLRPArgsForCall(i int) (*models.ActualLRPKey, 
 	return fake.startActualLRPArgsForCall[i].key, fake.startActualLRPArgsForCall[i].instanceKey, fake.startActualLRPArgsForCall[i].netInfo
 }
 
-func (fake *FakeClient) StartActualLRPReturns(result1 *models.ActualLRP, result2 error) {
+func (fake *FakeClient) StartActualLRPReturns(result1 error) {
 	fake.StartActualLRPStub = nil
 	fake.startActualLRPReturns = struct {
-		result1 *models.ActualLRP
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeClient) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
