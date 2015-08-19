@@ -43,7 +43,7 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFi
 				return
 			}
 			groupsLock.Lock()
-			groups = append(groups, g.ActualLrpGroups...)
+			groups = append(groups, g...)
 			groupsLock.Unlock()
 		})
 	}
@@ -65,16 +65,16 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFi
 	return groups, nil
 }
 
-func (db *ETCDDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) (*models.ActualLRPGroups, *models.Error) {
+func (db *ETCDDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, *models.Error) {
 	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPProcessDir(processGuid))
 	if bbsErr.Equal(models.ErrResourceNotFound) {
-		return &models.ActualLRPGroups{}, nil
+		return []*models.ActualLRPGroup{}, nil
 	}
 	if bbsErr != nil {
 		return nil, bbsErr
 	}
 	if node.Nodes.Len() == 0 {
-		return &models.ActualLRPGroups{}, nil
+		return []*models.ActualLRPGroup{}, nil
 	}
 
 	return parseActualLRPGroups(logger, node, models.ActualLRPFilter{})
@@ -481,8 +481,8 @@ func (db *ETCDDB) removeActualLRP(logger lager.Logger, lrp *models.ActualLRP, pr
 	return nil
 }
 
-func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.ActualLRPFilter) (*models.ActualLRPGroups, *models.Error) {
-	var groups = &models.ActualLRPGroups{}
+func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, *models.Error) {
+	var groups = []*models.ActualLRPGroup{}
 
 	logger.Debug("performing-parsing-actual-lrp-groups")
 	for _, indexNode := range node.Nodes {
@@ -492,7 +492,7 @@ func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.Ac
 			deserializeErr := models.FromJSON([]byte(instanceNode.Value), &lrp)
 			if deserializeErr != nil {
 				logger.Error("failed-parsing-actual-lrp-groups", deserializeErr, lager.Data{"key": instanceNode.Key})
-				return &models.ActualLRPGroups{}, models.ErrDeserializeJSON
+				return []*models.ActualLRPGroup{}, models.ErrDeserializeJSON
 			}
 			if filter.Domain != "" && lrp.Domain != filter.Domain {
 				continue
@@ -511,10 +511,10 @@ func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.Ac
 		}
 
 		if group.Instance != nil || group.Evacuating != nil {
-			groups.ActualLrpGroups = append(groups.ActualLrpGroups, group)
+			groups = append(groups, group)
 		}
 	}
-	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups.ActualLrpGroups)})
+	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups)})
 
 	return groups, nil
 }

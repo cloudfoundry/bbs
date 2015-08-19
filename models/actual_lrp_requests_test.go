@@ -24,6 +24,34 @@ var _ = Describe("ActualLRP Requests", func() {
 		})
 	})
 
+	Describe("ActualLRPGroupsByProcessGuidRequest", func() {
+		Describe("Validate", func() {
+			var request models.ActualLRPGroupsByProcessGuidRequest
+
+			BeforeEach(func() {
+				request = models.ActualLRPGroupsByProcessGuidRequest{
+					ProcessGuid: "something",
+				}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+
+			Context("when the ProcessGuid is blank", func() {
+				BeforeEach(func() {
+					request.ProcessGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"process_guid"}))
+				})
+			})
+		})
+	})
+
 	Describe("ClaimActualLRPRequest", func() {
 		Describe("Validate", func() {
 			var request models.ClaimActualLRPRequest

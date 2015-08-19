@@ -8,7 +8,7 @@ import (
 //go:generate counterfeiter . ActualLRPDB
 type ActualLRPDB interface {
 	ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, *models.Error)
-	ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) (*models.ActualLRPGroups, *models.Error)
+	ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, *models.Error)
 	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, *models.Error)
 
 	ClaimActualLRP(logger lager.Logger, request *models.ClaimActualLRPRequest) *models.Error

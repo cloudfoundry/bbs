@@ -125,9 +125,16 @@ func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.Actua
 }
 
 func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {
-	var actualLRPGroups models.ActualLRPGroups
-	err := c.doRequest(ActualLRPGroupsByProcessGuidRoute, rata.Params{"process_guid": processGuid}, nil, nil, &actualLRPGroups)
-	return actualLRPGroups.GetActualLrpGroups(), err
+	request := models.ActualLRPGroupsByProcessGuidRequest{
+		ProcessGuid: processGuid,
+	}
+	response := models.ActualLRPGroupsResponse{}
+	err := c.doRequest(ActualLRPGroupsByProcessGuidRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ActualLrpGroups, response.Error
 }
 
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {

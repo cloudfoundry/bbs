@@ -914,6 +914,9 @@ func (m *RemoveEvacuatingActualLRPResponse) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthEvacuation
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -937,6 +940,9 @@ func (m *RemoveEvacuatingActualLRPResponse) Unmarshal(data []byte) error {
 			skippy, err := skipEvacuation(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvacuation
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1490,7 +1496,7 @@ func (m *RemoveEvacuatingActualLRPResponse) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *RemoveEvacuatingActualLRPResponse) MarshalTo(data []byte) (n int, err error) {
+func (m *RemoveEvacuatingActualLRPResponse) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int

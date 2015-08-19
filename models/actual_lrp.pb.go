@@ -198,20 +198,6 @@ func (m *ActualLRP) GetModificationTag() ModificationTag {
 	return ModificationTag{}
 }
 
-type ActualLRPGroups struct {
-	ActualLrpGroups []*ActualLRPGroup `protobuf:"bytes,1,rep,name=actual_lrp_groups" json:"actual_lrp_groups,omitempty"`
-}
-
-func (m *ActualLRPGroups) Reset()      { *m = ActualLRPGroups{} }
-func (*ActualLRPGroups) ProtoMessage() {}
-
-func (m *ActualLRPGroups) GetActualLrpGroups() []*ActualLRPGroup {
-	if m != nil {
-		return m.ActualLrpGroups
-	}
-	return nil
-}
-
 func (m *ActualLRPGroup) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -934,79 +920,6 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 
 	return nil
 }
-func (m *ActualLRPGroups) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ActualLrpGroups", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthActualLrp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ActualLrpGroups = append(m.ActualLrpGroups, &ActualLRPGroup{})
-			if err := m.ActualLrpGroups[len(m.ActualLrpGroups)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipActualLrp(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthActualLrp
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	return nil
-}
 func skipActualLrp(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -1173,16 +1086,6 @@ func (this *ActualLRP) String() string {
 	}, "")
 	return s
 }
-func (this *ActualLRPGroups) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPGroups{`,
-		`ActualLrpGroups:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroups), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
 func valueToStringActualLrp(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1267,18 +1170,6 @@ func (m *ActualLRP) Size() (n int) {
 	n += 1 + sovActualLrp(uint64(m.Since))
 	l = m.ModificationTag.Size()
 	n += 1 + l + sovActualLrp(uint64(l))
-	return n
-}
-
-func (m *ActualLRPGroups) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.ActualLrpGroups) > 0 {
-		for _, e := range m.ActualLrpGroups {
-			l = e.Size()
-			n += 1 + l + sovActualLrp(uint64(l))
-		}
-	}
 	return n
 }
 
@@ -1514,36 +1405,6 @@ func (m *ActualLRP) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
-func (m *ActualLRPGroups) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ActualLRPGroups) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.ActualLrpGroups) > 0 {
-		for _, msg := range m.ActualLrpGroups {
-			data[i] = 0xa
-			i++
-			i = encodeVarintActualLrp(data, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(data[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
 func encodeFixed64ActualLrp(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -1631,14 +1492,6 @@ func (this *ActualLRP) GoString() string {
 		`PlacementError:` + fmt.Sprintf("%#v", this.PlacementError),
 		`Since:` + fmt.Sprintf("%#v", this.Since),
 		`ModificationTag:` + strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1) + `}`}, ", ")
-	return s
-}
-func (this *ActualLRPGroups) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRPGroups{` +
-		`ActualLrpGroups:` + fmt.Sprintf("%#v", this.ActualLrpGroups) + `}`}, ", ")
 	return s
 }
 func valueToGoStringActualLrp(v interface{}, typ string) string {
@@ -1860,36 +1713,6 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	}
 	if !this.ModificationTag.Equal(&that1.ModificationTag) {
 		return false
-	}
-	return true
-}
-func (this *ActualLRPGroups) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ActualLRPGroups)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if len(this.ActualLrpGroups) != len(that1.ActualLrpGroups) {
-		return false
-	}
-	for i := range this.ActualLrpGroups {
-		if !this.ActualLrpGroups[i].Equal(that1.ActualLrpGroups[i]) {
-			return false
-		}
 	}
 	return true
 }

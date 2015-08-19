@@ -20,14 +20,14 @@ type FakeActualLRPDB struct {
 		result1 []*models.ActualLRPGroup
 		result2 *models.Error
 	}
-	ActualLRPGroupsByProcessGuidStub        func(logger lager.Logger, processGuid string) (*models.ActualLRPGroups, *models.Error)
+	ActualLRPGroupsByProcessGuidStub        func(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, *models.Error)
 	actualLRPGroupsByProcessGuidMutex       sync.RWMutex
 	actualLRPGroupsByProcessGuidArgsForCall []struct {
 		logger      lager.Logger
 		processGuid string
 	}
 	actualLRPGroupsByProcessGuidReturns struct {
-		result1 *models.ActualLRPGroups
+		result1 []*models.ActualLRPGroup
 		result2 *models.Error
 	}
 	ActualLRPGroupByProcessGuidAndIndexStub        func(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, *models.Error)
@@ -132,7 +132,7 @@ func (fake *FakeActualLRPDB) ActualLRPGroupsReturns(result1 []*models.ActualLRPG
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) (*models.ActualLRPGroups, *models.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, *models.Error) {
 	fake.actualLRPGroupsByProcessGuidMutex.Lock()
 	fake.actualLRPGroupsByProcessGuidArgsForCall = append(fake.actualLRPGroupsByProcessGuidArgsForCall, struct {
 		logger      lager.Logger
@@ -158,10 +158,10 @@ func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidArgsForCall(i int) (lag
 	return fake.actualLRPGroupsByProcessGuidArgsForCall[i].logger, fake.actualLRPGroupsByProcessGuidArgsForCall[i].processGuid
 }
 
-func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidReturns(result1 *models.ActualLRPGroups, result2 *models.Error) {
+func (fake *FakeActualLRPDB) ActualLRPGroupsByProcessGuidReturns(result1 []*models.ActualLRPGroup, result2 *models.Error) {
 	fake.ActualLRPGroupsByProcessGuidStub = nil
 	fake.actualLRPGroupsByProcessGuidReturns = struct {
-		result1 *models.ActualLRPGroups
+		result1 []*models.ActualLRPGroup
 		result2 *models.Error
 	}{result1, result2}
 }

@@ -204,7 +204,7 @@ var _ = Describe("ActualLRPDB", func() {
 			It("returns all the /instance LRPs and /evacuating LRPs in groups", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(ConsistOf(
+				Expect(actualLRPGroups).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP},
 					&models.ActualLRPGroup{Instance: nil, Evacuating: otherIndexLRP},
 				))
@@ -216,7 +216,7 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
+				Expect(actualLRPGroups).To(BeEmpty())
 			})
 		})
 
@@ -233,7 +233,7 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPGroups).NotTo(BeNil())
-				Expect(actualLRPGroups.GetActualLrpGroups()).To(BeEmpty())
+				Expect(actualLRPGroups).To(BeEmpty())
 			})
 		})
 

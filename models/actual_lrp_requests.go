@@ -4,6 +4,20 @@ func (request *ActualLRPGroupsRequest) Validate() error {
 	return nil
 }
 
+func (request *ActualLRPGroupsByProcessGuidRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ProcessGuid == "" {
+		validationError = validationError.Append(ErrInvalidField{"process_guid"})
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
 func (request *StartActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
