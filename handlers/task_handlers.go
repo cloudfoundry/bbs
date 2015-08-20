@@ -69,39 +69,15 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("start-task")
 
-	data, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		logger.Error("failed-to-read-body", err)
-		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
-		return
+	request := &models.StartTaskRequest{}
+	response := &models.StartTaskResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.ShouldStart, response.Error = h.db.StartTask(logger, request.TaskGuid, request.CellId)
 	}
 
-	startReq := &models.StartTaskRequest{}
-	err = startReq.Unmarshal(data)
-	if err != nil {
-		logger.Error("failed-to-unmarshal", err)
-		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal: %s", err))
-		return
-	}
-
-	if err := startReq.Validate(); err != nil {
-		logger.Error("invalid-request", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return
-	}
-
-	taskGuid := startReq.TaskGuid
-	cellID := startReq.CellId
-	logger = logger.WithData(lager.Data{"task-guid": taskGuid, "cell-id": cellID})
-
-	shouldStart, startErr := h.db.StartTask(logger, startReq.TaskGuid, startReq.CellId)
-	if startErr != nil {
-		logger.Error("failed-to-start-task", startErr)
-		writeInternalServerErrorResponse(w, startErr)
-		return
-	}
-	logger.Info("succeeded-start-task")
-	writeProtoResponse(w, http.StatusOK, &models.StartTaskResponse{ShouldStart: shouldStart})
+	writeResponse(w, response)
 }
 
 func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {

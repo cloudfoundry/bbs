@@ -22,7 +22,8 @@ message StartTaskRequest {
 }
 
 message StartTaskResponse {
-  optional bool should_start = 1;
+  optional Error error = 1;
+  optional bool should_start = 2;
 }
 
 message FailTaskRequest {

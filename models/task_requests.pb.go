@@ -90,11 +90,19 @@ func (m *StartTaskRequest) GetCellId() string {
 }
 
 type StartTaskResponse struct {
-	ShouldStart bool `protobuf:"varint,1,opt,name=should_start" json:"should_start"`
+	Error       *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+	ShouldStart bool   `protobuf:"varint,2,opt,name=should_start" json:"should_start"`
 }
 
 func (m *StartTaskResponse) Reset()      { *m = StartTaskResponse{} }
 func (*StartTaskResponse) ProtoMessage() {}
+
+func (m *StartTaskResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
 
 func (m *StartTaskResponse) GetShouldStart() bool {
 	if m != nil {
@@ -644,6 +652,36 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 		wireType := int(wire & 0x7)
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTaskRequests
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Error == nil {
+				m.Error = &Error{}
+			}
+			if err := m.Error.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ShouldStart", wireType)
 			}
@@ -1729,6 +1767,7 @@ func (this *StartTaskResponse) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&StartTaskResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
 		`ShouldStart:` + fmt.Sprintf("%v", this.ShouldStart) + `,`,
 		`}`,
 	}, "")
@@ -1883,6 +1922,10 @@ func (m *StartTaskRequest) Size() (n int) {
 func (m *StartTaskResponse) Size() (n int) {
 	var l int
 	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	n += 2
 	return n
 }
@@ -2110,7 +2153,17 @@ func (m *StartTaskResponse) MarshalTo(data []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0x8
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(data, i, uint64(m.Error.Size()))
+		n3, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	data[i] = 0x10
 	i++
 	if m.ShouldStart {
 		data[i] = 1
@@ -2325,11 +2378,11 @@ func (m *TasksResponse) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintTaskRequests(data, i, uint64(m.Error.Size()))
-		n3, err := m.Error.MarshalTo(data[i:])
+		n4, err := m.Error.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n4
 	}
 	if len(m.Tasks) > 0 {
 		for _, msg := range m.Tasks {
@@ -2387,21 +2440,21 @@ func (m *TaskResponse) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintTaskRequests(data, i, uint64(m.Error.Size()))
-		n4, err := m.Error.MarshalTo(data[i:])
+		n5, err := m.Error.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
 	}
 	if m.Task != nil {
 		data[i] = 0x12
 		i++
 		i = encodeVarintTaskRequests(data, i, uint64(m.Task.Size()))
-		n5, err := m.Task.MarshalTo(data[i:])
+		n6, err := m.Task.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n6
 	}
 	return i, nil
 }
@@ -2465,6 +2518,7 @@ func (this *StartTaskResponse) GoString() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&models.StartTaskResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error),
 		`ShouldStart:` + fmt.Sprintf("%#v", this.ShouldStart) + `}`}, ", ")
 	return s
 }
@@ -2681,6 +2735,9 @@ func (this *StartTaskResponse) Equal(that interface{}) bool {
 		}
 		return false
 	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
 		return false
 	}
 	if this.ShouldStart != that1.ShouldStart {

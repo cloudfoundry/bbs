@@ -21,11 +21,11 @@ type FakeTaskDB struct {
 		result1 []*models.Task
 		result2 *models.Error
 	}
-	TaskByGuidStub        func(logger lager.Logger, processGuid string) (*models.Task, *models.Error)
+	TaskByGuidStub        func(logger lager.Logger, taskGuid string) (*models.Task, *models.Error)
 	taskByGuidMutex       sync.RWMutex
 	taskByGuidArgsForCall []struct {
-		logger      lager.Logger
-		processGuid string
+		logger   lager.Logger
+		taskGuid string
 	}
 	taskByGuidReturns struct {
 		result1 *models.Task
@@ -147,15 +147,15 @@ func (fake *FakeTaskDB) TasksReturns(result1 []*models.Task, result2 *models.Err
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) TaskByGuid(logger lager.Logger, processGuid string) (*models.Task, *models.Error) {
+func (fake *FakeTaskDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, *models.Error) {
 	fake.taskByGuidMutex.Lock()
 	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
-		logger      lager.Logger
-		processGuid string
-	}{logger, processGuid})
+		logger   lager.Logger
+		taskGuid string
+	}{logger, taskGuid})
 	fake.taskByGuidMutex.Unlock()
 	if fake.TaskByGuidStub != nil {
-		return fake.TaskByGuidStub(logger, processGuid)
+		return fake.TaskByGuidStub(logger, taskGuid)
 	} else {
 		return fake.taskByGuidReturns.result1, fake.taskByGuidReturns.result2
 	}
@@ -170,7 +170,7 @@ func (fake *FakeTaskDB) TaskByGuidCallCount() int {
 func (fake *FakeTaskDB) TaskByGuidArgsForCall(i int) (lager.Logger, string) {
 	fake.taskByGuidMutex.RLock()
 	defer fake.taskByGuidMutex.RUnlock()
-	return fake.taskByGuidArgsForCall[i].logger, fake.taskByGuidArgsForCall[i].processGuid
+	return fake.taskByGuidArgsForCall[i].logger, fake.taskByGuidArgsForCall[i].taskGuid
 }
 
 func (fake *FakeTaskDB) TaskByGuidReturns(result1 *models.Task, result2 *models.Error) {

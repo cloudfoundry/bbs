@@ -12,7 +12,7 @@ type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task
 //go:generate counterfeiter . TaskDB
 type TaskDB interface {
 	Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error)
-	TaskByGuid(logger lager.Logger, processGuid string) (*models.Task, *models.Error)
+	TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, *models.Error)
 
 	DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) *models.Error
 	StartTask(logger lager.Logger, taskGuid, cellId string) (bool, *models.Error)

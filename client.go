@@ -372,64 +372,67 @@ func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinit
 }
 
 func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
-	req := &models.StartTaskRequest{
+	request := &models.StartTaskRequest{
 		TaskGuid: taskGuid,
 		CellId:   cellId,
 	}
-	res := &models.StartTaskResponse{}
-	err := c.doRequest(StartTaskRoute, nil, nil, req, res)
-	return res.GetShouldStart(), err
+	response := &models.StartTaskResponse{}
+	err := c.doRequest(StartTaskRoute, nil, nil, request, response)
+	if err != nil {
+		return false, err
+	}
+	return response.ShouldStart, response.Error
 }
 
 func (c *client) CancelTask(taskGuid string) error {
-	req := &models.TaskGuidRequest{
+	request := &models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
-	return c.doRequest(CancelTaskRoute, nil, nil, req, nil)
+	return c.doRequest(CancelTaskRoute, nil, nil, request, nil)
 }
 
 func (c *client) ResolvingTask(taskGuid string) error {
-	req := &models.TaskGuidRequest{
+	request := &models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
-	return c.doRequest(ResolvingTaskRoute, nil, nil, req, nil)
+	return c.doRequest(ResolvingTaskRoute, nil, nil, request, nil)
 }
 
 func (c *client) ResolveTask(taskGuid string) error {
-	req := &models.TaskGuidRequest{
+	request := &models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
-	return c.doRequest(ResolveTaskRoute, nil, nil, req, nil)
+	return c.doRequest(ResolveTaskRoute, nil, nil, request, nil)
 }
 
 func (c *client) FailTask(taskGuid, failureReason string) error {
-	req := &models.FailTaskRequest{
+	request := &models.FailTaskRequest{
 		TaskGuid:      taskGuid,
 		FailureReason: failureReason,
 	}
-	return c.doRequest(FailTaskRoute, nil, nil, req, nil)
+	return c.doRequest(FailTaskRoute, nil, nil, request, nil)
 }
 
 func (c *client) CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error {
-	req := &models.CompleteTaskRequest{
+	request := &models.CompleteTaskRequest{
 		TaskGuid:      taskGuid,
 		CellId:        cellId,
 		Failed:        failed,
 		FailureReason: failureReason,
 		Result:        result,
 	}
-	return c.doRequest(CompleteTaskRoute, nil, nil, req, nil)
+	return c.doRequest(CompleteTaskRoute, nil, nil, request, nil)
 }
 
 func (c *client) ConvergeTasks(
 	kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
 ) error {
-	req := &models.ConvergeTasksRequest{
+	request := &models.ConvergeTasksRequest{
 		KickTaskDuration:            kickTaskDuration.Nanoseconds(),
 		ExpirePendingTaskDuration:   expirePendingTaskDuration.Nanoseconds(),
 		ExpireCompletedTaskDuration: expireCompletedTaskDuration.Nanoseconds(),
 	}
-	return c.doRequest(ConvergeTasksRoute, nil, nil, req, nil)
+	return c.doRequest(ConvergeTasksRoute, nil, nil, request, nil)
 }
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {
@@ -459,15 +462,15 @@ func (c *client) createRequest(requestName string, params rata.Params, queryPara
 		}
 	}
 
-	req, err := c.reqGen.CreateRequest(requestName, params, bytes.NewReader(messageBody))
+	request, err := c.reqGen.CreateRequest(requestName, params, bytes.NewReader(messageBody))
 	if err != nil {
 		return nil, err
 	}
 
-	req.URL.RawQuery = queryParams.Encode()
-	req.ContentLength = int64(len(messageBody))
-	req.Header.Set("Content-Type", ProtoContentType)
-	return req, nil
+	request.URL.RawQuery = queryParams.Encode()
+	request.ContentLength = int64(len(messageBody))
+	request.Header.Set("Content-Type", ProtoContentType)
+	return request, nil
 }
 
 func (c *client) doEvacRequest(route string, defaultKeepContainer bool, request proto.Message) (bool, error) {
@@ -481,55 +484,55 @@ func (c *client) doEvacRequest(route string, defaultKeepContainer bool, request 
 }
 
 func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, requestBody, responseBody proto.Message) error {
-	req, err := c.createRequest(requestName, params, queryParams, requestBody)
+	request, err := c.createRequest(requestName, params, queryParams, requestBody)
 	if err != nil {
 		return err
 	}
-	return c.do(req, responseBody)
+	return c.do(request, responseBody)
 }
 
-func (c *client) do(req *http.Request, responseObject proto.Message) error {
-	res, err := c.httpClient.Do(req)
+func (c *client) do(request *http.Request, responseObject proto.Message) error {
+	response, err := c.httpClient.Do(request)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer response.Body.Close()
 
 	var parsedContentType string
-	if contentType, ok := res.Header[ContentTypeHeader]; ok {
+	if contentType, ok := response.Header[ContentTypeHeader]; ok {
 		parsedContentType, _, _ = mime.ParseMediaType(contentType[0])
 	}
 
-	if routerError, ok := res.Header[XCfRouterErrorHeader]; ok {
+	if routerError, ok := response.Header[XCfRouterErrorHeader]; ok {
 		return &models.Error{Type: models.RouterError, Message: routerError[0]}
 	}
 
 	if parsedContentType == ProtoContentType {
-		if res.StatusCode > 299 {
-			return handleErrorResponse(res)
+		if response.StatusCode > 299 {
+			return handleErrorResponse(response)
 		} else {
-			return handleProtoResponse(res, responseObject)
+			return handleProtoResponse(response, responseObject)
 		}
 	} else {
-		return handleNonProtoResponse(res)
+		return handleNonProtoResponse(response)
 	}
 }
 
-func handleErrorResponse(res *http.Response) error {
+func handleErrorResponse(response *http.Response) error {
 	errResponse := &models.Error{}
-	err := handleProtoResponse(res, errResponse)
+	err := handleProtoResponse(response, errResponse)
 	if err != nil {
 		return &models.Error{Type: models.InvalidProtobufMessage, Message: err.Error()}
 	}
 	return errResponse
 }
 
-func handleProtoResponse(res *http.Response, responseObject proto.Message) error {
+func handleProtoResponse(response *http.Response, responseObject proto.Message) error {
 	if responseObject == nil {
 		return &models.Error{Type: models.InvalidRequest, Message: "responseObject cannot be nil"}
 	}
 
-	buf, err := ioutil.ReadAll(res.Body)
+	buf, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return &models.Error{Type: models.InvalidResponse, Message: fmt.Sprint("failed to read body: ", err.Error())}
 	}
@@ -542,11 +545,11 @@ func handleProtoResponse(res *http.Response, responseObject proto.Message) error
 	return nil
 }
 
-func handleNonProtoResponse(res *http.Response) error {
-	if res.StatusCode > 299 {
+func handleNonProtoResponse(response *http.Response) error {
+	if response.StatusCode > 299 {
 		return &models.Error{
 			Type:    models.InvalidResponse,
-			Message: fmt.Sprintf("Invalid Response with status code: %d", res.StatusCode),
+			Message: fmt.Sprintf("Invalid Response with status code: %d", response.StatusCode),
 		}
 	}
 	return nil
