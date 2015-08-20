@@ -36,21 +36,15 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 }
 
 func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *http.Request) {
-	processGuid := req.FormValue(":process_guid")
-	logger := h.logger.Session("desired-lrps-process-guid", lager.Data{
-		"process_guid": processGuid,
-	})
+	logger := h.logger.Session("desired-lrp-by-process-guid")
 
-	desiredLRP, err := h.db.DesiredLRPByProcessGuid(h.logger, processGuid)
-	if err == models.ErrResourceNotFound {
-		writeNotFoundResponse(w, err)
-		return
-	}
-	if err != nil {
-		logger.Error("failed-to-fetch-desired-lrp", err)
-		writeInternalServerErrorResponse(w, err)
-		return
+	request := &models.DesiredLRPByProcessGuidRequest{}
+	response := &models.DesiredLRPResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.DesiredLrp, response.Error = h.db.DesiredLRPByProcessGuid(h.logger, request.ProcessGuid)
 	}
 
-	writeProtoResponse(w, http.StatusOK, desiredLRP)
+	writeResponse(w, response)
 }

@@ -14,3 +14,13 @@ message DesiredLRPsResponse {
 message DesiredLRPsRequest {
   optional string domain = 1;
 }
+
+message DesiredLRPResponse {
+  optional Error error = 1;
+  optional DesiredLRP desired_lrp = 2;
+}
+
+message DesiredLRPByProcessGuidRequest {
+  optional string process_guid = 1;
+}
+

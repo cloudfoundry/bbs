@@ -292,11 +292,16 @@ func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredL
 }
 
 func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {
-	var desiredLRP models.DesiredLRP
-	err := c.doRequest(DesiredLRPByProcessGuidRoute,
-		rata.Params{"process_guid": processGuid},
-		nil, nil, &desiredLRP)
-	return &desiredLRP, err
+	request := models.DesiredLRPByProcessGuidRequest{
+		ProcessGuid: processGuid,
+	}
+	response := models.DesiredLRPResponse{}
+	err := c.doRequest(DesiredLRPByProcessGuidRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.DesiredLrp, response.Error
 }
 
 func (c *client) Tasks() ([]*models.Task, error) {
