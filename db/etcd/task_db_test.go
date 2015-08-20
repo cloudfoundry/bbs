@@ -148,12 +148,7 @@ var _ = Describe("TaskDB", func() {
 		var errDesire *models.Error
 
 		JustBeforeEach(func() {
-			request := models.DesireTaskRequest{
-				Domain:         domain,
-				TaskGuid:       taskGuid,
-				TaskDefinition: taskDef,
-			}
-			errDesire = etcdDB.DesireTask(logger, &request)
+			errDesire = etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 		})
 
 		BeforeEach(func() {
@@ -221,12 +216,7 @@ var _ = Describe("TaskDB", func() {
 			const otherDomain = "other-domain"
 
 			BeforeEach(func() {
-				request := models.DesireTaskRequest{
-					Domain:         otherDomain,
-					TaskGuid:       taskGuid,
-					TaskDefinition: taskDef,
-				}
-				err := etcdDB.DesireTask(logger, &request)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, otherDomain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -260,12 +250,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when starting a pending Task", func() {
 			BeforeEach(func() {
-				desireRequest := models.DesireTaskRequest{
-					Domain:         domain,
-					TaskGuid:       taskGuid,
-					TaskDefinition: taskDef,
-				}
-				err := etcdDB.DesireTask(logger, &desireRequest)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -293,12 +278,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("When starting a Task that is already started", func() {
 			BeforeEach(func() {
-				request := models.DesireTaskRequest{
-					Domain:         "domain",
-					TaskGuid:       taskGuid,
-					TaskDefinition: taskDef,
-				}
-				err := etcdDB.DesireTask(logger, &request)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, "domain")
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = etcdDB.StartTask(logger, startRequest)
@@ -385,12 +365,7 @@ var _ = Describe("TaskDB", func() {
 			Context("when the task is in pending state", func() {
 				BeforeEach(func() {
 					taskDef = model_helpers.NewValidTaskDefinition()
-					request := models.DesireTaskRequest{
-						Domain:         domain,
-						TaskGuid:       taskGuid,
-						TaskDefinition: taskDef,
-					}
-					err := etcdDB.DesireTask(logger, &request)
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -408,12 +383,7 @@ var _ = Describe("TaskDB", func() {
 						TaskGuid: taskGuid,
 						CellId:   cellId,
 					}
-					desireRequest := &models.DesireTaskRequest{
-						TaskDefinition: taskDef,
-						TaskGuid:       taskGuid,
-						Domain:         domain,
-					}
-					err := etcdDB.DesireTask(logger, desireRequest)
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = etcdDB.StartTask(logger, startRequest)
@@ -457,12 +427,7 @@ var _ = Describe("TaskDB", func() {
 						TaskGuid: taskGuid,
 						CellId:   cellId,
 					}
-					desireRequest := &models.DesireTaskRequest{
-						TaskDefinition: taskDef,
-						TaskGuid:       taskGuid,
-						Domain:         domain,
-					}
-					err := etcdDB.DesireTask(logger, desireRequest)
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = etcdDB.StartTask(logger, startRequest)
@@ -491,12 +456,7 @@ var _ = Describe("TaskDB", func() {
 						TaskGuid: taskGuid,
 						CellId:   cellId,
 					}
-					desireRequest := &models.DesireTaskRequest{
-						TaskDefinition: taskDef,
-						TaskGuid:       taskGuid,
-						Domain:         domain,
-					}
-					err := etcdDB.DesireTask(logger, desireRequest)
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = etcdDB.StartTask(logger, startRequest)
@@ -549,12 +509,7 @@ var _ = Describe("TaskDB", func() {
 		Context("when completing a pending Task", func() {
 			JustBeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				desireRequest := &models.DesireTaskRequest{
-					TaskDefinition: taskDef,
-					TaskGuid:       taskGuid,
-					Domain:         domain,
-				}
-				err := etcdDB.DesireTask(logger, desireRequest)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -572,8 +527,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when completing a running Task", func() {
 			var (
-				startRequest  *models.StartTaskRequest
-				desireRequest *models.DesireTaskRequest
+				startRequest *models.StartTaskRequest
 			)
 
 			BeforeEach(func() {
@@ -582,15 +536,10 @@ var _ = Describe("TaskDB", func() {
 					TaskGuid: taskGuid,
 					CellId:   cellId,
 				}
-				desireRequest = &models.DesireTaskRequest{
-					TaskDefinition: taskDef,
-					TaskGuid:       taskGuid,
-					Domain:         domain,
-				}
 			})
 
 			JustBeforeEach(func() {
-				err := etcdDB.DesireTask(logger, desireRequest)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = etcdDB.StartTask(logger, startRequest)
@@ -683,12 +632,7 @@ var _ = Describe("TaskDB", func() {
 					TaskGuid: taskGuid,
 					CellId:   cellId,
 				}
-				desireRequest := &models.DesireTaskRequest{
-					TaskDefinition: taskDef,
-					TaskGuid:       taskGuid,
-					Domain:         domain,
-				}
-				err := etcdDB.DesireTask(logger, desireRequest)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = etcdDB.StartTask(logger, startRequest)
@@ -723,12 +667,7 @@ var _ = Describe("TaskDB", func() {
 					TaskGuid: taskGuid,
 					CellId:   cellId,
 				}
-				desireRequest := &models.DesireTaskRequest{
-					TaskDefinition: taskDef,
-					TaskGuid:       taskGuid,
-					Domain:         domain,
-				}
-				err := etcdDB.DesireTask(logger, desireRequest)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = etcdDB.StartTask(logger, startRequest)
@@ -761,20 +700,14 @@ var _ = Describe("TaskDB", func() {
 	})
 
 	Describe("FailTask", func() {
-		var desireRequest *models.DesireTaskRequest
 		BeforeEach(func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
-			desireRequest = &models.DesireTaskRequest{
-				TaskDefinition: taskDef,
-				TaskGuid:       taskGuid,
-				Domain:         domain,
-			}
 		})
 
 		Context("when failing a Task", func() {
 			Context("when the task is pending", func() {
 				JustBeforeEach(func() {
-					err := etcdDB.DesireTask(logger, desireRequest)
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -857,12 +790,7 @@ var _ = Describe("TaskDB", func() {
 						TaskGuid: taskGuid,
 						CellId:   cellId,
 					}
-					desireRequest := &models.DesireTaskRequest{
-						TaskDefinition: taskDef,
-						TaskGuid:       taskGuid,
-						Domain:         domain,
-					}
-					err := etcdDB.DesireTask(logger, desireRequest)
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = etcdDB.StartTask(logger, startRequest)
@@ -894,12 +822,7 @@ var _ = Describe("TaskDB", func() {
 						TaskGuid: taskGuid,
 						CellId:   cellId,
 					}
-					desireRequest := &models.DesireTaskRequest{
-						TaskDefinition: taskDef,
-						TaskGuid:       taskGuid,
-						Domain:         domain,
-					}
-					err := etcdDB.DesireTask(logger, desireRequest)
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = etcdDB.StartTask(logger, startRequest)
@@ -935,12 +858,7 @@ var _ = Describe("TaskDB", func() {
 				TaskGuid: taskGuid,
 				CellId:   cellId,
 			}
-			desireRequest := &models.DesireTaskRequest{
-				TaskDefinition: taskDef,
-				TaskGuid:       taskGuid,
-				Domain:         domain,
-			}
-			err := etcdDB.DesireTask(logger, desireRequest)
+			err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = etcdDB.StartTask(logger, startRequest)
@@ -1006,12 +924,7 @@ var _ = Describe("TaskDB", func() {
 				TaskGuid: taskGuid,
 				CellId:   cellId,
 			}
-			desireRequest := &models.DesireTaskRequest{
-				TaskDefinition: taskDef,
-				TaskGuid:       taskGuid,
-				Domain:         domain,
-			}
-			err := etcdDB.DesireTask(logger, desireRequest)
+			err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = etcdDB.StartTask(logger, startRequest)

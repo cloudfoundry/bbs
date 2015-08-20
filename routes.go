@@ -77,11 +77,11 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
 
 	// Tasks
-	{Path: "/v1/tasks", Method: "POST", Name: DesireTaskRoute},
 	{Path: "/v1/tasks", Method: "GET", Name: TasksRoute},
 	{Path: "/v1/tasks/:task_guid", Method: "GET", Name: TaskByGuidRoute},
 
 	// Task Lifecycle
+	{Path: "/v1/tasks/desire", Method: "POST", Name: DesireTaskRoute},
 	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
 	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute},
 	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},

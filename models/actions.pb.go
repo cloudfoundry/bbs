@@ -19,6 +19,7 @@
 		modification_tag.proto
 		security_group.proto
 		task.proto
+		task_requests.proto
 
 	It has these top-level messages:
 		Action

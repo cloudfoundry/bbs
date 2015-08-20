@@ -218,7 +218,6 @@ var _ = Describe("Task Handlers", func() {
 
 	Describe("DesireTask", func() {
 		var (
-			request  *http.Request
 			taskGuid = "task-guid"
 			domain   = "domain"
 			taskDef  *models.TaskDefinition
@@ -236,39 +235,24 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request = newTestRequest(requestBody)
+			request := newTestRequest(requestBody)
 			handler.DesireTask(responseRecorder, request)
 		})
 
 		Context("when the desire is successful", func() {
-			It("responds with 201 Status Created", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
-			})
-
 			It("desires the task with the requested definitions", func() {
 				Expect(fakeTaskDB.DesireTaskCallCount()).To(Equal(1))
-				_, actualRequest := fakeTaskDB.DesireTaskArgsForCall(0)
-				Expect(actualRequest).To(Equal(requestBody))
-			})
-		})
+				_, actualTaskDef, actualTaskGuid, actualDomain := fakeTaskDB.DesireTaskArgsForCall(0)
+				Expect(actualTaskDef).To(Equal(taskDef))
+				Expect(actualTaskGuid).To(Equal(taskGuid))
+				Expect(actualDomain).To(Equal(domain))
 
-		Context("when request is invalid", func() {
-			BeforeEach(func() {
-				requestBody = &models.DesireTaskRequest{}
-			})
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.TaskLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
 
-			It("responds with 400 Bad Request", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-		})
-
-		Context("when parsing the body fails", func() {
-			BeforeEach(func() {
-				requestBody = "beep boop beep boop -- i am a robot"
-			})
-
-			It("responds with 400 Bad Request", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+				Expect(response.Error).To(BeNil())
 			})
 		})
 
@@ -277,14 +261,18 @@ var _ = Describe("Task Handlers", func() {
 				fakeTaskDB.DesireTaskReturns(models.ErrUnknownError)
 			})
 
-			It("responds with 500 Internal Server Error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.TaskLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})
 
 	Describe("StartTask", func() {
-
 		Context("when the start is successful", func() {
 			BeforeEach(func() {
 				request = newTestRequest(&models.StartTaskRequest{

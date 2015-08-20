@@ -85,40 +85,15 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("desire-task")
 
-	data, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		logger.Error("failed-to-read-body", err)
-		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
-		return
-	}
-
-	logger.Info("data", lager.Data{"data": data})
 	request := &models.DesireTaskRequest{}
-	err = request.Unmarshal(data)
-	if err != nil {
-		logger.Error("failed-to-unmarshal-task", err)
-		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal TaskDescription: %s", err))
-		return
-	}
-	logger.Debug("parsed-request-body", lager.Data{"request": request})
-	if err := request.Validate(); err != nil {
-		logger.Error("invalid-request", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return
+	response := &models.TaskLifecycleResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Error = h.db.DesireTask(h.logger, request.TaskDefinition, request.TaskGuid, request.Domain)
 	}
 
-	modelErr := h.db.DesireTask(logger, request)
-	if modelErr != nil {
-		logger.Error("failed-to-desire-task", modelErr)
-		if modelErr.Type == models.InvalidRecord {
-			writeBadRequestResponse(w, models.InvalidRecord, modelErr)
-		} else {
-			writeInternalServerErrorResponse(w, modelErr)
-		}
-		return
-	}
-
-	writeEmptyResponse(w, http.StatusCreated)
+	writeResponse(w, response)
 }
 
 func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {

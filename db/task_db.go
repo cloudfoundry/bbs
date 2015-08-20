@@ -15,7 +15,7 @@ type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task
 type TaskDB interface {
 	Tasks(logger lager.Logger, filter TaskFilter) (*models.Tasks, *models.Error)
 	TaskByGuid(logger lager.Logger, processGuid string) (*models.Task, *models.Error)
-	DesireTask(logger lager.Logger, request *models.DesireTaskRequest) *models.Error
+	DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) *models.Error
 	StartTask(logger lager.Logger, request *models.StartTaskRequest) (bool, *models.Error)
 	CancelTask(logger lager.Logger, taskGuid string) *models.Error
 	FailTask(logger lager.Logger, request *models.FailTaskRequest) *models.Error

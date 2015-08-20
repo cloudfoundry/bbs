@@ -56,14 +56,17 @@ type Client interface {
 	TasksByDomain(domain string) ([]*models.Task, error)
 	TasksByCellID(cellId string) ([]*models.Task, error)
 	TaskByGuid(guid string) (*models.Task, error)
+
 	DesireTask(guid, domain string, def *models.TaskDefinition) error
 	CancelTask(taskGuid string) error
 	FailTask(taskGuid, failureReason string) error
 	CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error
 	ResolvingTask(taskGuid string) error
 	ResolveTask(taskGuid string) error
-	SubscribeToEvents() (events.EventSource, error)
+
 	ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+
+	SubscribeToEvents() (events.EventSource, error)
 
 	// Internal Task Methods
 	StartTask(taskGuid string, cellID string) (bool, error)
@@ -335,12 +338,17 @@ func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
 }
 
 func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinition) error {
-	req := &models.DesireTaskRequest{
+	request := models.DesireTaskRequest{
 		TaskGuid:       taskGuid,
 		Domain:         domain,
 		TaskDefinition: taskDef,
 	}
-	return c.doRequest(DesireTaskRoute, nil, nil, req, nil)
+	response := models.TaskLifecycleResponse{}
+	err := c.doRequest(DesireTaskRoute, nil, nil, &request, &response)
+	if err != nil {
+		return err
+	}
+	return response.Error
 }
 
 func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {

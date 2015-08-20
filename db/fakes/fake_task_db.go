@@ -31,11 +31,13 @@ type FakeTaskDB struct {
 		result1 *models.Task
 		result2 *models.Error
 	}
-	DesireTaskStub        func(logger lager.Logger, request *models.DesireTaskRequest) *models.Error
+	DesireTaskStub        func(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) *models.Error
 	desireTaskMutex       sync.RWMutex
 	desireTaskArgsForCall []struct {
-		logger  lager.Logger
-		request *models.DesireTaskRequest
+		logger         lager.Logger
+		taskDefinition *models.TaskDefinition
+		taskGuid       string
+		domain         string
 	}
 	desireTaskReturns struct {
 		result1 *models.Error
@@ -173,15 +175,17 @@ func (fake *FakeTaskDB) TaskByGuidReturns(result1 *models.Task, result2 *models.
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) DesireTask(logger lager.Logger, request *models.DesireTaskRequest) *models.Error {
+func (fake *FakeTaskDB) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid string, domain string) *models.Error {
 	fake.desireTaskMutex.Lock()
 	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
-		logger  lager.Logger
-		request *models.DesireTaskRequest
-	}{logger, request})
+		logger         lager.Logger
+		taskDefinition *models.TaskDefinition
+		taskGuid       string
+		domain         string
+	}{logger, taskDefinition, taskGuid, domain})
 	fake.desireTaskMutex.Unlock()
 	if fake.DesireTaskStub != nil {
-		return fake.DesireTaskStub(logger, request)
+		return fake.DesireTaskStub(logger, taskDefinition, taskGuid, domain)
 	} else {
 		return fake.desireTaskReturns.result1
 	}
@@ -193,10 +197,10 @@ func (fake *FakeTaskDB) DesireTaskCallCount() int {
 	return len(fake.desireTaskArgsForCall)
 }
 
-func (fake *FakeTaskDB) DesireTaskArgsForCall(i int) (lager.Logger, *models.DesireTaskRequest) {
+func (fake *FakeTaskDB) DesireTaskArgsForCall(i int) (lager.Logger, *models.TaskDefinition, string, string) {
 	fake.desireTaskMutex.RLock()
 	defer fake.desireTaskMutex.RUnlock()
-	return fake.desireTaskArgsForCall[i].logger, fake.desireTaskArgsForCall[i].request
+	return fake.desireTaskArgsForCall[i].logger, fake.desireTaskArgsForCall[i].taskDefinition, fake.desireTaskArgsForCall[i].taskGuid, fake.desireTaskArgsForCall[i].domain
 }
 
 func (fake *FakeTaskDB) DesireTaskReturns(result1 *models.Error) {

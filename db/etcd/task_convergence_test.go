@@ -155,11 +155,7 @@ var _ = Describe("Convergence of Tasks", func() {
 
 		Context("when a Task is running", func() {
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, &models.DesireTaskRequest{
-					Domain:         domain,
-					TaskGuid:       taskGuid,
-					TaskDefinition: model_helpers.NewValidTaskDefinition(),
-				})
+				err := etcdDB.DesireTask(logger, model_helpers.NewValidTaskDefinition(), taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{TaskGuid: taskGuid, CellId: "cell-id"})
@@ -205,11 +201,7 @@ var _ = Describe("Convergence of Tasks", func() {
 					taskDef := model_helpers.NewValidTaskDefinition()
 					taskDef.CompletionCallbackUrl = "blah"
 
-					err := etcdDB.DesireTask(logger, &models.DesireTaskRequest{
-						Domain:         domain,
-						TaskGuid:       taskGuid,
-						TaskDefinition: taskDef,
-					})
+					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{
@@ -227,11 +219,7 @@ var _ = Describe("Convergence of Tasks", func() {
 					})
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.DesireTask(logger, &models.DesireTaskRequest{
-						Domain:         domain,
-						TaskGuid:       taskGuid2,
-						TaskDefinition: taskDef,
-					})
+					err = etcdDB.DesireTask(logger, taskDef, taskGuid2, domain)
 
 					_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{
 						TaskGuid: taskGuid2,
@@ -324,11 +312,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				taskDef := model_helpers.NewValidTaskDefinition()
 				taskDef.CompletionCallbackUrl = "blah"
 
-				err := etcdDB.DesireTask(logger, &models.DesireTaskRequest{
-					Domain:         domain,
-					TaskGuid:       taskGuid,
-					TaskDefinition: taskDef,
-				})
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{
