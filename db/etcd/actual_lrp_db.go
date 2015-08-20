@@ -159,7 +159,7 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, request *models.ClaimActua
 	}
 
 	logger.Info("starting")
-	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(request.ProcessGuid, request.Index), string(lrpRawJSON), 0, "", prevIndex)
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(request.ProcessGuid, request.Index), lrpRawJSON, 0, prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeClaimed
@@ -199,7 +199,7 @@ func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.Actual
 		return models.ErrSerializeJSON
 	}
 
-	_, err = db.client.Set(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0)
+	_, err = db.client.Create(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpRawJSON, 0)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeStarted
@@ -223,7 +223,7 @@ func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.Act
 		return models.ErrSerializeJSON
 	}
 
-	_, err = db.client.Create(EvacuatingActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), evacuatingTTLInSeconds)
+	_, err = db.client.Create(EvacuatingActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpRawJSON, evacuatingTTLInSeconds)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeStarted
@@ -271,7 +271,7 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, request *models.StartActua
 		return models.ErrSerializeJSON
 	}
 
-	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0, "", prevIndex)
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpRawJSON, 0, prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeStarted
@@ -336,7 +336,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, request *models.CrashActua
 		return models.ErrSerializeJSON
 	}
 
-	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0, "", prevIndex)
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpRawJSON, 0, prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeCrashed
@@ -398,7 +398,7 @@ func (db *ETCDDB) FailActualLRP(logger lager.Logger, request *models.FailActualL
 		return models.ErrSerializeJSON
 	}
 
-	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), string(lrpRawJSON), 0, "", prevIndex)
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpRawJSON, 0, prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeFailed
@@ -472,7 +472,7 @@ func (db *ETCDDB) RetireActualLRP(logger lager.Logger, request *models.RetireAct
 
 func (db *ETCDDB) removeActualLRP(logger lager.Logger, lrp *models.ActualLRP, prevIndex uint64) *models.Error {
 	logger.Info("starting")
-	_, err := db.client.CompareAndDelete(ActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), "", prevIndex)
+	_, err := db.client.CompareAndDelete(ActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeRemoved

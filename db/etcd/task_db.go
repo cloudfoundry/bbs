@@ -11,7 +11,7 @@ import (
 
 const (
 	TaskSchemaRoot = DataSchemaRoot + "task"
-	NO_TTL         = uint64(0)
+	NO_TTL         = 0
 )
 
 func TaskSchemaPath(task *models.Task) string {
@@ -102,7 +102,7 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, request *models.DesireTaskRequ
 	}
 
 	taskLogger.Debug("persisting-task")
-	_, err := db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), string(value), NO_TTL)
+	_, err := db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL)
 	if err != nil {
 		return ErrorFromEtcdError(logger, err)
 	}
@@ -164,7 +164,7 @@ func (db *ETCDDB) StartTask(logger lager.Logger, request *models.StartTaskReques
 		return false, modelErr
 	}
 
-	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), string(value), NO_TTL, "", index)
+	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), value, NO_TTL, index)
 	if err != nil {
 		logger.Error("failed-persisting-task", err)
 		return false, ErrorFromEtcdError(logger, err)
@@ -301,7 +301,7 @@ func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uin
 	}
 
 	logger.Info("persisting-task")
-	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(task.TaskGuid), string(value), NO_TTL, "", index)
+	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL, index)
 	if err != nil {
 		return ErrorFromEtcdError(logger, err)
 	}
@@ -359,7 +359,7 @@ func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) *models.Er
 		return modelErr
 	}
 
-	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), string(value), NO_TTL, "", index)
+	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), value, NO_TTL, index)
 	if err != nil {
 		return ErrorFromEtcdError(logger, err)
 	}

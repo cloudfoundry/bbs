@@ -208,7 +208,7 @@ func (db *ETCDDB) removeEvacuatingActualLRP(logger lager.Logger, lrpKey *models.
 	}
 
 	logger.Info("starting")
-	_, etcdErr := db.client.CompareAndDelete(EvacuatingActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), "", prevIndex)
+	_, etcdErr := db.client.CompareAndDelete(EvacuatingActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), prevIndex)
 	if etcdErr != nil {
 		logger.Error("failed", etcdErr)
 		return models.ErrActualLRPCannotBeRemoved
@@ -217,11 +217,6 @@ func (db *ETCDDB) removeEvacuatingActualLRP(logger lager.Logger, lrpKey *models.
 	logger.Info("succeeded")
 	return nil
 }
-
-// func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, *models.Error) {
-// 	group, _, err := db.rawActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-// 	return group, err
-// }
 
 func (db *ETCDDB) rawEvacuatingActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, *models.Error) {
 	node, bbsErr := db.fetchRaw(logger, EvacuatingActualLRPSchemaPath(processGuid, index))
@@ -311,7 +306,7 @@ func (db *ETCDDB) unclaimActualLRPWithIndex(
 		return stateDidNotChange, models.ErrSerializeJSON
 	}
 
-	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(actualLRPKey.ProcessGuid, actualLRPKey.Index), string(lrpRawJSON), 0, "", storeIndex)
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(actualLRPKey.ProcessGuid, actualLRPKey.Index), lrpRawJSON, 0, storeIndex)
 	if err != nil {
 		logger.Error("failed-to-compare-and-swap", err)
 		return stateDidNotChange, models.ErrActualLRPCannotBeUnclaimed
@@ -406,9 +401,8 @@ func (db *ETCDDB) compareAndSwapRawEvacuatingActualLRP(
 
 	_, err = db.client.CompareAndSwap(
 		EvacuatingActualLRPSchemaPath(lrp.ActualLRPKey.ProcessGuid, lrp.ActualLRPKey.Index),
-		string(lrpRawJSON),
+		lrpRawJSON,
 		evacuationTTLInSeconds,
-		"",
 		storeIndex,
 	)
 	if err != nil {

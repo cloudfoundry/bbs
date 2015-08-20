@@ -236,7 +236,7 @@ func (db *ETCDDB) batchCompareAndSwapTasks(tasksToCAS []compareAndSwappableTask,
 
 		index := taskToCAS.OldIndex
 		works = append(works, func() {
-			_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(task.TaskGuid), string(value), NO_TTL, "", index)
+			_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL, index)
 			if err != nil {
 				taskLog.Error("failed-to-compare-and-swap", err, lager.Data{
 					"task-guid": task.TaskGuid,

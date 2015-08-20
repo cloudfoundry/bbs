@@ -52,7 +52,7 @@ func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 }
 
 type ETCDDB struct {
-	client            *etcd.Client
+	client            StoreClient
 	clock             clock.Clock
 	inflightWatches   map[chan bool]bool
 	inflightWatchLock *sync.Mutex
@@ -68,7 +68,8 @@ type ETCDDB struct {
 func NewETCD(etcdClient *etcd.Client,
 	auctioneerClient auctionhandlers.Client, cellClient cellhandlers.Client,
 	cellDB db.CellDB, clock clock.Clock, cbWorkPool *workpool.WorkPool, taskCBFactory db.CompleteTaskWork) *ETCDDB {
-	return &ETCDDB{etcdClient,
+	return &ETCDDB{
+		&storeClient{client: etcdClient},
 		clock,
 		map[chan bool]bool{},
 		&sync.Mutex{},
