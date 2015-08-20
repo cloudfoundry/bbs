@@ -6,14 +6,12 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
-	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Task", func() {
 	var taskPayload string
-	var oldTask oldmodels.Task
 	var task models.Task
 
 	BeforeEach(func() {
@@ -50,10 +48,10 @@ var _ = Describe("Task", func() {
 		"created_at": 1393371971000000000,
 		"updated_at": 1393371971000000010,
 		"first_completed_at": 1393371971000000030,
-		"state": 1,
+		"state": "Pending",
 		"annotation": "[{\"anything\": \"you want!\"}]... dude",
 		"egress_rules": [
-		  {
+			{
 				"protocol": "tcp",
 				"destinations": ["0.0.0.0/0"],
 				"port_range": {
@@ -62,17 +60,15 @@ var _ = Describe("Task", func() {
 				},
 				"log": true
 			},
-		  {
+			{
 				"protocol": "udp",
 				"destinations": ["8.8.0.0/16"],
 				"ports": [53],
 				"log": false
 			}
 		],
-		"completion_callback_url":{"Scheme":"http","Opaque":"","User":{},"Host":"a.b.c","Path":"/d/e/f","RawQuery":"","Fragment":""}
+		"completion_callback_url":"http://@a.b.c/d/e/f"
 	}`
-		err := oldmodels.FromJSON([]byte(taskPayload), &oldTask)
-		Expect(err).NotTo(HaveOccurred())
 
 		task = models.Task{
 			TaskDefinition: &models.TaskDefinition{

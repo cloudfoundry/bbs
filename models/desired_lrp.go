@@ -3,6 +3,8 @@ package models
 import (
 	"net/url"
 	"regexp"
+
+	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 )
 
 const PreloadedRootFSScheme = "preloaded"
@@ -104,4 +106,30 @@ func (desired DesiredLRP) Validate() error {
 	}
 
 	return nil
+}
+
+func EnvironmentVariablesFromProto(envVars []*EnvironmentVariable) []oldmodels.EnvironmentVariable {
+	if envVars == nil {
+		return nil
+	}
+	out := make([]oldmodels.EnvironmentVariable, len(envVars))
+	for i, val := range envVars {
+		out[i].Name = val.Name
+		out[i].Value = val.Value
+	}
+	return out
+}
+
+func EnvironmentVariablesFromModel(envVars []oldmodels.EnvironmentVariable) []*EnvironmentVariable {
+	if envVars == nil {
+		return nil
+	}
+	out := make([]*EnvironmentVariable, len(envVars))
+	for i, val := range envVars {
+		out[i] = &EnvironmentVariable{
+			Name:  val.Name,
+			Value: val.Value,
+		}
+	}
+	return out
 }

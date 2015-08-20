@@ -94,7 +94,7 @@ func (db *ETCDDB) ConvergeTasks(
 	for _, node := range taskState.Nodes {
 		task := &models.Task{}
 
-		err := task.UnmarshalJSON([]byte(node.Value))
+		err := models.FromJSON([]byte(node.Value), task)
 		if err != nil {
 			logger.Error("failed-to-unmarshal-task-json", err, lager.Data{
 				"key":   node.Key,
