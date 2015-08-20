@@ -308,25 +308,40 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 }
 
 func (c *client) Tasks() ([]*models.Task, error) {
-	var tasks models.Tasks
-	err := c.doRequest(TasksRoute, nil, nil, nil, &tasks)
-	return tasks.Tasks, err
+	request := models.TasksRequest{}
+	response := models.TasksResponse{}
+	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Tasks, response.Error
 }
 
 func (c *client) TasksByDomain(domain string) ([]*models.Task, error) {
-	var tasks models.Tasks
-	query := url.Values{}
-	query.Set("domain", domain)
-	err := c.doRequest(TasksRoute, nil, query, nil, &tasks)
-	return tasks.Tasks, err
+	request := models.TasksRequest{
+		Domain: domain,
+	}
+	response := models.TasksResponse{}
+	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Tasks, response.Error
 }
 
 func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
-	var tasks models.Tasks
-	query := url.Values{}
-	query.Set("cell_id", cellId)
-	err := c.doRequest(TasksRoute, nil, query, nil, &tasks)
-	return tasks.Tasks, err
+	request := models.TasksRequest{
+		CellId: cellId,
+	}
+	response := models.TasksResponse{}
+	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Tasks, response.Error
 }
 
 func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {

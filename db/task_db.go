@@ -7,13 +7,11 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-type TaskFilter func(t *models.Task) bool
-
 type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task) func()
 
 //go:generate counterfeiter . TaskDB
 type TaskDB interface {
-	Tasks(logger lager.Logger, filter TaskFilter) (*models.Tasks, *models.Error)
+	Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error)
 	TaskByGuid(logger lager.Logger, processGuid string) (*models.Task, *models.Error)
 
 	DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) *models.Error

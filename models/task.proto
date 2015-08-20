@@ -9,10 +9,6 @@ import "security_group.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
-message Tasks {
-  repeated Task tasks = 1;
-}
-
 message TaskDefinition {
   optional string root_fs = 1 [(gogoproto.jsontag) = "rootfs"];
   repeated EnvironmentVariable environment_variables = 2 [(gogoproto.jsontag) = "env,omitempty"];

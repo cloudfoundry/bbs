@@ -9,6 +9,11 @@ import (
 
 var taskGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
+type TaskFilter struct {
+	Domain string
+	CellID string
+}
+
 func (t *Task) LagerData() lager.Data {
 	return lager.Data{
 		"task-guid": t.TaskGuid,

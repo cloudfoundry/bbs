@@ -65,20 +65,6 @@ func (x *Task_State) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type Tasks struct {
-	Tasks []*Task `protobuf:"bytes,1,rep,name=tasks" json:"tasks,omitempty"`
-}
-
-func (m *Tasks) Reset()      { *m = Tasks{} }
-func (*Tasks) ProtoMessage() {}
-
-func (m *Tasks) GetTasks() []*Task {
-	if m != nil {
-		return m.Tasks
-	}
-	return nil
-}
-
 type TaskDefinition struct {
 	RootFs                string                 `protobuf:"bytes,1,opt,name=root_fs" json:"rootfs"`
 	EnvironmentVariables  []*EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env,omitempty"`
@@ -286,79 +272,6 @@ func (m *Task) GetFailureReason() string {
 
 func init() {
 	proto.RegisterEnum("models.Task_State", Task_State_name, Task_State_value)
-}
-func (m *Tasks) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tasks", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthTask
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Tasks = append(m.Tasks, &Task{})
-			if err := m.Tasks[len(m.Tasks)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipTask(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTask
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	return nil
 }
 func (m *TaskDefinition) Unmarshal(data []byte) error {
 	l := len(data)
@@ -1068,16 +981,6 @@ var (
 	ErrInvalidLengthTask = fmt.Errorf("proto: negative length found during unmarshaling")
 )
 
-func (this *Tasks) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Tasks{`,
-		`Tasks:` + strings.Replace(fmt.Sprintf("%v", this.Tasks), "Task", "Task", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
 func (this *TaskDefinition) String() string {
 	if this == nil {
 		return "nil"
@@ -1129,18 +1032,6 @@ func valueToStringTask(v interface{}) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
 }
-func (m *Tasks) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Tasks) > 0 {
-		for _, e := range m.Tasks {
-			l = e.Size()
-			n += 1 + l + sovTask(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *TaskDefinition) Size() (n int) {
 	var l int
 	_ = l
@@ -1219,36 +1110,6 @@ func sovTask(x uint64) (n int) {
 func sozTask(x uint64) (n int) {
 	return sovTask(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Tasks) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *Tasks) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Tasks) > 0 {
-		for _, msg := range m.Tasks {
-			data[i] = 0xa
-			i++
-			i = encodeVarintTask(data, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(data[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
 func (m *TaskDefinition) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -1441,14 +1302,6 @@ func encodeVarintTask(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	return offset + 1
 }
-func (this *Tasks) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.Tasks{` +
-		`Tasks:` + fmt.Sprintf("%#v", this.Tasks) + `}`}, ", ")
-	return s
-}
 func (this *TaskDefinition) GoString() string {
 	if this == nil {
 		return "nil"
@@ -1512,36 +1365,6 @@ func extensionToGoStringTask(e map[int32]github_com_gogo_protobuf_proto.Extensio
 	}
 	s += strings.Join(ss, ",") + "}"
 	return s
-}
-func (this *Tasks) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*Tasks)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if len(this.Tasks) != len(that1.Tasks) {
-		return false
-	}
-	for i := range this.Tasks {
-		if !this.Tasks[i].Equal(that1.Tasks[i]) {
-			return false
-		}
-	}
-	return true
 }
 func (this *TaskDefinition) Equal(that interface{}) bool {
 	if that == nil {

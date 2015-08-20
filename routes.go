@@ -77,7 +77,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
 
 	// Tasks
-	{Path: "/v1/tasks", Method: "GET", Name: TasksRoute},
+	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute},
 	{Path: "/v1/tasks/:task_guid", Method: "GET", Name: TaskByGuidRoute},
 
 	// Task Lifecycle

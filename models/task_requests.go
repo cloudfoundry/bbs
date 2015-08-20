@@ -40,3 +40,7 @@ func (req *StartTaskRequest) Validate() error {
 
 	return nil
 }
+
+func (req *TasksRequest) Validate() error {
+	return nil
+}

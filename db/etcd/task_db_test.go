@@ -20,11 +20,15 @@ var _ = Describe("TaskDB", func() {
 		taskDef *models.TaskDefinition
 	)
 
-	filterByState := func(state models.Task_State) *models.Tasks {
-		tasks, err := etcdDB.Tasks(logger, func(t *models.Task) bool {
-			return t.State == state
-		})
+	filterByState := func(state models.Task_State) []*models.Task {
+		allTasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
 		Expect(err).NotTo(HaveOccurred())
+		tasks := []*models.Task{}
+		for _, task := range allTasks {
+			if task.State == state {
+				tasks = append(tasks, task)
+			}
+		}
 		return tasks
 	}
 
@@ -33,9 +37,13 @@ var _ = Describe("TaskDB", func() {
 			var expectedTasks []*models.Task
 
 			BeforeEach(func() {
-				expectedTasks = []*models.Task{
-					model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid"),
-				}
+				task1 := model_helpers.NewValidTask("a-guid")
+				task1.Domain = "domain-1"
+				task1.CellId = "cell-1"
+				task2 := model_helpers.NewValidTask("b-guid")
+				task2.Domain = "domain-2"
+				task2.CellId = "cell-2"
+				expectedTasks = []*models.Task{task1, task2}
 
 				for _, t := range expectedTasks {
 					etcdHelper.SetRawTask(t)
@@ -43,25 +51,32 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("returns all the tasks", func() {
-				tasks, err := etcdDB.Tasks(logger, nil)
+				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tasks.GetTasks()).To(ConsistOf(expectedTasks))
+				Expect(tasks).To(ConsistOf(expectedTasks))
 			})
 
-			It("can filter", func() {
-				tasks, err := etcdDB.Tasks(logger, func(t *models.Task) bool { return t.TaskGuid == "b-guid" })
+			It("can filter by domain", func() {
+				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{Domain: "domain-1"})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tasks.Tasks).To(HaveLen(1))
-				Expect(tasks.Tasks[0]).To(Equal(expectedTasks[1]))
+				Expect(tasks).To(HaveLen(1))
+				Expect(tasks[0]).To(Equal(expectedTasks[0]))
+			})
+
+			It("can filter by cell id", func() {
+				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{CellID: "cell-2"})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tasks).To(HaveLen(1))
+				Expect(tasks[0]).To(Equal(expectedTasks[1]))
 			})
 		})
 
 		Context("when there are no tasks", func() {
 			It("returns an empty list", func() {
-				tasks, err := etcdDB.Tasks(logger, nil)
+				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tasks).NotTo(BeNil())
-				Expect(tasks.GetTasks()).To(BeEmpty())
+				Expect(tasks).To(BeEmpty())
 			})
 		})
 
@@ -73,7 +88,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.Tasks(logger, nil)
+				_, err := etcdDB.Tasks(logger, models.TaskFilter{})
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -88,7 +103,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("errors", func() {
-				_, err := etcdDB.Tasks(logger, nil)
+				_, err := etcdDB.Tasks(logger, models.TaskFilter{})
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -221,10 +236,10 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("does not persist a second task", func() {
-				tasks, err := etcdDB.Tasks(logger, nil)
+				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tasks.GetTasks()).To(HaveLen(1))
-				Expect(tasks.GetTasks()[0].Domain).To(Equal(otherDomain))
+				Expect(tasks).To(HaveLen(1))
+				Expect(tasks[0].Domain).To(Equal(otherDomain))
 			})
 
 			It("does not request a second auction", func() {
@@ -517,7 +532,7 @@ var _ = Describe("TaskDB", func() {
 
 					tasks := filterByState(models.Task_Completed)
 
-					task := tasks.Tasks[0]
+					task := tasks[0]
 					Expect(task.Failed).To(BeTrue())
 					Expect(task.FailureReason).To(Equal("because i said so"))
 					Expect(task.UpdatedAt).To(Equal(clock.Now().UnixNano()))
@@ -525,31 +540,28 @@ var _ = Describe("TaskDB", func() {
 					Expect(task.CellId).To(BeEmpty())
 				})
 
-				Context("when a receptor is present", func() {
-					Context("and completing succeeds", func() {
-						Context("and the task has a complete URL", func() {
-							BeforeEach(func() {
-								taskDef.CompletionCallbackUrl = "bogus"
-							})
-
-							It("eventually causes the workpool to complete its callback work", func() {
-								err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
-								Expect(err).NotTo(HaveOccurred())
-								Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(1))
-
-							})
+				Context("and completing succeeds", func() {
+					Context("and the task has a complete URL", func() {
+						BeforeEach(func() {
+							taskDef.CompletionCallbackUrl = "bogus"
 						})
 
-						Context("but the task has no complete URL", func() {
-							BeforeEach(func() {
-								taskDef.CompletionCallbackUrl = ""
-							})
+						It("eventually causes the workpool to complete its callback work", func() {
+							err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
+							Expect(err).NotTo(HaveOccurred())
+							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(1))
+						})
+					})
 
-							It("does not complete the task via the receptor", func() {
-								err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
-								Expect(err).NotTo(HaveOccurred())
-								Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(0))
-							})
+					Context("but the task has no complete URL", func() {
+						BeforeEach(func() {
+							taskDef.CompletionCallbackUrl = ""
+						})
+
+						It("does not complete the task callback", func() {
+							err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
+							Expect(err).NotTo(HaveOccurred())
+							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(0))
 						})
 					})
 				})
@@ -618,7 +630,7 @@ var _ = Describe("TaskDB", func() {
 
 					tasks := filterByState(models.Task_Completed)
 
-					task := tasks.Tasks[0]
+					task := tasks[0]
 
 					Expect(task.Failed).To(BeTrue())
 					Expect(task.FailureReason).To(Equal("because i said so"))
@@ -626,57 +638,31 @@ var _ = Describe("TaskDB", func() {
 					Expect(task.FirstCompletedAt).To(Equal(clock.Now().UnixNano()))
 				})
 
-				// Context("when a receptor is present", func() {
-				// 	Context("and failing succeeds", func() {
-				// 		BeforeEach(func() {
-				// 			fakeTaskClient.CompleteTasksReturns(nil)
-				// 		})
+				Context("and failing succeeds", func() {
+					Context("and the task has a complete URL", func() {
+						BeforeEach(func() {
+							taskDef.CompletionCallbackUrl = "bogus"
+						})
 
-				// 		Context("and the task has a complete URL", func() {
-				// 			BeforeEach(func() {
-				// 				task.CompletionCallbackURL = &url.URL{Host: "bogus"}
-				// 			})
+						It("eventually causes the workpool to complete its callback work", func() {
+							err := etcdDB.FailTask(logger, taskGuid, "because i said so")
+							Expect(err).NotTo(HaveOccurred())
+							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(1))
+						})
+					})
 
-				// 			It("completes the task using its address", func() {
-				// 				err := bbs.FailTask(logger, task.TaskGuid, "because")
-				// 				Expect(err).NotTo(HaveOccurred())
+					Context("but the task has no complete URL", func() {
+						BeforeEach(func() {
+							taskDef.CompletionCallbackUrl = ""
+						})
 
-				// 				Expect(fakeTaskClient.CompleteTasksCallCount()).To(Equal(1))
-				// 				url, completedTasks := fakeTaskClient.CompleteTasksArgsForCall(0)
-				// 				Expect(url).To(Equal(receptorURL))
-				// 				Expect(completedTasks).To(HaveLen(1))
-				// 				Expect(completedTasks[0].TaskGuid).To(Equal(task.TaskGuid))
-				// 				Expect(completedTasks[0].Failed).To(BeTrue())
-				// 				Expect(completedTasks[0].FailureReason).To(Equal("because"))
-				// 				Expect(completedTasks[0].Result).To(BeEmpty())
-				// 			})
-				// 		})
-
-				// 		Context("but the task has no complete URL", func() {
-				// 			BeforeEach(func() {
-				// 				task.CompletionCallbackURL = nil
-				// 			})
-
-				// 			It("does not complete the task via the receptor", func() {
-				// 				err := bbs.FailTask(logger, task.TaskGuid, "because")
-				// 				Expect(err).NotTo(HaveOccurred())
-
-				// 				Expect(fakeTaskClient.CompleteTasksCallCount()).To(BeZero())
-				// 			})
-				// 		})
-				// 	})
-
-				// 	Context("and failing fails", func() {
-				// 		BeforeEach(func() {
-				// 			fakeTaskClient.CompleteTasksReturns(errors.New("welp"))
-				// 		})
-
-				// 		It("swallows the error, as we'll retry again eventually (via convergence)", func() {
-				// 			err := bbs.FailTask(logger, task.TaskGuid, "because")
-				// 			Expect(err).NotTo(HaveOccurred())
-				// 		})
-				// 	})
-				// })
+						It("does not complete the task callback", func() {
+							err := etcdDB.FailTask(logger, taskGuid, "because i said so")
+							Expect(err).NotTo(HaveOccurred())
+							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(0))
+						})
+					})
+				})
 			})
 
 			Context("when the task is completed", func() {
@@ -748,8 +734,8 @@ var _ = Describe("TaskDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				tasks := filterByState(models.Task_Resolving)
-				Expect(tasks.Tasks[0].TaskGuid).To(Equal(taskGuid))
-				Expect(tasks.Tasks[0].State).To(Equal(models.Task_Resolving))
+				Expect(tasks[0].TaskGuid).To(Equal(taskGuid))
+				Expect(tasks[0].State).To(Equal(models.Task_Resolving))
 			})
 
 			It("bumps UpdatedAt", func() {
@@ -759,7 +745,7 @@ var _ = Describe("TaskDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				tasks := filterByState(models.Task_Resolving)
-				Expect(tasks.Tasks[0].UpdatedAt).To(Equal(clock.Now().UnixNano()))
+				Expect(tasks[0].UpdatedAt).To(Equal(clock.Now().UnixNano()))
 			})
 
 			Context("when the Task is already resolving", func() {
@@ -806,9 +792,9 @@ var _ = Describe("TaskDB", func() {
 				err := etcdDB.ResolveTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
-				tasks, err := etcdDB.Tasks(logger, nil)
+				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tasks.Tasks).To(BeEmpty())
+				Expect(tasks).To(BeEmpty())
 			})
 		})
 

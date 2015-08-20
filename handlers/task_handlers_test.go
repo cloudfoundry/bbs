@@ -27,6 +27,8 @@ var _ = Describe("Task Handlers", func() {
 
 		task1 models.Task
 		task2 models.Task
+
+		requestBody interface{}
 	)
 
 	BeforeEach(func() {
@@ -34,108 +36,86 @@ var _ = Describe("Task Handlers", func() {
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		request = nil
 		handler = handlers.NewTaskHandler(logger, fakeTaskDB)
 	})
 
 	Describe("Tasks", func() {
 		BeforeEach(func() {
-			request = newTestRequest("")
-
 			task1 = models.Task{Domain: "domain-1"}
 			task2 = models.Task{CellId: "cell-id"}
+			requestBody = &models.TasksRequest{}
 		})
 
 		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
 			handler.Tasks(responseRecorder, request)
 		})
 
 		Context("when reading tasks from DB succeeds", func() {
-			var tasks *models.Tasks
+			var tasks []*models.Task
 
 			BeforeEach(func() {
-				tasks = &models.Tasks{
-					[]*models.Task{&task1, &task2},
-				}
+				tasks = []*models.Task{&task1, &task2}
 				fakeTaskDB.TasksReturns(tasks, nil)
 			})
 
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-			})
-
 			It("returns a list of task", func() {
-				response := &models.Tasks{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TasksResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(tasks))
+				Expect(response.Error).To(BeNil())
+				Expect(response.Tasks).To(Equal(tasks))
 			})
 
 			It("calls the DB with no filter", func() {
 				Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
 				_, filter := fakeTaskDB.TasksArgsForCall(0)
-				Expect(filter).To(BeNil())
+				Expect(filter).To(Equal(models.TaskFilter{}))
 			})
 
 			Context("and filtering by domain", func() {
 				BeforeEach(func() {
-					var err error
-					request, err = http.NewRequest("", "http://example.com?domain=domain-1", nil)
-					Expect(err).NotTo(HaveOccurred())
+					requestBody = &models.TasksRequest{
+						Domain: "domain-1",
+					}
 				})
 
 				It("calls the DB with a domain filter", func() {
 					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
 					_, filter := fakeTaskDB.TasksArgsForCall(0)
-					Expect(filter(&task1)).To(BeTrue())
-					Expect(filter(&task2)).To(BeFalse())
+					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
 
 			Context("and filtering by cell id", func() {
 				BeforeEach(func() {
-					var err error
-					request, err = http.NewRequest("", "http://example.com?cell_id=cell-id", nil)
-					Expect(err).NotTo(HaveOccurred())
+					requestBody = &models.TasksRequest{
+						CellId: "cell-id",
+					}
 				})
 
 				It("calls the DB with a cell filter", func() {
 					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
 					_, filter := fakeTaskDB.TasksArgsForCall(0)
-					Expect(filter(&task1)).To(BeFalse())
-					Expect(filter(&task2)).To(BeTrue())
-				})
-			})
-
-			Context("filtering by domain and cell", func() {
-				BeforeEach(func() {
-					var err error
-					request, err = http.NewRequest("", "http://example.com?domain=d&cell_id=cell-id", nil)
-					Expect(err).NotTo(HaveOccurred())
-				})
-
-				It("responds with 400 Bad Request", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+					Expect(filter.CellID).To(Equal("cell-id"))
 				})
 			})
 		})
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeTaskDB.TasksReturns(&models.Tasks{}, models.ErrUnknownError)
-			})
-
-			It("responds with an error", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
+				fakeTaskDB.TasksReturns(nil, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TasksResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})

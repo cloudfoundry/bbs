@@ -11,14 +11,14 @@ import (
 )
 
 type FakeTaskDB struct {
-	TasksStub        func(logger lager.Logger, filter db.TaskFilter) (*models.Tasks, *models.Error)
+	TasksStub        func(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct {
 		logger lager.Logger
-		filter db.TaskFilter
+		filter models.TaskFilter
 	}
 	tasksReturns struct {
-		result1 *models.Tasks
+		result1 []*models.Task
 		result2 *models.Error
 	}
 	TaskByGuidStub        func(logger lager.Logger, processGuid string) (*models.Task, *models.Error)
@@ -113,11 +113,11 @@ type FakeTaskDB struct {
 	}
 }
 
-func (fake *FakeTaskDB) Tasks(logger lager.Logger, filter db.TaskFilter) (*models.Tasks, *models.Error) {
+func (fake *FakeTaskDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error) {
 	fake.tasksMutex.Lock()
 	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct {
 		logger lager.Logger
-		filter db.TaskFilter
+		filter models.TaskFilter
 	}{logger, filter})
 	fake.tasksMutex.Unlock()
 	if fake.TasksStub != nil {
@@ -133,16 +133,16 @@ func (fake *FakeTaskDB) TasksCallCount() int {
 	return len(fake.tasksArgsForCall)
 }
 
-func (fake *FakeTaskDB) TasksArgsForCall(i int) (lager.Logger, db.TaskFilter) {
+func (fake *FakeTaskDB) TasksArgsForCall(i int) (lager.Logger, models.TaskFilter) {
 	fake.tasksMutex.RLock()
 	defer fake.tasksMutex.RUnlock()
 	return fake.tasksArgsForCall[i].logger, fake.tasksArgsForCall[i].filter
 }
 
-func (fake *FakeTaskDB) TasksReturns(result1 *models.Tasks, result2 *models.Error) {
+func (fake *FakeTaskDB) TasksReturns(result1 []*models.Task, result2 *models.Error) {
 	fake.TasksStub = nil
 	fake.tasksReturns = struct {
-		result1 *models.Tasks
+		result1 []*models.Task
 		result2 *models.Error
 	}{result1, result2}
 }
