@@ -345,11 +345,16 @@ func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
 }
 
 func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
-	var task models.Task
-	err := c.doRequest(TaskByGuidRoute,
-		rata.Params{"task_guid": taskGuid},
-		nil, nil, &task)
-	return &task, err
+	request := models.TaskByGuidRequest{
+		TaskGuid: taskGuid,
+	}
+	response := models.TaskResponse{}
+	err := c.doRequest(TaskByGuidRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Task, response.Error
 }
 
 func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinition) error {

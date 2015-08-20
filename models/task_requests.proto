@@ -65,3 +65,12 @@ message TasksResponse{
   optional Error error = 1;
   repeated Task tasks = 2;
 }
+
+message TaskByGuidRequest{
+  optional string task_guid = 1;
+}
+
+message TaskResponse{
+  optional Error error = 1;
+  optional Task task = 2;
+}

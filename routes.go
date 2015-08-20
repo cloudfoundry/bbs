@@ -78,7 +78,7 @@ var Routes = rata.Routes{
 
 	// Tasks
 	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute},
-	{Path: "/v1/tasks/:task_guid", Method: "GET", Name: TaskByGuidRoute},
+	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute},
 
 	// Task Lifecycle
 	{Path: "/v1/tasks/desire", Method: "POST", Name: DesireTaskRoute},

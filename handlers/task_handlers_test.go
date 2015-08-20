@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
@@ -21,7 +20,6 @@ var _ = Describe("Task Handlers", func() {
 		logger           lager.Logger
 		fakeTaskDB       *fakes.FakeTaskDB
 		responseRecorder *httptest.ResponseRecorder
-		request          *http.Request
 
 		handler *handlers.TaskHandler
 
@@ -29,6 +27,8 @@ var _ = Describe("Task Handlers", func() {
 		task2 models.Task
 
 		requestBody interface{}
+
+		request *http.Request
 	)
 
 	BeforeEach(func() {
@@ -124,11 +124,13 @@ var _ = Describe("Task Handlers", func() {
 		var taskGuid = "task-guid"
 
 		BeforeEach(func() {
-			request = newTestRequest("")
-			request.URL.RawQuery = url.Values{":task_guid": []string{taskGuid}}.Encode()
+			requestBody = &models.TaskByGuidRequest{
+				TaskGuid: taskGuid,
+			}
 		})
 
 		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
 			handler.TaskByGuid(responseRecorder, request)
 		})
 
@@ -140,10 +142,6 @@ var _ = Describe("Task Handlers", func() {
 				fakeTaskDB.TaskByGuidReturns(task, nil)
 			})
 
-			It("responds with 200 Status OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-			})
-
 			It("fetches task by guid", func() {
 				Expect(fakeTaskDB.TaskByGuidCallCount()).To(Equal(1))
 				_, actualGuid := fakeTaskDB.TaskByGuidArgsForCall(0)
@@ -151,11 +149,13 @@ var _ = Describe("Task Handlers", func() {
 			})
 
 			It("returns the task", func() {
-				response := &models.Task{}
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TaskResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(response).To(Equal(task))
+				Expect(response.Error).To(BeNil())
+				Expect(response.Task).To(Equal(task))
 			})
 		})
 
@@ -164,16 +164,13 @@ var _ = Describe("Task Handlers", func() {
 				fakeTaskDB.TaskByGuidReturns(nil, models.ErrResourceNotFound)
 			})
 
-			It("responds with 404", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
-			})
-
 			It("returns a resource not found error", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TaskResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrResourceNotFound)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 
@@ -182,16 +179,13 @@ var _ = Describe("Task Handlers", func() {
 				fakeTaskDB.TaskByGuidReturns(nil, models.ErrUnknownError)
 			})
 
-			It("responds with a 500", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
-			})
-
 			It("provides relevant error information", func() {
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TaskResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrUnknownError)).To(BeTrue())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})

@@ -39,23 +39,17 @@ func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
-	taskGuid := req.FormValue(":task_guid")
-	logger := h.logger.Session("task-by-guid", lager.Data{
-		"task_guid": taskGuid,
-	})
+	logger := h.logger.Session("task-by-guyid")
 
-	task, err := h.db.TaskByGuid(h.logger, taskGuid)
-	if err == models.ErrResourceNotFound {
-		writeNotFoundResponse(w, err)
-		return
-	}
-	if err != nil {
-		logger.Error("failed-to-fetch-task", err)
-		writeInternalServerErrorResponse(w, err)
-		return
+	request := &models.TaskByGuidRequest{}
+	response := &models.TaskResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Task, response.Error = h.db.TaskByGuid(h.logger, request.TaskGuid)
 	}
 
-	writeProtoResponse(w, http.StatusOK, task)
+	writeResponse(w, response)
 }
 
 func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
