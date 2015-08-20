@@ -116,16 +116,7 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 	return nil
 }
 
-func (db *ETCDDB) StartTask(logger lager.Logger, request *models.StartTaskRequest) (bool, *models.Error) {
-	taskGuid := request.TaskGuid
-	cellID := request.CellId
-	if taskGuid == "" {
-		return false, &models.Error{Type: models.InvalidRequest, Message: "missing task guid"}
-	}
-	if cellID == "" {
-		return false, &models.Error{Type: models.InvalidRequest, Message: "missing cellId"}
-	}
-
+func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool, *models.Error) {
 	logger = logger.Session("start-task", lager.Data{"task-guid": taskGuid, "cell-id": cellID})
 
 	logger.Info("starting")
@@ -193,11 +184,7 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error
 
 	logger.Info("completing-task")
 	cellId := task.CellId
-	modelErr = db.completeTask(logger, task, index, &models.CompleteTaskRequest{
-		Failed:        true,
-		FailureReason: "task was cancelled",
-		Result:        "",
-	})
+	modelErr = db.completeTask(logger, task, index, true, "task was cancelled", "")
 	if modelErr != nil {
 		logger.Error("failed-completing-task", modelErr)
 		return modelErr
@@ -227,14 +214,14 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error
 	return nil
 }
 
-func (db *ETCDDB) FailTask(logger lager.Logger, request *models.FailTaskRequest) *models.Error {
-	logger = logger.Session("fail-task", lager.Data{"task-guid": request.TaskGuid})
+func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) *models.Error {
+	logger = logger.Session("fail-task", lager.Data{"task-guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
 	logger.Info("getting-task")
-	task, index, modelErr := db.taskByGuidWithIndex(logger, request.TaskGuid)
+	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
 	if modelErr != nil {
 		logger.Error("failed-getting-task", modelErr)
 		return modelErr
@@ -247,33 +234,29 @@ func (db *ETCDDB) FailTask(logger lager.Logger, request *models.FailTaskRequest)
 		return modelErr
 	}
 
-	return db.completeTask(logger, task, index, &models.CompleteTaskRequest{
-		Failed:        true,
-		FailureReason: request.FailureReason,
-		Result:        "",
-	})
+	return db.completeTask(logger, task, index, true, failureReason, "")
 }
 
 // The cell calls this when it has finished running the task (be it success or failure)
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // This really really shouldn't fail.  If it does, blog about it and walk away. If it failed in a
 // consistent way (i.e. key already exists), there's probably a flaw in our design.
-func (db *ETCDDB) CompleteTask(logger lager.Logger, request *models.CompleteTaskRequest) *models.Error {
-	logger = logger.Session("complete-task", lager.Data{"task-guid": request.TaskGuid, "cell-id": request.CellId})
+func (db *ETCDDB) CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) *models.Error {
+	logger = logger.Session("complete-task", lager.Data{"task-guid": taskGuid, "cell-id": cellId})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
 	logger.Info("getting-task")
-	task, index, modelErr := db.taskByGuidWithIndex(logger, request.TaskGuid)
+	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
 	if modelErr != nil {
 		logger.Error("failed-getting-task", modelErr)
 		return modelErr
 	}
 	logger.Info("succeeded-getting-task")
 
-	if task.State == models.Task_Running && task.CellId != request.CellId {
-		modelErr = models.NewRunningOnDifferentCellError(request.CellId, task.CellId)
+	if task.State == models.Task_Running && task.CellId != cellId {
+		modelErr = models.NewRunningOnDifferentCellError(cellId, task.CellId)
 		logger.Error("invalid-cell-id", modelErr)
 		return modelErr
 	}
@@ -284,11 +267,11 @@ func (db *ETCDDB) CompleteTask(logger lager.Logger, request *models.CompleteTask
 		return modelErr
 	}
 
-	return db.completeTask(logger, task, index, request)
+	return db.completeTask(logger, task, index, failed, failureReason, result)
 }
 
-func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uint64, request *models.CompleteTaskRequest) *models.Error {
-	db.markTaskCompleted(task, request.Failed, request.FailureReason, request.Result)
+func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uint64, failed bool, failureReason, result string) *models.Error {
+	db.markTaskCompleted(task, failed, failureReason, result)
 
 	value, modelErr := models.ToJSON(task)
 	if modelErr != nil {

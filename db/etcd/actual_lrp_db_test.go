@@ -865,8 +865,6 @@ var _ = Describe("ActualLRPDB", func() {
 
 			lrpKey models.ActualLRPKey
 
-			request models.RetireActualLRPRequest
-
 			processGuid string
 			index       int32
 		)
@@ -877,10 +875,6 @@ var _ = Describe("ActualLRPDB", func() {
 			domain := "domain"
 
 			lrpKey = models.NewActualLRPKey(processGuid, index, domain)
-
-			request = models.RetireActualLRPRequest{
-				ActualLrpKey: &lrpKey,
-			}
 		})
 
 		Context("with an Unclaimed LRP", func() {

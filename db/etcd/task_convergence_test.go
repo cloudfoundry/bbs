@@ -158,7 +158,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				err := etcdDB.DesireTask(logger, model_helpers.NewValidTaskDefinition(), taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{TaskGuid: taskGuid, CellId: "cell-id"})
+				_, err = etcdDB.StartTask(logger, taskGuid, "cell-id")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -204,36 +204,18 @@ var _ = Describe("Convergence of Tasks", func() {
 					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{
-						TaskGuid: taskGuid,
-						CellId:   cellId,
-					})
+					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
-						TaskGuid:      taskGuid,
-						CellId:        cellId,
-						Failed:        true,
-						FailureReason: "'cause I said so",
-						Result:        "a magical result",
-					})
+					err = etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
 
 					err = etcdDB.DesireTask(logger, taskDef, taskGuid2, domain)
 
-					_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{
-						TaskGuid: taskGuid2,
-						CellId:   cellId,
-					})
+					_, err = etcdDB.StartTask(logger, taskGuid2, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
-						TaskGuid:      taskGuid2,
-						CellId:        cellId,
-						Failed:        true,
-						FailureReason: "'cause I said so",
-						Result:        "a magical result",
-					})
+					err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -315,19 +297,10 @@ var _ = Describe("Convergence of Tasks", func() {
 				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, &models.StartTaskRequest{
-					TaskGuid: taskGuid,
-					CellId:   cellId,
-				})
+				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = etcdDB.CompleteTask(logger, &models.CompleteTaskRequest{
-					TaskGuid:      taskGuid,
-					CellId:        cellId,
-					Failed:        true,
-					FailureReason: "'cause I said so",
-					Result:        "a magical result",
-				})
+				err = etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 				Expect(err).NotTo(HaveOccurred())
 
 				err = etcdDB.ResolvingTask(logger, taskGuid)

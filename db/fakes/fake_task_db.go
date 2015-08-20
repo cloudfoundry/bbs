@@ -42,11 +42,12 @@ type FakeTaskDB struct {
 	desireTaskReturns struct {
 		result1 *models.Error
 	}
-	StartTaskStub        func(logger lager.Logger, request *models.StartTaskRequest) (bool, *models.Error)
+	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (bool, *models.Error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
-		logger  lager.Logger
-		request *models.StartTaskRequest
+		logger   lager.Logger
+		taskGuid string
+		cellId   string
 	}
 	startTaskReturns struct {
 		result1 bool
@@ -61,20 +62,25 @@ type FakeTaskDB struct {
 	cancelTaskReturns struct {
 		result1 *models.Error
 	}
-	FailTaskStub        func(logger lager.Logger, request *models.FailTaskRequest) *models.Error
+	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) *models.Error
 	failTaskMutex       sync.RWMutex
 	failTaskArgsForCall []struct {
-		logger  lager.Logger
-		request *models.FailTaskRequest
+		logger        lager.Logger
+		taskGuid      string
+		failureReason string
 	}
 	failTaskReturns struct {
 		result1 *models.Error
 	}
-	CompleteTaskStub        func(logger lager.Logger, request *models.CompleteTaskRequest) *models.Error
+	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) *models.Error
 	completeTaskMutex       sync.RWMutex
 	completeTaskArgsForCall []struct {
-		logger  lager.Logger
-		request *models.CompleteTaskRequest
+		logger        lager.Logger
+		taskGuid      string
+		cellId        string
+		failed        bool
+		failureReason string
+		result        string
 	}
 	completeTaskReturns struct {
 		result1 *models.Error
@@ -210,15 +216,16 @@ func (fake *FakeTaskDB) DesireTaskReturns(result1 *models.Error) {
 	}{result1}
 }
 
-func (fake *FakeTaskDB) StartTask(logger lager.Logger, request *models.StartTaskRequest) (bool, *models.Error) {
+func (fake *FakeTaskDB) StartTask(logger lager.Logger, taskGuid string, cellId string) (bool, *models.Error) {
 	fake.startTaskMutex.Lock()
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
-		logger  lager.Logger
-		request *models.StartTaskRequest
-	}{logger, request})
+		logger   lager.Logger
+		taskGuid string
+		cellId   string
+	}{logger, taskGuid, cellId})
 	fake.startTaskMutex.Unlock()
 	if fake.StartTaskStub != nil {
-		return fake.StartTaskStub(logger, request)
+		return fake.StartTaskStub(logger, taskGuid, cellId)
 	} else {
 		return fake.startTaskReturns.result1, fake.startTaskReturns.result2
 	}
@@ -230,10 +237,10 @@ func (fake *FakeTaskDB) StartTaskCallCount() int {
 	return len(fake.startTaskArgsForCall)
 }
 
-func (fake *FakeTaskDB) StartTaskArgsForCall(i int) (lager.Logger, *models.StartTaskRequest) {
+func (fake *FakeTaskDB) StartTaskArgsForCall(i int) (lager.Logger, string, string) {
 	fake.startTaskMutex.RLock()
 	defer fake.startTaskMutex.RUnlock()
-	return fake.startTaskArgsForCall[i].logger, fake.startTaskArgsForCall[i].request
+	return fake.startTaskArgsForCall[i].logger, fake.startTaskArgsForCall[i].taskGuid, fake.startTaskArgsForCall[i].cellId
 }
 
 func (fake *FakeTaskDB) StartTaskReturns(result1 bool, result2 *models.Error) {
@@ -277,15 +284,16 @@ func (fake *FakeTaskDB) CancelTaskReturns(result1 *models.Error) {
 	}{result1}
 }
 
-func (fake *FakeTaskDB) FailTask(logger lager.Logger, request *models.FailTaskRequest) *models.Error {
+func (fake *FakeTaskDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) *models.Error {
 	fake.failTaskMutex.Lock()
 	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
-		logger  lager.Logger
-		request *models.FailTaskRequest
-	}{logger, request})
+		logger        lager.Logger
+		taskGuid      string
+		failureReason string
+	}{logger, taskGuid, failureReason})
 	fake.failTaskMutex.Unlock()
 	if fake.FailTaskStub != nil {
-		return fake.FailTaskStub(logger, request)
+		return fake.FailTaskStub(logger, taskGuid, failureReason)
 	} else {
 		return fake.failTaskReturns.result1
 	}
@@ -297,10 +305,10 @@ func (fake *FakeTaskDB) FailTaskCallCount() int {
 	return len(fake.failTaskArgsForCall)
 }
 
-func (fake *FakeTaskDB) FailTaskArgsForCall(i int) (lager.Logger, *models.FailTaskRequest) {
+func (fake *FakeTaskDB) FailTaskArgsForCall(i int) (lager.Logger, string, string) {
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
-	return fake.failTaskArgsForCall[i].logger, fake.failTaskArgsForCall[i].request
+	return fake.failTaskArgsForCall[i].logger, fake.failTaskArgsForCall[i].taskGuid, fake.failTaskArgsForCall[i].failureReason
 }
 
 func (fake *FakeTaskDB) FailTaskReturns(result1 *models.Error) {
@@ -310,15 +318,19 @@ func (fake *FakeTaskDB) FailTaskReturns(result1 *models.Error) {
 	}{result1}
 }
 
-func (fake *FakeTaskDB) CompleteTask(logger lager.Logger, request *models.CompleteTaskRequest) *models.Error {
+func (fake *FakeTaskDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) *models.Error {
 	fake.completeTaskMutex.Lock()
 	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
-		logger  lager.Logger
-		request *models.CompleteTaskRequest
-	}{logger, request})
+		logger        lager.Logger
+		taskGuid      string
+		cellId        string
+		failed        bool
+		failureReason string
+		result        string
+	}{logger, taskGuid, cellId, failed, failureReason, result})
 	fake.completeTaskMutex.Unlock()
 	if fake.CompleteTaskStub != nil {
-		return fake.CompleteTaskStub(logger, request)
+		return fake.CompleteTaskStub(logger, taskGuid, cellId, failed, failureReason, result)
 	} else {
 		return fake.completeTaskReturns.result1
 	}
@@ -330,10 +342,10 @@ func (fake *FakeTaskDB) CompleteTaskCallCount() int {
 	return len(fake.completeTaskArgsForCall)
 }
 
-func (fake *FakeTaskDB) CompleteTaskArgsForCall(i int) (lager.Logger, *models.CompleteTaskRequest) {
+func (fake *FakeTaskDB) CompleteTaskArgsForCall(i int) (lager.Logger, string, string, bool, string, string) {
 	fake.completeTaskMutex.RLock()
 	defer fake.completeTaskMutex.RUnlock()
-	return fake.completeTaskArgsForCall[i].logger, fake.completeTaskArgsForCall[i].request
+	return fake.completeTaskArgsForCall[i].logger, fake.completeTaskArgsForCall[i].taskGuid, fake.completeTaskArgsForCall[i].cellId, fake.completeTaskArgsForCall[i].failed, fake.completeTaskArgsForCall[i].failureReason, fake.completeTaskArgsForCall[i].result
 }
 
 func (fake *FakeTaskDB) CompleteTaskReturns(result1 *models.Error) {

@@ -289,10 +289,10 @@ var _ = Describe("Task Handlers", func() {
 			It("calls StartTask", func() {
 				handler.StartTask(responseRecorder, request)
 				Expect(fakeTaskDB.StartTaskCallCount()).To(Equal(1))
-				taskLogger, startTaskRequest := fakeTaskDB.StartTaskArgsForCall(0)
+				taskLogger, taskGuid, cellId := fakeTaskDB.StartTaskArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("start-task"))
-				Expect(startTaskRequest.TaskGuid).To(Equal("task-guid"))
-				Expect(startTaskRequest.CellId).To(Equal("cell-id"))
+				Expect(taskGuid).To(Equal("task-guid"))
+				Expect(cellId).To(Equal("cell-id"))
 			})
 
 			It("responds with true when the task should start", func() {
@@ -438,160 +438,108 @@ var _ = Describe("Task Handlers", func() {
 		})
 	})
 	Describe("FailTask", func() {
-		Context("when the fail request is normal", func() {
-			var expected *models.FailTaskRequest
-			BeforeEach(func() {
-				expected = &models.FailTaskRequest{
-					TaskGuid:      "task-guid",
-					FailureReason: "just cuz ;)",
-				}
-				request = newTestRequest(expected)
-			})
+		var (
+			taskGuid      string
+			failureReason string
 
-			It("responds with 200 OK", func() {
-				handler.FailTask(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
-			})
+			requestBody interface{}
+		)
 
+		BeforeEach(func() {
+			taskGuid = "task-guid"
+			failureReason = "just cuz ;)"
+
+			requestBody = &models.FailTaskRequest{
+				TaskGuid:      taskGuid,
+				FailureReason: failureReason,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request = newTestRequest(requestBody)
+			handler.FailTask(responseRecorder, request)
+		})
+
+		Context("when failing the task succeeds", func() {
 			It("calls FailTask", func() {
-				handler.FailTask(responseRecorder, request)
-				Expect(fakeTaskDB.FailTaskCallCount()).To(Equal(1))
-				taskLogger, failReq := fakeTaskDB.FailTaskArgsForCall(0)
+				taskLogger, actualTaskGuid, actualFailureReason := fakeTaskDB.FailTaskArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("fail-task"))
-				Expect(failReq).To(BeEquivalentTo(expected))
+				Expect(actualTaskGuid).To(Equal(taskGuid))
+				Expect(actualFailureReason).To(Equal(failureReason))
+			})
+		})
+
+		Context("when failing the task fails ", func() {
+			BeforeEach(func() {
+				fakeTaskDB.FailTaskReturns(models.ErrResourceExists)
 			})
 
 			It("bubbles up the underlying model error", func() {
-				fakeTaskDB.FailTaskReturns(models.ErrResourceExists)
-				handler.FailTask(responseRecorder, request)
 				res := &models.Error{}
 				err := res.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res).To(Equal(models.ErrResourceExists))
-			})
-		})
-		Context("when the request body is not a FailTaskRequest", func() {
-			BeforeEach(func() {
-				request = newTestRequest("foo")
-			})
-
-			It("responds with 400 BAD REQUEST", func() {
-				handler.FailTask(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("returns an Invalid Request error", func() {
-				handler.FailTask(responseRecorder, request)
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("unmarshal"))
-			})
-		})
-
-		Context("when the request body fails to stream", func() {
-			BeforeEach(func() {
-				request = newTestRequest(newExplodingReader(errors.New("foobar")))
-			})
-
-			It("responds with 400 BAD REQUEST", func() {
-				handler.FailTask(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("returns an Invalid Request error", func() {
-				handler.FailTask(responseRecorder, request)
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("foobar"))
 			})
 		})
 	})
 
 	Describe("CompleteTask", func() {
-		Context("when the request is normal", func() {
-			var expected *models.CompleteTaskRequest
-			BeforeEach(func() {
-				expected = &models.CompleteTaskRequest{
-					TaskGuid:      "task-guid",
-					CellId:        "cell_id",
-					Failed:        false,
-					FailureReason: "just cuz ;)",
-					Result:        "a result",
-				}
-				request = newTestRequest(expected)
-			})
+		var (
+			taskGuid      string
+			cellId        string
+			failed        bool
+			failureReason string
+			result        string
 
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			requestBody = &models.CompleteTaskRequest{
+				TaskGuid:      taskGuid,
+				CellId:        cellId,
+				Failed:        failed,
+				FailureReason: failureReason,
+				Result:        result,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.CompleteTask(responseRecorder, request)
+		})
+
+		Context("when completing the task succeeds", func() {
 			It("responds with 200 OK", func() {
-				handler.CompleteTask(responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
 			})
 
 			It("calls CompleteTask", func() {
-				handler.CompleteTask(responseRecorder, request)
 				Expect(fakeTaskDB.CompleteTaskCallCount()).To(Equal(1))
-				taskLogger, completeReq := fakeTaskDB.CompleteTaskArgsForCall(0)
+				taskLogger, actualTaskGuid, actualCellId, actualFailed, actualFailureReason, actualResult := fakeTaskDB.CompleteTaskArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("complete-task"))
-				Expect(completeReq).To(BeEquivalentTo(expected))
+				Expect(actualTaskGuid).To(Equal(taskGuid))
+				Expect(actualCellId).To(Equal(cellId))
+				Expect(actualFailed).To(Equal(failed))
+				Expect(actualFailureReason).To(Equal(failureReason))
+				Expect(actualResult).To(Equal(result))
+			})
+
+		})
+		Context("when completing the task fails", func() {
+			BeforeEach(func() {
+				fakeTaskDB.CompleteTaskReturns(models.ErrResourceExists)
 			})
 
 			It("bubbles up the underlying model error", func() {
-				fakeTaskDB.CompleteTaskReturns(models.ErrResourceExists)
-				handler.CompleteTask(responseRecorder, request)
 				res := &models.Error{}
 				err := res.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res).To(Equal(models.ErrResourceExists))
 			})
 		})
-
-		Context("when the request body is not a CompleteTaskRequest", func() {
-			BeforeEach(func() {
-				request = newTestRequest("foo")
-			})
-
-			It("responds with 400 BAD REQUEST", func() {
-				handler.CompleteTask(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("returns an Invalid Request error", func() {
-				handler.CompleteTask(responseRecorder, request)
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("unmarshal"))
-			})
-		})
-
-		Context("when the request body completes to stream", func() {
-			BeforeEach(func() {
-				request = newTestRequest(newExplodingReader(errors.New("foobar")))
-			})
-
-			It("responds with 400 BAD REQUEST", func() {
-				handler.CompleteTask(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("returns an Invalid Request error", func() {
-				handler.CompleteTask(responseRecorder, request)
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("foobar"))
-			})
-		})
 	})
+
 	Describe("ResolvingTask", func() {
 		Context("when the request is normal", func() {
 			var expected *models.TaskGuidRequest

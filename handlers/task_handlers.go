@@ -124,7 +124,7 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 	cellID := startReq.CellId
 	logger = logger.WithData(lager.Data{"task-guid": taskGuid, "cell-id": cellID})
 
-	shouldStart, startErr := h.db.StartTask(logger, startReq)
+	shouldStart, startErr := h.db.StartTask(logger, startReq.TaskGuid, startReq.CellId)
 	if startErr != nil {
 		logger.Error("failed-to-start-task", startErr)
 		writeInternalServerErrorResponse(w, startErr)
@@ -197,7 +197,7 @@ func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
 
 	logger.Debug("parsed-request-body", lager.Data{"request": dbReq})
 
-	modelErr := h.db.FailTask(logger, dbReq)
+	modelErr := h.db.FailTask(logger, dbReq.TaskGuid, dbReq.FailureReason)
 	if modelErr != nil {
 		logger.Error("failed-to-fail-task", modelErr)
 		writeInternalServerErrorResponse(w, modelErr)
@@ -232,7 +232,7 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
 
 	logger.Debug("parsed-request-body", lager.Data{"request": dbReq})
 
-	modelErr := h.db.CompleteTask(logger, dbReq)
+	modelErr := h.db.CompleteTask(logger, dbReq.TaskGuid, dbReq.CellId, dbReq.Failed, dbReq.FailureReason, dbReq.Result)
 	if modelErr != nil {
 		logger.Error("failed-to-complete-task", modelErr)
 		writeInternalServerErrorResponse(w, modelErr)
