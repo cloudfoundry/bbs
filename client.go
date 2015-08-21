@@ -440,7 +440,13 @@ func (c *client) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expi
 		ExpirePendingTaskDuration:   expirePendingTaskDuration.Nanoseconds(),
 		ExpireCompletedTaskDuration: expireCompletedTaskDuration.Nanoseconds(),
 	}
-	return c.doRequest(ConvergeTasksRoute, nil, nil, request, nil)
+	response := models.ConvergeTasksResponse{}
+	route := ConvergeTasksRoute
+	err := c.doRequest(route, nil, nil, request, &response)
+	if err != nil {
+		return err
+	}
+	return response.Error
 }
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {

@@ -269,6 +269,20 @@ func (m *ConvergeTasksRequest) GetExpireCompletedTaskDuration() int64 {
 	return 0
 }
 
+type ConvergeTasksResponse struct {
+	Error *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+}
+
+func (m *ConvergeTasksResponse) Reset()      { *m = ConvergeTasksResponse{} }
+func (*ConvergeTasksResponse) ProtoMessage() {}
+
+func (m *ConvergeTasksResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+
 type TasksRequest struct {
 	Domain string `protobuf:"bytes,1,opt,name=domain" json:"domain"`
 	CellId string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
@@ -1273,6 +1287,81 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *ConvergeTasksResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTaskRequests
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Error == nil {
+				m.Error = &Error{}
+			}
+			if err := m.Error.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTaskRequests(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTaskRequests
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func (m *TasksRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -1834,6 +1923,16 @@ func (this *ConvergeTasksRequest) String() string {
 	}, "")
 	return s
 }
+func (this *ConvergeTasksResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ConvergeTasksResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func (this *TasksRequest) String() string {
 	if this == nil {
 		return "nil"
@@ -1984,6 +2083,16 @@ func (m *ConvergeTasksRequest) Size() (n int) {
 	n += 1 + sovTaskRequests(uint64(m.KickTaskDuration))
 	n += 1 + sovTaskRequests(uint64(m.ExpirePendingTaskDuration))
 	n += 1 + sovTaskRequests(uint64(m.ExpireCompletedTaskDuration))
+	return n
+}
+
+func (m *ConvergeTasksResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -2333,6 +2442,34 @@ func (m *ConvergeTasksRequest) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *ConvergeTasksResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ConvergeTasksResponse) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(data, i, uint64(m.Error.Size()))
+		n4, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+
 func (m *TasksRequest) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -2378,11 +2515,11 @@ func (m *TasksResponse) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintTaskRequests(data, i, uint64(m.Error.Size()))
-		n4, err := m.Error.MarshalTo(data[i:])
+		n5, err := m.Error.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
 	}
 	if len(m.Tasks) > 0 {
 		for _, msg := range m.Tasks {
@@ -2440,21 +2577,21 @@ func (m *TaskResponse) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintTaskRequests(data, i, uint64(m.Error.Size()))
-		n5, err := m.Error.MarshalTo(data[i:])
+		n6, err := m.Error.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n6
 	}
 	if m.Task != nil {
 		data[i] = 0x12
 		i++
 		i = encodeVarintTaskRequests(data, i, uint64(m.Task.Size()))
-		n6, err := m.Task.MarshalTo(data[i:])
+		n7, err := m.Task.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n7
 	}
 	return i, nil
 }
@@ -2571,6 +2708,14 @@ func (this *ConvergeTasksRequest) GoString() string {
 		`KickTaskDuration:` + fmt.Sprintf("%#v", this.KickTaskDuration),
 		`ExpirePendingTaskDuration:` + fmt.Sprintf("%#v", this.ExpirePendingTaskDuration),
 		`ExpireCompletedTaskDuration:` + fmt.Sprintf("%#v", this.ExpireCompletedTaskDuration) + `}`}, ", ")
+	return s
+}
+func (this *ConvergeTasksResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ConvergeTasksResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
 	return s
 }
 func (this *TasksRequest) GoString() string {
@@ -2899,6 +3044,31 @@ func (this *ConvergeTasksRequest) Equal(that interface{}) bool {
 		return false
 	}
 	if this.ExpireCompletedTaskDuration != that1.ExpireCompletedTaskDuration {
+		return false
+	}
+	return true
+}
+func (this *ConvergeTasksResponse) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ConvergeTasksResponse)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
 		return false
 	}
 	return true

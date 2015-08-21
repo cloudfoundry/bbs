@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -566,71 +565,39 @@ var _ = Describe("Task Handlers", func() {
 
 	Describe("ConvergeTasks", func() {
 		Context("when the request is normal", func() {
-			var expected *models.ConvergeTasksRequest
+			var (
+				kickTaskDuration            = int64(10 * time.Second)
+				expirePendingTaskDuration   = int64(10 * time.Second)
+				expireCompletedTaskDuration = int64(10 * time.Second)
+			)
 			BeforeEach(func() {
-				expected = &models.ConvergeTasksRequest{
-					KickTaskDuration:            int64(10 * time.Second),
-					ExpirePendingTaskDuration:   int64(10 * time.Second),
-					ExpireCompletedTaskDuration: int64(10 * time.Second),
+				requestBody = &models.ConvergeTasksRequest{
+					KickTaskDuration:            kickTaskDuration,
+					ExpirePendingTaskDuration:   expirePendingTaskDuration,
+					ExpireCompletedTaskDuration: expireCompletedTaskDuration,
 				}
-				request = newTestRequest(expected)
 			})
 
-			It("responds with 200 OK", func() {
+			JustBeforeEach(func() {
+				request := newTestRequest(requestBody)
 				handler.ConvergeTasks(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
 			})
 
 			It("calls ConvergeTasks", func() {
-				handler.ConvergeTasks(responseRecorder, request)
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
-				taskLogger, kickDuration, pendingDuration, completedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
+				taskLogger, actualKickDuration, actualPendingDuration, actualCompletedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("converge-tasks"))
-				Expect(kickDuration).To(BeEquivalentTo(expected.KickTaskDuration))
-				Expect(pendingDuration).To(BeEquivalentTo(expected.ExpirePendingTaskDuration))
-				Expect(completedDuration).To(BeEquivalentTo(expected.ExpireCompletedTaskDuration))
-			})
-		})
+				Expect(actualKickDuration).To(BeEquivalentTo(kickTaskDuration))
+				Expect(actualPendingDuration).To(BeEquivalentTo(expirePendingTaskDuration))
+				Expect(actualCompletedDuration).To(BeEquivalentTo(expireCompletedTaskDuration))
 
-		Context("when the request body is not a TaskGuidRequest", func() {
-			BeforeEach(func() {
-				request = newTestRequest("foo")
-			})
-
-			It("responds with 400 BAD REQUEST", func() {
-				handler.ConvergeTasks(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("returns an Invalid Request error", func() {
-				handler.ConvergeTasks(responseRecorder, request)
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.TaskLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("unmarshal"))
-			})
-		})
-
-		Context("when the request body resolves to stream", func() {
-			BeforeEach(func() {
-				request = newTestRequest(newExplodingReader(errors.New("foobar")))
-			})
-
-			It("responds with 400 BAD REQUEST", func() {
-				handler.ConvergeTasks(responseRecorder, request)
-				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("returns an Invalid Request error", func() {
-				handler.ConvergeTasks(responseRecorder, request)
-				var bbsError models.Error
-				err := bbsError.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(bbsError.Equal(models.ErrBadRequest)).To(BeTrue())
-				Expect(bbsError.Message).To(ContainSubstring("foobar"))
+				Expect(response.Error).To(BeNil())
 			})
 		})
 	})

@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -153,32 +151,18 @@ func (h *TaskHandler) ResolveTask(w http.ResponseWriter, req *http.Request) {
 func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("converge-tasks")
 
-	data, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		logger.Error("failed-to-read-body", err)
-		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to read request body: %s", err))
-		return
-	}
-
 	request := &models.ConvergeTasksRequest{}
-	err = request.Unmarshal(data)
-	if err != nil {
-		logger.Error("failed-to-unmarshal-task", err)
-		writeBadRequestResponse(w, models.InvalidRequest, fmt.Errorf("failed to unmarshal converge tasks request: %s", err))
-		return
-	}
-	logger.Debug("parsed-request-body", lager.Data{"request": request})
-	// if err := request.Validate(); err != nil {
-	// 	logger.Error("invalid-request", err)
-	// 	writeBadRequestResponse(w, models.InvalidRequest, err)
-	// 	return
-	// }
+	response := &models.ConvergeTasksResponse{}
 
-	h.db.ConvergeTasks(
-		logger,
-		time.Duration(request.KickTaskDuration),
-		time.Duration(request.ExpirePendingTaskDuration),
-		time.Duration(request.ExpireCompletedTaskDuration),
-	)
-	writeEmptyResponse(w, http.StatusNoContent)
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		h.db.ConvergeTasks(
+			logger,
+			time.Duration(request.KickTaskDuration),
+			time.Duration(request.ExpirePendingTaskDuration),
+			time.Duration(request.ExpireCompletedTaskDuration),
+		)
+	}
+
+	writeResponse(w, response)
 }

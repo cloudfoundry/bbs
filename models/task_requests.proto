@@ -57,6 +57,10 @@ message ConvergeTasksRequest {
   optional int64 expire_completed_task_duration = 3;
 }
 
+message ConvergeTasksResponse {
+  optional Error error = 1;
+}
+
 message TasksRequest{
   optional string domain = 1;
   optional string cell_id = 2;

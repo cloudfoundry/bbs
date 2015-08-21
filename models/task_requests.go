@@ -106,3 +106,7 @@ func (request *TaskGuidRequest) Validate() error {
 
 	return nil
 }
+
+func (request *ConvergeTasksRequest) Validate() error {
+	return nil
+}
