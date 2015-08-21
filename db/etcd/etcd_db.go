@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
@@ -65,11 +66,22 @@ type ETCDDB struct {
 	cellDB db.CellDB
 }
 
-func NewETCD(etcdClient *etcd.Client,
-	auctioneerClient auctionhandlers.Client, cellClient cellhandlers.Client,
-	cellDB db.CellDB, clock clock.Clock, cbWorkPool *workpool.WorkPool, taskCBFactory db.CompleteTaskWork) *ETCDDB {
+func NewETCD(
+	etcdClient *etcd.Client,
+	auctioneerClient auctionhandlers.Client,
+	cellClient cellhandlers.Client,
+	cellDB db.CellDB,
+	clock clock.Clock,
+	cbWorkPool *workpool.WorkPool,
+	taskCBFactory db.CompleteTaskWork,
+) *ETCDDB {
+	storeClient := &storeClient{
+		client: etcdClient,
+		codecs: codec.NewCodecs(codec.NONE),
+	}
+
 	return &ETCDDB{
-		&storeClient{client: etcdClient},
+		storeClient,
 		clock,
 		map[chan bool]bool{},
 		&sync.Mutex{},

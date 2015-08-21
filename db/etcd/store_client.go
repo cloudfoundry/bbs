@@ -1,6 +1,9 @@
 package etcd
 
-import "github.com/coreos/go-etcd/etcd"
+import (
+	"github.com/cloudfoundry-incubator/bbs/db/codec"
+	"github.com/coreos/go-etcd/etcd"
+)
 
 type StoreClient interface {
 	Get(key string, sort bool, recursive bool) (*etcd.Response, error)
@@ -14,10 +17,45 @@ type StoreClient interface {
 
 type storeClient struct {
 	client *etcd.Client
+	codecs *codec.Codecs
+}
+
+func NewStoreClient(client *etcd.Client, defaultEncoding codec.Kind) StoreClient {
+	return &storeClient{
+		client: client,
+		codecs: codec.NewCodecs(defaultEncoding),
+	}
 }
 
 func (sc *storeClient) Get(key string, sort bool, recursive bool) (*etcd.Response, error) {
-	return sc.client.Get(key, sort, recursive)
+	response, err := sc.client.Get(key, sort, recursive)
+	if err != nil {
+		return nil, err
+	}
+
+	err = sc.decode(response.Node)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, err
+}
+
+func (sc *storeClient) decode(node *etcd.Node) error {
+	payload, err := sc.codecs.Decode([]byte(node.Value))
+	if err != nil {
+		return err
+	}
+
+	node.Value = string(payload)
+
+	for _, n := range node.Nodes {
+		if err := sc.decode(n); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (sc *storeClient) Set(key string, value []byte, ttl uint64) (*etcd.Response, error) {
