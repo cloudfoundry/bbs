@@ -94,7 +94,7 @@ func (c *client) Domains() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return response.Domains, response.Error
+	return response.Domains, response.Error.ToError()
 }
 
 func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
@@ -107,7 +107,7 @@ func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
 	if err != nil {
 		return err
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
@@ -121,7 +121,7 @@ func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.Actua
 		return nil, err
 	}
 
-	return response.ActualLrpGroups, response.Error
+	return response.ActualLrpGroups, response.Error.ToError()
 }
 
 func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {
@@ -134,7 +134,7 @@ func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.Act
 		return nil, err
 	}
 
-	return response.ActualLrpGroups, response.Error
+	return response.ActualLrpGroups, response.Error.ToError()
 }
 
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {
@@ -148,7 +148,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index i
 		return nil, err
 	}
 
-	return response.ActualLrpGroup, response.Error
+	return response.ActualLrpGroup, response.Error.ToError()
 }
 
 func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
@@ -162,7 +162,7 @@ func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *mode
 	if err != nil {
 		return err
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
@@ -177,7 +177,7 @@ func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 		return err
 
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
@@ -192,7 +192,7 @@ func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 		return err
 
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
@@ -206,7 +206,7 @@ func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) er
 		return err
 
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
@@ -219,7 +219,7 @@ func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
 		return err
 
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) RemoveActualLRP(processGuid string, index int) error {
@@ -232,7 +232,7 @@ func (c *client) RemoveActualLRP(processGuid string, index int) error {
 	if err != nil {
 		return err
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) EvacuateClaimedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
@@ -278,7 +278,7 @@ func (c *client) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey
 		return err
 	}
 
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
@@ -291,7 +291,7 @@ func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredL
 		return nil, err
 	}
 
-	return response.DesiredLrps, response.Error
+	return response.DesiredLrps, response.Error.ToError()
 }
 
 func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {
@@ -304,7 +304,7 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 		return nil, err
 	}
 
-	return response.DesiredLrp, response.Error
+	return response.DesiredLrp, response.Error.ToError()
 }
 
 func (c *client) Tasks() ([]*models.Task, error) {
@@ -315,7 +315,7 @@ func (c *client) Tasks() ([]*models.Task, error) {
 		return nil, err
 	}
 
-	return response.Tasks, response.Error
+	return response.Tasks, response.Error.ToError()
 }
 
 func (c *client) TasksByDomain(domain string) ([]*models.Task, error) {
@@ -328,7 +328,7 @@ func (c *client) TasksByDomain(domain string) ([]*models.Task, error) {
 		return nil, err
 	}
 
-	return response.Tasks, response.Error
+	return response.Tasks, response.Error.ToError()
 }
 
 func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
@@ -341,7 +341,7 @@ func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
 		return nil, err
 	}
 
-	return response.Tasks, response.Error
+	return response.Tasks, response.Error.ToError()
 }
 
 func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
@@ -354,7 +354,7 @@ func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
 		return nil, err
 	}
 
-	return response.Task, response.Error
+	return response.Task, response.Error.ToError()
 }
 
 func (c *client) doTaskLifecycleRequest(route string, request proto.Message) error {
@@ -363,7 +363,7 @@ func (c *client) doTaskLifecycleRequest(route string, request proto.Message) err
 	if err != nil {
 		return err
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinition) error {
@@ -386,7 +386,7 @@ func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return response.ShouldStart, response.Error
+	return response.ShouldStart, response.Error.ToError()
 }
 
 func (c *client) CancelTask(taskGuid string) error {
@@ -446,7 +446,7 @@ func (c *client) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expi
 	if err != nil {
 		return err
 	}
-	return response.Error
+	return response.Error.ToError()
 }
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {
@@ -522,23 +522,10 @@ func (c *client) do(request *http.Request, responseObject proto.Message) error {
 	}
 
 	if parsedContentType == ProtoContentType {
-		if response.StatusCode > 299 {
-			return handleErrorResponse(response)
-		} else {
-			return handleProtoResponse(response, responseObject)
-		}
+		return handleProtoResponse(response, responseObject)
 	} else {
 		return handleNonProtoResponse(response)
 	}
-}
-
-func handleErrorResponse(response *http.Response) error {
-	errResponse := &models.Error{}
-	err := handleProtoResponse(response, errResponse)
-	if err != nil {
-		return &models.Error{Type: models.InvalidProtobufMessage, Message: err.Error()}
-	}
-	return errResponse
 }
 
 func handleProtoResponse(response *http.Response, responseObject proto.Message) error {
