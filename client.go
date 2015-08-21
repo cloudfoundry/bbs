@@ -357,18 +357,23 @@ func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
 	return response.Task, response.Error
 }
 
+func (c *client) doTaskLifecycleRequest(route string, request proto.Message) error {
+	response := models.TaskLifecycleResponse{}
+	err := c.doRequest(route, nil, nil, request, &response)
+	if err != nil {
+		return err
+	}
+	return response.Error
+}
+
 func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinition) error {
+	route := DesireTaskRoute
 	request := models.DesireTaskRequest{
 		TaskGuid:       taskGuid,
 		Domain:         domain,
 		TaskDefinition: taskDef,
 	}
-	response := models.TaskLifecycleResponse{}
-	err := c.doRequest(DesireTaskRoute, nil, nil, &request, &response)
-	if err != nil {
-		return err
-	}
-	return response.Error
+	return c.doTaskLifecycleRequest(route, &request)
 }
 
 func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
@@ -385,48 +390,51 @@ func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
 }
 
 func (c *client) CancelTask(taskGuid string) error {
-	request := &models.TaskGuidRequest{
+	request := models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
-	return c.doRequest(CancelTaskRoute, nil, nil, request, nil)
+	route := CancelTaskRoute
+	return c.doTaskLifecycleRequest(route, &request)
 }
 
 func (c *client) ResolvingTask(taskGuid string) error {
-	request := &models.TaskGuidRequest{
+	request := models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
-	return c.doRequest(ResolvingTaskRoute, nil, nil, request, nil)
+	route := ResolvingTaskRoute
+	return c.doTaskLifecycleRequest(route, &request)
 }
 
 func (c *client) ResolveTask(taskGuid string) error {
-	request := &models.TaskGuidRequest{
+	request := models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
-	return c.doRequest(ResolveTaskRoute, nil, nil, request, nil)
+	route := ResolveTaskRoute
+	return c.doTaskLifecycleRequest(route, &request)
 }
 
 func (c *client) FailTask(taskGuid, failureReason string) error {
-	request := &models.FailTaskRequest{
+	request := models.FailTaskRequest{
 		TaskGuid:      taskGuid,
 		FailureReason: failureReason,
 	}
-	return c.doRequest(FailTaskRoute, nil, nil, request, nil)
+	route := FailTaskRoute
+	return c.doTaskLifecycleRequest(route, &request)
 }
 
 func (c *client) CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error {
-	request := &models.CompleteTaskRequest{
+	request := models.CompleteTaskRequest{
 		TaskGuid:      taskGuid,
 		CellId:        cellId,
 		Failed:        failed,
 		FailureReason: failureReason,
 		Result:        result,
 	}
-	return c.doRequest(CompleteTaskRoute, nil, nil, request, nil)
+	route := CompleteTaskRoute
+	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) ConvergeTasks(
-	kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-) error {
+func (c *client) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error {
 	request := &models.ConvergeTasksRequest{
 		KickTaskDuration:            kickTaskDuration.Nanoseconds(),
 		ExpirePendingTaskDuration:   expirePendingTaskDuration.Nanoseconds(),

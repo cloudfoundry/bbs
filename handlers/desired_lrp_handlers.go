@@ -29,7 +29,7 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
 		filter := models.DesiredLRPFilter{Domain: request.Domain}
-		response.DesiredLrps, response.Error = h.db.DesiredLRPs(h.logger, filter)
+		response.DesiredLrps, response.Error = h.db.DesiredLRPs(logger, filter)
 	}
 
 	writeResponse(w, response)
@@ -43,7 +43,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.DesiredLrp, response.Error = h.db.DesiredLRPByProcessGuid(h.logger, request.ProcessGuid)
+		response.DesiredLrp, response.Error = h.db.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 	}
 
 	writeResponse(w, response)

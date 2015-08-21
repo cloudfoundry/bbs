@@ -95,4 +95,82 @@ var _ = Describe("Task requests", func() {
 			})
 		})
 	})
+
+	Describe("CompleteTaskRequest", func() {
+		Describe("Validate", func() {
+			var request models.CompleteTaskRequest
+
+			BeforeEach(func() {
+				request = models.CompleteTaskRequest{
+					TaskGuid: "t-guid",
+					CellId:   "c-id",
+				}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+
+			Context("when the TaskGuid is blank", func() {
+				BeforeEach(func() {
+					request.TaskGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"task_guid"}))
+				})
+			})
+
+			Context("when the CellId is blank", func() {
+				BeforeEach(func() {
+					request.CellId = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"cell_id"}))
+				})
+			})
+		})
+	})
+
+	Describe("FailTaskRequest", func() {
+		Describe("Validate", func() {
+			var request models.FailTaskRequest
+
+			BeforeEach(func() {
+				request = models.FailTaskRequest{
+					TaskGuid:      "t-guid",
+					FailureReason: "some-failure",
+				}
+			})
+
+			Context("when valid", func() {
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+
+			Context("when the TaskGuid is blank", func() {
+				BeforeEach(func() {
+					request.TaskGuid = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"task_guid"}))
+				})
+			})
+
+			Context("when the FailureReason is blank", func() {
+				BeforeEach(func() {
+					request.FailureReason = ""
+				})
+
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(ConsistOf(models.ErrInvalidField{"failure_reason"}))
+				})
+			})
+		})
+	})
 })

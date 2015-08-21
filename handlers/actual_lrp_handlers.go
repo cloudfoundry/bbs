@@ -29,7 +29,7 @@ func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Requ
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
 		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId}
-		response.ActualLrpGroups, response.Error = h.db.ActualLRPGroups(h.logger, filter)
+		response.ActualLrpGroups, response.Error = h.db.ActualLRPGroups(logger, filter)
 	}
 
 	writeResponse(w, response)
@@ -43,7 +43,7 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, r
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.ActualLrpGroups, response.Error = h.db.ActualLRPGroupsByProcessGuid(h.logger, request.ProcessGuid)
+		response.ActualLrpGroups, response.Error = h.db.ActualLRPGroupsByProcessGuid(logger, request.ProcessGuid)
 	}
 
 	writeResponse(w, response)
@@ -57,7 +57,7 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWr
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.ActualLrpGroup, response.Error = h.db.ActualLRPGroupByProcessGuidAndIndex(h.logger, request.ProcessGuid, request.Index)
+		response.ActualLrpGroup, response.Error = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
 	}
 
 	writeResponse(w, response)

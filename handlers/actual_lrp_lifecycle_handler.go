@@ -28,7 +28,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.Error = h.db.ClaimActualLRP(h.logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
+		response.Error = h.db.ClaimActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
 	}
 
 	writeResponse(w, response)
@@ -42,7 +42,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.Error = h.db.StartActualLRP(h.logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
+		response.Error = h.db.StartActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
 	}
 
 	writeResponse(w, response)
@@ -56,7 +56,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.Error = h.db.CrashActualLRP(h.logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
+		response.Error = h.db.CrashActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
 	}
 
 	writeResponse(w, response)
@@ -70,7 +70,7 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *ht
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.Error = h.db.FailActualLRP(h.logger, request.ActualLrpKey, request.ErrorMessage)
+		response.Error = h.db.FailActualLRP(logger, request.ActualLrpKey, request.ErrorMessage)
 	}
 
 	writeResponse(w, response)
@@ -84,7 +84,7 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.Error = h.db.RemoveActualLRP(h.logger, request.ProcessGuid, request.Index)
+		response.Error = h.db.RemoveActualLRP(logger, request.ProcessGuid, request.Index)
 	}
 
 	writeResponse(w, response)
@@ -98,7 +98,7 @@ func (h *ActualLRPLifecycleHandler) RetireActualLRP(w http.ResponseWriter, req *
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.Error = h.db.RetireActualLRP(h.logger, request.ActualLrpKey)
+		response.Error = h.db.RetireActualLRP(logger, request.ActualLrpKey)
 	}
 
 	writeResponse(w, response)
