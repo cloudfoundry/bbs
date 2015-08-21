@@ -45,62 +45,52 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req 
 	logger := h.logger.Session("evacuate-claimed-actual-lrp")
 
 	request := &models.EvacuateClaimedActualLRPRequest{}
-	if !parseRequestAndWrite(logger, w, req, request) {
-		return
+	response := &models.EvacuationResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.KeepContainer, response.Error = h.db.EvacuateClaimedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	}
 
-	keepContainer, bbsErr := h.db.EvacuateClaimedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
-
-	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
-		KeepContainer: keepContainer,
-		Error:         bbsErr,
-	})
+	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("evacuate-crashed-actual-lrp")
 
 	request := &models.EvacuateCrashedActualLRPRequest{}
-	if !parseRequestAndWrite(logger, w, req, request) {
-		return
+	response := &models.EvacuationResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.KeepContainer, response.Error = h.db.EvacuateCrashedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
 	}
 
-	keepContainer, bbsErr := h.db.EvacuateCrashedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
-
-	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
-		KeepContainer: keepContainer,
-		Error:         bbsErr,
-	})
+	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("evacuate-running-actual-lrp")
 
 	request := &models.EvacuateRunningActualLRPRequest{}
-	if !parseRequestAndWrite(logger, w, req, request) {
-		return
+	response := &models.EvacuationResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.KeepContainer, response.Error = h.db.EvacuateRunningActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
 	}
 
-	keepContainer, bbsErr := h.db.EvacuateRunningActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
-
-	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
-		KeepContainer: keepContainer,
-		Error:         bbsErr,
-	})
+	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("evacuate-stopped-actual-lrp")
-
 	request := &models.EvacuateStoppedActualLRPRequest{}
-	if !parseRequestAndWrite(logger, w, req, request) {
-		return
+	response := &models.EvacuationResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.KeepContainer, response.Error = h.db.EvacuateStoppedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	}
-
-	keepContainer, bbsErr := h.db.EvacuateStoppedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
-
-	writeProtoResponse(w, http.StatusOK, &models.EvacuationResponse{
-		KeepContainer: keepContainer,
-		Error:         bbsErr,
-	})
+	writeResponse(w, response)
 }

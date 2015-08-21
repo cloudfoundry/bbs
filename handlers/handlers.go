@@ -3,11 +3,13 @@ package handlers
 import (
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/gogo/protobuf/proto"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 )
@@ -78,30 +80,6 @@ func route(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(f)
 }
 
-func parseRequestAndWrite(logger lager.Logger, w http.ResponseWriter, req *http.Request, request MessageValidator) bool {
-	data, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		logger.Error("failed-to-read-body", err)
-		writeInternalServerErrorResponse(w, err)
-		return false
-	}
-
-	err = request.Unmarshal(data)
-	if err != nil {
-		logger.Error("failed-to-parse-request-body", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return false
-	}
-
-	logger.Debug("parsed-request-body", lager.Data{"request": request})
-	if err := request.Validate(); err != nil {
-		logger.Error("invalid-request", err)
-		writeBadRequestResponse(w, models.InvalidRequest, err)
-		return false
-	}
-	return true
-}
-
 func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) *models.Error {
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -125,4 +103,17 @@ func parseRequest(logger lager.Logger, req *http.Request, request MessageValidat
 	}
 
 	return nil
+}
+
+func writeResponse(w http.ResponseWriter, message proto.Message) {
+	responseBytes, err := proto.Marshal(message)
+	if err != nil {
+		panic("Unable to encode Proto: " + err.Error())
+	}
+
+	w.Header().Set("Content-Length", strconv.Itoa(len(responseBytes)))
+	w.Header().Set("Content-Type", "application/x-protobuf")
+	w.WriteHeader(http.StatusOK)
+
+	w.Write(responseBytes)
 }
