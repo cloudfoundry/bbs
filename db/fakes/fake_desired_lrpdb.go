@@ -30,6 +30,34 @@ type FakeDesiredLRPDB struct {
 		result1 *models.DesiredLRP
 		result2 *models.Error
 	}
+	DesireLRPStub        func(logger lager.Logger, desiredLRP *models.DesiredLRP) *models.Error
+	desireLRPMutex       sync.RWMutex
+	desireLRPArgsForCall []struct {
+		logger     lager.Logger
+		desiredLRP *models.DesiredLRP
+	}
+	desireLRPReturns struct {
+		result1 *models.Error
+	}
+	UpdateDesiredLRPStub        func(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) *models.Error
+	updateDesiredLRPMutex       sync.RWMutex
+	updateDesiredLRPArgsForCall []struct {
+		logger      lager.Logger
+		processGuid string
+		update      *models.DesiredLRPUpdate
+	}
+	updateDesiredLRPReturns struct {
+		result1 *models.Error
+	}
+	RemoveDesiredLRPStub        func(logger lager.Logger, processGuid string) *models.Error
+	removeDesiredLRPMutex       sync.RWMutex
+	removeDesiredLRPArgsForCall []struct {
+		logger      lager.Logger
+		processGuid string
+	}
+	removeDesiredLRPReturns struct {
+		result1 *models.Error
+	}
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, *models.Error) {
@@ -98,6 +126,106 @@ func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidReturns(result1 *models.Des
 		result1 *models.DesiredLRP
 		result2 *models.Error
 	}{result1, result2}
+}
+
+func (fake *FakeDesiredLRPDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) *models.Error {
+	fake.desireLRPMutex.Lock()
+	fake.desireLRPArgsForCall = append(fake.desireLRPArgsForCall, struct {
+		logger     lager.Logger
+		desiredLRP *models.DesiredLRP
+	}{logger, desiredLRP})
+	fake.desireLRPMutex.Unlock()
+	if fake.DesireLRPStub != nil {
+		return fake.DesireLRPStub(logger, desiredLRP)
+	} else {
+		return fake.desireLRPReturns.result1
+	}
+}
+
+func (fake *FakeDesiredLRPDB) DesireLRPCallCount() int {
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	return len(fake.desireLRPArgsForCall)
+}
+
+func (fake *FakeDesiredLRPDB) DesireLRPArgsForCall(i int) (lager.Logger, *models.DesiredLRP) {
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	return fake.desireLRPArgsForCall[i].logger, fake.desireLRPArgsForCall[i].desiredLRP
+}
+
+func (fake *FakeDesiredLRPDB) DesireLRPReturns(result1 *models.Error) {
+	fake.DesireLRPStub = nil
+	fake.desireLRPReturns = struct {
+		result1 *models.Error
+	}{result1}
+}
+
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) *models.Error {
+	fake.updateDesiredLRPMutex.Lock()
+	fake.updateDesiredLRPArgsForCall = append(fake.updateDesiredLRPArgsForCall, struct {
+		logger      lager.Logger
+		processGuid string
+		update      *models.DesiredLRPUpdate
+	}{logger, processGuid, update})
+	fake.updateDesiredLRPMutex.Unlock()
+	if fake.UpdateDesiredLRPStub != nil {
+		return fake.UpdateDesiredLRPStub(logger, processGuid, update)
+	} else {
+		return fake.updateDesiredLRPReturns.result1
+	}
+}
+
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRPCallCount() int {
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
+	return len(fake.updateDesiredLRPArgsForCall)
+}
+
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRPArgsForCall(i int) (lager.Logger, string, *models.DesiredLRPUpdate) {
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
+	return fake.updateDesiredLRPArgsForCall[i].logger, fake.updateDesiredLRPArgsForCall[i].processGuid, fake.updateDesiredLRPArgsForCall[i].update
+}
+
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRPReturns(result1 *models.Error) {
+	fake.UpdateDesiredLRPStub = nil
+	fake.updateDesiredLRPReturns = struct {
+		result1 *models.Error
+	}{result1}
+}
+
+func (fake *FakeDesiredLRPDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) *models.Error {
+	fake.removeDesiredLRPMutex.Lock()
+	fake.removeDesiredLRPArgsForCall = append(fake.removeDesiredLRPArgsForCall, struct {
+		logger      lager.Logger
+		processGuid string
+	}{logger, processGuid})
+	fake.removeDesiredLRPMutex.Unlock()
+	if fake.RemoveDesiredLRPStub != nil {
+		return fake.RemoveDesiredLRPStub(logger, processGuid)
+	} else {
+		return fake.removeDesiredLRPReturns.result1
+	}
+}
+
+func (fake *FakeDesiredLRPDB) RemoveDesiredLRPCallCount() int {
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	return len(fake.removeDesiredLRPArgsForCall)
+}
+
+func (fake *FakeDesiredLRPDB) RemoveDesiredLRPArgsForCall(i int) (lager.Logger, string) {
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	return fake.removeDesiredLRPArgsForCall[i].logger, fake.removeDesiredLRPArgsForCall[i].processGuid
+}
+
+func (fake *FakeDesiredLRPDB) RemoveDesiredLRPReturns(result1 *models.Error) {
+	fake.RemoveDesiredLRPStub = nil
+	fake.removeDesiredLRPReturns = struct {
+		result1 *models.Error
+	}{result1}
 }
 
 var _ db.DesiredLRPDB = new(FakeDesiredLRPDB)

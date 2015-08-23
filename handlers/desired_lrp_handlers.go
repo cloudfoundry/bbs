@@ -48,3 +48,45 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 
 	writeResponse(w, response)
 }
+
+func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("desire-lrp")
+
+	request := &models.DesireLRPRequest{}
+	response := &models.DesiredLRPLifecycleResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Error = h.db.DesireLRP(logger, request.DesiredLrp)
+	}
+
+	writeResponse(w, response)
+}
+
+func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("update-desired-lrp")
+
+	request := &models.UpdateDesiredLRPRequest{}
+	response := &models.DesiredLRPLifecycleResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Error = h.db.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
+	}
+
+	writeResponse(w, response)
+}
+
+func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("remove-desired-lrp")
+
+	request := &models.RemoveDesiredLRPRequest{}
+	response := &models.DesiredLRPLifecycleResponse{}
+
+	response.Error = parseRequest(logger, req, request)
+	if response.Error == nil {
+		response.Error = h.db.RemoveDesiredLRP(logger, request.ProcessGuid)
+	}
+
+	writeResponse(w, response)
+}

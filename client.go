@@ -51,6 +51,10 @@ type Client interface {
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
 
+	DesireLRP(*models.DesiredLRP) error
+	UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error
+	RemoveDesiredLRP(processGuid string) error
+
 	// Public Task Methods
 	Tasks() ([]*models.Task, error)
 	TasksByDomain(domain string) ([]*models.Task, error)
@@ -305,6 +309,37 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 	}
 
 	return response.DesiredLrp, response.Error.ToError()
+}
+
+func (c *client) doDesiredLRPLifecycleRequest(route string, request proto.Message) error {
+	response := models.DesiredLRPLifecycleResponse{}
+	err := c.doRequest(route, nil, nil, request, &response)
+	if err != nil {
+		return err
+	}
+	return response.Error.ToError()
+}
+
+func (c *client) DesireLRP(desiredLRP *models.DesiredLRP) error {
+	request := models.DesireLRPRequest{
+		DesiredLrp: desiredLRP,
+	}
+	return c.doDesiredLRPLifecycleRequest(DesireDesiredLRPRoute, &request)
+}
+
+func (c *client) UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error {
+	request := models.UpdateDesiredLRPRequest{
+		ProcessGuid: processGuid,
+		Update:      update,
+	}
+	return c.doDesiredLRPLifecycleRequest(UpdateDesiredLRPRoute, &request)
+}
+
+func (c *client) RemoveDesiredLRP(processGuid string) error {
+	request := models.RemoveDesiredLRPRequest{
+		ProcessGuid: processGuid,
+	}
+	return c.doDesiredLRPLifecycleRequest(RemoveDesiredLRPRoute, &request)
 }
 
 func (c *client) Tasks() ([]*models.Task, error) {

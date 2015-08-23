@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager"
@@ -180,6 +181,175 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := models.DesiredLRPResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
+	Describe("DesireDesiredLRP", func() {
+		var (
+			desiredLRP *models.DesiredLRP
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			desiredLRP = model_helpers.NewValidDesiredLRP("some-guid")
+			requestBody = &models.DesireLRPRequest{
+				DesiredLrp: desiredLRP,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.DesireDesiredLRP(responseRecorder, request)
+		})
+
+		Context("when creating desired lrp in DB succeeds", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesireLRPReturns(nil)
+			})
+
+			It("creates desired lrp", func() {
+				Expect(fakeDesiredLRPDB.DesireLRPCallCount()).To(Equal(1))
+				_, actualDesiredLRP := fakeDesiredLRPDB.DesireLRPArgsForCall(0)
+				Expect(actualDesiredLRP).To(Equal(desiredLRP))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesireLRPReturns(models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
+	Describe("UpdateDesiredLRP", func() {
+		var (
+			processGuid string
+			update      *models.DesiredLRPUpdate
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			processGuid = "some-guid"
+			someText := "some-text"
+			update = &models.DesiredLRPUpdate{
+				Annotation: &someText,
+			}
+			requestBody = &models.UpdateDesiredLRPRequest{
+				ProcessGuid: processGuid,
+				Update:      update,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.UpdateDesiredLRP(responseRecorder, request)
+		})
+
+		Context("when updating desired lrp in DB succeeds", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(nil)
+			})
+
+			It("updates the desired lrp", func() {
+				Expect(fakeDesiredLRPDB.UpdateDesiredLRPCallCount()).To(Equal(1))
+				_, actualProcessGuid, actualUpdate := fakeDesiredLRPDB.UpdateDesiredLRPArgsForCall(0)
+				Expect(actualProcessGuid).To(Equal(processGuid))
+				Expect(actualUpdate).To(Equal(update))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
+	Describe("RemoveDesiredLRP", func() {
+		var (
+			processGuid string
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			processGuid = "some-guid"
+			requestBody = &models.RemoveDesiredLRPRequest{
+				ProcessGuid: processGuid,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.RemoveDesiredLRP(responseRecorder, request)
+		})
+
+		Context("when updating desired lrp in DB succeeds", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.RemoveDesiredLRPReturns(nil)
+			})
+
+			It("updates the desired lrp", func() {
+				Expect(fakeDesiredLRPDB.RemoveDesiredLRPCallCount()).To(Equal(1))
+				_, actualProcessGuid := fakeDesiredLRPDB.RemoveDesiredLRPArgsForCall(0)
+				Expect(actualProcessGuid).To(Equal(processGuid))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.RemoveDesiredLRPReturns(models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 

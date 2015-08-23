@@ -15,6 +15,8 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+const retireActualThrottlerSize = 20
+
 func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, *models.Error) {
 	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
 	if bbsErr.Equal(models.ErrResourceNotFound) {
@@ -78,6 +80,43 @@ func (db *ETCDDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid 
 	}
 
 	return parseActualLRPGroups(logger, node, models.ActualLRPFilter{})
+}
+
+func (db *ETCDDB) instanceActualLRPsByProcessGuid(logger lager.Logger, processGuid string) (map[int32]*models.ActualLRP, *models.Error) {
+	node, bbsErr := db.fetchRecursiveRaw(logger, ActualLRPProcessDir(processGuid))
+	if bbsErr.Equal(models.ErrResourceNotFound) {
+		return nil, nil
+	}
+	if bbsErr != nil {
+		return nil, bbsErr
+	}
+	if node.Nodes.Len() == 0 {
+		return nil, nil
+	}
+
+	var instances = map[int32]*models.ActualLRP{}
+
+	logger.Debug("performing-parsing-actual-lrps")
+	for _, indexNode := range node.Nodes {
+		for _, instanceNode := range indexNode.Nodes {
+			if !isInstanceActualLRPNode(instanceNode) {
+				continue
+			}
+
+			instance := &models.ActualLRP{}
+			deserializeErr := models.FromJSON([]byte(instanceNode.Value), instance)
+			if deserializeErr != nil {
+				logger.Error("failed-parsing-actual-lrs", deserializeErr, lager.Data{"key": instanceNode.Key})
+				return nil, models.ErrDeserializeJSON
+			}
+
+			instances[instance.Index] = instance
+		}
+
+	}
+	logger.Debug("succeeded-performing-parsing-actual-lrps", lager.Data{"num-actual-lrps": len(instances)})
+
+	return instances, nil
 }
 
 func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, *models.Error) {
@@ -193,24 +232,90 @@ func (db *ETCDDB) newRunningActualLRP(key *models.ActualLRPKey, instanceKey *mod
 	}, nil
 }
 
+func (db *ETCDDB) newUnclaimedActualLRP(key *models.ActualLRPKey) (*models.ActualLRP, error) {
+	guid, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ActualLRP{
+		ActualLRPKey: *key,
+		Since:        db.clock.Now().UnixNano(),
+		State:        models.ActualLRPStateUnclaimed,
+		ModificationTag: models.ModificationTag{
+			Epoch: guid.String(),
+			Index: 0,
+		},
+	}, nil
+}
+
+func (db *ETCDDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) *models.Error {
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})
+		return models.ErrSerializeJSON
+	}
+
+	_, err = db.client.Create(ActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), lrpRawJSON, 0)
+	if err != nil {
+		logger.Error("failed-to-create-actual-lrp", err, lager.Data{"actual-lrp": lrp})
+		return models.ErrActualLRPCannotBeStarted
+	}
+
+	return nil
+}
+
 func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) *models.Error {
 	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
 	if err != nil {
 		return models.ErrActualLRPCannotBeStarted
 	}
 
-	lrpRawJSON, err := json.Marshal(lrp)
+	return db.createRawActualLRP(logger, lrp)
+}
+
+func (db *ETCDDB) createUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) *models.Error {
+	lrp, err := db.newUnclaimedActualLRP(key)
 	if err != nil {
-		return models.ErrSerializeJSON
+		return models.ErrActualLRPCannotBeUnclaimed
 	}
 
-	_, err = db.client.Create(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpRawJSON, 0)
-	if err != nil {
-		logger.Error("failed", err)
-		return models.ErrActualLRPCannotBeStarted
+	return db.createRawActualLRP(logger, lrp)
+}
+
+func (db *ETCDDB) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []uint {
+	count := len(keys)
+	createdIndicesChan := make(chan uint, count)
+
+	works := make([]func(), count)
+
+	for i, key := range keys {
+		key := key
+		works[i] = func() {
+			err := db.createUnclaimedActualLRP(logger, key)
+			if err != nil {
+				logger.Info("failed-creating-actual-lrp", lager.Data{"actual_lrp_key": key, "err-message": err.Error()})
+			} else {
+				createdIndicesChan <- uint(key.Index)
+			}
+		}
 	}
 
-	return nil
+	throttler, err := workpool.NewThrottler(createActualMaxWorkers, works)
+	if err != nil {
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": createActualMaxWorkers, "num-works": len(works)})
+		return []uint{}
+	}
+
+	throttler.Work()
+	close(createdIndicesChan)
+
+	createdIndices := make([]uint, 0, count)
+	for createdIndex := range createdIndicesChan {
+		createdIndices = append(createdIndices, createdIndex)
+	}
+
+	return createdIndices
 }
 
 func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) (modelErr *models.Error) {
@@ -464,6 +569,31 @@ func (db *ETCDDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 	}
 
 	return err
+}
+
+func (db *ETCDDB) retireActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) {
+	logger = logger.Session("retire-actual-lrps")
+
+	works := make([]func(), len(keys))
+
+	for i, key := range keys {
+		key := key
+
+		works[i] = func() {
+			err := db.RetireActualLRP(logger, key)
+			if err != nil {
+				logger.Error("failed-to-retire", err, lager.Data{"lrp-key": key})
+			}
+		}
+	}
+
+	throttler, err := workpool.NewThrottler(retireActualThrottlerSize, works)
+	if err != nil {
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": retireActualThrottlerSize, "num-works": len(works)})
+		return
+	}
+
+	throttler.Work()
 }
 
 func (db *ETCDDB) removeActualLRP(logger lager.Logger, lrp *models.ActualLRP, prevIndex uint64) *models.Error {

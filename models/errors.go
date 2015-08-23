@@ -50,6 +50,8 @@ const (
 	ActualLRPCannotBeUnclaimed = "ActualLRPCannotBeUnclaimed"
 	ActualLRPCannotBeEvacuated = "ActualLRPCannotBeEvacuated"
 
+	DesiredLRPCannotBeUpdated = "DesiredLRPCannotBeUpdated"
+
 	RunningOnDifferentCell = "RunningOnDifferentCell"
 )
 
@@ -127,6 +129,11 @@ var (
 	ErrActualLRPCannotBeEvacuated = &Error{
 		Type:    ActualLRPCannotBeEvacuated,
 		Message: "cannot evacuate actual LRP",
+	}
+
+	ErrDesiredLRPCannotBeUpdated = &Error{
+		Type:    DesiredLRPCannotBeUpdated,
+		Message: "cannot update desired LRP",
 	}
 )
 

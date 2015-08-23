@@ -1,9 +1,6 @@
 package models
 
-import (
-	"encoding/json"
-	"reflect"
-)
+import "encoding/json"
 
 type Routes map[string]*json.RawMessage
 
@@ -55,5 +52,10 @@ func (r *Routes) Size() int {
 }
 
 func (r Routes) Equal(other Routes) bool {
-	return reflect.DeepEqual(r, other)
+	for k := range r {
+		if r[k] != other[k] {
+			return false
+		}
+	}
+	return true
 }

@@ -31,6 +31,11 @@ const (
 	DesiredLRPsRoute             = "DesiredLRPs"
 	DesiredLRPByProcessGuidRoute = "DesiredLRPByProcessGuid"
 
+	// Desire LRP Lifecycle
+	DesireDesiredLRPRoute = "DesireDesiredLRP"
+	UpdateDesiredLRPRoute = "UpdateDesireLRP"
+	RemoveDesiredLRPRoute = "RemoveDesiredLRP"
+
 	// Tasks
 	TasksRoute         = "Tasks"
 	TaskByGuidRoute    = "TaskByGuid"
@@ -75,6 +80,11 @@ var Routes = rata.Routes{
 	// Desired LRPs
 	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute},
 	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
+
+	// Desire LPR Lifecycle
+	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute},
+	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute},
+	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
 
 	// Tasks
 	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute},

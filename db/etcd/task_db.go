@@ -81,9 +81,9 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 }
 
 func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) *models.Error {
-	taskLogger := logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
-	taskLogger.Info("starting")
-	defer taskLogger.Info("finished")
+	logger = logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
+	logger.Info("starting")
+	defer logger.Info("finished")
 
 	task := &models.Task{
 		TaskDefinition: taskDef,
@@ -100,20 +100,20 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 		return modelErr
 	}
 
-	taskLogger.Debug("persisting-task")
+	logger.Debug("persisting-task")
 	_, err := db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL)
 	if err != nil {
 		return ErrorFromEtcdError(logger, err)
 	}
-	taskLogger.Debug("succeeded-persisting-task")
+	logger.Debug("succeeded-persisting-task")
 
-	taskLogger.Debug("requesting-task-auction")
+	logger.Debug("requesting-task-auction")
 	err = db.auctioneerClient.RequestTaskAuctions([]*models.Task{task})
 	if err != nil {
-		taskLogger.Error("failed-requesting-task-auction", err)
+		logger.Error("failed-requesting-task-auction", err)
 		// The creation succeeded, the auction request error can be dropped
 	} else {
-		taskLogger.Debug("succeeded-requesting-task-auction")
+		logger.Debug("succeeded-requesting-task-auction")
 	}
 
 	return nil

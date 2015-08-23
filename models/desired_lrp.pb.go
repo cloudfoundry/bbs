@@ -208,6 +208,29 @@ func (m *ProtoRoutes) GetRoutes() map[string][]byte {
 	return nil
 }
 
+type DesiredLRPUpdate struct {
+	Instances  *int32  `protobuf:"varint,1,opt,name=instances" json:"instances,omitempty"`
+	Routes     *Routes `protobuf:"bytes,2,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
+	Annotation *string `protobuf:"bytes,3,opt,name=annotation" json:"annotation,omitempty"`
+}
+
+func (m *DesiredLRPUpdate) Reset()      { *m = DesiredLRPUpdate{} }
+func (*DesiredLRPUpdate) ProtoMessage() {}
+
+func (m *DesiredLRPUpdate) GetInstances() int32 {
+	if m != nil && m.Instances != nil {
+		return *m.Instances
+	}
+	return 0
+}
+
+func (m *DesiredLRPUpdate) GetAnnotation() string {
+	if m != nil && m.Annotation != nil {
+		return *m.Annotation
+	}
+	return ""
+}
+
 func (m *DesiredLRP) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -860,6 +883,120 @@ func (m *ProtoRoutes) Unmarshal(data []byte) error {
 
 	return nil
 }
+func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Instances", wireType)
+			}
+			var v int32
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Instances = &v
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Routes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var v Routes
+			m.Routes = &v
+			if err := m.Routes.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Annotation", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			s := string(data[iNdEx:postIndex])
+			m.Annotation = &s
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipDesiredLrp(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
 func skipDesiredLrp(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -1002,6 +1139,18 @@ func (this *ProtoRoutes) String() string {
 	}, "")
 	return s
 }
+func (this *DesiredLRPUpdate) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPUpdate{`,
+		`Instances:` + valueToStringDesiredLrp(this.Instances) + `,`,
+		`Routes:` + valueToStringDesiredLrp(this.Routes) + `,`,
+		`Annotation:` + valueToStringDesiredLrp(this.Annotation) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func valueToStringDesiredLrp(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1083,6 +1232,23 @@ func (m *ProtoRoutes) Size() (n int) {
 			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
 			n += mapEntrySize + 1 + sovDesiredLrp(uint64(mapEntrySize))
 		}
+	}
+	return n
+}
+
+func (m *DesiredLRPUpdate) Size() (n int) {
+	var l int
+	_ = l
+	if m.Instances != nil {
+		n += 1 + sovDesiredLrp(uint64(*m.Instances))
+	}
+	if m.Routes != nil {
+		l = m.Routes.Size()
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.Annotation != nil {
+		l = len(*m.Annotation)
+		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
 	return n
 }
@@ -1302,6 +1468,45 @@ func (m *ProtoRoutes) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *DesiredLRPUpdate) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *DesiredLRPUpdate) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Instances != nil {
+		data[i] = 0x8
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(*m.Instances))
+	}
+	if m.Routes != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(m.Routes.Size()))
+		n6, err := m.Routes.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	if m.Annotation != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(len(*m.Annotation)))
+		i += copy(data[i:], *m.Annotation)
+	}
+	return i, nil
+}
+
 func encodeFixed64DesiredLrp(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -1373,6 +1578,16 @@ func (this *ProtoRoutes) GoString() string {
 	mapStringForRoutes += "}"
 	s := strings.Join([]string{`&models.ProtoRoutes{` +
 		`Routes:` + mapStringForRoutes + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPUpdate) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPUpdate{` +
+		`Instances:` + valueToGoStringDesiredLrp(this.Instances, "int32"),
+		`Routes:` + valueToGoStringDesiredLrp(this.Routes, "Routes"),
+		`Annotation:` + valueToGoStringDesiredLrp(this.Annotation, "string") + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1531,6 +1746,53 @@ func (this *ProtoRoutes) Equal(that interface{}) bool {
 		if !bytes.Equal(this.Routes[i], that1.Routes[i]) {
 			return false
 		}
+	}
+	return true
+}
+func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*DesiredLRPUpdate)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Instances != nil && that1.Instances != nil {
+		if *this.Instances != *that1.Instances {
+			return false
+		}
+	} else if this.Instances != nil {
+		return false
+	} else if that1.Instances != nil {
+		return false
+	}
+	if that1.Routes == nil {
+		if this.Routes != nil {
+			return false
+		}
+	} else if !this.Routes.Equal(*that1.Routes) {
+		return false
+	}
+	if this.Annotation != nil && that1.Annotation != nil {
+		if *this.Annotation != *that1.Annotation {
+			return false
+		}
+	} else if this.Annotation != nil {
+		return false
+	} else if that1.Annotation != nil {
+		return false
 	}
 	return true
 }

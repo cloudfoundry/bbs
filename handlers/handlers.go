@@ -51,6 +51,9 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:             route(desiredLRPHandler.DesiredLRPs),
 		bbs.DesiredLRPByProcessGuidRoute: route(desiredLRPHandler.DesiredLRPByProcessGuid),
+		bbs.DesireDesiredLRPRoute:        route(desiredLRPHandler.DesireDesiredLRP),
+		bbs.UpdateDesiredLRPRoute:        route(desiredLRPHandler.UpdateDesiredLRP),
+		bbs.RemoveDesiredLRPRoute:        route(desiredLRPHandler.RemoveDesiredLRP),
 
 		// Tasks
 		bbs.TasksRoute:         route(taskHandler.Tasks),

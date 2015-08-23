@@ -181,6 +181,31 @@ type FakeClient struct {
 		result1 *models.DesiredLRP
 		result2 error
 	}
+	DesireLRPStub        func(*models.DesiredLRP) error
+	desireLRPMutex       sync.RWMutex
+	desireLRPArgsForCall []struct {
+		arg1 *models.DesiredLRP
+	}
+	desireLRPReturns struct {
+		result1 error
+	}
+	UpdateDesiredLRPStub        func(processGuid string, update *models.DesiredLRPUpdate) error
+	updateDesiredLRPMutex       sync.RWMutex
+	updateDesiredLRPArgsForCall []struct {
+		processGuid string
+		update      *models.DesiredLRPUpdate
+	}
+	updateDesiredLRPReturns struct {
+		result1 error
+	}
+	RemoveDesiredLRPStub        func(processGuid string) error
+	removeDesiredLRPMutex       sync.RWMutex
+	removeDesiredLRPArgsForCall []struct {
+		processGuid string
+	}
+	removeDesiredLRPReturns struct {
+		result1 error
+	}
 	TasksStub        func() ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct{}
@@ -893,6 +918,103 @@ func (fake *FakeClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLR
 		result1 *models.DesiredLRP
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) DesireLRP(arg1 *models.DesiredLRP) error {
+	fake.desireLRPMutex.Lock()
+	fake.desireLRPArgsForCall = append(fake.desireLRPArgsForCall, struct {
+		arg1 *models.DesiredLRP
+	}{arg1})
+	fake.desireLRPMutex.Unlock()
+	if fake.DesireLRPStub != nil {
+		return fake.DesireLRPStub(arg1)
+	} else {
+		return fake.desireLRPReturns.result1
+	}
+}
+
+func (fake *FakeClient) DesireLRPCallCount() int {
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	return len(fake.desireLRPArgsForCall)
+}
+
+func (fake *FakeClient) DesireLRPArgsForCall(i int) *models.DesiredLRP {
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	return fake.desireLRPArgsForCall[i].arg1
+}
+
+func (fake *FakeClient) DesireLRPReturns(result1 error) {
+	fake.DesireLRPStub = nil
+	fake.desireLRPReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error {
+	fake.updateDesiredLRPMutex.Lock()
+	fake.updateDesiredLRPArgsForCall = append(fake.updateDesiredLRPArgsForCall, struct {
+		processGuid string
+		update      *models.DesiredLRPUpdate
+	}{processGuid, update})
+	fake.updateDesiredLRPMutex.Unlock()
+	if fake.UpdateDesiredLRPStub != nil {
+		return fake.UpdateDesiredLRPStub(processGuid, update)
+	} else {
+		return fake.updateDesiredLRPReturns.result1
+	}
+}
+
+func (fake *FakeClient) UpdateDesiredLRPCallCount() int {
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
+	return len(fake.updateDesiredLRPArgsForCall)
+}
+
+func (fake *FakeClient) UpdateDesiredLRPArgsForCall(i int) (string, *models.DesiredLRPUpdate) {
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
+	return fake.updateDesiredLRPArgsForCall[i].processGuid, fake.updateDesiredLRPArgsForCall[i].update
+}
+
+func (fake *FakeClient) UpdateDesiredLRPReturns(result1 error) {
+	fake.UpdateDesiredLRPStub = nil
+	fake.updateDesiredLRPReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) RemoveDesiredLRP(processGuid string) error {
+	fake.removeDesiredLRPMutex.Lock()
+	fake.removeDesiredLRPArgsForCall = append(fake.removeDesiredLRPArgsForCall, struct {
+		processGuid string
+	}{processGuid})
+	fake.removeDesiredLRPMutex.Unlock()
+	if fake.RemoveDesiredLRPStub != nil {
+		return fake.RemoveDesiredLRPStub(processGuid)
+	} else {
+		return fake.removeDesiredLRPReturns.result1
+	}
+}
+
+func (fake *FakeClient) RemoveDesiredLRPCallCount() int {
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	return len(fake.removeDesiredLRPArgsForCall)
+}
+
+func (fake *FakeClient) RemoveDesiredLRPArgsForCall(i int) string {
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	return fake.removeDesiredLRPArgsForCall[i].processGuid
+}
+
+func (fake *FakeClient) RemoveDesiredLRPReturns(result1 error) {
+	fake.RemoveDesiredLRPStub = nil
+	fake.removeDesiredLRPReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeClient) Tasks() ([]*models.Task, error) {

@@ -36,3 +36,9 @@ message DesiredLRP {
 message proto_routes {
   map<string, bytes> routes = 1;
 }
+
+message DesiredLRPUpdate {
+  optional int32 instances = 1 [(gogoproto.nullable) = true];
+  optional bytes routes = 2 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+  optional string annotation = 3 [(gogoproto.nullable) = true];
+}

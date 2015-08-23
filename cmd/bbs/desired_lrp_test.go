@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/internal/model_helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -89,6 +90,72 @@ var _ = Describe("DesiredLRP API", func() {
 
 		It("returns all desired lrps from the bbs", func() {
 			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
+		})
+	})
+
+	Describe("DesireLRP", func() {
+		var (
+			desiredLRP *models.DesiredLRP
+
+			desireErr error
+		)
+
+		JustBeforeEach(func() {
+			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
+			desireErr = client.DesireLRP(desiredLRP)
+		})
+
+		It("creates the desired LRP in the system", func() {
+			Expect(desireErr).NotTo(HaveOccurred())
+			persistedDesiredLRP, err := client.DesiredLRPByProcessGuid("super-lrp")
+			Expect(err).NotTo(HaveOccurred())
+			persistedDesiredLRP.ModificationTag = nil
+			Expect(persistedDesiredLRP).To(Equal(desiredLRP))
+		})
+	})
+
+	Describe("RemoveDesiredLRP", func() {
+		var (
+			desiredLRP *models.DesiredLRP
+
+			removeErr error
+		)
+
+		JustBeforeEach(func() {
+			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
+			err := client.DesireLRP(desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+			removeErr = client.RemoveDesiredLRP("super-lrp")
+		})
+
+		It("creates the desired LRP in the system", func() {
+			Expect(removeErr).NotTo(HaveOccurred())
+			_, err := client.DesiredLRPByProcessGuid("super-lrp")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(models.ErrResourceNotFound))
+		})
+	})
+
+	Describe("UpdateDesiredLRP", func() {
+		var (
+			desiredLRP *models.DesiredLRP
+
+			updateErr error
+		)
+
+		JustBeforeEach(func() {
+			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
+			err := client.DesireLRP(desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+			three := int32(3)
+			updateErr = client.UpdateDesiredLRP("super-lrp", &models.DesiredLRPUpdate{Instances: &three})
+		})
+
+		It("creates the desired LRP in the system", func() {
+			Expect(updateErr).NotTo(HaveOccurred())
+			persistedDesiredLRP, err := client.DesiredLRPByProcessGuid("super-lrp")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(persistedDesiredLRP.Instances).To(Equal(int32(3)))
 		})
 	})
 })

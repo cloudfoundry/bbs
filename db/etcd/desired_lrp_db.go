@@ -7,8 +7,11 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
+	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
+
+const createActualMaxWorkers = 100
 
 func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, *models.Error) {
 	root, bbsErr := db.fetchRecursiveRaw(logger, DesiredLRPSchemaRoot)
@@ -65,18 +68,165 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 	return desiredLRPs, nil
 }
 
-func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error) {
+func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, uint64, *models.Error) {
 	node, bbsErr := db.fetchRaw(logger, DesiredLRPSchemaPathByProcessGuid(processGuid))
 	if bbsErr != nil {
-		return nil, bbsErr
+		return nil, 0, bbsErr
 	}
 
 	var lrp models.DesiredLRP
 	deserializeErr := models.FromJSON([]byte(node.Value), &lrp)
 	if deserializeErr != nil {
 		logger.Error("failed-parsing-desired-lrp", deserializeErr)
-		return nil, models.ErrDeserializeJSON
+		return nil, 0, models.ErrDeserializeJSON
 	}
 
-	return &lrp, nil
+	return &lrp, node.ModifiedIndex, nil
+}
+
+func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error) {
+	lrp, _, err := db.rawDesiredLRPByProcessGuid(logger, processGuid)
+	return lrp, err
+}
+
+func (db *ETCDDB) startInstanceRange(logger lager.Logger, lower, upper int32, desiredLRP *models.DesiredLRP) {
+	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	keys := make([]*models.ActualLRPKey, upper-lower)
+	i := 0
+	for actualIndex := lower; actualIndex < upper; actualIndex++ {
+		key := models.NewActualLRPKey(desiredLRP.ProcessGuid, int32(actualIndex), desiredLRP.Domain)
+		keys[i] = &key
+		i++
+	}
+
+	createdIndices := db.createUnclaimedActualLRPs(logger, keys)
+	start := models.NewLRPStartRequest(desiredLRP, createdIndices...)
+
+	err := db.auctioneerClient.RequestLRPAuctions([]*models.LRPStartRequest{&start})
+	if err != nil {
+		logger.Error("failed-to-request-auction", err)
+	}
+}
+
+func (db *ETCDDB) stopInstanceRange(logger lager.Logger, lower, upper int32, desiredLRP *models.DesiredLRP) {
+	logger = logger.Session("stop-instance-range", lager.Data{"lower": lower, "upper": upper})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	actualsMap, err := db.instanceActualLRPsByProcessGuid(logger, desiredLRP.ProcessGuid)
+	if err != nil {
+		logger.Error("failed-to-get-actual-lrps", err)
+		return
+	}
+
+	actualKeys := make([]*models.ActualLRPKey, 0)
+	for i := lower; i < upper; i++ {
+		actual, ok := actualsMap[i]
+		if ok {
+			actualKeys = append(actualKeys, &actual.ActualLRPKey)
+		}
+	}
+
+	db.retireActualLRPs(logger, actualKeys)
+}
+
+func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) *models.Error {
+	logger = logger.Session("create-desired-lrp", lager.Data{"process-guid": desiredLRP.ProcessGuid})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	guid, err := uuid.NewV4()
+	if err != nil {
+		logger.Error("failed-to-generate-epoch", err)
+		return models.ErrUnknownError
+	}
+
+	desiredLRP.ModificationTag = &models.ModificationTag{
+		Epoch: guid.String(),
+		Index: 0,
+	}
+
+	value, modelErr := models.ToJSON(desiredLRP)
+	if modelErr != nil {
+		logger.Error("failed-to-json", err)
+		return models.ErrSerializeJSON
+	}
+
+	logger.Debug("persisting-desired-lrp")
+	_, err = db.client.Create(DesiredLRPSchemaPath(desiredLRP), value, NO_TTL)
+	if err != nil {
+		return ErrorFromEtcdError(logger, err)
+	}
+	logger.Debug("succeeded-persisting-desired-lrp")
+
+	db.startInstanceRange(logger, 0, desiredLRP.Instances, desiredLRP)
+	return nil
+}
+
+func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) *models.Error {
+	logger = logger.Session("update-desired-lrp", lager.Data{"process-guid": processGuid})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	desiredLRP, index, modelErr := db.rawDesiredLRPByProcessGuid(logger, processGuid)
+	if modelErr != nil {
+		logger.Error("failed-to-fetch-existing-desired-lrp", modelErr)
+		return modelErr
+	}
+
+	existingInstances := desiredLRP.Instances
+	desiredLRP = desiredLRP.ApplyUpdate(update)
+
+	desiredLRP.ModificationTag.Increment()
+
+	value, modelErr := models.ToJSON(desiredLRP)
+	if modelErr != nil {
+		logger.Error("failed-to-serialize-desired-lrp", modelErr)
+		return modelErr
+	}
+
+	_, err := db.client.CompareAndSwap(DesiredLRPSchemaPath(desiredLRP), value, NO_TTL, index)
+	if err != nil {
+		logger.Error("failed-to-CAS-desired-lrp", err)
+		return models.ErrDesiredLRPCannotBeUpdated
+	}
+
+	diff := desiredLRP.Instances - existingInstances
+	switch {
+	case diff > 0:
+		db.startInstanceRange(logger, existingInstances, desiredLRP.Instances, desiredLRP)
+
+	case diff < 0:
+		db.stopInstanceRange(logger, desiredLRP.Instances, existingInstances, desiredLRP)
+
+	case diff == 0:
+		// this space intentionally left blank
+	}
+
+	return nil
+}
+
+func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) *models.Error {
+	logger = logger.Session("remove-desired-lrp", lager.Data{"process-guid": processGuid})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	desiredLRP, modelErr := db.DesiredLRPByProcessGuid(logger, processGuid)
+	if modelErr != nil {
+		return modelErr
+	}
+
+	logger.Info("starting")
+	_, err := db.client.Delete(DesiredLRPSchemaPathByProcessGuid(processGuid), true)
+	if err != nil {
+		logger.Error("failed", err)
+		return models.ErrUnknownError
+	}
+	logger.Info("succeeded")
+
+	db.stopInstanceRange(logger, 0, desiredLRP.Instances, desiredLRP)
+	return nil
 }

@@ -3,8 +3,6 @@ package models
 import (
 	"net/url"
 	"regexp"
-
-	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 )
 
 const PreloadedRootFSScheme = "preloaded"
@@ -25,6 +23,19 @@ func PreloadedRootFS(stack string) string {
 		Scheme: PreloadedRootFSScheme,
 		Opaque: stack,
 	}).String()
+}
+
+func (desired *DesiredLRP) ApplyUpdate(update *DesiredLRPUpdate) *DesiredLRP {
+	if update.Instances != nil {
+		desired.Instances = *update.Instances
+	}
+	if update.Routes != nil {
+		desired.Routes = update.Routes
+	}
+	if update.Annotation != nil {
+		desired.Annotation = *update.Annotation
+	}
+	return desired
 }
 
 func (desired DesiredLRP) Validate() error {
@@ -108,28 +119,31 @@ func (desired DesiredLRP) Validate() error {
 	return nil
 }
 
-func EnvironmentVariablesFromProto(envVars []*EnvironmentVariable) []oldmodels.EnvironmentVariable {
-	if envVars == nil {
-		return nil
-	}
-	out := make([]oldmodels.EnvironmentVariable, len(envVars))
-	for i, val := range envVars {
-		out[i].Name = val.Name
-		out[i].Value = val.Value
-	}
-	return out
-}
+func (desired *DesiredLRPUpdate) Validate() error {
+	var validationError ValidationError
 
-func EnvironmentVariablesFromModel(envVars []oldmodels.EnvironmentVariable) []*EnvironmentVariable {
-	if envVars == nil {
-		return nil
+	if desired.GetInstances() < 0 {
+		validationError = validationError.Append(ErrInvalidField{"instances"})
 	}
-	out := make([]*EnvironmentVariable, len(envVars))
-	for i, val := range envVars {
-		out[i] = &EnvironmentVariable{
-			Name:  val.Name,
-			Value: val.Value,
+
+	if len(desired.GetAnnotation()) > maximumAnnotationLength {
+		validationError = validationError.Append(ErrInvalidField{"annotation"})
+	}
+
+	totalRoutesLength := 0
+	if desired.Routes != nil {
+		for _, value := range *desired.Routes {
+			totalRoutesLength += len(*value)
+			if totalRoutesLength > maximumRouteLength {
+				validationError = validationError.Append(ErrInvalidField{"routes"})
+				break
+			}
 		}
 	}
-	return out
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
 }
