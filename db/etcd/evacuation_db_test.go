@@ -854,7 +854,7 @@ func (t evacuationTest) Test() {
 
 			Context("when the desired LRP no longer exists", func() {
 				BeforeEach(func() {
-					_, err := etcdClient.Delete(etcddb.DesiredLRPSchemaPath(&desiredLRP), true)
+					_, err := storeClient.Delete(etcddb.DesiredLRPSchemaPath(&desiredLRP), true)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -1010,7 +1010,7 @@ func (t evacuationTest) Test() {
 }
 
 func getEvacuatingActualLRP(lrpKey models.ActualLRPKey) (models.ActualLRP, int64, error) {
-	node, err := etcdClient.Get(etcddb.EvacuatingActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
+	node, err := storeClient.Get(etcddb.EvacuatingActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
 	if etcdErrCode(err) == etcddb.ETCDErrKeyNotFound {
 		return models.ActualLRP{}, 0, models.ErrResourceNotFound
 	}

@@ -84,36 +84,20 @@ func main() {
 
 	initializeDropsonde(logger)
 
-	etcdOptions, err := etcdFlags.Validate()
-	if err != nil {
-		logger.Fatal("etcd-validation-failed", err)
-	}
+	cbWorkPool := initializeWorkPool(logger)
 
-	var etcdClient *etcdclient.Client
-	if etcdOptions.IsSSL {
-		etcdClient, err = etcdclient.NewTLSClient(etcdOptions.ClusterUrls, etcdOptions.CertFile, etcdOptions.KeyFile, etcdOptions.CAFile)
-		if err != nil {
-			logger.Fatal("failed-to-construct-etcd-tls-client", err)
-		}
-	} else {
-		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
-	}
-	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
+	db := etcddb.NewETCD(
+		initializeEtcdStoreClient(logger,etcdFlags),
+		initializeAuctioneerClient(logger),
+		cellhandlers.NewClient(),
+		initializeConsulDB(logger),
+		clock.NewClock(),
+		cbWorkPool,
+		etcddb.CompleteTaskWork,
+		)
 
-	err = validateAuctioneerFlag()
-	if err != nil {
-		logger.Fatal("auctioneer-address-validation-failed", err)
-	}
-	auctioneerClient := auctionhandlers.NewClient(*auctioneerAddress)
-	consulSession := initializeConsul(logger)
-	consulDB := consuldb.NewConsul(consulSession)
-	cellClient := cellhandlers.NewClient()
-	cbWorkPool, err := workpool.NewWorkPool(etcddb.TASK_CB_WORKERS)
-	if err != nil {
-		logger.Fatal("callback-workpool-creation-failed", err)
-	}
-	db := etcddb.NewETCD(etcdClient, auctioneerClient, cellClient, consulDB, clock.NewClock(), cbWorkPool, etcddb.CompleteTaskWork)
 	hub := events.NewHub()
+
 	watcher := watcher.NewWatcher(
 		logger,
 		db,
@@ -124,16 +108,8 @@ func main() {
 
 	handler := handlers.New(logger, db, hub)
 
-	workPoolRunner := func(signals <-chan os.Signal, ready chan<- struct{}) error {
-		close(ready)
-		<-signals
-		go cbWorkPool.Stop()
-
-		return nil
-	}
-
 	members := grouper.Members{
-		{"workPool", ifrit.RunFunc(workPoolRunner)},
+		{"workPool", initializeWorkPoolRunner(cbWorkPool)},
 		{"watcher", watcher},
 		{"server", http_server.New(*serverAddress, handler)},
 		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
@@ -151,7 +127,7 @@ func main() {
 
 	logger.Info("started")
 
-	err = <-monitor.Wait()
+	err := <-monitor.Wait()
 	if err != nil {
 		logger.Error("exited-with-failure", err)
 		os.Exit(1)
@@ -160,11 +136,11 @@ func main() {
 	logger.Info("exited")
 }
 
-func validateAuctioneerFlag() error {
+func initializeAuctioneerClient(logger lager.Logger) auctionhandlers.Client {
 	if *auctioneerAddress == "" {
-		return errors.New("auctioneerAddress is required")
+		logger.Fatal("auctioneer-address-validation-failed", errors.New("auctioneerAddress is required"))
 	}
-	return nil
+	return auctionhandlers.NewClient(*auctioneerAddress)
 }
 
 func initializeDropsonde(logger lager.Logger) {
@@ -190,7 +166,27 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 	})
 }
 
-func initializeConsul(logger lager.Logger) *consuladapter.Session {
+func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb.StoreClient{
+	etcdOptions, err := etcdFlags.Validate()
+	if err != nil {
+		logger.Fatal("etcd-validation-failed", err)
+	}
+
+	var etcdClient *etcdclient.Client
+	if etcdOptions.IsSSL {
+		etcdClient, err = etcdclient.NewTLSClient(etcdOptions.ClusterUrls, etcdOptions.CertFile, etcdOptions.KeyFile, etcdOptions.CAFile)
+		if err != nil {
+			logger.Fatal("failed-to-construct-etcd-tls-client", err)
+		}
+	} else {
+		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
+	}
+	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
+
+	return etcddb.NewStoreClient(etcdClient, etcdOptions.Encoding)
+}
+
+func initializeConsulDB(logger lager.Logger) *consuldb.ConsulDB {
 	client, err := consuladapter.NewClient(*consulCluster)
 	if err != nil {
 		logger.Fatal("new-client-failed", err)
@@ -201,5 +197,24 @@ func initializeConsul(logger lager.Logger) *consuladapter.Session {
 	if err != nil {
 		logger.Fatal("consul-session-failed", err)
 	}
-	return consulSession
+
+	return consuldb.NewConsul(consulSession)
+}
+
+func initializeWorkPool(logger lager.Logger) *workpool.WorkPool{
+	cbWorkPool, err := workpool.NewWorkPool(etcddb.TASK_CB_WORKERS)
+	if err != nil {
+		logger.Fatal("callback-workpool-creation-failed", err)
+	}
+	return cbWorkPool
+}
+
+func initializeWorkPoolRunner(cbWorkPool *workpool.WorkPool)ifrit.RunFunc{
+	return func(signals <-chan os.Signal, ready chan<- struct{}) error {
+		close(ready)
+		<-signals
+		go cbWorkPool.Stop()
+
+		return nil
+	}
 }

@@ -150,7 +150,7 @@ var _ = Describe("ActualLRPDB", func() {
 				etcdHelper.SetRawActualLRP(baseLRP)
 
 				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
-				_, err := etcdClient.Delete(ActualLRPProcessDir(processGuid), true)
+				_, err := storeClient.Delete(ActualLRPProcessDir(processGuid), true)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -225,7 +225,7 @@ var _ = Describe("ActualLRPDB", func() {
 				etcdHelper.SetRawActualLRP(baseLRP)
 
 				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
-				_, err := etcdClient.Delete(ActualLRPProcessDir(processGuid), true)
+				_, err := storeClient.Delete(ActualLRPProcessDir(processGuid), true)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -296,7 +296,7 @@ var _ = Describe("ActualLRPDB", func() {
 				etcdHelper.SetRawActualLRP(baseLRP)
 
 				processGuid := baseLRP.ActualLRPKey.GetProcessGuid()
-				_, err := etcdClient.Delete(ActualLRPSchemaPath(processGuid, baseIndex), true)
+				_, err := storeClient.Delete(ActualLRPSchemaPath(processGuid, baseIndex), true)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -976,7 +976,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("is not present", func() {
 					It("removes the LRPs", func() {
-						_, err := etcdClient.Get(ActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
+						_, err := storeClient.Get(ActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
 						Expect(err).To(HaveOccurred())
 					})
 				})

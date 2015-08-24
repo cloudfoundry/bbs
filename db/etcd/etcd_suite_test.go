@@ -7,6 +7,7 @@ import (
 	fakeauctioneer "github.com/cloudfoundry-incubator/bbs/auctionhandlers/fakes"
 	fakecellhandlers "github.com/cloudfoundry-incubator/bbs/cellhandlers/fakes"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	"github.com/cloudfoundry-incubator/bbs/db/consul"
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -32,8 +33,7 @@ const receptorURL = "http://some-receptor-url"
 var etcdPort int
 var etcdUrl string
 var etcdRunner *etcdstorerunner.ETCDClusterRunner
-var etcdClient *etcdclient.Client
-
+var storeClient etcd.StoreClient
 var consulRunner *consulrunner.ClusterRunner
 var consulSession *consuladapter.Session
 
@@ -94,15 +94,16 @@ var _ = BeforeEach(func() {
 	consulRunner.Reset()
 	consulSession = consulRunner.NewSession("a-session")
 
-	etcdClient = etcdRunner.Client()
+	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
-	etcdHelper = etcd_helpers.NewETCDHelper(etcdClient)
+	storeClient = etcd.NewStoreClient(etcdClient, codec.BASE64)
+	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 	cellDB = consul.NewConsul(consulSession)
 	fakeTaskCBFactory = new(fakeHelpers.FakeTaskCallbackFactory)
 	fakeTaskCBFactory.TaskCallbackWorkReturns(func() {})
 
-	etcdDB = etcd.NewETCD(etcdClient, auctioneerClient, cellClient, cellDB, clock, taskCBWorkPool, fakeTaskCBFactory.TaskCallbackWork)
+	etcdDB = etcd.NewETCD(storeClient, auctioneerClient, cellClient, cellDB, clock, taskCBWorkPool, fakeTaskCBFactory.TaskCallbackWork)
 })
 
 func registerCell(cell models.CellPresence) {

@@ -1,6 +1,8 @@
 package etcd_test
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	etcderror "github.com/coreos/etcd/error"
@@ -43,9 +45,12 @@ var (
 var _ = Describe("StoreClient", func() {
 	var encoding codec.Kind
 	var storeClient etcd.StoreClient
+	var etcdClient *etcdclient.Client
 
 	BeforeEach(func() {
 		encoding = codec.NONE
+		etcdClient = etcdRunner.Client()
+		etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	})
 
 	JustBeforeEach(func() {
@@ -58,7 +63,7 @@ var _ = Describe("StoreClient", func() {
 
 	Describe("Get", func() {
 		BeforeEach(func() {
-			basicSetup()
+			basicSetup(etcdClient)
 		})
 
 		Context("when the data in the store is valid", func() {
@@ -200,7 +205,7 @@ var _ = Describe("StoreClient", func() {
 
 	Describe("Delete", func() {
 		BeforeEach(func() {
-			basicSetup()
+			basicSetup(etcdClient)
 		})
 
 		Context("when recursive is false", func() {
@@ -241,7 +246,7 @@ var _ = Describe("StoreClient", func() {
 		var oldIndex uint64
 
 		BeforeEach(func() {
-			basicSetup()
+			basicSetup(etcdClient)
 			encoding = codec.UNENCODED
 
 			response, err := etcdClient.Get("/valid/unencoded/json-map", false, false)
@@ -280,7 +285,7 @@ var _ = Describe("StoreClient", func() {
 		var oldIndex uint64
 
 		BeforeEach(func() {
-			basicSetup()
+			basicSetup(etcdClient)
 			encoding = codec.UNENCODED
 
 			response, err := etcdClient.Get("/valid/unencoded/json-map", false, false)
@@ -323,42 +328,30 @@ var _ = Describe("StoreClient", func() {
 		)
 
 		BeforeEach(func() {
-			basicSetup()
+			basicSetup(etcdClient)
 		})
 
 		Context("when the watch is a one-shot", func() {
-			var responses chan *etcdclient.Response
-			var watchErr chan error
+			It("returns the first change", func() {
+				responseChan := make(chan *etcdclient.Response)
 
-			BeforeEach(func() {
-				responses = make(chan *etcdclient.Response, 1)
-				watchErr = make(chan error, 1)
-			})
-
-			It("returns the updated data", func() {
 				go func() {
 					defer GinkgoRecover()
-					response, err := storeClient.Watch("/valid", 0, true, nil, nil)
-					responses <- response
-					watchErr <- err
+					response, watchErr := storeClient.Watch("/valid", 0, true, nil, nil)
+					Expect(watchErr).NotTo(HaveOccurred())
+					responseChan <- response
 				}()
 
+				// laaaaaame :(
+				time.Sleep(time.Millisecond)
+
 				key := "/valid/base64/json-map"
-				result := make(chan *etcdclient.Response, 1)
+				_, err := etcdClient.Set(key, validEncodedData[key], 0)
+				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(func() bool {
-					select {
-					case response := <-responses:
-						result <- response
-						return true
-					default:
-						_, err := etcdClient.Set(key, validEncodedData[key], 0)
-						Expect(err).NotTo(HaveOccurred())
-						return false
-					}
-				}).Should(BeTrue())
-
-				response := <-result
+				response := <-responseChan
+				Expect(response.PrevNode.Key).To(Equal(key))
+				Expect(response.PrevNode.Value).To(Equal(validDecodedData[key]))
 				Expect(response.Node.Key).To(Equal(key))
 				Expect(response.Node.Value).To(Equal(validDecodedData[key]))
 			})
@@ -385,20 +378,11 @@ var _ = Describe("StoreClient", func() {
 						return false
 					}
 				}).Should(BeTrue())
-
-			out:
-				for {
-					select {
-					case <-updates:
-					default:
-						break out
-					}
-				}
 			})
 
 			AfterEach(func() {
 				close(stop)
-				Eventually(complete).Should(Receive(MatchError(etcdclient.ErrWatchStoppedByUser)))
+				Eventually(complete).Should(Receive())
 				Eventually(updates).Should(BeClosed())
 			})
 
@@ -408,6 +392,8 @@ var _ = Describe("StoreClient", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Eventually(updates).Should(Receive(&response))
+					Expect(response.PrevNode.Key).To(Equal(key))
+					Expect(response.PrevNode.Value).To(Equal(validDecodedData[response.Node.Key]))
 					Expect(response.Node.Key).To(Equal(key))
 					Expect(response.Node.Value).To(Equal(validDecodedData[response.Node.Key]))
 				}
@@ -416,7 +402,7 @@ var _ = Describe("StoreClient", func() {
 	})
 })
 
-func basicSetup() {
+func basicSetup(etcdClient *etcdclient.Client) {
 	for key, value := range validEncodedData {
 		etcdClient.Set(key, value, 0)
 	}

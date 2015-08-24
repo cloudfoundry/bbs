@@ -14,6 +14,7 @@ type Args struct {
 	EtcdClientCert    string
 	EtcdClientKey     string
 	EtcdCACert        string
+	EtcdEncoding 			string
 }
 
 func (args Args) ArgSlice() []string {
@@ -25,6 +26,7 @@ func (args Args) ArgSlice() []string {
 		"-etcdCertFile", args.EtcdClientCert,
 		"-etcdKeyFile", args.EtcdClientKey,
 		"-etcdCaFile", args.EtcdCACert,
+		"-etcdEncoding", args.EtcdEncoding,
 		"-logLevel", "debug",
 	}
 }

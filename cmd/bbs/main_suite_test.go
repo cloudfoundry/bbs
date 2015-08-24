@@ -7,6 +7,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
+	"github.com/cloudfoundry-incubator/bbs/db/codec"
+	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
@@ -30,6 +32,7 @@ var etcdPort int
 var etcdUrl string
 var etcdRunner *etcdstorerunner.ETCDClusterRunner
 var etcdClient *etcdclient.Client
+var storeClient etcd.StoreClient
 
 var logger lager.Logger
 
@@ -112,7 +115,8 @@ var _ = BeforeEach(func() {
 	bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 
 	bbsProcess = ginkgomon.Invoke(bbsRunner)
-	etcdHelper = etcd_helpers.NewETCDHelper(etcdClient)
+	storeClient = etcd.NewStoreClient(etcdClient, codec.BASE64)
+	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
 })
 
 var _ = AfterEach(func() {

@@ -15,7 +15,7 @@ func (t *ETCDHelper) SetRawActualLRP(lrp *models.ActualLRP) {
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.ActualLRPSchemaPath(lrp.GetProcessGuid(), lrp.GetIndex())
-	_, err = t.etcdClient.Set(key, string(value), 0)
+	_, err = t.client.Set(key, value, 0)
 
 	Expect(err).NotTo(HaveOccurred())
 }
@@ -25,7 +25,7 @@ func (t *ETCDHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSecon
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.EvacuatingActualLRPSchemaPath(lrp.GetProcessGuid(), lrp.GetIndex())
-	_, err = t.etcdClient.Set(key, string(value), ttlInSeconds)
+	_, err = t.client.Set(key, value, ttlInSeconds)
 
 	Expect(err).NotTo(HaveOccurred())
 }
@@ -35,7 +35,7 @@ func (t *ETCDHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.DesiredLRPSchemaPath(lrp)
-	_, err = t.etcdClient.Set(key, string(value), 0)
+	_, err = t.client.Set(key, value, 0)
 
 	Expect(err).NotTo(HaveOccurred())
 }
@@ -45,7 +45,7 @@ func (t *ETCDHelper) SetRawTask(task *models.Task) {
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.TaskSchemaPath(task)
-	_, err = t.etcdClient.Set(key, string(value), 0)
+	_, err = t.client.Set(key, value, 0)
 
 	Expect(err).NotTo(HaveOccurred())
 }
@@ -83,7 +83,7 @@ func (t *ETCDHelper) CreateMalformedTask(guid string) {
 }
 
 func (t *ETCDHelper) createMalformedValueForKey(key string) {
-	_, err := t.etcdClient.Create(key, "ßßßßßß", 0)
+	_, err := t.client.Create(key, []byte("ßßßßßß"), 0)
 
 	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("error occurred at key '%s'", key))
 }
@@ -111,7 +111,7 @@ func (t *ETCDHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 			value, err := models.ToJSON(desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
-			t.etcdClient.Set(etcddb.DesiredLRPSchemaPath(desiredLRP), string(value), 0)
+			t.client.Set(etcddb.DesiredLRPSchemaPath(desiredLRP), value, 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			createdDesiredLRPs[domain] = append(createdDesiredLRPs[domain], desiredLRP)

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/cloudfoundry-incubator/bbs/db/codec"
 )
 
 type ETCDFlags struct {
@@ -13,6 +15,7 @@ type ETCDFlags struct {
 	keyFile     string
 	caFile      string
 	clusterUrls string
+	encoding string
 }
 
 type ETCDOptions struct {
@@ -21,6 +24,7 @@ type ETCDOptions struct {
 	CAFile      string
 	ClusterUrls []string
 	IsSSL       bool
+	Encoding 		codec.Kind
 }
 
 func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
@@ -50,6 +54,12 @@ func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
 		"etcdCaFile",
 		"",
 		"Location of the CA certificate for mutual auth",
+	)
+	flagSet.StringVar(
+		&flags.encoding,
+		"etcdEncoding",
+		"",
+		"none,unencoded,base64",
 	)
 	return flags
 }
@@ -85,11 +95,25 @@ func (flags *ETCDFlags) Validate() (*ETCDOptions, error) {
 		}
 	}
 
+	var encoding codec.Kind
+	switch flags.encoding {
+	case "","none":
+		encoding = codec.NONE
+	case "unencoded":
+		encoding = codec.UNENCODED
+	case "base64":
+		encoding = codec.BASE64
+	default:
+		return nil, errors.New("Encoding must be set to none, unencoded, or base64")
+	}
+
+
 	return &ETCDOptions{
 		CertFile:    flags.certFile,
 		KeyFile:     flags.keyFile,
 		CAFile:      flags.caFile,
 		ClusterUrls: clusterUrls,
 		IsSSL:       isSSL,
+		Encoding: encoding,
 	}, nil
 }

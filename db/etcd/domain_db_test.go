@@ -15,7 +15,7 @@ var _ = Describe("DomainDB", func() {
 				bbsErr := etcdDB.UpsertDomain(logger, domain, 5432)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
-				etcdEntry, err := etcdClient.Get(DomainSchemaPath(domain), false, false)
+				etcdEntry, err := storeClient.Get(DomainSchemaPath(domain), false, false)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(etcdEntry.Node.TTL).To(BeNumerically("<=", 5432))
 			})
@@ -26,7 +26,7 @@ var _ = Describe("DomainDB", func() {
 
 			BeforeEach(func() {
 				var err error
-				_, err = etcdClient.Set(DomainSchemaPath(existingDomain), "", 100)
+				_, err = storeClient.Set(DomainSchemaPath(existingDomain), []byte(""), 100)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -34,7 +34,7 @@ var _ = Describe("DomainDB", func() {
 				bbsErr := etcdDB.UpsertDomain(logger, existingDomain, 1337)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
-				etcdEntry, err := etcdClient.Get(DomainSchemaPath(existingDomain), false, false)
+				etcdEntry, err := storeClient.Get(DomainSchemaPath(existingDomain), false, false)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(etcdEntry.Node.TTL).To(BeNumerically("<=", 1337))
 				Expect(etcdEntry.Node.TTL).To(BeNumerically(">", 100))
@@ -46,9 +46,9 @@ var _ = Describe("DomainDB", func() {
 		Context("when there are domains in the DB", func() {
 			BeforeEach(func() {
 				var err error
-				_, err = etcdClient.Set(DomainSchemaPath("domain-1"), "", 100)
+				_, err = storeClient.Set(DomainSchemaPath("domain-1"), []byte(""), 100)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = etcdClient.Set(DomainSchemaPath("domain-2"), "", 100)
+				_, err = storeClient.Set(DomainSchemaPath("domain-2"), []byte(""), 100)
 				Expect(err).NotTo(HaveOccurred())
 			})
 

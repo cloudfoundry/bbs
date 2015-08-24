@@ -91,7 +91,7 @@ var _ = Describe("Watchers", func() {
 			desired, bbsErr := etcdDB.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(bbsErr).NotTo(HaveOccurred())
 
-			_, err := etcdClient.Delete(DesiredLRPSchemaPath(desired), true)
+			_, err := storeClient.Delete(DesiredLRPSchemaPath(desired), true)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(deletes).Should(Receive(Equal(desired)))
@@ -175,7 +175,7 @@ var _ = Describe("Watchers", func() {
 			Eventually(creates).Should(Receive())
 
 			key := actualLRPGroup.Instance.ActualLRPKey
-			_, err := etcdClient.Delete(ActualLRPSchemaPath(key.GetProcessGuid(), key.GetIndex()), true)
+			_, err := storeClient.Delete(ActualLRPSchemaPath(key.GetProcessGuid(), key.GetIndex()), true)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(deletes).Should(Receive(Equal(actualLRPGroup)))
@@ -186,12 +186,12 @@ var _ = Describe("Watchers", func() {
 			Eventually(creates).Should(Receive())
 
 			key := actualLRPGroup.Instance.ActualLRPKey
-			_, err := etcdClient.Delete(ActualLRPSchemaPath(key.GetProcessGuid(), key.GetIndex()), true)
+			_, err := storeClient.Delete(ActualLRPSchemaPath(key.GetProcessGuid(), key.GetIndex()), true)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(deletes).Should(Receive(Equal(actualLRPGroup)))
 
-			_, err = etcdClient.Delete(ActualLRPProcessDir(key.GetProcessGuid()), true)
+			_, err = storeClient.Delete(ActualLRPProcessDir(key.GetProcessGuid()), true)
 
 			Consistently(logger).ShouldNot(Say("failed-to-unmarshal"))
 		})
@@ -233,7 +233,7 @@ var _ = Describe("Watchers", func() {
 				Expect(actualLRPChange.Before).To(Equal(evacuatedLRPGroup))
 				Expect(actualLRPChange.After).To(Equal(updatedGroup))
 
-				_, err := etcdClient.Delete(EvacuatingActualLRPSchemaPath(key.GetProcessGuid(), key.GetIndex()), true)
+				_, err := storeClient.Delete(EvacuatingActualLRPSchemaPath(key.GetProcessGuid(), key.GetIndex()), true)
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(deletes).Should(Receive(Equal(updatedGroup)))

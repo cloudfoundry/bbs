@@ -105,6 +105,7 @@ func (sc *storeClient) Watch(
 		proxy = make(chan *etcd.Response)
 		go func() {
 			for response := range proxy {
+				sc.decode(response.PrevNode)
 				sc.decode(response.Node)
 				receiver <- response
 			}
@@ -114,18 +115,18 @@ func (sc *storeClient) Watch(
 
 	response, err := sc.client.Watch(prefix, waitIndex, recursive, proxy, stop)
 	if err != nil {
-		return response, err
-	}
-
-	err = sc.decode(response.Node)
-	if err != nil {
 		return nil, err
 	}
-
-	return response, err
+	sc.decode(response.PrevNode)
+	sc.decode(response.Node)
+	return response, nil
 }
 
 func (sc *storeClient) decode(node *etcd.Node) error {
+	if node == nil {
+		return nil
+	}
+
 	payload, err := sc.codecs.Decode([]byte(node.Value))
 	if err != nil {
 		return err

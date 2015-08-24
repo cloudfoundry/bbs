@@ -47,6 +47,24 @@ func (task *Task) Validate() error {
 	return nil
 }
 
+func (t *Task) Decode(p *Payload) error {
+	var err error
+
+	switch p.Version {
+	case V0:
+		err = FromJSON(p.Payload, t)
+	case V1:
+		err = t.Unmarshal(p.Payload)
+	default:
+		panic("unknown version")
+	}
+
+	if err != nil {
+		return err
+	}
+	return t.Validate()
+}
+
 func (def *TaskDefinition) Validate() error {
 	var validationError ValidationError
 

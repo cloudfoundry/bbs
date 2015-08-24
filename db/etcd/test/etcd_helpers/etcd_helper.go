@@ -2,17 +2,17 @@ package etcd_helpers
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
 )
 
-func NewETCDHelper(etcdClient *etcdclient.Client) *ETCDHelper {
-	return &ETCDHelper{etcdClient: etcdClient}
+func NewETCDHelper(client etcd.StoreClient) *ETCDHelper {
+	return &ETCDHelper{client: client}
 }
 
 type ETCDHelper struct {
-	etcdClient *etcdclient.Client
+	client etcd.StoreClient
 }
 
 //go:generate counterfeiter . TaskCallbackFactory

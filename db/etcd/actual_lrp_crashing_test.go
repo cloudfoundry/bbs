@@ -253,7 +253,7 @@ func (t crashTest) Test() {
 
 			Context("when the desired LRP no longer exists", func() {
 				BeforeEach(func() {
-					_, err := etcdClient.Delete(etcd.DesiredLRPSchemaPathByProcessGuid(actualLRPKey.ProcessGuid), false)
+					_, err := storeClient.Delete(etcd.DesiredLRPSchemaPathByProcessGuid(actualLRPKey.ProcessGuid), false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
