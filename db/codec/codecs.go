@@ -55,6 +55,7 @@ func (c *Base64Codec) Decode(data []byte) ([]byte, error) {
 
 func NewCodecs(encoderKind Kind) *Codecs {
 	codecs := map[Kind]Codec{
+		NONE:      nil,
 		UNENCODED: &IdentityCodec{},
 		BASE64:    &Base64Codec{},
 	}

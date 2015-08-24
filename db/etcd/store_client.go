@@ -41,6 +41,90 @@ func (sc *storeClient) Get(key string, sort bool, recursive bool) (*etcd.Respons
 	return response, err
 }
 
+func (sc *storeClient) Set(key string, payload []byte, ttl uint64) (*etcd.Response, error) {
+	data, err := sc.codecs.Encode(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return sc.client.Set(key, string(data), ttl)
+}
+
+func (sc *storeClient) Create(key string, payload []byte, ttl uint64) (*etcd.Response, error) {
+	data, err := sc.codecs.Encode(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return sc.client.Create(key, string(data), ttl)
+}
+
+func (sc *storeClient) Delete(key string, recursive bool) (*etcd.Response, error) {
+	return sc.client.Delete(key, recursive)
+}
+
+func (sc *storeClient) CompareAndSwap(key string, payload []byte, ttl uint64, prevIndex uint64) (*etcd.Response, error) {
+	data, err := sc.codecs.Encode(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := sc.client.CompareAndSwap(key, string(data), ttl, "", prevIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Node.Value = ""
+	res.PrevNode.Value = ""
+
+	return res, err
+}
+
+func (sc *storeClient) CompareAndDelete(key string, prevIndex uint64) (*etcd.Response, error) {
+	res, err := sc.client.CompareAndDelete(key, "", prevIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Node.Value = ""
+	res.PrevNode.Value = ""
+
+	return res, err
+}
+
+func (sc *storeClient) Watch(
+	prefix string,
+	waitIndex uint64,
+	recursive bool,
+	receiver chan *etcd.Response,
+	stop chan bool,
+) (*etcd.Response, error) {
+	var proxy chan *etcd.Response
+
+	if receiver != nil {
+		proxy = make(chan *etcd.Response)
+		go func() {
+			for response := range proxy {
+				sc.decode(response.Node)
+				receiver <- response
+			}
+			close(receiver)
+		}()
+	}
+
+	response, err := sc.client.Watch(prefix, waitIndex, recursive, proxy, stop)
+	if err != nil {
+		return response, err
+	}
+
+	err = sc.decode(response.Node)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, err
+}
+
 func (sc *storeClient) decode(node *etcd.Node) error {
 	payload, err := sc.codecs.Decode([]byte(node.Value))
 	if err != nil {
@@ -56,34 +140,4 @@ func (sc *storeClient) decode(node *etcd.Node) error {
 	}
 
 	return nil
-}
-
-func (sc *storeClient) Set(key string, value []byte, ttl uint64) (*etcd.Response, error) {
-	return sc.client.Set(key, string(value), ttl)
-}
-
-func (sc *storeClient) Create(key string, value []byte, ttl uint64) (*etcd.Response, error) {
-	return sc.client.Create(key, string(value), ttl)
-}
-
-func (sc *storeClient) Delete(key string, recursive bool) (*etcd.Response, error) {
-	return sc.client.Delete(key, recursive)
-}
-
-func (sc *storeClient) CompareAndSwap(key string, value []byte, ttl uint64, prevIndex uint64) (*etcd.Response, error) {
-	return sc.client.CompareAndSwap(key, string(value), ttl, "", prevIndex)
-}
-
-func (sc *storeClient) CompareAndDelete(key string, prevIndex uint64) (*etcd.Response, error) {
-	return sc.client.CompareAndDelete(key, "", prevIndex)
-}
-
-func (sc *storeClient) Watch(
-	prefix string,
-	waitIndex uint64,
-	recursive bool,
-	receiver chan *etcd.Response,
-	stop chan bool,
-) (*etcd.Response, error) {
-	return sc.client.Watch(prefix, waitIndex, recursive, receiver, stop)
 }
