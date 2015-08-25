@@ -287,12 +287,12 @@ type FakeClient struct {
 	resolvingTaskReturns struct {
 		result1 error
 	}
-	ResolveTaskStub        func(taskGuid string) error
-	resolveTaskMutex       sync.RWMutex
-	resolveTaskArgsForCall []struct {
+	DeleteTaskStub        func(taskGuid string) error
+	deleteTaskMutex       sync.RWMutex
+	deleteTaskArgsForCall []struct {
 		taskGuid string
 	}
-	resolveTaskReturns struct {
+	deleteTaskReturns struct {
 		result1 error
 	}
 	ConvergeTasksStub        func(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
@@ -1308,34 +1308,34 @@ func (fake *FakeClient) ResolvingTaskReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) ResolveTask(taskGuid string) error {
-	fake.resolveTaskMutex.Lock()
-	fake.resolveTaskArgsForCall = append(fake.resolveTaskArgsForCall, struct {
+func (fake *FakeClient) DeleteTask(taskGuid string) error {
+	fake.deleteTaskMutex.Lock()
+	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
 		taskGuid string
 	}{taskGuid})
-	fake.resolveTaskMutex.Unlock()
-	if fake.ResolveTaskStub != nil {
-		return fake.ResolveTaskStub(taskGuid)
+	fake.deleteTaskMutex.Unlock()
+	if fake.DeleteTaskStub != nil {
+		return fake.DeleteTaskStub(taskGuid)
 	} else {
-		return fake.resolveTaskReturns.result1
+		return fake.deleteTaskReturns.result1
 	}
 }
 
-func (fake *FakeClient) ResolveTaskCallCount() int {
-	fake.resolveTaskMutex.RLock()
-	defer fake.resolveTaskMutex.RUnlock()
-	return len(fake.resolveTaskArgsForCall)
+func (fake *FakeClient) DeleteTaskCallCount() int {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	return len(fake.deleteTaskArgsForCall)
 }
 
-func (fake *FakeClient) ResolveTaskArgsForCall(i int) string {
-	fake.resolveTaskMutex.RLock()
-	defer fake.resolveTaskMutex.RUnlock()
-	return fake.resolveTaskArgsForCall[i].taskGuid
+func (fake *FakeClient) DeleteTaskArgsForCall(i int) string {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	return fake.deleteTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeClient) ResolveTaskReturns(result1 error) {
-	fake.ResolveTaskStub = nil
-	fake.resolveTaskReturns = struct {
+func (fake *FakeClient) DeleteTaskReturns(result1 error) {
+	fake.DeleteTaskStub = nil
+	fake.deleteTaskReturns = struct {
 		result1 error
 	}{result1}
 }

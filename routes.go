@@ -45,7 +45,7 @@ const (
 	FailTaskRoute      = "FailTask"
 	CompleteTaskRoute  = "CompleteTask"
 	ResolvingTaskRoute = "ResolvingTask"
-	ResolveTaskRoute   = "ResolveTask"
+	DeleteTaskRoute    = "DeleteTask"
 	ConvergeTasksRoute = "ConvergeTasks"
 
 	// Event Streaming
@@ -97,7 +97,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
 	{Path: "/v1/tasks/complete", Method: "POST", Name: CompleteTaskRoute},
 	{Path: "/v1/tasks/resolving", Method: "POST", Name: ResolvingTaskRoute},
-	{Path: "/v1/tasks/resolve", Method: "POST", Name: ResolveTaskRoute},
+	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute},
 
 	// Task Convergence
 	{Path: "/v1/tasks/converge", Method: "POST", Name: ConvergeTasksRoute},

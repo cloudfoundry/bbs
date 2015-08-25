@@ -134,15 +134,15 @@ func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
 	writeResponse(w, response)
 }
 
-func (h *TaskHandler) ResolveTask(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("resolve-task")
+func (h *TaskHandler) DeleteTask(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("delete-task")
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	response.Error = parseRequest(logger, req, request)
 	if response.Error == nil {
-		response.Error = h.db.ResolveTask(logger, request.TaskGuid)
+		response.Error = h.db.DeleteTask(logger, request.TaskGuid)
 	}
 
 	writeResponse(w, response)

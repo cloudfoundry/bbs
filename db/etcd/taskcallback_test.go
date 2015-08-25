@@ -56,7 +56,7 @@ var _ = Describe("TaskWorker", func() {
 			callbackURL = fakeServer.URL() + "/the-callback/url"
 			taskDB = new(dbFakes.FakeTaskDB)
 			taskDB.ResolvingTaskReturns(nil)
-			taskDB.ResolveTaskReturns(nil)
+			taskDB.DeleteTaskReturns(nil)
 		})
 
 		simulateTaskCompleting := func() {
@@ -104,8 +104,8 @@ var _ = Describe("TaskWorker", func() {
 
 						statusCodes <- 200
 
-						Eventually(taskDB.ResolveTaskCallCount).Should(Equal(1))
-						_, actualGuid := taskDB.ResolveTaskArgsForCall(0)
+						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
+						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 				})
@@ -116,8 +116,8 @@ var _ = Describe("TaskWorker", func() {
 
 						statusCodes <- 403
 
-						Eventually(taskDB.ResolveTaskCallCount).Should(Equal(1))
-						_, actualGuid := taskDB.ResolveTaskArgsForCall(0)
+						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
+						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 				})
@@ -128,8 +128,8 @@ var _ = Describe("TaskWorker", func() {
 
 						statusCodes <- 500
 
-						Eventually(taskDB.ResolveTaskCallCount).Should(Equal(1))
-						_, actualGuid := taskDB.ResolveTaskArgsForCall(0)
+						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
+						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 				})
@@ -141,18 +141,18 @@ var _ = Describe("TaskWorker", func() {
 
 						statusCodes <- 503
 
-						Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+						Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(2))
 
 						statusCodes <- 504
 
-						Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+						Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(3))
 
 						statusCodes <- 200
 
-						Eventually(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(1))
-						_, actualGuid := taskDB.ResolveTaskArgsForCall(0)
+						Eventually(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(1))
+						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 
@@ -163,31 +163,31 @@ var _ = Describe("TaskWorker", func() {
 
 							statusCodes <- 503
 
-							Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+							Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 							Eventually(fakeServer.ReceivedRequests).Should(HaveLen(2))
 
 							statusCodes <- 504
 
-							Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+							Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 							Eventually(fakeServer.ReceivedRequests).Should(HaveLen(3))
 
 							statusCodes <- 503
 
-							Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+							Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 							Consistently(fakeServer.ReceivedRequests, 0.25).Should(HaveLen(3))
 						})
 					})
 				})
 
-				Context("when ResolveTask fails", func() {
+				Context("when DeleteTask fails", func() {
 					It("logs an error and returns", func() {
-						taskDB.ResolveTaskReturns(&models.Error{})
+						taskDB.DeleteTaskReturns(&models.Error{})
 						go simulateTaskCompleting()
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
 						statusCodes <- 200
 
-						Eventually(taskDB.ResolveTaskCallCount).Should(Equal(1))
-						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.resolve-task-failed"))
+						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
+						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.delete-task-failed"))
 					})
 				})
 
@@ -209,29 +209,29 @@ var _ = Describe("TaskWorker", func() {
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
 
 						sleepCh <- timeout + 100*time.Millisecond
-						Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+						Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(2))
 
 						sleepCh <- timeout + 100*time.Millisecond
-						Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+						Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(3))
 
-						Eventually(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+						Eventually(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 					})
 
 					Context("when the request fails with timeout once and then succeeds", func() {
-						It("resolves the task", func() {
+						It("deletes the task", func() {
 							go simulateTaskCompleting()
 							sleepCh <- (timeout + 100*time.Millisecond)
 
 							Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
-							Consistently(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(0))
+							Consistently(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(0))
 
 							sleepCh <- 0
 							Eventually(fakeServer.ReceivedRequests).Should(HaveLen(2))
-							Eventually(taskDB.ResolveTaskCallCount, 0.25).Should(Equal(1))
+							Eventually(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(1))
 
-							_, resolvedTaskGuid := taskDB.ResolveTaskArgsForCall(0)
+							_, resolvedTaskGuid := taskDB.DeleteTaskArgsForCall(0)
 							Expect(resolvedTaskGuid).To(Equal("the-task-guid"))
 						})
 					})

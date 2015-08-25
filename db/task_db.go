@@ -20,7 +20,7 @@ type TaskDB interface {
 	FailTask(logger lager.Logger, taskGuid, failureReason string) *models.Error
 	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) *models.Error
 	ResolvingTask(logger lager.Logger, taskGuid string) *models.Error
-	ResolveTask(logger lager.Logger, taskGuid string) *models.Error
+	DeleteTask(logger lager.Logger, taskGuid string) *models.Error
 
 	ConvergeTasks(
 		logger lager.Logger,

@@ -68,9 +68,9 @@ func HandleCompletedTask(logger lager.Logger, taskDB db.TaskDB, task *models.Tas
 
 			statusCode = response.StatusCode
 			if shouldResolve(statusCode) {
-				modelErr := taskDB.ResolveTask(logger, task.TaskGuid)
+				modelErr := taskDB.DeleteTask(logger, task.TaskGuid)
 				if modelErr != nil {
-					logger.Error("resolve-task-failed", modelErr)
+					logger.Error("delete-task-failed", modelErr)
 					return
 				}
 

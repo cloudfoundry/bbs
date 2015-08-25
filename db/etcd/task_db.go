@@ -351,8 +351,8 @@ func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) *models.Er
 // The stager calls this when it wants to signal that it has received a completion and is handling it
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // If this fails, the stager should assume that someone else is handling the completion and should bail
-func (db *ETCDDB) ResolveTask(logger lager.Logger, taskGuid string) *models.Error {
-	logger = logger.Session("resolve-task", lager.Data{"task-guid": taskGuid})
+func (db *ETCDDB) DeleteTask(logger lager.Logger, taskGuid string) *models.Error {
+	logger = logger.Session("delete-task", lager.Data{"task-guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")

@@ -94,13 +94,13 @@ type FakeTaskDB struct {
 	resolvingTaskReturns struct {
 		result1 *models.Error
 	}
-	ResolveTaskStub        func(logger lager.Logger, taskGuid string) *models.Error
-	resolveTaskMutex       sync.RWMutex
-	resolveTaskArgsForCall []struct {
+	DeleteTaskStub        func(logger lager.Logger, taskGuid string) *models.Error
+	deleteTaskMutex       sync.RWMutex
+	deleteTaskArgsForCall []struct {
 		logger   lager.Logger
 		taskGuid string
 	}
-	resolveTaskReturns struct {
+	deleteTaskReturns struct {
 		result1 *models.Error
 	}
 	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration)
@@ -388,35 +388,35 @@ func (fake *FakeTaskDB) ResolvingTaskReturns(result1 *models.Error) {
 	}{result1}
 }
 
-func (fake *FakeTaskDB) ResolveTask(logger lager.Logger, taskGuid string) *models.Error {
-	fake.resolveTaskMutex.Lock()
-	fake.resolveTaskArgsForCall = append(fake.resolveTaskArgsForCall, struct {
+func (fake *FakeTaskDB) DeleteTask(logger lager.Logger, taskGuid string) *models.Error {
+	fake.deleteTaskMutex.Lock()
+	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
 		logger   lager.Logger
 		taskGuid string
 	}{logger, taskGuid})
-	fake.resolveTaskMutex.Unlock()
-	if fake.ResolveTaskStub != nil {
-		return fake.ResolveTaskStub(logger, taskGuid)
+	fake.deleteTaskMutex.Unlock()
+	if fake.DeleteTaskStub != nil {
+		return fake.DeleteTaskStub(logger, taskGuid)
 	} else {
-		return fake.resolveTaskReturns.result1
+		return fake.deleteTaskReturns.result1
 	}
 }
 
-func (fake *FakeTaskDB) ResolveTaskCallCount() int {
-	fake.resolveTaskMutex.RLock()
-	defer fake.resolveTaskMutex.RUnlock()
-	return len(fake.resolveTaskArgsForCall)
+func (fake *FakeTaskDB) DeleteTaskCallCount() int {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	return len(fake.deleteTaskArgsForCall)
 }
 
-func (fake *FakeTaskDB) ResolveTaskArgsForCall(i int) (lager.Logger, string) {
-	fake.resolveTaskMutex.RLock()
-	defer fake.resolveTaskMutex.RUnlock()
-	return fake.resolveTaskArgsForCall[i].logger, fake.resolveTaskArgsForCall[i].taskGuid
+func (fake *FakeTaskDB) DeleteTaskArgsForCall(i int) (lager.Logger, string) {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	return fake.deleteTaskArgsForCall[i].logger, fake.deleteTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeTaskDB) ResolveTaskReturns(result1 *models.Error) {
-	fake.ResolveTaskStub = nil
-	fake.resolveTaskReturns = struct {
+func (fake *FakeTaskDB) DeleteTaskReturns(result1 *models.Error) {
+	fake.DeleteTaskStub = nil
+	fake.deleteTaskReturns = struct {
 		result1 *models.Error
 	}{result1}
 }

@@ -769,7 +769,7 @@ var _ = Describe("TaskDB", func() {
 		})
 	})
 
-	Describe("ResolveTask", func() {
+	Describe("DeleteTask", func() {
 		BeforeEach(func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
 			err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
@@ -789,7 +789,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("should remove /task/<guid>", func() {
-				err := etcdDB.ResolveTask(logger, taskGuid)
+				err := etcdDB.DeleteTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
@@ -800,7 +800,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when the task is not resolving", func() {
 			It("should fail", func() {
-				err := etcdDB.ResolveTask(logger, taskGuid)
+				err := etcdDB.DeleteTask(logger, taskGuid)
 				Expect(err).To(HaveOccurred())
 			})
 		})

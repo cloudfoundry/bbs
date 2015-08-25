@@ -163,9 +163,9 @@ var _ = Describe("Task API", func() {
 						Expect(err).NotTo(HaveOccurred())
 					})
 
-					Describe("ResolveTask", func() {
+					Describe("DeleteTask", func() {
 						It("deletes the task", func() {
-							err := client.ResolveTask(taskGuid)
+							err := client.DeleteTask(taskGuid)
 							Expect(err).NotTo(HaveOccurred())
 
 							_, err = client.TaskByGuid(taskGuid)

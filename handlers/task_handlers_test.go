@@ -519,8 +519,8 @@ var _ = Describe("Task Handlers", func() {
 		})
 	})
 
-	Describe("ResolveTask", func() {
-		Context("when the resolve request is normal", func() {
+	Describe("DeleteTask", func() {
+		Context("when the delete request is normal", func() {
 			BeforeEach(func() {
 				requestBody = &models.TaskGuidRequest{
 					TaskGuid: "task-guid",
@@ -528,13 +528,13 @@ var _ = Describe("Task Handlers", func() {
 			})
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
-				handler.ResolveTask(responseRecorder, request)
+				handler.DeleteTask(responseRecorder, request)
 			})
 
-			Context("when resolveing the task succeeds", func() {
+			Context("when deleting the task succeeds", func() {
 				It("returns no error", func() {
-					Expect(fakeTaskDB.ResolveTaskCallCount()).To(Equal(1))
-					_, taskGuid := fakeTaskDB.ResolveTaskArgsForCall(0)
+					Expect(fakeTaskDB.DeleteTaskCallCount()).To(Equal(1))
+					_, taskGuid := fakeTaskDB.DeleteTaskArgsForCall(0)
 					Expect(taskGuid).To(Equal("task-guid"))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -548,7 +548,7 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when desiring the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.ResolveTaskReturns(models.ErrUnknownError)
+					fakeTaskDB.DeleteTaskReturns(models.ErrUnknownError)
 				})
 
 				It("responds with an error", func() {

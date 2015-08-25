@@ -66,7 +66,7 @@ type Client interface {
 	FailTask(taskGuid, failureReason string) error
 	CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error
 	ResolvingTask(taskGuid string) error
-	ResolveTask(taskGuid string) error
+	DeleteTask(taskGuid string) error
 
 	ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
 
@@ -440,11 +440,11 @@ func (c *client) ResolvingTask(taskGuid string) error {
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) ResolveTask(taskGuid string) error {
+func (c *client) DeleteTask(taskGuid string) error {
 	request := models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
-	route := ResolveTaskRoute
+	route := DeleteTaskRoute
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
