@@ -2,7 +2,7 @@ package consul_test
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/db/consul"
-	"github.com/cloudfoundry-incubator/bbs/db/consul/internal/consul_helpers"
+	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	. "github.com/onsi/ginkgo"
