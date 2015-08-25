@@ -9,77 +9,73 @@ import (
 )
 
 var _ = Describe("Task API", func() {
-	Context("Getters", func() {
-		var expectedTasks []*models.Task
+	var expectedTasks []*models.Task
 
-		BeforeEach(func() {
-			expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
-			expectedTasks[1].Domain = "b-domain"
-			expectedTasks[1].CellId = "b-cell"
-			for _, t := range expectedTasks {
-				etcdHelper.SetRawTask(t)
-			}
-		})
+	BeforeEach(func() {
+		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
+		expectedTasks[1].Domain = "b-domain"
+		expectedTasks[1].CellId = "b-cell"
+		for _, t := range expectedTasks {
+			etcdHelper.SetRawTask(t)
+		}
+	})
 
-		Describe("GET /v1/tasks", func() {
-			Context("all tasks", func() {
-				It("has the correct number of responses", func() {
-					actualTasks, err := client.Tasks()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(actualTasks).To(ConsistOf(expectedTasks))
-				})
-			})
-
-			Context("when filtering by domain", func() {
-				It("has the correct number of responses", func() {
-					domain := expectedTasks[0].Domain
-					actualTasks, err := client.TasksByDomain(domain)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(actualTasks).To(ConsistOf(expectedTasks[0]))
-				})
-			})
-
-			Context("when filtering by cell", func() {
-				It("has the correct number of responses", func() {
-					actualTasks, err := client.TasksByCellID("b-cell")
-					Expect(err).NotTo(HaveOccurred())
-					Expect(actualTasks).To(ConsistOf(expectedTasks[1]))
-				})
-			})
-		})
-
-		Describe("GET /v1/tasks/:task_guid", func() {
-			It("returns the task", func() {
-				task, err := client.TaskByGuid(expectedTasks[0].TaskGuid)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(task).To(Equal(expectedTasks[0]))
-			})
+	Describe("Tasks", func() {
+		It("has the correct number of responses", func() {
+			actualTasks, err := client.Tasks()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualTasks).To(ConsistOf(expectedTasks))
 		})
 	})
 
-	Context("Setters", func() {
-		Describe("POST /v1/tasks", func() {
-			It("adds the desired task", func() {
-				expectedTask := model_helpers.NewValidTask("task-1")
-				err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
-				Expect(err).NotTo(HaveOccurred())
+	Describe("TasksByDomain", func() {
+		It("has the correct number of responses", func() {
+			domain := expectedTasks[0].Domain
+			actualTasks, err := client.TasksByDomain(domain)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualTasks).To(ConsistOf(expectedTasks[0]))
+		})
+	})
 
-				task, err := client.TaskByGuid(expectedTask.TaskGuid)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(task.TaskDefinition).To(Equal(expectedTask.TaskDefinition))
-			})
+	Describe("TasksByCellID", func() {
+		It("has the correct number of responses", func() {
+			actualTasks, err := client.TasksByCellID("b-cell")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualTasks).To(ConsistOf(expectedTasks[1]))
+		})
+	})
+
+	Describe("TaskByGuid", func() {
+		It("returns the task", func() {
+			task, err := client.TaskByGuid(expectedTasks[0].TaskGuid)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(task).To(Equal(expectedTasks[0]))
+		})
+	})
+
+	Describe("DesireTask", func() {
+		It("adds the desired task", func() {
+			expectedTask := model_helpers.NewValidTask("task-1")
+			err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
+			Expect(err).NotTo(HaveOccurred())
+
+			task, err := client.TaskByGuid(expectedTask.TaskGuid)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(task.TaskDefinition).To(Equal(expectedTask.TaskDefinition))
+		})
+	})
+
+	Describe("Task Lifecycle", func() {
+		var taskDef = model_helpers.NewValidTaskDefinition()
+		const taskGuid = "task-1"
+		const cellId = "cell-1"
+
+		BeforeEach(func() {
+			err := client.DesireTask(taskGuid, "test", taskDef)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
-		Describe("POST /v1/tasks/start", func() {
-			var taskDef = model_helpers.NewValidTaskDefinition()
-			const taskGuid = "task-1"
-			const cellId = "cell-1"
-
-			BeforeEach(func() {
-				err := client.DesireTask(taskGuid, "test", taskDef)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
+		Describe("StartTask", func() {
 			It("changes the task state from pending to running", func() {
 				task, err := client.TaskByGuid(taskGuid)
 				Expect(err).NotTo(HaveOccurred())
@@ -100,18 +96,83 @@ var _ = Describe("Task API", func() {
 			})
 		})
 
-		Describe("POST /v1/tasks/cancel", func() {
+		Describe("CancelTask", func() {
 			It("cancel the desired task", func() {
-				expectedTask := model_helpers.NewValidTask("task-1")
-				err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
+				err := client.CancelTask(taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = client.CancelTask(expectedTask.TaskGuid)
-				Expect(err).NotTo(HaveOccurred())
-
-				task, err := client.TaskByGuid(expectedTask.TaskGuid)
+				task, err := client.TaskByGuid(taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.FailureReason).To(Equal("task was cancelled"))
+			})
+		})
+
+		Context("task has been started", func() {
+			BeforeEach(func() {
+				_, err := client.StartTask(taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Describe("FailTask", func() {
+				It("marks the task completed and sets FailureReason", func() {
+					err := client.FailTask(taskGuid, "some failure happened")
+					Expect(err).NotTo(HaveOccurred())
+
+					task, err := client.TaskByGuid(taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(task.State).To(Equal(models.Task_Completed))
+					Expect(task.FailureReason).To(Equal("some failure happened"))
+				})
+			})
+
+			Describe("CompleteTask", func() {
+				It("changes the task state from running to completed", func() {
+					task, err := client.TaskByGuid(taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(task.State).To(Equal(models.Task_Running))
+
+					err = client.CompleteTask(taskGuid, cellId, false, "", "result")
+					Expect(err).NotTo(HaveOccurred())
+
+					task, err = client.TaskByGuid(taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(task.State).To(Equal(models.Task_Completed))
+				})
+			})
+
+			Context("task has been completed", func() {
+				BeforeEach(func() {
+					err := client.CompleteTask(taskGuid, cellId, false, "", "result")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Describe("ResolvingTask", func() {
+					It("changes the task state from completed to resolving", func() {
+						err := client.ResolvingTask(taskGuid)
+						Expect(err).NotTo(HaveOccurred())
+
+						task, err := client.TaskByGuid(taskGuid)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(task.State).To(Equal(models.Task_Resolving))
+					})
+				})
+
+				Context("task is resolving", func() {
+					BeforeEach(func() {
+						err := client.ResolvingTask(taskGuid)
+						Expect(err).NotTo(HaveOccurred())
+					})
+
+					Describe("ResolveTask", func() {
+						It("deletes the task", func() {
+							err := client.ResolveTask(taskGuid)
+							Expect(err).NotTo(HaveOccurred())
+
+							_, err = client.TaskByGuid(taskGuid)
+							Expect(err).To(Equal(models.ErrResourceNotFound))
+						})
+					})
+				})
 			})
 		})
 	})
