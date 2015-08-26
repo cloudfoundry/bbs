@@ -102,4 +102,12 @@ var _ = Describe("Codecs", func() {
 			})
 		})
 	})
+
+	Describe("SupportsBinary", func() {
+		It("indicates whether the encoding supports binary", func() {
+			Expect(codec.NONE.SupportsBinary()).To(BeFalse())
+			Expect(codec.UNENCODED.SupportsBinary()).To(BeFalse())
+			Expect(codec.BASE64.SupportsBinary()).To(BeTrue())
+		})
+	})
 })

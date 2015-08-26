@@ -6,6 +6,7 @@ import (
 )
 
 type StoreClient interface {
+	SupportsBinary() bool
 	Get(key string, sort bool, recursive bool) (*etcd.Response, error)
 	Set(key string, value []byte, ttl uint64) (*etcd.Response, error)
 	Create(key string, value []byte, ttl uint64) (*etcd.Response, error)
@@ -16,15 +17,21 @@ type StoreClient interface {
 }
 
 type storeClient struct {
-	client *etcd.Client
-	codecs *codec.Codecs
+	client   *etcd.Client
+	codecs   *codec.Codecs
+	encoding codec.Kind
 }
 
-func NewStoreClient(client *etcd.Client, defaultEncoding codec.Kind) StoreClient {
+func NewStoreClient(client *etcd.Client, encoding codec.Kind) StoreClient {
 	return &storeClient{
-		client: client,
-		codecs: codec.NewCodecs(defaultEncoding),
+		client:   client,
+		encoding: encoding,
+		codecs:   codec.NewCodecs(encoding),
 	}
+}
+
+func (sc *storeClient) SupportsBinary() bool {
+	return sc.encoding.SupportsBinary()
 }
 
 func (sc *storeClient) Get(key string, sort bool, recursive bool) (*etcd.Response, error) {

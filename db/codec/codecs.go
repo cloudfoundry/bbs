@@ -32,6 +32,15 @@ var (
 	BASE64    Kind = [2]byte{'0', '1'}
 )
 
+func (k Kind) SupportsBinary() bool {
+	switch k {
+	case BASE64:
+		return true
+	default:
+		return false
+	}
+}
+
 type IdentityCodec struct{}
 
 func (id *IdentityCodec) Encode(data []byte) ([]byte, error) { return data, nil }

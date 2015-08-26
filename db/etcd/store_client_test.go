@@ -61,6 +61,28 @@ var _ = Describe("StoreClient", func() {
 		storeClient = nil
 	})
 
+	Describe("SupportsBinary", func() {
+		Context("when the encoding supports binary", func() {
+			BeforeEach(func() {
+				encoding = codec.NONE
+			})
+
+			It("returns false", func() {
+				Expect(storeClient.SupportsBinary()).To(BeFalse())
+			})
+		})
+
+		Context("when the encoding does not support binary", func() {
+			BeforeEach(func() {
+				encoding = codec.BASE64
+			})
+
+			It("returns true", func() {
+				Expect(storeClient.SupportsBinary()).To(BeTrue())
+			})
+		})
+	})
+
 	Describe("Get", func() {
 		BeforeEach(func() {
 			basicSetup(etcdClient)
