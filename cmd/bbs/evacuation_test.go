@@ -1,14 +1,25 @@
 package main_test
 
 import (
+	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Evacuation API", func() {
+	BeforeEach(func() {
+		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsProcess = ginkgomon.Invoke(bbsRunner)
+	})
+
+	AfterEach(func() {
+		ginkgomon.Kill(bbsProcess)
+	})
+
 	Describe("RemoveEvacuatingActualLRP", func() {
 		var actual *models.ActualLRP
 		const noExpirationTTL = 0

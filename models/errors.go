@@ -26,11 +26,13 @@ func (err *Error) Error() string {
 const (
 	InvalidDomain = "InvalidDomain"
 
+	UnkownVersion          = "UnkownVersion"
 	InvalidRecord          = "InvalidRecord"
 	InvalidRequest         = "InvalidRequest"
 	InvalidResponse        = "InvalidResponse"
 	InvalidProtobufMessage = "InvalidProtobufMessage"
 	InvalidJSON            = "InvalidJSON"
+	FailedToOpenEnvelope   = "FailedToOpenEnvelope"
 	InvalidStateTransition = "InvalidStateTransition"
 
 	UnknownError = "UnknownError"
@@ -89,6 +91,11 @@ var (
 	ErrDeserializeJSON = &Error{
 		Type:    InvalidJSON,
 		Message: "could not deserialize JSON",
+	}
+
+	ErrFailedToOpenEnvelope = &Error{
+		Type:    FailedToOpenEnvelope,
+		Message: "could not open envelope",
 	}
 
 	ErrActualLRPCannotBeClaimed = &Error{

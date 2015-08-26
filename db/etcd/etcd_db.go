@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/coreos/go-etcd/etcd"
+	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
@@ -50,6 +51,7 @@ func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 }
 
 type ETCDDB struct {
+	format            models.SerializationFormat
 	client            StoreClient
 	clock             clock.Clock
 	inflightWatches   map[chan bool]bool
@@ -63,6 +65,7 @@ type ETCDDB struct {
 }
 
 func NewETCD(
+	format models.SerializationFormat,
 	storeClient StoreClient,
 	auctioneerClient auctionhandlers.Client,
 	cellClient cellhandlers.Client,
@@ -71,6 +74,7 @@ func NewETCD(
 	taskCC taskworkpool.TaskCompletionClient,
 ) *ETCDDB {
 	return &ETCDDB{
+		format,
 		storeClient,
 		clock,
 		map[chan bool]bool{},
@@ -80,6 +84,24 @@ func NewETCD(
 		taskCC,
 		cellDB,
 	}
+}
+
+func (db *ETCDDB) supportsBinary() bool {
+	return db.client.SupportsBinary()
+}
+
+func (db *ETCDDB) serializeModel(logger lager.Logger, model models.Versioner) ([]byte, *models.Error) {
+	data, err := models.MarshalEnvelope(db.format, model)
+	if err != nil {
+		logger.Error("failed-ro-serialize-model", err)
+		return nil, err
+	}
+	return data, nil
+}
+
+func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model models.Versioner) *models.Error {
+	envelope := models.OpenEnvelope([]byte(node.Value))
+	return envelope.Unmarshal(logger, model)
 }
 
 func (db *ETCDDB) fetchRecursiveRaw(logger lager.Logger, key string) (*etcd.Node, *models.Error) {

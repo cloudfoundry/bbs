@@ -1,9 +1,27 @@
 package models
 
-import "bytes"
+import (
+	"bytes"
 
+	"github.com/gogo/protobuf/proto"
+)
+
+//go:generate counterfeiter . Validator
 type Validator interface {
 	Validate() error
+}
+
+//go:generate counterfeiter . ProtoValidator
+type ProtoValidator interface {
+	Validator
+	proto.Message
+}
+
+//go:generate counterfeiter . Versioner
+type Versioner interface {
+	ProtoValidator
+	MigrateFromVersion(v Version) *Error
+	Version() Version
 }
 
 type ValidationError []error

@@ -3,13 +3,24 @@ package main_test
 import (
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Domain API", func() {
+	BeforeEach(func() {
+		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsProcess = ginkgomon.Invoke(bbsRunner)
+	})
+
+	AfterEach(func() {
+		ginkgomon.Kill(bbsProcess)
+	})
+
 	Describe("UpsertDomain", func() {
 		var existingDomain string
 

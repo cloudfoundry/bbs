@@ -8,10 +8,12 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
+	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
 	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
@@ -32,6 +34,12 @@ var serverAddress = flag.String(
 	"address",
 	"",
 	"The host:port that the server is bound to.",
+)
+
+var serializationFormat = flag.String(
+	"serializationFormat",
+	"json_no_envelope",
+	"options: json_no_envelope, json, proto",
 )
 
 var communicationTimeout = flag.Duration(
@@ -86,14 +94,7 @@ func main() {
 
 	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
 
-	db := etcddb.NewETCD(
-		initializeEtcdStoreClient(logger, etcdFlags),
-		initializeAuctioneerClient(logger),
-		cellhandlers.NewClient(),
-		initializeConsulDB(logger),
-		clock.NewClock(),
-		cbWorkPool,
-	)
+	db := initializeEtcdDB(logger, etcdFlags, cbWorkPool)
 
 	hub := events.NewHub()
 
@@ -165,7 +166,36 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 	})
 }
 
-func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb.StoreClient {
+func initializeEtcdDB(logger lager.Logger, etcdFlags *ETCDFlags, cbClient taskworkpool.TaskCompletionClient) *etcddb.ETCDDB {
+	var format models.SerializationFormat
+	var encoding codec.Kind
+
+	switch *serializationFormat {
+	case "proto":
+		format = models.PROTO
+		encoding = codec.BASE64
+	case "json":
+		format = models.JSON
+		encoding = codec.UNENCODED
+	case "json_no_envelope", "":
+		format = models.JSON_NO_ENVELOPE
+		encoding = codec.NONE
+	default:
+		logger.Fatal("invalid-seriailization-format", nil)
+	}
+
+	return etcddb.NewETCD(
+		format,
+		initializeEtcdStoreClient(logger, etcdFlags, encoding),
+		initializeAuctioneerClient(logger),
+		cellhandlers.NewClient(),
+		initializeConsulDB(logger),
+		clock.NewClock(),
+		cbClient,
+	)
+}
+
+func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags, encoding codec.Kind) etcddb.StoreClient {
 	etcdOptions, err := etcdFlags.Validate()
 	if err != nil {
 		logger.Fatal("etcd-validation-failed", err)
@@ -182,7 +212,7 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb
 	}
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
-	return etcddb.NewStoreClient(etcdClient, etcdOptions.Encoding)
+	return etcddb.NewStoreClient(etcdClient, encoding)
 }
 
 func initializeConsulDB(logger lager.Logger) *consuldb.ConsulDB {

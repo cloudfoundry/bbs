@@ -7,14 +7,14 @@ import (
 )
 
 type Args struct {
-	Address           string
-	AuctioneerAddress string
-	ConsulCluster     string
-	EtcdCluster       string
-	EtcdClientCert    string
-	EtcdClientKey     string
-	EtcdCACert        string
-	EtcdEncoding      string
+	Address             string
+	AuctioneerAddress   string
+	ConsulCluster       string
+	SerializationFormat string
+	EtcdCluster         string
+	EtcdClientCert      string
+	EtcdClientKey       string
+	EtcdCACert          string
 }
 
 func (args Args) ArgSlice() []string {
@@ -22,11 +22,11 @@ func (args Args) ArgSlice() []string {
 		"-address", args.Address,
 		"-auctioneerAddress", args.AuctioneerAddress,
 		"-consulCluster", args.ConsulCluster,
+		"-serializationFormat", args.SerializationFormat,
 		"-etcdCluster", args.EtcdCluster,
 		"-etcdCertFile", args.EtcdClientCert,
 		"-etcdKeyFile", args.EtcdClientKey,
 		"-etcdCaFile", args.EtcdCACert,
-		"-etcdEncoding", args.EtcdEncoding,
 		"-logLevel", "debug",
 	}
 }

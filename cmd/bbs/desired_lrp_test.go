@@ -1,8 +1,10 @@
 package main_test
 
 import (
+	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,6 +22,8 @@ var _ = Describe("DesiredLRP API", func() {
 	)
 
 	BeforeEach(func() {
+		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsProcess = ginkgomon.Invoke(bbsRunner)
 		filter = models.DesiredLRPFilter{}
 		expectedDesiredLRPs = []*models.DesiredLRP{}
 		actualDesiredLRPs = []*models.DesiredLRP{}
@@ -27,6 +31,10 @@ var _ = Describe("DesiredLRP API", func() {
 			"domain-1": 2,
 			"domain-2": 3,
 		})
+	})
+
+	AfterEach(func() {
+		ginkgomon.Kill(bbsProcess)
 	})
 
 	Describe("DesiredLRPs", func() {

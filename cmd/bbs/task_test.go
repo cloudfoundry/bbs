@@ -1,8 +1,10 @@
 package main_test
 
 import (
+	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -12,12 +14,18 @@ var _ = Describe("Task API", func() {
 	var expectedTasks []*models.Task
 
 	BeforeEach(func() {
+		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsProcess = ginkgomon.Invoke(bbsRunner)
 		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
 		expectedTasks[1].Domain = "b-domain"
 		expectedTasks[1].CellId = "b-cell"
 		for _, t := range expectedTasks {
 			etcdHelper.SetRawTask(t)
 		}
+	})
+
+	AfterEach(func() {
+		ginkgomon.Kill(bbsProcess)
 	})
 
 	Describe("Tasks", func() {

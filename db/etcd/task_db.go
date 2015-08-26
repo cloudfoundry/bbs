@@ -36,13 +36,10 @@ func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*model
 	tasks := []*models.Task{}
 
 	for _, node := range root.Nodes {
-		node := node
-
-		var task models.Task
-		deserializeErr := models.FromJSON([]byte(node.Value), &task)
-		if deserializeErr != nil {
-			logger.Error("failed-parsing-task", deserializeErr, lager.Data{"key": node.Key})
-			return nil, models.ErrUnknownError
+		task := new(models.Task)
+		err := db.deserializeModel(logger, node, task)
+		if err != nil {
+			return nil, err
 		}
 
 		if filter.Domain != "" && task.Domain != filter.Domain {
@@ -51,7 +48,8 @@ func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*model
 		if filter.CellID != "" && task.CellId != filter.CellID {
 			continue
 		}
-		tasks = append(tasks, &task)
+
+		tasks = append(tasks, task)
 	}
 
 	logger.Debug("succeeded-performing-deserialization", lager.Data{"num-tasks": len(tasks)})
@@ -70,14 +68,14 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 		return nil, 0, bbsErr
 	}
 
-	var task models.Task
-	deserializeErr := models.FromJSON([]byte(node.Value), &task)
+	task := new(models.Task)
+	deserializeErr := db.deserializeModel(logger, node, task)
 	if deserializeErr != nil {
 		logger.Error("failed-parsing-desired-task", deserializeErr)
 		return nil, 0, models.ErrDeserializeJSON
 	}
 
-	return &task, node.ModifiedIndex, nil
+	return task, node.ModifiedIndex, nil
 }
 
 func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) *models.Error {
@@ -94,9 +92,8 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 		UpdatedAt:      db.clock.Now().UnixNano(),
 	}
 
-	value, modelErr := models.ToJSON(task)
+	value, modelErr := db.serializeModel(logger, task)
 	if modelErr != nil {
-		logger.Error("failed-to-json", modelErr)
 		return modelErr
 	}
 
@@ -148,9 +145,8 @@ func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool,
 	task.State = models.Task_Running
 	task.CellId = cellID
 
-	value, modelErr := models.ToJSON(task)
+	value, modelErr := db.serializeModel(logger, task)
 	if modelErr != nil {
-		logger.Error("failed-to-json", modelErr)
 		return false, modelErr
 	}
 
@@ -276,9 +272,8 @@ func (db *ETCDDB) CompleteTask(logger lager.Logger, taskGuid, cellId string, fai
 func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uint64, failed bool, failureReason, result string) *models.Error {
 	db.markTaskCompleted(task, failed, failureReason, result)
 
-	value, modelErr := models.ToJSON(task)
+	value, modelErr := db.serializeModel(logger, task)
 	if modelErr != nil {
-		logger.Error("failed-to-json", modelErr)
 		return modelErr
 	}
 
@@ -335,9 +330,8 @@ func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) *models.Er
 	task.UpdatedAt = db.clock.Now().UnixNano()
 	task.State = models.Task_Resolving
 
-	value, modelErr := models.ToJSON(task)
+	value, modelErr := db.serializeModel(logger, task)
 	if modelErr != nil {
-		logger.Error("failed-to-json", modelErr)
 		return modelErr
 	}
 

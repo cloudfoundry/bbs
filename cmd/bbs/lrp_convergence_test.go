@@ -1,9 +1,11 @@
 package main_test
 
 import (
+	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
 var _ = Describe("Convergence API", func() {
@@ -11,6 +13,9 @@ var _ = Describe("Convergence API", func() {
 		var processGuid string
 
 		BeforeEach(func() {
+			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsProcess = ginkgomon.Invoke(bbsRunner)
+
 			cellPresence := models.NewCellPresence(
 				"some-cell",
 				"cell.example.com",
@@ -22,6 +27,10 @@ var _ = Describe("Convergence API", func() {
 			consulHelper.RegisterCell(cellPresence)
 			processGuid = "some-process-guid"
 			etcdHelper.CreateValidDesiredLRP(processGuid)
+		})
+
+		AfterEach(func() {
+			ginkgomon.Kill(bbsProcess)
 		})
 
 		It("converges the lrps", func() {

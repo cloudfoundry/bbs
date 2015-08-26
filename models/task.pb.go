@@ -9,15 +9,15 @@ import math "math"
 
 // discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
-import io "io"
+import strconv "strconv"
+
 import fmt "fmt"
-
 import strings "strings"
-import reflect "reflect"
-
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
-import strconv "strconv"
+import reflect "reflect"
+
+import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -273,842 +273,205 @@ func (m *Task) GetFailureReason() string {
 func init() {
 	proto.RegisterEnum("models.Task_State", Task_State_name, Task_State_value)
 }
-func (m *TaskDefinition) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
+func (x Task_State) String() string {
+	s, ok := Task_State_name[int32(x)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(x))
+}
+func (this *TaskDefinition) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
 		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RootFs", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RootFs = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EnvironmentVariables", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthTask
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.EnvironmentVariables = append(m.EnvironmentVariables, &EnvironmentVariable{})
-			if err := m.EnvironmentVariables[len(m.EnvironmentVariables)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthTask
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Action == nil {
-				m.Action = &Action{}
-			}
-			if err := m.Action.Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DiskMb", wireType)
-			}
-			m.DiskMb = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.DiskMb |= (int32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MemoryMb", wireType)
-			}
-			m.MemoryMb = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.MemoryMb |= (int32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CpuWeight", wireType)
-			}
-			m.CpuWeight = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.CpuWeight |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Privileged", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Privileged = bool(v != 0)
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LogSource", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LogSource = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LogGuid", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LogGuid = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 10:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MetricsGuid", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MetricsGuid = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 11:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ResultFile", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ResultFile = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 12:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CompletionCallbackUrl", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CompletionCallbackUrl = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 13:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Annotation", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Annotation = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 14:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EgressRules", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthTask
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.EgressRules = append(m.EgressRules, &SecurityGroupRule{})
-			if err := m.EgressRules[len(m.EgressRules)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipTask(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTask
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
+		return false
 	}
 
-	return nil
-}
-func (m *Task) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
+	that1, ok := that.(*TaskDefinition)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
 		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TaskDefinition", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthTask
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.TaskDefinition == nil {
-				m.TaskDefinition = &TaskDefinition{}
-			}
-			if err := m.TaskDefinition.Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TaskGuid", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TaskGuid = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Domain = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
-			}
-			m.CreatedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.CreatedAt |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAt", wireType)
-			}
-			m.UpdatedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.UpdatedAt |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FirstCompletedAt", wireType)
-			}
-			m.FirstCompletedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.FirstCompletedAt |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
-			}
-			m.State = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.State |= (Task_State(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CellId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CellId = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Result = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 10:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Failed", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Failed = bool(v != 0)
-		case 11:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FailureReason", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.FailureReason = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipTask(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTask
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.RootFs != that1.RootFs {
+		return false
+	}
+	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
+		return false
+	}
+	for i := range this.EnvironmentVariables {
+		if !this.EnvironmentVariables[i].Equal(that1.EnvironmentVariables[i]) {
+			return false
 		}
 	}
-
-	return nil
-}
-func skipTask(data []byte) (n int, err error) {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for {
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if data[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-			return iNdEx, nil
-		case 1:
-			iNdEx += 8
-			return iNdEx, nil
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			iNdEx += length
-			if length < 0 {
-				return 0, ErrInvalidLengthTask
-			}
-			return iNdEx, nil
-		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := data[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipTask(data[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
-		case 4:
-			return iNdEx, nil
-		case 5:
-			iNdEx += 4
-			return iNdEx, nil
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+	if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	if this.DiskMb != that1.DiskMb {
+		return false
+	}
+	if this.MemoryMb != that1.MemoryMb {
+		return false
+	}
+	if this.CpuWeight != that1.CpuWeight {
+		return false
+	}
+	if this.Privileged != that1.Privileged {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.LogGuid != that1.LogGuid {
+		return false
+	}
+	if this.MetricsGuid != that1.MetricsGuid {
+		return false
+	}
+	if this.ResultFile != that1.ResultFile {
+		return false
+	}
+	if this.CompletionCallbackUrl != that1.CompletionCallbackUrl {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
+		return false
+	}
+	if len(this.EgressRules) != len(that1.EgressRules) {
+		return false
+	}
+	for i := range this.EgressRules {
+		if !this.EgressRules[i].Equal(that1.EgressRules[i]) {
+			return false
 		}
 	}
-	panic("unreachable")
+	return true
 }
+func (this *Task) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
 
-var (
-	ErrInvalidLengthTask = fmt.Errorf("proto: negative length found during unmarshaling")
-)
-
-func (this *TaskDefinition) String() string {
+	that1, ok := that.(*Task)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.TaskDefinition.Equal(that1.TaskDefinition) {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.CreatedAt != that1.CreatedAt {
+		return false
+	}
+	if this.UpdatedAt != that1.UpdatedAt {
+		return false
+	}
+	if this.FirstCompletedAt != that1.FirstCompletedAt {
+		return false
+	}
+	if this.State != that1.State {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	if this.Result != that1.Result {
+		return false
+	}
+	if this.Failed != that1.Failed {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	return true
+}
+func (this *TaskDefinition) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&TaskDefinition{`,
-		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
-		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
-		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
-		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
-		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
-		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`LogGuid:` + fmt.Sprintf("%v", this.LogGuid) + `,`,
-		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
-		`ResultFile:` + fmt.Sprintf("%v", this.ResultFile) + `,`,
-		`CompletionCallbackUrl:` + fmt.Sprintf("%v", this.CompletionCallbackUrl) + `,`,
-		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
-		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
-		`}`,
-	}, "")
+	s := strings.Join([]string{`&models.TaskDefinition{` +
+		`RootFs:` + fmt.Sprintf("%#v", this.RootFs),
+		`EnvironmentVariables:` + fmt.Sprintf("%#v", this.EnvironmentVariables),
+		`Action:` + fmt.Sprintf("%#v", this.Action),
+		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
+		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
+		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
+		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
+		`LogGuid:` + fmt.Sprintf("%#v", this.LogGuid),
+		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
+		`ResultFile:` + fmt.Sprintf("%#v", this.ResultFile),
+		`CompletionCallbackUrl:` + fmt.Sprintf("%#v", this.CompletionCallbackUrl),
+		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
+		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules) + `}`}, ", ")
 	return s
 }
-func (this *Task) String() string {
+func (this *Task) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&Task{`,
-		`TaskDefinition:` + strings.Replace(fmt.Sprintf("%v", this.TaskDefinition), "TaskDefinition", "TaskDefinition", 1) + `,`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
-		`UpdatedAt:` + fmt.Sprintf("%v", this.UpdatedAt) + `,`,
-		`FirstCompletedAt:` + fmt.Sprintf("%v", this.FirstCompletedAt) + `,`,
-		`State:` + fmt.Sprintf("%v", this.State) + `,`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
-		`Failed:` + fmt.Sprintf("%v", this.Failed) + `,`,
-		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
-		`}`,
-	}, "")
+	s := strings.Join([]string{`&models.Task{` +
+		`TaskDefinition:` + fmt.Sprintf("%#v", this.TaskDefinition),
+		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
+		`Domain:` + fmt.Sprintf("%#v", this.Domain),
+		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
+		`UpdatedAt:` + fmt.Sprintf("%#v", this.UpdatedAt),
+		`FirstCompletedAt:` + fmt.Sprintf("%#v", this.FirstCompletedAt),
+		`State:` + fmt.Sprintf("%#v", this.State),
+		`CellId:` + fmt.Sprintf("%#v", this.CellId),
+		`Result:` + fmt.Sprintf("%#v", this.Result),
+		`Failed:` + fmt.Sprintf("%#v", this.Failed),
+		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason) + `}`}, ", ")
 	return s
 }
-func valueToStringTask(v interface{}) string {
+func valueToGoStringTask(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
 		return "nil"
 	}
 	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("*%v", pv)
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func (m *TaskDefinition) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.RootFs)
-	n += 1 + l + sovTask(uint64(l))
-	if len(m.EnvironmentVariables) > 0 {
-		for _, e := range m.EnvironmentVariables {
-			l = e.Size()
-			n += 1 + l + sovTask(uint64(l))
-		}
+func extensionToGoStringTask(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
 	}
-	if m.Action != nil {
-		l = m.Action.Size()
-		n += 1 + l + sovTask(uint64(l))
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
 	}
-	n += 1 + sovTask(uint64(m.DiskMb))
-	n += 1 + sovTask(uint64(m.MemoryMb))
-	n += 1 + sovTask(uint64(m.CpuWeight))
-	n += 2
-	l = len(m.LogSource)
-	n += 1 + l + sovTask(uint64(l))
-	l = len(m.LogGuid)
-	n += 1 + l + sovTask(uint64(l))
-	l = len(m.MetricsGuid)
-	n += 1 + l + sovTask(uint64(l))
-	l = len(m.ResultFile)
-	n += 1 + l + sovTask(uint64(l))
-	l = len(m.CompletionCallbackUrl)
-	n += 1 + l + sovTask(uint64(l))
-	l = len(m.Annotation)
-	n += 1 + l + sovTask(uint64(l))
-	if len(m.EgressRules) > 0 {
-		for _, e := range m.EgressRules {
-			l = e.Size()
-			n += 1 + l + sovTask(uint64(l))
-		}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	return n
-}
-
-func (m *Task) Size() (n int) {
-	var l int
-	_ = l
-	if m.TaskDefinition != nil {
-		l = m.TaskDefinition.Size()
-		n += 1 + l + sovTask(uint64(l))
-	}
-	l = len(m.TaskGuid)
-	n += 1 + l + sovTask(uint64(l))
-	l = len(m.Domain)
-	n += 1 + l + sovTask(uint64(l))
-	n += 1 + sovTask(uint64(m.CreatedAt))
-	n += 1 + sovTask(uint64(m.UpdatedAt))
-	n += 1 + sovTask(uint64(m.FirstCompletedAt))
-	n += 1 + sovTask(uint64(m.State))
-	l = len(m.CellId)
-	n += 1 + l + sovTask(uint64(l))
-	l = len(m.Result)
-	n += 1 + l + sovTask(uint64(l))
-	n += 2
-	l = len(m.FailureReason)
-	n += 1 + l + sovTask(uint64(l))
-	return n
-}
-
-func sovTask(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
-}
-func sozTask(x uint64) (n int) {
-	return sovTask(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+	s += strings.Join(ss, ",") + "}"
+	return s
 }
 func (m *TaskDefinition) Marshal() (data []byte, err error) {
 	size := m.Size()
@@ -1302,203 +665,875 @@ func encodeVarintTask(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	return offset + 1
 }
-func (this *TaskDefinition) GoString() string {
+func (m *TaskDefinition) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.RootFs)
+	n += 1 + l + sovTask(uint64(l))
+	if len(m.EnvironmentVariables) > 0 {
+		for _, e := range m.EnvironmentVariables {
+			l = e.Size()
+			n += 1 + l + sovTask(uint64(l))
+		}
+	}
+	if m.Action != nil {
+		l = m.Action.Size()
+		n += 1 + l + sovTask(uint64(l))
+	}
+	n += 1 + sovTask(uint64(m.DiskMb))
+	n += 1 + sovTask(uint64(m.MemoryMb))
+	n += 1 + sovTask(uint64(m.CpuWeight))
+	n += 2
+	l = len(m.LogSource)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.LogGuid)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.MetricsGuid)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.ResultFile)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.CompletionCallbackUrl)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.Annotation)
+	n += 1 + l + sovTask(uint64(l))
+	if len(m.EgressRules) > 0 {
+		for _, e := range m.EgressRules {
+			l = e.Size()
+			n += 1 + l + sovTask(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *Task) Size() (n int) {
+	var l int
+	_ = l
+	if m.TaskDefinition != nil {
+		l = m.TaskDefinition.Size()
+		n += 1 + l + sovTask(uint64(l))
+	}
+	l = len(m.TaskGuid)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.Domain)
+	n += 1 + l + sovTask(uint64(l))
+	n += 1 + sovTask(uint64(m.CreatedAt))
+	n += 1 + sovTask(uint64(m.UpdatedAt))
+	n += 1 + sovTask(uint64(m.FirstCompletedAt))
+	n += 1 + sovTask(uint64(m.State))
+	l = len(m.CellId)
+	n += 1 + l + sovTask(uint64(l))
+	l = len(m.Result)
+	n += 1 + l + sovTask(uint64(l))
+	n += 2
+	l = len(m.FailureReason)
+	n += 1 + l + sovTask(uint64(l))
+	return n
+}
+
+func sovTask(x uint64) (n int) {
+	for {
+		n++
+		x >>= 7
+		if x == 0 {
+			break
+		}
+	}
+	return n
+}
+func sozTask(x uint64) (n int) {
+	return sovTask(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (this *TaskDefinition) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TaskDefinition{` +
-		`RootFs:` + fmt.Sprintf("%#v", this.RootFs),
-		`EnvironmentVariables:` + fmt.Sprintf("%#v", this.EnvironmentVariables),
-		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
-		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
-		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
-		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`LogGuid:` + fmt.Sprintf("%#v", this.LogGuid),
-		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
-		`ResultFile:` + fmt.Sprintf("%#v", this.ResultFile),
-		`CompletionCallbackUrl:` + fmt.Sprintf("%#v", this.CompletionCallbackUrl),
-		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
-		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules) + `}`}, ", ")
+	s := strings.Join([]string{`&TaskDefinition{`,
+		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
+		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
+		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
+		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
+		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
+		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
+		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`LogGuid:` + fmt.Sprintf("%v", this.LogGuid) + `,`,
+		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
+		`ResultFile:` + fmt.Sprintf("%v", this.ResultFile) + `,`,
+		`CompletionCallbackUrl:` + fmt.Sprintf("%v", this.CompletionCallbackUrl) + `,`,
+		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
+		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
+		`}`,
+	}, "")
 	return s
 }
-func (this *Task) GoString() string {
+func (this *Task) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.Task{` +
-		`TaskDefinition:` + fmt.Sprintf("%#v", this.TaskDefinition),
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
-		`Domain:` + fmt.Sprintf("%#v", this.Domain),
-		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
-		`UpdatedAt:` + fmt.Sprintf("%#v", this.UpdatedAt),
-		`FirstCompletedAt:` + fmt.Sprintf("%#v", this.FirstCompletedAt),
-		`State:` + fmt.Sprintf("%#v", this.State),
-		`CellId:` + fmt.Sprintf("%#v", this.CellId),
-		`Result:` + fmt.Sprintf("%#v", this.Result),
-		`Failed:` + fmt.Sprintf("%#v", this.Failed),
-		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason) + `}`}, ", ")
+	s := strings.Join([]string{`&Task{`,
+		`TaskDefinition:` + strings.Replace(fmt.Sprintf("%v", this.TaskDefinition), "TaskDefinition", "TaskDefinition", 1) + `,`,
+		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
+		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
+		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
+		`UpdatedAt:` + fmt.Sprintf("%v", this.UpdatedAt) + `,`,
+		`FirstCompletedAt:` + fmt.Sprintf("%v", this.FirstCompletedAt) + `,`,
+		`State:` + fmt.Sprintf("%v", this.State) + `,`,
+		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
+		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
+		`Failed:` + fmt.Sprintf("%v", this.Failed) + `,`,
+		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
+		`}`,
+	}, "")
 	return s
 }
-func valueToGoStringTask(v interface{}, typ string) string {
+func valueToStringTask(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
 		return "nil"
 	}
 	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+	return fmt.Sprintf("*%v", pv)
 }
-func extensionToGoStringTask(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
-	if e == nil {
-		return "nil"
-	}
-	s := "map[int32]proto.Extension{"
-	keys := make([]int, 0, len(e))
-	for k := range e {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	ss := []string{}
-	for _, k := range keys {
-		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
-	}
-	s += strings.Join(ss, ",") + "}"
-	return s
-}
-func (this *TaskDefinition) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
+func (m *TaskDefinition) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
 		}
-		return false
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RootFs", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RootFs = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EnvironmentVariables", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EnvironmentVariables = append(m.EnvironmentVariables, &EnvironmentVariable{})
+			if err := m.EnvironmentVariables[len(m.EnvironmentVariables)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Action == nil {
+				m.Action = &Action{}
+			}
+			if err := m.Action.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DiskMb", wireType)
+			}
+			m.DiskMb = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.DiskMb |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MemoryMb", wireType)
+			}
+			m.MemoryMb = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.MemoryMb |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpuWeight", wireType)
+			}
+			m.CpuWeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.CpuWeight |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Privileged", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Privileged = bool(v != 0)
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LogSource", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LogSource = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LogGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LogGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetricsGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetricsGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ResultFile", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ResultFile = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CompletionCallbackUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CompletionCallbackUrl = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Annotation", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Annotation = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EgressRules", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EgressRules = append(m.EgressRules, &SecurityGroupRule{})
+			if err := m.EgressRules[len(m.EgressRules)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
 	}
 
-	that1, ok := that.(*TaskDefinition)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if this.RootFs != that1.RootFs {
-		return false
-	}
-	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
-		return false
-	}
-	for i := range this.EnvironmentVariables {
-		if !this.EnvironmentVariables[i].Equal(that1.EnvironmentVariables[i]) {
-			return false
-		}
-	}
-	if !this.Action.Equal(that1.Action) {
-		return false
-	}
-	if this.DiskMb != that1.DiskMb {
-		return false
-	}
-	if this.MemoryMb != that1.MemoryMb {
-		return false
-	}
-	if this.CpuWeight != that1.CpuWeight {
-		return false
-	}
-	if this.Privileged != that1.Privileged {
-		return false
-	}
-	if this.LogSource != that1.LogSource {
-		return false
-	}
-	if this.LogGuid != that1.LogGuid {
-		return false
-	}
-	if this.MetricsGuid != that1.MetricsGuid {
-		return false
-	}
-	if this.ResultFile != that1.ResultFile {
-		return false
-	}
-	if this.CompletionCallbackUrl != that1.CompletionCallbackUrl {
-		return false
-	}
-	if this.Annotation != that1.Annotation {
-		return false
-	}
-	if len(this.EgressRules) != len(that1.EgressRules) {
-		return false
-	}
-	for i := range this.EgressRules {
-		if !this.EgressRules[i].Equal(that1.EgressRules[i]) {
-			return false
-		}
-	}
-	return true
+	return nil
 }
-func (this *Task) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
+func (m *Task) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
 		}
-		return false
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaskDefinition", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TaskDefinition == nil {
+				m.TaskDefinition = &TaskDefinition{}
+			}
+			if err := m.TaskDefinition.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaskGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TaskGuid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Domain = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
+			}
+			m.CreatedAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.CreatedAt |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAt", wireType)
+			}
+			m.UpdatedAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.UpdatedAt |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FirstCompletedAt", wireType)
+			}
+			m.FirstCompletedAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.FirstCompletedAt |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.State |= (Task_State(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CellId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CellId = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Result = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Failed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Failed = bool(v != 0)
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FailureReason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FailureReason = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipTask(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTask
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
 	}
 
-	that1, ok := that.(*Task)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
+	return nil
+}
+func skipTask(data []byte) (n int, err error) {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
 		}
-		return false
-	} else if this == nil {
-		return false
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for {
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if data[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+			return iNdEx, nil
+		case 1:
+			iNdEx += 8
+			return iNdEx, nil
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			iNdEx += length
+			if length < 0 {
+				return 0, ErrInvalidLengthTask
+			}
+			return iNdEx, nil
+		case 3:
+			for {
+				var innerWire uint64
+				var start int = iNdEx
+				for shift := uint(0); ; shift += 7 {
+					if iNdEx >= l {
+						return 0, io.ErrUnexpectedEOF
+					}
+					b := data[iNdEx]
+					iNdEx++
+					innerWire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				innerWireType := int(innerWire & 0x7)
+				if innerWireType == 4 {
+					break
+				}
+				next, err := skipTask(data[start:])
+				if err != nil {
+					return 0, err
+				}
+				iNdEx = start + next
+			}
+			return iNdEx, nil
+		case 4:
+			return iNdEx, nil
+		case 5:
+			iNdEx += 4
+			return iNdEx, nil
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
 	}
-	if !this.TaskDefinition.Equal(that1.TaskDefinition) {
-		return false
-	}
-	if this.TaskGuid != that1.TaskGuid {
-		return false
-	}
-	if this.Domain != that1.Domain {
-		return false
-	}
-	if this.CreatedAt != that1.CreatedAt {
-		return false
-	}
-	if this.UpdatedAt != that1.UpdatedAt {
-		return false
-	}
-	if this.FirstCompletedAt != that1.FirstCompletedAt {
-		return false
-	}
-	if this.State != that1.State {
-		return false
-	}
-	if this.CellId != that1.CellId {
-		return false
-	}
-	if this.Result != that1.Result {
-		return false
-	}
-	if this.Failed != that1.Failed {
-		return false
-	}
-	if this.FailureReason != that1.FailureReason {
-		return false
-	}
-	return true
+	panic("unreachable")
 }
-func (x Task_State) String() string {
-	s, ok := Task_State_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
+
+var (
+	ErrInvalidLengthTask = fmt.Errorf("proto: negative length found during unmarshaling")
+)

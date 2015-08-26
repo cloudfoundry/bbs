@@ -118,15 +118,11 @@ var _ = BeforeEach(func() {
 		EtcdCluster:       etcdUrl,
 		ConsulCluster:     consulRunner.ConsulCluster(),
 	}
-	bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
-
-	bbsProcess = ginkgomon.Invoke(bbsRunner)
 	storeClient = etcd.NewStoreClient(etcdClient, codec.BASE64)
 	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 })
 
 var _ = AfterEach(func() {
-	ginkgomon.Kill(bbsProcess)
 	auctioneerServer.Close()
 })
