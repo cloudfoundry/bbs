@@ -1,13 +1,13 @@
-package etcd_test
+package taskworkpool_test
 
 import (
 	"net/http"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	dbFakes "github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -62,7 +62,7 @@ var _ = Describe("TaskWorker", func() {
 		simulateTaskCompleting := func() {
 			task := model_helpers.NewValidTask("the-task-guid")
 			task.CompletionCallbackUrl = callbackURL
-			etcd.HandleCompletedTask(logger, taskDB, task)
+			taskworkpool.HandleCompletedTask(logger, taskDB, task)
 		}
 
 		Context("when the task has a completion callback URL", func() {

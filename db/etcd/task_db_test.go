@@ -549,7 +549,7 @@ var _ = Describe("TaskDB", func() {
 						It("eventually causes the workpool to complete its callback work", func() {
 							err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
 							Expect(err).NotTo(HaveOccurred())
-							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(1))
+							Eventually(fakeTaskCompletionClient.SubmitCallCount()).Should(Equal(1))
 						})
 					})
 
@@ -561,7 +561,7 @@ var _ = Describe("TaskDB", func() {
 						It("does not complete the task callback", func() {
 							err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
 							Expect(err).NotTo(HaveOccurred())
-							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(0))
+							Eventually(fakeTaskCompletionClient.SubmitCallCount()).Should(Equal(0))
 						})
 					})
 				})
@@ -647,7 +647,7 @@ var _ = Describe("TaskDB", func() {
 						It("eventually causes the workpool to complete its callback work", func() {
 							err := etcdDB.FailTask(logger, taskGuid, "because i said so")
 							Expect(err).NotTo(HaveOccurred())
-							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(1))
+							Eventually(fakeTaskCompletionClient.SubmitCallCount()).Should(Equal(1))
 						})
 					})
 
@@ -659,7 +659,7 @@ var _ = Describe("TaskDB", func() {
 						It("does not complete the task callback", func() {
 							err := etcdDB.FailTask(logger, taskGuid, "because i said so")
 							Expect(err).NotTo(HaveOccurred())
-							Eventually(fakeTaskCBFactory.TaskCallbackWorkCallCount()).Should(Equal(0))
+							Eventually(fakeTaskCompletionClient.SubmitCallCount()).Should(Equal(0))
 						})
 					})
 				})

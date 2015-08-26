@@ -12,13 +12,13 @@ import (
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
+	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
 	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry/dropsonde"
-	"github.com/cloudfoundry/gunk/workpool"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
@@ -84,7 +84,7 @@ func main() {
 
 	initializeDropsonde(logger)
 
-	cbWorkPool := initializeWorkPool(logger)
+	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
 
 	db := etcddb.NewETCD(
 		initializeEtcdStoreClient(logger, etcdFlags),
@@ -93,7 +93,6 @@ func main() {
 		initializeConsulDB(logger),
 		clock.NewClock(),
 		cbWorkPool,
-		etcddb.CompleteTaskWork,
 	)
 
 	hub := events.NewHub()
@@ -109,7 +108,7 @@ func main() {
 	handler := handlers.New(logger, db, hub)
 
 	members := grouper.Members{
-		{"workPool", initializeWorkPoolRunner(cbWorkPool)},
+		{"workPool", cbWorkPool},
 		{"watcher", watcher},
 		{"server", http_server.New(*serverAddress, handler)},
 		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
@@ -199,22 +198,4 @@ func initializeConsulDB(logger lager.Logger) *consuldb.ConsulDB {
 	}
 
 	return consuldb.NewConsul(consulSession)
-}
-
-func initializeWorkPool(logger lager.Logger) *workpool.WorkPool {
-	cbWorkPool, err := workpool.NewWorkPool(etcddb.TASK_CB_WORKERS)
-	if err != nil {
-		logger.Fatal("callback-workpool-creation-failed", err)
-	}
-	return cbWorkPool
-}
-
-func initializeWorkPoolRunner(cbWorkPool *workpool.WorkPool) ifrit.RunFunc {
-	return func(signals <-chan os.Signal, ready chan<- struct{}) error {
-		close(ready)
-		<-signals
-		go cbWorkPool.Stop()
-
-		return nil
-	}
 }

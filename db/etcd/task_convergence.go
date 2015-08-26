@@ -182,7 +182,7 @@ func (db *ETCDDB) ConvergeTasks(
 
 	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
 	for _, task := range tasksToComplete {
-		db.callbackWorkPool.Submit(db.taskCallbackFactory(logger, db, task))
+		db.taskCompletionClient.Submit(db, task)
 	}
 	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
 

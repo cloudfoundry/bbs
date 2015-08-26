@@ -9,15 +9,13 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry/gunk/workpool"
+	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 
 const DataSchemaRoot = "/v1/"
-
-const TASK_CB_WORKERS = 20
 
 const maxActualGroupGetterWorkPoolSize = 50
 const ActualLRPSchemaRoot = DataSchemaRoot + "actual"
@@ -59,8 +57,7 @@ type ETCDDB struct {
 	auctioneerClient  auctionhandlers.Client
 	cellClient        cellhandlers.Client
 
-	taskCallbackFactory db.CompleteTaskWork
-	callbackWorkPool    *workpool.WorkPool
+	taskCompletionClient taskworkpool.TaskCompletionClient
 
 	cellDB db.CellDB
 }
@@ -71,8 +68,7 @@ func NewETCD(
 	cellClient cellhandlers.Client,
 	cellDB db.CellDB,
 	clock clock.Clock,
-	cbWorkPool *workpool.WorkPool,
-	taskCBFactory db.CompleteTaskWork,
+	taskCC taskworkpool.TaskCompletionClient,
 ) *ETCDDB {
 	return &ETCDDB{
 		storeClient,
@@ -81,8 +77,7 @@ func NewETCD(
 		&sync.Mutex{},
 		auctioneerClient,
 		cellClient,
-		taskCBFactory,
-		cbWorkPool,
+		taskCC,
 		cellDB,
 	}
 }

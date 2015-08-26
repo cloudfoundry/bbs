@@ -1,21 +1,71 @@
-package etcd
+package taskworkpool
 
 import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"regexp"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf_http"
+	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"
 )
 
 const MAX_CB_RETRIES = 3
+const TASK_CB_WORKERS = 20
 
-func CompleteTaskWork(logger lager.Logger, taskDB db.TaskDB, task *models.Task) func() {
-	return func() { HandleCompletedTask(logger, taskDB, task) }
+//go:generate counterfeiter . TaskCompletionClient
+
+type CompletedTaskHandler func(logger lager.Logger, taskDB db.TaskDB, task *models.Task)
+
+type TaskCompletionClient interface {
+	Submit(taskDB db.TaskDB, task *models.Task)
+}
+
+type TaskCompletionWorkPool struct {
+	logger           lager.Logger
+	callbackHandler  CompletedTaskHandler
+	callbackWorkPool *workpool.WorkPool
+}
+
+func New(logger lager.Logger, cbHandler CompletedTaskHandler) *TaskCompletionWorkPool {
+	if cbHandler == nil {
+		panic("callbackHandler cannot be nil")
+	}
+	return &TaskCompletionWorkPool{
+		logger:          logger,
+		callbackHandler: cbHandler,
+	}
+}
+
+func initializeWorkPool(logger lager.Logger) *workpool.WorkPool {
+	cbWorkPool, err := workpool.NewWorkPool(TASK_CB_WORKERS)
+	if err != nil {
+		logger.Fatal("callback-workpool-creation-failed", err)
+	}
+	return cbWorkPool
+}
+
+func (twp *TaskCompletionWorkPool) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+	twp.callbackWorkPool = initializeWorkPool(twp.logger)
+	close(ready)
+
+	<-signals
+	go twp.callbackWorkPool.Stop()
+
+	return nil
+}
+
+func (twp *TaskCompletionWorkPool) Submit(taskDB db.TaskDB, task *models.Task) {
+	if twp.callbackWorkPool == nil {
+		panic("called submit before workpool was started")
+	}
+	twp.callbackWorkPool.Submit(func() {
+		twp.callbackHandler(twp.logger, taskDB, task)
+	})
 }
 
 func HandleCompletedTask(logger lager.Logger, taskDB db.TaskDB, task *models.Task) {

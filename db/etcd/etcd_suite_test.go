@@ -12,11 +12,10 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
-	fakeHelpers "github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers/fakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
-	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -47,9 +46,8 @@ var consulHelper *consul_helpers.ConsulHelper
 
 var cellDB db.CellDB
 var etcdDB db.DB
-var taskCBWorkPool *workpool.WorkPool
 var workPoolCreateError error
-var fakeTaskCBFactory *fakeHelpers.FakeTaskCallbackFactory
+var fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
 
 func TestDB(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -74,14 +72,12 @@ var _ = BeforeSuite(func() {
 
 	etcdRunner.Start()
 
-	taskCBWorkPool, workPoolCreateError = workpool.NewWorkPool(1)
 	Expect(workPoolCreateError).ToNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 	consulRunner.Stop()
-	taskCBWorkPool.Stop()
 })
 
 var _ = BeforeEach(func() {
@@ -100,10 +96,9 @@ var _ = BeforeEach(func() {
 	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 	cellDB = consul.NewConsul(consulSession)
-	fakeTaskCBFactory = new(fakeHelpers.FakeTaskCallbackFactory)
-	fakeTaskCBFactory.TaskCallbackWorkReturns(func() {})
+	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 
-	etcdDB = etcd.NewETCD(storeClient, auctioneerClient, cellClient, cellDB, clock, taskCBWorkPool, fakeTaskCBFactory.TaskCallbackWork)
+	etcdDB = etcd.NewETCD(storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {
