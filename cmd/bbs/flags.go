@@ -15,7 +15,7 @@ type ETCDFlags struct {
 	keyFile     string
 	caFile      string
 	clusterUrls string
-	encoding string
+	encoding    string
 }
 
 type ETCDOptions struct {
@@ -24,7 +24,7 @@ type ETCDOptions struct {
 	CAFile      string
 	ClusterUrls []string
 	IsSSL       bool
-	Encoding 		codec.Kind
+	Encoding    codec.Kind
 }
 
 func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
@@ -97,7 +97,7 @@ func (flags *ETCDFlags) Validate() (*ETCDOptions, error) {
 
 	var encoding codec.Kind
 	switch flags.encoding {
-	case "","none":
+	case "", "none":
 		encoding = codec.NONE
 	case "unencoded":
 		encoding = codec.UNENCODED
@@ -107,13 +107,12 @@ func (flags *ETCDFlags) Validate() (*ETCDOptions, error) {
 		return nil, errors.New("Encoding must be set to none, unencoded, or base64")
 	}
 
-
 	return &ETCDOptions{
 		CertFile:    flags.certFile,
 		KeyFile:     flags.keyFile,
 		CAFile:      flags.caFile,
 		ClusterUrls: clusterUrls,
 		IsSSL:       isSSL,
-		Encoding: encoding,
+		Encoding:    encoding,
 	}, nil
 }

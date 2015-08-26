@@ -87,14 +87,14 @@ func main() {
 	cbWorkPool := initializeWorkPool(logger)
 
 	db := etcddb.NewETCD(
-		initializeEtcdStoreClient(logger,etcdFlags),
+		initializeEtcdStoreClient(logger, etcdFlags),
 		initializeAuctioneerClient(logger),
 		cellhandlers.NewClient(),
 		initializeConsulDB(logger),
 		clock.NewClock(),
 		cbWorkPool,
 		etcddb.CompleteTaskWork,
-		)
+	)
 
 	hub := events.NewHub()
 
@@ -166,7 +166,7 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 	})
 }
 
-func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb.StoreClient{
+func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb.StoreClient {
 	etcdOptions, err := etcdFlags.Validate()
 	if err != nil {
 		logger.Fatal("etcd-validation-failed", err)
@@ -201,7 +201,7 @@ func initializeConsulDB(logger lager.Logger) *consuldb.ConsulDB {
 	return consuldb.NewConsul(consulSession)
 }
 
-func initializeWorkPool(logger lager.Logger) *workpool.WorkPool{
+func initializeWorkPool(logger lager.Logger) *workpool.WorkPool {
 	cbWorkPool, err := workpool.NewWorkPool(etcddb.TASK_CB_WORKERS)
 	if err != nil {
 		logger.Fatal("callback-workpool-creation-failed", err)
@@ -209,7 +209,7 @@ func initializeWorkPool(logger lager.Logger) *workpool.WorkPool{
 	return cbWorkPool
 }
 
-func initializeWorkPoolRunner(cbWorkPool *workpool.WorkPool)ifrit.RunFunc{
+func initializeWorkPoolRunner(cbWorkPool *workpool.WorkPool) ifrit.RunFunc {
 	return func(signals <-chan os.Signal, ready chan<- struct{}) error {
 		close(ready)
 		<-signals
