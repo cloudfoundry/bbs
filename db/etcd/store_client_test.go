@@ -413,7 +413,13 @@ var _ = Describe("StoreClient", func() {
 					response, err := etcdClient.Set(key, value, 0)
 					Expect(err).NotTo(HaveOccurred())
 
-					Eventually(updates).Should(Receive(&response))
+					for {
+						Eventually(updates).Should(Receive(&response))
+						if response.Node.Key == key {
+							break
+						}
+					}
+
 					Expect(response.PrevNode.Key).To(Equal(key))
 					Expect(response.PrevNode.Value).To(Equal(validDecodedData[response.Node.Key]))
 					Expect(response.Node.Key).To(Equal(key))
