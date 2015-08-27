@@ -11,6 +11,7 @@ type StoreClient interface {
 	Set(key string, value []byte, ttl uint64) (*etcd.Response, error)
 	Create(key string, value []byte, ttl uint64) (*etcd.Response, error)
 	Delete(key string, recursive bool) (*etcd.Response, error)
+	DeleteDir(key string) (*etcd.Response, error)
 	CompareAndSwap(key string, value []byte, ttl uint64, prevIndex uint64) (*etcd.Response, error)
 	CompareAndDelete(key string, prevIndex uint64) (*etcd.Response, error)
 	Watch(prefix string, waitIndex uint64, recursive bool, receiver chan *etcd.Response, stop chan bool) (*etcd.Response, error)
@@ -68,6 +69,10 @@ func (sc *storeClient) Create(key string, payload []byte, ttl uint64) (*etcd.Res
 
 func (sc *storeClient) Delete(key string, recursive bool) (*etcd.Response, error) {
 	return sc.client.Delete(key, recursive)
+}
+
+func (sc *storeClient) DeleteDir(key string) (*etcd.Response, error) {
+	return sc.client.DeleteDir(key)
 }
 
 func (sc *storeClient) CompareAndSwap(key string, payload []byte, ttl uint64, prevIndex uint64) (*etcd.Response, error) {

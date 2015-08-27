@@ -206,6 +206,12 @@ type FakeClient struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
+	ConvergeLRPsStub        func() error
+	convergeLRPsMutex       sync.RWMutex
+	convergeLRPsArgsForCall []struct{}
+	convergeLRPsReturns struct {
+		result1 error
+	}
 	TasksStub        func() ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct{}
@@ -1013,6 +1019,30 @@ func (fake *FakeClient) RemoveDesiredLRPArgsForCall(i int) string {
 func (fake *FakeClient) RemoveDesiredLRPReturns(result1 error) {
 	fake.RemoveDesiredLRPStub = nil
 	fake.removeDesiredLRPReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ConvergeLRPs() error {
+	fake.convergeLRPsMutex.Lock()
+	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct{}{})
+	fake.convergeLRPsMutex.Unlock()
+	if fake.ConvergeLRPsStub != nil {
+		return fake.ConvergeLRPsStub()
+	} else {
+		return fake.convergeLRPsReturns.result1
+	}
+}
+
+func (fake *FakeClient) ConvergeLRPsCallCount() int {
+	fake.convergeLRPsMutex.RLock()
+	defer fake.convergeLRPsMutex.RUnlock()
+	return len(fake.convergeLRPsArgsForCall)
+}
+
+func (fake *FakeClient) ConvergeLRPsReturns(result1 error) {
+	fake.ConvergeLRPsStub = nil
+	fake.convergeLRPsReturns = struct {
 		result1 error
 	}{result1}
 }

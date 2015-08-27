@@ -264,6 +264,59 @@ var _ = Describe("StoreClient", func() {
 		})
 	})
 
+	Describe("DeleteDir", func() {
+		Context("when the key is an empty directory", func() {
+			var emptyDirKey string
+
+			BeforeEach(func() {
+				emptyDirKey = "/empty/dir"
+				etcdClient.SetDir(emptyDirKey, 0)
+			})
+
+			It("deletes the specified key", func() {
+				_, err := storeClient.DeleteDir(emptyDirKey)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = storeClient.Get(emptyDirKey, false, false)
+				etcdErr := err.(*etcdclient.EtcdError)
+				Expect(etcdErr.ErrorCode).To(Equal(etcderror.EcodeKeyNotFound))
+			})
+		})
+
+		Context("when the key is a leaf node", func() {
+			var leafKey string
+
+			BeforeEach(func() {
+				leafKey = "/a/leaf"
+				etcdClient.Set(leafKey, "some-value", 0)
+			})
+
+			It("deletes the specified key", func() {
+				_, err := storeClient.DeleteDir(leafKey)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = storeClient.Get(leafKey, false, false)
+				etcdErr := err.(*etcdclient.EtcdError)
+				Expect(etcdErr.ErrorCode).To(Equal(etcderror.EcodeKeyNotFound))
+			})
+		})
+
+		Context("non-empty directory", func() {
+			var leafKey string
+
+			BeforeEach(func() {
+				leafKey = "/a/leaf"
+				etcdClient.Set(leafKey, "some-value", 0)
+			})
+
+			It("should not delete the specified key", func() {
+				_, err := storeClient.DeleteDir("/a")
+				etcdErr := err.(*etcdclient.EtcdError)
+				Expect(etcdErr.ErrorCode).To(Equal(etcderror.EcodeDirNotEmpty))
+			})
+		})
+	})
+
 	Describe("CompareAndSwap", func() {
 		var oldIndex uint64
 

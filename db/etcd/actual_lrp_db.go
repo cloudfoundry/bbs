@@ -213,6 +213,42 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 	return nil
 }
 
+func (db *ETCDDB) createActualLRP(logger lager.Logger, desiredLRP *models.DesiredLRP, index int32) error {
+	logger = logger.Session("create-actual-lrp")
+	var err error
+	// if index >= desiredLRP.Instances {
+	// 	err = &models.Error{Type: models.InvalidRecord, Message: "Index too large"}
+	// 	logger.Error("actual-lrp-index-too-large", err, lager.Data{"actual-index": index, "desired-instances": desiredLRP.Instances})
+	// 	return err
+	// }
+
+	guid, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+
+	actualLRP := &models.ActualLRP{
+		ActualLRPKey: models.NewActualLRPKey(
+			desiredLRP.ProcessGuid,
+			index,
+			desiredLRP.Domain,
+		),
+		State: models.ActualLRPStateUnclaimed,
+		Since: db.clock.Now().UnixNano(),
+		ModificationTag: models.ModificationTag{
+			Epoch: guid.String(),
+			Index: 0,
+		},
+	}
+
+	modelErr := db.createRawActualLRP(logger, actualLRP)
+	if modelErr != nil {
+		return modelErr
+	}
+
+	return nil
+}
+
 func (db *ETCDDB) newRunningActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
 	guid, err := uuid.NewV4()
 	if err != nil {
@@ -643,6 +679,82 @@ func parseActualLRPGroups(logger lager.Logger, node *etcd.Node, filter models.Ac
 	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups)})
 
 	return groups, nil
+}
+
+func (db *ETCDDB) unclaimActualLRP(
+	logger lager.Logger,
+	actualLRPKey *models.ActualLRPKey,
+	actualLRPInstanceKey *models.ActualLRPInstanceKey,
+) (stateChange, *models.Error) {
+	logger = logger.Session("unclaim-actual-lrp")
+	logger.Info("starting")
+
+	lrp, storeIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	if err != nil {
+		return stateDidNotChange, err
+	}
+
+	changed, err := db.unclaimActualLRPWithIndex(logger, lrp, storeIndex, actualLRPKey, actualLRPInstanceKey)
+	if err != nil {
+		return changed, err
+	}
+
+	logger.Info("succeeded")
+	return changed, nil
+}
+
+func (db *ETCDDB) unclaimActualLRPWithIndex(
+	logger lager.Logger,
+	lrp *models.ActualLRP,
+	storeIndex uint64,
+	actualLRPKey *models.ActualLRPKey,
+	actualLRPInstanceKey *models.ActualLRPInstanceKey,
+) (change stateChange, modelErr *models.Error) {
+	logger = logger.Session("unclaim-actual-lrp-with-index")
+	defer func() {
+		logger.Debug("complete", lager.Data{"stateChange": change, "error": modelErr})
+	}()
+	if !lrp.ActualLRPKey.Equal(actualLRPKey) {
+		logger.Error("failed-actual-lrp-key-differs", models.ErrActualLRPCannotBeUnclaimed)
+		return stateDidNotChange, models.ErrActualLRPCannotBeUnclaimed
+	}
+
+	if lrp.State == models.ActualLRPStateUnclaimed {
+		logger.Info("already-unclaimed")
+		return stateDidNotChange, nil
+	}
+
+	if !lrp.ActualLRPInstanceKey.Equal(actualLRPInstanceKey) {
+		logger.Error("failed-actual-lrp-instance-key-differs", models.ErrActualLRPCannotBeUnclaimed)
+		return stateDidNotChange, models.ErrActualLRPCannotBeUnclaimed
+	}
+
+	lrp.Since = db.clock.Now().UnixNano()
+	lrp.State = models.ActualLRPStateUnclaimed
+	lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+	lrp.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
+	lrp.ModificationTag.Increment()
+
+	err := lrp.Validate()
+	if err != nil {
+		logger.Error("failed-to-validate-unclaimed-lrp", err)
+		return stateDidNotChange, &models.Error{Type: models.InvalidRecord, Message: err.Error()}
+	}
+
+	lrpRawJSON, err := json.Marshal(lrp)
+	if err != nil {
+		logger.Error("failed-to-marshal-unclaimed-lrp", err)
+		return stateDidNotChange, models.ErrSerializeJSON
+	}
+
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(actualLRPKey.ProcessGuid, actualLRPKey.Index), lrpRawJSON, 0, storeIndex)
+	if err != nil {
+		logger.Error("failed-to-compare-and-swap", err)
+		return stateDidNotChange, models.ErrActualLRPCannotBeUnclaimed
+	}
+
+	logger.Debug("changed-to-unclaimed")
+	return stateDidChange, nil
 }
 
 func isInstanceActualLRPNode(node *etcd.Node) bool {

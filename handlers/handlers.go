@@ -20,6 +20,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db)
 	evacuationHandler := NewEvacuationHandler(logger, db)
 	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
+	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
 	taskHandler := NewTaskHandler(logger, db)
 	eventsHandler := NewEventHandler(logger, hub)
 
@@ -47,6 +48,9 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		bbs.EvacuateCrashedActualLRPRoute:  route(evacuationHandler.EvacuateCrashedActualLRP),
 		bbs.EvacuateStoppedActualLRPRoute:  route(evacuationHandler.EvacuateStoppedActualLRP),
 		bbs.EvacuateRunningActualLRPRoute:  route(evacuationHandler.EvacuateRunningActualLRP),
+
+		// LRP Convergence
+		bbs.ConvergeLRPsRoute: route(lrpConvergenceHandler.ConvergeLRPs),
 
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:             route(desiredLRPHandler.DesiredLRPs),

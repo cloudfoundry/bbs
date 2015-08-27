@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/db/codec"
+	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
@@ -45,6 +46,7 @@ var bbsProcess ifrit.Process
 var consulSession *consuladapter.Session
 var consulRunner *consulrunner.ClusterRunner
 var etcdHelper *etcd_helpers.ETCDHelper
+var consulHelper *consul_helpers.ConsulHelper
 var auctioneerServer *ghttp.Server
 
 func TestBBS(t *testing.T) {
@@ -72,8 +74,10 @@ var _ = SynchronizedBeforeSuite(
 			"http",
 		)
 
-		etcdRunner.Start()
 		consulRunner.Start()
+		consulRunner.WaitUntilReady()
+
+		etcdRunner.Start()
 	},
 )
 
@@ -88,10 +92,12 @@ var _ = BeforeEach(func() {
 	logger = lagertest.NewTestLogger("test")
 
 	etcdRunner.Reset()
-	etcdClient = etcdRunner.Client()
-	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	consulRunner.Reset()
+	consulSession = consulRunner.NewSession("a-session")
+
+	etcdClient = etcdRunner.Client()
+	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	auctioneerServer = ghttp.NewServer()
 	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
@@ -117,6 +123,7 @@ var _ = BeforeEach(func() {
 	bbsProcess = ginkgomon.Invoke(bbsRunner)
 	storeClient = etcd.NewStoreClient(etcdClient, codec.BASE64)
 	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
+	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 })
 
 var _ = AfterEach(func() {

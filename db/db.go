@@ -2,8 +2,7 @@ package db
 
 type DB interface {
 	DomainDB
-	ActualLRPDB
-	DesiredLRPDB
+	LRPDB
 	TaskDB
 	EventDB
 	EvacuationDB

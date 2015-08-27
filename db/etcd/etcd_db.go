@@ -42,7 +42,7 @@ const maxDesiredLRPGetterWorkPoolSize = 50
 const DesiredLRPSchemaRoot = DataSchemaRoot + "desired"
 
 func DesiredLRPSchemaPath(lrp *models.DesiredLRP) string {
-	return DesiredLRPSchemaPathByProcessGuid(lrp.GetProcessGuid())
+	return DesiredLRPSchemaPathByProcessGuid(lrp.ProcessGuid)
 }
 
 func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {

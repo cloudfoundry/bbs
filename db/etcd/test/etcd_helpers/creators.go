@@ -50,6 +50,11 @@ func (t *ETCDHelper) SetRawTask(task *models.Task) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
+func (t *ETCDHelper) SetRawDomain(domain string) {
+	_, err := t.client.Set(etcddb.DomainSchemaPath(domain), []byte{}, 0)
+	Expect(err).NotTo(HaveOccurred())
+}
+
 func (t *ETCDHelper) CreateValidActualLRP(guid string, index int32) {
 	t.SetRawActualLRP(model_helpers.NewValidActualLRP(guid, index))
 }

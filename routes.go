@@ -36,6 +36,9 @@ const (
 	UpdateDesiredLRPRoute = "UpdateDesireLRP"
 	RemoveDesiredLRPRoute = "RemoveDesiredLRP"
 
+	// LRP Convergence
+	ConvergeLRPsRoute = "ConvergeLRPs"
+
 	// Tasks
 	TasksRoute         = "Tasks"
 	TaskByGuidRoute    = "TaskByGuid"
@@ -85,6 +88,9 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
+
+	// LRP Convergence
+	{Path: "/v1/lrps/converge", Method: "POST", Name: ConvergeLRPsRoute},
 
 	// Tasks
 	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute},

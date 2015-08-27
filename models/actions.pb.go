@@ -16,6 +16,7 @@
 		error.proto
 		evacuation.proto
 		events.proto
+		lrp_convergence_request.proto
 		modification_tag.proto
 		security_group.proto
 		task.proto

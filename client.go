@@ -55,6 +55,8 @@ type Client interface {
 	UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error
 	RemoveDesiredLRP(processGuid string) error
 
+	ConvergeLRPs() error
+
 	// Public Task Methods
 	Tasks() ([]*models.Task, error)
 	TasksByDomain(domain string) ([]*models.Task, error)
@@ -340,6 +342,16 @@ func (c *client) RemoveDesiredLRP(processGuid string) error {
 		ProcessGuid: processGuid,
 	}
 	return c.doDesiredLRPLifecycleRequest(RemoveDesiredLRPRoute, &request)
+}
+
+func (c *client) ConvergeLRPs() error {
+	route := ConvergeLRPsRoute
+	response := models.ConvergeLRPsResponse{}
+	err := c.doRequest(route, nil, nil, nil, &response)
+	if err != nil {
+		return err
+	}
+	return response.Error.ToError()
 }
 
 func (c *client) Tasks() ([]*models.Task, error) {
