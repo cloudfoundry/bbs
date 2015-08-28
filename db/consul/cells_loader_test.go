@@ -7,8 +7,10 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
+	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/runtime-schema/bbs/services_bbs"
-	"github.com/cloudfoundry-incubator/runtime-schema/models"
+	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
@@ -25,8 +27,8 @@ var _ = Describe("CellsLoader", func() {
 			bbs                *services_bbs.ServicesBBS
 			presence1          ifrit.Process
 			presence2          ifrit.Process
-			firstCellPresence  models.CellPresence
-			secondCellPresence models.CellPresence
+			firstCellPresence  oldmodels.CellPresence
+			secondCellPresence oldmodels.CellPresence
 			logger             *lagertest.TestLogger
 		)
 
@@ -35,11 +37,12 @@ var _ = Describe("CellsLoader", func() {
 			clock = fakeclock.NewFakeClock(time.Now())
 			bbs = services_bbs.New(consulSession, clock, logger)
 
-			firstCellPresence = models.NewCellPresence("first-rep", "1.2.3.4", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
-			secondCellPresence = models.NewCellPresence("second-rep", "4.5.6.7", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
+			firstCellPresence = oldmodels.NewCellPresence("first-rep", "1.2.3.4", "the-zone", oldmodels.NewCellCapacity(128, 1024, 3), []string{}, []string{})
+			secondCellPresence = oldmodels.NewCellPresence("second-rep", "4.5.6.7", "the-zone", oldmodels.NewCellCapacity(128, 1024, 3), []string{}, []string{})
 
 			presence1 = nil
 			presence2 = nil
+
 		})
 
 		AfterEach(func() {
@@ -48,15 +51,15 @@ var _ = Describe("CellsLoader", func() {
 		})
 
 		Context("when there is a single cell", func() {
-			var cellsLoader *services_bbs.CellsLoader
+			var cellsLoader db.CellsLoader
 			var cells models.CellSet
 			var err error
 
 			BeforeEach(func() {
-				cellsLoader = bbs.NewCellsLoader()
+				cellsLoader = consulDB.NewCellsLoader(logger)
 				presence1 = ifrit.Invoke(bbs.NewCellPresence(firstCellPresence, retryInterval))
 
-				Eventually(func() ([]models.CellPresence, error) {
+				Eventually(func() ([]oldmodels.CellPresence, error) {
 					return bbs.Cells()
 				}).Should(HaveLen(1))
 
@@ -73,7 +76,7 @@ var _ = Describe("CellsLoader", func() {
 				BeforeEach(func() {
 					presence2 = ifrit.Invoke(bbs.NewCellPresence(secondCellPresence, retryInterval))
 
-					Eventually(func() ([]models.CellPresence, error) {
+					Eventually(func() ([]oldmodels.CellPresence, error) {
 						return bbs.Cells()
 					}).Should(HaveLen(2))
 				})
@@ -86,7 +89,7 @@ var _ = Describe("CellsLoader", func() {
 
 				Context("when a new loader is created", func() {
 					It("returns two cells", func() {
-						newCellsLoader := bbs.NewCellsLoader()
+						newCellsLoader := consulDB.NewCellsLoader(logger)
 						cells, err := newCellsLoader.Cells()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(cells).To(HaveLen(2))
