@@ -55,13 +55,6 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	}
 	logger.Info("succeeded-gathering-and-pruning-actual-lrps")
 
-	logger.Debug("listing-domains")
-	domains, _ := db.Domains(logger)
-	if err != nil {
-		return &models.ConvergenceInput{}, err
-	}
-	logger.Debug("succeeded-listing-domains")
-
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
 	logger.Info("gathering-and-pruning-desired-lrps")
 	desireds, err := db.gatherAndPruneDesiredLRPs(logger, guids) // modifies guids
@@ -70,6 +63,13 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Info("succeeded-gathering-and-pruning-desired-lrps")
+
+	logger.Debug("listing-domains")
+	domains, _ := db.Domains(logger)
+	if err != nil {
+		return &models.ConvergenceInput{}, err
+	}
+	logger.Debug("succeeded-listing-domains")
 
 	cellsLoader := db.cellDB.NewCellsLoader(logger)
 	logger.Debug("listing-cells")
