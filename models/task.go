@@ -76,14 +76,11 @@ func (def *TaskDefinition) Validate() error {
 		}
 	}
 
-	action := UnwrapAction(def.Action)
-	if action == nil {
+	if def.Action == nil {
 		validationError = validationError.Append(ErrInvalidActionType)
-	} else {
-		err := action.Validate()
-		if err != nil {
-			validationError = validationError.Append(err)
-		}
+	} else if err := def.Action.Validate(); err != nil {
+		validationError = validationError.Append(ErrInvalidField{"action"})
+		validationError = validationError.Append(err)
 	}
 
 	if def.CpuWeight > 100 {

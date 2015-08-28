@@ -27,6 +27,18 @@ type ActionInterface interface {
 	Validator
 }
 
+func (a *Action) Validate() error {
+	if inner := UnwrapAction(a); inner != nil {
+		err := inner.Validate()
+		if err != nil {
+			return err
+		}
+	} else {
+		return ErrInvalidField{"inner-action"}
+	}
+	return nil
+}
+
 func (a *DownloadAction) ActionType() string {
 	return ActionTypeDownload
 }

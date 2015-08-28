@@ -413,6 +413,11 @@ var _ = Describe("DesiredLRP", func() {
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "action")
 		})
 
+		It("requires an action with an inner action", func() {
+			desiredLRP.Action = &models.Action{}
+			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "action")
+		})
+
 		It("requires a valid action", func() {
 			desiredLRP.Action = &models.Action{
 				UploadAction: &models.UploadAction{
@@ -431,6 +436,11 @@ var _ = Describe("DesiredLRP", func() {
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
 		})
 
+		It("requires a setup action with an inner action", func() {
+			desiredLRP.Setup = &models.Action{}
+			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "setup")
+		})
+
 		It("requires a valid monitor action if specified", func() {
 			desiredLRP.Monitor = &models.Action{
 				UploadAction: &models.UploadAction{
@@ -438,6 +448,11 @@ var _ = Describe("DesiredLRP", func() {
 				},
 			}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
+		})
+
+		It("requires a monitor action with an inner action", func() {
+			desiredLRP.Monitor = &models.Action{}
+			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "monitor")
 		})
 
 		It("requires a valid CPU weight", func() {

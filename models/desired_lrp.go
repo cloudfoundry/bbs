@@ -59,24 +59,22 @@ func (desired DesiredLRP) Validate() error {
 	}
 
 	if desired.Setup != nil {
-		err := UnwrapAction(desired.Setup).Validate()
-		if err != nil {
+		if err := desired.Setup.Validate(); err != nil {
+			validationError = validationError.Append(ErrInvalidField{"setup"})
 			validationError = validationError.Append(err)
 		}
 	}
 
 	if desired.Action == nil {
 		validationError = validationError.Append(ErrInvalidActionType)
-	} else {
-		err := UnwrapAction(desired.Action).Validate()
-		if err != nil {
-			validationError = validationError.Append(err)
-		}
+	} else if err := desired.Action.Validate(); err != nil {
+		validationError = validationError.Append(ErrInvalidField{"action"})
+		validationError = validationError.Append(err)
 	}
 
 	if desired.Monitor != nil {
-		err := UnwrapAction(desired.Monitor).Validate()
-		if err != nil {
+		if err := desired.Monitor.Validate(); err != nil {
+			validationError = validationError.Append(ErrInvalidField{"monitor"})
 			validationError = validationError.Append(err)
 		}
 	}
