@@ -11,71 +11,90 @@ import (
 )
 
 var _ = Describe("Events API", func() {
+	var (
+		done         chan struct{}
+		eventChannel chan models.Event
+
+		eventSource    events.EventSource
+		baseLRP        *models.ActualLRP
+		desiredLRP     *models.DesiredLRP
+		key            models.ActualLRPKey
+		instanceKey    models.ActualLRPInstanceKey
+		newInstanceKey models.ActualLRPInstanceKey
+		netInfo        models.ActualLRPNetInfo
+	)
+
+	JustBeforeEach(func() {
+		var err error
+		eventSource, err = client.SubscribeToEvents()
+		Expect(err).NotTo(HaveOccurred())
+
+		eventChannel = make(chan models.Event)
+		done = make(chan struct{})
+
+		go func() {
+			defer close(done)
+			for {
+				event, err := eventSource.Next()
+				if err != nil {
+					close(eventChannel)
+					return
+				}
+				eventChannel <- event
+			}
+		}()
+
+		rawMessage := json.RawMessage([]byte(`{"port":8080,"hosts":["primer-route"]}`))
+		primerLRP := &models.DesiredLRP{
+			ProcessGuid: "primer-guid",
+			Domain:      "primer-domain",
+			RootFs:      "primer:rootfs",
+			Routes: &models.Routes{
+				"router": &rawMessage,
+			},
+			Action: models.WrapAction(&models.RunAction{
+				User: "me",
+				Path: "true",
+			}),
+		}
+
+		etcdHelper.SetRawDesiredLRP(primerLRP)
+
+	PRIMING:
+		for {
+			select {
+			case <-eventChannel:
+				break PRIMING
+			case <-time.After(50 * time.Millisecond):
+				etcdHelper.SetRawDesiredLRP(primerLRP)
+				Expect(err).NotTo(HaveOccurred())
+			}
+		}
+
+		err = client.RemoveDesiredLRP(primerLRP.ProcessGuid)
+		Expect(err).NotTo(HaveOccurred())
+
+		var event models.Event
+		for {
+			Eventually(eventChannel).Should(Receive(&event))
+			if event.EventType() == models.EventTypeDesiredLRPRemoved {
+				break
+			}
+		}
+	})
+
+	AfterEach(func() {
+		err := eventSource.Close()
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(done).Should(BeClosed())
+	})
+
 	Describe("Actual LRPs", func() {
 		const (
 			processGuid     = "some-process-guid"
 			domain          = "some-domain"
 			noExpirationTTL = 0
 		)
-
-		var (
-			done         chan struct{}
-			eventChannel chan models.Event
-
-			eventSource    events.EventSource
-			baseLRP        *models.ActualLRP
-			desiredLRP     *models.DesiredLRP
-			key            models.ActualLRPKey
-			instanceKey    models.ActualLRPInstanceKey
-			newInstanceKey models.ActualLRPInstanceKey
-			netInfo        models.ActualLRPNetInfo
-		)
-
-		JustBeforeEach(func() {
-			var err error
-			eventSource, err = client.SubscribeToEvents()
-			Expect(err).NotTo(HaveOccurred())
-
-			eventChannel = make(chan models.Event)
-			done = make(chan struct{})
-
-			go func() {
-				defer close(done)
-				for {
-					event, err := eventSource.Next()
-					if err != nil {
-						close(eventChannel)
-						return
-					}
-					eventChannel <- event
-				}
-			}()
-
-			rawMessage := json.RawMessage([]byte(`{"port":8080,"hosts":["primer-route"]}`))
-			primerLRP := &models.DesiredLRP{
-				ProcessGuid: "primer-guid",
-				Domain:      "primer-domain",
-				RootFs:      "primer:rootfs",
-				Routes: &models.Routes{
-					"router": &rawMessage,
-				},
-				Action: models.WrapAction(&models.RunAction{
-					User: "me",
-					Path: "true",
-				}),
-			}
-
-		PRIMING:
-			for {
-				select {
-				case <-eventChannel:
-					break PRIMING
-				case <-time.After(50 * time.Millisecond):
-					etcdHelper.SetRawDesiredLRP(primerLRP)
-					Expect(err).NotTo(HaveOccurred())
-				}
-			}
-		})
 
 		BeforeEach(func() {
 			key = models.NewActualLRPKey(processGuid, 0, domain)
@@ -103,7 +122,6 @@ var _ = Describe("Events API", func() {
 
 		It("receives events", func() {
 			By("creating a ActualLRP")
-			// replace me with client.DesiredLRP
 			etcdHelper.SetRawDesiredLRP(desiredLRP)
 			etcdHelper.SetRawActualLRP(baseLRP)
 
@@ -232,6 +250,67 @@ var _ = Describe("Events API", func() {
 			actualLRPRemovedEvent = event.(*models.ActualLRPRemovedEvent)
 			response = actualLRPRemovedEvent.ActualLrpGroup.GetEvacuating()
 			Expect(*response).To(Equal(evacuatingLRP))
+		})
+	})
+
+	Describe("Desired LRPs", func() {
+		BeforeEach(func() {
+			routeMessage := json.RawMessage([]byte(`[{"port":8080,"hostnames":["original-route"]}]`))
+			routes := &models.Routes{"cf-router": &routeMessage}
+
+			desiredLRP = &models.DesiredLRP{
+				ProcessGuid: "some-guid",
+				Domain:      "some-domain",
+				RootFs:      "some:rootfs",
+				Routes:      routes,
+				Action: models.WrapAction(&models.RunAction{
+					User:      "me",
+					Dir:       "/tmp",
+					Path:      "true",
+					LogSource: "logs",
+				}),
+			}
+		})
+
+		It("receives events", func() {
+			By("creating a DesiredLRP")
+			err := client.DesireLRP(desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			desiredLRP, err := client.DesiredLRPByProcessGuid(desiredLRP.ProcessGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			var event models.Event
+			Eventually(eventChannel).Should(Receive(&event))
+
+			desiredLRPCreatedEvent, ok := event.(*models.DesiredLRPCreatedEvent)
+			Expect(ok).To(BeTrue())
+
+			Expect(desiredLRPCreatedEvent.DesiredLrp).To(Equal(desiredLRP))
+
+			By("updating an existing DesiredLRP")
+			routeMessage := json.RawMessage([]byte(`[{"port":8080,"hostnames":["new-route"]}]`))
+			newRoutes := &models.Routes{
+				"cf-router": &routeMessage,
+			}
+			err = client.UpdateDesiredLRP(desiredLRP.ProcessGuid, &models.DesiredLRPUpdate{Routes: newRoutes})
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+
+			desiredLRPChangedEvent, ok := event.(*models.DesiredLRPChangedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(desiredLRPChangedEvent.After.Routes).To(Equal(newRoutes))
+
+			By("removing the DesiredLRP")
+			err = client.RemoveDesiredLRP(desiredLRP.ProcessGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+
+			desiredLRPRemovedEvent, ok := event.(*models.DesiredLRPRemovedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(desiredLRPRemovedEvent.DesiredLrp.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
 		})
 	})
 })
