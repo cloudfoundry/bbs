@@ -216,11 +216,11 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 func (db *ETCDDB) createActualLRP(logger lager.Logger, desiredLRP *models.DesiredLRP, index int32) error {
 	logger = logger.Session("create-actual-lrp")
 	var err error
-	// if index >= desiredLRP.Instances {
-	// 	err = &models.Error{Type: models.InvalidRecord, Message: "Index too large"}
-	// 	logger.Error("actual-lrp-index-too-large", err, lager.Data{"actual-index": index, "desired-instances": desiredLRP.Instances})
-	// 	return err
-	// }
+	if index >= desiredLRP.Instances {
+		err = &models.Error{Type: models.InvalidRecord, Message: "Index too large"}
+		logger.Error("actual-lrp-index-too-large", err, lager.Data{"actual-index": index, "desired-instances": desiredLRP.Instances})
+		return err
+	}
 
 	guid, err := uuid.NewV4()
 	if err != nil {

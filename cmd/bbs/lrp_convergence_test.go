@@ -30,7 +30,7 @@ var _ = Describe("Convergence API", func() {
 
 			groups, err := client.ActualLRPGroupsByProcessGuid(processGuid)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(groups).NotTo(HaveLen(0))
+			Expect(groups).To(HaveLen(1))
 		})
 	})
 })
