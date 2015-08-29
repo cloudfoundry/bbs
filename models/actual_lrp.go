@@ -177,6 +177,14 @@ func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, 
 	}
 }
 
+func (actual *ActualLRP) Version() Version {
+	return V0
+}
+
+func (actual *ActualLRP) MigrateFromVersion(v Version) error {
+	return nil
+}
+
 func (actual ActualLRP) Validate() error {
 	var validationError ValidationError
 

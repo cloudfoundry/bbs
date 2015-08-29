@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"net/url"
 	"regexp"
 
@@ -20,15 +19,7 @@ func (t *Task) Version() Version {
 }
 
 func (t *Task) MigrateFromVersion(v Version) error {
-	switch v {
-	case V0:
-		return nil
-	default:
-		return NewError(
-			Error_UnkownVersion,
-			fmt.Sprint("unkown task version: ", v),
-		)
-	}
+	return nil
 }
 
 func (t *Task) LagerData() lager.Data {

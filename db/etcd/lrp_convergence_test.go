@@ -752,21 +752,14 @@ var _ = Describe("LrpConvergence", func() {
 
 			cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.CellCapacity{128, 1024, 3}, []string{}, []string{})
 
-			claimedActualLRP := model_helpers.NewValidActualLRP(processGuid, 0)
-			claimedActualLRP.State = models.ActualLRPStateUnclaimed
-			etcdHelper.SetRawActualLRP(claimedActualLRP)
+			lrp0 := models.NewActualLRPKey(processGuid, 0, freshDomain)
+			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrp0, 1))
 
-			unclaimedActualLRP := model_helpers.NewValidActualLRP(processGuid, 1)
-			unclaimedActualLRP.State = models.ActualLRPStateUnclaimed
-			etcdHelper.SetRawActualLRP(unclaimedActualLRP)
+			lrp1 := models.NewActualLRPKey(processGuid, 1, freshDomain)
+			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrp1, 1))
 
 			instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellID)
-			err := etcdDB.ClaimActualLRP(
-				logger,
-				processGuid,
-				0,
-				&instanceKey,
-			)
+			err := etcdDB.ClaimActualLRP(logger,processGuid,0,&instanceKey)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

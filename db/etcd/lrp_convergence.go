@@ -121,12 +121,12 @@ func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string
 			for _, indexGroup := range guidGroup.Nodes {
 				indexGroupWillBeEmpty := true
 
-				for _, rawActual := range indexGroup.Nodes {
-					var actual models.ActualLRP
-					err := models.FromJSON([]byte(rawActual.Value), &actual)
+				for _, actualNode := range indexGroup.Nodes {
+					actual := new(models.ActualLRP)
+					err := db.deserializeModel(logger, actualNode, actual)
 					if err != nil {
 						actualsToDeleteLock.Lock()
-						actualsToDelete = append(actualsToDelete, rawActual.Key)
+						actualsToDelete = append(actualsToDelete, actualNode.Key)
 						actualsToDeleteLock.Unlock()
 
 						continue
@@ -139,12 +139,12 @@ func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string
 					guids[actual.ProcessGuid] = struct{}{}
 					guidsLock.Unlock()
 
-					if path.Base(rawActual.Key) == ActualLRPInstanceKey {
+					if path.Base(actualNode.Key) == ActualLRPInstanceKey {
 						actualsLock.Lock()
 						if actuals[actual.ProcessGuid] == nil {
 							actuals[actual.ProcessGuid] = map[int32]*models.ActualLRP{}
 						}
-						actuals[actual.ProcessGuid][actual.Index] = &actual
+						actuals[actual.ProcessGuid][actual.Index] = actual
 						actualsLock.Unlock()
 					}
 				}

@@ -98,7 +98,7 @@ var _ = BeforeEach(func() {
 	cellDB = consul.NewConsul(consulSession)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 
-	etcdDB = etcd.NewETCD(models.PROTO, storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
+	etcdDB = etcd.NewETCD(models.JSON_NO_ENVELOPE, storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {
