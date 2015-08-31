@@ -1,6 +1,7 @@
 package etcd_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -1017,7 +1018,7 @@ func getEvacuatingActualLRP(lrpKey models.ActualLRPKey) (models.ActualLRP, int64
 	Expect(err).NotTo(HaveOccurred())
 
 	var lrp models.ActualLRP
-	err = models.FromJSON([]byte(node.Node.Value), &lrp)
+	err = json.Unmarshal([]byte(node.Node.Value), &lrp)
 	Expect(err).NotTo(HaveOccurred())
 
 	return lrp, node.Node.TTL, nil

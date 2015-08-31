@@ -1,11 +1,11 @@
 package models
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
+
+	"github.com/cloudfoundry-incubator/bbs/format"
 )
 
 const (
@@ -24,7 +24,15 @@ var ErrInvalidActionType = errors.New("invalid action type")
 
 type ActionInterface interface {
 	ActionType() string
-	Validator
+	Validate() error
+}
+
+func (*Action) Version() format.Version {
+	return format.V0
+}
+
+func (*Action) MigrateFromVersion(v format.Version) error {
+	return nil
 }
 
 func (a *Action) Validate() error {
@@ -36,6 +44,14 @@ func (a *Action) Validate() error {
 	} else {
 		return ErrInvalidField{"inner-action"}
 	}
+	return nil
+}
+
+func (*DownloadAction) Version() format.Version {
+	return format.V0
+}
+
+func (*DownloadAction) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 
@@ -65,6 +81,14 @@ func (a DownloadAction) Validate() error {
 	return nil
 }
 
+func (*UploadAction) Version() format.Version {
+	return format.V0
+}
+
+func (*UploadAction) MigrateFromVersion(v format.Version) error {
+	return nil
+}
+
 func (a *UploadAction) ActionType() string {
 	return ActionTypeUpload
 }
@@ -91,6 +115,14 @@ func (a UploadAction) Validate() error {
 	return nil
 }
 
+func (*RunAction) Version() format.Version {
+	return format.V0
+}
+
+func (*RunAction) MigrateFromVersion(v format.Version) error {
+	return nil
+}
+
 func (a *RunAction) ActionType() string {
 	return ActionTypeRun
 }
@@ -110,6 +142,14 @@ func (a RunAction) Validate() error {
 		return validationError
 	}
 
+	return nil
+}
+
+func (*TimeoutAction) Version() format.Version {
+	return format.V0
+}
+
+func (*TimeoutAction) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 
@@ -140,6 +180,14 @@ func (a TimeoutAction) Validate() error {
 	return nil
 }
 
+func (*TryAction) Version() format.Version {
+	return format.V0
+}
+
+func (*TryAction) MigrateFromVersion(v format.Version) error {
+	return nil
+}
+
 func (a *TryAction) ActionType() string {
 	return ActionTypeTry
 }
@@ -160,6 +208,14 @@ func (a TryAction) Validate() error {
 		return validationError
 	}
 
+	return nil
+}
+
+func (*ParallelAction) Version() format.Version {
+	return format.V0
+}
+
+func (*ParallelAction) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 
@@ -193,6 +249,14 @@ func (a ParallelAction) Validate() error {
 	return nil
 }
 
+func (*CodependentAction) Version() format.Version {
+	return format.V0
+}
+
+func (*CodependentAction) MigrateFromVersion(v format.Version) error {
+	return nil
+}
+
 func (a *CodependentAction) ActionType() string {
 	return ActionTypeCodependent
 }
@@ -223,6 +287,14 @@ func (a CodependentAction) Validate() error {
 	return nil
 }
 
+func (*SerialAction) Version() format.Version {
+	return format.V0
+}
+
+func (*SerialAction) MigrateFromVersion(v format.Version) error {
+	return nil
+}
+
 func (a *SerialAction) ActionType() string {
 	return ActionTypeSerial
 }
@@ -250,6 +322,14 @@ func (a SerialAction) Validate() error {
 		return validationError
 	}
 
+	return nil
+}
+
+func (*EmitProgressAction) Version() format.Version {
+	return format.V0
+}
+
+func (*EmitProgressAction) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 
@@ -331,60 +411,4 @@ func WrapAction(action ActionInterface) *Action {
 	a := &Action{}
 	a.SetValue(action)
 	return a
-}
-
-var actionMap = map[string]ActionInterface{
-	ActionTypeDownload:     &DownloadAction{},
-	ActionTypeEmitProgress: &EmitProgressAction{},
-	ActionTypeRun:          &RunAction{},
-	ActionTypeUpload:       &UploadAction{},
-	ActionTypeTimeout:      &TimeoutAction{},
-	ActionTypeTry:          &TryAction{},
-	ActionTypeParallel:     &ParallelAction{},
-	ActionTypeSerial:       &SerialAction{},
-	ActionTypeCodependent:  &CodependentAction{},
-}
-
-func MarshalAction(a ActionInterface) ([]byte, error) {
-	if a == nil {
-		return json.Marshal(a)
-	}
-	payload, err := json.Marshal(a)
-	if err != nil {
-		return nil, err
-	}
-
-	j := json.RawMessage(payload)
-
-	wrapped := map[string]*json.RawMessage{
-		a.ActionType(): &j,
-	}
-
-	return json.Marshal(wrapped)
-}
-
-func UnmarshalAction(data []byte) (ActionInterface, error) {
-	wrapped := make(map[string]json.RawMessage)
-	err := json.Unmarshal(data, &wrapped)
-	if err != nil {
-		return nil, err
-	}
-	if wrapped == nil {
-		return nil, nil
-	}
-
-	if len(wrapped) == 1 {
-		for k, v := range wrapped {
-			action := actionMap[k]
-			if action == nil {
-				return nil, errors.New("Unknown action: " + string(k))
-			}
-			st := reflect.TypeOf(action).Elem()
-			p := reflect.New(st)
-			err = json.Unmarshal(v, p.Interface())
-			return p.Interface().(ActionInterface), err
-		}
-	}
-
-	return nil, ErrInvalidField{"Invalid action"}
 }

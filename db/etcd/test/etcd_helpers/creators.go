@@ -113,7 +113,7 @@ func (t *ETCDHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 				Instances:   1,
 				Action:      action,
 			}
-			value, err := models.ToJSON(desiredLRP)
+			value, err := json.Marshal(desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
 			t.client.Set(etcddb.DesiredLRPSchemaPath(desiredLRP), value, 0)

@@ -1,6 +1,7 @@
 package etcd_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -104,7 +105,7 @@ var _ = BeforeEach(func() {
 
 func registerCell(cell models.CellPresence) {
 	var err error
-	jsonBytes, err := models.ToJSON(cell)
+	jsonBytes, err := json.Marshal(cell)
 	Expect(err).NotTo(HaveOccurred())
 
 	_, err = consulSession.SetPresence(consul.CellSchemaPath(cell.CellID), jsonBytes)

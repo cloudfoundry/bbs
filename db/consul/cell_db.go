@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"encoding/json"
 	"path"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -23,10 +24,15 @@ func (db *ConsulDB) Cells(logger lager.Logger) ([]*models.CellPresence, error) {
 
 	cellPresences := []*models.CellPresence{}
 	for _, cell := range cells {
-		cellPresence := &models.CellPresence{}
-		err := models.FromJSON(cell, cellPresence)
+		cellPresence := new(models.CellPresence)
+		err := json.Unmarshal(cell, cellPresence)
 		if err != nil {
 			logger.Error("failed-to-unmarshal-cells-json", err)
+			continue
+		}
+		err = cellPresence.Validate()
+		if err != nil {
+			logger.Error("invalid-cell-presence", err)
 			continue
 		}
 
@@ -37,19 +43,24 @@ func (db *ConsulDB) Cells(logger lager.Logger) ([]*models.CellPresence, error) {
 }
 
 func (db *ConsulDB) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
-	cellPresence := models.CellPresence{}
+	cellPresence := new(models.CellPresence)
 
 	value, err := db.session.GetAcquiredValue(CellSchemaPath(cellId))
 	if err != nil {
 		return nil, convertConsulError(err)
 	}
 
-	err = models.FromJSON(value, &cellPresence)
+	err = json.Unmarshal(value, cellPresence)
 	if err != nil {
-		return nil, models.ErrDeserializeJSON
+		return nil, models.NewError(models.Error_InvalidJSON, err.Error())
 	}
 
-	return &cellPresence, nil
+	err = cellPresence.Validate()
+	if err != nil {
+		return nil, models.NewError(models.Error_InvalidJSON, err.Error())
+	}
+
+	return cellPresence, nil
 }
 
 func convertConsulError(err error) error {

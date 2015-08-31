@@ -15,21 +15,10 @@ var _ = Describe("Actions", func() {
 	itSerializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
 		It("Action -> JSON for "+string(action.ActionType()), func() {
-			By("marshalling to JSON", func() {
-				marshalledAction := action
-				json, err := json.Marshal(&marshalledAction)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(json).To(MatchJSON(actionPayload))
-			})
-
-			wrappedJSON := fmt.Sprintf(`{"%s":%s}`, action.ActionType(), actionPayload)
-			By("wrapping", func() {
-				marshalledAction := action
-
-				json, err := models.MarshalAction(marshalledAction)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(json).To(MatchJSON(wrappedJSON))
-			})
+			marshalledAction := action
+			json, err := json.Marshal(&marshalledAction)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(json).To(MatchJSON(actionPayload))
 		})
 	}
 
@@ -37,13 +26,10 @@ var _ = Describe("Actions", func() {
 		action := models.UnwrapAction(a)
 		It("JSON -> Action for "+string(action.ActionType()), func() {
 			wrappedJSON := fmt.Sprintf(`{"%s":%s}`, action.ActionType(), actionPayload)
-
-			By("unwrapping", func() {
-				var unmarshalledAction models.ActionInterface
-				unmarshalledAction, err := models.UnmarshalAction([]byte(wrappedJSON))
-				Expect(err).NotTo(HaveOccurred())
-				Expect(unmarshalledAction).To(Equal(action))
-			})
+			marshalledAction := new(models.Action)
+			err := json.Unmarshal([]byte(wrappedJSON), marshalledAction)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(marshalledAction).To(BeEquivalentTo(a))
 		})
 	}
 
@@ -51,13 +37,6 @@ var _ = Describe("Actions", func() {
 		itSerializes(actionPayload, action)
 		itDeserializes(actionPayload, action)
 	}
-
-	Describe("UnmarshalAction", func() {
-		It("returns an error when the action is not registered", func() {
-			_, err := models.UnmarshalAction([]byte(`{"bogusAction": {}}`))
-			Expect(err).To(MatchError("Unknown action: bogusAction"))
-		})
-	})
 
 	Describe("Download", func() {
 		itSerializesAndDeserializes(
@@ -78,11 +57,11 @@ var _ = Describe("Actions", func() {
 		)
 
 		Describe("Validate", func() {
-			var downloadAction models.DownloadAction
+			var downloadAction *models.DownloadAction
 
 			Context("when the action has 'from', 'to', and 'user' specified", func() {
 				It("is valid", func() {
-					downloadAction = models.DownloadAction{
+					downloadAction = &models.DownloadAction{
 						From: "web_location",
 						To:   "local_location",
 						User: "someone",
@@ -96,19 +75,19 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"from",
-					models.DownloadAction{
+					&models.DownloadAction{
 						To: "local_location",
 					},
 				},
 				{
 					"to",
-					models.DownloadAction{
+					&models.DownloadAction{
 						From: "web_location",
 					},
 				},
 				{
 					"user",
-					models.DownloadAction{
+					&models.DownloadAction{
 						From: "web_location",
 						To:   "local_location",
 					},
@@ -136,11 +115,11 @@ var _ = Describe("Actions", func() {
 		)
 
 		Describe("Validate", func() {
-			var uploadAction models.UploadAction
+			var uploadAction *models.UploadAction
 
 			Context("when the action has 'from', 'to', and 'user' specified", func() {
 				It("is valid", func() {
-					uploadAction = models.UploadAction{
+					uploadAction = &models.UploadAction{
 						To:   "web_location",
 						From: "local_location",
 						User: "someone",
@@ -154,19 +133,19 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"from",
-					models.UploadAction{
+					&models.UploadAction{
 						To: "web_location",
 					},
 				},
 				{
 					"to",
-					models.UploadAction{
+					&models.UploadAction{
 						From: "local_location",
 					},
 				},
 				{
 					"user",
-					models.UploadAction{
+					&models.UploadAction{
 						To:   "web_location",
 						From: "local_location",
 					},
@@ -180,7 +159,7 @@ var _ = Describe("Actions", func() {
 	Describe("Run", func() {
 		var nofile uint64 = 10
 		itSerializesAndDeserializes(
-			`{	
+			`{
 					"user": "me",
 					"path": "rm",
 					"args": ["-rf", "/"],
@@ -205,11 +184,11 @@ var _ = Describe("Actions", func() {
 		)
 
 		Describe("Validate", func() {
-			var runAction models.RunAction
+			var runAction *models.RunAction
 
 			Context("when the action has the required fields", func() {
 				It("is valid", func() {
-					runAction = models.RunAction{
+					runAction = &models.RunAction{
 						Path: "ls",
 						User: "foo",
 					}
@@ -222,13 +201,13 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"path",
-					models.RunAction{
+					&models.RunAction{
 						User: "me",
 					},
 				},
 				{
 					"user",
-					models.RunAction{
+					&models.RunAction{
 						Path: "ls",
 					},
 				},
@@ -247,7 +226,7 @@ var _ = Describe("Actions", func() {
 						"path": "echo",
 						"user": "someone",
 						"resource_limits":{
-							"nofile": 10	
+							"nofile": 10
 						}
 					}
 				},
@@ -265,11 +244,11 @@ var _ = Describe("Actions", func() {
 		)
 
 		Describe("Validate", func() {
-			var timeoutAction models.TimeoutAction
+			var timeoutAction *models.TimeoutAction
 
 			Context("when the action has 'action' specified and a positive timeout", func() {
 				It("is valid", func() {
-					timeoutAction = models.TimeoutAction{
+					timeoutAction = &models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
 								From: "local_location",
@@ -288,13 +267,13 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"action",
-					models.TimeoutAction{
+					&models.TimeoutAction{
 						Timeout: int64(time.Second),
 					},
 				},
 				{
 					"from",
-					models.TimeoutAction{
+					&models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
 								To:   "web_location",
@@ -306,7 +285,7 @@ var _ = Describe("Actions", func() {
 				},
 				{
 					"timeout",
-					models.TimeoutAction{
+					&models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
 								From: "local_location",
@@ -341,11 +320,11 @@ var _ = Describe("Actions", func() {
 		)
 
 		Describe("Validate", func() {
-			var tryAction models.TryAction
+			var tryAction *models.TryAction
 
 			Context("when the action has 'action' specified", func() {
 				It("is valid", func() {
-					tryAction = models.TryAction{
+					tryAction = &models.TryAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
 								From: "local_location",
@@ -363,11 +342,11 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"action",
-					models.TryAction{},
+					&models.TryAction{},
 				},
 				{
 					"from",
-					models.TryAction{
+					&models.TryAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{
 								To: "web_location",
@@ -418,11 +397,11 @@ var _ = Describe("Actions", func() {
 		)
 
 		Describe("Validate", func() {
-			var parallelAction models.ParallelAction
+			var parallelAction *models.ParallelAction
 
 			Context("when the action has 'actions' as a slice of valid actions", func() {
 				It("is valid", func() {
-					parallelAction = models.ParallelAction{
+					parallelAction = &models.ParallelAction{
 						Actions: []*models.Action{
 							&models.Action{
 								UploadAction: &models.UploadAction{
@@ -442,23 +421,23 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"actions",
-					models.ParallelAction{},
+					&models.ParallelAction{},
 				},
 				{
 					"actions",
-					models.ParallelAction{
+					&models.ParallelAction{
 						Actions: []*models.Action{},
 					},
 				},
 				{
 					"action at index 0",
-					models.ParallelAction{
+					&models.ParallelAction{
 						Actions: []*models.Action{nil},
 					},
 				},
 				{
 					"from",
-					models.ParallelAction{
+					&models.ParallelAction{
 						Actions: []*models.Action{
 							&models.Action{
 								UploadAction: &models.UploadAction{
@@ -530,17 +509,17 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"actions",
-					models.SerialAction{},
+					&models.SerialAction{},
 				},
 				{
 					"actions",
-					models.SerialAction{
+					&models.SerialAction{
 						Actions: []*models.Action{},
 					},
 				},
 				{
 					"action at index 0",
-					models.SerialAction{
+					&models.SerialAction{
 						Actions: []*models.Action{nil},
 					},
 				},
@@ -604,7 +583,7 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"action",
-					models.EmitProgressAction{},
+					&models.EmitProgressAction{},
 				},
 				{
 					"from",
@@ -674,16 +653,16 @@ var _ = Describe("Actions", func() {
 			for _, testCase := range []ValidatorErrorCase{
 				{
 					"actions",
-					models.CodependentAction{},
+					&models.CodependentAction{},
 				},
 				{
 					"actions",
-					models.CodependentAction{
+					&models.CodependentAction{
 						Actions: []*models.Action{}},
 				},
 				{
 					"action at index 0",
-					models.CodependentAction{
+					&models.CodependentAction{
 						Actions: []*models.Action{nil}},
 				},
 				{

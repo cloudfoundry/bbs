@@ -1,6 +1,8 @@
 package etcd_helpers
 
 import (
+		"encoding/json"
+
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -17,7 +19,7 @@ func (t *ETCDHelper) GetInstanceActualLRP(lrpKey *models.ActualLRPKey) (*models.
 	Expect(err).NotTo(HaveOccurred())
 
 	var lrp models.ActualLRP
-	err = models.FromJSON([]byte(resp.Node.Value), &lrp)
+	err = json.Unmarshal([]byte(resp.Node.Value), &lrp)
 	Expect(err).NotTo(HaveOccurred())
 
 	return &lrp, nil

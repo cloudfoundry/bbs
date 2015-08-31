@@ -308,30 +308,4 @@ var _ = Describe("Task", func() {
 			testValidatorErrorCase(testCase)
 		}
 	})
-
-	Describe("Marshal", func() {
-		It("should JSONify", func() {
-			json, err := models.ToJSON(&task)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(json)).To(MatchJSON(taskPayload))
-		})
-	})
-
-	Describe("Unmarshal", func() {
-		It("returns a Task with correct fields", func() {
-			decodedTask := &models.Task{}
-			err := models.FromJSON([]byte(taskPayload), decodedTask)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(decodedTask).To(Equal(&task))
-		})
-
-		Context("with an invalid payload", func() {
-			It("returns the error", func() {
-				decodedTask := &models.Task{}
-				err := models.FromJSON([]byte("aliens lol"), decodedTask)
-				Expect(err).To(HaveOccurred())
-			})
-		})
-	})
 })
