@@ -47,7 +47,7 @@ var _ = Describe("Evacuation API", func() {
 
 		BeforeEach(func() {
 			actual = model_helpers.NewValidActualLRP("some-process-guid", 1)
-			actual = models.NewClaimedActualLRP(actual.ActualLRPKey,actual.ActualLRPInstanceKey,actual.Since)
+			actual = models.NewClaimedActualLRP(actual.ActualLRPKey, actual.ActualLRPInstanceKey, actual.Since)
 			etcdHelper.SetRawActualLRP(actual)
 			etcdHelper.CreateValidDesiredLRP(actual.ProcessGuid)
 		})

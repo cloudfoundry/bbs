@@ -11,7 +11,7 @@ type FakeValidator struct {
 	ValidateStub        func() error
 	validateMutex       sync.RWMutex
 	validateArgsForCall []struct{}
-	validateReturns struct {
+	validateReturns     struct {
 		result1 error
 	}
 }

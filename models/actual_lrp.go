@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/cloudfoundry-incubator/bbs/format"
 )
 
 const (
@@ -177,11 +179,11 @@ func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, 
 	}
 }
 
-func (actual *ActualLRP) Version() Version {
-	return V0
+func (actual *ActualLRP) Version() format.Version {
+	return format.V0
 }
 
-func (actual *ActualLRP) MigrateFromVersion(v Version) error {
+func (actual *ActualLRP) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 

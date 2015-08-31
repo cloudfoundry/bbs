@@ -12,6 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
 	"github.com/cloudfoundry-incubator/consuladapter"
@@ -98,7 +99,7 @@ var _ = BeforeEach(func() {
 	cellDB = consul.NewConsul(consulSession)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 
-	etcdDB = etcd.NewETCD(models.JSON_NO_ENVELOPE, storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
+	etcdDB = etcd.NewETCD(format.LEGACY_FORMATTING, storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {

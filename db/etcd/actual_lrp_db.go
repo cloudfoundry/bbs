@@ -287,6 +287,8 @@ func (db *ETCDDB) newUnclaimedActualLRP(key *models.ActualLRPKey) (*models.Actua
 }
 
 func (db *ETCDDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) error {
+	logger = logger.WithData(lager.Data{"actual-lrp": lrp})
+
 	lrpData, err := db.serializeModel(logger, lrp)
 	if err != nil {
 		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})

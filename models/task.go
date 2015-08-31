@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"regexp"
 
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -14,11 +15,11 @@ type TaskFilter struct {
 	CellID string
 }
 
-func (t *Task) Version() Version {
-	return V0
+func (t *Task) Version() format.Version {
+	return format.V0
 }
 
-func (t *Task) MigrateFromVersion(v Version) error {
+func (t *Task) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 

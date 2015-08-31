@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/coreos/go-etcd/etcd"
@@ -51,7 +52,7 @@ func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 }
 
 type ETCDDB struct {
-	format            models.SerializationFormat
+	format            *format.Format
 	client            StoreClient
 	clock             clock.Clock
 	inflightWatches   map[chan bool]bool
@@ -65,7 +66,7 @@ type ETCDDB struct {
 }
 
 func NewETCD(
-	format models.SerializationFormat,
+	format *format.Format,
 	storeClient StoreClient,
 	auctioneerClient auctionhandlers.Client,
 	cellClient cellhandlers.Client,
@@ -90,18 +91,22 @@ func (db *ETCDDB) supportsBinary() bool {
 	return db.client.SupportsBinary()
 }
 
-func (db *ETCDDB) serializeModel(logger lager.Logger, model models.Versioner) ([]byte, error) {
-	data, err := models.MarshalEnvelope(db.format, model)
+func (db *ETCDDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
+	encodedPayload, err := format.Marshal(db.format, model)
 	if err != nil {
 		logger.Error("failed-ro-serialize-model", err)
-		return nil, err
+		return nil, models.NewError(models.Error_InvalidRecord, err.Error())
 	}
-	return data, nil
+	return encodedPayload, nil
 }
 
-func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model models.Versioner) error {
-	envelope := models.OpenEnvelope([]byte(node.Value))
-	return envelope.Unmarshal(logger, model)
+func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model format.Versioner) error {
+	err := format.Unmarshal(logger, []byte(node.Value), model)
+	if err != nil {
+		logger.Error("failed-ro-serialize-model", err)
+		return models.NewError(models.Error_InvalidRecord, err.Error())
+	}
+	return nil
 }
 
 func (db *ETCDDB) fetchRecursiveRaw(logger lager.Logger, key string) (*etcd.Node, error) {

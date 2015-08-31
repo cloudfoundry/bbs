@@ -759,7 +759,7 @@ var _ = Describe("LrpConvergence", func() {
 			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrp1, 1))
 
 			instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellID)
-			err := etcdDB.ClaimActualLRP(logger,processGuid,0,&instanceKey)
+			err := etcdDB.ClaimActualLRP(logger, processGuid, 0, &instanceKey)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

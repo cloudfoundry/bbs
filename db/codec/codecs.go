@@ -5,26 +5,7 @@ import (
 	"fmt"
 )
 
-type Encoder interface {
-	Encode(data []byte) ([]byte, error)
-}
-
-type Decoder interface {
-	Decode(data []byte) ([]byte, error)
-}
-
-type Codec interface {
-	Encoder
-	Decoder
-}
-
 type Kind [2]byte
-
-type Codecs struct {
-	codecs      map[Kind]Codec
-	encoder     Encoder
-	encoderKind Kind
-}
 
 var (
 	NONE      Kind = [2]byte{}
@@ -39,6 +20,19 @@ func (k Kind) SupportsBinary() bool {
 	default:
 		return false
 	}
+}
+
+type Encoder interface {
+	Encode(data []byte) ([]byte, error)
+}
+
+type Decoder interface {
+	Decode(data []byte) ([]byte, error)
+}
+
+type Codec interface {
+	Encoder
+	Decoder
 }
 
 type IdentityCodec struct{}
@@ -60,6 +54,12 @@ func (c *Base64Codec) Decode(data []byte) ([]byte, error) {
 	payload := make([]byte, decodedLen)
 	n, err := base64.StdEncoding.Decode(payload, data)
 	return payload[:n], err
+}
+
+type Codecs struct {
+	codecs      map[Kind]Codec
+	encoder     Encoder
+	encoderKind Kind
 }
 
 func NewCodecs(encoderKind Kind) *Codecs {

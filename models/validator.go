@@ -17,13 +17,6 @@ type ProtoValidator interface {
 	proto.Message
 }
 
-//go:generate counterfeiter . Versioner
-type Versioner interface {
-	ProtoValidator
-	MigrateFromVersion(v Version) error
-	Version() Version
-}
-
 type ValidationError []error
 
 func (ve ValidationError) Append(err error) ValidationError {

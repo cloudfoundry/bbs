@@ -4,16 +4,10 @@ package fakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/format"
 )
 
 type FakeVersioner struct {
-	ValidateStub        func() error
-	validateMutex       sync.RWMutex
-	validateArgsForCall []struct{}
-	validateReturns struct {
-		result1 error
-	}
 	ResetStub        func()
 	resetMutex       sync.RWMutex
 	resetArgsForCall []struct{}
@@ -26,44 +20,26 @@ type FakeVersioner struct {
 	ProtoMessageStub        func()
 	protoMessageMutex       sync.RWMutex
 	protoMessageArgsForCall []struct{}
-	MigrateFromVersionStub        func(v models.Version) error
+	MigrateFromVersionStub        func(v format.Version) error
 	migrateFromVersionMutex       sync.RWMutex
 	migrateFromVersionArgsForCall []struct {
-		v models.Version
+		v format.Version
 	}
 	migrateFromVersionReturns struct {
 		result1 error
 	}
-	VersionStub        func() models.Version
+	ValidateStub        func() error
+	validateMutex       sync.RWMutex
+	validateArgsForCall []struct{}
+	validateReturns struct {
+		result1 error
+	}
+	VersionStub        func() format.Version
 	versionMutex       sync.RWMutex
 	versionArgsForCall []struct{}
 	versionReturns struct {
-		result1 models.Version
+		result1 format.Version
 	}
-}
-
-func (fake *FakeVersioner) Validate() error {
-	fake.validateMutex.Lock()
-	fake.validateArgsForCall = append(fake.validateArgsForCall, struct{}{})
-	fake.validateMutex.Unlock()
-	if fake.ValidateStub != nil {
-		return fake.ValidateStub()
-	} else {
-		return fake.validateReturns.result1
-	}
-}
-
-func (fake *FakeVersioner) ValidateCallCount() int {
-	fake.validateMutex.RLock()
-	defer fake.validateMutex.RUnlock()
-	return len(fake.validateArgsForCall)
-}
-
-func (fake *FakeVersioner) ValidateReturns(result1 error) {
-	fake.ValidateStub = nil
-	fake.validateReturns = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *FakeVersioner) Reset() {
@@ -120,10 +96,10 @@ func (fake *FakeVersioner) ProtoMessageCallCount() int {
 	return len(fake.protoMessageArgsForCall)
 }
 
-func (fake *FakeVersioner) MigrateFromVersion(v models.Version) error {
+func (fake *FakeVersioner) MigrateFromVersion(v format.Version) error {
 	fake.migrateFromVersionMutex.Lock()
 	fake.migrateFromVersionArgsForCall = append(fake.migrateFromVersionArgsForCall, struct {
-		v models.Version
+		v format.Version
 	}{v})
 	fake.migrateFromVersionMutex.Unlock()
 	if fake.MigrateFromVersionStub != nil {
@@ -139,7 +115,7 @@ func (fake *FakeVersioner) MigrateFromVersionCallCount() int {
 	return len(fake.migrateFromVersionArgsForCall)
 }
 
-func (fake *FakeVersioner) MigrateFromVersionArgsForCall(i int) models.Version {
+func (fake *FakeVersioner) MigrateFromVersionArgsForCall(i int) format.Version {
 	fake.migrateFromVersionMutex.RLock()
 	defer fake.migrateFromVersionMutex.RUnlock()
 	return fake.migrateFromVersionArgsForCall[i].v
@@ -152,7 +128,31 @@ func (fake *FakeVersioner) MigrateFromVersionReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeVersioner) Version() models.Version {
+func (fake *FakeVersioner) Validate() error {
+	fake.validateMutex.Lock()
+	fake.validateArgsForCall = append(fake.validateArgsForCall, struct{}{})
+	fake.validateMutex.Unlock()
+	if fake.ValidateStub != nil {
+		return fake.ValidateStub()
+	} else {
+		return fake.validateReturns.result1
+	}
+}
+
+func (fake *FakeVersioner) ValidateCallCount() int {
+	fake.validateMutex.RLock()
+	defer fake.validateMutex.RUnlock()
+	return len(fake.validateArgsForCall)
+}
+
+func (fake *FakeVersioner) ValidateReturns(result1 error) {
+	fake.ValidateStub = nil
+	fake.validateReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeVersioner) Version() format.Version {
 	fake.versionMutex.Lock()
 	fake.versionArgsForCall = append(fake.versionArgsForCall, struct{}{})
 	fake.versionMutex.Unlock()
@@ -169,11 +169,11 @@ func (fake *FakeVersioner) VersionCallCount() int {
 	return len(fake.versionArgsForCall)
 }
 
-func (fake *FakeVersioner) VersionReturns(result1 models.Version) {
+func (fake *FakeVersioner) VersionReturns(result1 format.Version) {
 	fake.VersionStub = nil
 	fake.versionReturns = struct {
-		result1 models.Version
+		result1 format.Version
 	}{result1}
 }
 
-var _ models.Versioner = new(FakeVersioner)
+var _ format.Versioner = new(FakeVersioner)

@@ -12,8 +12,8 @@ import (
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/events"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
-	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
 	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
@@ -38,8 +38,8 @@ var serverAddress = flag.String(
 
 var serializationFormat = flag.String(
 	"serializationFormat",
-	"json_no_envelope",
-	"options: json_no_envelope, json, proto",
+	"legacy",
+	"options: legacy, unencoded_json, encoded_proto",
 )
 
 var communicationTimeout = flag.Duration(
@@ -167,25 +167,25 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 }
 
 func initializeEtcdDB(logger lager.Logger, etcdFlags *ETCDFlags, cbClient taskworkpool.TaskCompletionClient) *etcddb.ETCDDB {
-	var format models.SerializationFormat
+	var formatting *format.Format
 	var encoding codec.Kind
 
 	switch *serializationFormat {
-	case "proto":
-		format = models.PROTO
+	case "encoded_proto":
+		formatting = format.ENCODED_PROTO
 		encoding = codec.BASE64
-	case "json":
-		format = models.JSON
+	case "unencoded_json":
+		formatting = format.FORMATTED_JSON
 		encoding = codec.UNENCODED
-	case "json_no_envelope", "":
-		format = models.JSON_NO_ENVELOPE
+	case "legacy", "":
+		formatting = format.LEGACY_FORMATTING
 		encoding = codec.NONE
 	default:
 		logger.Fatal("invalid-seriailization-format", nil)
 	}
 
 	return etcddb.NewETCD(
-		format,
+		format.NewFormat(format.LEGACY_UNENCODED, formatting.EnvelopeFormat),
 		initializeEtcdStoreClient(logger, etcdFlags, encoding),
 		initializeAuctioneerClient(logger),
 		cellhandlers.NewClient(),

@@ -6,6 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -31,9 +32,9 @@ var _ = Describe("SerializationFormat", func() {
 		ginkgomon.Kill(bbsProcess)
 	})
 
-	Context("when the format is set to json_no_envelope", func() {
+	Context("when the format is set to legacy", func() {
 		BeforeEach(func() {
-			bbsArgs.SerializationFormat = "json_no_envelope"
+			bbsArgs.SerializationFormat = "legacy"
 		})
 
 		It("writes the value as unencoded json with no metadata", func() {
@@ -43,23 +44,23 @@ var _ = Describe("SerializationFormat", func() {
 		})
 	})
 
-	Context("when the format is set to json", func() {
+	Context("when the format is set to unencoded_json", func() {
 		BeforeEach(func() {
-			bbsArgs.SerializationFormat = "json"
+			bbsArgs.SerializationFormat = "unencoded_json"
 		})
 		It("writes the value as unencoded json with metadata", func() {
 			res, err := etcdClient.Get(etcd.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(res.Node.Value[:2]).To(BeEquivalentTo(codec.UNENCODED[:]))
-			Expect(res.Node.Value[2]).To(BeEquivalentTo(models.JSON))
-			Expect(res.Node.Value[3]).To(BeEquivalentTo(models.V0))
+			Expect(res.Node.Value[:2]).To(BeEquivalentTo(format.UNENCODED[:]))
+			Expect(res.Node.Value[2]).To(BeEquivalentTo(format.JSON))
+			Expect(res.Node.Value[3]).To(BeEquivalentTo(format.V0))
 			Expect(res.Node.Value[4]).To(BeEquivalentTo('{'))
 		})
 	})
 
-	Context("when the format is set to proto", func() {
+	Context("when the format is set to encoded_proto", func() {
 		BeforeEach(func() {
-			bbsArgs.SerializationFormat = "proto"
+			bbsArgs.SerializationFormat = "encoded_proto"
 		})
 		It("writes the value as base64 encoded protobufs with metadata", func() {
 			res, err := etcdClient.Get(etcd.TaskSchemaPathByGuid(task.TaskGuid), false, false)
@@ -68,8 +69,8 @@ var _ = Describe("SerializationFormat", func() {
 			Expect(res.Node.Value[:2]).To(BeEquivalentTo(codec.BASE64[:]))
 
 			payload, err := base64.StdEncoding.DecodeString(string(res.Node.Value[2:]))
-			Expect(payload[0]).To(BeEquivalentTo(models.PROTO))
-			Expect(payload[1]).To(BeEquivalentTo(models.V0))
+			Expect(payload[0]).To(BeEquivalentTo(format.PROTO))
+			Expect(payload[1]).To(BeEquivalentTo(format.V0))
 		})
 	})
 })

@@ -11,16 +11,16 @@ type FakeProtoValidator struct {
 	ValidateStub        func() error
 	validateMutex       sync.RWMutex
 	validateArgsForCall []struct{}
-	validateReturns struct {
+	validateReturns     struct {
 		result1 error
 	}
-	ResetStub        func()
-	resetMutex       sync.RWMutex
-	resetArgsForCall []struct{}
+	ResetStub         func()
+	resetMutex        sync.RWMutex
+	resetArgsForCall  []struct{}
 	StringStub        func() string
 	stringMutex       sync.RWMutex
 	stringArgsForCall []struct{}
-	stringReturns struct {
+	stringReturns     struct {
 		result1 string
 	}
 	ProtoMessageStub        func()
