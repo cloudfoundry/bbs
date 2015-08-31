@@ -38,35 +38,35 @@ func (db *ETCDDB) WatchForDesiredLRPChanges(logger lager.Logger,
 			case event.Node != nil && event.PrevNode == nil:
 				logger.Debug("received-create")
 
-				var desiredLRP models.DesiredLRP
-				err := models.FromJSON([]byte(event.Node.Value), &desiredLRP)
+				desiredLRP := new(models.DesiredLRP)
+				err := db.deserializeModel(logger, event.Node, desiredLRP)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.Node.Value})
 					continue
 				}
 
-				logger.Debug("sending-create", lager.Data{"desired-lrp": &desiredLRP})
-				created(&desiredLRP)
+				logger.Debug("sending-create", lager.Data{"desired-lrp": desiredLRP})
+				created(desiredLRP)
 
 			case event.Node != nil && event.PrevNode != nil: // update
 				logger.Debug("received-update")
 
-				var before models.DesiredLRP
-				err := models.FromJSON([]byte(event.PrevNode.Value), &before)
+				before := new(models.DesiredLRP)
+				err := db.deserializeModel(logger, event.PrevNode, before)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.PrevNode.Value})
 					continue
 				}
 
-				var after models.DesiredLRP
-				err = models.FromJSON([]byte(event.Node.Value), &after)
+				after := new(models.DesiredLRP)
+				err = db.deserializeModel(logger, event.Node, after)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.Node.Value})
 					continue
 				}
 
-				logger.Debug("sending-update", lager.Data{"before": &before, "after": &after})
-				changed(&models.DesiredLRPChange{Before: &before, After: &after})
+				logger.Debug("sending-update", lager.Data{"before": before, "after": after})
+				changed(&models.DesiredLRPChange{Before: before, After: after})
 
 			case event.Node == nil && event.PrevNode != nil: // delete
 				logger.Debug("received-delete")
@@ -108,8 +108,8 @@ func (db *ETCDDB) WatchForActualLRPChanges(logger lager.Logger,
 			case event.Node != nil && event.PrevNode == nil:
 				logger.Debug("received-create")
 
-				var actualLRP models.ActualLRP
-				err := models.FromJSON([]byte(event.Node.Value), &actualLRP)
+				actualLRP := new(models.ActualLRP)
+				err := db.deserializeModel(logger, event.Node, actualLRP)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-actual-lrp-on-create", err, lager.Data{"key": event.Node.Key, "value": event.Node.Value})
 					continue
@@ -118,9 +118,9 @@ func (db *ETCDDB) WatchForActualLRPChanges(logger lager.Logger,
 				evacuating := isEvacuatingActualLRPNode(event.Node)
 				actualLRPGroup := &models.ActualLRPGroup{}
 				if evacuating {
-					actualLRPGroup.Evacuating = &actualLRP
+					actualLRPGroup.Evacuating = actualLRP
 				} else {
-					actualLRPGroup.Instance = &actualLRP
+					actualLRPGroup.Instance = actualLRP
 				}
 
 				logger.Debug("sending-create", lager.Data{"actual-lrp": &actualLRP, "evacuating": evacuating})
@@ -129,15 +129,15 @@ func (db *ETCDDB) WatchForActualLRPChanges(logger lager.Logger,
 			case event.Node != nil && event.PrevNode != nil:
 				logger.Debug("received-change")
 
-				var before models.ActualLRP
-				err := models.FromJSON([]byte(event.PrevNode.Value), &before)
+				before := new(models.ActualLRP)
+				err := db.deserializeModel(logger, event.PrevNode, before)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-prev-actual-lrp-on-change", err, lager.Data{"key": event.PrevNode.Key, "value": event.PrevNode.Value})
 					continue
 				}
 
-				var after models.ActualLRP
-				err = models.FromJSON([]byte(event.Node.Value), &after)
+				after := new(models.ActualLRP)
+				err = db.deserializeModel(logger, event.Node, after)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-actual-lrp-on-change", err, lager.Data{"key": event.Node.Key, "value": event.Node.Value})
 					continue
@@ -147,33 +147,33 @@ func (db *ETCDDB) WatchForActualLRPChanges(logger lager.Logger,
 				beforeGroup := &models.ActualLRPGroup{}
 				afterGroup := &models.ActualLRPGroup{}
 				if evacuating {
-					afterGroup.Evacuating = &after
-					beforeGroup.Evacuating = &before
+					afterGroup.Evacuating = after
+					beforeGroup.Evacuating = before
 				} else {
-					afterGroup.Instance = &after
-					beforeGroup.Instance = &before
+					afterGroup.Instance = after
+					beforeGroup.Instance = before
 				}
 
-				logger.Debug("sending-change", lager.Data{"before": &before, "after": &after, "evacuating": evacuating})
+				logger.Debug("sending-change", lager.Data{"before": before, "after": after, "evacuating": evacuating})
 				changed(&models.ActualLRPChange{Before: beforeGroup, After: afterGroup})
 
 			case event.PrevNode != nil && event.Node == nil:
 				logger.Debug("received-delete")
-
-				var actualLRP models.ActualLRP
 				if event.PrevNode.Dir {
 					continue
 				}
-				err := models.FromJSON([]byte(event.PrevNode.Value), &actualLRP)
+
+				actualLRP := new(models.ActualLRP)
+				err := db.deserializeModel(logger, event.PrevNode, actualLRP)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-prev-actual-lrp-on-delete", err, lager.Data{"key": event.PrevNode.Key, "value": event.PrevNode.Value})
 				} else {
 					evacuating := isEvacuatingActualLRPNode(event.PrevNode)
 					actualLRPGroup := &models.ActualLRPGroup{}
 					if evacuating {
-						actualLRPGroup.Evacuating = &actualLRP
+						actualLRPGroup.Evacuating = actualLRP
 					} else {
-						actualLRPGroup.Instance = &actualLRP
+						actualLRPGroup.Instance = actualLRP
 					}
 
 					logger.Debug("sending-delete", lager.Data{"actual-lrp": &actualLRP, "evacuating": evacuating})

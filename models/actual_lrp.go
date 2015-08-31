@@ -179,11 +179,11 @@ func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, 
 	}
 }
 
-func (actual *ActualLRP) Version() format.Version {
+func (*ActualLRP) Version() format.Version {
 	return format.V0
 }
 
-func (actual *ActualLRP) MigrateFromVersion(v format.Version) error {
+func (*ActualLRP) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 

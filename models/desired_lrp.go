@@ -3,6 +3,8 @@ package models
 import (
 	"net/url"
 	"regexp"
+
+	"github.com/cloudfoundry-incubator/bbs/format"
 )
 
 const PreloadedRootFSScheme = "preloaded"
@@ -23,6 +25,14 @@ func PreloadedRootFS(stack string) string {
 		Scheme: PreloadedRootFSScheme,
 		Opaque: stack,
 	}).String()
+}
+
+func (*DesiredLRP) Version() format.Version {
+	return format.V0
+}
+
+func (*DesiredLRP) MigrateFromVersion(v format.Version) error {
+	return nil
 }
 
 func (desired *DesiredLRP) ApplyUpdate(update *DesiredLRPUpdate) *DesiredLRP {

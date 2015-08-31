@@ -241,7 +241,7 @@ func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 		childNode := childNode
 		works = append(works, func() {
 			var desired models.DesiredLRP
-			err := models.FromJSON([]byte(childNode.Value), &desired)
+			err := db.deserializeModel(logger, childNode, &desired)
 			if err != nil {
 				desiredsToDeleteLock.Lock()
 				desiredsToDelete = append(desiredsToDelete, childNode.Key)

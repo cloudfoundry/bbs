@@ -36,8 +36,8 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 		node := node
 
 		works = append(works, func() {
-			var lrp models.DesiredLRP
-			deserializeErr := models.FromJSON([]byte(node.Value), &lrp)
+			lrp := new(models.DesiredLRP)
+			deserializeErr := db.deserializeModel(logger, node, lrp)
 			if deserializeErr != nil {
 				logger.Error("failed-parsing-desired-lrp", deserializeErr)
 				workErr.Store(fmt.Errorf("cannot parse lrp JSON for key %s: %s", node.Key, deserializeErr.Error()))
@@ -46,7 +46,7 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 
 			if filter.Domain == "" || lrp.GetDomain() == filter.Domain {
 				lrpsLock.Lock()
-				desiredLRPs = append(desiredLRPs, &lrp)
+				desiredLRPs = append(desiredLRPs, lrp)
 				lrpsLock.Unlock()
 			}
 		})
@@ -75,14 +75,14 @@ func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid st
 		return nil, 0, err
 	}
 
-	var lrp models.DesiredLRP
-	deserializeErr := models.FromJSON([]byte(node.Value), &lrp)
+	lrp := new(models.DesiredLRP)
+	deserializeErr := db.deserializeModel(logger, node, lrp)
 	if deserializeErr != nil {
 		logger.Error("failed-parsing-desired-lrp", deserializeErr)
-		return nil, 0, models.ErrDeserializeJSON
+		return nil, 0, deserializeErr
 	}
 
-	return &lrp, node.ModifiedIndex, nil
+	return lrp, node.ModifiedIndex, nil
 }
 
 func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
@@ -150,10 +150,10 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 		Index: 0,
 	}
 
-	value, err := models.ToJSON(desiredLRP)
+	value, err := db.serializeModel(logger, desiredLRP)
 	if err != nil {
-		logger.Error("failed-to-json", err)
-		return models.ErrSerializeJSON
+		logger.Error("failed-to-serialize", err)
+		return err
 	}
 
 	logger.Debug("persisting-desired-lrp")
@@ -183,7 +183,7 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 
 	desiredLRP.ModificationTag.Increment()
 
-	value, err := models.ToJSON(desiredLRP)
+	value, err := db.serializeModel(logger, desiredLRP)
 	if err != nil {
 		logger.Error("failed-to-serialize-desired-lrp", err)
 		return err

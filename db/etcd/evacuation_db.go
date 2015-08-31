@@ -1,7 +1,6 @@
 package etcd
 
 import (
-	"encoding/json"
 	"reflect"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -233,13 +232,13 @@ func (db *ETCDDB) rawEvacuatingActuaLLRPByProcessGuidAndIndex(logger lager.Logge
 		return nil, 0, bbsErr
 	}
 
-	var lrp models.ActualLRP
-	deserializeErr := json.Unmarshal([]byte(node.Value), &lrp)
+	lrp := new(models.ActualLRP)
+	deserializeErr := db.deserializeModel(logger, node, lrp)
 	if deserializeErr != nil {
 		return nil, 0, models.ErrDeserializeJSON
 	}
 
-	return &lrp, node.ModifiedIndex, nil
+	return lrp, node.ModifiedIndex, nil
 }
 
 type stateChange bool
@@ -331,15 +330,15 @@ func (db *ETCDDB) compareAndSwapRawEvacuatingActualLRP(
 	storeIndex uint64,
 	evacuationTTLInSeconds uint64,
 ) error {
-	lrpRawJSON, err := json.Marshal(lrp)
+	payload, err := db.serializeModel(logger, lrp)
 	if err != nil {
 		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})
-		return models.ErrSerializeJSON
+		return err
 	}
 
 	_, err = db.client.CompareAndSwap(
 		EvacuatingActualLRPSchemaPath(lrp.ActualLRPKey.ProcessGuid, lrp.ActualLRPKey.Index),
-		lrpRawJSON,
+		payload,
 		evacuationTTLInSeconds,
 		storeIndex,
 	)

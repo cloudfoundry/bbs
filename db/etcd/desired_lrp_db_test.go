@@ -119,7 +119,9 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			It("errors", func() {
 				_, err := etcdDB.DesiredLRPByProcessGuid(logger, "some-other-guid")
-				Expect(err).To(Equal(models.ErrDeserializeJSON))
+				Expect(err).To(HaveOccurred())
+				bbsErr := models.ConvertError(err)
+				Expect(bbsErr.Type).To(Equal(models.Error_InvalidRecord))
 			})
 		})
 
