@@ -194,7 +194,7 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 	err := lrp.Validate()
 	if err != nil {
 		logger.Error("failed", err)
-		return &models.Error{Type: models.InvalidRecord, Message: err.Error()}
+		return models.NewError(models.Error_InvalidRecord, err.Error())
 	}
 
 	lrpRawJSON, err := json.Marshal(lrp)
@@ -217,7 +217,7 @@ func (db *ETCDDB) createActualLRP(logger lager.Logger, desiredLRP *models.Desire
 	logger = logger.Session("create-actual-lrp")
 	var err error
 	if index >= desiredLRP.Instances {
-		err = &models.Error{Type: models.InvalidRecord, Message: "Index too large"}
+		err = models.NewError(models.Error_InvalidRecord, "Index too large")
 		logger.Error("actual-lrp-index-too-large", err, lager.Data{"actual-index": index, "desired-instances": desiredLRP.Instances})
 		return err
 	}
@@ -738,7 +738,7 @@ func (db *ETCDDB) unclaimActualLRPWithIndex(
 	err := lrp.Validate()
 	if err != nil {
 		logger.Error("failed-to-validate-unclaimed-lrp", err)
-		return stateDidNotChange, &models.Error{Type: models.InvalidRecord, Message: err.Error()}
+		return stateDidNotChange, models.NewError(models.Error_InvalidRecord, err.Error())
 	}
 
 	lrpRawJSON, err := json.Marshal(lrp)

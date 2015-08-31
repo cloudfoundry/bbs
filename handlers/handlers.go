@@ -103,10 +103,7 @@ func parseRequest(logger lager.Logger, req *http.Request, request MessageValidat
 	logger.Debug("parsed-request-body", lager.Data{"request": request})
 	if err := request.Validate(); err != nil {
 		logger.Error("invalid-request", err)
-		return &models.Error{
-			Type:    models.InvalidRequest,
-			Message: err.Error(),
-		}
+		return models.NewError(models.Error_InvalidRequest, err.Error())
 	}
 
 	return nil

@@ -51,7 +51,7 @@ func MarshalEnvelope(format SerializationFormat, model Versioner) ([]byte, *Erro
 	case JSON_NO_ENVELOPE:
 		return ToJSON(model)
 	default:
-		err = NewError(InvalidRecord, "unknown format")
+		err = NewError(Error_InvalidRecord, "unknown format")
 	}
 
 	if err != nil {
@@ -76,17 +76,17 @@ func (e *Envelope) Unmarshal(logger lager.Logger, model Versioner) *Error {
 		err := json.Unmarshal(e.Payload, model)
 		if err != nil {
 			logger.Error("failed-to-json-unmarshal-payload", err)
-			return NewError(InvalidRecord, err.Error())
+			return NewError(Error_InvalidRecord, err.Error())
 		}
 	case PROTO:
 		err := proto.Unmarshal(e.Payload, model)
 		if err != nil {
 			logger.Error("failed-to-proto-unmarshal-payload", err)
-			return NewError(InvalidRecord, err.Error())
+			return NewError(Error_InvalidRecord, err.Error())
 		}
 	default:
 		logger.Error("cannot-unmarshal-unknown-serialization-format", nil)
-		return NewError(FailedToOpenEnvelope, "unknown serialization format")
+		return NewError(Error_FailedToOpenEnvelope, "unknown serialization format")
 	}
 
 	model.MigrateFromVersion(e.Version)
@@ -94,7 +94,7 @@ func (e *Envelope) Unmarshal(logger lager.Logger, model Versioner) *Error {
 	err := model.Validate()
 	if err != nil {
 		logger.Error("invalid-record", err)
-		return NewError(InvalidRecord, err.Error())
+		return NewError(Error_InvalidRecord, err.Error())
 	}
 	return nil
 }

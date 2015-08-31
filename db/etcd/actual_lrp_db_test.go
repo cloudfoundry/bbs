@@ -363,7 +363,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns a validation error", func() {
-					Expect(claimErr.Type).To(Equal(models.InvalidRecord))
+					Expect(claimErr.Type).To(Equal(models.Error_InvalidRecord))
 				})
 
 				It("does not modify the persisted actual LRP", func() {

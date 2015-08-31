@@ -86,7 +86,7 @@ var _ = Describe("Evacuation Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).NotTo(BeNil())
-				Expect(response.Error.Type).To(Equal(models.InvalidRequest))
+				Expect(response.Error.Type).To(Equal(models.Error_InvalidRequest))
 			})
 		})
 

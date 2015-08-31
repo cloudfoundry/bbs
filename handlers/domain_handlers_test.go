@@ -88,7 +88,7 @@ var _ = Describe("Domain Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(upsertDomainResponse.Error).NotTo(BeNil())
-				Expect(upsertDomainResponse.Error.Type).To(Equal(models.InvalidRequest))
+				Expect(upsertDomainResponse.Error.Type).To(Equal(models.Error_InvalidRequest))
 			})
 		})
 

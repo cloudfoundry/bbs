@@ -18,13 +18,13 @@ func FromJSON(payload []byte, v Validator) error {
 func ToJSON(v Validator) ([]byte, *Error) {
 	if !isNil(v) {
 		if err := v.Validate(); err != nil {
-			return nil, NewError(InvalidRecord, err.Error())
+			return nil, NewError(Error_InvalidRecord, err.Error())
 		}
 	}
 
 	bytes, err := json.Marshal(v)
 	if err != nil {
-		return nil, NewError(InvalidJSON, err.Error())
+		return nil, NewError(Error_InvalidJSON, err.Error())
 	}
 
 	return bytes, nil
@@ -33,13 +33,13 @@ func ToJSON(v Validator) ([]byte, *Error) {
 func toProto(v ProtoValidator) ([]byte, *Error) {
 	if !isNil(v) {
 		if err := v.Validate(); err != nil {
-			return nil, NewError(InvalidRecord, err.Error())
+			return nil, NewError(Error_InvalidRecord, err.Error())
 		}
 	}
 
 	bytes, err := proto.Marshal(v)
 	if err != nil {
-		return nil, NewError(InvalidProtobufMessage, err.Error())
+		return nil, NewError(Error_InvalidProtobufMessage, err.Error())
 	}
 
 	return bytes, nil

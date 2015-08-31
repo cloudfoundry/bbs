@@ -9,14 +9,15 @@ import math "math"
 
 // discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
+import io "io"
 import fmt "fmt"
+
 import strings "strings"
+import reflect "reflect"
+
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
 import strconv "strconv"
-import reflect "reflect"
-
-import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -192,592 +193,6 @@ func (m *RemoveEvacuatingActualLRPResponse) GetError() *Error {
 	return nil
 }
 
-func (this *EvacuationResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.EvacuationResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error),
-		`KeepContainer:` + fmt.Sprintf("%#v", this.KeepContainer) + `}`}, ", ")
-	return s
-}
-func (this *EvacuateClaimedActualLRPRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.EvacuateClaimedActualLRPRequest{` +
-		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
-		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
-	return s
-}
-func (this *EvacuateRunningActualLRPRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.EvacuateRunningActualLRPRequest{` +
-		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
-		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey),
-		`ActualLrpNetInfo:` + fmt.Sprintf("%#v", this.ActualLrpNetInfo),
-		`Ttl:` + fmt.Sprintf("%#v", this.Ttl) + `}`}, ", ")
-	return s
-}
-func (this *EvacuateStoppedActualLRPRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.EvacuateStoppedActualLRPRequest{` +
-		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
-		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
-	return s
-}
-func (this *EvacuateCrashedActualLRPRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.EvacuateCrashedActualLRPRequest{` +
-		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
-		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey),
-		`ErrorMessage:` + fmt.Sprintf("%#v", this.ErrorMessage) + `}`}, ", ")
-	return s
-}
-func (this *RemoveEvacuatingActualLRPRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.RemoveEvacuatingActualLRPRequest{` +
-		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
-		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
-	return s
-}
-func (this *RemoveEvacuatingActualLRPResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.RemoveEvacuatingActualLRPResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
-	return s
-}
-func valueToGoStringEvacuation(v interface{}, typ string) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
-}
-func extensionToGoStringEvacuation(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
-	if e == nil {
-		return "nil"
-	}
-	s := "map[int32]proto.Extension{"
-	keys := make([]int, 0, len(e))
-	for k := range e {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	ss := []string{}
-	for _, k := range keys {
-		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
-	}
-	s += strings.Join(ss, ",") + "}"
-	return s
-}
-func (m *EvacuationResponse) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *EvacuationResponse) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Error != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.Error.Size()))
-		n1, err := m.Error.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
-	data[i] = 0x10
-	i++
-	if m.KeepContainer {
-		data[i] = 1
-	} else {
-		data[i] = 0
-	}
-	i++
-	return i, nil
-}
-
-func (m *EvacuateClaimedActualLRPRequest) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *EvacuateClaimedActualLRPRequest) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
-		n2, err := m.ActualLrpKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
-	}
-	if m.ActualLrpInstanceKey != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n3, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n3
-	}
-	return i, nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
-		n4, err := m.ActualLrpKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n4
-	}
-	if m.ActualLrpInstanceKey != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n5, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
-	}
-	if m.ActualLrpNetInfo != nil {
-		data[i] = 0x1a
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpNetInfo.Size()))
-		n6, err := m.ActualLrpNetInfo.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n6
-	}
-	data[i] = 0x20
-	i++
-	i = encodeVarintEvacuation(data, i, uint64(m.Ttl))
-	return i, nil
-}
-
-func (m *EvacuateStoppedActualLRPRequest) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *EvacuateStoppedActualLRPRequest) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
-		n7, err := m.ActualLrpKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n7
-	}
-	if m.ActualLrpInstanceKey != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n8, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
-	return i, nil
-}
-
-func (m *EvacuateCrashedActualLRPRequest) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *EvacuateCrashedActualLRPRequest) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
-		n9, err := m.ActualLrpKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n9
-	}
-	if m.ActualLrpInstanceKey != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n10, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n10
-	}
-	data[i] = 0x1a
-	i++
-	i = encodeVarintEvacuation(data, i, uint64(len(m.ErrorMessage)))
-	i += copy(data[i:], m.ErrorMessage)
-	return i, nil
-}
-
-func (m *RemoveEvacuatingActualLRPRequest) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *RemoveEvacuatingActualLRPRequest) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
-		n11, err := m.ActualLrpKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n11
-	}
-	if m.ActualLrpInstanceKey != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
-		n12, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n12
-	}
-	return i, nil
-}
-
-func (m *RemoveEvacuatingActualLRPResponse) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *RemoveEvacuatingActualLRPResponse) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Error != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvacuation(data, i, uint64(m.Error.Size()))
-		n13, err := m.Error.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n13
-	}
-	return i, nil
-}
-
-func encodeFixed64Evacuation(data []byte, offset int, v uint64) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	data[offset+4] = uint8(v >> 32)
-	data[offset+5] = uint8(v >> 40)
-	data[offset+6] = uint8(v >> 48)
-	data[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Evacuation(data []byte, offset int, v uint32) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
-func encodeVarintEvacuation(data []byte, offset int, v uint64) int {
-	for v >= 1<<7 {
-		data[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	data[offset] = uint8(v)
-	return offset + 1
-}
-func (m *EvacuationResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.Error != nil {
-		l = m.Error.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	n += 2
-	return n
-}
-
-func (m *EvacuateClaimedActualLRPRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		l = m.ActualLrpKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	if m.ActualLrpInstanceKey != nil {
-		l = m.ActualLrpInstanceKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	return n
-}
-
-func (m *EvacuateRunningActualLRPRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		l = m.ActualLrpKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	if m.ActualLrpInstanceKey != nil {
-		l = m.ActualLrpInstanceKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	if m.ActualLrpNetInfo != nil {
-		l = m.ActualLrpNetInfo.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	n += 1 + sovEvacuation(uint64(m.Ttl))
-	return n
-}
-
-func (m *EvacuateStoppedActualLRPRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		l = m.ActualLrpKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	if m.ActualLrpInstanceKey != nil {
-		l = m.ActualLrpInstanceKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	return n
-}
-
-func (m *EvacuateCrashedActualLRPRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		l = m.ActualLrpKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	if m.ActualLrpInstanceKey != nil {
-		l = m.ActualLrpInstanceKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	l = len(m.ErrorMessage)
-	n += 1 + l + sovEvacuation(uint64(l))
-	return n
-}
-
-func (m *RemoveEvacuatingActualLRPRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.ActualLrpKey != nil {
-		l = m.ActualLrpKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	if m.ActualLrpInstanceKey != nil {
-		l = m.ActualLrpInstanceKey.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	return n
-}
-
-func (m *RemoveEvacuatingActualLRPResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.Error != nil {
-		l = m.Error.Size()
-		n += 1 + l + sovEvacuation(uint64(l))
-	}
-	return n
-}
-
-func sovEvacuation(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
-}
-func sozEvacuation(x uint64) (n int) {
-	return sovEvacuation(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *EvacuationResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuationResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`KeepContainer:` + fmt.Sprintf("%v", this.KeepContainer) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateClaimedActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateClaimedActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateRunningActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateRunningActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`ActualLrpNetInfo:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpNetInfo), "ActualLRPNetInfo", "ActualLRPNetInfo", 1) + `,`,
-		`Ttl:` + fmt.Sprintf("%v", this.Ttl) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateStoppedActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateStoppedActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateCrashedActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateCrashedActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`ErrorMessage:` + fmt.Sprintf("%v", this.ErrorMessage) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RemoveEvacuatingActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RemoveEvacuatingActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RemoveEvacuatingActualLRPResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RemoveEvacuatingActualLRPResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func valueToStringEvacuation(v interface{}) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("*%v", pv)
-}
 func (m *EvacuationResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -1327,9 +742,6 @@ func (m *EvacuateCrashedActualLRPRequest) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
-				return ErrInvalidLengthEvacuation
-			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1632,3 +1044,590 @@ func skipEvacuation(data []byte) (n int, err error) {
 var (
 	ErrInvalidLengthEvacuation = fmt.Errorf("proto: negative length found during unmarshaling")
 )
+
+func (this *EvacuationResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EvacuationResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`KeepContainer:` + fmt.Sprintf("%v", this.KeepContainer) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EvacuateClaimedActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EvacuateClaimedActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EvacuateRunningActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EvacuateRunningActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`ActualLrpNetInfo:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpNetInfo), "ActualLRPNetInfo", "ActualLRPNetInfo", 1) + `,`,
+		`Ttl:` + fmt.Sprintf("%v", this.Ttl) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EvacuateStoppedActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EvacuateStoppedActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EvacuateCrashedActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EvacuateCrashedActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`ErrorMessage:` + fmt.Sprintf("%v", this.ErrorMessage) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *RemoveEvacuatingActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&RemoveEvacuatingActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *RemoveEvacuatingActualLRPResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&RemoveEvacuatingActualLRPResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringEvacuation(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
+}
+func (m *EvacuationResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	n += 2
+	return n
+}
+
+func (m *EvacuateClaimedActualLRPRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		l = m.ActualLrpKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	if m.ActualLrpInstanceKey != nil {
+		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	return n
+}
+
+func (m *EvacuateRunningActualLRPRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		l = m.ActualLrpKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	if m.ActualLrpInstanceKey != nil {
+		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	if m.ActualLrpNetInfo != nil {
+		l = m.ActualLrpNetInfo.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	n += 1 + sovEvacuation(uint64(m.Ttl))
+	return n
+}
+
+func (m *EvacuateStoppedActualLRPRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		l = m.ActualLrpKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	if m.ActualLrpInstanceKey != nil {
+		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	return n
+}
+
+func (m *EvacuateCrashedActualLRPRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		l = m.ActualLrpKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	if m.ActualLrpInstanceKey != nil {
+		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	l = len(m.ErrorMessage)
+	n += 1 + l + sovEvacuation(uint64(l))
+	return n
+}
+
+func (m *RemoveEvacuatingActualLRPRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		l = m.ActualLrpKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	if m.ActualLrpInstanceKey != nil {
+		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	return n
+}
+
+func (m *RemoveEvacuatingActualLRPResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
+		n += 1 + l + sovEvacuation(uint64(l))
+	}
+	return n
+}
+
+func sovEvacuation(x uint64) (n int) {
+	for {
+		n++
+		x >>= 7
+		if x == 0 {
+			break
+		}
+	}
+	return n
+}
+func sozEvacuation(x uint64) (n int) {
+	return sovEvacuation(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *EvacuationResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *EvacuationResponse) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.Error.Size()))
+		n1, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	data[i] = 0x10
+	i++
+	if m.KeepContainer {
+		data[i] = 1
+	} else {
+		data[i] = 0
+	}
+	i++
+	return i, nil
+}
+
+func (m *EvacuateClaimedActualLRPRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *EvacuateClaimedActualLRPRequest) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
+		n2, err := m.ActualLrpKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n3, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	return i, nil
+}
+
+func (m *EvacuateRunningActualLRPRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *EvacuateRunningActualLRPRequest) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
+		n4, err := m.ActualLrpKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n5, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	if m.ActualLrpNetInfo != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpNetInfo.Size()))
+		n6, err := m.ActualLrpNetInfo.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	data[i] = 0x20
+	i++
+	i = encodeVarintEvacuation(data, i, uint64(m.Ttl))
+	return i, nil
+}
+
+func (m *EvacuateStoppedActualLRPRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *EvacuateStoppedActualLRPRequest) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
+		n7, err := m.ActualLrpKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n8, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	return i, nil
+}
+
+func (m *EvacuateCrashedActualLRPRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *EvacuateCrashedActualLRPRequest) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
+		n9, err := m.ActualLrpKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n10, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	data[i] = 0x1a
+	i++
+	i = encodeVarintEvacuation(data, i, uint64(len(m.ErrorMessage)))
+	i += copy(data[i:], m.ErrorMessage)
+	return i, nil
+}
+
+func (m *RemoveEvacuatingActualLRPRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *RemoveEvacuatingActualLRPRequest) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpKey != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpKey.Size()))
+		n11, err := m.ActualLrpKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n12, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	return i, nil
+}
+
+func (m *RemoveEvacuatingActualLRPResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *RemoveEvacuatingActualLRPResponse) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvacuation(data, i, uint64(m.Error.Size()))
+		n13, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
+	return i, nil
+}
+
+func encodeFixed64Evacuation(data []byte, offset int, v uint64) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	data[offset+4] = uint8(v >> 32)
+	data[offset+5] = uint8(v >> 40)
+	data[offset+6] = uint8(v >> 48)
+	data[offset+7] = uint8(v >> 56)
+	return offset + 8
+}
+func encodeFixed32Evacuation(data []byte, offset int, v uint32) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	return offset + 4
+}
+func encodeVarintEvacuation(data []byte, offset int, v uint64) int {
+	for v >= 1<<7 {
+		data[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	data[offset] = uint8(v)
+	return offset + 1
+}
+func (this *EvacuationResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.EvacuationResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error),
+		`KeepContainer:` + fmt.Sprintf("%#v", this.KeepContainer) + `}`}, ", ")
+	return s
+}
+func (this *EvacuateClaimedActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.EvacuateClaimedActualLRPRequest{` +
+		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
+		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
+	return s
+}
+func (this *EvacuateRunningActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.EvacuateRunningActualLRPRequest{` +
+		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
+		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey),
+		`ActualLrpNetInfo:` + fmt.Sprintf("%#v", this.ActualLrpNetInfo),
+		`Ttl:` + fmt.Sprintf("%#v", this.Ttl) + `}`}, ", ")
+	return s
+}
+func (this *EvacuateStoppedActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.EvacuateStoppedActualLRPRequest{` +
+		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
+		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
+	return s
+}
+func (this *EvacuateCrashedActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.EvacuateCrashedActualLRPRequest{` +
+		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
+		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey),
+		`ErrorMessage:` + fmt.Sprintf("%#v", this.ErrorMessage) + `}`}, ", ")
+	return s
+}
+func (this *RemoveEvacuatingActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.RemoveEvacuatingActualLRPRequest{` +
+		`ActualLrpKey:` + fmt.Sprintf("%#v", this.ActualLrpKey),
+		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
+	return s
+}
+func (this *RemoveEvacuatingActualLRPResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.RemoveEvacuatingActualLRPResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
+	return s
+}
+func valueToGoStringEvacuation(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringEvacuation(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
+}

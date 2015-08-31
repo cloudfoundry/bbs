@@ -375,9 +375,6 @@ func validateStateTransition(from, to models.Task_State) *models.Error {
 		(from == models.Task_Completed && to == models.Task_Resolving) {
 		return nil
 	} else {
-		return &models.Error{
-			Type:    models.InvalidStateTransition,
-			Message: fmt.Sprintf("Cannot transition from %s to %s", from.String(), to.String()),
-		}
+		return models.NewError(models.Error_InvalidStateTransition, fmt.Sprintf("Cannot transition from %s to %s", from.String(), to.String()))
 	}
 }

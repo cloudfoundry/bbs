@@ -510,6 +510,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -537,6 +540,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -564,6 +570,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -591,6 +600,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -618,6 +630,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -645,6 +660,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -672,6 +690,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -699,6 +720,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -726,6 +750,9 @@ func (m *Action) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -749,6 +776,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -924,6 +954,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1076,6 +1109,9 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1187,6 +1223,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1212,6 +1251,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1280,6 +1322,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1325,6 +1370,9 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1387,6 +1435,9 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1432,6 +1483,9 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1544,6 +1598,9 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1589,6 +1646,9 @@ func (m *TryAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1635,6 +1695,9 @@ func (m *TryAction) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1680,6 +1743,9 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1723,6 +1789,9 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1769,6 +1838,9 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1812,6 +1884,9 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1858,6 +1933,9 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1901,6 +1979,9 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1961,6 +2042,9 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2016,6 +2100,9 @@ func skipActions(data []byte) (n int, err error) {
 				}
 			}
 			iNdEx += length
+			if length < 0 {
+				return 0, ErrInvalidLengthActions
+			}
 			return iNdEx, nil
 		case 3:
 			for {
@@ -2054,6 +2141,11 @@ func skipActions(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
+
+var (
+	ErrInvalidLengthActions = fmt.Errorf("proto: negative length found during unmarshaling")
+)
+
 func (this *Action) GetValue() interface{} {
 	if this.DownloadAction != nil {
 		return this.DownloadAction
@@ -2484,7 +2576,7 @@ func (m *Action) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *Action) MarshalTo(data []byte) (n int, err error) {
+func (m *Action) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2592,7 +2684,7 @@ func (m *DownloadAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *DownloadAction) MarshalTo(data []byte) (n int, err error) {
+func (m *DownloadAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2634,7 +2726,7 @@ func (m *UploadAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *UploadAction) MarshalTo(data []byte) (n int, err error) {
+func (m *UploadAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2672,7 +2764,7 @@ func (m *RunAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *RunAction) MarshalTo(data []byte) (n int, err error) {
+func (m *RunAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2743,7 +2835,7 @@ func (m *TimeoutAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *TimeoutAction) MarshalTo(data []byte) (n int, err error) {
+func (m *TimeoutAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2778,7 +2870,7 @@ func (m *EmitProgressAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *EmitProgressAction) MarshalTo(data []byte) (n int, err error) {
+func (m *EmitProgressAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2822,7 +2914,7 @@ func (m *TryAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *TryAction) MarshalTo(data []byte) (n int, err error) {
+func (m *TryAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2854,7 +2946,7 @@ func (m *ParallelAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *ParallelAction) MarshalTo(data []byte) (n int, err error) {
+func (m *ParallelAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2888,7 +2980,7 @@ func (m *SerialAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *SerialAction) MarshalTo(data []byte) (n int, err error) {
+func (m *SerialAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2922,7 +3014,7 @@ func (m *CodependentAction) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *CodependentAction) MarshalTo(data []byte) (n int, err error) {
+func (m *CodependentAction) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2956,7 +3048,7 @@ func (m *ResourceLimits) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *ResourceLimits) MarshalTo(data []byte) (n int, err error) {
+func (m *ResourceLimits) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int

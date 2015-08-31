@@ -79,7 +79,7 @@ var _ = Describe("TaskWorker", func() {
 
 			Context("when marking the task as resolving fails", func() {
 				BeforeEach(func() {
-					taskDB.ResolvingTaskReturns(models.NewError(models.UnknownError, "failed to resolve task"))
+					taskDB.ResolvingTaskReturns(models.NewError(models.Error_UnknownError, "failed to resolve task"))
 				})
 
 				It("does not make a request to the task's callback URL", func() {

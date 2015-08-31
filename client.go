@@ -565,7 +565,7 @@ func (c *client) do(request *http.Request, responseObject proto.Message) error {
 	}
 
 	if routerError, ok := response.Header[XCfRouterErrorHeader]; ok {
-		return &models.Error{Type: models.RouterError, Message: routerError[0]}
+		return models.NewError(models.Error_RouterError, routerError[0])
 	}
 
 	if parsedContentType == ProtoContentType {
@@ -577,17 +577,17 @@ func (c *client) do(request *http.Request, responseObject proto.Message) error {
 
 func handleProtoResponse(response *http.Response, responseObject proto.Message) error {
 	if responseObject == nil {
-		return &models.Error{Type: models.InvalidRequest, Message: "responseObject cannot be nil"}
+		return models.NewError(models.Error_InvalidRequest, "responseObject cannot be nil")
 	}
 
 	buf, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return &models.Error{Type: models.InvalidResponse, Message: fmt.Sprint("failed to read body: ", err.Error())}
+		return models.NewError(models.Error_InvalidResponse, fmt.Sprint("failed to read body: ", err.Error()))
 	}
 
 	err = proto.Unmarshal(buf, responseObject)
 	if err != nil {
-		return &models.Error{Type: models.InvalidProtobufMessage, Message: fmt.Sprintf("failed to unmarshal proto", err.Error())}
+		return models.NewError(models.Error_InvalidProtobufMessage, fmt.Sprintf("failed to unmarshal proto", err.Error()))
 	}
 
 	return nil
@@ -595,10 +595,7 @@ func handleProtoResponse(response *http.Response, responseObject proto.Message) 
 
 func handleNonProtoResponse(response *http.Response) error {
 	if response.StatusCode > 299 {
-		return &models.Error{
-			Type:    models.InvalidResponse,
-			Message: fmt.Sprintf("Invalid Response with status code: %d", response.StatusCode),
-		}
+		return models.NewError(models.Error_InvalidResponse, fmt.Sprintf("Invalid Response with status code: %d", response.StatusCode))
 	}
 	return nil
 }

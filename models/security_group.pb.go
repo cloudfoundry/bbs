@@ -9,14 +9,15 @@ import math "math"
 
 // discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
+import io "io"
 import fmt "fmt"
+
 import strings "strings"
+import reflect "reflect"
+
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
 import strconv "strconv"
-import reflect "reflect"
-
-import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -120,417 +121,6 @@ func (m *SecurityGroupRule) GetLog() bool {
 	return false
 }
 
-func (this *PortRange) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*PortRange)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if this.Start != that1.Start {
-		return false
-	}
-	if this.End != that1.End {
-		return false
-	}
-	return true
-}
-func (this *ICMPInfo) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ICMPInfo)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if this.Type != that1.Type {
-		return false
-	}
-	if this.Code != that1.Code {
-		return false
-	}
-	return true
-}
-func (this *SecurityGroupRule) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*SecurityGroupRule)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if this.Protocol != that1.Protocol {
-		return false
-	}
-	if len(this.Destinations) != len(that1.Destinations) {
-		return false
-	}
-	for i := range this.Destinations {
-		if this.Destinations[i] != that1.Destinations[i] {
-			return false
-		}
-	}
-	if len(this.Ports) != len(that1.Ports) {
-		return false
-	}
-	for i := range this.Ports {
-		if this.Ports[i] != that1.Ports[i] {
-			return false
-		}
-	}
-	if !this.PortRange.Equal(that1.PortRange) {
-		return false
-	}
-	if !this.IcmpInfo.Equal(that1.IcmpInfo) {
-		return false
-	}
-	if this.Log != that1.Log {
-		return false
-	}
-	return true
-}
-func (this *PortRange) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.PortRange{` +
-		`Start:` + fmt.Sprintf("%#v", this.Start),
-		`End:` + fmt.Sprintf("%#v", this.End) + `}`}, ", ")
-	return s
-}
-func (this *ICMPInfo) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ICMPInfo{` +
-		`Type:` + fmt.Sprintf("%#v", this.Type),
-		`Code:` + fmt.Sprintf("%#v", this.Code) + `}`}, ", ")
-	return s
-}
-func (this *SecurityGroupRule) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.SecurityGroupRule{` +
-		`Protocol:` + fmt.Sprintf("%#v", this.Protocol),
-		`Destinations:` + fmt.Sprintf("%#v", this.Destinations),
-		`Ports:` + fmt.Sprintf("%#v", this.Ports),
-		`PortRange:` + fmt.Sprintf("%#v", this.PortRange),
-		`IcmpInfo:` + fmt.Sprintf("%#v", this.IcmpInfo),
-		`Log:` + fmt.Sprintf("%#v", this.Log) + `}`}, ", ")
-	return s
-}
-func valueToGoStringSecurityGroup(v interface{}, typ string) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
-}
-func extensionToGoStringSecurityGroup(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
-	if e == nil {
-		return "nil"
-	}
-	s := "map[int32]proto.Extension{"
-	keys := make([]int, 0, len(e))
-	for k := range e {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	ss := []string{}
-	for _, k := range keys {
-		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
-	}
-	s += strings.Join(ss, ",") + "}"
-	return s
-}
-func (m *PortRange) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *PortRange) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	data[i] = 0x8
-	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.Start))
-	data[i] = 0x10
-	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.End))
-	return i, nil
-}
-
-func (m *ICMPInfo) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ICMPInfo) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	data[i] = 0x8
-	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.Type))
-	data[i] = 0x10
-	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.Code))
-	return i, nil
-}
-
-func (m *SecurityGroupRule) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *SecurityGroupRule) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	data[i] = 0xa
-	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(len(m.Protocol)))
-	i += copy(data[i:], m.Protocol)
-	if len(m.Destinations) > 0 {
-		for _, s := range m.Destinations {
-			data[i] = 0x12
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				data[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			data[i] = uint8(l)
-			i++
-			i += copy(data[i:], s)
-		}
-	}
-	if len(m.Ports) > 0 {
-		for _, num := range m.Ports {
-			data[i] = 0x18
-			i++
-			i = encodeVarintSecurityGroup(data, i, uint64(num))
-		}
-	}
-	if m.PortRange != nil {
-		data[i] = 0x22
-		i++
-		i = encodeVarintSecurityGroup(data, i, uint64(m.PortRange.Size()))
-		n1, err := m.PortRange.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
-	if m.IcmpInfo != nil {
-		data[i] = 0x2a
-		i++
-		i = encodeVarintSecurityGroup(data, i, uint64(m.IcmpInfo.Size()))
-		n2, err := m.IcmpInfo.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
-	}
-	data[i] = 0x30
-	i++
-	if m.Log {
-		data[i] = 1
-	} else {
-		data[i] = 0
-	}
-	i++
-	return i, nil
-}
-
-func encodeFixed64SecurityGroup(data []byte, offset int, v uint64) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	data[offset+4] = uint8(v >> 32)
-	data[offset+5] = uint8(v >> 40)
-	data[offset+6] = uint8(v >> 48)
-	data[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32SecurityGroup(data []byte, offset int, v uint32) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
-func encodeVarintSecurityGroup(data []byte, offset int, v uint64) int {
-	for v >= 1<<7 {
-		data[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	data[offset] = uint8(v)
-	return offset + 1
-}
-func (m *PortRange) Size() (n int) {
-	var l int
-	_ = l
-	n += 1 + sovSecurityGroup(uint64(m.Start))
-	n += 1 + sovSecurityGroup(uint64(m.End))
-	return n
-}
-
-func (m *ICMPInfo) Size() (n int) {
-	var l int
-	_ = l
-	n += 1 + sovSecurityGroup(uint64(m.Type))
-	n += 1 + sovSecurityGroup(uint64(m.Code))
-	return n
-}
-
-func (m *SecurityGroupRule) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Protocol)
-	n += 1 + l + sovSecurityGroup(uint64(l))
-	if len(m.Destinations) > 0 {
-		for _, s := range m.Destinations {
-			l = len(s)
-			n += 1 + l + sovSecurityGroup(uint64(l))
-		}
-	}
-	if len(m.Ports) > 0 {
-		for _, e := range m.Ports {
-			n += 1 + sovSecurityGroup(uint64(e))
-		}
-	}
-	if m.PortRange != nil {
-		l = m.PortRange.Size()
-		n += 1 + l + sovSecurityGroup(uint64(l))
-	}
-	if m.IcmpInfo != nil {
-		l = m.IcmpInfo.Size()
-		n += 1 + l + sovSecurityGroup(uint64(l))
-	}
-	n += 2
-	return n
-}
-
-func sovSecurityGroup(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
-}
-func sozSecurityGroup(x uint64) (n int) {
-	return sovSecurityGroup(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *PortRange) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&PortRange{`,
-		`Start:` + fmt.Sprintf("%v", this.Start) + `,`,
-		`End:` + fmt.Sprintf("%v", this.End) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ICMPInfo) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ICMPInfo{`,
-		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
-		`Code:` + fmt.Sprintf("%v", this.Code) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *SecurityGroupRule) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SecurityGroupRule{`,
-		`Protocol:` + fmt.Sprintf("%v", this.Protocol) + `,`,
-		`Destinations:` + fmt.Sprintf("%v", this.Destinations) + `,`,
-		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
-		`PortRange:` + strings.Replace(fmt.Sprintf("%v", this.PortRange), "PortRange", "PortRange", 1) + `,`,
-		`IcmpInfo:` + strings.Replace(fmt.Sprintf("%v", this.IcmpInfo), "ICMPInfo", "ICMPInfo", 1) + `,`,
-		`Log:` + fmt.Sprintf("%v", this.Log) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func valueToStringSecurityGroup(v interface{}) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("*%v", pv)
-}
 func (m *PortRange) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -721,9 +311,6 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
-				return ErrInvalidLengthSecurityGroup
-			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -746,9 +333,6 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 				}
 			}
 			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
-				return ErrInvalidLengthSecurityGroup
-			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -965,3 +549,415 @@ func skipSecurityGroup(data []byte) (n int, err error) {
 var (
 	ErrInvalidLengthSecurityGroup = fmt.Errorf("proto: negative length found during unmarshaling")
 )
+
+func (this *PortRange) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&PortRange{`,
+		`Start:` + fmt.Sprintf("%v", this.Start) + `,`,
+		`End:` + fmt.Sprintf("%v", this.End) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ICMPInfo) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ICMPInfo{`,
+		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
+		`Code:` + fmt.Sprintf("%v", this.Code) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SecurityGroupRule) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SecurityGroupRule{`,
+		`Protocol:` + fmt.Sprintf("%v", this.Protocol) + `,`,
+		`Destinations:` + fmt.Sprintf("%v", this.Destinations) + `,`,
+		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
+		`PortRange:` + strings.Replace(fmt.Sprintf("%v", this.PortRange), "PortRange", "PortRange", 1) + `,`,
+		`IcmpInfo:` + strings.Replace(fmt.Sprintf("%v", this.IcmpInfo), "ICMPInfo", "ICMPInfo", 1) + `,`,
+		`Log:` + fmt.Sprintf("%v", this.Log) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringSecurityGroup(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
+}
+func (m *PortRange) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovSecurityGroup(uint64(m.Start))
+	n += 1 + sovSecurityGroup(uint64(m.End))
+	return n
+}
+
+func (m *ICMPInfo) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovSecurityGroup(uint64(m.Type))
+	n += 1 + sovSecurityGroup(uint64(m.Code))
+	return n
+}
+
+func (m *SecurityGroupRule) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Protocol)
+	n += 1 + l + sovSecurityGroup(uint64(l))
+	if len(m.Destinations) > 0 {
+		for _, s := range m.Destinations {
+			l = len(s)
+			n += 1 + l + sovSecurityGroup(uint64(l))
+		}
+	}
+	if len(m.Ports) > 0 {
+		for _, e := range m.Ports {
+			n += 1 + sovSecurityGroup(uint64(e))
+		}
+	}
+	if m.PortRange != nil {
+		l = m.PortRange.Size()
+		n += 1 + l + sovSecurityGroup(uint64(l))
+	}
+	if m.IcmpInfo != nil {
+		l = m.IcmpInfo.Size()
+		n += 1 + l + sovSecurityGroup(uint64(l))
+	}
+	n += 2
+	return n
+}
+
+func sovSecurityGroup(x uint64) (n int) {
+	for {
+		n++
+		x >>= 7
+		if x == 0 {
+			break
+		}
+	}
+	return n
+}
+func sozSecurityGroup(x uint64) (n int) {
+	return sovSecurityGroup(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *PortRange) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *PortRange) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0x8
+	i++
+	i = encodeVarintSecurityGroup(data, i, uint64(m.Start))
+	data[i] = 0x10
+	i++
+	i = encodeVarintSecurityGroup(data, i, uint64(m.End))
+	return i, nil
+}
+
+func (m *ICMPInfo) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ICMPInfo) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0x8
+	i++
+	i = encodeVarintSecurityGroup(data, i, uint64(m.Type))
+	data[i] = 0x10
+	i++
+	i = encodeVarintSecurityGroup(data, i, uint64(m.Code))
+	return i, nil
+}
+
+func (m *SecurityGroupRule) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *SecurityGroupRule) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintSecurityGroup(data, i, uint64(len(m.Protocol)))
+	i += copy(data[i:], m.Protocol)
+	if len(m.Destinations) > 0 {
+		for _, s := range m.Destinations {
+			data[i] = 0x12
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			data[i] = uint8(l)
+			i++
+			i += copy(data[i:], s)
+		}
+	}
+	if len(m.Ports) > 0 {
+		for _, num := range m.Ports {
+			data[i] = 0x18
+			i++
+			i = encodeVarintSecurityGroup(data, i, uint64(num))
+		}
+	}
+	if m.PortRange != nil {
+		data[i] = 0x22
+		i++
+		i = encodeVarintSecurityGroup(data, i, uint64(m.PortRange.Size()))
+		n1, err := m.PortRange.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	if m.IcmpInfo != nil {
+		data[i] = 0x2a
+		i++
+		i = encodeVarintSecurityGroup(data, i, uint64(m.IcmpInfo.Size()))
+		n2, err := m.IcmpInfo.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	data[i] = 0x30
+	i++
+	if m.Log {
+		data[i] = 1
+	} else {
+		data[i] = 0
+	}
+	i++
+	return i, nil
+}
+
+func encodeFixed64SecurityGroup(data []byte, offset int, v uint64) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	data[offset+4] = uint8(v >> 32)
+	data[offset+5] = uint8(v >> 40)
+	data[offset+6] = uint8(v >> 48)
+	data[offset+7] = uint8(v >> 56)
+	return offset + 8
+}
+func encodeFixed32SecurityGroup(data []byte, offset int, v uint32) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	return offset + 4
+}
+func encodeVarintSecurityGroup(data []byte, offset int, v uint64) int {
+	for v >= 1<<7 {
+		data[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	data[offset] = uint8(v)
+	return offset + 1
+}
+func (this *PortRange) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.PortRange{` +
+		`Start:` + fmt.Sprintf("%#v", this.Start),
+		`End:` + fmt.Sprintf("%#v", this.End) + `}`}, ", ")
+	return s
+}
+func (this *ICMPInfo) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ICMPInfo{` +
+		`Type:` + fmt.Sprintf("%#v", this.Type),
+		`Code:` + fmt.Sprintf("%#v", this.Code) + `}`}, ", ")
+	return s
+}
+func (this *SecurityGroupRule) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.SecurityGroupRule{` +
+		`Protocol:` + fmt.Sprintf("%#v", this.Protocol),
+		`Destinations:` + fmt.Sprintf("%#v", this.Destinations),
+		`Ports:` + fmt.Sprintf("%#v", this.Ports),
+		`PortRange:` + fmt.Sprintf("%#v", this.PortRange),
+		`IcmpInfo:` + fmt.Sprintf("%#v", this.IcmpInfo),
+		`Log:` + fmt.Sprintf("%#v", this.Log) + `}`}, ", ")
+	return s
+}
+func valueToGoStringSecurityGroup(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringSecurityGroup(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
+}
+func (this *PortRange) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*PortRange)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Start != that1.Start {
+		return false
+	}
+	if this.End != that1.End {
+		return false
+	}
+	return true
+}
+func (this *ICMPInfo) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ICMPInfo)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Type != that1.Type {
+		return false
+	}
+	if this.Code != that1.Code {
+		return false
+	}
+	return true
+}
+func (this *SecurityGroupRule) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*SecurityGroupRule)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Protocol != that1.Protocol {
+		return false
+	}
+	if len(this.Destinations) != len(that1.Destinations) {
+		return false
+	}
+	for i := range this.Destinations {
+		if this.Destinations[i] != that1.Destinations[i] {
+			return false
+		}
+	}
+	if len(this.Ports) != len(that1.Ports) {
+		return false
+	}
+	for i := range this.Ports {
+		if this.Ports[i] != that1.Ports[i] {
+			return false
+		}
+	}
+	if !this.PortRange.Equal(that1.PortRange) {
+		return false
+	}
+	if !this.IcmpInfo.Equal(that1.IcmpInfo) {
+		return false
+	}
+	if this.Log != that1.Log {
+		return false
+	}
+	return true
+}

@@ -319,7 +319,7 @@ var _ = Describe("TaskDB", func() {
 				It("returns an error", func() {
 					_, err := etcdDB.StartTask(logger, taskGuid, "some-other-cell")
 					Expect(err).NotTo(BeNil())
-					Expect(err.Type).To(Equal(models.InvalidStateTransition))
+					Expect(err.Type).To(Equal(models.Error_InvalidStateTransition))
 				})
 
 				It("does not change the Task in the store", func() {

@@ -9,14 +9,15 @@ import math "math"
 
 // discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
 
+import io "io"
 import fmt "fmt"
+
 import strings "strings"
+import reflect "reflect"
+
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
 import strconv "strconv"
-import reflect "reflect"
-
-import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -122,603 +123,6 @@ func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 	return nil
 }
 
-func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ActualLRPCreatedEvent)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
-		return false
-	}
-	return true
-}
-func (this *ActualLRPChangedEvent) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ActualLRPChangedEvent)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if !this.Before.Equal(that1.Before) {
-		return false
-	}
-	if !this.After.Equal(that1.After) {
-		return false
-	}
-	return true
-}
-func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ActualLRPRemovedEvent)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
-		return false
-	}
-	return true
-}
-func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*DesiredLRPCreatedEvent)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
-		return false
-	}
-	return true
-}
-func (this *DesiredLRPChangedEvent) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*DesiredLRPChangedEvent)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if !this.Before.Equal(that1.Before) {
-		return false
-	}
-	if !this.After.Equal(that1.After) {
-		return false
-	}
-	return true
-}
-func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*DesiredLRPRemovedEvent)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
-		return false
-	}
-	return true
-}
-func (this *ActualLRPCreatedEvent) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRPCreatedEvent{` +
-		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
-	return s
-}
-func (this *ActualLRPChangedEvent) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRPChangedEvent{` +
-		`Before:` + fmt.Sprintf("%#v", this.Before),
-		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
-	return s
-}
-func (this *ActualLRPRemovedEvent) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRPRemovedEvent{` +
-		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
-	return s
-}
-func (this *DesiredLRPCreatedEvent) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.DesiredLRPCreatedEvent{` +
-		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
-	return s
-}
-func (this *DesiredLRPChangedEvent) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.DesiredLRPChangedEvent{` +
-		`Before:` + fmt.Sprintf("%#v", this.Before),
-		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
-	return s
-}
-func (this *DesiredLRPRemovedEvent) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.DesiredLRPRemovedEvent{` +
-		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
-	return s
-}
-func valueToGoStringEvents(v interface{}, typ string) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
-}
-func extensionToGoStringEvents(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
-	if e == nil {
-		return "nil"
-	}
-	s := "map[int32]proto.Extension{"
-	keys := make([]int, 0, len(e))
-	for k := range e {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	ss := []string{}
-	for _, k := range keys {
-		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
-	}
-	s += strings.Join(ss, ",") + "}"
-	return s
-}
-func (m *ActualLRPCreatedEvent) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ActualLRPCreatedEvent) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ActualLrpGroup != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.ActualLrpGroup.Size()))
-		n1, err := m.ActualLrpGroup.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
-	return i, nil
-}
-
-func (m *ActualLRPChangedEvent) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ActualLRPChangedEvent) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Before != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.Before.Size()))
-		n2, err := m.Before.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
-	}
-	if m.After != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.After.Size()))
-		n3, err := m.After.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n3
-	}
-	return i, nil
-}
-
-func (m *ActualLRPRemovedEvent) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ActualLRPRemovedEvent) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ActualLrpGroup != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.ActualLrpGroup.Size()))
-		n4, err := m.ActualLrpGroup.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n4
-	}
-	return i, nil
-}
-
-func (m *DesiredLRPCreatedEvent) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *DesiredLRPCreatedEvent) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.DesiredLrp != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.DesiredLrp.Size()))
-		n5, err := m.DesiredLrp.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
-	}
-	return i, nil
-}
-
-func (m *DesiredLRPChangedEvent) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *DesiredLRPChangedEvent) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Before != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.Before.Size()))
-		n6, err := m.Before.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n6
-	}
-	if m.After != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.After.Size()))
-		n7, err := m.After.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n7
-	}
-	return i, nil
-}
-
-func (m *DesiredLRPRemovedEvent) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *DesiredLRPRemovedEvent) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.DesiredLrp != nil {
-		data[i] = 0xa
-		i++
-		i = encodeVarintEvents(data, i, uint64(m.DesiredLrp.Size()))
-		n8, err := m.DesiredLrp.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
-	return i, nil
-}
-
-func encodeFixed64Events(data []byte, offset int, v uint64) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	data[offset+4] = uint8(v >> 32)
-	data[offset+5] = uint8(v >> 40)
-	data[offset+6] = uint8(v >> 48)
-	data[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Events(data []byte, offset int, v uint32) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
-func encodeVarintEvents(data []byte, offset int, v uint64) int {
-	for v >= 1<<7 {
-		data[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	data[offset] = uint8(v)
-	return offset + 1
-}
-func (m *ActualLRPCreatedEvent) Size() (n int) {
-	var l int
-	_ = l
-	if m.ActualLrpGroup != nil {
-		l = m.ActualLrpGroup.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	return n
-}
-
-func (m *ActualLRPChangedEvent) Size() (n int) {
-	var l int
-	_ = l
-	if m.Before != nil {
-		l = m.Before.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.After != nil {
-		l = m.After.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	return n
-}
-
-func (m *ActualLRPRemovedEvent) Size() (n int) {
-	var l int
-	_ = l
-	if m.ActualLrpGroup != nil {
-		l = m.ActualLrpGroup.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	return n
-}
-
-func (m *DesiredLRPCreatedEvent) Size() (n int) {
-	var l int
-	_ = l
-	if m.DesiredLrp != nil {
-		l = m.DesiredLrp.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	return n
-}
-
-func (m *DesiredLRPChangedEvent) Size() (n int) {
-	var l int
-	_ = l
-	if m.Before != nil {
-		l = m.Before.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.After != nil {
-		l = m.After.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	return n
-}
-
-func (m *DesiredLRPRemovedEvent) Size() (n int) {
-	var l int
-	_ = l
-	if m.DesiredLrp != nil {
-		l = m.DesiredLrp.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	return n
-}
-
-func sovEvents(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
-}
-func sozEvents(x uint64) (n int) {
-	return sovEvents(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *ActualLRPCreatedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPCreatedEvent{`,
-		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPChangedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPChangedEvent{`,
-		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPRemovedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPRemovedEvent{`,
-		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPCreatedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPCreatedEvent{`,
-		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPChangedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPChangedEvent{`,
-		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPRemovedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPRemovedEvent{`,
-		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func valueToStringEvents(v interface{}) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("*%v", pv)
-}
 func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -1320,3 +724,601 @@ func skipEvents(data []byte) (n int, err error) {
 var (
 	ErrInvalidLengthEvents = fmt.Errorf("proto: negative length found during unmarshaling")
 )
+
+func (this *ActualLRPCreatedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPCreatedEvent{`,
+		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPChangedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPChangedEvent{`,
+		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPRemovedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPRemovedEvent{`,
+		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPCreatedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPCreatedEvent{`,
+		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPChangedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPChangedEvent{`,
+		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPRemovedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPRemovedEvent{`,
+		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringEvents(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
+}
+func (m *ActualLRPCreatedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpGroup != nil {
+		l = m.ActualLrpGroup.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *ActualLRPChangedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Before != nil {
+		l = m.Before.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.After != nil {
+		l = m.After.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *ActualLRPRemovedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.ActualLrpGroup != nil {
+		l = m.ActualLrpGroup.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *DesiredLRPCreatedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.DesiredLrp != nil {
+		l = m.DesiredLrp.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *DesiredLRPChangedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Before != nil {
+		l = m.Before.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.After != nil {
+		l = m.After.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *DesiredLRPRemovedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.DesiredLrp != nil {
+		l = m.DesiredLrp.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func sovEvents(x uint64) (n int) {
+	for {
+		n++
+		x >>= 7
+		if x == 0 {
+			break
+		}
+	}
+	return n
+}
+func sozEvents(x uint64) (n int) {
+	return sovEvents(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *ActualLRPCreatedEvent) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ActualLRPCreatedEvent) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpGroup != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.ActualLrpGroup.Size()))
+		n1, err := m.ActualLrpGroup.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	return i, nil
+}
+
+func (m *ActualLRPChangedEvent) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ActualLRPChangedEvent) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Before != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.Before.Size()))
+		n2, err := m.Before.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	if m.After != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.After.Size()))
+		n3, err := m.After.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	return i, nil
+}
+
+func (m *ActualLRPRemovedEvent) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *ActualLRPRemovedEvent) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ActualLrpGroup != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.ActualLrpGroup.Size()))
+		n4, err := m.ActualLrpGroup.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+
+func (m *DesiredLRPCreatedEvent) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *DesiredLRPCreatedEvent) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.DesiredLrp != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.DesiredLrp.Size()))
+		n5, err := m.DesiredLrp.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	return i, nil
+}
+
+func (m *DesiredLRPChangedEvent) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *DesiredLRPChangedEvent) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Before != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.Before.Size()))
+		n6, err := m.Before.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	if m.After != nil {
+		data[i] = 0x12
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.After.Size()))
+		n7, err := m.After.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	return i, nil
+}
+
+func (m *DesiredLRPRemovedEvent) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *DesiredLRPRemovedEvent) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.DesiredLrp != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintEvents(data, i, uint64(m.DesiredLrp.Size()))
+		n8, err := m.DesiredLrp.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	return i, nil
+}
+
+func encodeFixed64Events(data []byte, offset int, v uint64) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	data[offset+4] = uint8(v >> 32)
+	data[offset+5] = uint8(v >> 40)
+	data[offset+6] = uint8(v >> 48)
+	data[offset+7] = uint8(v >> 56)
+	return offset + 8
+}
+func encodeFixed32Events(data []byte, offset int, v uint32) int {
+	data[offset] = uint8(v)
+	data[offset+1] = uint8(v >> 8)
+	data[offset+2] = uint8(v >> 16)
+	data[offset+3] = uint8(v >> 24)
+	return offset + 4
+}
+func encodeVarintEvents(data []byte, offset int, v uint64) int {
+	for v >= 1<<7 {
+		data[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	data[offset] = uint8(v)
+	return offset + 1
+}
+func (this *ActualLRPCreatedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPCreatedEvent{` +
+		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPChangedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPChangedEvent{` +
+		`Before:` + fmt.Sprintf("%#v", this.Before),
+		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPRemovedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPRemovedEvent{` +
+		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPCreatedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPCreatedEvent{` +
+		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPChangedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPChangedEvent{` +
+		`Before:` + fmt.Sprintf("%#v", this.Before),
+		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPRemovedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPRemovedEvent{` +
+		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
+	return s
+}
+func valueToGoStringEvents(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
+func extensionToGoStringEvents(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+	if e == nil {
+		return "nil"
+	}
+	s := "map[int32]proto.Extension{"
+	keys := make([]int, 0, len(e))
+	for k := range e {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	ss := []string{}
+	for _, k := range keys {
+		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
+	}
+	s += strings.Join(ss, ",") + "}"
+	return s
+}
+func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPCreatedEvent)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPChangedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPChangedEvent)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*ActualLRPRemovedEvent)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+		return false
+	}
+	return true
+}
+func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*DesiredLRPCreatedEvent)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+		return false
+	}
+	return true
+}
+func (this *DesiredLRPChangedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*DesiredLRPChangedEvent)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	return true
+}
+func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*DesiredLRPRemovedEvent)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+		return false
+	}
+	return true
+}

@@ -1,9 +1,9 @@
 package models
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
-	"fmt"
 
 	"github.com/pivotal-golang/lager"
 )
@@ -25,7 +25,7 @@ func (t *Task) MigrateFromVersion(v Version) *Error {
 		return nil
 	default:
 		return NewError(
-			UnkownVersion,
+			Error_UnkownVersion,
 			fmt.Sprint("unkown task version: ", v),
 		)
 	}
