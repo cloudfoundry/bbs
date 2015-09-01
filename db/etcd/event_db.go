@@ -72,7 +72,7 @@ func (db *ETCDDB) WatchForDesiredLRPChanges(logger lager.Logger,
 				logger.Debug("received-delete")
 
 				desiredLRP := new(models.DesiredLRP)
-				err := db.deserializeModel(logger,event.PrevNode, desiredLRP)
+				err := db.deserializeModel(logger, event.PrevNode, desiredLRP)
 				if err != nil {
 					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.PrevNode.Value})
 					continue

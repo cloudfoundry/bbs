@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -34,7 +33,7 @@ var _ = Describe("SerializationFormat", func() {
 
 	Context("when the format is set to legacy", func() {
 		BeforeEach(func() {
-			bbsArgs.SerializationFormat = "legacy"
+			bbsArgs.SerializationFormat = "json_no_envelope"
 		})
 
 		It("writes the value as unencoded json with no metadata", func() {
@@ -46,7 +45,7 @@ var _ = Describe("SerializationFormat", func() {
 
 	Context("when the format is set to unencoded_json", func() {
 		BeforeEach(func() {
-			bbsArgs.SerializationFormat = "unencoded_json"
+			bbsArgs.SerializationFormat = "json"
 		})
 		It("writes the value as unencoded json with metadata", func() {
 			res, err := etcdClient.Get(etcd.TaskSchemaPathByGuid(task.TaskGuid), false, false)
@@ -60,13 +59,13 @@ var _ = Describe("SerializationFormat", func() {
 
 	Context("when the format is set to encoded_proto", func() {
 		BeforeEach(func() {
-			bbsArgs.SerializationFormat = "encoded_proto"
+			bbsArgs.SerializationFormat = "proto"
 		})
 		It("writes the value as base64 encoded protobufs with metadata", func() {
 			res, err := etcdClient.Get(etcd.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(res.Node.Value[:2]).To(BeEquivalentTo(codec.BASE64[:]))
+			Expect(res.Node.Value[:2]).To(BeEquivalentTo(format.BASE64[:]))
 
 			payload, err := base64.StdEncoding.DecodeString(string(res.Node.Value[2:]))
 			Expect(payload[0]).To(BeEquivalentTo(format.PROTO))

@@ -1,7 +1,7 @@
 package etcd_helpers
 
 import (
-		"encoding/json"
+	"encoding/json"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"

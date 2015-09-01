@@ -8,7 +8,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
-	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/events"
@@ -38,8 +37,8 @@ var serverAddress = flag.String(
 
 var serializationFormat = flag.String(
 	"serializationFormat",
-	"legacy",
-	"options: legacy, unencoded_json, encoded_proto",
+	"json_no_envelope",
+	"options: json_no_envelope, json, proto",
 )
 
 var communicationTimeout = flag.Duration(
@@ -168,25 +167,21 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 
 func initializeEtcdDB(logger lager.Logger, etcdFlags *ETCDFlags, cbClient taskworkpool.TaskCompletionClient) *etcddb.ETCDDB {
 	var formatting *format.Format
-	var encoding codec.Kind
 
 	switch *serializationFormat {
-	case "encoded_proto":
+	case "proto":
 		formatting = format.ENCODED_PROTO
-		encoding = codec.BASE64
-	case "unencoded_json":
+	case "json":
 		formatting = format.FORMATTED_JSON
-		encoding = codec.UNENCODED
-	case "legacy", "":
+	case "json_no_envelope", "":
 		formatting = format.LEGACY_FORMATTING
-		encoding = codec.NONE
 	default:
 		logger.Fatal("invalid-seriailization-format", nil)
 	}
 
 	return etcddb.NewETCD(
-		format.NewFormat(format.LEGACY_UNENCODED, formatting.EnvelopeFormat),
-		initializeEtcdStoreClient(logger, etcdFlags, encoding),
+		formatting,
+		initializeEtcdStoreClient(logger, etcdFlags),
 		initializeAuctioneerClient(logger),
 		cellhandlers.NewClient(),
 		initializeConsulDB(logger),
@@ -195,7 +190,7 @@ func initializeEtcdDB(logger lager.Logger, etcdFlags *ETCDFlags, cbClient taskwo
 	)
 }
 
-func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags, encoding codec.Kind) etcddb.StoreClient {
+func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb.StoreClient {
 	etcdOptions, err := etcdFlags.Validate()
 	if err != nil {
 		logger.Fatal("etcd-validation-failed", err)
@@ -212,7 +207,7 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags, encodi
 	}
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
-	return etcddb.NewStoreClient(etcdClient, encoding)
+	return etcddb.NewStoreClient(etcdClient)
 }
 
 func initializeConsulDB(logger lager.Logger) *consuldb.ConsulDB {

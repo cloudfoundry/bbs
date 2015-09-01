@@ -87,10 +87,6 @@ func NewETCD(
 	}
 }
 
-func (db *ETCDDB) supportsBinary() bool {
-	return db.client.SupportsBinary()
-}
-
 func (db *ETCDDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
 	encodedPayload, err := format.Marshal(db.format, model)
 	if err != nil {

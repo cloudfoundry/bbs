@@ -8,7 +8,6 @@ import (
 	fakeauctioneer "github.com/cloudfoundry-incubator/bbs/auctionhandlers/fakes"
 	fakecellhandlers "github.com/cloudfoundry-incubator/bbs/cellhandlers/fakes"
 	"github.com/cloudfoundry-incubator/bbs/db"
-	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	"github.com/cloudfoundry-incubator/bbs/db/consul"
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -94,7 +93,7 @@ var _ = BeforeEach(func() {
 
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
-	storeClient = etcd.NewStoreClient(etcdClient, codec.BASE64)
+	storeClient = etcd.NewStoreClient(etcdClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 	cellDB = consul.NewConsul(consulSession)

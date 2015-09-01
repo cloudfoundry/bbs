@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/db/codec"
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
@@ -118,7 +117,7 @@ var _ = BeforeEach(func() {
 		EtcdCluster:       etcdUrl,
 		ConsulCluster:     consulRunner.ConsulCluster(),
 	}
-	storeClient = etcd.NewStoreClient(etcdClient, codec.BASE64)
+	storeClient = etcd.NewStoreClient(etcdClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 })

@@ -1,7 +1,8 @@
 package consul_helpers
 
 import (
-  "encoding/json"
+	"encoding/json"
+
 	"github.com/cloudfoundry-incubator/bbs/db/consul"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
