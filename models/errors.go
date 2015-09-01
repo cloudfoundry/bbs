@@ -17,8 +17,10 @@ func ConvertError(err error) *Error {
 		return nil
 	}
 
-	var modelErr *Error
-	modelErr = err.(*Error)
+	modelErr, ok := err.(*Error)
+	if !ok {
+		modelErr = NewError(Error_UnknownError, err.Error())
+	}
 	return modelErr
 }
 
