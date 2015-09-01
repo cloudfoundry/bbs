@@ -38,6 +38,59 @@ var _ = Describe("Actions", func() {
 		itDeserializes(actionPayload, action)
 	}
 
+	Describe("WrapAction", func() {
+		It("wraps an action into *Action", func() {
+			action := &models.DownloadAction{
+				Artifact: "mouse",
+				From:     "web_location",
+				To:       "local_location",
+				CacheKey: "elephant",
+				User:     "someone",
+			}
+			wrapped := models.WrapAction(action)
+			Expect(wrapped).NotTo(BeNil())
+			Expect(wrapped.GetValue()).To(Equal(action))
+		})
+
+		It("does not wrap nil", func() {
+			wrapped := models.WrapAction(nil)
+			Expect(wrapped).To(BeNil())
+		})
+	})
+
+	Describe("Nil Actions", func() {
+		It("Action -> JSON for a Nil action", func() {
+			var action *models.Action = nil
+			By("marshalling to JSON", func() {
+				json, err := json.Marshal(action)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(json).To(MatchJSON("null"))
+			})
+		})
+
+		It("JSON -> Action for Nil action", func() {
+			By("unwrapping", func() {
+				var unmarshalledAction *models.Action
+				err := json.Unmarshal([]byte("null"), &unmarshalledAction)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(unmarshalledAction).To(BeNil())
+			})
+		})
+
+		Describe("Validate", func() {
+			var action *models.Action
+
+			Context("when the action has no inner actions", func() {
+				It("is valid", func() {
+					action = nil
+
+					err := action.Validate()
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+		})
+	})
+
 	Describe("Download", func() {
 		itSerializesAndDeserializes(
 			`{

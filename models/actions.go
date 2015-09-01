@@ -36,6 +36,10 @@ func (*Action) MigrateFromVersion(v format.Version) error {
 }
 
 func (a *Action) Validate() error {
+	if a == nil {
+		return nil
+	}
+
 	if inner := UnwrapAction(a); inner != nil {
 		err := inner.Validate()
 		if err != nil {
@@ -408,6 +412,9 @@ func WrapActions(actions []ActionInterface) []*Action {
 }
 
 func WrapAction(action ActionInterface) *Action {
+	if action == nil {
+		return nil
+	}
 	a := &Action{}
 	a.SetValue(action)
 	return a
