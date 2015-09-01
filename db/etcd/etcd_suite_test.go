@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	fakeauctioneer "github.com/cloudfoundry-incubator/bbs/auctionhandlers/fakes"
+	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
 	fakecellhandlers "github.com/cloudfoundry-incubator/bbs/cellhandlers/fakes"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/consul"
@@ -37,7 +37,7 @@ var storeClient etcd.StoreClient
 var consulRunner *consulrunner.ClusterRunner
 var consulSession *consuladapter.Session
 
-var auctioneerClient *fakeauctioneer.FakeClient
+var auctioneerClient *auctioneerfakes.FakeClient
 var cellClient *fakecellhandlers.FakeClient
 
 var logger *lagertest.TestLogger
@@ -84,7 +84,7 @@ var _ = AfterSuite(func() {
 var _ = BeforeEach(func() {
 	logger = lagertest.NewTestLogger("test")
 
-	auctioneerClient = new(fakeauctioneer.FakeClient)
+	auctioneerClient = new(auctioneerfakes.FakeClient)
 	cellClient = new(fakecellhandlers.FakeClient)
 	etcdRunner.Reset()
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -224,11 +224,11 @@ func initializeLockMaintainer(logger lager.Logger, client *api.Client, sessionMa
 	return lockMaintainer
 }
 
-func initializeAuctioneerClient(logger lager.Logger) auctionhandlers.Client {
+func initializeAuctioneerClient(logger lager.Logger) auctioneer.Client {
 	if *auctioneerAddress == "" {
 		logger.Fatal("auctioneer-address-validation-failed", errors.New("auctioneerAddress is required"))
 	}
-	return auctionhandlers.NewClient(*auctioneerAddress)
+	return auctioneer.NewClient(*auctioneerAddress)
 }
 
 func initializeDropsonde(logger lager.Logger) {

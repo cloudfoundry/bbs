@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/auctionhandlers"
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/format"
@@ -82,7 +82,7 @@ type ETCDDB struct {
 	clock             clock.Clock
 	inflightWatches   map[chan bool]bool
 	inflightWatchLock *sync.Mutex
-	auctioneerClient  auctionhandlers.Client
+	auctioneerClient  auctioneer.Client
 	cellClient        cellhandlers.Client
 
 	taskCompletionClient taskworkpool.TaskCompletionClient
@@ -93,7 +93,7 @@ type ETCDDB struct {
 func NewETCD(
 	format *format.Format,
 	storeClient StoreClient,
-	auctioneerClient auctionhandlers.Client,
+	auctioneerClient auctioneer.Client,
 	cellClient cellhandlers.Client,
 	cellDB db.CellDB,
 	clock clock.Clock,
