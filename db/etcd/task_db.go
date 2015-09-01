@@ -21,13 +21,14 @@ func TaskSchemaPathByGuid(taskGuid string) string {
 	return path.Join(TaskSchemaRoot, taskGuid)
 }
 
-func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error) {
-	root, bbsErr := db.fetchRecursiveRaw(logger, TaskSchemaRoot)
-	if bbsErr.Equal(models.ErrResourceNotFound) {
-		return []*models.Task{}, nil
-	}
+func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
+	root, err := db.fetchRecursiveRaw(logger, TaskSchemaRoot)
+	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
-		return nil, bbsErr
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return []*models.Task{}, nil
+		}
+		return nil, err
 	}
 	if root.Nodes.Len() == 0 {
 		return []*models.Task{}, nil
@@ -57,15 +58,15 @@ func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*model
 	return tasks, nil
 }
 
-func (db *ETCDDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, *models.Error) {
+func (db *ETCDDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
 	task, _, err := db.taskByGuidWithIndex(logger, taskGuid)
 	return task, err
 }
 
-func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*models.Task, uint64, *models.Error) {
-	node, bbsErr := db.fetchRaw(logger, TaskSchemaPathByGuid(taskGuid))
-	if bbsErr != nil {
-		return nil, 0, bbsErr
+func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*models.Task, uint64, error) {
+	node, err := db.fetchRaw(logger, TaskSchemaPathByGuid(taskGuid))
+	if err != nil {
+		return nil, 0, err
 	}
 
 	task := new(models.Task)
@@ -78,7 +79,7 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 	return task, node.ModifiedIndex, nil
 }
 
-func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) *models.Error {
+func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
 	logger = logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("finished")
@@ -92,13 +93,13 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 		UpdatedAt:      db.clock.Now().UnixNano(),
 	}
 
-	value, modelErr := db.serializeModel(logger, task)
-	if modelErr != nil {
-		return modelErr
+	value, err := db.serializeModel(logger, task)
+	if err != nil {
+		return err
 	}
 
 	logger.Debug("persisting-task")
-	_, err := db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL)
+	_, err = db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL)
 	if err != nil {
 		return ErrorFromEtcdError(logger, err)
 	}
@@ -116,16 +117,16 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 	return nil
 }
 
-func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool, *models.Error) {
+func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool, error) {
 	logger = logger.Session("start-task", lager.Data{"task-guid": taskGuid, "cell-id": cellID})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
-	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
-	if modelErr != nil {
-		logger.Error("failed-to-fetch-task", modelErr)
-		return false, modelErr
+	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
+	if err != nil {
+		logger.Error("failed-to-fetch-task", err)
+		return false, err
 	}
 
 	logger = logger.WithData(lager.Data{"task": task.LagerData()})
@@ -135,22 +136,22 @@ func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool,
 		return false, nil
 	}
 
-	modelErr = validateStateTransition(task.State, models.Task_Running)
-	if modelErr != nil {
-		logger.Error("invalid-state-transition", modelErr)
-		return false, modelErr
+	err = validateStateTransition(task.State, models.Task_Running)
+	if err != nil {
+		logger.Error("invalid-state-transition", err)
+		return false, err
 	}
 
 	task.UpdatedAt = db.clock.Now().UnixNano()
 	task.State = models.Task_Running
 	task.CellId = cellID
 
-	value, modelErr := db.serializeModel(logger, task)
-	if modelErr != nil {
-		return false, modelErr
+	value, err := db.serializeModel(logger, task)
+	if err != nil {
+		return false, err
 	}
 
-	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), value, NO_TTL, index)
+	_, err = db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), value, NO_TTL, index)
 	if err != nil {
 		logger.Error("failed-persisting-task", err)
 		return false, ErrorFromEtcdError(logger, err)
@@ -162,31 +163,31 @@ func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool,
 // The cell calls this when the user requested to cancel the task
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // Will fail if the task has already been cancelled or completed normally
-func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error {
+func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("cancel-task", lager.Data{"task-guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
-	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
-	if modelErr != nil {
-		logger.Error("failed-to-fetch-task", modelErr)
-		return modelErr
+	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
+	if err != nil {
+		logger.Error("failed-to-fetch-task", err)
+		return err
 	}
 	logger.Info("succeeded-getting-task")
 
 	if task.State == models.Task_Resolving || task.State == models.Task_Completed {
-		modelErr = models.NewTaskTransitionError(task.State, models.Task_Completed)
-		logger.Error("invalid-state-transition", modelErr)
-		return modelErr
+		err = models.NewTaskTransitionError(task.State, models.Task_Completed)
+		logger.Error("invalid-state-transition", err)
+		return err
 	}
 
 	logger.Info("completing-task")
 	cellId := task.CellId
-	modelErr = db.completeTask(logger, task, index, true, "task was cancelled", "")
-	if modelErr != nil {
-		logger.Error("failed-completing-task", modelErr)
-		return modelErr
+	err = db.completeTask(logger, task, index, true, "task was cancelled", "")
+	if err != nil {
+		logger.Error("failed-completing-task", err)
+		return err
 	}
 	logger.Info("succeeded-completing-task")
 
@@ -195,15 +196,15 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error
 	}
 
 	logger.Info("getting-cell-info")
-	cellPresence, modelErr := db.cellDB.CellById(logger, cellId)
-	if modelErr != nil {
-		logger.Error("failed-getting-cell-info", modelErr)
+	cellPresence, err := db.cellDB.CellById(logger, cellId)
+	if err != nil {
+		logger.Error("failed-getting-cell-info", err)
 		return nil
 	}
 	logger.Info("succeeded-getting-cell-info")
 
 	logger.Info("cell-client-cancelling-task")
-	err := db.cellClient.CancelTask(cellPresence.RepAddress, task.TaskGuid)
+	err = db.cellClient.CancelTask(cellPresence.RepAddress, task.TaskGuid)
 	if err != nil {
 		logger.Error("cell-client-failed-cancelling-task", err)
 		return nil
@@ -213,24 +214,24 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error
 	return nil
 }
 
-func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) *models.Error {
+func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
 	logger = logger.Session("fail-task", lager.Data{"task-guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
 	logger.Info("getting-task")
-	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
-	if modelErr != nil {
-		logger.Error("failed-getting-task", modelErr)
-		return modelErr
+	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
+	if err != nil {
+		logger.Error("failed-getting-task", err)
+		return err
 	}
 	logger.Info("succeeded-getting-task")
 
 	if task.State == models.Task_Resolving || task.State == models.Task_Completed {
-		modelErr = models.NewTaskTransitionError(task.State, models.Task_Completed)
-		logger.Error("invalid-state-transition", modelErr)
-		return modelErr
+		err = models.NewTaskTransitionError(task.State, models.Task_Completed)
+		logger.Error("invalid-state-transition", err)
+		return err
 	}
 
 	return db.completeTask(logger, task, index, true, failureReason, "")
@@ -240,45 +241,45 @@ func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) 
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // This really really shouldn't fail.  If it does, blog about it and walk away. If it failed in a
 // consistent way (i.e. key already exists), there's probably a flaw in our design.
-func (db *ETCDDB) CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) *models.Error {
+func (db *ETCDDB) CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error {
 	logger = logger.Session("complete-task", lager.Data{"task-guid": taskGuid, "cell-id": cellId})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
 	logger.Info("getting-task")
-	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
-	if modelErr != nil {
-		logger.Error("failed-getting-task", modelErr)
-		return modelErr
+	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
+	if err != nil {
+		logger.Error("failed-getting-task", err)
+		return err
 	}
 	logger.Info("succeeded-getting-task")
 
 	if task.State == models.Task_Running && task.CellId != cellId {
-		modelErr = models.NewRunningOnDifferentCellError(cellId, task.CellId)
-		logger.Error("invalid-cell-id", modelErr)
-		return modelErr
+		err = models.NewRunningOnDifferentCellError(cellId, task.CellId)
+		logger.Error("invalid-cell-id", err)
+		return err
 	}
 
-	modelErr = validateStateTransition(task.State, models.Task_Completed)
-	if modelErr != nil {
-		logger.Error("invalid-state-transition", modelErr)
-		return modelErr
+	err = validateStateTransition(task.State, models.Task_Completed)
+	if err != nil {
+		logger.Error("invalid-state-transition", err)
+		return err
 	}
 
 	return db.completeTask(logger, task, index, failed, failureReason, result)
 }
 
-func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uint64, failed bool, failureReason, result string) *models.Error {
+func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uint64, failed bool, failureReason, result string) error {
 	db.markTaskCompleted(task, failed, failureReason, result)
 
-	value, modelErr := db.serializeModel(logger, task)
-	if modelErr != nil {
-		return modelErr
+	value, err := db.serializeModel(logger, task)
+	if err != nil {
+		return err
 	}
 
 	logger.Info("persisting-task")
-	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL, index)
+	_, err = db.client.CompareAndSwap(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL, index)
 	if err != nil {
 		return ErrorFromEtcdError(logger, err)
 	}
@@ -307,35 +308,35 @@ func (db *ETCDDB) markTaskCompleted(task *models.Task, failed bool, failureReaso
 
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
 // stager ever attempts to handle a completed task
-func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) *models.Error {
+func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("resolving-task", lager.Data{"task-guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
 	logger.Info("getting-task")
-	task, index, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
-	if modelErr != nil {
-		logger.Error("failed-getting-task", modelErr)
-		return modelErr
+	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
+	if err != nil {
+		logger.Error("failed-getting-task", err)
+		return err
 	}
 	logger.Info("succeeded-getting-task")
 
-	modelErr = validateStateTransition(task.State, models.Task_Resolving)
-	if modelErr != nil {
-		logger.Error("invalid-state-transition", modelErr)
-		return modelErr
+	err = validateStateTransition(task.State, models.Task_Resolving)
+	if err != nil {
+		logger.Error("invalid-state-transition", err)
+		return err
 	}
 
 	task.UpdatedAt = db.clock.Now().UnixNano()
 	task.State = models.Task_Resolving
 
-	value, modelErr := db.serializeModel(logger, task)
-	if modelErr != nil {
-		return modelErr
+	value, err := db.serializeModel(logger, task)
+	if err != nil {
+		return err
 	}
 
-	_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), value, NO_TTL, index)
+	_, err = db.client.CompareAndSwap(TaskSchemaPathByGuid(taskGuid), value, NO_TTL, index)
 	if err != nil {
 		return ErrorFromEtcdError(logger, err)
 	}
@@ -345,31 +346,31 @@ func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) *models.Er
 // The stager calls this when it wants to signal that it has received a completion and is handling it
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // If this fails, the stager should assume that someone else is handling the completion and should bail
-func (db *ETCDDB) DeleteTask(logger lager.Logger, taskGuid string) *models.Error {
+func (db *ETCDDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("delete-task", lager.Data{"task-guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
 
 	logger.Info("getting-task")
-	task, _, modelErr := db.taskByGuidWithIndex(logger, taskGuid)
-	if modelErr != nil {
-		logger.Error("failed-getting-task", modelErr)
-		return modelErr
+	task, _, err := db.taskByGuidWithIndex(logger, taskGuid)
+	if err != nil {
+		logger.Error("failed-getting-task", err)
+		return err
 	}
 	logger.Info("succeeded-getting-task")
 
 	if task.State != models.Task_Resolving {
-		modelErr = models.NewTaskTransitionError(task.State, models.Task_Resolving)
-		logger.Error("invalid-state-transition", modelErr)
-		return modelErr
+		err = models.NewTaskTransitionError(task.State, models.Task_Resolving)
+		logger.Error("invalid-state-transition", err)
+		return err
 	}
 
-	_, err := db.client.Delete(TaskSchemaPathByGuid(taskGuid), false)
+	_, err = db.client.Delete(TaskSchemaPathByGuid(taskGuid), false)
 	return ErrorFromEtcdError(logger, err)
 }
 
-func validateStateTransition(from, to models.Task_State) *models.Error {
+func validateStateTransition(from, to models.Task_State) error {
 	if (from == models.Task_Pending && to == models.Task_Running) ||
 		(from == models.Task_Running && to == models.Task_Completed) ||
 		(from == models.Task_Completed && to == models.Task_Resolving) {

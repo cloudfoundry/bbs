@@ -28,69 +28,80 @@ type MessageValidator interface {
 }
 
 func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("remove-evacuating-actual-lrp")
 
 	request := &models.RemoveEvacuatingActualLRPRequest{}
 	response := &models.RemoveEvacuatingActualLRPResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.Error = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	}
 
+	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("evacuate-claimed-actual-lrp")
 
 	request := &models.EvacuateClaimedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.KeepContainer, response.Error = h.db.EvacuateClaimedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.KeepContainer, err = h.db.EvacuateClaimedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	}
 
+	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("evacuate-crashed-actual-lrp")
 
 	request := &models.EvacuateCrashedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.KeepContainer, response.Error = h.db.EvacuateCrashedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.KeepContainer, err = h.db.EvacuateCrashedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
 	}
 
+	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("evacuate-running-actual-lrp")
 
 	request := &models.EvacuateRunningActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.KeepContainer, response.Error = h.db.EvacuateRunningActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.KeepContainer, err = h.db.EvacuateRunningActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
 	}
 
+	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 }
 
 func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("evacuate-stopped-actual-lrp")
 	request := &models.EvacuateStoppedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.KeepContainer, response.Error = h.db.EvacuateStoppedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.KeepContainer, err = h.db.EvacuateStoppedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	}
+
+	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 }

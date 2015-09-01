@@ -19,7 +19,7 @@ func (t *Task) Version() Version {
 	return V0
 }
 
-func (t *Task) MigrateFromVersion(v Version) *Error {
+func (t *Task) MigrateFromVersion(v Version) error {
 	switch v {
 	case V0:
 		return nil

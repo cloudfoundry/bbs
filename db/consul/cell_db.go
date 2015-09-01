@@ -12,12 +12,12 @@ func CellSchemaPath(cellID string) string {
 	return path.Join(CellSchemaRoot, cellID)
 }
 
-func (db *ConsulDB) Cells(logger lager.Logger) ([]*models.CellPresence, *models.Error) {
+func (db *ConsulDB) Cells(logger lager.Logger) ([]*models.CellPresence, error) {
 	cells, err := db.session.ListAcquiredValues(CellSchemaRoot)
 	if err != nil {
-		modelErr := convertConsulError(err)
-		if modelErr != models.ErrResourceNotFound {
-			return nil, modelErr
+		bbsErr := models.ConvertError(convertConsulError(err))
+		if bbsErr.Type != models.Error_ResourceNotFound {
+			return nil, err
 		}
 	}
 
@@ -36,7 +36,7 @@ func (db *ConsulDB) Cells(logger lager.Logger) ([]*models.CellPresence, *models.
 	return cellPresences, nil
 }
 
-func (db *ConsulDB) CellById(logger lager.Logger, cellId string) (*models.CellPresence, *models.Error) {
+func (db *ConsulDB) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 	cellPresence := models.CellPresence{}
 
 	value, err := db.session.GetAcquiredValue(CellSchemaPath(cellId))
@@ -52,7 +52,7 @@ func (db *ConsulDB) CellById(logger lager.Logger, cellId string) (*models.CellPr
 	return &cellPresence, nil
 }
 
-func convertConsulError(err error) *models.Error {
+func convertConsulError(err error) error {
 	switch err.(type) {
 	case consuladapter.KeyNotFoundError:
 		return models.ErrResourceNotFound

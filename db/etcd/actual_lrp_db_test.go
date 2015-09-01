@@ -324,7 +324,7 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("ClaimActualLRP", func() {
 		var (
 			actualLRP *models.ActualLRP
-			claimErr  *models.Error
+			claimErr  error
 
 			lrpKey      models.ActualLRPKey
 			instanceKey models.ActualLRPInstanceKey
@@ -363,7 +363,9 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns a validation error", func() {
-					Expect(claimErr.Type).To(Equal(models.Error_InvalidRecord))
+					modelErr := models.ConvertError(claimErr)
+					Expect(modelErr).NotTo(BeNil())
+					Expect(modelErr.Type).To(Equal(models.Error_InvalidRecord))
 				})
 
 				It("does not modify the persisted actual LRP", func() {
@@ -582,7 +584,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("StartActualLRP", func() {
 		var (
-			startErr *models.Error
+			startErr error
 
 			lrpKey      models.ActualLRPKey
 			instanceKey models.ActualLRPInstanceKey
@@ -861,7 +863,7 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("RetireActualLRPs", func() {
 		var (
 			actualLRP *models.ActualLRP
-			retireErr *models.Error
+			retireErr error
 
 			lrpKey models.ActualLRPKey
 
@@ -997,7 +999,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("FailActualLRP", func() {
 		var (
-			failErr   *models.Error
+			failErr   error
 			actualLRP *models.ActualLRP
 
 			lrpKey       models.ActualLRPKey
@@ -1086,7 +1088,7 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("RemoveActualLRP", func() {
 		var (
 			actualLRP *models.ActualLRP
-			removeErr *models.Error
+			removeErr error
 
 			lrpKey models.ActualLRPKey
 

@@ -26,13 +26,13 @@ type FakeVersioner struct {
 	ProtoMessageStub        func()
 	protoMessageMutex       sync.RWMutex
 	protoMessageArgsForCall []struct{}
-	MigrateFromVersionStub        func(v models.Version) *models.Error
+	MigrateFromVersionStub        func(v models.Version) error
 	migrateFromVersionMutex       sync.RWMutex
 	migrateFromVersionArgsForCall []struct {
 		v models.Version
 	}
 	migrateFromVersionReturns struct {
-		result1 *models.Error
+		result1 error
 	}
 	VersionStub        func() models.Version
 	versionMutex       sync.RWMutex
@@ -120,7 +120,7 @@ func (fake *FakeVersioner) ProtoMessageCallCount() int {
 	return len(fake.protoMessageArgsForCall)
 }
 
-func (fake *FakeVersioner) MigrateFromVersion(v models.Version) *models.Error {
+func (fake *FakeVersioner) MigrateFromVersion(v models.Version) error {
 	fake.migrateFromVersionMutex.Lock()
 	fake.migrateFromVersionArgsForCall = append(fake.migrateFromVersionArgsForCall, struct {
 		v models.Version
@@ -145,10 +145,10 @@ func (fake *FakeVersioner) MigrateFromVersionArgsForCall(i int) models.Version {
 	return fake.migrateFromVersionArgsForCall[i].v
 }
 
-func (fake *FakeVersioner) MigrateFromVersionReturns(result1 *models.Error) {
+func (fake *FakeVersioner) MigrateFromVersionReturns(result1 error) {
 	fake.MigrateFromVersionStub = nil
 	fake.migrateFromVersionReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 

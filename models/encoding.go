@@ -15,7 +15,7 @@ func FromJSON(payload []byte, v Validator) error {
 	return v.Validate()
 }
 
-func ToJSON(v Validator) ([]byte, *Error) {
+func ToJSON(v Validator) ([]byte, error) {
 	if !isNil(v) {
 		if err := v.Validate(); err != nil {
 			return nil, NewError(Error_InvalidRecord, err.Error())
@@ -30,7 +30,7 @@ func ToJSON(v Validator) ([]byte, *Error) {
 	return bytes, nil
 }
 
-func toProto(v ProtoValidator) ([]byte, *Error) {
+func toProto(v ProtoValidator) ([]byte, error) {
 	if !isNil(v) {
 		if err := v.Validate(); err != nil {
 			return nil, NewError(Error_InvalidRecord, err.Error())

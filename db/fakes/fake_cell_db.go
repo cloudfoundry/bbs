@@ -18,7 +18,7 @@ type FakeCellDB struct {
 	newCellsLoaderReturns struct {
 		result1 db.CellsLoader
 	}
-	CellByIdStub        func(logger lager.Logger, cellId string) (*models.CellPresence, *models.Error)
+	CellByIdStub        func(logger lager.Logger, cellId string) (*models.CellPresence, error)
 	cellByIdMutex       sync.RWMutex
 	cellByIdArgsForCall []struct {
 		logger lager.Logger
@@ -26,7 +26,7 @@ type FakeCellDB struct {
 	}
 	cellByIdReturns struct {
 		result1 *models.CellPresence
-		result2 *models.Error
+		result2 error
 	}
 }
 
@@ -62,7 +62,7 @@ func (fake *FakeCellDB) NewCellsLoaderReturns(result1 db.CellsLoader) {
 	}{result1}
 }
 
-func (fake *FakeCellDB) CellById(logger lager.Logger, cellId string) (*models.CellPresence, *models.Error) {
+func (fake *FakeCellDB) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 	fake.cellByIdMutex.Lock()
 	fake.cellByIdArgsForCall = append(fake.cellByIdArgsForCall, struct {
 		logger lager.Logger
@@ -88,11 +88,11 @@ func (fake *FakeCellDB) CellByIdArgsForCall(i int) (lager.Logger, string) {
 	return fake.cellByIdArgsForCall[i].logger, fake.cellByIdArgsForCall[i].cellId
 }
 
-func (fake *FakeCellDB) CellByIdReturns(result1 *models.CellPresence, result2 *models.Error) {
+func (fake *FakeCellDB) CellByIdReturns(result1 *models.CellPresence, result2 error) {
 	fake.CellByIdStub = nil
 	fake.cellByIdReturns = struct {
 		result1 *models.CellPresence
-		result2 *models.Error
+		result2 error
 	}{result1, result2}
 }
 

@@ -87,7 +87,7 @@ func route(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(f)
 }
 
-func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) *models.Error {
+func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) error {
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-to-read-body", err)

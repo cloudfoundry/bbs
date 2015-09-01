@@ -125,7 +125,7 @@ var _ = Describe("Envelope", func() {
 
 			err := envelope.Unmarshal(logger, model)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Type).To(Equal(models.Error_FailedToOpenEnvelope))
+			Expect(models.ConvertError(err).Type).To(Equal(models.Error_FailedToOpenEnvelope))
 		})
 
 		It("returns an error when the json payload is invalid", func() {
@@ -136,7 +136,7 @@ var _ = Describe("Envelope", func() {
 			}
 
 			err := envelope.Unmarshal(logger, model)
-			Expect(err.Type).To(Equal(models.Error_InvalidRecord))
+			Expect(models.ConvertError(err).Type).To(Equal(models.Error_InvalidRecord))
 		})
 
 		It("returns an error when the protobuf payload is invalid", func() {
@@ -147,7 +147,7 @@ var _ = Describe("Envelope", func() {
 			}
 
 			err := envelope.Unmarshal(logger, model)
-			Expect(err.Type).To(Equal(models.Error_InvalidRecord))
+			Expect(models.ConvertError(err).Type).To(Equal(models.Error_InvalidRecord))
 		})
 	})
 })

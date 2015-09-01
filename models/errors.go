@@ -12,6 +12,16 @@ func NewError(errType Error_Type, msg string) *Error {
 	}
 }
 
+func ConvertError(err error) *Error {
+	if err == nil {
+		return nil
+	}
+
+	var modelErr *Error
+	modelErr = err.(*Error)
+	return modelErr
+}
+
 func (err *Error) ToError() error {
 	if err == nil {
 		return nil

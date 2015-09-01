@@ -1162,7 +1162,7 @@ var _ = Describe("LrpConvergence", func() {
 			desiredLRP.Domain = domain
 
 			err := etcdDB.DesireLRP(logger, desiredLRP)
-			Expect(err).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 
 			clock.Increment(models.StaleUnclaimedActualLRPDuration + 1*time.Second)
 		})

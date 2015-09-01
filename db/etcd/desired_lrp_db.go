@@ -13,13 +13,14 @@ import (
 
 const createActualMaxWorkers = 100
 
-func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, *models.Error) {
-	root, bbsErr := db.fetchRecursiveRaw(logger, DesiredLRPSchemaRoot)
-	if bbsErr.Equal(models.ErrResourceNotFound) {
-		return []*models.DesiredLRP{}, nil
-	}
+func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+	root, err := db.fetchRecursiveRaw(logger, DesiredLRPSchemaRoot)
+	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
-		return nil, bbsErr
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return []*models.DesiredLRP{}, nil
+		}
+		return nil, err
 	}
 	if root.Nodes.Len() == 0 {
 		return []*models.DesiredLRP{}, nil
@@ -68,10 +69,10 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 	return desiredLRPs, nil
 }
 
-func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, uint64, *models.Error) {
-	node, bbsErr := db.fetchRaw(logger, DesiredLRPSchemaPathByProcessGuid(processGuid))
-	if bbsErr != nil {
-		return nil, 0, bbsErr
+func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, uint64, error) {
+	node, err := db.fetchRaw(logger, DesiredLRPSchemaPathByProcessGuid(processGuid))
+	if err != nil {
+		return nil, 0, err
 	}
 
 	var lrp models.DesiredLRP
@@ -84,7 +85,7 @@ func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid st
 	return &lrp, node.ModifiedIndex, nil
 }
 
-func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error) {
+func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
 	lrp, _, err := db.rawDesiredLRPByProcessGuid(logger, processGuid)
 	return lrp, err
 }
@@ -133,7 +134,7 @@ func (db *ETCDDB) stopInstanceRange(logger lager.Logger, lower, upper int32, des
 	db.retireActualLRPs(logger, actualKeys)
 }
 
-func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) *models.Error {
+func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	logger = logger.Session("create-desired-lrp", lager.Data{"process-guid": desiredLRP.ProcessGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -149,8 +150,8 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 		Index: 0,
 	}
 
-	value, modelErr := models.ToJSON(desiredLRP)
-	if modelErr != nil {
+	value, err := models.ToJSON(desiredLRP)
+	if err != nil {
 		logger.Error("failed-to-json", err)
 		return models.ErrSerializeJSON
 	}
@@ -166,15 +167,15 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 	return nil
 }
 
-func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) *models.Error {
+func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error {
 	logger = logger.Session("update-desired-lrp", lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	desiredLRP, index, modelErr := db.rawDesiredLRPByProcessGuid(logger, processGuid)
-	if modelErr != nil {
-		logger.Error("failed-to-fetch-existing-desired-lrp", modelErr)
-		return modelErr
+	desiredLRP, index, err := db.rawDesiredLRPByProcessGuid(logger, processGuid)
+	if err != nil {
+		logger.Error("failed-to-fetch-existing-desired-lrp", err)
+		return err
 	}
 
 	existingInstances := desiredLRP.Instances
@@ -182,13 +183,13 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 
 	desiredLRP.ModificationTag.Increment()
 
-	value, modelErr := models.ToJSON(desiredLRP)
-	if modelErr != nil {
-		logger.Error("failed-to-serialize-desired-lrp", modelErr)
-		return modelErr
+	value, err := models.ToJSON(desiredLRP)
+	if err != nil {
+		logger.Error("failed-to-serialize-desired-lrp", err)
+		return err
 	}
 
-	_, err := db.client.CompareAndSwap(DesiredLRPSchemaPath(desiredLRP), value, NO_TTL, index)
+	_, err = db.client.CompareAndSwap(DesiredLRPSchemaPath(desiredLRP), value, NO_TTL, index)
 	if err != nil {
 		logger.Error("failed-to-CAS-desired-lrp", err)
 		return models.ErrDesiredLRPCannotBeUpdated
@@ -209,18 +210,18 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 	return nil
 }
 
-func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) *models.Error {
+func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
 	logger = logger.Session("remove-desired-lrp", lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	desiredLRP, modelErr := db.DesiredLRPByProcessGuid(logger, processGuid)
-	if modelErr != nil {
-		return modelErr
+	desiredLRP, err := db.DesiredLRPByProcessGuid(logger, processGuid)
+	if err != nil {
+		return err
 	}
 
 	logger.Info("starting")
-	_, err := db.client.Delete(DesiredLRPSchemaPathByProcessGuid(processGuid), true)
+	_, err = db.client.Delete(DesiredLRPSchemaPathByProcessGuid(processGuid), true)
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrUnknownError

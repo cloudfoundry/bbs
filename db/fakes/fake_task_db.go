@@ -11,7 +11,7 @@ import (
 )
 
 type FakeTaskDB struct {
-	TasksStub        func(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error)
+	TasksStub        func(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct {
 		logger lager.Logger
@@ -19,9 +19,9 @@ type FakeTaskDB struct {
 	}
 	tasksReturns struct {
 		result1 []*models.Task
-		result2 *models.Error
+		result2 error
 	}
-	TaskByGuidStub        func(logger lager.Logger, taskGuid string) (*models.Task, *models.Error)
+	TaskByGuidStub        func(logger lager.Logger, taskGuid string) (*models.Task, error)
 	taskByGuidMutex       sync.RWMutex
 	taskByGuidArgsForCall []struct {
 		logger   lager.Logger
@@ -29,9 +29,9 @@ type FakeTaskDB struct {
 	}
 	taskByGuidReturns struct {
 		result1 *models.Task
-		result2 *models.Error
+		result2 error
 	}
-	DesireTaskStub        func(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) *models.Error
+	DesireTaskStub        func(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error
 	desireTaskMutex       sync.RWMutex
 	desireTaskArgsForCall []struct {
 		logger         lager.Logger
@@ -40,9 +40,9 @@ type FakeTaskDB struct {
 		domain         string
 	}
 	desireTaskReturns struct {
-		result1 *models.Error
+		result1 error
 	}
-	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (bool, *models.Error)
+	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (bool, error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
 		logger   lager.Logger
@@ -51,18 +51,18 @@ type FakeTaskDB struct {
 	}
 	startTaskReturns struct {
 		result1 bool
-		result2 *models.Error
+		result2 error
 	}
-	CancelTaskStub        func(logger lager.Logger, taskGuid string) *models.Error
+	CancelTaskStub        func(logger lager.Logger, taskGuid string) error
 	cancelTaskMutex       sync.RWMutex
 	cancelTaskArgsForCall []struct {
 		logger   lager.Logger
 		taskGuid string
 	}
 	cancelTaskReturns struct {
-		result1 *models.Error
+		result1 error
 	}
-	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) *models.Error
+	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) error
 	failTaskMutex       sync.RWMutex
 	failTaskArgsForCall []struct {
 		logger        lager.Logger
@@ -70,9 +70,9 @@ type FakeTaskDB struct {
 		failureReason string
 	}
 	failTaskReturns struct {
-		result1 *models.Error
+		result1 error
 	}
-	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) *models.Error
+	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
 	completeTaskMutex       sync.RWMutex
 	completeTaskArgsForCall []struct {
 		logger        lager.Logger
@@ -83,25 +83,25 @@ type FakeTaskDB struct {
 		result        string
 	}
 	completeTaskReturns struct {
-		result1 *models.Error
+		result1 error
 	}
-	ResolvingTaskStub        func(logger lager.Logger, taskGuid string) *models.Error
+	ResolvingTaskStub        func(logger lager.Logger, taskGuid string) error
 	resolvingTaskMutex       sync.RWMutex
 	resolvingTaskArgsForCall []struct {
 		logger   lager.Logger
 		taskGuid string
 	}
 	resolvingTaskReturns struct {
-		result1 *models.Error
+		result1 error
 	}
-	DeleteTaskStub        func(logger lager.Logger, taskGuid string) *models.Error
+	DeleteTaskStub        func(logger lager.Logger, taskGuid string) error
 	deleteTaskMutex       sync.RWMutex
 	deleteTaskArgsForCall []struct {
 		logger   lager.Logger
 		taskGuid string
 	}
 	deleteTaskReturns struct {
-		result1 *models.Error
+		result1 error
 	}
 	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration)
 	convergeTasksMutex       sync.RWMutex
@@ -113,7 +113,7 @@ type FakeTaskDB struct {
 	}
 }
 
-func (fake *FakeTaskDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error) {
+func (fake *FakeTaskDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
 	fake.tasksMutex.Lock()
 	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct {
 		logger lager.Logger
@@ -139,15 +139,15 @@ func (fake *FakeTaskDB) TasksArgsForCall(i int) (lager.Logger, models.TaskFilter
 	return fake.tasksArgsForCall[i].logger, fake.tasksArgsForCall[i].filter
 }
 
-func (fake *FakeTaskDB) TasksReturns(result1 []*models.Task, result2 *models.Error) {
+func (fake *FakeTaskDB) TasksReturns(result1 []*models.Task, result2 error) {
 	fake.TasksStub = nil
 	fake.tasksReturns = struct {
 		result1 []*models.Task
-		result2 *models.Error
+		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, *models.Error) {
+func (fake *FakeTaskDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
 	fake.taskByGuidMutex.Lock()
 	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
 		logger   lager.Logger
@@ -173,15 +173,15 @@ func (fake *FakeTaskDB) TaskByGuidArgsForCall(i int) (lager.Logger, string) {
 	return fake.taskByGuidArgsForCall[i].logger, fake.taskByGuidArgsForCall[i].taskGuid
 }
 
-func (fake *FakeTaskDB) TaskByGuidReturns(result1 *models.Task, result2 *models.Error) {
+func (fake *FakeTaskDB) TaskByGuidReturns(result1 *models.Task, result2 error) {
 	fake.TaskByGuidStub = nil
 	fake.taskByGuidReturns = struct {
 		result1 *models.Task
-		result2 *models.Error
+		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid string, domain string) *models.Error {
+func (fake *FakeTaskDB) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid string, domain string) error {
 	fake.desireTaskMutex.Lock()
 	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
 		logger         lager.Logger
@@ -209,14 +209,14 @@ func (fake *FakeTaskDB) DesireTaskArgsForCall(i int) (lager.Logger, *models.Task
 	return fake.desireTaskArgsForCall[i].logger, fake.desireTaskArgsForCall[i].taskDefinition, fake.desireTaskArgsForCall[i].taskGuid, fake.desireTaskArgsForCall[i].domain
 }
 
-func (fake *FakeTaskDB) DesireTaskReturns(result1 *models.Error) {
+func (fake *FakeTaskDB) DesireTaskReturns(result1 error) {
 	fake.DesireTaskStub = nil
 	fake.desireTaskReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeTaskDB) StartTask(logger lager.Logger, taskGuid string, cellId string) (bool, *models.Error) {
+func (fake *FakeTaskDB) StartTask(logger lager.Logger, taskGuid string, cellId string) (bool, error) {
 	fake.startTaskMutex.Lock()
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
 		logger   lager.Logger
@@ -243,15 +243,15 @@ func (fake *FakeTaskDB) StartTaskArgsForCall(i int) (lager.Logger, string, strin
 	return fake.startTaskArgsForCall[i].logger, fake.startTaskArgsForCall[i].taskGuid, fake.startTaskArgsForCall[i].cellId
 }
 
-func (fake *FakeTaskDB) StartTaskReturns(result1 bool, result2 *models.Error) {
+func (fake *FakeTaskDB) StartTaskReturns(result1 bool, result2 error) {
 	fake.StartTaskStub = nil
 	fake.startTaskReturns = struct {
 		result1 bool
-		result2 *models.Error
+		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) CancelTask(logger lager.Logger, taskGuid string) *models.Error {
+func (fake *FakeTaskDB) CancelTask(logger lager.Logger, taskGuid string) error {
 	fake.cancelTaskMutex.Lock()
 	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
 		logger   lager.Logger
@@ -277,14 +277,14 @@ func (fake *FakeTaskDB) CancelTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.cancelTaskArgsForCall[i].logger, fake.cancelTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeTaskDB) CancelTaskReturns(result1 *models.Error) {
+func (fake *FakeTaskDB) CancelTaskReturns(result1 error) {
 	fake.CancelTaskStub = nil
 	fake.cancelTaskReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeTaskDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) *models.Error {
+func (fake *FakeTaskDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) error {
 	fake.failTaskMutex.Lock()
 	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
 		logger        lager.Logger
@@ -311,14 +311,14 @@ func (fake *FakeTaskDB) FailTaskArgsForCall(i int) (lager.Logger, string, string
 	return fake.failTaskArgsForCall[i].logger, fake.failTaskArgsForCall[i].taskGuid, fake.failTaskArgsForCall[i].failureReason
 }
 
-func (fake *FakeTaskDB) FailTaskReturns(result1 *models.Error) {
+func (fake *FakeTaskDB) FailTaskReturns(result1 error) {
 	fake.FailTaskStub = nil
 	fake.failTaskReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeTaskDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) *models.Error {
+func (fake *FakeTaskDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) error {
 	fake.completeTaskMutex.Lock()
 	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
 		logger        lager.Logger
@@ -348,14 +348,14 @@ func (fake *FakeTaskDB) CompleteTaskArgsForCall(i int) (lager.Logger, string, st
 	return fake.completeTaskArgsForCall[i].logger, fake.completeTaskArgsForCall[i].taskGuid, fake.completeTaskArgsForCall[i].cellId, fake.completeTaskArgsForCall[i].failed, fake.completeTaskArgsForCall[i].failureReason, fake.completeTaskArgsForCall[i].result
 }
 
-func (fake *FakeTaskDB) CompleteTaskReturns(result1 *models.Error) {
+func (fake *FakeTaskDB) CompleteTaskReturns(result1 error) {
 	fake.CompleteTaskStub = nil
 	fake.completeTaskReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeTaskDB) ResolvingTask(logger lager.Logger, taskGuid string) *models.Error {
+func (fake *FakeTaskDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	fake.resolvingTaskMutex.Lock()
 	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
 		logger   lager.Logger
@@ -381,14 +381,14 @@ func (fake *FakeTaskDB) ResolvingTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.resolvingTaskArgsForCall[i].logger, fake.resolvingTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeTaskDB) ResolvingTaskReturns(result1 *models.Error) {
+func (fake *FakeTaskDB) ResolvingTaskReturns(result1 error) {
 	fake.ResolvingTaskStub = nil
 	fake.resolvingTaskReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeTaskDB) DeleteTask(logger lager.Logger, taskGuid string) *models.Error {
+func (fake *FakeTaskDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 	fake.deleteTaskMutex.Lock()
 	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
 		logger   lager.Logger
@@ -414,10 +414,10 @@ func (fake *FakeTaskDB) DeleteTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.deleteTaskArgsForCall[i].logger, fake.deleteTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeTaskDB) DeleteTaskReturns(result1 *models.Error) {
+func (fake *FakeTaskDB) DeleteTaskReturns(result1 error) {
 	fake.DeleteTaskStub = nil
 	fake.deleteTaskReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 type FakeDesiredLRPDB struct {
-	DesiredLRPsStub        func(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, *models.Error)
+	DesiredLRPsStub        func(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
 		logger lager.Logger
@@ -18,9 +18,9 @@ type FakeDesiredLRPDB struct {
 	}
 	desiredLRPsReturns struct {
 		result1 []*models.DesiredLRP
-		result2 *models.Error
+		result2 error
 	}
-	DesiredLRPByProcessGuidStub        func(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error)
+	DesiredLRPByProcessGuidStub        func(logger lager.Logger, processGuid string) (*models.DesiredLRP, error)
 	desiredLRPByProcessGuidMutex       sync.RWMutex
 	desiredLRPByProcessGuidArgsForCall []struct {
 		logger      lager.Logger
@@ -28,18 +28,18 @@ type FakeDesiredLRPDB struct {
 	}
 	desiredLRPByProcessGuidReturns struct {
 		result1 *models.DesiredLRP
-		result2 *models.Error
+		result2 error
 	}
-	DesireLRPStub        func(logger lager.Logger, desiredLRP *models.DesiredLRP) *models.Error
+	DesireLRPStub        func(logger lager.Logger, desiredLRP *models.DesiredLRP) error
 	desireLRPMutex       sync.RWMutex
 	desireLRPArgsForCall []struct {
 		logger     lager.Logger
 		desiredLRP *models.DesiredLRP
 	}
 	desireLRPReturns struct {
-		result1 *models.Error
+		result1 error
 	}
-	UpdateDesiredLRPStub        func(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) *models.Error
+	UpdateDesiredLRPStub        func(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error
 	updateDesiredLRPMutex       sync.RWMutex
 	updateDesiredLRPArgsForCall []struct {
 		logger      lager.Logger
@@ -47,20 +47,20 @@ type FakeDesiredLRPDB struct {
 		update      *models.DesiredLRPUpdate
 	}
 	updateDesiredLRPReturns struct {
-		result1 *models.Error
+		result1 error
 	}
-	RemoveDesiredLRPStub        func(logger lager.Logger, processGuid string) *models.Error
+	RemoveDesiredLRPStub        func(logger lager.Logger, processGuid string) error
 	removeDesiredLRPMutex       sync.RWMutex
 	removeDesiredLRPArgsForCall []struct {
 		logger      lager.Logger
 		processGuid string
 	}
 	removeDesiredLRPReturns struct {
-		result1 *models.Error
+		result1 error
 	}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, *models.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	fake.desiredLRPsMutex.Lock()
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
 		logger lager.Logger
@@ -86,15 +86,15 @@ func (fake *FakeDesiredLRPDB) DesiredLRPsArgsForCall(i int) (lager.Logger, model
 	return fake.desiredLRPsArgsForCall[i].logger, fake.desiredLRPsArgsForCall[i].filter
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2 *models.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2 error) {
 	fake.DesiredLRPsStub = nil
 	fake.desiredLRPsReturns = struct {
 		result1 []*models.DesiredLRP
-		result2 *models.Error
+		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, *models.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
 	fake.desiredLRPByProcessGuidMutex.Lock()
 	fake.desiredLRPByProcessGuidArgsForCall = append(fake.desiredLRPByProcessGuidArgsForCall, struct {
 		logger      lager.Logger
@@ -120,15 +120,15 @@ func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidArgsForCall(i int) (lager.L
 	return fake.desiredLRPByProcessGuidArgsForCall[i].logger, fake.desiredLRPByProcessGuidArgsForCall[i].processGuid
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 *models.Error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 error) {
 	fake.DesiredLRPByProcessGuidStub = nil
 	fake.desiredLRPByProcessGuidReturns = struct {
 		result1 *models.DesiredLRP
-		result2 *models.Error
+		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDesiredLRPDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) *models.Error {
+func (fake *FakeDesiredLRPDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	fake.desireLRPMutex.Lock()
 	fake.desireLRPArgsForCall = append(fake.desireLRPArgsForCall, struct {
 		logger     lager.Logger
@@ -154,14 +154,14 @@ func (fake *FakeDesiredLRPDB) DesireLRPArgsForCall(i int) (lager.Logger, *models
 	return fake.desireLRPArgsForCall[i].logger, fake.desireLRPArgsForCall[i].desiredLRP
 }
 
-func (fake *FakeDesiredLRPDB) DesireLRPReturns(result1 *models.Error) {
+func (fake *FakeDesiredLRPDB) DesireLRPReturns(result1 error) {
 	fake.DesireLRPStub = nil
 	fake.desireLRPReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) *models.Error {
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error {
 	fake.updateDesiredLRPMutex.Lock()
 	fake.updateDesiredLRPArgsForCall = append(fake.updateDesiredLRPArgsForCall, struct {
 		logger      lager.Logger
@@ -188,14 +188,14 @@ func (fake *FakeDesiredLRPDB) UpdateDesiredLRPArgsForCall(i int) (lager.Logger, 
 	return fake.updateDesiredLRPArgsForCall[i].logger, fake.updateDesiredLRPArgsForCall[i].processGuid, fake.updateDesiredLRPArgsForCall[i].update
 }
 
-func (fake *FakeDesiredLRPDB) UpdateDesiredLRPReturns(result1 *models.Error) {
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRPReturns(result1 error) {
 	fake.UpdateDesiredLRPStub = nil
 	fake.updateDesiredLRPReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeDesiredLRPDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) *models.Error {
+func (fake *FakeDesiredLRPDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
 	fake.removeDesiredLRPMutex.Lock()
 	fake.removeDesiredLRPArgsForCall = append(fake.removeDesiredLRPArgsForCall, struct {
 		logger      lager.Logger
@@ -221,10 +221,10 @@ func (fake *FakeDesiredLRPDB) RemoveDesiredLRPArgsForCall(i int) (lager.Logger, 
 	return fake.removeDesiredLRPArgsForCall[i].logger, fake.removeDesiredLRPArgsForCall[i].processGuid
 }
 
-func (fake *FakeDesiredLRPDB) RemoveDesiredLRPReturns(result1 *models.Error) {
+func (fake *FakeDesiredLRPDB) RemoveDesiredLRPReturns(result1 error) {
 	fake.RemoveDesiredLRPStub = nil
 	fake.removeDesiredLRPReturns = struct {
-		result1 *models.Error
+		result1 error
 	}{result1}
 }
 

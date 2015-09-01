@@ -90,7 +90,7 @@ func (db *ETCDDB) supportsBinary() bool {
 	return db.client.SupportsBinary()
 }
 
-func (db *ETCDDB) serializeModel(logger lager.Logger, model models.Versioner) ([]byte, *models.Error) {
+func (db *ETCDDB) serializeModel(logger lager.Logger, model models.Versioner) ([]byte, error) {
 	data, err := models.MarshalEnvelope(db.format, model)
 	if err != nil {
 		logger.Error("failed-ro-serialize-model", err)
@@ -99,12 +99,12 @@ func (db *ETCDDB) serializeModel(logger lager.Logger, model models.Versioner) ([
 	return data, nil
 }
 
-func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model models.Versioner) *models.Error {
+func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model models.Versioner) error {
 	envelope := models.OpenEnvelope([]byte(node.Value))
 	return envelope.Unmarshal(logger, model)
 }
 
-func (db *ETCDDB) fetchRecursiveRaw(logger lager.Logger, key string) (*etcd.Node, *models.Error) {
+func (db *ETCDDB) fetchRecursiveRaw(logger lager.Logger, key string) (*etcd.Node, error) {
 	logger.Debug("fetching-recursive-from-etcd")
 	response, err := db.client.Get(key, false, true)
 	if err != nil {
@@ -114,7 +114,7 @@ func (db *ETCDDB) fetchRecursiveRaw(logger lager.Logger, key string) (*etcd.Node
 	return response.Node, nil
 }
 
-func (db *ETCDDB) fetchRaw(logger lager.Logger, key string) (*etcd.Node, *models.Error) {
+func (db *ETCDDB) fetchRaw(logger lager.Logger, key string) (*etcd.Node, error) {
 	logger.Debug("fetching-from-etcd")
 	response, err := db.client.Get(key, false, false)
 	if err != nil {
@@ -130,7 +130,7 @@ const (
 	ETCDErrIndexCleared = 401
 )
 
-func ErrorFromEtcdError(logger lager.Logger, err error) *models.Error {
+func ErrorFromEtcdError(logger lager.Logger, err error) error {
 	if err == nil {
 		return nil
 	}

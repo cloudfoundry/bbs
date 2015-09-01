@@ -8,9 +8,9 @@ import (
 //go:generate counterfeiter . CellDB
 type CellDB interface {
 	NewCellsLoader(logger lager.Logger) CellsLoader
-	CellById(logger lager.Logger, cellId string) (*models.CellPresence, *models.Error)
+	CellById(logger lager.Logger, cellId string) (*models.CellPresence, error)
 }
 
 type CellsLoader interface {
-	Cells() (models.CellSet, *models.Error)
+	Cells() (models.CellSet, error)
 }

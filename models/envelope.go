@@ -39,9 +39,9 @@ func OpenEnvelope(data []byte) *Envelope {
 	return e
 }
 
-func MarshalEnvelope(format SerializationFormat, model Versioner) ([]byte, *Error) {
+func MarshalEnvelope(format SerializationFormat, model Versioner) ([]byte, error) {
 	var payload []byte
-	var err *Error
+	var err error
 
 	switch format {
 	case PROTO:
@@ -70,7 +70,7 @@ func MarshalEnvelope(format SerializationFormat, model Versioner) ([]byte, *Erro
 	return data, nil
 }
 
-func (e *Envelope) Unmarshal(logger lager.Logger, model Versioner) *Error {
+func (e *Envelope) Unmarshal(logger lager.Logger, model Versioner) error {
 	switch e.SerializationFormat {
 	case JSON:
 		err := json.Unmarshal(e.Payload, model)

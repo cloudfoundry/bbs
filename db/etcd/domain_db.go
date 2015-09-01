@@ -4,16 +4,15 @@ import (
 	"path"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
 )
 
 const DomainSchemaRoot = DataSchemaRoot + "domain"
 
-func (db *ETCDDB) Domains(logger lager.Logger) ([]string, *models.Error) {
+func (db *ETCDDB) Domains(logger lager.Logger) ([]string, error) {
 	response, err := db.client.Get(DomainSchemaRoot, false, true)
 	if err != nil {
-		if err.(*etcd.EtcdError).ErrorCode == ETCDErrKeyNotFound {
+		if etcdErrCode(err) == ETCDErrKeyNotFound {
 			return []string{}, nil
 		}
 		logger.Error("failed-to-fetch-domains", err)
@@ -28,7 +27,7 @@ func (db *ETCDDB) Domains(logger lager.Logger) ([]string, *models.Error) {
 	return domains, nil
 }
 
-func (db *ETCDDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) *models.Error {
+func (db *ETCDDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) error {
 	_, err := db.client.Set(DomainSchemaPath(domain), []byte{}, uint64(ttl))
 	if err != nil {
 		logger.Error("failed-to-upsert-domain", err)

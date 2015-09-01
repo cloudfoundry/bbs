@@ -160,7 +160,7 @@ var _ = Describe("TaskDB", func() {
 	})
 
 	Describe("DesireTask", func() {
-		var errDesire *models.Error
+		var errDesire error
 
 		JustBeforeEach(func() {
 			errDesire = etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
@@ -318,8 +318,9 @@ var _ = Describe("TaskDB", func() {
 			Context("on another cell", func() {
 				It("returns an error", func() {
 					_, err := etcdDB.StartTask(logger, taskGuid, "some-other-cell")
-					Expect(err).NotTo(BeNil())
-					Expect(err.Type).To(Equal(models.Error_InvalidStateTransition))
+					modelErr := models.ConvertError(err)
+					Expect(modelErr).NotTo(BeNil())
+					Expect(modelErr.Type).To(Equal(models.Error_InvalidStateTransition))
 				})
 
 				It("does not change the Task in the store", func() {

@@ -20,7 +20,7 @@ type ProtoValidator interface {
 //go:generate counterfeiter . Versioner
 type Versioner interface {
 	ProtoValidator
-	MigrateFromVersion(v Version) *Error
+	MigrateFromVersion(v Version) error
 	Version() Version
 }
 

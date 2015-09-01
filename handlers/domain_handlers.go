@@ -27,22 +27,26 @@ func NewDomainHandler(logger lager.Logger, db db.DomainDB) *DomainHandler {
 }
 
 func (h *DomainHandler) Domains(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("domains")
 	response := &models.DomainsResponse{}
-	response.Domains, response.Error = h.db.Domains(logger)
+	response.Domains, err = h.db.Domains(logger)
+	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 }
 
 func (h *DomainHandler) Upsert(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("upsert")
 
 	request := &models.UpsertDomainRequest{}
 	response := &models.UpsertDomainResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.Error = h.db.UpsertDomain(logger, request.Domain, request.Ttl)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		err = h.db.UpsertDomain(logger, request.Domain, request.Ttl)
 	}
 
+	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 }

@@ -12,11 +12,11 @@ type cellsLoader struct {
 	lock    sync.Mutex
 	db      *ConsulDB
 	cellSet models.CellSet
-	err     *models.Error
+	err     error
 	logger  lager.Logger
 }
 
-func (loader *cellsLoader) Cells() (models.CellSet, *models.Error) {
+func (loader *cellsLoader) Cells() (models.CellSet, error) {
 	loader.lock.Lock()
 	if loader.cellSet == nil {
 		cells, err := loader.db.Cells(loader.logger)

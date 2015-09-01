@@ -8,7 +8,7 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-func (db *ETCDDB) EvacuateClaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (keepContainer bool, modelErr *models.Error) {
+func (db *ETCDDB) EvacuateClaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (keepContainer bool, modelErr error) {
 	logger = logger.Session("evacuate-claimed", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey})
 	logger.Info("started")
 	defer func() { logger.Info("finished", lager.Data{"keepContainer": keepContainer, "err": modelErr}) }()
@@ -16,11 +16,11 @@ func (db *ETCDDB) EvacuateClaimedActualLRP(logger lager.Logger, key *models.Actu
 	_ = db.RemoveEvacuatingActualLRP(logger, key, instanceKey)
 
 	changed, err := db.unclaimActualLRP(logger, key, instanceKey)
-	if err == models.ErrResourceNotFound {
-		return false, nil
-	}
-
-	if err != nil {
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return false, nil
+		}
 		return false, err
 	}
 
@@ -42,7 +42,7 @@ func (db *ETCDDB) EvacuateClaimedActualLRP(logger lager.Logger, key *models.Actu
 	return false, nil
 }
 
-func (db *ETCDDB) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, ttl uint64) (keepContainer bool, modelErr *models.Error) {
+func (db *ETCDDB) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, ttl uint64) (keepContainer bool, modelErr error) {
 	logger = logger.Session("evacuate-running", lager.Data{
 		"actual_lrp_key":          key,
 		"actual_lrp_instance_key": instanceKey,
@@ -53,18 +53,22 @@ func (db *ETCDDB) EvacuateRunningActualLRP(logger lager.Logger, key *models.Actu
 	defer func() { logger.Info("finished", lager.Data{"keepContainer": keepContainer, "err": modelErr}) }()
 
 	instanceLRP, storeIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
-	if err == models.ErrResourceNotFound {
-		err := db.RemoveEvacuatingActualLRP(logger, key, instanceKey)
-		if err == models.ErrActualLRPCannotBeRemoved {
-			logger.Debug("remove-evacuating-actual-lrp-failed")
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			err := db.RemoveEvacuatingActualLRP(logger, key, instanceKey)
+			bbsErr := models.ConvertError(err)
+			if bbsErr != nil {
+				if bbsErr.Type == models.Error_ActualLRPCannotBeRemoved {
+					logger.Debug("remove-evacuating-actual-lrp-failed")
+					return false, nil
+				}
+				logger.Debug("remove-evacuating-actual-lrp-errored")
+				return true, err
+			}
+			logger.Debug("remove-evacuating-actual-lrp-success")
 			return false, nil
-		} else if err != nil {
-			logger.Debug("remove-evacuating-actual-lrp-errored")
-			return true, err
 		}
-		logger.Debug("remove-evacuating-actual-lrp-success")
-		return false, nil
-	} else if err != nil {
 		logger.Debug("fetch-actual-lrp-errored")
 		return true, err
 	}
@@ -123,10 +127,11 @@ func (db *ETCDDB) EvacuateRunningActualLRP(logger lager.Logger, key *models.Actu
 		(instanceLRP.State == models.ActualLRPStateRunning && !instanceLRP.ActualLRPInstanceKey.Equal(instanceKey)) ||
 		instanceLRP.State == models.ActualLRPStateCrashed {
 		err := db.RemoveEvacuatingActualLRP(logger, key, instanceKey)
-		if err == models.ErrActualLRPCannotBeRemoved {
-			return false, nil
-		}
-		if err != nil {
+		bbsErr := models.ConvertError(err)
+		if bbsErr != nil {
+			if bbsErr.Type == models.Error_ActualLRPCannotBeRemoved {
+				return false, nil
+			}
 			return true, err
 		}
 
@@ -137,7 +142,7 @@ func (db *ETCDDB) EvacuateRunningActualLRP(logger lager.Logger, key *models.Actu
 	return true, nil
 }
 
-func (db *ETCDDB) EvacuateStoppedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, *models.Error) {
+func (db *ETCDDB) EvacuateStoppedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
 	logger = logger.Session("evacuating-stopped", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey})
 	logger.Info("started")
 
@@ -145,8 +150,11 @@ func (db *ETCDDB) EvacuateStoppedActualLRP(logger lager.Logger, key *models.Actu
 	_ = db.RemoveEvacuatingActualLRP(logger, key, instanceKey)
 
 	lrp, storeIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
-	if err == models.ErrResourceNotFound {
-		return false, nil
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return false, nil
+		}
 	} else if !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
 		return false, models.ErrActualLRPCannotBeRemoved
 	} else if err != nil {
@@ -162,7 +170,7 @@ func (db *ETCDDB) EvacuateStoppedActualLRP(logger lager.Logger, key *models.Actu
 	return false, nil
 }
 
-func (db *ETCDDB) EvacuateCrashedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, *models.Error) {
+func (db *ETCDDB) EvacuateCrashedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, error) {
 	logger = logger.Session("evacuating-crashed", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "error_message": errorMessage})
 
 	logger.Info("started")
@@ -173,9 +181,11 @@ func (db *ETCDDB) EvacuateCrashedActualLRP(logger lager.Logger, key *models.Actu
 	}
 
 	err = db.CrashActualLRP(logger, key, instanceKey, errorMessage)
-	if err == models.ErrResourceNotFound {
-		return false, nil
-	} else if err != nil {
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return false, nil
+		}
 		return false, err
 	}
 
@@ -183,8 +193,8 @@ func (db *ETCDDB) EvacuateCrashedActualLRP(logger lager.Logger, key *models.Actu
 	return false, nil
 }
 
-func (db *ETCDDB) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) *models.Error {
-	var err *models.Error
+func (db *ETCDDB) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+	var err error
 	var prevIndex uint64
 	var lrp *models.ActualLRP
 	processGuid := key.ProcessGuid
@@ -192,12 +202,12 @@ func (db *ETCDDB) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.Act
 	logger = logger.Session("removing-evacuating", lager.Data{"process_guid": processGuid, "index": index})
 
 	lrp, prevIndex, err = db.rawEvacuatingActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
-	if err == models.ErrResourceNotFound {
-		logger.Debug("evacuating-actual-lrp-already-removed")
-		return nil
-	}
-
-	if err != nil {
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			logger.Debug("evacuating-actual-lrp-already-removed")
+			return nil
+		}
 		return err
 	}
 
@@ -217,7 +227,7 @@ func (db *ETCDDB) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.Act
 	return nil
 }
 
-func (db *ETCDDB) rawEvacuatingActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, *models.Error) {
+func (db *ETCDDB) rawEvacuatingActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, error) {
 	node, bbsErr := db.fetchRaw(logger, EvacuatingActualLRPSchemaPath(processGuid, index))
 	if bbsErr != nil {
 		return nil, 0, bbsErr
@@ -245,12 +255,14 @@ func (db *ETCDDB) unconditionallyEvacuateActualLRP(
 	actualLRPInstanceKey *models.ActualLRPInstanceKey,
 	actualLRPNetInfo *models.ActualLRPNetInfo,
 	evacuationTTLInSeconds uint64,
-) *models.Error {
+) error {
 	existingLRP, storeIndex, err := db.rawEvacuatingActuaLLRPByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	logger = logger.Session("unconditionally-evacuate")
-	if err == models.ErrResourceNotFound {
-		return db.createEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, evacuationTTLInSeconds)
-	} else if err != nil {
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return db.createEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, evacuationTTLInSeconds)
+		}
 		return err
 	}
 
@@ -278,12 +290,15 @@ func (db *ETCDDB) conditionallyEvacuateActualLRP(
 	actualLRPInstanceKey *models.ActualLRPInstanceKey,
 	actualLRPNetInfo *models.ActualLRPNetInfo,
 	evacuationTTLInSeconds uint64,
-) *models.Error {
+) error {
 	existingLRP, storeIndex, err := db.rawEvacuatingActuaLLRPByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	logger = logger.Session("conditionally-evacuate")
-	if err == models.ErrResourceNotFound {
-		return db.createEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, evacuationTTLInSeconds)
-	} else if err != nil {
+
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return db.createEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, evacuationTTLInSeconds)
+		}
 		return err
 	}
 
@@ -315,7 +330,7 @@ func (db *ETCDDB) compareAndSwapRawEvacuatingActualLRP(
 	lrp *models.ActualLRP,
 	storeIndex uint64,
 	evacuationTTLInSeconds uint64,
-) *models.Error {
+) error {
 	lrpRawJSON, err := json.Marshal(lrp)
 	if err != nil {
 		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})

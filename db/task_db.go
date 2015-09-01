@@ -11,16 +11,16 @@ type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task
 
 //go:generate counterfeiter . TaskDB
 type TaskDB interface {
-	Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, *models.Error)
-	TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, *models.Error)
+	Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
+	TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error)
 
-	DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) *models.Error
-	StartTask(logger lager.Logger, taskGuid, cellId string) (bool, *models.Error)
-	CancelTask(logger lager.Logger, taskGuid string) *models.Error
-	FailTask(logger lager.Logger, taskGuid, failureReason string) *models.Error
-	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) *models.Error
-	ResolvingTask(logger lager.Logger, taskGuid string) *models.Error
-	DeleteTask(logger lager.Logger, taskGuid string) *models.Error
+	DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error
+	StartTask(logger lager.Logger, taskGuid, cellId string) (bool, error)
+	CancelTask(logger lager.Logger, taskGuid string) error
+	FailTask(logger lager.Logger, taskGuid, failureReason string) error
+	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
+	ResolvingTask(logger lager.Logger, taskGuid string) error
+	DeleteTask(logger lager.Logger, taskGuid string) error
 
 	ConvergeTasks(
 		logger lager.Logger,

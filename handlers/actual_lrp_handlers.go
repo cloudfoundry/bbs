@@ -21,44 +21,53 @@ func NewActualLRPHandler(logger lager.Logger, db db.ActualLRPDB) *ActualLRPHandl
 }
 
 func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("actual-lrp-groups")
 
 	request := &models.ActualLRPGroupsRequest{}
 	response := &models.ActualLRPGroupsResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
+	err = parseRequest(logger, req, request)
+	if err == nil {
 		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId}
-		response.ActualLrpGroups, response.Error = h.db.ActualLRPGroups(logger, filter)
+		response.ActualLrpGroups, err = h.db.ActualLRPGroups(logger, filter)
 	}
+
+	response.Error = models.ConvertError(err)
 
 	writeResponse(w, response)
 }
 
 func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("actual-lrp-groups-by-process-guid")
 
 	request := &models.ActualLRPGroupsByProcessGuidRequest{}
 	response := &models.ActualLRPGroupsResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.ActualLrpGroups, response.Error = h.db.ActualLRPGroupsByProcessGuid(logger, request.ProcessGuid)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.ActualLrpGroups, err = h.db.ActualLRPGroupsByProcessGuid(logger, request.ProcessGuid)
 	}
+
+	response.Error = models.ConvertError(err)
 
 	writeResponse(w, response)
 }
 
 func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger := h.logger.Session("actual-lrp-group-by-process-guid-and-index")
 
 	request := &models.ActualLRPGroupByProcessGuidAndIndexRequest{}
 	response := &models.ActualLRPGroupResponse{}
 
-	response.Error = parseRequest(logger, req, request)
-	if response.Error == nil {
-		response.ActualLrpGroup, response.Error = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.ActualLrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
 	}
+
+	response.Error = models.ConvertError(err)
 
 	writeResponse(w, response)
 }
