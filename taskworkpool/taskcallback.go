@@ -19,7 +19,7 @@ const TASK_CB_WORKERS = 20
 
 //go:generate counterfeiter . TaskCompletionClient
 
-type CompletedTaskHandler func(logger lager.Logger, taskDB db.TaskDB, task *models.Task)
+type CompletedTaskHandler func(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, task *models.Task)
 
 type TaskCompletionClient interface {
 	Submit(taskDB db.TaskDB, task *models.Task)
@@ -29,6 +29,7 @@ type TaskCompletionWorkPool struct {
 	logger           lager.Logger
 	callbackHandler  CompletedTaskHandler
 	callbackWorkPool *workpool.WorkPool
+	httpClient       *http.Client
 }
 
 func New(logger lager.Logger, cbHandler CompletedTaskHandler) *TaskCompletionWorkPool {
@@ -38,6 +39,7 @@ func New(logger lager.Logger, cbHandler CompletedTaskHandler) *TaskCompletionWor
 	return &TaskCompletionWorkPool{
 		logger:          logger,
 		callbackHandler: cbHandler,
+		httpClient:      cf_http.NewClient(),
 	}
 }
 
@@ -64,14 +66,12 @@ func (twp *TaskCompletionWorkPool) Submit(taskDB db.TaskDB, task *models.Task) {
 		panic("called submit before workpool was started")
 	}
 	twp.callbackWorkPool.Submit(func() {
-		twp.callbackHandler(twp.logger, taskDB, task)
+		twp.callbackHandler(twp.logger, twp.httpClient, taskDB, task)
 	})
 }
 
-func HandleCompletedTask(logger lager.Logger, taskDB db.TaskDB, task *models.Task) {
+func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, task *models.Task) {
 	logger = logger.WithData(lager.Data{"task-guid": task.TaskGuid})
-
-	httpClient := cf_http.NewClient()
 
 	if task.CompletionCallbackUrl != "" {
 		logger.Info("resolving-task")

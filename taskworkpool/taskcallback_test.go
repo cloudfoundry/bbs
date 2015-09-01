@@ -46,9 +46,12 @@ var _ = Describe("TaskWorker", func() {
 			statusCodes chan int
 			reqCount    chan struct{}
 			task        *models.Task
+
+			httpClient *http.Client
 		)
 
 		BeforeEach(func() {
+			httpClient = cf_http.NewClient()
 			statusCodes = make(chan int)
 			reqCount = make(chan struct{})
 
@@ -65,7 +68,7 @@ var _ = Describe("TaskWorker", func() {
 		simulateTaskCompleting := func() {
 			task = model_helpers.NewValidTask("the-task-guid")
 			task.CompletionCallbackUrl = callbackURL
-			taskworkpool.HandleCompletedTask(logger, taskDB, task)
+			taskworkpool.HandleCompletedTask(logger, httpClient, taskDB, task)
 		}
 
 		Context("when the task has a completion callback URL", func() {
