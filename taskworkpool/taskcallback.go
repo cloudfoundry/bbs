@@ -89,6 +89,7 @@ func HandleCompletedTask(logger lager.Logger, taskDB db.TaskDB, task *models.Tas
 			FailureReason: task.FailureReason,
 			Result:        task.Result,
 			Annotation:    task.Annotation,
+			CreatedAt:     task.CreatedAt,
 		})
 		if err != nil {
 			logger.Error("marshalling-task-failed", err)

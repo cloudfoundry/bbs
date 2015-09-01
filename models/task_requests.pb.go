@@ -198,6 +198,7 @@ type TaskCallbackResponse struct {
 	FailureReason string `protobuf:"bytes,3,opt,name=failure_reason" json:"failure_reason"`
 	Result        string `protobuf:"bytes,4,opt,name=result" json:"result"`
 	Annotation    string `protobuf:"bytes,5,opt,name=annotation" json:"annotation,omitempty"`
+	CreatedAt     int64  `protobuf:"varint,6,opt,name=created_at" json:"created_at"`
 }
 
 func (m *TaskCallbackResponse) Reset()      { *m = TaskCallbackResponse{} }
@@ -236,6 +237,13 @@ func (m *TaskCallbackResponse) GetAnnotation() string {
 		return m.Annotation
 	}
 	return ""
+}
+
+func (m *TaskCallbackResponse) GetCreatedAt() int64 {
+	if m != nil {
+		return m.CreatedAt
+	}
+	return 0
 }
 
 type ConvergeTasksRequest struct {
@@ -599,6 +607,9 @@ func (this *TaskCallbackResponse) Equal(that interface{}) bool {
 	if this.Annotation != that1.Annotation {
 		return false
 	}
+	if this.CreatedAt != that1.CreatedAt {
+		return false
+	}
 	return true
 }
 func (this *ConvergeTasksRequest) Equal(that interface{}) bool {
@@ -845,7 +856,8 @@ func (this *TaskCallbackResponse) GoString() string {
 		`Failed:` + fmt.Sprintf("%#v", this.Failed),
 		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason),
 		`Result:` + fmt.Sprintf("%#v", this.Result),
-		`Annotation:` + fmt.Sprintf("%#v", this.Annotation) + `}`}, ", ")
+		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
+		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt) + `}`}, ", ")
 	return s
 }
 func (this *ConvergeTasksRequest) GoString() string {
@@ -1181,6 +1193,9 @@ func (m *TaskCallbackResponse) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintTaskRequests(data, i, uint64(len(m.Annotation)))
 	i += copy(data[i:], m.Annotation)
+	data[i] = 0x30
+	i++
+	i = encodeVarintTaskRequests(data, i, uint64(m.CreatedAt))
 	return i, nil
 }
 
@@ -1482,6 +1497,7 @@ func (m *TaskCallbackResponse) Size() (n int) {
 	n += 1 + l + sovTaskRequests(uint64(l))
 	l = len(m.Annotation)
 	n += 1 + l + sovTaskRequests(uint64(l))
+	n += 1 + sovTaskRequests(uint64(m.CreatedAt))
 	return n
 }
 
@@ -1654,6 +1670,7 @@ func (this *TaskCallbackResponse) String() string {
 		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
 		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
 		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
+		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2581,6 +2598,22 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			}
 			m.Annotation = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
+			}
+			m.CreatedAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.CreatedAt |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			var sizeOfWire int
 			for {

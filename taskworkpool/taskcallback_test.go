@@ -1,6 +1,8 @@
 package taskworkpool_test
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -43,6 +45,7 @@ var _ = Describe("TaskWorker", func() {
 			taskDB      *dbFakes.FakeTaskDB
 			statusCodes chan int
 			reqCount    chan struct{}
+			task        *models.Task
 		)
 
 		BeforeEach(func() {
@@ -60,7 +63,7 @@ var _ = Describe("TaskWorker", func() {
 		})
 
 		simulateTaskCompleting := func() {
-			task := model_helpers.NewValidTask("the-task-guid")
+			task = model_helpers.NewValidTask("the-task-guid")
 			task.CompletionCallbackUrl = callbackURL
 			taskworkpool.HandleCompletedTask(logger, taskDB, task)
 		}
@@ -99,6 +102,22 @@ var _ = Describe("TaskWorker", func() {
 				})
 
 				Context("when the request succeeds", func() {
+					BeforeEach(func() {
+						fakeServer.RouteToHandler("POST", "/the-callback/url", func(w http.ResponseWriter, req *http.Request) {
+							w.WriteHeader(<-statusCodes)
+							data, err := ioutil.ReadAll(req.Body)
+							Expect(err).NotTo(HaveOccurred())
+
+							var response models.TaskCallbackResponse
+							err = json.Unmarshal(data, &response)
+							Expect(err).NotTo(HaveOccurred())
+
+							Expect(response.CreatedAt).To(Equal(task.CreatedAt))
+							Expect(response.TaskGuid).To(Equal("the-task-guid"))
+							Expect(response.CreatedAt).To(Equal(task.CreatedAt))
+						})
+					})
+
 					It("resolves the task", func() {
 						go simulateTaskCompleting()
 
