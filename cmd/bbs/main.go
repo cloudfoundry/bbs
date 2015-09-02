@@ -19,6 +19,7 @@ import (
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
+	"github.com/cloudfoundry-incubator/runtime-schema/bbs/lock_bbs"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
@@ -29,10 +30,16 @@ import (
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
-var serverAddress = flag.String(
-	"address",
+var listenAddress = flag.String(
+	"listenAddress",
 	"",
 	"The host:port that the server is bound to.",
+)
+
+var advertiseURL = flag.String(
+	"advertiseURL",
+	"",
+	"The URL to advertise to clients",
 )
 
 var serializationFormat = flag.String(
@@ -55,7 +62,7 @@ var auctioneerAddress = flag.String(
 
 var sessionName = flag.String(
 	"sessionName",
-	"rep",
+	"bbs",
 	"consul session name",
 )
 
@@ -67,8 +74,14 @@ var consulCluster = flag.String(
 
 var lockTTL = flag.Duration(
 	"lockTTL",
-	10*time.Second,
+	lock_bbs.LockTTL,
 	"TTL for service lock",
+)
+
+var lockRetryInterval = flag.Duration(
+	"lockRetryInterval",
+	lock_bbs.RetryInterval,
+	"interval to wait before retrying a failed lock acquisition",
 )
 
 const (
@@ -110,7 +123,7 @@ func main() {
 	members := grouper.Members{
 		{"workPool", cbWorkPool},
 		{"watcher", watcher},
-		{"server", http_server.New(*serverAddress, handler)},
+		{"server", http_server.New(*listenAddress, handler)},
 		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
 	}
 
@@ -145,7 +158,7 @@ func initializeAuctioneerClient(logger lager.Logger) auctionhandlers.Client {
 func initializeDropsonde(logger lager.Logger) {
 	err := dropsonde.Initialize(dropsondeDestination, dropsondeOrigin)
 	if err != nil {
-		logger.Error("failed to initialize dropsonde: %v", err)
+		logger.Error("failed-to-initialize-dropsonde", err)
 	}
 }
 

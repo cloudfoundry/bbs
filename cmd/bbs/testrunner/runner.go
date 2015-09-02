@@ -8,6 +8,7 @@ import (
 
 type Args struct {
 	Address             string
+	AdvertiseURL        string
 	AuctioneerAddress   string
 	ConsulCluster       string
 	SerializationFormat string
@@ -19,15 +20,16 @@ type Args struct {
 
 func (args Args) ArgSlice() []string {
 	return []string{
-		"-address", args.Address,
+		"-advertiseURL", args.AdvertiseURL,
 		"-auctioneerAddress", args.AuctioneerAddress,
 		"-consulCluster", args.ConsulCluster,
-		"-serializationFormat", args.SerializationFormat,
-		"-etcdCluster", args.EtcdCluster,
-		"-etcdCertFile", args.EtcdClientCert,
-		"-etcdKeyFile", args.EtcdClientKey,
 		"-etcdCaFile", args.EtcdCACert,
+		"-etcdCertFile", args.EtcdClientCert,
+		"-etcdCluster", args.EtcdCluster,
+		"-etcdKeyFile", args.EtcdClientKey,
+		"-listenAddress", args.Address,
 		"-logLevel", "debug",
+		"-serializationFormat", args.SerializationFormat,
 	}
 }
 

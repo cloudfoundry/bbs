@@ -113,6 +113,7 @@ var _ = BeforeEach(func() {
 
 	bbsArgs = testrunner.Args{
 		Address:           bbsAddress,
+		AdvertiseURL:      bbsURL.String(),
 		AuctioneerAddress: auctioneerServer.URL(),
 		EtcdCluster:       etcdUrl,
 		ConsulCluster:     consulRunner.ConsulCluster(),
