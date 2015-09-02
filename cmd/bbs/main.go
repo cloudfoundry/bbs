@@ -19,9 +19,13 @@ import (
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
+	legacybbs "github.com/cloudfoundry-incubator/runtime-schema/bbs"
 	"github.com/cloudfoundry-incubator/runtime-schema/bbs/lock_bbs"
+	legacymodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
+	"github.com/hashicorp/consul/api"
+	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
@@ -104,9 +108,22 @@ func main() {
 
 	initializeDropsonde(logger)
 
-	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
+	consulClient, err := consuladapter.NewClient(*consulCluster)
+	if err != nil {
+		logger.Fatal("new-consul-client-failed", err)
+	}
 
-	db := initializeEtcdDB(logger, etcdFlags, cbWorkPool)
+	sessionManager := consuladapter.NewSessionManager(consulClient)
+	consulDBSession, err := consuladapter.NewSessionNoChecks("consul-db", *lockTTL, consulClient, sessionManager)
+	if err != nil {
+		logger.Fatal("consul-session-failed", err)
+	}
+
+	consulDB := consuldb.NewConsul(consulDBSession)
+	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
+	db := initializeEtcdDB(logger, etcdFlags, cbWorkPool, consulDB)
+
+	maintainer := initializeLockMaintainer(logger, consulClient, sessionManager)
 
 	hub := events.NewHub()
 
@@ -121,6 +138,7 @@ func main() {
 	handler := handlers.New(logger, db, hub)
 
 	members := grouper.Members{
+		{"lock-maintainer", maintainer},
 		{"workPool", cbWorkPool},
 		{"watcher", watcher},
 		{"server", http_server.New(*listenAddress, handler)},
@@ -139,13 +157,38 @@ func main() {
 
 	logger.Info("started")
 
-	err := <-monitor.Wait()
+	err = <-monitor.Wait()
 	if err != nil {
 		logger.Error("exited-with-failure", err)
 		os.Exit(1)
 	}
 
 	logger.Info("exited")
+}
+
+func initializeLockMaintainer(logger lager.Logger, client *api.Client, sessionManager consuladapter.SessionManager) ifrit.Runner {
+	session, err := consuladapter.NewSession("bbs", *lockTTL, client, sessionManager)
+	if err != nil {
+		logger.Fatal("Couldn't create consul session", err)
+	}
+	presenceManager := legacybbs.NewBBSPresenceManager(session, clock.NewClock(), logger)
+
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		logger.Fatal("Couldn't generate uuid", err)
+	}
+
+	if *advertiseURL == "" {
+		logger.Fatal("Advertise URL must be specified", nil)
+	}
+
+	bbsPresence := legacymodels.NewBBSPresence(uuid.String(), *advertiseURL)
+	lockMaintainer, err := presenceManager.NewBBSMasterLock(bbsPresence, *lockRetryInterval)
+	if err != nil {
+		logger.Fatal("Couldn't create lock maintainer", err)
+	}
+
+	return lockMaintainer
 }
 
 func initializeAuctioneerClient(logger lager.Logger) auctionhandlers.Client {
@@ -178,7 +221,12 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 	})
 }
 
-func initializeEtcdDB(logger lager.Logger, etcdFlags *ETCDFlags, cbClient taskworkpool.TaskCompletionClient) *etcddb.ETCDDB {
+func initializeEtcdDB(
+	logger lager.Logger,
+	etcdFlags *ETCDFlags,
+	cbClient taskworkpool.TaskCompletionClient,
+	consulDB *consuldb.ConsulDB,
+) *etcddb.ETCDDB {
 	var formatting *format.Format
 
 	switch *serializationFormat {
@@ -197,7 +245,7 @@ func initializeEtcdDB(logger lager.Logger, etcdFlags *ETCDFlags, cbClient taskwo
 		initializeEtcdStoreClient(logger, etcdFlags),
 		initializeAuctioneerClient(logger),
 		cellhandlers.NewClient(),
-		initializeConsulDB(logger),
+		consulDB,
 		clock.NewClock(),
 		cbClient,
 	)
@@ -221,19 +269,4 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	return etcddb.NewStoreClient(etcdClient)
-}
-
-func initializeConsulDB(logger lager.Logger) *consuldb.ConsulDB {
-	client, err := consuladapter.NewClient(*consulCluster)
-	if err != nil {
-		logger.Fatal("new-client-failed", err)
-	}
-
-	sessionMgr := consuladapter.NewSessionManager(client)
-	consulSession, err := consuladapter.NewSessionNoChecks(*sessionName, *lockTTL, client, sessionMgr)
-	if err != nil {
-		logger.Fatal("consul-session-failed", err)
-	}
-
-	return consuldb.NewConsul(consulSession)
 }
