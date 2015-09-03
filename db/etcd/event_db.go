@@ -41,11 +41,11 @@ func (db *ETCDDB) WatchForDesiredLRPChanges(logger lager.Logger,
 				desiredLRP := new(models.DesiredLRP)
 				err := db.deserializeModel(logger, event.Node, desiredLRP)
 				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.Node.Value})
+					logger.Error("failed-to-unmarshal-desired-lrp", err)
 					continue
 				}
 
-				logger.Debug("sending-create", lager.Data{"desired-lrp": desiredLRP})
+				logger.Debug("sending-create", lager.Data{"process-guid": desiredLRP.ProcessGuid})
 				created(desiredLRP)
 
 			case event.Node != nil && event.PrevNode != nil: // update
@@ -54,18 +54,18 @@ func (db *ETCDDB) WatchForDesiredLRPChanges(logger lager.Logger,
 				before := new(models.DesiredLRP)
 				err := db.deserializeModel(logger, event.PrevNode, before)
 				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.PrevNode.Value})
+					logger.Error("failed-to-unmarshal-desired-lrp", err)
 					continue
 				}
 
 				after := new(models.DesiredLRP)
 				err = db.deserializeModel(logger, event.Node, after)
 				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.Node.Value})
+					logger.Error("failed-to-unmarshal-desired-lrp", err)
 					continue
 				}
 
-				logger.Debug("sending-update", lager.Data{"before": before, "after": after})
+				logger.Debug("sending-update", lager.Data{"process-guid": after.ProcessGuid})
 				changed(&models.DesiredLRPChange{Before: before, After: after})
 
 			case event.Node == nil && event.PrevNode != nil: // delete
@@ -74,11 +74,11 @@ func (db *ETCDDB) WatchForDesiredLRPChanges(logger lager.Logger,
 				desiredLRP := new(models.DesiredLRP)
 				err := db.deserializeModel(logger, event.PrevNode, desiredLRP)
 				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err, lager.Data{"value": event.PrevNode.Value})
+					logger.Error("failed-to-unmarshal-desired-lrp", err)
 					continue
 				}
 
-				logger.Debug("sending-delete", lager.Data{"desired-lrp": desiredLRP})
+				logger.Debug("sending-delete", lager.Data{"process-guid": desiredLRP.ProcessGuid})
 				deleted(desiredLRP)
 
 			default:
