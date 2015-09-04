@@ -15,6 +15,7 @@ import (
 )
 
 func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
+	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db)
@@ -25,6 +26,9 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 	eventsHandler := NewEventHandler(logger, hub)
 
 	actions := rata.Handlers{
+		// Ping
+		bbs.PingRoute: route(pingHandler.Ping),
+
 		// Domains
 		bbs.DomainsRoute:      route(domainHandler.Domains),
 		bbs.UpsertDomainRoute: route(domainHandler.Upsert),

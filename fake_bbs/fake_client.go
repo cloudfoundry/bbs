@@ -11,6 +11,12 @@ import (
 )
 
 type FakeClient struct {
+	PingStub        func() bool
+	pingMutex       sync.RWMutex
+	pingArgsForCall []struct{}
+	pingReturns     struct {
+		result1 bool
+	}
 	DomainsStub        func() ([]string, error)
 	domainsMutex       sync.RWMutex
 	domainsArgsForCall []struct{}
@@ -328,6 +334,30 @@ type FakeClient struct {
 		result1 bool
 		result2 error
 	}
+}
+
+func (fake *FakeClient) Ping() bool {
+	fake.pingMutex.Lock()
+	fake.pingArgsForCall = append(fake.pingArgsForCall, struct{}{})
+	fake.pingMutex.Unlock()
+	if fake.PingStub != nil {
+		return fake.PingStub()
+	} else {
+		return fake.pingReturns.result1
+	}
+}
+
+func (fake *FakeClient) PingCallCount() int {
+	fake.pingMutex.RLock()
+	defer fake.pingMutex.RUnlock()
+	return len(fake.pingArgsForCall)
+}
+
+func (fake *FakeClient) PingReturns(result1 bool) {
+	fake.PingStub = nil
+	fake.pingReturns = struct {
+		result1 bool
+	}{result1}
 }
 
 func (fake *FakeClient) Domains() ([]string, error) {

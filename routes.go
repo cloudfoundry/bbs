@@ -3,6 +3,9 @@ package bbs
 import "github.com/tedsuo/rata"
 
 const (
+	// Ping
+	PingRoute = "Ping"
+
 	// Domains
 	DomainsRoute      = "Domains"
 	UpsertDomainRoute = "UpsertDomain"
@@ -56,6 +59,9 @@ const (
 )
 
 var Routes = rata.Routes{
+	// Ping
+	{Path: "/v1/ping", Method: "POST", Name: PingRoute},
+
 	// Domains
 	{Path: "/v1/domains/list", Method: "POST", Name: DomainsRoute},
 	{Path: "/v1/domains/upsert", Method: "POST", Name: UpsertDomainRoute},

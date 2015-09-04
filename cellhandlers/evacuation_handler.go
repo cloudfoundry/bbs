@@ -4,22 +4,30 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/rep/evacuation/evacuation_context"
 	"github.com/pivotal-golang/lager"
 )
 
 type EvacuationHandler struct {
 	evacuatable evacuation_context.Evacuatable
+	bbsClient   bbs.Client
+	pingTimeout time.Duration
 	logger      lager.Logger
 }
 
 func NewEvacuationHandler(
 	logger lager.Logger,
+	bbsClient bbs.Client,
+	pingTimeout time.Duration,
 	evacuatable evacuation_context.Evacuatable,
 ) *EvacuationHandler {
 	return &EvacuationHandler{
 		evacuatable: evacuatable,
+		bbsClient:   bbsClient,
+		pingTimeout: pingTimeout,
 		logger:      logger,
 	}
 }
@@ -28,6 +36,22 @@ func (h *EvacuationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	logger := h.logger.Session("handling-evacuation")
 	logger.Info("starting")
 	defer logger.Info("finished")
+
+	bbsRunning := make(chan struct{})
+
+	go func(bbsClient bbs.Client) {
+		for !bbsClient.Ping() {
+			time.Sleep(100 * time.Millisecond)
+		}
+		close(bbsRunning)
+	}(h.bbsClient)
+
+	select {
+	case <-bbsRunning:
+	case <-time.After(h.pingTimeout):
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
 
 	h.evacuatable.Evacuate()
 

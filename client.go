@@ -28,6 +28,8 @@ const (
 //go:generate counterfeiter -o fake_bbs/fake_client.go . Client
 
 type Client interface {
+	Ping() bool
+
 	Domains() ([]string, error)
 	UpsertDomain(domain string, ttl time.Duration) error
 
@@ -92,6 +94,15 @@ type client struct {
 	streamingHTTPClient *http.Client
 
 	reqGen *rata.RequestGenerator
+}
+
+func (c *client) Ping() bool {
+	response := models.PingResponse{}
+	err := c.doRequest(PingRoute, nil, nil, nil, &response)
+	if err != nil {
+		return false
+	}
+	return response.Available
 }
 
 func (c *client) Domains() ([]string, error) {
