@@ -556,11 +556,20 @@ func (c *client) doEvacRequest(route string, defaultKeepContainer bool, request 
 }
 
 func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, requestBody, responseBody proto.Message) error {
+	var err error
 	request, err := c.createRequest(requestName, params, queryParams, requestBody)
 	if err != nil {
 		return err
 	}
-	return c.do(request, responseBody)
+	for attempts := 0; attempts < 10; attempts++ {
+		err = c.do(request, responseBody)
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+		} else {
+			break
+		}
+	}
+	return err
 }
 
 func (c *client) do(request *http.Request, responseObject proto.Message) error {
