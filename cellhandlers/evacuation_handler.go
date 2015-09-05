@@ -37,20 +37,15 @@ func (h *EvacuationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	logger.Info("starting")
 	defer logger.Info("finished")
 
-	bbsRunning := make(chan struct{})
+	start := time.Now()
 
-	go func(bbsClient bbs.Client) {
-		for !bbsClient.Ping() {
-			time.Sleep(100 * time.Millisecond)
+	for !h.bbsClient.Ping() {
+		time.Sleep(100 * time.Millisecond)
+		now := time.Now()
+		if now.Sub(start) > h.pingTimeout {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
 		}
-		close(bbsRunning)
-	}(h.bbsClient)
-
-	select {
-	case <-bbsRunning:
-	case <-time.After(h.pingTimeout):
-		w.WriteHeader(http.StatusServiceUnavailable)
-		return
 	}
 
 	h.evacuatable.Evacuate()
