@@ -38,7 +38,9 @@ func NewManager(
 }
 
 func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	version, err := m.db.Version(m.logger)
+	logger := m.logger.Session("migration-manager")
+
+	version, err := m.db.Version(logger)
 	if err != nil {
 		if models.ConvertError(err) == models.ErrResourceNotFound {
 			version = &models.Version{}
@@ -101,6 +103,11 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				return err
 			}
 
+			logger.Debug("running-migration", lager.Data{
+				"CurrentVersion":   currentVersion,
+				"TargetVersion":    targetVersion,
+				"MigrationVersion": migration.Version(),
+			})
 			err = migration.Up(m.logger, m.storeClient)
 			if err != nil {
 				return err
@@ -114,11 +121,15 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			if err != nil {
 				return err
 			}
+
+			logger.Debug("completed-migration")
 		}
 	}
 
 	close(ready)
 	close(m.migrationsDone)
+
+	logger.Debug("migrations-finished")
 
 	select {
 	case <-signals:
