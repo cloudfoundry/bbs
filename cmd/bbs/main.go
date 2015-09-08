@@ -48,12 +48,6 @@ var advertiseURL = flag.String(
 	"The URL to advertise to clients",
 )
 
-var serializationFormat = flag.String(
-	"serializationFormat",
-	"json_no_envelope",
-	"options: json_no_envelope, json, proto",
-)
-
 var communicationTimeout = flag.Duration(
 	"communicationTimeout",
 	10*time.Second,
@@ -233,21 +227,8 @@ func initializeEtcdDB(
 	cbClient taskworkpool.TaskCompletionClient,
 	consulDB *consuldb.ConsulDB,
 ) *etcddb.ETCDDB {
-	var formatting *format.Format
-
-	switch *serializationFormat {
-	case "proto":
-		formatting = format.ENCODED_PROTO
-	case "json":
-		formatting = format.FORMATTED_JSON
-	case "json_no_envelope", "":
-		formatting = format.LEGACY_FORMATTING
-	default:
-		logger.Fatal("invalid-seriailization-format", nil)
-	}
-
 	return etcddb.NewETCD(
-		formatting,
+		format.ENCODED_PROTO,
 		storeClient,
 		initializeAuctioneerClient(logger),
 		cellhandlers.NewClient(),
