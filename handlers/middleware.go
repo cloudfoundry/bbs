@@ -21,3 +21,11 @@ func LogWrap(logger lager.Logger, handler http.Handler) http.HandlerFunc {
 		requestLog.Info("done")
 	}
 }
+
+func UnavailableWrap(handler http.Handler, serviceReady <-chan struct{}) http.HandlerFunc {
+	handler = NewUnavailableHandler(handler, serviceReady)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler.ServeHTTP(w, r)
+	}
+}

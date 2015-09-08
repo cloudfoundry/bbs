@@ -25,9 +25,10 @@ var _ = Describe("Migration Manager", func() {
 		fakeDB     *fakes.FakeDB
 		migrations []migration.Migration
 
-		ready      chan struct{}
-		signals    chan os.Signal
-		runErrChan chan error
+		ready          chan struct{}
+		signals        chan os.Signal
+		runErrChan     chan error
+		migrationsDone chan struct{}
 
 		dbVersion     *models.Version
 		fakeMigration *migrationfakes.FakeMigration
@@ -39,6 +40,7 @@ var _ = Describe("Migration Manager", func() {
 		runErrChan = make(chan error, 1)
 		ready = make(chan struct{})
 		signals = make(chan os.Signal)
+		migrationsDone = make(chan struct{})
 
 		dbVersion = &models.Version{}
 
@@ -53,7 +55,7 @@ var _ = Describe("Migration Manager", func() {
 	})
 
 	JustBeforeEach(func() {
-		manager = migration.NewManager(logger, fakeDB, storeClient, migrations)
+		manager = migration.NewManager(logger, fakeDB, storeClient, migrations, migrationsDone)
 		migrationProcess = ifrit.Background(manager)
 	})
 
@@ -102,6 +104,7 @@ var _ = Describe("Migration Manager", func() {
 			Eventually(migrationProcess.Wait()).Should(Receive(&err))
 			Expect(err).To(MatchError("kablamo"))
 			Expect(migrationProcess.Ready()).ToNot(BeClosed())
+			Expect(migrationsDone).NotTo(BeClosed())
 		})
 	})
 
@@ -117,6 +120,7 @@ var _ = Describe("Migration Manager", func() {
 			Eventually(migrationProcess.Wait()).Should(Receive(&err))
 			Expect(err).To(MatchError("Existing DB version (100) exceeds bbs version (99)"))
 			Expect(migrationProcess.Ready()).ToNot(BeClosed())
+			Expect(migrationsDone).NotTo(BeClosed())
 		})
 	})
 
@@ -129,6 +133,7 @@ var _ = Describe("Migration Manager", func() {
 
 		It("signals ready and does not change the version", func() {
 			Eventually(migrationProcess.Ready()).Should(BeClosed())
+			Expect(migrationsDone).To(BeClosed())
 			Consistently(fakeDB.SetVersionCallCount).Should(Equal(0))
 		})
 
@@ -142,6 +147,7 @@ var _ = Describe("Migration Manager", func() {
 				Eventually(migrationProcess.Wait()).Should(Receive(&err))
 				Expect(err).To(MatchError("Existing DB target version (101) exceeds final migration version (100)"))
 				Expect(migrationProcess.Ready()).ToNot(BeClosed())
+				Expect(migrationsDone).ToNot(BeClosed())
 			})
 		})
 
@@ -155,6 +161,7 @@ var _ = Describe("Migration Manager", func() {
 				Eventually(migrationProcess.Wait()).Should(Receive(&err))
 				Expect(err).To(MatchError("Existing DB target version (99) exceeds current version (100)"))
 				Expect(migrationProcess.Ready()).ToNot(BeClosed())
+				Expect(migrationsDone).ToNot(BeClosed())
 			})
 		})
 	})
@@ -175,6 +182,7 @@ var _ = Describe("Migration Manager", func() {
 
 		It("it sorts the migrations and runs them sequentially", func() {
 			Eventually(migrationProcess.Ready()).Should(BeClosed())
+			Expect(migrationsDone).To(BeClosed())
 			Consistently(fakeDB.SetVersionCallCount).Should(Equal(4))
 
 			_, version := fakeDB.SetVersionArgsForCall(0)
@@ -205,7 +213,8 @@ var _ = Describe("Migration Manager", func() {
 				var err error
 				Eventually(migrationProcess.Wait()).Should(Receive(&err))
 				Expect(err).To(MatchError("Existing DB target version (101) exceeds pending migration version (100)"))
-				Expect(migrationProcess.Ready()).ToNot(BeClosed())
+				Expect(migrationProcess.Ready()).NotTo(BeClosed())
+				Expect(migrationsDone).NotTo(BeClosed())
 			})
 		})
 	})

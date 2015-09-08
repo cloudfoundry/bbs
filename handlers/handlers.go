@@ -14,7 +14,7 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
+func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan struct{}) http.Handler {
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
@@ -84,7 +84,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub) http.Handler {
 		panic("unable to create router: " + err.Error())
 	}
 
-	return LogWrap(logger, handler)
+	return LogWrap(logger, UnavailableWrap(handler, migrationsDone))
 }
 
 func route(f func(w http.ResponseWriter, r *http.Request)) http.Handler {

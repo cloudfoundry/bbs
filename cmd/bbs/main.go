@@ -121,8 +121,10 @@ func main() {
 	storeClient := initializeEtcdStoreClient(logger, etcdFlags)
 	db := initializeEtcdDB(logger, storeClient, cbWorkPool, consulDB)
 
+	migrationsDone := make(chan struct{})
+
 	maintainer := initializeLockMaintainer(logger, consulClient, sessionManager)
-	migrationManager := migration.NewManager(logger, db, storeClient, migrations.Migrations)
+	migrationManager := migration.NewManager(logger, db, storeClient, migrations.Migrations, migrationsDone)
 
 	hub := events.NewHub()
 
@@ -134,14 +136,14 @@ func main() {
 		bbsWatchRetryWaitDuration,
 	)
 
-	handler := handlers.New(logger, db, hub)
+	handler := handlers.New(logger, db, hub, migrationsDone)
 
 	members := grouper.Members{
 		{"lock-maintainer", maintainer},
-		{"migration-manager", migrationManager},
 		{"workPool", cbWorkPool},
-		{"watcher", watcher},
 		{"server", http_server.New(*listenAddress, handler)},
+		{"migration-manager", migrationManager},
+		{"watcher", watcher},
 		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
 	}
 

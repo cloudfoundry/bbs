@@ -12,20 +12,28 @@ import (
 )
 
 type Manager struct {
-	logger      lager.Logger
-	db          db.DB
-	storeClient etcd.StoreClient
-	migrations  []Migration
+	logger         lager.Logger
+	db             db.DB
+	storeClient    etcd.StoreClient
+	migrations     []Migration
+	migrationsDone chan<- struct{}
 }
 
-func NewManager(logger lager.Logger, db db.DB, storeClient etcd.StoreClient, migrations Migrations) Manager {
+func NewManager(
+	logger lager.Logger,
+	db db.DB,
+	storeClient etcd.StoreClient,
+	migrations Migrations,
+	migrationsDone chan<- struct{},
+) Manager {
 	sort.Sort(migrations)
 
 	return Manager{
-		logger:      logger,
-		db:          db,
-		storeClient: storeClient,
-		migrations:  migrations,
+		logger:         logger,
+		db:             db,
+		storeClient:    storeClient,
+		migrations:     migrations,
+		migrationsDone: migrationsDone,
 	}
 }
 
@@ -110,6 +118,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 
 	close(ready)
+	close(m.migrationsDone)
 
 	select {
 	case <-signals:

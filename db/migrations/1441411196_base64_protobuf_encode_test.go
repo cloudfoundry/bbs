@@ -148,12 +148,6 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 					Expect(migrationErr).NotTo(HaveOccurred())
 				})
 			})
-
-			Context("otherwise", func() {
-				XIt("fails the migration", func() {
-					// TODO How do we test this??
-				})
-			})
 		})
 
 		Context("when fetching actual lrps fails", func() {
@@ -167,12 +161,6 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 					Expect(migrationErr).NotTo(HaveOccurred())
 				})
 			})
-
-			Context("otherwise", func() {
-				XIt("fails the migration", func() {
-					// TODO How do we test this??
-				})
-			})
 		})
 
 		Context("when fetching tasks fails", func() {
@@ -184,12 +172,6 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 
 				It("continues the migration", func() {
 					Expect(migrationErr).NotTo(HaveOccurred())
-				})
-			})
-
-			Context("otherwise", func() {
-				XIt("fails the migration", func() {
-					// TODO How do we test this??
 				})
 			})
 		})
