@@ -47,6 +47,7 @@ var _ = Describe("SerializationFormat", func() {
 		BeforeEach(func() {
 			bbsArgs.SerializationFormat = "json"
 		})
+
 		It("writes the value as unencoded json with metadata", func() {
 			res, err := etcdClient.Get(etcd.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 			Expect(err).NotTo(HaveOccurred())
@@ -61,6 +62,7 @@ var _ = Describe("SerializationFormat", func() {
 		BeforeEach(func() {
 			bbsArgs.SerializationFormat = "proto"
 		})
+
 		It("writes the value as base64 encoded protobufs with metadata", func() {
 			res, err := etcdClient.Get(etcd.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 			Expect(err).NotTo(HaveOccurred())

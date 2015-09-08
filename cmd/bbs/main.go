@@ -10,9 +10,11 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/db/migrations"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
+	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
 	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
@@ -121,9 +123,12 @@ func main() {
 
 	consulDB := consuldb.NewConsul(consulDBSession)
 	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
-	db := initializeEtcdDB(logger, etcdFlags, cbWorkPool, consulDB)
+
+	storeClient := initializeEtcdStoreClient(logger, etcdFlags)
+	db := initializeEtcdDB(logger, storeClient, cbWorkPool, consulDB)
 
 	maintainer := initializeLockMaintainer(logger, consulClient, sessionManager)
+	migrationManager := migration.NewManager(logger, db, storeClient, migrations.Migrations)
 
 	hub := events.NewHub()
 
@@ -139,6 +144,7 @@ func main() {
 
 	members := grouper.Members{
 		{"lock-maintainer", maintainer},
+		{"migration-manager", migrationManager},
 		{"workPool", cbWorkPool},
 		{"watcher", watcher},
 		{"server", http_server.New(*listenAddress, handler)},
@@ -223,7 +229,7 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 
 func initializeEtcdDB(
 	logger lager.Logger,
-	etcdFlags *ETCDFlags,
+	storeClient etcddb.StoreClient,
 	cbClient taskworkpool.TaskCompletionClient,
 	consulDB *consuldb.ConsulDB,
 ) *etcddb.ETCDDB {
@@ -242,7 +248,7 @@ func initializeEtcdDB(
 
 	return etcddb.NewETCD(
 		formatting,
-		initializeEtcdStoreClient(logger, etcdFlags),
+		storeClient,
 		initializeAuctioneerClient(logger),
 		cellhandlers.NewClient(),
 		consulDB,

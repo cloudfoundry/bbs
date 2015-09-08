@@ -18,6 +18,7 @@ import (
 )
 
 const DataSchemaRoot = "/v1/"
+const VersionKey = "/version"
 
 const maxActualGroupGetterWorkPoolSize = 50
 const ActualLRPSchemaRoot = DataSchemaRoot + "actual"
