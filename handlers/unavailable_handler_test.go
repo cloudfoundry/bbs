@@ -16,8 +16,7 @@ var _ = Describe("Unavailable Handler", func() {
 		handler             *handlers.UnavailableHandler
 		serviceReady, ready chan struct{}
 
-		responseRecorder *httptest.ResponseRecorder
-		request          *http.Request
+		request *http.Request
 	)
 
 	BeforeEach(func() {
@@ -26,35 +25,30 @@ var _ = Describe("Unavailable Handler", func() {
 
 		fakeServer = ghttp.NewServer()
 		handler = handlers.NewUnavailableHandler(fakeServer, serviceReady)
-		responseRecorder = httptest.NewRecorder()
 
 		var err error
 		request, err = http.NewRequest("GET", "/test", nil)
 		Expect(err).NotTo(HaveOccurred())
+
+		fakeServer.RouteToHandler("GET", "/test", ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/test"),
+			ghttp.RespondWith(200, nil, nil),
+		))
 	})
 
-	It("responds with 503 when the service is not ready", func() {
+	verifyResponse := func(expectedStatus int, handler *handlers.UnavailableHandler) {
+		responseRecorder := httptest.NewRecorder()
 		handler.ServeHTTP(responseRecorder, request)
-		Expect(responseRecorder.Code).To(Equal(http.StatusServiceUnavailable))
-	})
+		Expect(responseRecorder.Code).To(Equal(expectedStatus))
+	}
 
-	Context("when the service is ready", func() {
-		BeforeEach(func() {
-			fakeServer.AppendHandlers(ghttp.CombineHandlers(
-				ghttp.VerifyRequest("GET", "/test"),
-				ghttp.RespondWith(200, nil, nil),
-			))
+	It("responds with 503 until the service is ready", func() {
+		verifyResponse(http.StatusServiceUnavailable, handler)
+		verifyResponse(http.StatusServiceUnavailable, handler)
 
-			go func() {
-				serviceReady <- struct{}{}
-				ready <- struct{}{}
-			}()
-		})
+		close(serviceReady)
 
-		It("calls through to the wrapped handler", func() {
-			Eventually(ready).Should(Receive())
-			handler.ServeHTTP(responseRecorder, request)
-			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-		})
+		verifyResponse(http.StatusOK, handler)
+		verifyResponse(http.StatusOK, handler)
 	})
 })
