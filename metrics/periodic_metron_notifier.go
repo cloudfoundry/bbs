@@ -10,7 +10,11 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const metricsReportingDuration = metric.Duration("MetricsReportingDuration")
+const (
+	metricsReportingDuration = metric.Duration("MetricsReportingDuration")
+
+	bbsMasterElected = metric.Counter("BBSMasterElected")
+)
 
 type PeriodicMetronNotifier struct {
 	Interval    time.Duration
@@ -48,6 +52,8 @@ func (notifier PeriodicMetronNotifier) Run(signals <-chan os.Signal, ready chan<
 
 	logger.Info("started")
 	defer logger.Info("finished")
+
+	bbsMasterElected.Increment()
 
 	for {
 		select {

@@ -55,6 +55,14 @@ var _ = Describe("PeriodicMetronNotifier", func() {
 		Eventually(pmn.Wait(), 2*time.Second).Should(Receive())
 	})
 
+	Context("when the metron notifier starts up", func() {
+		It("should emit an event that BBS has started", func() {
+			Eventually(func() uint64 {
+				return sender.GetCounter("BBSMasterElected")
+			}).Should(Equal(uint64(1)))
+		})
+	})
+
 	Context("when the report interval elapses", func() {
 		JustBeforeEach(func() {
 			fakeClock.Increment(reportInterval)
