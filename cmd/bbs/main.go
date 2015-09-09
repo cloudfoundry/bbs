@@ -141,7 +141,13 @@ func main() {
 	migrationsDone := make(chan struct{})
 
 	maintainer := initializeLockMaintainer(logger, consulClient, sessionManager)
-	migrationManager := migration.NewManager(logger, db, storeClient, migrations.Migrations, migrationsDone)
+	migrationManager := migration.NewManager(logger,
+		db,
+		storeClient,
+		migrations.Migrations,
+		migrationsDone,
+		clock.NewClock(),
+	)
 
 	hub := events.NewHub()
 

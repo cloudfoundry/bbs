@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/runtime-schema/metric"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
+)
+
+const (
+	migrationDuration = metric.Duration("MigrationDuration")
 )
 
 type Manager struct {
@@ -17,6 +24,7 @@ type Manager struct {
 	storeClient    etcd.StoreClient
 	migrations     []Migration
 	migrationsDone chan<- struct{}
+	clock          clock.Clock
 }
 
 func NewManager(
@@ -25,6 +33,7 @@ func NewManager(
 	storeClient etcd.StoreClient,
 	migrations Migrations,
 	migrationsDone chan<- struct{},
+	clock clock.Clock,
 ) Manager {
 	sort.Sort(migrations)
 
@@ -34,6 +43,7 @@ func NewManager(
 		storeClient:    storeClient,
 		migrations:     migrations,
 		migrationsDone: migrationsDone,
+		clock:          clock,
 	}
 }
 
@@ -81,6 +91,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			bbsMigrationVersion,
 		)
 	}
+
+	migrateStart := m.clock.Now()
 
 	currentVersion := version.CurrentVersion
 	targetVersion := version.TargetVersion
@@ -130,6 +142,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	close(m.migrationsDone)
 
 	logger.Debug("migrations-finished")
+	migrationDuration.Send(time.Since(migrateStart))
 
 	select {
 	case <-signals:

@@ -9,8 +9,11 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/migration/migrationfakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
+	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -34,9 +37,14 @@ var _ = Describe("Migration Manager", func() {
 		fakeMigration *migrationfakes.FakeMigration
 
 		storeClient etcd.StoreClient
+
+		sender *fake.FakeMetricSender
 	)
 
 	BeforeEach(func() {
+		sender = fake.NewFakeMetricSender()
+		metrics.Initialize(sender, nil)
+
 		runErrChan = make(chan error, 1)
 		ready = make(chan struct{})
 		signals = make(chan os.Signal)
@@ -55,7 +63,7 @@ var _ = Describe("Migration Manager", func() {
 	})
 
 	JustBeforeEach(func() {
-		manager = migration.NewManager(logger, fakeDB, storeClient, migrations, migrationsDone)
+		manager = migration.NewManager(logger, fakeDB, storeClient, migrations, migrationsDone, clock.NewClock())
 		migrationProcess = ifrit.Background(manager)
 	})
 
@@ -178,6 +186,15 @@ var _ = Describe("Migration Manager", func() {
 			fakeMigration.VersionReturns(100)
 
 			migrations = []migration.Migration{fakeMigration102, fakeMigration}
+		})
+
+		It("reports the duration that it took to converge", func() {
+			Eventually(migrationProcess.Ready()).Should(BeClosed())
+			Expect(migrationsDone).To(BeClosed())
+
+			reportedDuration := sender.GetValue("MigrationDuration")
+			Expect(reportedDuration.Value).NotTo(BeZero())
+			Expect(reportedDuration.Unit).To(Equal("nanos"))
 		})
 
 		It("it sorts the migrations and runs them sequentially", func() {
