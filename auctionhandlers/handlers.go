@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/auction/auctiontypes"
-	"github.com/cloudfoundry/dropsonde"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 )
@@ -49,7 +48,7 @@ func logWrap(loggable loggableHandler, logger lager.Logger) http.HandlerFunc {
 			"request": r.URL.String(),
 		})
 
-		handler := dropsonde.InstrumentedHandler(loggable.WithLogger(requestLog))
+		handler := loggable.WithLogger(requestLog)
 
 		requestLog.Info("serving")
 		handler.ServeHTTP(w, r)

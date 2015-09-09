@@ -84,7 +84,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan st
 		panic("unable to create router: " + err.Error())
 	}
 
-	return LogWrap(logger, UnavailableWrap(handler, migrationsDone))
+	return MeasureWrap(LogWrap(logger, UnavailableWrap(handler, migrationsDone)))
 }
 
 func route(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
