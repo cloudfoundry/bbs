@@ -40,6 +40,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			domain    = "some-domain"
 			cellId    = "cell-id"
 		)
+
 		JustBeforeEach(func() {
 			etcdDB.ConvergeTasks(logger, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
@@ -54,10 +55,16 @@ var _ = Describe("Convergence of Tasks", func() {
 			Expect(reportedDuration.Value).NotTo(BeZero())
 		})
 
+		It("emits -1 metrics", func() {
+			Expect(sender.GetValue("TasksPending").Value).To(Equal(float64(-1)))
+			Expect(sender.GetValue("TasksRunning").Value).To(Equal(float64(-1)))
+			Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(-1)))
+			Expect(sender.GetValue("TasksResolving").Value).To(Equal(float64(-1)))
+		})
+
 		Context("when a Task is malformed", func() {
 			BeforeEach(func() {
 				etcdHelper.CreateMalformedTask(taskGuid)
-
 			})
 
 			It("should delete it", func() {
@@ -82,6 +89,10 @@ var _ = Describe("Convergence of Tasks", func() {
 					t.FirstCompletedAt = 0
 					etcdHelper.SetRawTask(t)
 				}
+			})
+
+			It("emits a pending metric", func() {
+				Expect(sender.GetValue("TasksPending").Value).To(Equal(float64(2)))
 			})
 
 			Context("when the Task has NOT been pending for too long", func() {
@@ -162,6 +173,10 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
+			It("emits a running metric", func() {
+				Expect(sender.GetValue("TasksRunning").Value).To(Equal(float64(1)))
+			})
+
 			Context("when the associated cell is present", func() {
 				BeforeEach(func() {
 					cellPresence := models.NewCellPresence("cell-id", "1.2.3.4", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
@@ -217,6 +232,10 @@ var _ = Describe("Convergence of Tasks", func() {
 
 					err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("emits a completed metric", func() {
+					Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(2)))
 				})
 
 				Context("for longer than the convergence interval", func() {
@@ -305,6 +324,10 @@ var _ = Describe("Convergence of Tasks", func() {
 
 				err = etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("emits a resolving metric", func() {
+				Expect(sender.GetValue("TasksResolving").Value).To(Equal(float64(1)))
 			})
 
 			Context("when the task is in resolving state for less than the convergence interval", func() {

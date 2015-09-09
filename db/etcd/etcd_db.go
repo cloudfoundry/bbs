@@ -52,6 +52,14 @@ func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 	return path.Join(DesiredLRPSchemaRoot, processGuid)
 }
 
+type ETCDOptions struct {
+	CertFile    string
+	KeyFile     string
+	CAFile      string
+	ClusterUrls []string
+	IsSSL       bool
+}
+
 type ETCDDB struct {
 	format            *format.Format
 	client            StoreClient

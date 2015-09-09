@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 
@@ -12,8 +13,10 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
+	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
+	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
@@ -47,6 +50,8 @@ var consulRunner *consulrunner.ClusterRunner
 var etcdHelper *etcd_helpers.ETCDHelper
 var consulHelper *consul_helpers.ConsulHelper
 var auctioneerServer *ghttp.Server
+var testMetricsListener net.PacketConn
+var testMetricsChan chan *events.ValueMetric
 
 func TestBBS(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -109,14 +114,41 @@ var _ = BeforeEach(func() {
 		Host:   bbsAddress,
 	}
 
+	testMetricsListener, _ = net.ListenPacket("udp", "127.0.0.1:0")
+	testMetricsChan = make(chan *events.ValueMetric, 1)
+	go func() {
+		defer GinkgoRecover()
+		for {
+			buffer := make([]byte, 1024)
+			n, _, err := testMetricsListener.ReadFrom(buffer)
+			if err != nil {
+				close(testMetricsChan)
+				return
+			}
+
+			var envelope events.Envelope
+			err = proto.Unmarshal(buffer[:n], &envelope)
+			Expect(err).NotTo(HaveOccurred())
+
+			if envelope.GetEventType() == events.Envelope_ValueMetric {
+				select {
+				case testMetricsChan <- envelope.ValueMetric:
+				default:
+				}
+			}
+		}
+	}()
+
 	client = bbs.NewClient(bbsURL.String())
 
 	bbsArgs = testrunner.Args{
-		Address:           bbsAddress,
-		AdvertiseURL:      bbsURL.String(),
-		AuctioneerAddress: auctioneerServer.URL(),
-		EtcdCluster:       etcdUrl,
-		ConsulCluster:     consulRunner.ConsulCluster(),
+		Address:               bbsAddress,
+		AdvertiseURL:          bbsURL.String(),
+		AuctioneerAddress:     auctioneerServer.URL(),
+		ConsulCluster:         consulRunner.ConsulCluster(),
+		DropsondeDestination:  testMetricsListener.LocalAddr().String(),
+		EtcdCluster:           etcdUrl,
+		MetricsReportInterval: 10 * time.Millisecond,
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
@@ -125,4 +157,6 @@ var _ = BeforeEach(func() {
 
 var _ = AfterEach(func() {
 	auctioneerServer.Close()
+	testMetricsListener.Close()
+	Eventually(testMetricsChan).Should(BeClosed())
 })

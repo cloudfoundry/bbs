@@ -37,6 +37,26 @@ var _ = Describe("LrpConvergence", func() {
 			testData = createTestData(3, 1, 1, 3, 1, 1, 3, 1, 1)
 		})
 
+		Describe("general metrics", func() {
+			It("emits a metric for domains", func() {
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				Expect(gatherError).NotTo(HaveOccurred())
+
+				Expect(sender.GetValue("Domain.test-domain").Value).To(Equal(float64(1)))
+			})
+
+			It("emits metrics for lrps", func() {
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				Expect(gatherError).NotTo(HaveOccurred())
+
+				Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(5)))
+				Expect(sender.GetValue("LRPsStarting").Value).To(Equal(float64(0)))
+				Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(15)))
+				Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(0)))
+				Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(0)))
+			})
+		})
+
 		Context("Desired LRPs", func() {
 			It("provides the correct desired LRPs", func() {
 				data, gatherError := etcdDB.GatherAndPruneLRPs(logger)
@@ -105,7 +125,6 @@ var _ = Describe("LrpConvergence", func() {
 					len(testData.unknownDesiredGuidsWithOnlyInvalidActuals)
 				Expect(sender.GetCounter("ConvergenceLRPPreProcessingDesiredLRPsDeleted")).To(BeNumerically("==", expectedMetric))
 			})
-
 		})
 
 		Context("Actual LRPs", func() {

@@ -3,6 +3,7 @@ package etcd
 import (
 	"path"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -20,6 +21,14 @@ const (
 	desiredLRPsDeleted = metric.Counter("ConvergenceLRPPreProcessingDesiredLRPsDeleted")
 	actualLRPsDeleted  = metric.Counter("ConvergenceLRPPreProcessingActualLRPsDeleted")
 	lrpsDeletedCounter = metric.Counter("ConvergenceLRPsDeleted")
+
+	domainMetricPrefix = "Domain."
+
+	desiredLRPs         = metric.Metric("LRPsDesired")
+	startingLRPs        = metric.Metric("LRPsStarting")
+	runningLRPs         = metric.Metric("LRPsRunning")
+	crashedActualLRPs   = metric.Metric("CrashedActualLRPs")
+	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
 )
 
 func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
@@ -51,6 +60,13 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	actuals, err := db.gatherAndPruneActualLRPs(logger, guids) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-and-pruning-actual-lrps", err)
+
+		startingLRPs.Send(-1)
+		runningLRPs.Send(-1)
+		crashedActualLRPs.Send(-1)
+		crashingDesiredLRPs.Send(-1)
+		desiredLRPs.Send(-1)
+
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Info("succeeded-gathering-and-pruning-actual-lrps")
@@ -60,16 +76,22 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	desireds, err := db.gatherAndPruneDesiredLRPs(logger, guids) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-and-pruning-desired-lrps", err)
+
+		desiredLRPs.Send(-1)
+
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Info("succeeded-gathering-and-pruning-desired-lrps")
 
 	logger.Debug("listing-domains")
-	domains, _ := db.Domains(logger)
+	domains, err := db.Domains(logger)
 	if err != nil {
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Debug("succeeded-listing-domains")
+	for _, domain := range domains {
+		metric.Metric(domainMetricPrefix + domain).Send(1)
+	}
 
 	cellsLoader := db.cellDB.NewCellsLoader(logger)
 	logger.Debug("listing-cells")
@@ -108,10 +130,15 @@ func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string
 	actuals := map[string]map[int32]*models.ActualLRP{}
 	var guidKeysToDelete, indexKeysToDelete []string
 	var actualsToDelete []string
-	var guidsLock, actualsLock, guidKeysToDeleteLock, indexKeysToDeleteLock, actualsToDeleteLock sync.Mutex
+	var guidsLock, actualsLock, guidKeysToDeleteLock, indexKeysToDeleteLock,
+		crashingDesiredsLock, actualsToDeleteLock sync.Mutex
 
 	logger.Info("walking-actual-lrp-tree")
 	works := []func(){}
+	var startingCount int32 = 0
+	var runningCount int32 = 0
+	var crashedCount int32 = 0
+	crashingDesireds := map[string]struct{}{}
 
 	for _, guidGroup := range response.Nodes {
 		guidGroup := guidGroup
@@ -134,6 +161,18 @@ func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string
 
 					indexGroupWillBeEmpty = false
 					guidGroupWillBeEmpty = false
+
+					switch actual.State {
+					case models.ActualLRPStateClaimed:
+						atomic.AddInt32(&startingCount, 1)
+					case models.ActualLRPStateRunning:
+						atomic.AddInt32(&runningCount, 1)
+					case models.ActualLRPStateCrashed:
+						crashingDesiredsLock.Lock()
+						crashingDesireds[actual.ProcessGuid] = struct{}{}
+						crashingDesiredsLock.Unlock()
+						atomic.AddInt32(&crashedCount, 1)
+					}
 
 					guidsLock.Lock()
 					guids[actual.ProcessGuid] = struct{}{}
@@ -192,6 +231,11 @@ func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string
 		logger.Info("succeeded-deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
 	}
 
+	startingLRPs.Send(int(startingCount))
+	runningLRPs.Send(int(runningCount))
+	crashedActualLRPs.Send(int(crashedCount))
+	crashingDesiredLRPs.Send(len(crashingDesireds))
+
 	return actuals, nil
 }
 
@@ -235,6 +279,7 @@ func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 	var guidsLock, desiredsLock, desiredsToDeleteLock sync.Mutex
 
 	logger.Info("walking-desired-lrp-tree")
+	var desiredCount int32 = 0
 
 	works := []func(){}
 	for _, childNode := range response.Nodes {
@@ -250,6 +295,7 @@ func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 				desiredsLock.Lock()
 				desireds[desired.ProcessGuid] = &desired
 				desiredsLock.Unlock()
+				atomic.AddInt32(&desiredCount, desired.Instances)
 
 				guidsLock.Lock()
 				guids[desired.ProcessGuid] = struct{}{}
@@ -271,6 +317,7 @@ func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 	db.batchDeleteNodes(desiredsToDelete, logger)
 	logger.Info("done-deleting-invalid-desired-lrps", lager.Data{"num-lrps": len(desiredsToDelete)})
 	desiredLRPsDeleted.Add(uint64(len(desiredsToDelete)))
+	desiredLRPs.Send(int(desiredCount))
 
 	return desireds, nil
 }

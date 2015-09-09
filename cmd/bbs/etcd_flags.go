@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 )
 
 type ETCDFlags struct {
@@ -13,14 +15,6 @@ type ETCDFlags struct {
 	keyFile     string
 	caFile      string
 	clusterUrls string
-}
-
-type ETCDOptions struct {
-	CertFile    string
-	KeyFile     string
-	CAFile      string
-	ClusterUrls []string
-	IsSSL       bool
 }
 
 func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
@@ -53,7 +47,7 @@ func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
 	return flags
 }
 
-func (flags *ETCDFlags) Validate() (*ETCDOptions, error) {
+func (flags *ETCDFlags) Validate() (*etcd.ETCDOptions, error) {
 	scheme := ""
 	clusterUrls := strings.Split(flags.clusterUrls, ",")
 	for i, uString := range clusterUrls {
@@ -84,7 +78,7 @@ func (flags *ETCDFlags) Validate() (*ETCDOptions, error) {
 		}
 	}
 
-	return &ETCDOptions{
+	return &etcd.ETCDOptions{
 		CertFile:    flags.certFile,
 		KeyFile:     flags.keyFile,
 		CAFile:      flags.caFile,

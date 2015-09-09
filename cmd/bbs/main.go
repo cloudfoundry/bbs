@@ -14,6 +14,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
+	"github.com/cloudfoundry-incubator/bbs/metrics"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
@@ -84,9 +85,20 @@ var lockRetryInterval = flag.Duration(
 	"interval to wait before retrying a failed lock acquisition",
 )
 
+var reportInterval = flag.Duration(
+	"metricsReportInterval",
+	time.Minute,
+	"interval on which to report metrics",
+)
+
+var dropsondeDestination = flag.String(
+	"dropsondeDestination",
+	"localhost:3457",
+	"Destination for dropsonde-emitted metrics.",
+)
+
 const (
-	dropsondeDestination = "localhost:3457"
-	dropsondeOrigin      = "bbs"
+	dropsondeOrigin = "bbs"
 
 	bbsWatchRetryWaitDuration = 3 * time.Second
 )
@@ -115,10 +127,15 @@ func main() {
 		logger.Fatal("consul-session-failed", err)
 	}
 
+	etcdOptions, err := etcdFlags.Validate()
+	if err != nil {
+		logger.Fatal("etcd-validation-failed", err)
+	}
+
 	consulDB := consuldb.NewConsul(consulDBSession)
 	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
 
-	storeClient := initializeEtcdStoreClient(logger, etcdFlags)
+	storeClient := initializeEtcdStoreClient(logger, etcdOptions)
 	db := initializeEtcdDB(logger, storeClient, cbWorkPool, consulDB)
 
 	migrationsDone := make(chan struct{})
@@ -138,6 +155,13 @@ func main() {
 
 	handler := handlers.New(logger, db, hub, migrationsDone)
 
+	metricsNotifier := metrics.NewPeriodicMetronNotifier(
+		logger,
+		*reportInterval,
+		etcdOptions,
+		clock.NewClock(),
+	)
+
 	members := grouper.Members{
 		{"lock-maintainer", maintainer},
 		{"workPool", cbWorkPool},
@@ -145,6 +169,7 @@ func main() {
 		{"migration-manager", migrationManager},
 		{"watcher", watcher},
 		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
+		{"metrics", *metricsNotifier},
 	}
 
 	if dbgAddr := cf_debug_server.DebugAddress(flag.CommandLine); dbgAddr != "" {
@@ -201,7 +226,7 @@ func initializeAuctioneerClient(logger lager.Logger) auctionhandlers.Client {
 }
 
 func initializeDropsonde(logger lager.Logger) {
-	err := dropsonde.Initialize(dropsondeDestination, dropsondeOrigin)
+	err := dropsonde.Initialize(*dropsondeDestination, dropsondeOrigin)
 	if err != nil {
 		logger.Error("failed-to-initialize-dropsonde", err)
 	}
@@ -240,12 +265,8 @@ func initializeEtcdDB(
 	)
 }
 
-func initializeEtcdStoreClient(logger lager.Logger, etcdFlags *ETCDFlags) etcddb.StoreClient {
-	etcdOptions, err := etcdFlags.Validate()
-	if err != nil {
-		logger.Fatal("etcd-validation-failed", err)
-	}
-
+func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOptions) etcddb.StoreClient {
+	var err error
 	var etcdClient *etcdclient.Client
 	if etcdOptions.IsSSL {
 		etcdClient, err = etcdclient.NewTLSClient(etcdOptions.ClusterUrls, etcdOptions.CertFile, etcdOptions.KeyFile, etcdOptions.CAFile)

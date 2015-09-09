@@ -17,6 +17,11 @@ const (
 
 	tasksKickedCounter = metric.Counter("ConvergenceTasksKicked")
 	tasksPrunedCounter = metric.Counter("ConvergenceTasksPruned")
+
+	pendingTasks   = metric.Metric("TasksPending")
+	runningTasks   = metric.Metric("TasksRunning")
+	completedTasks = metric.Metric("TasksCompleted")
+	resolvingTasks = metric.Metric("TasksResolving")
 )
 
 type compareAndSwappableTask struct {
@@ -44,6 +49,10 @@ func (db *ETCDDB) ConvergeTasks(
 	taskState, modelErr := db.fetchRecursiveRaw(logger, TaskSchemaRoot)
 	if modelErr != nil {
 		logger.Debug("failed-listing-task")
+		pendingTasks.Send(-1)
+		runningTasks.Send(-1)
+		completedTasks.Send(-1)
+		resolvingTasks.Send(-1)
 		return
 	}
 	logger.Debug("succeeded-listing-task")
@@ -90,6 +99,11 @@ func (db *ETCDDB) ConvergeTasks(
 
 	var tasksKicked uint64 = 0
 
+	pendingCount := 0
+	runningCount := 0
+	completedCount := 0
+	resolvingCount := 0
+
 	logger.Debug("determining-convergence-work", lager.Data{"num-tasks": len(taskState.Nodes)})
 	for _, node := range taskState.Nodes {
 		task := new(models.Task)
@@ -108,6 +122,7 @@ func (db *ETCDDB) ConvergeTasks(
 
 		switch task.State {
 		case models.Task_Pending:
+			pendingCount++
 			shouldMarkAsFailed := db.durationSinceTaskCreated(task) >= expirePendingTaskDuration
 			if shouldMarkAsFailed {
 				logError(task, "failed-to-start-in-time")
@@ -120,6 +135,7 @@ func (db *ETCDDB) ConvergeTasks(
 				tasksKicked++
 			}
 		case models.Task_Running:
+			runningCount++
 			cellIsAlive := cellSet.HasCellID(task.CellId)
 			if !cellIsAlive {
 				logError(task, "cell-disappeared")
@@ -128,6 +144,7 @@ func (db *ETCDDB) ConvergeTasks(
 				tasksKicked++
 			}
 		case models.Task_Completed:
+			completedCount++
 			shouldDeleteTask := db.durationSinceTaskFirstCompleted(task) >= expireCompletedTaskDuration
 			if shouldDeleteTask {
 				logError(task, "failed-to-start-resolving-in-time")
@@ -138,6 +155,7 @@ func (db *ETCDDB) ConvergeTasks(
 				tasksKicked++
 			}
 		case models.Task_Resolving:
+			resolvingCount++
 			shouldDeleteTask := db.durationSinceTaskFirstCompleted(task) >= expireCompletedTaskDuration
 			if shouldDeleteTask {
 				logError(task, "failed-to-resolve-in-time")
@@ -157,6 +175,10 @@ func (db *ETCDDB) ConvergeTasks(
 		"num-tasks-to-complete": len(tasksToComplete),
 		"num-keys-to-delete":    len(keysToDelete),
 	})
+	pendingTasks.Send(pendingCount)
+	runningTasks.Send(runningCount)
+	completedTasks.Send(completedCount)
+	resolvingTasks.Send(resolvingCount)
 
 	if len(tasksToAuction) > 0 {
 		logger.Debug("requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
