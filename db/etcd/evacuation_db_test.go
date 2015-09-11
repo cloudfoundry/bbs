@@ -1,7 +1,6 @@
 package etcd_test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -945,41 +944,44 @@ func (t evacuationTest) Test() {
 
 		if t.Result.Evacuating == nil {
 			It("removes the /evacuating actualLRP", func() {
-				_, _, err := getEvacuatingActualLRP(lrpKey)
+				_, err := getEvacuatingActualLRPTTL(lrpKey)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		} else {
 			if t.Result.Evacuating.ShouldUpdate {
 				It("updates the /evacuating Since", func() {
-					lrpInBBS, _, err := getEvacuatingActualLRP(lrpKey)
+					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
 					Expect(err).NotTo(HaveOccurred())
+					lrpInBBS := group.Evacuating
 
 					Expect(lrpInBBS.Since).To(Equal(clock.Now().UnixNano()))
 				})
 
 				It("updates the /evacuating TTL to the desired value", func() {
-					_, ttl, err := getEvacuatingActualLRP(lrpKey)
+					ttl, err := getEvacuatingActualLRPTTL(lrpKey)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(ttl).To(BeNumerically("~", t.Result.Evacuating.TTL, allowedTTLDecay))
 				})
 
 				It("updates the /evacuating ModificationTag", func() {
-					lrpInBBS, _, err := getEvacuatingActualLRP(lrpKey)
+					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
 					Expect(err).NotTo(HaveOccurred())
+					lrpInBBS := group.Evacuating
 
 					Expect(lrpInBBS.ModificationTag.Index).To(Equal(initialEvacuatingModificationIndex + 1))
 				})
 			} else {
 				It("does not update the /evacuating Since", func() {
-					lrpInBBS, _, err := getEvacuatingActualLRP(lrpKey)
+					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
 					Expect(err).NotTo(HaveOccurred())
+					lrpInBBS := group.Evacuating
 
 					Expect(lrpInBBS.Since).To(Equal(initialTimestamp))
 				})
 
 				It("does not update the /evacuating TTL", func() {
-					_, ttl, err := getEvacuatingActualLRP(lrpKey)
+					ttl, err := getEvacuatingActualLRPTTL(lrpKey)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(ttl).To(BeNumerically("~", omegaEvacuationTTL, allowedTTLDecay))
@@ -987,22 +989,25 @@ func (t evacuationTest) Test() {
 			}
 
 			It("has the expected /evacuating state", func() {
-				lrpInBBS, _, err := getEvacuatingActualLRP(lrpKey)
+				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
 				Expect(err).NotTo(HaveOccurred())
+				lrpInBBS := group.Evacuating
 
 				Expect(lrpInBBS.State).To(Equal(t.Result.Evacuating.State))
 			})
 
 			It("has the expected /evacuating instance key", func() {
-				lrpInBBS, _, err := getEvacuatingActualLRP(lrpKey)
+				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
 				Expect(err).NotTo(HaveOccurred())
+				lrpInBBS := group.Evacuating
 
 				Expect(lrpInBBS.ActualLRPInstanceKey).To(Equal(t.Result.Evacuating.ActualLRPInstanceKey))
 			})
 
 			It("has the expected /evacuating net info", func() {
-				lrpInBBS, _, err := getEvacuatingActualLRP(lrpKey)
+				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
 				Expect(err).NotTo(HaveOccurred())
+				lrpInBBS := group.Evacuating
 
 				Expect(lrpInBBS.ActualLRPNetInfo).To(Equal(t.Result.Evacuating.ActualLRPNetInfo))
 			})
@@ -1010,18 +1015,14 @@ func (t evacuationTest) Test() {
 	})
 }
 
-func getEvacuatingActualLRP(lrpKey models.ActualLRPKey) (models.ActualLRP, int64, error) {
+func getEvacuatingActualLRPTTL(lrpKey models.ActualLRPKey) (int64, error) {
 	node, err := storeClient.Get(etcddb.EvacuatingActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
 	if etcdErrCode(err) == etcddb.ETCDErrKeyNotFound {
-		return models.ActualLRP{}, 0, models.ErrResourceNotFound
+		return 0, models.ErrResourceNotFound
 	}
 	Expect(err).NotTo(HaveOccurred())
 
-	var lrp models.ActualLRP
-	err = json.Unmarshal([]byte(node.Node.Value), &lrp)
-	Expect(err).NotTo(HaveOccurred())
-
-	return lrp, node.Node.TTL, nil
+	return node.Node.TTL, nil
 }
 
 func etcdErrCode(err error) int {

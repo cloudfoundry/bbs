@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -151,7 +152,7 @@ var _ = BeforeEach(func() {
 		MetricsReportInterval: 10 * time.Millisecond,
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
-	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
+	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCODED_PROTO, storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 })
 

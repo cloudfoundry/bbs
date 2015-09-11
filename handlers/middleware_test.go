@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
@@ -22,7 +23,7 @@ var _ = Describe("Middleware", func() {
 			sender = fake.NewFakeMetricSender()
 			dropsonde_metrics.Initialize(sender, nil)
 
-			handler = func(w http.ResponseWriter, r *http.Request) {}
+			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
 			handler = handlers.MeasureWrap(handler)
 		})
 

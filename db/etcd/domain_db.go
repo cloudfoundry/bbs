@@ -7,8 +7,6 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const DomainSchemaRoot = DataSchemaRoot + "domain"
-
 func (db *ETCDDB) Domains(logger lager.Logger) ([]string, error) {
 	response, err := db.client.Get(DomainSchemaRoot, false, true)
 	if err != nil {

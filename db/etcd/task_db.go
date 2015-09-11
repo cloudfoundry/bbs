@@ -2,24 +2,12 @@ package etcd
 
 import (
 	"fmt"
-	"path"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
-const (
-	TaskSchemaRoot = DataSchemaRoot + "task"
-	NO_TTL         = 0
-)
-
-func TaskSchemaPath(task *models.Task) string {
-	return TaskSchemaPathByGuid(task.GetTaskGuid())
-}
-
-func TaskSchemaPathByGuid(taskGuid string) string {
-	return path.Join(TaskSchemaRoot, taskGuid)
-}
+const NO_TTL = 0
 
 func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
 	root, err := db.fetchRecursiveRaw(logger, TaskSchemaRoot)

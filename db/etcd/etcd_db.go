@@ -17,13 +17,22 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const DataSchemaRoot = "/v1/"
-const VersionKey = "/version"
+const (
+	V1SchemaRoot = "/v1/"
+	VersionKey   = "/version"
+
+	DomainSchemaRoot = V1SchemaRoot + "domain"
+
+	ActualLRPSchemaRoot    = V1SchemaRoot + "actual"
+	ActualLRPInstanceKey   = "instance"
+	ActualLRPEvacuatingKey = "evacuating"
+
+	DesiredLRPSchemaRoot = V1SchemaRoot + "desired"
+
+	TaskSchemaRoot = V1SchemaRoot + "task"
+)
 
 const maxActualGroupGetterWorkPoolSize = 50
-const ActualLRPSchemaRoot = DataSchemaRoot + "actual"
-const ActualLRPInstanceKey = "instance"
-const ActualLRPEvacuatingKey = "evacuating"
 
 func ActualLRPProcessDir(processGuid string) string {
 	return path.Join(ActualLRPSchemaRoot, processGuid)
@@ -41,9 +50,6 @@ func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
 	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPEvacuatingKey)
 }
 
-const maxDesiredLRPGetterWorkPoolSize = 50
-const DesiredLRPSchemaRoot = DataSchemaRoot + "desired"
-
 func DesiredLRPSchemaPath(lrp *models.DesiredLRP) string {
 	return DesiredLRPSchemaPathByProcessGuid(lrp.ProcessGuid)
 }
@@ -51,6 +57,16 @@ func DesiredLRPSchemaPath(lrp *models.DesiredLRP) string {
 func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
 	return path.Join(DesiredLRPSchemaRoot, processGuid)
 }
+
+func TaskSchemaPath(task *models.Task) string {
+	return TaskSchemaPathByGuid(task.GetTaskGuid())
+}
+
+func TaskSchemaPathByGuid(taskGuid string) string {
+	return path.Join(TaskSchemaRoot, taskGuid)
+}
+
+const maxDesiredLRPGetterWorkPoolSize = 50
 
 type ETCDOptions struct {
 	CertFile    string

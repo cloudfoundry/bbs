@@ -94,12 +94,12 @@ var _ = BeforeEach(func() {
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	storeClient = etcd.NewStoreClient(etcdClient)
-	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
+	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCODED_PROTO, storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 	cellDB = consul.NewConsul(consulSession)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 
-	etcdDB = etcd.NewETCD(format.LEGACY_FORMATTING, storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
+	etcdDB = etcd.NewETCD(format.ENCODED_PROTO, storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {

@@ -44,9 +44,6 @@ func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstan
 }
 
 func NewActualLRPNetInfo(address string, ports ...*PortMapping) ActualLRPNetInfo {
-	if ports == nil {
-		ports = []*PortMapping{}
-	}
 	return ActualLRPNetInfo{address, ports}
 }
 

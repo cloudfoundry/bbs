@@ -201,7 +201,7 @@ var _ = Describe("Watchers", func() {
 				key := models.NewActualLRPKey(lrpProcessGuid, lrpIndex, lrpDomain)
 
 				instanceKey := models.NewActualLRPInstanceKey("instance-guid", "cell-id")
-				netInfo := models.NewActualLRPNetInfo("1.1.1.1", nil)
+				netInfo := models.NewActualLRPNetInfo("1.1.1.1")
 				evacuatedLRPGroup := &models.ActualLRPGroup{
 					Evacuating: &models.ActualLRP{
 						ActualLRPKey:         key,
@@ -220,7 +220,7 @@ var _ = Describe("Watchers", func() {
 					Evacuating: &models.ActualLRP{
 						ActualLRPKey:         key,
 						ActualLRPInstanceKey: instanceKey,
-						ActualLRPNetInfo:     models.NewActualLRPNetInfo("2.2.2.2", nil),
+						ActualLRPNetInfo:     models.NewActualLRPNetInfo("2.2.2.2"),
 						State:                models.ActualLRPStateRunning,
 						Since:                clock.Now().UnixNano(),
 					},
@@ -239,6 +239,5 @@ var _ = Describe("Watchers", func() {
 				Eventually(deletes).Should(Receive(Equal(updatedGroup)))
 			})
 		})
-
 	})
 })

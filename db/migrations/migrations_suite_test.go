@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -46,5 +47,5 @@ var _ = BeforeEach(func() {
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	storeClient = etcd.NewStoreClient(etcdClient)
-	etcdHelper = etcd_helpers.NewETCDHelper(storeClient)
+	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCODED_PROTO, storeClient)
 })

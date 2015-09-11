@@ -281,8 +281,7 @@ var _ = Describe("ActualLRP", func() {
 					netInfo := models.EmptyActualLRPNetInfo()
 
 					Expect(netInfo.GetAddress()).To(BeEmpty())
-					Expect(netInfo.GetPorts()).NotTo(BeNil())
-					Expect(netInfo.GetPorts()).To(HaveLen(0))
+					Expect(netInfo.GetPorts()).To(BeEmpty())
 				})
 			})
 		})

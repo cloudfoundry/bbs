@@ -8,18 +8,18 @@ import (
 )
 
 type FakeVersioner struct {
-	ResetStub         func()
-	resetMutex        sync.RWMutex
-	resetArgsForCall  []struct{}
+	ResetStub        func()
+	resetMutex       sync.RWMutex
+	resetArgsForCall []struct{}
 	StringStub        func() string
 	stringMutex       sync.RWMutex
 	stringArgsForCall []struct{}
-	stringReturns     struct {
+	stringReturns struct {
 		result1 string
 	}
-	ProtoMessageStub              func()
-	protoMessageMutex             sync.RWMutex
-	protoMessageArgsForCall       []struct{}
+	ProtoMessageStub        func()
+	protoMessageMutex       sync.RWMutex
+	protoMessageArgsForCall []struct{}
 	MigrateFromVersionStub        func(v format.Version) error
 	migrateFromVersionMutex       sync.RWMutex
 	migrateFromVersionArgsForCall []struct {
@@ -31,13 +31,13 @@ type FakeVersioner struct {
 	ValidateStub        func() error
 	validateMutex       sync.RWMutex
 	validateArgsForCall []struct{}
-	validateReturns     struct {
+	validateReturns struct {
 		result1 error
 	}
 	VersionStub        func() format.Version
 	versionMutex       sync.RWMutex
 	versionArgsForCall []struct{}
-	versionReturns     struct {
+	versionReturns struct {
 		result1 format.Version
 	}
 }
