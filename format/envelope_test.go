@@ -36,6 +36,12 @@ var _ = Describe("Envelope", func() {
 			Expect(*task).To(Equal(newTask))
 		})
 
+		It("returns an error when marshalling when the envelope doesn't support the model", func() {
+			model := &fakes.FakeVersioner{}
+			_, err := format.MarshalEnvelope(format.PROTO, model)
+			Expect(err).To(MatchError("Model object incompatible with envelope format"))
+		})
+
 		Context("when model validation fails", func() {
 			It("returns an error ", func() {
 				model := &fakes.FakeVersioner{}
@@ -89,6 +95,16 @@ var _ = Describe("Envelope", func() {
 			payload := []byte{byte(format.PROTO), byte(format.V0), 'f', 'o', 'o'}
 			err := format.UnmarshalEnvelope(logger, payload, model)
 			Expect(err).To(HaveOccurred())
+		})
+
+		It("returns an error when unmarshalling when the model doesn't match the envelope", func() {
+			task := model_helpers.NewValidTask("some-guid")
+			payload, err := format.MarshalEnvelope(format.PROTO, task)
+			Expect(err).NotTo(HaveOccurred())
+
+			model := &fakes.FakeVersioner{}
+			err = format.UnmarshalEnvelope(logger, payload, model)
+			Expect(err).To(MatchError("Model object incompatible with envelope format"))
 		})
 	})
 })

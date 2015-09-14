@@ -2,6 +2,7 @@ package format
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -29,9 +30,13 @@ func UnmarshalEnvelope(logger lager.Logger, unencodedPayload []byte, model Versi
 	case JSON:
 		err = UnmarshalJSON(logger, unencodedPayload[EnvelopeOffset:], model)
 	case PROTO:
-		err = UnmarshalProto(logger, unencodedPayload[EnvelopeOffset:], model)
+		protoModel, ok := model.(ProtoVersioner)
+		if !ok {
+			return errors.New("Model object incompatible with envelope format")
+		}
+		err = UnmarshalProto(logger, unencodedPayload[EnvelopeOffset:], protoModel)
 	default:
-		err = fmt.Errorf("unknown format %s", envelopeFormat)
+		err = fmt.Errorf("unknown format %d", envelopeFormat)
 		logger.Error("cannot-unmarshal-unknown-serialization-format", err)
 	}
 
@@ -55,13 +60,17 @@ func MarshalEnvelope(format EnvelopeFormat, model Versioner) ([]byte, error) {
 
 	switch format {
 	case PROTO:
-		payload, err = MarshalProto(model)
+		protoModel, ok := model.(ProtoVersioner)
+		if !ok {
+			return nil, errors.New("Model object incompatible with envelope format")
+		}
+		payload, err = MarshalProto(protoModel)
 	case JSON:
 		payload, err = MarshalJSON(model)
 	case LEGACY_JSON:
 		return MarshalJSON(model)
 	default:
-		err = fmt.Errorf("unknown format %s", format)
+		err = fmt.Errorf("unknown format %d", format)
 	}
 
 	if err != nil {
@@ -131,7 +140,7 @@ func MarshalJSON(v Versioner) ([]byte, error) {
 	return bytes, nil
 }
 
-func UnmarshalProto(logger lager.Logger, marshaledPayload []byte, model Versioner) error {
+func UnmarshalProto(logger lager.Logger, marshaledPayload []byte, model ProtoVersioner) error {
 	err := proto.Unmarshal(marshaledPayload, model)
 	if err != nil {
 		logger.Error("failed-to-proto-unmarshal-payload", err)
@@ -140,7 +149,7 @@ func UnmarshalProto(logger lager.Logger, marshaledPayload []byte, model Versione
 	return nil
 }
 
-func MarshalProto(v Versioner) ([]byte, error) {
+func MarshalProto(v ProtoVersioner) ([]byte, error) {
 	if !isNil(v) {
 		if err := v.Validate(); err != nil {
 			return nil, err

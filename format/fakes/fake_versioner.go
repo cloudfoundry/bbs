@@ -8,18 +8,6 @@ import (
 )
 
 type FakeVersioner struct {
-	ResetStub        func()
-	resetMutex       sync.RWMutex
-	resetArgsForCall []struct{}
-	StringStub        func() string
-	stringMutex       sync.RWMutex
-	stringArgsForCall []struct{}
-	stringReturns struct {
-		result1 string
-	}
-	ProtoMessageStub        func()
-	protoMessageMutex       sync.RWMutex
-	protoMessageArgsForCall []struct{}
 	MigrateFromVersionStub        func(v format.Version) error
 	migrateFromVersionMutex       sync.RWMutex
 	migrateFromVersionArgsForCall []struct {
@@ -31,69 +19,15 @@ type FakeVersioner struct {
 	ValidateStub        func() error
 	validateMutex       sync.RWMutex
 	validateArgsForCall []struct{}
-	validateReturns struct {
+	validateReturns     struct {
 		result1 error
 	}
 	VersionStub        func() format.Version
 	versionMutex       sync.RWMutex
 	versionArgsForCall []struct{}
-	versionReturns struct {
+	versionReturns     struct {
 		result1 format.Version
 	}
-}
-
-func (fake *FakeVersioner) Reset() {
-	fake.resetMutex.Lock()
-	fake.resetArgsForCall = append(fake.resetArgsForCall, struct{}{})
-	fake.resetMutex.Unlock()
-	if fake.ResetStub != nil {
-		fake.ResetStub()
-	}
-}
-
-func (fake *FakeVersioner) ResetCallCount() int {
-	fake.resetMutex.RLock()
-	defer fake.resetMutex.RUnlock()
-	return len(fake.resetArgsForCall)
-}
-
-func (fake *FakeVersioner) String() string {
-	fake.stringMutex.Lock()
-	fake.stringArgsForCall = append(fake.stringArgsForCall, struct{}{})
-	fake.stringMutex.Unlock()
-	if fake.StringStub != nil {
-		return fake.StringStub()
-	} else {
-		return fake.stringReturns.result1
-	}
-}
-
-func (fake *FakeVersioner) StringCallCount() int {
-	fake.stringMutex.RLock()
-	defer fake.stringMutex.RUnlock()
-	return len(fake.stringArgsForCall)
-}
-
-func (fake *FakeVersioner) StringReturns(result1 string) {
-	fake.StringStub = nil
-	fake.stringReturns = struct {
-		result1 string
-	}{result1}
-}
-
-func (fake *FakeVersioner) ProtoMessage() {
-	fake.protoMessageMutex.Lock()
-	fake.protoMessageArgsForCall = append(fake.protoMessageArgsForCall, struct{}{})
-	fake.protoMessageMutex.Unlock()
-	if fake.ProtoMessageStub != nil {
-		fake.ProtoMessageStub()
-	}
-}
-
-func (fake *FakeVersioner) ProtoMessageCallCount() int {
-	fake.protoMessageMutex.RLock()
-	defer fake.protoMessageMutex.RUnlock()
-	return len(fake.protoMessageArgsForCall)
 }
 
 func (fake *FakeVersioner) MigrateFromVersion(v format.Version) error {

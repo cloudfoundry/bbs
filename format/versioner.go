@@ -10,8 +10,13 @@ const (
 
 //go:generate counterfeiter . Versioner
 type Versioner interface {
-	proto.Message
 	MigrateFromVersion(v Version) error
 	Validate() error
 	Version() Version
+}
+
+//go:generate counterfeiter . ProtoVersioner
+type ProtoVersioner interface {
+	proto.Message
+	Versioner
 }
