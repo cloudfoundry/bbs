@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
-	"github.com/cloudfoundry-incubator/bbs/cellhandlers"
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
@@ -22,6 +21,7 @@ import (
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
+	"github.com/cloudfoundry-incubator/rep"
 	legacybbs "github.com/cloudfoundry-incubator/runtime-schema/bbs"
 	"github.com/cloudfoundry-incubator/runtime-schema/bbs/lock_bbs"
 	legacymodels "github.com/cloudfoundry-incubator/runtime-schema/models"
@@ -264,9 +264,9 @@ func initializeEtcdDB(
 		format.ENCODED_PROTO,
 		storeClient,
 		initializeAuctioneerClient(logger),
-		cellhandlers.NewClient(),
 		consulDB,
 		clock.NewClock(),
+		rep.NewClientFactory(cf_http.NewClient()),
 		cbClient,
 	)
 }
