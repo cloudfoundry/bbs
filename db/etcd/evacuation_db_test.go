@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
@@ -833,18 +834,18 @@ func (t evacuationTest) Test() {
 
 		if t.Result.AuctionRequested {
 			It("starts an auction", func() {
-				Expect(auctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				requestedAuctions := auctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(&desiredLRP, int(index))
+				requestedAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(requestedAuctions).To(HaveLen(1))
 
-				Expect(*requestedAuctions[0].DesiredLRP).To(Equal(desiredLRP))
-				Expect(requestedAuctions[0].Indices).To(ConsistOf(uint(index)))
+				Expect(*requestedAuctions[0]).To(Equal(expectedStartRequest))
 			})
 
 			Context("when starting the auction fails", func() {
 				BeforeEach(func() {
-					auctioneerClient.RequestLRPAuctionsReturns(errors.New("error"))
+					fakeAuctioneerClient.RequestLRPAuctionsReturns(errors.New("error"))
 				})
 
 				It("returns an UnknownError", func() {
@@ -873,7 +874,7 @@ func (t evacuationTest) Test() {
 			})
 		} else {
 			It("does not start an auction", func() {
-				Expect(auctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
 			})
 		}
 

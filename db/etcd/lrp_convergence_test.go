@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -658,12 +659,12 @@ var _ = Describe("LrpConvergence", func() {
 
 		Context("when there are no actuals for desired LRP", func() {
 			It("emits a start auction request for the correct indices", func() {
-				Expect(auctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				startAuctions := auctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
+				startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
-				Expect(startAuctions[0].DesiredLRP).To(Equal(desiredLRP))
-				Expect(startAuctions[0].Indices).To(ConsistOf(uint(0), uint(1)))
+				Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
 			})
 		})
 
@@ -680,12 +681,12 @@ var _ = Describe("LrpConvergence", func() {
 			})
 
 			It("emits a start auction request for the missing index", func() {
-				Expect(auctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				startAuctions := auctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1)
+				startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
-				Expect(startAuctions[0].DesiredLRP).To(Equal(desiredLRP))
-				Expect(startAuctions[0].Indices).To(ConsistOf(uint(1)))
+				Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
 			})
 		})
 
@@ -715,12 +716,13 @@ var _ = Describe("LrpConvergence", func() {
 			})
 
 			It("emits a start auction request for the crashed index", func() {
-				Expect(auctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				startAuctions := auctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1)
+
+				startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
-				Expect(startAuctions[0].DesiredLRP).To(Equal(desiredLRP))
-				Expect(startAuctions[0].Indices).To(ConsistOf(uint(1)))
+				Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
 			})
 
 			It("unclaims the crashed actual lrp", func() {
@@ -902,8 +904,11 @@ var _ = Describe("LrpConvergence", func() {
 				It("sends a stop request to the corresponding cell", func() {
 					etcdDB.ConvergeLRPs(logger)
 
-					addr, key, instanceKey := cellClient.StopLRPInstanceArgsForCall(0)
-					Expect(addr).To(Equal(cellPresence.RepAddress))
+					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
+
+					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
+					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
 					Expect(key.ProcessGuid).To(Equal(processGuid))
 					Expect(key.Index).To(Equal(index))
 					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
@@ -922,7 +927,7 @@ var _ = Describe("LrpConvergence", func() {
 					It("does not stop the actual LRP", func() {
 						etcdDB.ConvergeLRPs(logger)
 
-						Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(0))
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
 						Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
 					})
 				})
@@ -960,10 +965,11 @@ var _ = Describe("LrpConvergence", func() {
 				It("sends a stop request to the corresponding cell", func() {
 					etcdDB.ConvergeLRPs(logger)
 
-					Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(1))
+					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
 
-					addr, key, instanceKey := cellClient.StopLRPInstanceArgsForCall(0)
-					Expect(addr).To(Equal(cellPresence.RepAddress))
+					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
+					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
 					Expect(key.ProcessGuid).To(Equal(processGuid))
 					Expect(key.Index).To(Equal(index))
 					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
@@ -976,7 +982,7 @@ var _ = Describe("LrpConvergence", func() {
 
 					It("does not stop the actual LRP", func() {
 						etcdDB.ConvergeLRPs(logger)
-						Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(0))
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
 						Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
 					})
 				})
@@ -1072,10 +1078,12 @@ var _ = Describe("LrpConvergence", func() {
 				It("sends a stop request to the corresponding cell", func() {
 					etcdDB.ConvergeLRPs(logger)
 
-					Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(1))
+					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
 
-					addr, key, instanceKey := cellClient.StopLRPInstanceArgsForCall(0)
-					Expect(addr).To(Equal(cellPresence.RepAddress))
+					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
+					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+
 					Expect(key.ProcessGuid).To(Equal(processGuid))
 					Expect(key.Index).To(Equal(index))
 					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
@@ -1088,7 +1096,7 @@ var _ = Describe("LrpConvergence", func() {
 
 					It("does not stop the actual LRP", func() {
 						etcdDB.ConvergeLRPs(logger)
-						Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(0))
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
 					})
 				})
 			})
@@ -1137,10 +1145,12 @@ var _ = Describe("LrpConvergence", func() {
 				It("sends a stop request to the corresponding cell", func() {
 					etcdDB.ConvergeLRPs(logger)
 
-					Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(1))
+					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
 
-					addr, key, instanceKey := cellClient.StopLRPInstanceArgsForCall(0)
-					Expect(addr).To(Equal(cellPresence.RepAddress))
+					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
+					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+
 					Expect(key.ProcessGuid).To(Equal(processGuid))
 					Expect(key.Index).To(Equal(index))
 					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
@@ -1153,7 +1163,7 @@ var _ = Describe("LrpConvergence", func() {
 
 					It("does not stop the actual LRP", func() {
 						etcdDB.ConvergeLRPs(logger)
-						Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(0))
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
 					})
 				})
 			})
@@ -1185,14 +1195,15 @@ var _ = Describe("LrpConvergence", func() {
 		})
 
 		It("re-emits start auction requests", func() {
-			originalAuctionCallCount := auctioneerClient.RequestLRPAuctionsCallCount()
+			originalAuctionCallCount := fakeAuctioneerClient.RequestLRPAuctionsCallCount()
 			etcdDB.ConvergeLRPs(logger)
-			Consistently(auctioneerClient.RequestLRPAuctionsCallCount).Should(Equal(originalAuctionCallCount + 1))
+			Consistently(fakeAuctioneerClient.RequestLRPAuctionsCallCount).Should(Equal(originalAuctionCallCount + 1))
 
-			startAuctions := auctioneerClient.RequestLRPAuctionsArgsForCall(originalAuctionCallCount)
+			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+
+			startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(originalAuctionCallCount)
 			Expect(startAuctions).To(HaveLen(1))
-			Expect(startAuctions[0].DesiredLRP).To(Equal(desiredLRP))
-			Expect(startAuctions[0].Indices).To(ConsistOf(uint(0)))
+			Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
 		})
 	})
 })

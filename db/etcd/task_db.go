@@ -3,6 +3,7 @@ package etcd
 import (
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -94,7 +95,8 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 	logger.Debug("succeeded-persisting-task")
 
 	logger.Debug("requesting-task-auction")
-	err = db.auctioneerClient.RequestTaskAuctions([]*models.Task{task})
+	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task)
+	err = db.auctioneerClient.RequestTaskAuctions([]*auctioneer.TaskStartRequest{&taskStartRequest})
 	if err != nil {
 		logger.Error("failed-requesting-task-auction", err)
 		// The creation succeeded, the auction request error can be dropped
@@ -192,7 +194,8 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) error {
 	logger.Info("succeeded-getting-cell-info")
 
 	logger.Info("cell-client-cancelling-task")
-	err = db.cellClient.CancelTask(cellPresence.RepAddress, task.TaskGuid)
+	repClient := db.repClientFactory.CreateClient(cellPresence.RepAddress)
+	err = repClient.CancelTask(task.TaskGuid)
 	if err != nil {
 		logger.Error("cell-client-failed-cancelling-task", err)
 		return nil

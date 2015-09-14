@@ -945,7 +945,7 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						cellPresence = models.NewCellPresence(
 							cellID,
-							"cell.example.com",
+							"cell1.addr",
 							"the-zone",
 							models.NewCellCapacity(128, 1024, 6),
 							[]string{},
@@ -955,23 +955,22 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("stops the LRPs", func() {
-						Eventually(cellClient.StopLRPInstanceCallCount).Should(Equal(1))
+						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
+						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
 
-						addr, stoppedKey, stoppedInstanceKey := cellClient.StopLRPInstanceArgsForCall(0)
-
-						Expect(addr).To(Equal(cellPresence.RepAddress))
-
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).Should(Equal(1))
+						stoppedKey, stoppedInstanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
 						Expect(stoppedKey).To(Equal(lrpKey))
 						Expect(stoppedInstanceKey).To(Equal(instanceKey))
 					})
 
 					Context("when stopping the LRP fails", func() {
 						BeforeEach(func() {
-							cellClient.StopLRPInstanceReturns(errors.New("something is terrible"))
+							fakeRepClient.StopLRPInstanceReturns(errors.New("something is terrible"))
 						})
 
 						It("retries", func() {
-							Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(models.RetireActualLRPRetryAttempts))
+							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(models.RetireActualLRPRetryAttempts))
 						})
 					})
 				})
@@ -990,7 +989,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("does not stop the instances", func() {
-						Expect(cellClient.StopLRPInstanceCallCount()).To(Equal(0))
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
 					})
 				})
 			})

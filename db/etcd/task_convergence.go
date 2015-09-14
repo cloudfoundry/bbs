@@ -3,6 +3,7 @@ package etcd
 import (
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/cloudfoundry/gunk/workpool"
@@ -95,7 +96,7 @@ func (db *ETCDDB) ConvergeTasks(
 		})
 	}
 
-	tasksToAuction := []*models.Task{}
+	tasksToAuction := []*auctioneer.TaskStartRequest{}
 
 	var tasksKicked uint64 = 0
 
@@ -131,7 +132,8 @@ func (db *ETCDDB) ConvergeTasks(
 				tasksKicked++
 			} else if shouldKickTask {
 				logger.Info("requesting-auction-for-pending-task", lager.Data{"task-guid": task.TaskGuid})
-				tasksToAuction = append(tasksToAuction, task)
+				start := auctioneer.NewTaskStartRequestFromModel(task)
+				tasksToAuction = append(tasksToAuction, &start)
 				tasksKicked++
 			}
 		case models.Task_Running:

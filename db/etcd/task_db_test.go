@@ -3,6 +3,7 @@ package etcd_test
 import (
 	"errors"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 
@@ -161,13 +162,15 @@ var _ = Describe("TaskDB", func() {
 
 	Describe("DesireTask", func() {
 		var errDesire error
+		var task *models.Task
 
 		JustBeforeEach(func() {
 			errDesire = etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 		})
 
 		BeforeEach(func() {
-			taskDef = model_helpers.NewValidTaskDefinition()
+			task = model_helpers.NewValidTask(taskGuid)
+			taskDef = task.TaskDefinition
 		})
 
 		Context("when a task is not already present at the desired key", func() {
@@ -197,16 +200,18 @@ var _ = Describe("TaskDB", func() {
 
 			Context("when able to fetch the Auctioneer address", func() {
 				It("requests an auction", func() {
-					Expect(auctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+					Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
 
-					requestedTasks := auctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					expectedStartRequest := auctioneer.NewTaskStartRequestFromModel(task)
+
+					requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
 					Expect(requestedTasks).To(HaveLen(1))
-					Expect(*requestedTasks[0].TaskDefinition).To(Equal(*taskDef))
+					Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
 				})
 
 				Context("when requesting a task auction succeeds", func() {
 					BeforeEach(func() {
-						auctioneerClient.RequestTaskAuctionsReturns(nil)
+						fakeAuctioneerClient.RequestTaskAuctionsReturns(nil)
 					})
 
 					It("does not return an error", func() {
@@ -216,7 +221,7 @@ var _ = Describe("TaskDB", func() {
 
 				Context("when requesting a task auction fails", func() {
 					BeforeEach(func() {
-						auctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
+						fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
 					})
 
 					It("does not return an error", func() {
@@ -243,7 +248,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("does not request a second auction", func() {
-				Consistently(auctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
+				Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
 			})
 
 			It("returns an error", func() {
@@ -381,7 +386,7 @@ var _ = Describe("TaskDB", func() {
 				itMarksTaskAsCancelled()
 
 				It("does not cancel the task", func() {
-					Expect(cellClient.CancelTaskCallCount()).To(Equal(0))
+					Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
 				})
 			})
 
@@ -406,17 +411,20 @@ var _ = Describe("TaskDB", func() {
 					})
 
 					It("cancels the task", func() {
-						Expect(cellClient.CancelTaskCallCount()).To(Equal(1))
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
 
-						addr, cancelledTaskGuid := cellClient.CancelTaskArgsForCall(0)
-						Expect(addr).To(Equal(cellPresence.RepAddress))
+						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
+						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
+
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
+						cancelledTaskGuid := fakeRepClient.CancelTaskArgsForCall(0)
 						Expect(cancelledTaskGuid).To(Equal(taskGuid))
 					})
 				})
 
 				Context("when the cell is not present", func() {
 					It("does not cancel the task", func() {
-						Expect(cellClient.CancelTaskCallCount()).To(Equal(0))
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
 					})
 
 					It("logs the error", func() {

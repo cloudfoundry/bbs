@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
@@ -322,9 +323,9 @@ func (db *ETCDDB) createUnclaimedActualLRP(logger lager.Logger, key *models.Actu
 	return db.createRawActualLRP(logger, lrp)
 }
 
-func (db *ETCDDB) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []uint {
+func (db *ETCDDB) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {
 	count := len(keys)
-	createdIndicesChan := make(chan uint, count)
+	createdIndicesChan := make(chan int, count)
 
 	works := make([]func(), count)
 
@@ -335,7 +336,7 @@ func (db *ETCDDB) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.
 			if err != nil {
 				logger.Info("failed-creating-actual-lrp", lager.Data{"actual_lrp_key": key, "err-message": err.Error()})
 			} else {
-				createdIndicesChan <- uint(key.Index)
+				createdIndicesChan <- int(key.Index)
 			}
 		}
 	}
@@ -343,13 +344,13 @@ func (db *ETCDDB) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.
 	throttler, err := workpool.NewThrottler(createActualMaxWorkers, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": createActualMaxWorkers, "num-works": len(works)})
-		return []uint{}
+		return []int{}
 	}
 
 	throttler.Work()
 	close(createdIndicesChan)
 
-	createdIndices := make([]uint, 0, count)
+	createdIndices := make([]int, 0, count)
 	for createdIndex := range createdIndicesChan {
 		createdIndices = append(createdIndices, createdIndex)
 	}
@@ -514,8 +515,8 @@ func (db *ETCDDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.Ac
 		}
 	}
 
-	lrpStart := models.NewLRPStartRequest(desiredLRP, uint(key.Index))
-	err = db.auctioneerClient.RequestLRPAuctions([]*models.LRPStartRequest{&lrpStart})
+	lrpStart := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(key.Index))
+	err = db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&lrpStart})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
 		return models.ErrUnknownError
@@ -599,7 +600,9 @@ func (db *ETCDDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 			logger.Info("stopping-lrp-instance", lager.Data{
 				"actual-lrp-key": key,
 			})
-			cellErr := db.cellClient.StopLRPInstance(cell.RepAddress, key, instanceKey)
+
+			repClient := db.repClientFactory.CreateClient(cell.RepAddress)
+			cellErr := repClient.StopLRPInstance(key, instanceKey)
 			if cellErr != nil {
 				err = models.ErrActualLRPCannotBeStopped
 			}

@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 
@@ -581,7 +582,7 @@ func (db *ETCDDB) startActualLRPs(logger lager.Logger, starts *startRequests) {
 
 type startRequests struct {
 	desiredMap    map[string]*models.DesiredLRP
-	startMap      map[string]*models.LRPStartRequest
+	startMap      map[string]*auctioneer.LRPStartRequest
 	instanceCount uint64
 	*sync.Mutex
 }
@@ -589,7 +590,7 @@ type startRequests struct {
 func newStartRequests(desiredMap map[string]*models.DesiredLRP) *startRequests {
 	return &startRequests{
 		desiredMap: desiredMap,
-		startMap:   make(map[string]*models.LRPStartRequest),
+		startMap:   make(map[string]*auctioneer.LRPStartRequest),
 		Mutex:      new(sync.Mutex),
 	}
 }
@@ -606,12 +607,10 @@ func (s *startRequests) Add(logger lager.Logger, actual *models.ActualLRPKey) {
 
 	start, found := s.startMap[desiredLRP.ProcessGuid]
 	if !found {
-		start = &models.LRPStartRequest{
-			DesiredLRP: desiredLRP,
-			Indices:    []uint{uint(actual.Index)},
-		}
+		startRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actual.Index))
+		start = &startRequest
 	} else {
-		start.Indices = append(start.Indices, uint(actual.Index))
+		start.Indices = append(start.Indices, int(actual.Index))
 	}
 
 	logger.Info("adding-start-auction", lager.Data{"process-guid": desiredLRP.ProcessGuid, "index": actual.Index})
@@ -619,11 +618,11 @@ func (s *startRequests) Add(logger lager.Logger, actual *models.ActualLRPKey) {
 	s.instanceCount++
 }
 
-func (s *startRequests) Slice() []*models.LRPStartRequest {
+func (s *startRequests) Slice() []*auctioneer.LRPStartRequest {
 	s.Lock()
 	defer s.Unlock()
 
-	starts := make([]*models.LRPStartRequest, 0, len(s.startMap))
+	starts := make([]*auctioneer.LRPStartRequest, 0, len(s.startMap))
 	for _, start := range s.startMap {
 		starts = append(starts, start)
 	}

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/nu7hatch/gouuid"
@@ -104,9 +105,9 @@ func (db *ETCDDB) startInstanceRange(logger lager.Logger, lower, upper int32, de
 	}
 
 	createdIndices := db.createUnclaimedActualLRPs(logger, keys)
-	start := models.NewLRPStartRequest(desiredLRP, createdIndices...)
+	start := auctioneer.NewLRPStartRequestFromModel(desiredLRP, createdIndices...)
 
-	err := db.auctioneerClient.RequestLRPAuctions([]*models.LRPStartRequest{&start})
+	err := db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&start})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
-	fakecellhandlers "github.com/cloudfoundry-incubator/bbs/cellhandlers/fakes"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/consul"
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
@@ -17,6 +16,7 @@ import (
 	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
+	"github.com/cloudfoundry-incubator/rep/repfakes"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -37,8 +37,10 @@ var storeClient etcd.StoreClient
 var consulRunner *consulrunner.ClusterRunner
 var consulSession *consuladapter.Session
 
-var auctioneerClient *auctioneerfakes.FakeClient
-var cellClient *fakecellhandlers.FakeClient
+var fakeAuctioneerClient *auctioneerfakes.FakeClient
+var fakeRepClient *repfakes.FakeClient
+var fakeRepClientFactory *repfakes.FakeClientFactory
+var fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
 
 var logger *lagertest.TestLogger
 var clock *fakeclock.FakeClock
@@ -48,7 +50,6 @@ var consulHelper *consul_helpers.ConsulHelper
 var cellDB db.CellDB
 var etcdDB db.DB
 var workPoolCreateError error
-var fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
 
 func TestDB(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -84,8 +85,7 @@ var _ = AfterSuite(func() {
 var _ = BeforeEach(func() {
 	logger = lagertest.NewTestLogger("test")
 
-	auctioneerClient = new(auctioneerfakes.FakeClient)
-	cellClient = new(fakecellhandlers.FakeClient)
+	fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 	etcdRunner.Reset()
 
 	consulRunner.Reset()
@@ -98,8 +98,10 @@ var _ = BeforeEach(func() {
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 	cellDB = consul.NewConsul(consulSession)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
-
-	etcdDB = etcd.NewETCD(format.ENCODED_PROTO, storeClient, auctioneerClient, cellClient, cellDB, clock, fakeTaskCompletionClient)
+	fakeRepClientFactory = new(repfakes.FakeClientFactory)
+	fakeRepClient = new(repfakes.FakeClient)
+	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
+	etcdDB = etcd.NewETCD(format.LEGACY_FORMATTING, storeClient, fakeAuctioneerClient, cellDB, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {

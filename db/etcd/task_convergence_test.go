@@ -101,7 +101,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("does not request an auction for the task", func() {
-					Consistently(auctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(0))
+					Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(0))
 				})
 			})
 
@@ -121,16 +121,16 @@ var _ = Describe("Convergence of Tasks", func() {
 				Context("when able to fetch the auctioneer address", func() {
 
 					It("requests an auction", func() {
-						Expect(auctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+						Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
 
-						requestedTasks := auctioneerClient.RequestTaskAuctionsArgsForCall(0)
+						requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
 						Expect(requestedTasks).To(HaveLen(2))
 						Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid, taskGuid2))
 					})
 
 					Context("when requesting an auction is unsuccessful", func() {
 						BeforeEach(func() {
-							auctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
+							fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
 						})
 
 						It("logs an error", func() {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
@@ -240,15 +241,15 @@ func (t crashTest) Test() {
 
 		if t.Result.Auction {
 			It("starts an auction", func() {
-				Expect(auctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				requestedAuctions := auctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				requestedAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(requestedAuctions).To(HaveLen(1))
 
 				desiredLRP, err := etcdDB.DesiredLRPByProcessGuid(logger, actualLRPKey.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(requestedAuctions[0].DesiredLRP).To(Equal(desiredLRP))
-				Expect(requestedAuctions[0].Indices).To(ConsistOf(uint(actualLRPKey.Index)))
+				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRPKey.Index))
+				Expect(*requestedAuctions[0]).To(Equal(expectedStartRequest))
 			})
 
 			Context("when the desired LRP no longer exists", func() {
@@ -266,7 +267,7 @@ func (t crashTest) Test() {
 			})
 		} else {
 			It("does not start an auction", func() {
-				Expect(auctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
 			})
 		}
 
