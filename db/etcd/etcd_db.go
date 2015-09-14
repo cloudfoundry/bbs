@@ -115,7 +115,7 @@ func NewETCD(
 func (db *ETCDDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
 	encodedPayload, err := format.Marshal(db.format, model)
 	if err != nil {
-		logger.Error("failed-ro-serialize-model", err)
+		logger.Error("failed-to-serialize-model", err)
 		return nil, models.NewError(models.Error_InvalidRecord, err.Error())
 	}
 	return encodedPayload, nil
@@ -124,7 +124,7 @@ func (db *ETCDDB) serializeModel(logger lager.Logger, model format.Versioner) ([
 func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model format.Versioner) error {
 	err := format.Unmarshal(logger, []byte(node.Value), model)
 	if err != nil {
-		logger.Error("failed-ro-serialize-model", err)
+		logger.Error("failed-to-deserialize-model", err)
 		return models.NewError(models.Error_InvalidRecord, err.Error())
 	}
 	return nil
