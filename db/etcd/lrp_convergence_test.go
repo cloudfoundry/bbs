@@ -661,10 +661,13 @@ var _ = Describe("LrpConvergence", func() {
 			It("emits a start auction request for the correct indices", func() {
 				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
 				startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
-				Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
+
+				startAuction := startAuctions[0]
+				Expect(startAuction.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
+				Expect(startAuction.Indices).To(HaveLen(2))
+				Expect(startAuction.Indices).To(ConsistOf([]int{0, 1}))
 			})
 		})
 
