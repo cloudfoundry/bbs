@@ -21,9 +21,8 @@ import (
 	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
+	"github.com/cloudfoundry-incubator/locket"
 	"github.com/cloudfoundry-incubator/rep"
-	legacybbs "github.com/cloudfoundry-incubator/runtime-schema/bbs"
-	"github.com/cloudfoundry-incubator/runtime-schema/bbs/lock_bbs"
 	legacymodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -75,13 +74,13 @@ var consulCluster = flag.String(
 
 var lockTTL = flag.Duration(
 	"lockTTL",
-	lock_bbs.LockTTL,
+	locket.LockTTL,
 	"TTL for service lock",
 )
 
 var lockRetryInterval = flag.Duration(
 	"lockRetryInterval",
-	lock_bbs.RetryInterval,
+	locket.RetryInterval,
 	"interval to wait before retrying a failed lock acquisition",
 )
 
@@ -204,7 +203,7 @@ func initializeLockMaintainer(logger lager.Logger, client *api.Client, sessionMa
 	if err != nil {
 		logger.Fatal("Couldn't create consul session", err)
 	}
-	presenceManager := legacybbs.NewBBSPresenceManager(session, clock.NewClock(), logger)
+	presenceManager := locket.New(session, clock.NewClock(), logger)
 
 	uuid, err := uuid.NewV4()
 	if err != nil {

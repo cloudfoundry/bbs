@@ -34,7 +34,7 @@ var _ = Describe("Ping API", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
-				bbsRunner.StartCheck = "bbs.lock-bbs.lock.acquiring-lock"
+				bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
 
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 			})
