@@ -203,7 +203,7 @@ func initializeLockMaintainer(logger lager.Logger, client *api.Client, sessionMa
 	if err != nil {
 		logger.Fatal("Couldn't create consul session", err)
 	}
-	presenceManager := locket.New(session, clock.NewClock(), logger)
+	presenceManager := locket.NewClient(session, clock.NewClock(), logger)
 
 	uuid, err := uuid.NewV4()
 	if err != nil {

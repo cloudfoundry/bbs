@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/runtime-schema/bbs/services_bbs"
+	"github.com/cloudfoundry-incubator/locket"
 	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,7 +24,7 @@ var _ = Describe("CellsLoader", func() {
 		var (
 			clock *fakeclock.FakeClock
 
-			bbs                *services_bbs.ServicesBBS
+			locketClient       locket.Client
 			presence1          ifrit.Process
 			presence2          ifrit.Process
 			firstCellPresence  oldmodels.CellPresence
@@ -35,7 +35,7 @@ var _ = Describe("CellsLoader", func() {
 		BeforeEach(func() {
 			logger = lagertest.NewTestLogger("test")
 			clock = fakeclock.NewFakeClock(time.Now())
-			bbs = services_bbs.New(consulSession, clock, logger)
+			locketClient = locket.NewClient(consulSession, clock, logger)
 
 			firstCellPresence = oldmodels.NewCellPresence("first-rep", "1.2.3.4", "the-zone", oldmodels.NewCellCapacity(128, 1024, 3), []string{}, []string{})
 			secondCellPresence = oldmodels.NewCellPresence("second-rep", "4.5.6.7", "the-zone", oldmodels.NewCellCapacity(128, 1024, 3), []string{}, []string{})
@@ -57,10 +57,10 @@ var _ = Describe("CellsLoader", func() {
 
 			BeforeEach(func() {
 				cellsLoader = consulDB.NewCellsLoader(logger)
-				presence1 = ifrit.Invoke(bbs.NewCellPresence(firstCellPresence, retryInterval))
+				presence1 = ifrit.Invoke(locketClient.NewCellPresence(firstCellPresence, retryInterval))
 
 				Eventually(func() ([]oldmodels.CellPresence, error) {
-					return bbs.Cells()
+					return locketClient.Cells()
 				}).Should(HaveLen(1))
 
 				cells, err = cellsLoader.Cells()
@@ -74,10 +74,10 @@ var _ = Describe("CellsLoader", func() {
 
 			Context("when one more cell is added", func() {
 				BeforeEach(func() {
-					presence2 = ifrit.Invoke(bbs.NewCellPresence(secondCellPresence, retryInterval))
+					presence2 = ifrit.Invoke(locketClient.NewCellPresence(secondCellPresence, retryInterval))
 
 					Eventually(func() ([]oldmodels.CellPresence, error) {
-						return bbs.Cells()
+						return locketClient.Cells()
 					}).Should(HaveLen(2))
 				})
 

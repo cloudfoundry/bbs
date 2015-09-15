@@ -2,7 +2,7 @@ package main_test
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/runtime-schema/bbs/shared"
+	"github.com/cloudfoundry-incubator/locket"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -12,7 +12,7 @@ import (
 var _ = Describe("MasterLock", func() {
 	Context("when the bbs cannot obtain the bbs lock", func() {
 		BeforeEach(func() {
-			err := consulSession.AcquireLock(shared.LockSchemaPath("bbs_lock"), []byte{})
+			err := consulSession.AcquireLock(locket.LockSchemaPath("bbs_lock"), []byte{})
 			Expect(err).NotTo(HaveOccurred())
 
 			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)

@@ -2,7 +2,7 @@ package main_test
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/runtime-schema/bbs/shared"
+	"github.com/cloudfoundry-incubator/locket"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -30,7 +30,7 @@ var _ = Describe("Ping API", func() {
 
 		Context("when the BBS Server is not the leader", func() {
 			BeforeEach(func() {
-				err := consulSession.AcquireLock(shared.LockSchemaPath("bbs_lock"), []byte{})
+				err := consulSession.AcquireLock(locket.LockSchemaPath("bbs_lock"), []byte{})
 				Expect(err).NotTo(HaveOccurred())
 
 				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
