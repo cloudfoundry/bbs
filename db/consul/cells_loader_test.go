@@ -10,7 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/locket"
-	oldmodels "github.com/cloudfoundry-incubator/runtime-schema/models"
+	"github.com/cloudfoundry-incubator/locket/presence"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
@@ -27,8 +27,8 @@ var _ = Describe("CellsLoader", func() {
 			locketClient       locket.Client
 			presence1          ifrit.Process
 			presence2          ifrit.Process
-			firstCellPresence  oldmodels.CellPresence
-			secondCellPresence oldmodels.CellPresence
+			firstCellPresence  presence.CellPresence
+			secondCellPresence presence.CellPresence
 			logger             *lagertest.TestLogger
 		)
 
@@ -37,8 +37,8 @@ var _ = Describe("CellsLoader", func() {
 			clock = fakeclock.NewFakeClock(time.Now())
 			locketClient = locket.NewClient(consulSession, clock, logger)
 
-			firstCellPresence = oldmodels.NewCellPresence("first-rep", "1.2.3.4", "the-zone", oldmodels.NewCellCapacity(128, 1024, 3), []string{}, []string{})
-			secondCellPresence = oldmodels.NewCellPresence("second-rep", "4.5.6.7", "the-zone", oldmodels.NewCellCapacity(128, 1024, 3), []string{}, []string{})
+			firstCellPresence = presence.NewCellPresence("first-rep", "1.2.3.4", "the-zone", presence.NewCellCapacity(128, 1024, 3), []string{}, []string{})
+			secondCellPresence = presence.NewCellPresence("second-rep", "4.5.6.7", "the-zone", presence.NewCellCapacity(128, 1024, 3), []string{}, []string{})
 
 			presence1 = nil
 			presence2 = nil
@@ -59,7 +59,7 @@ var _ = Describe("CellsLoader", func() {
 				cellsLoader = consulDB.NewCellsLoader(logger)
 				presence1 = ifrit.Invoke(locketClient.NewCellPresence(firstCellPresence, retryInterval))
 
-				Eventually(func() ([]oldmodels.CellPresence, error) {
+				Eventually(func() ([]presence.CellPresence, error) {
 					return locketClient.Cells()
 				}).Should(HaveLen(1))
 
@@ -76,7 +76,7 @@ var _ = Describe("CellsLoader", func() {
 				BeforeEach(func() {
 					presence2 = ifrit.Invoke(locketClient.NewCellPresence(secondCellPresence, retryInterval))
 
-					Eventually(func() ([]oldmodels.CellPresence, error) {
+					Eventually(func() ([]presence.CellPresence, error) {
 						return locketClient.Cells()
 					}).Should(HaveLen(2))
 				})

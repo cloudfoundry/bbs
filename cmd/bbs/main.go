@@ -22,8 +22,8 @@ import (
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/locket"
+	"github.com/cloudfoundry-incubator/locket/presence"
 	"github.com/cloudfoundry-incubator/rep"
-	legacymodels "github.com/cloudfoundry-incubator/runtime-schema/models"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/hashicorp/consul/api"
@@ -214,7 +214,7 @@ func initializeLockMaintainer(logger lager.Logger, client *api.Client, sessionMa
 		logger.Fatal("Advertise URL must be specified", nil)
 	}
 
-	bbsPresence := legacymodels.NewBBSPresence(uuid.String(), *advertiseURL)
+	bbsPresence := presence.NewBBSPresence(uuid.String(), *advertiseURL)
 	lockMaintainer, err := presenceManager.NewBBSMasterLock(bbsPresence, *lockRetryInterval)
 	if err != nil {
 		logger.Fatal("Couldn't create lock maintainer", err)
