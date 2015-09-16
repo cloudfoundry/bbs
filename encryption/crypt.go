@@ -7,6 +7,8 @@ import (
 	"io"
 )
 
+const NonceSize = 12
+
 type Encrypted struct {
 	Nonce      []byte
 	KeyLabel   string

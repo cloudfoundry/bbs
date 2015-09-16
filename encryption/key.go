@@ -23,6 +23,10 @@ func NewKey(label, phrase string) (Key, error) {
 		return nil, errors.New("A key label is required")
 	}
 
+	if len(label) > 127 {
+		return nil, errors.New("Key label is longer than 127 bytes")
+	}
+
 	hash := sha256.Sum256([]byte(phrase))
 	block, err := aes.NewCipher(hash[:])
 	if err != nil {

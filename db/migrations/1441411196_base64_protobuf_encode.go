@@ -14,10 +14,14 @@ func init() {
 	appendMigration(NewBase64ProtobufEncode())
 }
 
-type Base64ProtobufEncode struct{}
+type Base64ProtobufEncode struct {
+	serializer format.Serializer
+}
 
 func NewBase64ProtobufEncode() Base64ProtobufEncode {
-	return Base64ProtobufEncode{}
+	return Base64ProtobufEncode{
+		serializer: format.NewSerializer(nil),
+	}
 }
 
 func (b Base64ProtobufEncode) Version() int64 {
@@ -40,7 +44,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 		desiredLRPRootNode := response.Node
 		for _, node := range desiredLRPRootNode.Nodes {
 			var desiredLRP models.DesiredLRP
-			err := reWriteNode(logger, node, &desiredLRP, storeClient)
+			err := b.reWriteNode(logger, node, &desiredLRP, storeClient)
 			if err != nil {
 				return err
 			}
@@ -64,7 +68,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 			for _, groupNode := range processNode.Nodes {
 				for _, actualLRPNode := range groupNode.Nodes {
 					var actualLRP models.ActualLRP
-					err := reWriteNode(logger, actualLRPNode, &actualLRP, storeClient)
+					err := b.reWriteNode(logger, actualLRPNode, &actualLRP, storeClient)
 					if err != nil {
 						return err
 					}
@@ -88,7 +92,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 		taskRootNode := response.Node
 		for _, node := range taskRootNode.Nodes {
 			var task models.Task
-			err := reWriteNode(logger, node, &task, storeClient)
+			err := b.reWriteNode(logger, node, &task, storeClient)
 			if err != nil {
 				return err
 			}
@@ -102,13 +106,13 @@ func (b Base64ProtobufEncode) Down(logger lager.Logger, storeClient etcd.StoreCl
 	return errors.New("not implemented")
 }
 
-func reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner, storeClient etcd.StoreClient) error {
-	err := format.Unmarshal(logger, []byte(node.Value), model)
+func (b Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner, storeClient etcd.StoreClient) error {
+	err := b.serializer.Unmarshal(logger, []byte(node.Value), model)
 	if err != nil {
 		return err
 	}
 
-	value, err := format.Marshal(format.ENCODED_PROTO, model)
+	value, err := b.serializer.Marshal(logger, format.ENCODED_PROTO, model)
 	if err != nil {
 		return err
 	}

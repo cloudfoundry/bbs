@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
@@ -78,6 +79,7 @@ type ETCDOptions struct {
 
 type ETCDDB struct {
 	format            *format.Format
+	serializer        format.Serializer
 	client            StoreClient
 	clock             clock.Clock
 	inflightWatches   map[chan bool]bool
@@ -91,7 +93,8 @@ type ETCDDB struct {
 }
 
 func NewETCD(
-	format *format.Format,
+	serializationFormat *format.Format,
+	cryptor encryption.Cryptor,
 	storeClient StoreClient,
 	auctioneerClient auctioneer.Client,
 	cellDB db.CellDB,
@@ -100,20 +103,21 @@ func NewETCD(
 	taskCC taskworkpool.TaskCompletionClient,
 ) *ETCDDB {
 	return &ETCDDB{
-		format,
-		storeClient,
-		clock,
-		map[chan bool]bool{},
-		&sync.Mutex{},
-		auctioneerClient,
-		repClientFactory,
-		taskCC,
-		cellDB,
+		format:               serializationFormat,
+		serializer:           format.NewSerializer(cryptor),
+		client:               storeClient,
+		clock:                clock,
+		inflightWatches:      map[chan bool]bool{},
+		inflightWatchLock:    &sync.Mutex{},
+		auctioneerClient:     auctioneerClient,
+		repClientFactory:     repClientFactory,
+		taskCompletionClient: taskCC,
+		cellDB:               cellDB,
 	}
 }
 
 func (db *ETCDDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
-	encodedPayload, err := format.Marshal(db.format, model)
+	encodedPayload, err := db.serializer.Marshal(logger, db.format, model)
 	if err != nil {
 		logger.Error("failed-to-serialize-model", err)
 		return nil, models.NewError(models.Error_InvalidRecord, err.Error())
@@ -122,7 +126,7 @@ func (db *ETCDDB) serializeModel(logger lager.Logger, model format.Versioner) ([
 }
 
 func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model format.Versioner) error {
-	err := format.Unmarshal(logger, []byte(node.Value), model)
+	err := db.serializer.Unmarshal(logger, []byte(node.Value), model)
 	if err != nil {
 		logger.Error("failed-to-deserialize-model", err)
 		return models.NewError(models.Error_InvalidRecord, err.Error())

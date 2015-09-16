@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"errors"
 	"flag"
 	"os"
@@ -10,6 +11,7 @@ import (
 	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -93,7 +95,7 @@ var reportInterval = flag.Duration(
 var dropsondeDestination = flag.String(
 	"dropsondeDestination",
 	"localhost:3457",
-	"Destination for dropsonde-emitted metrics.",
+	"Destination for dropsonde-emitted metrics",
 )
 
 const (
@@ -106,6 +108,8 @@ func main() {
 	cf_debug_server.AddFlags(flag.CommandLine)
 	cf_lager.AddFlags(flag.CommandLine)
 	etcdFlags := AddETCDFlags(flag.CommandLine)
+	encryptionFlags := AddEncryptionFlags(flag.CommandLine)
+
 	flag.Parse()
 
 	cf_http.Initialize(*communicationTimeout)
@@ -131,11 +135,17 @@ func main() {
 		logger.Fatal("etcd-validation-failed", err)
 	}
 
+	keyManager, err := encryptionFlags.Validate()
+	if err != nil {
+		logger.Fatal("cannot-setup-encryption", err)
+	}
+	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
+
 	consulDB := consuldb.NewConsul(consulDBSession)
 	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
 
 	storeClient := initializeEtcdStoreClient(logger, etcdOptions)
-	db := initializeEtcdDB(logger, storeClient, cbWorkPool, consulDB)
+	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, consulDB)
 
 	migrationsDone := make(chan struct{})
 
@@ -255,12 +265,14 @@ func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
 
 func initializeEtcdDB(
 	logger lager.Logger,
+	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
 	cbClient taskworkpool.TaskCompletionClient,
 	consulDB *consuldb.ConsulDB,
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(
-		format.ENCODED_PROTO,
+		format.ENCRYPTED_PROTO,
+		cryptor,
 		storeClient,
 		initializeAuctioneerClient(logger),
 		consulDB,

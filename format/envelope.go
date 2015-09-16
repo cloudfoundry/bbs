@@ -77,14 +77,9 @@ func MarshalEnvelope(format EnvelopeFormat, model Versioner) ([]byte, error) {
 		return nil, err
 	}
 
-	// to avoid the following copy, change toProto to write the payload
-	// into a buffer pre-filled with format and version.
-	data := make([]byte, len(payload)+2)
-	data[0] = byte(format)
-	data[1] = byte(model.Version())
-	for i := range payload {
-		data[i+2] = payload[i]
-	}
+	data := make([]byte, 0, len(payload)+EnvelopeOffset)
+	data = append(data, byte(format), byte(model.Version()))
+	data = append(data, payload...)
 
 	return data, nil
 }
@@ -97,7 +92,7 @@ func EnvelopeMetadataFromPayload(unencodedPayload []byte) (EnvelopeFormat, Versi
 }
 
 func IsEnveloped(data []byte) bool {
-	if len(data) < 2 {
+	if len(data) < EnvelopeOffset {
 		return false
 	}
 

@@ -17,7 +17,8 @@ import (
 
 var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 	var (
-		migration migrations.Base64ProtobufEncode
+		migration  migrations.Base64ProtobufEncode
+		serializer format.Serializer
 
 		logger *lagertest.TestLogger
 	)
@@ -25,6 +26,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 
+		serializer = format.NewSerializer(nil)
 		migration = migrations.NewBase64ProtobufEncode()
 	})
 
@@ -88,7 +90,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(payload[0]).To(BeEquivalentTo(format.PROTO))
 			Expect(payload[1]).To(BeEquivalentTo(format.V0))
-			format.Unmarshal(logger, []byte(value), actual)
+			serializer.Unmarshal(logger, []byte(value), actual)
 			Expect(actual).To(Equal(expected))
 		}
 
@@ -102,7 +104,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			for _, node := range response.Node.Nodes {
 				var desiredLRP models.DesiredLRP
 				value := node.Value
-				format.Unmarshal(logger, []byte(value), &desiredLRP)
+				serializer.Unmarshal(logger, []byte(value), &desiredLRP)
 				validateConversionToProto(node, &desiredLRP, expectedDesiredLRP)
 			}
 
@@ -120,7 +122,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 							expected = expectedEvacuatingActualLRP
 						}
 						var actualLRP models.ActualLRP
-						format.Unmarshal(logger, []byte(lrpNode.Value), &actualLRP)
+						serializer.Unmarshal(logger, []byte(lrpNode.Value), &actualLRP)
 						validateConversionToProto(lrpNode, &actualLRP, expected)
 					}
 				}
@@ -132,7 +134,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			Expect(response.Node.Nodes).To(HaveLen(1))
 			for _, taskNode := range response.Node.Nodes {
 				var task models.Task
-				format.Unmarshal(logger, []byte(taskNode.Value), &task)
+				serializer.Unmarshal(logger, []byte(taskNode.Value), &task)
 				validateConversionToProto(taskNode, &task, expectedTask)
 			}
 		})

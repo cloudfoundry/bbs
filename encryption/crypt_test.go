@@ -44,6 +44,14 @@ var _ = Describe("Crypt", func() {
 		Expect(plaintext).To(Equal(input))
 	})
 
+	It("has the expected nonce length", func() {
+		input := []byte("some plaintext data")
+		encrypted, err := cryptor.Encrypt(input)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(encrypted.Nonce).To(HaveLen(encryption.NonceSize))
+	})
+
 	Context("when the nonce is incorrect", func() {
 		It("fails to decrypt", func() {
 			input := []byte("some plaintext data")

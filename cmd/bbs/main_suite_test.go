@@ -150,6 +150,9 @@ var _ = BeforeEach(func() {
 		DropsondeDestination:  testMetricsListener.LocalAddr().String(),
 		EtcdCluster:           etcdUrl,
 		MetricsReportInterval: 10 * time.Millisecond,
+
+		EncryptionKeys: []string{"label:key"},
+		ActiveKeyLabel: "label",
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCODED_PROTO, storeClient)

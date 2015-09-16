@@ -4,14 +4,13 @@ import (
 	"fmt"
 
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	. "github.com/onsi/gomega"
 )
 
 func (t *ETCDHelper) SetRawActualLRP(lrp *models.ActualLRP) {
-	value, err := format.Marshal(t.format, lrp)
+	value, err := t.serializer.Marshal(t.logger, t.format, lrp)
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.ActualLRPSchemaPath(lrp.GetProcessGuid(), lrp.GetIndex())
@@ -21,7 +20,7 @@ func (t *ETCDHelper) SetRawActualLRP(lrp *models.ActualLRP) {
 }
 
 func (t *ETCDHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSeconds uint64) {
-	value, err := format.Marshal(t.format, lrp)
+	value, err := t.serializer.Marshal(t.logger, t.format, lrp)
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.EvacuatingActualLRPSchemaPath(lrp.GetProcessGuid(), lrp.GetIndex())
@@ -31,7 +30,7 @@ func (t *ETCDHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSecon
 }
 
 func (t *ETCDHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
-	value, err := format.Marshal(t.format, lrp)
+	value, err := t.serializer.Marshal(t.logger, t.format, lrp)
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.DesiredLRPSchemaPath(lrp)
@@ -41,7 +40,7 @@ func (t *ETCDHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
 }
 
 func (t *ETCDHelper) SetRawTask(task *models.Task) {
-	value, err := format.Marshal(t.format, task)
+	value, err := t.serializer.Marshal(t.logger, t.format, task)
 	Expect(err).NotTo(HaveOccurred())
 
 	key := etcddb.TaskSchemaPath(task)
@@ -113,7 +112,7 @@ func (t *ETCDHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 				Instances:   1,
 				Action:      action,
 			}
-			value, err := format.Marshal(t.format, desiredLRP)
+			value, err := t.serializer.Marshal(t.logger, t.format, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
 			t.client.Set(etcddb.DesiredLRPSchemaPath(desiredLRP), value, 0)

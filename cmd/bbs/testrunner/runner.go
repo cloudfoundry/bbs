@@ -18,10 +18,13 @@ type Args struct {
 	EtcdClientKey         string
 	EtcdCluster           string
 	MetricsReportInterval time.Duration
+
+	ActiveKeyLabel string
+	EncryptionKeys []string
 }
 
 func (args Args) ArgSlice() []string {
-	return []string{
+	arguments := []string{
 		"-advertiseURL", args.AdvertiseURL,
 		"-auctioneerAddress", args.AuctioneerAddress,
 		"-consulCluster", args.ConsulCluster,
@@ -33,7 +36,15 @@ func (args Args) ArgSlice() []string {
 		"-listenAddress", args.Address,
 		"-logLevel", "debug",
 		"-metricsReportInterval", args.MetricsReportInterval.String(),
+
+		"-activeKeyLabel", args.ActiveKeyLabel,
 	}
+
+	for _, key := range args.EncryptionKeys {
+		arguments = append(arguments, "-encryptionKey="+key)
+	}
+
+	return arguments
 }
 
 func New(binPath string, args Args) *ginkgomon.Runner {

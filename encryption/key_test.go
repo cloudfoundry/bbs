@@ -42,5 +42,20 @@ var _ = Describe("Key", func() {
 				Expect(err).To(MatchError("A key label is required"))
 			})
 		})
+
+		Context("when a key label is longer than 127 bytes", func() {
+			It("returns a meaningful error", func() {
+				var label string
+				for i := 0; i < 127; i++ {
+					label = fmt.Sprintf("%s%d", label, i%10)
+				}
+				_, err := encryption.NewKey(label, "phrase")
+				Expect(err).NotTo(HaveOccurred())
+
+				label = label + "0"
+				_, err = encryption.NewKey(label, "phrase")
+				Expect(err).To(MatchError("Key label is longer than 127 bytes"))
+			})
+		})
 	})
 })
