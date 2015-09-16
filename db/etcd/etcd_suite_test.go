@@ -1,6 +1,7 @@
 package etcd_test
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
@@ -51,6 +53,8 @@ var cellDB db.CellDB
 var etcdDB db.DB
 var workPoolCreateError error
 
+var cryptor encryption.Cryptor
+
 func TestDB(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "ETCD DB Suite")
@@ -75,6 +79,12 @@ var _ = BeforeSuite(func() {
 	etcdRunner.Start()
 
 	Expect(workPoolCreateError).ToNot(HaveOccurred())
+
+	encryptionKey, err := encryption.NewKey("label", "passphrase")
+	Expect(err).NotTo(HaveOccurred())
+	keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
+	Expect(err).NotTo(HaveOccurred())
+	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 })
 
 var _ = AfterSuite(func() {
@@ -94,14 +104,14 @@ var _ = BeforeEach(func() {
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	storeClient = etcd.NewStoreClient(etcdClient)
-	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCODED_PROTO, storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 	cellDB = consul.NewConsul(consulSession)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 	fakeRepClientFactory = new(repfakes.FakeClientFactory)
 	fakeRepClient = new(repfakes.FakeClient)
 	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
-	etcdDB = etcd.NewETCD(format.LEGACY_FORMATTING, nil, storeClient, fakeAuctioneerClient, cellDB, clock, fakeRepClientFactory, fakeTaskCompletionClient)
+	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient)
+	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, cryptor, storeClient, fakeAuctioneerClient, cellDB, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {

@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	V1SchemaRoot = "/v1/"
-	VersionKey   = "/version"
+	V1SchemaRoot          = "/v1/"
+	VersionKey            = "/version"
+	EncryptionKeyLabelKey = "/encryption-key"
 
 	DomainSchemaRoot = V1SchemaRoot + "domain"
 

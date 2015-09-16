@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"crypto/rand"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
@@ -155,7 +157,12 @@ var _ = BeforeEach(func() {
 		ActiveKeyLabel: "label",
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
-	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCODED_PROTO, storeClient)
+	encryptionKey, err := encryption.NewKey("label", "key")
+	Expect(err).NotTo(HaveOccurred())
+	keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
+	Expect(err).NotTo(HaveOccurred())
+	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
+	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient)
 	consulHelper = consul_helpers.NewConsulHelper(consulSession)
 })
 

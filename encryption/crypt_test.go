@@ -112,19 +112,6 @@ var _ = Describe("Crypt", func() {
 		})
 	})
 
-	Context("when the random number generator fails to generate enough data", func() {
-		BeforeEach(func() {
-			prng = bytes.NewBufferString("goo")
-		})
-
-		It("fails to encrypt", func() {
-			input := []byte("some plaintext data")
-
-			_, err := cryptor.Encrypt(input)
-			Expect(err).To(MatchError("Unable to generate random nonce"))
-		})
-	})
-
 	Context("when the encryption key is invalid", func() {
 		var key *fakes.FakeKey
 

@@ -12,13 +12,13 @@ type FakeKey struct {
 	LabelStub        func() string
 	labelMutex       sync.RWMutex
 	labelArgsForCall []struct{}
-	labelReturns     struct {
+	labelReturns struct {
 		result1 string
 	}
 	BlockStub        func() cipher.Block
 	blockMutex       sync.RWMutex
 	blockArgsForCall []struct{}
-	blockReturns     struct {
+	blockReturns struct {
 		result1 cipher.Block
 	}
 }

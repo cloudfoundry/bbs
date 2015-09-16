@@ -12,6 +12,7 @@ import (
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"github.com/cloudfoundry-incubator/bbs/encryptor"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -158,6 +159,8 @@ func main() {
 		clock.NewClock(),
 	)
 
+	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient)
+
 	hub := events.NewHub()
 
 	watcher := watcher.NewWatcher(
@@ -182,6 +185,7 @@ func main() {
 		{"workPool", cbWorkPool},
 		{"server", http_server.New(*listenAddress, handler)},
 		{"migration-manager", migrationManager},
+		{"encryptor", encryptor},
 		{"watcher", watcher},
 		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
 		{"metrics", *metricsNotifier},

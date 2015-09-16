@@ -2,7 +2,6 @@ package encryption
 
 import (
 	"crypto/cipher"
-	"errors"
 	"fmt"
 	"io"
 )
@@ -49,12 +48,9 @@ func (c *cryptor) Encrypt(plaintext []byte) (Encrypted, error) {
 	}
 
 	nonce := make([]byte, aead.NonceSize())
-	n, err := c.prng.Read(nonce)
+	_, err = io.ReadFull(c.prng, nonce)
 	if err != nil {
 		return Encrypted{}, fmt.Errorf("Unable to generate random nonce: %q", err)
-	}
-	if n != len(nonce) {
-		return Encrypted{}, errors.New("Unable to generate random nonce")
 	}
 
 	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
