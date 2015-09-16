@@ -58,7 +58,6 @@ func (notifier PeriodicMetronNotifier) Run(signals <-chan os.Signal, ready chan<
 	for {
 		select {
 		case <-ticker.C():
-			logger.Info("emitting")
 			startedAt := notifier.Clock.Now()
 
 			etcdMetrics.Send()

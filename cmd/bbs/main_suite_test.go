@@ -45,6 +45,7 @@ var logger lager.Logger
 var client bbs.Client
 var bbsBinPath string
 var bbsAddress string
+var bbsURL *url.URL
 var bbsArgs testrunner.Args
 var bbsRunner *ginkgomon.Runner
 var bbsProcess ifrit.Process
@@ -112,7 +113,7 @@ var _ = BeforeEach(func() {
 
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", 6700+GinkgoParallelNode())
 
-	bbsURL := &url.URL{
+	bbsURL = &url.URL{
 		Scheme: "http",
 		Host:   bbsAddress,
 	}

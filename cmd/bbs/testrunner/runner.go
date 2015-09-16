@@ -2,6 +2,7 @@ package testrunner
 
 import (
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -21,6 +22,11 @@ type Args struct {
 
 	ActiveKeyLabel string
 	EncryptionKeys []string
+
+	RequireSSL bool
+	CAFile     string
+	KeyFile    string
+	CertFile   string
 }
 
 func (args Args) ArgSlice() []string {
@@ -36,8 +42,11 @@ func (args Args) ArgSlice() []string {
 		"-listenAddress", args.Address,
 		"-logLevel", "debug",
 		"-metricsReportInterval", args.MetricsReportInterval.String(),
-
 		"-activeKeyLabel", args.ActiveKeyLabel,
+		"-requireSSL=" + strconv.FormatBool(args.RequireSSL),
+		"-caFile", args.CAFile,
+		"-certFile", args.CertFile,
+		"-keyFile", args.KeyFile,
 	}
 
 	for _, key := range args.EncryptionKeys {

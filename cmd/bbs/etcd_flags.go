@@ -11,10 +11,10 @@ import (
 )
 
 type ETCDFlags struct {
-	certFile    string
-	keyFile     string
-	caFile      string
-	clusterUrls string
+	etcdCertFile string
+	etcdKeyFile  string
+	etcdCaFile   string
+	clusterUrls  string
 }
 
 func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
@@ -27,19 +27,19 @@ func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
 		"comma-separated list of etcd URLs (scheme://ip:port)",
 	)
 	flagSet.StringVar(
-		&flags.certFile,
+		&flags.etcdCertFile,
 		"etcdCertFile",
 		"",
 		"Location of the client certificate for mutual auth",
 	)
 	flagSet.StringVar(
-		&flags.keyFile,
+		&flags.etcdKeyFile,
 		"etcdKeyFile",
 		"",
 		"Location of the client key for mutual auth",
 	)
 	flagSet.StringVar(
-		&flags.caFile,
+		&flags.etcdCaFile,
 		"etcdCaFile",
 		"",
 		"Location of the CA certificate for mutual auth",
@@ -70,18 +70,18 @@ func (flags *ETCDFlags) Validate() (*etcd.ETCDOptions, error) {
 	isSSL := false
 	if scheme == "https" {
 		isSSL = true
-		if flags.certFile == "" {
+		if flags.etcdCertFile == "" {
 			return nil, errors.New("Cert file must be provided for https connections")
 		}
-		if flags.keyFile == "" {
+		if flags.etcdKeyFile == "" {
 			return nil, errors.New("Key file must be provided for https connections")
 		}
 	}
 
 	return &etcd.ETCDOptions{
-		CertFile:    flags.certFile,
-		KeyFile:     flags.keyFile,
-		CAFile:      flags.caFile,
+		CertFile:    flags.etcdCertFile,
+		KeyFile:     flags.etcdKeyFile,
+		CAFile:      flags.etcdCaFile,
 		ClusterUrls: clusterUrls,
 		IsSSL:       isSSL,
 	}, nil

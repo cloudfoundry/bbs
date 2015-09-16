@@ -20,8 +20,8 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
-	cf_debug_server "github.com/cloudfoundry-incubator/cf-debug-server"
-	cf_lager "github.com/cloudfoundry-incubator/cf-lager"
+	"github.com/cloudfoundry-incubator/cf-debug-server"
+	"github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/locket"
@@ -43,6 +43,30 @@ var listenAddress = flag.String(
 	"listenAddress",
 	"",
 	"The host:port that the server is bound to.",
+)
+
+var requireSSL = flag.Bool(
+	"requireSSL",
+	false,
+	"whether the bbs server should require ssl-secured communication",
+)
+
+var caFile = flag.String(
+	"caFile",
+	"",
+	"the certificate authority public key file to use with ssl authentication",
+)
+
+var certFile = flag.String(
+	"certFile",
+	"",
+	"the public key file to use with ssl authentication",
+)
+
+var keyFile = flag.String(
+	"keyFile",
+	"",
+	"the private key file to use with ssl authentication",
 )
 
 var advertiseURL = flag.String(
@@ -180,10 +204,21 @@ func main() {
 		clock.NewClock(),
 	)
 
+	var server ifrit.Runner
+	if *requireSSL {
+		tlsConfig, err := cf_http.NewTLSConfig(*certFile, *keyFile, *caFile)
+		if err != nil {
+			logger.Fatal("tls-configuration-failed", err)
+		}
+		server = http_server.NewTLSServer(*listenAddress, handler, tlsConfig)
+	} else {
+		server = http_server.New(*listenAddress, handler)
+	}
+
 	members := grouper.Members{
 		{"lock-maintainer", maintainer},
 		{"workPool", cbWorkPool},
-		{"server", http_server.New(*listenAddress, handler)},
+		{"server", server},
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
 		{"watcher", watcher},
