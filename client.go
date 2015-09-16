@@ -2,6 +2,7 @@ package bbs
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -80,13 +81,40 @@ type Client interface {
 	StartTask(taskGuid string, cellID string) (bool, error)
 }
 
-func NewClient(url string) Client {
+func newClient(url string) *client {
 	return &client{
 		httpClient:          cf_http.NewClient(),
 		streamingHTTPClient: cf_http.NewStreamingClient(),
 
 		reqGen: rata.NewRequestGenerator(url, Routes),
 	}
+}
+
+func NewClient(url string) Client {
+	return newClient(url)
+}
+
+func NewSecureClient(url, caFile, certFile, keyFile string) (Client, error) {
+	client := newClient(url)
+
+	tlsConfig, err := cf_http.NewTLSConfig(certFile, keyFile, caFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if tr, ok := client.httpClient.Transport.(*http.Transport); ok {
+		tr.TLSClientConfig = tlsConfig
+	} else {
+		return nil, errors.New("Invalid transport")
+	}
+
+	if tr, ok := client.streamingHTTPClient.Transport.(*http.Transport); ok {
+		tr.TLSClientConfig = tlsConfig
+	} else {
+		return nil, errors.New("Invalid transport")
+	}
+
+	return client, nil
 }
 
 type client struct {
