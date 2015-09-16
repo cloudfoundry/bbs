@@ -150,12 +150,15 @@ var _ = Describe("Migration Manager", func() {
 				dbVersion.TargetVersion = 101
 			})
 
-			It("shuts down wihtout signalling ready", func() {
-				var err error
-				Eventually(migrationProcess.Wait()).Should(Receive(&err))
-				Expect(err).To(MatchError("Existing DB target version (101) exceeds final migration version (100)"))
-				Expect(migrationProcess.Ready()).ToNot(BeClosed())
-				Expect(migrationsDone).ToNot(BeClosed())
+			It("sets the target version to the current version and signals ready", func() {
+				Eventually(migrationProcess.Ready()).Should(BeClosed())
+				Expect(migrationsDone).To(BeClosed())
+
+				Eventually(fakeDB.SetVersionCallCount).Should(Equal(1))
+
+				_, version := fakeDB.SetVersionArgsForCall(0)
+				Expect(version.CurrentVersion).To(BeEquivalentTo(100))
+				Expect(version.TargetVersion).To(BeEquivalentTo(100))
 			})
 		})
 
@@ -200,18 +203,12 @@ var _ = Describe("Migration Manager", func() {
 		It("it sorts the migrations and runs them sequentially", func() {
 			Eventually(migrationProcess.Ready()).Should(BeClosed())
 			Expect(migrationsDone).To(BeClosed())
-			Consistently(fakeDB.SetVersionCallCount).Should(Equal(4))
+			Consistently(fakeDB.SetVersionCallCount).Should(Equal(2))
 
 			_, version := fakeDB.SetVersionArgsForCall(0)
-			Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 100}))
+			Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
 
 			_, version = fakeDB.SetVersionArgsForCall(1)
-			Expect(version).To(Equal(&models.Version{CurrentVersion: 100, TargetVersion: 100}))
-
-			_, version = fakeDB.SetVersionArgsForCall(2)
-			Expect(version).To(Equal(&models.Version{CurrentVersion: 100, TargetVersion: 102}))
-
-			_, version = fakeDB.SetVersionArgsForCall(3)
 			Expect(version).To(Equal(&models.Version{CurrentVersion: 102, TargetVersion: 102}))
 
 			Expect(fakeMigration.UpCallCount()).To(Equal(1))
@@ -223,15 +220,25 @@ var _ = Describe("Migration Manager", func() {
 
 		Context("when the target version is greater than the bbs migration version", func() {
 			BeforeEach(func() {
-				dbVersion.TargetVersion = 101
+				dbVersion.TargetVersion = 103
 			})
 
-			It("shuts down wihtout signalling ready", func() {
-				var err error
-				Eventually(migrationProcess.Wait()).Should(Receive(&err))
-				Expect(err).To(MatchError("Existing DB target version (101) exceeds pending migration version (100)"))
-				Expect(migrationProcess.Ready()).NotTo(BeClosed())
-				Expect(migrationsDone).NotTo(BeClosed())
+			It("runs the migrations up to the bbs migration version", func() {
+				Eventually(migrationProcess.Ready()).Should(BeClosed())
+				Expect(migrationsDone).To(BeClosed())
+				Consistently(fakeDB.SetVersionCallCount).Should(Equal(2))
+
+				_, version := fakeDB.SetVersionArgsForCall(0)
+				Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
+
+				_, version = fakeDB.SetVersionArgsForCall(1)
+				Expect(version).To(Equal(&models.Version{CurrentVersion: 102, TargetVersion: 102}))
+
+				Expect(fakeMigration.UpCallCount()).To(Equal(1))
+				Expect(fakeMigration102.UpCallCount()).To(Equal(1))
+
+				Expect(fakeMigration.DownCallCount()).To(Equal(0))
+				Expect(fakeMigration102.DownCallCount()).To(Equal(0))
 			})
 		})
 	})

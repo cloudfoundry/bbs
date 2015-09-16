@@ -84,57 +84,48 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		)
 	}
 
-	if version.TargetVersion > bbsMigrationVersion {
-		return fmt.Errorf(
-			"Existing DB target version (%d) exceeds final migration version (%d)",
-			version.TargetVersion,
-			bbsMigrationVersion,
-		)
+	if version.TargetVersion != bbsMigrationVersion {
+		if version.TargetVersion > bbsMigrationVersion {
+			version.TargetVersion = bbsMigrationVersion
+		}
+
+		m.writeVersion(version.CurrentVersion, bbsMigrationVersion)
 	}
 
 	migrateStart := m.clock.Now()
+	if version.CurrentVersion != bbsMigrationVersion {
 
-	currentVersion := version.CurrentVersion
-	targetVersion := version.TargetVersion
-	for _, migration := range m.migrations {
-		if currentVersion < migration.Version() {
-			if targetVersion > migration.Version() {
-				return fmt.Errorf(
-					"Existing DB target version (%d) exceeds pending migration version (%d)",
-					targetVersion,
-					migration.Version(),
-				)
+		lastVersion := version.CurrentVersion
+		nextVersion := version.CurrentVersion
+		for _, currentMigration := range m.migrations {
+			if lastVersion < currentMigration.Version() {
+				if nextVersion > currentMigration.Version() {
+					return fmt.Errorf(
+						"Existing DB target version (%d) exceeds pending migration version (%d)",
+						nextVersion,
+						currentMigration.Version(),
+					)
+				}
+				nextVersion = currentMigration.Version()
+
+				logger.Debug("running-migration", lager.Data{
+					"CurrentVersion":   lastVersion,
+					"NextVersion":      nextVersion,
+					"MigrationVersion": currentMigration.Version(),
+				})
+				err = currentMigration.Up(m.logger, m.storeClient)
+				if err != nil {
+					return err
+				}
+
+				lastVersion = currentMigration.Version()
+				logger.Debug("completed-migration")
 			}
-			targetVersion = migration.Version()
+		}
 
-			err := m.db.SetVersion(m.logger, &models.Version{
-				CurrentVersion: currentVersion,
-				TargetVersion:  targetVersion,
-			})
-			if err != nil {
-				return err
-			}
-
-			logger.Debug("running-migration", lager.Data{
-				"CurrentVersion":   currentVersion,
-				"TargetVersion":    targetVersion,
-				"MigrationVersion": migration.Version(),
-			})
-			err = migration.Up(m.logger, m.storeClient)
-			if err != nil {
-				return err
-			}
-
-			currentVersion = migration.Version()
-			err = m.db.SetVersion(m.logger, &models.Version{
-				CurrentVersion: currentVersion,
-				TargetVersion:  targetVersion,
-			})
-			if err != nil {
-				return err
-			}
-
-			logger.Debug("completed-migration")
+		err = m.writeVersion(lastVersion, nextVersion)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -148,6 +139,13 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	case <-signals:
 		return nil
 	}
+}
+
+func (m *Manager) writeVersion(currentVersion, targetVersion int64) error {
+	return m.db.SetVersion(m.logger, &models.Version{
+		CurrentVersion: currentVersion,
+		TargetVersion:  targetVersion,
+	})
 }
 
 type Migrations []Migration
