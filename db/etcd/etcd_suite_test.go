@@ -30,8 +30,6 @@ import (
 	"testing"
 )
 
-const receptorURL = "http://some-receptor-url"
-
 var etcdPort int
 var etcdUrl string
 var etcdRunner *etcdstorerunner.ETCDClusterRunner
