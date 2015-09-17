@@ -130,21 +130,20 @@ func NewRunningActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
 }
 
 func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
-	if group.Instance == nil && group.Evacuating == nil {
+	switch {
+	case group.Instance == nil && group.Evacuating == nil:
 		panic(ErrActualLRPGroupInvalid)
-	}
 
-	if group.Instance == nil {
+	case group.Instance == nil:
 		return group.Evacuating, true
-	}
 
-	if group.Evacuating == nil {
+	case group.Evacuating == nil:
 		return group.Instance, false
-	}
 
-	if group.Instance.State == ActualLRPStateRunning || group.Instance.State == ActualLRPStateCrashed {
+	case group.Instance.State == ActualLRPStateRunning || group.Instance.State == ActualLRPStateCrashed:
 		return group.Instance, false
-	} else {
+
+	default:
 		return group.Evacuating, true
 	}
 }
