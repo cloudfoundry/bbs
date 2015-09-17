@@ -159,7 +159,7 @@ func main() {
 		clock.NewClock(),
 	)
 
-	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient)
+	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock.NewClock())
 
 	hub := events.NewHub()
 

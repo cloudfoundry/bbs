@@ -3,14 +3,21 @@ package encryptor
 import (
 	"errors"
 	"os"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/coreos/go-etcd/etcd"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
+)
+
+const (
+	encryptionDuration = metric.Duration("EncryptionDuration")
 )
 
 type Encryptor struct {
@@ -19,6 +26,7 @@ type Encryptor struct {
 	keyManager  encryption.KeyManager
 	cryptor     encryption.Cryptor
 	storeClient etcddb.StoreClient
+	clock       clock.Clock
 }
 
 func New(
@@ -27,6 +35,7 @@ func New(
 	keyManager encryption.KeyManager,
 	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
+	clock clock.Clock,
 ) Encryptor {
 	return Encryptor{
 		logger:      logger,
@@ -34,6 +43,7 @@ func New(
 		keyManager:  keyManager,
 		cryptor:     cryptor,
 		storeClient: storeClient,
+		clock:       clock,
 	}
 }
 
@@ -54,10 +64,12 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	close(ready)
 
 	if currentEncryptionKey != m.keyManager.EncryptionKey().Label() {
+		encryptionStart := m.clock.Now()
 		logger.Debug("encryption-started")
 		m.performEncryption(logger)
 		logger.Debug("encryption-finished")
 		m.db.SetEncryptionKeyLabel(logger, m.keyManager.EncryptionKey().Label())
+		encryptionDuration.Send(time.Since(encryptionStart))
 	}
 
 	select {

@@ -42,7 +42,7 @@ func AddEncryptionFlags(flagSet *flag.FlagSet) *EncryptionFlags {
 
 func (ef *EncryptionFlags) Validate() (encryption.KeyManager, error) {
 	if len(ef.encryptionKeys) == 0 {
-		return nil, errors.New("Must have at leaste one encryption key set")
+		return nil, errors.New("Must have at least one encryption key set")
 	}
 
 	if len(ef.activeKeyLabel) == 0 {

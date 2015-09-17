@@ -191,7 +191,7 @@ var _ = Describe("Migration Manager", func() {
 			migrations = []migration.Migration{fakeMigration102, fakeMigration}
 		})
 
-		It("reports the duration that it took to converge", func() {
+		It("reports the duration that it took to migrate", func() {
 			Eventually(migrationProcess.Ready()).Should(BeClosed())
 			Expect(migrationsDone).To(BeClosed())
 

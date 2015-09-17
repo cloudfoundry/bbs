@@ -10,8 +10,11 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
+	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -31,9 +34,14 @@ var _ = Describe("Encryptor", func() {
 		runErrChan chan error
 
 		task *models.Task
+
+		sender *fake.FakeMetricSender
 	)
 
 	BeforeEach(func() {
+		sender = fake.NewFakeMetricSender()
+		metrics.Initialize(sender, nil)
+
 		runErrChan = make(chan error, 1)
 		ready = make(chan struct{})
 		signals = make(chan os.Signal)
@@ -58,12 +66,21 @@ var _ = Describe("Encryptor", func() {
 	})
 
 	JustBeforeEach(func() {
-		runner = encryptor.New(logger, etcdDB, keyManager, cryptor, storeClient)
+		runner = encryptor.New(logger, etcdDB, keyManager, cryptor, storeClient, clock.NewClock())
 		encryptorProcess = ifrit.Background(runner)
 	})
 
 	AfterEach(func() {
 		ginkgomon.Kill(encryptorProcess)
+	})
+
+	It("reports the duration that it took to encrypt", func() {
+		Eventually(encryptorProcess.Ready()).Should(BeClosed())
+		Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
+
+		reportedDuration := sender.GetValue("EncryptionDuration")
+		Expect(reportedDuration.Value).NotTo(BeZero())
+		Expect(reportedDuration.Unit).To(Equal("nanos"))
 	})
 
 	Context("when there is no current encryption key", func() {
