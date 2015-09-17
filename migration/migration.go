@@ -2,6 +2,7 @@ package migration
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -12,4 +13,5 @@ type Migration interface {
 	Up(logger lager.Logger) error
 	Down(logger lager.Logger) error
 	SetStoreClient(storeClient etcd.StoreClient)
+	SetCryptor(cryptor encryption.Cryptor)
 }

@@ -153,6 +153,7 @@ func main() {
 	maintainer := initializeLockMaintainer(logger, consulClient, sessionManager)
 	migrationManager := migration.NewManager(logger,
 		db,
+		cryptor,
 		storeClient,
 		migrations.Migrations,
 		migrationsDone,

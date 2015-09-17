@@ -6,6 +6,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
+	fakeencryption "github.com/cloudfoundry-incubator/bbs/encryption/fakes"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/migration/migrationfakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -37,6 +39,7 @@ var _ = Describe("Migration Manager", func() {
 		fakeMigration *migrationfakes.FakeMigration
 
 		storeClient etcd.StoreClient
+		cryptor     encryption.Cryptor
 
 		sender *fake.FakeMetricSender
 	)
@@ -57,13 +60,14 @@ var _ = Describe("Migration Manager", func() {
 		fakeDB.VersionReturns(dbVersion, nil)
 
 		storeClient = etcd.NewStoreClient(nil)
+		cryptor = &fakeencryption.FakeCryptor{}
 
 		fakeMigration = &migrationfakes.FakeMigration{}
 		migrations = []migration.Migration{fakeMigration}
 	})
 
 	JustBeforeEach(func() {
-		manager = migration.NewManager(logger, fakeDB, storeClient, migrations, migrationsDone, clock.NewClock())
+		manager = migration.NewManager(logger, fakeDB, cryptor, storeClient, migrations, migrationsDone, clock.NewClock())
 		migrationProcess = ifrit.Background(manager)
 	})
 
@@ -224,6 +228,14 @@ var _ = Describe("Migration Manager", func() {
 			Expect(fakeMigration.SetStoreClientCallCount()).To(Equal(1))
 			actualStoreClient := fakeMigration.SetStoreClientArgsForCall(0)
 			Expect(actualStoreClient).To(Equal(storeClient))
+		})
+
+		It("sets the cryptor on the migration", func() {
+			Eventually(migrationProcess.Ready()).Should(BeClosed())
+			Expect(migrationsDone).To(BeClosed())
+			Expect(fakeMigration.SetCryptorCallCount()).To(Equal(1))
+			actualCryptor := fakeMigration.SetCryptorArgsForCall(0)
+			Expect(actualCryptor).To(Equal(cryptor))
 		})
 
 		Context("when the target version is greater than the bbs migration version", func() {
