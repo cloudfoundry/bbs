@@ -19,13 +19,13 @@ type FakeVersioner struct {
 	ValidateStub        func() error
 	validateMutex       sync.RWMutex
 	validateArgsForCall []struct{}
-	validateReturns     struct {
+	validateReturns struct {
 		result1 error
 	}
 	VersionStub        func() format.Version
 	versionMutex       sync.RWMutex
 	versionArgsForCall []struct{}
-	versionReturns     struct {
+	versionReturns struct {
 		result1 format.Version
 	}
 }

@@ -94,9 +94,9 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 	migrateStart := m.clock.Now()
 	if version.CurrentVersion != bbsMigrationVersion {
-
 		lastVersion := version.CurrentVersion
 		nextVersion := version.CurrentVersion
+
 		for _, currentMigration := range m.migrations {
 			if lastVersion < currentMigration.Version() {
 				if nextVersion > currentMigration.Version() {
@@ -113,7 +113,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 					"NextVersion":      nextVersion,
 					"MigrationVersion": currentMigration.Version(),
 				})
-				err = currentMigration.Up(m.logger, m.storeClient)
+				currentMigration.SetStoreClient(m.storeClient)
+				err = currentMigration.Up(m.logger)
 				if err != nil {
 					return err
 				}
@@ -153,10 +154,3 @@ type Migrations []Migration
 func (m Migrations) Len() int           { return len(m) }
 func (m Migrations) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m Migrations) Less(i, j int) bool { return m[i].Version() < m[j].Version() }
-
-//go:generate counterfeiter -o migrationfakes/fake_migration.go . Migration
-type Migration interface {
-	Version() int64
-	Up(logger lager.Logger, storeClient etcd.StoreClient) error
-	Down(logger lager.Logger, storeClient etcd.StoreClient) error
-}

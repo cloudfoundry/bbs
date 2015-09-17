@@ -14,13 +14,13 @@ type FakeClient struct {
 	PingStub        func() bool
 	pingMutex       sync.RWMutex
 	pingArgsForCall []struct{}
-	pingReturns     struct {
+	pingReturns struct {
 		result1 bool
 	}
 	DomainsStub        func() ([]string, error)
 	domainsMutex       sync.RWMutex
 	domainsArgsForCall []struct{}
-	domainsReturns     struct {
+	domainsReturns struct {
 		result1 []string
 		result2 error
 	}
@@ -215,13 +215,13 @@ type FakeClient struct {
 	ConvergeLRPsStub        func() error
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct{}
-	convergeLRPsReturns     struct {
+	convergeLRPsReturns struct {
 		result1 error
 	}
 	TasksStub        func() ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct{}
-	tasksReturns     struct {
+	tasksReturns struct {
 		result1 []*models.Task
 		result2 error
 	}
@@ -320,7 +320,7 @@ type FakeClient struct {
 	SubscribeToEventsStub        func() (events.EventSource, error)
 	subscribeToEventsMutex       sync.RWMutex
 	subscribeToEventsArgsForCall []struct{}
-	subscribeToEventsReturns     struct {
+	subscribeToEventsReturns struct {
 		result1 events.EventSource
 		result2 error
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	goetcd "github.com/coreos/go-etcd/etcd"
@@ -18,7 +19,7 @@ import (
 
 var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 	var (
-		migration  migrations.Base64ProtobufEncode
+		migration  migration.Migration
 		serializer format.Serializer
 
 		logger *lagertest.TestLogger
@@ -80,7 +81,8 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 		})
 
 		JustBeforeEach(func() {
-			migrationErr = migration.Up(logger, storeClient)
+			migration.SetStoreClient(storeClient)
+			migrationErr = migration.Up(logger)
 		})
 
 		var validateConversionToProto = func(node *goetcd.Node, actual, expected format.Versioner) {
@@ -182,7 +184,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 
 	Describe("Down", func() {
 		It("returns a not implemented error", func() {
-			Expect(migration.Down(logger, storeClient)).To(HaveOccurred())
+			Expect(migration.Down(logger)).To(HaveOccurred())
 		})
 	})
 })
