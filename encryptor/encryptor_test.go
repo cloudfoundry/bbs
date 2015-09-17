@@ -73,6 +73,7 @@ var _ = Describe("Encryptor", func() {
 
 		It("encrypts all the existing records", func() {
 			Eventually(encryptorProcess.Ready()).Should(BeClosed())
+			Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
 
 			res, err := storeClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 			Expect(err).NotTo(HaveOccurred())
@@ -109,6 +110,7 @@ var _ = Describe("Encryptor", func() {
 
 		It("does not fail and logs the error", func() {
 			Eventually(encryptorProcess.Ready()).Should(BeClosed())
+			Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
 
 			Expect(logger.LogMessages()).To(ContainElement("test.encryptor.failed-to-read-node"))
 		})
@@ -175,6 +177,7 @@ var _ = Describe("Encryptor", func() {
 
 		It("encrypts all the existing records", func() {
 			Eventually(encryptorProcess.Ready()).Should(BeClosed())
+			Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
 
 			res, err := storeClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 			Expect(err).NotTo(HaveOccurred())
