@@ -3,7 +3,6 @@ package encryptor
 import (
 	"errors"
 	"os"
-	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -67,9 +66,10 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		encryptionStart := m.clock.Now()
 		logger.Debug("encryption-started")
 		m.performEncryption(logger)
-		logger.Debug("encryption-finished")
 		m.db.SetEncryptionKeyLabel(logger, m.keyManager.EncryptionKey().Label())
-		encryptionDuration.Send(time.Since(encryptionStart))
+		totalTime := m.clock.Since(encryptionStart)
+		logger.Debug("encryption-finished", lager.Data{"total-time": totalTime})
+		encryptionDuration.Send(totalTime)
 	}
 
 	select {
