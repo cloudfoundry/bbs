@@ -15,6 +15,14 @@ func (ve ValidationError) Append(err error) ValidationError {
 	}
 }
 
+func (ve ValidationError) ToError() error {
+	if len(ve) == 0 {
+		return nil
+	} else {
+		return ve
+	}
+}
+
 func (ve ValidationError) Error() string {
 	var buffer bytes.Buffer
 
@@ -33,4 +41,18 @@ func (ve ValidationError) Error() string {
 
 func (ve ValidationError) Empty() bool {
 	return len(ve) == 0
+}
+
+type Validator interface {
+	Validate() error
+}
+
+func (ve ValidationError) Check(validators ...Validator) ValidationError {
+	for _, v := range validators {
+		err := v.Validate()
+		if err != nil {
+			ve = ve.Append(err)
+		}
+	}
+	return ve
 }

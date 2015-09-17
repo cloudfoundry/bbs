@@ -3,6 +3,7 @@ package migrations
 import (
 	"errors"
 
+	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -30,7 +31,7 @@ func (b Base64ProtobufEncode) Version() int64 {
 
 func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClient) error {
 	// Desired LRPs
-	response, err := storeClient.Get(etcd.DesiredLRPSchemaRoot, false, true)
+	response, err := storeClient.Get(deprecations.DesiredLRPSchemaRoot, false, true)
 	if err != nil {
 		err = etcd.ErrorFromEtcdError(logger, err)
 

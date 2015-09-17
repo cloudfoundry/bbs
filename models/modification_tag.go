@@ -1,5 +1,12 @@
 package models
 
+func NewModificationTag(epoch string, index uint32) ModificationTag {
+	return ModificationTag{
+		Epoch: epoch,
+		Index: index,
+	}
+}
+
 func (t *ModificationTag) Increment() {
 	t.Index++
 }

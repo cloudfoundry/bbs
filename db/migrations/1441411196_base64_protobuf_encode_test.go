@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
+	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
 	"github.com/cloudfoundry-incubator/bbs/format"
@@ -49,7 +50,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP("process-guid")
 			jsonValue, err := json.Marshal(expectedDesiredLRP)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = storeClient.Set(etcd.DesiredLRPSchemaPath(expectedDesiredLRP), jsonValue, 0)
+			_, err = storeClient.Set(deprecations.DesiredLRPSchemaPath(expectedDesiredLRP), jsonValue, 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			// ActualLRP
@@ -98,7 +99,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			Expect(migrationErr).NotTo(HaveOccurred())
 
 			By("Converting DesiredLRPs to Encoded Proto")
-			response, err := storeClient.Get(etcd.DesiredLRPSchemaRoot, false, true)
+			response, err := storeClient.Get(deprecations.DesiredLRPSchemaRoot, false, true)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response.Node.Nodes).To(HaveLen(1))
 			for _, node := range response.Node.Nodes {
@@ -142,7 +143,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 		Context("when fetching desired lrps fails", func() {
 			Context("because the root node does not exist", func() {
 				BeforeEach(func() {
-					_, err := storeClient.Delete(etcd.DesiredLRPSchemaRoot, true)
+					_, err := storeClient.Delete(deprecations.DesiredLRPSchemaRoot, true)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

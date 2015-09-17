@@ -29,7 +29,11 @@ const (
 	ActualLRPInstanceKey   = "instance"
 	ActualLRPEvacuatingKey = "evacuating"
 
-	DesiredLRPSchemaRoot = V1SchemaRoot + "desired"
+	DesiredLRPComponentsSchemaRoot     = V1SchemaRoot + "desired_lrp"
+	DesiredLRPSchedulingInfoKey        = "schedule"
+	DesiredLRPSchedulingInfoSchemaRoot = DesiredLRPComponentsSchemaRoot + "/" + DesiredLRPSchedulingInfoKey
+	DesiredLRPRunInfoKey               = "run"
+	DesiredLRPRunInfoSchemaRoot        = DesiredLRPComponentsSchemaRoot + "/" + DesiredLRPRunInfoKey
 
 	TaskSchemaRoot = V1SchemaRoot + "task"
 )
@@ -52,12 +56,12 @@ func EvacuatingActualLRPSchemaPath(processGuid string, index int32) string {
 	return path.Join(ActualLRPIndexDir(processGuid, index), ActualLRPEvacuatingKey)
 }
 
-func DesiredLRPSchemaPath(lrp *models.DesiredLRP) string {
-	return DesiredLRPSchemaPathByProcessGuid(lrp.ProcessGuid)
+func DesiredLRPSchedulingInfoSchemaPath(processGuid string) string {
+	return path.Join(DesiredLRPSchedulingInfoSchemaRoot, processGuid)
 }
 
-func DesiredLRPSchemaPathByProcessGuid(processGuid string) string {
-	return path.Join(DesiredLRPSchemaRoot, processGuid)
+func DesiredLRPRunInfoSchemaPath(processGuid string) string {
+	return path.Join(DesiredLRPComponentsSchemaRoot, DesiredLRPRunInfoKey, processGuid)
 }
 
 func TaskSchemaPath(task *models.Task) string {

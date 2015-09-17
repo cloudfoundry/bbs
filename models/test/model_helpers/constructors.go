@@ -30,6 +30,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
+	modTag := models.NewModificationTag("epoch", 0)
 	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          guid,
 		Domain:               "some-domain",
@@ -60,6 +61,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			Destinations: []string{"1.1.1.1/32", "2.2.2.2/32"},
 			PortRange:    &models.PortRange{Start: 10, End: 16000},
 		}},
+		ModificationTag: &modTag,
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
@@ -111,6 +113,25 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 	}
 }
 
+func NewValidEgressRules() []models.SecurityGroupRule {
+	return []models.SecurityGroupRule{
+		{
+			Protocol:     "tcp",
+			Destinations: []string{"0.0.0.0/0"},
+			PortRange: &models.PortRange{
+				Start: 1,
+				End:   1024,
+			},
+			Log: true,
+		},
+		{
+			Protocol:     "udp",
+			Destinations: []string{"8.8.0.0/16"},
+			Ports:        []uint32{53},
+		},
+	}
+}
+
 func NewValidTask(guid string) *models.Task {
 	task := &models.Task{
 		TaskGuid:       guid,
@@ -133,4 +154,8 @@ func NewValidTask(guid string) *models.Task {
 		panic(err)
 	}
 	return task
+}
+
+func NewValidAction() *models.Action {
+	return models.WrapAction(&models.RunAction{Path: "ls", User: "name"})
 }

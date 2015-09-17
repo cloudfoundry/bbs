@@ -26,31 +26,32 @@ var _ = math.Inf
 type Error_Type int32
 
 const (
-	Error_UnknownError               Error_Type = 0
-	Error_InvalidDomain              Error_Type = 1
-	Error_UnkownVersion              Error_Type = 2
-	Error_InvalidRecord              Error_Type = 3
-	Error_InvalidRequest             Error_Type = 4
-	Error_InvalidResponse            Error_Type = 5
-	Error_InvalidProtobufMessage     Error_Type = 6
-	Error_InvalidJSON                Error_Type = 7
-	Error_FailedToOpenEnvelope       Error_Type = 8
-	Error_InvalidStateTransition     Error_Type = 9
-	Error_Unauthorized               Error_Type = 10
-	Error_ResourceConflict           Error_Type = 11
-	Error_ResourceExists             Error_Type = 12
-	Error_ResourceNotFound           Error_Type = 13
-	Error_RouterError                Error_Type = 14
-	Error_ActualLRPCannotBeClaimed   Error_Type = 15
-	Error_ActualLRPCannotBeStarted   Error_Type = 16
-	Error_ActualLRPCannotBeCrashed   Error_Type = 17
-	Error_ActualLRPCannotBeFailed    Error_Type = 18
-	Error_ActualLRPCannotBeRemoved   Error_Type = 19
-	Error_ActualLRPCannotBeStopped   Error_Type = 20
-	Error_ActualLRPCannotBeUnclaimed Error_Type = 21
-	Error_ActualLRPCannotBeEvacuated Error_Type = 22
-	Error_DesiredLRPCannotBeUpdated  Error_Type = 23
-	Error_RunningOnDifferentCell     Error_Type = 24
+	Error_UnknownError                            Error_Type = 0
+	Error_InvalidDomain                           Error_Type = 1
+	Error_UnkownVersion                           Error_Type = 2
+	Error_InvalidRecord                           Error_Type = 3
+	Error_InvalidRequest                          Error_Type = 4
+	Error_InvalidResponse                         Error_Type = 5
+	Error_InvalidProtobufMessage                  Error_Type = 6
+	Error_InvalidJSON                             Error_Type = 7
+	Error_FailedToOpenEnvelope                    Error_Type = 8
+	Error_InvalidStateTransition                  Error_Type = 9
+	Error_Unauthorized                            Error_Type = 10
+	Error_ResourceConflict                        Error_Type = 11
+	Error_ResourceExists                          Error_Type = 12
+	Error_ResourceNotFound                        Error_Type = 13
+	Error_RouterError                             Error_Type = 14
+	Error_ActualLRPCannotBeClaimed                Error_Type = 15
+	Error_ActualLRPCannotBeStarted                Error_Type = 16
+	Error_ActualLRPCannotBeCrashed                Error_Type = 17
+	Error_ActualLRPCannotBeFailed                 Error_Type = 18
+	Error_ActualLRPCannotBeRemoved                Error_Type = 19
+	Error_ActualLRPCannotBeStopped                Error_Type = 20
+	Error_ActualLRPCannotBeUnclaimed              Error_Type = 21
+	Error_ActualLRPCannotBeEvacuated              Error_Type = 22
+	Error_DesiredLRPCannotBeUpdated               Error_Type = 23
+	Error_RunningOnDifferentCell                  Error_Type = 24
+	Error_DesiredLRPSchedulingInfoCannotBeUpdated Error_Type = 25
 )
 
 var Error_Type_name = map[int32]string{
@@ -79,33 +80,35 @@ var Error_Type_name = map[int32]string{
 	22: "ActualLRPCannotBeEvacuated",
 	23: "DesiredLRPCannotBeUpdated",
 	24: "RunningOnDifferentCell",
+	25: "DesiredLRPSchedulingInfoCannotBeUpdated",
 }
 var Error_Type_value = map[string]int32{
-	"UnknownError":               0,
-	"InvalidDomain":              1,
-	"UnkownVersion":              2,
-	"InvalidRecord":              3,
-	"InvalidRequest":             4,
-	"InvalidResponse":            5,
-	"InvalidProtobufMessage":     6,
-	"InvalidJSON":                7,
-	"FailedToOpenEnvelope":       8,
-	"InvalidStateTransition":     9,
-	"Unauthorized":               10,
-	"ResourceConflict":           11,
-	"ResourceExists":             12,
-	"ResourceNotFound":           13,
-	"RouterError":                14,
-	"ActualLRPCannotBeClaimed":   15,
-	"ActualLRPCannotBeStarted":   16,
-	"ActualLRPCannotBeCrashed":   17,
-	"ActualLRPCannotBeFailed":    18,
-	"ActualLRPCannotBeRemoved":   19,
-	"ActualLRPCannotBeStopped":   20,
-	"ActualLRPCannotBeUnclaimed": 21,
-	"ActualLRPCannotBeEvacuated": 22,
-	"DesiredLRPCannotBeUpdated":  23,
-	"RunningOnDifferentCell":     24,
+	"UnknownError":                            0,
+	"InvalidDomain":                           1,
+	"UnkownVersion":                           2,
+	"InvalidRecord":                           3,
+	"InvalidRequest":                          4,
+	"InvalidResponse":                         5,
+	"InvalidProtobufMessage":                  6,
+	"InvalidJSON":                             7,
+	"FailedToOpenEnvelope":                    8,
+	"InvalidStateTransition":                  9,
+	"Unauthorized":                            10,
+	"ResourceConflict":                        11,
+	"ResourceExists":                          12,
+	"ResourceNotFound":                        13,
+	"RouterError":                             14,
+	"ActualLRPCannotBeClaimed":                15,
+	"ActualLRPCannotBeStarted":                16,
+	"ActualLRPCannotBeCrashed":                17,
+	"ActualLRPCannotBeFailed":                 18,
+	"ActualLRPCannotBeRemoved":                19,
+	"ActualLRPCannotBeStopped":                20,
+	"ActualLRPCannotBeUnclaimed":              21,
+	"ActualLRPCannotBeEvacuated":              22,
+	"DesiredLRPCannotBeUpdated":               23,
+	"RunningOnDifferentCell":                  24,
+	"DesiredLRPSchedulingInfoCannotBeUpdated": 25,
 }
 
 func (x Error_Type) Enum() *Error_Type {

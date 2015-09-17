@@ -7,9 +7,11 @@ import (
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -243,6 +245,14 @@ var _ = Describe("DesiredLRP", func() {
 		desiredLRP = models.DesiredLRP{}
 		err := json.Unmarshal([]byte(jsonDesiredLRP), &desiredLRP)
 		Expect(err).NotTo(HaveOccurred())
+	})
+
+	Describe("Explode", func() {
+		It("decomposes the desired lrp into it's component parts", func() {
+			schedInfo, runInfo := desiredLRP.Explode()
+			newDesired := models.NewDesiredLRP(schedInfo, runInfo)
+			Expect(newDesired).To(BeEquivalentTo(desiredLRP))
+		})
 	})
 
 	Describe("serialization", func() {
@@ -531,4 +541,146 @@ func randStringBytes(n int) string {
 	rand.Read(rb)
 	rs := base64.URLEncoding.EncodeToString(rb)
 	return rs
+}
+
+var _ = Describe("DesiredLRPKey", func() {
+	const guid = "valid-guid"
+	const domain = "valid-domain"
+	const log = "valid-log-guid"
+
+	DescribeTable("Validation",
+		func(key models.DesiredLRPKey, expectedErr string) {
+			err := key.Validate()
+			if expectedErr == "" {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(expectedErr))
+			}
+		},
+		Entry("valid key", models.NewDesiredLRPKey(guid, domain, log), ""),
+		Entry("blank process guid", models.NewDesiredLRPKey("", domain, log), "process_guid"),
+		Entry("blank domain", models.NewDesiredLRPKey(guid, "", log), "domain"),
+		Entry("blank log guid is valid", models.NewDesiredLRPKey(guid, domain, ""), ""),
+	)
+	Context("process_guid only contains `A-Z`, `a-z`, `0-9`, `-`, and `_`", func() {
+		validGuids := []string{"a", "A", "0", "-", "_", "-aaaa", "_-aaa", "09a87aaa-_aASKDn"}
+		for _, validGuid := range validGuids {
+			func(validGuid string) {
+				It(fmt.Sprintf("'%s' is a valid process_guid", validGuid), func() {
+					key := models.NewDesiredLRPKey(validGuid, domain, log)
+					err := key.Validate()
+					Expect(err).NotTo(HaveOccurred())
+				})
+			}(validGuid)
+		}
+
+		invalidGuids := []string{"", "bang!", "!!!", "\\slash", "star*", "params()", "invalid/key", "with.dots"}
+		for _, invalidGuid := range invalidGuids {
+			func(invalidGuid string) {
+				It(fmt.Sprintf("'%s' is an invalid process_guid", invalidGuid), func() {
+					key := models.NewDesiredLRPKey(invalidGuid, domain, log)
+					err := key.Validate()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("process_guid"))
+				})
+			}(invalidGuid)
+		}
+	})
+})
+
+var _ = Describe("DesiredLRPResource", func() {
+	const rootFs = "preloaded://linux64"
+	const memoryMb = 256
+	const diskMb = 256
+
+	DescribeTable("Validation",
+		func(key models.DesiredLRPResource, expectedErr string) {
+			err := key.Validate()
+			if expectedErr == "" {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(expectedErr))
+			}
+		},
+		Entry("valid resource", models.NewDesiredLRPResource(memoryMb, diskMb, rootFs), ""),
+		Entry("invalid rootFs", models.NewDesiredLRPResource(memoryMb, diskMb, "BAD URL"), "rootfs"),
+		Entry("invalid memoryMb", models.NewDesiredLRPResource(-1, diskMb, rootFs), "memory_mb"),
+		Entry("invalid diskMb", models.NewDesiredLRPResource(memoryMb, -1, rootFs), "disk_mb"),
+	)
+})
+
+var _ = Describe("DesiredLRPSchedulingInfo", func() {
+	const annotation = "the annotation"
+	const instances = 2
+	var (
+		largeString = randStringBytes(50000)
+		rawMessage  = json.RawMessage([]byte(`{"port": 8080,"hosts":["new-route-1","new-route-2"]}`))
+		routes      = models.Routes{
+			"router": &rawMessage,
+		}
+		largeRoute  = json.RawMessage([]byte(largeString))
+		largeRoutes = models.Routes{
+			"router": &largeRoute,
+		}
+		tag = models.ModificationTag{}
+	)
+
+	DescribeTable("Validation",
+		func(key models.DesiredLRPSchedulingInfo, expectedErr string) {
+			err := key.Validate()
+			if expectedErr == "" {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(expectedErr))
+			}
+		},
+		Entry("valid scheduling info", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), routes, tag), ""),
+		Entry("invalid annotation", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), largeString, instances, newValidResource(), routes, tag), "annotation"),
+		Entry("invalid instances", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, -2, newValidResource(), routes, tag), "instances"),
+		Entry("invalid key", models.NewDesiredLRPSchedulingInfo(models.DesiredLRPKey{}, annotation, instances, newValidResource(), routes, tag), "process_guid"),
+		Entry("invalid resource", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, models.DesiredLRPResource{}, routes, tag), "rootfs"),
+		Entry("invalid routes", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), largeRoutes, tag), "routes"),
+	)
+})
+
+var _ = Describe("DesiredLRPRunInfo", func() {
+	var envVars = []models.EnvironmentVariable{{"FOO", "bar"}}
+	var action = model_helpers.NewValidAction()
+	const startTimeout uint32 = 12
+	const privileged = true
+	var ports = []uint32{80, 443}
+	var egressRules = model_helpers.NewValidEgressRules()
+	const logSource = "log-source"
+	const metricsGuid = "metrics-guid"
+	const cpuWeight = 50
+
+	DescribeTable("Validation",
+		func(key models.DesiredLRPRunInfo, expectedErr string) {
+			err := key.Validate()
+			if expectedErr == "" {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(expectedErr))
+			}
+		},
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), ""),
+		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, envVars, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "process_guid"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), append(envVars, models.EnvironmentVariable{}), action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "name"),
+		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, &models.Action{}, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
+		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
+		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
+		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid), "cpu_weight"),
+	)
+})
+
+func newValidLRPKey() models.DesiredLRPKey {
+	return models.NewDesiredLRPKey("some-guid", "domain", "log-guid")
+}
+
+func newValidResource() models.DesiredLRPResource {
+	return models.NewDesiredLRPResource(256, 256, "preloaded://linux64")
 }

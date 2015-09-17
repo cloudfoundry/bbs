@@ -79,42 +79,7 @@ var _ = Describe("LrpConvergence", func() {
 				}
 			})
 
-			It("prunes only the invalid DesiredLRPs from the datastore", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
-				Expect(gatherError).NotTo(HaveOccurred())
-
-				for _, desiredGuid := range testData.validDesiredGuidsWithSomeValidActuals {
-					_, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
-					Expect(err).NotTo(HaveOccurred())
-				}
-
-				for _, desiredGuid := range testData.validDesiredGuidsWithNoActuals {
-					_, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
-					Expect(err).NotTo(HaveOccurred())
-				}
-
-				for _, desiredGuid := range testData.validDesiredGuidsWithOnlyInvalidActuals {
-					_, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
-					Expect(err).NotTo(HaveOccurred())
-				}
-
-				for _, desiredGuid := range testData.invalidDesiredGuidsWithSomeValidActuals {
-					_, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
-					Expect(err).To(Equal(models.ErrResourceNotFound))
-				}
-
-				for _, desiredGuid := range testData.invalidDesiredGuidsWithNoActuals {
-					_, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
-					Expect(err).To(Equal(models.ErrResourceNotFound))
-				}
-
-				for _, desiredGuid := range testData.invalidDesiredGuidsWithOnlyInvalidActuals {
-					_, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
-					Expect(err).To(Equal(models.ErrResourceNotFound))
-				}
-			})
-
-			It("emits a metric for the number of pruned DesiredLRPs", func() {
+			It("emits a metric for the number of malformed SchedulingInfos", func() {
 				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
 				Expect(gatherError).NotTo(HaveOccurred())
 
@@ -124,7 +89,20 @@ var _ = Describe("LrpConvergence", func() {
 					len(testData.unknownDesiredGuidsWithSomeValidActuals) +
 					len(testData.unknownDesiredGuidsWithNoActuals) +
 					len(testData.unknownDesiredGuidsWithOnlyInvalidActuals)
-				Expect(sender.GetCounter("ConvergenceLRPPreProcessingDesiredLRPsDeleted")).To(BeNumerically("==", expectedMetric))
+				Expect(sender.GetCounter("ConvergenceLRPPreProcessingMalformedSchedulingInfos")).To(BeNumerically("==", expectedMetric))
+			})
+
+			It("emits a metric for the number of malformed RunInfos", func() {
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				Expect(gatherError).NotTo(HaveOccurred())
+
+				expectedMetric := len(testData.invalidDesiredGuidsWithSomeValidActuals) +
+					len(testData.invalidDesiredGuidsWithNoActuals) +
+					len(testData.invalidDesiredGuidsWithOnlyInvalidActuals) +
+					len(testData.unknownDesiredGuidsWithSomeValidActuals) +
+					len(testData.unknownDesiredGuidsWithNoActuals) +
+					len(testData.unknownDesiredGuidsWithOnlyInvalidActuals)
+				Expect(sender.GetCounter("ConvergenceLRPPreProcessingMalformedRunInfos")).To(BeNumerically("==", expectedMetric))
 			})
 		})
 
@@ -744,13 +722,8 @@ var _ = Describe("LrpConvergence", func() {
 			etcdDB.ConvergeLRPs(logger)
 		})
 
-		It("should delete the bogus entry", func() {
-			_, err := etcdDB.DesiredLRPByProcessGuid(logger, processGuid)
-			Expect(err).To(Equal(models.ErrResourceNotFound))
-		})
-
 		It("logs", func() {
-			Expect(logger.TestSink).To(gbytes.Say("done-deleting-invalid-desired-lrps"))
+			Expect(logger.TestSink).To(gbytes.Say("failed-to-deserialize-scheduling-info"))
 		})
 	})
 
