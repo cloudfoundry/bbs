@@ -218,6 +218,14 @@ var _ = Describe("Migration Manager", func() {
 			Expect(fakeMigration102.DownCallCount()).To(Equal(0))
 		})
 
+		It("sets the store client on the migration", func() {
+			Eventually(migrationProcess.Ready()).Should(BeClosed())
+			Expect(migrationsDone).To(BeClosed())
+			Expect(fakeMigration.SetStoreClientCallCount()).To(Equal(1))
+			actualStoreClient := fakeMigration.SetStoreClientArgsForCall(0)
+			Expect(actualStoreClient).To(Equal(storeClient))
+		})
+
 		Context("when the target version is greater than the bbs migration version", func() {
 			BeforeEach(func() {
 				dbVersion.TargetVersion = 103

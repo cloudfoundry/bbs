@@ -6,6 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	goetcd "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
@@ -16,11 +17,12 @@ func init() {
 }
 
 type Base64ProtobufEncode struct {
-	serializer format.Serializer
+	serializer  format.Serializer
+	storeClient etcd.StoreClient
 }
 
-func NewBase64ProtobufEncode() Base64ProtobufEncode {
-	return Base64ProtobufEncode{
+func NewBase64ProtobufEncode() migration.Migration {
+	return &Base64ProtobufEncode{
 		serializer: format.NewSerializer(nil),
 	}
 }
@@ -29,9 +31,13 @@ func (b Base64ProtobufEncode) Version() int64 {
 	return 1441411196
 }
 
-func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClient) error {
+func (b *Base64ProtobufEncode) SetStoreClient(storeClient etcd.StoreClient) {
+	b.storeClient = storeClient
+}
+
+func (b Base64ProtobufEncode) Up(logger lager.Logger) error {
 	// Desired LRPs
-	response, err := storeClient.Get(deprecations.DesiredLRPSchemaRoot, false, true)
+	response, err := b.storeClient.Get(deprecations.DesiredLRPSchemaRoot, false, true)
 	if err != nil {
 		err = etcd.ErrorFromEtcdError(logger, err)
 
@@ -45,7 +51,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 		desiredLRPRootNode := response.Node
 		for _, node := range desiredLRPRootNode.Nodes {
 			var desiredLRP models.DesiredLRP
-			err := b.reWriteNode(logger, node, &desiredLRP, storeClient)
+			err := b.reWriteNode(logger, node, &desiredLRP)
 			if err != nil {
 				return err
 			}
@@ -53,7 +59,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 	}
 
 	// Actual LRPs
-	response, err = storeClient.Get(etcd.ActualLRPSchemaRoot, false, true)
+	response, err = b.storeClient.Get(etcd.ActualLRPSchemaRoot, false, true)
 	if err != nil {
 		err = etcd.ErrorFromEtcdError(logger, err)
 
@@ -69,7 +75,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 			for _, groupNode := range processNode.Nodes {
 				for _, actualLRPNode := range groupNode.Nodes {
 					var actualLRP models.ActualLRP
-					err := b.reWriteNode(logger, actualLRPNode, &actualLRP, storeClient)
+					err := b.reWriteNode(logger, actualLRPNode, &actualLRP)
 					if err != nil {
 						return err
 					}
@@ -79,7 +85,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 	}
 
 	// Tasks
-	response, err = storeClient.Get(etcd.TaskSchemaRoot, false, true)
+	response, err = b.storeClient.Get(etcd.TaskSchemaRoot, false, true)
 	if err != nil {
 		err = etcd.ErrorFromEtcdError(logger, err)
 
@@ -93,7 +99,7 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 		taskRootNode := response.Node
 		for _, node := range taskRootNode.Nodes {
 			var task models.Task
-			err := b.reWriteNode(logger, node, &task, storeClient)
+			err := b.reWriteNode(logger, node, &task)
 			if err != nil {
 				return err
 			}
@@ -103,11 +109,11 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger, storeClient etcd.StoreClie
 	return nil
 }
 
-func (b Base64ProtobufEncode) Down(logger lager.Logger, storeClient etcd.StoreClient) error {
+func (b Base64ProtobufEncode) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
 }
 
-func (b Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner, storeClient etcd.StoreClient) error {
+func (b Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner) error {
 	err := b.serializer.Unmarshal(logger, []byte(node.Value), model)
 	if err != nil {
 		return err
@@ -118,7 +124,7 @@ func (b Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node
 		return err
 	}
 
-	_, err = storeClient.CompareAndSwap(node.Key, value, etcd.NO_TTL, node.ModifiedIndex)
+	_, err = b.storeClient.CompareAndSwap(node.Key, value, etcd.NO_TTL, node.ModifiedIndex)
 	if err != nil {
 		return err
 	}
