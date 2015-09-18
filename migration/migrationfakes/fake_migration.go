@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/pivotal-golang/lager"
 )
@@ -36,6 +37,11 @@ type FakeMigration struct {
 	setStoreClientMutex       sync.RWMutex
 	setStoreClientArgsForCall []struct {
 		storeClient etcd.StoreClient
+	}
+	SetCryptorStub        func(cryptor encryption.Cryptor)
+	setCryptorMutex       sync.RWMutex
+	setCryptorArgsForCall []struct {
+		cryptor encryption.Cryptor
 	}
 }
 
@@ -148,6 +154,29 @@ func (fake *FakeMigration) SetStoreClientArgsForCall(i int) etcd.StoreClient {
 	fake.setStoreClientMutex.RLock()
 	defer fake.setStoreClientMutex.RUnlock()
 	return fake.setStoreClientArgsForCall[i].storeClient
+}
+
+func (fake *FakeMigration) SetCryptor(cryptor encryption.Cryptor) {
+	fake.setCryptorMutex.Lock()
+	fake.setCryptorArgsForCall = append(fake.setCryptorArgsForCall, struct {
+		cryptor encryption.Cryptor
+	}{cryptor})
+	fake.setCryptorMutex.Unlock()
+	if fake.SetCryptorStub != nil {
+		fake.SetCryptorStub(cryptor)
+	}
+}
+
+func (fake *FakeMigration) SetCryptorCallCount() int {
+	fake.setCryptorMutex.RLock()
+	defer fake.setCryptorMutex.RUnlock()
+	return len(fake.setCryptorArgsForCall)
+}
+
+func (fake *FakeMigration) SetCryptorArgsForCall(i int) encryption.Cryptor {
+	fake.setCryptorMutex.RLock()
+	defer fake.setCryptorMutex.RUnlock()
+	return fake.setCryptorArgsForCall[i].cryptor
 }
 
 var _ migration.Migration = new(FakeMigration)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -34,6 +35,8 @@ func (b Base64ProtobufEncode) Version() int64 {
 func (b *Base64ProtobufEncode) SetStoreClient(storeClient etcd.StoreClient) {
 	b.storeClient = storeClient
 }
+
+func (b *Base64ProtobufEncode) SetCryptor(cryptor encryption.Cryptor) {}
 
 func (b Base64ProtobufEncode) Up(logger lager.Logger) error {
 	// Desired LRPs

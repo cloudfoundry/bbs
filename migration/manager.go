@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/pivotal-golang/clock"
@@ -21,6 +22,7 @@ const (
 type Manager struct {
 	logger         lager.Logger
 	db             db.DB
+	cryptor        encryption.Cryptor
 	storeClient    etcd.StoreClient
 	migrations     []Migration
 	migrationsDone chan<- struct{}
@@ -30,6 +32,7 @@ type Manager struct {
 func NewManager(
 	logger lager.Logger,
 	db db.DB,
+	cryptor encryption.Cryptor,
 	storeClient etcd.StoreClient,
 	migrations Migrations,
 	migrationsDone chan<- struct{},
@@ -40,6 +43,7 @@ func NewManager(
 	return Manager{
 		logger:         logger,
 		db:             db,
+		cryptor:        cryptor,
 		storeClient:    storeClient,
 		migrations:     migrations,
 		migrationsDone: migrationsDone,
@@ -113,6 +117,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 					"NextVersion":      nextVersion,
 					"MigrationVersion": currentMigration.Version(),
 				})
+				currentMigration.SetCryptor(m.cryptor)
 				currentMigration.SetStoreClient(m.storeClient)
 				err = currentMigration.Up(m.logger)
 				if err != nil {

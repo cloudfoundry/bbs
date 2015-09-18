@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/pivotal-golang/lager"
 )
@@ -24,6 +25,8 @@ func NewTestMigration(version int64) migration.Migration {
 func (t *TestMigration) SetStoreClient(storeClient etcd.StoreClient) {
 	t.storeClient = storeClient
 }
+
+func (t *TestMigration) SetCryptor(cryptor encryption.Cryptor) {}
 
 func (t TestMigration) Up(logger lager.Logger) error {
 	_, err := t.storeClient.Create("/test/key", []byte("jim is awesome"), etcd.NO_TTL)
