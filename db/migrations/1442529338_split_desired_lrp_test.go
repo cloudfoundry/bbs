@@ -92,7 +92,6 @@ var _ = Describe("Split Desired LRP Migration", func() {
 		)
 
 		BeforeEach(func() {
-			// DesiredLRP
 			existingDesiredLRP = newValidDesiredLRP("process-guid")
 			payload, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, existingDesiredLRP)
 			Expect(err).NotTo(HaveOccurred())
@@ -179,6 +178,34 @@ var _ = Describe("Split Desired LRP Migration", func() {
 				It("continues the migration", func() {
 					Expect(migrationErr).NotTo(HaveOccurred())
 				})
+			})
+		})
+
+		Context("when there are already 'migrated' data in the database", func() {
+			var existingSplit *models.DesiredLRP
+			BeforeEach(func() {
+				existingSplit = newValidDesiredLRP("existing-split")
+				schedulingInfo, runInfo := existingSplit.Explode()
+
+				schedulingInfoPayload, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, &schedulingInfo)
+				Expect(err).NotTo(HaveOccurred())
+				runInfoPayload, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, &runInfo)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = storeClient.Set(etcd.DesiredLRPSchedulingInfoSchemaPath("existing-split"), schedulingInfoPayload, 0)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = storeClient.Set(etcd.DesiredLRPRunInfoSchemaPath("existing-split"), runInfoPayload, 0)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("deletes the existing lrp that was already split afterwards", func() {
+				Expect(migrationErr).NotTo(HaveOccurred())
+
+				_, err := storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaPath("existing-split"), false, true)
+				Expect(err).To(HaveOccurred())
+
+				_, err = storeClient.Get(etcd.DesiredLRPRunInfoSchemaPath("existing-split"), false, true)
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})

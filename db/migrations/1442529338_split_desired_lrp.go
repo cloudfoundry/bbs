@@ -38,6 +38,16 @@ func (m *SplitDesiredLRP) SetCryptor(cryptor encryption.Cryptor) {
 }
 
 func (m SplitDesiredLRP) Up(logger lager.Logger) error {
+	_, err := m.storeClient.Delete(etcd.DesiredLRPSchedulingInfoSchemaRoot, true)
+	if err != nil {
+		logger.Error("failed-to-delete-dir", err, lager.Data{"key": etcd.DesiredLRPSchedulingInfoSchemaRoot})
+	}
+
+	_, err = m.storeClient.Delete(etcd.DesiredLRPRunInfoSchemaRoot, true)
+	if err != nil {
+		logger.Error("failed-to-delete-dir", err, lager.Data{"key": etcd.DesiredLRPRunInfoSchemaRoot})
+	}
+
 	response, err := m.storeClient.Get(deprecations.DesiredLRPSchemaRoot, false, true)
 	if err != nil {
 		err = etcd.ErrorFromEtcdError(logger, err)
