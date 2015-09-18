@@ -189,6 +189,95 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 	})
 
+	Describe("DesiredLRPSchedulingInfos", func() {
+		var (
+			requestBody     interface{}
+			schedulingInfo1 models.DesiredLRPSchedulingInfo
+			schedulingInfo2 models.DesiredLRPSchedulingInfo
+		)
+
+		BeforeEach(func() {
+			requestBody = &models.DesiredLRPsRequest{}
+			schedulingInfo1 = models.DesiredLRPSchedulingInfo{}
+			schedulingInfo2 = models.DesiredLRPSchedulingInfo{}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.DesiredLRPSchedulingInfos(responseRecorder, request)
+		})
+
+		Context("when reading scheduling infos from DB succeeds", func() {
+			var schedulingInfos []*models.DesiredLRPSchedulingInfo
+
+			BeforeEach(func() {
+				schedulingInfos = []*models.DesiredLRPSchedulingInfo{&schedulingInfo1, &schedulingInfo2}
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(schedulingInfos, nil)
+			})
+
+			It("returns a list of desired lrp groups", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPSchedulingInfosResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrpSchedulingInfos).To(Equal(schedulingInfos))
+			})
+
+			Context("and no filter is provided", func() {
+				It("call the DB with no filters to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
+					_, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					Expect(filter).To(Equal(models.DesiredLRPFilter{}))
+				})
+			})
+
+			Context("and filtering by domain", func() {
+				BeforeEach(func() {
+					requestBody = &models.DesiredLRPsRequest{Domain: "domain-1"}
+				})
+
+				It("call the DB with the domain filter to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
+					_, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					Expect(filter.Domain).To(Equal("domain-1"))
+				})
+			})
+		})
+
+		Context("when the DB returns no desired lrp groups", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns([]*models.DesiredLRPSchedulingInfo{}, nil)
+			})
+
+			It("returns an empty list", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPSchedulingInfosResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrpSchedulingInfos).To(BeEmpty())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns([]*models.DesiredLRPSchedulingInfo{}, models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPSchedulingInfosResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
 	Describe("DesireDesiredLRP", func() {
 		var (
 			desiredLRP *models.DesiredLRP

@@ -53,6 +53,23 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 	writeResponse(w, response)
 }
 
+func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(w http.ResponseWriter, req *http.Request) {
+	var err error
+	logger := h.logger.Session("desired-lrps")
+
+	request := &models.DesiredLRPsRequest{}
+	response := &models.DesiredLRPSchedulingInfosResponse{}
+
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		filter := models.DesiredLRPFilter{Domain: request.Domain}
+		response.DesiredLrpSchedulingInfos, err = h.db.DesiredLRPSchedulingInfos(logger, filter)
+	}
+
+	response.Error = models.ConvertError(err)
+	writeResponse(w, response)
+}
+
 func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger := h.logger.Session("desire-lrp")

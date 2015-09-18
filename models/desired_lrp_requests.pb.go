@@ -94,6 +94,28 @@ func (m *DesiredLRPResponse) GetDesiredLrp() *DesiredLRP {
 	return nil
 }
 
+type DesiredLRPSchedulingInfosResponse struct {
+	Error                     *Error                      `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+	DesiredLrpSchedulingInfos []*DesiredLRPSchedulingInfo `protobuf:"bytes,2,rep,name=desired_lrp_scheduling_infos" json:"desired_lrp_scheduling_infos,omitempty"`
+}
+
+func (m *DesiredLRPSchedulingInfosResponse) Reset()      { *m = DesiredLRPSchedulingInfosResponse{} }
+func (*DesiredLRPSchedulingInfosResponse) ProtoMessage() {}
+
+func (m *DesiredLRPSchedulingInfosResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+
+func (m *DesiredLRPSchedulingInfosResponse) GetDesiredLrpSchedulingInfos() []*DesiredLRPSchedulingInfo {
+	if m != nil {
+		return m.DesiredLrpSchedulingInfos
+	}
+	return nil
+}
+
 type DesiredLRPByProcessGuidRequest struct {
 	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
 }
@@ -269,6 +291,39 @@ func (this *DesiredLRPResponse) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *DesiredLRPSchedulingInfosResponse) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*DesiredLRPSchedulingInfosResponse)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.DesiredLrpSchedulingInfos) != len(that1.DesiredLrpSchedulingInfos) {
+		return false
+	}
+	for i := range this.DesiredLrpSchedulingInfos {
+		if !this.DesiredLrpSchedulingInfos[i].Equal(that1.DesiredLrpSchedulingInfos[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (this *DesiredLRPByProcessGuidRequest) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -404,6 +459,15 @@ func (this *DesiredLRPResponse) GoString() string {
 	s := strings.Join([]string{`&models.DesiredLRPResponse{` +
 		`Error:` + fmt.Sprintf("%#v", this.Error),
 		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPSchedulingInfosResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPSchedulingInfosResponse{` +
+		`Error:` + fmt.Sprintf("%#v", this.Error),
+		`DesiredLrpSchedulingInfos:` + fmt.Sprintf("%#v", this.DesiredLrpSchedulingInfos) + `}`}, ", ")
 	return s
 }
 func (this *DesiredLRPByProcessGuidRequest) GoString() string {
@@ -592,6 +656,46 @@ func (m *DesiredLRPResponse) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *DesiredLRPSchedulingInfosResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *DesiredLRPSchedulingInfosResponse) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Error != nil {
+		data[i] = 0xa
+		i++
+		i = encodeVarintDesiredLrpRequests(data, i, uint64(m.Error.Size()))
+		n5, err := m.Error.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	if len(m.DesiredLrpSchedulingInfos) > 0 {
+		for _, msg := range m.DesiredLrpSchedulingInfos {
+			data[i] = 0x12
+			i++
+			i = encodeVarintDesiredLrpRequests(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func (m *DesiredLRPByProcessGuidRequest) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -633,11 +737,11 @@ func (m *DesireLRPRequest) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintDesiredLrpRequests(data, i, uint64(m.DesiredLrp.Size()))
-		n5, err := m.DesiredLrp.MarshalTo(data[i:])
+		n6, err := m.DesiredLrp.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n6
 	}
 	return i, nil
 }
@@ -665,11 +769,11 @@ func (m *UpdateDesiredLRPRequest) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x12
 		i++
 		i = encodeVarintDesiredLrpRequests(data, i, uint64(m.Update.Size()))
-		n6, err := m.Update.MarshalTo(data[i:])
+		n7, err := m.Update.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n7
 	}
 	return i, nil
 }
@@ -771,6 +875,22 @@ func (m *DesiredLRPResponse) Size() (n int) {
 	return n
 }
 
+func (m *DesiredLRPSchedulingInfosResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Error != nil {
+		l = m.Error.Size()
+		n += 1 + l + sovDesiredLrpRequests(uint64(l))
+	}
+	if len(m.DesiredLrpSchedulingInfos) > 0 {
+		for _, e := range m.DesiredLrpSchedulingInfos {
+			l = e.Size()
+			n += 1 + l + sovDesiredLrpRequests(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *DesiredLRPByProcessGuidRequest) Size() (n int) {
 	var l int
 	_ = l
@@ -860,6 +980,17 @@ func (this *DesiredLRPResponse) String() string {
 	s := strings.Join([]string{`&DesiredLRPResponse{`,
 		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
 		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPSchedulingInfosResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPSchedulingInfosResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`DesiredLrpSchedulingInfos:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrpSchedulingInfos), "DesiredLRPSchedulingInfo", "DesiredLRPSchedulingInfo", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1237,6 +1368,109 @@ func (m *DesiredLRPResponse) Unmarshal(data []byte) error {
 				m.DesiredLrp = &DesiredLRP{}
 			}
 			if err := m.DesiredLrp.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipDesiredLrpRequests(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDesiredLrpRequests
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *DesiredLRPSchedulingInfosResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrpRequests
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Error == nil {
+				m.Error = &Error{}
+			}
+			if err := m.Error.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DesiredLrpSchedulingInfos", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrpRequests
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DesiredLrpSchedulingInfos = append(m.DesiredLrpSchedulingInfos, &DesiredLRPSchedulingInfo{})
+			if err := m.DesiredLrpSchedulingInfos[len(m.DesiredLrpSchedulingInfos)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

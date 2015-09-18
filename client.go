@@ -54,6 +54,8 @@ type Client interface {
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
 
+	DesiredLRPSchedulingInfos(models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
+
 	DesireLRP(*models.DesiredLRP) error
 	UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error
 	RemoveDesiredLRP(processGuid string) error
@@ -350,6 +352,19 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 	}
 
 	return response.DesiredLrp, response.Error.ToError()
+}
+
+func (c *client) DesiredLRPSchedulingInfos(filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+	request := models.DesiredLRPsRequest{
+		Domain: filter.Domain,
+	}
+	response := models.DesiredLRPSchedulingInfosResponse{}
+	err := c.doRequest(DesiredLRPSchedulingInfosRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.DesiredLrpSchedulingInfos, response.Error.ToError()
 }
 
 func (c *client) doDesiredLRPLifecycleRequest(route string, request proto.Message) error {

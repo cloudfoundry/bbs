@@ -13,6 +13,7 @@ import (
 var _ = Describe("DesiredLRP API", func() {
 	var (
 		desiredLRPs         map[string][]*models.DesiredLRP
+		schedulingInfos     []*models.DesiredLRPSchedulingInfo
 		expectedDesiredLRPs []*models.DesiredLRP
 		actualDesiredLRPs   []*models.DesiredLRP
 
@@ -98,6 +99,54 @@ var _ = Describe("DesiredLRP API", func() {
 
 		It("returns all desired lrps from the bbs", func() {
 			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
+		})
+	})
+
+	Describe("DesiredLRPSchedulingInfos", func() {
+		JustBeforeEach(func() {
+			schedulingInfos, getErr = client.DesiredLRPSchedulingInfos(filter)
+		})
+
+		It("responds without error", func() {
+			Expect(getErr).NotTo(HaveOccurred())
+		})
+
+		It("has the correct number of responses", func() {
+			Expect(schedulingInfos).To(HaveLen(5))
+		})
+
+		Context("when not filtering", func() {
+			It("returns all scheduling infos from the bbs", func() {
+				expectedSchedulingInfos := []*models.DesiredLRPSchedulingInfo{}
+				for _, domainLRPs := range desiredLRPs {
+					for _, lrp := range domainLRPs {
+						schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+						expectedSchedulingInfos = append(expectedSchedulingInfos, &schedulingInfo)
+					}
+				}
+				Expect(schedulingInfos).To(ConsistOf(expectedSchedulingInfos))
+			})
+		})
+
+		Context("when filtering by domain", func() {
+			var domain string
+			BeforeEach(func() {
+				domain = "domain-1"
+				filter = models.DesiredLRPFilter{Domain: domain}
+			})
+
+			It("has the correct number of responses", func() {
+				Expect(schedulingInfos).To(HaveLen(2))
+			})
+
+			It("returns only the scheduling infos in the requested domain", func() {
+				expectedSchedulingInfos := []*models.DesiredLRPSchedulingInfo{}
+				for _, lrp := range desiredLRPs[domain] {
+					schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+					expectedSchedulingInfos = append(expectedSchedulingInfos, &schedulingInfo)
+				}
+				Expect(schedulingInfos).To(ConsistOf(expectedSchedulingInfos))
+			})
 		})
 	})
 

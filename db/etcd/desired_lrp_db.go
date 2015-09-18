@@ -48,6 +48,29 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 	return desireds, err
 }
 
+func (db *ETCDDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+	logger = logger.Session("desired-lrp-scheduling-infos", lager.Data{"filter": filter})
+	logger.Info("start")
+	defer logger.Info("complete")
+
+	root, err := db.fetchRecursiveRaw(logger, DesiredLRPSchedulingInfoSchemaRoot)
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return []*models.DesiredLRPSchedulingInfo{}, nil
+		}
+		return nil, err
+	}
+
+	schedulingInfoMap, _ := db.deserializeScheduleInfos(logger, root.Nodes, filter)
+
+	schedulingInfos := make([]*models.DesiredLRPSchedulingInfo, 0, len(schedulingInfoMap))
+	for _, schedulingInfo := range schedulingInfoMap {
+		schedulingInfos = append(schedulingInfos, schedulingInfo)
+	}
+	return schedulingInfos, nil
+}
+
 func (db *ETCDDB) desiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, guidSet, error) {
 	root, err := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 	bbsErr := models.ConvertError(err)

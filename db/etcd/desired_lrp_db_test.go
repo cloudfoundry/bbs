@@ -147,6 +147,90 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 	})
 
+	Describe("DesiredLRPSchedulingInfos", func() {
+		var filter models.DesiredLRPFilter
+		var desiredLRPsInDomains map[string][]*models.DesiredLRP
+
+		BeforeEach(func() {
+			filter = models.DesiredLRPFilter{}
+		})
+
+		Context("when there are desired LRPs", func() {
+			var expectedSchedulingInfos []*models.DesiredLRPSchedulingInfo
+
+			BeforeEach(func() {
+				expectedSchedulingInfos = []*models.DesiredLRPSchedulingInfo{}
+
+				desiredLRPsInDomains = etcdHelper.CreateDesiredLRPsInDomains(map[string]int{
+					"domain-1": 1,
+					"domain-2": 2,
+				})
+			})
+
+			It("returns all the scheduling infos", func() {
+				for _, domainLRPs := range desiredLRPsInDomains {
+					for _, lrp := range domainLRPs {
+						schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+						expectedSchedulingInfos = append(expectedSchedulingInfos, &schedulingInfo)
+					}
+				}
+				schedulingInfos, err := etcdDB.DesiredLRPSchedulingInfos(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(schedulingInfos).To(ConsistOf(expectedSchedulingInfos))
+			})
+
+			It("can filter by domain", func() {
+				for _, lrp := range desiredLRPsInDomains["domain-2"] {
+					schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+					expectedSchedulingInfos = append(expectedSchedulingInfos, &schedulingInfo)
+				}
+				filter.Domain = "domain-2"
+				schedulingInfos, err := etcdDB.DesiredLRPSchedulingInfos(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(schedulingInfos).To(ConsistOf(expectedSchedulingInfos))
+			})
+		})
+
+		Context("when there are no LRPs", func() {
+			It("returns an empty list", func() {
+				schedulingInfos, err := etcdDB.DesiredLRPSchedulingInfos(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(schedulingInfos).NotTo(BeNil())
+				Expect(schedulingInfos).To(BeEmpty())
+			})
+		})
+
+		Context("when there is invalid data", func() {
+			BeforeEach(func() {
+				etcdHelper.CreateValidDesiredLRP("guid-1")
+				etcdHelper.CreateMalformedDesiredLRP("bad-guid")
+				etcdHelper.CreateValidDesiredLRP("guid-2")
+			})
+
+			It("retuns only valid records", func() {
+				schedulingInfo, err := etcdDB.DesiredLRPSchedulingInfos(logger, filter)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(schedulingInfo).To(HaveLen(2))
+				Expect([]string{schedulingInfo[0].ProcessGuid, schedulingInfo[1].ProcessGuid}).To(ConsistOf("guid-1", "guid-2"))
+			})
+		})
+
+		Context("when etcd is not there", func() {
+			BeforeEach(func() {
+				etcdRunner.Stop()
+			})
+
+			AfterEach(func() {
+				etcdRunner.Start()
+			})
+
+			It("errors", func() {
+				_, err := etcdDB.DesiredLRPSchedulingInfos(logger, filter)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("DesireLRP", func() {
 		var lrp *models.DesiredLRP
 

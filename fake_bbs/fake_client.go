@@ -187,6 +187,15 @@ type FakeClient struct {
 		result1 *models.DesiredLRP
 		result2 error
 	}
+	DesiredLRPSchedulingInfosStub        func(models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
+	desiredLRPSchedulingInfosMutex       sync.RWMutex
+	desiredLRPSchedulingInfosArgsForCall []struct {
+		arg1 models.DesiredLRPFilter
+	}
+	desiredLRPSchedulingInfosReturns struct {
+		result1 []*models.DesiredLRPSchedulingInfo
+		result2 error
+	}
 	DesireLRPStub        func(*models.DesiredLRP) error
 	desireLRPMutex       sync.RWMutex
 	desireLRPArgsForCall []struct {
@@ -952,6 +961,39 @@ func (fake *FakeClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLR
 	fake.DesiredLRPByProcessGuidStub = nil
 	fake.desiredLRPByProcessGuidReturns = struct {
 		result1 *models.DesiredLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) DesiredLRPSchedulingInfos(arg1 models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+	fake.desiredLRPSchedulingInfosMutex.Lock()
+	fake.desiredLRPSchedulingInfosArgsForCall = append(fake.desiredLRPSchedulingInfosArgsForCall, struct {
+		arg1 models.DesiredLRPFilter
+	}{arg1})
+	fake.desiredLRPSchedulingInfosMutex.Unlock()
+	if fake.DesiredLRPSchedulingInfosStub != nil {
+		return fake.DesiredLRPSchedulingInfosStub(arg1)
+	} else {
+		return fake.desiredLRPSchedulingInfosReturns.result1, fake.desiredLRPSchedulingInfosReturns.result2
+	}
+}
+
+func (fake *FakeClient) DesiredLRPSchedulingInfosCallCount() int {
+	fake.desiredLRPSchedulingInfosMutex.RLock()
+	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
+	return len(fake.desiredLRPSchedulingInfosArgsForCall)
+}
+
+func (fake *FakeClient) DesiredLRPSchedulingInfosArgsForCall(i int) models.DesiredLRPFilter {
+	fake.desiredLRPSchedulingInfosMutex.RLock()
+	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
+	return fake.desiredLRPSchedulingInfosArgsForCall[i].arg1
+}
+
+func (fake *FakeClient) DesiredLRPSchedulingInfosReturns(result1 []*models.DesiredLRPSchedulingInfo, result2 error) {
+	fake.DesiredLRPSchedulingInfosStub = nil
+	fake.desiredLRPSchedulingInfosReturns = struct {
+		result1 []*models.DesiredLRPSchedulingInfo
 		result2 error
 	}{result1, result2}
 }

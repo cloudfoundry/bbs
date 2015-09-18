@@ -24,6 +24,11 @@ message DesiredLRPResponse {
   optional DesiredLRP desired_lrp = 2;
 }
 
+message DesiredLRPSchedulingInfosResponse {
+  optional Error error = 1;
+  repeated DesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2;
+}
+
 message DesiredLRPByProcessGuidRequest {
   optional string process_guid = 1;
 }
