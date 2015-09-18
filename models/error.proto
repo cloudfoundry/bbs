@@ -40,6 +40,8 @@ message Error {
     DesiredLRPCannotBeUpdated = 23;
 
     RunningOnDifferentCell = 24;
+
+    DesiredLRPSchedulingInfoCannotBeUpdated = 25;
   }
   optional Type type = 1 [(gogoproto.nullable) = false];
   optional string message = 2 [(gogoproto.nullable) = false];

@@ -855,8 +855,7 @@ func (t evacuationTest) Test() {
 
 			Context("when the desired LRP no longer exists", func() {
 				BeforeEach(func() {
-					_, err := storeClient.Delete(etcddb.DesiredLRPSchemaPath(&desiredLRP), true)
-					Expect(err).NotTo(HaveOccurred())
+					etcdHelper.DeleteDesiredLRP(desiredLRP.ProcessGuid)
 				})
 
 				It("the actual LRP is also deleted", func() {

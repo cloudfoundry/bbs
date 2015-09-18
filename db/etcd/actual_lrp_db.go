@@ -500,7 +500,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 }
 
 func (db *ETCDDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.ActualLRPKey) error {
-	desiredLRP, err := db.DesiredLRPByProcessGuid(logger, key.ProcessGuid)
+	schedulingInfo, _, err := db.rawDesiredLRPSchedulingInfo(logger, key.ProcessGuid)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
 		if bbsErr.Type == models.Error_ResourceNotFound {
@@ -515,7 +515,7 @@ func (db *ETCDDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.Ac
 		}
 	}
 
-	lrpStart := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(key.Index))
+	lrpStart := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, int(key.Index))
 	err = db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&lrpStart})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)

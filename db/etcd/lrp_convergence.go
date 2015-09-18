@@ -19,9 +19,10 @@ const (
 	convergeLRPRunsCounter = metric.Counter("ConvergenceLRPRuns")
 	convergeLRPDuration    = metric.Duration("ConvergenceLRPDuration")
 
-	desiredLRPsDeleted = metric.Counter("ConvergenceLRPPreProcessingDesiredLRPsDeleted")
-	actualLRPsDeleted  = metric.Counter("ConvergenceLRPPreProcessingActualLRPsDeleted")
-	lrpsDeletedCounter = metric.Counter("ConvergenceLRPsDeleted")
+	malformedSchedulingInfosMetric = metric.Counter("ConvergenceLRPPreProcessingMalformedSchedulingInfos")
+	malformedRunInfosMetric        = metric.Counter("ConvergenceLRPPreProcessingMalformedRunInfos")
+	actualLRPsDeleted              = metric.Counter("ConvergenceLRPPreProcessingActualLRPsDeleted")
+	lrpsDeletedCounter             = metric.Counter("ConvergenceLRPsDeleted")
 
 	domainMetricPrefix = "Domain."
 
@@ -73,16 +74,16 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	logger.Info("succeeded-gathering-and-pruning-actual-lrps")
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
-	logger.Info("gathering-and-pruning-desired-lrps")
-	desireds, err := db.gatherAndPruneDesiredLRPs(logger, guids) // modifies guids
+	logger.Info("gathering-desired-lrps")
+	desireds, err := db.gatherDesiredLRPs(logger, guids) // modifies guids
 	if err != nil {
-		logger.Error("failed-gathering-and-pruning-desired-lrps", err)
+		logger.Error("failed-gathering-desired-lrps", err)
 
 		desiredLRPs.Send(-1)
 
 		return &models.ConvergenceInput{}, err
 	}
-	logger.Info("succeeded-gathering-and-pruning-desired-lrps")
+	logger.Info("succeeded-gathering-desired-lrps")
 
 	logger.Debug("listing-domains")
 	domains, err := db.Domains(logger)
@@ -263,8 +264,8 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 	return nil
 }
 
-func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]*models.DesiredLRP, error) {
-	response, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPSchemaRoot)
+func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]*models.DesiredLRP, error) {
+	response, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
 		logger.Info("actual-lrp-schema-root-not-found")
@@ -275,32 +276,52 @@ func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 		return nil, modelErr
 	}
 
-	desireds := map[string]*models.DesiredLRP{}
-	var desiredsToDelete []string
-	var guidsLock, desiredsLock, desiredsToDeleteLock sync.Mutex
+	schedulingInfos := map[string]*models.DesiredLRPSchedulingInfo{}
+	runInfos := map[string]*models.DesiredLRPRunInfo{}
 
-	logger.Info("walking-desired-lrp-tree")
-	var desiredCount int32 = 0
+	var malformedSchedulingInfos int32
+	var malformedRunInfos int32
+	var guidsLock, schedulingInfosLock, runInfosLock sync.Mutex
+	var desiredInstanceCount int32
 
 	works := []func(){}
+	logger.Info("walking-desired-lrp-components-tree")
 	for _, childNode := range response.Nodes {
 		childNode := childNode
 		works = append(works, func() {
-			var desired models.DesiredLRP
-			err := db.deserializeModel(logger, childNode, &desired)
-			if err != nil {
-				desiredsToDeleteLock.Lock()
-				desiredsToDelete = append(desiredsToDelete, childNode.Key)
-				desiredsToDeleteLock.Unlock()
-			} else {
-				desiredsLock.Lock()
-				desireds[desired.ProcessGuid] = &desired
-				desiredsLock.Unlock()
-				atomic.AddInt32(&desiredCount, desired.Instances)
+			var schedulingInfo models.DesiredLRPSchedulingInfo
+			var runInfo models.DesiredLRPRunInfo
 
-				guidsLock.Lock()
-				guids[desired.ProcessGuid] = struct{}{}
-				guidsLock.Unlock()
+			for _, node := range childNode.Nodes {
+				switch childNode.Key {
+				case DesiredLRPSchedulingInfoSchemaRoot:
+					err := db.deserializeModel(logger, node, &schedulingInfo)
+					if err != nil {
+						logger.Error("failed-to-deserialize-scheduling-info", err)
+						atomic.AddInt32(&malformedSchedulingInfos, 1)
+					} else {
+						schedulingInfosLock.Lock()
+						schedulingInfos[schedulingInfo.ProcessGuid] = &schedulingInfo
+						schedulingInfosLock.Unlock()
+						atomic.AddInt32(&desiredInstanceCount, schedulingInfo.Instances)
+
+						guidsLock.Lock()
+						guids[schedulingInfo.ProcessGuid] = struct{}{}
+						guidsLock.Unlock()
+					}
+
+				case DesiredLRPRunInfoSchemaRoot:
+					err := db.deserializeModel(logger, node, &runInfo)
+					if err != nil {
+						logger.Error("failed-to-deserialize-run-info", err)
+						atomic.AddInt32(&malformedRunInfos, 1)
+					} else {
+						runInfosLock.Lock()
+						runInfos[runInfo.ProcessGuid] = &runInfo
+						runInfosLock.Unlock()
+					}
+				}
+
 			}
 		})
 	}
@@ -312,13 +333,18 @@ func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 
 	throttler.Work()
 
+	malformedSchedulingInfosMetric.Add(uint64(malformedSchedulingInfos))
+	malformedRunInfosMetric.Add(uint64(malformedRunInfos))
+	desiredLRPs.Send(int(desiredInstanceCount))
+
 	logger.Info("done-walking-desired-lrp-tree")
 
-	logger.Info("deleting-invalid-desired-lrps", lager.Data{"num-lrps": len(desiredsToDelete)})
-	db.batchDeleteNodes(desiredsToDelete, logger)
-	logger.Info("done-deleting-invalid-desired-lrps", lager.Data{"num-lrps": len(desiredsToDelete)})
-	desiredLRPsDeleted.Add(uint64(len(desiredsToDelete)))
-	desiredLRPs.Send(int(desiredCount))
+	desireds := make(map[string]*models.DesiredLRP)
+	for guid, schedulingInfo := range schedulingInfos {
+		runInfo := runInfos[guid]
+		desiredLRP := models.NewDesiredLRP(*schedulingInfo, *runInfo)
+		desireds[guid] = &desiredLRP
+	}
 
 	return desireds, nil
 }

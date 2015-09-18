@@ -30,10 +30,27 @@ func (t *ETCDHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSecon
 }
 
 func (t *ETCDHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
-	value, err := t.serializer.Marshal(t.logger, t.format, lrp)
+	schedulingInfo, runInfo := lrp.Explode()
+
+	t.SetRawDesiredLRPSchedulingInfo(&schedulingInfo)
+	t.SetRawDesiredLRPRunInfo(&runInfo)
+}
+
+func (t *ETCDHelper) SetRawDesiredLRPRunInfo(model *models.DesiredLRPRunInfo) {
+	value, err := t.serializer.Marshal(t.logger, t.format, model)
 	Expect(err).NotTo(HaveOccurred())
 
-	key := etcddb.DesiredLRPSchemaPath(lrp)
+	key := etcddb.DesiredLRPRunInfoSchemaPath(model.ProcessGuid)
+	_, err = t.client.Set(key, value, 0)
+
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func (t *ETCDHelper) SetRawDesiredLRPSchedulingInfo(model *models.DesiredLRPSchedulingInfo) {
+	value, err := t.serializer.Marshal(t.logger, t.format, model)
+	Expect(err).NotTo(HaveOccurred())
+
+	key := etcddb.DesiredLRPSchedulingInfoSchemaPath(model.ProcessGuid)
 	_, err = t.client.Set(key, value, 0)
 
 	Expect(err).NotTo(HaveOccurred())
@@ -79,7 +96,8 @@ func (t *ETCDHelper) CreateMalformedEvacuatingLRP(guid string, index int32) {
 }
 
 func (t *ETCDHelper) CreateMalformedDesiredLRP(guid string) {
-	t.createMalformedValueForKey(etcddb.DesiredLRPSchemaPath(&models.DesiredLRP{ProcessGuid: guid}))
+	t.createMalformedValueForKey(etcddb.DesiredLRPSchedulingInfoSchemaPath(guid))
+	t.createMalformedValueForKey(etcddb.DesiredLRPRunInfoSchemaPath(guid))
 }
 
 func (t *ETCDHelper) CreateMalformedTask(guid string) {
@@ -99,23 +117,21 @@ func (t *ETCDHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 		createdDesiredLRPs[domain] = []*models.DesiredLRP{}
 
 		for i := 0; i < count; i++ {
-			action := &models.Action{}
-			action.SetValue(&models.DownloadAction{
-				From: "http://example.com",
-				To:   "/tmp/internet",
-				User: "someone",
-			})
-			desiredLRP := &models.DesiredLRP{
-				Domain:      domain,
-				ProcessGuid: fmt.Sprintf("guid-%d-for-%s", i, domain),
-				RootFs:      "some:rootfs",
-				Instances:   1,
-				Action:      action,
-			}
-			value, err := t.serializer.Marshal(t.logger, t.format, desiredLRP)
+			guid := fmt.Sprintf("guid-%d-for-%s", i, domain)
+			desiredLRP := model_helpers.NewValidDesiredLRP(guid)
+			desiredLRP.Domain = domain
+			schedulingInfo, runInfo := desiredLRP.Explode()
+
+			schedulingInfoValue, err := t.serializer.Marshal(t.logger, t.format, &schedulingInfo)
 			Expect(err).NotTo(HaveOccurred())
 
-			t.client.Set(etcddb.DesiredLRPSchemaPath(desiredLRP), value, 0)
+			t.client.Set(etcddb.DesiredLRPSchedulingInfoSchemaPath(guid), schedulingInfoValue, 0)
+			Expect(err).NotTo(HaveOccurred())
+
+			runInfoValue, err := t.serializer.Marshal(t.logger, t.format, &runInfo)
+			Expect(err).NotTo(HaveOccurred())
+
+			t.client.Set(etcddb.DesiredLRPRunInfoSchemaPath(guid), runInfoValue, 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			createdDesiredLRPs[domain] = append(createdDesiredLRPs[domain], desiredLRP)

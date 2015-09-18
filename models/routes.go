@@ -64,3 +64,16 @@ func (r *Routes) Equal(other Routes) bool {
 	}
 	return true
 }
+
+func (r Routes) Validate() error {
+	totalRoutesLength := 0
+	if r != nil {
+		for _, value := range r {
+			totalRoutesLength += len(*value)
+			if totalRoutesLength > maximumRouteLength {
+				return ErrInvalidField{"routes"}
+			}
+		}
+	}
+	return nil
+}

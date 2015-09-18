@@ -23,6 +23,179 @@ const (
 	updateEvent
 )
 
+type DesiredEventCache map[string]DesiredComponents
+
+type DesiredComponents struct {
+	*models.DesiredLRPSchedulingInfo
+	*models.DesiredLRPRunInfo
+}
+
+func NewDesiredEventCache() DesiredEventCache {
+	return DesiredEventCache{}
+}
+
+func (d DesiredEventCache) AddSchedulingInfo(logger lager.Logger, schedulingInfo *models.DesiredLRPSchedulingInfo) (*models.DesiredLRP, bool) {
+	logger.Info("adding-scheduling-info", lager.Data{"process-guid": schedulingInfo.ProcessGuid})
+	components, exists := d[schedulingInfo.ProcessGuid]
+	if !exists {
+		components = DesiredComponents{}
+	}
+	components.DesiredLRPSchedulingInfo = schedulingInfo
+	if !exists {
+		d[schedulingInfo.ProcessGuid] = components
+	}
+
+	if components.DesiredLRPRunInfo != nil {
+		desiredLRP := models.NewDesiredLRP(*components.DesiredLRPSchedulingInfo, *components.DesiredLRPRunInfo)
+		delete(d, schedulingInfo.ProcessGuid)
+		return &desiredLRP, true
+	}
+
+	return nil, false
+}
+
+func (d DesiredEventCache) AddRunInfo(logger lager.Logger, runInfo *models.DesiredLRPRunInfo) (*models.DesiredLRP, bool) {
+	logger.Info("adding-run-info", lager.Data{"process-guid": runInfo.ProcessGuid})
+	components, exists := d[runInfo.ProcessGuid]
+	if !exists {
+		components = DesiredComponents{}
+	}
+	components.DesiredLRPRunInfo = runInfo
+	if !exists {
+		d[runInfo.ProcessGuid] = components
+	}
+	if components.DesiredLRPSchedulingInfo != nil {
+		desiredLRP := models.NewDesiredLRP(*components.DesiredLRPSchedulingInfo, *components.DesiredLRPRunInfo)
+		delete(d, runInfo.ProcessGuid)
+		return &desiredLRP, true
+	}
+
+	return nil, false
+}
+
+func (db *ETCDDB) handleDesiredLRPSchedulingInfoEvent(
+	logger lager.Logger,
+	event watchEvent,
+	created func(*models.DesiredLRP),
+	changed func(*models.DesiredLRPChange),
+	deleted func(*models.DesiredLRP),
+	createsEventCache,
+	deletesEventCache DesiredEventCache,
+) {
+	logger = logger.Session("scheduling-info")
+	switch {
+	case event.Node != nil && event.PrevNode == nil:
+		logger.Debug("received-create")
+
+		schedulingInfo := new(models.DesiredLRPSchedulingInfo)
+		err := db.deserializeModel(logger, event.Node, schedulingInfo)
+		if err != nil {
+			logger.Error("failed-to-unmarshal-desired-lrp-scheduling-info", err)
+			return
+		}
+
+		desiredLRP, complete := createsEventCache.AddSchedulingInfo(logger, schedulingInfo)
+		if complete {
+			logger.Debug("sending-create", lager.Data{"process-guid": schedulingInfo.ProcessGuid})
+			created(desiredLRP)
+		}
+
+	case event.Node != nil && event.PrevNode != nil: // update
+		logger.Debug("received-update")
+
+		beforeSchedulingInfo := new(models.DesiredLRPSchedulingInfo)
+		err := db.deserializeModel(logger, event.PrevNode, beforeSchedulingInfo)
+		if err != nil {
+			logger.Error("failed-to-unmarshal-desired-lrp-scheduling-info", err)
+			return
+		}
+
+		afterSchedulingInfo := new(models.DesiredLRPSchedulingInfo)
+		err = db.deserializeModel(logger, event.Node, afterSchedulingInfo)
+		if err != nil {
+			logger.Error("failed-to-unmarshal-desired-lrp-scheduling-info", err)
+			return
+		}
+
+		runInfo, err := db.rawDesiredLRPRunInfo(logger, beforeSchedulingInfo.ProcessGuid)
+		if err != nil {
+			logger.Error("failed-to-fetch-run-info", err, lager.Data{"process-guid": beforeSchedulingInfo.ProcessGuid})
+			return
+		}
+
+		before := models.NewDesiredLRP(*beforeSchedulingInfo, *runInfo)
+		after := models.NewDesiredLRP(*afterSchedulingInfo, *runInfo)
+
+		changed(&models.DesiredLRPChange{Before: &before, After: &after})
+
+	case event.Node == nil && event.PrevNode != nil: // delete
+		logger.Debug("received-delete")
+
+		schedulingInfo := new(models.DesiredLRPSchedulingInfo)
+		err := db.deserializeModel(logger, event.PrevNode, schedulingInfo)
+		if err != nil {
+			logger.Error("failed-to-unmarshal-desired-lrp-scheduling-info", err)
+			return
+		}
+
+		logger.Debug("sending-delete", lager.Data{"process-guid": schedulingInfo.ProcessGuid})
+		desiredLRP, complete := deletesEventCache.AddSchedulingInfo(logger, schedulingInfo)
+		if complete {
+			deleted(desiredLRP)
+		}
+
+	default:
+		logger.Debug("received-event-with-both-nodes-nil")
+	}
+}
+
+func (db *ETCDDB) handleDesiredLRPRunInfoEvent(
+	logger lager.Logger,
+	event watchEvent,
+	created func(*models.DesiredLRP),
+	deleted func(*models.DesiredLRP),
+	createsEventCache,
+	deletesEventCache DesiredEventCache,
+) {
+	logger = logger.Session("run-info")
+	switch {
+	case event.Node != nil && event.PrevNode == nil:
+		logger.Debug("received-create")
+
+		runInfo := new(models.DesiredLRPRunInfo)
+		err := db.deserializeModel(logger, event.Node, runInfo)
+		if err != nil {
+			logger.Error("failed-to-unmarshal-desired-lrp-run-info", err)
+			return
+		}
+
+		desiredLRP, complete := createsEventCache.AddRunInfo(logger, runInfo)
+		if complete {
+			logger.Debug("sending-create", lager.Data{"process-guid": runInfo.ProcessGuid})
+			created(desiredLRP)
+		}
+
+	case event.Node == nil && event.PrevNode != nil: // delete
+		logger.Debug("received-delete")
+
+		runInfo := new(models.DesiredLRPRunInfo)
+		err := db.deserializeModel(logger, event.PrevNode, runInfo)
+		if err != nil {
+			logger.Error("failed-to-unmarshal-desired-lrp-run-info", err)
+			return
+		}
+
+		logger.Debug("sending-delete", lager.Data{"process-guid": runInfo.ProcessGuid})
+		desiredLRP, complete := deletesEventCache.AddRunInfo(logger, runInfo)
+		if complete {
+			deleted(desiredLRP)
+		}
+
+	default:
+		logger.Debug("received-event-with-both-nodes-nil")
+	}
+}
+
 func (db *ETCDDB) WatchForDesiredLRPChanges(logger lager.Logger,
 	created func(*models.DesiredLRP),
 	changed func(*models.DesiredLRPChange),
@@ -30,59 +203,45 @@ func (db *ETCDDB) WatchForDesiredLRPChanges(logger lager.Logger,
 ) (chan<- bool, <-chan error) {
 	logger = logger.Session("watching-for-desired-lrp-changes")
 
-	events, stop, err := db.watch(DesiredLRPSchemaRoot)
+	createsEventCache := NewDesiredEventCache()
+	deletesEventCache := NewDesiredEventCache()
+
+	schedInfoEvents, stop, err := db.watch(DesiredLRPSchedulingInfoSchemaRoot)
+	runInfoEvents, stop, err := db.watch(DesiredLRPRunInfoSchemaRoot)
 
 	go func() {
-		for event := range events {
-			switch {
-			case event.Node != nil && event.PrevNode == nil:
-				logger.Debug("received-create")
-
-				desiredLRP := new(models.DesiredLRP)
-				err := db.deserializeModel(logger, event.Node, desiredLRP)
-				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err)
-					continue
+		for schedInfoEvents != nil && runInfoEvents != nil {
+			select {
+			case event, ok := <-schedInfoEvents:
+				if !ok {
+					schedInfoEvents = nil
+					break
 				}
 
-				logger.Debug("sending-create", lager.Data{"process-guid": desiredLRP.ProcessGuid})
-				created(desiredLRP)
+				db.handleDesiredLRPSchedulingInfoEvent(
+					logger,
+					event,
+					created,
+					changed,
+					deleted,
+					createsEventCache,
+					deletesEventCache,
+				)
 
-			case event.Node != nil && event.PrevNode != nil: // update
-				logger.Debug("received-update")
-
-				before := new(models.DesiredLRP)
-				err := db.deserializeModel(logger, event.PrevNode, before)
-				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err)
-					continue
+			case event, ok := <-runInfoEvents:
+				if !ok {
+					runInfoEvents = nil
+					break
 				}
 
-				after := new(models.DesiredLRP)
-				err = db.deserializeModel(logger, event.Node, after)
-				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err)
-					continue
-				}
-
-				logger.Debug("sending-update", lager.Data{"process-guid": after.ProcessGuid})
-				changed(&models.DesiredLRPChange{Before: before, After: after})
-
-			case event.Node == nil && event.PrevNode != nil: // delete
-				logger.Debug("received-delete")
-
-				desiredLRP := new(models.DesiredLRP)
-				err := db.deserializeModel(logger, event.PrevNode, desiredLRP)
-				if err != nil {
-					logger.Error("failed-to-unmarshal-desired-lrp", err)
-					continue
-				}
-
-				logger.Debug("sending-delete", lager.Data{"process-guid": desiredLRP.ProcessGuid})
-				deleted(desiredLRP)
-
-			default:
-				logger.Debug("received-event-with-both-nodes-nil")
+				db.handleDesiredLRPRunInfoEvent(
+					logger,
+					event,
+					created,
+					deleted,
+					createsEventCache,
+					deletesEventCache,
+				)
 			}
 		}
 	}()

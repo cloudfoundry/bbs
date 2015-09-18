@@ -8,6 +8,59 @@ import "actions.proto";
 import "security_group.proto";
 import "environment_variables.proto";
 
+message DesiredLRPSchedulingInfo {
+  optional DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+
+  optional string annotation = 2;
+  optional int32 instances = 3;
+
+  optional DesiredLRPResource desired_lrp_resource = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+
+  optional bytes routes = 5 [(gogoproto.customtype) = "Routes"];
+  optional ModificationTag modification_tag = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+}
+
+message DesiredLRPRunInfo {
+  optional DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+
+  repeated EnvironmentVariable environment_variables = 2 [(gogoproto.jsontag) = "env", (gogoproto.nullable) = false];
+  optional Action setup = 3;
+  optional Action action = 4;
+  optional Action monitor = 5;
+
+  optional uint32 start_timeout = 6;
+  optional bool privileged = 7;
+
+  optional uint32 cpu_weight = 8;
+  repeated uint32 ports = 9;
+  repeated SecurityGroupRule egress_rules = 10 [(gogoproto.nullable) = false];
+  optional string log_source = 11;
+  optional string metrics_guid = 12;
+}
+
+// helper message for marshalling routes
+message proto_routes {
+  map<string, bytes> routes = 1;
+}
+
+message DesiredLRPUpdate {
+  optional int32 instances = 1 [(gogoproto.nullable) = true];
+  optional bytes routes = 2 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+  optional string annotation = 3 [(gogoproto.nullable) = true];
+}
+
+message DesiredLRPKey {
+  optional string process_guid = 1;
+  optional string domain = 2;
+  optional string log_guid = 3;
+}
+
+message DesiredLRPResource {
+  optional int32 memory_mb = 1;
+  optional int32 disk_mb = 2;
+  optional string root_fs = 3 [(gogoproto.jsontag) = "rootfs"];
+}
+
 message DesiredLRP {
   optional string process_guid = 1;
   optional string domain = 2;
@@ -30,15 +83,4 @@ message DesiredLRP {
   optional string annotation = 19;
   repeated SecurityGroupRule egress_rules = 20;
   optional ModificationTag modification_tag = 21;
-}
-
-// helper message for marshalling routes
-message proto_routes {
-  map<string, bytes> routes = 1;
-}
-
-message DesiredLRPUpdate {
-  optional int32 instances = 1 [(gogoproto.nullable) = true];
-  optional bytes routes = 2 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
-  optional string annotation = 3 [(gogoproto.nullable) = true];
 }

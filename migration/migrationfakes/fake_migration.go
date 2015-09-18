@@ -13,7 +13,7 @@ type FakeMigration struct {
 	VersionStub        func() int64
 	versionMutex       sync.RWMutex
 	versionArgsForCall []struct{}
-	versionReturns struct {
+	versionReturns     struct {
 		result1 int64
 	}
 	UpStub        func(logger lager.Logger, storeClient etcd.StoreClient) error

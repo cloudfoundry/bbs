@@ -17,11 +17,14 @@ var _ = Describe("DesiredLRPDB", func() {
 		var filter models.DesiredLRPFilter
 		var desiredLRPsInDomains map[string][]*models.DesiredLRP
 
+		BeforeEach(func() {
+			filter = models.DesiredLRPFilter{}
+		})
+
 		Context("when there are desired LRPs", func() {
 			var expectedDesiredLRPs []*models.DesiredLRP
 
 			BeforeEach(func() {
-				filter = models.DesiredLRPFilter{}
 				expectedDesiredLRPs = []*models.DesiredLRP{}
 
 				desiredLRPsInDomains = etcdHelper.CreateDesiredLRPsInDomains(map[string]int{
@@ -63,14 +66,16 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when there is invalid data", func() {
 			BeforeEach(func() {
-				etcdHelper.CreateValidDesiredLRP("some-guid")
-				etcdHelper.CreateMalformedDesiredLRP("some-other-guid")
-				etcdHelper.CreateValidDesiredLRP("some-third-guid")
+				etcdHelper.CreateValidDesiredLRP("guid-1")
+				etcdHelper.CreateMalformedDesiredLRP("bad-guid")
+				etcdHelper.CreateValidDesiredLRP("guid-2")
 			})
 
-			It("errors", func() {
-				_, err := etcdDB.DesiredLRPs(logger, filter)
-				Expect(err).To(HaveOccurred())
+			It("retuns only valid records", func() {
+				desireds, err := etcdDB.DesiredLRPs(logger, filter)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(desireds).To(HaveLen(2))
+				Expect([]string{desireds[0].ProcessGuid, desireds[1].ProcessGuid}).To(ConsistOf("guid-1", "guid-2"))
 			})
 		})
 
@@ -151,14 +156,18 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		Context("when the desired LRP does not yet exist", func() {
-			It("creates /v1/desired/<process-guid>", func() {
+			It("persists the scheduling info and run info", func() {
 				err := etcdDB.DesireLRP(logger, lrp)
 				Expect(err).NotTo(HaveOccurred())
 
 				persisted, err := etcdDB.DesiredLRPByProcessGuid(logger, "some-process-guid")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(persisted).To(Equal(lrp))
+				Expect(persisted.DesiredLRPKey()).To(Equal(lrp.DesiredLRPKey()))
+				Expect(persisted.DesiredLRPResource()).To(Equal(lrp.DesiredLRPResource()))
+				Expect(persisted.Annotation).To(Equal(lrp.Annotation))
+				Expect(persisted.Instances).To(Equal(lrp.Instances))
+				Expect(persisted.DesiredLRPRunInfo()).To(Equal(lrp.DesiredLRPRunInfo()))
 			})
 
 			It("creates one ActualLRP per index", func() {

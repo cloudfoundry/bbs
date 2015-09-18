@@ -91,8 +91,7 @@ var _ = Describe("Watchers", func() {
 			desired, bbsErr := etcdDB.DesiredLRPByProcessGuid(logger, lrp.GetProcessGuid())
 			Expect(bbsErr).NotTo(HaveOccurred())
 
-			_, err := storeClient.Delete(DesiredLRPSchemaPath(desired), true)
-			Expect(err).NotTo(HaveOccurred())
+			etcdHelper.DeleteDesiredLRP(desired.ProcessGuid)
 
 			Eventually(deletes).Should(Receive(Equal(desired)))
 

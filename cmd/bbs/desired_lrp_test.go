@@ -117,8 +117,11 @@ var _ = Describe("DesiredLRP API", func() {
 			Expect(desireErr).NotTo(HaveOccurred())
 			persistedDesiredLRP, err := client.DesiredLRPByProcessGuid("super-lrp")
 			Expect(err).NotTo(HaveOccurred())
-			persistedDesiredLRP.ModificationTag = nil
-			Expect(persistedDesiredLRP).To(Equal(desiredLRP))
+			Expect(persistedDesiredLRP.DesiredLRPKey()).To(Equal(desiredLRP.DesiredLRPKey()))
+			Expect(persistedDesiredLRP.DesiredLRPResource()).To(Equal(desiredLRP.DesiredLRPResource()))
+			Expect(persistedDesiredLRP.Annotation).To(Equal(desiredLRP.Annotation))
+			Expect(persistedDesiredLRP.Instances).To(Equal(desiredLRP.Instances))
+			Expect(persistedDesiredLRP.DesiredLRPRunInfo()).To(Equal(desiredLRP.DesiredLRPRunInfo()))
 		})
 	})
 

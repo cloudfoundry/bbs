@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
 	. "github.com/onsi/ginkgo"
@@ -254,8 +253,7 @@ func (t crashTest) Test() {
 
 			Context("when the desired LRP no longer exists", func() {
 				BeforeEach(func() {
-					_, err := storeClient.Delete(etcd.DesiredLRPSchemaPathByProcessGuid(actualLRPKey.ProcessGuid), false)
-					Expect(err).NotTo(HaveOccurred())
+					etcdHelper.DeleteDesiredLRP(actualLRPKey.ProcessGuid)
 				})
 
 				It("the actual LRP is also deleted", func() {
