@@ -89,20 +89,14 @@ var _ = Describe("Migration Manager", func() {
 			fakeMigration.VersionReturns(9)
 		})
 
-		It("creates a version with the correct target version", func() {
-			Eventually(fakeDB.SetVersionCallCount).Should(Equal(3))
+		It("creates a version with the correct target version and does not run any migrations", func() {
+			Eventually(fakeDB.SetVersionCallCount).Should(Equal(1))
 
 			_, version := fakeDB.SetVersionArgsForCall(0)
-			Expect(version.CurrentVersion).To(BeEquivalentTo(0))
-			Expect(version.TargetVersion).To(BeEquivalentTo(0))
-
-			_, version = fakeDB.SetVersionArgsForCall(1)
-			Expect(version.CurrentVersion).To(BeEquivalentTo(0))
-			Expect(version.TargetVersion).To(BeEquivalentTo(9))
-
-			_, version = fakeDB.SetVersionArgsForCall(2)
 			Expect(version.CurrentVersion).To(BeEquivalentTo(9))
 			Expect(version.TargetVersion).To(BeEquivalentTo(9))
+
+			Expect(fakeMigration.UpCallCount()).To(Equal(0))
 		})
 	})
 

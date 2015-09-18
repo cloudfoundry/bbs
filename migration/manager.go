@@ -54,14 +54,21 @@ func NewManager(
 func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := m.logger.Session("migration-manager")
 
+	var bbsMigrationVersion int64
+	if len(m.migrations) > 0 {
+		bbsMigrationVersion = m.migrations[len(m.migrations)-1].Version()
+	}
+
 	version, err := m.db.Version(logger)
 	if err != nil {
 		if models.ConvertError(err) == models.ErrResourceNotFound {
-			version = &models.Version{}
-			err = m.db.SetVersion(m.logger, version)
+			err = m.writeVersion(bbsMigrationVersion, bbsMigrationVersion)
 			if err != nil {
 				return err
 			}
+
+			m.finishAndWait(signals, ready)
+			return nil
 		} else {
 			return err
 		}
@@ -73,11 +80,6 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			version.TargetVersion,
 			version.CurrentVersion,
 		)
-	}
-
-	var bbsMigrationVersion int64
-	if len(m.migrations) > 0 {
-		bbsMigrationVersion = m.migrations[len(m.migrations)-1].Version()
 	}
 
 	if version.CurrentVersion > bbsMigrationVersion {
@@ -135,15 +137,20 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		}
 	}
 
-	close(ready)
-	close(m.migrationsDone)
-
 	logger.Debug("migrations-finished")
 	migrationDuration.Send(time.Since(migrateStart))
 
+	m.finishAndWait(signals, ready)
+	return nil
+}
+
+func (m *Manager) finishAndWait(signals <-chan os.Signal, ready chan<- struct{}) {
+	close(ready)
+	close(m.migrationsDone)
+
 	select {
 	case <-signals:
-		return nil
+		return
 	}
 }
 

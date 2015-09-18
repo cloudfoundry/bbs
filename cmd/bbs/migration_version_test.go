@@ -38,6 +38,11 @@ var _ = Describe("Migration Version", func() {
 		Expect(err).NotTo(HaveOccurred())
 		bbsBinPath = string(bbsConfig)
 
+		value, err := json.Marshal(models.Version{CurrentVersion: 100, TargetVersion: 100})
+		// write initial version
+		_, err = storeClient.Set(etcd.VersionKey, value, etcd.NO_TTL)
+		Expect(err).NotTo(HaveOccurred())
+
 		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
