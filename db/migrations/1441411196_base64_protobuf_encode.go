@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	appendMigration(NewBase64ProtobufEncode())
+	AppendMigration(NewBase64ProtobufEncode())
 }
 
 type Base64ProtobufEncode struct {

@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	appendMigration(NewBase64ProtobufEncode())
+	AppendMigration(NewSplitDesiredLRP())
 }
 
 type SplitDesiredLRP struct {

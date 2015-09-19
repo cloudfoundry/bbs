@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	appendMigration(NewTestMigration(9999999999))
+	AppendMigration(NewTestMigration(9999999999))
 }
 
 type TestMigration struct {

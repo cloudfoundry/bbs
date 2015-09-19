@@ -32,6 +32,10 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 		migration = migrations.NewBase64ProtobufEncode()
 	})
 
+	It("appends itself to the migration list", func() {
+		Expect(migrations.Migrations).To(ContainElement(migration))
+	})
+
 	Describe("Version", func() {
 		It("returns the timestamp from which it was created", func() {
 			Expect(migration.Version()).To(BeEquivalentTo(1441411196))
