@@ -36,6 +36,9 @@ const (
 func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
 	convergeStart := db.clock.Now()
 	convergeLRPRunsCounter.Increment()
+	logger = logger.Session("converge-lrps")
+	logger.Info("starting-convergence")
+	defer logger.Info("finished-convergence")
 
 	defer func() {
 		convergeLRPDuration.Send(time.Since(convergeStart))
@@ -289,12 +292,10 @@ func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 	for _, childNode := range response.Nodes {
 		childNode := childNode
 		works = append(works, func() {
-			var schedulingInfo models.DesiredLRPSchedulingInfo
-			var runInfo models.DesiredLRPRunInfo
-
 			for _, node := range childNode.Nodes {
 				switch childNode.Key {
 				case DesiredLRPSchedulingInfoSchemaRoot:
+					var schedulingInfo models.DesiredLRPSchedulingInfo
 					err := db.deserializeModel(logger, node, &schedulingInfo)
 					if err != nil {
 						logger.Error("failed-to-deserialize-scheduling-info", err)
@@ -311,6 +312,7 @@ func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 					}
 
 				case DesiredLRPRunInfoSchemaRoot:
+					var runInfo models.DesiredLRPRunInfo
 					err := db.deserializeModel(logger, node, &runInfo)
 					if err != nil {
 						logger.Error("failed-to-deserialize-run-info", err)
@@ -321,7 +323,6 @@ func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 						runInfosLock.Unlock()
 					}
 				}
-
 			}
 		})
 	}

@@ -70,12 +70,21 @@ var _ = Describe("LrpConvergence", func() {
 
 				for _, desiredGuid := range testData.validDesiredGuidsWithSomeValidActuals {
 					Expect(data.DesiredLRPs).To(HaveKey(desiredGuid))
+					desiredLRP, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(data.DesiredLRPs[desiredGuid]).To(Equal(desiredLRP))
 				}
 				for _, desiredGuid := range testData.validDesiredGuidsWithNoActuals {
 					Expect(data.DesiredLRPs).To(HaveKey(desiredGuid))
+					desiredLRP, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(data.DesiredLRPs[desiredGuid]).To(Equal(desiredLRP))
 				}
 				for _, desiredGuid := range testData.validDesiredGuidsWithOnlyInvalidActuals {
 					Expect(data.DesiredLRPs).To(HaveKey(desiredGuid))
+					desiredLRP, err := etcdDB.DesiredLRPByProcessGuid(logger, desiredGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(data.DesiredLRPs[desiredGuid]).To(Equal(desiredLRP))
 				}
 			})
 
