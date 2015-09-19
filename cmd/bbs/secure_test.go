@@ -57,10 +57,19 @@ var _ = Describe("Secure", func() {
 			Expect(client.Ping()).To(BeFalse())
 		})
 
-		It("fails for a client configured with the wrong certificate", func() {
-			caFile := path.Join(basePath, "blue-certs", "server-ca.crt")
+		It("fails for a client configured with the wrong certificates", func() {
+			caFile := path.Join(basePath, "green-certs", "server-ca.crt")
 			certFile := path.Join(basePath, "blue-certs", "client.crt")
 			keyFile := path.Join(basePath, "blue-certs", "client.key")
+			client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(client.Ping()).To(BeFalse())
+		})
+
+		It("fails for a client configured with a different ca certificate", func() {
+			caFile := path.Join(basePath, "blue-certs", "server-ca.crt")
+			certFile := path.Join(basePath, "green-certs", "client.crt")
+			keyFile := path.Join(basePath, "green-certs", "client.key")
 			client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(client.Ping()).To(BeFalse())
