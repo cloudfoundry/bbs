@@ -56,6 +56,13 @@ func (t *ETCDHelper) SetRawDesiredLRPSchedulingInfo(model *models.DesiredLRPSche
 	Expect(err).NotTo(HaveOccurred())
 }
 
+func (t *ETCDHelper) CreateInvalidDesiredLRPComponent() {
+	key := etcddb.DesiredLRPComponentsSchemaRoot + "/bogus"
+	_, err := t.client.Set(key, []byte("value"), 0)
+
+	Expect(err).NotTo(HaveOccurred())
+}
+
 func (t *ETCDHelper) SetRawTask(task *models.Task) {
 	value, err := t.serializer.Marshal(t.logger, t.format, task)
 	Expect(err).NotTo(HaveOccurred())

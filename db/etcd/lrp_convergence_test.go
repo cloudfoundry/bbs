@@ -113,6 +113,17 @@ var _ = Describe("LrpConvergence", func() {
 					len(testData.unknownDesiredGuidsWithOnlyInvalidActuals)
 				Expect(sender.GetCounter("ConvergenceLRPPreProcessingMalformedRunInfos")).To(BeNumerically("==", expectedMetric))
 			})
+
+			Context("when the desired LRP root in ETCD has an invalid child node", func() {
+				BeforeEach(func() {
+					etcdHelper.CreateInvalidDesiredLRPComponent()
+				})
+
+				It("returns an error", func() {
+					_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+					Expect(gatherError).To(MatchError(HavePrefix("unrecognized child node under desired LRPs root node: ")))
+				})
+			})
 		})
 
 		Context("Actual LRPs", func() {
