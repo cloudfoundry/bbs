@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"fmt"
 	"path"
 	"sync"
 	"sync/atomic"
@@ -268,7 +269,7 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 }
 
 func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]*models.DesiredLRP, error) {
-	response, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
+	desiredLRPsRoot, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
 		logger.Info("actual-lrp-schema-root-not-found")
@@ -289,12 +290,13 @@ func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 
 	works := []func(){}
 	logger.Info("walking-desired-lrp-components-tree")
-	for _, childNode := range response.Nodes {
-		childNode := childNode
-		works = append(works, func() {
-			for _, node := range childNode.Nodes {
-				switch childNode.Key {
-				case DesiredLRPSchedulingInfoSchemaRoot:
+
+	for _, componentRoot := range desiredLRPsRoot.Nodes {
+		switch componentRoot.Key {
+		case DesiredLRPSchedulingInfoSchemaRoot:
+			for _, node := range componentRoot.Nodes {
+				node := node
+				works = append(works, func() {
 					var schedulingInfo models.DesiredLRPSchedulingInfo
 					err := db.deserializeModel(logger, node, &schedulingInfo)
 					if err != nil {
@@ -310,8 +312,12 @@ func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 						guids[schedulingInfo.ProcessGuid] = struct{}{}
 						guidsLock.Unlock()
 					}
-
-				case DesiredLRPRunInfoSchemaRoot:
+				})
+			}
+		case DesiredLRPRunInfoSchemaRoot:
+			for _, node := range componentRoot.Nodes {
+				node := node
+				works = append(works, func() {
 					var runInfo models.DesiredLRPRunInfo
 					err := db.deserializeModel(logger, node, &runInfo)
 					if err != nil {
@@ -322,9 +328,13 @@ func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 						runInfos[runInfo.ProcessGuid] = &runInfo
 						runInfosLock.Unlock()
 					}
-				}
+				})
 			}
-		})
+		default:
+			err := fmt.Errorf("unrecognized node under desired LRPs root node: %s", componentRoot.Key)
+			logger.Error("unrecognized-node", err)
+			return nil, err
+		}
 	}
 
 	throttler, err := workpool.NewThrottler(throttlerSize, works)
