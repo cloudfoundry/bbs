@@ -2,6 +2,7 @@ package bbs
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -105,6 +106,7 @@ func NewSecureClient(url, caFile, certFile, keyFile string) (Client, error) {
 	}
 
 	if tr, ok := client.httpClient.Transport.(*http.Transport); ok {
+		tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(128)
 		tr.TLSClientConfig = tlsConfig
 	} else {
 		return nil, errors.New("Invalid transport")
