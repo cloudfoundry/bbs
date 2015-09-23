@@ -2,8 +2,10 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/tls"
 	"errors"
 	"flag"
+	"net/http"
 	"os"
 	"time"
 
@@ -323,13 +325,36 @@ func initializeEtcdDB(
 }
 
 func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOptions) etcddb.StoreClient {
-	var err error
 	var etcdClient *etcdclient.Client
+	var tr *http.Transport
+
 	if etcdOptions.IsSSL {
+		if etcdOptions.CertFile == "" || etcdOptions.KeyFile == "" {
+			logger.Fatal("failed-to-construct-etcd-tls-client", errors.New("Require both cert and key path"))
+		}
+
+		var err error
 		etcdClient, err = etcdclient.NewTLSClient(etcdOptions.ClusterUrls, etcdOptions.CertFile, etcdOptions.KeyFile, etcdOptions.CAFile)
 		if err != nil {
 			logger.Fatal("failed-to-construct-etcd-tls-client", err)
 		}
+
+		tlsCert, err := tls.LoadX509KeyPair(etcdOptions.CertFile, etcdOptions.KeyFile)
+		if err != nil {
+			logger.Fatal("failed-to-construct-etcd-tls-client", err)
+		}
+
+		tlsConfig := &tls.Config{
+			Certificates:       []tls.Certificate{tlsCert},
+			InsecureSkipVerify: true,
+			ClientSessionCache: tls.NewLRUClientSessionCache(128),
+		}
+		tr = &http.Transport{
+			TLSClientConfig: tlsConfig,
+			Dial:            etcdClient.DefaultDial,
+		}
+		etcdClient.SetTransport(tr)
+
 	} else {
 		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
 	}
