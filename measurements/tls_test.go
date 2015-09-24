@@ -62,6 +62,7 @@ var _ = Describe("TLS", func() {
 					Expect(client.Ping()).To(BeTrue())
 				})
 			})
+			Expect(runtime.Seconds()).To(BeNumerically("<", 5.0), "Ping shouldn't take too long")
 		}, 3)
 
 		Measure("desire lrp time", func(b Benchmarker) {
@@ -76,6 +77,7 @@ var _ = Describe("TLS", func() {
 					desireLRP()
 				})
 			})
+			Expect(runtime.Seconds()).To(BeNumerically("<", 10.0), "Desiring LRPs shouldn't take too long")
 		}, 3)
 	}
 
