@@ -77,7 +77,7 @@ var _ = Describe("TLS", func() {
 					desireLRP()
 				})
 			})
-			Expect(runtime.Seconds()).To(BeNumerically("<", 10.0), "Desiring LRPs shouldn't take too long")
+			Expect(runtime.Seconds()).To(BeNumerically("<", 15.0), "Desiring LRPs shouldn't take too long")
 		}, 3)
 	}
 
@@ -105,7 +105,7 @@ var _ = Describe("TLS", func() {
 			keyFile := path.Join(basePath, "green-certs", "client.key")
 
 			var err error
-			client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile)
+			client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile, 64, 2)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

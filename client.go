@@ -97,23 +97,25 @@ func NewClient(url string) Client {
 	return newClient(url)
 }
 
-func NewSecureClient(url, caFile, certFile, keyFile string) (Client, error) {
+func NewSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (Client, error) {
 	client := newClient(url)
 
 	tlsConfig, err := cf_http.NewTLSConfig(certFile, keyFile, caFile)
 	if err != nil {
 		return nil, err
 	}
+	tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(clientSessionCacheSize)
 
 	if tr, ok := client.httpClient.Transport.(*http.Transport); ok {
-		tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(128)
 		tr.TLSClientConfig = tlsConfig
+		tr.MaxIdleConnsPerHost = maxIdleConnsPerHost
 	} else {
 		return nil, errors.New("Invalid transport")
 	}
 
 	if tr, ok := client.streamingHTTPClient.Transport.(*http.Transport); ok {
 		tr.TLSClientConfig = tlsConfig
+		tr.MaxIdleConnsPerHost = maxIdleConnsPerHost
 	} else {
 		return nil, errors.New("Invalid transport")
 	}
