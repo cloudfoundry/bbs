@@ -20,22 +20,6 @@ var _ = FDescribe("TLS", func() {
 		basePath = path.Join(os.Getenv("GOPATH"), "src", "github.com", "cloudfoundry-incubator", "bbs", "cmd", "bbs", "fixtures")
 	})
 
-	manyTimes := func(count, concurrency int, f func()) {
-		done := make(chan bool)
-		for c := 0; c < concurrency; c++ {
-			go func() {
-				defer GinkgoRecover()
-				for i := 0; i < count/concurrency; i++ {
-					f()
-				}
-				done <- true
-			}()
-		}
-		for c := 0; c < concurrency; c++ {
-			<-done
-		}
-	}
-
 	desireLRP := func() {
 		var err error
 		guid, err := uuid.NewV4()
@@ -57,11 +41,6 @@ var _ = FDescribe("TLS", func() {
 			b.Time("second-request", func() {
 				Expect(client.Ping()).To(BeTrue())
 			})
-			runtime := b.Time("runtime", func() {
-				manyTimes(10000, 50, func() {
-					Expect(client.Ping()).To(BeTrue())
-				})
-			})
 		}, 3)
 
 		Measure("desire lrp time", func(b Benchmarker) {
@@ -70,11 +49,6 @@ var _ = FDescribe("TLS", func() {
 			})
 			b.Time("second-request", func() {
 				desireLRP()
-			})
-			runtime := b.Time("runtime", func() {
-				manyTimes(200, 50, func() {
-					desireLRP()
-				})
 			})
 		}, 3)
 	}
