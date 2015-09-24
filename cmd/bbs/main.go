@@ -347,14 +347,15 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 		tlsConfig := &tls.Config{
 			Certificates:       []tls.Certificate{tlsCert},
 			InsecureSkipVerify: true,
-			ClientSessionCache: tls.NewLRUClientSessionCache(128),
+			ClientSessionCache: tls.NewLRUClientSessionCache(etcdOptions.ClientSessionCacheSize),
 		}
 		tr = &http.Transport{
-			TLSClientConfig: tlsConfig,
-			Dial:            etcdClient.DefaultDial,
+			TLSClientConfig:     tlsConfig,
+			Dial:                etcdClient.DefaultDial,
+			MaxIdleConnsPerHost: etcdOptions.MaxIdleConnsPerHost,
 		}
 		etcdClient.SetTransport(tr)
-
+		etcdClient.AddRootCA(etcdOptions.CAFile)
 	} else {
 		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
 	}

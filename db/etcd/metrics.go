@@ -42,6 +42,7 @@ func NewETCDMetrics(logger lager.Logger, etcdOptions *ETCDOptions) (*ETCDMetrics
 		if err != nil {
 			return nil, err
 		}
+		tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(etcdOptions.ClientSessionCacheSize)
 	}
 
 	client := cf_http.NewClient()

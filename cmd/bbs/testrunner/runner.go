@@ -9,16 +9,18 @@ import (
 )
 
 type Args struct {
-	Address               string
-	AdvertiseURL          string
-	AuctioneerAddress     string
-	ConsulCluster         string
-	DropsondeDestination  string
-	EtcdCACert            string
-	EtcdClientCert        string
-	EtcdClientKey         string
-	EtcdCluster           string
-	MetricsReportInterval time.Duration
+	Address                    string
+	AdvertiseURL               string
+	AuctioneerAddress          string
+	ConsulCluster              string
+	DropsondeDestination       string
+	EtcdCACert                 string
+	EtcdClientCert             string
+	EtcdClientKey              string
+	EtcdClientSessionCacheSize int
+	EtcdCluster                string
+	EtcdMaxIdleConnsPerHost    int
+	MetricsReportInterval      time.Duration
 
 	ActiveKeyLabel string
 	EncryptionKeys []string
@@ -39,6 +41,8 @@ func (args Args) ArgSlice() []string {
 		"-etcdCertFile", args.EtcdClientCert,
 		"-etcdCluster", args.EtcdCluster,
 		"-etcdKeyFile", args.EtcdClientKey,
+		"-etcdClientSessionCacheSize", strconv.Itoa(args.EtcdClientSessionCacheSize),
+		"-etcdMaxIdleConnsPerHost", strconv.Itoa(args.EtcdMaxIdleConnsPerHost),
 		"-listenAddress", args.Address,
 		"-logLevel", "debug",
 		"-metricsReportInterval", args.MetricsReportInterval.String(),

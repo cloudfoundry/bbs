@@ -75,11 +75,13 @@ func TaskSchemaPathByGuid(taskGuid string) string {
 const maxDesiredLRPGetterWorkPoolSize = 50
 
 type ETCDOptions struct {
-	CertFile    string
-	KeyFile     string
-	CAFile      string
-	ClusterUrls []string
-	IsSSL       bool
+	CertFile               string
+	KeyFile                string
+	CAFile                 string
+	ClusterUrls            []string
+	IsSSL                  bool
+	ClientSessionCacheSize int
+	MaxIdleConnsPerHost    int
 }
 
 type ETCDDB struct {

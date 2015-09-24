@@ -92,6 +92,8 @@ var _ = Describe("TLS", func() {
 			bbsArgs.EtcdCACert = path.Join(basePath, "blue-certs", "server-ca.crt")
 			bbsArgs.EtcdClientCert = path.Join(basePath, "blue-certs", "client.crt")
 			bbsArgs.EtcdClientKey = path.Join(basePath, "blue-certs", "client.key")
+			bbsArgs.EtcdClientSessionCacheSize = 64
+			bbsArgs.EtcdMaxIdleConnsPerHost = 2
 
 			bbsURL.Scheme = "https"
 

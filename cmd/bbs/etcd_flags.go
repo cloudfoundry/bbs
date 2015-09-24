@@ -11,10 +11,12 @@ import (
 )
 
 type ETCDFlags struct {
-	etcdCertFile string
-	etcdKeyFile  string
-	etcdCaFile   string
-	clusterUrls  string
+	etcdCertFile           string
+	etcdKeyFile            string
+	etcdCaFile             string
+	clusterUrls            string
+	clientSessionCacheSize int
+	maxIdleConnsPerHost    int
 }
 
 func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
@@ -43,6 +45,19 @@ func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
 		"etcdCaFile",
 		"",
 		"Location of the CA certificate for mutual auth",
+	)
+
+	flagSet.IntVar(
+		&flags.clientSessionCacheSize,
+		"etcdClientSessionCacheSize",
+		0,
+		"Capacity of the ClientSessionCache option on the TLS configuration. If zero, golang's default will be used",
+	)
+	flagSet.IntVar(
+		&flags.maxIdleConnsPerHost,
+		"etcdMaxIdleConnsPerHost",
+		0,
+		"Controls the maximum number of idle (keep-alive) connctions per host. If zero, golang's default will be used",
 	)
 	return flags
 }
@@ -84,5 +99,7 @@ func (flags *ETCDFlags) Validate() (*etcd.ETCDOptions, error) {
 		CAFile:      flags.etcdCaFile,
 		ClusterUrls: clusterUrls,
 		IsSSL:       isSSL,
+		ClientSessionCacheSize: flags.clientSessionCacheSize,
+		MaxIdleConnsPerHost:    flags.maxIdleConnsPerHost,
 	}, nil
 }
