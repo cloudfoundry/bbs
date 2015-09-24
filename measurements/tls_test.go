@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("TLS", func() {
+var _ = Describe("TLS", func() {
 	var basePath string
 
 	BeforeEach(func() {
