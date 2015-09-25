@@ -98,6 +98,14 @@ func NewClient(url string) Client {
 }
 
 func NewSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (Client, error) {
+	return newSecureClient(url, caFile, certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, false)
+}
+
+func NewSecureSkipVerifyClient(url, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (Client, error) {
+	return newSecureClient(url, "", certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, true)
+}
+
+func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool) (Client, error) {
 	client := newClient(url)
 
 	tlsConfig, err := cf_http.NewTLSConfig(certFile, keyFile, caFile)
@@ -105,6 +113,8 @@ func NewSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSi
 		return nil, err
 	}
 	tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(clientSessionCacheSize)
+
+	tlsConfig.InsecureSkipVerify = skipVerify
 
 	if tr, ok := client.httpClient.Transport.(*http.Transport); ok {
 		tr.TLSClientConfig = tlsConfig

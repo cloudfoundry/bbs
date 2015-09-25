@@ -80,4 +80,27 @@ var _ = Describe("Secure", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+
+	Context("when configuring a client without mutual SSL (skipping verification)", func() {
+		BeforeEach(func() {
+			bbsArgs.RequireSSL = true
+			bbsArgs.CertFile = path.Join(basePath, "green-certs", "server.crt")
+			bbsArgs.KeyFile = path.Join(basePath, "green-certs", "server.key")
+		})
+
+		It("succeeds for a client configured with the right certificate", func() {
+			certFile := path.Join(basePath, "green-certs", "client.crt")
+			keyFile := path.Join(basePath, "green-certs", "client.key")
+			client, err = bbs.NewSecureSkipVerifyClient(bbsURL.String(), certFile, keyFile, 0, 0)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("fails for a client configured with the wrong certificates", func() {
+			certFile := path.Join(basePath, "blue-certs", "client.crt")
+			keyFile := path.Join(basePath, "blue-certs", "client.key")
+			client, err = bbs.NewSecureSkipVerifyClient(bbsURL.String(), certFile, keyFile, 0, 0)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(client.Ping()).To(BeFalse())
+		})
+	})
 })
