@@ -79,7 +79,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
 	logger.Info("gathering-desired-lrps")
-	desireds, err := db.gatherDesiredLRPs(logger, guids) // modifies guids
+	desireds, err := db.GatherDesiredLRPs(logger, guids) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-desired-lrps", err)
 
@@ -122,6 +122,14 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 }
 
 func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]map[int32]*models.ActualLRP, error) {
+	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, true)
+}
+
+func (db *ETCDDB) GatherActualLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]map[int32]*models.ActualLRP, error) {
+	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, false)
+}
+
+func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, doPrune bool) (map[string]map[int32]*models.ActualLRP, error) {
 	response, modelErr := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
@@ -217,30 +225,32 @@ func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string
 
 	throttler.Work()
 
-	logger.Info("deleting-invalid-actual-lrps", lager.Data{"num-lrps": len(actualsToDelete)})
-	db.batchDeleteNodes(actualsToDelete, logger)
-	actualLRPsDeleted.Add(uint64(len(actualsToDelete)))
+	if doPrune {
+		logger.Info("deleting-invalid-actual-lrps", lager.Data{"num-lrps": len(actualsToDelete)})
+		db.batchDeleteNodes(actualsToDelete, logger)
+		actualLRPsDeleted.Add(uint64(len(actualsToDelete)))
 
-	logger.Info("deleting-empty-actual-indices", lager.Data{"num-indices": len(indexKeysToDelete)})
-	err = db.deleteLeaves(logger, indexKeysToDelete)
-	if err != nil {
-		logger.Error("failed-deleting-empty-actual-indices", err, lager.Data{"num-indices": len(indexKeysToDelete)})
-	} else {
-		logger.Info("succeeded-deleting-empty-actual-indices", lager.Data{"num-indices": len(indexKeysToDelete)})
+		logger.Info("deleting-empty-actual-indices", lager.Data{"num-indices": len(indexKeysToDelete)})
+		err = db.deleteLeaves(logger, indexKeysToDelete)
+		if err != nil {
+			logger.Error("failed-deleting-empty-actual-indices", err, lager.Data{"num-indices": len(indexKeysToDelete)})
+		} else {
+			logger.Info("succeeded-deleting-empty-actual-indices", lager.Data{"num-indices": len(indexKeysToDelete)})
+		}
+
+		logger.Info("deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
+		err = db.deleteLeaves(logger, guidKeysToDelete)
+		if err != nil {
+			logger.Error("failed-deleting-empty-actual-guids", err, lager.Data{"num-guids": len(guidKeysToDelete)})
+		} else {
+			logger.Info("succeeded-deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
+		}
+
+		startingLRPs.Send(int(startingCount))
+		runningLRPs.Send(int(runningCount))
+		crashedActualLRPs.Send(int(crashedCount))
+		crashingDesiredLRPs.Send(len(crashingDesireds))
 	}
-
-	logger.Info("deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
-	err = db.deleteLeaves(logger, guidKeysToDelete)
-	if err != nil {
-		logger.Error("failed-deleting-empty-actual-guids", err, lager.Data{"num-guids": len(guidKeysToDelete)})
-	} else {
-		logger.Info("succeeded-deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
-	}
-
-	startingLRPs.Send(int(startingCount))
-	runningLRPs.Send(int(runningCount))
-	crashedActualLRPs.Send(int(crashedCount))
-	crashingDesiredLRPs.Send(len(crashingDesireds))
 
 	return actuals, nil
 }
@@ -268,7 +278,7 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 	return nil
 }
 
-func (db *ETCDDB) gatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]*models.DesiredLRP, error) {
+func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]*models.DesiredLRP, error) {
 	desiredLRPsRoot, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
