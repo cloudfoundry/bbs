@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
-	consuldb "github.com/cloudfoundry-incubator/bbs/db/consul"
+	"github.com/cloudfoundry-incubator/bbs"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
@@ -20,6 +20,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/metrics"
 	"github.com/cloudfoundry-incubator/bbs/migration"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
 	"github.com/cloudfoundry-incubator/cf-debug-server"
@@ -27,7 +28,6 @@ import (
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/locket"
-	"github.com/cloudfoundry-incubator/locket/presence"
 	"github.com/cloudfoundry-incubator/rep"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -146,21 +146,18 @@ func main() {
 
 	initializeDropsonde(logger)
 
+	clock := clock.NewClock()
+
 	consulClient, err := consuladapter.NewClient(*consulCluster)
 	if err != nil {
 		logger.Fatal("new-consul-client-failed", err)
 	}
 
 	sessionManager := consuladapter.NewSessionManager(consulClient)
-	consulDBSession, err := consuladapter.NewSessionNoChecks("consul-db", *lockTTL, consulClient, sessionManager)
-	if err != nil {
-		logger.Fatal("consul-session-failed", err)
-	}
 
-	etcdOptions, err := etcdFlags.Validate()
-	if err != nil {
-		logger.Fatal("etcd-validation-failed", err)
-	}
+	serviceClient := initializeServiceClient(logger, clock, consulClient, sessionManager)
+
+	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
 
 	keyManager, err := encryptionFlags.Validate()
 	if err != nil {
@@ -168,25 +165,28 @@ func main() {
 	}
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
-	consulDB := consuldb.NewConsul(consulDBSession)
-	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
-
+	etcdOptions, err := etcdFlags.Validate()
+	if err != nil {
+		logger.Fatal("etcd-validation-failed", err)
+	}
 	storeClient := initializeEtcdStoreClient(logger, etcdOptions)
-	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, consulDB)
+
+	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient)
 
 	migrationsDone := make(chan struct{})
 
-	maintainer := initializeLockMaintainer(logger, consulClient, sessionManager)
+	maintainer := initializeLockMaintainer(logger, serviceClient)
+
 	migrationManager := migration.NewManager(logger,
 		db,
 		cryptor,
 		storeClient,
 		migrations.Migrations,
 		migrationsDone,
-		clock.NewClock(),
+		clock,
 	)
 
-	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock.NewClock())
+	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
 
 	hub := events.NewHub()
 
@@ -194,7 +194,7 @@ func main() {
 		logger,
 		db,
 		hub,
-		clock.NewClock(),
+		clock,
 		bbsWatchRetryWaitDuration,
 	)
 
@@ -204,7 +204,7 @@ func main() {
 		logger,
 		*reportInterval,
 		etcdOptions,
-		clock.NewClock(),
+		clock,
 	)
 
 	var server ifrit.Runner
@@ -250,13 +250,7 @@ func main() {
 	logger.Info("exited")
 }
 
-func initializeLockMaintainer(logger lager.Logger, client *api.Client, sessionManager consuladapter.SessionManager) ifrit.Runner {
-	session, err := consuladapter.NewSession("bbs", *lockTTL, client, sessionManager)
-	if err != nil {
-		logger.Fatal("Couldn't create consul session", err)
-	}
-	presenceManager := locket.NewClient(session, clock.NewClock(), logger)
-
+func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClient) ifrit.Runner {
 	uuid, err := uuid.NewV4()
 	if err != nil {
 		logger.Fatal("Couldn't generate uuid", err)
@@ -266,8 +260,8 @@ func initializeLockMaintainer(logger lager.Logger, client *api.Client, sessionMa
 		logger.Fatal("Advertise URL must be specified", nil)
 	}
 
-	bbsPresence := presence.NewBBSPresence(uuid.String(), *advertiseURL)
-	lockMaintainer, err := presenceManager.NewBBSMasterLock(bbsPresence, *lockRetryInterval)
+	bbsPresence := models.NewBBSPresence(uuid.String(), *advertiseURL)
+	lockMaintainer, err := serviceClient.NewBBSLockRunner(logger, &bbsPresence, *lockRetryInterval)
 	if err != nil {
 		logger.Fatal("Couldn't create lock maintainer", err)
 	}
@@ -310,14 +304,14 @@ func initializeEtcdDB(
 	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
 	cbClient taskworkpool.TaskCompletionClient,
-	consulDB *consuldb.ConsulDB,
+	serviceClient bbs.ServiceClient,
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(
 		format.ENCRYPTED_PROTO,
 		cryptor,
 		storeClient,
 		initializeAuctioneerClient(logger),
-		consulDB,
+		serviceClient,
 		clock.NewClock(),
 		rep.NewClientFactory(cf_http.NewClient()),
 		cbClient,
@@ -362,4 +356,13 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	return etcddb.NewStoreClient(etcdClient)
+}
+
+func initializeServiceClient(logger lager.Logger, clock clock.Clock, consulClient *api.Client, sessionManager consuladapter.SessionManager) bbs.ServiceClient {
+	consulDBSession, err := consuladapter.NewSessionNoChecks("consul-db", *lockTTL, consulClient, sessionManager)
+	if err != nil {
+		logger.Fatal("consul-session-failed", err)
+	}
+
+	return bbs.NewServiceClient(consulDBSession, clock)
 }

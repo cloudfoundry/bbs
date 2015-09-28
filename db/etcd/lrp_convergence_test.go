@@ -648,7 +648,7 @@ var _ = Describe("LrpConvergence", func() {
 			etcdHelper.SetRawDesiredLRP(desiredLRP)
 
 			cellPresence := models.NewCellPresence(cellId, "cell.example.com", "the-zone", models.CellCapacity{128, 1024, 3}, []string{}, []string{})
-			consulHelper.RegisterCell(cellPresence)
+			consulHelper.RegisterCell(&cellPresence)
 		})
 
 		JustBeforeEach(func() {
@@ -782,7 +782,7 @@ var _ = Describe("LrpConvergence", func() {
 
 		Context("when the cell is present", func() {
 			BeforeEach(func() {
-				consulHelper.RegisterCell(cellPresence)
+				consulHelper.RegisterCell(&cellPresence)
 			})
 
 			It("should not prune any LRPs", func() {
@@ -882,7 +882,7 @@ var _ = Describe("LrpConvergence", func() {
 
 				JustBeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
-					consulHelper.RegisterCell(cellPresence)
+					consulHelper.RegisterCell(&cellPresence)
 
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
@@ -934,7 +934,7 @@ var _ = Describe("LrpConvergence", func() {
 
 				JustBeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
-					consulHelper.RegisterCell(cellPresence)
+					consulHelper.RegisterCell(&cellPresence)
 
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
@@ -1045,7 +1045,7 @@ var _ = Describe("LrpConvergence", func() {
 
 				JustBeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 100), []string{}, []string{})
-					consulHelper.RegisterCell(cellPresence)
+					consulHelper.RegisterCell(&cellPresence)
 
 					index = numInstances
 
@@ -1102,7 +1102,7 @@ var _ = Describe("LrpConvergence", func() {
 
 				JustBeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(124, 1024, 6), []string{}, []string{})
-					consulHelper.RegisterCell(cellPresence)
+					consulHelper.RegisterCell(&cellPresence)
 
 					index = numInstances
 
@@ -1459,7 +1459,7 @@ func createTestData(
 	}
 
 	testData.cells.Each(func(cell *models.CellPresence) {
-		consulHelper.RegisterCell(*cell)
+		consulHelper.RegisterCell(cell)
 	})
 
 	return testData

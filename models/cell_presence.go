@@ -2,6 +2,10 @@ package models
 
 type CellSet map[string]*CellPresence
 
+func NewCellSet() CellSet {
+	return make(CellSet)
+}
+
 func (set CellSet) Add(cell *CellPresence) {
 	set[cell.CellID] = cell
 }
@@ -99,4 +103,29 @@ func (c CellPresence) Validate() error {
 	}
 
 	return nil
+}
+
+const (
+	EventTypeCellDisappeared = "cell_disappeared"
+)
+
+type CellEvent interface {
+	EventType() string
+	CellIDs() []string
+}
+
+type CellDisappearedEvent struct {
+	IDs []string
+}
+
+func NewCellDisappearedEvent(ids []string) CellDisappearedEvent {
+	return CellDisappearedEvent{ids}
+}
+
+func (CellDisappearedEvent) EventType() string {
+	return EventTypeCellDisappeared
+}
+
+func (e CellDisappearedEvent) CellIDs() []string {
+	return e.IDs
 }

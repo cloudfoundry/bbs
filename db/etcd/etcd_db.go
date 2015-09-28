@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
-	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -96,7 +96,7 @@ type ETCDDB struct {
 
 	taskCompletionClient taskworkpool.TaskCompletionClient
 
-	cellDB db.CellDB
+	serviceClient bbs.ServiceClient
 }
 
 func NewETCD(
@@ -104,7 +104,7 @@ func NewETCD(
 	cryptor encryption.Cryptor,
 	storeClient StoreClient,
 	auctioneerClient auctioneer.Client,
-	cellDB db.CellDB,
+	serviceClient bbs.ServiceClient,
 	clock clock.Clock,
 	repClientFactory rep.ClientFactory,
 	taskCC taskworkpool.TaskCompletionClient,
@@ -119,7 +119,7 @@ func NewETCD(
 		auctioneerClient:     auctioneerClient,
 		repClientFactory:     repClientFactory,
 		taskCompletionClient: taskCC,
-		cellDB:               cellDB,
+		serviceClient:               serviceClient,
 	}
 }
 

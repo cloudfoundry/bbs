@@ -1,8 +1,7 @@
-package consul_test
+package bbs_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db/consul"
-	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	. "github.com/onsi/ginkgo"
@@ -17,14 +16,7 @@ var consulRunner *consulrunner.ClusterRunner
 var consulSession *consuladapter.Session
 
 var logger *lagertest.TestLogger
-var consulHelper *consul_helpers.ConsulHelper
-
-var consulDB *consul.ConsulDB
-
-func TestDB(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Consul DB Suite")
-}
+var consulHelper *test_helpers.ConsulHelper
 
 var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
@@ -49,6 +41,10 @@ var _ = BeforeEach(func() {
 	consulRunner.Reset()
 	consulSession = consulRunner.NewSession("a-session")
 
-	consulHelper = consul_helpers.NewConsulHelper(consulSession)
-	consulDB = consul.NewConsul(consulSession)
+	consulHelper = test_helpers.NewConsulHelper(consulSession)
 })
+
+func TestBbs(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Bbs Suite")
+}

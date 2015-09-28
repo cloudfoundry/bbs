@@ -186,7 +186,7 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) error {
 	}
 
 	logger.Info("getting-cell-info")
-	cellPresence, err := db.cellDB.CellById(logger, cellId)
+	cellPresence, err := db.serviceClient.CellById(logger, cellId)
 	if err != nil {
 		logger.Error("failed-getting-cell-info", err)
 		return nil

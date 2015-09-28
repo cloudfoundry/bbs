@@ -99,9 +99,8 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 		metric.Metric(domainMetricPrefix + domain).Send(1)
 	}
 
-	cellsLoader := db.cellDB.NewCellsLoader(logger)
 	logger.Debug("listing-cells")
-	cellSet, modelErr := cellsLoader.Cells()
+	cellSet, modelErr := db.serviceClient.Cells(logger)
 	if modelErr != nil {
 		if !models.ErrResourceNotFound.Equal(modelErr) {
 			logger.Debug("failed-listing-cells")

@@ -9,11 +9,11 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -52,7 +52,7 @@ var bbsProcess ifrit.Process
 var consulSession *consuladapter.Session
 var consulRunner *consulrunner.ClusterRunner
 var etcdHelper *etcd_helpers.ETCDHelper
-var consulHelper *consul_helpers.ConsulHelper
+var consulHelper *test_helpers.ConsulHelper
 var auctioneerServer *ghttp.Server
 var testMetricsListener net.PacketConn
 var testMetricsChan chan *events.ValueMetric
@@ -164,7 +164,7 @@ var _ = BeforeEach(func() {
 	Expect(err).NotTo(HaveOccurred())
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient)
-	consulHelper = consul_helpers.NewConsulHelper(consulSession)
+	consulHelper = test_helpers.NewConsulHelper(consulSession)
 })
 
 var _ = AfterEach(func() {
