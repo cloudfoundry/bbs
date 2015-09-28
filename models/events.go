@@ -1,8 +1,6 @@
 package models
 
-import (
-	"github.com/gogo/protobuf/proto"
-)
+import "github.com/gogo/protobuf/proto"
 
 type Event interface {
 	EventType() string

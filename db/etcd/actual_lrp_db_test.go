@@ -3,7 +3,7 @@ package etcd_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/bbs/db/consul"
+	"github.com/cloudfoundry-incubator/bbs"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
@@ -951,7 +951,7 @@ var _ = Describe("ActualLRPDB", func() {
 							[]string{},
 							[]string{},
 						)
-						consulHelper.RegisterCell(cellPresence)
+						consulHelper.RegisterCell(&cellPresence)
 					})
 
 					It("stops the LRPs", func() {
@@ -984,7 +984,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("cannot be retrieved", func() {
 					BeforeEach(func() {
-						_, err := consulSession.SetPresence(consul.CellSchemaPath(cellID), []byte("abcd"))
+						_, err := consulSession.SetPresence(bbs.CellSchemaPath(cellID), []byte("abcd"))
 						Expect(err).NotTo(HaveOccurred())
 					})
 

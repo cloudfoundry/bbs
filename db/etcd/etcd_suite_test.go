@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
-	"github.com/cloudfoundry-incubator/bbs/db/consul"
-	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	"github.com/cloudfoundry-incubator/rep/repfakes"
@@ -45,9 +45,9 @@ var fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
 var logger *lagertest.TestLogger
 var clock *fakeclock.FakeClock
 var etcdHelper *etcd_helpers.ETCDHelper
-var consulHelper *consul_helpers.ConsulHelper
+var consulHelper *test_helpers.ConsulHelper
 
-var cellDB db.CellDB
+var serviceClient bbs.ServiceClient
 var etcdDB db.DB
 var workPoolCreateError error
 
@@ -102,14 +102,14 @@ var _ = BeforeEach(func() {
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	storeClient = etcd.NewStoreClient(etcdClient)
-	consulHelper = consul_helpers.NewConsulHelper(consulSession)
-	cellDB = consul.NewConsul(consulSession)
+	consulHelper = test_helpers.NewConsulHelper(consulSession)
+	serviceClient = bbs.NewServiceClient(consulSession, clock)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 	fakeRepClientFactory = new(repfakes.FakeClientFactory)
 	fakeRepClient = new(repfakes.FakeClient)
 	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient)
-	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, cryptor, storeClient, fakeAuctioneerClient, cellDB, clock, fakeRepClientFactory, fakeTaskCompletionClient)
+	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {
@@ -117,6 +117,6 @@ func registerCell(cell models.CellPresence) {
 	jsonBytes, err := json.Marshal(cell)
 	Expect(err).NotTo(HaveOccurred())
 
-	_, err = consulSession.SetPresence(consul.CellSchemaPath(cell.CellID), jsonBytes)
+	_, err = consulSession.SetPresence(bbs.CellSchemaPath(cell.CellID), jsonBytes)
 	Expect(err).NotTo(HaveOccurred())
 }

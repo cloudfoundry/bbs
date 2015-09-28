@@ -354,7 +354,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				cellPresence := models.NewCellPresence("the-cell-id", "cell.example.com", "az1", models.NewCellCapacity(128, 1024, 6), []string{}, []string{})
 
 				BeforeEach(func() {
-					consulHelper.RegisterCell(cellPresence)
+					consulHelper.RegisterCell(&cellPresence)
 
 					for i := int32(0); i < lrp.Instances; i++ {
 						instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellID)
@@ -481,7 +481,7 @@ var _ = Describe("DesiredLRPDB", func() {
 					cellPresence := models.NewCellPresence("the-cell-id", "cell.example.com", "az1", models.NewCellCapacity(128, 1024, 6), []string{}, []string{})
 
 					BeforeEach(func() {
-						consulHelper.RegisterCell(cellPresence)
+						consulHelper.RegisterCell(&cellPresence)
 
 						for i := int32(0); i < lrp.Instances; i++ {
 							instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellID)

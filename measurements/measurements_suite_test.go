@@ -10,7 +10,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/db/consul/test/consul_helpers"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
@@ -48,7 +47,6 @@ var bbsProcess ifrit.Process
 var consulSession *consuladapter.Session
 var consulRunner *consulrunner.ClusterRunner
 var etcdHelper *etcd_helpers.ETCDHelper
-var consulHelper *consul_helpers.ConsulHelper
 var auctioneerServer *ghttp.Server
 
 func TestMeasurements(t *testing.T) {

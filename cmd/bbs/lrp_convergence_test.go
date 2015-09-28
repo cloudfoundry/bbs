@@ -24,7 +24,7 @@ var _ = Describe("Convergence API", func() {
 				[]string{},
 				[]string{},
 			)
-			consulHelper.RegisterCell(cellPresence)
+			consulHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
 			etcdHelper.CreateValidDesiredLRP(processGuid)
 		})

@@ -587,7 +587,7 @@ func (db *ETCDDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 			var cell *models.CellPresence
 			key := lrp.ActualLRPKey
 			instanceKey := lrp.ActualLRPInstanceKey
-			cell, err = db.cellDB.CellById(logger, instanceKey.CellId)
+			cell, err = db.serviceClient.CellById(logger, instanceKey.CellId)
 			if err != nil {
 				bbsErr := models.ConvertError(err)
 				if bbsErr.Type == models.Error_ResourceNotFound {
