@@ -135,7 +135,7 @@ func main() {
 	cf_debug_server.AddFlags(flag.CommandLine)
 	cf_lager.AddFlags(flag.CommandLine)
 	etcdFlags := AddETCDFlags(flag.CommandLine)
-	encryptionFlags := AddEncryptionFlags(flag.CommandLine)
+	encryptionFlags := encryption.AddEncryptionFlags(flag.CommandLine)
 
 	flag.Parse()
 

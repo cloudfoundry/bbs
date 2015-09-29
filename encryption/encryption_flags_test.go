@@ -1,9 +1,9 @@
-package main_test
+package encryption_test
 
 import (
 	"flag"
 
-	"github.com/cloudfoundry-incubator/bbs/cmd/bbs"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,7 +17,7 @@ var _ = Describe("Encryption Flags", func() {
 
 	JustBeforeEach(func() {
 		flagSet = flag.NewFlagSet("test", 2)
-		encryptionFlags = main.AddEncryptionFlags(flagSet)
+		encryptionFlags = encryption.AddEncryptionFlags(flagSet)
 	})
 
 	Describe("Validate", func() {

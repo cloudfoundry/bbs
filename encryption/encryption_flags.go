@@ -1,11 +1,9 @@
-package main
+package encryption
 
 import (
 	"errors"
 	"flag"
 	"strings"
-
-	"github.com/cloudfoundry-incubator/bbs/encryption"
 )
 
 type EncryptionKeys []string
@@ -40,7 +38,7 @@ func AddEncryptionFlags(flagSet *flag.FlagSet) *EncryptionFlags {
 	return ef
 }
 
-func (ef *EncryptionFlags) Validate() (encryption.KeyManager, error) {
+func (ef *EncryptionFlags) Validate() (KeyManager, error) {
 	if len(ef.encryptionKeys) == 0 {
 		return nil, errors.New("Must have at least one encryption key set")
 	}
@@ -49,8 +47,8 @@ func (ef *EncryptionFlags) Validate() (encryption.KeyManager, error) {
 		return nil, errors.New("Must select an active encryption key")
 	}
 
-	var encryptionKey encryption.Key
-	keys := make([]encryption.Key, len(ef.encryptionKeys))
+	var encryptionKey Key
+	keys := make([]Key, len(ef.encryptionKeys))
 
 	for i, key := range ef.encryptionKeys {
 		splitKey := strings.SplitN(key, ":", 2)
@@ -59,7 +57,7 @@ func (ef *EncryptionFlags) Validate() (encryption.KeyManager, error) {
 		}
 		label := splitKey[0]
 		phrase := splitKey[1]
-		key, err := encryption.NewKey(label, phrase)
+		key, err := NewKey(label, phrase)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +72,7 @@ func (ef *EncryptionFlags) Validate() (encryption.KeyManager, error) {
 		return nil, errors.New("The selected active key must be listed on the encryption keys flag")
 	}
 
-	keyManager, err := encryption.NewKeyManager(encryptionKey, keys)
+	keyManager, err := NewKeyManager(encryptionKey, keys)
 	if err != nil {
 		return nil, err
 	}
