@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	dbFakes "github.com/cloudfoundry-incubator/bbs/db/fakes"
@@ -13,6 +14,8 @@ import (
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -65,17 +68,29 @@ var _ = Describe("TaskWorker", func() {
 			taskDB.DeleteTaskReturns(nil)
 		})
 
-		simulateTaskCompleting := func() {
+		simulateTaskCompleting := func(signals <-chan os.Signal, ready chan<- struct{}) error {
+			close(ready)
 			task = model_helpers.NewValidTask("the-task-guid")
 			task.CompletionCallbackUrl = callbackURL
 			taskworkpool.HandleCompletedTask(logger, httpClient, taskDB, task)
+			return nil
 		}
 
-		Context("when the task has a completion callback URL", func() {
-			It("marks the task as resolving", func() {
-				Expect(taskDB.ResolvingTaskCallCount()).To(Equal(0))
+		var process ifrit.Process
+		JustBeforeEach(func() {
+			process = ifrit.Invoke(ifrit.RunFunc(simulateTaskCompleting))
+		})
 
-				go simulateTaskCompleting()
+		AfterEach(func() {
+			ginkgomon.Kill(process)
+		})
+
+		Context("when the task has a completion callback URL", func() {
+			BeforeEach(func() {
+				Expect(taskDB.ResolvingTaskCallCount()).To(Equal(0))
+			})
+
+			It("marks the task as resolving", func() {
 				statusCodes <- 200
 
 				Eventually(taskDB.ResolvingTaskCallCount).Should(Equal(1))
@@ -89,18 +104,13 @@ var _ = Describe("TaskWorker", func() {
 				})
 
 				It("does not make a request to the task's callback URL", func() {
-					go simulateTaskCompleting()
-
 					Consistently(fakeServer.ReceivedRequests, 0.25).Should(BeEmpty())
 				})
 			})
 
 			Context("when marking the task as resolving succeeds", func() {
 				It("POSTs to the task's callback URL", func() {
-					go simulateTaskCompleting()
-
 					statusCodes <- 200
-
 					Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
 				})
 
@@ -122,8 +132,6 @@ var _ = Describe("TaskWorker", func() {
 					})
 
 					It("resolves the task", func() {
-						go simulateTaskCompleting()
-
 						statusCodes <- 200
 
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
@@ -134,8 +142,6 @@ var _ = Describe("TaskWorker", func() {
 
 				Context("when the request fails with a 4xx response code", func() {
 					It("resolves the task", func() {
-						go simulateTaskCompleting()
-
 						statusCodes <- 403
 
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
@@ -146,8 +152,6 @@ var _ = Describe("TaskWorker", func() {
 
 				Context("when the request fails with a 500 response code", func() {
 					It("resolves the task", func() {
-						go simulateTaskCompleting()
-
 						statusCodes <- 500
 
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
@@ -158,7 +162,6 @@ var _ = Describe("TaskWorker", func() {
 
 				Context("when the request fails with a 503 or 504 response code", func() {
 					It("retries the request 2 more times", func() {
-						go simulateTaskCompleting()
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
 
 						statusCodes <- 503
@@ -180,7 +183,6 @@ var _ = Describe("TaskWorker", func() {
 
 					Context("when the request fails every time", func() {
 						It("does not resolve the task", func() {
-							go simulateTaskCompleting()
 							Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
 
 							statusCodes <- 503
@@ -202,9 +204,11 @@ var _ = Describe("TaskWorker", func() {
 				})
 
 				Context("when DeleteTask fails", func() {
-					It("logs an error and returns", func() {
+					BeforeEach(func() {
 						taskDB.DeleteTaskReturns(&models.Error{})
-						go simulateTaskCompleting()
+					})
+
+					It("logs an error and returns", func() {
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
 						statusCodes <- 200
 
@@ -225,8 +229,6 @@ var _ = Describe("TaskWorker", func() {
 					})
 
 					It("retries the request 2 more times", func() {
-						go simulateTaskCompleting()
-
 						sleepCh <- timeout + 100*time.Millisecond
 						Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
 
@@ -243,7 +245,6 @@ var _ = Describe("TaskWorker", func() {
 
 					Context("when the request fails with timeout once and then succeeds", func() {
 						It("deletes the task", func() {
-							go simulateTaskCompleting()
 							sleepCh <- (timeout + 100*time.Millisecond)
 
 							Eventually(fakeServer.ReceivedRequests).Should(HaveLen(1))
@@ -264,7 +265,6 @@ var _ = Describe("TaskWorker", func() {
 		Context("when the task doesn't have a completion callback URL", func() {
 			BeforeEach(func() {
 				callbackURL = ""
-				go simulateTaskCompleting()
 			})
 
 			It("does not mark the task as resolving", func() {
