@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-type EncryptionKeys []string
+type EncryptionKeys map[string]struct{}
 
-func (*EncryptionKeys) String() string {
+func (EncryptionKeys) String() string {
 	return ""
 }
 
-func (e *EncryptionKeys) Set(key string) error {
-	*e = append(*e, key)
+func (e EncryptionKeys) Set(key string) error {
+	e[key] = struct{}{}
 	return nil
 }
 
@@ -22,12 +22,18 @@ type EncryptionFlags struct {
 	encryptionKeys EncryptionKeys
 }
 
+func NewEncryptionFlags() EncryptionFlags {
+	return EncryptionFlags{
+		encryptionKeys: make(EncryptionKeys),
+	}
+}
+
 func AddEncryptionFlags(flagSet *flag.FlagSet) *EncryptionFlags {
-	ef := &EncryptionFlags{}
+	ef := NewEncryptionFlags()
 	flagSet.Var(
 		&ef.encryptionKeys,
 		"encryptionKey",
-		"Encryption key in label:phassphrase format (may be specified multiple times)",
+		"Encryption key in label:passphrase format (may be specified multiple times)",
 	)
 	flagSet.StringVar(
 		&ef.activeKeyLabel,
@@ -35,7 +41,7 @@ func AddEncryptionFlags(flagSet *flag.FlagSet) *EncryptionFlags {
 		"",
 		"Label of the encryption key to be used when writing to the database",
 	)
-	return ef
+	return &ef
 }
 
 func (ef *EncryptionFlags) Validate() (KeyManager, error) {
@@ -48,9 +54,9 @@ func (ef *EncryptionFlags) Validate() (KeyManager, error) {
 	}
 
 	var encryptionKey Key
-	keys := make([]Key, len(ef.encryptionKeys))
+	keys := make([]Key, 0, len(ef.encryptionKeys))
 
-	for i, key := range ef.encryptionKeys {
+	for key := range ef.encryptionKeys {
 		splitKey := strings.SplitN(key, ":", 2)
 		if len(splitKey) != 2 {
 			return nil, errors.New("Could not parse encryption keys")
@@ -61,7 +67,7 @@ func (ef *EncryptionFlags) Validate() (KeyManager, error) {
 		if err != nil {
 			return nil, err
 		}
-		keys[i] = key
+		keys = append(keys, key)
 
 		if label == ef.activeKeyLabel {
 			encryptionKey = key

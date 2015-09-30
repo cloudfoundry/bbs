@@ -12,7 +12,7 @@ import (
 var _ = Describe("Encryption Flags", func() {
 	var (
 		flagSet         *flag.FlagSet
-		encryptionFlags *main.EncryptionFlags
+		encryptionFlags *encryption.EncryptionFlags
 	)
 
 	JustBeforeEach(func() {
@@ -33,6 +33,20 @@ var _ = Describe("Encryption Flags", func() {
 
 			_, err := encryptionFlags.Validate()
 			Expect(err).To(HaveOccurred())
+		})
+
+		It("doesn't add duplicate keys", func() {
+			args = append(args, "-encryptionKey="+"label:key:with:colon")
+			args = append(args, "-activeKeyLabel="+"label")
+			flagSet.Parse(args)
+
+			_, err := encryptionFlags.Validate()
+			Expect(err).ToNot(HaveOccurred())
+
+			flagSet.Parse(args)
+			km, err := encryptionFlags.Validate()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(km.EncryptionKey().Label()).To(Equal("label"))
 		})
 
 		It("ensures there's a selected active key", func() {
