@@ -21,12 +21,12 @@ var ()
 func NewEventHandler(logger lager.Logger, hub events.Hub) *EventHandler {
 	return &EventHandler{
 		hub:    hub,
-		logger: logger.Session("domain-handler"),
+		logger: logger.Session("events-handler"),
 	}
 }
 
 func (h *EventHandler) Subscribe(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("event-handler")
+	logger := h.logger.Session("subscribe")
 
 	closeNotifier := w.(http.CloseNotifier).CloseNotify()
 
