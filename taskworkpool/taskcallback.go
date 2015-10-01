@@ -15,7 +15,7 @@ import (
 )
 
 const MAX_CB_RETRIES = 3
-const TASK_CB_WORKERS = 20
+const TASK_CB_WORKERS = 100
 
 //go:generate counterfeiter . TaskCompletionClient
 
