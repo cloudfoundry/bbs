@@ -58,20 +58,40 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
 	db.ResolveConvergence(logger, input.DesiredLRPs, changes)
 }
 
+type lrpMetricCounter struct {
+	startingLRPs        int32
+	runningLRPs         int32
+	crashedActualLRPs   int32
+	crashingDesiredLRPs int32
+	desiredLRPs         int32
+}
+
+func (lmc lrpMetricCounter) Send() {
+	startingLRPs.Send(int(lmc.startingLRPs))
+	runningLRPs.Send(int(lmc.runningLRPs))
+	crashedActualLRPs.Send(int(lmc.crashedActualLRPs))
+	crashingDesiredLRPs.Send(int(lmc.crashingDesiredLRPs))
+	desiredLRPs.Send(int(lmc.desiredLRPs))
+}
+
 func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceInput, error) {
 	guids := map[string]struct{}{}
 
 	// always fetch actualLRPs before desiredLRPs to ensure correctness
 	logger.Info("gathering-and-pruning-actual-lrps")
-	actuals, err := db.gatherAndPruneActualLRPs(logger, guids) // modifies guids
+	lrpMetricCounter := &lrpMetricCounter{}
+
+	actuals, err := db.gatherAndPruneActualLRPs(logger, guids, lrpMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-and-pruning-actual-lrps", err)
 
-		startingLRPs.Send(-1)
-		runningLRPs.Send(-1)
-		crashedActualLRPs.Send(-1)
-		crashingDesiredLRPs.Send(-1)
-		desiredLRPs.Send(-1)
+		lrpMetricCounter.startingLRPs = -1
+		lrpMetricCounter.runningLRPs = -1
+		lrpMetricCounter.crashedActualLRPs = -1
+		lrpMetricCounter.crashingDesiredLRPs = -1
+		lrpMetricCounter.desiredLRPs = -1
+
+		lrpMetricCounter.Send()
 
 		return &models.ConvergenceInput{}, err
 	}
@@ -79,15 +99,18 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
 	logger.Info("gathering-desired-lrps")
-	desireds, err := db.GatherDesiredLRPs(logger, guids) // modifies guids
+	desireds, err := db.GatherDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-desired-lrps", err)
 
-		desiredLRPs.Send(-1)
+		lrpMetricCounter.desiredLRPs = -1
+		lrpMetricCounter.Send()
 
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Info("succeeded-gathering-desired-lrps")
+
+	lrpMetricCounter.Send()
 
 	logger.Debug("listing-domains")
 	domains, err := db.Domains(logger)
@@ -120,15 +143,15 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	}, nil
 }
 
-func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]map[int32]*models.ActualLRP, error) {
-	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, true)
+func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *lrpMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
+	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, true, lmc)
 }
 
-func (db *ETCDDB) GatherActualLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]map[int32]*models.ActualLRP, error) {
-	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, false)
+func (db *ETCDDB) GatherActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *lrpMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
+	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, false, lmc)
 }
 
-func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, doPrune bool) (map[string]map[int32]*models.ActualLRP, error) {
+func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, doPrune bool, lmc *lrpMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
 	response, modelErr := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
@@ -148,9 +171,6 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 
 	logger.Info("walking-actual-lrp-tree")
 	works := []func(){}
-	var startingCount int32 = 0
-	var runningCount int32 = 0
-	var crashedCount int32 = 0
 	crashingDesireds := map[string]struct{}{}
 
 	for _, guidGroup := range response.Nodes {
@@ -177,14 +197,14 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 
 					switch actual.State {
 					case models.ActualLRPStateClaimed:
-						atomic.AddInt32(&startingCount, 1)
+						atomic.AddInt32(&lmc.startingLRPs, 1)
 					case models.ActualLRPStateRunning:
-						atomic.AddInt32(&runningCount, 1)
+						atomic.AddInt32(&lmc.runningLRPs, 1)
 					case models.ActualLRPStateCrashed:
 						crashingDesiredsLock.Lock()
 						crashingDesireds[actual.ProcessGuid] = struct{}{}
 						crashingDesiredsLock.Unlock()
-						atomic.AddInt32(&crashedCount, 1)
+						atomic.AddInt32(&lmc.crashedActualLRPs, 1)
 					}
 
 					guidsLock.Lock()
@@ -244,12 +264,9 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 		} else {
 			logger.Info("succeeded-deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
 		}
-
-		startingLRPs.Send(int(startingCount))
-		runningLRPs.Send(int(runningCount))
-		crashedActualLRPs.Send(int(crashedCount))
-		crashingDesiredLRPs.Send(len(crashingDesireds))
 	}
+
+	lmc.crashingDesiredLRPs = int32(len(crashingDesireds))
 
 	return actuals, nil
 }
@@ -277,7 +294,7 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 	return nil
 }
 
-func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}) (map[string]*models.DesiredLRP, error) {
+func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *lrpMetricCounter) (map[string]*models.DesiredLRP, error) {
 	desiredLRPsRoot, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
@@ -295,7 +312,6 @@ func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 	var malformedSchedulingInfos int32
 	var malformedRunInfos int32
 	var guidsLock, schedulingInfosLock, runInfosLock sync.Mutex
-	var desiredInstanceCount int32
 
 	works := []func(){}
 	logger.Info("walking-desired-lrp-components-tree")
@@ -315,7 +331,7 @@ func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 						schedulingInfosLock.Lock()
 						schedulingInfos[schedulingInfo.ProcessGuid] = &schedulingInfo
 						schedulingInfosLock.Unlock()
-						atomic.AddInt32(&desiredInstanceCount, schedulingInfo.Instances)
+						atomic.AddInt32(&lmc.desiredLRPs, schedulingInfo.Instances)
 
 						guidsLock.Lock()
 						guids[schedulingInfo.ProcessGuid] = struct{}{}
@@ -355,7 +371,6 @@ func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 
 	malformedSchedulingInfosMetric.Add(uint64(malformedSchedulingInfos))
 	malformedRunInfosMetric.Add(uint64(malformedRunInfos))
-	desiredLRPs.Send(int(desiredInstanceCount))
 
 	logger.Info("done-walking-desired-lrp-tree")
 
