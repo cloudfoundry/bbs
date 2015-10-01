@@ -55,7 +55,7 @@ var etcdHelper *etcd_helpers.ETCDHelper
 var consulHelper *test_helpers.ConsulHelper
 var auctioneerServer *ghttp.Server
 var testMetricsListener net.PacketConn
-var testMetricsChan chan *events.ValueMetric
+var testMetricsChan chan *events.Envelope
 
 func TestBBS(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -119,7 +119,7 @@ var _ = BeforeEach(func() {
 	}
 
 	testMetricsListener, _ = net.ListenPacket("udp", "127.0.0.1:0")
-	testMetricsChan = make(chan *events.ValueMetric, 1)
+	testMetricsChan = make(chan *events.Envelope, 1)
 	go func() {
 		defer GinkgoRecover()
 		for {
@@ -133,13 +133,7 @@ var _ = BeforeEach(func() {
 			var envelope events.Envelope
 			err = proto.Unmarshal(buffer[:n], &envelope)
 			Expect(err).NotTo(HaveOccurred())
-
-			if envelope.GetEventType() == events.Envelope_ValueMetric {
-				select {
-				case testMetricsChan <- envelope.ValueMetric:
-				default:
-				}
-			}
+			testMetricsChan <- &envelope
 		}
 	}()
 

@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("Middleware", func() {
-	Describe("MeasureWrap", func() {
+	Describe("EmitLatency", func() {
 		var (
 			sender  *fake.FakeMetricSender
 			handler http.HandlerFunc
@@ -24,15 +24,7 @@ var _ = Describe("Middleware", func() {
 			dropsonde_metrics.Initialize(sender, nil)
 
 			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
-			handler = handlers.MeasureWrap(handler)
-		})
-
-		It("reports call count", func() {
-			handler.ServeHTTP(nil, nil)
-			handler.ServeHTTP(nil, nil)
-			handler.ServeHTTP(nil, nil)
-
-			Expect(sender.GetCounter("RequestCount")).To(Equal(uint64(3)))
+			handler = handlers.EmitLatency(handler)
 		})
 
 		It("reports latency", func() {
@@ -41,6 +33,29 @@ var _ = Describe("Middleware", func() {
 			latency := sender.GetValue("RequestLatency")
 			Expect(latency.Value).NotTo(BeZero())
 			Expect(latency.Unit).To(Equal("nanos"))
+		})
+	})
+
+	Describe("RequestCountWrap", func() {
+		var (
+			sender  *fake.FakeMetricSender
+			handler http.HandlerFunc
+		)
+
+		BeforeEach(func() {
+			sender = fake.NewFakeMetricSender()
+			dropsonde_metrics.Initialize(sender, nil)
+
+			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
+			handler = handlers.RequestCountWrap(handler)
+		})
+
+		It("reports call count", func() {
+			handler.ServeHTTP(nil, nil)
+			handler.ServeHTTP(nil, nil)
+			handler.ServeHTTP(nil, nil)
+
+			Expect(sender.GetCounter("RequestCount")).To(Equal(uint64(3)))
 		})
 	})
 })

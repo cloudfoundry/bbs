@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	sonde_events "github.com/cloudfoundry/sonde-go/events"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -79,8 +80,7 @@ var _ = Describe("Events API", func() {
 			}
 		}
 
-		err = client.RemoveDesiredLRP(primerLRP.ProcessGuid)
-		Expect(err).NotTo(HaveOccurred())
+		etcdHelper.DeleteDesiredLRP(primerLRP.ProcessGuid)
 
 		var event models.Event
 		for {
@@ -92,10 +92,48 @@ var _ = Describe("Events API", func() {
 	})
 
 	AfterEach(func() {
-		err := eventSource.Close()
-		Expect(err).NotTo(HaveOccurred())
 		Eventually(done).Should(BeClosed())
 		ginkgomon.Kill(bbsProcess)
+	})
+
+	It("does not emit latency metrics", func() {
+		eventSource.Close()
+
+		timeout := time.After(50 * time.Millisecond)
+		for {
+			select {
+			case envelope := <-testMetricsChan:
+				if envelope.GetEventType() == sonde_events.Envelope_ValueMetric {
+					Expect(*envelope.ValueMetric.Name).NotTo(Equal("RequestLatency"))
+				}
+			case <-timeout:
+				return
+			}
+		}
+	})
+
+	It("emits request counting metrics", func() {
+		eventSource.Close()
+
+		timeout := time.After(50 * time.Millisecond)
+		var delta uint64
+	OUTER_LOOP:
+		for {
+			select {
+			case envelope := <-testMetricsChan:
+				if envelope.GetEventType() == sonde_events.Envelope_CounterEvent {
+					counter := envelope.CounterEvent
+					if *counter.Name == "RequestCount" {
+						delta = *counter.Delta
+						break OUTER_LOOP
+					}
+				}
+			case <-timeout:
+				break OUTER_LOOP
+			}
+		}
+
+		Expect(delta).To(BeEquivalentTo(1))
 	})
 
 	Describe("Actual LRPs", func() {
@@ -127,6 +165,11 @@ var _ = Describe("Events API", func() {
 				State:        models.ActualLRPStateUnclaimed,
 				Since:        time.Now().UnixNano(),
 			}
+		})
+
+		AfterEach(func() {
+			err := eventSource.Close()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("receives events", func() {
@@ -279,6 +322,11 @@ var _ = Describe("Events API", func() {
 					LogSource: "logs",
 				}),
 			}
+		})
+
+		AfterEach(func() {
+			err := eventSource.Close()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("receives events", func() {

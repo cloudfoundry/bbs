@@ -34,11 +34,17 @@ func UnavailableWrap(handler http.Handler, serviceReady <-chan struct{}) http.Ha
 	}
 }
 
-func MeasureWrap(handler http.Handler) http.HandlerFunc {
+func EmitLatency(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		startTime := time.Now()
+		f(w, r)
+		requestLatency.Send(time.Since(startTime))
+	}
+}
+
+func RequestCountWrap(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestCount.Increment()
-		startTime := time.Now()
 		handler.ServeHTTP(w, r)
-		requestLatency.Send(time.Since(startTime))
 	}
 }
