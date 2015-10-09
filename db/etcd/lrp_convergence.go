@@ -58,7 +58,7 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
 	db.ResolveConvergence(logger, input.DesiredLRPs, changes)
 }
 
-type lrpMetricCounter struct {
+type LRPMetricCounter struct {
 	startingLRPs        int32
 	runningLRPs         int32
 	crashedActualLRPs   int32
@@ -66,7 +66,7 @@ type lrpMetricCounter struct {
 	desiredLRPs         int32
 }
 
-func (lmc lrpMetricCounter) Send() {
+func (lmc LRPMetricCounter) Send() {
 	startingLRPs.Send(int(lmc.startingLRPs))
 	runningLRPs.Send(int(lmc.runningLRPs))
 	crashedActualLRPs.Send(int(lmc.crashedActualLRPs))
@@ -79,19 +79,19 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 
 	// always fetch actualLRPs before desiredLRPs to ensure correctness
 	logger.Info("gathering-and-pruning-actual-lrps")
-	lrpMetricCounter := &lrpMetricCounter{}
+	LRPMetricCounter := &LRPMetricCounter{}
 
-	actuals, err := db.gatherAndPruneActualLRPs(logger, guids, lrpMetricCounter) // modifies guids
+	actuals, err := db.gatherAndPruneActualLRPs(logger, guids, LRPMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-and-pruning-actual-lrps", err)
 
-		lrpMetricCounter.startingLRPs = -1
-		lrpMetricCounter.runningLRPs = -1
-		lrpMetricCounter.crashedActualLRPs = -1
-		lrpMetricCounter.crashingDesiredLRPs = -1
-		lrpMetricCounter.desiredLRPs = -1
+		LRPMetricCounter.startingLRPs = -1
+		LRPMetricCounter.runningLRPs = -1
+		LRPMetricCounter.crashedActualLRPs = -1
+		LRPMetricCounter.crashingDesiredLRPs = -1
+		LRPMetricCounter.desiredLRPs = -1
 
-		lrpMetricCounter.Send()
+		LRPMetricCounter.Send()
 
 		return &models.ConvergenceInput{}, err
 	}
@@ -99,18 +99,18 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
 	logger.Info("gathering-desired-lrps")
-	desireds, err := db.GatherDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
+	desireds, err := db.GatherDesiredLRPs(logger, guids, LRPMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-desired-lrps", err)
 
-		lrpMetricCounter.desiredLRPs = -1
-		lrpMetricCounter.Send()
+		LRPMetricCounter.desiredLRPs = -1
+		LRPMetricCounter.Send()
 
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Info("succeeded-gathering-desired-lrps")
 
-	lrpMetricCounter.Send()
+	LRPMetricCounter.Send()
 
 	logger.Debug("listing-domains")
 	domains, err := db.Domains(logger)
@@ -143,15 +143,15 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	}, nil
 }
 
-func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *lrpMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
+func (db *ETCDDB) gatherAndPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
 	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, true, lmc)
 }
 
-func (db *ETCDDB) GatherActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *lrpMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
+func (db *ETCDDB) GatherActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
 	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, false, lmc)
 }
 
-func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, doPrune bool, lmc *lrpMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
+func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, doPrune bool, lmc *LRPMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
 	response, modelErr := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
@@ -294,7 +294,7 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 	return nil
 }
 
-func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *lrpMetricCounter) (map[string]*models.DesiredLRP, error) {
+func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]*models.DesiredLRP, error) {
 	desiredLRPsRoot, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
