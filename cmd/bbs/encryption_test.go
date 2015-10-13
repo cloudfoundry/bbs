@@ -131,7 +131,7 @@ var _ = Describe("Encryption", func() {
 				bbsArgs.ActiveKeyLabel = "my-label"
 			})
 
-			FIt("eventually rewrites existing data in encrypted format", func() {
+			It("eventually rewrites existing data in encrypted format", func() {
 				checkEncoding := func() format.Encoding {
 					res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 					Expect(err).NotTo(HaveOccurred())
