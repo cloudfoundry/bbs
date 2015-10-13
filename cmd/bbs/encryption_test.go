@@ -131,17 +131,19 @@ var _ = Describe("Encryption", func() {
 				bbsArgs.ActiveKeyLabel = "my-label"
 			})
 
-			It("rewrites existing data in encrypted format", func() {
-				By("reading it with the client")
-				returnedTask, err := client.TaskByGuid(task.TaskGuid)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(returnedTask).To(Equal(task))
+			FIt("eventually rewrites existing data in encrypted format", func() {
+				checkEncoding := func() format.Encoding {
+					res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
+					Expect(err).NotTo(HaveOccurred())
 
-				By("decrypting it manually")
-				res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
-				Expect(err).NotTo(HaveOccurred())
+					header := res.Node.Value[:format.EnvelopeOffset]
+					return format.Encoding{header[0], header[1]}
+				}
+				Eventually(checkEncoding).Should(Equal(format.BASE64_ENCRYPTED))
 
 				var decodedTask models.Task
+
+				res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
 
 				encryptionKey, err := encryption.NewKey("my-label", "my-secure-passphrase")
 				Expect(err).NotTo(HaveOccurred())
@@ -150,8 +152,6 @@ var _ = Describe("Encryption", func() {
 				cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 				serializer := format.NewSerializer(cryptor)
 
-				encoding := res.Node.Value[:format.EnvelopeOffset]
-				Expect(format.Encoding{encoding[0], encoding[1]}).To(Equal(format.BASE64_ENCRYPTED))
 				err = serializer.Unmarshal(logger, []byte(res.Node.Value), &decodedTask)
 				Expect(err).NotTo(HaveOccurred())
 
