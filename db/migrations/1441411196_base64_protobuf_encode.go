@@ -23,9 +23,7 @@ type Base64ProtobufEncode struct {
 }
 
 func NewBase64ProtobufEncode() migration.Migration {
-	return &Base64ProtobufEncode{
-		serializer: format.NewSerializer(nil),
-	}
+	return &Base64ProtobufEncode{}
 }
 
 func (b Base64ProtobufEncode) Version() int64 {
@@ -36,7 +34,9 @@ func (b *Base64ProtobufEncode) SetStoreClient(storeClient etcd.StoreClient) {
 	b.storeClient = storeClient
 }
 
-func (b *Base64ProtobufEncode) SetCryptor(cryptor encryption.Cryptor) {}
+func (b *Base64ProtobufEncode) SetCryptor(cryptor encryption.Cryptor) {
+	b.serializer = format.NewSerializer(cryptor)
+}
 
 func (b Base64ProtobufEncode) Up(logger lager.Logger) error {
 	// Desired LRPs

@@ -1,12 +1,14 @@
 package migrations_test
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 
 	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -21,6 +23,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 	var (
 		migration  migration.Migration
 		serializer format.Serializer
+		cryptor    encryption.Cryptor
 
 		logger *lagertest.TestLogger
 	)
@@ -28,7 +31,12 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 
-		serializer = format.NewSerializer(nil)
+		encryptionKey, err := encryption.NewKey("label", "passphrase")
+		Expect(err).NotTo(HaveOccurred())
+		keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
+		Expect(err).NotTo(HaveOccurred())
+		cryptor = encryption.NewCryptor(keyManager, rand.Reader)
+		serializer = format.NewSerializer(cryptor)
 		migration = migrations.NewBase64ProtobufEncode()
 	})
 
@@ -86,6 +94,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 
 		JustBeforeEach(func() {
 			migration.SetStoreClient(storeClient)
+			migration.SetCryptor(cryptor)
 			migrationErr = migration.Up(logger)
 		})
 
