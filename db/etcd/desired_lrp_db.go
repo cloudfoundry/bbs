@@ -10,8 +10,6 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const createActualMaxWorkers = 100
-
 type guidSet struct {
 	set map[string]struct{}
 }

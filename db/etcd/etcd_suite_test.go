@@ -109,7 +109,7 @@ var _ = BeforeEach(func() {
 	fakeRepClient = new(repfakes.FakeClient)
 	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient)
-	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
+	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {
