@@ -349,7 +349,6 @@ func (db *ETCDDB) createDesiredLRPSchedulingInfo(logger lager.Logger, scheduling
 }
 
 func (db *ETCDDB) updateDesiredLRPSchedulingInfo(logger lager.Logger, schedulingInfo *models.DesiredLRPSchedulingInfo, index uint64) error {
-
 	value, err := db.serializeModel(logger, schedulingInfo)
 	if err != nil {
 		logger.Error("failed-to-serialize-scheduling-info", err)

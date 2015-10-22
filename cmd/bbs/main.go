@@ -133,13 +133,13 @@ var convergenceWorkers = flag.Int(
 
 var updateWorkers = flag.Int(
 	"updateWorkers",
-	100,
+	1000,
 	"Max concurrency for etcd updates in a single request",
 )
 
 var taskCallBackWorkers = flag.Int(
 	"taskCallBackWorkers",
-	100,
+	1000,
 	"Max concurrency for task callback requests",
 )
 
