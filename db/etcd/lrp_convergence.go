@@ -237,7 +237,7 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 	}
 	logger.Info("done-walking-actual-lrp-tree")
 
-	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-to-create-throttler", err)
 	}
@@ -284,7 +284,7 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 		})
 	}
 
-	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		return err
 	}
@@ -362,7 +362,7 @@ func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 		}
 	}
 
-	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-to-create-throttler", err)
 	}
@@ -404,7 +404,7 @@ func (db *ETCDDB) batchDeleteNodes(keys []string, logger lager.Logger) {
 		})
 	}
 
-	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-to-create-throttler", err)
 	}
@@ -520,9 +520,9 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 		works = append(works, db.resolveRestartableCrashedActualLRPS(logger, actual, startRequests))
 	}
 
-	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": throttlerSize, "num-works": len(works)})
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": db.convergenceWorkersSize, "num-works": len(works)})
 		return
 	}
 

@@ -72,8 +72,6 @@ func TaskSchemaPathByGuid(taskGuid string) string {
 	return path.Join(TaskSchemaRoot, taskGuid)
 }
 
-const maxDesiredLRPGetterWorkPoolSize = 50
-
 type ETCDOptions struct {
 	CertFile               string
 	KeyFile                string
@@ -85,14 +83,16 @@ type ETCDOptions struct {
 }
 
 type ETCDDB struct {
-	format            *format.Format
-	serializer        format.Serializer
-	client            StoreClient
-	clock             clock.Clock
-	inflightWatches   map[chan bool]bool
-	inflightWatchLock *sync.Mutex
-	auctioneerClient  auctioneer.Client
-	repClientFactory  rep.ClientFactory
+	format                 *format.Format
+	convergenceWorkersSize int
+	updateWorkersSize      int
+	serializer             format.Serializer
+	client                 StoreClient
+	clock                  clock.Clock
+	inflightWatches        map[chan bool]bool
+	inflightWatchLock      *sync.Mutex
+	auctioneerClient       auctioneer.Client
+	repClientFactory       rep.ClientFactory
 
 	taskCompletionClient taskworkpool.TaskCompletionClient
 
@@ -101,6 +101,8 @@ type ETCDDB struct {
 
 func NewETCD(
 	serializationFormat *format.Format,
+	convergenceWorkersSize int,
+	updateWorkersSize int,
 	cryptor encryption.Cryptor,
 	storeClient StoreClient,
 	auctioneerClient auctioneer.Client,
@@ -110,16 +112,18 @@ func NewETCD(
 	taskCC taskworkpool.TaskCompletionClient,
 ) *ETCDDB {
 	return &ETCDDB{
-		format:               serializationFormat,
-		serializer:           format.NewSerializer(cryptor),
-		client:               storeClient,
-		clock:                clock,
-		inflightWatches:      map[chan bool]bool{},
-		inflightWatchLock:    &sync.Mutex{},
-		auctioneerClient:     auctioneerClient,
-		repClientFactory:     repClientFactory,
-		taskCompletionClient: taskCC,
-		serviceClient:               serviceClient,
+		format:                 serializationFormat,
+		convergenceWorkersSize: convergenceWorkersSize,
+		updateWorkersSize:      updateWorkersSize,
+		serializer:             format.NewSerializer(cryptor),
+		client:                 storeClient,
+		clock:                  clock,
+		inflightWatches:        map[chan bool]bool{},
+		inflightWatchLock:      &sync.Mutex{},
+		auctioneerClient:       auctioneerClient,
+		repClientFactory:       repClientFactory,
+		taskCompletionClient:   taskCC,
+		serviceClient:          serviceClient,
 	}
 }
 

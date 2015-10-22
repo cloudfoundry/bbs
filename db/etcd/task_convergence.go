@@ -10,8 +10,6 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const throttlerSize = 20
-
 const (
 	convergeTaskRunsCounter = metric.Counter("ConvergenceTaskRuns")
 	convergeTaskDuration    = metric.Duration("ConvergenceTaskDuration")
@@ -267,7 +265,7 @@ func (db *ETCDDB) batchCompareAndSwapTasks(tasksToCAS []compareAndSwappableTask,
 		})
 	}
 
-	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		return err
 	}
@@ -295,7 +293,7 @@ func (db *ETCDDB) batchDeleteTasks(taskGuids []string, logger lager.Logger) {
 		})
 	}
 
-	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-to-create-throttler", err)
 	}

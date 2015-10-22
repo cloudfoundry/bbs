@@ -15,8 +15,6 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const retireActualThrottlerSize = 20
-
 func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	node, err := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
 	bbsErr := models.ConvertError(err)
@@ -26,39 +24,41 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFi
 		}
 		return nil, err
 	}
-	if node.Nodes.Len() == 0 {
+	if len(node.Nodes) == 0 {
 		return []*models.ActualLRPGroup{}, nil
 	}
 
 	groups := []*models.ActualLRPGroup{}
 
-	groupsLock := sync.Mutex{}
 	var workErr atomic.Value
-	works := []func(){}
+	groupChan := make(chan []*models.ActualLRPGroup, len(node.Nodes))
+	wg := sync.WaitGroup{}
 
+	logger.Debug("performing-deserialization-work")
 	for _, node := range node.Nodes {
 		node := node
 
-		works = append(works, func() {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 			g, err := db.parseActualLRPGroups(logger, node, filter)
 			if err != nil {
 				workErr.Store(err)
 				return
 			}
-			groupsLock.Lock()
-			groups = append(groups, g...)
-			groupsLock.Unlock()
-		})
+			groupChan <- g
+		}()
 	}
 
-	throttler, err := workpool.NewThrottler(maxActualGroupGetterWorkPoolSize, works)
-	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": maxActualGroupGetterWorkPoolSize, "num-works": len(works)})
-		return []*models.ActualLRPGroup{}, models.ErrUnknownError
+	go func() {
+		wg.Wait()
+		close(groupChan)
+	}()
+
+	for g := range groupChan {
+		groups = append(groups, g...)
 	}
 
-	logger.Debug("performing-deserialization-work")
-	throttler.Work()
 	if err, ok := workErr.Load().(error); ok {
 		logger.Error("failed-performing-deserialization-work", err)
 		return []*models.ActualLRPGroup{}, models.ErrUnknownError
@@ -343,14 +343,16 @@ func (db *ETCDDB) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.
 		}
 	}
 
-	throttler, err := workpool.NewThrottler(createActualMaxWorkers, works)
+	throttler, err := workpool.NewThrottler(db.updateWorkersSize, works)
 	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": createActualMaxWorkers, "num-works": len(works)})
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": db.updateWorkersSize, "num-works": len(works)})
 		return []int{}
 	}
 
-	throttler.Work()
-	close(createdIndicesChan)
+	go func() {
+		throttler.Work()
+		close(createdIndicesChan)
+	}()
 
 	createdIndices := make([]int, 0, count)
 	for createdIndex := range createdIndicesChan {
@@ -638,9 +640,9 @@ func (db *ETCDDB) retireActualLRPs(logger lager.Logger, keys []*models.ActualLRP
 		}
 	}
 
-	throttler, err := workpool.NewThrottler(retireActualThrottlerSize, works)
+	throttler, err := workpool.NewThrottler(db.updateWorkersSize, works)
 	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": retireActualThrottlerSize, "num-works": len(works)})
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": db.updateWorkersSize, "num-works": len(works)})
 		return
 	}
 

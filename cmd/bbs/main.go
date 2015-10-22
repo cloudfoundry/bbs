@@ -125,6 +125,24 @@ var dropsondeDestination = flag.String(
 	"Destination for dropsonde-emitted metrics",
 )
 
+var convergenceWorkers = flag.Int(
+	"convergenceWorkers",
+	20,
+	"Max concurrency for convergence",
+)
+
+var updateWorkers = flag.Int(
+	"updateWorkers",
+	100,
+	"Max concurrency for etcd updates in a single request",
+)
+
+var taskCallBackWorkers = flag.Int(
+	"taskCallBackWorkers",
+	100,
+	"Max concurrency for task callback requests",
+)
+
 const (
 	dropsondeOrigin = "bbs"
 
@@ -157,7 +175,7 @@ func main() {
 
 	serviceClient := initializeServiceClient(logger, clock, consulClient, sessionManager)
 
-	cbWorkPool := taskworkpool.New(logger, taskworkpool.HandleCompletedTask)
+	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
 
 	keyManager, err := encryptionFlags.Validate()
 	if err != nil {
@@ -308,6 +326,8 @@ func initializeEtcdDB(
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(
 		format.ENCRYPTED_PROTO,
+		*convergenceWorkers,
+		*updateWorkers,
 		cryptor,
 		storeClient,
 		initializeAuctioneerClient(logger),

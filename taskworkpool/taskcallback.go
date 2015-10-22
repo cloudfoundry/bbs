@@ -15,7 +15,6 @@ import (
 )
 
 const MAX_CB_RETRIES = 3
-const TASK_CB_WORKERS = 100
 
 //go:generate counterfeiter . TaskCompletionClient
 
@@ -27,32 +26,31 @@ type TaskCompletionClient interface {
 
 type TaskCompletionWorkPool struct {
 	logger           lager.Logger
+	maxWorkers       int
 	callbackHandler  CompletedTaskHandler
 	callbackWorkPool *workpool.WorkPool
 	httpClient       *http.Client
 }
 
-func New(logger lager.Logger, cbHandler CompletedTaskHandler) *TaskCompletionWorkPool {
+func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler) *TaskCompletionWorkPool {
 	if cbHandler == nil {
 		panic("callbackHandler cannot be nil")
 	}
 	return &TaskCompletionWorkPool{
 		logger:          logger,
+		maxWorkers:      maxWorkers,
 		callbackHandler: cbHandler,
 		httpClient:      cf_http.NewClient(),
 	}
 }
 
-func initializeWorkPool(logger lager.Logger) *workpool.WorkPool {
-	cbWorkPool, err := workpool.NewWorkPool(TASK_CB_WORKERS)
-	if err != nil {
-		logger.Fatal("callback-workpool-creation-failed", err)
-	}
-	return cbWorkPool
-}
-
 func (twp *TaskCompletionWorkPool) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	twp.callbackWorkPool = initializeWorkPool(twp.logger)
+	cbWorkPool, err := workpool.NewWorkPool(twp.maxWorkers)
+	if err != nil {
+		twp.logger.Error("callback-workpool-creation-failed", err)
+		return err
+	}
+	twp.callbackWorkPool = cbWorkPool
 	close(ready)
 
 	<-signals
