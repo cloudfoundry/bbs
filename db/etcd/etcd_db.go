@@ -166,9 +166,10 @@ func (db *ETCDDB) fetchRaw(logger lager.Logger, key string) (*etcd.Node, error) 
 }
 
 const (
-	ETCDErrKeyNotFound  = 100
-	ETCDErrKeyExists    = 105
-	ETCDErrIndexCleared = 401
+	ETCDErrKeyNotFound           = 100
+	ETCDErrIndexComparisonFailed = 101
+	ETCDErrKeyExists             = 105
+	ETCDErrIndexCleared          = 401
 )
 
 func ErrorFromEtcdError(logger lager.Logger, err error) error {
@@ -184,6 +185,9 @@ func ErrorFromEtcdError(logger lager.Logger, err error) error {
 	case ETCDErrKeyExists:
 		logger.Debug("resource-exits")
 		return models.ErrResourceExists
+	case ETCDErrIndexComparisonFailed:
+		logger.Debug("resource-conflict")
+		return models.ErrResourceConflict
 	default:
 		logger.Error("unknown-error", err)
 		return models.ErrUnknownError

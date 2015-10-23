@@ -358,7 +358,7 @@ func (db *ETCDDB) updateDesiredLRPSchedulingInfo(logger lager.Logger, scheduling
 	_, err = db.client.CompareAndSwap(DesiredLRPSchedulingInfoSchemaPath(schedulingInfo.ProcessGuid), value, NO_TTL, index)
 	if err != nil {
 		logger.Error("failed-to-CAS-scheduling-info", err)
-		return models.NewError(models.Error_DesiredLRPSchedulingInfoCannotBeUpdated, err.Error())
+		return ErrorFromEtcdError(logger, err)
 	}
 
 	return nil
@@ -386,16 +386,37 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	schedulingInfo, index, err := db.rawDesiredLRPSchedulingInfo(logger, processGuid)
-	if err != nil {
-		return err
+	var schedulingInfo *models.DesiredLRPSchedulingInfo
+	var existingInstances int32
+	var err error
+
+	for i := 0; i < 2; i++ {
+		var index uint64
+
+		schedulingInfo, index, err = db.rawDesiredLRPSchedulingInfo(logger, processGuid)
+		if err != nil {
+			logger.Error("failed-to-fetch-scheduling-info", err)
+			break
+		}
+
+		existingInstances = schedulingInfo.Instances
+
+		schedulingInfo.ApplyUpdate(update)
+
+		err = db.updateDesiredLRPSchedulingInfo(logger, schedulingInfo, index)
+		if err != nil {
+			logger.Error("update-scheduling-info-failed", err)
+			modelErr := models.ConvertError(err)
+			if modelErr != models.ErrResourceConflict {
+				break
+			}
+			// Retry on CAS fail
+			continue
+		}
+
+		break
 	}
 
-	existingInstances := schedulingInfo.Instances
-
-	schedulingInfo.ApplyUpdate(update)
-
-	err = db.updateDesiredLRPSchedulingInfo(logger, schedulingInfo, index)
 	if err != nil {
 		return err
 	}

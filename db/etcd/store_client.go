@@ -2,6 +2,10 @@ package etcd
 
 import "github.com/coreos/go-etcd/etcd"
 
+// THIS IS NOT WORKING go:generate counterfeiter -o fakes/fake_store_client.go . StoreClient
+// Counterfeiter has a bug with colliding package names: https://github.com/maxbrunsfeld/counterfeiter/issues/19
+// Manual fixes to the fake need to be applied after generation
+
 type StoreClient interface {
 	Get(key string, sort bool, recursive bool) (*etcd.Response, error)
 	Set(key string, value []byte, ttl uint64) (*etcd.Response, error)

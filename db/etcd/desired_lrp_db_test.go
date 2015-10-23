@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
+	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	etcdclient "github.com/coreos/go-etcd/etcd"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -443,6 +445,40 @@ var _ = Describe("DesiredLRPDB", func() {
 				Expect(updated.Instances).To(Equal(*update.Instances))
 				Expect(updated.ModificationTag.Epoch).To(Equal(desiredLRP.ModificationTag.Epoch))
 				Expect(updated.ModificationTag.Index).To(Equal(desiredLRP.ModificationTag.Index + 1))
+			})
+
+			Context("when the compare and swap fails", func() {
+				BeforeEach(func() {
+					resp, err := storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaPath(lrp.ProcessGuid), false, false)
+					Expect(err).NotTo(HaveOccurred())
+					fakeStoreClient.GetReturns(resp, nil) // return the pre-updated desired lrps
+				})
+
+				Context("for a CAS failure", func() {
+					BeforeEach(func() {
+						fakeStoreClient.CompareAndSwapReturns(nil, etcdclient.EtcdError{ErrorCode: etcd.ETCDErrIndexComparisonFailed})
+					})
+
+					It("retries the update up to 2 times", func() {
+						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(0))
+						modelErr := etcdDBWithFakeStore.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+						Expect(modelErr).To(HaveOccurred())
+						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(2))
+					})
+				})
+
+				Context("for a non CAS failure", func() {
+					BeforeEach(func() {
+						fakeStoreClient.CompareAndSwapReturns(nil, etcdclient.EtcdError{ErrorCode: etcd.ETCDErrKeyExists})
+					})
+
+					It("fails immediately", func() {
+						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(0))
+						modelErr := etcdDBWithFakeStore.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+						Expect(modelErr).To(HaveOccurred())
+						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(1))
+					})
+				})
 			})
 
 			Context("when the instances are increased", func() {

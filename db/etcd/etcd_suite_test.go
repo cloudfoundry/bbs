@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/db/etcd/fakes"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
@@ -34,6 +35,7 @@ var etcdPort int
 var etcdUrl string
 var etcdRunner *etcdstorerunner.ETCDClusterRunner
 var storeClient etcd.StoreClient
+var fakeStoreClient *fakes.FakeStoreClient
 var consulRunner *consulrunner.ClusterRunner
 var consulSession *consuladapter.Session
 
@@ -49,6 +51,7 @@ var consulHelper *test_helpers.ConsulHelper
 
 var serviceClient bbs.ServiceClient
 var etcdDB db.DB
+var etcdDBWithFakeStore db.DB
 var workPoolCreateError error
 
 var cryptor encryption.Cryptor
@@ -102,6 +105,7 @@ var _ = BeforeEach(func() {
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	storeClient = etcd.NewStoreClient(etcdClient)
+	fakeStoreClient = &fakes.FakeStoreClient{}
 	consulHelper = test_helpers.NewConsulHelper(consulSession)
 	serviceClient = bbs.NewServiceClient(consulSession, clock)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
@@ -110,6 +114,7 @@ var _ = BeforeEach(func() {
 	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient)
 	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
+	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, cryptor, fakeStoreClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {

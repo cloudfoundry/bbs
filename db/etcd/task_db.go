@@ -281,9 +281,7 @@ func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uin
 	}
 
 	logger.Info("task-client-completing-task")
-	go func() {
-		db.taskCompletionClient.Submit(db, task)
-	}()
+	go db.taskCompletionClient.Submit(db, task)
 
 	return nil
 }
