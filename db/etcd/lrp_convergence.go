@@ -27,9 +27,14 @@ const (
 
 	domainMetricPrefix = "Domain."
 
-	desiredLRPs         = metric.Metric("LRPsDesired")
-	startingLRPs        = metric.Metric("LRPsStarting")
-	runningLRPs         = metric.Metric("LRPsRunning")
+	desiredLRPs   = metric.Metric("LRPsDesired")
+	claimedLRPs   = metric.Metric("LRPsClaimed")
+	unclaimedLRPs = metric.Metric("LRPsUnclaimed")
+	runningLRPs   = metric.Metric("LRPsRunning")
+
+	missingLRPs = metric.Metric("LRPsMissing")
+	extraLRPs   = metric.Metric("LRPsExtra")
+
 	crashedActualLRPs   = metric.Metric("CrashedActualLRPs")
 	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
 )
@@ -59,7 +64,8 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
 }
 
 type LRPMetricCounter struct {
-	startingLRPs        int32
+	unclaimedLRPs       int32
+	claimedLRPs         int32
 	runningLRPs         int32
 	crashedActualLRPs   int32
 	crashingDesiredLRPs int32
@@ -67,11 +73,21 @@ type LRPMetricCounter struct {
 }
 
 func (lmc LRPMetricCounter) Send() {
-	startingLRPs.Send(int(lmc.startingLRPs))
+	unclaimedLRPs.Send(int(lmc.unclaimedLRPs))
+	claimedLRPs.Send(int(lmc.claimedLRPs))
 	runningLRPs.Send(int(lmc.runningLRPs))
 	crashedActualLRPs.Send(int(lmc.crashedActualLRPs))
 	crashingDesiredLRPs.Send(int(lmc.crashingDesiredLRPs))
 	desiredLRPs.Send(int(lmc.desiredLRPs))
+
+	missing := (((lmc.desiredLRPs - lmc.runningLRPs) - lmc.claimedLRPs) - lmc.crashedActualLRPs)
+	extra := int32(0)
+	if missing < 0 {
+		extra = -missing
+		missing = 0
+	}
+	missingLRPs.Send(int(missing))
+	extraLRPs.Send(int(extra))
 }
 
 func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceInput, error) {
@@ -79,19 +95,20 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 
 	// always fetch actualLRPs before desiredLRPs to ensure correctness
 	logger.Info("gathering-and-pruning-actual-lrps")
-	LRPMetricCounter := &LRPMetricCounter{}
+	lrpMetricCounter := &LRPMetricCounter{}
 
-	actuals, err := db.gatherAndPruneActualLRPs(logger, guids, LRPMetricCounter) // modifies guids
+	actuals, err := db.gatherAndPruneActualLRPs(logger, guids, lrpMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-and-pruning-actual-lrps", err)
 
-		LRPMetricCounter.startingLRPs = -1
-		LRPMetricCounter.runningLRPs = -1
-		LRPMetricCounter.crashedActualLRPs = -1
-		LRPMetricCounter.crashingDesiredLRPs = -1
-		LRPMetricCounter.desiredLRPs = -1
+		lrpMetricCounter.unclaimedLRPs = -1
+		lrpMetricCounter.claimedLRPs = -1
+		lrpMetricCounter.runningLRPs = -1
+		lrpMetricCounter.crashedActualLRPs = -1
+		lrpMetricCounter.crashingDesiredLRPs = -1
+		lrpMetricCounter.desiredLRPs = -1
 
-		LRPMetricCounter.Send()
+		lrpMetricCounter.Send()
 
 		return &models.ConvergenceInput{}, err
 	}
@@ -99,18 +116,18 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
 	logger.Info("gathering-desired-lrps")
-	desireds, err := db.GatherDesiredLRPs(logger, guids, LRPMetricCounter) // modifies guids
+	desireds, err := db.GatherDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-desired-lrps", err)
 
-		LRPMetricCounter.desiredLRPs = -1
-		LRPMetricCounter.Send()
+		lrpMetricCounter.desiredLRPs = -1
+		lrpMetricCounter.Send()
 
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Info("succeeded-gathering-desired-lrps")
 
-	LRPMetricCounter.Send()
+	lrpMetricCounter.Send()
 
 	logger.Debug("listing-domains")
 	domains, err := db.Domains(logger)
@@ -196,8 +213,10 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 					guidGroupWillBeEmpty = false
 
 					switch actual.State {
+					case models.ActualLRPStateUnclaimed:
+						atomic.AddInt32(&lmc.unclaimedLRPs, 1)
 					case models.ActualLRPStateClaimed:
-						atomic.AddInt32(&lmc.startingLRPs, 1)
+						atomic.AddInt32(&lmc.claimedLRPs, 1)
 					case models.ActualLRPStateRunning:
 						atomic.AddInt32(&lmc.runningLRPs, 1)
 					case models.ActualLRPStateCrashed:

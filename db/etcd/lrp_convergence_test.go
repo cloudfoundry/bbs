@@ -51,10 +51,13 @@ var _ = Describe("LrpConvergence", func() {
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(5)))
-				Expect(sender.GetValue("LRPsStarting").Value).To(Equal(float64(0)))
+				Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(0)))
+				Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(0)))
 				Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(15)))
 				Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(0)))
 				Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(0)))
+				Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(0)))
+				Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(10)))
 			})
 		})
 
