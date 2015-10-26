@@ -56,8 +56,6 @@ var _ = Describe("LrpConvergence", func() {
 				Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(15)))
 				Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(0)))
 				Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(0)))
-				Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(0)))
-				Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(10)))
 			})
 		})
 
@@ -439,6 +437,10 @@ var _ = Describe("LrpConvergence", func() {
 
 					changesEqual(changes, output)
 				})
+
+				It("emits missing LRP metrics", func() {
+					Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(2)))
+				})
 			})
 
 			Context("with indices we don't desire", func() {
@@ -464,6 +466,10 @@ var _ = Describe("LrpConvergence", func() {
 					}
 
 					changesEqual(changes, output)
+				})
+
+				It("emits extra LRP metrics", func() {
+					Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(1)))
 				})
 			})
 
@@ -570,6 +576,10 @@ var _ = Describe("LrpConvergence", func() {
 				changesEqual(changes, output)
 			})
 
+			It("emits extra LRP metrics", func() {
+				Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(2)))
+			})
+
 			Context("with missing cells", func() {
 				BeforeEach(func() {
 					input.Cells = cellSet()
@@ -614,6 +624,11 @@ var _ = Describe("LrpConvergence", func() {
 
 			It("reports nothing", func() {
 				changesEqual(changes, &models.ConvergenceChanges{})
+			})
+
+			It("emits no missing or extra lrps", func() {
+				Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(0)))
+				Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(0)))
 			})
 		})
 	})

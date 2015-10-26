@@ -79,15 +79,6 @@ func (lmc LRPMetricCounter) Send() {
 	crashedActualLRPs.Send(int(lmc.crashedActualLRPs))
 	crashingDesiredLRPs.Send(int(lmc.crashingDesiredLRPs))
 	desiredLRPs.Send(int(lmc.desiredLRPs))
-
-	missing := (((lmc.desiredLRPs - lmc.runningLRPs) - lmc.claimedLRPs) - lmc.crashedActualLRPs)
-	extra := int32(0)
-	if missing < 0 {
-		extra = -missing
-		missing = 0
-	}
-	missingLRPs.Send(int(missing))
-	extraLRPs.Send(int(extra))
 }
 
 func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceInput, error) {
@@ -440,6 +431,8 @@ func CalculateConvergence(
 ) *models.ConvergenceChanges {
 	sess := logger.Session("calculate-convergence")
 
+	var extraLRPCount, missingLRPCount int
+
 	sess.Info("start")
 	defer sess.Info("done")
 
@@ -460,6 +453,7 @@ func CalculateConvergence(
 			for i := int32(0); i < desired.Instances; i++ {
 				if _, hasIndex := actualsByIndex[i]; !hasIndex {
 					pLog.Info("missing", lager.Data{"index": i})
+					missingLRPCount++
 					lrpKey := models.NewActualLRPKey(desired.ProcessGuid, i, desired.Domain)
 					changes.ActualLRPKeysForMissingIndices = append(
 						changes.ActualLRPKeysForMissingIndices,
@@ -477,6 +471,7 @@ func CalculateConvergence(
 
 				if actual.Index >= desired.Instances && input.Domains.Contains(desired.Domain) {
 					pLog.Info("extra", lager.Data{"index": i})
+					extraLRPCount++
 					changes.ActualLRPsForExtraIndices = append(changes.ActualLRPsForExtraIndices, actual)
 					continue
 				}
@@ -507,10 +502,14 @@ func CalculateConvergence(
 				}
 
 				pLog.Info("no-longer-desired", lager.Data{"index": i})
+				extraLRPCount++
 				changes.ActualLRPsForExtraIndices = append(changes.ActualLRPsForExtraIndices, actual)
 			}
 		}
 	}
+
+	missingLRPs.Send(missingLRPCount)
+	extraLRPs.Send(extraLRPCount)
 
 	return changes
 }
