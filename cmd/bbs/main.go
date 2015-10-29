@@ -333,7 +333,7 @@ func initializeEtcdDB(
 		initializeAuctioneerClient(logger),
 		serviceClient,
 		clock.NewClock(),
-		rep.NewClientFactory(cf_http.NewClient()),
+		rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient()),
 		cbClient,
 	)
 }
