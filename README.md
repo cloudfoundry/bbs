@@ -1,6 +1,13 @@
 # BBS Server
 
-Internal API to access the database for Diego.
+API to access the database for Diego.
+
+## API
+
+To interact with the BBS from outside of Diego, use the methods provided on the
+ExternalClient interface, documented [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalClient).
+
+Components within Diego may use the full [Client interface](https://godoc.org/github.com/cloudfoundry-incubator/bbs#Client) to modify internal state.
 
 ## Code Generation
 
