@@ -29,22 +29,20 @@ const (
 
 //go:generate counterfeiter -o fake_bbs/fake_client.go . Client
 
+/*
+The Client interface exposes all available endpoints of the BBS server,
+including private endpoints which should be used exclusively by internal Diego
+components. To interact with the BBS from outside of Diego, the ExternalClient
+should be used instead.
+*/
 type Client interface {
-	Ping() bool
-
-	Domains() ([]string, error)
-	UpsertDomain(domain string, ttl time.Duration) error
-
-	ActualLRPGroups(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
-	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
-	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
+	ExternalClient
 
 	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
 	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
 	CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(processGuid string, index int) error
-	RetireActualLRP(key *models.ActualLRPKey) error
 
 	EvacuateClaimedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateRunningActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, error)
@@ -52,36 +50,81 @@ type Client interface {
 	EvacuateCrashedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
 	RemoveEvacuatingActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 
-	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
-	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
-
-	DesiredLRPSchedulingInfos(models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
-
-	DesireLRP(*models.DesiredLRP) error
-	UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error
-	RemoveDesiredLRP(processGuid string) error
-
 	ConvergeLRPs() error
 
-	// Public Task Methods
-	Tasks() ([]*models.Task, error)
-	TasksByDomain(domain string) ([]*models.Task, error)
-	TasksByCellID(cellId string) ([]*models.Task, error)
-	TaskByGuid(guid string) (*models.Task, error)
-
-	DesireTask(guid, domain string, def *models.TaskDefinition) error
-	CancelTask(taskGuid string) error
+	ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+	StartTask(taskGuid string, cellID string) (bool, error)
 	FailTask(taskGuid, failureReason string) error
 	CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error
 	ResolvingTask(taskGuid string) error
 	DeleteTask(taskGuid string) error
+}
 
-	ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+/*
+The External Client can be used to access the BBS's public functionality.
+It exposes methods for basic LRP and Task Lifecycles, Domain manipulation, and
+event subscription.
+*/
+type ExternalClient interface {
+	// Returns true if the BBS server is reachable
+	Ping() bool
 
+	// Lists the active domains
+	Domains() ([]string, error)
+
+	// Creates a domain or bumps the ttl on an existing domain
+	UpsertDomain(domain string, ttl time.Duration) error
+
+	// Returns all ActualLRPGroups matching the given ActualLRPFilter
+	ActualLRPGroups(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
+
+	// Returns all ActualLRPGroups that have the given process guid
+	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
+
+	// Returns the ActualLRPGroup with the given process guid and instance index
+	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
+
+	// Shuts down the ActualLRP matching the given ActualLRPKey, but does not modify the desired state
+	RetireActualLRP(key *models.ActualLRPKey) error
+
+	// Lists all DesiredLRPs that match the given DesiredLRPFilter
+	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+
+	// Returns the DesiredLRP with the given process guid
+	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
+
+	// Returns all DesiredLRPSchedulingInfos that match the given DesiredLRPFilter
+	DesiredLRPSchedulingInfos(models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
+
+	// Creates the given DesiredLRP and its corresponding ActualLRPs
+	DesireLRP(*models.DesiredLRP) error
+
+	// Updates the DesiredLRP matching the given process guid
+	UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error
+
+	// Removes the DesiredLRP matching the given process guid
+	RemoveDesiredLRP(processGuid string) error
+
+	// Lists all Tasks
+	Tasks() ([]*models.Task, error)
+
+	// Lists all Tasks of the given domain
+	TasksByDomain(domain string) ([]*models.Task, error)
+
+	// Lists all Tasks on the given cell
+	TasksByCellID(cellId string) ([]*models.Task, error)
+
+	// Returns the Task with the given guid
+	TaskByGuid(guid string) (*models.Task, error)
+
+	// Creates a Task from the given TaskDefinition
+	DesireTask(guid, domain string, def *models.TaskDefinition) error
+
+	// Cancels the Task with the given task guid
+	CancelTask(taskGuid string) error
+
+	// Returns an EventSource for watching changes to LRPs
 	SubscribeToEvents() (events.EventSource, error)
-
-	// Internal Task Methods
-	StartTask(taskGuid string, cellID string) (bool, error)
 }
 
 func newClient(url string) *client {

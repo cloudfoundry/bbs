@@ -2,6 +2,8 @@
 
 Internal API to access the database for Diego.
 
+## API
+
 ## Code Generation
 
 You need the 3.0 version of the `protoc` compiler. If you're a Homebrew user
