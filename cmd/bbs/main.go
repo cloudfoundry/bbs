@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -119,10 +120,10 @@ var reportInterval = flag.Duration(
 	"interval on which to report metrics",
 )
 
-var dropsondeDestination = flag.String(
-	"dropsondeDestination",
-	"localhost:3457",
-	"Destination for dropsonde-emitted metrics",
+var dropsondePort = flag.Int(
+	"dropsondePort",
+	3457,
+	"port the local metron agent is listening on",
 )
 
 var convergenceWorkers = flag.Int(
@@ -295,7 +296,8 @@ func initializeAuctioneerClient(logger lager.Logger) auctioneer.Client {
 }
 
 func initializeDropsonde(logger lager.Logger) {
-	err := dropsonde.Initialize(*dropsondeDestination, dropsondeOrigin)
+	dropsondeDestination := fmt.Sprint("localhost:", *dropsondePort)
+	err := dropsonde.Initialize(dropsondeDestination, dropsondeOrigin)
 	if err != nil {
 		logger.Error("failed-to-initialize-dropsonde", err)
 	}
