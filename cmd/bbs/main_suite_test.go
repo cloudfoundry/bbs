@@ -6,6 +6,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
@@ -137,6 +139,9 @@ var _ = BeforeEach(func() {
 		}
 	}()
 
+	port, err := strconv.Atoi(strings.TrimPrefix(testMetricsListener.LocalAddr().String(), "127.0.0.1:"))
+	Expect(err).NotTo(HaveOccurred())
+
 	client = bbs.NewClient(bbsURL.String())
 
 	bbsArgs = testrunner.Args{
@@ -144,7 +149,7 @@ var _ = BeforeEach(func() {
 		AdvertiseURL:          bbsURL.String(),
 		AuctioneerAddress:     auctioneerServer.URL(),
 		ConsulCluster:         consulRunner.ConsulCluster(),
-		DropsondeDestination:  testMetricsListener.LocalAddr().String(),
+		DropsondePort:         port,
 		EtcdCluster:           etcdUrl,
 		MetricsReportInterval: 10 * time.Millisecond,
 

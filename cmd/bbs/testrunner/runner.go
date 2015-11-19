@@ -13,7 +13,7 @@ type Args struct {
 	AdvertiseURL               string
 	AuctioneerAddress          string
 	ConsulCluster              string
-	DropsondeDestination       string
+	DropsondePort              int
 	EtcdCACert                 string
 	EtcdClientCert             string
 	EtcdClientKey              string
@@ -36,7 +36,7 @@ func (args Args) ArgSlice() []string {
 		"-advertiseURL", args.AdvertiseURL,
 		"-auctioneerAddress", args.AuctioneerAddress,
 		"-consulCluster", args.ConsulCluster,
-		"-dropsondeDestination", args.DropsondeDestination,
+		"-dropsondePort", strconv.Itoa(args.DropsondePort),
 		"-etcdCaFile", args.EtcdCACert,
 		"-etcdCertFile", args.EtcdClientCert,
 		"-etcdCluster", args.EtcdCluster,
