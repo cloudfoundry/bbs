@@ -24,3 +24,11 @@ func (u *UnavailableHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 }
+
+func UnavailableWrap(handler http.Handler, serviceReady <-chan struct{}) http.HandlerFunc {
+	handler = NewUnavailableHandler(handler, serviceReady)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler.ServeHTTP(w, r)
+	}
+}

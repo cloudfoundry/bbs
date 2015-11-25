@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/events"
+	"github.com/cloudfoundry-incubator/bbs/handlers/middleware"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pivotal-golang/lager"
@@ -27,54 +28,54 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan st
 
 	actions := rata.Handlers{
 		// Ping
-		bbs.PingRoute: route(EmitLatency(pingHandler.Ping)),
+		bbs.PingRoute: route(middleware.EmitLatency(pingHandler.Ping)),
 
 		// Domains
-		bbs.DomainsRoute:      route(EmitLatency(domainHandler.Domains)),
-		bbs.UpsertDomainRoute: route(EmitLatency(domainHandler.Upsert)),
+		bbs.DomainsRoute:      route(middleware.EmitLatency(domainHandler.Domains)),
+		bbs.UpsertDomainRoute: route(middleware.EmitLatency(domainHandler.Upsert)),
 
 		// Actual LRPs
-		bbs.ActualLRPGroupsRoute:                     route(EmitLatency(actualLRPHandler.ActualLRPGroups)),
-		bbs.ActualLRPGroupsByProcessGuidRoute:        route(EmitLatency(actualLRPHandler.ActualLRPGroupsByProcessGuid)),
-		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(EmitLatency(actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex)),
+		bbs.ActualLRPGroupsRoute:                     route(middleware.EmitLatency(actualLRPHandler.ActualLRPGroups)),
+		bbs.ActualLRPGroupsByProcessGuidRoute:        route(middleware.EmitLatency(actualLRPHandler.ActualLRPGroupsByProcessGuid)),
+		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(middleware.EmitLatency(actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex)),
 
 		// Actual LRP Lifecycle
-		bbs.ClaimActualLRPRoute:  route(EmitLatency(actualLRPLifecycleHandler.ClaimActualLRP)),
-		bbs.StartActualLRPRoute:  route(EmitLatency(actualLRPLifecycleHandler.StartActualLRP)),
-		bbs.CrashActualLRPRoute:  route(EmitLatency(actualLRPLifecycleHandler.CrashActualLRP)),
-		bbs.RetireActualLRPRoute: route(EmitLatency(actualLRPLifecycleHandler.RetireActualLRP)),
-		bbs.FailActualLRPRoute:   route(EmitLatency(actualLRPLifecycleHandler.FailActualLRP)),
-		bbs.RemoveActualLRPRoute: route(EmitLatency(actualLRPLifecycleHandler.RemoveActualLRP)),
+		bbs.ClaimActualLRPRoute:  route(middleware.EmitLatency(actualLRPLifecycleHandler.ClaimActualLRP)),
+		bbs.StartActualLRPRoute:  route(middleware.EmitLatency(actualLRPLifecycleHandler.StartActualLRP)),
+		bbs.CrashActualLRPRoute:  route(middleware.EmitLatency(actualLRPLifecycleHandler.CrashActualLRP)),
+		bbs.RetireActualLRPRoute: route(middleware.EmitLatency(actualLRPLifecycleHandler.RetireActualLRP)),
+		bbs.FailActualLRPRoute:   route(middleware.EmitLatency(actualLRPLifecycleHandler.FailActualLRP)),
+		bbs.RemoveActualLRPRoute: route(middleware.EmitLatency(actualLRPLifecycleHandler.RemoveActualLRP)),
 
 		// Evacuation
-		bbs.RemoveEvacuatingActualLRPRoute: route(EmitLatency(evacuationHandler.RemoveEvacuatingActualLRP)),
-		bbs.EvacuateClaimedActualLRPRoute:  route(EmitLatency(evacuationHandler.EvacuateClaimedActualLRP)),
-		bbs.EvacuateCrashedActualLRPRoute:  route(EmitLatency(evacuationHandler.EvacuateCrashedActualLRP)),
-		bbs.EvacuateStoppedActualLRPRoute:  route(EmitLatency(evacuationHandler.EvacuateStoppedActualLRP)),
-		bbs.EvacuateRunningActualLRPRoute:  route(EmitLatency(evacuationHandler.EvacuateRunningActualLRP)),
+		bbs.RemoveEvacuatingActualLRPRoute: route(middleware.EmitLatency(evacuationHandler.RemoveEvacuatingActualLRP)),
+		bbs.EvacuateClaimedActualLRPRoute:  route(middleware.EmitLatency(evacuationHandler.EvacuateClaimedActualLRP)),
+		bbs.EvacuateCrashedActualLRPRoute:  route(middleware.EmitLatency(evacuationHandler.EvacuateCrashedActualLRP)),
+		bbs.EvacuateStoppedActualLRPRoute:  route(middleware.EmitLatency(evacuationHandler.EvacuateStoppedActualLRP)),
+		bbs.EvacuateRunningActualLRPRoute:  route(middleware.EmitLatency(evacuationHandler.EvacuateRunningActualLRP)),
 
 		// LRP Convergence
-		bbs.ConvergeLRPsRoute: route(EmitLatency(lrpConvergenceHandler.ConvergeLRPs)),
+		bbs.ConvergeLRPsRoute: route(middleware.EmitLatency(lrpConvergenceHandler.ConvergeLRPs)),
 
 		// Desired LRPs
-		bbs.DesiredLRPsRoute:               route(EmitLatency(desiredLRPHandler.DesiredLRPs)),
-		bbs.DesiredLRPByProcessGuidRoute:   route(EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid)),
-		bbs.DesiredLRPSchedulingInfosRoute: route(EmitLatency(desiredLRPHandler.DesiredLRPSchedulingInfos)),
-		bbs.DesireDesiredLRPRoute:          route(EmitLatency(desiredLRPHandler.DesireDesiredLRP)),
-		bbs.UpdateDesiredLRPRoute:          route(EmitLatency(desiredLRPHandler.UpdateDesiredLRP)),
-		bbs.RemoveDesiredLRPRoute:          route(EmitLatency(desiredLRPHandler.RemoveDesiredLRP)),
+		bbs.DesiredLRPsRoute:               route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPs)),
+		bbs.DesiredLRPByProcessGuidRoute:   route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid)),
+		bbs.DesiredLRPSchedulingInfosRoute: route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPSchedulingInfos)),
+		bbs.DesireDesiredLRPRoute:          route(middleware.EmitLatency(desiredLRPHandler.DesireDesiredLRP)),
+		bbs.UpdateDesiredLRPRoute:          route(middleware.EmitLatency(desiredLRPHandler.UpdateDesiredLRP)),
+		bbs.RemoveDesiredLRPRoute:          route(middleware.EmitLatency(desiredLRPHandler.RemoveDesiredLRP)),
 
 		// Tasks
-		bbs.TasksRoute:         route(EmitLatency(taskHandler.Tasks)),
-		bbs.TaskByGuidRoute:    route(EmitLatency(taskHandler.TaskByGuid)),
-		bbs.DesireTaskRoute:    route(EmitLatency(taskHandler.DesireTask)),
-		bbs.StartTaskRoute:     route(EmitLatency(taskHandler.StartTask)),
-		bbs.CancelTaskRoute:    route(EmitLatency(taskHandler.CancelTask)),
-		bbs.FailTaskRoute:      route(EmitLatency(taskHandler.FailTask)),
-		bbs.CompleteTaskRoute:  route(EmitLatency(taskHandler.CompleteTask)),
-		bbs.ResolvingTaskRoute: route(EmitLatency(taskHandler.ResolvingTask)),
-		bbs.DeleteTaskRoute:    route(EmitLatency(taskHandler.DeleteTask)),
-		bbs.ConvergeTasksRoute: route(EmitLatency(taskHandler.ConvergeTasks)),
+		bbs.TasksRoute:         route(middleware.EmitLatency(taskHandler.Tasks)),
+		bbs.TaskByGuidRoute:    route(middleware.EmitLatency(taskHandler.TaskByGuid)),
+		bbs.DesireTaskRoute:    route(middleware.EmitLatency(taskHandler.DesireTask)),
+		bbs.StartTaskRoute:     route(middleware.EmitLatency(taskHandler.StartTask)),
+		bbs.CancelTaskRoute:    route(middleware.EmitLatency(taskHandler.CancelTask)),
+		bbs.FailTaskRoute:      route(middleware.EmitLatency(taskHandler.FailTask)),
+		bbs.CompleteTaskRoute:  route(middleware.EmitLatency(taskHandler.CompleteTask)),
+		bbs.ResolvingTaskRoute: route(middleware.EmitLatency(taskHandler.ResolvingTask)),
+		bbs.DeleteTaskRoute:    route(middleware.EmitLatency(taskHandler.DeleteTask)),
+		bbs.ConvergeTasksRoute: route(middleware.EmitLatency(taskHandler.ConvergeTasks)),
 
 		// Events
 		bbs.EventStreamRoute: route(eventsHandler.Subscribe),
@@ -85,7 +86,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan st
 		panic("unable to create router: " + err.Error())
 	}
 
-	return RequestCountWrap(LogWrap(logger, UnavailableWrap(handler, migrationsDone)))
+	return middleware.RequestCountWrap(middleware.LogWrap(logger, UnavailableWrap(handler, migrationsDone)))
 }
 
 func route(f http.HandlerFunc) http.Handler {

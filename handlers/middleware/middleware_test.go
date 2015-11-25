@@ -1,10 +1,10 @@
-package handlers_test
+package middleware_test
 
 import (
 	"net/http"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/handlers"
+	"github.com/cloudfoundry-incubator/bbs/handlers/middleware"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
 
@@ -24,7 +24,7 @@ var _ = Describe("Middleware", func() {
 			dropsonde_metrics.Initialize(sender, nil)
 
 			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
-			handler = handlers.EmitLatency(handler)
+			handler = middleware.EmitLatency(handler)
 		})
 
 		It("reports latency", func() {
@@ -47,7 +47,7 @@ var _ = Describe("Middleware", func() {
 			dropsonde_metrics.Initialize(sender, nil)
 
 			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
-			handler = handlers.RequestCountWrap(handler)
+			handler = middleware.RequestCountWrap(handler)
 		})
 
 		It("reports call count", func() {

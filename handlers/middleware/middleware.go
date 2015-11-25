@@ -1,4 +1,4 @@
-package handlers
+package middleware
 
 import (
 	"net/http"
@@ -23,14 +23,6 @@ func LogWrap(logger lager.Logger, handler http.Handler) http.HandlerFunc {
 		requestLog.Info("serving")
 		handler.ServeHTTP(w, r)
 		requestLog.Info("done")
-	}
-}
-
-func UnavailableWrap(handler http.Handler, serviceReady <-chan struct{}) http.HandlerFunc {
-	handler = NewUnavailableHandler(handler, serviceReady)
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		handler.ServeHTTP(w, r)
 	}
 }
 
