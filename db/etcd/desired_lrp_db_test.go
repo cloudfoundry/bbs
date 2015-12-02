@@ -2,6 +2,7 @@ package etcd_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
@@ -253,7 +254,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				Expect(persisted.DesiredLRPResource()).To(Equal(lrp.DesiredLRPResource()))
 				Expect(persisted.Annotation).To(Equal(lrp.Annotation))
 				Expect(persisted.Instances).To(Equal(lrp.Instances))
-				Expect(persisted.DesiredLRPRunInfo()).To(Equal(lrp.DesiredLRPRunInfo()))
+				Expect(persisted.DesiredLRPRunInfo(clock.Now())).To(Equal(lrp.DesiredLRPRunInfo(clock.Now())))
 			})
 
 			It("creates one ActualLRP per index", func() {
@@ -307,6 +308,29 @@ var _ = Describe("DesiredLRPDB", func() {
 					Expect(startAuctions).To(HaveLen(1))
 					Expect(startAuctions[0].ProcessGuid).To(Equal(desired.ProcessGuid))
 					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
+				})
+			})
+
+			Context("An error occurs creating the scheduling info", func() {
+				BeforeEach(func() {
+					count := 0
+					fakeStoreClient.CreateStub = func(key string, value []byte, ttl uint64) (*etcdclient.Response, error) {
+						if count == 0 {
+							count++
+							return nil, nil
+						} else {
+							return nil, errors.New("Failed Scheduling desired lrp ingo")
+						}
+					}
+				})
+
+				It("attempts to delete the run info", func() {
+					err := etcdDBWithFakeStore.DesireLRP(logger, lrp)
+					Expect(err).To(HaveOccurred())
+
+					Expect(fakeStoreClient.DeleteCallCount()).To(Equal(1))
+					schemaPath, _ := fakeStoreClient.DeleteArgsForCall(0)
+					Expect(schemaPath).To(Equal(etcd.DesiredLRPRunInfoSchemaPath(lrp.ProcessGuid)))
 				})
 			})
 		})
@@ -388,8 +412,44 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 		})
 
+		Context("when the RunInfo exists, and the SchedulingInfo does not exist", func() {
+			BeforeEach(func() {
+				err := etcdDB.DesireLRP(logger, lrp)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = storeClient.Delete(etcd.DesiredLRPSchedulingInfoSchemaPath(lrp.ProcessGuid), true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("deletes the RunInfo", func() {
+				err := etcdDB.RemoveDesiredLRP(logger, lrp.ProcessGuid)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+				_, err = storeClient.Get(etcd.DesiredLRPRunInfoSchemaPath(lrp.ProcessGuid), false, false)
+				Expect(etcd.ErrorFromEtcdError(logger, err)).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when removing the SchedulingInfo fails", func() {
+			BeforeEach(func() {
+				fakeStoreClient.DeleteReturns(nil, errors.New("kabooom!"))
+
+				err := etcdDBWithFakeStore.DesireLRP(logger, lrp)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("does not remove the RunInfo", func() {
+				err := etcdDBWithFakeStore.RemoveDesiredLRP(logger, lrp.ProcessGuid)
+				Expect(err).To(HaveOccurred())
+
+				Expect(fakeStoreClient.DeleteCallCount()).To(Equal(1))
+				schemaPath, _ := fakeStoreClient.DeleteArgsForCall(0)
+				Expect(schemaPath).To(Equal(etcd.DesiredLRPSchedulingInfoSchemaPath(lrp.ProcessGuid)))
+			})
+		})
+
 		Context("when the desired LRP does not exist", func() {
-			It("returns an resource not found", func() {
+			It("returns a resource not found error", func() {
 				err := etcdDB.RemoveDesiredLRP(logger, "monkey")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})

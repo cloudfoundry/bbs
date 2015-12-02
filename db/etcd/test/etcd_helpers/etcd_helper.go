@@ -4,6 +4,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 )
@@ -13,9 +14,10 @@ type ETCDHelper struct {
 	format     *format.Format
 	serializer format.Serializer
 	logger     lager.Logger
+	clock      clock.Clock
 }
 
-func NewETCDHelper(serializationFormat *format.Format, cryptor encryption.Cryptor, client etcd.StoreClient) *ETCDHelper {
+func NewETCDHelper(serializationFormat *format.Format, cryptor encryption.Cryptor, client etcd.StoreClient, clock clock.Clock) *ETCDHelper {
 	logger := lagertest.NewTestLogger("etcd-helper")
 
 	return &ETCDHelper{
@@ -23,5 +25,6 @@ func NewETCDHelper(serializationFormat *format.Format, cryptor encryption.Crypto
 		format:     serializationFormat,
 		serializer: format.NewSerializer(cryptor),
 		logger:     logger,
+		clock:      clock,
 	}
 }

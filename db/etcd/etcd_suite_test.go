@@ -31,6 +31,8 @@ import (
 	"testing"
 )
 
+const DesiredLRPCreationTimeout = time.Minute
+
 var etcdPort int
 var etcdUrl string
 var etcdRunner *etcdstorerunner.ETCDClusterRunner
@@ -112,9 +114,9 @@ var _ = BeforeEach(func() {
 	fakeRepClientFactory = new(repfakes.FakeClientFactory)
 	fakeRepClient = new(repfakes.FakeClient)
 	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
-	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient)
-	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
-	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, cryptor, fakeStoreClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
+	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient, clock)
+	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
+	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, fakeStoreClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 })
 
 func registerCell(cell models.CellPresence) {

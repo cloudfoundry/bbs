@@ -36,6 +36,7 @@ message DesiredLRPRunInfo {
   repeated SecurityGroupRule egress_rules = 10 [(gogoproto.nullable) = false];
   optional string log_source = 11;
   optional string metrics_guid = 12;
+  optional int64 created_at = 13;
 }
 
 // helper message for marshalling routes

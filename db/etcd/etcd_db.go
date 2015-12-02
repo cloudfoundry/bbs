@@ -4,6 +4,7 @@ import (
 	"path"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
@@ -83,16 +84,17 @@ type ETCDOptions struct {
 }
 
 type ETCDDB struct {
-	format                 *format.Format
-	convergenceWorkersSize int
-	updateWorkersSize      int
-	serializer             format.Serializer
-	client                 StoreClient
-	clock                  clock.Clock
-	inflightWatches        map[chan bool]bool
-	inflightWatchLock      *sync.Mutex
-	auctioneerClient       auctioneer.Client
-	repClientFactory       rep.ClientFactory
+	format                    *format.Format
+	convergenceWorkersSize    int
+	updateWorkersSize         int
+	desiredLRPCreationTimeout time.Duration
+	serializer                format.Serializer
+	client                    StoreClient
+	clock                     clock.Clock
+	inflightWatches           map[chan bool]bool
+	inflightWatchLock         *sync.Mutex
+	auctioneerClient          auctioneer.Client
+	repClientFactory          rep.ClientFactory
 
 	taskCompletionClient taskworkpool.TaskCompletionClient
 
@@ -103,6 +105,7 @@ func NewETCD(
 	serializationFormat *format.Format,
 	convergenceWorkersSize int,
 	updateWorkersSize int,
+	desiredLRPCreationTimeout time.Duration,
 	cryptor encryption.Cryptor,
 	storeClient StoreClient,
 	auctioneerClient auctioneer.Client,
@@ -112,18 +115,19 @@ func NewETCD(
 	taskCC taskworkpool.TaskCompletionClient,
 ) *ETCDDB {
 	return &ETCDDB{
-		format:                 serializationFormat,
-		convergenceWorkersSize: convergenceWorkersSize,
-		updateWorkersSize:      updateWorkersSize,
-		serializer:             format.NewSerializer(cryptor),
-		client:                 storeClient,
-		clock:                  clock,
-		inflightWatches:        map[chan bool]bool{},
-		inflightWatchLock:      &sync.Mutex{},
-		auctioneerClient:       auctioneerClient,
-		repClientFactory:       repClientFactory,
-		taskCompletionClient:   taskCC,
-		serviceClient:          serviceClient,
+		format:                    serializationFormat,
+		convergenceWorkersSize:    convergenceWorkersSize,
+		updateWorkersSize:         updateWorkersSize,
+		desiredLRPCreationTimeout: desiredLRPCreationTimeout,
+		serializer:                format.NewSerializer(cryptor),
+		client:                    storeClient,
+		clock:                     clock,
+		inflightWatches:           map[chan bool]bool{},
+		inflightWatchLock:         &sync.Mutex{},
+		auctioneerClient:          auctioneerClient,
+		repClientFactory:          repClientFactory,
+		taskCompletionClient:      taskCC,
+		serviceClient:             serviceClient,
 	}
 }
 

@@ -3,6 +3,7 @@ package encryptor_test
 import (
 	"crypto/rand"
 	"fmt"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -51,5 +52,5 @@ var _ = BeforeEach(func() {
 	keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
 	Expect(err).NotTo(HaveOccurred())
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, cryptor, storeClient, nil, nil, nil, nil, nil)
+	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, 1*time.Minute, cryptor, storeClient, nil, nil, nil, nil, nil)
 })

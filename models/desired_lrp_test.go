@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -247,11 +248,16 @@ var _ = Describe("DesiredLRP", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Describe("Explode", func() {
+	Describe("CreateComponents", func() {
 		It("decomposes the desired lrp into it's component parts", func() {
-			schedInfo, runInfo := desiredLRP.Explode()
+			schedInfo, runInfo := desiredLRP.CreateComponents(time.Unix(123, 456))
 			newDesired := models.NewDesiredLRP(schedInfo, runInfo)
 			Expect(newDesired).To(BeEquivalentTo(desiredLRP))
+		})
+
+		It("saves the created at time on the run info", func() {
+			_, runInfo := desiredLRP.CreateComponents(time.Unix(123, 456))
+			Expect(runInfo.CreatedAt).To(BeEquivalentTo((time.Unix(123, 456).UnixNano())))
 		})
 	})
 
@@ -656,6 +662,7 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 	const logSource = "log-source"
 	const metricsGuid = "metrics-guid"
 	const cpuWeight = 50
+	var createdAt = time.Unix(123, 456)
 
 	DescribeTable("Validation",
 		func(key models.DesiredLRPRunInfo, expectedErr string) {
@@ -667,13 +674,13 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), ""),
-		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, envVars, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "process_guid"),
-		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), append(envVars, models.EnvironmentVariable{}), action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "name"),
-		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, &models.Action{}, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
-		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
-		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
-		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), envVars, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid), "cpu_weight"),
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), ""),
+		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "process_guid"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "name"),
+		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, &models.Action{}, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
+		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
+		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
+		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid), "cpu_weight"),
 	)
 })
 

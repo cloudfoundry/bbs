@@ -64,6 +64,7 @@ type DesiredLRPRunInfo struct {
 	EgressRules          []SecurityGroupRule   `protobuf:"bytes,10,rep,name=egress_rules" json:"egress_rules"`
 	LogSource            string                `protobuf:"bytes,11,opt,name=log_source" json:"log_source"`
 	MetricsGuid          string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
+	CreatedAt            int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -144,6 +145,13 @@ func (m *DesiredLRPRunInfo) GetMetricsGuid() string {
 		return m.MetricsGuid
 	}
 	return ""
+}
+
+func (m *DesiredLRPRunInfo) GetCreatedAt() int64 {
+	if m != nil {
+		return m.CreatedAt
+	}
+	return 0
 }
 
 // helper message for marshalling routes
@@ -522,6 +530,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	if this.MetricsGuid != that1.MetricsGuid {
 		return false
 	}
+	if this.CreatedAt != that1.CreatedAt {
+		return false
+	}
 	return true
 }
 func (this *ProtoRoutes) Equal(that interface{}) bool {
@@ -796,7 +807,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`Ports:` + fmt.Sprintf("%#v", this.Ports),
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%#v", this.EgressRules), `&`, ``, 1),
 		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid) + `}`}, ", ")
+		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
+		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -1063,6 +1075,9 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.MetricsGuid)))
 	i += copy(data[i:], m.MetricsGuid)
+	data[i] = 0x68
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(m.CreatedAt))
 	return i, nil
 }
 
@@ -1450,6 +1465,7 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	l = len(m.MetricsGuid)
 	n += 1 + l + sovDesiredLrp(uint64(l))
+	n += 1 + sovDesiredLrp(uint64(m.CreatedAt))
 	return n
 }
 
@@ -1614,6 +1630,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`EgressRules:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1), `&`, ``, 1) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
 		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
+		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2214,6 +2231,22 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			m.MetricsGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
+			}
+			m.CreatedAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.CreatedAt |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			var sizeOfWire int
 			for {

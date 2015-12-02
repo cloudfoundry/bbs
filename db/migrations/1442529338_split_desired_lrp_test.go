@@ -189,7 +189,7 @@ var _ = Describe("Split Desired LRP Migration", func() {
 			var existingSplit *models.DesiredLRP
 			BeforeEach(func() {
 				existingSplit = newValidDesiredLRP("existing-split")
-				schedulingInfo, runInfo := existingSplit.Explode()
+				schedulingInfo, runInfo := existingSplit.CreateComponents(time.Unix(42, 42))
 
 				schedulingInfoPayload, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, &schedulingInfo)
 				Expect(err).NotTo(HaveOccurred())

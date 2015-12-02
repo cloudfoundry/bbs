@@ -330,6 +330,7 @@ func initializeEtcdDB(
 		format.ENCRYPTED_PROTO,
 		*convergenceWorkers,
 		*updateWorkers,
+		time.Minute, //TODO make this customizable
 		cryptor,
 		storeClient,
 		initializeAuctioneerClient(logger),

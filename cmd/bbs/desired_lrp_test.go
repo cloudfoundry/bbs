@@ -5,6 +5,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -170,7 +171,7 @@ var _ = Describe("DesiredLRP API", func() {
 			Expect(persistedDesiredLRP.DesiredLRPResource()).To(Equal(desiredLRP.DesiredLRPResource()))
 			Expect(persistedDesiredLRP.Annotation).To(Equal(desiredLRP.Annotation))
 			Expect(persistedDesiredLRP.Instances).To(Equal(desiredLRP.Instances))
-			Expect(persistedDesiredLRP.DesiredLRPRunInfo()).To(Equal(desiredLRP.DesiredLRPRunInfo()))
+			Expect(persistedDesiredLRP.DesiredLRPRunInfo(time.Unix(42, 0))).To(Equal(desiredLRP.DesiredLRPRunInfo(time.Unix(42, 0))))
 		})
 	})
 

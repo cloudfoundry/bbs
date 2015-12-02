@@ -3,6 +3,7 @@ package models
 import (
 	"net/url"
 	"regexp"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/format"
 )
@@ -104,7 +105,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 	return NewDesiredLRPSchedulingInfo(d.DesiredLRPKey(), d.Annotation, d.Instances, d.DesiredLRPResource(), routes, modificationTag)
 }
 
-func (d *DesiredLRP) DesiredLRPRunInfo() DesiredLRPRunInfo {
+func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	environmentVariables := make([]EnvironmentVariable, len(d.EnvironmentVariables))
 	for i := range d.EnvironmentVariables {
 		environmentVariables[i] = *d.EnvironmentVariables[i]
@@ -114,11 +115,11 @@ func (d *DesiredLRP) DesiredLRPRunInfo() DesiredLRPRunInfo {
 	for i := range d.EgressRules {
 		egressRules[i] = *d.EgressRules[i]
 	}
-	return NewDesiredLRPRunInfo(d.DesiredLRPKey(), environmentVariables, d.Setup, d.Action, d.Monitor, d.StartTimeout, d.Privileged, d.CpuWeight, d.Ports, egressRules, d.LogSource, d.MetricsGuid)
+	return NewDesiredLRPRunInfo(d.DesiredLRPKey(), createdAt, environmentVariables, d.Setup, d.Action, d.Monitor, d.StartTimeout, d.Privileged, d.CpuWeight, d.Ports, egressRules, d.LogSource, d.MetricsGuid)
 }
 
-func (d *DesiredLRP) Explode() (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
-	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo()
+func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
+	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
 }
 
 func (desired DesiredLRP) Validate() error {
@@ -317,9 +318,10 @@ func (resource DesiredLRPResource) Validate() error {
 	return validationError.ToError()
 }
 
-func NewDesiredLRPRunInfo(key DesiredLRPKey, envVars []EnvironmentVariable, setup, action, monitor *Action, startTimeout uint32, privileged bool, cpuWeight uint32, ports []uint32, egressRules []SecurityGroupRule, logSource, metricsGuid string) DesiredLRPRunInfo {
+func NewDesiredLRPRunInfo(key DesiredLRPKey, createdAt time.Time, envVars []EnvironmentVariable, setup, action, monitor *Action, startTimeout uint32, privileged bool, cpuWeight uint32, ports []uint32, egressRules []SecurityGroupRule, logSource, metricsGuid string) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:        key,
+		CreatedAt:            createdAt.UnixNano(),
 		EnvironmentVariables: envVars,
 		Setup:                setup,
 		Action:               action,

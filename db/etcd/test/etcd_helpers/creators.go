@@ -30,7 +30,7 @@ func (t *ETCDHelper) SetRawEvacuatingActualLRP(lrp *models.ActualLRP, ttlInSecon
 }
 
 func (t *ETCDHelper) SetRawDesiredLRP(lrp *models.DesiredLRP) {
-	schedulingInfo, runInfo := lrp.Explode()
+	schedulingInfo, runInfo := lrp.CreateComponents(t.clock.Now())
 
 	t.SetRawDesiredLRPSchedulingInfo(&schedulingInfo)
 	t.SetRawDesiredLRPRunInfo(&runInfo)
@@ -127,7 +127,7 @@ func (t *ETCDHelper) CreateDesiredLRPsInDomains(domainCounts map[string]int) map
 			guid := fmt.Sprintf("guid-%d-for-%s", i, domain)
 			desiredLRP := model_helpers.NewValidDesiredLRP(guid)
 			desiredLRP.Domain = domain
-			schedulingInfo, runInfo := desiredLRP.Explode()
+			schedulingInfo, runInfo := desiredLRP.CreateComponents(t.clock.Now())
 
 			schedulingInfoValue, err := t.serializer.Marshal(t.logger, t.format, &schedulingInfo)
 			Expect(err).NotTo(HaveOccurred())
