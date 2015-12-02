@@ -144,6 +144,12 @@ var taskCallBackWorkers = flag.Int(
 	"Max concurrency for task callback requests",
 )
 
+var desiredLRPCreationTimeout = flag.Duration(
+	"desiredLRPCreationTimeout",
+	1*time.Minute,
+	"Expected maximum time to create all components of a desired LRP",
+)
+
 const (
 	dropsondeOrigin = "bbs"
 
@@ -190,7 +196,7 @@ func main() {
 	}
 	storeClient := initializeEtcdStoreClient(logger, etcdOptions)
 
-	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient)
+	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
 
 	migrationsDone := make(chan struct{})
 
@@ -325,12 +331,13 @@ func initializeEtcdDB(
 	storeClient etcddb.StoreClient,
 	cbClient taskworkpool.TaskCompletionClient,
 	serviceClient bbs.ServiceClient,
+	desiredLRPCreationMaxTime time.Duration,
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(
 		format.ENCRYPTED_PROTO,
 		*convergenceWorkers,
 		*updateWorkers,
-		time.Minute, //TODO make this customizable
+		desiredLRPCreationMaxTime,
 		cryptor,
 		storeClient,
 		initializeAuctioneerClient(logger),
