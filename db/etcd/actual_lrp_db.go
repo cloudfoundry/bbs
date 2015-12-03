@@ -1,7 +1,6 @@
 package etcd
 
 import (
-	"fmt"
 	"path"
 	"sync"
 	"sync/atomic"
@@ -455,15 +454,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 
 	logger.Debug("retrieved-lrp")
 	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateCrashed) {
-		err := fmt.Errorf("cannot transition crashed lrp from state %s to state %s", lrp.State, models.ActualLRPStateCrashed)
-		logger.Error("failed-to-transition-actual", err)
-		return models.ErrActualLRPCannotBeCrashed
-	}
-
-	if lrp.State == models.ActualLRPStateUnclaimed || lrp.State == models.ActualLRPStateCrashed ||
-		((lrp.State == models.ActualLRPStateClaimed || lrp.State == models.ActualLRPStateRunning) &&
-			!lrp.ActualLRPInstanceKey.Equal(instanceKey)) {
-		logger.Debug("cannot-be-crashed", lager.Data{"state": lrp.State, "same-instance-key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
+		logger.Error("failed-to-transition-to-crashed", nil, lager.Data{"from-state": lrp.State, "same-instance-key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
 		return models.ErrActualLRPCannotBeCrashed
 	}
 
@@ -504,18 +495,23 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 }
 
 func (db *ETCDDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.ActualLRPKey) error {
+	logger = logger.Session("requesting-auction", lager.Data{"process-guid": key.ProcessGuid, "index": key.Index})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
 	schedulingInfo, _, err := db.rawDesiredLRPSchedulingInfo(logger, key.ProcessGuid)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
 		if bbsErr.Type == models.Error_ResourceNotFound {
+			logger.Error("missing-scheduling-info-for-auction", nil)
 			_, err := db.client.Delete(ActualLRPSchemaPath(key.ProcessGuid, key.Index), false)
 			if err != nil {
 				logger.Error("failed-to-delete-actual", err)
 				return models.ErrUnknownError
 			}
-			return err
+			return nil
 		} else {
-			return err
+			return bbsErr
 		}
 	}
 

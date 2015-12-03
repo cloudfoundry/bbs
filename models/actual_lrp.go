@@ -120,6 +120,13 @@ func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *Ac
 		return false
 	}
 
+	if newState == ActualLRPStateCrashed {
+		if before.State == ActualLRPStateUnclaimed || before.State == ActualLRPStateCrashed ||
+			((before.State == ActualLRPStateClaimed || before.State == ActualLRPStateRunning) &&
+				!before.ActualLRPInstanceKey.Equal(instanceKey)) {
+			return false
+		}
+	}
 	return true
 }
 
