@@ -35,7 +35,7 @@ var _ = Describe("LrpConvergence", func() {
 
 	Describe("Convergence Fetching and Pruning", func() {
 		BeforeEach(func() {
-			testData = createTestData(3, 1, 1, 3, 1, 1, 3, 1, 1)
+			testData = createTestData(3, 1, 1, 3, 1, 1, 3, 1, 1, 1, 1)
 		})
 
 		Describe("general metrics", func() {
@@ -113,6 +113,38 @@ var _ = Describe("LrpConvergence", func() {
 					len(testData.unknownDesiredGuidsWithNoActuals) +
 					len(testData.unknownDesiredGuidsWithOnlyInvalidActuals)
 				Expect(sender.GetCounter("ConvergenceLRPPreProcessingMalformedRunInfos")).To(BeNumerically("==", expectedMetric))
+			})
+
+			It("emits a metric for the number of orphaned RunInfos", func() {
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				Expect(gatherError).NotTo(HaveOccurred())
+
+				expectedMetric := len(testData.oldOrphanedRunInfoGuids)
+				Expect(sender.GetCounter("ConvergenceLRPPreProcessingOrphanedRunInfos")).To(BeNumerically("==", expectedMetric))
+			})
+
+			Context("when there is a RunInfo without a matching SchedulingInfo", func() {
+				JustBeforeEach(func() {
+					_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+					Expect(gatherError).NotTo(HaveOccurred())
+				})
+
+				It("deletes old orphaned RunInfos", func() {
+					for _, guid := range testData.oldOrphanedRunInfoGuids {
+						_, err := storeClient.Get(etcd.DesiredLRPRunInfoSchemaPath(guid), false, true)
+						Expect(err).To(HaveOccurred())
+						etcdErr, ok := err.(*etcdclient.EtcdError)
+						Expect(ok).To(BeTrue())
+						Expect(etcdErr.ErrorCode).To(Equal(etcderror.EcodeKeyNotFound))
+					}
+				})
+
+				It("keeps recent orphaned RunInfos", func() {
+					for _, guid := range testData.recentOrphanedRunInfoGuids {
+						_, err := storeClient.Get(etcd.DesiredLRPRunInfoSchemaPath(guid), false, true)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				})
 			})
 
 			Context("when the desired LRP root in ETCD has an invalid child node", func() {
@@ -1257,6 +1289,8 @@ type testDataForConvergenceGatherer struct {
 	unknownDesiredGuidsWithSomeValidActuals   []string
 	unknownDesiredGuidsWithNoActuals          []string
 	unknownDesiredGuidsWithOnlyInvalidActuals []string
+	oldOrphanedRunInfoGuids                   []string
+	recentOrphanedRunInfoGuids                []string
 }
 
 func createTestData(
@@ -1268,7 +1302,9 @@ func createTestData(
 	numInvalidDesiredGuidsWithOnlyInvalidActuals,
 	numUnknownDesiredGuidsWithSomeValidActuals,
 	numUnknownDesiredGuidsWithNoActuals,
-	numUnknownDesiredGuidsWithOnlyInvalidActuals int,
+	numUnknownDesiredGuidsWithOnlyInvalidActuals,
+	numOldOrphanedRunInfos,
+	numRecentOrphanedRunInfos int,
 ) *testDataForConvergenceGatherer {
 	testData := &testDataForConvergenceGatherer{
 		instanceKeysToKeep:    map[processGuidAndIndex]struct{}{},
@@ -1287,6 +1323,8 @@ func createTestData(
 		unknownDesiredGuidsWithSomeValidActuals:   []string{},
 		unknownDesiredGuidsWithNoActuals:          []string{},
 		unknownDesiredGuidsWithOnlyInvalidActuals: []string{},
+		oldOrphanedRunInfoGuids:                   []string{},
+		recentOrphanedRunInfoGuids:                []string{},
 	}
 
 	for i := 0; i < numValidDesiredGuidsWithSomeValidActuals; i++ {
@@ -1413,6 +1451,22 @@ func createTestData(
 		testData.instanceKeysToPrune[processGuidAndIndex{guid, randomIndex2}] = struct{}{}
 	}
 
+	for i := 0; i < numOldOrphanedRunInfos; i++ {
+		guid := fmt.Sprintf("old-orphaned-run-info-with-no-scheduling-info-%d", i)
+		testData.oldOrphanedRunInfoGuids = append(
+			testData.oldOrphanedRunInfoGuids,
+			guid,
+		)
+	}
+
+	for i := 0; i < numRecentOrphanedRunInfos; i++ {
+		guid := fmt.Sprintf("recent-orphaned-run-info-with-no-scheduling-info-%d", i)
+		testData.recentOrphanedRunInfoGuids = append(
+			testData.recentOrphanedRunInfoGuids,
+			guid,
+		)
+	}
+
 	testData.domains = append(testData.domains, domain)
 
 	testData.cells = models.CellSet{
@@ -1470,6 +1524,14 @@ func createTestData(
 
 	for _, guid := range testData.unknownDesiredGuidsWithOnlyInvalidActuals {
 		etcdHelper.CreateMalformedDesiredLRP(guid)
+	}
+
+	for _, guid := range testData.oldOrphanedRunInfoGuids {
+		etcdHelper.CreateOrphanedRunInfo(guid, clock.Now().Add(-time.Hour))
+	}
+
+	for _, guid := range testData.recentOrphanedRunInfoGuids {
+		etcdHelper.CreateOrphanedRunInfo(guid, clock.Now())
 	}
 
 	for _, domain := range testData.domains {

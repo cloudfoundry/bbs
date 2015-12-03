@@ -24,6 +24,7 @@ const (
 	malformedRunInfosMetric        = metric.Counter("ConvergenceLRPPreProcessingMalformedRunInfos")
 	actualLRPsDeleted              = metric.Counter("ConvergenceLRPPreProcessingActualLRPsDeleted")
 	lrpsDeletedCounter             = metric.Counter("ConvergenceLRPsDeleted")
+	orphanedRunInfosMetric         = metric.Counter("ConvergenceLRPPreProcessingOrphanedRunInfos")
 
 	domainMetricPrefix = "Domain."
 
@@ -106,17 +107,17 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	logger.Info("succeeded-gathering-and-pruning-actual-lrps")
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
-	logger.Info("gathering-desired-lrps")
-	desireds, err := db.GatherDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
+	logger.Info("gathering-and-pruning-desired-lrps")
+	desireds, err := db.gatherAndPruneDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
 	if err != nil {
-		logger.Error("failed-gathering-desired-lrps", err)
+		logger.Error("failed-gathering-and-pruning-desired-lrps", err)
 
 		lrpMetricCounter.desiredLRPs = -1
 		lrpMetricCounter.Send()
 
 		return &models.ConvergenceInput{}, err
 	}
-	logger.Info("succeeded-gathering-desired-lrps")
+	logger.Info("succeeded-gathering-and-pruning-desired-lrps")
 
 	lrpMetricCounter.Send()
 
@@ -304,7 +305,7 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 	return nil
 }
 
-func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]*models.DesiredLRP, error) {
+func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]*models.DesiredLRP, error) {
 	desiredLRPsRoot, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
@@ -389,6 +390,23 @@ func (db *ETCDDB) GatherDesiredLRPs(logger lager.Logger, guids map[string]struct
 		runInfo := runInfos[guid]
 		desiredLRP := models.NewDesiredLRP(*schedulingInfo, *runInfo)
 		desireds[guid] = &desiredLRP
+	}
+
+	// Check to see if we have orphaned RunInfos
+	if len(runInfos) != len(schedulingInfos) {
+		var runInfosToDelete []string
+		for guid, runInfo := range runInfos {
+			// If there is no corresponding SchedulingInfo and the RunInfo has
+			// existed for longer than desiredLRPCreationTimeout, consider it orphaned
+			// and delete it.
+			_, ok := schedulingInfos[guid]
+			if !ok && db.clock.Since(time.Unix(0, runInfo.CreatedAt)) > db.desiredLRPCreationTimeout {
+				orphanedRunInfosMetric.Add(1)
+				runInfosToDelete = append(runInfosToDelete, DesiredLRPRunInfoSchemaPath(guid))
+			}
+		}
+
+		db.batchDeleteNodes(runInfosToDelete, logger)
 	}
 
 	return desireds, nil

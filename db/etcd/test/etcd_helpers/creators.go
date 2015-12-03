@@ -2,6 +2,7 @@ package etcd_helpers
 
 import (
 	"fmt"
+	"time"
 
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -92,6 +93,13 @@ func (t *ETCDHelper) CreateValidDesiredLRP(guid string) {
 
 func (t *ETCDHelper) CreateValidTask(guid string) {
 	t.SetRawTask(model_helpers.NewValidTask(guid))
+}
+
+func (t *ETCDHelper) CreateOrphanedRunInfo(guid string, createdAt time.Time) {
+	lrp := model_helpers.NewValidDesiredLRP(guid)
+	_, runInfo := lrp.CreateComponents(createdAt)
+
+	t.SetRawDesiredLRPRunInfo(&runInfo)
 }
 
 func (t *ETCDHelper) CreateMalformedActualLRP(guid string, index int32) {
