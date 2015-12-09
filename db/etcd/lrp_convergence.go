@@ -108,7 +108,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
 	logger.Info("gathering-and-pruning-desired-lrps")
-	desireds, err := db.gatherAndPruneDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
+	desireds, err := db.GatherAndPruneDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-and-pruning-desired-lrps", err)
 
@@ -305,7 +305,7 @@ func (db *ETCDDB) deleteLeaves(logger lager.Logger, keys []string) error {
 	return nil
 }
 
-func (db *ETCDDB) gatherAndPruneDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]*models.DesiredLRP, error) {
+func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]*models.DesiredLRP, error) {
 	desiredLRPsRoot, modelErr := db.fetchRecursiveRaw(logger, DesiredLRPComponentsSchemaRoot)
 
 	if modelErr == models.ErrResourceNotFound {
@@ -508,12 +508,6 @@ func CalculateConvergence(
 			}
 		} else {
 			for i, actual := range actualsByIndex {
-				if actual.CellIsMissing(input.Cells) {
-					pLog.Info("missing-cell", lager.Data{"index": i})
-					changes.ActualLRPsWithMissingCells = append(changes.ActualLRPsWithMissingCells, actual)
-					continue
-				}
-
 				if !input.Domains.Contains(actual.Domain) {
 					pLog.Info("skipping-unfresh-domain")
 					continue

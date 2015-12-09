@@ -617,9 +617,9 @@ var _ = Describe("LrpConvergence", func() {
 					input.Cells = cellSet()
 				})
 
-				It("reports them", func() {
+				It("reports them as extra indices", func() {
 					output := &models.ConvergenceChanges{
-						ActualLRPsWithMissingCells: []*models.ActualLRP{
+						ActualLRPsForExtraIndices: []*models.ActualLRP{
 							newRunningActualLRP(lrpA, cellA.CellID, 0),
 							newRunningActualLRP(lrpA, cellA.CellID, 1),
 						},
@@ -930,10 +930,11 @@ var _ = Describe("LrpConvergence", func() {
 			Context("when the actual LRP is CLAIMED", func() {
 				var cellPresence models.CellPresence
 
-				JustBeforeEach(func() {
+				BeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
-					consulHelper.RegisterCell(&cellPresence)
+				})
 
+				JustBeforeEach(func() {
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -947,34 +948,63 @@ var _ = Describe("LrpConvergence", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("sends a stop request to the corresponding cell", func() {
-					etcdDB.ConvergeLRPs(logger)
-
-					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
-					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-					Expect(key.ProcessGuid).To(Equal(processGuid))
-					Expect(key.Index).To(Equal(index))
-					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
-				})
-
-				It("logs", func() {
-					etcdDB.ConvergeLRPs(logger)
-					Expect(logger.TestSink).To(gbytes.Say("no-longer-desired"))
-				})
-
-				Context("when the LRP domain is not fresh", func() {
-					BeforeEach(func() {
-						domain = "expired-domain"
+				Context("when the cell exists", func() {
+					JustBeforeEach(func() {
+						consulHelper.RegisterCell(&cellPresence)
 					})
 
-					It("does not stop the actual LRP", func() {
+					It("sends a stop request to the corresponding cell", func() {
 						etcdDB.ConvergeLRPs(logger)
 
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
-						Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
+						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
+						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
+
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
+						key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+						Expect(key.ProcessGuid).To(Equal(processGuid))
+						Expect(key.Index).To(Equal(index))
+						Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
+					})
+
+					It("logs", func() {
+						etcdDB.ConvergeLRPs(logger)
+						Expect(logger.TestSink).To(gbytes.Say("no-longer-desired"))
+					})
+
+					Context("when the LRP domain is not fresh", func() {
+						BeforeEach(func() {
+							domain = "expired-domain"
+						})
+
+						It("does not stop the actual LRP", func() {
+							etcdDB.ConvergeLRPs(logger)
+
+							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
+							Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
+						})
+					})
+				})
+
+				Context("when the cell is missing", func() {
+					It("removes the actualLRP", func() {
+						etcdDB.ConvergeLRPs(logger)
+
+						_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+						Expect(err).To(Equal(models.ErrResourceNotFound))
+					})
+
+					Context("when the LRP domain is not fresh", func() {
+						BeforeEach(func() {
+							domain = "expired-domain"
+						})
+
+						It("does not delete the actual LRP", func() {
+							etcdDB.ConvergeLRPs(logger)
+
+							_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
+						})
 					})
 				})
 			})
