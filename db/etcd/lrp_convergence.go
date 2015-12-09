@@ -387,9 +387,14 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 
 	desireds := make(map[string]*models.DesiredLRP)
 	for guid, schedulingInfo := range schedulingInfos {
-		runInfo := runInfos[guid]
-		desiredLRP := models.NewDesiredLRP(*schedulingInfo, *runInfo)
-		desireds[guid] = &desiredLRP
+		runInfo, ok := runInfos[guid]
+		if !ok {
+			err := fmt.Errorf("Missing runInfo for GUID %s", guid)
+			logger.Error("runInfo-not-found-error", err)
+		} else {
+			desiredLRP := models.NewDesiredLRP(*schedulingInfo, *runInfo)
+			desireds[guid] = &desiredLRP
+		}
 	}
 
 	// Check to see if we have orphaned RunInfos

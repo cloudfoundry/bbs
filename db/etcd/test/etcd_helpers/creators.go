@@ -102,6 +102,13 @@ func (t *ETCDHelper) CreateOrphanedRunInfo(guid string, createdAt time.Time) {
 	t.SetRawDesiredLRPRunInfo(&runInfo)
 }
 
+func (t *ETCDHelper) CreateOrphanedSchedulingInfo(guid string, createdAt time.Time) {
+	lrp := model_helpers.NewValidDesiredLRP(guid)
+	schedulingInfo, _ := lrp.CreateComponents(createdAt)
+
+	t.SetRawDesiredLRPSchedulingInfo(&schedulingInfo)
+}
+
 func (t *ETCDHelper) CreateMalformedActualLRP(guid string, index int32) {
 	t.createMalformedValueForKey(etcddb.ActualLRPSchemaPath(guid, index))
 }

@@ -35,7 +35,7 @@ var _ = Describe("LrpConvergence", func() {
 
 	Describe("Convergence Fetching and Pruning", func() {
 		BeforeEach(func() {
-			testData = createTestData(3, 1, 1, 3, 1, 1, 3, 1, 1, 1, 1)
+			testData = createTestData(3, 1, 1, 3, 1, 1, 3, 1, 1, 1, 1, 1)
 		})
 
 		Describe("general metrics", func() {
@@ -50,7 +50,7 @@ var _ = Describe("LrpConvergence", func() {
 				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
 				Expect(gatherError).NotTo(HaveOccurred())
 
-				Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(5)))
+				Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(6)))
 				Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(0)))
 				Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(0)))
 				Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(15)))
@@ -353,6 +353,9 @@ var _ = Describe("LrpConvergence", func() {
 				expectedGuids[desiredGuid] = struct{}{}
 			}
 			for _, desiredGuid := range testData.unknownDesiredGuidsWithSomeValidActuals {
+				expectedGuids[desiredGuid] = struct{}{}
+			}
+			for _, desiredGuid := range testData.orphanedSchedulingInfoGuids {
 				expectedGuids[desiredGuid] = struct{}{}
 			}
 
@@ -1321,6 +1324,7 @@ type testDataForConvergenceGatherer struct {
 	unknownDesiredGuidsWithOnlyInvalidActuals []string
 	oldOrphanedRunInfoGuids                   []string
 	recentOrphanedRunInfoGuids                []string
+	orphanedSchedulingInfoGuids               []string
 }
 
 func createTestData(
@@ -1334,7 +1338,8 @@ func createTestData(
 	numUnknownDesiredGuidsWithNoActuals,
 	numUnknownDesiredGuidsWithOnlyInvalidActuals,
 	numOldOrphanedRunInfos,
-	numRecentOrphanedRunInfos int,
+	numRecentOrphanedRunInfos,
+	numOrphanedSchedulingInfos int,
 ) *testDataForConvergenceGatherer {
 	testData := &testDataForConvergenceGatherer{
 		instanceKeysToKeep:    map[processGuidAndIndex]struct{}{},
@@ -1355,6 +1360,7 @@ func createTestData(
 		unknownDesiredGuidsWithOnlyInvalidActuals: []string{},
 		oldOrphanedRunInfoGuids:                   []string{},
 		recentOrphanedRunInfoGuids:                []string{},
+		orphanedSchedulingInfoGuids:               []string{},
 	}
 
 	for i := 0; i < numValidDesiredGuidsWithSomeValidActuals; i++ {
@@ -1497,6 +1503,14 @@ func createTestData(
 		)
 	}
 
+	for i := 0; i < numOrphanedSchedulingInfos; i++ {
+		guid := fmt.Sprintf("orphaned-scheduling-info-with-no-run-info-%d", i)
+		testData.orphanedSchedulingInfoGuids = append(
+			testData.orphanedSchedulingInfoGuids,
+			guid,
+		)
+	}
+
 	testData.domains = append(testData.domains, domain)
 
 	testData.cells = models.CellSet{
@@ -1562,6 +1576,10 @@ func createTestData(
 
 	for _, guid := range testData.recentOrphanedRunInfoGuids {
 		etcdHelper.CreateOrphanedRunInfo(guid, clock.Now())
+	}
+
+	for _, guid := range testData.orphanedSchedulingInfoGuids {
+		etcdHelper.CreateOrphanedSchedulingInfo(guid, clock.Now())
 	}
 
 	for _, domain := range testData.domains {
