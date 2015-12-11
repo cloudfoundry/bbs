@@ -34,7 +34,18 @@ func (sc *storeClient) Set(key string, payload []byte, ttl uint64) (*etcd.Respon
 }
 
 func (sc *storeClient) Create(key string, payload []byte, ttl uint64) (*etcd.Response, error) {
-	return sc.client.Create(key, string(payload), ttl)
+	resp, err := sc.client.Create(key, string(payload), ttl)
+	if etcdErrCode(err) == ETCDErrKeyExists {
+		getResp, getErr := sc.Get(key, false, false)
+		if getErr != nil {
+			return resp, err
+		}
+		if getResp.Node.Value == string(payload) {
+			// We got a dup on a retry?
+			return resp, nil
+		}
+	}
+	return resp, err
 }
 
 func (sc *storeClient) Delete(key string, recursive bool) (*etcd.Response, error) {

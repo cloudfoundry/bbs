@@ -405,7 +405,7 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 			// existed for longer than desiredLRPCreationTimeout, consider it orphaned
 			// and delete it.
 			_, ok := schedulingInfos[guid]
-			if !ok && db.clock.Since(time.Unix(0, runInfo.CreatedAt)) > db.desiredLRPCreationTimeout {
+			if !ok && runInfo != nil && db.clock.Since(time.Unix(0, runInfo.CreatedAt)) > db.desiredLRPCreationTimeout {
 				orphanedRunInfosMetric.Add(1)
 				runInfosToDelete = append(runInfosToDelete, DesiredLRPRunInfoSchemaPath(guid))
 			}
