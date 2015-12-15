@@ -65,6 +65,7 @@ type DesiredLRPRunInfo struct {
 	LogSource            string                `protobuf:"bytes,11,opt,name=log_source" json:"log_source"`
 	MetricsGuid          string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
 	CreatedAt            int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
+	CacheDependencies    []*CacheDependency    `protobuf:"bytes,14,rep,name=cache_dependencies" json:"cache_dependencies,omitempty"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -152,6 +153,13 @@ func (m *DesiredLRPRunInfo) GetCreatedAt() int64 {
 		return m.CreatedAt
 	}
 	return 0
+}
+
+func (m *DesiredLRPRunInfo) GetCacheDependencies() []*CacheDependency {
+	if m != nil {
+		return m.CacheDependencies
+	}
+	return nil
 }
 
 // helper message for marshalling routes
@@ -274,6 +282,7 @@ type DesiredLRP struct {
 	Annotation           string                 `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
 	EgressRules          []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
 	ModificationTag      *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
+	CacheDependencies    []*CacheDependency     `protobuf:"bytes,22,rep,name=cache_dependencies" json:"cache_dependencies,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -419,6 +428,13 @@ func (m *DesiredLRP) GetModificationTag() *ModificationTag {
 	return nil
 }
 
+func (m *DesiredLRP) GetCacheDependencies() []*CacheDependency {
+	if m != nil {
+		return m.CacheDependencies
+	}
+	return nil
+}
+
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -532,6 +548,14 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	}
 	if this.CreatedAt != that1.CreatedAt {
 		return false
+	}
+	if len(this.CacheDependencies) != len(that1.CacheDependencies) {
+		return false
+	}
+	for i := range this.CacheDependencies {
+		if !this.CacheDependencies[i].Equal(that1.CacheDependencies[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -776,6 +800,14 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if !this.ModificationTag.Equal(that1.ModificationTag) {
 		return false
 	}
+	if len(this.CacheDependencies) != len(that1.CacheDependencies) {
+		return false
+	}
+	for i := range this.CacheDependencies {
+		if !this.CacheDependencies[i].Equal(that1.CacheDependencies[i]) {
+			return false
+		}
+	}
 	return true
 }
 func (this *DesiredLRPSchedulingInfo) GoString() string {
@@ -808,7 +840,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%#v", this.EgressRules), `&`, ``, 1),
 		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
 		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
-		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt) + `}`}, ", ")
+		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
+		`CacheDependencies:` + fmt.Sprintf("%#v", this.CacheDependencies) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -884,7 +917,8 @@ func (this *DesiredLRP) GoString() string {
 		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
 		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
 		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
-		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag) + `}`}, ", ")
+		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag),
+		`CacheDependencies:` + fmt.Sprintf("%#v", this.CacheDependencies) + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1078,6 +1112,18 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 	data[i] = 0x68
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.CreatedAt))
+	if len(m.CacheDependencies) > 0 {
+		for _, msg := range m.CacheDependencies {
+			data[i] = 0x72
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -1377,6 +1423,20 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		}
 		i += n14
 	}
+	if len(m.CacheDependencies) > 0 {
+		for _, msg := range m.CacheDependencies {
+			data[i] = 0xb2
+			i++
+			data[i] = 0x1
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -1466,6 +1526,12 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 	l = len(m.MetricsGuid)
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	n += 1 + sovDesiredLrp(uint64(m.CreatedAt))
+	if len(m.CacheDependencies) > 0 {
+		for _, e := range m.CacheDependencies {
+			l = e.Size()
+			n += 1 + l + sovDesiredLrp(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1582,6 +1648,12 @@ func (m *DesiredLRP) Size() (n int) {
 		l = m.ModificationTag.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
+	if len(m.CacheDependencies) > 0 {
+		for _, e := range m.CacheDependencies {
+			l = e.Size()
+			n += 2 + l + sovDesiredLrp(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1631,6 +1703,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
 		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
 		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
+		`CacheDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CacheDependencies), "CacheDependency", "CacheDependency", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1717,6 +1790,7 @@ func (this *DesiredLRP) String() string {
 		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
 		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
+		`CacheDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CacheDependencies), "CacheDependency", "CacheDependency", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2247,6 +2321,34 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CacheDependencies", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CacheDependencies = append(m.CacheDependencies, &CacheDependency{})
+			if err := m.CacheDependencies[len(m.CacheDependencies)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			var sizeOfWire int
 			for {
@@ -3259,6 +3361,34 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				m.ModificationTag = &ModificationTag{}
 			}
 			if err := m.ModificationTag.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 22:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CacheDependencies", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CacheDependencies = append(m.CacheDependencies, &CacheDependency{})
+			if err := m.CacheDependencies[len(m.CacheDependencies)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

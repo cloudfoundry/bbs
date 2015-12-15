@@ -6,6 +6,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actions.proto";
 import "environment_variables.proto";
 import "security_group.proto";
+import "cache_dependency.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
@@ -24,6 +25,7 @@ message TaskDefinition {
   optional string completion_callback_url = 12 [(gogoproto.jsontag) = "completion_callback_url,omitempty"];
   optional string annotation = 13 [(gogoproto.jsontag) = "annotation,omitempty"];
   repeated SecurityGroupRule egress_rules = 14 [(gogoproto.jsontag) = "egress_rules,omitempty"];
+  repeated CacheDependency cache_dependencies = 15 [(gogoproto.jsontag) = "cache_dependencies,omitempty"];
 }
 
 message Task {

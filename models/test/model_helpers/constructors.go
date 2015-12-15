@@ -37,9 +37,12 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		RootFs:               "some:rootfs",
 		Instances:            1,
 		EnvironmentVariables: []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
-		Setup:                models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-		Action:               models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-		StartTimeout:         15,
+		CacheDependencies: []*models.CacheDependency{
+			{Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
+		},
+		Setup:        models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+		Action:       models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+		StartTimeout: 15,
 		Monitor: models.WrapAction(models.EmitProgressFor(
 			models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
 				10*time.Second,
@@ -77,6 +80,9 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				Name:  "FOO",
 				Value: "BAR",
 			},
+		},
+		CacheDependencies: []*models.CacheDependency{
+			{Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
 		},
 		Action: models.WrapAction(&models.RunAction{
 			User:           "user",

@@ -51,6 +51,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		Routes:               &schedInfo.Routes,
 		ModificationTag:      &schedInfo.ModificationTag,
 		EnvironmentVariables: environmentVariables,
+		CacheDependencies:    runInfo.CacheDependencies,
 		Setup:                runInfo.Setup,
 		Action:               runInfo.Action,
 		Monitor:              runInfo.Monitor,
@@ -115,7 +116,22 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	for i := range d.EgressRules {
 		egressRules[i] = *d.EgressRules[i]
 	}
-	return NewDesiredLRPRunInfo(d.DesiredLRPKey(), createdAt, environmentVariables, d.Setup, d.Action, d.Monitor, d.StartTimeout, d.Privileged, d.CpuWeight, d.Ports, egressRules, d.LogSource, d.MetricsGuid)
+	return NewDesiredLRPRunInfo(
+		d.DesiredLRPKey(),
+		createdAt,
+		environmentVariables,
+		d.CacheDependencies,
+		d.Setup,
+		d.Action,
+		d.Monitor,
+		d.StartTimeout,
+		d.Privileged,
+		d.CpuWeight,
+		d.Ports,
+		egressRules,
+		d.LogSource,
+		d.MetricsGuid,
+	)
 }
 
 func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
@@ -318,11 +334,27 @@ func (resource DesiredLRPResource) Validate() error {
 	return validationError.ToError()
 }
 
-func NewDesiredLRPRunInfo(key DesiredLRPKey, createdAt time.Time, envVars []EnvironmentVariable, setup, action, monitor *Action, startTimeout uint32, privileged bool, cpuWeight uint32, ports []uint32, egressRules []SecurityGroupRule, logSource, metricsGuid string) DesiredLRPRunInfo {
+func NewDesiredLRPRunInfo(
+	key DesiredLRPKey,
+	createdAt time.Time,
+	envVars []EnvironmentVariable,
+	cacheDeps []*CacheDependency,
+	setup,
+	action,
+	monitor *Action,
+	startTimeout uint32,
+	privileged bool,
+	cpuWeight uint32,
+	ports []uint32,
+	egressRules []SecurityGroupRule,
+	logSource,
+	metricsGuid string,
+) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:        key,
 		CreatedAt:            createdAt.UnixNano(),
 		EnvironmentVariables: envVars,
+		CacheDependencies:    cacheDeps,
 		Setup:                setup,
 		Action:               action,
 		Monitor:              monitor,

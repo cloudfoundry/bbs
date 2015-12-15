@@ -80,6 +80,7 @@ type TaskDefinition struct {
 	CompletionCallbackUrl string                 `protobuf:"bytes,12,opt,name=completion_callback_url" json:"completion_callback_url,omitempty"`
 	Annotation            string                 `protobuf:"bytes,13,opt,name=annotation" json:"annotation,omitempty"`
 	EgressRules           []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
+	CacheDependencies     []*CacheDependency     `protobuf:"bytes,15,rep,name=cache_dependencies" json:"cache_dependencies,omitempty"`
 }
 
 func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
@@ -179,6 +180,13 @@ func (m *TaskDefinition) GetAnnotation() string {
 func (m *TaskDefinition) GetEgressRules() []*SecurityGroupRule {
 	if m != nil {
 		return m.EgressRules
+	}
+	return nil
+}
+
+func (m *TaskDefinition) GetCacheDependencies() []*CacheDependency {
+	if m != nil {
+		return m.CacheDependencies
 	}
 	return nil
 }
@@ -352,6 +360,14 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 			return false
 		}
 	}
+	if len(this.CacheDependencies) != len(that1.CacheDependencies) {
+		return false
+	}
+	for i := range this.CacheDependencies {
+		if !this.CacheDependencies[i].Equal(that1.CacheDependencies[i]) {
+			return false
+		}
+	}
 	return true
 }
 func (this *Task) Equal(that interface{}) bool {
@@ -427,7 +443,8 @@ func (this *TaskDefinition) GoString() string {
 		`ResultFile:` + fmt.Sprintf("%#v", this.ResultFile),
 		`CompletionCallbackUrl:` + fmt.Sprintf("%#v", this.CompletionCallbackUrl),
 		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
-		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules) + `}`}, ", ")
+		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
+		`CacheDependencies:` + fmt.Sprintf("%#v", this.CacheDependencies) + `}`}, ", ")
 	return s
 }
 func (this *Task) GoString() string {
@@ -558,6 +575,18 @@ func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 	if len(m.EgressRules) > 0 {
 		for _, msg := range m.EgressRules {
 			data[i] = 0x72
+			i++
+			i = encodeVarintTask(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.CacheDependencies) > 0 {
+		for _, msg := range m.CacheDependencies {
+			data[i] = 0x7a
 			i++
 			i = encodeVarintTask(data, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(data[i:])
@@ -702,6 +731,12 @@ func (m *TaskDefinition) Size() (n int) {
 			n += 1 + l + sovTask(uint64(l))
 		}
 	}
+	if len(m.CacheDependencies) > 0 {
+		for _, e := range m.CacheDependencies {
+			l = e.Size()
+			n += 1 + l + sovTask(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -762,6 +797,7 @@ func (this *TaskDefinition) String() string {
 		`CompletionCallbackUrl:` + fmt.Sprintf("%v", this.CompletionCallbackUrl) + `,`,
 		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
+		`CacheDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CacheDependencies), "CacheDependency", "CacheDependency", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1136,6 +1172,34 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			m.EgressRules = append(m.EgressRules, &SecurityGroupRule{})
 			if err := m.EgressRules[len(m.EgressRules)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 15:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CacheDependencies", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CacheDependencies = append(m.CacheDependencies, &CacheDependency{})
+			if err := m.CacheDependencies[len(m.CacheDependencies)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
