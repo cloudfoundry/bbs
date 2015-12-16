@@ -32,6 +32,15 @@ func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		filter := models.TaskFilter{Domain: request.Domain, CellID: request.CellId}
 		response.Tasks, err = h.db.Tasks(logger, filter)
+		if err == nil {
+			for _, task := range response.Tasks {
+				if task.TaskDefinition == nil {
+					continue
+				}
+				transformedTaskDef := task.TaskDefinition.WithCacheDependenciesAsActions()
+				task.TaskDefinition = &transformedTaskDef
+			}
+		}
 	}
 
 	response.Error = models.ConvertError(err)
@@ -48,6 +57,10 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		response.Task, err = h.db.TaskByGuid(logger, request.TaskGuid)
+		if err == nil && response.Task.TaskDefinition != nil {
+			transformedTaskDef := response.Task.TaskDefinition.WithCacheDependenciesAsActions()
+			response.Task.TaskDefinition = &transformedTaskDef
+		}
 	}
 
 	response.Error = models.ConvertError(err)

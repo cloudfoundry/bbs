@@ -138,6 +138,35 @@ func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPScheduling
 	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
 }
 
+func (d DesiredLRP) WithCacheDependenciesAsSetupActions() DesiredLRP {
+	if len(d.CacheDependencies) > 0 {
+		actions := make([]ActionInterface, len(d.CacheDependencies))
+
+		for i := range d.CacheDependencies {
+			cacheDependency := d.CacheDependencies[i]
+			actions[i] = &DownloadAction{
+				Artifact:  cacheDependency.Name,
+				From:      cacheDependency.From,
+				To:        cacheDependency.To,
+				CacheKey:  cacheDependency.CacheKey,
+				LogSource: cacheDependency.LogSource,
+				User:      "vcap",
+			}
+		}
+
+		parallelDownloads := Parallel(actions...)
+
+		if d.Setup != nil {
+			d.Setup = WrapAction(Serial(parallelDownloads, UnwrapAction(d.Setup)))
+		} else {
+			d.Setup = WrapAction(Serial(parallelDownloads))
+		}
+		d.CacheDependencies = nil
+	}
+
+	return d
+}
+
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
 

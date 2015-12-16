@@ -361,6 +361,104 @@ var _ = Describe("DesiredLRP", func() {
 		})
 	})
 
+	Describe("WithCacheDependenciesAsSetupActions", func() {
+		var (
+			downloadAction1, downloadAction2 *models.DownloadAction
+		)
+
+		BeforeEach(func() {
+			desiredLRP.CacheDependencies = []*models.CacheDependency{
+				{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
+				{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
+			}
+		})
+
+		Context("when there is no existing setup action", func() {
+			BeforeEach(func() {
+				desiredLRP.Setup = nil
+
+				downloadAction1 = &models.DownloadAction{
+					Artifact:  "name-1",
+					From:      "from-1",
+					To:        "to-1",
+					CacheKey:  "cache-key-1",
+					LogSource: "log-source-1",
+					User:      "vcap",
+				}
+
+				downloadAction2 = &models.DownloadAction{
+					Artifact:  "name-2",
+					From:      "from-2",
+					To:        "to-2",
+					CacheKey:  "cache-key-2",
+					LogSource: "log-source-2",
+					User:      "vcap",
+				}
+			})
+
+			It("converts a cache dependency into download step action", func() {
+				convertedLRP := desiredLRP.WithCacheDependenciesAsSetupActions()
+				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(1))
+				Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+
+				Expect(*convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(*downloadAction1))
+				Expect(*convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(*downloadAction2))
+
+				Expect(*convertedLRP.Setup).To(Equal(models.Action{
+					SerialAction: &models.SerialAction{
+						Actions: []*models.Action{
+							{
+								ParallelAction: &models.ParallelAction{
+									Actions: []*models.Action{
+										&models.Action{DownloadAction: downloadAction1},
+										&models.Action{DownloadAction: downloadAction2},
+									},
+								},
+							},
+						},
+					},
+				}))
+			})
+		})
+
+		Context("when there is an existing setup action", func() {
+			It("appends the new converted step action to the front", func() {
+				convertedLRP := desiredLRP.WithCacheDependenciesAsSetupActions()
+				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
+				Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+
+				Expect(*convertedLRP.Setup).To(Equal(models.Action{
+					SerialAction: &models.SerialAction{
+						Actions: []*models.Action{
+							{
+								ParallelAction: &models.ParallelAction{
+									Actions: []*models.Action{
+										&models.Action{DownloadAction: downloadAction1},
+										&models.Action{DownloadAction: downloadAction2},
+									},
+								},
+							},
+							desiredLRP.Setup,
+						},
+					},
+				}))
+			})
+		})
+
+		Context("when there are no cache dependencies", func() {
+			BeforeEach(func() {
+				desiredLRP.CacheDependencies = nil
+			})
+
+			It("keeps the current setup", func() {
+				convertedLRP := desiredLRP.WithCacheDependenciesAsSetupActions()
+				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
+
+				Expect(*convertedLRP.Setup).To(Equal(*desiredLRP.Setup))
+			})
+		})
+	})
+
 	Describe("Validate", func() {
 		var assertDesiredLRPValidationFailsWithMessage = func(lrp models.DesiredLRP, substring string) {
 			validationErr := lrp.Validate()

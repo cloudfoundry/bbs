@@ -56,6 +56,35 @@ func (task *Task) Validate() error {
 	return nil
 }
 
+func (t TaskDefinition) WithCacheDependenciesAsActions() TaskDefinition {
+	if len(t.CacheDependencies) > 0 {
+		actions := make([]ActionInterface, len(t.CacheDependencies))
+
+		for i := range t.CacheDependencies {
+			cacheDependency := t.CacheDependencies[i]
+			actions[i] = &DownloadAction{
+				Artifact:  cacheDependency.Name,
+				From:      cacheDependency.From,
+				To:        cacheDependency.To,
+				CacheKey:  cacheDependency.CacheKey,
+				LogSource: cacheDependency.LogSource,
+				User:      "vcap",
+			}
+		}
+
+		parallelDownloads := Parallel(actions...)
+
+		if t.Action != nil {
+			t.Action = WrapAction(Serial(parallelDownloads, UnwrapAction(t.Action)))
+		} else {
+			t.Action = WrapAction(Serial(parallelDownloads))
+		}
+		t.CacheDependencies = nil
+	}
+
+	return t
+}
+
 func (def *TaskDefinition) Validate() error {
 	var validationError ValidationError
 

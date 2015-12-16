@@ -83,6 +83,37 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
+
+			Context("when the desired LRPs have cache dependencies", func() {
+				BeforeEach(func() {
+					desiredLRP1.Setup = &models.Action{
+						UploadAction: &models.UploadAction{
+							From: "web_location",
+						},
+					}
+
+					desiredLRP1.CacheDependencies = []*models.CacheDependency{
+						{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
+					}
+
+					desiredLRP2.CacheDependencies = []*models.CacheDependency{
+						{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
+						{Name: "name-3", From: "from-3", To: "to-3", CacheKey: "cache-key-3", LogSource: "log-source-3"},
+					}
+				})
+
+				It("returns the cache dependency along with any setup actions", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPsResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+					Expect(response.DesiredLrps).To(HaveLen(2))
+					Expect(*response.DesiredLrps[0]).To(Equal(desiredLRP1.WithCacheDependenciesAsSetupActions()))
+					Expect(*response.DesiredLrps[1]).To(Equal(desiredLRP2.WithCacheDependenciesAsSetupActions()))
+				})
+			})
 		})
 
 		Context("when the DB returns no desired lrp groups", func() {
@@ -155,6 +186,29 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.DesiredLrp).To(Equal(desiredLRP))
+			})
+
+			Context("when the desired LRP has cache dependencies", func() {
+				BeforeEach(func() {
+					desiredLRP.Setup = &models.Action{
+						UploadAction: &models.UploadAction{
+							From: "web_location",
+						},
+					}
+					desiredLRP.CacheDependencies = []*models.CacheDependency{
+						{Name: "name", From: "from", To: "to", CacheKey: "cache-key", LogSource: "log-source"},
+					}
+				})
+
+				It("returns the cache dependency along with any setup actions", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+					Expect(*response.DesiredLrp).To(Equal(desiredLRP.WithCacheDependenciesAsSetupActions()))
+				})
 			})
 		})
 
