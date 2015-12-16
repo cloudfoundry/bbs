@@ -37,7 +37,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		RootFs:               "some:rootfs",
 		Instances:            1,
 		EnvironmentVariables: []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
-		CacheDependencies: []*models.CacheDependency{
+		CachedDependencies: []*models.CachedDependency{
 			{Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
 		},
 		Setup:        models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
@@ -81,7 +81,7 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				Value: "BAR",
 			},
 		},
-		CacheDependencies: []*models.CacheDependency{
+		CachedDependencies: []*models.CachedDependency{
 			{Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
 		},
 		Action: models.WrapAction(&models.RunAction{

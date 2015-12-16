@@ -113,11 +113,11 @@ var _ = Describe("Task Handlers", func() {
 						},
 					}
 
-					task1.CacheDependencies = []*models.CacheDependency{
+					task1.CachedDependencies = []*models.CachedDependency{
 						{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 					}
 
-					task2.CacheDependencies = []*models.CacheDependency{
+					task2.CachedDependencies = []*models.CachedDependency{
 						{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 						{Name: "name-3", From: "from-3", To: "to-3", CacheKey: "cache-key-3", LogSource: "log-source-3"},
 					}
@@ -131,8 +131,8 @@ var _ = Describe("Task Handlers", func() {
 
 					Expect(response.Error).To(BeNil())
 					Expect(response.Tasks).To(HaveLen(2))
-					Expect(*response.Tasks[0].TaskDefinition).To(Equal(task1.TaskDefinition.WithCacheDependenciesAsActions()))
-					Expect(*response.Tasks[1].TaskDefinition).To(Equal(task2.TaskDefinition.WithCacheDependenciesAsActions()))
+					Expect(*response.Tasks[0].TaskDefinition).To(Equal(task1.TaskDefinition.WithCachedDependenciesAsActions()))
+					Expect(*response.Tasks[1].TaskDefinition).To(Equal(task2.TaskDefinition.WithCachedDependenciesAsActions()))
 				})
 			})
 		})
@@ -194,7 +194,7 @@ var _ = Describe("Task Handlers", func() {
 			Context("when the task has cache dependencies", func() {
 				BeforeEach(func() {
 					task.TaskDefinition = &models.TaskDefinition{}
-					task.CacheDependencies = []*models.CacheDependency{
+					task.CachedDependencies = []*models.CachedDependency{
 						{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 						{Name: "name-3", From: "from-3", To: "to-3", CacheKey: "cache-key-3", LogSource: "log-source-3"},
 					}
@@ -207,7 +207,7 @@ var _ = Describe("Task Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
-					transformedTaskDef := task.TaskDefinition.WithCacheDependenciesAsActions()
+					transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
 					task.TaskDefinition = &transformedTaskDef
 					Expect(response.Task).To(Equal(task))
 				})

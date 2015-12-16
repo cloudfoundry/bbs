@@ -9,7 +9,7 @@
 		actions.proto
 		actual_lrp.proto
 		actual_lrp_requests.proto
-		cache_dependency.proto
+		cached_dependency.proto
 		desired_lrp.proto
 		desired_lrp_requests.proto
 		domain.proto

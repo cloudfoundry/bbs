@@ -128,13 +128,13 @@ var _ = Describe("Task", func() {
 		}
 	})
 
-	Describe("WithCacheDependenciesAsActions", func() {
+	Describe("WithCachedDependenciesAsActions", func() {
 		var (
 			downloadAction1, downloadAction2 *models.DownloadAction
 		)
 
 		BeforeEach(func() {
-			task.CacheDependencies = []*models.CacheDependency{
+			task.CachedDependencies = []*models.CachedDependency{
 				{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 				{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 			}
@@ -164,7 +164,7 @@ var _ = Describe("Task", func() {
 			})
 
 			It("converts a cache dependency into download action", func() {
-				transformedTaskDefinition := task.TaskDefinition.WithCacheDependenciesAsActions()
+				transformedTaskDefinition := task.TaskDefinition.WithCachedDependenciesAsActions()
 				Expect(transformedTaskDefinition.Action.SerialAction.Actions).To(HaveLen(1))
 				Expect(transformedTaskDefinition.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
@@ -190,7 +190,7 @@ var _ = Describe("Task", func() {
 
 		Context("when there is an existing action", func() {
 			It("appends the new converted step action to the front", func() {
-				transformedTaskDef := task.TaskDefinition.WithCacheDependenciesAsActions()
+				transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
 				Expect(transformedTaskDef.Action.SerialAction.Actions).To(HaveLen(2))
 				Expect(transformedTaskDef.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
@@ -214,11 +214,11 @@ var _ = Describe("Task", func() {
 
 		Context("when there are no cache dependencies", func() {
 			BeforeEach(func() {
-				task.CacheDependencies = nil
+				task.CachedDependencies = nil
 			})
 
 			It("keeps the current action", func() {
-				transformedTaskDef := task.TaskDefinition.WithCacheDependenciesAsActions()
+				transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
 				Expect(*transformedTaskDef.Action).To(Equal(*task.Action))
 			})
 		})

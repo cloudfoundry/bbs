@@ -37,7 +37,7 @@ func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
 				if task.TaskDefinition == nil {
 					continue
 				}
-				transformedTaskDef := task.TaskDefinition.WithCacheDependenciesAsActions()
+				transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
 				task.TaskDefinition = &transformedTaskDef
 			}
 		}
@@ -58,7 +58,7 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		response.Task, err = h.db.TaskByGuid(logger, request.TaskGuid)
 		if err == nil && response.Task.TaskDefinition != nil {
-			transformedTaskDef := response.Task.TaskDefinition.WithCacheDependenciesAsActions()
+			transformedTaskDef := response.Task.TaskDefinition.WithCachedDependenciesAsActions()
 			response.Task.TaskDefinition = &transformedTaskDef
 		}
 	}

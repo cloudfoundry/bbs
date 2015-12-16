@@ -51,7 +51,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		Routes:               &schedInfo.Routes,
 		ModificationTag:      &schedInfo.ModificationTag,
 		EnvironmentVariables: environmentVariables,
-		CacheDependencies:    runInfo.CacheDependencies,
+		CachedDependencies:   runInfo.CachedDependencies,
 		Setup:                runInfo.Setup,
 		Action:               runInfo.Action,
 		Monitor:              runInfo.Monitor,
@@ -120,7 +120,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.DesiredLRPKey(),
 		createdAt,
 		environmentVariables,
-		d.CacheDependencies,
+		d.CachedDependencies,
 		d.Setup,
 		d.Action,
 		d.Monitor,
@@ -138,12 +138,12 @@ func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPScheduling
 	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
 }
 
-func (d DesiredLRP) WithCacheDependenciesAsSetupActions() DesiredLRP {
-	if len(d.CacheDependencies) > 0 {
-		actions := make([]ActionInterface, len(d.CacheDependencies))
+func (d DesiredLRP) WithCachedDependenciesAsSetupActions() DesiredLRP {
+	if len(d.CachedDependencies) > 0 {
+		actions := make([]ActionInterface, len(d.CachedDependencies))
 
-		for i := range d.CacheDependencies {
-			cacheDependency := d.CacheDependencies[i]
+		for i := range d.CachedDependencies {
+			cacheDependency := d.CachedDependencies[i]
 			actions[i] = &DownloadAction{
 				Artifact:  cacheDependency.Name,
 				From:      cacheDependency.From,
@@ -161,7 +161,7 @@ func (d DesiredLRP) WithCacheDependenciesAsSetupActions() DesiredLRP {
 		} else {
 			d.Setup = WrapAction(Serial(parallelDownloads))
 		}
-		d.CacheDependencies = nil
+		d.CachedDependencies = nil
 	}
 
 	return d
@@ -367,7 +367,7 @@ func NewDesiredLRPRunInfo(
 	key DesiredLRPKey,
 	createdAt time.Time,
 	envVars []EnvironmentVariable,
-	cacheDeps []*CacheDependency,
+	cacheDeps []*CachedDependency,
 	setup,
 	action,
 	monitor *Action,
@@ -383,7 +383,7 @@ func NewDesiredLRPRunInfo(
 		DesiredLRPKey:        key,
 		CreatedAt:            createdAt.UnixNano(),
 		EnvironmentVariables: envVars,
-		CacheDependencies:    cacheDeps,
+		CachedDependencies:   cacheDeps,
 		Setup:                setup,
 		Action:               action,
 		Monitor:              monitor,

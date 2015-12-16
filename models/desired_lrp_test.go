@@ -361,13 +361,13 @@ var _ = Describe("DesiredLRP", func() {
 		})
 	})
 
-	Describe("WithCacheDependenciesAsSetupActions", func() {
+	Describe("WithCachedDependenciesAsSetupActions", func() {
 		var (
 			downloadAction1, downloadAction2 models.DownloadAction
 		)
 
 		BeforeEach(func() {
-			desiredLRP.CacheDependencies = []*models.CacheDependency{
+			desiredLRP.CachedDependencies = []*models.CachedDependency{
 				{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 				{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 			}
@@ -397,7 +397,7 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			It("converts a cache dependency into download step action", func() {
-				convertedLRP := desiredLRP.WithCacheDependenciesAsSetupActions()
+				convertedLRP := desiredLRP.WithCachedDependenciesAsSetupActions()
 				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(1))
 				Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
@@ -423,7 +423,7 @@ var _ = Describe("DesiredLRP", func() {
 
 		Context("when there is an existing setup action", func() {
 			It("appends the new converted step action to the front", func() {
-				convertedLRP := desiredLRP.WithCacheDependenciesAsSetupActions()
+				convertedLRP := desiredLRP.WithCachedDependenciesAsSetupActions()
 				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
 				Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
@@ -447,11 +447,11 @@ var _ = Describe("DesiredLRP", func() {
 
 		Context("when there are no cache dependencies", func() {
 			BeforeEach(func() {
-				desiredLRP.CacheDependencies = nil
+				desiredLRP.CachedDependencies = nil
 			})
 
 			It("keeps the current setup", func() {
-				convertedLRP := desiredLRP.WithCacheDependenciesAsSetupActions()
+				convertedLRP := desiredLRP.WithCachedDependenciesAsSetupActions()
 				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
 
 				Expect(*convertedLRP.Setup).To(Equal(*desiredLRP.Setup))

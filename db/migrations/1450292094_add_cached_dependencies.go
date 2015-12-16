@@ -12,34 +12,34 @@ import (
 
 // null migration to bump the database version
 func init() {
-	AppendMigration(NewAddCacheDependencies())
+	AppendMigration(NewAddCachedDependencies())
 }
 
-type AddCacheDependencies struct {
+type AddCachedDependencies struct {
 	serializer  format.Serializer
 	storeClient etcd.StoreClient
 }
 
-func NewAddCacheDependencies() migration.Migration {
-	return &AddCacheDependencies{}
+func NewAddCachedDependencies() migration.Migration {
+	return &AddCachedDependencies{}
 }
 
-func (a AddCacheDependencies) Version() int64 {
+func (a AddCachedDependencies) Version() int64 {
 	return 1450292094
 }
 
-func (a *AddCacheDependencies) SetStoreClient(storeClient etcd.StoreClient) {
+func (a *AddCachedDependencies) SetStoreClient(storeClient etcd.StoreClient) {
 	a.storeClient = storeClient
 }
 
-func (a *AddCacheDependencies) SetCryptor(cryptor encryption.Cryptor) {
+func (a *AddCachedDependencies) SetCryptor(cryptor encryption.Cryptor) {
 	a.serializer = format.NewSerializer(cryptor)
 }
 
-func (a AddCacheDependencies) Up(logger lager.Logger) error {
+func (a AddCachedDependencies) Up(logger lager.Logger) error {
 	return nil
 }
 
-func (a AddCacheDependencies) Down(logger lager.Logger) error {
+func (a AddCachedDependencies) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
 }

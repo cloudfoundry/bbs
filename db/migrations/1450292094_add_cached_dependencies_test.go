@@ -16,7 +16,7 @@ var _ = Describe("Add Cache Dependencies Migration", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		migration = migrations.NewAddCacheDependencies()
+		migration = migrations.NewAddCachedDependencies()
 	})
 
 	It("appends itself to the migration list", func() {

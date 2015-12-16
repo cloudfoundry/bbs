@@ -6,7 +6,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
-message CacheDependency {
+message CachedDependency {
   optional string name = 1 [(gogoproto.jsontag) = "name"];
   optional string from = 2 [(gogoproto.jsontag) = "from"];
   optional string to = 3 [(gogoproto.jsontag) = "to"];

@@ -35,7 +35,7 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 		lrps, err = h.db.DesiredLRPs(logger, filter)
 		if err == nil {
 			for i := range lrps {
-				transformedLRP := lrps[i].WithCacheDependenciesAsSetupActions()
+				transformedLRP := lrps[i].WithCachedDependenciesAsSetupActions()
 				response.DesiredLrps = append(response.DesiredLrps, &transformedLRP)
 			}
 		}
@@ -57,7 +57,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 		var lrp *models.DesiredLRP
 		lrp, err = h.db.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 		if err == nil {
-			transformedLRP := lrp.WithCacheDependenciesAsSetupActions()
+			transformedLRP := lrp.WithCachedDependenciesAsSetupActions()
 			response.DesiredLrp = &transformedLRP
 		}
 	}

@@ -56,12 +56,12 @@ func (task *Task) Validate() error {
 	return nil
 }
 
-func (t TaskDefinition) WithCacheDependenciesAsActions() TaskDefinition {
-	if len(t.CacheDependencies) > 0 {
-		actions := make([]ActionInterface, len(t.CacheDependencies))
+func (t TaskDefinition) WithCachedDependenciesAsActions() TaskDefinition {
+	if len(t.CachedDependencies) > 0 {
+		actions := make([]ActionInterface, len(t.CachedDependencies))
 
-		for i := range t.CacheDependencies {
-			cacheDependency := t.CacheDependencies[i]
+		for i := range t.CachedDependencies {
+			cacheDependency := t.CachedDependencies[i]
 			actions[i] = &DownloadAction{
 				Artifact:  cacheDependency.Name,
 				From:      cacheDependency.From,
@@ -79,7 +79,7 @@ func (t TaskDefinition) WithCacheDependenciesAsActions() TaskDefinition {
 		} else {
 			t.Action = WrapAction(Serial(parallelDownloads))
 		}
-		t.CacheDependencies = nil
+		t.CachedDependencies = nil
 	}
 
 	return t

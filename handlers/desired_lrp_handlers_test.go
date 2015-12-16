@@ -92,11 +92,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						},
 					}
 
-					desiredLRP1.CacheDependencies = []*models.CacheDependency{
+					desiredLRP1.CachedDependencies = []*models.CachedDependency{
 						{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 					}
 
-					desiredLRP2.CacheDependencies = []*models.CacheDependency{
+					desiredLRP2.CachedDependencies = []*models.CachedDependency{
 						{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 						{Name: "name-3", From: "from-3", To: "to-3", CacheKey: "cache-key-3", LogSource: "log-source-3"},
 					}
@@ -110,8 +110,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					Expect(response.Error).To(BeNil())
 					Expect(response.DesiredLrps).To(HaveLen(2))
-					Expect(*response.DesiredLrps[0]).To(Equal(desiredLRP1.WithCacheDependenciesAsSetupActions()))
-					Expect(*response.DesiredLrps[1]).To(Equal(desiredLRP2.WithCacheDependenciesAsSetupActions()))
+					Expect(*response.DesiredLrps[0]).To(Equal(desiredLRP1.WithCachedDependenciesAsSetupActions()))
+					Expect(*response.DesiredLrps[1]).To(Equal(desiredLRP2.WithCachedDependenciesAsSetupActions()))
 				})
 			})
 		})
@@ -195,7 +195,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 							From: "web_location",
 						},
 					}
-					desiredLRP.CacheDependencies = []*models.CacheDependency{
+					desiredLRP.CachedDependencies = []*models.CachedDependency{
 						{Name: "name", From: "from", To: "to", CacheKey: "cache-key", LogSource: "log-source"},
 					}
 				})
@@ -207,7 +207,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
-					Expect(*response.DesiredLrp).To(Equal(desiredLRP.WithCacheDependenciesAsSetupActions()))
+					Expect(*response.DesiredLrp).To(Equal(desiredLRP.WithCachedDependenciesAsSetupActions()))
 				})
 			})
 		})
