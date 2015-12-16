@@ -363,7 +363,7 @@ var _ = Describe("DesiredLRP", func() {
 
 	Describe("WithCacheDependenciesAsSetupActions", func() {
 		var (
-			downloadAction1, downloadAction2 *models.DownloadAction
+			downloadAction1, downloadAction2 models.DownloadAction
 		)
 
 		BeforeEach(func() {
@@ -371,29 +371,29 @@ var _ = Describe("DesiredLRP", func() {
 				{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 				{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 			}
+
+			downloadAction1 = models.DownloadAction{
+				Artifact:  "name-1",
+				From:      "from-1",
+				To:        "to-1",
+				CacheKey:  "cache-key-1",
+				LogSource: "log-source-1",
+				User:      "vcap",
+			}
+
+			downloadAction2 = models.DownloadAction{
+				Artifact:  "name-2",
+				From:      "from-2",
+				To:        "to-2",
+				CacheKey:  "cache-key-2",
+				LogSource: "log-source-2",
+				User:      "vcap",
+			}
 		})
 
 		Context("when there is no existing setup action", func() {
 			BeforeEach(func() {
 				desiredLRP.Setup = nil
-
-				downloadAction1 = &models.DownloadAction{
-					Artifact:  "name-1",
-					From:      "from-1",
-					To:        "to-1",
-					CacheKey:  "cache-key-1",
-					LogSource: "log-source-1",
-					User:      "vcap",
-				}
-
-				downloadAction2 = &models.DownloadAction{
-					Artifact:  "name-2",
-					From:      "from-2",
-					To:        "to-2",
-					CacheKey:  "cache-key-2",
-					LogSource: "log-source-2",
-					User:      "vcap",
-				}
 			})
 
 			It("converts a cache dependency into download step action", func() {
@@ -401,8 +401,8 @@ var _ = Describe("DesiredLRP", func() {
 				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(1))
 				Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
-				Expect(*convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(*downloadAction1))
-				Expect(*convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(*downloadAction2))
+				Expect(*convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(downloadAction1))
+				Expect(*convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(downloadAction2))
 
 				Expect(*convertedLRP.Setup).To(Equal(models.Action{
 					SerialAction: &models.SerialAction{
@@ -410,8 +410,8 @@ var _ = Describe("DesiredLRP", func() {
 							{
 								ParallelAction: &models.ParallelAction{
 									Actions: []*models.Action{
-										&models.Action{DownloadAction: downloadAction1},
-										&models.Action{DownloadAction: downloadAction2},
+										&models.Action{DownloadAction: &downloadAction1},
+										&models.Action{DownloadAction: &downloadAction2},
 									},
 								},
 							},
@@ -433,8 +433,8 @@ var _ = Describe("DesiredLRP", func() {
 							{
 								ParallelAction: &models.ParallelAction{
 									Actions: []*models.Action{
-										&models.Action{DownloadAction: downloadAction1},
-										&models.Action{DownloadAction: downloadAction2},
+										&models.Action{DownloadAction: &downloadAction1},
+										&models.Action{DownloadAction: &downloadAction2},
 									},
 								},
 							},
