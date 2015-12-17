@@ -138,6 +138,7 @@ var _ = Describe("Task", func() {
 				{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 				{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 			}
+			task.LegacyDownloadUser = "bob"
 
 			downloadAction1 = &models.DownloadAction{
 				Artifact:  "name-1",
@@ -145,7 +146,7 @@ var _ = Describe("Task", func() {
 				To:        "to-1",
 				CacheKey:  "cache-key-1",
 				LogSource: "log-source-1",
-				User:      "vcap",
+				User:      "bob",
 			}
 
 			downloadAction2 = &models.DownloadAction{
@@ -154,7 +155,7 @@ var _ = Describe("Task", func() {
 				To:        "to-2",
 				CacheKey:  "cache-key-2",
 				LogSource: "log-source-2",
-				User:      "vcap",
+				User:      "bob",
 			}
 		})
 
@@ -396,6 +397,22 @@ var _ = Describe("Task", func() {
 						}),
 						EgressRules: []*models.SecurityGroupRule{
 							{Protocol: "invalid"},
+						},
+					},
+				},
+			},
+			{
+				"legacy_download_user",
+				&models.Task{
+					TaskGuid: "guid-1",
+					Domain:   "some-domain",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some-rootfs",
+						CachedDependencies: []*models.CachedDependency{
+							{
+								To:   "here",
+								From: "there",
+							},
 						},
 					},
 				},

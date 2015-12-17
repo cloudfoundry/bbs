@@ -68,7 +68,7 @@ func (t TaskDefinition) WithCachedDependenciesAsActions() TaskDefinition {
 				To:        cacheDependency.To,
 				CacheKey:  cacheDependency.CacheKey,
 				LogSource: cacheDependency.LogSource,
-				User:      "vcap",
+				User:      t.LegacyDownloadUser,
 			}
 		}
 
@@ -117,6 +117,10 @@ func (def *TaskDefinition) Validate() error {
 		if err != nil {
 			validationError = validationError.Append(ErrInvalidField{"egress_rules"})
 		}
+	}
+
+	if len(def.CachedDependencies) > 0 && def.LegacyDownloadUser == "" {
+		validationError = validationError.Append(ErrInvalidField{"legacy_download_user"})
 	}
 
 	if !validationError.Empty() {

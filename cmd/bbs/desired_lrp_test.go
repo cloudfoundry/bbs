@@ -1,11 +1,12 @@
 package main_test
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

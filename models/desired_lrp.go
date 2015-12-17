@@ -62,6 +62,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		EgressRules:          egressRules,
 		LogSource:            runInfo.LogSource,
 		MetricsGuid:          runInfo.MetricsGuid,
+		LegacyDownloadUser:   runInfo.LegacyDownloadUser,
 	}
 }
 
@@ -131,6 +132,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		egressRules,
 		d.LogSource,
 		d.MetricsGuid,
+		d.LegacyDownloadUser,
 	)
 }
 
@@ -150,7 +152,7 @@ func (d DesiredLRP) WithCachedDependenciesAsSetupActions() DesiredLRP {
 				To:        cacheDependency.To,
 				CacheKey:  cacheDependency.CacheKey,
 				LogSource: cacheDependency.LogSource,
-				User:      "vcap",
+				User:      d.LegacyDownloadUser,
 			}
 		}
 
@@ -237,6 +239,10 @@ func (desired DesiredLRP) Validate() error {
 			validationError = validationError.Append(ErrInvalidField{"egress_rules"})
 			validationError = validationError.Append(err)
 		}
+	}
+
+	if len(desired.CachedDependencies) > 0 && desired.LegacyDownloadUser == "" {
+		validationError = validationError.Append(ErrInvalidField{"legacy_download_user"})
 	}
 
 	return validationError.ToError()
@@ -378,6 +384,7 @@ func NewDesiredLRPRunInfo(
 	egressRules []SecurityGroupRule,
 	logSource,
 	metricsGuid string,
+	legacyDownloadUser string,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:        key,
@@ -394,6 +401,7 @@ func NewDesiredLRPRunInfo(
 		EgressRules:          egressRules,
 		LogSource:            logSource,
 		MetricsGuid:          metricsGuid,
+		LegacyDownloadUser:   legacyDownloadUser,
 	}
 }
 
@@ -417,6 +425,10 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 	if runInfo.GetCpuWeight() > 100 {
 		ve = ve.Append(ErrInvalidField{"cpu_weight"})
+	}
+
+	if len(runInfo.CachedDependencies) > 0 && runInfo.LegacyDownloadUser == "" {
+		ve = ve.Append(ErrInvalidField{"legacy_download_user"})
 	}
 
 	return ve.ToError()

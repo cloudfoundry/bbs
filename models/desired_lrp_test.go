@@ -371,6 +371,7 @@ var _ = Describe("DesiredLRP", func() {
 				{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 				{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 			}
+			desiredLRP.LegacyDownloadUser = "joe-schmoe"
 
 			downloadAction1 = models.DownloadAction{
 				Artifact:  "name-1",
@@ -378,7 +379,7 @@ var _ = Describe("DesiredLRP", func() {
 				To:        "to-1",
 				CacheKey:  "cache-key-1",
 				LogSource: "log-source-1",
-				User:      "vcap",
+				User:      "joe-schmoe",
 			}
 
 			downloadAction2 = models.DownloadAction{
@@ -387,7 +388,7 @@ var _ = Describe("DesiredLRP", func() {
 				To:        "to-2",
 				CacheKey:  "cache-key-2",
 				LogSource: "log-source-2",
-				User:      "vcap",
+				User:      "joe-schmoe",
 			}
 		})
 
@@ -596,6 +597,18 @@ var _ = Describe("DesiredLRP", func() {
 				Expect(validationErr).NotTo(HaveOccurred())
 			})
 		})
+
+		Context("when cached dependencies are specified", func() {
+			It("requires a legacy download user", func() {
+				desiredLRP.CachedDependencies = []*models.CachedDependency{
+					{
+						To:   "here",
+						From: "there",
+					},
+				}
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "legacy_download_user")
+			})
+		})
 	})
 })
 
@@ -772,13 +785,14 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), ""),
-		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "process_guid"),
-		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "name"),
-		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
-		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
-		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid), "inner-action"),
-		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid), "cpu_weight"),
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), ""),
+		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "process_guid"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "name"),
+		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "inner-action"),
+		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "inner-action"),
+		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "inner-action"),
+		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "cpu_weight"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, ""), "legacy_download_user"),
 	)
 })
 

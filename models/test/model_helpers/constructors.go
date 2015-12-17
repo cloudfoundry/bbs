@@ -64,7 +64,8 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			Destinations: []string{"1.1.1.1/32", "2.2.2.2/32"},
 			PortRange:    &models.PortRange{Start: 10, End: 16000},
 		}},
-		ModificationTag: &modTag,
+		ModificationTag:    &modTag,
+		LegacyDownloadUser: "legacy-jim",
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
@@ -114,8 +115,8 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				Ports:        []uint32{53},
 			},
 		},
-
-		Annotation: `[{"anything": "you want!"}]... dude`,
+		Annotation:         `[{"anything": "you want!"}]... dude`,
+		LegacyDownloadUser: "legacy-jim",
 	}
 }
 

@@ -81,6 +81,7 @@ type TaskDefinition struct {
 	Annotation            string                 `protobuf:"bytes,13,opt,name=annotation" json:"annotation,omitempty"`
 	EgressRules           []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
 	CachedDependencies    []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser    string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 }
 
 func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
@@ -189,6 +190,13 @@ func (m *TaskDefinition) GetCachedDependencies() []*CachedDependency {
 		return m.CachedDependencies
 	}
 	return nil
+}
+
+func (m *TaskDefinition) GetLegacyDownloadUser() string {
+	if m != nil {
+		return m.LegacyDownloadUser
+	}
+	return ""
 }
 
 type Task struct {
@@ -368,6 +376,9 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 			return false
 		}
 	}
+	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
+		return false
+	}
 	return true
 }
 func (this *Task) Equal(that interface{}) bool {
@@ -444,7 +455,8 @@ func (this *TaskDefinition) GoString() string {
 		`CompletionCallbackUrl:` + fmt.Sprintf("%#v", this.CompletionCallbackUrl),
 		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
 		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
-		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies) + `}`}, ", ")
+		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
+		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser) + `}`}, ", ")
 	return s
 }
 func (this *Task) GoString() string {
@@ -596,6 +608,12 @@ func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	data[i] = 0x82
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.LegacyDownloadUser)))
+	i += copy(data[i:], m.LegacyDownloadUser)
 	return i, nil
 }
 
@@ -737,6 +755,8 @@ func (m *TaskDefinition) Size() (n int) {
 			n += 1 + l + sovTask(uint64(l))
 		}
 	}
+	l = len(m.LegacyDownloadUser)
+	n += 2 + l + sovTask(uint64(l))
 	return n
 }
 
@@ -798,6 +818,7 @@ func (this *TaskDefinition) String() string {
 		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
+		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1202,6 +1223,31 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			if err := m.CachedDependencies[len(m.CachedDependencies)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LegacyDownloadUser", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LegacyDownloadUser = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

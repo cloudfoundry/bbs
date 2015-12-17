@@ -66,6 +66,7 @@ type DesiredLRPRunInfo struct {
 	MetricsGuid          string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
 	CreatedAt            int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
 	CachedDependencies   []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser   string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -160,6 +161,13 @@ func (m *DesiredLRPRunInfo) GetCachedDependencies() []*CachedDependency {
 		return m.CachedDependencies
 	}
 	return nil
+}
+
+func (m *DesiredLRPRunInfo) GetLegacyDownloadUser() string {
+	if m != nil {
+		return m.LegacyDownloadUser
+	}
+	return ""
 }
 
 // helper message for marshalling routes
@@ -283,6 +291,7 @@ type DesiredLRP struct {
 	EgressRules          []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
 	ModificationTag      *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
 	CachedDependencies   []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser   string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -435,6 +444,13 @@ func (m *DesiredLRP) GetCachedDependencies() []*CachedDependency {
 	return nil
 }
 
+func (m *DesiredLRP) GetLegacyDownloadUser() string {
+	if m != nil {
+		return m.LegacyDownloadUser
+	}
+	return ""
+}
+
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -556,6 +572,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		if !this.CachedDependencies[i].Equal(that1.CachedDependencies[i]) {
 			return false
 		}
+	}
+	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
+		return false
 	}
 	return true
 }
@@ -808,6 +827,9 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
+	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
+		return false
+	}
 	return true
 }
 func (this *DesiredLRPSchedulingInfo) GoString() string {
@@ -841,7 +863,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
 		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
 		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
-		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies) + `}`}, ", ")
+		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
+		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -918,7 +941,8 @@ func (this *DesiredLRP) GoString() string {
 		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
 		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
 		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag),
-		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies) + `}`}, ", ")
+		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
+		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser) + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1124,6 +1148,10 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	data[i] = 0x7a
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(len(m.LegacyDownloadUser)))
+	i += copy(data[i:], m.LegacyDownloadUser)
 	return i, nil
 }
 
@@ -1437,6 +1465,12 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	data[i] = 0xba
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(len(m.LegacyDownloadUser)))
+	i += copy(data[i:], m.LegacyDownloadUser)
 	return i, nil
 }
 
@@ -1532,6 +1566,8 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 			n += 1 + l + sovDesiredLrp(uint64(l))
 		}
 	}
+	l = len(m.LegacyDownloadUser)
+	n += 1 + l + sovDesiredLrp(uint64(l))
 	return n
 }
 
@@ -1654,6 +1690,8 @@ func (m *DesiredLRP) Size() (n int) {
 			n += 2 + l + sovDesiredLrp(uint64(l))
 		}
 	}
+	l = len(m.LegacyDownloadUser)
+	n += 2 + l + sovDesiredLrp(uint64(l))
 	return n
 }
 
@@ -1704,6 +1742,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
 		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
+		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1791,6 +1830,7 @@ func (this *DesiredLRP) String() string {
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
 		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
+		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2348,6 +2388,31 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			if err := m.CachedDependencies[len(m.CachedDependencies)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 15:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LegacyDownloadUser", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LegacyDownloadUser = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -3391,6 +3456,31 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if err := m.CachedDependencies[len(m.CachedDependencies)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 23:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LegacyDownloadUser", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LegacyDownloadUser = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
