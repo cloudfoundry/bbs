@@ -58,19 +58,19 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan st
 		bbs.ConvergeLRPsRoute: route(middleware.EmitLatency(lrpConvergenceHandler.ConvergeLRPs)),
 
 		// Desired LRPs
-		bbs.DesiredLRPsRoute_V2:             route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPs_V2)),
-		bbs.DesiredLRPByProcessGuidRoute_V2: route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid_V2)),
-		bbs.DesiredLRPSchedulingInfosRoute:  route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPSchedulingInfos)),
-		bbs.DesireDesiredLRPRoute:           route(middleware.EmitLatency(desiredLRPHandler.DesireDesiredLRP)),
-		bbs.UpdateDesiredLRPRoute:           route(middleware.EmitLatency(desiredLRPHandler.UpdateDesiredLRP)),
-		bbs.RemoveDesiredLRPRoute:           route(middleware.EmitLatency(desiredLRPHandler.RemoveDesiredLRP)),
+		bbs.DesiredLRPsRoute:               route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPs)),
+		bbs.DesiredLRPByProcessGuidRoute:   route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid)),
+		bbs.DesiredLRPSchedulingInfosRoute: route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPSchedulingInfos)),
+		bbs.DesireDesiredLRPRoute:          route(middleware.EmitLatency(desiredLRPHandler.DesireDesiredLRP)),
+		bbs.UpdateDesiredLRPRoute:          route(middleware.EmitLatency(desiredLRPHandler.UpdateDesiredLRP)),
+		bbs.RemoveDesiredLRPRoute:          route(middleware.EmitLatency(desiredLRPHandler.RemoveDesiredLRP)),
 
-		bbs.DesiredLRPsRoute:             route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPs)),
-		bbs.DesiredLRPByProcessGuidRoute: route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid)),
+		bbs.DesiredLRPsRoute_r0:             route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPs_r0)),
+		bbs.DesiredLRPByProcessGuidRoute_r0: route(middleware.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid_r0)),
 
 		// Tasks
-		bbs.TasksRoute_V2:      route(middleware.EmitLatency(taskHandler.Tasks_V2)),
-		bbs.TaskByGuidRoute_V2: route(middleware.EmitLatency(taskHandler.TaskByGuid_V2)),
+		bbs.TasksRoute:         route(middleware.EmitLatency(taskHandler.Tasks)),
+		bbs.TaskByGuidRoute:    route(middleware.EmitLatency(taskHandler.TaskByGuid)),
 		bbs.DesireTaskRoute:    route(middleware.EmitLatency(taskHandler.DesireTask)),
 		bbs.StartTaskRoute:     route(middleware.EmitLatency(taskHandler.StartTask)),
 		bbs.CancelTaskRoute:    route(middleware.EmitLatency(taskHandler.CancelTask)),
@@ -80,8 +80,8 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan st
 		bbs.DeleteTaskRoute:    route(middleware.EmitLatency(taskHandler.DeleteTask)),
 		bbs.ConvergeTasksRoute: route(middleware.EmitLatency(taskHandler.ConvergeTasks)),
 
-		bbs.TasksRoute:      route(middleware.EmitLatency(taskHandler.Tasks)),
-		bbs.TaskByGuidRoute: route(middleware.EmitLatency(taskHandler.TaskByGuid)),
+		bbs.TasksRoute_r0:      route(middleware.EmitLatency(taskHandler.Tasks_r0)),
+		bbs.TaskByGuidRoute_r0: route(middleware.EmitLatency(taskHandler.TaskByGuid_r0)),
 
 		// Events
 		bbs.EventStreamRoute: route(eventsHandler.Subscribe),

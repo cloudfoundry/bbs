@@ -101,40 +101,6 @@ var _ = Describe("Task Handlers", func() {
 					Expect(filter.CellID).To(Equal("cell-id"))
 				})
 			})
-
-			Context("and the returned tasks have cache dependencies", func() {
-				BeforeEach(func() {
-					task1.TaskDefinition = &models.TaskDefinition{}
-					task2.TaskDefinition = &models.TaskDefinition{}
-
-					task1.Action = &models.Action{
-						UploadAction: &models.UploadAction{
-							From: "web_location",
-						},
-					}
-
-					task1.CachedDependencies = []*models.CachedDependency{
-						{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
-					}
-
-					task2.CachedDependencies = []*models.CachedDependency{
-						{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
-						{Name: "name-3", From: "from-3", To: "to-3", CacheKey: "cache-key-3", LogSource: "log-source-3"},
-					}
-				})
-
-				It("translates the cache dependencies into download actions", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := models.TasksResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(response.Error).To(BeNil())
-					Expect(response.Tasks).To(HaveLen(2))
-					Expect(*response.Tasks[0].TaskDefinition).To(Equal(task1.TaskDefinition.WithCachedDependenciesAsActions()))
-					Expect(*response.Tasks[1].TaskDefinition).To(Equal(task2.TaskDefinition.WithCachedDependenciesAsActions()))
-				})
-			})
 		})
 
 		Context("when the DB errors out", func() {
@@ -189,28 +155,6 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.Task).To(Equal(task))
-			})
-
-			Context("when the task has cache dependencies", func() {
-				BeforeEach(func() {
-					task.TaskDefinition = &models.TaskDefinition{}
-					task.CachedDependencies = []*models.CachedDependency{
-						{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
-						{Name: "name-3", From: "from-3", To: "to-3", CacheKey: "cache-key-3", LogSource: "log-source-3"},
-					}
-				})
-
-				It("moves them to the actions", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := models.TaskResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(response.Error).To(BeNil())
-					transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
-					task.TaskDefinition = &transformedTaskDef
-					Expect(response.Task).To(Equal(task))
-				})
 			})
 		})
 

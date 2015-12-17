@@ -31,12 +31,12 @@ const (
 	EvacuateRunningActualLRPRoute  = "EvacuateRunningActualLRP"
 
 	// Desired LRPs
-	DesiredLRPsRoute_V2             = "DesiredLRPs_V2"
-	DesiredLRPSchedulingInfosRoute  = "DesiredLRPSchedulingInfos"
-	DesiredLRPByProcessGuidRoute_V2 = "DesiredLRPByProcessGuid_V2"
+	DesiredLRPsRoute               = "DesiredLRPs_r1"
+	DesiredLRPSchedulingInfosRoute = "DesiredLRPSchedulingInfos"
+	DesiredLRPByProcessGuidRoute   = "DesiredLRPByProcessGuid_r1"
 
-	DesiredLRPsRoute             = "DesiredLRPs"             // Deprecated
-	DesiredLRPByProcessGuidRoute = "DesiredLRPByProcessGuid" // Deprecated
+	DesiredLRPsRoute_r0             = "DesiredLRPs"             // Deprecated
+	DesiredLRPByProcessGuidRoute_r0 = "DesiredLRPByProcessGuid" // Deprecated
 
 	// Desire LRP Lifecycle
 	DesireDesiredLRPRoute = "DesireDesiredLRP"
@@ -47,8 +47,8 @@ const (
 	ConvergeLRPsRoute = "ConvergeLRPs"
 
 	// Tasks
-	TasksRoute_V2      = "Tasks_V2"
-	TaskByGuidRoute_V2 = "TaskByGuid_V2"
+	TasksRoute         = "Tasks_r1"
+	TaskByGuidRoute    = "TaskByGuid_r1"
 	DesireTaskRoute    = "DesireTask"
 	StartTaskRoute     = "StartTask"
 	CancelTaskRoute    = "CancelTask"
@@ -58,8 +58,8 @@ const (
 	DeleteTaskRoute    = "DeleteTask"
 	ConvergeTasksRoute = "ConvergeTasks"
 
-	TasksRoute      = "Tasks"      // Deprecated
-	TaskByGuidRoute = "TaskByGuid" // Deprecated
+	TasksRoute_r0      = "Tasks"      // Deprecated
+	TaskByGuidRoute_r0 = "TaskByGuid" // Deprecated
 
 	// Event Streaming
 	EventStreamRoute = "EventStream"
@@ -94,8 +94,8 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrps/evacuate_running", Method: "POST", Name: EvacuateRunningActualLRPRoute},
 
 	// Desired LRPs
-	{Path: "/v2/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute_V2},
-	{Path: "/v2/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute_V2},
+	{Path: "/v1/desired_lrps/list.r1", Method: "POST", Name: DesiredLRPsRoute},
+	{Path: "/v1/desired_lrps/get_by_process_guid.r1", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
 	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute},
 
 	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute},                            // Deprecated
@@ -110,8 +110,8 @@ var Routes = rata.Routes{
 	{Path: "/v1/lrps/converge", Method: "POST", Name: ConvergeLRPsRoute},
 
 	// Tasks
-	{Path: "/v2/tasks/list", Method: "POST", Name: TasksRoute_V2},
-	{Path: "/v2/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute_V2},
+	{Path: "/v1/tasks/list.r1", Method: "POST", Name: TasksRoute},
+	{Path: "/v1/tasks/get_by_task_guid.r1", Method: "POST", Name: TaskByGuidRoute},
 
 	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute},                 // Deprecated
 	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute}, // Deprecated

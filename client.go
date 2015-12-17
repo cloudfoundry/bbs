@@ -390,7 +390,7 @@ func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredL
 		Domain: filter.Domain,
 	}
 	response := models.DesiredLRPsResponse{}
-	err := c.doRequest(DesiredLRPsRoute_V2, nil, nil, &request, &response)
+	err := c.doRequest(DesiredLRPsRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -403,7 +403,7 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 		ProcessGuid: processGuid,
 	}
 	response := models.DesiredLRPResponse{}
-	err := c.doRequest(DesiredLRPByProcessGuidRoute_V2, nil, nil, &request, &response)
+	err := c.doRequest(DesiredLRPByProcessGuidRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +468,7 @@ func (c *client) ConvergeLRPs() error {
 func (c *client) Tasks() ([]*models.Task, error) {
 	request := models.TasksRequest{}
 	response := models.TasksResponse{}
-	err := c.doRequest(TasksRoute_V2, nil, nil, &request, &response)
+	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +481,7 @@ func (c *client) TasksByDomain(domain string) ([]*models.Task, error) {
 		Domain: domain,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(TasksRoute_V2, nil, nil, &request, &response)
+	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -494,7 +494,7 @@ func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
 		CellId: cellId,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(TasksRoute_V2, nil, nil, &request, &response)
+	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -507,7 +507,7 @@ func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
 		TaskGuid: taskGuid,
 	}
 	response := models.TaskResponse{}
-	err := c.doRequest(TaskByGuidRoute_V2, nil, nil, &request, &response)
+	err := c.doRequest(TaskByGuidRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}

@@ -29,16 +29,8 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		var lrps []*models.DesiredLRP
-
 		filter := models.DesiredLRPFilter{Domain: request.Domain}
-		lrps, err = h.db.DesiredLRPs(logger, filter)
-		if err == nil {
-			for i := range lrps {
-				transformedLRP := lrps[i].WithCachedDependenciesAsSetupActions()
-				response.DesiredLrps = append(response.DesiredLrps, &transformedLRP)
-			}
-		}
+		response.DesiredLrps, err = h.db.DesiredLRPs(logger, filter)
 	}
 
 	response.Error = models.ConvertError(err)
@@ -54,12 +46,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		var lrp *models.DesiredLRP
-		lrp, err = h.db.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
-		if err == nil {
-			transformedLRP := lrp.WithCachedDependenciesAsSetupActions()
-			response.DesiredLrp = &transformedLRP
-		}
+		response.DesiredLrp, err = h.db.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 	}
 
 	response.Error = models.ConvertError(err)
