@@ -98,8 +98,8 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrps/get_by_process_guid.r1", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
 	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute},
 
-	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute},                            // Deprecated
-	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute}, // Deprecated
+	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute_r0},                            // Deprecated
+	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r0}, // Deprecated
 
 	// Desire LPR Lifecycle
 	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute},
@@ -113,8 +113,8 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks/list.r1", Method: "POST", Name: TasksRoute},
 	{Path: "/v1/tasks/get_by_task_guid.r1", Method: "POST", Name: TaskByGuidRoute},
 
-	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute},                 // Deprecated
-	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute}, // Deprecated
+	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute_r0},                 // Deprecated
+	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute_r0}, // Deprecated
 
 	// Task Lifecycle
 	{Path: "/v1/tasks/desire", Method: "POST", Name: DesireTaskRoute},
