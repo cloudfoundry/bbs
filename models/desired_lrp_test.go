@@ -599,6 +599,17 @@ var _ = Describe("DesiredLRP", func() {
 		})
 
 		Context("when cached dependencies are specified", func() {
+			It("requires requires them to be valid", func() {
+				desiredLRP.CachedDependencies = []*models.CachedDependency{
+					{
+						To:   "",
+						From: "",
+					},
+				}
+				desiredLRP.LegacyDownloadUser = "user"
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "cached_dependency")
+			})
+
 			It("requires a legacy download user", func() {
 				desiredLRP.CachedDependencies = []*models.CachedDependency{
 					{
@@ -792,7 +803,8 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "inner-action"),
 		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "inner-action"),
 		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim"), "cpu_weight"),
-		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, ""), "legacy_download_user"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here", From: "there"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, ""), "legacy_download_user"),
+		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user"), "cached_dependency"),
 	)
 })
 

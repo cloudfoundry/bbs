@@ -417,6 +417,21 @@ var _ = Describe("Task", func() {
 					},
 				},
 			},
+			{
+				"cached_dependency",
+				&models.Task{
+					TaskGuid: "guid-1",
+					Domain:   "some-domain",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some-rootfs",
+						CachedDependencies: []*models.CachedDependency{
+							{
+								To: "here",
+							},
+						},
+					},
+				},
+			},
 		} {
 			testValidatorErrorCase(testCase)
 		}

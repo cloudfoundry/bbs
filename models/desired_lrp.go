@@ -241,8 +241,9 @@ func (desired DesiredLRP) Validate() error {
 		}
 	}
 
-	if len(desired.CachedDependencies) > 0 && desired.LegacyDownloadUser == "" {
-		validationError = validationError.Append(ErrInvalidField{"legacy_download_user"})
+	err = validateCachedDependencies(desired.CachedDependencies, desired.LegacyDownloadUser)
+	if err != nil {
+		validationError = validationError.Append(err)
 	}
 
 	return validationError.ToError()
@@ -427,8 +428,9 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 		ve = ve.Append(ErrInvalidField{"cpu_weight"})
 	}
 
-	if len(runInfo.CachedDependencies) > 0 && runInfo.LegacyDownloadUser == "" {
-		ve = ve.Append(ErrInvalidField{"legacy_download_user"})
+	err := validateCachedDependencies(runInfo.CachedDependencies, runInfo.LegacyDownloadUser)
+	if err != nil {
+		ve = ve.Append(err)
 	}
 
 	return ve.ToError()

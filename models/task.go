@@ -119,8 +119,9 @@ func (def *TaskDefinition) Validate() error {
 		}
 	}
 
-	if len(def.CachedDependencies) > 0 && def.LegacyDownloadUser == "" {
-		validationError = validationError.Append(ErrInvalidField{"legacy_download_user"})
+	err := validateCachedDependencies(def.CachedDependencies, def.LegacyDownloadUser)
+	if err != nil {
+		validationError = validationError.Append(err)
 	}
 
 	if !validationError.Empty() {
