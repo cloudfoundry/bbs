@@ -29,6 +29,7 @@
 		DownloadAction
 		UploadAction
 		RunAction
+		NetCheckAction
 		TimeoutAction
 		EmitProgressAction
 		TryAction
@@ -67,6 +68,7 @@ type Action struct {
 	ParallelAction     *ParallelAction     `protobuf:"bytes,7,opt,name=parallel_action" json:"parallel,omitempty"`
 	SerialAction       *SerialAction       `protobuf:"bytes,8,opt,name=serial_action" json:"serial,omitempty"`
 	CodependentAction  *CodependentAction  `protobuf:"bytes,9,opt,name=codependent_action" json:"codependent,omitempty"`
+	NetCheckAction     *NetCheckAction     `protobuf:"bytes,10,opt,name=net_check_action" json:"net_check,omitempty"`
 }
 
 func (m *Action) Reset()      { *m = Action{} }
@@ -131,6 +133,13 @@ func (m *Action) GetSerialAction() *SerialAction {
 func (m *Action) GetCodependentAction() *CodependentAction {
 	if m != nil {
 		return m.CodependentAction
+	}
+	return nil
+}
+
+func (m *Action) GetNetCheckAction() *NetCheckAction {
+	if m != nil {
+		return m.NetCheckAction
 	}
 	return nil
 }
@@ -291,6 +300,28 @@ func (m *RunAction) GetUser() string {
 }
 
 func (m *RunAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+
+type NetCheckAction struct {
+	Port      uint32 `protobuf:"varint,1,opt,name=port" json:"port"`
+	LogSource string `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+}
+
+func (m *NetCheckAction) Reset()      { *m = NetCheckAction{} }
+func (*NetCheckAction) ProtoMessage() {}
+
+func (m *NetCheckAction) GetPort() uint32 {
+	if m != nil {
+		return m.Port
+	}
+	return 0
+}
+
+func (m *NetCheckAction) GetLogSource() string {
 	if m != nil {
 		return m.LogSource
 	}
@@ -522,6 +553,9 @@ func (this *Action) Equal(that interface{}) bool {
 	if !this.CodependentAction.Equal(that1.CodependentAction) {
 		return false
 	}
+	if !this.NetCheckAction.Equal(that1.NetCheckAction) {
+		return false
+	}
 	return true
 }
 func (this *DownloadAction) Equal(that interface{}) bool {
@@ -647,6 +681,34 @@ func (this *RunAction) Equal(that interface{}) bool {
 		return false
 	}
 	if this.User != that1.User {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	return true
+}
+func (this *NetCheckAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*NetCheckAction)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Port != that1.Port {
 		return false
 	}
 	if this.LogSource != that1.LogSource {
@@ -893,7 +955,8 @@ func (this *Action) GoString() string {
 		`TryAction:` + fmt.Sprintf("%#v", this.TryAction),
 		`ParallelAction:` + fmt.Sprintf("%#v", this.ParallelAction),
 		`SerialAction:` + fmt.Sprintf("%#v", this.SerialAction),
-		`CodependentAction:` + fmt.Sprintf("%#v", this.CodependentAction) + `}`}, ", ")
+		`CodependentAction:` + fmt.Sprintf("%#v", this.CodependentAction),
+		`NetCheckAction:` + fmt.Sprintf("%#v", this.NetCheckAction) + `}`}, ", ")
 	return s
 }
 func (this *DownloadAction) GoString() string {
@@ -932,6 +995,15 @@ func (this *RunAction) GoString() string {
 		`Env:` + fmt.Sprintf("%#v", this.Env),
 		`ResourceLimits:` + fmt.Sprintf("%#v", this.ResourceLimits),
 		`User:` + fmt.Sprintf("%#v", this.User),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+	return s
+}
+func (this *NetCheckAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.NetCheckAction{` +
+		`Port:` + fmt.Sprintf("%#v", this.Port),
 		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
 	return s
 }
@@ -1131,6 +1203,16 @@ func (m *Action) MarshalTo(data []byte) (int, error) {
 		}
 		i += n9
 	}
+	if m.NetCheckAction != nil {
+		data[i] = 0x52
+		i++
+		i = encodeVarintActions(data, i, uint64(m.NetCheckAction.Size()))
+		n10, err := m.NetCheckAction.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
 	return i, nil
 }
 
@@ -1268,17 +1350,42 @@ func (m *RunAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x2a
 		i++
 		i = encodeVarintActions(data, i, uint64(m.ResourceLimits.Size()))
-		n10, err := m.ResourceLimits.MarshalTo(data[i:])
+		n11, err := m.ResourceLimits.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n11
 	}
 	data[i] = 0x32
 	i++
 	i = encodeVarintActions(data, i, uint64(len(m.User)))
 	i += copy(data[i:], m.User)
 	data[i] = 0x3a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
+	i += copy(data[i:], m.LogSource)
+	return i, nil
+}
+
+func (m *NetCheckAction) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *NetCheckAction) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0x8
+	i++
+	i = encodeVarintActions(data, i, uint64(m.Port))
+	data[i] = 0x12
 	i++
 	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
 	i += copy(data[i:], m.LogSource)
@@ -1304,11 +1411,11 @@ func (m *TimeoutAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActions(data, i, uint64(m.Action.Size()))
-		n11, err := m.Action.MarshalTo(data[i:])
+		n12, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n12
 	}
 	data[i] = 0x10
 	i++
@@ -1339,11 +1446,11 @@ func (m *EmitProgressAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActions(data, i, uint64(m.Action.Size()))
-		n12, err := m.Action.MarshalTo(data[i:])
+		n13, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n13
 	}
 	data[i] = 0x12
 	i++
@@ -1383,11 +1490,11 @@ func (m *TryAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActions(data, i, uint64(m.Action.Size()))
-		n13, err := m.Action.MarshalTo(data[i:])
+		n14, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n14
 	}
 	data[i] = 0x12
 	i++
@@ -1587,6 +1694,10 @@ func (m *Action) Size() (n int) {
 		l = m.CodependentAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	if m.NetCheckAction != nil {
+		l = m.NetCheckAction.Size()
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -1649,6 +1760,15 @@ func (m *RunAction) Size() (n int) {
 	}
 	l = len(m.User)
 	n += 1 + l + sovActions(uint64(l))
+	l = len(m.LogSource)
+	n += 1 + l + sovActions(uint64(l))
+	return n
+}
+
+func (m *NetCheckAction) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovActions(uint64(m.Port))
 	l = len(m.LogSource)
 	n += 1 + l + sovActions(uint64(l))
 	return n
@@ -1775,6 +1895,7 @@ func (this *Action) String() string {
 		`ParallelAction:` + strings.Replace(fmt.Sprintf("%v", this.ParallelAction), "ParallelAction", "ParallelAction", 1) + `,`,
 		`SerialAction:` + strings.Replace(fmt.Sprintf("%v", this.SerialAction), "SerialAction", "SerialAction", 1) + `,`,
 		`CodependentAction:` + strings.Replace(fmt.Sprintf("%v", this.CodependentAction), "CodependentAction", "CodependentAction", 1) + `,`,
+		`NetCheckAction:` + strings.Replace(fmt.Sprintf("%v", this.NetCheckAction), "NetCheckAction", "NetCheckAction", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1819,6 +1940,17 @@ func (this *RunAction) String() string {
 		`Env:` + strings.Replace(fmt.Sprintf("%v", this.Env), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
 		`ResourceLimits:` + strings.Replace(fmt.Sprintf("%v", this.ResourceLimits), "ResourceLimits", "ResourceLimits", 1) + `,`,
 		`User:` + fmt.Sprintf("%v", this.User) + `,`,
+		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *NetCheckAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&NetCheckAction{`,
+		`Port:` + fmt.Sprintf("%v", this.Port) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
 		`}`,
 	}, "")
@@ -1940,6 +2072,9 @@ func (this *Action) GetValue() interface{} {
 	if this.CodependentAction != nil {
 		return this.CodependentAction
 	}
+	if this.NetCheckAction != nil {
+		return this.NetCheckAction
+	}
 	return nil
 }
 
@@ -1963,6 +2098,8 @@ func (this *Action) SetValue(value interface{}) bool {
 		this.SerialAction = vt
 	case *CodependentAction:
 		this.CodependentAction = vt
+	case *NetCheckAction:
+		this.NetCheckAction = vt
 	default:
 		return false
 	}
@@ -2254,6 +2391,36 @@ func (m *Action) Unmarshal(data []byte) error {
 				m.CodependentAction = &CodependentAction{}
 			}
 			if err := m.CodependentAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NetCheckAction", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActions
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.NetCheckAction == nil {
+				m.NetCheckAction = &NetCheckAction{}
+			}
+			if err := m.NetCheckAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2826,6 +2993,92 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			m.User = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LogSource", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthActions
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LogSource = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipActions(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthActions
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *NetCheckAction) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Port", wireType)
+			}
+			m.Port = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.Port |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LogSource", wireType)
 			}

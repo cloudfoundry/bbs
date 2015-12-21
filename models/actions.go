@@ -12,6 +12,7 @@ const (
 	ActionTypeDownload     = "download"
 	ActionTypeEmitProgress = "emit_progress"
 	ActionTypeRun          = "run"
+	ActionTypeNetCheck     = "net_check"
 	ActionTypeUpload       = "upload"
 	ActionTypeTimeout      = "timeout"
 	ActionTypeTry          = "try"
@@ -146,6 +147,22 @@ func (a RunAction) Validate() error {
 		return validationError
 	}
 
+	return nil
+}
+
+func (*NetCheckAction) Version() format.Version {
+	return format.V0
+}
+
+func (*NetCheckAction) MigrateFromVersion(v format.Version) error {
+	return nil
+}
+
+func (a *NetCheckAction) ActionType() string {
+	return ActionTypeNetCheck
+}
+
+func (a NetCheckAction) Validate() error {
 	return nil
 }
 

@@ -17,6 +17,7 @@ message Action {
     ParallelAction parallel_action = 7 [(gogoproto.jsontag) = "parallel,omitempty"];
     SerialAction serial_action = 8 [(gogoproto.jsontag) = "serial,omitempty"];
     CodependentAction codependent_action = 9 [(gogoproto.jsontag) = "codependent,omitempty"];
+    NetCheckAction net_check_action = 10 [(gogoproto.jsontag) = "net_check,omitempty"];
   }
 }
 
@@ -45,6 +46,11 @@ message RunAction {
   optional ResourceLimits resource_limits = 5;
   optional string user = 6;
   optional string log_source = 7 [(gogoproto.jsontag) = "log_source,omitempty"];
+}
+
+message NetCheckAction {
+  optional uint32 port = 1;
+  optional string log_source = 2 [(gogoproto.jsontag) = "log_source,omitempty"];
 }
 
 message TimeoutAction {
