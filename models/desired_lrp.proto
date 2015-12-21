@@ -5,6 +5,7 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "modification_tag.proto";
 import "actions.proto";
+import "cached_dependency.proto";
 import "security_group.proto";
 import "environment_variables.proto";
 
@@ -37,7 +38,7 @@ message DesiredLRPRunInfo {
   optional string log_source = 11;
   optional string metrics_guid = 12;
   optional int64 created_at = 13;
-  repeated CacheDependency cache_dependencies = 14 [(gogoproto.jsontag) = "cache_dependencies,omitempty"];
+  repeated CachedDependency cached_dependencies = 14 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 15 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
 }
 
@@ -86,6 +87,6 @@ message DesiredLRP {
   optional string annotation = 19;
   repeated SecurityGroupRule egress_rules = 20;
   optional ModificationTag modification_tag = 21;
-  repeated CacheDependency cache_dependencies = 22 [(gogoproto.jsontag) = "cache_dependencies,omitempty"];
+  repeated CachedDependency cached_dependencies = 22 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 23 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
 }
