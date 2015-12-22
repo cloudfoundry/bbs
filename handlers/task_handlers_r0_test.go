@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
@@ -127,8 +128,8 @@ var _ = Describe("Task Handlers", func() {
 
 					Expect(response.Error).To(BeNil())
 					Expect(response.Tasks).To(HaveLen(2))
-					Expect(*response.Tasks[0].TaskDefinition).To(Equal(task1.TaskDefinition.WithCachedDependenciesAsActions()))
-					Expect(*response.Tasks[1].TaskDefinition).To(Equal(task2.TaskDefinition.WithCachedDependenciesAsActions()))
+					Expect(response.Tasks[0]).To(Equal(task1.VersionDownTo(format.V0)))
+					Expect(response.Tasks[1]).To(Equal(task2.VersionDownTo(format.V0)))
 				})
 			})
 		})
@@ -203,9 +204,7 @@ var _ = Describe("Task Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
-					transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
-					task.TaskDefinition = &transformedTaskDef
-					Expect(response.Task).To(Equal(task))
+					Expect(response.Task).To(Equal(task.VersionDownTo(format.V0)))
 				})
 			})
 		})

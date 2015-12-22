@@ -16,7 +16,7 @@ type TaskFilter struct {
 }
 
 func (t *Task) Version() format.Version {
-	return format.V0
+	return format.V1
 }
 
 func (t *Task) MigrateFromVersion(v format.Version) error {
@@ -56,35 +56,56 @@ func (task *Task) Validate() error {
 	return nil
 }
 
-func (t TaskDefinition) WithCachedDependenciesAsActions() TaskDefinition {
+func (t *Task) Copy() *Task {
+	newTask := *t
+	return &newTask
+}
+
+func (t *Task) VersionDownTo(v format.Version) *Task {
+	t = t.Copy()
+	switch v {
+	case format.V0:
+		t.TaskDefinition = newTaskDefWithCachedDependenciesAsActions(t.TaskDefinition)
+		return t
+	default:
+		return t
+	}
+}
+
+func newTaskDefWithCachedDependenciesAsActions(t *TaskDefinition) *TaskDefinition {
+	t = t.Copy()
 	if len(t.CachedDependencies) > 0 {
-		actions := make([]ActionInterface, len(t.CachedDependencies))
-
-		for i := range t.CachedDependencies {
-			cacheDependency := t.CachedDependencies[i]
-			actions[i] = &DownloadAction{
-				Artifact:  cacheDependency.Name,
-				From:      cacheDependency.From,
-				To:        cacheDependency.To,
-				CacheKey:  cacheDependency.CacheKey,
-				LogSource: cacheDependency.LogSource,
-				User:      t.LegacyDownloadUser,
-			}
-		}
-
-		parallelDownloads := Parallel(actions...)
-
+		cachedDownloads := Parallel(t.actionsFromCachedDependencies()...)
 		if t.Action != nil {
-			t.Action = WrapAction(Serial(parallelDownloads, UnwrapAction(t.Action)))
+			t.Action = WrapAction(Serial(cachedDownloads, UnwrapAction(t.Action)))
 		} else {
-			t.Action = WrapAction(Serial(parallelDownloads))
+			t.Action = WrapAction(Serial(cachedDownloads))
 		}
 		t.CachedDependencies = nil
 	}
-
 	return t
 }
 
+func (t *TaskDefinition) actionsFromCachedDependencies() []ActionInterface {
+	actions := make([]ActionInterface, len(t.CachedDependencies))
+	for i := range t.CachedDependencies {
+		cacheDependency := t.CachedDependencies[i]
+		actions[i] = &DownloadAction{
+			Artifact:  cacheDependency.Name,
+			From:      cacheDependency.From,
+			To:        cacheDependency.To,
+			CacheKey:  cacheDependency.CacheKey,
+			LogSource: cacheDependency.LogSource,
+			User:      t.LegacyDownloadUser,
+		}
+	}
+	return actions
+}
+
+func (t *TaskDefinition) Copy() *TaskDefinition {
+	newTaskDef := *t
+	return &newTaskDef
+}
 func (def *TaskDefinition) Validate() error {
 	var validationError ValidationError
 

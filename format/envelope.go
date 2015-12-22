@@ -44,7 +44,11 @@ func UnmarshalEnvelope(logger lager.Logger, unencodedPayload []byte, model Versi
 		return err
 	}
 
-	model.MigrateFromVersion(version)
+	err = model.MigrateFromVersion(version)
+	if err != nil {
+		logger.Error("failed-to-migrate", err)
+		return err
+	}
 
 	err = model.Validate()
 	if err != nil {
