@@ -102,13 +102,14 @@ func IsEnveloped(data []byte) bool {
 		return false
 	}
 
-	switch Version(data[1]) {
-	case V0:
-	default:
-		return false
+	version := Version(data[1])
+	for _, validVersion := range ValidVersions {
+		if version == validVersion {
+			return true
+		}
 	}
 
-	return true
+	return false
 }
 
 func UnmarshalJSON(logger lager.Logger, marshaledPayload []byte, model Versioner) error {

@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
@@ -109,8 +110,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					Expect(response.Error).To(BeNil())
 					Expect(response.DesiredLrps).To(HaveLen(2))
-					Expect(*response.DesiredLrps[0]).To(Equal(desiredLRP1.WithCachedDependenciesAsSetupActions()))
-					Expect(*response.DesiredLrps[1]).To(Equal(desiredLRP2.WithCachedDependenciesAsSetupActions()))
+					Expect(response.DesiredLrps[0]).To(Equal(desiredLRP1.VersionDownTo(format.V0)))
+					Expect(response.DesiredLrps[1]).To(Equal(desiredLRP2.VersionDownTo(format.V0)))
 				})
 			})
 		})
@@ -206,7 +207,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
-					Expect(*response.DesiredLrp).To(Equal(desiredLRP.WithCachedDependenciesAsSetupActions()))
+					Expect(response.DesiredLrp).To(Equal(desiredLRP.VersionDownTo(format.V0)))
 				})
 			})
 		})

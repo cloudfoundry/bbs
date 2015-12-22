@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -22,8 +23,8 @@ func (h *DesiredLRPHandler) DesiredLRPs_r0(w http.ResponseWriter, req *http.Requ
 		lrps, err = h.db.DesiredLRPs(logger, filter)
 		if err == nil {
 			for i := range lrps {
-				transformedLRP := lrps[i].WithCachedDependenciesAsSetupActions()
-				response.DesiredLrps = append(response.DesiredLrps, &transformedLRP)
+				transformedLRP := lrps[i].VersionDownTo(format.V0)
+				response.DesiredLrps = append(response.DesiredLrps, transformedLRP)
 			}
 		}
 	}
@@ -44,8 +45,8 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(w http.ResponseWriter, re
 		var lrp *models.DesiredLRP
 		lrp, err = h.db.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 		if err == nil {
-			transformedLRP := lrp.WithCachedDependenciesAsSetupActions()
-			response.DesiredLrp = &transformedLRP
+			transformedLRP := lrp.VersionDownTo(format.V0)
+			response.DesiredLrp = transformedLRP
 		}
 	}
 
