@@ -1,6 +1,9 @@
 package models
 
-import "github.com/gogo/protobuf/proto"
+import (
+	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/gogo/protobuf/proto"
+)
 
 type Event interface {
 	EventType() string
@@ -19,6 +22,22 @@ const (
 	EventTypeActualLRPChanged = "actual_lrp_changed"
 	EventTypeActualLRPRemoved = "actual_lrp_removed"
 )
+
+func VersionDesiredLRPsToV0(event Event) Event {
+	switch event := event.(type) {
+	case *DesiredLRPCreatedEvent:
+		return NewDesiredLRPCreatedEvent(event.DesiredLrp.VersionDownTo(format.V0))
+	case *DesiredLRPRemovedEvent:
+		return NewDesiredLRPRemovedEvent(event.DesiredLrp.VersionDownTo(format.V0))
+	case *DesiredLRPChangedEvent:
+		return NewDesiredLRPChangedEvent(
+			event.Before.VersionDownTo(format.V0),
+			event.After.VersionDownTo(format.V0),
+		)
+	default:
+		return event
+	}
+}
 
 func NewDesiredLRPCreatedEvent(desiredLRP *DesiredLRP) *DesiredLRPCreatedEvent {
 	return &DesiredLRPCreatedEvent{

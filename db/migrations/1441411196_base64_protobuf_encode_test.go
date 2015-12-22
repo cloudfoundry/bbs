@@ -105,7 +105,6 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			payload, err := base64.StdEncoding.DecodeString(string(value[2:]))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(payload[0]).To(BeEquivalentTo(format.PROTO))
-			Expect(payload[1]).To(BeEquivalentTo(format.V0))
 			serializer.Unmarshal(logger, []byte(value), actual)
 			Expect(actual).To(Equal(expected))
 		}
@@ -120,7 +119,8 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			for _, node := range response.Node.Nodes {
 				var desiredLRP models.DesiredLRP
 				value := node.Value
-				serializer.Unmarshal(logger, []byte(value), &desiredLRP)
+				err := serializer.Unmarshal(logger, []byte(value), &desiredLRP)
+				Expect(err).NotTo(HaveOccurred())
 				validateConversionToProto(node, &desiredLRP, expectedDesiredLRP)
 			}
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/gogo/protobuf/proto"
@@ -361,7 +362,7 @@ var _ = Describe("DesiredLRP", func() {
 		})
 	})
 
-	Describe("WithCachedDependenciesAsSetupActions", func() {
+	Describe("Version Down To V0", func() {
 		var (
 			downloadAction1, downloadAction2 models.DownloadAction
 		)
@@ -398,7 +399,7 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			It("converts a cache dependency into download step action", func() {
-				convertedLRP := desiredLRP.WithCachedDependenciesAsSetupActions()
+				convertedLRP := desiredLRP.VersionDownTo(format.V0)
 				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(1))
 				Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
@@ -424,7 +425,7 @@ var _ = Describe("DesiredLRP", func() {
 
 		Context("when there is an existing setup action", func() {
 			It("appends the new converted step action to the front", func() {
-				convertedLRP := desiredLRP.WithCachedDependenciesAsSetupActions()
+				convertedLRP := desiredLRP.VersionDownTo(format.V0)
 				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
 				Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
@@ -452,7 +453,7 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			It("keeps the current setup", func() {
-				convertedLRP := desiredLRP.WithCachedDependenciesAsSetupActions()
+				convertedLRP := desiredLRP.VersionDownTo(format.V0)
 				Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
 
 				Expect(*convertedLRP.Setup).To(Equal(*desiredLRP.Setup))

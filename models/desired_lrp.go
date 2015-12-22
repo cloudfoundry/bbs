@@ -66,12 +66,38 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 	}
 }
 
+func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLRP {
+	d = d.Copy()
+	if len(d.CachedDependencies) > 0 {
+
+		cachedDownloads := Parallel(d.actionsFromCachedDependencies()...)
+
+		if d.Setup != nil {
+			d.Setup = WrapAction(Serial(cachedDownloads, UnwrapAction(d.Setup)))
+		} else {
+			d.Setup = WrapAction(Serial(cachedDownloads))
+		}
+		d.CachedDependencies = nil
+	}
+
+	return d
+}
+
 func (*DesiredLRP) Version() format.Version {
-	return format.V0
+	return format.V1
 }
 
 func (*DesiredLRP) MigrateFromVersion(v format.Version) error {
 	return nil
+}
+
+func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
+	switch v {
+	case format.V0:
+		return newDesiredLRPWithCachedDependenciesAsSetupActions(d)
+	default:
+		return d.Copy()
+	}
 }
 
 func (desired *DesiredLRP) ApplyUpdate(update *DesiredLRPUpdate) *DesiredLRP {
@@ -136,37 +162,29 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	)
 }
 
+func (d *DesiredLRP) Copy() *DesiredLRP {
+	newDesired := *d
+	return &newDesired
+}
+
 func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
 	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
 }
 
-func (d DesiredLRP) WithCachedDependenciesAsSetupActions() DesiredLRP {
-	if len(d.CachedDependencies) > 0 {
-		actions := make([]ActionInterface, len(d.CachedDependencies))
-
-		for i := range d.CachedDependencies {
-			cacheDependency := d.CachedDependencies[i]
-			actions[i] = &DownloadAction{
-				Artifact:  cacheDependency.Name,
-				From:      cacheDependency.From,
-				To:        cacheDependency.To,
-				CacheKey:  cacheDependency.CacheKey,
-				LogSource: cacheDependency.LogSource,
-				User:      d.LegacyDownloadUser,
-			}
+func (d *DesiredLRP) actionsFromCachedDependencies() []ActionInterface {
+	actions := make([]ActionInterface, len(d.CachedDependencies))
+	for i := range d.CachedDependencies {
+		cacheDependency := d.CachedDependencies[i]
+		actions[i] = &DownloadAction{
+			Artifact:  cacheDependency.Name,
+			From:      cacheDependency.From,
+			To:        cacheDependency.To,
+			CacheKey:  cacheDependency.CacheKey,
+			LogSource: cacheDependency.LogSource,
+			User:      d.LegacyDownloadUser,
 		}
-
-		parallelDownloads := Parallel(actions...)
-
-		if d.Setup != nil {
-			d.Setup = WrapAction(Serial(parallelDownloads, UnwrapAction(d.Setup)))
-		} else {
-			d.Setup = WrapAction(Serial(parallelDownloads))
-		}
-		d.CachedDependencies = nil
 	}
-
-	return d
+	return actions
 }
 
 func (desired DesiredLRP) Validate() error {
