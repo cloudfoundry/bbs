@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -128,7 +129,7 @@ var _ = Describe("Task", func() {
 		}
 	})
 
-	Describe("WithCachedDependenciesAsActions", func() {
+	Describe("VersionDownTo V0", func() {
 		var (
 			downloadAction1, downloadAction2 *models.DownloadAction
 		)
@@ -159,20 +160,20 @@ var _ = Describe("Task", func() {
 			}
 		})
 
-		Context("when there is no existing action", func() {
+		Context("when there is no existing setup action", func() {
 			BeforeEach(func() {
 				task.Action = nil
 			})
 
 			It("converts a cache dependency into download action", func() {
-				transformedTaskDefinition := task.TaskDefinition.WithCachedDependenciesAsActions()
-				Expect(transformedTaskDefinition.Action.SerialAction.Actions).To(HaveLen(1))
-				Expect(transformedTaskDefinition.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+				newTask := task.VersionDownTo(format.V0)
+				Expect(newTask.Action.SerialAction.Actions).To(HaveLen(1))
+				Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
-				Expect(*transformedTaskDefinition.Action.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(*downloadAction1))
-				Expect(*transformedTaskDefinition.Action.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(*downloadAction2))
+				Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(*downloadAction1))
+				Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(*downloadAction2))
 
-				Expect(*transformedTaskDefinition.Action).To(Equal(models.Action{
+				Expect(*newTask.Action).To(Equal(models.Action{
 					SerialAction: &models.SerialAction{
 						Actions: []*models.Action{
 							{
@@ -191,11 +192,11 @@ var _ = Describe("Task", func() {
 
 		Context("when there is an existing action", func() {
 			It("appends the new converted step action to the front", func() {
-				transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
-				Expect(transformedTaskDef.Action.SerialAction.Actions).To(HaveLen(2))
-				Expect(transformedTaskDef.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+				newTask := task.VersionDownTo(format.V0)
+				Expect(newTask.Action.SerialAction.Actions).To(HaveLen(2))
+				Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
-				Expect(*transformedTaskDef.Action).To(Equal(models.Action{
+				Expect(*newTask.Action).To(Equal(models.Action{
 					SerialAction: &models.SerialAction{
 						Actions: []*models.Action{
 							{
@@ -219,8 +220,8 @@ var _ = Describe("Task", func() {
 			})
 
 			It("keeps the current action", func() {
-				transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
-				Expect(*transformedTaskDef.Action).To(Equal(*task.Action))
+				newTask := task.VersionDownTo(format.V0)
+				Expect(*newTask.Action).To(Equal(*task.Action))
 			})
 		})
 	})

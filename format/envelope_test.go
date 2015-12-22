@@ -27,7 +27,6 @@ var _ = Describe("Envelope", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(format.EnvelopeFormat(encoded[0])).To(Equal(format.PROTO))
-			Expect(format.Version(encoded[1])).To(Equal(format.V0))
 
 			var newTask models.Task
 			modelErr := proto.Unmarshal(encoded[2:], &newTask)

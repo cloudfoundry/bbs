@@ -68,7 +68,6 @@ var _ = Describe("Format", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(unencoded[0]).To(BeEquivalentTo(format.JSON))
-				Expect(unencoded[1]).To(BeEquivalentTo(format.V0))
 				Expect(unencoded[2:]).To(MatchJSON(jsonEncodedTask))
 			})
 		})
@@ -85,7 +84,6 @@ var _ = Describe("Format", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(unencoded[0]).To(BeEquivalentTo(format.PROTO))
-				Expect(unencoded[1]).To(BeEquivalentTo(format.V0))
 				Expect(unencoded[2:]).To(Equal(protoEncodedTask))
 			})
 		})
@@ -102,7 +100,6 @@ var _ = Describe("Format", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(unencoded[0]).To(BeEquivalentTo(format.PROTO))
-				Expect(unencoded[1]).To(BeEquivalentTo(format.V0))
 				Expect(unencoded[2:]).To(Equal(protoEncodedTask))
 			})
 		})

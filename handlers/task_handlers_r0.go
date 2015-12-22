@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -19,12 +20,12 @@ func (h *TaskHandler) Tasks_r0(w http.ResponseWriter, req *http.Request) {
 		filter := models.TaskFilter{Domain: request.Domain, CellID: request.CellId}
 		response.Tasks, err = h.db.Tasks(logger, filter)
 		if err == nil {
-			for _, task := range response.Tasks {
+			for i := range response.Tasks {
+				task := response.Tasks[i]
 				if task.TaskDefinition == nil {
 					continue
 				}
-				transformedTaskDef := task.TaskDefinition.WithCachedDependenciesAsActions()
-				task.TaskDefinition = &transformedTaskDef
+				response.Tasks[i] = task.VersionDownTo(format.V0)
 			}
 		}
 	}
@@ -44,8 +45,7 @@ func (h *TaskHandler) TaskByGuid_r0(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		response.Task, err = h.db.TaskByGuid(logger, request.TaskGuid)
 		if err == nil && response.Task.TaskDefinition != nil {
-			transformedTaskDef := response.Task.TaskDefinition.WithCachedDependenciesAsActions()
-			response.Task.TaskDefinition = &transformedTaskDef
+			response.Task = response.Task.VersionDownTo(format.V0)
 		}
 	}
 
