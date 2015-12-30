@@ -383,7 +383,7 @@ var _ = Describe("DesiredLRPDB", func() {
 					consulHelper.RegisterCell(&cellPresence)
 
 					for i := int32(0); i < lrp.Instances; i++ {
-						instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellID)
+						instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellId)
 						err := etcdDB.ClaimActualLRP(logger, lrp.ProcessGuid, i, &instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 					}
@@ -580,7 +580,7 @@ var _ = Describe("DesiredLRPDB", func() {
 						consulHelper.RegisterCell(&cellPresence)
 
 						for i := int32(0); i < lrp.Instances; i++ {
-							instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellID)
+							instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellId)
 							err := etcdDB.ClaimActualLRP(logger, lrp.ProcessGuid, i, &instanceKey)
 							Expect(err).NotTo(HaveOccurred())
 						}

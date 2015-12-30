@@ -223,7 +223,7 @@ func main() {
 		bbsWatchRetryWaitDuration,
 	)
 
-	handler := handlers.New(logger, db, hub, migrationsDone)
+	handler := handlers.New(logger, db, hub, serviceClient, migrationsDone)
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(
 		logger,

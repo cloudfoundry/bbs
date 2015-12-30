@@ -124,6 +124,6 @@ func registerCell(cell models.CellPresence) {
 	jsonBytes, err := json.Marshal(cell)
 	Expect(err).NotTo(HaveOccurred())
 
-	_, err = consulSession.SetPresence(bbs.CellSchemaPath(cell.CellID), jsonBytes)
+	_, err = consulSession.SetPresence(bbs.CellSchemaPath(cell.CellId), jsonBytes)
 	Expect(err).NotTo(HaveOccurred())
 }

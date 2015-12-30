@@ -10,6 +10,7 @@
 		actual_lrp.proto
 		actual_lrp_requests.proto
 		cached_dependency.proto
+		cells.proto
 		desired_lrp.proto
 		desired_lrp_requests.proto
 		domain.proto

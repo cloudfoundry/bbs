@@ -23,6 +23,6 @@ func (t *ConsulHelper) RegisterCell(cell *models.CellPresence) {
 	jsonBytes, err := json.Marshal(cell)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = t.consulSession.AcquireLock(bbs.CellSchemaPath(cell.CellID), jsonBytes)
+	err = t.consulSession.AcquireLock(bbs.CellSchemaPath(cell.CellId), jsonBytes)
 	Expect(err).NotTo(HaveOccurred())
 }

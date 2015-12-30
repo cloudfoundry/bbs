@@ -45,7 +45,7 @@ var _ = Describe("CellPresence", func() {
 		Context("when cell presence is invalid", func() {
 			Context("when cell id is invalid", func() {
 				BeforeEach(func() {
-					cellPresence.CellID = ""
+					cellPresence.CellId = ""
 				})
 
 				It("returns an error", func() {
@@ -70,7 +70,7 @@ var _ = Describe("CellPresence", func() {
 			Context("when cell capacity is invalid", func() {
 				Context("when memory is zero", func() {
 					BeforeEach(func() {
-						cellPresence.Capacity.MemoryMB = 0
+						cellPresence.Capacity.MemoryMb = 0
 					})
 					It("returns an error", func() {
 						err := cellPresence.Validate()
@@ -81,7 +81,7 @@ var _ = Describe("CellPresence", func() {
 
 				Context("when memory is negative", func() {
 					BeforeEach(func() {
-						cellPresence.Capacity.MemoryMB = -1
+						cellPresence.Capacity.MemoryMb = -1
 					})
 					It("returns an error", func() {
 						err := cellPresence.Validate()
@@ -114,7 +114,7 @@ var _ = Describe("CellPresence", func() {
 
 				Context("when disk is negative", func() {
 					BeforeEach(func() {
-						cellPresence.Capacity.DiskMB = -1
+						cellPresence.Capacity.DiskMb = -1
 					})
 					It("returns an error", func() {
 						err := cellPresence.Validate()

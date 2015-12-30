@@ -80,7 +80,7 @@ func newCellPresence(cellID string) *models.CellPresence {
 		"the-zone",
 		models.NewCellCapacity(128, 1024, 6),
 		[]string{},
-		[]string{},
+		nil,
 	)
 	return &presence
 }

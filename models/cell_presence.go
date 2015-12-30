@@ -6,8 +6,16 @@ func NewCellSet() CellSet {
 	return make(CellSet)
 }
 
+func NewCellSetFromList(cells []*CellPresence) CellSet {
+	cellSet := NewCellSet()
+	for _, v := range cells {
+		cellSet.Add(v)
+	}
+	return cellSet
+}
+
 func (set CellSet) Add(cell *CellPresence) {
-	set[cell.CellID] = cell
+	set[cell.CellId] = cell
 }
 
 func (set CellSet) Each(predicate func(cell *CellPresence)) {
@@ -21,16 +29,10 @@ func (set CellSet) HasCellID(cellID string) bool {
 	return ok
 }
 
-type CellCapacity struct {
-	MemoryMB   int `json:"memory_mb"`
-	DiskMB     int `json:"disk_mb"`
-	Containers int `json:"containers"`
-}
-
-func NewCellCapacity(memoryMB, diskMB, containers int) CellCapacity {
+func NewCellCapacity(memoryMB, diskMB, containers int32) CellCapacity {
 	return CellCapacity{
-		MemoryMB:   memoryMB,
-		DiskMB:     diskMB,
+		MemoryMb:   memoryMB,
+		DiskMb:     diskMB,
 		Containers: containers,
 	}
 }
@@ -38,11 +40,11 @@ func NewCellCapacity(memoryMB, diskMB, containers int) CellCapacity {
 func (cap CellCapacity) Validate() error {
 	var validationError ValidationError
 
-	if cap.MemoryMB <= 0 {
+	if cap.MemoryMb <= 0 {
 		validationError = validationError.Append(ErrInvalidField{"memory_mb"})
 	}
 
-	if cap.DiskMB < 0 {
+	if cap.DiskMb < 0 {
 		validationError = validationError.Append(ErrInvalidField{"disk_mb"})
 	}
 
@@ -57,36 +59,32 @@ func (cap CellCapacity) Validate() error {
 	return nil
 }
 
-type CellPresence struct {
-	CellID          string              `json:"cell_id"`
-	RepAddress      string              `json:"rep_address"`
-	Zone            string              `json:"zone"`
-	Capacity        CellCapacity        `json:"capacity"`
-	RootFSProviders map[string][]string `json:"rootfs_providers"`
-}
-
 func NewCellPresence(cellID, repAddress, zone string, capacity CellCapacity, rootFSProviders, preloadedRootFSes []string) CellPresence {
-	rootFSProviderMap := make(map[string][]string)
+	rootFSProviderMap := make(RootFSProviders)
 
 	for _, provider := range rootFSProviders {
-		rootFSProviderMap[provider] = []string{}
+		rootFSProviderMap[provider] = &Providers{
+			ProvidersList: []string{},
+		}
 	}
 
-	rootFSProviderMap["preloaded"] = preloadedRootFSes
+	rootFSProviderMap["preloaded"] = &Providers{
+		ProvidersList: preloadedRootFSes,
+	}
 
 	return CellPresence{
-		CellID:          cellID,
+		CellId:          cellID,
 		RepAddress:      repAddress,
 		Zone:            zone,
-		Capacity:        capacity,
-		RootFSProviders: rootFSProviderMap,
+		Capacity:        &capacity,
+		RootfsProviders: rootFSProviderMap,
 	}
 }
 
 func (c CellPresence) Validate() error {
 	var validationError ValidationError
 
-	if c.CellID == "" {
+	if c.CellId == "" {
 		validationError = validationError.Append(ErrInvalidField{"cell_id"})
 	}
 

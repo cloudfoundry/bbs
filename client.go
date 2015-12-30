@@ -125,14 +125,16 @@ type ExternalClient interface {
 
 	// Returns an EventSource for watching changes to LRPs
 	SubscribeToEvents() (events.EventSource, error)
+
+	// Lists all Cells
+	Cells() ([]*models.CellPresence, error)
 }
 
 func newClient(url string) *client {
 	return &client{
 		httpClient:          cf_http.NewClient(),
 		streamingHTTPClient: cf_http.NewStreamingClient(),
-
-		reqGen: rata.NewRequestGenerator(url, Routes),
+		reqGen:              rata.NewRequestGenerator(url, Routes),
 	}
 }
 
@@ -179,8 +181,7 @@ func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSi
 type client struct {
 	httpClient          *http.Client
 	streamingHTTPClient *http.Client
-
-	reqGen *rata.RequestGenerator
+	reqGen              *rata.RequestGenerator
 }
 
 func (c *client) Ping() bool {
@@ -622,6 +623,15 @@ func (c *client) SubscribeToEvents() (events.EventSource, error) {
 	}
 
 	return events.NewEventSource(eventSource), nil
+}
+
+func (c *client) Cells() ([]*models.CellPresence, error) {
+	response := models.CellsResponse{}
+	err := c.doRequest(CellsRoute, nil, nil, nil, &response)
+	if err != nil {
+		return nil, err
+	}
+	return response.Cells, response.Error.ToError()
 }
 
 func (c *client) createRequest(requestName string, params rata.Params, queryParams url.Values, message proto.Message) (*http.Request, error) {

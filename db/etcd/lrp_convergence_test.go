@@ -383,13 +383,13 @@ var _ = Describe("LrpConvergence", func() {
 
 	Describe("Convergence Calculation", func() {
 		var cellA = &models.CellPresence{
-			CellID:     "cell-a",
+			CellId:     "cell-a",
 			RepAddress: "some-rep-address",
 			Zone:       "some-zone",
 		}
 
 		var cellB = &models.CellPresence{
-			CellID:     "cell-b",
+			CellId:     "cell-b",
 			RepAddress: "some-rep-address",
 			Zone:       "some-zone",
 		}
@@ -431,8 +431,8 @@ var _ = Describe("LrpConvergence", func() {
 						AllProcessGuids: map[string]struct{}{lrpA.ProcessGuid: struct{}{}},
 						DesiredLRPs:     desiredLRPs(lrpA),
 						ActualLRPs: actualLRPs(
-							newRunningActualLRP(lrpA, cellA.CellID, 0),
-							newRunningActualLRP(lrpA, cellA.CellID, 1),
+							newRunningActualLRP(lrpA, cellA.CellId, 0),
+							newRunningActualLRP(lrpA, cellA.CellId, 1),
 						),
 						Domains: models.DomainSet{},
 						Cells:   models.CellSet{},
@@ -442,8 +442,8 @@ var _ = Describe("LrpConvergence", func() {
 				It("reports them", func() {
 					output := &models.ConvergenceChanges{
 						ActualLRPsWithMissingCells: []*models.ActualLRP{
-							newRunningActualLRP(lrpA, cellA.CellID, 0),
-							newRunningActualLRP(lrpA, cellA.CellID, 1),
+							newRunningActualLRP(lrpA, cellA.CellId, 0),
+							newRunningActualLRP(lrpA, cellA.CellId, 1),
 						},
 					}
 
@@ -484,9 +484,9 @@ var _ = Describe("LrpConvergence", func() {
 						AllProcessGuids: map[string]struct{}{lrpA.ProcessGuid: struct{}{}},
 						DesiredLRPs:     desiredLRPs(lrpA),
 						ActualLRPs: actualLRPs(
-							newRunningActualLRP(lrpA, cellA.CellID, 0),
-							newRunningActualLRP(lrpA, cellA.CellID, 1),
-							newRunningActualLRP(lrpA, cellA.CellID, 2),
+							newRunningActualLRP(lrpA, cellA.CellId, 0),
+							newRunningActualLRP(lrpA, cellA.CellId, 1),
+							newRunningActualLRP(lrpA, cellA.CellId, 2),
 						),
 						Domains: models.NewDomainSet([]string{domainA}),
 						Cells:   cellSet(cellA),
@@ -496,7 +496,7 @@ var _ = Describe("LrpConvergence", func() {
 				It("reports them", func() {
 					output := &models.ConvergenceChanges{
 						ActualLRPsForExtraIndices: []*models.ActualLRP{
-							newRunningActualLRP(lrpA, cellA.CellID, 2),
+							newRunningActualLRP(lrpA, cellA.CellId, 2),
 						},
 					}
 
@@ -539,7 +539,7 @@ var _ = Describe("LrpConvergence", func() {
 						AllProcessGuids: map[string]struct{}{lrpA.ProcessGuid: struct{}{}},
 						DesiredLRPs:     desiredLRPs(lrpA),
 						ActualLRPs: actualLRPs(
-							newRunningActualLRP(lrpA, cellA.CellID, 0),
+							newRunningActualLRP(lrpA, cellA.CellId, 0),
 							newStaleUnclaimedActualLRP(lrpA, 1),
 						),
 						Domains: models.NewDomainSet([]string{domainA}),
@@ -566,7 +566,7 @@ var _ = Describe("LrpConvergence", func() {
 							lrpB.ProcessGuid: struct{}{},
 						},
 						DesiredLRPs: desiredLRPs(lrpA, lrpB),
-						ActualLRPs:  actualLRPs(newRunningActualLRP(lrpA, cellA.CellID, 7)),
+						ActualLRPs:  actualLRPs(newRunningActualLRP(lrpA, cellA.CellId, 7)),
 						Domains:     models.NewDomainSet([]string{domainB}),
 						Cells:       cellSet(cellA, cellB),
 					}
@@ -592,8 +592,8 @@ var _ = Describe("LrpConvergence", func() {
 				input = &models.ConvergenceInput{
 					AllProcessGuids: map[string]struct{}{lrpA.ProcessGuid: struct{}{}},
 					ActualLRPs: actualLRPs(
-						newRunningActualLRP(lrpA, cellA.CellID, 0),
-						newRunningActualLRP(lrpA, cellA.CellID, 1),
+						newRunningActualLRP(lrpA, cellA.CellId, 0),
+						newRunningActualLRP(lrpA, cellA.CellId, 1),
 					),
 					Domains: models.NewDomainSet([]string{domainA}),
 					Cells:   cellSet(cellA),
@@ -603,8 +603,8 @@ var _ = Describe("LrpConvergence", func() {
 			It("reports them", func() {
 				output := &models.ConvergenceChanges{
 					ActualLRPsForExtraIndices: []*models.ActualLRP{
-						newRunningActualLRP(lrpA, cellA.CellID, 0),
-						newRunningActualLRP(lrpA, cellA.CellID, 1),
+						newRunningActualLRP(lrpA, cellA.CellId, 0),
+						newRunningActualLRP(lrpA, cellA.CellId, 1),
 					},
 				}
 
@@ -623,8 +623,8 @@ var _ = Describe("LrpConvergence", func() {
 				It("reports them as extra indices", func() {
 					output := &models.ConvergenceChanges{
 						ActualLRPsForExtraIndices: []*models.ActualLRP{
-							newRunningActualLRP(lrpA, cellA.CellID, 0),
-							newRunningActualLRP(lrpA, cellA.CellID, 1),
+							newRunningActualLRP(lrpA, cellA.CellId, 0),
+							newRunningActualLRP(lrpA, cellA.CellId, 1),
 						},
 					}
 
@@ -649,8 +649,8 @@ var _ = Describe("LrpConvergence", func() {
 					AllProcessGuids: map[string]struct{}{lrpA.ProcessGuid: struct{}{}},
 					DesiredLRPs:     desiredLRPs(lrpA),
 					ActualLRPs: actualLRPs(
-						newStableRunningActualLRP(lrpA, cellA.CellID, 0),
-						newStableRunningActualLRP(lrpA, cellA.CellID, 1),
+						newStableRunningActualLRP(lrpA, cellA.CellId, 0),
+						newStableRunningActualLRP(lrpA, cellA.CellId, 1),
 					),
 					Domains: models.NewDomainSet([]string{domainA}),
 					Cells:   cellSet(cellA),
@@ -828,7 +828,7 @@ var _ = Describe("LrpConvergence", func() {
 			lrp1 := models.NewActualLRPKey(processGuid, 1, freshDomain)
 			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrp1, 1))
 
-			instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellID)
+			instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
 			err := etcdDB.ClaimActualLRP(logger, processGuid, 0, &instanceKey)
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -941,7 +941,7 @@ var _ = Describe("LrpConvergence", func() {
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
 
-					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellID)
+					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
 					err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ActualLRPKey.ProcessGuid,
@@ -1022,7 +1022,7 @@ var _ = Describe("LrpConvergence", func() {
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
 
-					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellID)
+					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
 					netInfo := models.NewActualLRPNetInfo("host", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
 					err = etcdDB.ClaimActualLRP(
 						logger,
@@ -1144,7 +1144,7 @@ var _ = Describe("LrpConvergence", func() {
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
 
-					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellID)
+					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
 					err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ActualLRPKey.ProcessGuid,
@@ -1202,7 +1202,7 @@ var _ = Describe("LrpConvergence", func() {
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
 
-					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellID)
+					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
 					netInfo := models.NewActualLRPNetInfo("host", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
 					err = etcdDB.ClaimActualLRP(
 						logger,
@@ -1696,7 +1696,7 @@ func newUnstartableCrashedActualLRP(d *models.DesiredLRP, index int32) *models.A
 }
 
 func newCellPresence(cellID string) *models.CellPresence {
-	cellPresence := models.NewCellPresence(cellID, "1.2.3.4", "az-1", models.CellCapacity{128, 1024, 3}, []string{}, []string{})
+	cellPresence := models.NewCellPresence(cellID, "1.2.3.4", "az-1", models.CellCapacity{128, 1024, 3}, []string{}, nil)
 	return &cellPresence
 }
 

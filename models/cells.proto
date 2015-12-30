@@ -1,0 +1,34 @@
+syntax = "proto2";
+
+package models;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "error.proto";
+
+message CellCapacity {
+  optional int32 memory_mb = 1;
+  optional int32 disk_mb = 2;
+  optional int32 containers = 3;
+}
+
+message Providers {
+  repeated string providersList = 1;
+}
+
+message proto_rootfsproviders {
+  map<string, Providers> rootfs_providers = 1;
+}
+
+message CellPresence {
+  optional string cell_id = 1;
+  optional string rep_address = 2;
+  optional string zone = 3;
+  optional CellCapacity capacity = 4;
+
+  optional bytes rootfs_providers = 5 [(gogoproto.customtype) = "RootFSProviders"];
+}
+
+message CellsResponse {
+  optional Error error = 1;
+  repeated CellPresence cells = 2;
+}

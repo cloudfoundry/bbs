@@ -180,6 +180,13 @@ type FakeClient struct {
 		result1 events.EventSource
 		result2 error
 	}
+	CellsStub        func() ([]*models.CellPresence, error)
+	cellsMutex       sync.RWMutex
+	cellsArgsForCall []struct{}
+	cellsReturns     struct {
+		result1 []*models.CellPresence
+		result2 error
+	}
 	ClaimActualLRPStub        func(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
@@ -966,6 +973,31 @@ func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, res
 	fake.SubscribeToEventsStub = nil
 	fake.subscribeToEventsReturns = struct {
 		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) Cells() ([]*models.CellPresence, error) {
+	fake.cellsMutex.Lock()
+	fake.cellsArgsForCall = append(fake.cellsArgsForCall, struct{}{})
+	fake.cellsMutex.Unlock()
+	if fake.CellsStub != nil {
+		return fake.CellsStub()
+	} else {
+		return fake.cellsReturns.result1, fake.cellsReturns.result2
+	}
+}
+
+func (fake *FakeClient) CellsCallCount() int {
+	fake.cellsMutex.RLock()
+	defer fake.cellsMutex.RUnlock()
+	return len(fake.cellsArgsForCall)
+}
+
+func (fake *FakeClient) CellsReturns(result1 []*models.CellPresence, result2 error) {
+	fake.CellsStub = nil
+	fake.cellsReturns = struct {
+		result1 []*models.CellPresence
 		result2 error
 	}{result1, result2}
 }

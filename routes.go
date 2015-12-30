@@ -63,6 +63,9 @@ const (
 
 	// Event Streaming
 	EventStreamRoute = "EventStream"
+
+	// Cell Presence
+	CellsRoute = "Cells_r1"
 )
 
 var Routes = rata.Routes{
@@ -130,4 +133,7 @@ var Routes = rata.Routes{
 
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute},
+
+	// Cells
+	{Path: "/v1/cells/list.r1", Method: "GET", Name: CellsRoute},
 }

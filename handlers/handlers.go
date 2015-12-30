@@ -15,7 +15,7 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan struct{}) http.Handler {
+func New(logger lager.Logger, db db.DB, hub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
@@ -25,6 +25,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan st
 	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
 	taskHandler := NewTaskHandler(logger, db)
 	eventsHandler := NewEventHandler(logger, hub)
+	cellsHandler := NewCellHandler(logger, serviceClient)
 
 	actions := rata.Handlers{
 		// Ping
@@ -85,6 +86,9 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, migrationsDone <-chan st
 
 		// Events
 		bbs.EventStreamRoute: route(eventsHandler.Subscribe),
+
+		// Cells
+		bbs.CellsRoute: route(middleware.EmitLatency(cellsHandler.Cells)),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

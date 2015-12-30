@@ -56,7 +56,7 @@ func (db *serviceClient) NewCellPresenceRunner(logger lager.Logger, cellPresence
 		panic(err)
 	}
 
-	return locket.NewPresence(db.session, CellSchemaPath(cellPresence.CellID), payload, db.clock, retryInterval, logger)
+	return locket.NewPresence(db.session, CellSchemaPath(cellPresence.CellId), payload, db.clock, retryInterval, logger)
 }
 
 func (db *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
