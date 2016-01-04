@@ -669,7 +669,7 @@ func (c *client) doRequest(requestName string, params rata.Params, queryParams u
 	var err error
 	var request *http.Request
 
-	for attempts := 0; attempts < 10; attempts++ {
+	for attempts := 0; attempts < 3; attempts++ {
 		request, err = c.createRequest(requestName, params, queryParams, requestBody)
 		if err != nil {
 			return err
