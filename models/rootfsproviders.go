@@ -53,8 +53,8 @@ func (r *RootFSProviders) Size() int {
 func (r *RootFSProviders) Equal(other RootFSProviders) bool {
 	for k, v := range *r {
 		oSlice := *other[k]
-		for i, str1 := range v.GetProvidersList() {
-			if str1 != oSlice.GetProvidersList()[i] {
+		for i, str1 := range v.GetParameters() {
+			if str1 != oSlice.GetParameters()[i] {
 				return false
 			}
 		}
@@ -66,7 +66,7 @@ func (r RootFSProviders) Validate() error {
 	totalRootFSProvidersLength := 0
 	if r != nil {
 		for _, value := range r {
-			totalRootFSProvidersLength += len(value.GetProvidersList())
+			totalRootFSProvidersLength += len(value.GetParameters())
 			if totalRootFSProvidersLength > maximumRouteLength {
 				return ErrInvalidField{"rootFSProviders"}
 			}

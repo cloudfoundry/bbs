@@ -64,12 +64,12 @@ func NewCellPresence(cellID, repAddress, zone string, capacity CellCapacity, roo
 
 	for _, provider := range rootFSProviders {
 		rootFSProviderMap[provider] = &Providers{
-			ProvidersList: []string{},
+			Parameters: []string{},
 		}
 	}
 
 	rootFSProviderMap["preloaded"] = &Providers{
-		ProvidersList: preloadedRootFSes,
+		Parameters: preloadedRootFSes,
 	}
 
 	return CellPresence{

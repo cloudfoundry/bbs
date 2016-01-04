@@ -43,8 +43,8 @@ var _ = Describe("Cell Handlers", func() {
 						Containers: 50,
 					},
 					RootfsProviders: models.RootFSProviders{
-						"provider1": &models.Providers{ProvidersList: []string{"test1", "test2"}},
-						"provider2": &models.Providers{ProvidersList: []string{"test3", "test4"}},
+						"provider1": &models.Providers{Parameters: []string{"test1", "test2"}},
+						"provider2": &models.Providers{Parameters: []string{"test3", "test4"}},
 					},
 				},
 				{
@@ -57,8 +57,8 @@ var _ = Describe("Cell Handlers", func() {
 						Containers: 20,
 					},
 					RootfsProviders: models.RootFSProviders{
-						"provider1": &models.Providers{ProvidersList: []string{"test1", "test2"}},
-						"provider2": &models.Providers{ProvidersList: []string{"test3", "test4"}},
+						"provider1": &models.Providers{Parameters: []string{"test1", "test2"}},
+						"provider2": &models.Providers{Parameters: []string{"test3", "test4"}},
 					},
 				},
 			}

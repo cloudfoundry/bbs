@@ -12,7 +12,7 @@ message CellCapacity {
 }
 
 message Providers {
-  repeated string providersList = 1;
+  repeated string parameters = 1;
 }
 
 message proto_rootfsproviders {

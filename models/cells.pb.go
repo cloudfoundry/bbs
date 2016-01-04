@@ -56,15 +56,15 @@ func (m *CellCapacity) GetContainers() int32 {
 }
 
 type Providers struct {
-	ProvidersList []string `protobuf:"bytes,1,rep,name=providersList" json:"providersList,omitempty"`
+	Parameters []string `protobuf:"bytes,1,rep,name=parameters" json:"parameters,omitempty"`
 }
 
 func (m *Providers) Reset()      { *m = Providers{} }
 func (*Providers) ProtoMessage() {}
 
-func (m *Providers) GetProvidersList() []string {
+func (m *Providers) GetParameters() []string {
 	if m != nil {
-		return m.ProvidersList
+		return m.Parameters
 	}
 	return nil
 }
@@ -195,11 +195,11 @@ func (this *Providers) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if len(this.ProvidersList) != len(that1.ProvidersList) {
+	if len(this.Parameters) != len(that1.Parameters) {
 		return false
 	}
-	for i := range this.ProvidersList {
-		if this.ProvidersList[i] != that1.ProvidersList[i] {
+	for i := range this.Parameters {
+		if this.Parameters[i] != that1.Parameters[i] {
 			return false
 		}
 	}
@@ -320,7 +320,7 @@ func (this *Providers) GoString() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&models.Providers{` +
-		`ProvidersList:` + fmt.Sprintf("%#v", this.ProvidersList) + `}`}, ", ")
+		`Parameters:` + fmt.Sprintf("%#v", this.Parameters) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRootfsproviders) GoString() string {
@@ -429,8 +429,8 @@ func (m *Providers) MarshalTo(data []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ProvidersList) > 0 {
-		for _, s := range m.ProvidersList {
+	if len(m.Parameters) > 0 {
+		for _, s := range m.Parameters {
 			data[i] = 0xa
 			i++
 			l = len(s)
@@ -622,8 +622,8 @@ func (m *CellCapacity) Size() (n int) {
 func (m *Providers) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.ProvidersList) > 0 {
-		for _, s := range m.ProvidersList {
+	if len(m.Parameters) > 0 {
+		for _, s := range m.Parameters {
 			l = len(s)
 			n += 1 + l + sovCells(uint64(l))
 		}
@@ -713,7 +713,7 @@ func (this *Providers) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&Providers{`,
-		`ProvidersList:` + fmt.Sprintf("%v", this.ProvidersList) + `,`,
+		`Parameters:` + fmt.Sprintf("%v", this.Parameters) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -885,7 +885,7 @@ func (m *Providers) Unmarshal(data []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProvidersList", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Parameters", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -906,7 +906,7 @@ func (m *Providers) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ProvidersList = append(m.ProvidersList, string(data[iNdEx:postIndex]))
+			m.Parameters = append(m.Parameters, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
