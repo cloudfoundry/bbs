@@ -180,7 +180,11 @@ func main() {
 
 	sessionManager := consuladapter.NewSessionManager(consulClient)
 
-	serviceClient := initializeServiceClient(logger, clock, consulClient, sessionManager)
+	consulDBSession, err := consuladapter.NewSessionNoChecks("consul-db", *lockTTL, consulClient, sessionManager)
+	if err != nil {
+		logger.Fatal("consul-session-failed", err)
+	}
+	serviceClient := bbs.NewServiceClient(consulDBSession, clock)
 
 	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
 
@@ -206,6 +210,7 @@ func main() {
 		db,
 		cryptor,
 		storeClient,
+		consulDBSession,
 		migrations.Migrations,
 		migrationsDone,
 		clock,
@@ -221,7 +226,6 @@ func main() {
 		hub,
 		clock,
 		bbsWatchRetryWaitDuration,
-	)
 
 	handler := handlers.New(logger, db, hub, serviceClient, migrationsDone)
 
@@ -389,10 +393,4 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 }
 
 func initializeServiceClient(logger lager.Logger, clock clock.Clock, consulClient *api.Client, sessionManager consuladapter.SessionManager) bbs.ServiceClient {
-	consulDBSession, err := consuladapter.NewSessionNoChecks("consul-db", *lockTTL, consulClient, sessionManager)
-	if err != nil {
-		logger.Fatal("consul-session-failed", err)
-	}
-
-	return bbs.NewServiceClient(consulDBSession, clock)
 }

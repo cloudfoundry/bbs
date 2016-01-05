@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/consuladapter"
 	goetcd "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
 )
@@ -32,6 +33,9 @@ func (b Base64ProtobufEncode) Version() int64 {
 
 func (b *Base64ProtobufEncode) SetStoreClient(storeClient etcd.StoreClient) {
 	b.storeClient = storeClient
+}
+
+func (b *Base64ProtobufEncode) SetConsulSession(consuladapter.Session) {
 }
 
 func (b *Base64ProtobufEncode) SetCryptor(cryptor encryption.Cryptor) {

@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -31,6 +32,9 @@ func (m SplitDesiredLRP) Version() int64 {
 
 func (m *SplitDesiredLRP) SetStoreClient(storeClient etcd.StoreClient) {
 	m.storeClient = storeClient
+}
+
+func (b *SplitDesiredLRP) SetConsulSession(consuladapter.Session) {
 }
 
 func (m *SplitDesiredLRP) SetCryptor(cryptor encryption.Cryptor) {

@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
@@ -24,6 +25,7 @@ type Manager struct {
 	db             db.DB
 	cryptor        encryption.Cryptor
 	storeClient    etcd.StoreClient
+	consulSession  consuladapter.Session
 	migrations     []Migration
 	migrationsDone chan<- struct{}
 	clock          clock.Clock
@@ -34,6 +36,7 @@ func NewManager(
 	db db.DB,
 	cryptor encryption.Cryptor,
 	storeClient etcd.StoreClient,
+	consulSession consuladapter.Session,
 	migrations Migrations,
 	migrationsDone chan<- struct{},
 	clock clock.Clock,
@@ -45,6 +48,7 @@ func NewManager(
 		db:             db,
 		cryptor:        cryptor,
 		storeClient:    storeClient,
+		consulSession:  consulSession,
 		migrations:     migrations,
 		migrationsDone: migrationsDone,
 		clock:          clock,
@@ -121,6 +125,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				})
 				currentMigration.SetCryptor(m.cryptor)
 				currentMigration.SetStoreClient(m.storeClient)
+				currentMigration.SetConsulSession(m.consulSession)
 				err = currentMigration.Up(m.logger)
 				if err != nil {
 					return err

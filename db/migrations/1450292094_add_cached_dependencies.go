@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
+	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -30,6 +31,9 @@ func (a AddCachedDependencies) Version() int64 {
 
 func (a *AddCachedDependencies) SetStoreClient(storeClient etcd.StoreClient) {
 	a.storeClient = storeClient
+}
+
+func (b *AddCachedDependencies) SetConsulSession(consuladapter.Session) {
 }
 
 func (a *AddCachedDependencies) SetCryptor(cryptor encryption.Cryptor) {
