@@ -60,24 +60,11 @@ func (cap CellCapacity) Validate() error {
 }
 
 func NewCellPresence(cellID, repAddress, zone string, capacity CellCapacity, rootFSProviders, preloadedRootFSes []string) CellPresence {
-	rootFSProviderMap := make(RootFSProviders)
-
-	for _, provider := range rootFSProviders {
-		rootFSProviderMap[provider] = &Providers{
-			Parameters: []string{},
-		}
-	}
-
-	rootFSProviderMap["preloaded"] = &Providers{
-		Parameters: preloadedRootFSes,
-	}
-
 	return CellPresence{
-		CellId:          cellID,
-		RepAddress:      repAddress,
-		Zone:            zone,
-		Capacity:        &capacity,
-		RootfsProviders: rootFSProviderMap,
+		CellId:     cellID,
+		RepAddress: repAddress,
+		Zone:       zone,
+		Capacity:   &capacity,
 	}
 }
 

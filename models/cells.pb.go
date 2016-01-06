@@ -15,9 +15,6 @@ import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
 import strconv "strconv"
 import reflect "reflect"
-import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
-
-import errors "errors"
 
 import io "io"
 
@@ -55,40 +52,11 @@ func (m *CellCapacity) GetContainers() int32 {
 	return 0
 }
 
-type Providers struct {
-	Parameters []string `protobuf:"bytes,1,rep,name=parameters" json:"parameters,omitempty"`
-}
-
-func (m *Providers) Reset()      { *m = Providers{} }
-func (*Providers) ProtoMessage() {}
-
-func (m *Providers) GetParameters() []string {
-	if m != nil {
-		return m.Parameters
-	}
-	return nil
-}
-
-type ProtoRootfsproviders struct {
-	RootfsProviders map[string]*Providers `protobuf:"bytes,1,rep,name=rootfs_providers" json:"rootfs_providers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-}
-
-func (m *ProtoRootfsproviders) Reset()      { *m = ProtoRootfsproviders{} }
-func (*ProtoRootfsproviders) ProtoMessage() {}
-
-func (m *ProtoRootfsproviders) GetRootfsProviders() map[string]*Providers {
-	if m != nil {
-		return m.RootfsProviders
-	}
-	return nil
-}
-
 type CellPresence struct {
-	CellId          string          `protobuf:"bytes,1,opt,name=cell_id" json:"cell_id"`
-	RepAddress      string          `protobuf:"bytes,2,opt,name=rep_address" json:"rep_address"`
-	Zone            string          `protobuf:"bytes,3,opt,name=zone" json:"zone"`
-	Capacity        *CellCapacity   `protobuf:"bytes,4,opt,name=capacity" json:"capacity,omitempty"`
-	RootfsProviders RootFSProviders `protobuf:"bytes,5,opt,name=rootfs_providers,customtype=RootFSProviders" json:"rootfs_providers"`
+	CellId     string        `protobuf:"bytes,1,opt,name=cell_id" json:"cell_id"`
+	RepAddress string        `protobuf:"bytes,2,opt,name=rep_address" json:"rep_address"`
+	Zone       string        `protobuf:"bytes,3,opt,name=zone" json:"zone"`
+	Capacity   *CellCapacity `protobuf:"bytes,4,opt,name=capacity" json:"capacity,omitempty"`
 }
 
 func (m *CellPresence) Reset()      { *m = CellPresence{} }
@@ -175,66 +143,6 @@ func (this *CellCapacity) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *Providers) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*Providers)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if len(this.Parameters) != len(that1.Parameters) {
-		return false
-	}
-	for i := range this.Parameters {
-		if this.Parameters[i] != that1.Parameters[i] {
-			return false
-		}
-	}
-	return true
-}
-func (this *ProtoRootfsproviders) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ProtoRootfsproviders)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if len(this.RootfsProviders) != len(that1.RootfsProviders) {
-		return false
-	}
-	for i := range this.RootfsProviders {
-		if !this.RootfsProviders[i].Equal(that1.RootfsProviders[i]) {
-			return false
-		}
-	}
-	return true
-}
 func (this *CellPresence) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -265,9 +173,6 @@ func (this *CellPresence) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.Capacity.Equal(that1.Capacity) {
-		return false
-	}
-	if !this.RootfsProviders.Equal(that1.RootfsProviders) {
 		return false
 	}
 	return true
@@ -315,32 +220,6 @@ func (this *CellCapacity) GoString() string {
 		`Containers:` + fmt.Sprintf("%#v", this.Containers) + `}`}, ", ")
 	return s
 }
-func (this *Providers) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.Providers{` +
-		`Parameters:` + fmt.Sprintf("%#v", this.Parameters) + `}`}, ", ")
-	return s
-}
-func (this *ProtoRootfsproviders) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	keysForRootfsProviders := make([]string, 0, len(this.RootfsProviders))
-	for k, _ := range this.RootfsProviders {
-		keysForRootfsProviders = append(keysForRootfsProviders, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForRootfsProviders)
-	mapStringForRootfsProviders := "map[string]*Providers{"
-	for _, k := range keysForRootfsProviders {
-		mapStringForRootfsProviders += fmt.Sprintf("%#v: %#v,", k, this.RootfsProviders[k])
-	}
-	mapStringForRootfsProviders += "}"
-	s := strings.Join([]string{`&models.ProtoRootfsproviders{` +
-		`RootfsProviders:` + mapStringForRootfsProviders + `}`}, ", ")
-	return s
-}
 func (this *CellPresence) GoString() string {
 	if this == nil {
 		return "nil"
@@ -349,8 +228,7 @@ func (this *CellPresence) GoString() string {
 		`CellId:` + fmt.Sprintf("%#v", this.CellId),
 		`RepAddress:` + fmt.Sprintf("%#v", this.RepAddress),
 		`Zone:` + fmt.Sprintf("%#v", this.Zone),
-		`Capacity:` + fmt.Sprintf("%#v", this.Capacity),
-		`RootfsProviders:` + fmt.Sprintf("%#v", this.RootfsProviders) + `}`}, ", ")
+		`Capacity:` + fmt.Sprintf("%#v", this.Capacity) + `}`}, ", ")
 	return s
 }
 func (this *CellsResponse) GoString() string {
@@ -414,87 +292,6 @@ func (m *CellCapacity) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
-func (m *Providers) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *Providers) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Parameters) > 0 {
-		for _, s := range m.Parameters {
-			data[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				data[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			data[i] = uint8(l)
-			i++
-			i += copy(data[i:], s)
-		}
-	}
-	return i, nil
-}
-
-func (m *ProtoRootfsproviders) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ProtoRootfsproviders) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.RootfsProviders) > 0 {
-		keysForRootfsProviders := make([]string, 0, len(m.RootfsProviders))
-		for k, _ := range m.RootfsProviders {
-			keysForRootfsProviders = append(keysForRootfsProviders, k)
-		}
-		github_com_gogo_protobuf_sortkeys.Strings(keysForRootfsProviders)
-		for _, k := range keysForRootfsProviders {
-			data[i] = 0xa
-			i++
-			v := m.RootfsProviders[k]
-			if v == nil {
-				return 0, errors.New("proto: map has nil element")
-			}
-			msgSize := v.Size()
-			mapSize := 1 + len(k) + sovCells(uint64(len(k))) + 1 + msgSize + sovCells(uint64(msgSize))
-			i = encodeVarintCells(data, i, uint64(mapSize))
-			data[i] = 0xa
-			i++
-			i = encodeVarintCells(data, i, uint64(len(k)))
-			i += copy(data[i:], k)
-			data[i] = 0x12
-			i++
-			i = encodeVarintCells(data, i, uint64(v.Size()))
-			n1, err := v.MarshalTo(data[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n1
-		}
-	}
-	return i, nil
-}
-
 func (m *CellPresence) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -526,20 +323,12 @@ func (m *CellPresence) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x22
 		i++
 		i = encodeVarintCells(data, i, uint64(m.Capacity.Size()))
-		n2, err := m.Capacity.MarshalTo(data[i:])
+		n1, err := m.Capacity.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n1
 	}
-	data[i] = 0x2a
-	i++
-	i = encodeVarintCells(data, i, uint64(m.RootfsProviders.Size()))
-	n3, err := m.RootfsProviders.MarshalTo(data[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n3
 	return i, nil
 }
 
@@ -562,11 +351,11 @@ func (m *CellsResponse) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintCells(data, i, uint64(m.Error.Size()))
-		n4, err := m.Error.MarshalTo(data[i:])
+		n2, err := m.Error.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n2
 	}
 	if len(m.Cells) > 0 {
 		for _, msg := range m.Cells {
@@ -619,36 +408,6 @@ func (m *CellCapacity) Size() (n int) {
 	return n
 }
 
-func (m *Providers) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Parameters) > 0 {
-		for _, s := range m.Parameters {
-			l = len(s)
-			n += 1 + l + sovCells(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *ProtoRootfsproviders) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.RootfsProviders) > 0 {
-		for k, v := range m.RootfsProviders {
-			_ = k
-			_ = v
-			l = 0
-			if v != nil {
-				l = v.Size()
-			}
-			mapEntrySize := 1 + len(k) + sovCells(uint64(len(k))) + 1 + l + sovCells(uint64(l))
-			n += mapEntrySize + 1 + sovCells(uint64(mapEntrySize))
-		}
-	}
-	return n
-}
-
 func (m *CellPresence) Size() (n int) {
 	var l int
 	_ = l
@@ -662,8 +421,6 @@ func (m *CellPresence) Size() (n int) {
 		l = m.Capacity.Size()
 		n += 1 + l + sovCells(uint64(l))
 	}
-	l = m.RootfsProviders.Size()
-	n += 1 + l + sovCells(uint64(l))
 	return n
 }
 
@@ -708,36 +465,6 @@ func (this *CellCapacity) String() string {
 	}, "")
 	return s
 }
-func (this *Providers) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Providers{`,
-		`Parameters:` + fmt.Sprintf("%v", this.Parameters) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ProtoRootfsproviders) String() string {
-	if this == nil {
-		return "nil"
-	}
-	keysForRootfsProviders := make([]string, 0, len(this.RootfsProviders))
-	for k, _ := range this.RootfsProviders {
-		keysForRootfsProviders = append(keysForRootfsProviders, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForRootfsProviders)
-	mapStringForRootfsProviders := "map[string]*Providers{"
-	for _, k := range keysForRootfsProviders {
-		mapStringForRootfsProviders += fmt.Sprintf("%v: %v,", k, this.RootfsProviders[k])
-	}
-	mapStringForRootfsProviders += "}"
-	s := strings.Join([]string{`&ProtoRootfsproviders{`,
-		`RootfsProviders:` + mapStringForRootfsProviders + `,`,
-		`}`,
-	}, "")
-	return s
-}
 func (this *CellPresence) String() string {
 	if this == nil {
 		return "nil"
@@ -747,7 +474,6 @@ func (this *CellPresence) String() string {
 		`RepAddress:` + fmt.Sprintf("%v", this.RepAddress) + `,`,
 		`Zone:` + fmt.Sprintf("%v", this.Zone) + `,`,
 		`Capacity:` + strings.Replace(fmt.Sprintf("%v", this.Capacity), "CellCapacity", "CellCapacity", 1) + `,`,
-		`RootfsProviders:` + fmt.Sprintf("%v", this.RootfsProviders) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -838,218 +564,6 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 					break
 				}
 			}
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipCells(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCells
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	return nil
-}
-func (m *Providers) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Parameters", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
-				return ErrInvalidLengthCells
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Parameters = append(m.Parameters, string(data[iNdEx:postIndex]))
-			iNdEx = postIndex
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipCells(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCells
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	return nil
-}
-func (m *ProtoRootfsproviders) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RootfsProviders", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthCells
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			var keykey uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				keykey |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			var stringLenmapkey uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLenmapkey |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if stringLenmapkey < 0 {
-				return ErrInvalidLengthCells
-			}
-			postStringIndexmapkey := iNdEx + int(stringLenmapkey)
-			if postStringIndexmapkey > l {
-				return io.ErrUnexpectedEOF
-			}
-			mapkey := string(data[iNdEx:postStringIndexmapkey])
-			iNdEx = postStringIndexmapkey
-			var valuekey uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				valuekey |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			var mapmsglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				mapmsglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postmsgIndex := iNdEx + mapmsglen
-			if mapmsglen < 0 {
-				return ErrInvalidLengthCells
-			}
-			if postmsgIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			mapvalue := &Providers{}
-			if err := mapvalue.Unmarshal(data[iNdEx:postmsgIndex]); err != nil {
-				return err
-			}
-			iNdEx = postmsgIndex
-			if m.RootfsProviders == nil {
-				m.RootfsProviders = make(map[string]*Providers)
-			}
-			m.RootfsProviders[mapkey] = mapvalue
-			iNdEx = postIndex
 		default:
 			var sizeOfWire int
 			for {
@@ -1197,33 +711,6 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				m.Capacity = &CellCapacity{}
 			}
 			if err := m.Capacity.Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RootfsProviders", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthCells
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.RootfsProviders.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
