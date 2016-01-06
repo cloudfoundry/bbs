@@ -42,10 +42,6 @@ var _ = Describe("Cell Handlers", func() {
 						DiskMb:     1000,
 						Containers: 50,
 					},
-					RootfsProviders: models.RootFSProviders{
-						"provider1": &models.Providers{Parameters: []string{"test1", "test2"}},
-						"provider2": &models.Providers{Parameters: []string{"test3", "test4"}},
-					},
 				},
 				{
 					CellId:     "cell-2",
@@ -55,10 +51,6 @@ var _ = Describe("Cell Handlers", func() {
 						MemoryMb:   2000,
 						DiskMb:     2000,
 						Containers: 20,
-					},
-					RootfsProviders: models.RootFSProviders{
-						"provider1": &models.Providers{Parameters: []string{"test1", "test2"}},
-						"provider2": &models.Providers{Parameters: []string{"test3", "test4"}},
 					},
 				},
 			}

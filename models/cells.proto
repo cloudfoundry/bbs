@@ -11,21 +11,11 @@ message CellCapacity {
   optional int32 containers = 3;
 }
 
-message Providers {
-  repeated string parameters = 1;
-}
-
-message proto_rootfsproviders {
-  map<string, Providers> rootfs_providers = 1;
-}
-
 message CellPresence {
   optional string cell_id = 1;
   optional string rep_address = 2;
   optional string zone = 3;
   optional CellCapacity capacity = 4;
-
-  optional bytes rootfs_providers = 5 [(gogoproto.customtype) = "RootFSProviders"];
 }
 
 message CellsResponse {
