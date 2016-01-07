@@ -31,21 +31,23 @@ var _ = Describe("Encryption Flags", func() {
 			args = append(args, "-activeKeyLabel="+"label")
 			flagSet.Parse(args)
 
-			_, err := encryptionFlags.Validate()
+			_, _, err := encryptionFlags.Parse()
 			Expect(err).To(HaveOccurred())
 		})
 
-		It("doesn't add duplicate keys", func() {
+		It("splits keys on the first colon", func() {
 			args = append(args, "-encryptionKey="+"label:key:with:colon")
 			args = append(args, "-activeKeyLabel="+"label")
 			flagSet.Parse(args)
 
-			_, err := encryptionFlags.Validate()
+			_, _, err := encryptionFlags.Parse()
 			Expect(err).ToNot(HaveOccurred())
 
 			flagSet.Parse(args)
-			km, err := encryptionFlags.Validate()
+			key, keys, err := encryptionFlags.Parse()
 			Expect(err).ToNot(HaveOccurred())
+
+			km, err := encryption.NewKeyManager(key, keys)
 			Expect(km.EncryptionKey().Label()).To(Equal("label"))
 		})
 
@@ -53,7 +55,7 @@ var _ = Describe("Encryption Flags", func() {
 			args = append(args, "-encryptionKey="+"label:key")
 			flagSet.Parse(args)
 
-			_, err := encryptionFlags.Validate()
+			_, _, err := encryptionFlags.Parse()
 			Expect(err).To(HaveOccurred())
 		})
 
@@ -62,7 +64,7 @@ var _ = Describe("Encryption Flags", func() {
 			args = append(args, "-activeKeyLabel="+"other-label")
 			flagSet.Parse(args)
 
-			_, err := encryptionFlags.Validate()
+			_, _, err := encryptionFlags.Parse()
 			Expect(err).To(HaveOccurred())
 		})
 
@@ -72,20 +74,20 @@ var _ = Describe("Encryption Flags", func() {
 			args = append(args, "-activeKeyLabel="+"label")
 			flagSet.Parse(args)
 
-			_, err := encryptionFlags.Validate()
+			_, _, err := encryptionFlags.Parse()
 			Expect(err).To(HaveOccurred())
 		})
 
-		It("returns a key manager with all the keys", func() {
+		It("returns an active key and all the keys", func() {
 			args = append(args, "-encryptionKey="+"label:key:with:colon")
 			args = append(args, "-encryptionKey="+"old-label:old-key")
 			args = append(args, "-activeKeyLabel="+"label")
 			flagSet.Parse(args)
 
-			km, err := encryptionFlags.Validate()
+			activeKey, keys, err := encryptionFlags.Parse()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(km.EncryptionKey().Label()).To(Equal("label"))
-			Expect(km.DecryptionKey("old-label").Label()).To(Equal("old-label"))
+			Expect(activeKey.Label()).To(Equal("label"))
+			Expect(keys[1].Label()).To(Equal("old-label"))
 		})
 	})
 })

@@ -182,13 +182,9 @@ func main() {
 
 	serviceClient := initializeServiceClient(logger, clock, consulClient, sessionManager)
 
-	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
+	maintainer := initializeLockMaintainer(logger, serviceClient)
 
-	keyManager, err := encryptionFlags.Validate()
-	if err != nil {
-		logger.Fatal("cannot-setup-encryption", err)
-	}
-	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
+	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
 
 	etcdOptions, err := etcdFlags.Validate()
 	if err != nil {
@@ -196,11 +192,21 @@ func main() {
 	}
 	storeClient := initializeEtcdStoreClient(logger, etcdOptions)
 
+	key, keys, err := encryptionFlags.Parse()
+	if err != nil {
+		logger.Fatal("cannot-setup-encryption", err)
+	}
+	keyManager, err := encryption.NewKeyManager(key, keys)
+	if err != nil {
+		logger.Fatal("cannot-setup-encryption", err)
+	}
+	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
+
 	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
 
-	migrationsDone := make(chan struct{})
+	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
 
-	maintainer := initializeLockMaintainer(logger, serviceClient)
+	migrationsDone := make(chan struct{})
 
 	migrationManager := migration.NewManager(logger,
 		db,
@@ -210,8 +216,6 @@ func main() {
 		migrationsDone,
 		clock,
 	)
-
-	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
 
 	desiredHub := events.NewHub()
 	desiredStreamer := watcher.NewDesiredStreamer(db)

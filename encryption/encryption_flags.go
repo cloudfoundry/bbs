@@ -44,13 +44,13 @@ func AddEncryptionFlags(flagSet *flag.FlagSet) *EncryptionFlags {
 	return &ef
 }
 
-func (ef *EncryptionFlags) Validate() (KeyManager, error) {
+func (ef *EncryptionFlags) Parse() (Key, []Key, error) {
 	if len(ef.encryptionKeys) == 0 {
-		return nil, errors.New("Must have at least one encryption key set")
+		return nil, nil, errors.New("Must have at least one encryption key set")
 	}
 
 	if len(ef.activeKeyLabel) == 0 {
-		return nil, errors.New("Must select an active encryption key")
+		return nil, nil, errors.New("Must select an active encryption key")
 	}
 
 	var encryptionKey Key
@@ -59,13 +59,13 @@ func (ef *EncryptionFlags) Validate() (KeyManager, error) {
 	for key := range ef.encryptionKeys {
 		splitKey := strings.SplitN(key, ":", 2)
 		if len(splitKey) != 2 {
-			return nil, errors.New("Could not parse encryption keys")
+			return nil, nil, errors.New("Could not parse encryption keys")
 		}
 		label := splitKey[0]
 		phrase := splitKey[1]
 		key, err := NewKey(label, phrase)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		keys = append(keys, key)
 
@@ -75,12 +75,14 @@ func (ef *EncryptionFlags) Validate() (KeyManager, error) {
 	}
 
 	if encryptionKey == nil {
-		return nil, errors.New("The selected active key must be listed on the encryption keys flag")
+		return nil, nil, errors.New("The selected active key must be listed on the encryption keys flag")
 	}
 
-	keyManager, err := NewKeyManager(encryptionKey, keys)
-	if err != nil {
-		return nil, err
-	}
-	return keyManager, nil
+	return encryptionKey, keys, nil
 }
+
+// keyManager, err := NewKeyManager(encryptionKey, keys)
+// if err != nil {
+// 	return nil, nil, err
+// }
+// return keyManager, nil
