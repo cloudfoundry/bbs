@@ -80,7 +80,7 @@ func (w *watcher) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				if stopChan == nil {
 					logger.Info("rewatching-from-hub-notification")
 					stopChan, errorChan = w.streamer.Stream(logger, eventChan)
-					logger.Debug("finished-rewatching-rom-hub-notification")
+					logger.Debug("finished-rewatching-from-hub-notification")
 				}
 			}
 
@@ -108,10 +108,8 @@ func (w *watcher) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 		case <-signals:
 			logger.Info("stopping")
-			if stopChan != nil {
-				stopChan <- true
-				stopChan = nil
-			}
+			w.hub.UnregisterCallback()
+			w.hub.Close()
 			return nil
 		}
 	}

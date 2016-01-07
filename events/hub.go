@@ -24,6 +24,7 @@ type Hub interface {
 	Close() error
 
 	RegisterCallback(func(count int))
+	UnregisterCallback()
 }
 
 type hub struct {
@@ -48,6 +49,12 @@ func (hub *hub) RegisterCallback(cb func(int)) {
 	if cb != nil {
 		cb(size)
 	}
+}
+
+func (hub *hub) UnregisterCallback() {
+	hub.lock.Lock()
+	hub.cb = nil
+	hub.lock.Unlock()
 }
 
 func (hub *hub) Subscribe() (EventSource, error) {

@@ -267,8 +267,6 @@ func main() {
 		{"encryptor", encryptor},
 		{"desired-watcher", desiredWatcher},
 		{"actual-watcher", actualWatcher},
-		{"desired-hub-closer", closeHub(logger.Session("desired-hub-closer"), desiredHub)},
-		{"actual-hub-closer", closeHub(logger.Session("actual-hub-closer"), actualHub)},
 		{"metrics", *metricsNotifier},
 	}
 
@@ -325,22 +323,6 @@ func initializeDropsonde(logger lager.Logger) {
 	if err != nil {
 		logger.Error("failed-to-initialize-dropsonde", err)
 	}
-}
-
-func closeHub(logger lager.Logger, hub events.Hub) ifrit.Runner {
-	return ifrit.RunFunc(func(signals <-chan os.Signal, ready chan<- struct{}) error {
-		logger.Info("starting")
-		defer logger.Info("finished")
-
-		close(ready)
-		logger.Info("started")
-
-		<-signals
-		logger.Info("shutting-down")
-		hub.Close()
-
-		return nil
-	})
 }
 
 func initializeEtcdDB(
