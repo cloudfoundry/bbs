@@ -123,8 +123,14 @@ type ExternalClient interface {
 	// Cancels the Task with the given task guid
 	CancelTask(taskGuid string) error
 
-	// Returns an EventSource for watching changes to LRPs
+	// Legacy, do not use
 	SubscribeToEvents() (events.EventSource, error)
+
+	// Returns an EventSource for watching changes to DesiredLRPs
+	SubscribeToDesiredLRPEvents() (events.EventSource, error)
+
+	// Returns an EventSource for watching changes to ActualLRPs
+	SubscribeToActualLRPEvents() (events.EventSource, error)
 
 	// Lists all Cells
 	Cells() ([]*models.CellPresence, error)
@@ -610,7 +616,7 @@ func (c *client) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expi
 
 func (c *client) SubscribeToEvents() (events.EventSource, error) {
 	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
-		request, err := c.reqGen.CreateRequest(EventStreamRoute, nil, nil)
+		request, err := c.reqGen.CreateRequest(EventStreamRoute_r0, nil, nil)
 		if err != nil {
 			panic(err) // totally shouldn't happen
 		}
@@ -625,6 +631,39 @@ func (c *client) SubscribeToEvents() (events.EventSource, error) {
 	return events.NewEventSource(eventSource), nil
 }
 
+func (c *client) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
+	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
+		request, err := c.reqGen.CreateRequest(DesiredLRPEventStreamRoute, nil, nil)
+		if err != nil {
+			panic(err) // totally shouldn't happen
+		}
+
+		return request
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return events.NewEventSource(eventSource), nil
+}
+
+func (c *client) SubscribeToActualLRPEvents() (events.EventSource, error) {
+	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
+		request, err := c.reqGen.CreateRequest(ActualLRPEventStreamRoute, nil, nil)
+		if err != nil {
+			panic(err) // totally shouldn't happen
+		}
+
+		return request
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return events.NewEventSource(eventSource), nil
+}
 func (c *client) Cells() ([]*models.CellPresence, error) {
 	response := models.CellsResponse{}
 	err := c.doRequest(CellsRoute, nil, nil, nil, &response)

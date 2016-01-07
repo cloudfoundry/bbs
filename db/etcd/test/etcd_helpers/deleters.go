@@ -11,3 +11,9 @@ func (t *ETCDHelper) DeleteDesiredLRP(guid string) {
 	_, err = t.client.Delete(etcd.DesiredLRPRunInfoSchemaPath(guid), false)
 	Expect(err).NotTo(HaveOccurred())
 }
+
+func (t *ETCDHelper) DeleteActualLRP(guid string, index int32) {
+	key := etcd.ActualLRPSchemaPath(guid, index)
+	_, err := t.client.Delete(key, false)
+	Expect(err).NotTo(HaveOccurred())
+}

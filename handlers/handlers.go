@@ -15,7 +15,7 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(logger lager.Logger, db db.DB, hub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
+func New(logger lager.Logger, db db.DB, desiredHub, actualHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
@@ -24,7 +24,7 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, serviceClient bbs.Servic
 	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
 	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
 	taskHandler := NewTaskHandler(logger, db)
-	eventsHandler := NewEventHandler(logger, hub)
+	eventsHandler := NewEventHandler(logger, desiredHub, actualHub)
 	cellsHandler := NewCellHandler(logger, serviceClient)
 
 	actions := rata.Handlers{
@@ -85,7 +85,9 @@ func New(logger lager.Logger, db db.DB, hub events.Hub, serviceClient bbs.Servic
 		bbs.TaskByGuidRoute_r0: route(middleware.EmitLatency(taskHandler.TaskByGuid_r0)),
 
 		// Events
-		bbs.EventStreamRoute: route(eventsHandler.Subscribe),
+		bbs.EventStreamRoute_r0:        route(eventsHandler.Subscribe_r0),
+		bbs.DesiredLRPEventStreamRoute: route(eventsHandler.SubscribeToDesiredLRPEvents),
+		bbs.ActualLRPEventStreamRoute:  route(eventsHandler.SubscribeToActualLRPEvents),
 
 		// Cells
 		bbs.CellsRoute: route(middleware.EmitLatency(cellsHandler.Cells)),

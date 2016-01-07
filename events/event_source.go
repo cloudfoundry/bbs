@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/gogo/protobuf/proto"
@@ -50,6 +51,20 @@ func NewCloseError(err error) error {
 
 func (e closeError) Error() string {
 	return fmt.Sprintf("error closing raw source: %s", e.err.Error())
+}
+
+func NewEventFromModelEvent(eventID int, event models.Event) (sse.Event, error) {
+	payload, err := proto.Marshal(event)
+	if err != nil {
+		return sse.Event{}, err
+	}
+
+	encodedPayload := base64.StdEncoding.EncodeToString(payload)
+	return sse.Event{
+		ID:   strconv.Itoa(eventID),
+		Name: string(event.EventType()),
+		Data: []byte(encodedPayload),
+	}, nil
 }
 
 //go:generate counterfeiter -o eventfakes/fake_event_source.go . EventSource

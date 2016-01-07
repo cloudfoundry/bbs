@@ -1,72 +1,46 @@
 package handlers
 
 import (
-	"encoding/base64"
 	"net/http"
-	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/gogo/protobuf/proto"
-	"github.com/vito/go-sse/sse"
 )
 
 func (h *EventHandler) Subscribe_r0(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("subscribe")
+	logger := h.logger.Session("subscribe-r0")
 
-	closeNotifier := w.(http.CloseNotifier).CloseNotify()
-
-	flusher := w.(http.Flusher)
-
-	source, err := h.hub.Subscribe()
+	desiredSource, err := h.desiredHub.Subscribe()
 	if err != nil {
-		logger.Error("failed-to-subscribe-to-event-hub", err)
+		logger.Error("failed-to-subscribe-to-desired-event-hub", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer desiredSource.Close()
 
-	defer source.Close()
-
-	go func() {
-		<-closeNotifier
-		source.Close()
-	}()
-
-	w.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
-	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
-	w.Header().Add("Connection", "keep-alive")
-
-	w.WriteHeader(http.StatusOK)
-
-	flusher.Flush()
-
-	eventID := 0
-	for {
-		event, err := source.Next()
-		if err == nil {
-			event = models.VersionDesiredLRPsToV0(event)
-		} else {
-			logger.Error("failed-to-get-next-event", err)
-			return
-		}
-
-		payload, err := proto.Marshal(event)
-		if err != nil {
-			logger.Error("failed-to-marshal-event", err)
-			return
-		}
-
-		encodedPayload := base64.StdEncoding.EncodeToString(payload)
-		err = sse.Event{
-			ID:   strconv.Itoa(eventID),
-			Name: string(event.EventType()),
-			Data: []byte(encodedPayload),
-		}.Write(w)
-		if err != nil {
-			break
-		}
-
-		flusher.Flush()
-
-		eventID++
+	actualSource, err := h.actualHub.Subscribe()
+	if err != nil {
+		logger.Error("failed-to-subscribe-to-actual-event-hub", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	defer actualSource.Close()
+
+	eventChan := make(chan models.Event)
+	errorChan := make(chan error)
+	closeChan := make(chan struct{})
+	defer close(closeChan)
+
+	desiredEventsFetcher := func() (models.Event, error) {
+		event, err := desiredSource.Next()
+		if err != nil {
+			return event, err
+		}
+		event = models.VersionDesiredLRPsToV0(event)
+		return event, err
+	}
+
+	go streamSource(eventChan, errorChan, closeChan, desiredEventsFetcher)
+	go streamSource(eventChan, errorChan, closeChan, actualSource.Next)
+
+	streamEventsToResponse(logger, w, eventChan, errorChan)
 }

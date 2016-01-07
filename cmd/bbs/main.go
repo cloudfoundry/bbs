@@ -213,17 +213,29 @@ func main() {
 
 	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
 
-	hub := events.NewHub()
-
-	watcher := watcher.NewWatcher(
+	desiredHub := events.NewHub()
+	desiredStreamer := watcher.NewDesiredStreamer(db)
+	desiredWatcher := watcher.NewWatcher(
 		logger,
-		db,
-		hub,
-		clock,
+		"desired-lrps",
 		bbsWatchRetryWaitDuration,
+		desiredStreamer,
+		desiredHub,
+		clock,
 	)
 
-	handler := handlers.New(logger, db, hub, serviceClient, migrationsDone)
+	actualHub := events.NewHub()
+	actualStreamer := watcher.NewActualStreamer(db)
+	actualWatcher := watcher.NewWatcher(
+		logger,
+		"actual-lrps",
+		bbsWatchRetryWaitDuration,
+		actualStreamer,
+		actualHub,
+		clock,
+	)
+
+	handler := handlers.New(logger, db, desiredHub, actualHub, serviceClient, migrationsDone)
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(
 		logger,
@@ -249,8 +261,10 @@ func main() {
 		{"server", server},
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
-		{"watcher", watcher},
-		{"hub-closer", closeHub(logger.Session("hub-closer"), hub)},
+		{"desired-watcher", desiredWatcher},
+		{"actual-watcher", actualWatcher},
+		{"desired-hub-closer", closeHub(logger.Session("desired-hub-closer"), desiredHub)},
+		{"actual-hub-closer", closeHub(logger.Session("actual-hub-closer"), actualHub)},
 		{"metrics", *metricsNotifier},
 	}
 

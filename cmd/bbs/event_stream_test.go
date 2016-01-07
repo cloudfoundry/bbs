@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	sonde_events "github.com/cloudfoundry/sonde-go/events"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -16,7 +17,6 @@ import (
 
 var _ = Describe("Events API", func() {
 	var (
-		done         chan struct{}
 		eventChannel chan models.Event
 
 		eventSource    events.EventSource
@@ -33,107 +33,66 @@ var _ = Describe("Events API", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
-	JustBeforeEach(func() {
-		var err error
-		eventSource, err = client.SubscribeToEvents()
-		Expect(err).NotTo(HaveOccurred())
-
-		eventChannel = make(chan models.Event)
-		done = make(chan struct{})
-
-		go func() {
-			defer close(done)
-			for {
-				event, err := eventSource.Next()
-				if err != nil {
-					close(eventChannel)
-					return
-				}
-				eventChannel <- event
-			}
-		}()
-
-		rawMessage := json.RawMessage([]byte(`{"port":8080,"hosts":["primer-route"]}`))
-		primerLRP := &models.DesiredLRP{
-			ProcessGuid: "primer-guid",
-			Domain:      "primer-domain",
-			RootFs:      "primer:rootfs",
-			Routes: &models.Routes{
-				"router": &rawMessage,
-			},
-			Action: models.WrapAction(&models.RunAction{
-				User: "me",
-				Path: "true",
-			}),
-		}
-
-		etcdHelper.SetRawDesiredLRP(primerLRP)
-
-	PRIMING:
-		for {
-			select {
-			case <-eventChannel:
-				break PRIMING
-			case <-time.After(50 * time.Millisecond):
-				etcdHelper.SetRawDesiredLRP(primerLRP)
-				Expect(err).NotTo(HaveOccurred())
-			}
-		}
-
-		etcdHelper.DeleteDesiredLRP(primerLRP.ProcessGuid)
-
-		var event models.Event
-		for {
-			Eventually(eventChannel).Should(Receive(&event))
-			if event.EventType() == models.EventTypeDesiredLRPRemoved {
-				break
-			}
-		}
-	})
-
 	AfterEach(func() {
-		Eventually(done).Should(BeClosed())
+		Eventually(eventChannel).Should(BeClosed())
 		ginkgomon.Kill(bbsProcess)
 	})
 
-	It("does not emit latency metrics", func() {
-		eventSource.Close()
+	Describe("Legacy Events", func() {
+		JustBeforeEach(func() {
+			var err error
+			eventSource, err = client.SubscribeToEvents()
+			Expect(err).NotTo(HaveOccurred())
 
-		timeout := time.After(50 * time.Millisecond)
-		for {
-			select {
-			case envelope := <-testMetricsChan:
-				if envelope.GetEventType() == sonde_events.Envelope_ValueMetric {
-					Expect(*envelope.ValueMetric.Name).NotTo(Equal("RequestLatency"))
-				}
-			case <-timeout:
-				return
-			}
-		}
-	})
+			eventChannel = streamEvents(eventSource)
 
-	It("emits request counting metrics", func() {
-		eventSource.Close()
+			primerLRP := model_helpers.NewValidDesiredLRP("primer-guid")
+			primeEventStream(eventChannel, models.EventTypeDesiredLRPRemoved, func() {
+				etcdHelper.SetRawDesiredLRP(primerLRP)
+			}, func() {
+				etcdHelper.DeleteDesiredLRP(primerLRP.ProcessGuid)
+			})
+		})
 
-		timeout := time.After(50 * time.Millisecond)
-		var delta uint64
-	OUTER_LOOP:
-		for {
-			select {
-			case envelope := <-testMetricsChan:
-				if envelope.GetEventType() == sonde_events.Envelope_CounterEvent {
-					counter := envelope.CounterEvent
-					if *counter.Name == "RequestCount" {
-						delta = *counter.Delta
-						break OUTER_LOOP
+		It("does not emit latency metrics", func() {
+			eventSource.Close()
+
+			timeout := time.After(50 * time.Millisecond)
+			for {
+				select {
+				case envelope := <-testMetricsChan:
+					if envelope.GetEventType() == sonde_events.Envelope_ValueMetric {
+						Expect(*envelope.ValueMetric.Name).NotTo(Equal("RequestLatency"))
 					}
+				case <-timeout:
+					return
 				}
-			case <-timeout:
-				break OUTER_LOOP
 			}
-		}
+		})
 
-		Expect(delta).To(BeEquivalentTo(1))
+		It("emits request counting metrics", func() {
+			eventSource.Close()
+
+			timeout := time.After(50 * time.Millisecond)
+			var delta uint64
+		OUTER_LOOP:
+			for {
+				select {
+				case envelope := <-testMetricsChan:
+					if envelope.GetEventType() == sonde_events.Envelope_CounterEvent {
+						counter := envelope.CounterEvent
+						if *counter.Name == "RequestCount" {
+							delta = *counter.Delta
+							break OUTER_LOOP
+						}
+					}
+				case <-timeout:
+					break OUTER_LOOP
+				}
+			}
+
+			Expect(delta).To(BeEquivalentTo(1))
+		})
 	})
 
 	Describe("Actual LRPs", func() {
@@ -165,6 +124,21 @@ var _ = Describe("Events API", func() {
 				State:        models.ActualLRPStateUnclaimed,
 				Since:        time.Now().UnixNano(),
 			}
+		})
+
+		JustBeforeEach(func() {
+			var err error
+			eventSource, err = client.SubscribeToActualLRPEvents()
+			Expect(err).NotTo(HaveOccurred())
+
+			eventChannel = streamEvents(eventSource)
+
+			primerLRP := model_helpers.NewValidActualLRP("primer-guid", 0)
+			primeEventStream(eventChannel, models.EventTypeActualLRPRemoved, func() {
+				etcdHelper.SetRawActualLRP(primerLRP)
+			}, func() {
+				etcdHelper.DeleteActualLRP(primerLRP.ProcessGuid, primerLRP.Index)
+			})
 		})
 
 		AfterEach(func() {
@@ -324,6 +298,21 @@ var _ = Describe("Events API", func() {
 			}
 		})
 
+		JustBeforeEach(func() {
+			var err error
+			eventSource, err = client.SubscribeToDesiredLRPEvents()
+			Expect(err).NotTo(HaveOccurred())
+
+			eventChannel = streamEvents(eventSource)
+
+			primerLRP := model_helpers.NewValidDesiredLRP("primer-guid")
+			primeEventStream(eventChannel, models.EventTypeDesiredLRPRemoved, func() {
+				etcdHelper.SetRawDesiredLRP(primerLRP)
+			}, func() {
+				etcdHelper.DeleteDesiredLRP(primerLRP.ProcessGuid)
+			})
+		})
+
 		AfterEach(func() {
 			err := eventSource.Close()
 			Expect(err).NotTo(HaveOccurred())
@@ -371,3 +360,44 @@ var _ = Describe("Events API", func() {
 		})
 	})
 })
+
+func primeEventStream(eventChannel chan models.Event, eventType string, primer func(), cleanup func()) {
+	primer()
+
+PRIMING:
+	for {
+		select {
+		case <-eventChannel:
+			break PRIMING
+		case <-time.After(50 * time.Millisecond):
+			primer()
+		}
+	}
+
+	cleanup()
+
+	var event models.Event
+	for {
+		Eventually(eventChannel).Should(Receive(&event))
+		if event.EventType() == eventType {
+			break
+		}
+	}
+}
+
+func streamEvents(eventSource events.EventSource) chan models.Event {
+	eventChannel := make(chan models.Event)
+
+	go func() {
+		for {
+			event, err := eventSource.Next()
+			if err != nil {
+				close(eventChannel)
+				return
+			}
+			eventChannel <- event
+		}
+	}()
+
+	return eventChannel
+}

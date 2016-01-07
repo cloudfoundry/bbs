@@ -1,85 +1,85 @@
 package handlers
 
 import (
-	"encoding/base64"
 	"net/http"
-	"strconv"
 
 	"github.com/cloudfoundry-incubator/bbs/events"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
-	"github.com/vito/go-sse/sse"
 )
 
 type EventHandler struct {
-	hub    events.Hub
-	logger lager.Logger
+	desiredHub events.Hub
+	actualHub  events.Hub
+	logger     lager.Logger
 }
 
 var ()
 
-func NewEventHandler(logger lager.Logger, hub events.Hub) *EventHandler {
+func NewEventHandler(logger lager.Logger, desiredHub, actualHub events.Hub) *EventHandler {
 	return &EventHandler{
-		hub:    hub,
-		logger: logger.Session("events-handler"),
+		desiredHub: desiredHub,
+		actualHub:  actualHub,
+		logger:     logger.Session("events-handler"),
 	}
 }
 
-func (h *EventHandler) Subscribe(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("subscribe")
-
-	closeNotifier := w.(http.CloseNotifier).CloseNotify()
-
-	flusher := w.(http.Flusher)
-
-	source, err := h.hub.Subscribe()
-	if err != nil {
-		logger.Error("failed-to-subscribe-to-event-hub", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	defer source.Close()
-
-	go func() {
-		<-closeNotifier
-		source.Close()
-	}()
-
+func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventChan <-chan models.Event, errorChan <-chan error) {
 	w.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
 	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Add("Connection", "keep-alive")
 
 	w.WriteHeader(http.StatusOK)
 
+	flusher := w.(http.Flusher)
 	flusher.Flush()
-
+	var event models.Event
 	eventID := 0
+	closeNotifier := w.(http.CloseNotifier).CloseNotify()
+
 	for {
-		event, err := source.Next()
-		if err != nil {
+		select {
+		case event = <-eventChan:
+		case err := <-errorChan:
 			logger.Error("failed-to-get-next-event", err)
+			return
+		case <-closeNotifier:
 			return
 		}
 
-		payload, err := proto.Marshal(event)
+		sseEvent, err := events.NewEventFromModelEvent(eventID, event)
 		if err != nil {
 			logger.Error("failed-to-marshal-event", err)
 			return
 		}
 
-		encodedPayload := base64.StdEncoding.EncodeToString(payload)
-		err = sse.Event{
-			ID:   strconv.Itoa(eventID),
-			Name: string(event.EventType()),
-			Data: []byte(encodedPayload),
-		}.Write(w)
+		err = sseEvent.Write(w)
 		if err != nil {
-			break
+			return
 		}
 
 		flusher.Flush()
 
 		eventID++
+	}
+}
+
+type EventFetcher func() (models.Event, error)
+
+func streamSource(eventChan chan<- models.Event, errorChan chan<- error, closeChan chan struct{}, fetchEvent EventFetcher) {
+	for {
+		event, err := fetchEvent()
+		if err != nil {
+			select {
+			case errorChan <- err:
+			case <-closeChan:
+			}
+			return
+		}
+		select {
+		case eventChan <- event:
+		case <-closeChan:
+			return
+		}
 	}
 }

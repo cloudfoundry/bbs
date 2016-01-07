@@ -180,6 +180,20 @@ type FakeClient struct {
 		result1 events.EventSource
 		result2 error
 	}
+	SubscribeToDesiredLRPEventsStub        func() (events.EventSource, error)
+	subscribeToDesiredLRPEventsMutex       sync.RWMutex
+	subscribeToDesiredLRPEventsArgsForCall []struct{}
+	subscribeToDesiredLRPEventsReturns     struct {
+		result1 events.EventSource
+		result2 error
+	}
+	SubscribeToActualLRPEventsStub        func() (events.EventSource, error)
+	subscribeToActualLRPEventsMutex       sync.RWMutex
+	subscribeToActualLRPEventsArgsForCall []struct{}
+	subscribeToActualLRPEventsReturns     struct {
+		result1 events.EventSource
+		result2 error
+	}
 	CellsStub        func() ([]*models.CellPresence, error)
 	cellsMutex       sync.RWMutex
 	cellsArgsForCall []struct{}
@@ -972,6 +986,56 @@ func (fake *FakeClient) SubscribeToEventsCallCount() int {
 func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, result2 error) {
 	fake.SubscribeToEventsStub = nil
 	fake.subscribeToEventsReturns = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
+	fake.subscribeToDesiredLRPEventsMutex.Lock()
+	fake.subscribeToDesiredLRPEventsArgsForCall = append(fake.subscribeToDesiredLRPEventsArgsForCall, struct{}{})
+	fake.subscribeToDesiredLRPEventsMutex.Unlock()
+	if fake.SubscribeToDesiredLRPEventsStub != nil {
+		return fake.SubscribeToDesiredLRPEventsStub()
+	} else {
+		return fake.subscribeToDesiredLRPEventsReturns.result1, fake.subscribeToDesiredLRPEventsReturns.result2
+	}
+}
+
+func (fake *FakeClient) SubscribeToDesiredLRPEventsCallCount() int {
+	fake.subscribeToDesiredLRPEventsMutex.RLock()
+	defer fake.subscribeToDesiredLRPEventsMutex.RUnlock()
+	return len(fake.subscribeToDesiredLRPEventsArgsForCall)
+}
+
+func (fake *FakeClient) SubscribeToDesiredLRPEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToDesiredLRPEventsStub = nil
+	fake.subscribeToDesiredLRPEventsReturns = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) SubscribeToActualLRPEvents() (events.EventSource, error) {
+	fake.subscribeToActualLRPEventsMutex.Lock()
+	fake.subscribeToActualLRPEventsArgsForCall = append(fake.subscribeToActualLRPEventsArgsForCall, struct{}{})
+	fake.subscribeToActualLRPEventsMutex.Unlock()
+	if fake.SubscribeToActualLRPEventsStub != nil {
+		return fake.SubscribeToActualLRPEventsStub()
+	} else {
+		return fake.subscribeToActualLRPEventsReturns.result1, fake.subscribeToActualLRPEventsReturns.result2
+	}
+}
+
+func (fake *FakeClient) SubscribeToActualLRPEventsCallCount() int {
+	fake.subscribeToActualLRPEventsMutex.RLock()
+	defer fake.subscribeToActualLRPEventsMutex.RUnlock()
+	return len(fake.subscribeToActualLRPEventsArgsForCall)
+}
+
+func (fake *FakeClient) SubscribeToActualLRPEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToActualLRPEventsStub = nil
+	fake.subscribeToActualLRPEventsReturns = struct {
 		result1 events.EventSource
 		result2 error
 	}{result1, result2}
