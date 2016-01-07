@@ -85,9 +85,15 @@ var _ = Describe("Encryption Flags", func() {
 			flagSet.Parse(args)
 
 			activeKey, keys, err := encryptionFlags.Parse()
+			keyLabels := make([]string, len(keys))
+			for _, key := range keys {
+				keyLabels = append(keyLabels, key.Label())
+			}
+
 			Expect(err).NotTo(HaveOccurred())
 			Expect(activeKey.Label()).To(Equal("label"))
-			Expect(keys[1].Label()).To(Equal("old-label"))
+			Expect(keyLabels).To(ContainElement("label"))
+			Expect(keyLabels).To(ContainElement("old-label"))
 		})
 	})
 })
