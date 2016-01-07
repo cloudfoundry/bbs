@@ -32,6 +32,9 @@ type FakeHub struct {
 	registerCallbackArgsForCall []struct {
 		arg1 func(count int)
 	}
+	UnregisterCallbackStub        func()
+	unregisterCallbackMutex       sync.RWMutex
+	unregisterCallbackArgsForCall []struct{}
 }
 
 func (fake *FakeHub) Subscribe() (events.EventSource, error) {
@@ -127,6 +130,21 @@ func (fake *FakeHub) RegisterCallbackArgsForCall(i int) func(count int) {
 	fake.registerCallbackMutex.RLock()
 	defer fake.registerCallbackMutex.RUnlock()
 	return fake.registerCallbackArgsForCall[i].arg1
+}
+
+func (fake *FakeHub) UnregisterCallback() {
+	fake.unregisterCallbackMutex.Lock()
+	fake.unregisterCallbackArgsForCall = append(fake.unregisterCallbackArgsForCall, struct{}{})
+	fake.unregisterCallbackMutex.Unlock()
+	if fake.UnregisterCallbackStub != nil {
+		fake.UnregisterCallbackStub()
+	}
+}
+
+func (fake *FakeHub) UnregisterCallbackCallCount() int {
+	fake.unregisterCallbackMutex.RLock()
+	defer fake.unregisterCallbackMutex.RUnlock()
+	return len(fake.unregisterCallbackArgsForCall)
 }
 
 var _ events.Hub = new(FakeHub)

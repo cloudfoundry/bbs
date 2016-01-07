@@ -19,7 +19,7 @@ import (
 
 var _ = Describe("Watcher", func() {
 	const (
-		retryWaitDuration    = 50 * time.Millisecond
+		retryWaitDuration = 50 * time.Millisecond
 	)
 
 	var (
@@ -142,9 +142,9 @@ var _ = Describe("Watcher", func() {
 			})
 
 			Context("and then the watcher is signaled to stop", func() {
-				It("stops the watches", func() {
+				It("closes the hub", func() {
 					process.Signal(os.Interrupt)
-					Eventually(stopChan).Should(Receive())
+					Eventually(hub.CloseCallCount).Should(Equal(1))
 					Eventually(process.Wait()).Should(Receive())
 				})
 			})
