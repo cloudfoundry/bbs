@@ -359,6 +359,73 @@ var _ = Describe("Events API", func() {
 			Expect(desiredLRPRemovedEvent.DesiredLrp.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
 		})
 	})
+
+	Describe("Tasks", func() {
+		var taskGuid string
+		var taskDef *models.TaskDefinition
+
+		BeforeEach(func() {
+			taskGuid = "example-guid"
+			taskDef = &models.TaskDefinition{
+				RootFs: "http://neopets.com",
+				Action: models.WrapAction(&models.RunAction{
+					User:      "me",
+					Dir:       "/tmp",
+					Path:      "true",
+					LogSource: "logs",
+				}),
+			}
+		})
+
+		JustBeforeEach(func() {
+			var err error
+			eventSource, err = client.SubscribeToTaskEvents()
+			Expect(err).NotTo(HaveOccurred())
+
+			eventChannel = streamEvents(eventSource)
+		})
+
+		AfterEach(func() {
+			err := eventSource.Close()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("receives events", func() {
+			By("creating a Task")
+			err := client.DesireTask(taskGuid, "domain", taskDef)
+			Expect(err).NotTo(HaveOccurred())
+
+			task, err := client.TaskByGuid(taskGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			var event models.Event
+			Eventually(eventChannel).Should(Receive(&event))
+
+			taskCreatedEvent, ok := event.(*models.TaskCreatedEvent)
+			Expect(ok).To(BeTrue())
+
+			Expect(taskCreatedEvent.Task).To(Equal(task))
+
+			By("updating an existing Task")
+			err = client.FailTask(task.TaskGuid, "i failed")
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+
+			taskChangedEvent, ok := event.(*models.TaskChangedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(taskChangedEvent.Before.FailureReason).To(BeEmpty())
+			Expect(taskChangedEvent.After.FailureReason).To(Equal("i failed"))
+
+			By("removing the Task")
+			etcdHelper.DeleteTask(task.TaskGuid)
+			Eventually(eventChannel).Should(Receive(&event))
+
+			taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(taskRemovedEvent.Task.TaskGuid).To(Equal(task.TaskGuid))
+		})
+	})
 })
 
 func primeEventStream(eventChannel chan models.Event, eventType string, primer func(), cleanup func()) {

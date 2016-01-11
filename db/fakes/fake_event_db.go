@@ -34,6 +34,18 @@ type FakeEventDB struct {
 		result1 chan<- bool
 		result2 <-chan error
 	}
+	WatchForTaskChangesStub        func(lager.Logger, func(created *models.Task), func(changed *models.TaskChange), func(deleted *models.Task)) (chan<- bool, <-chan error)
+	watchForTaskChangesMutex       sync.RWMutex
+	watchForTaskChangesArgsForCall []struct {
+		arg1 lager.Logger
+		arg2 func(created *models.Task)
+		arg3 func(changed *models.TaskChange)
+		arg4 func(deleted *models.Task)
+	}
+	watchForTaskChangesReturns struct {
+		result1 chan<- bool
+		result2 <-chan error
+	}
 }
 
 func (fake *FakeEventDB) WatchForActualLRPChanges(arg1 lager.Logger, arg2 func(created *models.ActualLRPGroup), arg3 func(changed *models.ActualLRPChange), arg4 func(deleted *models.ActualLRPGroup)) (chan<- bool, <-chan error) {
@@ -103,6 +115,42 @@ func (fake *FakeEventDB) WatchForDesiredLRPChangesArgsForCall(i int) (lager.Logg
 func (fake *FakeEventDB) WatchForDesiredLRPChangesReturns(result1 chan<- bool, result2 <-chan error) {
 	fake.WatchForDesiredLRPChangesStub = nil
 	fake.watchForDesiredLRPChangesReturns = struct {
+		result1 chan<- bool
+		result2 <-chan error
+	}{result1, result2}
+}
+
+func (fake *FakeEventDB) WatchForTaskChanges(arg1 lager.Logger, arg2 func(created *models.Task), arg3 func(changed *models.TaskChange), arg4 func(deleted *models.Task)) (chan<- bool, <-chan error) {
+	fake.watchForTaskChangesMutex.Lock()
+	fake.watchForTaskChangesArgsForCall = append(fake.watchForTaskChangesArgsForCall, struct {
+		arg1 lager.Logger
+		arg2 func(created *models.Task)
+		arg3 func(changed *models.TaskChange)
+		arg4 func(deleted *models.Task)
+	}{arg1, arg2, arg3, arg4})
+	fake.watchForTaskChangesMutex.Unlock()
+	if fake.WatchForTaskChangesStub != nil {
+		return fake.WatchForTaskChangesStub(arg1, arg2, arg3, arg4)
+	} else {
+		return fake.watchForTaskChangesReturns.result1, fake.watchForTaskChangesReturns.result2
+	}
+}
+
+func (fake *FakeEventDB) WatchForTaskChangesCallCount() int {
+	fake.watchForTaskChangesMutex.RLock()
+	defer fake.watchForTaskChangesMutex.RUnlock()
+	return len(fake.watchForTaskChangesArgsForCall)
+}
+
+func (fake *FakeEventDB) WatchForTaskChangesArgsForCall(i int) (lager.Logger, func(created *models.Task), func(changed *models.TaskChange), func(deleted *models.Task)) {
+	fake.watchForTaskChangesMutex.RLock()
+	defer fake.watchForTaskChangesMutex.RUnlock()
+	return fake.watchForTaskChangesArgsForCall[i].arg1, fake.watchForTaskChangesArgsForCall[i].arg2, fake.watchForTaskChangesArgsForCall[i].arg3, fake.watchForTaskChangesArgsForCall[i].arg4
+}
+
+func (fake *FakeEventDB) WatchForTaskChangesReturns(result1 chan<- bool, result2 <-chan error) {
+	fake.WatchForTaskChangesStub = nil
+	fake.watchForTaskChangesReturns = struct {
 		result1 chan<- bool
 		result2 <-chan error
 	}{result1, result2}

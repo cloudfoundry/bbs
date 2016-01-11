@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -219,6 +220,101 @@ var _ = Describe("EventSource", func() {
 					actualLRPRemovedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(actualLRPRemovedEvent).To(Equal(expectedEvent))
+				})
+			})
+		})
+
+		Describe("Task Events", func() {
+			var task *models.Task
+
+			BeforeEach(func() {
+				task = model_helpers.NewValidTask("task-guid")
+			})
+
+			Context("when receiving a TaskCreatedEvent", func() {
+				var expectedEvent *models.TaskCreatedEvent
+
+				BeforeEach(func() {
+					expectedEvent = models.NewTaskCreatedEvent(task)
+					payload, err := proto.Marshal(expectedEvent)
+					Expect(err).NotTo(HaveOccurred())
+					payload = []byte(base64.StdEncoding.EncodeToString(payload))
+
+					fakeRawEventSource.NextReturns(
+						sse.Event{
+							ID:   "sup",
+							Name: string(expectedEvent.EventType()),
+							Data: payload,
+						},
+						nil,
+					)
+				})
+
+				It("returns the event", func() {
+					event, err := eventSource.Next()
+					Expect(err).NotTo(HaveOccurred())
+
+					taskCreatedEvent, ok := event.(*models.TaskCreatedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(taskCreatedEvent).To(Equal(expectedEvent))
+				})
+			})
+
+			Context("when receiving a TaskChangedEvent", func() {
+				var expectedEvent *models.TaskChangedEvent
+
+				BeforeEach(func() {
+					expectedEvent = models.NewTaskChangedEvent(task, task)
+					payload, err := proto.Marshal(expectedEvent)
+					Expect(err).NotTo(HaveOccurred())
+					payload = []byte(base64.StdEncoding.EncodeToString(payload))
+
+					fakeRawEventSource.NextReturns(
+						sse.Event{
+							ID:   "sup",
+							Name: string(expectedEvent.EventType()),
+							Data: payload,
+						},
+						nil,
+					)
+				})
+
+				It("returns the event", func() {
+					event, err := eventSource.Next()
+					Expect(err).NotTo(HaveOccurred())
+
+					taskChangedEvent, ok := event.(*models.TaskChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(taskChangedEvent).To(Equal(expectedEvent))
+				})
+			})
+
+			Context("when receiving a TaskRemovedEvent", func() {
+				var expectedEvent *models.TaskRemovedEvent
+
+				BeforeEach(func() {
+					expectedEvent = models.NewTaskRemovedEvent(task)
+					payload, err := proto.Marshal(expectedEvent)
+					Expect(err).NotTo(HaveOccurred())
+					payload = []byte(base64.StdEncoding.EncodeToString(payload))
+
+					fakeRawEventSource.NextReturns(
+						sse.Event{
+							ID:   "sup",
+							Name: string(expectedEvent.EventType()),
+							Data: payload,
+						},
+						nil,
+					)
+				})
+
+				It("returns the event", func() {
+					event, err := eventSource.Next()
+					Expect(err).NotTo(HaveOccurred())
+
+					taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(taskRemovedEvent).To(Equal(expectedEvent))
 				})
 			})
 		})

@@ -21,6 +21,10 @@ const (
 	EventTypeActualLRPCreated = "actual_lrp_created"
 	EventTypeActualLRPChanged = "actual_lrp_changed"
 	EventTypeActualLRPRemoved = "actual_lrp_removed"
+
+	EventTypeTaskCreated = "task_created"
+	EventTypeTaskChanged = "task_changed"
+	EventTypeTaskRemoved = "task_removed"
 )
 
 func VersionDesiredLRPsToV0(event Event) Event {
@@ -126,4 +130,47 @@ func (event *ActualLRPCreatedEvent) EventType() string {
 func (event *ActualLRPCreatedEvent) Key() string {
 	actualLRP, _ := event.ActualLrpGroup.Resolve()
 	return actualLRP.GetInstanceGuid()
+}
+
+func NewTaskCreatedEvent(task *Task) *TaskCreatedEvent {
+	return &TaskCreatedEvent{
+		Task: task,
+	}
+}
+
+func (event *TaskCreatedEvent) EventType() string {
+	return EventTypeTaskCreated
+}
+
+func (event *TaskCreatedEvent) Key() string {
+	return event.Task.GetTaskGuid()
+}
+
+func NewTaskChangedEvent(before, after *Task) *TaskChangedEvent {
+	return &TaskChangedEvent{
+		Before: before,
+		After:  after,
+	}
+}
+
+func (event *TaskChangedEvent) EventType() string {
+	return EventTypeTaskChanged
+}
+
+func (event *TaskChangedEvent) Key() string {
+	return event.Before.GetTaskGuid()
+}
+
+func NewTaskRemovedEvent(task *Task) *TaskRemovedEvent {
+	return &TaskRemovedEvent{
+		Task: task,
+	}
+}
+
+func (event *TaskRemovedEvent) EventType() string {
+	return EventTypeTaskRemoved
+}
+
+func (event *TaskRemovedEvent) Key() string {
+	return event.Task.GetTaskGuid()
 }

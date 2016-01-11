@@ -187,6 +187,33 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 		}
 
 		return event, nil
+
+	case models.EventTypeTaskCreated:
+		event := new(models.TaskCreatedEvent)
+		err := proto.Unmarshal(data, event)
+		if err != nil {
+			return nil, NewInvalidPayloadError(rawEvent.Name, err)
+		}
+
+		return event, nil
+
+	case models.EventTypeTaskChanged:
+		event := new(models.TaskChangedEvent)
+		err := proto.Unmarshal(data, event)
+		if err != nil {
+			return nil, NewInvalidPayloadError(rawEvent.Name, err)
+		}
+
+		return event, nil
+
+	case models.EventTypeTaskRemoved:
+		event := new(models.TaskRemovedEvent)
+		err := proto.Unmarshal(data, event)
+		if err != nil {
+			return nil, NewInvalidPayloadError(rawEvent.Name, err)
+		}
+
+		return event, nil
 	}
 
 	return nil, ErrUnrecognizedEventType

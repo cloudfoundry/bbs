@@ -194,6 +194,13 @@ type FakeClient struct {
 		result1 events.EventSource
 		result2 error
 	}
+	SubscribeToTaskEventsStub        func() (events.EventSource, error)
+	subscribeToTaskEventsMutex       sync.RWMutex
+	subscribeToTaskEventsArgsForCall []struct{}
+	subscribeToTaskEventsReturns     struct {
+		result1 events.EventSource
+		result2 error
+	}
 	CellsStub        func() ([]*models.CellPresence, error)
 	cellsMutex       sync.RWMutex
 	cellsArgsForCall []struct{}
@@ -1036,6 +1043,31 @@ func (fake *FakeClient) SubscribeToActualLRPEventsCallCount() int {
 func (fake *FakeClient) SubscribeToActualLRPEventsReturns(result1 events.EventSource, result2 error) {
 	fake.SubscribeToActualLRPEventsStub = nil
 	fake.subscribeToActualLRPEventsReturns = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) SubscribeToTaskEvents() (events.EventSource, error) {
+	fake.subscribeToTaskEventsMutex.Lock()
+	fake.subscribeToTaskEventsArgsForCall = append(fake.subscribeToTaskEventsArgsForCall, struct{}{})
+	fake.subscribeToTaskEventsMutex.Unlock()
+	if fake.SubscribeToTaskEventsStub != nil {
+		return fake.SubscribeToTaskEventsStub()
+	} else {
+		return fake.subscribeToTaskEventsReturns.result1, fake.subscribeToTaskEventsReturns.result2
+	}
+}
+
+func (fake *FakeClient) SubscribeToTaskEventsCallCount() int {
+	fake.subscribeToTaskEventsMutex.RLock()
+	defer fake.subscribeToTaskEventsMutex.RUnlock()
+	return len(fake.subscribeToTaskEventsArgsForCall)
+}
+
+func (fake *FakeClient) SubscribeToTaskEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToTaskEventsStub = nil
+	fake.subscribeToTaskEventsReturns = struct {
 		result1 events.EventSource
 		result2 error
 	}{result1, result2}

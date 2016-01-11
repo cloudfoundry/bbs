@@ -239,7 +239,18 @@ func main() {
 		clock,
 	)
 
-	handler := handlers.New(logger, db, desiredHub, actualHub, serviceClient, migrationsDone)
+	taskHub := events.NewHub()
+	taskStreamer := watcher.NewTaskStreamer(db)
+	taskWatcher := watcher.NewWatcher(
+		logger,
+		"tasks",
+		bbsWatchRetryWaitDuration,
+		taskStreamer,
+		taskHub,
+		clock,
+	)
+
+	handler := handlers.New(logger, db, desiredHub, actualHub, taskHub, serviceClient, migrationsDone)
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(
 		logger,
@@ -267,6 +278,7 @@ func main() {
 		{"encryptor", encryptor},
 		{"desired-watcher", desiredWatcher},
 		{"actual-watcher", actualWatcher},
+		{"task-watcher", taskWatcher},
 		{"metrics", *metricsNotifier},
 	}
 

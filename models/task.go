@@ -10,6 +10,11 @@ import (
 
 var taskGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
+type TaskChange struct {
+	Before *Task
+	After  *Task
+}
+
 type TaskFilter struct {
 	Domain string
 	CellID string

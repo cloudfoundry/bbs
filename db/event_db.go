@@ -15,4 +15,8 @@ type EventDB interface {
 		func(created *models.DesiredLRP),
 		func(changed *models.DesiredLRPChange),
 		func(deleted *models.DesiredLRP)) (chan<- bool, <-chan error)
+	WatchForTaskChanges(lager.Logger,
+		func(created *models.Task),
+		func(changed *models.TaskChange),
+		func(deleted *models.Task)) (chan<- bool, <-chan error)
 }

@@ -5,6 +5,7 @@ import (
 
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -237,6 +238,75 @@ var _ = Describe("Watchers", func() {
 
 				Eventually(deletes).Should(Receive(Equal(updatedGroup)))
 			})
+		})
+	})
+
+	Describe("WatchForTaskChanges", func() {
+		var (
+			creates chan *models.Task
+			changes chan *models.TaskChange
+			deletes chan *models.Task
+			stop    chan<- bool
+			errors  <-chan error
+
+			task *models.Task
+		)
+
+		BeforeEach(func() {
+			createsCh := make(chan *models.Task)
+			creates = createsCh
+
+			changesCh := make(chan *models.TaskChange)
+			changes = changesCh
+
+			deletesCh := make(chan *models.Task)
+			deletes = deletesCh
+
+			stop, errors = etcdDB.WatchForTaskChanges(logger,
+				func(created *models.Task) { createsCh <- created },
+				func(changed *models.TaskChange) { changesCh <- changed },
+				func(deleted *models.Task) { deletesCh <- deleted },
+			)
+
+			task = model_helpers.NewValidTask("some-task-guid")
+		})
+
+		AfterEach(func() {
+			close(stop)
+			Consistently(errors).ShouldNot(Receive())
+			Eventually(errors).Should(BeClosed())
+		})
+
+		It("sends an event down the pipe for create", func() {
+			etcdHelper.SetRawTask(task)
+			Eventually(creates).Should(Receive(Equal(task)))
+		})
+
+		It("sends an event down the pipe for updates", func() {
+			etcdHelper.SetRawTask(task)
+			Eventually(creates).Should(Receive(Equal(task)))
+
+			updatedTask := *task
+			updatedTask.State = models.Task_Resolving
+			updatedTask.UpdatedAt = clock.Now().UnixNano()
+
+			etcdHelper.SetRawTask(&updatedTask)
+
+			var taskChange *models.TaskChange
+			Eventually(changes).Should(Receive(&taskChange))
+
+			before, after := taskChange.Before, taskChange.After
+			Expect(before).To(Equal(task))
+			Expect(after).To(Equal(&updatedTask))
+		})
+
+		It("sends an event down the pipe for delete", func() {
+			etcdHelper.SetRawTask(task)
+			Eventually(creates).Should(Receive(Equal(task)))
+
+			etcdHelper.DeleteTask(task.TaskGuid)
+
+			Eventually(deletes).Should(Receive(Equal(task)))
 		})
 	})
 })

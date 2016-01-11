@@ -17,3 +17,9 @@ func (t *ETCDHelper) DeleteActualLRP(guid string, index int32) {
 	_, err := t.client.Delete(key, false)
 	Expect(err).NotTo(HaveOccurred())
 }
+
+func (t *ETCDHelper) DeleteTask(guid string) {
+	key := etcd.TaskSchemaPathByGuid(guid)
+	_, err := t.client.Delete(key, false)
+	Expect(err).NotTo(HaveOccurred())
+}

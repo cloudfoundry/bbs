@@ -15,7 +15,7 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(logger lager.Logger, db db.DB, desiredHub, actualHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
+func New(logger lager.Logger, db db.DB, desiredHub, actualHub, taskHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
@@ -24,7 +24,7 @@ func New(logger lager.Logger, db db.DB, desiredHub, actualHub events.Hub, servic
 	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
 	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
 	taskHandler := NewTaskHandler(logger, db)
-	eventsHandler := NewEventHandler(logger, desiredHub, actualHub)
+	eventsHandler := NewEventHandler(logger, desiredHub, actualHub, taskHub)
 	cellsHandler := NewCellHandler(logger, serviceClient)
 
 	actions := rata.Handlers{
@@ -88,6 +88,7 @@ func New(logger lager.Logger, db db.DB, desiredHub, actualHub events.Hub, servic
 		bbs.EventStreamRoute_r0:        route(eventsHandler.Subscribe_r0),
 		bbs.DesiredLRPEventStreamRoute: route(eventsHandler.SubscribeToDesiredLRPEvents),
 		bbs.ActualLRPEventStreamRoute:  route(eventsHandler.SubscribeToActualLRPEvents),
+		bbs.TaskEventStreamRoute:       route(eventsHandler.SubscribeToTaskEvents),
 
 		// Cells
 		bbs.CellsRoute: route(middleware.EmitLatency(cellsHandler.Cells)),

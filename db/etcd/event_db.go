@@ -348,6 +348,63 @@ func (db *ETCDDB) WatchForActualLRPChanges(logger lager.Logger,
 	return stop, err
 }
 
+func (db *ETCDDB) WatchForTaskChanges(logger lager.Logger,
+	created func(*models.Task),
+	changed func(*models.TaskChange),
+	deleted func(*models.Task),
+) (chan<- bool, <-chan error) {
+	logger = logger.Session("watching-for-task-lrp-changes")
+
+	taskEvents, stop, err := db.watch(TaskSchemaRoot)
+
+	go func() {
+		for event := range taskEvents {
+			switch {
+			case event.PrevNode == nil && event.Node != nil:
+				task := new(models.Task)
+				err := db.deserializeModel(logger, event.Node, task)
+				if err != nil {
+					logger.Error("failed-to-unmarshal-task-on-create", err, lager.Data{"key": event.Node.Key, "value": event.Node.Value})
+					continue
+				}
+
+				created(task)
+
+			case event.PrevNode != nil && event.Node != nil:
+				beforeTask := new(models.Task)
+				err := db.deserializeModel(logger, event.PrevNode, beforeTask)
+				if err != nil {
+					logger.Error("failed-to-unmarshal-prev-task-on-change", err, lager.Data{"key": event.PrevNode.Key, "value": event.PrevNode.Value})
+					continue
+				}
+
+				afterTask := new(models.Task)
+				err = db.deserializeModel(logger, event.Node, afterTask)
+				if err != nil {
+					logger.Error("failed-to-unmarshal-task-on-change", err, lager.Data{"key": event.Node.Key, "value": event.Node.Value})
+					continue
+				}
+
+				changed(&models.TaskChange{
+					Before: beforeTask,
+					After:  afterTask,
+				})
+
+			case event.PrevNode != nil && event.Node == nil:
+				task := new(models.Task)
+				err := db.deserializeModel(logger, event.PrevNode, task)
+				if err != nil {
+					logger.Error("failed-to-unmarshal-prev-task-on-delete", err, lager.Data{"key": event.PrevNode.Key, "value": event.PrevNode.Value})
+					continue
+				}
+
+				deleted(task)
+			}
+		}
+	}()
+
+	return stop, err
+}
 func (db *ETCDDB) watch(key string) (<-chan watchEvent, chan<- bool, <-chan error) {
 	events := make(chan watchEvent)
 	errors := make(chan error)
