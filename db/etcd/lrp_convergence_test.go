@@ -147,6 +147,23 @@ var _ = Describe("LrpConvergence", func() {
 				})
 			})
 
+			Context("when there is a SchedulingInfo without a matching RunInfo", func() {
+				JustBeforeEach(func() {
+					_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+					Expect(gatherError).NotTo(HaveOccurred())
+				})
+
+				It("deletes orphaned schedulingInfos", func() {
+					for _, guid := range testData.orphanedSchedulingInfoGuids {
+						_, err := storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaPath(guid), false, true)
+						Expect(err).To(HaveOccurred())
+						etcdErr, ok := err.(*etcdclient.EtcdError)
+						Expect(ok).To(BeTrue())
+						Expect(etcdErr.ErrorCode).To(Equal(etcderror.EcodeKeyNotFound))
+					}
+				})
+			})
+
 			Context("when the desired LRP root in ETCD has an invalid child node", func() {
 				BeforeEach(func() {
 					etcdHelper.CreateInvalidDesiredLRPComponent()

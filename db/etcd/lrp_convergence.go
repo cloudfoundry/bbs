@@ -386,15 +386,18 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 	logger.Info("done-walking-desired-lrp-tree")
 
 	desireds := make(map[string]*models.DesiredLRP)
+	var schedInfosToDelete []string
 	for guid, schedulingInfo := range schedulingInfos {
 		runInfo, ok := runInfos[guid]
 		if !ok {
 			err := fmt.Errorf("Missing runInfo for GUID %s", guid)
 			logger.Error("runInfo-not-found-error", err)
+			schedInfosToDelete = append(schedInfosToDelete, DesiredLRPSchedulingInfoSchemaPath(guid))
 		} else {
 			desiredLRP := models.NewDesiredLRP(*schedulingInfo, *runInfo)
 			desireds[guid] = &desiredLRP
 		}
+		db.batchDeleteNodes(schedInfosToDelete, logger)
 	}
 
 	// Check to see if we have orphaned RunInfos
