@@ -48,7 +48,10 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
 	defer logger.Info("finished-convergence")
 
 	defer func() {
-		convergeLRPDuration.Send(time.Since(convergeStart))
+		err := convergeLRPDuration.Send(time.Since(convergeStart))
+		if err != nil {
+			logger.Error("failed-sending-converge-lrp-duration-metric", err)
+		}
 	}()
 
 	logger.Debug("gathering-convergence-input")
@@ -73,13 +76,36 @@ type LRPMetricCounter struct {
 	desiredLRPs         int32
 }
 
-func (lmc LRPMetricCounter) Send() {
-	unclaimedLRPs.Send(int(lmc.unclaimedLRPs))
-	claimedLRPs.Send(int(lmc.claimedLRPs))
-	runningLRPs.Send(int(lmc.runningLRPs))
-	crashedActualLRPs.Send(int(lmc.crashedActualLRPs))
-	crashingDesiredLRPs.Send(int(lmc.crashingDesiredLRPs))
-	desiredLRPs.Send(int(lmc.desiredLRPs))
+func (lmc LRPMetricCounter) Send(logger lager.Logger) {
+	err := unclaimedLRPs.Send(int(lmc.unclaimedLRPs))
+	if err != nil {
+		logger.Error("failed-sending-unclaimed-lrps-metric", err)
+	}
+
+	err = claimedLRPs.Send(int(lmc.claimedLRPs))
+	if err != nil {
+		logger.Error("failed-sending-claimed-lrps-metric", err)
+	}
+
+	err = runningLRPs.Send(int(lmc.runningLRPs))
+	if err != nil {
+		logger.Error("failed-sending-running-lrps-metric", err)
+	}
+
+	err = crashedActualLRPs.Send(int(lmc.crashedActualLRPs))
+	if err != nil {
+		logger.Error("failed-sending-crashed-actual-lrps-metric", err)
+	}
+
+	err = crashingDesiredLRPs.Send(int(lmc.crashingDesiredLRPs))
+	if err != nil {
+		logger.Error("failed-sending-crashing-desired-lrps-metric", err)
+	}
+
+	err = desiredLRPs.Send(int(lmc.desiredLRPs))
+	if err != nil {
+		logger.Error("failed-sending-desired-lrps-metric", err)
+	}
 }
 
 func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceInput, error) {
@@ -100,7 +126,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 		lrpMetricCounter.crashingDesiredLRPs = -1
 		lrpMetricCounter.desiredLRPs = -1
 
-		lrpMetricCounter.Send()
+		lrpMetricCounter.Send(logger)
 
 		return &models.ConvergenceInput{}, err
 	}
@@ -113,13 +139,13 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 		logger.Error("failed-gathering-and-pruning-desired-lrps", err)
 
 		lrpMetricCounter.desiredLRPs = -1
-		lrpMetricCounter.Send()
+		lrpMetricCounter.Send(logger)
 
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Info("succeeded-gathering-and-pruning-desired-lrps")
 
-	lrpMetricCounter.Send()
+	lrpMetricCounter.Send(logger)
 
 	logger.Debug("listing-domains")
 	domains, err := db.Domains(logger)

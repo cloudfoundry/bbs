@@ -69,7 +69,10 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		m.db.SetEncryptionKeyLabel(logger, m.keyManager.EncryptionKey().Label())
 		totalTime := m.clock.Since(encryptionStart)
 		logger.Debug("encryption-finished", lager.Data{"total-time": totalTime})
-		encryptionDuration.Send(totalTime)
+		err = encryptionDuration.Send(totalTime)
+		if err != nil {
+			logger.Error("failed-to-send-encryption-duration-metrics", err)
+		}
 	}
 
 	select {

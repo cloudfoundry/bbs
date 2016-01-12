@@ -64,7 +64,10 @@ func (notifier PeriodicMetronNotifier) Run(signals <-chan os.Signal, ready chan<
 
 			finishedAt := notifier.Clock.Now()
 
-			metricsReportingDuration.Send(finishedAt.Sub(startedAt))
+			err = metricsReportingDuration.Send(finishedAt.Sub(startedAt))
+			if err != nil {
+				logger.Error("failed-to-send-metrics-reporting-duration-metric", err)
+			}
 
 		case <-signals:
 			return nil

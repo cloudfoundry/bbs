@@ -138,7 +138,10 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 
 	logger.Debug("migrations-finished")
-	migrationDuration.Send(time.Since(migrateStart))
+	err = migrationDuration.Send(time.Since(migrateStart))
+	if err != nil {
+		logger.Error("failed-to-send-migration-duration-metric", err)
+	}
 
 	m.finishAndWait(signals, ready)
 	return nil

@@ -26,11 +26,24 @@ func LogWrap(logger lager.Logger, handler http.Handler) http.HandlerFunc {
 	}
 }
 
-func EmitLatency(f http.HandlerFunc) http.HandlerFunc {
+func NewLatencyEmitter(logger lager.Logger) LatencyEmitter {
+	return LatencyEmitter{
+		logger: logger,
+	}
+}
+
+type LatencyEmitter struct {
+	logger lager.Logger
+}
+
+func (l LatencyEmitter) EmitLatency(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		f(w, r)
-		requestLatency.Send(time.Since(startTime))
+		err := requestLatency.Send(time.Since(startTime))
+		if err != nil {
+			l.logger.Error("failed-to-send-request-latency-metric", err)
+		}
 	}
 }
 

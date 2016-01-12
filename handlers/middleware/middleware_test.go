@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/handlers/middleware"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
+	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,9 +23,10 @@ var _ = Describe("Middleware", func() {
 		BeforeEach(func() {
 			sender = fake.NewFakeMetricSender()
 			dropsonde_metrics.Initialize(sender, nil)
+			logger := lager.NewLogger("test-session")
 
 			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
-			handler = middleware.EmitLatency(handler)
+			handler = middleware.NewLatencyEmitter(logger).EmitLatency(handler)
 		})
 
 		It("reports latency", func() {

@@ -41,17 +41,17 @@ func (db *ETCDDB) ConvergeTasks(
 	convergeStart := db.clock.Now()
 
 	defer func() {
-		convergeTaskDuration.Send(time.Since(convergeStart))
+		err := convergeTaskDuration.Send(time.Since(convergeStart))
+		if err != nil {
+			logger.Error("failed-to-send-converge-task-duration-metric", err)
+		}
 	}()
 
 	logger.Debug("listing-tasks")
 	taskState, modelErr := db.fetchRecursiveRaw(logger, TaskSchemaRoot)
 	if modelErr != nil {
 		logger.Debug("failed-listing-task")
-		pendingTasks.Send(-1)
-		runningTasks.Send(-1)
-		completedTasks.Send(-1)
-		resolvingTasks.Send(-1)
+		sendTaskMetrics(logger, -1, -1, -1, -1)
 		return
 	}
 	logger.Debug("succeeded-listing-task")
@@ -174,10 +174,8 @@ func (db *ETCDDB) ConvergeTasks(
 		"num-tasks-to-complete": len(tasksToComplete),
 		"num-keys-to-delete":    len(keysToDelete),
 	})
-	pendingTasks.Send(pendingCount)
-	runningTasks.Send(runningCount)
-	completedTasks.Send(completedCount)
-	resolvingTasks.Send(resolvingCount)
+
+	sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
 
 	if len(tasksToAuction) > 0 {
 		logger.Debug("requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
@@ -300,4 +298,26 @@ func (db *ETCDDB) batchDeleteTasks(taskGuids []string, logger lager.Logger) {
 
 	throttler.Work()
 	return
+}
+
+func sendTaskMetrics(logger lager.Logger, pendingCount, runningCount, completedCount, resolvingCount int) {
+	err := pendingTasks.Send(pendingCount)
+	if err != nil {
+		logger.Error("failed-to-send-pending-tasks-metric", err)
+	}
+
+	err = runningTasks.Send(runningCount)
+	if err != nil {
+		logger.Error("failed-to-send-running-tasks-metric", err)
+	}
+
+	err = completedTasks.Send(completedCount)
+	if err != nil {
+		logger.Error("failed-to-send-completed-tasks-metric", err)
+	}
+
+	err = resolvingTasks.Send(resolvingCount)
+	if err != nil {
+		logger.Error("failed-to-send-resolving-tasks-metric", err)
+	}
 }

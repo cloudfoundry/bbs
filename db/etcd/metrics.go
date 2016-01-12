@@ -68,7 +68,6 @@ func NewETCDMetrics(logger lager.Logger, etcdOptions *ETCDOptions) (*ETCDMetrics
 func (t *ETCDMetrics) Send() {
 	for i, etcdAddr := range t.etcdCluster {
 		t.sendLeaderStats(etcdAddr, i)
-		// newEtcdNodeStats(etcdAddr, i, t.logger).Send()
 	}
 
 	t.sendSelfStats()
@@ -91,7 +90,10 @@ func (t *ETCDMetrics) sendLeaderStats(etcdAddr string, index int) {
 		return
 	}
 
-	etcdLeader.Send(index)
+	err = etcdLeader.Send(index)
+	if err != nil {
+		t.logger.Error("failed-to-send-etcd-leader-metric", err)
+	}
 
 	var storeStats etcdStoreStats
 
@@ -127,8 +129,15 @@ func (t *ETCDMetrics) sendLeaderStats(etcdAddr string, index int) {
 		return
 	}
 
-	etcdRaftTerm.Send(int(raftTerm))
-	etcdWatchers.Send(int(storeStats.Watchers))
+	err = etcdRaftTerm.Send(int(raftTerm))
+	if err != nil {
+		t.logger.Error("failed-to-send-etcd-raft-term-metric", err)
+	}
+
+	err = etcdWatchers.Send(int(storeStats.Watchers))
+	if err != nil {
+		t.logger.Error("failed-to-send-etcd-watchers-metric", err)
+	}
 
 	return
 }
@@ -174,11 +183,23 @@ func (t *ETCDMetrics) sendSelfStats() {
 		}
 	}
 
-	etcdSentBandwidthRate.Send(sentBandwidthRate)
-	etcdSentRequestRate.Send(float64(sentRequestsPerSecond))
+	err := etcdSentBandwidthRate.Send(sentBandwidthRate)
+	if err != nil {
+		t.logger.Error("failed-to-send-etcd-sent-bandwidth-rate-metric", err)
+	}
+	err = etcdSentRequestRate.Send(float64(sentRequestsPerSecond))
+	if err != nil {
+		t.logger.Error("failed-to-send-etcd-sent-request-rate-metric", err)
+	}
 
-	etcdReceivedBandwidthRate.Send(receivedBandwidthRate)
-	etcdReceivedRequestRate.Send(float64(receivedRequestsPerSecond))
+	err = etcdReceivedBandwidthRate.Send(receivedBandwidthRate)
+	if err != nil {
+		t.logger.Error("failed-to-send-etcd-received-bandwidth-rate-metric", err)
+	}
+	err = etcdReceivedRequestRate.Send(float64(receivedRequestsPerSecond))
+	if err != nil {
+		t.logger.Error("failed-to-send-etcd-received-request-rate-metric", err)
+	}
 }
 
 func (t *ETCDMetrics) leaderStatsEndpoint(etcdAddr string) string {
