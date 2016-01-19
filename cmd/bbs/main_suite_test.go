@@ -49,6 +49,7 @@ var logger lager.Logger
 var client bbs.Client
 var bbsBinPath string
 var bbsAddress string
+var bbsPort int
 var bbsURL *url.URL
 var bbsArgs testrunner.Args
 var bbsRunner *ginkgomon.Runner
@@ -115,7 +116,8 @@ var _ = BeforeEach(func() {
 	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
 	auctioneerServer.AllowUnhandledRequests = true
 
-	bbsAddress = fmt.Sprintf("127.0.0.1:%d", 6700+GinkgoParallelNode())
+	bbsPort = 6700 + GinkgoParallelNode()
+	bbsAddress = fmt.Sprintf("127.0.0.1:%d", bbsPort)
 
 	bbsURL = &url.URL{
 		Scheme: "http",

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -184,6 +185,17 @@ func main() {
 
 	maintainer := initializeLockMaintainer(logger, serviceClient)
 
+	_, portString, err := net.SplitHostPort(*listenAddress)
+	if err != nil {
+		logger.Fatal("failed-invalid-listen-address", err)
+	}
+	portNum, err := net.LookupPort("tcp", portString)
+	if err != nil {
+		logger.Fatal("failed-invalid-listen-port", err)
+	}
+
+	registrationRunner := initializeRegistrationRunner(logger, consuladapter.NewConsulClient(consulClient), portNum, clock)
+
 	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
 
 	etcdOptions, err := etcdFlags.Validate()
@@ -280,6 +292,7 @@ func main() {
 		{"actual-watcher", actualWatcher},
 		{"task-watcher", taskWatcher},
 		{"metrics", *metricsNotifier},
+		{"registration-runner", registrationRunner},
 	}
 
 	if dbgAddr := cf_debug_server.DebugAddress(flag.CommandLine); dbgAddr != "" {
@@ -301,6 +314,21 @@ func main() {
 	}
 
 	logger.Info("exited")
+}
+
+func initializeRegistrationRunner(
+	logger lager.Logger,
+	consulClient consuladapter.Client,
+	port int,
+	clock clock.Clock) ifrit.Runner {
+	registration := &api.AgentServiceRegistration{
+		Name: "bbs",
+		Port: port,
+		Check: &api.AgentServiceCheck{
+			TTL: "3s",
+		},
+	}
+	return locket.NewRegistrationRunner(logger, registration, consulClient, clock)
 }
 
 func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClient) ifrit.Runner {
