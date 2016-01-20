@@ -237,13 +237,14 @@ func (m *UploadAction) GetUser() string {
 }
 
 type RunAction struct {
-	Path           string                 `protobuf:"bytes,1,opt,name=path" json:"path"`
-	Args           []string               `protobuf:"bytes,2,rep,name=args" json:"args,omitempty"`
-	Dir            string                 `protobuf:"bytes,3,opt,name=dir" json:"dir,omitempty"`
-	Env            []*EnvironmentVariable `protobuf:"bytes,4,rep,name=env" json:"env,omitempty"`
-	ResourceLimits *ResourceLimits        `protobuf:"bytes,5,opt,name=resource_limits" json:"resource_limits,omitempty"`
-	User           string                 `protobuf:"bytes,6,opt,name=user" json:"user"`
-	LogSource      string                 `protobuf:"bytes,7,opt,name=log_source" json:"log_source,omitempty"`
+	Path              string                 `protobuf:"bytes,1,opt,name=path" json:"path"`
+	Args              []string               `protobuf:"bytes,2,rep,name=args" json:"args,omitempty"`
+	Dir               string                 `protobuf:"bytes,3,opt,name=dir" json:"dir,omitempty"`
+	Env               []*EnvironmentVariable `protobuf:"bytes,4,rep,name=env" json:"env,omitempty"`
+	ResourceLimits    *ResourceLimits        `protobuf:"bytes,5,opt,name=resource_limits" json:"resource_limits,omitempty"`
+	User              string                 `protobuf:"bytes,6,opt,name=user" json:"user"`
+	LogSource         string                 `protobuf:"bytes,7,opt,name=log_source" json:"log_source,omitempty"`
+	SuppressLogOutput bool                   `protobuf:"varint,8,opt,name=suppress_log_output" json:"suppress_log_output"`
 }
 
 func (m *RunAction) Reset()      { *m = RunAction{} }
@@ -296,6 +297,13 @@ func (m *RunAction) GetLogSource() string {
 		return m.LogSource
 	}
 	return ""
+}
+
+func (m *RunAction) GetSuppressLogOutput() bool {
+	if m != nil {
+		return m.SuppressLogOutput
+	}
+	return false
 }
 
 type TimeoutAction struct {
@@ -653,6 +661,9 @@ func (this *RunAction) Equal(that interface{}) bool {
 	if this.LogSource != that1.LogSource {
 		return false
 	}
+	if this.SuppressLogOutput != that1.SuppressLogOutput {
+		return false
+	}
 	return true
 }
 func (this *TimeoutAction) Equal(that interface{}) bool {
@@ -933,7 +944,8 @@ func (this *RunAction) GoString() string {
 		`Env:` + fmt.Sprintf("%#v", this.Env),
 		`ResourceLimits:` + fmt.Sprintf("%#v", this.ResourceLimits),
 		`User:` + fmt.Sprintf("%#v", this.User),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
+		`SuppressLogOutput:` + fmt.Sprintf("%#v", this.SuppressLogOutput) + `}`}, ", ")
 	return s
 }
 func (this *TimeoutAction) GoString() string {
@@ -1283,6 +1295,14 @@ func (m *RunAction) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
 	i += copy(data[i:], m.LogSource)
+	data[i] = 0x40
+	i++
+	if m.SuppressLogOutput {
+		data[i] = 1
+	} else {
+		data[i] = 0
+	}
+	i++
 	return i, nil
 }
 
@@ -1652,6 +1672,7 @@ func (m *RunAction) Size() (n int) {
 	n += 1 + l + sovActions(uint64(l))
 	l = len(m.LogSource)
 	n += 1 + l + sovActions(uint64(l))
+	n += 2
 	return n
 }
 
@@ -1821,6 +1842,7 @@ func (this *RunAction) String() string {
 		`ResourceLimits:` + strings.Replace(fmt.Sprintf("%v", this.ResourceLimits), "ResourceLimits", "ResourceLimits", 1) + `,`,
 		`User:` + fmt.Sprintf("%v", this.User) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`SuppressLogOutput:` + fmt.Sprintf("%v", this.SuppressLogOutput) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2851,6 +2873,23 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SuppressLogOutput", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SuppressLogOutput = bool(v != 0)
 		default:
 			var sizeOfWire int
 			for {

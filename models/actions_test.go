@@ -221,7 +221,8 @@ var _ = Describe("Actions", func() {
 						{"name":"FOO", "value":"1"},
 						{"name":"BAR", "value":"2"}
 					],
-					"resource_limits":{"nofile": 10}
+					"resource_limits":{"nofile": 10},
+					"suppress_log_output": false
 			}`,
 			models.WrapAction(&models.RunAction{
 				User: "me",
@@ -280,7 +281,8 @@ var _ = Describe("Actions", func() {
 						"user": "someone",
 						"resource_limits":{
 							"nofile": 10
-						}
+						},
+						"suppress_log_output": false
 					}
 				},
 				"timeout": 10000000
@@ -361,7 +363,8 @@ var _ = Describe("Actions", func() {
 						"run": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me"
+							"user": "me",
+							"suppress_log_output": false
 						}
 					}
 			}`,
@@ -429,7 +432,8 @@ var _ = Describe("Actions", func() {
 							"run": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me"
+								"user": "me",
+								"suppress_log_output": false
 							}
 						}
 					]
@@ -522,7 +526,8 @@ var _ = Describe("Actions", func() {
 							"run": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me"
+								"user": "me",
+								"suppress_log_output": false
 							}
 						}
 					]
@@ -600,7 +605,8 @@ var _ = Describe("Actions", func() {
 						"run": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me"
+							"user": "me",
+							"suppress_log_output": false
 						}
 					}
 			}`,
@@ -669,7 +675,8 @@ var _ = Describe("Actions", func() {
 							"run": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me"
+								"user": "me",
+								"suppress_log_output": false
 							}
 						}
 					]

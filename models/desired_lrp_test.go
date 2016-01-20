@@ -80,7 +80,8 @@ var _ = Describe("DesiredLRP", func() {
                 "nofile": 16384
               },
               "user": "vcap",
-              "log_source": "APP"
+              "log_source": "APP",
+			  "suppress_log_output": false
             }
           },
           {
@@ -118,7 +119,8 @@ var _ = Describe("DesiredLRP", func() {
               "resource_limits": {
                 "nofile": 16384
               },
-              "user": "vcap"
+              "user": "vcap",
+			  "suppress_log_output": false
             }
           }
         ]
@@ -136,7 +138,8 @@ var _ = Describe("DesiredLRP", func() {
               "nofile": 1024
             },
             "user": "vcap",
-            "log_source": "HEALTH"
+            "log_source": "HEALTH",
+			"suppress_log_output": true
           }
         },
         "timeout": 30000000000
