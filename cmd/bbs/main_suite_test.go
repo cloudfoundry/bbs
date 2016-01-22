@@ -32,9 +32,10 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
-	"github.com/pivotal-golang/clock/fakeclock"
 	"testing"
 	"time"
+
+	"github.com/pivotal-golang/clock/fakeclock"
 )
 
 var etcdPort int
@@ -163,7 +164,8 @@ var _ = BeforeEach(func() {
 	keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
 	Expect(err).NotTo(HaveOccurred())
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient, &fakeclock.FakeClock{})
+	clock := fakeclock.NewFakeClock(time.Now())
+	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient, clock)
 	consulHelper = test_helpers.NewConsulHelper(consulSession)
 })
 
