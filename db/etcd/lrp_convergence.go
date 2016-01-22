@@ -423,8 +423,8 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 			desiredLRP := models.NewDesiredLRP(*schedulingInfo, *runInfo)
 			desireds[guid] = &desiredLRP
 		}
-		db.batchDeleteNodes(schedInfosToDelete, logger)
 	}
+	db.batchDeleteNodes(schedInfosToDelete, logger)
 
 	// Check to see if we have orphaned RunInfos
 	if len(runInfos) != len(schedulingInfos) {

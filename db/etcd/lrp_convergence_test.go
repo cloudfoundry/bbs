@@ -161,6 +161,10 @@ var _ = Describe("LrpConvergence", func() {
 						Expect(ok).To(BeTrue())
 						Expect(etcdErr.ErrorCode).To(Equal(etcderror.EcodeKeyNotFound))
 					}
+
+					// This assertion is not great, however it checks that we do not attempt
+					// to delete the desired lrp scheduling infos more than once
+					Expect(logger).NotTo(gbytes.Say("failed-to-delete"))
 				})
 			})
 
