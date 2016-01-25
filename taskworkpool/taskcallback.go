@@ -106,7 +106,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 			request.Header.Set("Content-Type", "application/json")
 			response, err := httpClient.Do(request)
 			if err != nil {
-				matched, _ := regexp.MatchString("Client.Timeout", err.Error())
+				matched, _ := regexp.MatchString("Client.Timeout|use of closed network connection", err.Error())
 				if matched {
 					continue
 				}
