@@ -2,6 +2,7 @@ package etcd_test
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -9,6 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("ActualLRPDB", func() {
@@ -593,6 +595,25 @@ var _ = Describe("ActualLRPDB", func() {
 
 		JustBeforeEach(func() {
 			startErr = etcdDB.StartActualLRP(logger, &lrpKey, &instanceKey, &netInfo)
+		})
+
+		Context("when the logging session is created and the starting message is logged", func() {
+			BeforeEach(func() {
+				lrpKey = models.NewActualLRPKey("process-guid", 1, "domain")
+				instanceKey = models.NewActualLRPInstanceKey("instance-guid", cellID)
+				netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+			})
+
+			It("logs the net info", func() {
+				Eventually(logger).Should(Say(
+					fmt.Sprintf(
+						`"net_info":\{"address":"%s","ports":\[\{"container_port":%d,"host_port":%d\}\]\}`,
+						netInfo.Address,
+						netInfo.Ports[0].ContainerPort,
+						netInfo.Ports[0].HostPort,
+					),
+				))
+			})
 		})
 
 		Context("when the actual LRP exists", func() {

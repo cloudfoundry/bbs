@@ -11,9 +11,27 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Evacuation", func() {
+	Describe("EvacuateRunningActualLRP", func() {
+		Context("when the logging session is created and the started message is logged", func() {
+			It("logs the net info", func() {
+				etcdDB.EvacuateRunningActualLRP(logger, &lrpKey, &alphaInstanceKey, &alphaNetInfo, alphaEvacuationTTL)
+
+				Eventually(logger).Should(Say(
+					fmt.Sprintf(
+						`"actual_lrp_net_info":\{"address":"%s","ports":\[\{"container_port":%d,"host_port":%d\}\]\}`,
+						alphaNetInfo.Address,
+						alphaNetInfo.Ports[0].ContainerPort,
+						alphaNetInfo.Ports[0].HostPort,
+					),
+				))
+			})
+		})
+	})
+
 	Describe("Tabular tests", func() {
 		claimedTest := func(base evacuationTest) evacuationTest {
 			return evacuationTest{
