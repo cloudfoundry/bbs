@@ -57,7 +57,18 @@ func (sc *storeClient) DeleteDir(key string) (*etcd.Response, error) {
 }
 
 func (sc *storeClient) CompareAndSwap(key string, payload []byte, ttl uint64, prevIndex uint64) (*etcd.Response, error) {
-	return sc.client.CompareAndSwap(key, string(payload), ttl, "", prevIndex)
+	resp, err := sc.client.CompareAndSwap(key, string(payload), ttl, "", prevIndex)
+	if etcdErrCode(err) == ETCDErrIndexComparisonFailed {
+		getResp, getErr := sc.Get(key, false, false)
+		if getErr != nil {
+			return resp, err
+		}
+		if getResp.Node.Value == string(payload) {
+			// We got a dup on a retry?
+			return resp, nil
+		}
+	}
+	return resp, err
 }
 
 func (sc *storeClient) CompareAndDelete(key string, prevIndex uint64) (*etcd.Response, error) {
