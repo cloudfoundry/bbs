@@ -179,9 +179,7 @@ func main() {
 		logger.Fatal("new-consul-client-failed", err)
 	}
 
-	sessionManager := consuladapter.NewSessionManager(consulClient)
-
-	serviceClient := initializeServiceClient(logger, clock, consulClient, sessionManager)
+	serviceClient := bbs.NewServiceClient(logger, consuladapter.NewConsulClient(consulClient), *lockTTL, clock)
 
 	maintainer := initializeLockMaintainer(logger, serviceClient)
 
@@ -328,7 +326,7 @@ func initializeRegistrationRunner(
 			TTL: "3s",
 		},
 	}
-	return locket.NewRegistrationRunner(logger, registration, consulClient, clock)
+	return locket.NewRegistrationRunner(logger, registration, consulClient, locket.RetryInterval, clock)
 }
 
 func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClient) ifrit.Runner {
@@ -426,13 +424,4 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	return etcddb.NewStoreClient(etcdClient)
-}
-
-func initializeServiceClient(logger lager.Logger, clock clock.Clock, consulClient *api.Client, sessionManager consuladapter.SessionManager) bbs.ServiceClient {
-	consulDBSession, err := consuladapter.NewSessionNoChecks("consul-db", *lockTTL, consulClient, sessionManager)
-	if err != nil {
-		logger.Fatal("consul-session-failed", err)
-	}
-
-	return bbs.NewServiceClient(consulDBSession, clock)
 }

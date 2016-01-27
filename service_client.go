@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/locket"
+	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
@@ -35,41 +36,69 @@ type ServiceClient interface {
 	CellById(logger lager.Logger, cellId string) (*models.CellPresence, error)
 	Cells(logger lager.Logger) (models.CellSet, error)
 	CellEvents(logger lager.Logger) <-chan models.CellEvent
-	NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration) ifrit.Runner
+	NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval, lockTTL time.Duration) ifrit.Runner
 	NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval time.Duration) (ifrit.Runner, error)
 	CurrentBBS(logger lager.Logger) (*models.BBSPresence, error)
 	CurrentBBSURL(logger lager.Logger) (string, error)
 }
 
 type serviceClient struct {
-	session *consuladapter.Session
-	clock   clock.Clock
+	session      *consuladapter.Session
+	consulClient consuladapter.Client
+	clock        clock.Clock
 }
 
-func NewServiceClient(session *consuladapter.Session, clock clock.Clock) ServiceClient {
-	return &serviceClient{session, clock}
+func NewServiceClient(logger lager.Logger, client consuladapter.Client, lockTTL time.Duration, clock clock.Clock) ServiceClient {
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		logger.Fatal("construct-uuid-failed", err)
+	}
+
+	session, err := consuladapter.NewSessionNoChecks(uuid.String(), lockTTL, client)
+	if err != nil {
+		logger.Fatal("consul-session-failed", err)
+	}
+
+	return &serviceClient{
+		session:      session,
+		consulClient: client,
+		clock:        clock,
+	}
 }
 
-func (db *serviceClient) NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration) ifrit.Runner {
+func (db *serviceClient) NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration, lockTTL time.Duration) ifrit.Runner {
 	payload, err := models.ToJSON(cellPresence)
 	if err != nil {
 		panic(err)
 	}
 
-	return locket.NewPresence(db.session, CellSchemaPath(cellPresence.CellId), payload, db.clock, retryInterval, logger)
+	return locket.NewPresence(logger, db.consulClient, CellSchemaPath(cellPresence.CellId), payload, db.clock, retryInterval, lockTTL)
 }
 
 func (db *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
-	cells, err := db.session.ListAcquiredValues(CellSchemaRoot())
+	kvPairs, _, err := db.consulClient.KV().List(CellSchemaRoot(), nil)
 	if err != nil {
 		bbsErr := models.ConvertError(convertConsulError(err))
 		if bbsErr.Type != models.Error_ResourceNotFound {
-			return nil, err
+			return nil, bbsErr
+		}
+	}
+
+	if kvPairs == nil {
+		err = consuladapter.NewPrefixNotFoundError(CellSchemaRoot())
+		bbsErr := models.ConvertError(convertConsulError(err))
+		if bbsErr.Type != models.Error_ResourceNotFound {
+			return nil, bbsErr
 		}
 	}
 
 	cellPresences := models.NewCellSet()
-	for _, cell := range cells {
+	for _, kvPair := range kvPairs {
+		if kvPair.Session == "" {
+			continue
+		}
+
+		cell := kvPair.Value
 		presence := new(models.CellPresence)
 		err := models.FromJSON(cell, presence)
 		if err != nil {

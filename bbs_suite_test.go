@@ -13,7 +13,7 @@ import (
 )
 
 var consulRunner *consulrunner.ClusterRunner
-var consulSession *consuladapter.Session
+var consulClient consuladapter.Client
 
 var logger *lagertest.TestLogger
 var consulHelper *test_helpers.ConsulHelper
@@ -39,12 +39,13 @@ var _ = AfterSuite(func() {
 
 var _ = BeforeEach(func() {
 	consulRunner.Reset()
-	consulSession = consulRunner.NewSession("a-session")
+	consulSession := consulRunner.NewSession("a-session")
+	consulClient = consulRunner.NewConsulClient()
 
 	consulHelper = test_helpers.NewConsulHelper(consulSession)
 })
 
 func TestBbs(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Bbs Suite")
+	RunSpecs(t, "BBS Suite")
 }

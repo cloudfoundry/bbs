@@ -14,13 +14,13 @@ type FakeClient struct {
 	PingStub        func() bool
 	pingMutex       sync.RWMutex
 	pingArgsForCall []struct{}
-	pingReturns     struct {
+	pingReturns struct {
 		result1 bool
 	}
 	DomainsStub        func() ([]string, error)
 	domainsMutex       sync.RWMutex
 	domainsArgsForCall []struct{}
-	domainsReturns     struct {
+	domainsReturns struct {
 		result1 []string
 		result2 error
 	}
@@ -124,7 +124,7 @@ type FakeClient struct {
 	TasksStub        func() ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct{}
-	tasksReturns     struct {
+	tasksReturns struct {
 		result1 []*models.Task
 		result2 error
 	}
@@ -176,35 +176,35 @@ type FakeClient struct {
 	SubscribeToEventsStub        func() (events.EventSource, error)
 	subscribeToEventsMutex       sync.RWMutex
 	subscribeToEventsArgsForCall []struct{}
-	subscribeToEventsReturns     struct {
+	subscribeToEventsReturns struct {
 		result1 events.EventSource
 		result2 error
 	}
 	SubscribeToDesiredLRPEventsStub        func() (events.EventSource, error)
 	subscribeToDesiredLRPEventsMutex       sync.RWMutex
 	subscribeToDesiredLRPEventsArgsForCall []struct{}
-	subscribeToDesiredLRPEventsReturns     struct {
+	subscribeToDesiredLRPEventsReturns struct {
 		result1 events.EventSource
 		result2 error
 	}
 	SubscribeToActualLRPEventsStub        func() (events.EventSource, error)
 	subscribeToActualLRPEventsMutex       sync.RWMutex
 	subscribeToActualLRPEventsArgsForCall []struct{}
-	subscribeToActualLRPEventsReturns     struct {
+	subscribeToActualLRPEventsReturns struct {
 		result1 events.EventSource
 		result2 error
 	}
 	SubscribeToTaskEventsStub        func() (events.EventSource, error)
 	subscribeToTaskEventsMutex       sync.RWMutex
 	subscribeToTaskEventsArgsForCall []struct{}
-	subscribeToTaskEventsReturns     struct {
+	subscribeToTaskEventsReturns struct {
 		result1 events.EventSource
 		result2 error
 	}
 	CellsStub        func() ([]*models.CellPresence, error)
 	cellsMutex       sync.RWMutex
 	cellsArgsForCall []struct{}
-	cellsReturns     struct {
+	cellsReturns struct {
 		result1 []*models.CellPresence
 		result2 error
 	}
@@ -311,7 +311,7 @@ type FakeClient struct {
 	ConvergeLRPsStub        func() error
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct{}
-	convergeLRPsReturns     struct {
+	convergeLRPsReturns struct {
 		result1 error
 	}
 	ConvergeTasksStub        func(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error

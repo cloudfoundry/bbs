@@ -103,13 +103,14 @@ var _ = BeforeEach(func() {
 
 	consulRunner.Reset()
 	consulSession = consulRunner.NewSession("a-session")
+	consulClient := consulRunner.NewConsulClient()
 
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	storeClient = etcd.NewStoreClient(etcdClient)
 	fakeStoreClient = &fakes.FakeStoreClient{}
 	consulHelper = test_helpers.NewConsulHelper(consulSession)
-	serviceClient = bbs.NewServiceClient(consulSession, clock)
+	serviceClient = bbs.NewServiceClient(logger, consulClient, 10*time.Second, clock)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 	fakeRepClientFactory = new(repfakes.FakeClientFactory)
 	fakeRepClient = new(repfakes.FakeClient)

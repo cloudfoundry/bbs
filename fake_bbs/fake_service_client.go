@@ -39,12 +39,13 @@ type FakeServiceClient struct {
 	cellEventsReturns struct {
 		result1 <-chan models.CellEvent
 	}
-	NewCellPresenceRunnerStub        func(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration) ifrit.Runner
+	NewCellPresenceRunnerStub        func(logger lager.Logger, cellPresence *models.CellPresence, retryInterval, lockTTL time.Duration) ifrit.Runner
 	newCellPresenceRunnerMutex       sync.RWMutex
 	newCellPresenceRunnerArgsForCall []struct {
 		logger        lager.Logger
 		cellPresence  *models.CellPresence
 		retryInterval time.Duration
+		lockTTL       time.Duration
 	}
 	newCellPresenceRunnerReturns struct {
 		result1 ifrit.Runner
@@ -179,16 +180,17 @@ func (fake *FakeServiceClient) CellEventsReturns(result1 <-chan models.CellEvent
 	}{result1}
 }
 
-func (fake *FakeServiceClient) NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration) ifrit.Runner {
+func (fake *FakeServiceClient) NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration, lockTTL time.Duration) ifrit.Runner {
 	fake.newCellPresenceRunnerMutex.Lock()
 	fake.newCellPresenceRunnerArgsForCall = append(fake.newCellPresenceRunnerArgsForCall, struct {
 		logger        lager.Logger
 		cellPresence  *models.CellPresence
 		retryInterval time.Duration
-	}{logger, cellPresence, retryInterval})
+		lockTTL       time.Duration
+	}{logger, cellPresence, retryInterval, lockTTL})
 	fake.newCellPresenceRunnerMutex.Unlock()
 	if fake.NewCellPresenceRunnerStub != nil {
-		return fake.NewCellPresenceRunnerStub(logger, cellPresence, retryInterval)
+		return fake.NewCellPresenceRunnerStub(logger, cellPresence, retryInterval, lockTTL)
 	} else {
 		return fake.newCellPresenceRunnerReturns.result1
 	}
@@ -200,10 +202,10 @@ func (fake *FakeServiceClient) NewCellPresenceRunnerCallCount() int {
 	return len(fake.newCellPresenceRunnerArgsForCall)
 }
 
-func (fake *FakeServiceClient) NewCellPresenceRunnerArgsForCall(i int) (lager.Logger, *models.CellPresence, time.Duration) {
+func (fake *FakeServiceClient) NewCellPresenceRunnerArgsForCall(i int) (lager.Logger, *models.CellPresence, time.Duration, time.Duration) {
 	fake.newCellPresenceRunnerMutex.RLock()
 	defer fake.newCellPresenceRunnerMutex.RUnlock()
-	return fake.newCellPresenceRunnerArgsForCall[i].logger, fake.newCellPresenceRunnerArgsForCall[i].cellPresence, fake.newCellPresenceRunnerArgsForCall[i].retryInterval
+	return fake.newCellPresenceRunnerArgsForCall[i].logger, fake.newCellPresenceRunnerArgsForCall[i].cellPresence, fake.newCellPresenceRunnerArgsForCall[i].retryInterval, fake.newCellPresenceRunnerArgsForCall[i].lockTTL
 }
 
 func (fake *FakeServiceClient) NewCellPresenceRunnerReturns(result1 ifrit.Runner) {

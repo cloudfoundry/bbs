@@ -2,6 +2,7 @@ package bbs_test
 
 import (
 	"os"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -19,7 +20,7 @@ var _ = Describe("ServiceClient", func() {
 	var serviceClient bbs.ServiceClient
 
 	BeforeEach(func() {
-		serviceClient = bbs.NewServiceClient(consulSession, clock.NewClock())
+		serviceClient = bbs.NewServiceClient(logger, consulClient, 10*time.Second, clock.NewClock())
 	})
 
 	Describe("CellById", func() {
@@ -55,8 +56,8 @@ var _ = Describe("ServiceClient", func() {
 			BeforeEach(func() {
 				Expect(serviceClient.Cells(logger)).To(HaveLen(0))
 				maintainers = ifrit.Invoke(grouper.NewParallel(os.Interrupt, grouper.Members{
-					{cell1, serviceClient.NewCellPresenceRunner(logger, newCellPresence(cell1), locket.LockTTL)},
-					{cell2, serviceClient.NewCellPresenceRunner(logger, newCellPresence(cell2), locket.LockTTL)},
+					{cell1, serviceClient.NewCellPresenceRunner(logger, newCellPresence(cell1), locket.RetryInterval, locket.LockTTL)},
+					{cell2, serviceClient.NewCellPresenceRunner(logger, newCellPresence(cell2), locket.RetryInterval, locket.LockTTL)},
 				}))
 			})
 
