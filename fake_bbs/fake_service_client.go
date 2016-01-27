@@ -50,12 +50,13 @@ type FakeServiceClient struct {
 	newCellPresenceRunnerReturns struct {
 		result1 ifrit.Runner
 	}
-	NewBBSLockRunnerStub        func(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval time.Duration) (ifrit.Runner, error)
+	NewBBSLockRunnerStub        func(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval, lockTTL time.Duration) (ifrit.Runner, error)
 	newBBSLockRunnerMutex       sync.RWMutex
 	newBBSLockRunnerArgsForCall []struct {
 		logger        lager.Logger
 		bbsPresence   *models.BBSPresence
 		retryInterval time.Duration
+		lockTTL       time.Duration
 	}
 	newBBSLockRunnerReturns struct {
 		result1 ifrit.Runner
@@ -215,16 +216,17 @@ func (fake *FakeServiceClient) NewCellPresenceRunnerReturns(result1 ifrit.Runner
 	}{result1}
 }
 
-func (fake *FakeServiceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval time.Duration) (ifrit.Runner, error) {
+func (fake *FakeServiceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval time.Duration, lockTTL time.Duration) (ifrit.Runner, error) {
 	fake.newBBSLockRunnerMutex.Lock()
 	fake.newBBSLockRunnerArgsForCall = append(fake.newBBSLockRunnerArgsForCall, struct {
 		logger        lager.Logger
 		bbsPresence   *models.BBSPresence
 		retryInterval time.Duration
-	}{logger, bbsPresence, retryInterval})
+		lockTTL       time.Duration
+	}{logger, bbsPresence, retryInterval, lockTTL})
 	fake.newBBSLockRunnerMutex.Unlock()
 	if fake.NewBBSLockRunnerStub != nil {
-		return fake.NewBBSLockRunnerStub(logger, bbsPresence, retryInterval)
+		return fake.NewBBSLockRunnerStub(logger, bbsPresence, retryInterval, lockTTL)
 	} else {
 		return fake.newBBSLockRunnerReturns.result1, fake.newBBSLockRunnerReturns.result2
 	}
@@ -236,10 +238,10 @@ func (fake *FakeServiceClient) NewBBSLockRunnerCallCount() int {
 	return len(fake.newBBSLockRunnerArgsForCall)
 }
 
-func (fake *FakeServiceClient) NewBBSLockRunnerArgsForCall(i int) (lager.Logger, *models.BBSPresence, time.Duration) {
+func (fake *FakeServiceClient) NewBBSLockRunnerArgsForCall(i int) (lager.Logger, *models.BBSPresence, time.Duration, time.Duration) {
 	fake.newBBSLockRunnerMutex.RLock()
 	defer fake.newBBSLockRunnerMutex.RUnlock()
-	return fake.newBBSLockRunnerArgsForCall[i].logger, fake.newBBSLockRunnerArgsForCall[i].bbsPresence, fake.newBBSLockRunnerArgsForCall[i].retryInterval
+	return fake.newBBSLockRunnerArgsForCall[i].logger, fake.newBBSLockRunnerArgsForCall[i].bbsPresence, fake.newBBSLockRunnerArgsForCall[i].retryInterval, fake.newBBSLockRunnerArgsForCall[i].lockTTL
 }
 
 func (fake *FakeServiceClient) NewBBSLockRunnerReturns(result1 ifrit.Runner, result2 error) {

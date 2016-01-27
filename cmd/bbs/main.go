@@ -340,7 +340,7 @@ func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClie
 	}
 
 	bbsPresence := models.NewBBSPresence(uuid.String(), *advertiseURL)
-	lockMaintainer, err := serviceClient.NewBBSLockRunner(logger, &bbsPresence, *lockRetryInterval)
+	lockMaintainer, err := serviceClient.NewBBSLockRunner(logger, &bbsPresence, *lockRetryInterval, *lockTTL)
 	if err != nil {
 		logger.Fatal("Couldn't create lock maintainer", err)
 	}

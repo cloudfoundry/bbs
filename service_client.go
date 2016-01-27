@@ -37,14 +37,14 @@ type ServiceClient interface {
 	Cells(logger lager.Logger) (models.CellSet, error)
 	CellEvents(logger lager.Logger) <-chan models.CellEvent
 	NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval, lockTTL time.Duration) ifrit.Runner
-	NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval time.Duration) (ifrit.Runner, error)
+	NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval, lockTTL time.Duration) (ifrit.Runner, error)
 	CurrentBBS(logger lager.Logger) (*models.BBSPresence, error)
 	CurrentBBSURL(logger lager.Logger) (string, error)
 }
 
 type serviceClient struct {
-	session      *consuladapter.Session
 	consulClient consuladapter.Client
+	session      *consuladapter.Session
 	clock        clock.Clock
 }
 
@@ -60,8 +60,8 @@ func NewServiceClient(logger lager.Logger, client consuladapter.Client, lockTTL 
 	}
 
 	return &serviceClient{
-		session:      session,
 		consulClient: client,
+		session:      session,
 		clock:        clock,
 	}
 }
@@ -112,7 +112,7 @@ func (db *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 }
 
 func (db *serviceClient) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
-	value, err := db.session.GetAcquiredValue(CellSchemaPath(cellId))
+	value, err := db.getAcquiredValue(CellSchemaPath(cellId))
 	if err != nil {
 		return nil, convertConsulError(err)
 	}
@@ -153,12 +153,12 @@ func (db *serviceClient) CellEvents(logger lager.Logger) <-chan models.CellEvent
 	return events
 }
 
-func (db *serviceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval time.Duration) (ifrit.Runner, error) {
+func (db *serviceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval, lockTTL time.Duration) (ifrit.Runner, error) {
 	bbsPresenceJSON, err := models.ToJSON(bbsPresence)
 	if err != nil {
 		return nil, err
 	}
-	return locket.NewLock(db.session, locket.LockSchemaPath("bbs_lock"), bbsPresenceJSON, db.clock, retryInterval, logger), nil
+	return locket.NewLock(logger, db.consulClient, locket.LockSchemaPath("bbs_lock"), bbsPresenceJSON, db.clock, retryInterval, lockTTL), nil
 }
 
 func (db *serviceClient) CurrentBBS(logger lager.Logger) (*models.BBSPresence, error) {
@@ -194,4 +194,17 @@ func convertConsulError(err error) error {
 	default:
 		return models.NewError(models.Error_UnknownError, err.Error())
 	}
+}
+
+func (db *serviceClient) getAcquiredValue(key string) ([]byte, error) {
+	kvPair, _, err := db.consulClient.KV().Get(key, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if kvPair == nil || kvPair.Session == "" {
+		return nil, consuladapter.NewKeyNotFoundError(key)
+	}
+
+	return kvPair.Value, nil
 }
