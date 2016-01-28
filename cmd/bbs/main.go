@@ -179,7 +179,7 @@ func main() {
 		logger.Fatal("new-consul-client-failed", err)
 	}
 
-	serviceClient := bbs.NewServiceClient(logger, consuladapter.NewConsulClient(consulClient), *lockTTL, clock)
+	serviceClient := bbs.NewServiceClient(consuladapter.NewConsulClient(consulClient), clock)
 
 	maintainer := initializeLockMaintainer(logger, serviceClient)
 

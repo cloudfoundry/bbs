@@ -2,7 +2,6 @@ package bbs_test
 
 import (
 	"os"
-	"time"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -20,7 +19,7 @@ var _ = Describe("ServiceClient", func() {
 	var serviceClient bbs.ServiceClient
 
 	BeforeEach(func() {
-		serviceClient = bbs.NewServiceClient(logger, consulClient, 10*time.Second, clock.NewClock())
+		serviceClient = bbs.NewServiceClient(consulClient, clock.NewClock())
 	})
 
 	Describe("CellById", func() {

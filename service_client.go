@@ -1,13 +1,13 @@
 package bbs
 
 import (
+	"os"
 	"path"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/locket"
-	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
@@ -44,24 +44,12 @@ type ServiceClient interface {
 
 type serviceClient struct {
 	consulClient consuladapter.Client
-	session      *consuladapter.Session
 	clock        clock.Clock
 }
 
-func NewServiceClient(logger lager.Logger, client consuladapter.Client, lockTTL time.Duration, clock clock.Clock) ServiceClient {
-	uuid, err := uuid.NewV4()
-	if err != nil {
-		logger.Fatal("construct-uuid-failed", err)
-	}
-
-	session, err := consuladapter.NewSessionNoChecks(uuid.String(), lockTTL, client)
-	if err != nil {
-		logger.Fatal("consul-session-failed", err)
-	}
-
+func NewServiceClient(client consuladapter.Client, clock clock.Clock) ServiceClient {
 	return &serviceClient{
 		consulClient: client,
-		session:      session,
 		clock:        clock,
 	}
 }
@@ -129,14 +117,16 @@ func (db *serviceClient) CellById(logger lager.Logger, cellId string) (*models.C
 func (db *serviceClient) CellEvents(logger lager.Logger) <-chan models.CellEvent {
 	logger = logger.Session("cell-events")
 
+	disappearanceWatcher, disappeared := locket.NewDisappearanceWatcher(logger, db.consulClient, CellSchemaRoot(), db.clock)
+	process := ifrit.Invoke(disappearanceWatcher)
+
 	events := make(chan models.CellEvent)
 	go func() {
-		disappeared := db.session.WatchForDisappearancesUnder(logger, CellSchemaRoot())
-
 		for {
 			select {
 			case keys, ok := <-disappeared:
 				if !ok {
+					process.Signal(os.Interrupt)
 					return
 				}
 
@@ -162,7 +152,7 @@ func (db *serviceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence *mode
 }
 
 func (db *serviceClient) CurrentBBS(logger lager.Logger) (*models.BBSPresence, error) {
-	value, err := db.session.GetAcquiredValue(BBSLockSchemaPath())
+	value, err := db.getAcquiredValue(BBSLockSchemaPath())
 	if err != nil {
 		return nil, convertConsulError(err)
 	}
