@@ -69,7 +69,7 @@ func (twp *TaskCompletionWorkPool) Submit(taskDB db.TaskDB, task *models.Task) {
 }
 
 func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, task *models.Task) {
-	logger = logger.WithData(lager.Data{"task-guid": task.TaskGuid})
+	logger.Session("handle-completed-task", lager.Data{"task-guid": task.TaskGuid})
 
 	if task.CompletionCallbackUrl != "" {
 		logger.Info("resolving-task")
