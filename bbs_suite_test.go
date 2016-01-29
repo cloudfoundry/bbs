@@ -39,10 +39,9 @@ var _ = AfterSuite(func() {
 
 var _ = BeforeEach(func() {
 	consulRunner.Reset()
-	consulSession := consulRunner.NewSession("a-session")
 	consulClient = consulRunner.NewConsulClient()
 
-	consulHelper = test_helpers.NewConsulHelper(consulSession)
+	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 })
 
 func TestBbs(t *testing.T) {

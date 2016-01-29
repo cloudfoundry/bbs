@@ -54,8 +54,8 @@ var bbsURL *url.URL
 var bbsArgs testrunner.Args
 var bbsRunner *ginkgomon.Runner
 var bbsProcess ifrit.Process
-var consulSession *consuladapter.Session
 var consulRunner *consulrunner.ClusterRunner
+var consulClient consuladapter.Client
 var etcdHelper *etcd_helpers.ETCDHelper
 var consulHelper *test_helpers.ConsulHelper
 var auctioneerServer *ghttp.Server
@@ -107,7 +107,7 @@ var _ = BeforeEach(func() {
 	etcdRunner.Reset()
 
 	consulRunner.Reset()
-	consulSession = consulRunner.NewSession("a-session")
+	consulClient = consulRunner.NewConsulClient()
 
 	etcdClient = etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
@@ -168,7 +168,7 @@ var _ = BeforeEach(func() {
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 	clock := fakeclock.NewFakeClock(time.Now())
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient, clock)
-	consulHelper = test_helpers.NewConsulHelper(consulSession)
+	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 })
 
 var _ = AfterEach(func() {

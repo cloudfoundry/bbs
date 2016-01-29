@@ -3,6 +3,8 @@ package main_test
 import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/locket"
+	"github.com/pivotal-golang/clock"
+	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -11,9 +13,10 @@ import (
 
 var _ = Describe("MasterLock", func() {
 	Context("when the bbs cannot obtain the bbs lock", func() {
+		var competingBBSLockProcess ifrit.Process
 		BeforeEach(func() {
-			err := consulSession.AcquireLock(locket.LockSchemaPath("bbs_lock"), []byte{})
-			Expect(err).NotTo(HaveOccurred())
+			competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.LockTTL)
+			competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
 
 			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 			bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
@@ -23,7 +26,7 @@ var _ = Describe("MasterLock", func() {
 
 		AfterEach(func() {
 			ginkgomon.Kill(bbsProcess)
-			consulSession.Destroy()
+			ginkgomon.Kill(competingBBSLockProcess)
 		})
 
 		It("is not reachable", func() {
@@ -32,9 +35,7 @@ var _ = Describe("MasterLock", func() {
 		})
 
 		It("becomes available when the lock can be acquired", func() {
-			consulSession.Destroy()
-			_, err := consulSession.Recreate()
-			Expect(err).NotTo(HaveOccurred())
+			ginkgomon.Kill(competingBBSLockProcess)
 
 			Eventually(func() error {
 				_, err := client.Domains()

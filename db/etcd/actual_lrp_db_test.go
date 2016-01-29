@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/locket"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -1005,8 +1006,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("cannot be retrieved", func() {
 					BeforeEach(func() {
-						_, err := consulSession.SetPresence(bbs.CellSchemaPath(cellID), []byte("abcd"))
-						Expect(err).NotTo(HaveOccurred())
+						locket.NewPresence(logger, consulClient, bbs.CellSchemaPath(cellID), []byte("abcd"), clock, locket.RetryInterval, locket.LockTTL)
 					})
 
 					It("does not stop the instances", func() {

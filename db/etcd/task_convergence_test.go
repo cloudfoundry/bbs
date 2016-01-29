@@ -180,7 +180,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			Context("when the associated cell is present", func() {
 				BeforeEach(func() {
 					cellPresence := models.NewCellPresence("cell-id", "1.2.3.4", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
-					registerCell(cellPresence)
+					consulHelper.RegisterCell(&cellPresence)
 				})
 
 				It("leaves the task running", func() {

@@ -2,7 +2,6 @@ package etcd_test
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/models"
 	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
 	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
@@ -39,7 +37,7 @@ var etcdRunner *etcdstorerunner.ETCDClusterRunner
 var storeClient etcd.StoreClient
 var fakeStoreClient *fakes.FakeStoreClient
 var consulRunner *consulrunner.ClusterRunner
-var consulSession *consuladapter.Session
+var consulClient consuladapter.Client
 
 var fakeAuctioneerClient *auctioneerfakes.FakeClient
 var fakeRepClient *repfakes.FakeClient
@@ -102,14 +100,13 @@ var _ = BeforeEach(func() {
 	etcdRunner.Reset()
 
 	consulRunner.Reset()
-	consulSession = consulRunner.NewSession("a-session")
-	consulClient := consulRunner.NewConsulClient()
+	consulClient = consulRunner.NewConsulClient()
 
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	storeClient = etcd.NewStoreClient(etcdClient)
 	fakeStoreClient = &fakes.FakeStoreClient{}
-	consulHelper = test_helpers.NewConsulHelper(consulSession)
+	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 	serviceClient = bbs.NewServiceClient(consulClient, clock)
 	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 	fakeRepClientFactory = new(repfakes.FakeClientFactory)
@@ -119,12 +116,3 @@ var _ = BeforeEach(func() {
 	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, fakeStoreClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
 })
-
-func registerCell(cell models.CellPresence) {
-	var err error
-	jsonBytes, err := json.Marshal(cell)
-	Expect(err).NotTo(HaveOccurred())
-
-	_, err = consulSession.SetPresence(bbs.CellSchemaPath(cell.CellId), jsonBytes)
-	Expect(err).NotTo(HaveOccurred())
-}

@@ -11,7 +11,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
-	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -44,7 +43,6 @@ var bbsURL *url.URL
 var bbsArgs testrunner.Args
 var bbsRunner *ginkgomon.Runner
 var bbsProcess ifrit.Process
-var consulSession *consuladapter.Session
 var consulRunner *consulrunner.ClusterRunner
 var etcdHelper *etcd_helpers.ETCDHelper
 var auctioneerServer *ghttp.Server

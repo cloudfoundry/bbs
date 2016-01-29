@@ -6,16 +6,24 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/consuladapter"
+	"github.com/cloudfoundry-incubator/locket"
+	"github.com/pivotal-golang/clock"
+	"github.com/pivotal-golang/lager"
+	"github.com/tedsuo/ifrit"
 
 	. "github.com/onsi/gomega"
 )
 
 type ConsulHelper struct {
-	consulSession *consuladapter.Session
+	consulClient consuladapter.Client
+	logger       lager.Logger
 }
 
-func NewConsulHelper(consulSession *consuladapter.Session) *ConsulHelper {
-	return &ConsulHelper{consulSession: consulSession}
+func NewConsulHelper(logger lager.Logger, consulClient consuladapter.Client) *ConsulHelper {
+	return &ConsulHelper{
+		logger:       logger,
+		consulClient: consulClient,
+	}
 }
 
 func (t *ConsulHelper) RegisterCell(cell *models.CellPresence) {
@@ -23,6 +31,9 @@ func (t *ConsulHelper) RegisterCell(cell *models.CellPresence) {
 	jsonBytes, err := json.Marshal(cell)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = t.consulSession.AcquireLock(bbs.CellSchemaPath(cell.CellId), jsonBytes)
+	// Use NewLock instead of NewPresence in order to block on the cell being registered
+	runner := locket.NewLock(t.logger, t.consulClient, bbs.CellSchemaPath(cell.CellId), jsonBytes, clock.NewClock(), locket.RetryInterval, locket.LockTTL)
+	ifrit.Invoke(runner)
+
 	Expect(err).NotTo(HaveOccurred())
 }

@@ -407,7 +407,7 @@ var _ = Describe("TaskDB", func() {
 
 					BeforeEach(func() {
 						cellPresence = models.NewCellPresence(cellId, "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 6), []string{}, []string{})
-						registerCell(cellPresence)
+						consulHelper.RegisterCell(&cellPresence)
 					})
 
 					It("cancels the task", func() {
