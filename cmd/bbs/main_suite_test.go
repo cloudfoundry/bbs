@@ -107,7 +107,7 @@ var _ = BeforeEach(func() {
 	etcdRunner.Reset()
 
 	consulRunner.Reset()
-	consulClient = consulRunner.NewConsulClient()
+	consulClient = consulRunner.NewClient()
 
 	etcdClient = etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)

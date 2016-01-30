@@ -21,7 +21,7 @@ var _ = Describe("ServiceRegistration", func() {
 		})
 
 		It("registers itself with consul", func() {
-			client := consulRunner.NewConsulClient()
+			client := consulRunner.NewClient()
 			services, err := client.Agent().Services()
 			Expect(err).ToNot(HaveOccurred())
 
@@ -34,7 +34,7 @@ var _ = Describe("ServiceRegistration", func() {
 		})
 
 		It("registers a TTL healthcheck", func() {
-			client := consulRunner.NewConsulClient()
+			client := consulRunner.NewClient()
 			checks, err := client.Agent().Checks()
 			Expect(err).ToNot(HaveOccurred())
 

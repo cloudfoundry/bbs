@@ -174,12 +174,12 @@ func main() {
 
 	clock := clock.NewClock()
 
-	consulClient, err := consuladapter.NewClient(*consulCluster)
+	consulClient, err := consuladapter.NewClientFromUrl(*consulCluster)
 	if err != nil {
 		logger.Fatal("new-consul-client-failed", err)
 	}
 
-	serviceClient := bbs.NewServiceClient(consuladapter.NewConsulClient(consulClient), clock)
+	serviceClient := bbs.NewServiceClient(consulClient, clock)
 
 	maintainer := initializeLockMaintainer(logger, serviceClient)
 
@@ -192,7 +192,7 @@ func main() {
 		logger.Fatal("failed-invalid-listen-port", err)
 	}
 
-	registrationRunner := initializeRegistrationRunner(logger, consuladapter.NewConsulClient(consulClient), portNum, clock)
+	registrationRunner := initializeRegistrationRunner(logger, consulClient, portNum, clock)
 
 	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
 
