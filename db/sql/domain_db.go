@@ -14,6 +14,7 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 		logger.Error("failed-to-fetch-domains", err)
 		return nil, models.ErrUnknownError
 	}
+	defer rows.Close()
 
 	domains := []string{}
 	for rows.Next() {

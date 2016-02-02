@@ -1,7 +1,7 @@
 package sqldb
 
 import (
-	"github.com/jmoiron/sqlx"
+	"database/sql"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 
@@ -9,12 +9,12 @@ import (
 )
 
 type SQLDB struct {
-	sql    *sqlx.DB
+	sql    *sql.DB
 	etcdDB *etcd.ETCDDB
 }
 
 func NewSQLDB(etcdDB *etcd.ETCDDB) *SQLDB {
-	db, err := sqlx.Open("postgres", "user=pqgotest dbname=pqgotest sslmode=verify-full")
+	db, err := sql.Open("postgres", "user=pqgotest dbname=pqgotest sslmode=verify-full")
 	if err != nil {
 		panic(err)
 	}

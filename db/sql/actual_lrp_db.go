@@ -1,12 +1,18 @@
 package sqldb
 
 import (
+	"log"
 	"sync"
 	"sync/atomic"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
+
+type actualInstance struct {
+	blob         string
+	isEvacuating bool
+}
 
 func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	filterString := " "
@@ -17,56 +23,35 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 		filterString += "cell_id = " + filter.CellID
 	}
 
-	instQuery := "select * from actuals" + filterString
-	evacRows, err := db.sql.Queryx(instQuery)
+	instQuery := "select processGuid, data, isEvacuating from actuals" + filterString
+	evacRows, err := db.sql.Query(instQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	// node, err := db.fetchRecursiveRaw(logger, ActualLRPSchemaRoot)
-	// bbsErr := models.ConvertError(err)
-	// if bbsErr != nil {
-	// 	if bbsErr.Type == models.Error_ResourceNotFound {
-	// 		return []*models.ActualLRPGroup{}, nil
-	// 	}
-	// 	return nil, err
-	// }
-	// if len(node.Nodes) == 0 {
-	// 	return []*models.ActualLRPGroup{}, nil
-	// }
-
-	// processguid -> index -> evacuating?
-	table := map[string]map[int32]map[bool]*models.ActualLRP{}
-	for instRows.Next() {
-		inst := &models.ActualLRP{}
-		err = instRows.StructScan(inst)
-		if err != nil {
-			return nil, err
+	actualsByProcessGuid := make(map[string][]actualInstance)
+	var data, pGuid string
+	var isEvac bool
+	for rows.Next() {
+		if err := rows.Scan(&pGuid, &data, &isEvac); err != nil {
+			log.Fatal(err)
 		}
-		table[inst.ProcessGuid][inst.Index][false] = inst
-	}
-
-	for evacRows.Next() {
-		evac := &models.ActualLRP{}
-		err = evacRows.StructScan(evac)
-		if err != nil {
-			return nil, err
-		}
-		table[evac.ProcessGuid][evac.Index][true] = evac
+		actualsByProcessGuid[pGuid] = append(actualsByProcessGuid[pGuid],
+			actualInstance{data, isEvac})
 	}
 
 	var workErr atomic.Value
-	groupChan := make(chan []*models.ActualLRPGroup, len(actuals))
+	groupChan := make(chan []*models.ActualLRPGroup, len(actualsByProcessGuid))
 	wg := sync.WaitGroup{}
 
 	logger.Debug("performing-deserialization-work")
-	for _, actual := range actuals {
-		actual := actual
+	for _, actualSlice := range actualsByProcessGuid {
+		actualSlice := actualSlice
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			g, err := db.groupActualLRPs(logger, node, filter)
+			g, err := db.parseActualLRPGroups(logger, actualSlice)
 			if err != nil {
 				workErr.Store(err)
 				return
@@ -75,20 +60,50 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 		}()
 	}
 
-	// go func() {
-	// 	wg.Wait()
-	// 	close(groupChan)
-	// }()
+	go func() {
+		wg.Wait()
+		close(groupChan)
+	}()
 
-	// for g := range groupChan {
-	// 	groups = append(groups, g...)
-	// }
+	for g := range groupChan {
+		groups = append(groups, g...)
+	}
 
-	// if err, ok := workErr.Load().(error); ok {
-	// 	logger.Error("failed-performing-deserialization-work", err)
-	// 	return []*models.ActualLRPGroup{}, models.ErrUnknownError
-	// }
-	// logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups)})
+	if err, ok := workErr.Load().(error); ok {
+		logger.Error("failed-performing-deserialization-work", err)
+		return []*models.ActualLRPGroup{}, models.ErrUnknownError
+	}
+	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups)})
+
+	return groups, nil
+}
+
+func (db *SQLDB) parseActualLRPGroups(logger lager.Logger, actualSlice []actualInstance) ([]*models.ActualLRPGroup, error) {
+	var groups = []*models.ActualLRPGroup{}
+
+	logger.Debug("performing-parsing-actual-lrp-groups")
+	group := &models.ActualLRPGroup{}
+	for _, aInstance := range actualSlice { // instances/evacs
+		var lrp models.ActualLRP
+		deserializeErr := db.etcd.deserializeModel(logger, aInstance.blob, &lrp)
+		if deserializeErr != nil {
+			logger.Error("failed-parsing-actual-lrp-groups", deserializeErr, lager.Data{"key": instanceNode.Key})
+			return []*models.ActualLRPGroup{}, deserializeErr
+		}
+
+		if !aInstance.isEvacuating {
+			group.Instance = &lrp
+		}
+
+		if aInstance.isEvacuating {
+			group.Evacuating = &lrp
+		}
+	}
+
+	if group.Instance != nil || group.Evacuating != nil {
+		groups = append(groups, group)
+	}
+	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups)})
 
 	return groups, nil
 }
@@ -152,93 +167,116 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 // 	return group, err
 // }
 
-// func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, uint64, error) {
-// 	node, err := db.fetchRecursiveRaw(logger, ActualLRPIndexDir(processGuid, index))
-// 	if err != nil {
-// 		return nil, 0, err
-// 	}
+func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, uint64, error) {
 
-// 	group := models.ActualLRPGroup{}
-// 	for _, instanceNode := range node.Nodes {
-// 		var lrp models.ActualLRP
-// 		deserializeErr := db.deserializeModel(logger, instanceNode, &lrp)
-// 		if deserializeErr != nil {
-// 			logger.Error("failed-parsing-actual-lrp", deserializeErr, lager.Data{"key": instanceNode.Key})
-// 			return nil, 0, deserializeErr
-// 		}
+	instQuery := "select processGuid, data, isEvacuating, modifiedIndex from actuals where processGuid = ? and index = ?"
+	evacRows, err := db.sql.Query(instQuery)
+	if err != nil {
+		return nil, err
+	}
 
-// 		if isInstanceActualLRPNode(instanceNode) {
-// 			group.Instance = &lrp
-// 		}
+	actualsByProcessGuid := make([]actualInstance)
+	var data, pGuid string
+	var modifiedIndex int
+	var isEvac bool
+	for rows.Next() {
+		if err := rows.Scan(&pGuid, &data, &isEvac); err != nil {
+			log.Fatal(err)
+		}
+		actualsByProcessGuid = append(actualsByProcessGuid,
+			actualInstance{data, isEvac})
+	}
 
-// 		if isEvacuatingActualLRPNode(instanceNode) {
-// 			group.Evacuating = &lrp
-// 		}
-// 	}
+	group := models.ActualLRPGroup{}
+	for _, instanceNode := range actualsByProcessGuid {
+		var lrp models.ActualLRP
+		deserializeErr := db.deserializeModel(logger, instanceNode.blob, &lrp)
+		if deserializeErr != nil {
+			logger.Error("failed-parsing-actual-lrp", deserializeErr, lager.Data{"key": instanceNode.Key})
+			return nil, 0, deserializeErr
+		}
 
-// 	if group.Evacuating == nil && group.Instance == nil {
-// 		return nil, 0, models.ErrResourceNotFound
-// 	}
+		if !instanceNode.isEvacuating {
+			group.Instance = &lrp
+		}
 
-// 	return &group, node.ModifiedIndex, nil
-// }
+		if instanceNode.isEvacuating {
+			group.Evacuating = &lrp
+		}
+	}
 
-// func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, error) {
-// 	logger.Debug("raw-actual-lrp-by-process-guid-and-index")
-// 	node, err := db.fetchRaw(logger, ActualLRPSchemaPath(processGuid, index))
-// 	if err != nil {
-// 		return nil, 0, err
-// 	}
+	if group.Evacuating == nil && group.Instance == nil {
+		return nil, 0, models.ErrResourceNotFound
+	}
 
-// 	lrp := new(models.ActualLRP)
-// 	deserializeErr := db.deserializeModel(logger, node, lrp)
-// 	if deserializeErr != nil {
-// 		return nil, 0, deserializeErr
-// 	}
+	return &group, modifiedIndex, nil
+}
 
-// 	return lrp, node.ModifiedIndex, nil
-// }
+func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, error) {
+	logger.Debug("raw-actual-lrp-by-process-guid-and-index")
+	instQuery := "select data, modifiedIndex from actuals where processGuid = ? and index = ?"
+	evacRows, err := db.sql.Query(instQuery)
+	if err != nil {
+		return nil, err
+	}
 
-// func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
-// 	logger = logger.Session("claim-actual-lrp", lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance-key": instanceKey})
-// 	logger.Info("starting")
+	actualsByProcessGuid := make([]actualInstance)
+	var data string
+	var modifiedIndex int
+	lrp := new(models.ActualLRP)
+	for rows.Next() {
+		if err := rows.Scan(&data, &modifiedIndex); err != nil {
+			log.Fatal(err)
+		}
+		deserializeErr := db.deserializeModel(logger, data, lrp)
+		if deserializeErr != nil {
+			return nil, 0, deserializeErr
+		}
+	}
 
-// 	lrp, prevIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
-// 	if err != nil {
-// 		logger.Error("failed", err)
-// 		return err
-// 	}
+	return lrp, modifiedIndex, nil
+}
 
-// 	if !lrp.AllowsTransitionTo(&lrp.ActualLRPKey, instanceKey, models.ActualLRPStateClaimed) {
-// 		return models.ErrActualLRPCannotBeClaimed
-// 	}
+func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
+	logger = logger.Session("claim-actual-lrp", lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance-key": instanceKey})
+	logger.Info("starting")
 
-// 	lrp.PlacementError = ""
-// 	lrp.State = models.ActualLRPStateClaimed
-// 	lrp.ActualLRPInstanceKey = *instanceKey
-// 	lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
-// 	lrp.ModificationTag.Increment()
+	lrp, prevIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
+	if err != nil {
+		logger.Error("failed", err)
+		return err
+	}
 
-// 	err = lrp.Validate()
-// 	if err != nil {
-// 		logger.Error("failed", err)
-// 		return models.NewError(models.Error_InvalidRecord, err.Error())
-// 	}
+	if !lrp.AllowsTransitionTo(&lrp.ActualLRPKey, instanceKey, models.ActualLRPStateClaimed) {
+		return models.ErrActualLRPCannotBeClaimed
+	}
 
-// 	lrpData, serializeErr := db.serializeModel(logger, lrp)
-// 	if serializeErr != nil {
-// 		return serializeErr
-// 	}
+	lrp.PlacementError = ""
+	lrp.State = models.ActualLRPStateClaimed
+	lrp.ActualLRPInstanceKey = *instanceKey
+	lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
+	lrp.ModificationTag.Increment()
 
-// 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(processGuid, index), lrpData, 0, prevIndex)
-// 	if err != nil {
-// 		logger.Error("compare-and-swap-failed", err)
-// 		return models.ErrActualLRPCannotBeClaimed
-// 	}
-// 	logger.Info("succeeded")
+	err = lrp.Validate()
+	if err != nil {
+		logger.Error("failed", err)
+		return models.NewError(models.Error_InvalidRecord, err.Error())
+	}
 
-// 	return nil
-// }
+	lrpData, serializeErr := db.serializeModel(logger, lrp)
+	if serializeErr != nil {
+		return serializeErr
+	}
+
+	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(processGuid, index), lrpData, 0, prevIndex)
+	if err != nil {
+		logger.Error("compare-and-swap-failed", err)
+		return models.ErrActualLRPCannotBeClaimed
+	}
+	logger.Info("succeeded")
+
+	return nil
+}
 
 // func (db *SQLDB) createActualLRP(logger lager.Logger, desiredLRP *models.DesiredLRP, index int32) error {
 // 	logger = logger.Session("create-actual-lrp")
@@ -681,38 +719,6 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 // 	logger.Info("succeeded")
 // 	return nil
 // }
-
-func (db *SQLDB) parseActualLRPGroups(logger lager.Logger, actual *models.ActualLRP) ([]*models.ActualLRPGroup, error) {
-	var groups = []*models.ActualLRPGroup{}
-
-	logger.Debug("performing-parsing-actual-lrp-groups")
-	for _, indexNode := range node.Nodes { // per process guid
-		group := &models.ActualLRPGroup{}
-		for _, instanceNode := range indexNode.Nodes { // instances/evacs
-			var lrp models.ActualLRP
-			deserializeErr := db.deserializeModel(logger, instanceNode, &lrp)
-			if deserializeErr != nil {
-				logger.Error("failed-parsing-actual-lrp-groups", deserializeErr, lager.Data{"key": instanceNode.Key})
-				return []*models.ActualLRPGroup{}, deserializeErr
-			}
-
-			if isInstanceActualLRPNode(instanceNode) {
-				group.Instance = &lrp
-			}
-
-			if isEvacuatingActualLRPNode(instanceNode) {
-				group.Evacuating = &lrp
-			}
-		}
-
-		if group.Instance != nil || group.Evacuating != nil {
-			groups = append(groups, group)
-		}
-	}
-	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups)})
-
-	return groups, nil
-}
 
 // func (db *SQLDB) unclaimActualLRP(
 // 	logger lager.Logger,
