@@ -1,4 +1,4 @@
-# BBS Server
+# BBS Server [![GoDoc](https://godoc.org/github.com/cloudfoundry-incubator/bbs?status.svg)](https://godoc.org/github.com/cloudfoundry-incubator/bbs)
 
 API to access the database for Diego.
 
