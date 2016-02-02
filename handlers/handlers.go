@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/db/sql"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers/middleware"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -16,8 +17,9 @@ import (
 )
 
 func New(logger lager.Logger, db db.DB, desiredHub, actualHub, taskHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
+	sqlDB := sqldb.NewSQLDB(db)
 	pingHandler := NewPingHandler(logger)
-	domainHandler := NewDomainHandler(logger, db)
+	domainHandler := NewDomainHandler(logger, sqlDB)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db)
 	evacuationHandler := NewEvacuationHandler(logger, db)
