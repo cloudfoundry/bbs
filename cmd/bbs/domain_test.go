@@ -78,7 +78,7 @@ var _ = Describe("Domain API", func() {
 			Expect(delta).To(BeEquivalentTo(1))
 		})
 
-		FIt("updates the TTL when updating an existing domain", func() {
+		It("updates the TTL when updating an existing domain", func() {
 			err := client.UpsertDomain(existingDomain, 200*time.Second)
 			Expect(err).ToNot(HaveOccurred())
 

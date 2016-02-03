@@ -236,7 +236,7 @@ var _ = Describe("ActualLRP API", func() {
 			claimErr = client.ClaimActualLRP(unclaimedProcessGuid, unclaimedIndex, &instanceKey)
 		})
 
-		It("claims the actual_lrp", func() {
+		FIt("claims the actual_lrp", func() {
 			Expect(claimErr).NotTo(HaveOccurred())
 
 			expectedActualLRP := *unclaimedLRP

@@ -16,11 +16,11 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(logger lager.Logger, db db.DB, sqlDB sqldb.SQLDB, desiredHub, actualHub, taskHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
+func New(logger lager.Logger, db db.DB, sqlDB *sqldb.SQLDB, desiredHub, actualHub, taskHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, sqlDB)
-	actualLRPHandler := NewActualLRPHandler(logger, db)
-	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db)
+	actualLRPHandler := NewActualLRPHandler(logger, sqlDB)
+	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, sqlDB)
 	evacuationHandler := NewEvacuationHandler(logger, db)
 	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
 	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
