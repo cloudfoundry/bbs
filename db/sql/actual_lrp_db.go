@@ -4,8 +4,11 @@ import (
 	"log"
 	"sync"
 	"sync/atomic"
+	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -20,11 +23,11 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 		filterString += "domain = " + filter.Domain + " "
 	}
 	if filter.CellID != "" {
-		filterString += "cell_id = " + filter.CellID
+		filterString += "cellId = " + filter.CellID
 	}
 
 	instQuery := "select processGuid, data, isEvacuating from actuals" + filterString
-	evacRows, err := db.sql.Query(instQuery)
+	rows, err := db.sql.Query(instQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +67,7 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 		wg.Wait()
 		close(groupChan)
 	}()
+	groups := []*models.ActualLRPGroup{}
 
 	for g := range groupChan {
 		groups = append(groups, g...)
@@ -85,9 +89,9 @@ func (db *SQLDB) parseActualLRPGroups(logger lager.Logger, actualSlice []actualI
 	group := &models.ActualLRPGroup{}
 	for _, aInstance := range actualSlice { // instances/evacs
 		var lrp models.ActualLRP
-		deserializeErr := db.etcd.deserializeModel(logger, aInstance.blob, &lrp)
+		deserializeErr := db.deserializeModel(logger, aInstance.blob, &lrp)
 		if deserializeErr != nil {
-			logger.Error("failed-parsing-actual-lrp-groups", deserializeErr, lager.Data{"key": instanceNode.Key})
+			panic(deserializeErr)
 			return []*models.ActualLRPGroup{}, deserializeErr
 		}
 
@@ -108,21 +112,29 @@ func (db *SQLDB) parseActualLRPGroups(logger lager.Logger, actualSlice []actualI
 	return groups, nil
 }
 
-// func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
-// 	node, err := db.fetchRecursiveRaw(logger, ActualLRPProcessDir(processGuid))
-// 	bbsErr := models.ConvertError(err)
-// 	if bbsErr != nil {
-// 		if bbsErr.Type == models.Error_ResourceNotFound {
-// 			return []*models.ActualLRPGroup{}, nil
-// 		}
-// 		return nil, err
-// 	}
-// 	if node.Nodes.Len() == 0 {
-// 		return []*models.ActualLRPGroup{}, nil
-// 	}
+func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
+	query := "select data, isEvacuating from actuals where processGuid = $1"
+	rows, err := db.sql.Query(query, processGuid)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return db.parseActualLRPGroups(logger, node, models.ActualLRPFilter{})
-// }
+	actuals := []actualInstance{}
+	var data, pGuid string
+	var isEvac bool
+	for rows.Next() {
+		if err := rows.Scan(&pGuid, &data, &isEvac); err != nil {
+			log.Fatal(err)
+		}
+		actuals = append(actuals, actualInstance{data, isEvac})
+	}
+
+	if len(actuals) == 0 {
+		return []*models.ActualLRPGroup{}, nil
+	}
+
+	return db.parseActualLRPGroups(logger, actuals)
+}
 
 // func (db *SQLDB) instanceActualLRPsByProcessGuid(logger lager.Logger, processGuid string) (map[int32]*models.ActualLRP, error) {
 // 	node, err := db.fetchRecursiveRaw(logger, ActualLRPProcessDir(processGuid))
@@ -162,20 +174,20 @@ func (db *SQLDB) parseActualLRPGroups(logger lager.Logger, actualSlice []actualI
 // 	return instances, nil
 // }
 
-// func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
-// 	group, _, err := db.rawActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-// 	return group, err
-// }
+func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
+	group, _, err := db.rawActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+	return group, err
+}
 
 func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, uint64, error) {
 
 	instQuery := "select processGuid, data, isEvacuating, modifiedIndex from actuals where processGuid = ? and index = ?"
-	evacRows, err := db.sql.Query(instQuery)
+	rows, err := db.sql.Query(instQuery)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	actualsByProcessGuid := make([]actualInstance)
+	actualsByProcessGuid := []actualInstance{}
 	var data, pGuid string
 	var modifiedIndex int
 	var isEvac bool
@@ -192,7 +204,6 @@ func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pro
 		var lrp models.ActualLRP
 		deserializeErr := db.deserializeModel(logger, instanceNode.blob, &lrp)
 		if deserializeErr != nil {
-			logger.Error("failed-parsing-actual-lrp", deserializeErr, lager.Data{"key": instanceNode.Key})
 			return nil, 0, deserializeErr
 		}
 
@@ -209,39 +220,34 @@ func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pro
 		return nil, 0, models.ErrResourceNotFound
 	}
 
-	return &group, modifiedIndex, nil
+	return &group, uint64(modifiedIndex), nil
 }
 
 func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, error) {
 	logger.Debug("raw-actual-lrp-by-process-guid-and-index")
-	instQuery := "select data, modifiedIndex from actuals where processGuid = ? and index = ?"
-	evacRows, err := db.sql.Query(instQuery)
-	if err != nil {
-		return nil, err
-	}
+	instQuery := "select data, modifiedIndex from actuals where processGuid = ? and index = ? and isEvacuating = false"
+	row := db.sql.QueryRow(instQuery)
 
-	actualsByProcessGuid := make([]actualInstance)
 	var data string
 	var modifiedIndex int
 	lrp := new(models.ActualLRP)
-	for rows.Next() {
-		if err := rows.Scan(&data, &modifiedIndex); err != nil {
-			log.Fatal(err)
-		}
-		deserializeErr := db.deserializeModel(logger, data, lrp)
-		if deserializeErr != nil {
-			return nil, 0, deserializeErr
-		}
+	if err := row.Scan(&data, &modifiedIndex); err != nil {
+		log.Fatal(err)
 	}
 
-	return lrp, modifiedIndex, nil
+	deserializeErr := db.deserializeModel(logger, data, lrp)
+	if deserializeErr != nil {
+		return nil, 0, deserializeErr
+	}
+
+	return lrp, uint64(modifiedIndex), nil
 }
 
 func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
 	logger = logger.Session("claim-actual-lrp", lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance-key": instanceKey})
 	logger.Info("starting")
 
-	lrp, prevIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
+	lrp, _, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		logger.Error("failed", err)
 		return err
@@ -268,9 +274,10 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		return serializeErr
 	}
 
-	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(processGuid, index), lrpData, 0, prevIndex)
+	insert := "insert into actuals (processGuid, idx, cellId, data, isEvacuating) values ($1, $2, $3, $4, false)"
+	_, err = db.sql.Exec(insert, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData)
 	if err != nil {
-		logger.Error("compare-and-swap-failed", err)
+		logger.Error("insert-failed", err)
 		return models.ErrActualLRPCannotBeClaimed
 	}
 	logger.Info("succeeded")
@@ -314,24 +321,24 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 // 	return nil
 // }
 
-// func (db *SQLDB) newRunningActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
-// 	guid, err := uuid.NewV4()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (db *SQLDB) newRunningActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
+	guid, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 
-// 	return &models.ActualLRP{
-// 		ActualLRPKey:         *key,
-// 		ActualLRPInstanceKey: *instanceKey,
-// 		ActualLRPNetInfo:     *netInfo,
-// 		Since:                db.clock.Now().UnixNano(),
-// 		State:                models.ActualLRPStateRunning,
-// 		ModificationTag: models.ModificationTag{
-// 			Epoch: guid.String(),
-// 			Index: 0,
-// 		},
-// 	}, nil
-// }
+	return &models.ActualLRP{
+		ActualLRPKey:         *key,
+		ActualLRPInstanceKey: *instanceKey,
+		ActualLRPNetInfo:     *netInfo,
+		Since:                db.clock.Now().UnixNano(),
+		State:                models.ActualLRPStateRunning,
+		ModificationTag: models.ModificationTag{
+			Epoch: guid.String(),
+			Index: 0,
+		},
+	}, nil
+}
 
 // func (db *SQLDB) newUnclaimedActualLRP(key *models.ActualLRPKey) (*models.ActualLRP, error) {
 // 	guid, err := uuid.NewV4()
@@ -350,34 +357,35 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 // 	}, nil
 // }
 
-// func (db *SQLDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) error {
-// 	logger = logger.Session("creating-raw-actual-lrp", lager.Data{"actual-lrp": lrp})
-// 	logger.Debug("starting")
-// 	defer logger.Debug("complete")
+func (db *SQLDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) error {
+	logger = logger.Session("creating-raw-actual-lrp", lager.Data{"actual-lrp": lrp})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 
-// 	lrpData, err := db.serializeModel(logger, lrp)
-// 	if err != nil {
-// 		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})
-// 		return err
-// 	}
+	lrpData, err := db.serializeModel(logger, lrp)
+	if err != nil {
+		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})
+		return err
+	}
 
-// 	_, err = db.client.Create(ActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), lrpData, 0)
-// 	if err != nil {
-// 		logger.Error("failed-to-create-actual-lrp", err)
-// 		return models.ErrActualLRPCannotBeStarted
-// 	}
+	insert := "insert into actuals (processGuid, idx, cellId, data, isEvacuating) values ($1, $2, $3, $4, false)"
+	_, err = db.sql.Exec(insert, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData)
+	if err != nil {
+		logger.Error("failed-to-create-actual-lrp", err)
+		return models.ErrActualLRPCannotBeStarted
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
-// func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
-// 	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
-// 	if err != nil {
-// 		return models.ErrActualLRPCannotBeStarted
-// 	}
+func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
+	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
+	if err != nil {
+		return models.ErrActualLRPCannotBeStarted
+	}
 
-// 	return db.createRawActualLRP(logger, lrp)
-// }
+	return db.createRawActualLRP(logger, lrp)
+}
 
 // func (db *SQLDB) createUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
 // 	lrp, err := db.newUnclaimedActualLRP(key)
@@ -449,144 +457,146 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 // 	return nil
 // }
 
-// func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
-// 	logger = logger.Session("start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
-// 	logger.Info("starting")
-// 	lrp, prevIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
-// 	bbsErr := models.ConvertError(err)
-// 	if bbsErr != nil {
-// 		if bbsErr.Type == models.Error_ResourceNotFound {
-// 			return db.createRunningActualLRP(logger, key, instanceKey, netInfo)
-// 		}
-// 		logger.Error("failed-to-get-actual-lrp", err)
-// 		return err
-// 	}
+func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
+	logger = logger.Session("start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
+	logger.Info("starting")
+	lrp, _, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			return db.createRunningActualLRP(logger, key, instanceKey, netInfo)
+		}
+		logger.Error("failed-to-get-actual-lrp", err)
+		return err
+	}
 
-// 	if lrp.ActualLRPKey.Equal(key) &&
-// 		lrp.ActualLRPInstanceKey.Equal(instanceKey) &&
-// 		lrp.ActualLRPNetInfo.Equal(netInfo) &&
-// 		lrp.State == models.ActualLRPStateRunning {
-// 		logger.Info("succeeded")
-// 		return nil
-// 	}
+	if lrp.ActualLRPKey.Equal(key) &&
+		lrp.ActualLRPInstanceKey.Equal(instanceKey) &&
+		lrp.ActualLRPNetInfo.Equal(netInfo) &&
+		lrp.State == models.ActualLRPStateRunning {
+		logger.Info("succeeded")
+		return nil
+	}
 
-// 	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateRunning) {
-// 		logger.Error("failed-to-transition-actual-lrp-to-started", nil)
-// 		return models.ErrActualLRPCannotBeStarted
-// 	}
+	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateRunning) {
+		logger.Error("failed-to-transition-actual-lrp-to-started", nil)
+		return models.ErrActualLRPCannotBeStarted
+	}
 
-// 	lrp.ModificationTag.Increment()
-// 	lrp.State = models.ActualLRPStateRunning
-// 	lrp.Since = db.clock.Now().UnixNano()
-// 	lrp.ActualLRPInstanceKey = *instanceKey
-// 	lrp.ActualLRPNetInfo = *netInfo
-// 	lrp.PlacementError = ""
+	lrp.ModificationTag.Increment()
+	lrp.State = models.ActualLRPStateRunning
+	lrp.Since = db.clock.Now().UnixNano()
+	lrp.ActualLRPInstanceKey = *instanceKey
+	lrp.ActualLRPNetInfo = *netInfo
+	lrp.PlacementError = ""
 
-// 	lrpData, serializeErr := db.serializeModel(logger, lrp)
-// 	if serializeErr != nil {
-// 		return serializeErr
-// 	}
+	lrpData, serializeErr := db.serializeModel(logger, lrp)
+	if serializeErr != nil {
+		return serializeErr
+	}
 
-// 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpData, 0, prevIndex)
-// 	if err != nil {
-// 		logger.Error("failed", err)
-// 		return models.ErrActualLRPCannotBeStarted
-// 	}
+	update := "update actuals set data = $1 where processGuid = $2 and idx = $3 and isEvacuating = false"
+	_, err = db.sql.Exec(update, lrpData, lrp.ProcessGuid, lrp.Index)
+	if err != nil {
+		logger.Error("failed", err)
+		return models.ErrActualLRPCannotBeStarted
+	}
 
-// 	logger.Info("succeeded")
-// 	return nil
-// }
+	logger.Info("succeeded")
+	return nil
+}
 
-// func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
-// 	logger = logger.Session("crash-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey})
-// 	logger.Info("starting")
+func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+	logger = logger.Session("crash-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey})
+	logger.Info("starting")
 
-// 	lrp, prevIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
-// 	if err != nil {
-// 		logger.Error("failed-to-get-actual-lrp", err)
-// 		return err
-// 	}
+	lrp, prevIndex, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+	if err != nil {
+		logger.Error("failed-to-get-actual-lrp", err)
+		return err
+	}
 
-// 	latestChangeTime := time.Duration(db.clock.Now().UnixNano() - lrp.Since)
+	latestChangeTime := time.Duration(db.clock.Now().UnixNano() - lrp.Since)
 
-// 	var newCrashCount int32
-// 	if latestChangeTime > models.CrashResetTimeout && lrp.State == models.ActualLRPStateRunning {
-// 		newCrashCount = 1
-// 	} else {
-// 		newCrashCount = lrp.CrashCount + 1
-// 	}
+	var newCrashCount int32
+	if latestChangeTime > models.CrashResetTimeout && lrp.State == models.ActualLRPStateRunning {
+		newCrashCount = 1
+	} else {
+		newCrashCount = lrp.CrashCount + 1
+	}
 
-// 	logger.Debug("retrieved-lrp")
-// 	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateCrashed) {
-// 		logger.Error("failed-to-transition-to-crashed", nil, lager.Data{"from-state": lrp.State, "same-instance-key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
-// 		return models.ErrActualLRPCannotBeCrashed
-// 	}
+	logger.Debug("retrieved-lrp")
+	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateCrashed) {
+		logger.Error("failed-to-transition-to-crashed", nil, lager.Data{"from-state": lrp.State, "same-instance-key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
+		return models.ErrActualLRPCannotBeCrashed
+	}
 
-// 	lrp.State = models.ActualLRPStateCrashed
-// 	lrp.Since = db.clock.Now().UnixNano()
-// 	lrp.CrashCount = newCrashCount
-// 	lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
-// 	lrp.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
-// 	lrp.ModificationTag.Increment()
-// 	lrp.CrashReason = errorMessage
+	lrp.State = models.ActualLRPStateCrashed
+	lrp.Since = db.clock.Now().UnixNano()
+	lrp.CrashCount = newCrashCount
+	lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+	lrp.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
+	lrp.ModificationTag.Increment()
+	lrp.CrashReason = errorMessage
 
-// 	var immediateRestart bool
-// 	if lrp.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
-// 		lrp.State = models.ActualLRPStateUnclaimed
-// 		immediateRestart = true
-// 	}
+	var immediateRestart bool
+	if lrp.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
+		lrp.State = models.ActualLRPStateUnclaimed
+		immediateRestart = true
+	}
 
-// 	lrpData, serializeErr := db.serializeModel(logger, lrp)
-// 	if serializeErr != nil {
-// 		return serializeErr
-// 	}
+	lrpData, serializeErr := db.serializeModel(logger, lrp)
+	if serializeErr != nil {
+		return serializeErr
+	}
 
-// 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpData, 0, prevIndex)
-// 	if err != nil {
-// 		logger.Error("failed", err)
-// 		return models.ErrActualLRPCannotBeCrashed
-// 	}
+	update := "update actuals set data = $1 where processGuid = $2 and idx = $3 and isEvacuating = false"
+	_, err = db.sql.Exec(update, lrpData, lrp.ProcessGuid, lrp.Index)
+	if err != nil {
+		logger.Error("failed", err)
+		return models.ErrActualLRPCannotBeStarted
+	}
 
-// 	if immediateRestart {
-// 		auctionErr := db.requestLRPAuctionForLRPKey(logger, key)
-// 		if auctionErr != nil {
-// 			return auctionErr
-// 		}
-// 	}
+	if immediateRestart {
+		auctionErr := db.requestLRPAuctionForLRPKey(logger, key)
+		if auctionErr != nil {
+			return auctionErr
+		}
+	}
 
-// 	logger.Info("succeeded")
-// 	return nil
-// }
+	logger.Info("succeeded")
+	return nil
+}
 
-// func (db *SQLDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.ActualLRPKey) error {
-// 	logger = logger.Session("requesting-auction", lager.Data{"process-guid": key.ProcessGuid, "index": key.Index})
-// 	logger.Info("starting")
-// 	defer logger.Info("complete")
+func (db *SQLDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.ActualLRPKey) error {
+	logger = logger.Session("requesting-auction", lager.Data{"process-guid": key.ProcessGuid, "index": key.Index})
+	logger.Info("starting")
+	defer logger.Info("complete")
 
-// 	schedulingInfo, _, err := db.rawDesiredLRPSchedulingInfo(logger, key.ProcessGuid)
-// 	bbsErr := models.ConvertError(err)
-// 	if bbsErr != nil {
-// 		if bbsErr.Type == models.Error_ResourceNotFound {
-// 			logger.Error("missing-scheduling-info-for-auction", nil)
-// 			_, err := db.client.Delete(ActualLRPSchemaPath(key.ProcessGuid, key.Index), false)
-// 			if err != nil {
-// 				logger.Error("failed-to-delete-actual", err)
-// 				return models.ErrUnknownError
-// 			}
-// 			return nil
-// 		} else {
-// 			return bbsErr
-// 		}
-// 	}
+	schedulingInfo, _, err := db.rawDesiredLRPSchedulingInfo(logger, key.ProcessGuid)
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			logger.Error("missing-scheduling-info-for-auction", nil)
+			_, err := db.client.Delete(ActualLRPSchemaPath(key.ProcessGuid, key.Index), false)
+			if err != nil {
+				logger.Error("failed-to-delete-actual", err)
+				return models.ErrUnknownError
+			}
+			return nil
+		} else {
+			return bbsErr
+		}
+	}
 
-// 	lrpStart := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, int(key.Index))
-// 	err = db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&lrpStart})
-// 	if err != nil {
-// 		logger.Error("failed-to-request-auction", err)
-// 		return models.ErrUnknownError
-// 	}
-// 	return nil
-// }
+	lrpStart := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, int(key.Index))
+	err = db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&lrpStart})
+	if err != nil {
+		logger.Error("failed-to-request-auction", err)
+		return models.ErrUnknownError
+	}
+	return nil
+}
 
 // func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {
 // 	logger = logger.Session("fail-actual-lrp", lager.Data{"actual_lrp_key": key})

@@ -165,7 +165,7 @@ func (db *ETCDDB) deserializeRunInfos(logger lager.Logger, nodes etcd.Nodes, fil
 	return components, malformedModels
 }
 
-func (db *ETCDDB) rawDesiredLRPSchedulingInfo(logger lager.Logger, processGuid string) (*models.DesiredLRPSchedulingInfo, uint64, error) {
+func (db *ETCDDB) RawDesiredLRPSchedulingInfo(logger lager.Logger, processGuid string) (*models.DesiredLRPSchedulingInfo, uint64, error) {
 	node, err := db.fetchRaw(logger, DesiredLRPSchedulingInfoSchemaPath(processGuid))
 	if err != nil {
 		logger.Error("failed-to-fetch-existing-scheduling-info", err)
@@ -208,7 +208,7 @@ func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid st
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		schedulingInfo, _, schedulingErr = db.rawDesiredLRPSchedulingInfo(logger, processGuid)
+		schedulingInfo, _, schedulingErr = db.RawDesiredLRPSchedulingInfo(logger, processGuid)
 	}()
 
 	wg.Add(1)
@@ -401,7 +401,7 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 	for i := 0; i < 2; i++ {
 		var index uint64
 
-		schedulingInfo, index, err = db.rawDesiredLRPSchedulingInfo(logger, processGuid)
+		schedulingInfo, index, err = db.RawDesiredLRPSchedulingInfo(logger, processGuid)
 		if err != nil {
 			logger.Error("failed-to-fetch-scheduling-info", err)
 			break

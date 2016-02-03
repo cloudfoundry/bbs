@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
-	"github.com/cloudfoundry-incubator/bbs/db/sql"
+	sqldb "github.com/cloudfoundry-incubator/bbs/db/sql"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers/middleware"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -16,8 +16,7 @@ import (
 	"github.com/tedsuo/rata"
 )
 
-func New(logger lager.Logger, db db.DB, desiredHub, actualHub, taskHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
-	sqlDB := sqldb.NewSQLDB(db)
+func New(logger lager.Logger, db db.DB, sqlDB sqldb.SQLDB, desiredHub, actualHub, taskHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, sqlDB)
 	actualLRPHandler := NewActualLRPHandler(logger, db)

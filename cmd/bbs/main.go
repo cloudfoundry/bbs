@@ -15,6 +15,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
+	sqldb "github.com/cloudfoundry-incubator/bbs/db/sql"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/encryptor"
 	"github.com/cloudfoundry-incubator/bbs/events"
@@ -213,6 +214,7 @@ func main() {
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
 	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
+	sqlDB := sqldb.NewSQLDB(cryptor, db)
 
 	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
 
@@ -260,7 +262,7 @@ func main() {
 		clock,
 	)
 
-	handler := handlers.New(logger, db, desiredHub, actualHub, taskHub, serviceClient, migrationsDone)
+	handler := handlers.New(logger, db, sqlDB, desiredHub, actualHub, taskHub, serviceClient, migrationsDone)
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(
 		logger,
