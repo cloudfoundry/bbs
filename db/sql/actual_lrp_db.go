@@ -120,7 +120,7 @@ func (db *SQLDB) parseActualLRPGroups(logger lager.Logger, actualSlice []actualI
 }
 
 func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
-	query := "select data, isEvacuating from actuals where processGuid = $1"
+	query := "select data, isEvacuating from actuals where processGuid = ?"
 	rows, err := db.sql.Query(query, processGuid)
 	if err != nil {
 		return nil, err
@@ -190,7 +190,7 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 
 func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, uint64, error) {
 
-	instQuery := "select processGuid, data, isEvacuating, modifiedIndex from actuals where processGuid = $1 and inx = $2"
+	instQuery := "select processGuid, data, isEvacuating, modifiedIndex from actuals where processGuid = ? and inx = ?"
 	rows, err := db.sql.Query(instQuery, processGuid, index)
 	if err != nil {
 		return nil, 0, err
@@ -236,7 +236,7 @@ func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pro
 
 func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, error) {
 	logger.Debug("raw-actual-lrp-by-process-guid-and-index")
-	instQuery := "select data, modifiedIndex from actuals where processGuid = $1 and idx = $2 and isEvacuating = false"
+	instQuery := "select data, modifiedIndex from actuals where processGuid = ? and idx = ? and isEvacuating = false"
 	row := db.sql.QueryRow(instQuery, processGuid, index)
 
 	var data string
@@ -285,7 +285,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		return serializeErr
 	}
 
-	update := "update actuals set (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) = ($1, $2, $3, $4, false, modifiedIndex+1) where processGuid = $5 and modifiedIndex = $6"
+	update := "update actuals set (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) = (?, ?, ?, ?, false, modifiedIndex+1) where processGuid = ? and modifiedIndex = ?"
 	_, err = db.sql.Exec(update, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData, lrp.ProcessGuid, lrp.ModificationTag.Index)
 	if err != nil {
 		logger.Error("update-failed", err)
@@ -356,7 +356,7 @@ func (db *SQLDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) 
 		return err
 	}
 
-	insert := "insert into actuals (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) values ($1, $2, $3, $4, false, 1)"
+	insert := "insert into actuals (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) values (?, ?, ?, ?, false, 1)"
 	_, err = db.sql.Exec(insert, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData)
 	if err != nil {
 		logger.Error("failed-to-create-actual-lrp", err)

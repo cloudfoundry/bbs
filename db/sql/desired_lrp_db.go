@@ -327,7 +327,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 		return err
 	}
 
-	insert := "insert into desired (processGuid, domain, scheduleInfo, runInfo) values ($1, $2, $3, $4)"
+	insert := "insert into desired (processGuid, domain, scheduleInfo, runInfo) values (?, ?, ?, ?)"
 	_, err = db.sql.Exec(insert, desiredLRP.ProcessGuid, desiredLRP.Domain, serializedSchedInfo, serializedRunInfo)
 	if err != nil {
 		logger.Error("insert-failed", err)
