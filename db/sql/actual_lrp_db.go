@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry/gunk/workpool"
+	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -15,26 +17,34 @@ type actualInstance struct {
 }
 
 func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
-	filterString := " "
+	filterString := ""
 	if filter.Domain != "" {
-		filterString += "domain = " + filter.Domain + " "
+		filterString += " where domain = '" + filter.Domain + "'"
 	}
 	if filter.CellID != "" {
-		filterString += "cellId = " + filter.CellID
+		if len(filterString) == 0 {
+			filterString += " where "
+		} else {
+			filterString += " and "
+		}
+		filterString += "cellID = '" + filter.CellID + "'"
 	}
 
 	instQuery := "select processGuid, data, isEvacuating from actuals" + filterString
+	logger.Info("actuallrp-groups-query", lager.Data{"query": instQuery})
 	rows, err := db.sql.Query(instQuery)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	actualsByProcessGuid := make(map[string][]actualInstance)
 	var data, pGuid string
 	var isEvac bool
 	for rows.Next() {
 		if err := rows.Scan(&pGuid, &data, &isEvac); err != nil {
-			log.Fatal(err)
+			logger.Error("actual-lrp-groups", err)
+			panic(err)
 		}
 		actualsByProcessGuid[pGuid] = append(actualsByProcessGuid[pGuid],
 			actualInstance{data, isEvac})
@@ -115,13 +125,15 @@ func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	actuals := []actualInstance{}
 	var data, pGuid string
 	var isEvac bool
 	for rows.Next() {
 		if err := rows.Scan(&pGuid, &data, &isEvac); err != nil {
-			log.Fatal(err)
+			logger.Error("actuallrp-groups-by-pg", err)
+			panic(err)
 		}
 		actuals = append(actuals, actualInstance{data, isEvac})
 	}
@@ -183,14 +195,16 @@ func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pro
 	if err != nil {
 		return nil, 0, err
 	}
+	defer rows.Close()
 
 	actualsByProcessGuid := []actualInstance{}
 	var data, pGuid string
 	var modifiedIndex int
 	var isEvac bool
 	for rows.Next() {
-		if err := rows.Scan(&pGuid, &data, &isEvac); err != nil {
-			log.Fatal(err)
+		if err := rows.Scan(&pGuid, &data, &isEvac, &modifiedIndex); err != nil {
+			logger.Error("rawActualLRPGroupByProcessGuidAndIndex", err)
+			panic(err)
 		}
 		actualsByProcessGuid = append(actualsByProcessGuid,
 			actualInstance{data, isEvac})
@@ -271,10 +285,10 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		return serializeErr
 	}
 
-	insert := "insert into actuals (processGuid, idx, cellId, data, isEvacuating) values ($1, $2, $3, $4, false)"
-	_, err = db.sql.Exec(insert, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData)
+	update := "update actuals set (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) = ($1, $2, $3, $4, false, modifiedIndex+1) where processGuid = $5 and modifiedIndex = $6"
+	_, err = db.sql.Exec(update, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData, lrp.ProcessGuid, lrp.ModificationTag.Index)
 	if err != nil {
-		logger.Error("insert-failed", err)
+		logger.Error("update-failed", err)
 		return models.ErrActualLRPCannotBeClaimed
 	}
 	logger.Info("succeeded")
@@ -301,4 +315,89 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 
 func (db *SQLDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
 	return db.etcdDB.RetireActualLRP(logger, key)
+}
+
+// we need the create methods!!!
+//
+func (db *SQLDB) newUnclaimedActualLRP(key *models.ActualLRPKey) (*models.ActualLRP, error) {
+	guid, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ActualLRP{
+		ActualLRPKey: *key,
+		Since:        db.clock.Now().UnixNano(),
+		State:        models.ActualLRPStateUnclaimed,
+		ModificationTag: models.ModificationTag{
+			Epoch: guid.String(),
+			Index: 0,
+		},
+	}, nil
+}
+
+func (db *SQLDB) createUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+	lrp, err := db.newUnclaimedActualLRP(key)
+	if err != nil {
+		return models.ErrActualLRPCannotBeUnclaimed
+	}
+
+	return db.createRawActualLRP(logger, lrp)
+}
+
+func (db *SQLDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) error {
+	logger = logger.Session("creating-raw-actual-lrp", lager.Data{"actual-lrp": lrp})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	lrpData, err := db.serializeModel(logger, lrp)
+	if err != nil {
+		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})
+		return err
+	}
+
+	insert := "insert into actuals (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) values ($1, $2, $3, $4, false, 1)"
+	_, err = db.sql.Exec(insert, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData)
+	if err != nil {
+		logger.Error("failed-to-create-actual-lrp", err)
+		return models.ErrActualLRPCannotBeStarted
+	}
+	return nil
+}
+
+func (db *SQLDB) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {
+	count := len(keys)
+	createdIndicesChan := make(chan int, count)
+
+	works := make([]func(), count)
+
+	for i, key := range keys {
+		key := key
+		works[i] = func() {
+			err := db.createUnclaimedActualLRP(logger, key)
+			if err != nil {
+				logger.Info("failed-creating-actual-lrp", lager.Data{"actual_lrp_key": key, "err-message": err.Error()})
+			} else {
+				createdIndicesChan <- int(key.Index)
+			}
+		}
+	}
+
+	throttler, err := workpool.NewThrottler(db.updateWorkersSize, works)
+	if err != nil {
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": db.updateWorkersSize, "num-works": len(works)})
+		return []int{}
+	}
+
+	go func() {
+		throttler.Work()
+		close(createdIndicesChan)
+	}()
+
+	createdIndices := make([]int, 0, count)
+	for createdIndex := range createdIndicesChan {
+		createdIndices = append(createdIndices, createdIndex)
+	}
+
+	return createdIndices
 }

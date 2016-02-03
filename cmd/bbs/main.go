@@ -214,7 +214,7 @@ func main() {
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
 	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
-	sqlDB := sqldb.NewSQLDB(cryptor, db)
+	sqlDB := sqldb.NewSQLDB(cryptor, db, initializeAuctioneerClient(logger))
 
 	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
 
@@ -325,7 +325,7 @@ func initializeRegistrationRunner(
 		Name: "bbs",
 		Port: port,
 		Check: &api.AgentServiceCheck{
-			TTL: "3s",
+			TTL: "1m",
 		},
 	}
 	return locket.NewRegistrationRunner(logger, registration, consulClient, locket.RetryInterval, clock)

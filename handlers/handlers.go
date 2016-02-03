@@ -22,7 +22,7 @@ func New(logger lager.Logger, db db.DB, sqlDB *sqldb.SQLDB, desiredHub, actualHu
 	actualLRPHandler := NewActualLRPHandler(logger, sqlDB)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, sqlDB)
 	evacuationHandler := NewEvacuationHandler(logger, db)
-	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
+	desiredLRPHandler := NewDesiredLRPHandler(logger, sqlDB)
 	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
 	taskHandler := NewTaskHandler(logger, db)
 	eventsHandler := NewEventHandler(logger, desiredHub, actualHub, taskHub)
