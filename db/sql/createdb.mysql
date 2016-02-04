@@ -13,8 +13,8 @@ create table actuals (
   domain varchar(256),
   cellId varchar(256),
   isEvacuating boolean,
-  modifiedIndex int,
-  data blob
+  data varchar(2048),
+  primary key(processGUID, idx, isEvacuating)
 );
 
 create index cell_idx on actuals (cellId);
@@ -22,7 +22,7 @@ create index cell_idx on actuals (cellId);
 create table desired (
   processGuid varchar(64),
   domain varchar(256),
-  scheduleInfo blob,
-  modifiedIndex int,
-  runInfo blob
+  scheduleInfo varchar(2048),
+  runInfo varchar(2048),
+  primary key(processGUID)
 );

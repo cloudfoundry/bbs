@@ -190,7 +190,7 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 
 func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, uint64, error) {
 
-	instQuery := "select processGuid, data, isEvacuating, modifiedIndex from actuals where processGuid = ? and inx = ?"
+	instQuery := "select processGuid, data, isEvacuating from actuals where processGuid = ? and idx = ?"
 	rows, err := db.sql.Query(instQuery, processGuid, index)
 	if err != nil {
 		return nil, 0, err
@@ -199,10 +199,9 @@ func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pro
 
 	actualsByProcessGuid := []actualInstance{}
 	var data, pGuid string
-	var modifiedIndex int
 	var isEvac bool
 	for rows.Next() {
-		if err := rows.Scan(&pGuid, &data, &isEvac, &modifiedIndex); err != nil {
+		if err := rows.Scan(&pGuid, &data, &isEvac); err != nil {
 			logger.Error("rawActualLRPGroupByProcessGuidAndIndex", err)
 			panic(err)
 		}
@@ -231,18 +230,17 @@ func (db *SQLDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pro
 		return nil, 0, models.ErrResourceNotFound
 	}
 
-	return &group, uint64(modifiedIndex), nil
+	return &group, 0, nil
 }
 
 func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, error) {
 	logger.Debug("raw-actual-lrp-by-process-guid-and-index")
-	instQuery := "select data, modifiedIndex from actuals where processGuid = ? and idx = ? and isEvacuating = false"
+	instQuery := "select data from actuals where processGuid = ? and idx = ? and isEvacuating = false"
 	row := db.sql.QueryRow(instQuery, processGuid, index)
 
 	var data string
-	var modifiedIndex int
 	lrp := new(models.ActualLRP)
-	if err := row.Scan(&data, &modifiedIndex); err != nil {
+	if err := row.Scan(&data); err != nil {
 		log.Fatal(err)
 	}
 
@@ -251,7 +249,7 @@ func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processG
 		return nil, 0, deserializeErr
 	}
 
-	return lrp, uint64(modifiedIndex), nil
+	return lrp, 0, nil
 }
 
 func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
@@ -285,8 +283,8 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		return serializeErr
 	}
 
-	update := "update actuals set (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) = (?, ?, ?, ?, false, modifiedIndex+1) where processGuid = ? and modifiedIndex = ?"
-	_, err = db.sql.Exec(update, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData, lrp.ProcessGuid, lrp.ModificationTag.Index)
+	update := "update actuals set processGuid=?, idx=?, cellId=?, domain=?, data=?  where processGuid = ? and idx = ? and isEvacuating=false"
+	_, err = db.sql.Exec(update, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrp.Domain, lrpData, lrp.ProcessGuid, lrp.Index)
 	if err != nil {
 		logger.Error("update-failed", err)
 		return models.ErrActualLRPCannotBeClaimed
@@ -356,8 +354,8 @@ func (db *SQLDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) 
 		return err
 	}
 
-	insert := "insert into actuals (processGuid, idx, cellId, data, isEvacuating, modifiedIndex) values (?, ?, ?, ?, false, 1)"
-	_, err = db.sql.Exec(insert, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrpData)
+	insert := "insert into actuals (processGuid, idx, cellId, domain, data, isEvacuating) values (?, ?, ?, ?, ?, ?)"
+	_, err = db.sql.Exec(insert, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrp.Domain, lrpData, false)
 	if err != nil {
 		logger.Error("failed-to-create-actual-lrp", err)
 		return models.ErrActualLRPCannotBeStarted
