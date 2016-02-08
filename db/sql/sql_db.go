@@ -40,7 +40,8 @@ func NewSQLDB(cryptor encryption.Cryptor, etcdDB db.DB, auctioneerClient auction
 		panic(err)
 	}
 
-	return &SQLDB{sql: db,
+	return &SQLDB{
+		sql:               db,
 		etcdDB:            etcdDB,
 		serializer:        format.NewSerializer(cryptor),
 		clock:             clock.NewClock(),

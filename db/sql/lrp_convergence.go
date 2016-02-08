@@ -1,16 +1,10 @@
 package sqldb
 
 import (
-	"fmt"
-
 	"github.com/cloudfoundry-incubator/bbs/models"
 
 	"github.com/pivotal-golang/lager"
 )
-
-func (db *SQLDB) GatherActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
-	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, false, lmc)
-}
 
 type actualLRPCompositeKey struct {
 	processGuid  string
@@ -21,18 +15,17 @@ type actualLRPCompositeKey struct {
 type LRPMetricCounter struct {
 }
 
+func (db *SQLDB) GatherActualLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
+	logger = logger.Session("gather-actual-lrps")
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	return db.gatherAndOptionallyPruneActualLRPs(logger, guids, false, lmc)
+}
+
 func (db *SQLDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids map[string]struct{}, doPrune bool, lmc *LRPMetricCounter) (map[string]map[int32]*models.ActualLRP, error) {
-	var guidsString string
-
-	for k, _ := range guids {
-		if guidsString == "" {
-			guidsString = k
-		} else {
-			guidsString = fmt.Sprintf("%s, %s", k, guidsString)
-		}
-	}
-
-	fetchQuery := fmt.Sprintf("select processGuid, idx, isEvacuating, data from actuals where processGuid in (%s)", guids)
+	fetchQuery := "select processGuid, idx, isEvacuating, data from actuals"
+	logger.Info("built-fetch-query", lager.Data{"query": fetchQuery})
 	rows, err := db.sql.Query(fetchQuery)
 	if err != nil {
 		logger.Error("failed fetching actual lrps", err)
@@ -47,6 +40,7 @@ func (db *SQLDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids m
 	var isEvacuating bool
 	var index int32
 
+	logger.Info("scanning-actual-lrps")
 	for rows.Next() {
 		err := rows.Scan(&processGuid, &index, &isEvacuating, &data)
 		if err != nil {
@@ -54,8 +48,8 @@ func (db *SQLDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids m
 			return nil, err
 		}
 
-		var actualLRP *models.ActualLRP
-		deserializeErr := db.deserializeModel(logger, data, actualLRP)
+		var actualLRP models.ActualLRP
+		deserializeErr := db.deserializeModel(logger, data, &actualLRP)
 		if deserializeErr != nil {
 			key := actualLRPCompositeKey{
 				processGuid:  processGuid,
@@ -70,25 +64,22 @@ func (db *SQLDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids m
 			indexMap = map[int32]*models.ActualLRP{}
 		}
 
-		indexMap[index] = actualLRP
+		indexMap[index] = &actualLRP
 		actualLRPs[processGuid] = indexMap
 	}
 
+	logger.Info("gathered-actual-lrps", lager.Data{"num": len(actualLRPs)})
 	return actualLRPs, nil
 }
 
 func (db *SQLDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[string]struct{}, lmc *LRPMetricCounter) (map[string]*models.DesiredLRP, error) {
-	var guidsString string
+	logger = logger.Session("gathering-desired-lrps")
 
-	for k, _ := range guids {
-		if guidsString == "" {
-			guidsString = k
-		} else {
-			guidsString = fmt.Sprintf("%s, %s", k, guidsString)
-		}
-	}
+	logger.Info("starting")
+	defer logger.Info("complete")
 
-	fetchQuery := fmt.Sprintf("select processGuid, scheduleInfo, runInfo from desireds where processGuid in (%s)", guids)
+	fetchQuery := "select processGuid, scheduleInfo, runInfo from desired"
+	logger.Info("built-fetch-query", lager.Data{"query": fetchQuery})
 	rows, err := db.sql.Query(fetchQuery)
 	if err != nil {
 		logger.Error("failed fetching desired lrps", err)
@@ -99,6 +90,7 @@ func (db *SQLDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[string
 	desiredLRPs := map[string]*models.DesiredLRP{}
 	var processGuid, schedulingInfo, runInfo string
 
+	logger.Info("scanning-desired-lrps")
 	for rows.Next() {
 		err := rows.Scan(&processGuid, &schedulingInfo, &runInfo)
 		if err != nil {
@@ -106,23 +98,24 @@ func (db *SQLDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[string
 			return nil, err
 		}
 
-		var desiredSchedulingInfo *models.DesiredLRPSchedulingInfo
-		deserializeErr := db.deserializeModel(logger, schedulingInfo, desiredSchedulingInfo)
+		var desiredSchedulingInfo models.DesiredLRPSchedulingInfo
+		deserializeErr := db.deserializeModel(logger, schedulingInfo, &desiredSchedulingInfo)
 		if deserializeErr != nil {
 			logger.Error("failed to deserialize scheduling info", err)
 			continue
 		}
 
-		var desiredRunInfo *models.DesiredLRPRunInfo
-		deserializeErr = db.deserializeModel(logger, runInfo, desiredRunInfo)
+		var desiredRunInfo models.DesiredLRPRunInfo
+		deserializeErr = db.deserializeModel(logger, runInfo, &desiredRunInfo)
 		if deserializeErr != nil {
 			logger.Error("failed to deserialize run info", err)
 			continue
 		}
 
-		desiredLRP := models.NewDesiredLRP(*desiredSchedulingInfo, *desiredRunInfo)
+		desiredLRP := models.NewDesiredLRP(desiredSchedulingInfo, desiredRunInfo)
 		desiredLRPs[processGuid] = &desiredLRP
 	}
 
+	logger.Info("gathered-desired-lrps", lager.Data{"num": len(desiredLRPs)})
 	return desiredLRPs, nil
 }
