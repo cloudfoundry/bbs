@@ -378,12 +378,13 @@ func (db *ETCDDB) createDesiredLRPRunInfo(logger lager.Logger, runInfo *models.D
 		return err
 	}
 
-	logger.Debug("persisting-run-info")
+	logger.Info("persisting-run-info")
 	_, err = db.client.Create(DesiredLRPRunInfoSchemaPath(runInfo.ProcessGuid), serializedRunInfo, NO_TTL)
 	if err != nil {
+		logger.Error("failed-persisting-run-info", err)
 		return ErrorFromEtcdError(logger, err)
 	}
-	logger.Debug("succeeded-persisting-run-info")
+	logger.Info("succeeded-persisting-run-info")
 
 	return nil
 }
