@@ -1,3 +1,5 @@
+drop database diego;
+
 create database diego;
 
 create table domains (
@@ -8,7 +10,7 @@ create table domains (
 grant all on domains to public;
 
 create table actuals (
-  processGuid varchar(64),
+  processGuid varchar(80),
   idx int,
   domain varchar(256),
   cellId varchar(256),
@@ -22,7 +24,7 @@ grant all on domains to public;
 create index on actuals (cellId);
 
 create table desired (
-  processGuid varchar(64),
+  processGuid varchar(80),
   domain varchar(256),
   modifiedIndex int,
   scheduleInfo blob,

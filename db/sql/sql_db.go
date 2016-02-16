@@ -14,7 +14,6 @@ import (
 	"github.com/pivotal-golang/lager"
 
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
 )
 
 type SQLDB struct {
@@ -33,7 +32,7 @@ func NewSQLDB(cryptor encryption.Cryptor, etcdDB db.DB, auctioneerClient auction
 	// "diego:buttercup@tcp(benchmark-diego.cwqji29dpdny.us-east-1.rds.amazonaws.com)/diego"
 	dsn := os.Getenv("SQL_DSN")
 	if dsn == "" {
-		dsn = "diego:buttercup@tcp(benchmark-diego.cwqji29dpdny.us-east-1.rds.amazonaws.com:3306)/diego"
+		dsn = "root:password@tcp(10.244.7.6)/diego"
 	}
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

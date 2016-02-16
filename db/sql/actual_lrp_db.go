@@ -1,7 +1,6 @@
 package sqldb
 
 import (
-	"log"
 	"sync"
 	"sync/atomic"
 
@@ -120,7 +119,7 @@ func (db *SQLDB) parseActualLRPGroups(logger lager.Logger, actualSlice []actualI
 }
 
 func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
-	query := "select data, isEvacuating from actuals where processGuid = ?"
+	query := "select processGuid, data, isEvacuating from actuals where processGuid = ?"
 	rows, err := db.sql.Query(query, processGuid)
 	if err != nil {
 		return nil, err
@@ -241,7 +240,7 @@ func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processG
 	var data string
 	lrp := new(models.ActualLRP)
 	if err := row.Scan(&data); err != nil {
-		log.Fatal(err)
+		logger.Fatal("failed-to-get-data", err, lager.Data{"processGuid": processGuid, "index": index})
 	}
 
 	deserializeErr := db.deserializeModel(logger, data, lrp)
