@@ -66,22 +66,23 @@ func (x *Task_State) UnmarshalJSON(data []byte) error {
 }
 
 type TaskDefinition struct {
-	RootFs                string                 `protobuf:"bytes,1,opt,name=root_fs" json:"rootfs"`
-	EnvironmentVariables  []*EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env,omitempty"`
-	Action                *Action                `protobuf:"bytes,3,opt,name=action" json:"action,omitempty"`
-	DiskMb                int32                  `protobuf:"varint,4,opt,name=disk_mb" json:"disk_mb"`
-	MemoryMb              int32                  `protobuf:"varint,5,opt,name=memory_mb" json:"memory_mb"`
-	CpuWeight             uint32                 `protobuf:"varint,6,opt,name=cpu_weight" json:"cpu_weight"`
-	Privileged            bool                   `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
-	LogSource             string                 `protobuf:"bytes,8,opt,name=log_source" json:"log_source"`
-	LogGuid               string                 `protobuf:"bytes,9,opt,name=log_guid" json:"log_guid"`
-	MetricsGuid           string                 `protobuf:"bytes,10,opt,name=metrics_guid" json:"metrics_guid"`
-	ResultFile            string                 `protobuf:"bytes,11,opt,name=result_file" json:"result_file"`
-	CompletionCallbackUrl string                 `protobuf:"bytes,12,opt,name=completion_callback_url" json:"completion_callback_url,omitempty"`
-	Annotation            string                 `protobuf:"bytes,13,opt,name=annotation" json:"annotation,omitempty"`
-	EgressRules           []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
-	CachedDependencies    []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser    string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	RootFs                       string                 `protobuf:"bytes,1,opt,name=root_fs" json:"rootfs"`
+	EnvironmentVariables         []*EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env,omitempty"`
+	Action                       *Action                `protobuf:"bytes,3,opt,name=action" json:"action,omitempty"`
+	DiskMb                       int32                  `protobuf:"varint,4,opt,name=disk_mb" json:"disk_mb"`
+	MemoryMb                     int32                  `protobuf:"varint,5,opt,name=memory_mb" json:"memory_mb"`
+	CpuWeight                    uint32                 `protobuf:"varint,6,opt,name=cpu_weight" json:"cpu_weight"`
+	Privileged                   bool                   `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
+	LogSource                    string                 `protobuf:"bytes,8,opt,name=log_source" json:"log_source"`
+	LogGuid                      string                 `protobuf:"bytes,9,opt,name=log_guid" json:"log_guid"`
+	MetricsGuid                  string                 `protobuf:"bytes,10,opt,name=metrics_guid" json:"metrics_guid"`
+	ResultFile                   string                 `protobuf:"bytes,11,opt,name=result_file" json:"result_file"`
+	CompletionCallbackUrl        string                 `protobuf:"bytes,12,opt,name=completion_callback_url" json:"completion_callback_url,omitempty"`
+	Annotation                   string                 `protobuf:"bytes,13,opt,name=annotation" json:"annotation,omitempty"`
+	EgressRules                  []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
+	CachedDependencies           []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser           string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	TrustedSystemCertificatePath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificate_path" json:"trusted_system_certificate_path,omitempty"`
 }
 
 func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
@@ -195,6 +196,13 @@ func (m *TaskDefinition) GetCachedDependencies() []*CachedDependency {
 func (m *TaskDefinition) GetLegacyDownloadUser() string {
 	if m != nil {
 		return m.LegacyDownloadUser
+	}
+	return ""
+}
+
+func (m *TaskDefinition) GetTrustedSystemCertificatePath() string {
+	if m != nil {
+		return m.TrustedSystemCertificatePath
 	}
 	return ""
 }
@@ -379,6 +387,9 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
 		return false
 	}
+	if this.TrustedSystemCertificatePath != that1.TrustedSystemCertificatePath {
+		return false
+	}
 	return true
 }
 func (this *Task) Equal(that interface{}) bool {
@@ -456,7 +467,8 @@ func (this *TaskDefinition) GoString() string {
 		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
 		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
-		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser) + `}`}, ", ")
+		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
+		`TrustedSystemCertificatePath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatePath) + `}`}, ", ")
 	return s
 }
 func (this *Task) GoString() string {
@@ -614,6 +626,12 @@ func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintTask(data, i, uint64(len(m.LegacyDownloadUser)))
 	i += copy(data[i:], m.LegacyDownloadUser)
+	data[i] = 0x8a
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintTask(data, i, uint64(len(m.TrustedSystemCertificatePath)))
+	i += copy(data[i:], m.TrustedSystemCertificatePath)
 	return i, nil
 }
 
@@ -757,6 +775,8 @@ func (m *TaskDefinition) Size() (n int) {
 	}
 	l = len(m.LegacyDownloadUser)
 	n += 2 + l + sovTask(uint64(l))
+	l = len(m.TrustedSystemCertificatePath)
+	n += 2 + l + sovTask(uint64(l))
 	return n
 }
 
@@ -819,6 +839,7 @@ func (this *TaskDefinition) String() string {
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
+		`TrustedSystemCertificatePath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatePath) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1248,6 +1269,31 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.LegacyDownloadUser = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 17:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatePath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TrustedSystemCertificatePath = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

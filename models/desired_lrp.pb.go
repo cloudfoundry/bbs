@@ -52,21 +52,22 @@ func (m *DesiredLRPSchedulingInfo) GetInstances() int32 {
 }
 
 type DesiredLRPRunInfo struct {
-	DesiredLRPKey        `protobuf:"bytes,1,opt,name=desired_lrp_key,embedded=desired_lrp_key" json:""`
-	EnvironmentVariables []EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env"`
-	Setup                *Action               `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
-	Action               *Action               `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
-	Monitor              *Action               `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
-	StartTimeout         uint32                `protobuf:"varint,6,opt,name=start_timeout" json:"start_timeout"`
-	Privileged           bool                  `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
-	CpuWeight            uint32                `protobuf:"varint,8,opt,name=cpu_weight" json:"cpu_weight"`
-	Ports                []uint32              `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
-	EgressRules          []SecurityGroupRule   `protobuf:"bytes,10,rep,name=egress_rules" json:"egress_rules"`
-	LogSource            string                `protobuf:"bytes,11,opt,name=log_source" json:"log_source"`
-	MetricsGuid          string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
-	CreatedAt            int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
-	CachedDependencies   []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser   string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	DesiredLRPKey                `protobuf:"bytes,1,opt,name=desired_lrp_key,embedded=desired_lrp_key" json:""`
+	EnvironmentVariables         []EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env"`
+	Setup                        *Action               `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
+	Action                       *Action               `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
+	Monitor                      *Action               `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
+	StartTimeout                 uint32                `protobuf:"varint,6,opt,name=start_timeout" json:"start_timeout"`
+	Privileged                   bool                  `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
+	CpuWeight                    uint32                `protobuf:"varint,8,opt,name=cpu_weight" json:"cpu_weight"`
+	Ports                        []uint32              `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
+	EgressRules                  []SecurityGroupRule   `protobuf:"bytes,10,rep,name=egress_rules" json:"egress_rules"`
+	LogSource                    string                `protobuf:"bytes,11,opt,name=log_source" json:"log_source"`
+	MetricsGuid                  string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
+	CreatedAt                    int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
+	CachedDependencies           []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser           string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	TrustedSystemCertificatePath string                `protobuf:"bytes,16,opt,name=trusted_system_certificate_path" json:"trusted_system_certificate_path,omitempty"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -170,6 +171,13 @@ func (m *DesiredLRPRunInfo) GetLegacyDownloadUser() string {
 	return ""
 }
 
+func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatePath() string {
+	if m != nil {
+		return m.TrustedSystemCertificatePath
+	}
+	return ""
+}
+
 // helper message for marshalling routes
 type ProtoRoutes struct {
 	Routes map[string][]byte `protobuf:"bytes,1,rep,name=routes" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -269,29 +277,30 @@ func (m *DesiredLRPResource) GetRootFs() string {
 }
 
 type DesiredLRP struct {
-	ProcessGuid          string                 `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
-	Domain               string                 `protobuf:"bytes,2,opt,name=domain" json:"domain"`
-	RootFs               string                 `protobuf:"bytes,3,opt,name=root_fs" json:"rootfs"`
-	Instances            int32                  `protobuf:"varint,4,opt,name=instances" json:"instances"`
-	EnvironmentVariables []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables" json:"env"`
-	Setup                *Action                `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
-	Action               *Action                `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
-	StartTimeout         uint32                 `protobuf:"varint,8,opt,name=start_timeout" json:"start_timeout"`
-	Monitor              *Action                `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
-	DiskMb               int32                  `protobuf:"varint,10,opt,name=disk_mb" json:"disk_mb"`
-	MemoryMb             int32                  `protobuf:"varint,11,opt,name=memory_mb" json:"memory_mb"`
-	CpuWeight            uint32                 `protobuf:"varint,12,opt,name=cpu_weight" json:"cpu_weight"`
-	Privileged           bool                   `protobuf:"varint,13,opt,name=privileged" json:"privileged"`
-	Ports                []uint32               `protobuf:"varint,14,rep,name=ports" json:"ports,omitempty"`
-	Routes               *Routes                `protobuf:"bytes,15,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
-	LogSource            string                 `protobuf:"bytes,16,opt,name=log_source" json:"log_source"`
-	LogGuid              string                 `protobuf:"bytes,17,opt,name=log_guid" json:"log_guid"`
-	MetricsGuid          string                 `protobuf:"bytes,18,opt,name=metrics_guid" json:"metrics_guid"`
-	Annotation           string                 `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
-	EgressRules          []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
-	ModificationTag      *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
-	CachedDependencies   []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser   string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	ProcessGuid                  string                 `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Domain                       string                 `protobuf:"bytes,2,opt,name=domain" json:"domain"`
+	RootFs                       string                 `protobuf:"bytes,3,opt,name=root_fs" json:"rootfs"`
+	Instances                    int32                  `protobuf:"varint,4,opt,name=instances" json:"instances"`
+	EnvironmentVariables         []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables" json:"env"`
+	Setup                        *Action                `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
+	Action                       *Action                `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
+	StartTimeout                 uint32                 `protobuf:"varint,8,opt,name=start_timeout" json:"start_timeout"`
+	Monitor                      *Action                `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
+	DiskMb                       int32                  `protobuf:"varint,10,opt,name=disk_mb" json:"disk_mb"`
+	MemoryMb                     int32                  `protobuf:"varint,11,opt,name=memory_mb" json:"memory_mb"`
+	CpuWeight                    uint32                 `protobuf:"varint,12,opt,name=cpu_weight" json:"cpu_weight"`
+	Privileged                   bool                   `protobuf:"varint,13,opt,name=privileged" json:"privileged"`
+	Ports                        []uint32               `protobuf:"varint,14,rep,name=ports" json:"ports,omitempty"`
+	Routes                       *Routes                `protobuf:"bytes,15,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
+	LogSource                    string                 `protobuf:"bytes,16,opt,name=log_source" json:"log_source"`
+	LogGuid                      string                 `protobuf:"bytes,17,opt,name=log_guid" json:"log_guid"`
+	MetricsGuid                  string                 `protobuf:"bytes,18,opt,name=metrics_guid" json:"metrics_guid"`
+	Annotation                   string                 `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
+	EgressRules                  []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
+	ModificationTag              *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
+	CachedDependencies           []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser           string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	TrustedSystemCertificatePath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificate_path" json:"trusted_system_certificate_path,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -451,6 +460,13 @@ func (m *DesiredLRP) GetLegacyDownloadUser() string {
 	return ""
 }
 
+func (m *DesiredLRP) GetTrustedSystemCertificatePath() string {
+	if m != nil {
+		return m.TrustedSystemCertificatePath
+	}
+	return ""
+}
+
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -574,6 +590,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		}
 	}
 	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
+		return false
+	}
+	if this.TrustedSystemCertificatePath != that1.TrustedSystemCertificatePath {
 		return false
 	}
 	return true
@@ -830,6 +849,9 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
 		return false
 	}
+	if this.TrustedSystemCertificatePath != that1.TrustedSystemCertificatePath {
+		return false
+	}
 	return true
 }
 func (this *DesiredLRPSchedulingInfo) GoString() string {
@@ -864,7 +886,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
 		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
-		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser) + `}`}, ", ")
+		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
+		`TrustedSystemCertificatePath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatePath) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -942,7 +965,8 @@ func (this *DesiredLRP) GoString() string {
 		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
 		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
-		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser) + `}`}, ", ")
+		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
+		`TrustedSystemCertificatePath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatePath) + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1152,6 +1176,12 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.LegacyDownloadUser)))
 	i += copy(data[i:], m.LegacyDownloadUser)
+	data[i] = 0x82
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatePath)))
+	i += copy(data[i:], m.TrustedSystemCertificatePath)
 	return i, nil
 }
 
@@ -1471,6 +1501,12 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.LegacyDownloadUser)))
 	i += copy(data[i:], m.LegacyDownloadUser)
+	data[i] = 0xc2
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatePath)))
+	i += copy(data[i:], m.TrustedSystemCertificatePath)
 	return i, nil
 }
 
@@ -1568,6 +1604,8 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 	}
 	l = len(m.LegacyDownloadUser)
 	n += 1 + l + sovDesiredLrp(uint64(l))
+	l = len(m.TrustedSystemCertificatePath)
+	n += 2 + l + sovDesiredLrp(uint64(l))
 	return n
 }
 
@@ -1692,6 +1730,8 @@ func (m *DesiredLRP) Size() (n int) {
 	}
 	l = len(m.LegacyDownloadUser)
 	n += 2 + l + sovDesiredLrp(uint64(l))
+	l = len(m.TrustedSystemCertificatePath)
+	n += 2 + l + sovDesiredLrp(uint64(l))
 	return n
 }
 
@@ -1743,6 +1783,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
+		`TrustedSystemCertificatePath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatePath) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1831,6 +1872,7 @@ func (this *DesiredLRP) String() string {
 		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
+		`TrustedSystemCertificatePath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatePath) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2413,6 +2455,31 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.LegacyDownloadUser = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatePath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TrustedSystemCertificatePath = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -3481,6 +3548,31 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.LegacyDownloadUser = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 24:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatePath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TrustedSystemCertificatePath = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

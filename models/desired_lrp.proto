@@ -40,6 +40,7 @@ message DesiredLRPRunInfo {
   optional int64 created_at = 13;
   repeated CachedDependency cached_dependencies = 14 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 15 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
+  optional string trusted_system_certificate_path = 16 [(gogoproto.jsontag) = "trusted_system_certificate_path,omitempty"];
 }
 
 // helper message for marshalling routes
@@ -89,4 +90,5 @@ message DesiredLRP {
   optional ModificationTag modification_tag = 21;
   repeated CachedDependency cached_dependencies = 22 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 23 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
+  optional string trusted_system_certificate_path = 24 [(gogoproto.jsontag) = "trusted_system_certificate_path,omitempty"];
 }
