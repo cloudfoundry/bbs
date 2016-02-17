@@ -2,12 +2,12 @@ drop database diego;
 
 create database diego;
 
+use diego;
+
 create table domains (
   domain varchar(256),
   expireTime timestamp
 );
-
-grant all on domains to public;
 
 create table actuals (
   processGuid varchar(80),
@@ -19,8 +19,6 @@ create table actuals (
   data blob
 );
 
-grant all on domains to public;
-
 create index on actuals (cellId);
 
 create table desired (
@@ -30,5 +28,3 @@ create table desired (
   scheduleInfo blob,
   runInfo blob
 );
-
-grant all on actuals to public;
