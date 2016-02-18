@@ -59,7 +59,6 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 
 	request := &models.CrashActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
-
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		err = h.db.CrashActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)

@@ -304,7 +304,6 @@ func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 	err := c.doRequest(CrashActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
-
 	}
 	return response.Error.ToError()
 }
