@@ -146,6 +146,12 @@ var taskCallBackWorkers = flag.Int(
 	"Max concurrency for task callback requests",
 )
 
+var dbDSN = flag.String(
+	"dbDSN",
+	"",
+	"DSN to use when connecting to sql database",
+)
+
 var desiredLRPCreationTimeout = flag.Duration(
 	"desiredLRPCreationTimeout",
 	1*time.Minute,
@@ -214,7 +220,7 @@ func main() {
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
 	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
-	sqlDB := sqldb.NewSQLDB(cryptor, db, initializeAuctioneerClient(logger))
+	sqlDB := sqldb.NewSQLDB(cryptor, db, *dbDSN, initializeAuctioneerClient(logger))
 
 	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
 
