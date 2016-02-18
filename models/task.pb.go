@@ -82,7 +82,7 @@ type TaskDefinition struct {
 	EgressRules                  []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
 	CachedDependencies           []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
 	LegacyDownloadUser           string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
-	TrustedSystemCertificatePath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificate_path" json:"trusted_system_certificate_path,omitempty"`
+	TrustedSystemCertificatesPath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 }
 
 func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
@@ -200,9 +200,9 @@ func (m *TaskDefinition) GetLegacyDownloadUser() string {
 	return ""
 }
 
-func (m *TaskDefinition) GetTrustedSystemCertificatePath() string {
+func (m *TaskDefinition) GetTrustedSystemCertificatesPath() string {
 	if m != nil {
-		return m.TrustedSystemCertificatePath
+		return m.TrustedSystemCertificatesPath
 	}
 	return ""
 }
@@ -387,7 +387,7 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
 		return false
 	}
-	if this.TrustedSystemCertificatePath != that1.TrustedSystemCertificatePath {
+	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
 		return false
 	}
 	return true
@@ -468,7 +468,7 @@ func (this *TaskDefinition) GoString() string {
 		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatePath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatePath) + `}`}, ", ")
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath) + `}`}, ", ")
 	return s
 }
 func (this *Task) GoString() string {
@@ -630,8 +630,8 @@ func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 	i++
 	data[i] = 0x1
 	i++
-	i = encodeVarintTask(data, i, uint64(len(m.TrustedSystemCertificatePath)))
-	i += copy(data[i:], m.TrustedSystemCertificatePath)
+	i = encodeVarintTask(data, i, uint64(len(m.TrustedSystemCertificatesPath)))
+	i += copy(data[i:], m.TrustedSystemCertificatesPath)
 	return i, nil
 }
 
@@ -775,7 +775,7 @@ func (m *TaskDefinition) Size() (n int) {
 	}
 	l = len(m.LegacyDownloadUser)
 	n += 2 + l + sovTask(uint64(l))
-	l = len(m.TrustedSystemCertificatePath)
+	l = len(m.TrustedSystemCertificatesPath)
 	n += 2 + l + sovTask(uint64(l))
 	return n
 }
@@ -839,7 +839,7 @@ func (this *TaskDefinition) String() string {
 		`EgressRules:` + strings.Replace(fmt.Sprintf("%v", this.EgressRules), "SecurityGroupRule", "SecurityGroupRule", 1) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
-		`TrustedSystemCertificatePath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatePath) + `,`,
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1272,7 +1272,7 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 17:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatePath", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatesPath", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1293,7 +1293,7 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TrustedSystemCertificatePath = string(data[iNdEx:postIndex])
+			m.TrustedSystemCertificatesPath = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

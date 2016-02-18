@@ -27,7 +27,7 @@ message TaskDefinition {
   repeated SecurityGroupRule egress_rules = 14 [(gogoproto.jsontag) = "egress_rules,omitempty"];
   repeated CachedDependency cached_dependencies = 15 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 16 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
-  optional string trusted_system_certificate_path = 17 [(gogoproto.jsontag) = "trusted_system_certificate_path,omitempty"];
+  optional string trusted_system_certificates_path = 17 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
 }
 
 message Task {

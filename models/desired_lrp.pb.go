@@ -67,7 +67,7 @@ type DesiredLRPRunInfo struct {
 	CreatedAt                    int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
 	CachedDependencies           []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
 	LegacyDownloadUser           string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
-	TrustedSystemCertificatePath string                `protobuf:"bytes,16,opt,name=trusted_system_certificate_path" json:"trusted_system_certificate_path,omitempty"`
+	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -171,9 +171,9 @@ func (m *DesiredLRPRunInfo) GetLegacyDownloadUser() string {
 	return ""
 }
 
-func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatePath() string {
+func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatesPath() string {
 	if m != nil {
-		return m.TrustedSystemCertificatePath
+		return m.TrustedSystemCertificatesPath
 	}
 	return ""
 }
@@ -300,7 +300,7 @@ type DesiredLRP struct {
 	ModificationTag              *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
 	CachedDependencies           []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
 	LegacyDownloadUser           string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
-	TrustedSystemCertificatePath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificate_path" json:"trusted_system_certificate_path,omitempty"`
+	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -460,9 +460,9 @@ func (m *DesiredLRP) GetLegacyDownloadUser() string {
 	return ""
 }
 
-func (m *DesiredLRP) GetTrustedSystemCertificatePath() string {
+func (m *DesiredLRP) GetTrustedSystemCertificatesPath() string {
 	if m != nil {
-		return m.TrustedSystemCertificatePath
+		return m.TrustedSystemCertificatesPath
 	}
 	return ""
 }
@@ -592,7 +592,7 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
 		return false
 	}
-	if this.TrustedSystemCertificatePath != that1.TrustedSystemCertificatePath {
+	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
 		return false
 	}
 	return true
@@ -849,7 +849,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
 		return false
 	}
-	if this.TrustedSystemCertificatePath != that1.TrustedSystemCertificatePath {
+	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
 		return false
 	}
 	return true
@@ -887,7 +887,7 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatePath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatePath) + `}`}, ", ")
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -966,7 +966,7 @@ func (this *DesiredLRP) GoString() string {
 		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatePath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatePath) + `}`}, ", ")
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath) + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1180,8 +1180,8 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 	i++
 	data[i] = 0x1
 	i++
-	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatePath)))
-	i += copy(data[i:], m.TrustedSystemCertificatePath)
+	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatesPath)))
+	i += copy(data[i:], m.TrustedSystemCertificatesPath)
 	return i, nil
 }
 
@@ -1505,8 +1505,8 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 	i++
 	data[i] = 0x1
 	i++
-	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatePath)))
-	i += copy(data[i:], m.TrustedSystemCertificatePath)
+	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatesPath)))
+	i += copy(data[i:], m.TrustedSystemCertificatesPath)
 	return i, nil
 }
 
@@ -1604,7 +1604,7 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 	}
 	l = len(m.LegacyDownloadUser)
 	n += 1 + l + sovDesiredLrp(uint64(l))
-	l = len(m.TrustedSystemCertificatePath)
+	l = len(m.TrustedSystemCertificatesPath)
 	n += 2 + l + sovDesiredLrp(uint64(l))
 	return n
 }
@@ -1730,7 +1730,7 @@ func (m *DesiredLRP) Size() (n int) {
 	}
 	l = len(m.LegacyDownloadUser)
 	n += 2 + l + sovDesiredLrp(uint64(l))
-	l = len(m.TrustedSystemCertificatePath)
+	l = len(m.TrustedSystemCertificatesPath)
 	n += 2 + l + sovDesiredLrp(uint64(l))
 	return n
 }
@@ -1783,7 +1783,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
-		`TrustedSystemCertificatePath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatePath) + `,`,
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1872,7 +1872,7 @@ func (this *DesiredLRP) String() string {
 		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
-		`TrustedSystemCertificatePath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatePath) + `,`,
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2458,7 +2458,7 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 16:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatePath", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatesPath", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2479,7 +2479,7 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TrustedSystemCertificatePath = string(data[iNdEx:postIndex])
+			m.TrustedSystemCertificatesPath = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -3551,7 +3551,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 24:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatePath", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustedSystemCertificatesPath", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3572,7 +3572,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TrustedSystemCertificatePath = string(data[iNdEx:postIndex])
+			m.TrustedSystemCertificatesPath = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

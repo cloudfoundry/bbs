@@ -40,30 +40,30 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 	}
 
 	return DesiredLRP{
-		ProcessGuid:                  schedInfo.ProcessGuid,
-		Domain:                       schedInfo.Domain,
-		LogGuid:                      schedInfo.LogGuid,
-		MemoryMb:                     schedInfo.MemoryMb,
-		DiskMb:                       schedInfo.DiskMb,
-		RootFs:                       schedInfo.RootFs,
-		Instances:                    schedInfo.Instances,
-		Annotation:                   schedInfo.Annotation,
-		Routes:                       &schedInfo.Routes,
-		ModificationTag:              &schedInfo.ModificationTag,
-		EnvironmentVariables:         environmentVariables,
-		CachedDependencies:           runInfo.CachedDependencies,
-		Setup:                        runInfo.Setup,
-		Action:                       runInfo.Action,
-		Monitor:                      runInfo.Monitor,
-		StartTimeout:                 runInfo.StartTimeout,
-		Privileged:                   runInfo.Privileged,
-		CpuWeight:                    runInfo.CpuWeight,
-		Ports:                        runInfo.Ports,
-		EgressRules:                  egressRules,
-		LogSource:                    runInfo.LogSource,
-		MetricsGuid:                  runInfo.MetricsGuid,
-		LegacyDownloadUser:           runInfo.LegacyDownloadUser,
-		TrustedSystemCertificatePath: runInfo.TrustedSystemCertificatePath,
+		ProcessGuid:                   schedInfo.ProcessGuid,
+		Domain:                        schedInfo.Domain,
+		LogGuid:                       schedInfo.LogGuid,
+		MemoryMb:                      schedInfo.MemoryMb,
+		DiskMb:                        schedInfo.DiskMb,
+		RootFs:                        schedInfo.RootFs,
+		Instances:                     schedInfo.Instances,
+		Annotation:                    schedInfo.Annotation,
+		Routes:                        &schedInfo.Routes,
+		ModificationTag:               &schedInfo.ModificationTag,
+		EnvironmentVariables:          environmentVariables,
+		CachedDependencies:            runInfo.CachedDependencies,
+		Setup:                         runInfo.Setup,
+		Action:                        runInfo.Action,
+		Monitor:                       runInfo.Monitor,
+		StartTimeout:                  runInfo.StartTimeout,
+		Privileged:                    runInfo.Privileged,
+		CpuWeight:                     runInfo.CpuWeight,
+		Ports:                         runInfo.Ports,
+		EgressRules:                   egressRules,
+		LogSource:                     runInfo.LogSource,
+		MetricsGuid:                   runInfo.MetricsGuid,
+		LegacyDownloadUser:            runInfo.LegacyDownloadUser,
+		TrustedSystemCertificatesPath: runInfo.TrustedSystemCertificatesPath,
 	}
 }
 
@@ -160,7 +160,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.LogSource,
 		d.MetricsGuid,
 		d.LegacyDownloadUser,
-		d.TrustedSystemCertificatePath,
+		d.TrustedSystemCertificatesPath,
 	)
 }
 
@@ -406,7 +406,7 @@ func NewDesiredLRPRunInfo(
 	logSource,
 	metricsGuid string,
 	legacyDownloadUser string,
-	trustedSystemCertificatePath string,
+	trustedSystemCertificatesPath string,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                key,
@@ -424,7 +424,7 @@ func NewDesiredLRPRunInfo(
 		LogSource:                    logSource,
 		MetricsGuid:                  metricsGuid,
 		LegacyDownloadUser:           legacyDownloadUser,
-		TrustedSystemCertificatePath: trustedSystemCertificatePath,
+		TrustedSystemCertificatesPath: trustedSystemCertificatesPath,
 	}
 }
 
