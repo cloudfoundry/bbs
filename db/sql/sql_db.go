@@ -1,7 +1,11 @@
 package sqldb
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
+	"io/ioutil"
+	"log"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/db"
@@ -11,7 +15,7 @@ import (
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 type SQLDB struct {
@@ -32,6 +36,25 @@ func NewSQLDB(cryptor encryption.Cryptor, etcdDB db.DB, dsn string, auctioneerCl
 	// if dsn == "" {
 	// 	dsn = "root:password@tcp(10.244.7.6)/diego"
 	// }
+	rootCertPool := x509.NewCertPool()
+	pem, err := ioutil.ReadFile("/etc/mysql-ssl/diego-ca.crt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+		log.Fatal("Failed to append PEM.")
+	}
+	clientCert := make([]tls.Certificate, 0, 1)
+	certs, err := tls.LoadX509KeyPair("/etc/mysql-ssl/client.crt", "/etc/mysql-ssl/client.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	clientCert = append(clientCert, certs)
+	mysql.RegisterTLSConfig("custom", &tls.Config{
+		RootCAs:      rootCertPool,
+		Certificates: clientCert,
+	})
+
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		panic(err)
