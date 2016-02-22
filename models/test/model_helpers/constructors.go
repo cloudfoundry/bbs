@@ -64,8 +64,9 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			Destinations: []string{"1.1.1.1/32", "2.2.2.2/32"},
 			PortRange:    &models.PortRange{Start: 10, End: 16000},
 		}},
-		ModificationTag:    &modTag,
-		LegacyDownloadUser: "legacy-jim",
+		ModificationTag:               &modTag,
+		LegacyDownloadUser:            "legacy-jim",
+		TrustedSystemCertificatesPath: "/etc/somepath",
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
