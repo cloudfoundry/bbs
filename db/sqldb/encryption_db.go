@@ -22,7 +22,7 @@ func (db *SQLDB) SetEncryptionKeyLabel(logger lager.Logger, label string) error 
 		return err
 	}
 
-	if rowsAffected == 0 {
+	if rowsAffected < 1 {
 		_, err = db.db.Exec("INSERT INTO configurations VALUES (?, ?)", EncryptionKeyId, label)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Error creating encryption key label: %s", err))

@@ -15,11 +15,18 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 	}
 
 	count, err := result.RowsAffected()
-	if count == 0 || err != nil {
-		_, err = db.db.Exec("INSERT INTO domains VALUES (?, ?)", domain, expireTime)
+	if err != nil {
+		return err
 	}
 
-	return err
+	if count < 1 {
+		_, err = db.db.Exec("INSERT INTO domains VALUES (?, ?)", domain, expireTime)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
