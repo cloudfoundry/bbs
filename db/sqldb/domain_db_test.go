@@ -12,9 +12,6 @@ var _ = Describe("DomainDB", func() {
 	Describe("UpsertDomain", func() {
 		var logger *lagertest.TestLogger
 
-		BeforeEach(func() {
-		})
-
 		Context("when the domain is not present in the DB", func() {
 			It("inserts a new domain with the requested TTL", func() {
 				domain := "my-awesome-domain"
@@ -35,6 +32,14 @@ var _ = Describe("DomainDB", func() {
 				Expect(domainName).To(Equal(domain))
 				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(5432) * time.Second).Round(time.Second)
 				Expect(expireTime).To(BeEquivalentTo(expectedExpireTime))
+			})
+
+			Context("when the domain is too long", func() {
+				It("returns an error", func() {
+					domain := randStr(256)
+					bbsErr := sqlDB.UpsertDomain(logger, domain, 5432)
+					Expect(bbsErr).To(HaveOccurred())
+				})
 			})
 		})
 

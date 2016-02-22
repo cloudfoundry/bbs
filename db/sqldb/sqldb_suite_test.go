@@ -1,6 +1,7 @@
 package sqldb_test
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"time"
@@ -38,42 +39,71 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
-	_, err = db.Query(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
+	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
 	db, err = sql.Open("mysql", fmt.Sprintf("root:password@/diego_%d?parseTime=true", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
-	createDomains(db)
+	createTables(db)
 
 	sqlDB = sqldb.NewSQLDB(db, fakeClock)
 })
 
 var _ = AfterEach(func() {
-	truncateDB(db)
+	truncateTables(db)
 })
 
 var _ = AfterSuite(func() {
-	_, err := db.Query(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	_, err := db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(db.Close()).NotTo(HaveOccurred())
 })
 
-func truncateDB(db *sql.DB) {
-	_, err := db.Query(truncateTablesQuery)
-	Expect(err).NotTo(HaveOccurred())
+func truncateTables(db *sql.DB) {
+	for _, query := range truncateTablesSQL {
+		result, err := db.Exec(query)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
+	}
 }
 
-func createDomains(db *sql.DB) {
-	_, err := db.Query(createDomainQuery)
-	Expect(err).NotTo(HaveOccurred())
+func createTables(db *sql.DB) {
+	for _, query := range createTablesSQL {
+		result, err := db.Exec(query)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
+	}
 }
 
-const truncateTablesQuery = "TRUNCATE TABLE domains;"
+var truncateTablesSQL = []string{
+	"TRUNCATE TABLE domains;",
+	"TRUNCATE TABLE configurations;",
+}
 
-const createDomainQuery = `CREATE TABLE domains(
+var createTablesSQL = []string{
+	createDomainSQL,
+	createEncryptionKeyLabelsSQL,
+}
+
+const createDomainSQL = `CREATE TABLE domains(
 	domain varchar(255) PRIMARY KEY,
 	expireTime timestamp
 );`
+
+const createEncryptionKeyLabelsSQL = `CREATE TABLE configurations(
+	id varchar(255) PRIMARY KEY,
+	value varchar(255)
+);`
+
+func randStr(str_size int) string {
+	alphanum := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	var bytes = make([]byte, str_size)
+	rand.Read(bytes)
+	for i, b := range bytes {
+		bytes[i] = alphanum[b%byte(len(alphanum))]
+	}
+	return string(bytes)
+}
