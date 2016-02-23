@@ -240,7 +240,8 @@ func (db *SQLDB) rawActuaLLRPByProcessGuidAndIndex(logger lager.Logger, processG
 	var data string
 	lrp := new(models.ActualLRP)
 	if err := row.Scan(&data); err != nil {
-		logger.Fatal("failed-to-get-data", err, lager.Data{"processGuid": processGuid, "index": index})
+		logger.Error("failed-to-get-data", err, lager.Data{"processGuid": processGuid, "index": index})
+		return nil, 0, err
 	}
 
 	deserializeErr := db.deserializeModel(logger, data, lrp)
@@ -293,9 +294,56 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 	return nil
 }
 
-// stubbed out to etcd
 func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
-	return db.etcdDB.StartActualLRP(logger, key, instanceKey, netInfo)
+	logger = logger.Session("start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
+	logger.Info("starting")
+	lrp, _, err := db.rawActuaLLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		logger.Error("failed-to-get-actual-lrp", err)
+		return err
+	}
+
+	if lrp.ActualLRPKey.Equal(key) &&
+		lrp.ActualLRPInstanceKey.Equal(instanceKey) &&
+		lrp.ActualLRPNetInfo.Equal(netInfo) &&
+		lrp.State == models.ActualLRPStateRunning {
+		logger.Info("succeeded")
+		return nil
+	}
+
+	if !lrp.AllowsTransitionTo(&lrp.ActualLRPKey, instanceKey, models.ActualLRPStateRunning) {
+		logger.Error("failed-to-transition-actual-lrp-to-started", nil)
+		return models.ErrActualLRPCannotBeStarted
+	}
+
+	lrp.ModificationTag.Increment()
+	lrp.State = models.ActualLRPStateRunning
+	lrp.Since = db.clock.Now().UnixNano()
+	lrp.ActualLRPInstanceKey = *instanceKey
+	lrp.ActualLRPNetInfo = *netInfo
+	lrp.PlacementError = ""
+
+	err = lrp.Validate()
+	if err != nil {
+		logger.Error("failed", err)
+		return models.NewError(models.Error_InvalidRecord, err.Error())
+	}
+
+	lrpData, serializeErr := db.serializeModel(logger, lrp)
+	if serializeErr != nil {
+		return serializeErr
+	}
+
+	update := "update actuals set processGuid=?, idx=?, cellId=?, domain=?, data=?  where processGuid = ? and idx = ? and isEvacuating=false"
+	_, err = db.sql.Exec(update, lrp.ProcessGuid, lrp.Index, lrp.CellId, lrp.Domain, lrpData, lrp.ProcessGuid, lrp.Index)
+	if err != nil {
+		logger.Error("update-failed", err)
+		return models.ErrActualLRPCannotBeStarted
+	}
+	logger.Info("succeeded")
+
+	return nil
 }
 
 func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
