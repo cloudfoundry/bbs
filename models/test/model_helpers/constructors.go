@@ -116,8 +116,9 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				Ports:        []uint32{53},
 			},
 		},
-		Annotation:         `[{"anything": "you want!"}]... dude`,
-		LegacyDownloadUser: "legacy-jim",
+		Annotation:                    `[{"anything": "you want!"}]... dude`,
+		LegacyDownloadUser:            "legacy-jim",
+		TrustedSystemCertificatesPath: "/etc/somepath",
 	}
 }
 
