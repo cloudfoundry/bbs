@@ -277,6 +277,14 @@ var _ = Describe("TaskDB", func() {
 			Expect(task.UpdatedAt).To(Equal(fakeClock.Now().Truncate(time.Microsecond).UnixNano()))
 		})
 
+		Context("when the cell id is toooooo long", func() {
+			It("returns a BadRequest error", func() {
+				started, err := sqlDB.StartTask(logger, expectedTask.TaskGuid, randStr(256))
+				Expect(err).To(Equal(models.ErrBadRequest))
+				Expect(started).To(BeFalse())
+			})
+		})
+
 		Context("When starting a Task that is already started", func() {
 			BeforeEach(func() {
 				started, err := sqlDB.StartTask(logger, expectedTask.TaskGuid, "cell-id")

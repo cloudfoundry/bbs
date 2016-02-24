@@ -86,12 +86,12 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 			"",
 		)
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		if rowsAffected < 1 {
@@ -139,14 +139,13 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) error {
 			models.Task_Pending,
 			models.Task_Running,
 		)
-
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		if rowsAffected < 1 {
@@ -189,7 +188,7 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		if rowsAffected < 1 {
@@ -237,7 +236,7 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) e
 
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		if rowsAffected < 1 {
@@ -270,7 +269,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		if rowsAffected < 1 {
@@ -297,7 +296,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			panic(err.Error())
+			return db.convertSQLError(err)
 		}
 
 		if rowsAffected < 1 {

@@ -125,9 +125,9 @@ const createTasksSQL = `CREATE TABLE tasks(
 	task_definition blob NOT NULL
 );`
 
-func randStr(str_size int) string {
+func randStr(strSize int) string {
 	alphanum := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	var bytes = make([]byte, str_size)
+	var bytes = make([]byte, strSize)
 	rand.Read(bytes)
 	for i, b := range bytes {
 		bytes[i] = alphanum[b%byte(len(alphanum))]
