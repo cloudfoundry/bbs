@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -73,42 +72,30 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 	var started bool
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		if err != nil {
+			return err
+		}
+
+		if task.State == models.Task_Running && task.CellId == cellId {
+			return nil
+		}
+
+		if err = task.ValidateTransitionTo(models.Task_Running); err != nil {
+			return err
+		}
+
 		now := db.clock.Now()
-		result, err := tx.Exec(
-			`UPDATE tasks SET
-		  state = ?, updated_at = ?, cell_id = ?
-			WHERE guid = ? AND state = ? AND cell_id = ?`,
+		_, err = tx.Exec(
+			`UPDATE tasks SET state = ?, updated_at = ?, cell_id = ?
+			   WHERE guid = ?`,
 			models.Task_Running,
 			now,
 			cellId,
 			taskGuid,
-			models.Task_Pending,
-			"",
 		)
 		if err != nil {
 			return db.convertSQLError(err)
-		}
-
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return db.convertSQLError(err)
-		}
-
-		if rowsAffected < 1 {
-			row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
-			task, err := db.fetchTask(logger, row)
-			if err != nil {
-				return err
-			}
-
-			if task.State == models.Task_Running && task.CellId == cellId {
-				return nil
-			}
-
-			return models.NewError(
-				models.Error_InvalidStateTransition,
-				fmt.Sprintf("Cannot transition from %s to %s", task.State.String(), models.Task_Running.String()),
-			)
 		}
 
 		started = true
@@ -120,14 +107,23 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 
 func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		now := db.clock.Now()
+		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		if err != nil {
+			return err
+		}
 
-		result, err := tx.Exec(
+		if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
+			if task.State != models.Task_Pending {
+				return err
+			}
+		}
+
+		now := db.clock.Now()
+		_, err = tx.Exec(
 			`UPDATE tasks SET
-		  state = ?, updated_at = ?, cell_id = ?, first_completed_at = ?,
-			failed = ?, failure_reason = ?, result = ?
-			WHERE guid = ? AND state IN (?, ?)
-			`,
+				state = ?, updated_at = ?, cell_id = ?, first_completed_at = ?,
+				failed = ?, failure_reason = ?, result = ?
+				WHERE guid = ?`,
 			models.Task_Completed,
 			now,
 			"",
@@ -136,26 +132,9 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) error {
 			"task was cancelled",
 			"",
 			taskGuid,
-			models.Task_Pending,
-			models.Task_Running,
 		)
 		if err != nil {
 			return db.convertSQLError(err)
-		}
-
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return db.convertSQLError(err)
-		}
-
-		if rowsAffected < 1 {
-			row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
-			task, err := db.fetchTask(logger, row)
-			if err != nil {
-				return err
-			}
-
-			return models.NewTaskTransitionError(task.State, models.Task_Completed)
 		}
 
 		return nil
@@ -164,12 +143,28 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) error {
 
 func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		if err != nil {
+			return err
+		}
+
+		if task.CellId != cellID {
+			return models.NewRunningOnDifferentCellError(cellID, task.CellId)
+		}
+
+		if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
+			return err
+		}
+
+		if task.State == models.Task_Pending {
+		}
+
 		now := db.clock.Now()
-		result, err := tx.Exec(
+		_, err = tx.Exec(
 			`UPDATE tasks SET
-		  state = ?, updated_at = ?, first_completed_at = ?,
-			failed = ?, failure_reason = ?, result = ?, cell_id = ?
-			WHERE cell_id = ? AND guid = ? AND state = ?
+				state = ?, updated_at = ?, first_completed_at = ?,
+				failed = ?, failure_reason = ?, result = ?, cell_id = ?
+			WHERE cell_id = ? AND guid = ?
 			`,
 			models.Task_Completed,
 			now,
@@ -180,29 +175,9 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 			"",
 			cellID,
 			taskGuid,
-			models.Task_Running,
 		)
 		if err != nil {
 			return db.convertSQLError(err)
-		}
-
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return db.convertSQLError(err)
-		}
-
-		if rowsAffected < 1 {
-			row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
-			task, err := db.fetchTask(logger, row)
-			if err != nil {
-				return err
-			}
-
-			if task.State != models.Task_Running {
-				return models.NewTaskTransitionError(task.State, models.Task_Completed)
-			}
-
-			return models.NewRunningOnDifferentCellError(cellID, task.CellId)
 		}
 
 		return nil
@@ -211,13 +186,23 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 
 func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		now := db.clock.Now()
+		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		if err != nil {
+			return err
+		}
 
-		result, err := tx.Exec(
+		if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
+			if task.State != models.Task_Pending {
+				return err
+			}
+		}
+
+		now := db.clock.Now()
+		_, err = tx.Exec(
 			`UPDATE tasks SET
 		  state = ?, updated_at = ?, first_completed_at = ?,
 			failed = ?, failure_reason = ?, result = ?, cell_id = ?
-			WHERE guid = ? AND state IN (?, ?)
+			WHERE guid = ?
 			`,
 			models.Task_Completed,
 			now,
@@ -227,26 +212,9 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) e
 			"",
 			"",
 			taskGuid,
-			models.Task_Running,
-			models.Task_Pending,
 		)
 		if err != nil {
 			return db.convertSQLError(err)
-		}
-
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return db.convertSQLError(err)
-		}
-
-		if rowsAffected < 1 {
-			row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
-			task, err := db.fetchTask(logger, row)
-			if err != nil {
-				return err
-			}
-
-			return models.NewTaskTransitionError(task.State, models.Task_Completed)
 		}
 
 		return nil
@@ -255,31 +223,27 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) e
 
 func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		if err != nil {
+			return err
+		}
+
+		if err = task.ValidateTransitionTo(models.Task_Resolving); err != nil {
+			return err
+		}
+
 		now := db.clock.Now()
-		result, _ := tx.Exec(
+		_, err = tx.Exec(
 			`UPDATE tasks SET
 		  state = ?, updated_at = ?
-			WHERE state = ? AND guid = ?
+			WHERE guid = ?
 			`,
 			models.Task_Resolving,
 			now,
-			models.Task_Completed,
 			taskGuid,
 		)
-
-		rowsAffected, err := result.RowsAffected()
 		if err != nil {
 			return db.convertSQLError(err)
-		}
-
-		if rowsAffected < 1 {
-			row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
-			task, err := db.fetchTask(logger, row)
-			if err != nil {
-				return err
-			}
-
-			return models.NewTaskTransitionError(task.State, models.Task_Resolving)
 		}
 
 		return nil
@@ -288,29 +252,30 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 
 func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		result, _ := tx.Exec(
-			`DELETE FROM tasks WHERE guid = ? AND state = ?`,
-			taskGuid,
-			models.Task_Resolving,
-		)
+		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		if err != nil {
+			return err
+		}
 
-		rowsAffected, err := result.RowsAffected()
+		if task.State != models.Task_Resolving {
+			return models.ErrBadRequest
+		}
+
+		_, err = tx.Exec(
+			`DELETE FROM tasks WHERE guid = ?`,
+			taskGuid,
+		)
 		if err != nil {
 			return db.convertSQLError(err)
 		}
 
-		if rowsAffected < 1 {
-			row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
-			_, err := db.fetchTask(logger, row)
-			if err != nil {
-				return err
-			}
-
-			return models.ErrBadRequest
-		}
-
 		return nil
 	})
+}
+
+func (db *SQLDB) fetchTaskForShare(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
+	row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ? LOCK IN SHARE MODE", taskGuid)
+	return db.fetchTask(logger, row)
 }
 
 func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner) (*models.Task, error) {

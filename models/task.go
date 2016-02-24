@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
 
@@ -75,6 +76,27 @@ func (t *Task) VersionDownTo(v format.Version) *Task {
 	default:
 		return t
 	}
+}
+
+func (t *Task) ValidateTransitionTo(state Task_State) error {
+	var valid bool
+	switch state {
+	case Task_Running:
+		valid = t.State == Task_Pending
+	case Task_Completed:
+		valid = t.State == Task_Running
+	case Task_Resolving:
+		valid = t.State == Task_Completed
+	}
+
+	if !valid {
+		return NewError(
+			Error_InvalidStateTransition,
+			fmt.Sprintf("Cannot transition from %s to %s", t.State.String(), state.String()),
+		)
+	}
+
+	return nil
 }
 
 func newTaskDefWithCachedDependenciesAsActions(t *TaskDefinition) *TaskDefinition {
