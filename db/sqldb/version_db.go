@@ -15,45 +15,13 @@ func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error 
 		return err
 	}
 
-	tx, err := db.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	result, err := tx.Exec("UPDATE configurations SET value = ? WHERE id = ?", versionJSON, VersionID)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected < 1 {
-		_, err = tx.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", VersionID, versionJSON)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return db.setConfigurationValue(logger, VersionID, string(versionJSON))
 }
 
 func (db *SQLDB) Version(logger lager.Logger) (*models.Version, error) {
-	var versionJSON string
-	err := db.db.QueryRow(
-		"SELECT value FROM configurations WHERE id = ?",
-		VersionID,
-	).Scan(&versionJSON)
+	versionJSON, err := db.getConfigurationValue(logger, VersionID)
 	if err != nil {
-		return nil, models.ErrResourceNotFound
+		return nil, err
 	}
 
 	var version models.Version

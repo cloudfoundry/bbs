@@ -28,8 +28,7 @@ var _ = Describe("Encryption", func() {
 			It("returns an error trying to insert", func() {
 				expectedLabel := randStr(256)
 				err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("Error creating encryption key label"))
+				Expect(err).To(Equal(models.ErrBadRequest))
 			})
 		})
 
@@ -58,8 +57,7 @@ var _ = Describe("Encryption", func() {
 				It("returns an error trying to insert", func() {
 					expectedLabel := randStr(256)
 					err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
-					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("Error updating encryption key label"))
+					Expect(err).To(Equal(models.ErrBadRequest))
 				})
 			})
 		})

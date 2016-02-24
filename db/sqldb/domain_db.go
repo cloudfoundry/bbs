@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/pivotal-golang/lager"
@@ -9,29 +10,25 @@ import (
 func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) error {
 	expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second)
 
-	result, err := db.db.Exec("UPDATE domains SET expireTime = ? WHERE domain = ?", expireTime, domain)
-	if err != nil {
-		return err
-	}
-
-	count, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if count < 1 {
-		_, err = db.db.Exec("INSERT INTO domains VALUES (?, ?)", domain, expireTime)
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		_, err := tx.Exec(
+			`INSERT INTO domains (domain, expire_time) VALUES (?, ?)
+										ON DUPLICATE KEY UPDATE expire_time = ?`,
+			domain,
+			expireTime,
+			expireTime,
+		)
 		if err != nil {
-			return err
+			return db.convertSQLError(err)
 		}
-	}
 
-	return nil
+		return nil
+	})
 }
 
 func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 	expirationTime := db.clock.Now().Round(time.Second)
-	rows, err := db.db.Query("SELECT domain FROM domains WHERE expireTime > ?", expirationTime)
+	rows, err := db.db.Query("SELECT domain FROM domains WHERE expire_time > ?", expirationTime)
 	if err != nil {
 		return nil, err
 	}

@@ -103,7 +103,7 @@ var createTablesSQL = []string{
 
 const createDomainSQL = `CREATE TABLE domains(
 	domain varchar(255) PRIMARY KEY,
-	expireTime timestamp
+	expire_time timestamp
 );`
 
 const createConfigurationsSQL = `CREATE TABLE configurations(
