@@ -93,12 +93,14 @@ var truncateTablesSQL = []string{
 	"TRUNCATE TABLE domains;",
 	"TRUNCATE TABLE configurations;",
 	"TRUNCATE TABLE tasks;",
+	"TRUNCATE TABLE desired_lrps;",
 }
 
 var createTablesSQL = []string{
 	createDomainSQL,
 	createConfigurationsSQL,
 	createTasksSQL,
+	createDesiredLRPsSQL,
 }
 
 const createDomainSQL = `CREATE TABLE domains(
@@ -113,7 +115,7 @@ const createConfigurationsSQL = `CREATE TABLE configurations(
 
 const createTasksSQL = `CREATE TABLE tasks(
 	guid varchar(255) PRIMARY KEY,
-	domain varchar(255),
+	domain varchar(255) NOT NULL,
 	created_at timestamp(6),
 	updated_at timestamp(6),
 	first_completed_at timestamp(6),
@@ -123,6 +125,21 @@ const createTasksSQL = `CREATE TABLE tasks(
 	failed bool DEFAULT false,
 	failure_reason varchar(255) NOT NULL DEFAULT "",
 	task_definition blob NOT NULL
+);`
+
+const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
+	process_guid varchar(255) PRIMARY KEY,
+	domain varchar(255) NOT NULL,
+	log_guid varchar(255) NOT NULL,
+	annotation text,
+	instances int NOT NULL,
+	memory_mb int NOT NULL,
+	disk_mb int NOT NULL,
+	rootfs varchar(255) NOT NULL,
+	routes blob NOT NULL,
+	modification_tag_epoch varchar(255) NOT NULL,
+	modification_tag_index int,
+	run_info blob NOT NULL
 );`
 
 func randStr(strSize int) string {

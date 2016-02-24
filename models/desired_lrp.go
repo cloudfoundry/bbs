@@ -68,6 +68,32 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 	}
 }
 
+func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
+	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
+	for i := range runInfo.EnvironmentVariables {
+		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+	}
+
+	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
+	for i := range runInfo.EgressRules {
+		egressRules[i] = &runInfo.EgressRules[i]
+	}
+
+	desiredLRP.EnvironmentVariables = environmentVariables
+	desiredLRP.CachedDependencies = runInfo.CachedDependencies
+	desiredLRP.Setup = runInfo.Setup
+	desiredLRP.Action = runInfo.Action
+	desiredLRP.Monitor = runInfo.Monitor
+	desiredLRP.StartTimeout = runInfo.StartTimeout
+	desiredLRP.Privileged = runInfo.Privileged
+	desiredLRP.CpuWeight = runInfo.CpuWeight
+	desiredLRP.Ports = runInfo.Ports
+	desiredLRP.EgressRules = egressRules
+	desiredLRP.LogSource = runInfo.LogSource
+	desiredLRP.MetricsGuid = runInfo.MetricsGuid
+	desiredLRP.LegacyDownloadUser = runInfo.LegacyDownloadUser
+}
+
 func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLRP {
 	d = d.Copy()
 	if len(d.CachedDependencies) > 0 {
