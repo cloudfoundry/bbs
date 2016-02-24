@@ -8,11 +8,16 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const EncryptionKeyId = "encryption_key_label"
+const EncryptionKeyID = "encryption_key_label"
 
 func (db *SQLDB) SetEncryptionKeyLabel(logger lager.Logger, label string) error {
-	var err error
-	result, err := db.db.Exec("UPDATE configurations SET value = ? WHERE id = ? ", label, EncryptionKeyId)
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec("UPDATE configurations SET value = ? WHERE id = ? ", label, EncryptionKeyID)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error updating encryption key label: %s", err))
 	}
@@ -23,29 +28,28 @@ func (db *SQLDB) SetEncryptionKeyLabel(logger lager.Logger, label string) error 
 	}
 
 	if rowsAffected < 1 {
-		_, err = db.db.Exec("INSERT INTO configurations VALUES (?, ?)", EncryptionKeyId, label)
+		_, err = tx.Exec("INSERT INTO configurations VALUES (?, ?)", EncryptionKeyID, label)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Error creating encryption key label: %s", err))
 		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (db *SQLDB) EncryptionKeyLabel(logger lager.Logger) (string, error) {
-	rows, err := db.db.Query("SELECT value FROM configurations WHERE id = ?", EncryptionKeyId)
+	var label string
+	err := db.db.QueryRow(
+		"SELECT value FROM configurations WHERE id = ?",
+		EncryptionKeyID,
+	).Scan(&label)
 	if err != nil {
-		return "", err
+		return "", models.ErrResourceNotFound
 	}
-
-	if rows.Next() {
-		var label string
-		err = rows.Scan(&label)
-		if err != nil {
-			return "", err
-		}
-		return label, nil
-	}
-
-	return "", models.ErrResourceNotFound
+	return label, nil
 }

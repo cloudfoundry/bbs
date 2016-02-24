@@ -15,7 +15,7 @@ var _ = Describe("Encryption", func() {
 			err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
 			Expect(err).NotTo(HaveOccurred())
 
-			rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyId)
+			rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rows.Next()).To(BeTrue())
 			var label string
@@ -45,7 +45,7 @@ var _ = Describe("Encryption", func() {
 				err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyId)
+				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyID)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(rows.Next()).To(BeTrue())
 				var label string
@@ -69,7 +69,7 @@ var _ = Describe("Encryption", func() {
 		Context("when the encription key label key exists", func() {
 			It("retrieves the encrption key label from the database", func() {
 				label := "expectedLabel"
-				_, err := db.Exec("INSERT INTO configurations VALUES (?, ?)", sqldb.EncryptionKeyId, label)
+				_, err := db.Exec("INSERT INTO configurations VALUES (?, ?)", sqldb.EncryptionKeyID, label)
 				Expect(err).NotTo(HaveOccurred())
 
 				keyLabel, err := sqlDB.EncryptionKeyLabel(logger)

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
+	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"github.com/cloudfoundry-incubator/bbs/format"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
@@ -18,10 +20,12 @@ import (
 )
 
 var (
-	db        *sql.DB
-	sqlDB     *sqldb.SQLDB
-	fakeClock *fakeclock.FakeClock
-	logger    *lagertest.TestLogger
+	db         *sql.DB
+	sqlDB      *sqldb.SQLDB
+	fakeClock  *fakeclock.FakeClock
+	logger     *lagertest.TestLogger
+	cryptor    encryption.Cryptor
+	serializer format.Serializer
 )
 
 func TestSql(t *testing.T) {
@@ -48,7 +52,14 @@ var _ = BeforeSuite(func() {
 
 	createTables(db)
 
-	sqlDB = sqldb.NewSQLDB(db, fakeClock)
+	encryptionKey, err := encryption.NewKey("label", "passphrase")
+	Expect(err).NotTo(HaveOccurred())
+	keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
+	Expect(err).NotTo(HaveOccurred())
+	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
+	serializer = format.NewSerializer(cryptor)
+
+	sqlDB = sqldb.NewSQLDB(db, format.ENCRYPTED_PROTO, cryptor, fakeClock)
 })
 
 var _ = AfterEach(func() {
@@ -81,11 +92,13 @@ func createTables(db *sql.DB) {
 var truncateTablesSQL = []string{
 	"TRUNCATE TABLE domains;",
 	"TRUNCATE TABLE configurations;",
+	"TRUNCATE TABLE tasks;",
 }
 
 var createTablesSQL = []string{
 	createDomainSQL,
-	createEncryptionKeyLabelsSQL,
+	createConfigurationsSQL,
+	createTasksSQL,
 }
 
 const createDomainSQL = `CREATE TABLE domains(
@@ -93,9 +106,23 @@ const createDomainSQL = `CREATE TABLE domains(
 	expireTime timestamp
 );`
 
-const createEncryptionKeyLabelsSQL = `CREATE TABLE configurations(
+const createConfigurationsSQL = `CREATE TABLE configurations(
 	id varchar(255) PRIMARY KEY,
 	value varchar(255)
+);`
+
+const createTasksSQL = `CREATE TABLE tasks(
+	guid varchar(255) PRIMARY KEY,
+	domain varchar(255),
+	created_at timestamp(6),
+	updated_at timestamp(6),
+	first_completed_at timestamp(6),
+	state int,
+	cell_id varchar(255) NOT NULL DEFAULT "",
+	result text,
+	failed bool DEFAULT false,
+	failure_reason varchar(255) NOT NULL DEFAULT "",
+	task_definition blob NOT NULL
 );`
 
 func randStr(str_size int) string {

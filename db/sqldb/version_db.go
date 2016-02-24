@@ -7,7 +7,7 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const VERSION_ID = "version"
+const VersionID = "version"
 
 func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error {
 	versionJSON, err := json.Marshal(version)
@@ -15,7 +15,13 @@ func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error 
 		return err
 	}
 
-	result, err := db.db.Exec("UPDATE configurations SET value = ? WHERE id = ?", versionJSON, VERSION_ID)
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec("UPDATE configurations SET value = ? WHERE id = ?", versionJSON, VersionID)
 	if err != nil {
 		return err
 	}
@@ -26,36 +32,35 @@ func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error 
 	}
 
 	if rowsAffected < 1 {
-		_, err = db.db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", VERSION_ID, versionJSON)
+		_, err = tx.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", VersionID, versionJSON)
 		if err != nil {
 			return err
 		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (db *SQLDB) Version(logger lager.Logger) (*models.Version, error) {
-	rows, err := db.db.Query("SELECT value FROM configurations WHERE id = ?", VERSION_ID)
+	var versionJSON string
+	err := db.db.QueryRow(
+		"SELECT value FROM configurations WHERE id = ?",
+		VersionID,
+	).Scan(&versionJSON)
 	if err != nil {
-		return nil, err
+		return nil, models.ErrResourceNotFound
 	}
 
-	if rows.Next() {
-		var versionJSON string
-		err = rows.Scan(&versionJSON)
-		if err != nil {
-			return nil, err
-		}
-
-		var version models.Version
-		err = json.Unmarshal([]byte(versionJSON), &version)
-		if err != nil {
-			return nil, models.ErrDeserializeJSON
-		}
-
-		return &version, nil
+	var version models.Version
+	err = json.Unmarshal([]byte(versionJSON), &version)
+	if err != nil {
+		return nil, models.ErrDeserializeJSON
 	}
 
-	return nil, models.ErrResourceNotFound
+	return &version, nil
 }

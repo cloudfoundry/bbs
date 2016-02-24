@@ -111,6 +111,7 @@ func (t *TaskDefinition) Copy() *TaskDefinition {
 	newTaskDef := *t
 	return &newTaskDef
 }
+
 func (def *TaskDefinition) Validate() error {
 	var validationError ValidationError
 
@@ -154,5 +155,13 @@ func (def *TaskDefinition) Validate() error {
 		return validationError
 	}
 
+	return nil
+}
+
+func (t *TaskDefinition) Version() format.Version {
+	return format.V1
+}
+
+func (t *TaskDefinition) MigrateFromVersion(v format.Version) error {
 	return nil
 }

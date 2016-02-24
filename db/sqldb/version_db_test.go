@@ -17,7 +17,7 @@ var _ = Describe("Version", func() {
 				err := sqlDB.SetVersion(logger, expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.VERSION_ID)
+				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(rows.Next()).To(BeTrue())
@@ -41,7 +41,7 @@ var _ = Describe("Version", func() {
 				versionJSON, err := json.Marshal(existingVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				result, err := db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VERSION_ID, versionJSON)
+				result, err := db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VersionID, versionJSON)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(result.RowsAffected()).To(BeEquivalentTo(1))
 			})
@@ -52,7 +52,7 @@ var _ = Describe("Version", func() {
 				err := sqlDB.SetVersion(logger, version)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.VERSION_ID)
+				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(rows.Next()).To(BeTrue())
@@ -77,7 +77,7 @@ var _ = Describe("Version", func() {
 				value, err := json.Marshal(expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VERSION_ID, value)
+				_, err = db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VersionID, value)
 				Expect(err).NotTo(HaveOccurred())
 
 				version, err := sqlDB.Version(logger)
@@ -97,7 +97,7 @@ var _ = Describe("Version", func() {
 
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserializeJSON", func() {
-				_, err := db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VERSION_ID, "{{")
+				_, err := db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VersionID, "{{")
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)
