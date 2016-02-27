@@ -58,6 +58,8 @@ type Client interface {
 	CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error
 	ResolvingTask(taskGuid string) error
 	DeleteTask(taskGuid string) error
+
+	SubscribeToEvents() (events.EventSource, error)
 }
 
 /*
@@ -66,15 +68,60 @@ It exposes methods for basic LRP and Task Lifecycles, Domain manipulation, and
 event subscription.
 */
 type ExternalClient interface {
+	ExternalTaskClient
+	ExternalDomainClient
+	ExternalActualLRPClient
+	ExternalDesiredLRPClient
+	ExternalEventClient
+
 	// Returns true if the BBS server is reachable
 	Ping() bool
 
+	// Lists all Cells
+	Cells() ([]*models.CellPresence, error)
+}
+
+/*
+The ExternalTaskClient is used to access Diego's ability to run one-off tasks.
+More information about this API can be found in the bbs docs:
+
+https://github.com/cloudfoundry-incubator/bbs/tree/master/doc/tasks.md
+*/
+type ExternalTaskClient interface {
+	// Creates a Task from the given TaskDefinition
+	DesireTask(guid, domain string, def *models.TaskDefinition) error
+
+	// Lists all Tasks
+	Tasks() ([]*models.Task, error)
+
+	// Lists all Tasks of the given domain
+	TasksByDomain(domain string) ([]*models.Task, error)
+
+	// Lists all Tasks on the given cell
+	TasksByCellID(cellId string) ([]*models.Task, error)
+
+	// Returns the Task with the given guid
+	TaskByGuid(guid string) (*models.Task, error)
+
+	// Cancels the Task with the given task guid
+	CancelTask(taskGuid string) error
+}
+
+/*
+The ExternalDomainClient is used to access and update Diego's domains.
+*/
+type ExternalDomainClient interface {
 	// Lists the active domains
 	Domains() ([]string, error)
 
 	// Creates a domain or bumps the ttl on an existing domain
 	UpsertDomain(domain string, ttl time.Duration) error
+}
 
+/*
+The ExternalActualLRPClient is used to access and retire Actual LRPs
+*/
+type ExternalActualLRPClient interface {
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
 	ActualLRPGroups(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 
@@ -86,7 +133,12 @@ type ExternalClient interface {
 
 	// Shuts down the ActualLRP matching the given ActualLRPKey, but does not modify the desired state
 	RetireActualLRP(key *models.ActualLRPKey) error
+}
 
+/*
+The ExternalDesiredLRPClient is used to access and manipulate Disired LRPs.
+*/
+type ExternalDesiredLRPClient interface {
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
 	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 
@@ -104,28 +156,12 @@ type ExternalClient interface {
 
 	// Removes the DesiredLRP matching the given process guid
 	RemoveDesiredLRP(processGuid string) error
+}
 
-	// Lists all Tasks
-	Tasks() ([]*models.Task, error)
-
-	// Lists all Tasks of the given domain
-	TasksByDomain(domain string) ([]*models.Task, error)
-
-	// Lists all Tasks on the given cell
-	TasksByCellID(cellId string) ([]*models.Task, error)
-
-	// Returns the Task with the given guid
-	TaskByGuid(guid string) (*models.Task, error)
-
-	// Creates a Task from the given TaskDefinition
-	DesireTask(guid, domain string, def *models.TaskDefinition) error
-
-	// Cancels the Task with the given task guid
-	CancelTask(taskGuid string) error
-
-	// Legacy, do not use
-	SubscribeToEvents() (events.EventSource, error)
-
+/*
+The ExternalEventClient is used to subscribe to groups of Events.
+*/
+type ExternalEventClient interface {
 	// Returns an EventSource for watching changes to DesiredLRPs
 	SubscribeToDesiredLRPEvents() (events.EventSource, error)
 
@@ -134,9 +170,6 @@ type ExternalClient interface {
 
 	// Returns an EventSource for watching changes to Tasks
 	SubscribeToTaskEvents() (events.EventSource, error)
-
-	// Lists all Cells
-	Cells() ([]*models.CellPresence, error)
 }
 
 func newClient(url string) *client {
