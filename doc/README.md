@@ -9,12 +9,12 @@ Note: These docs are thouroughly incomplete, and are in the process of being mov
 Here's an outline:
 
 - [API Overview](overview.md)
-   - [Implementation Details](protobuf-rpc.md)
+   - Implementation Details
 - [Understanding Tasks](tasks.md)
    - [Defining Tasks](defining-tasks.md)
    - [Task Examples](task-examples.md)
-- [Understanding Long Running Processes (LRPs)](lrps.md)
-   - [Defining LRPs](defining-lrps.md)
-   - [LRP Examples](lrp-examples.md)
-- [Container Runtime Environment](environment.md)
-- [Understanding Actions](actions.md)
+- Understanding Long Running Processes (LRPs)
+   - Defining LRPs
+   - LRP Examples
+- Container Runtime Environment
+- Understanding Actions
