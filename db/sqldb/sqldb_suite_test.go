@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/cloudfoundry-incubator/bbs/guidprovider/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
@@ -20,23 +21,25 @@ import (
 )
 
 var (
-	db         *sql.DB
-	sqlDB      *sqldb.SQLDB
-	fakeClock  *fakeclock.FakeClock
-	logger     *lagertest.TestLogger
-	cryptor    encryption.Cryptor
-	serializer format.Serializer
+	db               *sql.DB
+	sqlDB            *sqldb.SQLDB
+	fakeClock        *fakeclock.FakeClock
+	fakeGUIDProvider *fakes.FakeGUIDProvider
+	logger           *lagertest.TestLogger
+	cryptor          encryption.Cryptor
+	serializer       format.Serializer
 )
 
 func TestSql(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	RunSpecs(t, "Sql Suite")
+	RunSpecs(t, "SQL DB Suite")
 }
 
 var _ = BeforeSuite(func() {
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
+	fakeGUIDProvider = &fakes.FakeGUIDProvider{}
 	logger = lagertest.NewTestLogger("sql-db")
 
 	db, err = sql.Open("mysql", "root:password@/")
@@ -59,7 +62,7 @@ var _ = BeforeSuite(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	sqlDB = sqldb.NewSQLDB(db, format.ENCRYPTED_PROTO, cryptor, fakeClock)
+	sqlDB = sqldb.NewSQLDB(db, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock)
 })
 
 var _ = AfterEach(func() {
@@ -94,6 +97,7 @@ var truncateTablesSQL = []string{
 	"TRUNCATE TABLE configurations;",
 	"TRUNCATE TABLE tasks;",
 	"TRUNCATE TABLE desired_lrps;",
+	"TRUNCATE TABLE actual_lrps;",
 }
 
 var createTablesSQL = []string{
@@ -101,45 +105,64 @@ var createTablesSQL = []string{
 	createConfigurationsSQL,
 	createTasksSQL,
 	createDesiredLRPsSQL,
+	createActualLRPsSQL,
 }
 
 const createDomainSQL = `CREATE TABLE domains(
-	domain varchar(255) PRIMARY KEY,
-	expire_time timestamp
+	domain VARCHAR(255) PRIMARY KEY,
+	expire_time TIMESTAMP(6) DEFAULT 0
 );`
 
 const createConfigurationsSQL = `CREATE TABLE configurations(
-	id varchar(255) PRIMARY KEY,
-	value varchar(255)
+	id VARCHAR(255) PRIMARY KEY,
+	value VARCHAR(255)
 );`
 
 const createTasksSQL = `CREATE TABLE tasks(
-	guid varchar(255) PRIMARY KEY,
-	domain varchar(255) NOT NULL,
-	created_at timestamp(6),
-	updated_at timestamp(6),
-	first_completed_at timestamp(6),
-	state int,
-	cell_id varchar(255) NOT NULL DEFAULT "",
-	result text,
-	failed bool DEFAULT false,
-	failure_reason varchar(255) NOT NULL DEFAULT "",
-	task_definition blob NOT NULL
+	guid VARCHAR(255) PRIMARY KEY,
+	domain VARCHAR(255) NOT NULL,
+	updated_at TIMESTAMP(6) DEFAULT 0,
+	created_at TIMESTAMP(6) DEFAULT 0,
+	first_completed_at TIMESTAMP(6) DEFAULT 0,
+	state INT,
+	cell_id VARCHAR(255) NOT NULL DEFAULT "",
+	result TEXT,
+	failed BOOL DEFAULT false,
+	failure_reason VARCHAR(255) NOT NULL DEFAULT "",
+	task_definition BLOB NOT NULL
 );`
 
 const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
-	process_guid varchar(255) PRIMARY KEY,
-	domain varchar(255) NOT NULL,
-	log_guid varchar(255) NOT NULL,
-	annotation text,
-	instances int NOT NULL,
-	memory_mb int NOT NULL,
-	disk_mb int NOT NULL,
-	rootfs varchar(255) NOT NULL,
-	routes blob NOT NULL,
-	modification_tag_epoch varchar(255) NOT NULL,
-	modification_tag_index int,
-	run_info blob NOT NULL
+	process_guid VARCHAR(255) PRIMARY KEY,
+	domain VARCHAR(255) NOT NULL,
+	log_guid VARCHAR(255) NOT NULL,
+	annotation TEXT,
+	instances INT NOT NULL,
+	memory_mb INT NOT NULL,
+	disk_mb INT NOT NULL,
+	rootfs VARCHAR(255) NOT NULL,
+	routes BLOB NOT NULL,
+	modification_tag_epoch VARCHAR(255) NOT NULL,
+	modification_tag_index INT,
+	run_info BLOB NOT NULL
+);`
+
+const createActualLRPsSQL = `CREATE TABLE actual_lrps(
+	process_guid VARCHAR(255),
+	instance_index INT,
+	evacuating BOOL DEFAULT false,
+	domain VARCHAR(255) NOT NULL,
+	state VARCHAR(255) NOT NULL,
+	instance_guid VARCHAR(255) NOT NULL DEFAULT "",
+	cell_id VARCHAR(255) NOT NULL DEFAULT "",
+	placement_error VARCHAR(255) NOT NULL DEFAULT "",
+	since TIMESTAMP(6) DEFAULT 0,
+	net_info BLOB NOT NULL,
+	modification_tag_epoch VARCHAR(255) NOT NULL,
+	modification_tag_index INT,
+	crash_count INT NOT NULL DEFAULT 0,
+	crash_reason VARCHAR(255) NOT NULL DEFAULT "",
+	PRIMARY KEY(process_guid, instance_index, evacuating)
 );`
 
 func randStr(strSize int) string {

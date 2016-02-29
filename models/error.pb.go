@@ -52,6 +52,7 @@ const (
 	Error_DesiredLRPCannotBeUpdated               Error_Type = 23
 	Error_RunningOnDifferentCell                  Error_Type = 24
 	Error_DesiredLRPSchedulingInfoCannotBeUpdated Error_Type = 25
+	Error_GUIDGeneration                          Error_Type = 26
 )
 
 var Error_Type_name = map[int32]string{
@@ -81,6 +82,7 @@ var Error_Type_name = map[int32]string{
 	23: "DesiredLRPCannotBeUpdated",
 	24: "RunningOnDifferentCell",
 	25: "DesiredLRPSchedulingInfoCannotBeUpdated",
+	26: "GUIDGeneration",
 }
 var Error_Type_value = map[string]int32{
 	"UnknownError":                            0,
@@ -109,6 +111,7 @@ var Error_Type_value = map[string]int32{
 	"DesiredLRPCannotBeUpdated":               23,
 	"RunningOnDifferentCell":                  24,
 	"DesiredLRPSchedulingInfoCannotBeUpdated": 25,
+	"GUIDGeneration":                          26,
 }
 
 func (x Error_Type) Enum() *Error_Type {

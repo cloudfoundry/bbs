@@ -17,12 +17,13 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 	now := db.clock.Now()
 
 	_, err = db.db.Exec(
-		`INSERT INTO tasks (guid, domain, created_at, updated_at, state, task_definition)
-			VALUES (?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO tasks (guid, domain, created_at, updated_at, first_completed_at, state, task_definition)
+			VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		taskGuid,
 		domain,
 		now,
 		now,
+		time.Time{},
 		models.Task_Pending,
 		taskDefData,
 	)
@@ -86,9 +87,9 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 		}
 
 		now := db.clock.Now()
-		_, err = tx.Exec(
-			`UPDATE tasks SET state = ?, updated_at = ?, cell_id = ?
-			   WHERE guid = ?`,
+		_, err = tx.Exec(`
+				UPDATE tasks SET state = ?, updated_at = ?, cell_id = ?
+				WHERE guid = ?`,
 			models.Task_Running,
 			now,
 			cellId,
@@ -289,8 +290,8 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner) (*models.Tas
 	err := scanner.Scan(
 		&guid,
 		&domain,
-		&createdAt,
 		&updatedAt,
+		&createdAt,
 		&firstCompletedAt,
 		&state,
 		&cellID,

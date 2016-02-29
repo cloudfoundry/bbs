@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/cloudfoundry-incubator/bbs/guidprovider"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/go-sql-driver/mysql"
 	"github.com/pivotal-golang/clock"
@@ -12,27 +13,43 @@ import (
 )
 
 type SQLDB struct {
-	db         *sql.DB
-	clock      clock.Clock
-	format     *format.Format
-	serializer format.Serializer
+	db           *sql.DB
+	clock        clock.Clock
+	format       *format.Format
+	guidProvider guidprovier.GUIDProvider
+	serializer   format.Serializer
 }
 
 type RowScanner interface {
 	Scan(dest ...interface{}) error
 }
 
+type Queryable interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Prepare(query string) (*sql.Stmt, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+}
+
+const (
+	NoLock = iota
+	LockForShare
+	LockForUpdate
+)
+
 func NewSQLDB(
 	db *sql.DB,
 	serializationFormat *format.Format,
 	cryptor encryption.Cryptor,
+	guidProvider guidprovier.GUIDProvider,
 	clock clock.Clock,
 ) *SQLDB {
 	return &SQLDB{
-		db:         db,
-		clock:      clock,
-		format:     serializationFormat,
-		serializer: format.NewSerializer(cryptor),
+		db:           db,
+		clock:        clock,
+		format:       serializationFormat,
+		guidProvider: guidProvider,
+		serializer:   format.NewSerializer(cryptor),
 	}
 }
 

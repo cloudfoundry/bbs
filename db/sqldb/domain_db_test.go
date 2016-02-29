@@ -30,7 +30,7 @@ var _ = Describe("DomainDB", func() {
 				err = rows.Scan(&domainName, &expireTime)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domainName).To(Equal(domain))
-				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(5432) * time.Second).Round(time.Second)
+				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(5432) * time.Second).Truncate(time.Microsecond)
 				Expect(expireTime).To(BeEquivalentTo(expectedExpireTime))
 			})
 
@@ -76,7 +76,7 @@ var _ = Describe("DomainDB", func() {
 				err = rows.Scan(&domainName, &expireTime)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domainName).To(Equal(existingDomain))
-				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(1) * time.Second).Round(time.Second)
+				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(1) * time.Second).Truncate(time.Microsecond)
 				Expect(expireTime).To(BeEquivalentTo(expectedExpireTime))
 			})
 		})

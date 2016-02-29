@@ -130,6 +130,11 @@ var (
 		Type:    Error_DesiredLRPCannotBeUpdated,
 		Message: "cannot update desired LRP",
 	}
+
+	ErrGUIDGeneration = &Error{
+		Type:    Error_GUIDGeneration,
+		Message: "cannot generate random guid",
+	}
 )
 
 type ErrInvalidField struct {

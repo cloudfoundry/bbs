@@ -27,8 +27,8 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 }
 
 func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
-	expirationTime := db.clock.Now().Round(time.Second)
-	rows, err := db.db.Query("SELECT domain FROM domains WHERE expire_time > ?", expirationTime)
+	expireTime := db.clock.Now().Round(time.Second)
+	rows, err := db.db.Query("SELECT domain FROM domains WHERE expire_time > ?", expireTime)
 	if err != nil {
 		return nil, err
 	}

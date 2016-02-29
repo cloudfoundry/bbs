@@ -55,6 +55,14 @@ func (info ActualLRPNetInfo) Empty() bool {
 	return info.Address == "" && len(info.Ports) == 0
 }
 
+func (*ActualLRPNetInfo) Version() format.Version {
+	return format.V0
+}
+
+func (*ActualLRPNetInfo) MigrateFromVersion(v format.Version) error {
+	return nil
+}
+
 func NewPortMapping(hostPort, containerPort uint32) *PortMapping {
 	return &PortMapping{
 		HostPort:      hostPort,
@@ -110,24 +118,29 @@ func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *Ac
 		return false
 	}
 
-	if before.State == ActualLRPStateClaimed && newState == ActualLRPStateRunning {
-		return true
+	var valid bool
+	switch before.State {
+	case ActualLRPStateUnclaimed:
+		valid = newState == ActualLRPStateUnclaimed ||
+			newState == ActualLRPStateClaimed ||
+			newState == ActualLRPStateRunning
+	case ActualLRPStateClaimed:
+		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
+			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateRunning ||
+			newState == ActualLRPStateCrashed && before.ActualLRPInstanceKey.Equal(instanceKey)
+	case ActualLRPStateRunning:
+		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
+			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateRunning && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateCrashed && before.ActualLRPInstanceKey.Equal(instanceKey)
+	case ActualLRPStateCrashed:
+		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
+			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateRunning && before.ActualLRPInstanceKey.Equal(instanceKey)
 	}
 
-	if (before.State == ActualLRPStateClaimed || before.State == ActualLRPStateRunning) &&
-		(newState == ActualLRPStateClaimed || newState == ActualLRPStateRunning) &&
-		(!before.ActualLRPInstanceKey.Equal(instanceKey)) {
-		return false
-	}
-
-	if newState == ActualLRPStateCrashed {
-		if before.State == ActualLRPStateUnclaimed || before.State == ActualLRPStateCrashed ||
-			((before.State == ActualLRPStateClaimed || before.State == ActualLRPStateRunning) &&
-				!before.ActualLRPInstanceKey.Equal(instanceKey)) {
-			return false
-		}
-	}
-	return true
+	return valid
 }
 
 func NewRunningActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {

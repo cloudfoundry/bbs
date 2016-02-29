@@ -42,6 +42,8 @@ message Error {
     RunningOnDifferentCell = 24;
 
     DesiredLRPSchedulingInfoCannotBeUpdated = 25;
+
+		GUIDGeneration = 26;
   }
   optional Type type = 1 [(gogoproto.nullable) = false];
   optional string message = 2 [(gogoproto.nullable) = false];
