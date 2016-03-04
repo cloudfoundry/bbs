@@ -1,28 +1,30 @@
+drop database diego;
+
 create database diego;
 
 use diego;
 
 create table domains (
-  domain varchar(256),
+  domain varchar(256) COLLATE latin1_swedish_ci,
   expireTime timestamp
-);
+) DEFAULT CHARSET=latin1 COLLATE=latin_swedish_ci;
 
 create table actuals (
-  processGuid varchar(64),
+  processGuid varchar(255) COLLATE latin1_swedish_ci,
   idx int,
-  domain varchar(256),
-  cellId varchar(256),
+  domain varchar(256) COLLATE latin1_swedish_ci,
+  cellId varchar(256) COLLATE latin1_swedish_ci,
   isEvacuating boolean,
-  data varchar(2048),
+  data varchar(2048) COLLATE latin1_swedish_ci,
   primary key(processGUID, idx, isEvacuating)
-);
+) DEFAULT CHARSET=latin1 COLLATE=latin_swedish_ci;
 
-/* create index cell_idx on actuals (cellId); */
+create index cell_idx on actuals (cellId);
 
 create table desired (
-  processGuid varchar(64),
-  domain varchar(256),
-  scheduleInfo varchar(2048),
-  runInfo varchar(2048),
+  processGuid varchar(255) COLLATE latin1_swedish_ci,
+  domain varchar(256) COLLATE latin1_swedish_ci,
+  scheduleInfo varchar(2048) COLLATE latin1_swedish_ci,
+  runInfo varchar(2048) COLLATE latin1_swedish_ci,
   primary key(processGUID)
-);
+) CHARSET=latin1 COLLATE=latin_swedish_ci;

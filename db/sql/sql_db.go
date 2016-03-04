@@ -56,6 +56,9 @@ func NewSQLDB(cryptor encryption.Cryptor, etcdDB db.DB, dsn string, auctioneerCl
 		panic(err)
 	}
 
+	db.SetMaxOpenConns(1500)
+	db.SetMaxIdleConns(0)
+
 	return &SQLDB{
 		sql:               db,
 		etcdDB:            etcdDB,
