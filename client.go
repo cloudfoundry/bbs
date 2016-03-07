@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -743,12 +744,24 @@ func (c *client) doRequest(requestName string, params rata.Params, queryParams u
 	return err
 }
 
+func closeResponse(response *http.Response) error {
+	// ensure we read the entire body
+	bs, err2 := ioutil.ReadAll(response.Body)
+	if err2 != nil {
+		log.Println("Error during ReadAll!!", err2)
+	}
+	if len(bs) > 0 {
+		log.Println("Had to read some bytes, not good!", bs, string(bs))
+	}
+	return response.Body.Close()
+}
+
 func (c *client) do(request *http.Request, responseObject proto.Message) error {
 	response, err := c.httpClient.Do(request)
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer closeResponse(response)
 
 	var parsedContentType string
 	if contentType, ok := response.Header[ContentTypeHeader]; ok {
