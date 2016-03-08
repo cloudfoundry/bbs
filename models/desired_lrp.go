@@ -92,6 +92,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.LogSource = runInfo.LogSource
 	desiredLRP.MetricsGuid = runInfo.MetricsGuid
 	desiredLRP.LegacyDownloadUser = runInfo.LegacyDownloadUser
+	desiredLRP.TrustedSystemCertificatesPath = runInfo.TrustedSystemCertificatesPath
 }
 
 func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLRP {

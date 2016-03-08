@@ -65,7 +65,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			PortRange:    &models.PortRange{Start: 10, End: 16000},
 		}},
 		ModificationTag:               &modTag,
-		LegacyDownloadUser:            "legacy-jim",
+		LegacyDownloadUser:            "legacy-dan",
 		TrustedSystemCertificatesPath: "/etc/somepath",
 		VolumeMounts: []*models.VolumeMount{
 			{
