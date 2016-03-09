@@ -142,6 +142,7 @@ type ExternalClient interface {
 
 func newClient(url string) *client {
 	return &client{
+		sem:                 make(chan struct{}, 25000),
 		httpClient:          cf_http.NewClient(),
 		streamingHTTPClient: cf_http.NewStreamingClient(),
 		reqGen:              rata.NewRequestGenerator(url, Routes),
@@ -192,6 +193,8 @@ type client struct {
 	httpClient          *http.Client
 	streamingHTTPClient *http.Client
 	reqGen              *rata.RequestGenerator
+
+	sem chan struct{}
 }
 
 func (c *client) Ping() bool {
@@ -757,7 +760,9 @@ func closeResponse(response *http.Response) error {
 }
 
 func (c *client) do(request *http.Request, responseObject proto.Message) error {
+	c.sem <- struct{}{}
 	response, err := c.httpClient.Do(request)
+	<-c.sem
 	if err != nil {
 		return err
 	}
