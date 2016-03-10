@@ -516,7 +516,7 @@ func CalculateConvergence(
 
 			for i, actual := range actualsByIndex {
 				if actual.CellIsMissing(input.Cells) {
-					pLog.Info("missing-cell", lager.Data{"index": i})
+					pLog.Info("missing-cell", lager.Data{"index": i, "cell-id": actual.CellId})
 					changes.ActualLRPsWithMissingCells = append(changes.ActualLRPsWithMissingCells, actual)
 					continue
 				}
