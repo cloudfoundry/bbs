@@ -1,8 +1,8 @@
 ## Defining Tasks
 
-This document provides an overview of the fields needed to define a new task. For a higher level overview of the Diego task api, see the [Tasks doc](tasks.md).
+This document provides an overview of the fields needed to define a new task. For a higher level overview of the Diego task API, see the [Tasks doc](tasks.md).
 
-```
+```go
 client := bbs.NewClient(url)
 err := client.DesireTask(
           "task-guid",
@@ -81,25 +81,25 @@ The `RootFs` field specifies the root filesystem to mount into the container.  D
 
 Preloaded root filesystems look like:
 
-```
+```go
 RootFs: "preloaded:ROOTFS-NAME"
 ```
 
 Diego ships with a root filesystem:
-```
+```go
 RootFs: "preloaded:cflinuxfs2"
 ```
 these are built to work with the Cloud Foundry buildpacks.
 
 It is possible to provide a custom root filesystem by specifying a Docker image for `rootfs`:
 
-```
+```go
 RootFs: "docker:///docker-org/docker-image#docker-tag"
 ```
 
 To pull the image from a different registry than the default (Docker Hub), specify it as the host in the URI string, e.g.:
 
-```
+```go
 RootFs: "docker://index.myregistry.gov/docker-org/docker-image#docker-tag"
 ```
 
@@ -108,7 +108,7 @@ RootFs: "docker://index.myregistry.gov/docker-org/docker-image#docker-tag"
 Diego supports the notion of container-level environment variables.  All processes that run in the container will inherit these environment variables.
 
 EG:
-```
+```go
 environmentVariables := []*models.EnvironmentVariable{
   {
     Name:  "FOO",
@@ -185,7 +185,7 @@ Rules are evaluated in reverse order of their position, i.e., the last one takes
 ##### `EgressRules` [optional]
 `EgressRules` are a list of egress firewall rules that are applied to a container running in Diego
 
-```
+```go
 egressRules := []*models.SecurityGroupRule{
   {
     Protocol:     "tcp",
@@ -226,7 +226,7 @@ A list of destination ports that are integers between 1 and 65535.
 - `Type` [required] will be an integer between 0 and 255
 - `Code` [required] will be an integer
 
-```
+```go
 rule := &SecurityGroupRule{
   Protocol: "icmp",
   IcmpInfo: &ICMPInfo{Type: 8, Code: 0}
@@ -246,7 +246,7 @@ Enable logging of the rule
 ##### Examples
 ***
 `ALL`
-```
+```go
 all := &SecurityGroupRule{
     Protocol: "all",
     Destinations: ["1.2.3.4"],rep/conversion_helpers.go
@@ -255,7 +255,7 @@ all := &SecurityGroupRule{
 ```
 ***
 `TCP`
-```
+```go
 tcp := &SecurityGroupRule{
     Protocol: "tcp",
     Destinations: ["1.2.3.4-2.3.4.5"],
@@ -265,7 +265,7 @@ tcp := &SecurityGroupRule{
 ```
 ***
 `UDP`
-```
+```go
 udp := &SecurityGroupRule{
     Protocol: "udp",
     Destinations: ["1.2.3.4/4"],
@@ -277,7 +277,7 @@ udp := &SecurityGroupRule{
 ```
 ***
 `ICMP`
-```
+```go
 icmp := &SecurityGroupRule{
     Protocol: "icmp",
     Destinations: ["1.2.3.4", "2.3.4.5/6"],

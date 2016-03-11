@@ -2,6 +2,8 @@
 
 API to access the database for Diego.
 
+A general overview of the BBS is documented [here](doc).
+
 ## API
 
 To interact with the BBS from outside of Diego, use the methods provided on the

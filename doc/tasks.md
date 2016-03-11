@@ -4,7 +4,7 @@ Diego can run one-off work in the form of Tasks.  When a Task is submitted Diego
 
 ## The Task API
 
-We recommend interacting with Diego's task functionality through the BBS' ExternalTaskClient. The rpc calls exposed to consumers are specifically documented [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalTaskClient).
+We recommend interacting with Diego's task functionality through the BBS' ExternalTaskClient. The RPC calls exposed to consumers are specifically documented [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalTaskClient).
 
 ## The Task lifecycle
 
@@ -27,7 +27,7 @@ There are a variety of timeouts associated with the `PENDING` and `CLAIMED` stat
 
 When submitting a task, a valid `guid`, `domain`, and `TaskDefinition` should be provided to [a Client's DesireTask method](https://github.com/cloudfoundry-incubator/bbs/blob/master/client.go#L121). Here's an example of such a call:
 
-```
+```go
 client := bbs.NewClient(url)
 err := client.DesireTask(
           "task-guid",
@@ -103,7 +103,7 @@ Timestamps in standard golang time.Time nanoseconds. Perhaps most importantly, t
 If a `CompletionCallbackUrl` is registered with the original task definition a `TaskCallbackResponse` will be sent back as json to the specified URL when the task is completed.
 
 The `TaskCallbackResponse` should look something like the following:
-```
+```go
 taskResponse, _ := json.Marshal(&models.TaskCallbackResponse {
   TaskGuid: "some-guid",
   Failed: false,
