@@ -17,4 +17,4 @@ Here's an outline:
    - Defining LRPs
    - LRP Examples
 - Container Runtime Environment
-- Understanding Actions
+- [Understanding Actions](actions.md)
