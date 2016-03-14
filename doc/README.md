@@ -1,20 +1,22 @@
 # Diego BBS API Docs
 
-Diego's BBS is the central data store and orchestrator of a Diego cluster. It can be communicated with via protobuf-based RPC.
+Diego's Bulletin Board System (BBS) is the central data store and orchestrator of a Diego cluster. It communicates via protocol-buffer-encoded RPC-style calls over HTTP.
 
-Consumers of Diego communicate with it via an ExternalClient, the golang interface for which can be found [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalClient). This client allows you to schedule Tasks and LRPs and to fetch information about running Tasks and LRPs.
+Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalClient) interface. This interface allows clients to create, read, update, delete, and subscribe to events about Tasks and LRPs.
 
-Note: These docs are thouroughly incomplete, and are in the process of being moved over from Diego's deprecated JSON receptor API docs. For the incomplete sections, it's often useful to reference these old docs, which can be found [here](https://github.com/cloudfoundry-incubator/receptor/tree/master/doc). However, we make no guarantees about the accuracy of these old docs, and in many cases they reference components and data types that have changed significantly since they were last changed.
-
-Here's an outline:
+## Table of Contents
 
 - [API Overview](overview.md)
-   - Implementation Details
-- [Understanding Tasks](tasks.md)
-   - [Defining Tasks](defining-tasks.md)
-   - [Task Examples](task-examples.md)
-- Understanding Long Running Processes (LRPs)
-   - Defining LRPs
-   - LRP Examples
-- Container Runtime Environment
-- [Understanding Actions](actions.md)
+    - Implementation Details
+- [Overview of Tasks](tasks.md)
+    - [Defining Tasks](defining-tasks.md)
+    - [Task Examples](task-examples.md)
+- Overview of Long Running Processes (LRPs)
+    - Defining LRPs
+    - LRP Examples
+- [Actions](actions.md)
+- Domains
+- Event Streams
+- The Container Runtime Environment
+
+Many of the documents are still in the process of being converted from the documents about the now obsolete [receptor](https://github.com/cloudfoundry-incubator/receptor/tree/master/doc) component.

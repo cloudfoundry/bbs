@@ -1,57 +1,63 @@
 ## Defining Tasks
 
-This document provides an overview of the fields needed to define a new task. For a higher level overview of the Diego task API, see the [Tasks doc](tasks.md).
+This document explains the fields available when defining a new Task. For a higher-level overview of the Diego Task API, see the [Tasks Overview](tasks.md).
 
 ```go
 client := bbs.NewClient(url)
 err := client.DesireTask(
-          "task-guid",
-          "domain",
-          &models.TaskDefinition{
-              RootFs: "docker:///docker.com/docker",
-              EnvironmentVariables: []*models.EnvironmentVariable{
-                {
-                  Name:  "FOO",
-                  Value: "BAR",
-                },
-              },
-              CachedDependencies: []*models.CachedDependency{
-                {Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
-              },
-              Action: models.WrapAction(&models.RunAction{
-                User:           "user",
-                Path:           "echo",
-                Args:           []string{"hello world"},
-                ResourceLimits: &models.ResourceLimits{},
-              }),
-              MemoryMb:    256,
-              DiskMb:      1024,
-              CpuWeight:   42,
-              Privileged:  true,
-              LogGuid:     "123",
-              LogSource:   "APP",
-              MetricsGuid: "456",
-              CompletionCallbackUrl: "36.195.164.128:8080",
-              ResultFile:  "some-file.txt",
-              EgressRules: []*models.SecurityGroupRule{
-                {
-                  Protocol:     "tcp",
-                  Destinations: []string{"0.0.0.0/0"},
-                  PortRange: &models.PortRange{
-                    Start: 1,
-                    End:   1024,
-                  },
-                  Log: true,
-                },
-                {
-                  Protocol:     "udp",
-                  Destinations: []string{"8.8.0.0/16"},
-                  Ports:        []uint32{53},
-                },
-              },
-              Annotation:                    "place any label/note/thing here",
-              TrustedSystemCertificatesPath: "/etc/somepath",
-          }
+  "task-guid", // 'guid' parameter
+  "domain",    // 'domain' parameter
+  &models.TaskDefinition{
+    RootFs: "docker:///docker.com/docker",
+    EnvironmentVariables: []*models.EnvironmentVariable{
+      {
+        Name:  "FOO",
+        Value: "BAR",
+      },
+    },
+    CachedDependencies: []*models.CachedDependency{
+      {
+        Name: "app bits",
+        From: "https://blobstore.com/bits/app-bits",
+        To: "/usr/local/app",
+        CacheKey: "cache-key",
+        LogSource: "log-source",
+      },
+    },
+    Action: models.WrapAction(&models.RunAction{
+      User:           "user",
+      Path:           "echo",
+      Args:           []string{"hello world"},
+      ResourceLimits: &models.ResourceLimits{},
+    }),
+    MemoryMb:    256,
+    DiskMb:      1024,
+    CpuWeight:   42,
+    Privileged:  true,
+    LogGuid:     "123",
+    LogSource:   "APP",
+    MetricsGuid: "456",
+    CompletionCallbackUrl: "http://36.195.164.128:8080",
+    ResultFile:  "some-file.txt",
+    EgressRules: []*models.SecurityGroupRule{
+      {
+        Protocol:     "tcp",
+        Destinations: []string{"0.0.0.0/0"},
+        PortRange: &models.PortRange{
+          Start: 1,
+          End:   1024,
+        },
+        Log: true,
+      },
+      {
+        Protocol:     "udp",
+        Destinations: []string{"8.8.0.0/16"},
+        Ports:        []uint32{53},
+      },
+    },
+    Annotation:                    "place any label/note/thing here",
+    TrustedSystemCertificatesPath: "/etc/somepath",
+  }
 )
 ```
 
@@ -59,45 +65,45 @@ err := client.DesireTask(
 
 #### `guid` [required]
 
-It is up to the consumer of Diego to provide a *globally unique* task guid.  To subsequently fetch the Task you refer to it by its guid.
+Diego clients must provide each Task with a unique Task identifier. Use this identifier to refer to the Task later.
 
-- It is an error to attempt to create a Task whose task guid matches that of an existing Task.
-- The `guid` must only include the characters `a-z`, `A-Z`, `0-9`, `_` and `-`.
-- The `guid` must not be empty
+- It is an error to create a Task with a guid matching that of an existing Task.
+- The `guid` must include only the characters `a-z`, `A-Z`, `0-9`, `_` and `-`.
+- The `guid` must not be empty.
+
 
 #### `domain` [required]
 
-The consumer of Diego may organize their Tasks into groupings called Domains.  These are purely organizational (e.g. for enabling multiple consumers to use Diego without colliding) and have no implications on the Task's placement or lifecycle.  It is possible to fetch all Tasks in a given Domain.
+Diego clients must label their Tasks with a domain. These domains partition the Tasks into logical groups, which clients may retrieve via the BBS API. Task domains are purely organizational (for example, for enabling multiple clients to use Diego without accidentally interfering with each other) and do not affect the Task's placement or lifecycle.
 
 - It is an error to provide an empty `domain`.
 
-### What's in a Task Definition
+
+### Task Definition Fields
 
 #### Container Contents and Environment
 
 ##### `RootFs` [required]
 
-The `RootFs` field specifies the root filesystem to mount into the container.  Diego can be configured with a set of *preloaded* RootFses.  These are named root filesystems that are already on the Diego Cells.
-
-Preloaded root filesystems look like:
+The `RootFs` field specifies the root filesystem to use inside the container. One class of root filesystems are the `preloaded` root filesystems, which are directories colocated on the Diego Cells and registered with their cell reps. Clients specify a preloaded root filesystem in the form:
 
 ```go
 RootFs: "preloaded:ROOTFS-NAME"
 ```
 
-Diego ships with a root filesystem:
+Cloud Foundry buildpack-based apps use the `cflinuxfs2` preloaded filesystem, built to work with Cloud Foundry buildpacks:
+
 ```go
 RootFs: "preloaded:cflinuxfs2"
 ```
-these are built to work with the Cloud Foundry buildpacks.
 
-It is possible to provide a custom root filesystem by specifying a Docker image for `rootfs`:
+Clients may also provide a root filesystem based on a Docker image:
 
 ```go
 RootFs: "docker:///docker-org/docker-image#docker-tag"
 ```
 
-To pull the image from a different registry than the default (Docker Hub), specify it as the host in the URI string, e.g.:
+To pull the image from a different registry than Docker Hub, specify it as the host in the URI string, e.g.:
 
 ```go
 RootFs: "docker://index.myregistry.gov/docker-org/docker-image#docker-tag"
@@ -105,88 +111,119 @@ RootFs: "docker://index.myregistry.gov/docker-org/docker-image#docker-tag"
 
 ##### `EnvironmentVariables` [optional]
 
-Diego supports the notion of container-level environment variables.  All processes that run in the container will inherit these environment variables.
+Clients may define environment variables at the container level, which all processes running in the container will receive. For example:
 
-EG:
 ```go
-environmentVariables := []*models.EnvironmentVariable{
+EnvironmentVariables: []*models.EnvironmentVariable{
   {
     Name:  "FOO",
     Value: "BAR",
   },
+  {
+    Name:  "LANG",
+    Value: "en_US.UTF-8",
+  },
 }
 ```
 
-For more details on the environment variables provided to processes in the container, see [Container Runtime Environment](environment.md)
+For more details on the environment variables provided to processes in the container, see the section on the [Container Runtime Environment](environment.md)
+
+
+##### `CachedDependencies` [optional]
+
+List of dependencies to cache on the Diego Cell and then to bind-mount into the container at the specified location. For example:
+
+```go
+CachedDependencies: []*models.CachedDependency{
+  {
+    Name: "app bits",
+    From: "https://blobstore.com/bits/app-bits",
+    To: "/usr/local/app",
+    CacheKey: "cache-key",
+    LogSource: "log-source",
+  },
+},
+```
+
+##### `TrustedSystemCertificatesPath` [optional]
+
+An absolute path inside the container's filesystem where trusted system certificates will be provided if an operator has specified them.
+
+
 
 #### Container Limits
 
 ##### `CpuWeight` [optional]
 
-To control the CPU shares provided to a container, set `CpuWeight`.  This must be a positive number in the range `1-100`.  The `CpuWeight` enforces a relative fair share of the CPU among containers.  It's best explained with examples.  Consider the following scenarios (we shall assume that each container is running a busy process that is attempting to consume as many CPU resources as possible):
+To control the CPU shares provided to a container, set `CpuWeight`. This must be a positive number in the range `1-100`. The `CpuWeight` enforces a relative fair share of the CPU among containers per unit time. To explain, suppose that conatainer A and container B each runs a busy process that attempts to consume as much CPU as possible.
 
-- Two containers, with equal values of `cpu_weight`: both containers will receive equal shares of CPU time.
-- Two containers, one with `CpuWeight=50` the other with `CpuWeight=100`: the later will get (roughly) 2/3 of the CPU time, the former 1/3.
+- If A and B each has `CpuWeight: 100`, their processes will receive approximately equal amounts of CPU time.
+- If A has `CpuWeight: 25` and B has `CpuWeight: 75`, A's process will receive about one quarter of the CPU time, and B's process will receive about three quarters of it.
+
 
 ##### `DiskMb` [optional]
 
-A disk quota applied to the entire container.  Any data written on top of the RootFs counts against the Disk Quota.  Processes that attempt to exceed this limit will not be allowed to write to disk.
+A disk quota in mebibytes applied to the container. Data written on top of the container's root filesystem counts against this quota. If it is exceeeded, writes will fail, but the container runtime will not kill processes in the container directly.
 
-- `DiskMb` must be an integer >= 0
-- If set to 0 no disk constraints are applied to the container
-- The units are megabytes
+- The `DiskMb` value must be an integer greater than or equal to 0.
+- If set to 0, no disk quota is applied to the container.
 
-##### `MemoryMb:` [optional]
 
-A memory limit applied to the entire container.  If the aggregate memory consumption by all processs running in the container exceeds this value, the container will be destroyed.
+##### `MemoryMb` [optional]
 
-- `MemoryMb:` must be an integer >= 0
-- If set to 0 no memory constraints are applied to the container
-- The units are megabytes
+A memory limit in mebibytes applied to the container.  If the total memory consumption by all processs running in the container exceeds this value, the container will be destroyed.
+
+- The `MemoryMb` value must be an integer greater than or equal to 0.
+- If set to 0, no memory quota is applied to the container.
+
 
 ##### `Privileged` [optional]
 
-If false, Diego will create a container that is in a user namespace.  Processes that succesfully obtain escalated privileges (i.e. root access) will actually only be root within the user namespace and will not be able to maliciously modify the host VM.  If true, Diego creates a container with no user namespace -- escalating to root gives the user *real* root access.
+- If false, Diego will create a container that is in a user namespace.  Processes that run as root will actually be root only within the user namespace and will not have administrative privileges on the host system.
+- If true, Diego creates a container without a user namespace, so that container root corresponds to root on the host system.
+
 
 #### Actions
 
 ##### `Action` [required]
 
-Encodes the action to run when running the Task.  For more details see [actions](actions.md)
+Encodes the action to execute when running the Task.  For more details, see the section on [Actions](actions.md).
+
 
 #### Task Completion and Output
 
-When the `Action` on a Task terminates the Task is marked as `COMPLETED`.
+When the `Action` on a Task finishes, the Task is marked as `COMPLETED`.
 
 ##### `ResultFile` [optional]
 
-When a Task completes succesfully Diego can fetch and return the contents of a file in the container.  This is made available in the `result` field of the `TaskResponse` (see [below](#retrieving-tasks)).
+If specified on a Task, Diego retrieves the contents of this file from the container when the Task completes successfully. The retrieved contents are made available in the `Result` field of the `TaskResponse` (see [below](#retrieving-tasks)).
 
-To do this, set `ResultFile` to a valid absolute path in the container.
+- Diego only returns the first 10 kilobytes of the `ResultFile`.  If you need to communicate back larger datasets, consider using an `UploadAction` to upload the result file to another service.
 
-- Diego only returns the first 10KB of the `ResultFile`.  If you need to communicate back larger datasets, consider using an `UploadAction` to upload the result file to a blob store.
 
 ##### `CompletionCallbackUrl` [optional]
 
-Consumers of Diego have two options to learn that a Task has `COMPLETED`: they can either poll the action or register a callback.
+Diego clients have several ways to learn that a Task has `COMPLETED`: they can poll the Task, subscribe to the Task event stream, or register a callback.
 
-If a `CompletionCallbackUrl` is provided Diego will `POST` to the provided URL as soon as the Task completes.  The body of the `POST` will include the `TaskResponse` (see [below](#retrieving-tasks)).
+If a `CompletionCallbackUrl` is provided, Diego will send a `POST` request to the provided URL when the Task completes.  The body of the `POST` will include the `TaskResponse` (see [below](#retrieving-tasks)).
 
-- Any response from the callback (be it success or failure) will resolve the Task (removing it from Diego).
-- However, if the callback responds with `503` or `504` Diego will immediately retry the callback up to 3 times.  If the `503/504` status persists Diego will try again after a period of time (typically within ~30 seconds).
-- If the callback times out or a connection cannot be established, Diego will try again after a period of time (typically within ~30 seconds).
-- Diego will eventually (after ~2 minutes) give up on the Task if the callback does not respond succesfully.
+- Almost any response from the callback will resolve the Task, thereby removing it from the BBS.
+- If the callback responds with status code '503 Service Unavailable' or '504 Gateway Timeout', however, Diego will immediately retry the callback up to 3 times.
+
+- If these status codes persist, if the callback times out, or if a connection cannot be established, Diego will try again after a short period of time, typically 30 seconds.
+- After about 2 minutes without a successful response from the callback URL, Diego will give up on the task and delete it.
 
 #### Networking
-By default network access for any container is limited but some tasks might need specific network access and that can be setup using `egress_rules` field.
 
-Rules are evaluated in reverse order of their position, i.e., the last one takes precedence.
+By default network access for any container is limited but some tasks may need specific network access and that can be setup using `egress_rules` field.
+
 
 ##### `EgressRules` [optional]
-`EgressRules` are a list of egress firewall rules that are applied to a container running in Diego
+
+List of firewall rules applied to the Task container. If traffic originating inside the container has a destination matching one of the rules, it is allowed egress. For example,
 
 ```go
-egressRules := []*models.SecurityGroupRule{
+EgressRules: []*models.SecurityGroupRule{
   {
     Protocol:     "tcp",
     Destinations: []string{"0.0.0.0/0"},
@@ -203,28 +240,32 @@ egressRules := []*models.SecurityGroupRule{
   },
 }
 ```
+
+This list of rules allows all outgoing TCP traffic bound for ports 1 though 1024 and UDP traffic to subnet 8.8.0.0/16 on port 53. Syslog messages are emitted for new connections matching the TCP rule.
+
 ###### `Protocol` [required]
-The protocol of the rule that can be one of the following `tcp`, `udp`,`icmp`, `all`.
 
-###### `destinations` [required]
-The destinations of the rule that is a list of either an IP Address (1.2.3.4) or an IP range (1.2.3.4-2.3.4.5) or a CIDR (1.2.3.4/5)
+The protocol type of the rule can be one of the following values: `tcp`, `udp`,`icmp`, or `all`.
 
-###### `Ports` [optional]
-A list of destination ports that are integers between 1 and 65535.
+###### `Destinations` [required]
 
-> `Ports` or `PortRange` must be provided for `tcp` and `udp`.
-> It is an error when both are provided.
+List of string representing a single IPv4 address (`1.2.3.4`), a range of IPv4 addresses (`1.2.3.4-2.3.4.5`), or an IPv4 subnet in CIDR notation (`1.2.3.4/24`).
 
-###### `PortRange` [optional]
-- `Start` [required] the start of the range as an integer between 1 and 65535
-- `End` [required] the end of the range as an integer between 1 and 65535
 
-> `Ports` or `PortRange` must be provided for protocol `tcp` and `udp`.
-> It is an error when both are provided.
+###### `Ports` and `PortRange` [optional]
+
+The `Ports` field is a list of integers between 1 and 65535 that correspond to destination ports.
+The `PortRange` field is a struct with a `Start` field and an `End` field, both integers between 1 and 65535. These values are required and signify the start and end of the port range, inclusive.
+
+- Either `Ports` or `PortRange` must be provided for protocol `tcp` and `udp`.
+- It is an error to provide both.
 
 ###### `IcmpInfo` [optional]
-- `Type` [required] will be an integer between 0 and 255
-- `Code` [required] will be an integer
+
+The `IcmpInfo` field stores two fields with parameters that pertain to ICMP traffic:
+
+- `Type` [required]: integer between 0 and 255
+- `Code` [required]: integer
 
 ```go
 rule := &SecurityGroupRule{
@@ -233,86 +274,100 @@ rule := &SecurityGroupRule{
 }
 ```
 
-> `IcmpInfo` is required for protocol `icmp`.
-> It is an error when provided for other protocols.
+- `IcmpInfo` is required for protocol `icmp`.
+- It is an error to provide for other protocols.
 
 ###### `Log` [optional]
-Enable logging of the rule
-> `Log` is optional for `tcp` and `all`.
-> It is an error to provide `Log` as true when protocol is `udp` or `icmp`.
 
-> Define all rules with `Log` enabled at the end of your `[]*SecurityGroupRule` to guarantee logging.
+If true, the system will log new outgoing connections that match the rule.
 
-##### Examples
-***
-`ALL`
+- `Log` is optional for `tcp` and `all`.
+- It is an error to set `Log` to true when the protocol is `udp` or `icmp`.
+- To ensure that they apply first, put all rules with `Log` set to true at the **end** of the rule list.
+
+##### Examples of Egress rules
+
+---
+
+Protocol `all`:
+
 ```go
 all := &SecurityGroupRule{
     Protocol: "all",
-    Destinations: ["1.2.3.4"],rep/conversion_helpers.go
+    Destinations: []string{"1.2.3.4"},
     Log: true,
 }
 ```
-***
-`TCP`
+
+---
+
+Protocol `tcp`:
+
 ```go
 tcp := &SecurityGroupRule{
     Protocol: "tcp",
-    Destinations: ["1.2.3.4-2.3.4.5"],
-    Ports: [80, 443],
+    Destinations: []string{"1.2.3.4-2.3.4.5"},
+    Ports: []int[80, 443],
     Log: true,
 }
 ```
-***
-`UDP`
+
+---
+
+Protocol `udp`:
+
 ```go
 udp := &SecurityGroupRule{
     Protocol: "udp",
-    Destinations: ["1.2.3.4/4"],
+    Destinations: []string{"1.2.3.4/8"},
     PortRange: {
         Start: 8000,
         End: 8085,
     },
 }
 ```
-***
-`ICMP`
+
+---
+
+Protocol `icmp`:
+
 ```go
 icmp := &SecurityGroupRule{
     Protocol: "icmp",
-    Destinations: ["1.2.3.4", "2.3.4.5/6"],
+    Destinations: []string{"1.2.3.4", "2.3.4.5/6"},
     IcmpInfo: {
         Type: 1,
         Code: 40,
     },
 }
 ```
-***
+
+---
+
 #### Logging
 
-Diego uses [doppler](https://github.com/cloudfoundry/loggregator) to emit logs generated by container processes to the user.
+Diego emits container metrics and logs generated by container processes to the [Loggregator](https://github.com/cloudfoundry/loggregator) system, in the form of [dropsonde log messages](https://github.com/cloudfoundry/dropsonde-protocol/blob/master/events/log.proto) and [container metrics](https://github.com/cloudfoundry/dropsonde-protocol/blob/master/events/metric.proto).
 
 ##### `LogGuid` [optional]
 
-`LogGuid` controls the doppler guid associated with logs coming from Task processes.  One typically sets the `LogGuid` to the task's `guid` though this is not strictly necessary.
+The `LogGuid` field sets the `AppId` on log messages coming from the Task.
+
 
 ##### `LogSource` [optional]
 
-`LogSource` is an identifier emitted with each log line.  Individual `RunAction`s can override the `LogSource`.  This allows a consumer of the log stream to distinguish between the logs of different processes.
+The `LogSource` field sets the default `SourceType` on the log messages. Individual Actions on the Task may override this field, so that different actions may be distinguished by the `SourceType` values on log messages.
+
 
 ##### `MetricsGuid` [optional]
 
-`LogGuid` controls the doppler guid associated with metrics coming from Task processes.  One typically sets the `MetricsGuid` to the task's `guid` though this is not strictly necessary.
+The `MetricsGuid` field sets the `ApplicationId` on container metris coming from the Task.
 
 
-#### Attaching Arbitrary Metadata
+#### Storing Arbitrary Metadata
 
 ##### `Annotation` [optional]
 
-Diego allows arbitrary annotations to be attached to a Task.  The annotation must not exceed 10 kilobytes in size.
+Diego allows arbitrary annotations to be attached to a Task.  The annotation may not exceed 10 kilobytes in size.
 
-##### `TrustedSystemCertificatesPath` [optional]
-
-This is an absolute path inside the container's filesystem where system-wide tls certificates will be installed if an operator has specified them.
 
 [back](README.md)

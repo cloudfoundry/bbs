@@ -15,7 +15,7 @@ err = client.DesireTask(
       Args:           []string{"-c", "echo hello world > result-file.txt"},
       ResourceLimits: &models.ResourceLimits{},
     }),
-    CompletionCallbackUrl: "http://10.244.16.6:6660",
+    CompletionCallbackUrl: "http://10.244.16.6:7890",
     ResultFile:            "result-file.txt",
   },
 )
@@ -31,7 +31,7 @@ for {
     panic(err)
   }
   if task.State == models.Task_Resolving {
-    log.Printf("here's the result from you polled task:\n %s\n\n", task.Result)
+    log.Printf("here's the result from your polled task:\n %s\n\n", task.Result)
     break
   }
   time.Sleep(time.Second)
@@ -40,7 +40,8 @@ for {
 
 ## Recieving a TaskCallbackResponse
 
-To recieve the TaskCallbackResponse, we're going to start up a classic http server.
+To receive the TaskCallbackResponse, we first start an HTTP server.
+
 ```go
 func taskCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	var taskResponse models.TaskCallbackResponse
@@ -58,13 +59,20 @@ func taskCallbackHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 http.HandleFunc("/", taskCallbackHandler)
-go http.ListenAndServe("8080", nil)
+go http.ListenAndServe("7890", nil)
 ```
-With this running, if the above task was desired, it would run on Diego, echo 'hello world' to it's ResultFile and complete. Diego would then populate the Result field of the TaskCallbackResponse with 'hello world' and post it as json to the CompletionCallbackUrl. The server we created here would then read that and print 'hello world' as part of the task response.
+
+Suppose this server is running on IP `10.244.16.6`. When the above task is desired, it will run on Diego, echo 'hello world' to the file `result-file.txt`, and complete successfully. Diego will then POST a JSON-encoded `TaskCallbackResponse` to the server. The `Result` field of the `TaskCallbackResponse` will be the contents of the `result-file.txt` file, namely 'hello world'.
+
 
 ## Cancelling a Task
 
 ```go
 client := bbs.NewClient(url)
 err := client.CancelTask("some-guid")
+if err != nil {
+  log.Printf("failed to cancel task: " + err.Error())
+}
 ```
+
+[back](README.md)
