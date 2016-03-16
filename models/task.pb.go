@@ -66,22 +66,22 @@ func (x *Task_State) UnmarshalJSON(data []byte) error {
 }
 
 type TaskDefinition struct {
-	RootFs                       string                 `protobuf:"bytes,1,opt,name=root_fs" json:"rootfs"`
-	EnvironmentVariables         []*EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env,omitempty"`
-	Action                       *Action                `protobuf:"bytes,3,opt,name=action" json:"action,omitempty"`
-	DiskMb                       int32                  `protobuf:"varint,4,opt,name=disk_mb" json:"disk_mb"`
-	MemoryMb                     int32                  `protobuf:"varint,5,opt,name=memory_mb" json:"memory_mb"`
-	CpuWeight                    uint32                 `protobuf:"varint,6,opt,name=cpu_weight" json:"cpu_weight"`
-	Privileged                   bool                   `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
-	LogSource                    string                 `protobuf:"bytes,8,opt,name=log_source" json:"log_source"`
-	LogGuid                      string                 `protobuf:"bytes,9,opt,name=log_guid" json:"log_guid"`
-	MetricsGuid                  string                 `protobuf:"bytes,10,opt,name=metrics_guid" json:"metrics_guid"`
-	ResultFile                   string                 `protobuf:"bytes,11,opt,name=result_file" json:"result_file"`
-	CompletionCallbackUrl        string                 `protobuf:"bytes,12,opt,name=completion_callback_url" json:"completion_callback_url,omitempty"`
-	Annotation                   string                 `protobuf:"bytes,13,opt,name=annotation" json:"annotation,omitempty"`
-	EgressRules                  []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
-	CachedDependencies           []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser           string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	RootFs                        string                 `protobuf:"bytes,1,opt,name=root_fs" json:"rootfs"`
+	EnvironmentVariables          []*EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env,omitempty"`
+	Action                        *Action                `protobuf:"bytes,3,opt,name=action" json:"action,omitempty"`
+	DiskMb                        int32                  `protobuf:"varint,4,opt,name=disk_mb" json:"disk_mb"`
+	MemoryMb                      int32                  `protobuf:"varint,5,opt,name=memory_mb" json:"memory_mb"`
+	CpuWeight                     uint32                 `protobuf:"varint,6,opt,name=cpu_weight" json:"cpu_weight"`
+	Privileged                    bool                   `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
+	LogSource                     string                 `protobuf:"bytes,8,opt,name=log_source" json:"log_source"`
+	LogGuid                       string                 `protobuf:"bytes,9,opt,name=log_guid" json:"log_guid"`
+	MetricsGuid                   string                 `protobuf:"bytes,10,opt,name=metrics_guid" json:"metrics_guid"`
+	ResultFile                    string                 `protobuf:"bytes,11,opt,name=result_file" json:"result_file"`
+	CompletionCallbackUrl         string                 `protobuf:"bytes,12,opt,name=completion_callback_url" json:"completion_callback_url,omitempty"`
+	Annotation                    string                 `protobuf:"bytes,13,opt,name=annotation" json:"annotation,omitempty"`
+	EgressRules                   []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
+	CachedDependencies            []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 }
 

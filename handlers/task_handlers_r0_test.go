@@ -32,7 +32,7 @@ var _ = Describe("Task Handlers", func() {
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewTaskHandler(logger, fakeTaskDB)
+		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeServiceClient, fakeRepClientFactory)
 	})
 
 	Describe("Tasks_r0", func() {

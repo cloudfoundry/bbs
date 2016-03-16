@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -16,8 +17,9 @@ import (
 
 var _ = Describe("Task Handlers", func() {
 	var (
-		logger           lager.Logger
-		fakeTaskDB       *fakes.FakeTaskDB
+		logger     lager.Logger
+		fakeTaskDB *fakes.FakeTaskDB
+
 		responseRecorder *httptest.ResponseRecorder
 
 		handler *handlers.TaskHandler
@@ -32,10 +34,11 @@ var _ = Describe("Task Handlers", func() {
 
 	BeforeEach(func() {
 		fakeTaskDB = new(fakes.FakeTaskDB)
+
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewTaskHandler(logger, fakeTaskDB)
+		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeServiceClient, fakeRepClientFactory)
 	})
 
 	Describe("Tasks", func() {
@@ -315,46 +318,137 @@ var _ = Describe("Task Handlers", func() {
 	})
 
 	Describe("CancelTask", func() {
-		Context("when the cancel request is normal", func() {
-			BeforeEach(func() {
-				requestBody = &models.TaskGuidRequest{
-					TaskGuid: "task-guid",
-				}
-			})
-			JustBeforeEach(func() {
-				request := newTestRequest(requestBody)
-				handler.CancelTask(responseRecorder, request)
-			})
+		var request *http.Request
 
-			Context("when canceling the task succeeds", func() {
+		BeforeEach(func() {
+			requestBody = &models.TaskGuidRequest{
+				TaskGuid: "task-guid",
+			}
+
+			request = newTestRequest(requestBody)
+		})
+
+		JustBeforeEach(func() {
+			handler.CancelTask(responseRecorder, request)
+			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+		})
+
+		Context("when the cancel request is normal", func() {
+			Context("when canceling the task in the db succeeds", func() {
+				BeforeEach(func() {
+					task1 = *model_helpers.NewValidTask("guid")
+					cellPresence := models.CellPresence{CellId: "cell-id"}
+					fakeTaskDB.TaskByGuidReturns(&task1, nil)
+					fakeServiceClient.CellByIdReturns(&cellPresence, nil)
+				})
+
 				It("returns no error", func() {
 					Expect(fakeTaskDB.CancelTaskCallCount()).To(Equal(1))
 					taskLogger, taskGuid := fakeTaskDB.CancelTaskArgsForCall(0)
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 					response := &models.TaskLifecycleResponse{}
 					err := response.Unmarshal(responseRecorder.Body.Bytes())
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
 				})
+
+				It("stops the task on the rep", func() {
+					Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
+					guid := fakeRepClient.CancelTaskArgsForCall(0)
+					Expect(guid).To(Equal("task-guid"))
+				})
+
+				// after persisting the task in the DB, all additional functionality is best-effort
+				Context("when fetching the task fails", func() {
+					BeforeEach(func() {
+						fakeTaskDB.TaskByGuidReturns(nil, errors.New("nope"))
+					})
+
+					It("does not return an error", func() {
+						response := &models.TaskLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(0))
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
+					})
+				})
+
+				Context("when the task has no cell id", func() {
+					BeforeEach(func() {
+						task1.CellId = ""
+					})
+
+					It("does not return an error", func() {
+						response := &models.TaskLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(0))
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
+					})
+				})
+
+				Context("when fetching the cell presence fails", func() {
+					BeforeEach(func() {
+						fakeServiceClient.CellByIdReturns(nil, errors.New("lol"))
+					})
+
+					It("does not return an error", func() {
+						response := &models.TaskLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
+					})
+				})
+
+				Context("when we fail to cancel the task on the rep", func() {
+					BeforeEach(func() {
+						fakeRepClient.CancelTaskReturns(errors.New("lol"))
+					})
+
+					It("does not return an error", func() {
+						response := &models.TaskLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+					})
+				})
 			})
 
-			Context("when desiring the task fails", func() {
+			Context("when cancelling the task fails", func() {
 				BeforeEach(func() {
 					fakeTaskDB.CancelTaskReturns(models.ErrUnknownError)
 				})
 
 				It("responds with an error", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 					response := &models.TaskLifecycleResponse{}
 					err := response.Unmarshal(responseRecorder.Body.Bytes())
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrUnknownError))
 				})
+			})
+		})
+
+		Context("when the cancel task request is not valid", func() {
+			BeforeEach(func() {
+				request = newTestRequest("{{")
+			})
+
+			It("returns an BadRequest error", func() {
+				response := &models.TaskLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrBadRequest))
 			})
 		})
 	})

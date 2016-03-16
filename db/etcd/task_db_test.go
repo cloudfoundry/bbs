@@ -401,36 +401,6 @@ var _ = Describe("TaskDB", func() {
 				})
 
 				itMarksTaskAsCancelled()
-
-				Context("when the cell is present", func() {
-					var cellPresence models.CellPresence
-
-					BeforeEach(func() {
-						cellPresence = models.NewCellPresence(cellId, "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 6), []string{}, []string{})
-						consulHelper.RegisterCell(&cellPresence)
-					})
-
-					It("cancels the task", func() {
-						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
-
-						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
-						cancelledTaskGuid := fakeRepClient.CancelTaskArgsForCall(0)
-						Expect(cancelledTaskGuid).To(Equal(taskGuid))
-					})
-				})
-
-				Context("when the cell is not present", func() {
-					It("does not cancel the task", func() {
-						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
-					})
-
-					It("logs the error", func() {
-						Eventually(logger.TestSink.LogMessages).Should(ContainElement("test.cancel-task.failed-getting-cell-info"))
-					})
-				})
 			})
 
 			Context("when the task is in completed state", func() {

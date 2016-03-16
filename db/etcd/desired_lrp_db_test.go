@@ -3,9 +3,7 @@ package etcd_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -257,28 +255,6 @@ var _ = Describe("DesiredLRPDB", func() {
 				Expect(persisted.DesiredLRPRunInfo(clock.Now())).To(Equal(lrp.DesiredLRPRunInfo(clock.Now())))
 			})
 
-			It("creates one ActualLRP per index", func() {
-				err := etcdDB.DesireLRP(logger, lrp)
-				Expect(err).NotTo(HaveOccurred())
-				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, "some-process-guid")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroups).To(HaveLen(5))
-			})
-
-			It("sets a ModificationTag on each ActualLRP with a unique epoch", func() {
-				err := etcdDB.DesireLRP(logger, lrp)
-				Expect(err).NotTo(HaveOccurred())
-				actualLRPGroups, err := etcdDB.ActualLRPGroupsByProcessGuid(logger, "some-process-guid")
-				Expect(err).NotTo(HaveOccurred())
-
-				epochs := map[string]models.ActualLRP{}
-				for _, actualLRPGroup := range actualLRPGroups {
-					epochs[actualLRPGroup.Instance.ModificationTag.Epoch] = *actualLRPGroup.Instance
-				}
-
-				Expect(epochs).To(HaveLen(5))
-			})
-
 			It("sets the ModificationTag on the DesiredLRP", func() {
 				err := etcdDB.DesireLRP(logger, lrp)
 				Expect(err).NotTo(HaveOccurred())
@@ -288,27 +264,6 @@ var _ = Describe("DesiredLRPDB", func() {
 
 				Expect(lrp.ModificationTag.Epoch).NotTo(BeEmpty())
 				Expect(lrp.ModificationTag.Index).To(BeEquivalentTo(0))
-			})
-
-			Context("when an auctioneer is present", func() {
-				It("emits start auction requests", func() {
-					originalAuctionCallCount := fakeAuctioneerClient.RequestLRPAuctionsCallCount()
-
-					err := etcdDB.DesireLRP(logger, lrp)
-					Expect(err).NotTo(HaveOccurred())
-
-					desired, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
-					Expect(err).NotTo(HaveOccurred())
-
-					Consistently(fakeAuctioneerClient.RequestLRPAuctionsCallCount).Should(Equal(originalAuctionCallCount + 1))
-
-					expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desired, 0, 1, 2, 3, 4)
-
-					startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(originalAuctionCallCount)
-					Expect(startAuctions).To(HaveLen(1))
-					Expect(startAuctions[0].ProcessGuid).To(Equal(desired.ProcessGuid))
-					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
-				})
 			})
 
 			Context("An error occurs creating the scheduling info", func() {
@@ -374,41 +329,6 @@ var _ = Describe("DesiredLRPDB", func() {
 				_, err = etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
-			})
-
-			Context("when there are running instances on a present cell", func() {
-				cellPresence := models.NewCellPresence("the-cell-id", "cell.example.com", "az1", models.NewCellCapacity(128, 1024, 6), []string{}, []string{})
-
-				BeforeEach(func() {
-					consulHelper.RegisterCell(&cellPresence)
-
-					for i := int32(0); i < lrp.Instances; i++ {
-						instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellId)
-						err := etcdDB.ClaimActualLRP(logger, lrp.ProcessGuid, i, &instanceKey)
-						Expect(err).NotTo(HaveOccurred())
-					}
-				})
-
-				It("stops all actual lrps for the desired lrp", func() {
-					originalStopCallCount := fakeRepClient.StopLRPInstanceCallCount()
-
-					err := etcdDB.RemoveDesiredLRP(logger, lrp.ProcessGuid)
-					Expect(err).NotTo(HaveOccurred())
-
-					callCount := originalStopCallCount + int(lrp.Instances)
-
-					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(callCount))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(callCount))
-
-					stoppedActuals := make([]int32, lrp.Instances)
-					for i := int32(0); i < lrp.Instances; i++ {
-						key, _ := fakeRepClient.StopLRPInstanceArgsForCall(originalStopCallCount + int(i))
-						stoppedActuals[i] = key.Index
-					}
-					Expect(stoppedActuals).To(ConsistOf([]int32{0, 1, 2, 3, 4}))
-				})
 			})
 		})
 
@@ -537,74 +457,6 @@ var _ = Describe("DesiredLRPDB", func() {
 						modelErr := etcdDBWithFakeStore.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
 						Expect(modelErr).To(HaveOccurred())
 						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(1))
-					})
-				})
-			})
-
-			Context("when the instances are increased", func() {
-				BeforeEach(func() {
-					instances := int32(6)
-					update.Instances = &instances
-				})
-
-				Context("when an auctioneer is present", func() {
-					It("emits start auction requests", func() {
-						originalAuctionCallCount := fakeAuctioneerClient.RequestLRPAuctionsCallCount()
-
-						err := etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
-						Expect(err).NotTo(HaveOccurred())
-
-						Consistently(fakeAuctioneerClient.RequestLRPAuctionsCallCount).Should(Equal(originalAuctionCallCount + 1))
-
-						updated, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
-						Expect(err).NotTo(HaveOccurred())
-
-						expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(updated, 5)
-						startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(originalAuctionCallCount)
-						Expect(startAuctions).To(HaveLen(1))
-						Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
-					})
-				})
-			})
-
-			Context("when the instances are decreased", func() {
-				BeforeEach(func() {
-					instances := int32(2)
-					update.Instances = &instances
-				})
-
-				Context("when the cell is present", func() {
-					cellPresence := models.NewCellPresence("the-cell-id", "cell.example.com", "az1", models.NewCellCapacity(128, 1024, 6), []string{}, []string{})
-
-					BeforeEach(func() {
-						consulHelper.RegisterCell(&cellPresence)
-
-						for i := int32(0); i < lrp.Instances; i++ {
-							instanceKey := models.NewActualLRPInstanceKey(fmt.Sprintf("some-instance-guid-%d", i), cellPresence.CellId)
-							err := etcdDB.ClaimActualLRP(logger, lrp.ProcessGuid, i, &instanceKey)
-							Expect(err).NotTo(HaveOccurred())
-						}
-					})
-
-					It("stops the instances at the removed indices", func() {
-						originalStopCallCount := fakeRepClient.StopLRPInstanceCallCount()
-
-						err := etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
-						Expect(err).NotTo(HaveOccurred())
-
-						callCount := originalStopCallCount + int(lrp.Instances-*(update.Instances))
-
-						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(callCount))
-						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(callCount))
-						stoppedActuals := make([]int32, lrp.Instances-*update.Instances)
-						for i := int32(0); i < (lrp.Instances - *update.Instances); i++ {
-							key, _ := fakeRepClient.StopLRPInstanceArgsForCall(originalStopCallCount + int(i))
-							stoppedActuals[i] = key.Index
-						}
-
-						Expect(stoppedActuals).To(ConsistOf([]int32{2, 3, 4}))
 					})
 				})
 			})

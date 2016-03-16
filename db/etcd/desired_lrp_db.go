@@ -3,7 +3,6 @@ package etcd
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/nu7hatch/gouuid"
@@ -236,28 +235,6 @@ func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid strin
 	return lrp, err
 }
 
-func (db *ETCDDB) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
-	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
-	logger.Info("starting")
-	defer logger.Info("complete")
-
-	keys := make([]*models.ActualLRPKey, upper-lower)
-	i := 0
-	for actualIndex := lower; actualIndex < upper; actualIndex++ {
-		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
-		keys[i] = &key
-		i++
-	}
-
-	createdIndices := db.createUnclaimedActualLRPs(logger, keys)
-	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
-
-	err := db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&start})
-	if err != nil {
-		logger.Error("failed-to-request-auction", err)
-	}
-}
-
 func (db *ETCDDB) stopInstancesForProcessGuid(logger lager.Logger, processGuid string) {
 	logger = logger.Session("stop-instance-for-process-guid", lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
@@ -324,7 +301,6 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 		return schedulingErr
 	}
 
-	db.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
 	return nil
 }
 
@@ -395,7 +371,6 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 	defer logger.Info("complete")
 
 	var schedulingInfo *models.DesiredLRPSchedulingInfo
-	var existingInstances int32
 	var err error
 
 	for i := 0; i < 2; i++ {
@@ -406,8 +381,6 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 			logger.Error("failed-to-fetch-scheduling-info", err)
 			break
 		}
-
-		existingInstances = schedulingInfo.Instances
 
 		schedulingInfo.ApplyUpdate(update)
 
@@ -427,17 +400,6 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 
 	if err != nil {
 		return err
-	}
-
-	switch diff := schedulingInfo.Instances - existingInstances; {
-	case diff > 0:
-		db.startInstanceRange(logger, existingInstances, schedulingInfo.Instances, schedulingInfo)
-
-	case diff < 0:
-		db.stopInstanceRange(logger, schedulingInfo.Instances, existingInstances, schedulingInfo)
-
-	case diff == 0:
-		// this space intentionally left blank
 	}
 
 	return nil

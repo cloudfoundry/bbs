@@ -173,35 +173,13 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) error {
 	}
 
 	logger.Info("completing-task")
-	cellId := task.CellId
 	err = db.completeTask(logger, task, index, true, "task was cancelled", "")
 	if err != nil {
 		logger.Error("failed-completing-task", err)
 		return err
 	}
+
 	logger.Info("succeeded-completing-task")
-
-	if cellId == "" {
-		return nil
-	}
-
-	logger.Info("getting-cell-info")
-	cellPresence, err := db.serviceClient.CellById(logger, cellId)
-	if err != nil {
-		logger.Error("failed-getting-cell-info", err)
-		return nil
-	}
-	logger.Info("succeeded-getting-cell-info")
-
-	logger.Info("cell-client-cancelling-task")
-	repClient := db.repClientFactory.CreateClient(cellPresence.RepAddress)
-	err = repClient.CancelTask(task.TaskGuid)
-	if err != nil {
-		logger.Error("cell-client-failed-cancelling-task", err)
-		return nil
-	}
-	logger.Info("cell-client-succeeded-cancelling-task")
-
 	return nil
 }
 

@@ -52,21 +52,21 @@ func (m *DesiredLRPSchedulingInfo) GetInstances() int32 {
 }
 
 type DesiredLRPRunInfo struct {
-	DesiredLRPKey                `protobuf:"bytes,1,opt,name=desired_lrp_key,embedded=desired_lrp_key" json:""`
-	EnvironmentVariables         []EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env"`
-	Setup                        *Action               `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
-	Action                       *Action               `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
-	Monitor                      *Action               `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
-	StartTimeout                 uint32                `protobuf:"varint,6,opt,name=start_timeout" json:"start_timeout"`
-	Privileged                   bool                  `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
-	CpuWeight                    uint32                `protobuf:"varint,8,opt,name=cpu_weight" json:"cpu_weight"`
-	Ports                        []uint32              `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
-	EgressRules                  []SecurityGroupRule   `protobuf:"bytes,10,rep,name=egress_rules" json:"egress_rules"`
-	LogSource                    string                `protobuf:"bytes,11,opt,name=log_source" json:"log_source"`
-	MetricsGuid                  string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
-	CreatedAt                    int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
-	CachedDependencies           []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser           string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	DesiredLRPKey                 `protobuf:"bytes,1,opt,name=desired_lrp_key,embedded=desired_lrp_key" json:""`
+	EnvironmentVariables          []EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env"`
+	Setup                         *Action               `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
+	Action                        *Action               `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
+	Monitor                       *Action               `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
+	StartTimeout                  uint32                `protobuf:"varint,6,opt,name=start_timeout" json:"start_timeout"`
+	Privileged                    bool                  `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
+	CpuWeight                     uint32                `protobuf:"varint,8,opt,name=cpu_weight" json:"cpu_weight"`
+	Ports                         []uint32              `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
+	EgressRules                   []SecurityGroupRule   `protobuf:"bytes,10,rep,name=egress_rules" json:"egress_rules"`
+	LogSource                     string                `protobuf:"bytes,11,opt,name=log_source" json:"log_source"`
+	MetricsGuid                   string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
+	CreatedAt                     int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
+	CachedDependencies            []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 }
 
@@ -277,29 +277,29 @@ func (m *DesiredLRPResource) GetRootFs() string {
 }
 
 type DesiredLRP struct {
-	ProcessGuid                  string                 `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
-	Domain                       string                 `protobuf:"bytes,2,opt,name=domain" json:"domain"`
-	RootFs                       string                 `protobuf:"bytes,3,opt,name=root_fs" json:"rootfs"`
-	Instances                    int32                  `protobuf:"varint,4,opt,name=instances" json:"instances"`
-	EnvironmentVariables         []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables" json:"env"`
-	Setup                        *Action                `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
-	Action                       *Action                `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
-	StartTimeout                 uint32                 `protobuf:"varint,8,opt,name=start_timeout" json:"start_timeout"`
-	Monitor                      *Action                `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
-	DiskMb                       int32                  `protobuf:"varint,10,opt,name=disk_mb" json:"disk_mb"`
-	MemoryMb                     int32                  `protobuf:"varint,11,opt,name=memory_mb" json:"memory_mb"`
-	CpuWeight                    uint32                 `protobuf:"varint,12,opt,name=cpu_weight" json:"cpu_weight"`
-	Privileged                   bool                   `protobuf:"varint,13,opt,name=privileged" json:"privileged"`
-	Ports                        []uint32               `protobuf:"varint,14,rep,name=ports" json:"ports,omitempty"`
-	Routes                       *Routes                `protobuf:"bytes,15,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
-	LogSource                    string                 `protobuf:"bytes,16,opt,name=log_source" json:"log_source"`
-	LogGuid                      string                 `protobuf:"bytes,17,opt,name=log_guid" json:"log_guid"`
-	MetricsGuid                  string                 `protobuf:"bytes,18,opt,name=metrics_guid" json:"metrics_guid"`
-	Annotation                   string                 `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
-	EgressRules                  []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
-	ModificationTag              *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
-	CachedDependencies           []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser           string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
+	ProcessGuid                   string                 `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Domain                        string                 `protobuf:"bytes,2,opt,name=domain" json:"domain"`
+	RootFs                        string                 `protobuf:"bytes,3,opt,name=root_fs" json:"rootfs"`
+	Instances                     int32                  `protobuf:"varint,4,opt,name=instances" json:"instances"`
+	EnvironmentVariables          []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables" json:"env"`
+	Setup                         *Action                `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
+	Action                        *Action                `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
+	StartTimeout                  uint32                 `protobuf:"varint,8,opt,name=start_timeout" json:"start_timeout"`
+	Monitor                       *Action                `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
+	DiskMb                        int32                  `protobuf:"varint,10,opt,name=disk_mb" json:"disk_mb"`
+	MemoryMb                      int32                  `protobuf:"varint,11,opt,name=memory_mb" json:"memory_mb"`
+	CpuWeight                     uint32                 `protobuf:"varint,12,opt,name=cpu_weight" json:"cpu_weight"`
+	Privileged                    bool                   `protobuf:"varint,13,opt,name=privileged" json:"privileged"`
+	Ports                         []uint32               `protobuf:"varint,14,rep,name=ports" json:"ports,omitempty"`
+	Routes                        *Routes                `protobuf:"bytes,15,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
+	LogSource                     string                 `protobuf:"bytes,16,opt,name=log_source" json:"log_source"`
+	LogGuid                       string                 `protobuf:"bytes,17,opt,name=log_guid" json:"log_guid"`
+	MetricsGuid                   string                 `protobuf:"bytes,18,opt,name=metrics_guid" json:"metrics_guid"`
+	Annotation                    string                 `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
+	EgressRules                   []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
+	ModificationTag               *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
+	CachedDependencies            []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 }
 

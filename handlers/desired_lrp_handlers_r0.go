@@ -20,7 +20,7 @@ func (h *DesiredLRPHandler) DesiredLRPs_r0(w http.ResponseWriter, req *http.Requ
 		var lrps []*models.DesiredLRP
 
 		filter := models.DesiredLRPFilter{Domain: request.Domain}
-		lrps, err = h.db.DesiredLRPs(logger, filter)
+		lrps, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
 		if err == nil {
 			for i := range lrps {
 				transformedLRP := lrps[i].VersionDownTo(format.V0)
@@ -43,7 +43,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(w http.ResponseWriter, re
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		var lrp *models.DesiredLRP
-		lrp, err = h.db.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+		lrp, err = h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 		if err == nil {
 			transformedLRP := lrp.VersionDownTo(format.V0)
 			response.DesiredLrp = transformedLRP

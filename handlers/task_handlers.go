@@ -4,20 +4,31 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/rep"
 	"github.com/pivotal-golang/lager"
 )
 
 type TaskHandler struct {
-	db     db.TaskDB
-	logger lager.Logger
+	db               db.TaskDB
+	logger           lager.Logger
+	serviceClient    bbs.ServiceClient
+	repClientFactory rep.ClientFactory
 }
 
-func NewTaskHandler(logger lager.Logger, db db.TaskDB) *TaskHandler {
+func NewTaskHandler(
+	logger lager.Logger,
+	db db.TaskDB,
+	serviceClient bbs.ServiceClient,
+	repClientFactory rep.ClientFactory,
+) *TaskHandler {
 	return &TaskHandler{
-		db:     db,
-		logger: logger.Session("task-handler"),
+		db:               db,
+		logger:           logger.Session("task-handler"),
+		serviceClient:    serviceClient,
+		repClientFactory: repClientFactory,
 	}
 }
 
@@ -87,19 +98,49 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
-	var err error
 	logger := h.logger.Session("cancel-task")
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
+	defer writeResponse(w, response)
 
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		err = h.db.CancelTask(logger, request.TaskGuid)
+	err := parseRequest(logger, req, request)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
 	}
 
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	err = h.db.CancelTask(logger, request.TaskGuid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	task, err := h.db.TaskByGuid(logger, request.TaskGuid)
+	if err != nil {
+		logger.Error("failed-getting-task", err)
+		return
+	}
+
+	if task.CellId == "" {
+		return
+	}
+
+	cellPresence, err := h.serviceClient.CellById(logger, task.CellId)
+	if err != nil {
+		logger.Error("failed-fetching-cell-presence", err)
+		return
+	}
+
+	repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
+	repClient.CancelTask(request.TaskGuid)
+	if err != nil {
+		logger.Error("failed-rep-cancel-task", err)
+		return
+	}
+
+	logger.Info("cell-client-succeeded-cancelling-task")
 }
 
 func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {

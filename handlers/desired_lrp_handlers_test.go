@@ -1,22 +1,31 @@
 package handlers_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
+	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/cloudfoundry-incubator/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("DesiredLRP Handlers", func() {
 	var (
-		logger           lager.Logger
-		fakeDesiredLRPDB *fakes.FakeDesiredLRPDB
+		logger               *lagertest.TestLogger
+		fakeDesiredLRPDB     *fakes.FakeDesiredLRPDB
+		fakeActualLRPDB      *fakes.FakeActualLRPDB
+		fakeAuctioneerClient *auctioneerfakes.FakeClient
+
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DesiredLRPHandler
 
@@ -26,10 +35,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 	BeforeEach(func() {
 		fakeDesiredLRPDB = new(fakes.FakeDesiredLRPDB)
-		logger = lager.NewLogger("test")
+		fakeActualLRPDB = new(fakes.FakeActualLRPDB)
+		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewDesiredLRPHandler(logger, fakeDesiredLRPDB)
+		handler = handlers.NewDesiredLRPHandler(logger, fakeDesiredLRPDB, fakeActualLRPDB, fakeAuctioneerClient, fakeRepClientFactory, fakeServiceClient)
 	})
 
 	Describe("DesiredLRPs", func() {
@@ -287,6 +298,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		BeforeEach(func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("some-guid")
+			desiredLRP.Instances = 5
 			requestBody = &models.DesireLRPRequest{
 				DesiredLrp: desiredLRP,
 			}
@@ -300,6 +312,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		Context("when creating desired lrp in DB succeeds", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesireLRPReturns(nil)
+				fakeActualLRPDB.CreateUnclaimedActualLRPReturns(nil)
 			})
 
 			It("creates desired lrp", func() {
@@ -313,6 +326,35 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+			})
+
+			It("creates one ActualLRP per index", func() {
+				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(5))
+
+				for i := 0; i < 5; i++ {
+					_, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
+					expectedLRPKey := &models.ActualLRPKey{
+						ProcessGuid: desiredLRP.ProcessGuid,
+						Domain:      desiredLRP.Domain,
+						Index:       int32(i),
+					}
+					Expect(actualLRPKey).To(Equal(expectedLRPKey))
+				}
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			Context("when an auctioneer is present", func() {
+				It("emits start auction requests", func() {
+					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+
+					expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1, 2, 3, 4)
+
+					startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+					Expect(startAuctions).To(HaveLen(1))
+					Expect(startAuctions[0].ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
+					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
+				})
 			})
 		})
 
@@ -328,6 +370,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+
+			It("does not try to create actual LRPs", func() {
+				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(0))
 			})
 		})
 	})
@@ -372,8 +418,175 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				response := models.DesiredLRPLifecycleResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
-
 				Expect(response.Error).To(BeNil())
+			})
+
+			Context("when the number of instances changes", func() {
+				BeforeEach(func() {
+					instances := int32(3)
+					update.Instances = &instances
+
+					desiredLRP := &models.DesiredLRP{
+						ProcessGuid: "some-guid",
+						Domain:      "some-domain",
+						RootFs:      "some-stack",
+						MemoryMb:    128,
+						DiskMb:      512,
+					}
+
+					fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
+					fakeServiceClient.CellByIdReturns(&models.CellPresence{RepAddress: "some-address"}, nil)
+				})
+
+				Context("when the number of instances decreased", func() {
+					var actualLRPGroups []*models.ActualLRPGroup
+
+					BeforeEach(func() {
+						actualLRPGroups = []*models.ActualLRPGroup{}
+						for i := 0; i < 5; i++ {
+							actualLRPGroups = append(actualLRPGroups, &models.ActualLRPGroup{
+								Instance: model_helpers.NewValidActualLRP("some-guid", int32(i)),
+							})
+						}
+						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(actualLRPGroups, nil)
+					})
+
+					It("stops extra actual lrps", func() {
+						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+						Expect(processGuid).To(Equal("some-guid"))
+
+						Expect(fakeActualLRPDB.ActualLRPGroupsByProcessGuidCallCount()).To(Equal(1))
+						_, processGuid = fakeActualLRPDB.ActualLRPGroupsByProcessGuidArgsForCall(0)
+						Expect(processGuid).To(Equal("some-guid"))
+
+						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
+						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
+						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal("some-address"))
+						Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal("some-address"))
+
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
+						key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+						Expect(key).To(Equal(actualLRPGroups[3].Instance.ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPGroups[3].Instance.ActualLRPInstanceKey))
+						key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
+						Expect(key).To(Equal(actualLRPGroups[4].Instance.ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPGroups[4].Instance.ActualLRPInstanceKey))
+					})
+
+					Context("when fetching cell presence fails", func() {
+						BeforeEach(func() {
+							fakeServiceClient.CellByIdStub = func(lager.Logger, string) (*models.CellPresence, error) {
+								if fakeRepClient.StopLRPInstanceCallCount() == 1 {
+									return nil, errors.New("ohhhhh nooooo, mr billlll")
+								} else {
+									return &models.CellPresence{RepAddress: "some-address"}, nil
+								}
+							}
+						})
+
+						It("continues stopping the rest of the lrps and logs", func() {
+							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
+							Expect(logger).To(gbytes.Say("failed-fetching-cell-presence"))
+						})
+					})
+
+					Context("when stopping the lrp fails", func() {
+						BeforeEach(func() {
+							fakeRepClient.StopLRPInstanceStub = func(models.ActualLRPKey, models.ActualLRPInstanceKey) error {
+								if fakeRepClient.StopLRPInstanceCallCount() == 1 {
+									return errors.New("ohhhhh nooooo, mr billlll")
+								} else {
+									return nil
+								}
+							}
+						})
+
+						It("continues stopping the rest of the lrps and logs", func() {
+							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
+							Expect(logger).To(gbytes.Say("failed-stopping-lrp-instance"))
+						})
+					})
+				})
+
+				Context("when the number of instances increases", func() {
+					var runningActualLRPGroup *models.ActualLRPGroup
+
+					BeforeEach(func() {
+						runningActualLRPGroup = &models.ActualLRPGroup{
+							Instance: model_helpers.NewValidActualLRP("some-guid", 0),
+						}
+						actualLRPGroups := []*models.ActualLRPGroup{
+							runningActualLRPGroup,
+						}
+						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(actualLRPGroups, nil)
+					})
+
+					It("creates missing actual lrps", func() {
+						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+						Expect(processGuid).To(Equal("some-guid"))
+
+						Expect(fakeActualLRPDB.ActualLRPGroupsByProcessGuidCallCount()).To(Equal(1))
+						_, processGuid = fakeActualLRPDB.ActualLRPGroupsByProcessGuidArgsForCall(0)
+						Expect(processGuid).To(Equal("some-guid"))
+
+						Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(2))
+						_, key := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
+						Expect(key).To(BeEquivalentTo(&models.ActualLRPKey{
+							ProcessGuid: "some-guid",
+							Index:       1,
+							Domain:      "some-domain",
+						}))
+
+						_, key = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(1)
+						Expect(key).To(BeEquivalentTo(&models.ActualLRPKey{
+							ProcessGuid: "some-guid",
+							Index:       2,
+							Domain:      "some-domain",
+						}))
+
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+						startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						Expect(startRequests).To(BeEquivalentTo([]*auctioneer.LRPStartRequest{
+							{ProcessGuid: "some-guid", Domain: "some-domain", Indices: []int{1, 2}, Resource: rep.Resource{MemoryMB: 128, DiskMB: 512, RootFs: "some-stack"}},
+						}))
+					})
+				})
+
+				Context("when fetching the desired lrp fails", func() {
+					BeforeEach(func() {
+						fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, errors.New("you lose."))
+					})
+
+					It("does not update the actual lrps", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						response := models.DesiredLRPLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+					})
+				})
+
+				Context("when fetching the actual lrps groups fails", func() {
+					BeforeEach(func() {
+						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(nil, errors.New("you lose."))
+					})
+
+					It("does not update the actual lrps", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						response := models.DesiredLRPLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+					})
+				})
 			})
 		})
 
@@ -412,12 +625,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			handler.RemoveDesiredLRP(responseRecorder, request)
 		})
 
-		Context("when updating desired lrp in DB succeeds", func() {
+		Context("when removing desired lrp in DB succeeds", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.RemoveDesiredLRPReturns(nil)
 			})
 
-			It("updates the desired lrp", func() {
+			It("removes the desired lrp", func() {
 				Expect(fakeDesiredLRPDB.RemoveDesiredLRPCallCount()).To(Equal(1))
 				_, actualProcessGuid := fakeDesiredLRPDB.RemoveDesiredLRPArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
@@ -428,6 +641,67 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+			})
+
+			Context("when there are running instances on a present cell", func() {
+				var runningActualLRPGroup, evacuatingAndRunningActualLRPGroup, evacuatingActualLRPGroup *models.ActualLRPGroup
+
+				BeforeEach(func() {
+					runningActualLRPGroup = &models.ActualLRPGroup{
+						Instance: model_helpers.NewValidActualLRP("some-guid", 0),
+					}
+					evacuatingAndRunningActualLRPGroup = &models.ActualLRPGroup{
+						Instance:   model_helpers.NewValidActualLRP("some-guid", 1),
+						Evacuating: model_helpers.NewValidActualLRP("some-guid", 1),
+					}
+					evacuatingActualLRPGroup = &models.ActualLRPGroup{
+						Evacuating: model_helpers.NewValidActualLRP("some-guid", 2),
+					}
+
+					actualLRPGroups := []*models.ActualLRPGroup{
+						runningActualLRPGroup,
+						evacuatingAndRunningActualLRPGroup,
+						evacuatingActualLRPGroup,
+					}
+
+					fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(actualLRPGroups, nil)
+				})
+
+				It("stops all of the corresponding actual lrps", func() {
+					Expect(fakeActualLRPDB.ActualLRPGroupsByProcessGuidCallCount()).To(Equal(1))
+
+					_, processGuid := fakeActualLRPDB.ActualLRPGroupsByProcessGuidArgsForCall(0)
+					Expect(processGuid).To(Equal("some-guid"))
+
+					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(runningActualLRPGroup.Instance.CellId))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.CellId))
+
+					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
+					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+					Expect(key).To(Equal(runningActualLRPGroup.Instance.ActualLRPKey))
+					Expect(instanceKey).To(Equal(runningActualLRPGroup.Instance.ActualLRPInstanceKey))
+					key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
+					Expect(key).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.ActualLRPKey))
+					Expect(instanceKey).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.ActualLRPInstanceKey))
+				})
+
+				Context("when fetching the actual lrps fails", func() {
+					BeforeEach(func() {
+						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(nil, errors.New("new error dawg"))
+					})
+
+					It("logs the error but still succeeds", func() {
+						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(0))
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						response := models.DesiredLRPLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(response.Error).To(BeNil())
+						Expect(logger).To(gbytes.Say("failed-fetching-actual-lrps"))
+					})
+				})
 			})
 		})
 
