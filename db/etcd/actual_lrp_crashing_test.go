@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 
 	. "github.com/onsi/ginkgo"
@@ -153,6 +152,7 @@ func (t crashTest) Test() {
 	Context(t.Name, func() {
 		var (
 			crashErr                 error
+			shouldRestart            bool
 			actualLRPKey             *models.ActualLRPKey
 			instanceKey              *models.ActualLRPInstanceKey
 			initialTimestamp         int64
@@ -181,7 +181,7 @@ func (t crashTest) Test() {
 
 		JustBeforeEach(func() {
 			clock.Increment(600)
-			crashErr = etcdDB.CrashActualLRP(logger, actualLRPKey, instanceKey, "crashed")
+			shouldRestart, crashErr = etcdDB.CrashActualLRP(logger, actualLRPKey, instanceKey, "crashed")
 		})
 
 		if t.Result.ReturnedErr == nil {
@@ -240,32 +240,11 @@ func (t crashTest) Test() {
 
 		if t.Result.Auction {
 			It("starts an auction", func() {
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-
-				requestedAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-				Expect(requestedAuctions).To(HaveLen(1))
-
-				desiredLRP, err := etcdDB.DesiredLRPByProcessGuid(logger, actualLRPKey.ProcessGuid)
-				Expect(err).NotTo(HaveOccurred())
-				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRPKey.Index))
-				Expect(*requestedAuctions[0]).To(Equal(expectedStartRequest))
-			})
-
-			Context("when the desired LRP no longer exists", func() {
-				BeforeEach(func() {
-					etcdHelper.DeleteDesiredLRP(actualLRPKey.ProcessGuid)
-				})
-
-				It("the actual LRP is also deleted", func() {
-					Expect(crashErr).NotTo(HaveOccurred())
-
-					_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
-					Expect(err).To(Equal(models.ErrResourceNotFound))
-				})
+				Expect(shouldRestart).To(BeTrue())
 			})
 		} else {
 			It("does not start an auction", func() {
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+				Expect(shouldRestart).To(BeFalse())
 			})
 		}
 

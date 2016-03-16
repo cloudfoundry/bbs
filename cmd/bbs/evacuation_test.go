@@ -119,6 +119,7 @@ var _ = Describe("Evacuation API", func() {
 			etcdHelper.SetRawActualLRP(actual)
 			etcdHelper.CreateValidDesiredLRP(actual.ProcessGuid)
 		})
+
 		It("removes the crashed evacuating LRP and unclaims the instance ActualLRP", func() {
 			keepContainer, evacuateErr := client.EvacuateCrashedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, "some-reason")
 			Expect(keepContainer).Should(BeFalse())

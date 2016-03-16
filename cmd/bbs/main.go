@@ -260,7 +260,20 @@ func main() {
 		clock,
 	)
 
-	handler := handlers.New(logger, db, desiredHub, actualHub, taskHub, serviceClient, migrationsDone)
+	repClientFactory := rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient())
+	auctioneerClient := initializeAuctioneerClient(logger)
+
+	handler := handlers.New(
+		logger,
+		db,
+		desiredHub,
+		actualHub,
+		taskHub,
+		serviceClient,
+		auctioneerClient,
+		repClientFactory,
+		migrationsDone,
+	)
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(
 		logger,
