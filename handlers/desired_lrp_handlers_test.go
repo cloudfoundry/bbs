@@ -40,7 +40,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewDesiredLRPHandler(logger, fakeDesiredLRPDB, fakeActualLRPDB, fakeAuctioneerClient, fakeRepClientFactory, fakeServiceClient)
+		handler = handlers.NewDesiredLRPHandler(logger, 5, fakeDesiredLRPDB, fakeActualLRPDB, fakeAuctioneerClient, fakeRepClientFactory, fakeServiceClient)
 	})
 
 	Describe("DesiredLRPs", func() {

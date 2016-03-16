@@ -13,17 +13,18 @@ import (
 )
 
 type DesiredLRPHandler struct {
-	desiredLRPDB     db.DesiredLRPDB
-	actualLRPDB      db.ActualLRPDB
-	auctioneerClient auctioneer.Client
-	repClientFactory rep.ClientFactory
-	serviceClient    bbs.ServiceClient
-	logger           lager.Logger
+	desiredLRPDB       db.DesiredLRPDB
+	actualLRPDB        db.ActualLRPDB
+	auctioneerClient   auctioneer.Client
+	repClientFactory   rep.ClientFactory
+	serviceClient      bbs.ServiceClient
+	updateWorkersCount int
+	logger             lager.Logger
 }
 
 func NewDesiredLRPHandler(
 	logger lager.Logger,
-	updateWorkers int,
+	updateWorkersCount int,
 	desiredLRPDB db.DesiredLRPDB,
 	actualLRPDB db.ActualLRPDB,
 	auctioneerClient auctioneer.Client,
@@ -31,12 +32,13 @@ func NewDesiredLRPHandler(
 	serviceClient bbs.ServiceClient,
 ) *DesiredLRPHandler {
 	return &DesiredLRPHandler{
-		desiredLRPDB:     desiredLRPDB,
-		actualLRPDB:      actualLRPDB,
-		auctioneerClient: auctioneerClient,
-		repClientFactory: repClientFactory,
-		serviceClient:    serviceClient,
-		logger:           logger.Session("desiredlrp-handler"),
+		desiredLRPDB:       desiredLRPDB,
+		actualLRPDB:        actualLRPDB,
+		auctioneerClient:   auctioneerClient,
+		repClientFactory:   repClientFactory,
+		serviceClient:      serviceClient,
+		updateWorkersCount: updateWorkersCount,
+		logger:             logger.Session("desiredlrp-handler"),
 	}
 }
 
@@ -153,7 +155,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 		}
 	}
 
-	throttlerSize := h.
+	throttlerSize := h.updateWorkersCount
 	throttler, err := workpool.NewThrottler(throttlerSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": throttlerSize, "num-works": len(works)})
