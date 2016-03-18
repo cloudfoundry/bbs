@@ -405,7 +405,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when updating desired lrp in DB succeeds", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.UpdateDesiredLRPReturns(nil)
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(5, nil)
 			})
 
 			It("updates the desired lrp", func() {
@@ -448,16 +448,13 @@ var _ = Describe("DesiredLRP Handlers", func() {
 								Instance: model_helpers.NewValidActualLRP("some-guid", int32(i)),
 							})
 						}
+
 						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(actualLRPGroups, nil)
 					})
 
 					It("stops extra actual lrps", func() {
 						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
 						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
-						Expect(processGuid).To(Equal("some-guid"))
-
-						Expect(fakeActualLRPDB.ActualLRPGroupsByProcessGuidCallCount()).To(Equal(1))
-						_, processGuid = fakeActualLRPDB.ActualLRPGroupsByProcessGuidArgsForCall(0)
 						Expect(processGuid).To(Equal("some-guid"))
 
 						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
@@ -513,6 +510,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					var runningActualLRPGroup *models.ActualLRPGroup
 
 					BeforeEach(func() {
+						fakeDesiredLRPDB.UpdateDesiredLRPReturns(1, nil)
 						runningActualLRPGroup = &models.ActualLRPGroup{
 							Instance: model_helpers.NewValidActualLRP("some-guid", 0),
 						}
@@ -525,10 +523,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					It("creates missing actual lrps", func() {
 						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
 						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
-						Expect(processGuid).To(Equal("some-guid"))
-
-						Expect(fakeActualLRPDB.ActualLRPGroupsByProcessGuidCallCount()).To(Equal(1))
-						_, processGuid = fakeActualLRPDB.ActualLRPGroupsByProcessGuidArgsForCall(0)
 						Expect(processGuid).To(Equal("some-guid"))
 
 						Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(2))
@@ -592,7 +586,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.UpdateDesiredLRPReturns(models.ErrUnknownError)
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(0, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
@@ -618,6 +612,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			requestBody = &models.RemoveDesiredLRPRequest{
 				ProcessGuid: processGuid,
 			}
+			fakeServiceClient.CellByIdReturns(&models.CellPresence{RepAddress: "some-address"}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -674,8 +669,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(processGuid).To(Equal("some-guid"))
 
 					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(runningActualLRPGroup.Instance.CellId))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.CellId))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal("some-address"))
+					Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal("some-address"))
 
 					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)

@@ -72,7 +72,8 @@ func (db *ETCDDB) EvacuateActualLRP(
 		return err
 	}
 
-	if lrp.ActualLRPKey.Equal(lrpKey) && lrp.ActualLRPInstanceKey.Equal(instanceKey) &&
+	if lrp.ActualLRPKey.Equal(lrpKey) &&
+		lrp.ActualLRPInstanceKey.Equal(instanceKey) &&
 		reflect.DeepEqual(lrp.ActualLRPNetInfo, *netInfo) {
 		return nil
 	}

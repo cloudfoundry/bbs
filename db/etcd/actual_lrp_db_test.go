@@ -403,26 +403,9 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 
 		Context("when the actual LRP does not exist", func() {
-			It("creates a new unclaimed actual LRP", func() {
+			It("fails with a resource not found", func() {
 				err := etcdDB.UnclaimActualLRP(logger, lrpKey)
-				Expect(err).NotTo(HaveOccurred())
-
-				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-				Expect(err).NotTo(HaveOccurred())
-
-				actualLRP, evacuating := group.Resolve()
-				Expect(evacuating).To(BeFalse())
-
-				actualLRP.ModificationTag.Epoch = "something static"
-				Expect(actualLRP).To(BeEquivalentTo(&models.ActualLRP{
-					ActualLRPKey: *lrpKey,
-					Since:        clock.Now().UnixNano(),
-					State:        models.ActualLRPStateUnclaimed,
-					ModificationTag: models.ModificationTag{
-						Epoch: "something static",
-						Index: 0,
-					},
-				}))
+				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 
 			Context("when we fail to create the node", func() {

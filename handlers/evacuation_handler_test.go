@@ -408,26 +408,33 @@ var _ = Describe("Evacuation Handlers", func() {
 		)
 
 		BeforeEach(func() {
+			request = nil
 			desiredLRP = model_helpers.NewValidDesiredLRP("the-guid")
 			fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 
 			actualLRP = model_helpers.NewValidActualLRP("the-guid", 1)
+
+			key := actualLRP.ActualLRPKey
+			instanceKey := actualLRP.ActualLRPInstanceKey
+			netInfo := actualLRP.ActualLRPNetInfo
 			requestBody = &models.EvacuateRunningActualLRPRequest{
-				ActualLrpKey:         &actualLRP.ActualLRPKey,
-				ActualLrpInstanceKey: &actualLRP.ActualLRPInstanceKey,
-				ActualLrpNetInfo:     &actualLRP.ActualLRPNetInfo,
+				ActualLrpKey:         &key,
+				ActualLrpInstanceKey: &instanceKey,
+				ActualLrpNetInfo:     &netInfo,
 				Ttl:                  60,
 			}
 
 			actualLRPGroup = &models.ActualLRPGroup{
 				Instance: actualLRP,
 			}
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(actualLRPGroup, nil)
 
-			request = newTestRequest(requestBody)
+			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(actualLRPGroup, nil)
 		})
 
 		JustBeforeEach(func() {
+			if request == nil {
+				request = newTestRequest(requestBody)
+			}
 			handler.EvacuateRunningActualLRP(responseRecorder, request)
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		})
@@ -451,7 +458,21 @@ var _ = Describe("Evacuation Handlers", func() {
 					Expect(*actualLRPInstanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
 				})
 
-				Context("when removing the evacuating lrp fails", func() {
+				Context("when the evacuating lrp cannot be removed", func() {
+					BeforeEach(func() {
+						fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
+					})
+
+					It("returns no error and removes the container", func() {
+						response := models.EvacuationResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.KeepContainer).To(BeFalse())
+						Expect(response.Error).To(BeNil())
+					})
+				})
+
+				Context("when removing the evacuating lrp fails for a different reason", func() {
 					BeforeEach(func() {
 						fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("didnt work"))
 					})
@@ -490,6 +511,22 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(*actualLRPInstanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actualLRP.ActualLRPNetInfo))
 						Expect(ttl).To(BeEquivalentTo(60))
+					})
+
+					Context("when there's an existing evacuating on another cell", func() {
+						BeforeEach(func() {
+							evacuatingLRP := model_helpers.NewValidActualLRP("the-guid", 1)
+							evacuatingLRP.CellId = "some-other-cell"
+							actualLRPGroup.Evacuating = evacuatingLRP
+						})
+
+						It("does not error and does not keep the container", func() {
+							response := models.EvacuationResponse{}
+							err := response.Unmarshal(responseRecorder.Body.Bytes())
+							Expect(err).NotTo(HaveOccurred())
+							Expect(response.KeepContainer).To(BeFalse())
+							Expect(response.Error).To(BeNil())
+						})
 					})
 
 					Context("when evacuating the actual lrp fails", func() {
@@ -579,11 +616,8 @@ var _ = Describe("Evacuation Handlers", func() {
 				})
 
 				Context("by another cell", func() {
-					var previousLRPInstanceKey models.ActualLRPInstanceKey
-
 					BeforeEach(func() {
-						previousLRPInstanceKey = actualLRP.ActualLRPInstanceKey
-						actualLRP.ActualLRPInstanceKey.CellId = "meow"
+						actualLRP.CellId = "some-other-cell"
 					})
 
 					It("evacuates the LRP", func() {
@@ -596,9 +630,25 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
 						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, ttl := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actualLRP.ActualLRPKey))
-						Expect(*actualLRPInstanceKey).To(Equal(previousLRPInstanceKey))
+						Expect(*actualLRPInstanceKey).To(Equal(*requestBody.ActualLrpInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actualLRP.ActualLRPNetInfo))
 						Expect(ttl).To(BeEquivalentTo(60))
+					})
+
+					Context("when there's an existing evacuating on another cell", func() {
+						BeforeEach(func() {
+							evacuatingLRP := model_helpers.NewValidActualLRP("the-guid", 1)
+							evacuatingLRP.CellId = "some-other-cell"
+							actualLRPGroup.Evacuating = evacuatingLRP
+						})
+
+						It("does not error and does not keep the container", func() {
+							response := models.EvacuationResponse{}
+							err := response.Unmarshal(responseRecorder.Body.Bytes())
+							Expect(err).NotTo(HaveOccurred())
+							Expect(response.KeepContainer).To(BeFalse())
+							Expect(response.Error).To(BeNil())
+						})
 					})
 
 					Context("when evacuating the actual lrp fails", func() {
@@ -776,10 +826,50 @@ var _ = Describe("Evacuation Handlers", func() {
 				})
 
 				Context("on another cell", func() {
-					It("removes the evacuating LRP", func() {})
+					BeforeEach(func() {
+						actualLRP.CellId = "some-other-cell"
+					})
+
+					It("removes the evacuating LRP", func() {
+						response := models.EvacuationResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.KeepContainer).To(BeFalse())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
+						_, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+						Expect(*actualLRPKey).To(Equal(actualLRP.ActualLRPKey))
+						Expect(*actualLRPInstanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
+					})
 
 					Context("when removing the evacuating LRP fails", func() {
-						It("returns an error and does keep the container", func() {})
+						BeforeEach(func() {
+							fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("boom!"))
+						})
+
+						It("returns an error and does keep the container", func() {
+							response := models.EvacuationResponse{}
+							err := response.Unmarshal(responseRecorder.Body.Bytes())
+							Expect(err).NotTo(HaveOccurred())
+							Expect(response.KeepContainer).To(BeTrue())
+							Expect(response.Error).NotTo(BeNil())
+							Expect(response.Error.Error()).To(Equal("boom!"))
+						})
+
+						Context("when the error is a ErrActualLRPCannotBeRemoved", func() {
+							BeforeEach(func() {
+								fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
+							})
+
+							It("does not return an error or keep the container", func() {
+								response := models.EvacuationResponse{}
+								err := response.Unmarshal(responseRecorder.Body.Bytes())
+								Expect(err).NotTo(HaveOccurred())
+								Expect(response.KeepContainer).To(BeFalse())
+								Expect(response.Error).To(BeNil())
+							})
+						})
 					})
 				})
 			})
@@ -838,13 +928,12 @@ var _ = Describe("Evacuation Handlers", func() {
 				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
 			})
 
-			It("returns an error and keeps the container", func() {
+			It("does not return an error or keep the container", func() {
 				response := models.EvacuationResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
-				Expect(response.KeepContainer).To(BeTrue())
-				Expect(response.Error).NotTo(BeNil())
-				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
+				Expect(response.KeepContainer).To(BeFalse())
+				Expect(response.Error).To(BeNil())
 			})
 		})
 

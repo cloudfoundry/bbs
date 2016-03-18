@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
@@ -193,14 +192,6 @@ func (db *ETCDDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey
 	actualLRP, modifiedIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
-		if bbsErr.Type == models.Error_ResourceNotFound {
-			lrp, err := db.newUnclaimedActualLRP(key)
-			if err != nil {
-				return models.ErrActualLRPCannotBeUnclaimed
-			}
-
-			return db.createRawActualLRP(logger, lrp)
-		}
 		return bbsErr
 	}
 
@@ -472,36 +463,6 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 
 	logger.Info("succeeded")
 	return immediateRestart, nil
-}
-
-func (db *ETCDDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.ActualLRPKey) error {
-	logger = logger.Session("requesting-auction", lager.Data{"process-guid": key.ProcessGuid, "index": key.Index})
-	logger.Info("starting")
-	defer logger.Info("complete")
-
-	schedulingInfo, _, err := db.rawDesiredLRPSchedulingInfo(logger, key.ProcessGuid)
-	bbsErr := models.ConvertError(err)
-	if bbsErr != nil {
-		if bbsErr.Type == models.Error_ResourceNotFound {
-			logger.Error("missing-scheduling-info-for-auction", nil)
-			_, err := db.client.Delete(ActualLRPSchemaPath(key.ProcessGuid, key.Index), false)
-			if err != nil {
-				logger.Error("failed-to-delete-actual", err)
-				return models.ErrUnknownError
-			}
-			return nil
-		} else {
-			return bbsErr
-		}
-	}
-
-	lrpStart := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, int(key.Index))
-	err = db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&lrpStart})
-	if err != nil {
-		logger.Error("failed-to-request-auction", err)
-		return models.ErrUnknownError
-	}
-	return nil
 }
 
 func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {

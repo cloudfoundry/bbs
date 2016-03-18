@@ -137,16 +137,27 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 	index := request.ActualLrpKey.Index
 	actualLRPGroup, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
 	if err != nil {
+		if err == models.ErrResourceNotFound {
+			response.KeepContainer = false
+			return
+		}
 		logger.Error("failed-fetching-lrp-group", err)
 		response.Error = models.ConvertError(err)
 		return
 	}
 
 	instance := actualLRPGroup.Instance
+	evacuating := actualLRPGroup.Evacuating
 
+	// If the instance is not there, clean up the corresponding evacuating LRP, if one exists.
 	if instance == nil {
 		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 		if err != nil {
+			if err == models.ErrActualLRPCannotBeRemoved {
+				logger.Debug("remove-evacuating-actual-lrp-failed")
+				response.KeepContainer = false
+				return
+			}
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			response.Error = models.ConvertError(err)
 			return
@@ -157,12 +168,20 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 
 	if (instance.State == models.ActualLRPStateUnclaimed && instance.PlacementError == "") ||
 		(instance.State == models.ActualLRPStateClaimed && !instance.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) {
+		if evacuating != nil && !evacuating.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
+			logger.Error("already-evacuated-by-different-cell", err)
+			response.KeepContainer = false
+			return
+		}
+
 		err = h.db.EvacuateActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
 		if err == models.ErrActualLRPCannotBeEvacuated {
 			logger.Error("cannot-evacuate-actual-lrp", err)
 			response.KeepContainer = false
 			return
 		}
+
+		response.KeepContainer = true
 
 		if err != nil {
 			logger.Error("failed-evacuating-actual-lrp", err)
@@ -171,9 +190,11 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 		return
 	}
 
-	if (instance.State == models.ActualLRPStateUnclaimed && instance.PlacementError != "") || instance.State == models.ActualLRPStateCrashed {
+	if (instance.State == models.ActualLRPStateUnclaimed && instance.PlacementError != "") ||
+		(instance.State == models.ActualLRPStateRunning && !instance.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) ||
+		instance.State == models.ActualLRPStateCrashed {
 		response.KeepContainer = false
-		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+		err = h.db.RemoveEvacuatingActualLRP(logger, &instance.ActualLRPKey, &instance.ActualLRPInstanceKey)
 		if err != nil && err != models.ErrActualLRPCannotBeRemoved {
 			response.KeepContainer = true
 			response.Error = models.ConvertError(err)

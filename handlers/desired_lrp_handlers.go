@@ -114,6 +114,79 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Re
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
 	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
 }
+func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("update-desired-lrp")
+
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	request := &models.UpdateDesiredLRPRequest{}
+	response := &models.DesiredLRPLifecycleResponse{}
+	defer writeResponse(w, response)
+
+	err := parseRequest(logger, req, request)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	logger = logger.WithData(lager.Data{"update": request.Update, "guid": request.ProcessGuid})
+
+	logger.Debug("updating-desired-lrp")
+	previousInstanceCount, err := h.desiredLRPDB.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
+	if err != nil {
+		logger.Debug("failed-updating-desired-lrp")
+		response.Error = models.ConvertError(err)
+		return
+	}
+	logger.Debug("completed-updating-desired-lrp")
+
+	if request.Update.Instances != nil {
+		logger.Debug("updating-lrp-instances")
+		desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+		if err != nil {
+			logger.Error("failed-fetching-desired-lrp", err)
+			return
+		}
+
+		requestedInstances := *request.Update.Instances - previousInstanceCount
+
+		if requestedInstances > 0 {
+			logger.Debug("increasing-the-instances", lager.Data{"instances": requestedInstances})
+			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+			h.startInstanceRange(logger, previousInstanceCount, *request.Update.Instances, &schedulingInfo)
+		}
+
+		if requestedInstances < 0 {
+			logger.Debug("decreasing-the-instances", lager.Data{"instances": requestedInstances})
+			numExtraActualLRP := previousInstanceCount + requestedInstances
+			h.stopInstancesFrom(logger, request.ProcessGuid, int(numExtraActualLRP))
+		}
+	}
+}
+
+func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Request) {
+	logger := h.logger.Session("remove-desired-lrp")
+
+	request := &models.RemoveDesiredLRPRequest{}
+	response := &models.DesiredLRPLifecycleResponse{}
+	defer writeResponse(w, response)
+
+	err := parseRequest(logger, req, request)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	err = h.desiredLRPDB.RemoveDesiredLRP(logger, request.ProcessGuid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	h.stopInstancesFrom(logger, request.ProcessGuid, 0)
+}
 
 func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
 	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
@@ -175,107 +248,29 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 	return createdIndices
 }
 
-func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("update-desired-lrp")
-
-	logger.Info("starting")
-	defer logger.Info("complete")
-
-	request := &models.UpdateDesiredLRPRequest{}
-	response := &models.DesiredLRPLifecycleResponse{}
-	defer writeResponse(w, response)
-
-	err := parseRequest(logger, req, request)
+func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid string, index int) {
+	actualLRPGroups, err := h.actualLRPDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
 	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	logger.Debug("updating-desired-lrp", lager.Data{"update": request.Update, "guid": request.ProcessGuid})
-	err = h.desiredLRPDB.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
-	if err != nil {
-		logger.Debug("failed-updating-desired-lrp")
-		response.Error = models.ConvertError(err)
-		return
-	}
-	logger.Debug("completed-updating-desired-lrp")
-
-	if request.Update.Instances != nil {
-		logger.Debug("updating-lrp-instances")
-		desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
-		if err != nil {
-			logger.Error("failed-fetching-desired-lrp", err)
-			return
-		}
-
-		actualLRPGroups, err := h.actualLRPDB.ActualLRPGroupsByProcessGuid(logger, request.ProcessGuid)
-		if err != nil {
-			logger.Error("failed-fetching-actual-lrps", err)
-			return
-		}
-
-		numActualLRPGroups := int32(len(actualLRPGroups))
-		requestedInstances := *request.Update.Instances - numActualLRPGroups
-
-		if requestedInstances > 0 {
-			logger.Debug("increasing-the-instances", lager.Data{"instances": requestedInstances})
-			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			h.startInstanceRange(logger, numActualLRPGroups, *request.Update.Instances, &schedulingInfo)
-		}
-
-		if requestedInstances < 0 {
-			logger.Debug("decreasing-the-instances", lager.Data{"instances": requestedInstances})
-			numExtraActualLRP := numActualLRPGroups + requestedInstances
-			for _, group := range actualLRPGroups[numExtraActualLRP:] {
-				lrp, _ := group.Resolve()
-				cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
-				if err != nil {
-					logger.Error("failed-fetching-cell-presence", err)
-					continue
-				}
-				repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
-				logger.Debug("stopping-lrp-instance")
-				err = repClient.StopLRPInstance(group.Instance.ActualLRPKey, group.Instance.ActualLRPInstanceKey)
-				if err != nil {
-					logger.Error("failed-stopping-lrp-instance", err)
-				}
-			}
-		}
-	}
-}
-
-func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("remove-desired-lrp")
-
-	request := &models.RemoveDesiredLRPRequest{}
-	response := &models.DesiredLRPLifecycleResponse{}
-	defer writeResponse(w, response)
-
-	err := parseRequest(logger, req, request)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	err = h.desiredLRPDB.RemoveDesiredLRP(logger, request.ProcessGuid)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	actualLRPGroups, err := h.actualLRPDB.ActualLRPGroupsByProcessGuid(logger, request.ProcessGuid)
-	if err == nil {
-		for _, group := range actualLRPGroups {
-			if group.Instance != nil {
-				repClient := h.repClientFactory.CreateClient(group.Instance.CellId)
-				err := repClient.StopLRPInstance(group.Instance.ActualLRPKey, group.Instance.ActualLRPInstanceKey)
-				if err != nil {
-					logger.Error("failed-stopping-lrp-instance", err)
-				}
-			}
-		}
-	} else {
 		logger.Error("failed-fetching-actual-lrps", err)
+		return
+	}
+
+	for i := index; i < len(actualLRPGroups); i++ {
+		group := actualLRPGroups[i]
+
+		if group.Instance != nil {
+			lrp := group.Instance
+			cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
+			if err != nil {
+				logger.Error("failed-fetching-cell-presence", err)
+				continue
+			}
+			repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
+			logger.Debug("stopping-lrp-instance")
+			err = repClient.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
+			if err != nil {
+				logger.Error("failed-stopping-lrp-instance", err)
+			}
+		}
 	}
 }

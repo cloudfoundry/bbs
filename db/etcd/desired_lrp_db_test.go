@@ -376,7 +376,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 	})
 
-	Describe("Updating DesireLRP", func() {
+	Describe("UpdateDesiredLRP", func() {
 		var (
 			update     *models.DesiredLRPUpdate
 			desiredLRP *models.DesiredLRP
@@ -409,7 +409,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("updates an existing DesireLRP", func() {
-				modelErr := etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+				_, modelErr := etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
 				Expect(modelErr).NotTo(HaveOccurred())
 
 				updated, modelErr := etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
@@ -427,6 +427,12 @@ var _ = Describe("DesiredLRPDB", func() {
 				Expect(updated.ModificationTag.Index).To(Equal(desiredLRP.ModificationTag.Index + 1))
 			})
 
+			It("returns the previous instance count", func() {
+				previousCount, modelErr := etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+				Expect(modelErr).NotTo(HaveOccurred())
+				Expect(previousCount).To(BeNumerically("==", 5))
+			})
+
 			Context("when the compare and swap fails", func() {
 				BeforeEach(func() {
 					resp, err := storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaPath(lrp.ProcessGuid), false, false)
@@ -441,7 +447,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 					It("retries the update up to 2 times", func() {
 						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(0))
-						modelErr := etcdDBWithFakeStore.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+						_, modelErr := etcdDBWithFakeStore.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
 						Expect(modelErr).To(HaveOccurred())
 						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(2))
 					})
@@ -454,7 +460,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 					It("fails immediately", func() {
 						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(0))
-						modelErr := etcdDBWithFakeStore.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+						_, modelErr := etcdDBWithFakeStore.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
 						Expect(modelErr).To(HaveOccurred())
 						Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(1))
 					})
@@ -473,7 +479,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				desiredBeforeUpdate, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+				_, err = etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("instances"))
 
@@ -488,7 +494,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			It("returns an ErrorKeyNotFound", func() {
 				instances := int32(0)
 
-				err := etcdDB.UpdateDesiredLRP(logger, "garbage-guid", &models.DesiredLRPUpdate{
+				_, err := etcdDB.UpdateDesiredLRP(logger, "garbage-guid", &models.DesiredLRPUpdate{
 					Instances: &instances,
 				})
 				Expect(err).To(Equal(models.ErrResourceNotFound))
