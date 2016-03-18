@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
+	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -17,8 +19,9 @@ import (
 
 var _ = Describe("Task Handlers", func() {
 	var (
-		logger     lager.Logger
-		fakeTaskDB *fakes.FakeTaskDB
+		logger               lager.Logger
+		fakeTaskDB           *fakes.FakeTaskDB
+		fakeAuctioneerClient *auctioneerfakes.FakeClient
 
 		responseRecorder *httptest.ResponseRecorder
 
@@ -34,11 +37,12 @@ var _ = Describe("Task Handlers", func() {
 
 	BeforeEach(func() {
 		fakeTaskDB = new(fakes.FakeTaskDB)
+		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeServiceClient, fakeRepClientFactory)
+		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory)
 	})
 
 	Describe("Tasks", func() {
@@ -227,6 +231,50 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+			})
+
+			It("requests an auction", func() {
+				Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+
+				expectedStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDef)
+
+				requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+				Expect(requestedTasks).To(HaveLen(1))
+				Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
+			})
+
+			Context("when requesting a task auction succeeds", func() {
+				BeforeEach(func() {
+					fakeAuctioneerClient.RequestTaskAuctionsReturns(nil)
+				})
+
+				It("does not return an error", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := &models.TaskLifecycleResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+				})
+			})
+
+			Context("when requesting a task auction fails", func() {
+				BeforeEach(func() {
+					fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
+				})
+
+				It("does not return an error", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := &models.TaskLifecycleResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+				})
+
+				It("does not request a second auction", func() {
+					Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
+				})
 			})
 		})
 

@@ -1,9 +1,6 @@
 package etcd_test
 
 import (
-	"errors"
-
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 
@@ -197,46 +194,13 @@ var _ = Describe("TaskDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(persistedTask.UpdatedAt).To(Equal(clock.Now().UnixNano()))
 			})
-
-			Context("when able to fetch the Auctioneer address", func() {
-				It("requests an auction", func() {
-					Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
-
-					expectedStartRequest := auctioneer.NewTaskStartRequestFromModel(task)
-
-					requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
-					Expect(requestedTasks).To(HaveLen(1))
-					Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
-				})
-
-				Context("when requesting a task auction succeeds", func() {
-					BeforeEach(func() {
-						fakeAuctioneerClient.RequestTaskAuctionsReturns(nil)
-					})
-
-					It("does not return an error", func() {
-						Expect(errDesire).NotTo(HaveOccurred())
-					})
-				})
-
-				Context("when requesting a task auction fails", func() {
-					BeforeEach(func() {
-						fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
-					})
-
-					It("does not return an error", func() {
-						// The creation succeeded, we can ignore the auction request error (converger will eventually do it)
-						Expect(errDesire).NotTo(HaveOccurred())
-					})
-				})
-			})
 		})
 
 		Context("when a task is already present at the desired key", func() {
-			const otherDomain = "other-domain"
+			const initialDomain = "other-domain"
 
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, otherDomain)
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, initialDomain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -244,11 +208,7 @@ var _ = Describe("TaskDB", func() {
 				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tasks).To(HaveLen(1))
-				Expect(tasks[0].Domain).To(Equal(otherDomain))
-			})
-
-			It("does not request a second auction", func() {
-				Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
+				Expect(tasks[0].Domain).To(Equal(initialDomain))
 			})
 
 			It("returns an error", func() {

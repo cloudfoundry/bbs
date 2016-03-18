@@ -129,7 +129,7 @@ func (db *ETCDDB) ConvergeTasks(
 				tasksKicked++
 			} else if shouldKickTask {
 				logger.Info("requesting-auction-for-pending-task", lager.Data{"task-guid": task.TaskGuid})
-				start := auctioneer.NewTaskStartRequestFromModel(task)
+				start := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
 				tasksToAuction = append(tasksToAuction, &start)
 				tasksKicked++
 			}

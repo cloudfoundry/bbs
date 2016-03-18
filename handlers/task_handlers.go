@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -14,6 +15,7 @@ import (
 type TaskHandler struct {
 	db               db.TaskDB
 	logger           lager.Logger
+	auctioneerClient auctioneer.Client
 	serviceClient    bbs.ServiceClient
 	repClientFactory rep.ClientFactory
 }
@@ -21,12 +23,14 @@ type TaskHandler struct {
 func NewTaskHandler(
 	logger lager.Logger,
 	db db.TaskDB,
+	auctioneerClient auctioneer.Client,
 	serviceClient bbs.ServiceClient,
 	repClientFactory rep.ClientFactory,
 ) *TaskHandler {
 	return &TaskHandler{
 		db:               db,
 		logger:           logger.Session("task-handler"),
+		auctioneerClient: auctioneerClient,
 		serviceClient:    serviceClient,
 		repClientFactory: repClientFactory,
 	}
@@ -72,13 +76,28 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer writeResponse(w, response)
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		err = h.db.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
 	}
 
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	err = h.db.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(request.TaskGuid, request.Domain, request.TaskDefinition)
+	err = h.auctioneerClient.RequestTaskAuctions([]*auctioneer.TaskStartRequest{&taskStartRequest})
+	if err != nil {
+		logger.Error("failed-requesting-task-auction", err)
+		// The creation succeeded, the auction request error can be dropped
+	} else {
+		logger.Debug("succeeded-requesting-task-auction")
+	}
 }
 
 func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
