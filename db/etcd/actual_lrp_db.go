@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
@@ -507,7 +506,7 @@ func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index
 	return db.removeActualLRP(logger, lrp, prevIndex)
 }
 
-func (db *ETCDDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+func (db *ETCDDB) retireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
 	logger = logger.Session("retire-actual-lrp", lager.Data{"actual_lrp_key": key})
 	var err error
 	var prevIndex uint64
@@ -559,31 +558,6 @@ func (db *ETCDDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 	}
 
 	return err
-}
-
-func (db *ETCDDB) retireActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) {
-	logger = logger.Session("retire-actual-lrps")
-
-	works := make([]func(), len(keys))
-
-	for i, key := range keys {
-		key := key
-
-		works[i] = func() {
-			err := db.RetireActualLRP(logger, key)
-			if err != nil {
-				logger.Error("failed-to-retire", err, lager.Data{"lrp-key": key})
-			}
-		}
-	}
-
-	throttler, err := workpool.NewThrottler(db.updateWorkersSize, works)
-	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": db.updateWorkersSize, "num-works": len(works)})
-		return
-	}
-
-	throttler.Work()
 }
 
 func (db *ETCDDB) removeActualLRP(logger lager.Logger, lrp *models.ActualLRP, prevIndex uint64) error {

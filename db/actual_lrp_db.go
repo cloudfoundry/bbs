@@ -19,5 +19,4 @@ type ActualLRPDB interface {
 	CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (shouldRestart bool, err error)
 	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) error
 	RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error
-	RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
 }

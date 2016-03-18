@@ -606,7 +606,7 @@ func (db *ETCDDB) resolveActualsToBeRetired(logger lager.Logger, actual *models.
 			"index":        actual.Index,
 		})
 		logger.Debug("retiring-actual-lrp")
-		retireErr := db.RetireActualLRP(logger, &actual.ActualLRPKey)
+		retireErr := db.retireActualLRP(logger, &actual.ActualLRPKey)
 		if retireErr != nil {
 			logger.Error("failed-retiring-actual-lrp", retireErr)
 			return
