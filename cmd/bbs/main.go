@@ -270,6 +270,7 @@ func main() {
 		desiredHub,
 		actualHub,
 		taskHub,
+		cbWorkPool,
 		serviceClient,
 		auctioneerClient,
 		repClientFactory,

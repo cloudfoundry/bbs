@@ -222,16 +222,18 @@ var _ = Describe("Convergence of Tasks", func() {
 					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
+					task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
+					Expect(task.TaskGuid).To(Equal(taskGuid))
 
 					err = etcdDB.DesireTask(logger, taskDef, taskGuid2, domain)
 
 					_, err = etcdDB.StartTask(logger, taskGuid2, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
+					task, err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
+					Expect(task.TaskGuid).To(Equal(taskGuid2))
 				})
 
 				It("emits a completed metric", func() {
@@ -244,8 +246,8 @@ var _ = Describe("Convergence of Tasks", func() {
 					})
 
 					It("resubmits the completed tasks to the callback workpool", func() {
-						expectedCallCount := 4
-						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(expectedCallCount)) // 2 initial completes + 2 times for convergence
+						expectedCallCount := 2
+						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(expectedCallCount))
 
 						task1Completions := 0
 						task2Completions := 0
@@ -262,8 +264,8 @@ var _ = Describe("Convergence of Tasks", func() {
 							Expect(task.Result).To(Equal("a magical result"))
 						}
 
-						Expect(task1Completions).To(Equal(2))
-						Expect(task2Completions).To(Equal(2))
+						Expect(task1Completions).To(Equal(1))
+						Expect(task2Completions).To(Equal(1))
 					})
 
 					It("logs that it kicks the completed task", func() {
@@ -319,8 +321,9 @@ var _ = Describe("Convergence of Tasks", func() {
 				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
+				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 				Expect(err).NotTo(HaveOccurred())
+				Expect(task.TaskGuid).To(Equal(taskGuid))
 
 				err = etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
@@ -339,7 +342,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("should do nothing", func() {
-					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
+					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(0))
 
 					returnedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
@@ -365,9 +368,9 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("submits the completed task to the workpool", func() {
-					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(2))
+					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
 
-					_, task := fakeTaskCompletionClient.SubmitArgsForCall(1)
+					_, task := fakeTaskCompletionClient.SubmitArgsForCall(0)
 					Expect(task.TaskGuid).To(Equal(taskGuid))
 				})
 

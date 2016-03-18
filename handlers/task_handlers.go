@@ -8,31 +8,35 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/rep"
 	"github.com/pivotal-golang/lager"
 )
 
 type TaskHandler struct {
-	db               db.TaskDB
-	logger           lager.Logger
-	auctioneerClient auctioneer.Client
-	serviceClient    bbs.ServiceClient
-	repClientFactory rep.ClientFactory
+	db                   db.TaskDB
+	logger               lager.Logger
+	taskCompletionClient taskworkpool.TaskCompletionClient
+	auctioneerClient     auctioneer.Client
+	serviceClient        bbs.ServiceClient
+	repClientFactory     rep.ClientFactory
 }
 
 func NewTaskHandler(
 	logger lager.Logger,
 	db db.TaskDB,
+	taskCompletionClient taskworkpool.TaskCompletionClient,
 	auctioneerClient auctioneer.Client,
 	serviceClient bbs.ServiceClient,
 	repClientFactory rep.ClientFactory,
 ) *TaskHandler {
 	return &TaskHandler{
-		db:               db,
-		logger:           logger.Session("task-handler"),
-		auctioneerClient: auctioneerClient,
-		serviceClient:    serviceClient,
-		repClientFactory: repClientFactory,
+		db:                   db,
+		logger:               logger.Session("task-handler"),
+		taskCompletionClient: taskCompletionClient,
+		auctioneerClient:     auctioneerClient,
+		serviceClient:        serviceClient,
+		repClientFactory:     repClientFactory,
 	}
 }
 
@@ -130,16 +134,15 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = h.db.CancelTask(logger, request.TaskGuid)
+	task, err := h.db.CancelTask(logger, request.TaskGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	task, err := h.db.TaskByGuid(logger, request.TaskGuid)
-	if err != nil {
-		logger.Error("failed-getting-task", err)
-		return
+	if task.CompletionCallbackUrl != "" {
+		logger.Info("task-client-completing-task")
+		h.taskCompletionClient.Submit(h.db, task)
 	}
 
 	if task.CellId == "" {
@@ -169,13 +172,24 @@ func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.FailTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer writeResponse(w, response)
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		err = h.db.FailTask(logger, request.TaskGuid, request.FailureReason)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
 	}
 
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	task, err := h.db.FailTask(logger, request.TaskGuid, request.FailureReason)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	if task.CompletionCallbackUrl != "" {
+		logger.Info("task-client-completing-task")
+		h.taskCompletionClient.Submit(h.db, task)
+	}
 }
 
 func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
@@ -185,13 +199,24 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.CompleteTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer writeResponse(w, response)
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		err = h.db.CompleteTask(logger, request.TaskGuid, request.CellId, request.Failed, request.FailureReason, request.Result)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
 	}
 
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	task, err := h.db.CompleteTask(logger, request.TaskGuid, request.CellId, request.Failed, request.FailureReason, request.Result)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	if task.CompletionCallbackUrl != "" {
+		logger.Info("task-client-completing-task")
+		h.taskCompletionClient.Submit(h.db, task)
+	}
 }
 
 func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
