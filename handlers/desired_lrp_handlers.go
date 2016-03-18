@@ -152,14 +152,15 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 
 		requestedInstances := *request.Update.Instances - previousInstanceCount
 
+		logger = logger.WithData(lager.Data{"instances-delta": requestedInstances})
 		if requestedInstances > 0 {
-			logger.Debug("increasing-the-instances", lager.Data{"instances": requestedInstances})
+			logger.Debug("increasing-the-instances")
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 			h.startInstanceRange(logger, previousInstanceCount, *request.Update.Instances, &schedulingInfo)
 		}
 
 		if requestedInstances < 0 {
-			logger.Debug("decreasing-the-instances", lager.Data{"instances": requestedInstances})
+			logger.Debug("decreasing-the-instances")
 			numExtraActualLRP := previousInstanceCount + requestedInstances
 			h.stopInstancesFrom(logger, request.ProcessGuid, int(numExtraActualLRP))
 		}
