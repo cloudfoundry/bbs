@@ -16,7 +16,7 @@ type ActualLRPHandler struct {
 func NewActualLRPHandler(logger lager.Logger, db db.ActualLRPDB) *ActualLRPHandler {
 	return &ActualLRPHandler{
 		db:     db,
-		logger: logger.Session("actuallrp-handler"),
+		logger: logger.Session("actual-lrp-handler"),
 	}
 }
 

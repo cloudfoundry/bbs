@@ -46,7 +46,9 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		fakeRepClient = new(repfakes.FakeClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient)
 
-		handler = handlers.NewActualLRPLifecycleHandler(logger, fakeActualLRPDB, fakeDesiredLRPDB, fakeAuctioneerClient, fakeRepClientFactory, fakeServiceClient)
+		retirer := handlers.NewActualLRPRetirer(fakeActualLRPDB, fakeRepClientFactory, fakeServiceClient)
+
+		handler = handlers.NewActualLRPLifecycleHandler(logger, fakeActualLRPDB, fakeDesiredLRPDB, fakeAuctioneerClient, retirer)
 	})
 
 	Describe("ClaimActualLRP", func() {
@@ -615,7 +617,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 					})
 				})
 
-				Context("the cell is present, but returns an error on lookup", func() {
+				Context("is present, but returns an error on lookup", func() {
 					BeforeEach(func() {
 						fakeServiceClient.CellByIdReturns(nil, errors.New("cell error"))
 					})

@@ -113,15 +113,6 @@ type FakeActualLRPDB struct {
 	removeActualLRPReturns struct {
 		result1 error
 	}
-	RetireActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) error
-	retireActualLRPMutex       sync.RWMutex
-	retireActualLRPArgsForCall []struct {
-		logger lager.Logger
-		key    *models.ActualLRPKey
-	}
-	retireActualLRPReturns struct {
-		result1 error
-	}
 }
 
 func (fake *FakeActualLRPDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
@@ -463,39 +454,6 @@ func (fake *FakeActualLRPDB) RemoveActualLRPArgsForCall(i int) (lager.Logger, st
 func (fake *FakeActualLRPDB) RemoveActualLRPReturns(result1 error) {
 	fake.RemoveActualLRPStub = nil
 	fake.removeActualLRPReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeActualLRPDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
-	fake.retireActualLRPMutex.Lock()
-	fake.retireActualLRPArgsForCall = append(fake.retireActualLRPArgsForCall, struct {
-		logger lager.Logger
-		key    *models.ActualLRPKey
-	}{logger, key})
-	fake.retireActualLRPMutex.Unlock()
-	if fake.RetireActualLRPStub != nil {
-		return fake.RetireActualLRPStub(logger, key)
-	} else {
-		return fake.retireActualLRPReturns.result1
-	}
-}
-
-func (fake *FakeActualLRPDB) RetireActualLRPCallCount() int {
-	fake.retireActualLRPMutex.RLock()
-	defer fake.retireActualLRPMutex.RUnlock()
-	return len(fake.retireActualLRPArgsForCall)
-}
-
-func (fake *FakeActualLRPDB) RetireActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
-	fake.retireActualLRPMutex.RLock()
-	defer fake.retireActualLRPMutex.RUnlock()
-	return fake.retireActualLRPArgsForCall[i].logger, fake.retireActualLRPArgsForCall[i].key
-}
-
-func (fake *FakeActualLRPDB) RetireActualLRPReturns(result1 error) {
-	fake.RetireActualLRPStub = nil
-	fake.retireActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }

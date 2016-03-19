@@ -22,7 +22,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("LrpConvergence", func() {
+var _ = Describe("LRPConvergence", func() {
 	var (
 		sender   *fake.FakeMetricSender
 		testData *testDataForConvergenceGatherer
@@ -711,6 +711,9 @@ var _ = Describe("LrpConvergence", func() {
 		var (
 			desiredLRP          *models.DesiredLRP
 			processGuid, cellId string
+
+			lrpStartRequests []*auctioneer.LRPStartRequest
+			keysToRetire     []*models.ActualLRPKey
 		)
 
 		BeforeEach(func() {
@@ -726,19 +729,15 @@ var _ = Describe("LrpConvergence", func() {
 		})
 
 		JustBeforeEach(func() {
-			etcdDB.ConvergeLRPs(logger)
+			lrpStartRequests, keysToRetire = etcdDB.ConvergeLRPs(logger)
 		})
 
 		Context("when there are no actuals for desired LRP", func() {
-			It("emits a start auction request for the correct indices", func() {
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+			It("returns start auction requests for the correct indices", func() {
+				Expect(lrpStartRequests).To(HaveLen(1))
 
-				startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-				Expect(startAuctions).To(HaveLen(1))
-
-				startAuction := startAuctions[0]
+				startAuction := lrpStartRequests[0]
 				Expect(startAuction.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
-				Expect(startAuction.Indices).To(HaveLen(2))
 				Expect(startAuction.Indices).To(ConsistOf([]int{0, 1}))
 			})
 		})
@@ -755,13 +754,12 @@ var _ = Describe("LrpConvergence", func() {
 				etcdHelper.SetRawActualLRP(actualLRP)
 			})
 
-			It("emits a start auction request for the missing index", func() {
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+			It("returns start auction requests for the missing index", func() {
+				Expect(lrpStartRequests).To(HaveLen(1))
 
-				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1)
-				startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-				Expect(startAuctions).To(HaveLen(1))
-				Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
+				startAuction := lrpStartRequests[0]
+				Expect(startAuction.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
+				Expect(startAuction.Indices).To(ConsistOf([]int{1}))
 			})
 		})
 
@@ -791,13 +789,11 @@ var _ = Describe("LrpConvergence", func() {
 			})
 
 			It("emits a start auction request for the crashed index", func() {
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+				Expect(lrpStartRequests).To(HaveLen(1))
 
-				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1)
-
-				startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-				Expect(startAuctions).To(HaveLen(1))
-				Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
+				startAuction := lrpStartRequests[0]
+				Expect(startAuction.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
+				Expect(startAuction.Indices).To(ConsistOf([]int{1}))
 			})
 
 			It("unclaims the crashed actual lrp", func() {
@@ -925,10 +921,13 @@ var _ = Describe("LrpConvergence", func() {
 			})
 
 			Context("when the actual LRP is UNCLAIMED", func() {
-				It("removes the actual LRP", func() {
-					etcdDB.ConvergeLRPs(logger)
-					_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-					Expect(err).To(Equal(models.ErrResourceNotFound))
+				It("returns the lrp to be retired", func() {
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
+						ProcessGuid: processGuid,
+						Index:       index,
+						Domain:      domain,
+					}))
 				})
 
 				It("logs", func() {
@@ -941,12 +940,9 @@ var _ = Describe("LrpConvergence", func() {
 						domain = "expired-domain"
 					})
 
-					It("does not delete the actual LRP", func() {
-						etcdDB.ConvergeLRPs(logger)
-
-						_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
+					It("returns no lrp to be retired", func() {
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
 			})
@@ -977,17 +973,13 @@ var _ = Describe("LrpConvergence", func() {
 						consulHelper.RegisterCell(&cellPresence)
 					})
 
-					It("sends a stop request to the corresponding cell", func() {
-						etcdDB.ConvergeLRPs(logger)
-
-						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
-						key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-						Expect(key.ProcessGuid).To(Equal(processGuid))
-						Expect(key.Index).To(Equal(index))
-						Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
+					It("returns the lrp to be retired", func() {
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
+							ProcessGuid: processGuid,
+							Index:       index,
+							Domain:      domain,
+						}))
 					})
 
 					It("logs", func() {
@@ -1000,21 +992,21 @@ var _ = Describe("LrpConvergence", func() {
 							domain = "expired-domain"
 						})
 
-						It("does not stop the actual LRP", func() {
-							etcdDB.ConvergeLRPs(logger)
-
-							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
-							Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
+						It("returns no lrps to be retired", func() {
+							_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+							Expect(keysToRetire).To(BeEmpty())
 						})
 					})
 				})
 
 				Context("when the cell is missing", func() {
-					It("removes the actualLRP", func() {
-						etcdDB.ConvergeLRPs(logger)
-
-						_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-						Expect(err).To(Equal(models.ErrResourceNotFound))
+					It("returns the lrp to be retired", func() {
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
+							ProcessGuid: processGuid,
+							Index:       index,
+							Domain:      domain,
+						}))
 					})
 
 					Context("when the LRP domain is not fresh", func() {
@@ -1022,12 +1014,9 @@ var _ = Describe("LrpConvergence", func() {
 							domain = "expired-domain"
 						})
 
-						It("does not delete the actual LRP", func() {
-							etcdDB.ConvergeLRPs(logger)
-
-							_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-							Expect(err).NotTo(HaveOccurred())
-							Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
+						It("returns no lrp to be retired", func() {
+							_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+							Expect(keysToRetire).To(BeEmpty())
 						})
 					})
 				})
@@ -1062,17 +1051,13 @@ var _ = Describe("LrpConvergence", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("sends a stop request to the corresponding cell", func() {
-					etcdDB.ConvergeLRPs(logger)
-
-					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
-					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-					Expect(key.ProcessGuid).To(Equal(processGuid))
-					Expect(key.Index).To(Equal(index))
-					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
+				It("returns the correct lrps to retire", func() {
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
+						ProcessGuid: processGuid,
+						Index:       index,
+						Domain:      domain,
+					}))
 				})
 
 				Context("when the LRP domain is not fresh", func() {
@@ -1080,10 +1065,9 @@ var _ = Describe("LrpConvergence", func() {
 						domain = "expired-domain"
 					})
 
-					It("does not stop the actual LRP", func() {
-						etcdDB.ConvergeLRPs(logger)
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
-						Expect(logger.TestSink).To(gbytes.Say("skipping-unfresh-domain"))
+					It("returns no lrps to retire", func() {
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
 			})
@@ -1124,11 +1108,13 @@ var _ = Describe("LrpConvergence", func() {
 					etcdHelper.SetRawActualLRP(higherIndexActualLRP)
 				})
 
-				It("removes the actual LRP", func() {
-					etcdDB.ConvergeLRPs(logger)
-
-					_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-					Expect(err).To(Equal(models.ErrResourceNotFound))
+				It("returns the lrp to be retired", func() {
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
+						ProcessGuid: processGuid,
+						Index:       index,
+						Domain:      domain,
+					}))
 				})
 
 				Context("when the LRP domain is not fresh", func() {
@@ -1136,10 +1122,9 @@ var _ = Describe("LrpConvergence", func() {
 						domain = "expired-domain"
 					})
 
-					It("does not delete the actual LRP", func() {
-						etcdDB.ConvergeLRPs(logger)
-						_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-						Expect(err).NotTo(HaveOccurred())
+					It("returns no lrp to be retired", func() {
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
 			})
@@ -1175,18 +1160,13 @@ var _ = Describe("LrpConvergence", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("sends a stop request to the corresponding cell", func() {
-					etcdDB.ConvergeLRPs(logger)
-
-					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
-					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-
-					Expect(key.ProcessGuid).To(Equal(processGuid))
-					Expect(key.Index).To(Equal(index))
-					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
+				It("returns the lrp to be retired", func() {
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
+						ProcessGuid: processGuid,
+						Index:       index,
+						Domain:      domain,
+					}))
 				})
 
 				Context("when the LRP domain is not fresh", func() {
@@ -1194,9 +1174,9 @@ var _ = Describe("LrpConvergence", func() {
 						domain = "expired-domain"
 					})
 
-					It("does not stop the actual LRP", func() {
-						etcdDB.ConvergeLRPs(logger)
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
+					It("returns no lrp to be retired", func() {
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
 			})
@@ -1243,17 +1223,12 @@ var _ = Describe("LrpConvergence", func() {
 				})
 
 				It("sends a stop request to the corresponding cell", func() {
-					etcdDB.ConvergeLRPs(logger)
-
-					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
-					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-
-					Expect(key.ProcessGuid).To(Equal(processGuid))
-					Expect(key.Index).To(Equal(index))
-					Expect(instanceKey.InstanceGuid).To(Equal("instance-guid"))
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
+						ProcessGuid: processGuid,
+						Index:       index,
+						Domain:      domain,
+					}))
 				})
 
 				Context("when the LRP domain is not fresh", func() {
@@ -1262,8 +1237,8 @@ var _ = Describe("LrpConvergence", func() {
 					})
 
 					It("does not stop the actual LRP", func() {
-						etcdDB.ConvergeLRPs(logger)
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						Expect(keysToRetire).To(HaveLen(0))
 					})
 				})
 			})
@@ -1294,16 +1269,13 @@ var _ = Describe("LrpConvergence", func() {
 			Expect(logger.TestSink).To(gbytes.Say("adding-start-auction"))
 		})
 
-		It("re-emits start auction requests", func() {
-			originalAuctionCallCount := fakeAuctioneerClient.RequestLRPAuctionsCallCount()
-			etcdDB.ConvergeLRPs(logger)
-			Consistently(fakeAuctioneerClient.RequestLRPAuctionsCallCount).Should(Equal(originalAuctionCallCount + 1))
+		It("re-returns start auction requests", func() {
+			startRequests, _ := etcdDB.ConvergeLRPs(logger)
+			Expect(startRequests).To(HaveLen(1))
 
-			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
-
-			startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(originalAuctionCallCount)
-			Expect(startAuctions).To(HaveLen(1))
-			Expect(*startAuctions[0]).To(Equal(expectedStartRequest))
+			startAuction := startRequests[0]
+			Expect(startAuction.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
+			Expect(startAuction.Indices).To(ConsistOf([]int{0}))
 		})
 	})
 })

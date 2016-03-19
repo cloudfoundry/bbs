@@ -21,6 +21,7 @@ import (
 func New(
 	logger lager.Logger,
 	updateWorkers int,
+	convergenceWorkersSize int,
 	db db.DB,
 	desiredHub, actualHub, taskHub events.Hub,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
@@ -29,13 +30,14 @@ func New(
 	repClientFactory rep.ClientFactory,
 	migrationsDone <-chan struct{},
 ) http.Handler {
+	retirer := NewActualLRPRetirer(db, repClientFactory, serviceClient)
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
-	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, auctioneerClient, repClientFactory, serviceClient)
+	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, auctioneerClient, retirer)
 	evacuationHandler := NewEvacuationHandler(logger, db, db, db, auctioneerClient)
 	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, auctioneerClient, repClientFactory, serviceClient)
-	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
+	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, auctioneerClient, retirer, convergenceWorkersSize)
 	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
 	eventsHandler := NewEventHandler(logger, desiredHub, actualHub, taskHub)
 	cellsHandler := NewCellHandler(logger, serviceClient)

@@ -266,6 +266,7 @@ func main() {
 	handler := handlers.New(
 		logger,
 		*updateWorkers,
+		*convergenceWorkers,
 		db,
 		desiredHub,
 		actualHub,

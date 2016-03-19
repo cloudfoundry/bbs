@@ -40,10 +40,10 @@ const (
 	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
 )
 
-func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
+func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey) {
 	convergeStart := db.clock.Now()
 	convergeLRPRunsCounter.Increment()
-	logger = logger.Session("converge-lrps")
+	logger = logger.Session("etcd")
 	logger.Info("starting-convergence")
 	defer logger.Info("finished-convergence")
 
@@ -58,13 +58,13 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) {
 	input, err := db.GatherAndPruneLRPs(logger)
 	if err != nil {
 		logger.Error("failed-gathering-convergence-input", err)
-		return
+		return nil, nil
 	}
 	logger.Debug("succeeded-gathering-convergence-input")
 
 	changes := CalculateConvergence(logger, db.clock, models.NewDefaultRestartCalculator(), input)
 
-	db.ResolveConvergence(logger, input.DesiredLRPs, changes)
+	return db.ResolveConvergence(logger, input.DesiredLRPs, changes)
 }
 
 type LRPMetricCounter struct {
@@ -560,7 +560,7 @@ func CalculateConvergence(
 	return changes
 }
 
-func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string]*models.DesiredLRP, changes *models.ConvergenceChanges) {
+func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string]*models.DesiredLRP, changes *models.ConvergenceChanges) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey) {
 	startRequests := newStartRequests(desiredLRPs)
 	for _, actual := range changes.StaleUnclaimedActualLRPs {
 		startRequests.Add(logger, &actual.ActualLRPKey)
@@ -568,8 +568,9 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 
 	works := []func(){}
 
-	for _, actual := range changes.ActualLRPsForExtraIndices {
-		works = append(works, db.resolveActualsToBeRetired(logger, actual))
+	keysToRetire := make([]*models.ActualLRPKey, len(changes.ActualLRPsForExtraIndices))
+	for i, actual := range changes.ActualLRPsForExtraIndices {
+		keysToRetire[i] = &actual.ActualLRPKey
 	}
 
 	for _, actual := range changes.ActualLRPsWithMissingCells {
@@ -587,32 +588,14 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": db.convergenceWorkersSize, "num-works": len(works)})
-		return
+		return nil, nil
 	}
 
 	logger.Debug("waiting-for-lrp-convergence-work")
 	throttler.Work()
 	logger.Debug("done-waiting-for-lrp-convergence-work")
 
-	logger.Debug("requesting-start-auctions", lager.Data{"start-requests-instance-count": startRequests.InstanceCount()})
-	db.startActualLRPs(logger, startRequests)
-	logger.Debug("done-requesting-start-auctions", lager.Data{"start-requests-instance-count": startRequests.InstanceCount()})
-}
-
-func (db *ETCDDB) resolveActualsToBeRetired(logger lager.Logger, actual *models.ActualLRP) func() {
-	return func() {
-		logger = logger.Session("start-retire-actual", lager.Data{
-			"process-guid": actual.ProcessGuid,
-			"index":        actual.Index,
-		})
-		logger.Debug("retiring-actual-lrp")
-		retireErr := db.retireActualLRP(logger, &actual.ActualLRPKey)
-		if retireErr != nil {
-			logger.Error("failed-retiring-actual-lrp", retireErr)
-			return
-		}
-		logger.Debug("succeeded-retiring-actual-lrp")
-	}
+	return startRequests.Slice(), keysToRetire
 }
 
 func (db *ETCDDB) resolveActualsWithMissingCells(logger lager.Logger, desired *models.DesiredLRP, actual *models.ActualLRP, starts *startRequests) func() {

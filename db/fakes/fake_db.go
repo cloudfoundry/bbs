@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
@@ -209,15 +210,6 @@ type FakeDB struct {
 	removeActualLRPReturns struct {
 		result1 error
 	}
-	RetireActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) error
-	retireActualLRPMutex       sync.RWMutex
-	retireActualLRPArgsForCall []struct {
-		logger lager.Logger
-		key    *models.ActualLRPKey
-	}
-	retireActualLRPReturns struct {
-		result1 error
-	}
 	DesiredLRPsStub        func(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
@@ -277,10 +269,14 @@ type FakeDB struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
-	ConvergeLRPsStub        func(logger lager.Logger)
+	ConvergeLRPsStub        func(logger lager.Logger) (keysToAuction []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
 		logger lager.Logger
+	}
+	convergeLRPsReturns struct {
+		result1 []*auctioneer.LRPStartRequest
+		result2 []*models.ActualLRPKey
 	}
 	GatherAndPruneLRPsStub        func(logger lager.Logger) (*models.ConvergenceInput, error)
 	gatherAndPruneLRPsMutex       sync.RWMutex
@@ -1068,39 +1064,6 @@ func (fake *FakeDB) RemoveActualLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDB) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
-	fake.retireActualLRPMutex.Lock()
-	fake.retireActualLRPArgsForCall = append(fake.retireActualLRPArgsForCall, struct {
-		logger lager.Logger
-		key    *models.ActualLRPKey
-	}{logger, key})
-	fake.retireActualLRPMutex.Unlock()
-	if fake.RetireActualLRPStub != nil {
-		return fake.RetireActualLRPStub(logger, key)
-	} else {
-		return fake.retireActualLRPReturns.result1
-	}
-}
-
-func (fake *FakeDB) RetireActualLRPCallCount() int {
-	fake.retireActualLRPMutex.RLock()
-	defer fake.retireActualLRPMutex.RUnlock()
-	return len(fake.retireActualLRPArgsForCall)
-}
-
-func (fake *FakeDB) RetireActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
-	fake.retireActualLRPMutex.RLock()
-	defer fake.retireActualLRPMutex.RUnlock()
-	return fake.retireActualLRPArgsForCall[i].logger, fake.retireActualLRPArgsForCall[i].key
-}
-
-func (fake *FakeDB) RetireActualLRPReturns(result1 error) {
-	fake.RetireActualLRPStub = nil
-	fake.retireActualLRPReturns = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	fake.desiredLRPsMutex.Lock()
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
@@ -1304,14 +1267,16 @@ func (fake *FakeDB) RemoveDesiredLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDB) ConvergeLRPs(logger lager.Logger) {
+func (fake *FakeDB) ConvergeLRPs(logger lager.Logger) (keysToAuction []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey) {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
 	fake.convergeLRPsMutex.Unlock()
 	if fake.ConvergeLRPsStub != nil {
-		fake.ConvergeLRPsStub(logger)
+		return fake.ConvergeLRPsStub(logger)
+	} else {
+		return fake.convergeLRPsReturns.result1, fake.convergeLRPsReturns.result2
 	}
 }
 
@@ -1325,6 +1290,14 @@ func (fake *FakeDB) ConvergeLRPsArgsForCall(i int) lager.Logger {
 	fake.convergeLRPsMutex.RLock()
 	defer fake.convergeLRPsMutex.RUnlock()
 	return fake.convergeLRPsArgsForCall[i].logger
+}
+
+func (fake *FakeDB) ConvergeLRPsReturns(result1 []*auctioneer.LRPStartRequest, result2 []*models.ActualLRPKey) {
+	fake.ConvergeLRPsStub = nil
+	fake.convergeLRPsReturns = struct {
+		result1 []*auctioneer.LRPStartRequest
+		result2 []*models.ActualLRPKey
+	}{result1, result2}
 }
 
 func (fake *FakeDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceInput, error) {

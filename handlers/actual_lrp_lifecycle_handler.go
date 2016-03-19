@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/rep"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -15,19 +13,17 @@ type ActualLRPLifecycleHandler struct {
 	db               db.ActualLRPDB
 	desiredLRPDB     db.DesiredLRPDB
 	auctioneerClient auctioneer.Client
-	repClientFactory rep.ClientFactory
-	serviceClient    bbs.ServiceClient
+	retirer          ActualLRPRetirer
 	logger           lager.Logger
 }
 
-func NewActualLRPLifecycleHandler(logger lager.Logger, db db.ActualLRPDB, desiredLRPDB db.DesiredLRPDB, auctioneerClient auctioneer.Client, repClientFactory rep.ClientFactory, serviceClient bbs.ServiceClient) *ActualLRPLifecycleHandler {
+func NewActualLRPLifecycleHandler(logger lager.Logger, db db.ActualLRPDB, desiredLRPDB db.DesiredLRPDB, auctioneerClient auctioneer.Client, retirer ActualLRPRetirer) *ActualLRPLifecycleHandler {
 	return &ActualLRPLifecycleHandler{
 		db:               db,
 		desiredLRPDB:     desiredLRPDB,
 		auctioneerClient: auctioneerClient,
-		repClientFactory: repClientFactory,
-		serviceClient:    serviceClient,
-		logger:           logger.Session("actuallrp-handler"),
+		retirer:          retirer,
+		logger:           logger.Session("actual-lrp-handler"),
 	}
 }
 
@@ -151,49 +147,6 @@ func (h *ActualLRPLifecycleHandler) RetireActualLRP(w http.ResponseWriter, req *
 		return
 	}
 
-	err = h.retireActualLRP(logger, request)
+	err = h.retirer.RetireActualLRP(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
 	response.Error = models.ConvertError(err)
-}
-
-func (h *ActualLRPLifecycleHandler) retireActualLRP(logger lager.Logger, request *models.RetireActualLRPRequest) error {
-	var err error
-	var cell *models.CellPresence
-
-	for retryCount := 0; retryCount < models.RetireActualLRPRetryAttempts; retryCount++ {
-		var lrpGroup *models.ActualLRPGroup
-		lrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
-		if err != nil {
-			return err
-		}
-
-		lrp := lrpGroup.Instance
-		if lrp == nil {
-			return models.ErrResourceNotFound
-		}
-
-		switch lrp.State {
-		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-			err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index)
-		case models.ActualLRPStateClaimed, models.ActualLRPStateRunning:
-			cell, err = h.serviceClient.CellById(logger, lrp.CellId)
-			if err != nil {
-				bbsErr := models.ConvertError(err)
-				if bbsErr.Type == models.Error_ResourceNotFound {
-					err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index)
-				}
-				return err
-			}
-
-			client := h.repClientFactory.CreateClient(cell.RepAddress)
-			err = client.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
-		}
-
-		if err == nil {
-			return nil
-		}
-
-		logger.Error("retrying-failed-retire-of-actual-lrp", err, lager.Data{"attempt": retryCount + 1})
-	}
-
-	return err
 }
