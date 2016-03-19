@@ -119,6 +119,14 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		Annotation:                    `[{"anything": "you want!"}]... dude`,
 		LegacyDownloadUser:            "legacy-jim",
 		TrustedSystemCertificatesPath: "/etc/somepath",
+		VolumeMounts: []*models.VolumeMount{
+			{
+				Driver:        "my-driver",
+				VolumeId:      "my-volume",
+				ContainerPath: "/mnt/mypath",
+				Mode:          models.BindMountMode_RO,
+			},
+		},
 	}
 }
 

@@ -7,6 +7,7 @@ import "actions.proto";
 import "environment_variables.proto";
 import "security_group.proto";
 import "cached_dependency.proto";
+import "volume_mount.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
@@ -28,6 +29,7 @@ message TaskDefinition {
   repeated CachedDependency cached_dependencies = 15 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 16 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
   optional string trusted_system_certificates_path = 17 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
+  repeated VolumeMount volume_mounts = 18 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
 }
 
 message Task {
