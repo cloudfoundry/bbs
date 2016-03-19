@@ -351,10 +351,6 @@ var _ = Describe("TaskDB", func() {
 				})
 
 				itMarksTaskAsCancelled()
-
-				It("does not cancel the task", func() {
-					Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
-				})
 			})
 
 			Context("when the task is in running state", func() {

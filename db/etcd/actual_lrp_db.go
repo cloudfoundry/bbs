@@ -88,44 +88,6 @@ func (db *ETCDDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid 
 	return db.parseActualLRPGroups(logger, node, models.ActualLRPFilter{})
 }
 
-func (db *ETCDDB) instanceActualLRPsByProcessGuid(logger lager.Logger, processGuid string) (map[int32]*models.ActualLRP, error) {
-	node, err := db.fetchRecursiveRaw(logger, ActualLRPProcessDir(processGuid))
-	bbsErr := models.ConvertError(err)
-	if bbsErr != nil {
-		if bbsErr.Type == models.Error_ResourceNotFound {
-			return nil, nil
-		}
-		return nil, err
-	}
-	if node.Nodes.Len() == 0 {
-		return nil, nil
-	}
-
-	var instances = map[int32]*models.ActualLRP{}
-
-	logger.Debug("performing-parsing-actual-lrps")
-	for _, indexNode := range node.Nodes {
-		for _, instanceNode := range indexNode.Nodes {
-			if !isInstanceActualLRPNode(instanceNode) {
-				continue
-			}
-
-			instance := &models.ActualLRP{}
-			deserializeErr := db.deserializeModel(logger, instanceNode, instance)
-			if deserializeErr != nil {
-				logger.Error("failed-parsing-actual-lrs", deserializeErr, lager.Data{"key": instanceNode.Key})
-				return nil, deserializeErr
-			}
-
-			instances[instance.Index] = instance
-		}
-
-	}
-	logger.Debug("succeeded-performing-parsing-actual-lrps", lager.Data{"num-actual-lrps": len(instances)})
-
-	return instances, nil
-}
-
 func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
 	group, _, err := db.rawActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 	return group, err
@@ -504,60 +466,6 @@ func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index
 	}
 
 	return db.removeActualLRP(logger, lrp, prevIndex)
-}
-
-func (db *ETCDDB) retireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
-	logger = logger.Session("retire-actual-lrp", lager.Data{"actual_lrp_key": key})
-	var err error
-	var prevIndex uint64
-	var lrp *models.ActualLRP
-	processGuid := key.ProcessGuid
-	index := key.Index
-
-	for i := 0; i < models.RetireActualLRPRetryAttempts; i++ {
-		lrp, prevIndex, err = db.rawActualLRPByProcessGuidAndIndex(logger, processGuid, index)
-		if err != nil {
-			break
-		}
-
-		switch lrp.State {
-		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-			err = db.removeActualLRP(logger, lrp, prevIndex)
-		default:
-			var cell *models.CellPresence
-			key := lrp.ActualLRPKey
-			instanceKey := lrp.ActualLRPInstanceKey
-			cell, err = db.serviceClient.CellById(logger, instanceKey.CellId)
-			if err != nil {
-				bbsErr := models.ConvertError(err)
-				if bbsErr.Type == models.Error_ResourceNotFound {
-					err = db.removeActualLRP(logger, lrp, prevIndex)
-				}
-				err = err
-				break
-			}
-
-			logger.Info("stopping-lrp-instance", lager.Data{
-				"actual-lrp-key": key,
-			})
-
-			repClient := db.repClientFactory.CreateClient(cell.RepAddress)
-			cellErr := repClient.StopLRPInstance(key, instanceKey)
-			if cellErr != nil {
-				err = models.ErrActualLRPCannotBeStopped
-			}
-		}
-
-		if err == nil {
-			break
-		}
-
-		if i+1 < models.RetireActualLRPRetryAttempts {
-			logger.Error("retrying-failed-retire-of-actual-lrp", err, lager.Data{"attempt": i + 1})
-		}
-	}
-
-	return err
 }
 
 func (db *ETCDDB) removeActualLRP(logger lager.Logger, lrp *models.ActualLRP, prevIndex uint64) error {

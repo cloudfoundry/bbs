@@ -3,6 +3,7 @@ package db
 import (
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -25,5 +26,5 @@ type TaskDB interface {
 	ConvergeTasks(
 		logger lager.Logger,
 		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-	)
+	) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task)
 }

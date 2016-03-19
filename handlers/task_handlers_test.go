@@ -15,12 +15,12 @@ import (
 	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("Task Handlers", func() {
 	var (
-		logger                   lager.Logger
+		logger                   *lagertest.TestLogger
 		fakeTaskDB               *fakes.FakeTaskDB
 		fakeAuctioneerClient     *auctioneerfakes.FakeClient
 		fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
@@ -39,8 +39,7 @@ var _ = Describe("Task Handlers", func() {
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 
-		logger = lager.NewLogger("test")
-		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeTaskCompletionClient, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory)
 	})
@@ -781,6 +780,7 @@ var _ = Describe("Task Handlers", func() {
 				expirePendingTaskDuration   = int64(10 * time.Second)
 				expireCompletedTaskDuration = int64(10 * time.Second)
 			)
+
 			BeforeEach(func() {
 				requestBody = &models.ConvergeTasksRequest{
 					KickTaskDuration:            kickTaskDuration,
@@ -809,6 +809,70 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+			})
+
+			Context("when there are tasks to complete", func() {
+				const taskGuid1 = "to-complete-1"
+				const taskGuid2 = "to-complete-2"
+
+				BeforeEach(func() {
+					task1 := model_helpers.NewValidTask(taskGuid1)
+					task2 := model_helpers.NewValidTask(taskGuid2)
+					fakeTaskDB.ConvergeTasksReturns(nil, []*models.Task{task1, task2})
+				})
+
+				It("submits the tasks to the workpool", func() {
+					expectedCallCount := 2
+					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(expectedCallCount))
+
+					_, submittedTask1 := fakeTaskCompletionClient.SubmitArgsForCall(0)
+					_, submittedTask2 := fakeTaskCompletionClient.SubmitArgsForCall(1)
+					Expect([]string{submittedTask1.TaskGuid, submittedTask2.TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
+
+					task1Completions := 0
+					task2Completions := 0
+					for i := 0; i < expectedCallCount; i++ {
+						db, task := fakeTaskCompletionClient.SubmitArgsForCall(i)
+						Expect(db).To(Equal(fakeTaskDB))
+						if task.TaskGuid == taskGuid1 {
+							task1Completions++
+						} else if task.TaskGuid == taskGuid2 {
+							task2Completions++
+						}
+					}
+
+					Expect(task1Completions).To(Equal(1))
+					Expect(task2Completions).To(Equal(1))
+				})
+			})
+
+			Context("when there are tasks to auction", func() {
+				const taskGuid1 = "to-auction-1"
+				const taskGuid2 = "to-auction-2"
+
+				BeforeEach(func() {
+					taskStartRequest1 := auctioneer.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
+					taskStartRequest2 := auctioneer.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
+					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2}, nil)
+				})
+
+				It("requests an auction", func() {
+					Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+
+					requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					Expect(requestedTasks).To(HaveLen(2))
+					Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
+				})
+
+				Context("when requesting an auction is unsuccessful", func() {
+					BeforeEach(func() {
+						fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
+					})
+
+					It("logs an error", func() {
+						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.task-handler.converge-tasks.failed-to-request-auctions-for-pending-tasks"))
+					})
+				})
 			})
 		})
 	})

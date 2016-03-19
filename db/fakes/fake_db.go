@@ -269,7 +269,7 @@ type FakeDB struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
-	ConvergeLRPsStub        func(logger lager.Logger) (keysToAuction []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey)
+	ConvergeLRPsStub        func(logger lager.Logger) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
 		logger lager.Logger
@@ -382,13 +382,17 @@ type FakeDB struct {
 	deleteTaskReturns struct {
 		result1 error
 	}
-	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration)
+	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task)
 	convergeTasksMutex       sync.RWMutex
 	convergeTasksArgsForCall []struct {
 		logger                      lager.Logger
 		kickTaskDuration            time.Duration
 		expirePendingTaskDuration   time.Duration
 		expireCompletedTaskDuration time.Duration
+	}
+	convergeTasksReturns struct {
+		result1 []*auctioneer.TaskStartRequest
+		result2 []*models.Task
 	}
 	VersionStub        func(logger lager.Logger) (*models.Version, error)
 	versionMutex       sync.RWMutex
@@ -1267,7 +1271,7 @@ func (fake *FakeDB) RemoveDesiredLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDB) ConvergeLRPs(logger lager.Logger) (keysToAuction []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey) {
+func (fake *FakeDB) ConvergeLRPs(logger lager.Logger) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey) {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
 		logger lager.Logger
@@ -1644,7 +1648,7 @@ func (fake *FakeDB) DeleteTaskReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDB) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) {
+func (fake *FakeDB) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task) {
 	fake.convergeTasksMutex.Lock()
 	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
 		logger                      lager.Logger
@@ -1654,7 +1658,9 @@ func (fake *FakeDB) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Dur
 	}{logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
 	fake.convergeTasksMutex.Unlock()
 	if fake.ConvergeTasksStub != nil {
-		fake.ConvergeTasksStub(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+		return fake.ConvergeTasksStub(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+	} else {
+		return fake.convergeTasksReturns.result1, fake.convergeTasksReturns.result2
 	}
 }
 
@@ -1668,6 +1674,14 @@ func (fake *FakeDB) ConvergeTasksArgsForCall(i int) (lager.Logger, time.Duration
 	fake.convergeTasksMutex.RLock()
 	defer fake.convergeTasksMutex.RUnlock()
 	return fake.convergeTasksArgsForCall[i].logger, fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
+}
+
+func (fake *FakeDB) ConvergeTasksReturns(result1 []*auctioneer.TaskStartRequest, result2 []*models.Task) {
+	fake.ConvergeTasksStub = nil
+	fake.convergeTasksReturns = struct {
+		result1 []*auctioneer.TaskStartRequest
+		result2 []*models.Task
+	}{result1, result2}
 }
 
 func (fake *FakeDB) Version(logger lager.Logger) (*models.Version, error) {

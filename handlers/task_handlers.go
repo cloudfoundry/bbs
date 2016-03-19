@@ -258,16 +258,37 @@ func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
 	request := &models.ConvergeTasksRequest{}
 	response := &models.ConvergeTasksResponse{}
 
+	defer writeResponse(w, response)
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		h.db.ConvergeTasks(
-			logger,
-			time.Duration(request.KickTaskDuration),
-			time.Duration(request.ExpirePendingTaskDuration),
-			time.Duration(request.ExpireCompletedTaskDuration),
-		)
+
+	if err != nil {
+		response.Error = models.ConvertError(err)
 	}
 
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	tasksToAuction, tasksToComplete := h.db.ConvergeTasks(
+		logger,
+		time.Duration(request.KickTaskDuration),
+		time.Duration(request.ExpirePendingTaskDuration),
+		time.Duration(request.ExpireCompletedTaskDuration),
+	)
+
+	if len(tasksToAuction) > 0 {
+		logger.Debug("requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
+		if err := h.auctioneerClient.RequestTaskAuctions(tasksToAuction); err != nil {
+			taskGuids := make([]string, len(tasksToAuction))
+			for i, task := range tasksToAuction {
+				taskGuids[i] = task.TaskGuid
+			}
+			logger.Error("failed-to-request-auctions-for-pending-tasks", err,
+				lager.Data{"task-guids": taskGuids})
+		}
+		logger.Debug("done-requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
+	}
+
+	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
+	for _, task := range tasksToComplete {
+		h.taskCompletionClient.Submit(h.db, task)
+	}
+	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
 }

@@ -173,7 +173,7 @@ type FakeLRPDB struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
-	ConvergeLRPsStub        func(logger lager.Logger) (keysToAuction []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey)
+	ConvergeLRPsStub        func(logger lager.Logger) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
 		logger lager.Logger
@@ -739,7 +739,7 @@ func (fake *FakeLRPDB) RemoveDesiredLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeLRPDB) ConvergeLRPs(logger lager.Logger) (keysToAuction []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey) {
+func (fake *FakeLRPDB) ConvergeLRPs(logger lager.Logger) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey) {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
 		logger lager.Logger

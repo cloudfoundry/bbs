@@ -394,11 +394,8 @@ func initializeEtcdDB(
 		desiredLRPCreationMaxTime,
 		cryptor,
 		storeClient,
-		initializeAuctioneerClient(logger),
 		serviceClient,
 		clock.NewClock(),
-		rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient()),
-		cbClient,
 	)
 }
 

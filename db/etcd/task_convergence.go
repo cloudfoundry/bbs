@@ -31,7 +31,7 @@ type compareAndSwappableTask struct {
 func (db *ETCDDB) ConvergeTasks(
 	logger lager.Logger,
 	kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-) {
+) ([]*auctioneer.TaskStartRequest, []*models.Task) {
 	logger = logger.Session("converge-tasks")
 	logger.Info("starting-convergence")
 	defer logger.Info("finished-convergence")
@@ -52,7 +52,7 @@ func (db *ETCDDB) ConvergeTasks(
 	if modelErr != nil {
 		logger.Debug("failed-listing-task")
 		sendTaskMetrics(logger, -1, -1, -1, -1)
-		return
+		return nil, nil
 	}
 	logger.Debug("succeeded-listing-task")
 
@@ -61,7 +61,7 @@ func (db *ETCDDB) ConvergeTasks(
 	if modelErr != nil {
 		if !models.ErrResourceNotFound.Equal(modelErr) {
 			logger.Debug("failed-listing-cells")
-			return
+			return nil, nil
 		}
 
 		cellSet = models.CellSet{}
@@ -177,37 +177,20 @@ func (db *ETCDDB) ConvergeTasks(
 
 	sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
 
-	if len(tasksToAuction) > 0 {
-		logger.Debug("requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
-		if err := db.auctioneerClient.RequestTaskAuctions(tasksToAuction); err != nil {
-			taskGuids := make([]string, len(tasksToAuction))
-			for i, task := range tasksToAuction {
-				taskGuids[i] = task.TaskGuid
-			}
-			logger.Error("failed-to-request-auctions-for-pending-tasks", err,
-				lager.Data{"task-guids": taskGuids})
-		}
-		logger.Debug("done-requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
-	}
-
 	tasksKickedCounter.Add(tasksKicked)
 	logger.Debug("compare-and-swapping-tasks", lager.Data{"num-tasks-to-cas": len(tasksToCAS)})
 	err := db.batchCompareAndSwapTasks(tasksToCAS, logger)
 	if err != nil {
-		return
+		return nil, nil
 	}
 	logger.Debug("done-compare-and-swapping-tasks", lager.Data{"num-tasks-to-cas": len(tasksToCAS)})
-
-	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
-	for _, task := range tasksToComplete {
-		db.taskCompletionClient.Submit(db, task)
-	}
-	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
 
 	tasksPrunedCounter.Add(uint64(len(keysToDelete)))
 	logger.Debug("deleting-keys", lager.Data{"num-keys-to-delete": len(keysToDelete)})
 	db.batchDeleteTasks(keysToDelete, logger)
 	logger.Debug("done-deleting-keys", lager.Data{"num-keys-to-delete": len(keysToDelete)})
+
+	return tasksToAuction, tasksToComplete
 }
 
 func (db *ETCDDB) durationSinceTaskCreated(task *models.Task) time.Duration {

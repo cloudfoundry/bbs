@@ -674,20 +674,6 @@ func (db *ETCDDB) resolveRestartableCrashedActualLRPS(logger lager.Logger, actua
 	}
 }
 
-func (db *ETCDDB) startActualLRPs(logger lager.Logger, starts *startRequests) {
-	count := starts.InstanceCount()
-	if count == 0 {
-		return
-	}
-
-	err := db.auctioneerClient.RequestLRPAuctions(starts.Slice())
-	if err != nil {
-		logger.Error("failed-to-request-starts", err, lager.Data{
-			"lrp-start-auctions": starts,
-		})
-	}
-}
-
 type startRequests struct {
 	desiredMap    map[string]*models.DesiredLRP
 	startMap      map[string]*auctioneer.LRPStartRequest

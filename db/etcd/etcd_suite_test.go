@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -13,11 +12,9 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
-	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
 	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
-	"github.com/cloudfoundry-incubator/rep/repfakes"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -38,11 +35,6 @@ var storeClient etcd.StoreClient
 var fakeStoreClient *fakes.FakeStoreClient
 var consulRunner *consulrunner.ClusterRunner
 var consulClient consuladapter.Client
-
-var fakeAuctioneerClient *auctioneerfakes.FakeClient
-var fakeRepClient *repfakes.FakeClient
-var fakeRepClientFactory *repfakes.FakeClientFactory
-var fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
 
 var logger *lagertest.TestLogger
 var clock *fakeclock.FakeClock
@@ -96,7 +88,6 @@ var _ = AfterSuite(func() {
 var _ = BeforeEach(func() {
 	logger = lagertest.NewTestLogger("test")
 
-	fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 	etcdRunner.Reset()
 
 	consulRunner.Reset()
@@ -108,11 +99,7 @@ var _ = BeforeEach(func() {
 	fakeStoreClient = &fakes.FakeStoreClient{}
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 	serviceClient = bbs.NewServiceClient(consulClient, clock)
-	fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
-	fakeRepClientFactory = new(repfakes.FakeClientFactory)
-	fakeRepClient = new(repfakes.FakeClient)
-	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient, clock)
-	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
-	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, fakeStoreClient, fakeAuctioneerClient, serviceClient, clock, fakeRepClientFactory, fakeTaskCompletionClient)
+	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, serviceClient, clock)
+	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, fakeStoreClient, serviceClient, clock)
 })

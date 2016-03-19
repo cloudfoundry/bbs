@@ -38,7 +38,7 @@ func NewDesiredLRPHandler(
 		repClientFactory:   repClientFactory,
 		serviceClient:      serviceClient,
 		updateWorkersCount: updateWorkersCount,
-		logger:             logger.Session("desiredlrp-handler"),
+		logger:             logger.Session("desired-lrp-handler"),
 	}
 }
 
