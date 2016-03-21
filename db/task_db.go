@@ -25,6 +25,7 @@ type TaskDB interface {
 
 	ConvergeTasks(
 		logger lager.Logger,
+		cellSet models.CellSet,
 		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
 	) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task)
 }

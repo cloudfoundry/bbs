@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
@@ -14,21 +15,34 @@ type LRPConvergenceHandler struct {
 	logger                 lager.Logger
 	db                     db.LRPDB
 	auctioneerClient       auctioneer.Client
+	serviceClient          bbs.ServiceClient
 	retirer                ActualLRPRetirer
 	convergenceWorkersSize int
 }
 
-func NewLRPConvergenceHandler(logger lager.Logger, db db.LRPDB, auctioneerClient auctioneer.Client, retirer ActualLRPRetirer, convergenceWorkersSize int) *LRPConvergenceHandler {
-	return &LRPConvergenceHandler{logger, db, auctioneerClient, retirer, convergenceWorkersSize}
+func NewLRPConvergenceHandler(logger lager.Logger, db db.LRPDB, auctioneerClient auctioneer.Client, serviceClient bbs.ServiceClient, retirer ActualLRPRetirer, convergenceWorkersSize int) *LRPConvergenceHandler {
+	return &LRPConvergenceHandler{logger, db, auctioneerClient, serviceClient, retirer, convergenceWorkersSize}
 }
 
 func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("converge-lrps")
-	startRequests, keysToRetire := h.db.ConvergeLRPs(logger)
+
+	logger.Debug("listing-cells")
+	cellSet, err := h.serviceClient.Cells(logger)
+	if err == models.ErrResourceNotFound {
+		logger.Debug("no-cells-found")
+		cellSet = models.CellSet{}
+	} else if err != nil {
+		logger.Debug("failed-listing-cells")
+		return
+	}
+	logger.Debug("succeeded-listing-cells")
+
+	startRequests, keysToRetire := h.db.ConvergeLRPs(logger, cellSet)
 
 	startLogger := logger.WithData(lager.Data{"start-requests-count": len(startRequests)})
 	startLogger.Debug("requesting-start-auctions")
-	err := h.auctioneerClient.RequestLRPAuctions(startRequests)
+	err = h.auctioneerClient.RequestLRPAuctions(startRequests)
 	if err != nil {
 		startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp-start-auctions": startRequests})
 	}

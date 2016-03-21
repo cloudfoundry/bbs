@@ -173,19 +173,21 @@ type FakeLRPDB struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
-	ConvergeLRPsStub        func(logger lager.Logger) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey)
+	ConvergeLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
-		logger lager.Logger
+		logger  lager.Logger
+		cellSet models.CellSet
 	}
 	convergeLRPsReturns struct {
 		result1 []*auctioneer.LRPStartRequest
 		result2 []*models.ActualLRPKey
 	}
-	GatherAndPruneLRPsStub        func(logger lager.Logger) (*models.ConvergenceInput, error)
+	GatherAndPruneLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error)
 	gatherAndPruneLRPsMutex       sync.RWMutex
 	gatherAndPruneLRPsArgsForCall []struct {
-		logger lager.Logger
+		logger  lager.Logger
+		cellSet models.CellSet
 	}
 	gatherAndPruneLRPsReturns struct {
 		result1 *models.ConvergenceInput
@@ -739,14 +741,15 @@ func (fake *FakeLRPDB) RemoveDesiredLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeLRPDB) ConvergeLRPs(logger lager.Logger) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey) {
+func (fake *FakeLRPDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequest []*auctioneer.LRPStartRequest, keysToRetire []*models.ActualLRPKey) {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
+		logger  lager.Logger
+		cellSet models.CellSet
+	}{logger, cellSet})
 	fake.convergeLRPsMutex.Unlock()
 	if fake.ConvergeLRPsStub != nil {
-		return fake.ConvergeLRPsStub(logger)
+		return fake.ConvergeLRPsStub(logger, cellSet)
 	} else {
 		return fake.convergeLRPsReturns.result1, fake.convergeLRPsReturns.result2
 	}
@@ -758,10 +761,10 @@ func (fake *FakeLRPDB) ConvergeLRPsCallCount() int {
 	return len(fake.convergeLRPsArgsForCall)
 }
 
-func (fake *FakeLRPDB) ConvergeLRPsArgsForCall(i int) lager.Logger {
+func (fake *FakeLRPDB) ConvergeLRPsArgsForCall(i int) (lager.Logger, models.CellSet) {
 	fake.convergeLRPsMutex.RLock()
 	defer fake.convergeLRPsMutex.RUnlock()
-	return fake.convergeLRPsArgsForCall[i].logger
+	return fake.convergeLRPsArgsForCall[i].logger, fake.convergeLRPsArgsForCall[i].cellSet
 }
 
 func (fake *FakeLRPDB) ConvergeLRPsReturns(result1 []*auctioneer.LRPStartRequest, result2 []*models.ActualLRPKey) {
@@ -772,14 +775,15 @@ func (fake *FakeLRPDB) ConvergeLRPsReturns(result1 []*auctioneer.LRPStartRequest
 	}{result1, result2}
 }
 
-func (fake *FakeLRPDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceInput, error) {
+func (fake *FakeLRPDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error) {
 	fake.gatherAndPruneLRPsMutex.Lock()
 	fake.gatherAndPruneLRPsArgsForCall = append(fake.gatherAndPruneLRPsArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
+		logger  lager.Logger
+		cellSet models.CellSet
+	}{logger, cellSet})
 	fake.gatherAndPruneLRPsMutex.Unlock()
 	if fake.GatherAndPruneLRPsStub != nil {
-		return fake.GatherAndPruneLRPsStub(logger)
+		return fake.GatherAndPruneLRPsStub(logger, cellSet)
 	} else {
 		return fake.gatherAndPruneLRPsReturns.result1, fake.gatherAndPruneLRPsReturns.result2
 	}
@@ -791,10 +795,10 @@ func (fake *FakeLRPDB) GatherAndPruneLRPsCallCount() int {
 	return len(fake.gatherAndPruneLRPsArgsForCall)
 }
 
-func (fake *FakeLRPDB) GatherAndPruneLRPsArgsForCall(i int) lager.Logger {
+func (fake *FakeLRPDB) GatherAndPruneLRPsArgsForCall(i int) (lager.Logger, models.CellSet) {
 	fake.gatherAndPruneLRPsMutex.RLock()
 	defer fake.gatherAndPruneLRPsMutex.RUnlock()
-	return fake.gatherAndPruneLRPsArgsForCall[i].logger
+	return fake.gatherAndPruneLRPsArgsForCall[i].logger, fake.gatherAndPruneLRPsArgsForCall[i].cellSet
 }
 
 func (fake *FakeLRPDB) GatherAndPruneLRPsReturns(result1 *models.ConvergenceInput, result2 error) {

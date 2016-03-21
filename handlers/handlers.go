@@ -37,7 +37,7 @@ func New(
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, auctioneerClient, retirer)
 	evacuationHandler := NewEvacuationHandler(logger, db, db, db, auctioneerClient)
 	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, auctioneerClient, repClientFactory, serviceClient)
-	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, auctioneerClient, retirer, convergenceWorkersSize)
+	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, auctioneerClient, serviceClient, retirer, convergenceWorkersSize)
 	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
 	eventsHandler := NewEventHandler(logger, desiredHub, actualHub, taskHub)
 	cellsHandler := NewCellHandler(logger, serviceClient)

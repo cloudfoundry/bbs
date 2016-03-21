@@ -39,7 +39,7 @@ const (
 	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
 )
 
-func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey) {
+func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey) {
 	convergeStart := db.clock.Now()
 	convergeLRPRunsCounter.Increment()
 	logger = logger.Session("etcd")
@@ -54,7 +54,7 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger) ([]*auctioneer.LRPStartReque
 	}()
 
 	logger.Debug("gathering-convergence-input")
-	input, err := db.GatherAndPruneLRPs(logger)
+	input, err := db.GatherAndPruneLRPs(logger, cellSet)
 	if err != nil {
 		logger.Error("failed-gathering-convergence-input", err)
 		return nil, nil
@@ -107,7 +107,7 @@ func (lmc LRPMetricCounter) Send(logger lager.Logger) {
 	}
 }
 
-func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceInput, error) {
+func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error) {
 	guids := map[string]struct{}{}
 
 	// always fetch actualLRPs before desiredLRPs to ensure correctness
@@ -155,18 +155,6 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger) (*models.ConvergenceIn
 	for _, domain := range domains {
 		metric.Metric(domainMetricPrefix + domain).Send(1)
 	}
-
-	logger.Debug("listing-cells")
-	cellSet, modelErr := db.serviceClient.Cells(logger)
-	if modelErr != nil {
-		if !models.ErrResourceNotFound.Equal(modelErr) {
-			logger.Debug("failed-listing-cells")
-			return &models.ConvergenceInput{}, modelErr
-		}
-		logger.Debug("no-cells-found")
-		cellSet = models.CellSet{}
-	}
-	logger.Debug("succeeded-listing-cells")
 
 	return &models.ConvergenceInput{
 		AllProcessGuids: guids,

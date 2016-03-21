@@ -31,7 +31,8 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		retiringActualLRP1 *models.ActualLRP
 		retiringActualLRP2 *models.ActualLRP
 
-		cellID string
+		cellID  string
+		cellSet models.CellSet
 
 		handler *handlers.LRPConvergenceHandler
 	)
@@ -84,8 +85,12 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient)
 		fakeServiceClient.CellByIdReturns(nil, errors.New("hi"))
 
+		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil)
+		cellSet = models.CellSet{"cell-id": &cellPresence}
+		fakeServiceClient.CellsReturns(cellSet, nil)
+
 		retirer := handlers.NewActualLRPRetirer(fakeLRPDB, fakeRepClientFactory, fakeServiceClient)
-		handler = handlers.NewLRPConvergenceHandler(logger, fakeLRPDB, fakeAuctioneerClient, retirer, 2)
+		handler = handlers.NewLRPConvergenceHandler(logger, fakeLRPDB, fakeAuctioneerClient, fakeServiceClient, retirer, 2)
 	})
 
 	JustBeforeEach(func() {
@@ -95,6 +100,32 @@ var _ = Describe("LRP Convergence Handlers", func() {
 	It("calls ConvergeLRPs", func() {
 		Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(1))
+		_, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
+		Expect(actualCellSet).To(BeEquivalentTo(cellSet))
+	})
+
+	Context("when fetching the cells fails", func() {
+		BeforeEach(func() {
+			fakeServiceClient.CellsReturns(nil, errors.New("kaboom"))
+		})
+
+		It("does not call ConvergeLRPs", func() {
+			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(0))
+		})
+	})
+
+	Context("when fetching the cells returns ErrResourceNotFound", func() {
+		BeforeEach(func() {
+			fakeServiceClient.CellsReturns(nil, models.ErrResourceNotFound)
+		})
+
+		It("calls ConvergeLRPs with an empty CellSet", func() {
+			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(1))
+			_, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
+			Expect(actualCellSet).To(BeEquivalentTo(models.CellSet{}))
+		})
 	})
 
 	It("auctions off the returned keys", func() {

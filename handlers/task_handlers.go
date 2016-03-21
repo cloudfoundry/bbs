@@ -266,8 +266,20 @@ func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
 		response.Error = models.ConvertError(err)
 	}
 
+	logger.Debug("listing-cells")
+	cellSet, err := h.serviceClient.Cells(logger)
+	if err == models.ErrResourceNotFound {
+		logger.Debug("no-cells-found")
+		cellSet = models.CellSet{}
+	} else if err != nil {
+		logger.Debug("failed-listing-cells")
+		return
+	}
+	logger.Debug("succeeded-listing-cells")
+
 	tasksToAuction, tasksToComplete := h.db.ConvergeTasks(
 		logger,
+		cellSet,
 		time.Duration(request.KickTaskDuration),
 		time.Duration(request.ExpirePendingTaskDuration),
 		time.Duration(request.ExpireCompletedTaskDuration),

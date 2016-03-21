@@ -40,14 +40,14 @@ var _ = Describe("LRPConvergence", func() {
 
 		Describe("general metrics", func() {
 			It("emits a metric for domains", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				Expect(sender.GetValue("Domain.test-domain").Value).To(Equal(float64(1)))
 			})
 
 			It("emits metrics for lrps", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(6)))
@@ -61,7 +61,7 @@ var _ = Describe("LRPConvergence", func() {
 
 		Context("Desired LRPs", func() {
 			It("provides the correct desired LRPs", func() {
-				data, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				data, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				expectedLength := len(testData.validDesiredGuidsWithSomeValidActuals) +
@@ -90,7 +90,7 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("emits a metric for the number of malformed SchedulingInfos", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				expectedMetric := len(testData.invalidDesiredGuidsWithSomeValidActuals) +
@@ -103,7 +103,7 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("emits a metric for the number of malformed RunInfos", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				expectedMetric := len(testData.invalidDesiredGuidsWithSomeValidActuals) +
@@ -116,7 +116,7 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("emits a metric for the number of orphaned RunInfos", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				expectedMetric := len(testData.oldOrphanedRunInfoGuids)
@@ -125,7 +125,7 @@ var _ = Describe("LRPConvergence", func() {
 
 			Context("when there is a RunInfo without a matching SchedulingInfo", func() {
 				JustBeforeEach(func() {
-					_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+					_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 					Expect(gatherError).NotTo(HaveOccurred())
 				})
 
@@ -149,7 +149,7 @@ var _ = Describe("LRPConvergence", func() {
 
 			Context("when there is a SchedulingInfo without a matching RunInfo", func() {
 				JustBeforeEach(func() {
-					_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+					_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 					Expect(gatherError).NotTo(HaveOccurred())
 				})
 
@@ -174,7 +174,7 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("returns an error", func() {
-					_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+					_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 					Expect(gatherError).To(MatchError(HavePrefix("unrecognized node under desired LRPs root node: ")))
 				})
 			})
@@ -182,7 +182,7 @@ var _ = Describe("LRPConvergence", func() {
 
 		Context("Actual LRPs", func() {
 			It("emits a metric for the number of pruned ActualLRPs", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				expectedMetric := len(testData.instanceKeysToPrune) +
@@ -191,7 +191,7 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("provides the correct actualLRPs", func() {
-				data, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				data, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				for actualData := range testData.instanceKeysToKeep {
@@ -219,7 +219,7 @@ var _ = Describe("LRPConvergence", func() {
 			// We need to use the ETCD Store Client to check for non existance, because
 			// the ETCDDB will not return Invalid Records when fetching multiple records.
 			It("prunes only the invalid ActualLRPs from the datastore", func() {
-				_, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				for _, guid := range testData.validDesiredGuidsWithOnlyInvalidActuals {
@@ -334,7 +334,7 @@ var _ = Describe("LRPConvergence", func() {
 
 		Context("Domains", func() {
 			It("gets all the domains", func() {
-				data, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				data, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				Expect(data.Domains).To(HaveLen(len(testData.domains)))
@@ -346,7 +346,7 @@ var _ = Describe("LRPConvergence", func() {
 
 		Context("Cells", func() {
 			It("gets all the cells", func() {
-				data, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				data, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				Expect(data.Cells).To(HaveLen(len(testData.cells)))
@@ -357,7 +357,7 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		It("provides all processGuids in the system", func() {
-			data, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+			data, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 			Expect(gatherError).NotTo(HaveOccurred())
 
 			expectedGuids := map[string]struct{}{}
@@ -386,18 +386,16 @@ var _ = Describe("LRPConvergence", func() {
 		Context("when root nodes are missing", func() {
 			BeforeEach(func() {
 				etcdRunner.Reset()
-				consulRunner.Reset()
 			})
 
 			It("returns empty convergence input", func() {
-				data, gatherError := etcdDB.GatherAndPruneLRPs(logger)
+				data, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 
 				Expect(gatherError).NotTo(HaveOccurred())
 				Expect(data.AllProcessGuids).To(BeEmpty())
 				Expect(data.DesiredLRPs).To(BeEmpty())
 				Expect(data.ActualLRPs).To(BeEmpty())
 				Expect(data.Domains).To(BeEmpty())
-				Expect(data.Cells).To(BeEmpty())
 			})
 		})
 	})
@@ -692,14 +690,14 @@ var _ = Describe("LRPConvergence", func() {
 	Describe("convergence counters", func() {
 		It("bumps the convergence counter", func() {
 			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(0)))
-			etcdDB.ConvergeLRPs(logger)
+			etcdDB.ConvergeLRPs(logger, models.CellSet{})
 			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(1)))
-			etcdDB.ConvergeLRPs(logger)
+			etcdDB.ConvergeLRPs(logger, models.CellSet{})
 			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(2)))
 		})
 
 		It("reports the duration that it took to converge", func() {
-			etcdDB.ConvergeLRPs(logger)
+			etcdDB.ConvergeLRPs(logger, models.CellSet{})
 
 			reportedDuration := sender.GetValue("ConvergenceLRPDuration")
 			Expect(reportedDuration.Unit).To(Equal("nanos"))
@@ -714,6 +712,8 @@ var _ = Describe("LRPConvergence", func() {
 
 			lrpStartRequests []*auctioneer.LRPStartRequest
 			keysToRetire     []*models.ActualLRPKey
+
+			cells models.CellSet
 		)
 
 		BeforeEach(func() {
@@ -725,11 +725,11 @@ var _ = Describe("LRPConvergence", func() {
 			etcdHelper.SetRawDesiredLRP(desiredLRP)
 
 			cellPresence := models.NewCellPresence(cellId, "cell.example.com", "the-zone", models.CellCapacity{128, 1024, 3}, []string{}, []string{})
-			consulHelper.RegisterCell(&cellPresence)
+			cells = models.CellSet{cellId: &cellPresence}
 		})
 
 		JustBeforeEach(func() {
-			lrpStartRequests, keysToRetire = etcdDB.ConvergeLRPs(logger)
+			lrpStartRequests, keysToRetire = etcdDB.ConvergeLRPs(logger, cells)
 		})
 
 		Context("when there are no actuals for desired LRP", func() {
@@ -809,7 +809,7 @@ var _ = Describe("LRPConvergence", func() {
 		BeforeEach(func() {
 			etcdHelper.CreateMalformedDesiredLRP(processGuid)
 
-			etcdDB.ConvergeLRPs(logger)
+			etcdDB.ConvergeLRPs(logger, models.CellSet{})
 		})
 
 		It("logs", func() {
@@ -823,13 +823,16 @@ var _ = Describe("LRPConvergence", func() {
 			processGuid  string
 			desiredLRP   *models.DesiredLRP
 			freshDomain  = "some-fresh-domain"
+
+			cells models.CellSet
 		)
 
 		JustBeforeEach(func() {
-			etcdDB.ConvergeLRPs(logger)
+			etcdDB.ConvergeLRPs(logger, cells)
 		})
 
 		BeforeEach(func() {
+			cells = models.CellSet{}
 			processGuid = "process-guid-for-pruning"
 
 			desiredLRP = model_helpers.NewValidDesiredLRP(processGuid)
@@ -852,7 +855,7 @@ var _ = Describe("LRPConvergence", func() {
 
 		Context("when the cell is present", func() {
 			BeforeEach(func() {
-				consulHelper.RegisterCell(&cellPresence)
+				cells["cell-id"] = &cellPresence
 			})
 
 			It("should not prune any LRPs", func() {
@@ -922,7 +925,7 @@ var _ = Describe("LRPConvergence", func() {
 
 			Context("when the actual LRP is UNCLAIMED", func() {
 				It("returns the lrp to be retired", func() {
-					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger, models.CellSet{})
 					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
 						ProcessGuid: processGuid,
 						Index:       index,
@@ -931,7 +934,7 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("logs", func() {
-					etcdDB.ConvergeLRPs(logger)
+					etcdDB.ConvergeLRPs(logger, models.CellSet{})
 					Expect(logger.TestSink).To(gbytes.Say("no-longer-desired"))
 				})
 
@@ -941,16 +944,20 @@ var _ = Describe("LRPConvergence", func() {
 					})
 
 					It("returns no lrp to be retired", func() {
-						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger, models.CellSet{})
 						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
 			})
 
 			Context("when the actual LRP is CLAIMED", func() {
-				var cellPresence models.CellPresence
+				var (
+					cellPresence models.CellPresence
+					cells        models.CellSet
+				)
 
 				BeforeEach(func() {
+					cells = models.CellSet{}
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
 				})
 
@@ -969,12 +976,12 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				Context("when the cell exists", func() {
-					JustBeforeEach(func() {
-						consulHelper.RegisterCell(&cellPresence)
+					BeforeEach(func() {
+						cells["cell-id"] = &cellPresence
 					})
 
 					It("returns the lrp to be retired", func() {
-						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 						Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
 							ProcessGuid: processGuid,
 							Index:       index,
@@ -983,7 +990,7 @@ var _ = Describe("LRPConvergence", func() {
 					})
 
 					It("logs", func() {
-						etcdDB.ConvergeLRPs(logger)
+						etcdDB.ConvergeLRPs(logger, cells)
 						Expect(logger.TestSink).To(gbytes.Say("no-longer-desired"))
 					})
 
@@ -993,7 +1000,7 @@ var _ = Describe("LRPConvergence", func() {
 						})
 
 						It("returns no lrps to be retired", func() {
-							_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+							_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 							Expect(keysToRetire).To(BeEmpty())
 						})
 					})
@@ -1001,7 +1008,7 @@ var _ = Describe("LRPConvergence", func() {
 
 				Context("when the cell is missing", func() {
 					It("returns the lrp to be retired", func() {
-						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 						Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
 							ProcessGuid: processGuid,
 							Index:       index,
@@ -1015,7 +1022,7 @@ var _ = Describe("LRPConvergence", func() {
 						})
 
 						It("returns no lrp to be retired", func() {
-							_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+							_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 							Expect(keysToRetire).To(BeEmpty())
 						})
 					})
@@ -1023,11 +1030,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			Context("when the actual LRP is RUNNING", func() {
-				var cellPresence models.CellPresence
+				var (
+					cellPresence models.CellPresence
+					cells        models.CellSet
+				)
 
 				JustBeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
-					consulHelper.RegisterCell(&cellPresence)
+					cells = models.CellSet{}
+					cells["cell-id"] = &cellPresence
 
 					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
@@ -1052,7 +1063,7 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("returns the correct lrps to retire", func() {
-					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
 						ProcessGuid: processGuid,
 						Index:       index,
@@ -1066,7 +1077,7 @@ var _ = Describe("LRPConvergence", func() {
 					})
 
 					It("returns no lrps to retire", func() {
-						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
@@ -1109,7 +1120,7 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("returns the lrp to be retired", func() {
-					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger, models.CellSet{})
 					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
 						ProcessGuid: processGuid,
 						Index:       index,
@@ -1123,18 +1134,22 @@ var _ = Describe("LRPConvergence", func() {
 					})
 
 					It("returns no lrp to be retired", func() {
-						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger, models.CellSet{})
 						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
 			})
 
 			Context("when the actual LRP is CLAIMED", func() {
-				var cellPresence models.CellPresence
+				var (
+					cellPresence models.CellPresence
+					cells        models.CellSet
+				)
 
 				JustBeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 100), []string{}, []string{})
-					consulHelper.RegisterCell(&cellPresence)
+					cells = models.CellSet{}
+					cells["cell-id"] = &cellPresence
 
 					index = numInstances
 
@@ -1161,7 +1176,7 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("returns the lrp to be retired", func() {
-					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
 						ProcessGuid: processGuid,
 						Index:       index,
@@ -1175,18 +1190,22 @@ var _ = Describe("LRPConvergence", func() {
 					})
 
 					It("returns no lrp to be retired", func() {
-						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 						Expect(keysToRetire).To(BeEmpty())
 					})
 				})
 			})
 
 			Context("when the actual LRP is RUNNING", func() {
-				var cellPresence models.CellPresence
+				var (
+					cellPresence models.CellPresence
+					cells        models.CellSet
+				)
 
 				JustBeforeEach(func() {
 					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(124, 1024, 6), []string{}, []string{})
-					consulHelper.RegisterCell(&cellPresence)
+					cells = models.CellSet{}
+					cells["cell-id"] = &cellPresence
 
 					index = numInstances
 
@@ -1223,7 +1242,7 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("sends a stop request to the corresponding cell", func() {
-					_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+					_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 					Expect(keysToRetire).To(ConsistOf(&models.ActualLRPKey{
 						ProcessGuid: processGuid,
 						Index:       index,
@@ -1237,7 +1256,7 @@ var _ = Describe("LRPConvergence", func() {
 					})
 
 					It("does not stop the actual LRP", func() {
-						_, keysToRetire := etcdDB.ConvergeLRPs(logger)
+						_, keysToRetire := etcdDB.ConvergeLRPs(logger, cells)
 						Expect(keysToRetire).To(HaveLen(0))
 					})
 				})
@@ -1265,12 +1284,12 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		It("logs", func() {
-			etcdDB.ConvergeLRPs(logger)
+			etcdDB.ConvergeLRPs(logger, models.CellSet{})
 			Expect(logger.TestSink).To(gbytes.Say("adding-start-auction"))
 		})
 
 		It("re-returns start auction requests", func() {
-			startRequests, _ := etcdDB.ConvergeLRPs(logger)
+			startRequests, _ := etcdDB.ConvergeLRPs(logger, models.CellSet{})
 			Expect(startRequests).To(HaveLen(1))
 
 			startAuction := startRequests[0]
@@ -1578,10 +1597,6 @@ func createTestData(
 	for _, domain := range testData.domains {
 		etcdHelper.SetRawDomain(domain)
 	}
-
-	testData.cells.Each(func(cell *models.CellPresence) {
-		consulHelper.RegisterCell(cell)
-	})
 
 	return testData
 }

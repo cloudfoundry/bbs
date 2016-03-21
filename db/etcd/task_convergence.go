@@ -30,6 +30,7 @@ type compareAndSwappableTask struct {
 
 func (db *ETCDDB) ConvergeTasks(
 	logger lager.Logger,
+	cellSet models.CellSet,
 	kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
 ) ([]*auctioneer.TaskStartRequest, []*models.Task) {
 	logger = logger.Session("converge-tasks")
@@ -55,19 +56,6 @@ func (db *ETCDDB) ConvergeTasks(
 		return nil, nil
 	}
 	logger.Debug("succeeded-listing-task")
-
-	logger.Debug("listing-cells")
-	cellSet, modelErr := db.serviceClient.Cells(logger)
-	if modelErr != nil {
-		if !models.ErrResourceNotFound.Equal(modelErr) {
-			logger.Debug("failed-listing-cells")
-			return nil, nil
-		}
-
-		cellSet = models.CellSet{}
-	}
-
-	logger.Debug("succeeded-listing-cells")
 
 	logError := func(task *models.Task, message string) {
 		logger.Error(message, nil, lager.Data{

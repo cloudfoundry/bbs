@@ -779,6 +779,7 @@ var _ = Describe("Task Handlers", func() {
 				kickTaskDuration            = int64(10 * time.Second)
 				expirePendingTaskDuration   = int64(10 * time.Second)
 				expireCompletedTaskDuration = int64(10 * time.Second)
+				cellSet                     models.CellSet
 			)
 
 			BeforeEach(func() {
@@ -787,6 +788,9 @@ var _ = Describe("Task Handlers", func() {
 					ExpirePendingTaskDuration:   expirePendingTaskDuration,
 					ExpireCompletedTaskDuration: expireCompletedTaskDuration,
 				}
+				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil)
+				cellSet = models.CellSet{"cell-id": &cellPresence}
+				fakeServiceClient.CellsReturns(cellSet, nil)
 			})
 
 			JustBeforeEach(func() {
@@ -797,18 +801,42 @@ var _ = Describe("Task Handlers", func() {
 			It("calls ConvergeTasks", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
-				taskLogger, actualKickDuration, actualPendingDuration, actualCompletedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
+				taskLogger, actualCellSet, actualKickDuration, actualPendingDuration, actualCompletedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("converge-tasks"))
+				Expect(actualCellSet).To(BeEquivalentTo(cellSet))
 				Expect(actualKickDuration).To(BeEquivalentTo(kickTaskDuration))
 				Expect(actualPendingDuration).To(BeEquivalentTo(expirePendingTaskDuration))
 				Expect(actualCompletedDuration).To(BeEquivalentTo(expireCompletedTaskDuration))
 
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := &models.TaskLifecycleResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+			})
+
+			Context("when fetching cells fails", func() {
+				BeforeEach(func() {
+					fakeServiceClient.CellsReturns(nil, errors.New("kaboom"))
+				})
+
+				It("does not call ConvergeTasks", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(0))
+				})
+			})
+
+			Context("when fetching cells returns ErrResourceNotFound", func() {
+				BeforeEach(func() {
+					fakeServiceClient.CellsReturns(nil, models.ErrResourceNotFound)
+				})
+
+				It("calls ConvergeTasks with an empty CellSet", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
+					_, actualCellSet, _, _, _ := fakeTaskDB.ConvergeTasksArgsForCall(0)
+					Expect(actualCellSet).To(BeEquivalentTo(models.CellSet{}))
+				})
 			})
 
 			Context("when there are tasks to complete", func() {

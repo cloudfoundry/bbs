@@ -394,7 +394,6 @@ func initializeEtcdDB(
 		desiredLRPCreationMaxTime,
 		cryptor,
 		storeClient,
-		serviceClient,
 		clock.NewClock(),
 	)
 }

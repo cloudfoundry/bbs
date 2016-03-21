@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -88,8 +87,6 @@ type ETCDDB struct {
 	clock                     clock.Clock
 	inflightWatches           map[chan bool]bool
 	inflightWatchLock         *sync.Mutex
-
-	serviceClient bbs.ServiceClient
 }
 
 func NewETCD(
@@ -99,7 +96,6 @@ func NewETCD(
 	desiredLRPCreationTimeout time.Duration,
 	cryptor encryption.Cryptor,
 	storeClient StoreClient,
-	serviceClient bbs.ServiceClient,
 	clock clock.Clock,
 ) *ETCDDB {
 	return &ETCDDB{
@@ -112,7 +108,6 @@ func NewETCD(
 		clock:                     clock,
 		inflightWatches:           map[chan bool]bool{},
 		inflightWatchLock:         &sync.Mutex{},
-		serviceClient:             serviceClient,
 	}
 }
 
