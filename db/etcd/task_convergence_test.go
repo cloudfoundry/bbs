@@ -1,9 +1,9 @@
 package etcd_test
 
 import (
-	"errors"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
@@ -41,8 +41,13 @@ var _ = Describe("Convergence of Tasks", func() {
 			cellId    = "cell-id"
 		)
 
+		var (
+			tasksToAuction  []*auctioneer.TaskStartRequest
+			tasksToComplete []*models.Task
+		)
+
 		JustBeforeEach(func() {
-			etcdDB.ConvergeTasks(logger, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+			tasksToAuction, tasksToComplete = etcdDB.ConvergeTasks(logger, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
 		It("bumps the convergence counter", func() {
@@ -100,8 +105,8 @@ var _ = Describe("Convergence of Tasks", func() {
 					clock.IncrementBySeconds(kickTasksDurationInSeconds - 1)
 				})
 
-				It("does not request an auction for the task", func() {
-					Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(0))
+				It("returns no tasks to auction", func() {
+					Expect(tasksToAuction).To(BeEmpty())
 				})
 			})
 
@@ -118,25 +123,9 @@ var _ = Describe("Convergence of Tasks", func() {
 					Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.requesting-auction-for-pending-task"))
 				})
 
-				Context("when able to fetch the auctioneer address", func() {
-
-					It("requests an auction", func() {
-						Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
-
-						requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
-						Expect(requestedTasks).To(HaveLen(2))
-						Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid, taskGuid2))
-					})
-
-					Context("when requesting an auction is unsuccessful", func() {
-						BeforeEach(func() {
-							fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
-						})
-
-						It("logs an error", func() {
-							Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.failed-to-request-auctions-for-pending-tasks"))
-						})
-					})
+				It("returns the tasks to be auctioned", func() {
+					Expect(tasksToAuction).To(HaveLen(2))
+					Expect([]string{tasksToAuction[0].TaskGuid, tasksToAuction[1].TaskGuid}).To(ConsistOf(taskGuid, taskGuid2))
 				})
 			})
 
@@ -222,16 +211,18 @@ var _ = Describe("Convergence of Tasks", func() {
 					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
+					task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
+					Expect(task.TaskGuid).To(Equal(taskGuid))
 
 					err = etcdDB.DesireTask(logger, taskDef, taskGuid2, domain)
 
 					_, err = etcdDB.StartTask(logger, taskGuid2, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
+					task, err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
+					Expect(task.TaskGuid).To(Equal(taskGuid2))
 				})
 
 				It("emits a completed metric", func() {
@@ -243,27 +234,9 @@ var _ = Describe("Convergence of Tasks", func() {
 						clock.IncrementBySeconds(expirePendingTaskDurationInSeconds + 1)
 					})
 
-					It("resubmits the completed tasks to the callback workpool", func() {
-						expectedCallCount := 4
-						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(expectedCallCount)) // 2 initial completes + 2 times for convergence
-
-						task1Completions := 0
-						task2Completions := 0
-						for i := 0; i < expectedCallCount; i++ {
-							db, task := fakeTaskCompletionClient.SubmitArgsForCall(i)
-							Expect(db).To(Equal(etcdDB))
-							if task.TaskGuid == taskGuid {
-								task1Completions++
-							} else if task.TaskGuid == taskGuid2 {
-								task2Completions++
-							}
-							Expect(task.Failed).To(BeTrue())
-							Expect(task.FailureReason).To(Equal("'cause I said so"))
-							Expect(task.Result).To(Equal("a magical result"))
-						}
-
-						Expect(task1Completions).To(Equal(2))
-						Expect(task2Completions).To(Equal(2))
+					It("returns the tasks to be completed", func() {
+						Expect(tasksToComplete).To(HaveLen(2))
+						Expect([]string{tasksToComplete[0].TaskGuid, tasksToComplete[1].TaskGuid}).To(ConsistOf(taskGuid, taskGuid2))
 					})
 
 					It("logs that it kicks the completed task", func() {
@@ -319,8 +292,9 @@ var _ = Describe("Convergence of Tasks", func() {
 				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
+				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 				Expect(err).NotTo(HaveOccurred())
+				Expect(task.TaskGuid).To(Equal(taskGuid))
 
 				err = etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
@@ -338,13 +312,8 @@ var _ = Describe("Convergence of Tasks", func() {
 					clock.IncrementBySeconds(1)
 				})
 
-				It("should do nothing", func() {
-					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
-
-					returnedTask, err := etcdDB.TaskByGuid(logger, taskGuid)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(returnedTask.State).To(Equal(models.Task_Resolving))
-					Expect(returnedTask.UpdatedAt).To(Equal(previousTime))
+				It("should return no tasks to complete", func() {
+					Expect(tasksToComplete).To(BeEmpty())
 				})
 			})
 
@@ -364,11 +333,9 @@ var _ = Describe("Convergence of Tasks", func() {
 					Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.demoting-resolving-to-completed"))
 				})
 
-				It("submits the completed task to the workpool", func() {
-					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(2))
-
-					_, task := fakeTaskCompletionClient.SubmitArgsForCall(1)
-					Expect(task.TaskGuid).To(Equal(taskGuid))
+				It("returns the task to complete", func() {
+					Expect(tasksToComplete).To(HaveLen(1))
+					Expect(tasksToComplete[0].TaskGuid).To(Equal(taskGuid))
 				})
 
 				It("bumps the compare-and-swap counter", func() {

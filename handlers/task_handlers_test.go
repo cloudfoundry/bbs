@@ -1,29 +1,33 @@
 package handlers_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
+	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("Task Handlers", func() {
 	var (
-		logger           lager.Logger
-		fakeTaskDB       *fakes.FakeTaskDB
+		logger                   *lagertest.TestLogger
+		fakeTaskDB               *fakes.FakeTaskDB
+		fakeAuctioneerClient     *auctioneerfakes.FakeClient
+		fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
+
 		responseRecorder *httptest.ResponseRecorder
 
 		handler *handlers.TaskHandler
-
-		task1 models.Task
-		task2 models.Task
 
 		requestBody interface{}
 
@@ -32,13 +36,20 @@ var _ = Describe("Task Handlers", func() {
 
 	BeforeEach(func() {
 		fakeTaskDB = new(fakes.FakeTaskDB)
-		logger = lager.NewLogger("test")
-		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
+
+		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewTaskHandler(logger, fakeTaskDB)
+		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeTaskCompletionClient, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory)
 	})
 
 	Describe("Tasks", func() {
+		var (
+			task1 models.Task
+			task2 models.Task
+		)
+
 		BeforeEach(func() {
 			task1 = models.Task{Domain: "domain-1"}
 			task2 = models.Task{CellId: "cell-id"}
@@ -225,6 +236,50 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 			})
+
+			It("requests an auction", func() {
+				Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+
+				expectedStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDef)
+
+				requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+				Expect(requestedTasks).To(HaveLen(1))
+				Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
+			})
+
+			Context("when requesting a task auction succeeds", func() {
+				BeforeEach(func() {
+					fakeAuctioneerClient.RequestTaskAuctionsReturns(nil)
+				})
+
+				It("does not return an error", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := &models.TaskLifecycleResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+				})
+			})
+
+			Context("when requesting a task auction fails", func() {
+				BeforeEach(func() {
+					fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
+				})
+
+				It("does not return an error", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := &models.TaskLifecycleResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+				})
+
+				It("does not request a second auction", func() {
+					Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
+				})
+			})
 		})
 
 		Context("when desiring the task fails", func() {
@@ -315,46 +370,146 @@ var _ = Describe("Task Handlers", func() {
 	})
 
 	Describe("CancelTask", func() {
-		Context("when the cancel request is normal", func() {
-			BeforeEach(func() {
-				requestBody = &models.TaskGuidRequest{
-					TaskGuid: "task-guid",
-				}
-			})
-			JustBeforeEach(func() {
-				request := newTestRequest(requestBody)
-				handler.CancelTask(responseRecorder, request)
-			})
+		var request *http.Request
 
-			Context("when canceling the task succeeds", func() {
+		BeforeEach(func() {
+			requestBody = &models.TaskGuidRequest{
+				TaskGuid: "task-guid",
+			}
+
+			task := model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.CancelTaskReturns(task, nil)
+
+			request = newTestRequest(requestBody)
+		})
+
+		JustBeforeEach(func() {
+			handler.CancelTask(responseRecorder, request)
+			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+		})
+
+		Context("when the cancel request is normal", func() {
+			Context("when canceling the task in the db succeeds", func() {
+				BeforeEach(func() {
+					cellPresence := models.CellPresence{CellId: "cell-id"}
+					fakeServiceClient.CellByIdReturns(&cellPresence, nil)
+				})
+
 				It("returns no error", func() {
 					Expect(fakeTaskDB.CancelTaskCallCount()).To(Equal(1))
 					taskLogger, taskGuid := fakeTaskDB.CancelTaskArgsForCall(0)
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 					response := &models.TaskLifecycleResponse{}
 					err := response.Unmarshal(responseRecorder.Body.Bytes())
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
 				})
+
+				Context("and the task has a complete URL", func() {
+					BeforeEach(func() {
+						task := model_helpers.NewValidTask("hi-bob")
+						task.CompletionCallbackUrl = "bogus"
+						fakeTaskDB.CancelTaskReturns(task, nil)
+					})
+
+					It("causes the workpool to complete its callback work", func() {
+						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
+					})
+				})
+
+				Context("but the task has no complete URL", func() {
+					BeforeEach(func() {
+						task := model_helpers.NewValidTask("hi-bob")
+						fakeTaskDB.CancelTaskReturns(task, nil)
+					})
+
+					It("does not complete the task callback", func() {
+						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(0))
+					})
+				})
+
+				It("stops the task on the rep", func() {
+					Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
+					guid := fakeRepClient.CancelTaskArgsForCall(0)
+					Expect(guid).To(Equal("task-guid"))
+				})
+
+				Context("when the task has no cell id", func() {
+					BeforeEach(func() {
+						task := model_helpers.NewValidTask("hi-bob")
+						task.CellId = ""
+						fakeTaskDB.CancelTaskReturns(task, nil)
+					})
+
+					It("does not return an error", func() {
+						response := &models.TaskLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(0))
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
+					})
+				})
+
+				Context("when fetching the cell presence fails", func() {
+					BeforeEach(func() {
+						fakeServiceClient.CellByIdReturns(nil, errors.New("lol"))
+					})
+
+					It("does not return an error", func() {
+						response := &models.TaskLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
+					})
+				})
+
+				Context("when we fail to cancel the task on the rep", func() {
+					BeforeEach(func() {
+						fakeRepClient.CancelTaskReturns(errors.New("lol"))
+					})
+
+					It("does not return an error", func() {
+						response := &models.TaskLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+					})
+				})
 			})
 
-			Context("when desiring the task fails", func() {
+			Context("when cancelling the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.CancelTaskReturns(models.ErrUnknownError)
+					fakeTaskDB.CancelTaskReturns(nil, models.ErrUnknownError)
 				})
 
 				It("responds with an error", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 					response := &models.TaskLifecycleResponse{}
 					err := response.Unmarshal(responseRecorder.Body.Bytes())
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrUnknownError))
 				})
+			})
+		})
+
+		Context("when the cancel task request is not valid", func() {
+			BeforeEach(func() {
+				request = newTestRequest("{{")
+			})
+
+			It("returns an BadRequest error", func() {
+				response := &models.TaskLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrBadRequest))
 			})
 		})
 	})
@@ -369,6 +524,9 @@ var _ = Describe("Task Handlers", func() {
 			taskGuid = "task-guid"
 			failureReason = "just cuz ;)"
 
+			task := model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.FailTaskReturns(task, nil)
+
 			requestBody = &models.FailTaskRequest{
 				TaskGuid:      taskGuid,
 				FailureReason: failureReason,
@@ -379,6 +537,7 @@ var _ = Describe("Task Handlers", func() {
 			request = newTestRequest(requestBody)
 			handler.FailTask(responseRecorder, request)
 		})
+
 		Context("when failing the task succeeds", func() {
 			It("returns no error", func() {
 				_, actualTaskGuid, actualFailureReason := fakeTaskDB.FailTaskArgsForCall(0)
@@ -392,11 +551,34 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 			})
+
+			Context("and the task has a complete URL", func() {
+				BeforeEach(func() {
+					task := model_helpers.NewValidTask("hi-bob")
+					task.CompletionCallbackUrl = "bogus"
+					fakeTaskDB.FailTaskReturns(task, nil)
+				})
+
+				It("causes the workpool to complete its callback work", func() {
+					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("but the task has no complete URL", func() {
+				BeforeEach(func() {
+					task := model_helpers.NewValidTask("hi-bob")
+					fakeTaskDB.FailTaskReturns(task, nil)
+				})
+
+				It("does not complete the task callback", func() {
+					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(0))
+				})
+			})
 		})
 
 		Context("when failing the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.FailTaskReturns(models.ErrUnknownError)
+				fakeTaskDB.FailTaskReturns(nil, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -425,6 +607,9 @@ var _ = Describe("Task Handlers", func() {
 			failed = true
 			failureReason = "some-error"
 			result = "yeah"
+
+			task := model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.CompleteTaskReturns(task, nil)
 
 			requestBody = &models.CompleteTaskRequest{
 				TaskGuid:      taskGuid,
@@ -457,11 +642,36 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 			})
+
+			Context("and completing succeeds", func() {
+				Context("and the task has a complete URL", func() {
+					BeforeEach(func() {
+						task := model_helpers.NewValidTask("hi-bob")
+						task.CompletionCallbackUrl = "bogus"
+						fakeTaskDB.CompleteTaskReturns(task, nil)
+					})
+
+					It("causes the workpool to complete its callback work", func() {
+						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
+					})
+				})
+
+				Context("but the task has no complete URL", func() {
+					BeforeEach(func() {
+						task := model_helpers.NewValidTask("hi-bob")
+						fakeTaskDB.CompleteTaskReturns(task, nil)
+					})
+
+					It("does not complete the task callback", func() {
+						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(0))
+					})
+				})
+			})
 		})
 
 		Context("when completing the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.CompleteTaskReturns(models.ErrUnknownError)
+				fakeTaskDB.CompleteTaskReturns(nil, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -570,6 +780,7 @@ var _ = Describe("Task Handlers", func() {
 				expirePendingTaskDuration   = int64(10 * time.Second)
 				expireCompletedTaskDuration = int64(10 * time.Second)
 			)
+
 			BeforeEach(func() {
 				requestBody = &models.ConvergeTasksRequest{
 					KickTaskDuration:            kickTaskDuration,
@@ -598,6 +809,70 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+			})
+
+			Context("when there are tasks to complete", func() {
+				const taskGuid1 = "to-complete-1"
+				const taskGuid2 = "to-complete-2"
+
+				BeforeEach(func() {
+					task1 := model_helpers.NewValidTask(taskGuid1)
+					task2 := model_helpers.NewValidTask(taskGuid2)
+					fakeTaskDB.ConvergeTasksReturns(nil, []*models.Task{task1, task2})
+				})
+
+				It("submits the tasks to the workpool", func() {
+					expectedCallCount := 2
+					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(expectedCallCount))
+
+					_, submittedTask1 := fakeTaskCompletionClient.SubmitArgsForCall(0)
+					_, submittedTask2 := fakeTaskCompletionClient.SubmitArgsForCall(1)
+					Expect([]string{submittedTask1.TaskGuid, submittedTask2.TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
+
+					task1Completions := 0
+					task2Completions := 0
+					for i := 0; i < expectedCallCount; i++ {
+						db, task := fakeTaskCompletionClient.SubmitArgsForCall(i)
+						Expect(db).To(Equal(fakeTaskDB))
+						if task.TaskGuid == taskGuid1 {
+							task1Completions++
+						} else if task.TaskGuid == taskGuid2 {
+							task2Completions++
+						}
+					}
+
+					Expect(task1Completions).To(Equal(1))
+					Expect(task2Completions).To(Equal(1))
+				})
+			})
+
+			Context("when there are tasks to auction", func() {
+				const taskGuid1 = "to-auction-1"
+				const taskGuid2 = "to-auction-2"
+
+				BeforeEach(func() {
+					taskStartRequest1 := auctioneer.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
+					taskStartRequest2 := auctioneer.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
+					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2}, nil)
+				})
+
+				It("requests an auction", func() {
+					Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+
+					requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					Expect(requestedTasks).To(HaveLen(2))
+					Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
+				})
+
+				Context("when requesting an auction is unsuccessful", func() {
+					BeforeEach(func() {
+						fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
+					})
+
+					It("logs an error", func() {
+						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.task-handler.converge-tasks.failed-to-request-auctions-for-pending-tasks"))
+					})
+				})
 			})
 		})
 	})

@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/locket"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	etcderrors "github.com/coreos/go-etcd/etcd"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -319,6 +319,183 @@ var _ = Describe("ActualLRPDB", func() {
 
 			It("errors", func() {
 				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, "some-other-guid", 0)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("CreateUnclaimedActualLRP", func() {
+		var (
+			guid   string
+			index  int32
+			lrpKey *models.ActualLRPKey
+		)
+
+		BeforeEach(func() {
+			guid = "the-guid"
+			index = 1
+			lrpKey = &models.ActualLRPKey{ProcessGuid: guid, Index: index, Domain: "the-domain"}
+		})
+
+		Context("when the actual LRP does not exist", func() {
+			It("creates a new unclaimed actual LRP", func() {
+				err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
+				Expect(err).NotTo(HaveOccurred())
+
+				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).NotTo(HaveOccurred())
+
+				actualLRP, evacuating := group.Resolve()
+				Expect(evacuating).To(BeFalse())
+
+				actualLRP.ModificationTag.Epoch = "something static"
+				Expect(actualLRP).To(BeEquivalentTo(&models.ActualLRP{
+					ActualLRPKey: *lrpKey,
+					Since:        clock.Now().UnixNano(),
+					State:        models.ActualLRPStateUnclaimed,
+					ModificationTag: models.ModificationTag{
+						Epoch: "something static",
+						Index: 0,
+					},
+				}))
+			})
+
+			Context("when we fail to create the node", func() {
+				BeforeEach(func() {
+					fakeStoreClient.GetReturns(nil, etcderrors.EtcdError{ErrorCode: ETCDErrKeyNotFound})
+					fakeStoreClient.CreateReturns(nil, errors.New("oh no!"))
+				})
+
+				It("errors", func() {
+					err := etcdDBWithFakeStore.CreateUnclaimedActualLRP(logger, lrpKey)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
+
+		Context("when the actual LRP exists", func() {
+			var actualLRP *models.ActualLRP
+			BeforeEach(func() {
+				actualLRP = model_helpers.NewValidActualLRP(lrpKey.ProcessGuid, lrpKey.Index)
+				etcdHelper.SetRawActualLRP(actualLRP)
+			})
+
+			It("returns a ResourceExists error", func() {
+				err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("UnclaimActualLRP", func() {
+		var (
+			lrpKey       *models.ActualLRPKey
+			guid, domain string
+			index        int32
+		)
+
+		BeforeEach(func() {
+			guid = "the guid"
+			index = 1
+			domain = "domain"
+
+			lrpKey = &models.ActualLRPKey{ProcessGuid: guid, Index: index, Domain: domain}
+		})
+
+		Context("when the actual LRP does not exist", func() {
+			It("fails with a resource not found", func() {
+				err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+
+			Context("when we fail to create the node", func() {
+				BeforeEach(func() {
+					fakeStoreClient.GetReturns(nil, etcderrors.EtcdError{ErrorCode: ETCDErrKeyNotFound})
+					fakeStoreClient.CreateReturns(nil, errors.New("oh no!"))
+				})
+
+				It("errors", func() {
+					err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
+
+		Context("when the actual LRP exists", func() {
+			var actualLRP *models.ActualLRP
+			BeforeEach(func() {
+				actualLRP = model_helpers.NewValidActualLRP(lrpKey.ProcessGuid, lrpKey.Index)
+				etcdHelper.SetRawActualLRP(actualLRP)
+			})
+
+			It("transitions the actual lrp into the unclaimed state", func() {
+				err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+				Expect(err).NotTo(HaveOccurred())
+
+				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).NotTo(HaveOccurred())
+
+				actualLRP, evacuating := group.Resolve()
+				Expect(evacuating).To(BeFalse())
+
+				actualLRP.ModificationTag.Increment()
+				Expect(actualLRP).To(BeEquivalentTo(&models.ActualLRP{
+					ActualLRPKey:    *lrpKey,
+					Since:           clock.Now().UnixNano(),
+					State:           models.ActualLRPStateUnclaimed,
+					CrashCount:      actualLRP.CrashCount,
+					CrashReason:     actualLRP.CrashReason,
+					ModificationTag: actualLRP.ModificationTag,
+				}))
+			})
+
+			Context("when the actual lrp is already unclaimed", func() {
+				BeforeEach(func() {
+					actualLRP.State = models.ActualLRPStateUnclaimed
+					actualLRP.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
+					actualLRP.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+					etcdHelper.SetRawActualLRP(actualLRP)
+				})
+
+				It("returns an error", func() {
+					err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
+			Context("when compare and swap fails", func() {
+				BeforeEach(func() {
+					fakeStoreClient.CompareAndSwapReturns(nil, errors.New("OOOOOH NOSE!"))
+
+					node, err := storeClient.Get(ActualLRPSchemaPath(guid, index), false, false)
+					fakeStoreClient.GetReturns(node, err)
+				})
+
+				It("returns an error", func() {
+					err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
+			Context("when deserializing the actual lrp fails", func() {
+				BeforeEach(func() {
+					storeClient.Set(ActualLRPSchemaPath(guid, index), []byte("{{"), 0)
+				})
+
+				It("returns an error", func() {
+					err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
+
+		Context("when fetching the actual lrp fails", func() {
+			BeforeEach(func() {
+				fakeStoreClient.GetReturns(nil, errors.New("oh NOES!"))
+			})
+
+			It("returns an error", func() {
+				err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -878,141 +1055,6 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Expect(lrpGroup.Instance.ModificationTag.Epoch).NotTo(BeEmpty())
 				Expect(lrpGroup.Instance.ModificationTag.Index).To(BeEquivalentTo(0))
-			})
-		})
-	})
-
-	Describe("RetireActualLRPs", func() {
-		var (
-			actualLRP *models.ActualLRP
-			retireErr error
-
-			lrpKey models.ActualLRPKey
-
-			processGuid string
-			index       int32
-		)
-
-		BeforeEach(func() {
-			processGuid = "some-process-guid"
-			index = 1
-			domain := "domain"
-
-			lrpKey = models.NewActualLRPKey(processGuid, index, domain)
-		})
-
-		Context("with an Unclaimed LRP", func() {
-			BeforeEach(func() {
-				actualLRP = &models.ActualLRP{
-					ActualLRPKey: lrpKey,
-					State:        models.ActualLRPStateUnclaimed,
-					Since:        123,
-				}
-
-				etcdHelper.SetRawActualLRP(actualLRP)
-			})
-
-			It("deletes the LRP", func() {
-				retireErr = etcdDB.RetireActualLRP(logger, &lrpKey)
-				Expect(retireErr).NotTo(HaveOccurred())
-
-				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-				Expect(err).To(Equal(models.ErrResourceNotFound))
-			})
-		})
-
-		Context("when the LRP is Crashed", func() {
-			BeforeEach(func() {
-				actualLRP = &models.ActualLRP{
-					ActualLRPKey: lrpKey,
-					CrashCount:   1,
-					State:        models.ActualLRPStateCrashed,
-					Since:        777,
-				}
-				etcdHelper.SetRawActualLRP(actualLRP)
-			})
-
-			It("should remove the actual", func() {
-				retireErr = etcdDB.RetireActualLRP(logger, &lrpKey)
-				Expect(retireErr).NotTo(HaveOccurred())
-
-				_, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-				Expect(err).To(Equal(models.ErrResourceNotFound))
-			})
-		})
-
-		Context("when the LRP is not Unclaimed", func() {
-			var (
-				cellPresence models.CellPresence
-				instanceKey  models.ActualLRPInstanceKey
-			)
-
-			BeforeEach(func() {
-				instanceKey = models.NewActualLRPInstanceKey("instance-guid", "cell-id")
-				actualLRP = &models.ActualLRP{
-					ActualLRPKey:         lrpKey,
-					ActualLRPInstanceKey: instanceKey,
-					State:                models.ActualLRPStateClaimed,
-					Since:                777,
-				}
-				etcdHelper.SetRawActualLRP(actualLRP)
-			})
-
-			JustBeforeEach(func() {
-				etcdDB.RetireActualLRP(logger, &lrpKey)
-			})
-
-			Context("when the cell", func() {
-				Context("is present", func() {
-					BeforeEach(func() {
-						cellPresence = models.NewCellPresence(
-							cellID,
-							"cell1.addr",
-							"the-zone",
-							models.NewCellCapacity(128, 1024, 6),
-							[]string{},
-							[]string{},
-						)
-						consulHelper.RegisterCell(&cellPresence)
-					})
-
-					It("stops the LRPs", func() {
-						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).Should(Equal(1))
-						stoppedKey, stoppedInstanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-						Expect(stoppedKey).To(Equal(lrpKey))
-						Expect(stoppedInstanceKey).To(Equal(instanceKey))
-					})
-
-					Context("when stopping the LRP fails", func() {
-						BeforeEach(func() {
-							fakeRepClient.StopLRPInstanceReturns(errors.New("something is terrible"))
-						})
-
-						It("retries", func() {
-							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(models.RetireActualLRPRetryAttempts))
-						})
-					})
-				})
-
-				Context("is not present", func() {
-					It("removes the LRPs", func() {
-						_, err := storeClient.Get(ActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
-						Expect(err).To(HaveOccurred())
-					})
-				})
-
-				Context("cannot be retrieved", func() {
-					BeforeEach(func() {
-						locket.NewPresence(logger, consulClient, bbs.CellSchemaPath(cellID), []byte("abcd"), clock, locket.RetryInterval, locket.LockTTL)
-					})
-
-					It("does not stop the instances", func() {
-						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(0))
-					})
-				})
 			})
 		})
 	})

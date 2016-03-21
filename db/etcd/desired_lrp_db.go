@@ -3,7 +3,6 @@ package etcd
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/nu7hatch/gouuid"
@@ -236,69 +235,6 @@ func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid strin
 	return lrp, err
 }
 
-func (db *ETCDDB) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
-	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
-	logger.Info("starting")
-	defer logger.Info("complete")
-
-	keys := make([]*models.ActualLRPKey, upper-lower)
-	i := 0
-	for actualIndex := lower; actualIndex < upper; actualIndex++ {
-		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
-		keys[i] = &key
-		i++
-	}
-
-	createdIndices := db.createUnclaimedActualLRPs(logger, keys)
-	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
-
-	err := db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&start})
-	if err != nil {
-		logger.Error("failed-to-request-auction", err)
-	}
-}
-
-func (db *ETCDDB) stopInstancesForProcessGuid(logger lager.Logger, processGuid string) {
-	logger = logger.Session("stop-instance-for-process-guid", lager.Data{"process-guid": processGuid})
-	logger.Info("starting")
-	defer logger.Info("complete")
-
-	actualsMap, err := db.instanceActualLRPsByProcessGuid(logger, processGuid)
-	if err != nil {
-		logger.Error("failed-to-get-actual-lrps", err)
-		return
-	}
-
-	actualKeys := make([]*models.ActualLRPKey, len(actualsMap))
-	for i, actual := range actualsMap {
-		actualKeys[i] = &actual.ActualLRPKey
-	}
-
-	db.retireActualLRPs(logger, actualKeys)
-}
-
-func (db *ETCDDB) stopInstanceRange(logger lager.Logger, lower, upper int32, schedInfo *models.DesiredLRPSchedulingInfo) {
-	logger = logger.Session("stop-instance-range", lager.Data{"lower": lower, "upper": upper})
-	logger.Info("starting")
-	defer logger.Info("complete")
-
-	actualsMap, err := db.instanceActualLRPsByProcessGuid(logger, schedInfo.ProcessGuid)
-	if err != nil {
-		logger.Error("failed-to-get-actual-lrps", err)
-		return
-	}
-
-	actualKeys := make([]*models.ActualLRPKey, 0)
-	for i := lower; i < upper; i++ {
-		actual, ok := actualsMap[i]
-		if ok {
-			actualKeys = append(actualKeys, &actual.ActualLRPKey)
-		}
-	}
-
-	db.retireActualLRPs(logger, actualKeys)
-}
-
 // DesireLRP creates a DesiredLRPSchedulingInfo and a DesiredLRPRunInfo. In order
 // to ensure that the complete model is available and there are no races in
 // Desired Watches, DesiredLRPRunInfo is created before DesiredLRPSchedulingInfo.
@@ -324,7 +260,6 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 		return schedulingErr
 	}
 
-	db.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
 	return nil
 }
 
@@ -389,14 +324,14 @@ func (db *ETCDDB) createDesiredLRPRunInfo(logger lager.Logger, runInfo *models.D
 	return nil
 }
 
-func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error {
+func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (int32, error) {
 	logger = logger.Session("update-desired-lrp", lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
 	var schedulingInfo *models.DesiredLRPSchedulingInfo
-	var existingInstances int32
 	var err error
+	var previousInstanceCount int32
 
 	for i := 0; i < 2; i++ {
 		var index uint64
@@ -407,8 +342,7 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 			break
 		}
 
-		existingInstances = schedulingInfo.Instances
-
+		previousInstanceCount = schedulingInfo.Instances
 		schedulingInfo.ApplyUpdate(update)
 
 		err = db.updateDesiredLRPSchedulingInfo(logger, schedulingInfo, index)
@@ -426,21 +360,10 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 	}
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	switch diff := schedulingInfo.Instances - existingInstances; {
-	case diff > 0:
-		db.startInstanceRange(logger, existingInstances, schedulingInfo.Instances, schedulingInfo)
-
-	case diff < 0:
-		db.stopInstanceRange(logger, schedulingInfo.Instances, existingInstances, schedulingInfo)
-
-	case diff == 0:
-		// this space intentionally left blank
-	}
-
-	return nil
+	return previousInstanceCount, nil
 }
 
 // RemoveDesiredLRP deletes the DesiredLRPSchedulingInfo and the DesiredLRPRunInfo
@@ -474,6 +397,5 @@ func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) erro
 		return models.ErrResourceNotFound
 	}
 
-	db.stopInstancesForProcessGuid(logger, processGuid)
 	return nil
 }

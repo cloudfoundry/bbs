@@ -11,11 +11,57 @@ import (
 )
 
 type FakeClient struct {
-	PingStub        func() bool
-	pingMutex       sync.RWMutex
-	pingArgsForCall []struct{}
-	pingReturns     struct {
-		result1 bool
+	DesireTaskStub        func(guid, domain string, def *models.TaskDefinition) error
+	desireTaskMutex       sync.RWMutex
+	desireTaskArgsForCall []struct {
+		guid   string
+		domain string
+		def    *models.TaskDefinition
+	}
+	desireTaskReturns struct {
+		result1 error
+	}
+	TasksStub        func() ([]*models.Task, error)
+	tasksMutex       sync.RWMutex
+	tasksArgsForCall []struct{}
+	tasksReturns     struct {
+		result1 []*models.Task
+		result2 error
+	}
+	TasksByDomainStub        func(domain string) ([]*models.Task, error)
+	tasksByDomainMutex       sync.RWMutex
+	tasksByDomainArgsForCall []struct {
+		domain string
+	}
+	tasksByDomainReturns struct {
+		result1 []*models.Task
+		result2 error
+	}
+	TasksByCellIDStub        func(cellId string) ([]*models.Task, error)
+	tasksByCellIDMutex       sync.RWMutex
+	tasksByCellIDArgsForCall []struct {
+		cellId string
+	}
+	tasksByCellIDReturns struct {
+		result1 []*models.Task
+		result2 error
+	}
+	TaskByGuidStub        func(guid string) (*models.Task, error)
+	taskByGuidMutex       sync.RWMutex
+	taskByGuidArgsForCall []struct {
+		guid string
+	}
+	taskByGuidReturns struct {
+		result1 *models.Task
+		result2 error
+	}
+	CancelTaskStub        func(taskGuid string) error
+	cancelTaskMutex       sync.RWMutex
+	cancelTaskArgsForCall []struct {
+		taskGuid string
+	}
+	cancelTaskReturns struct {
+		result1 error
 	}
 	DomainsStub        func() ([]string, error)
 	domainsMutex       sync.RWMutex
@@ -121,65 +167,6 @@ type FakeClient struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
-	TasksStub        func() ([]*models.Task, error)
-	tasksMutex       sync.RWMutex
-	tasksArgsForCall []struct{}
-	tasksReturns     struct {
-		result1 []*models.Task
-		result2 error
-	}
-	TasksByDomainStub        func(domain string) ([]*models.Task, error)
-	tasksByDomainMutex       sync.RWMutex
-	tasksByDomainArgsForCall []struct {
-		domain string
-	}
-	tasksByDomainReturns struct {
-		result1 []*models.Task
-		result2 error
-	}
-	TasksByCellIDStub        func(cellId string) ([]*models.Task, error)
-	tasksByCellIDMutex       sync.RWMutex
-	tasksByCellIDArgsForCall []struct {
-		cellId string
-	}
-	tasksByCellIDReturns struct {
-		result1 []*models.Task
-		result2 error
-	}
-	TaskByGuidStub        func(guid string) (*models.Task, error)
-	taskByGuidMutex       sync.RWMutex
-	taskByGuidArgsForCall []struct {
-		guid string
-	}
-	taskByGuidReturns struct {
-		result1 *models.Task
-		result2 error
-	}
-	DesireTaskStub        func(guid, domain string, def *models.TaskDefinition) error
-	desireTaskMutex       sync.RWMutex
-	desireTaskArgsForCall []struct {
-		guid   string
-		domain string
-		def    *models.TaskDefinition
-	}
-	desireTaskReturns struct {
-		result1 error
-	}
-	CancelTaskStub        func(taskGuid string) error
-	cancelTaskMutex       sync.RWMutex
-	cancelTaskArgsForCall []struct {
-		taskGuid string
-	}
-	cancelTaskReturns struct {
-		result1 error
-	}
-	SubscribeToEventsStub        func() (events.EventSource, error)
-	subscribeToEventsMutex       sync.RWMutex
-	subscribeToEventsArgsForCall []struct{}
-	subscribeToEventsReturns     struct {
-		result1 events.EventSource
-		result2 error
-	}
 	SubscribeToDesiredLRPEventsStub        func() (events.EventSource, error)
 	subscribeToDesiredLRPEventsMutex       sync.RWMutex
 	subscribeToDesiredLRPEventsArgsForCall []struct{}
@@ -200,6 +187,12 @@ type FakeClient struct {
 	subscribeToTaskEventsReturns     struct {
 		result1 events.EventSource
 		result2 error
+	}
+	PingStub        func() bool
+	pingMutex       sync.RWMutex
+	pingArgsForCall []struct{}
+	pingReturns     struct {
+		result1 bool
 	}
 	CellsStub        func() ([]*models.CellPresence, error)
 	cellsMutex       sync.RWMutex
@@ -371,29 +364,202 @@ type FakeClient struct {
 	deleteTaskReturns struct {
 		result1 error
 	}
-}
-
-func (fake *FakeClient) Ping() bool {
-	fake.pingMutex.Lock()
-	fake.pingArgsForCall = append(fake.pingArgsForCall, struct{}{})
-	fake.pingMutex.Unlock()
-	if fake.PingStub != nil {
-		return fake.PingStub()
-	} else {
-		return fake.pingReturns.result1
+	SubscribeToEventsStub        func() (events.EventSource, error)
+	subscribeToEventsMutex       sync.RWMutex
+	subscribeToEventsArgsForCall []struct{}
+	subscribeToEventsReturns     struct {
+		result1 events.EventSource
+		result2 error
 	}
 }
 
-func (fake *FakeClient) PingCallCount() int {
-	fake.pingMutex.RLock()
-	defer fake.pingMutex.RUnlock()
-	return len(fake.pingArgsForCall)
+func (fake *FakeClient) DesireTask(guid string, domain string, def *models.TaskDefinition) error {
+	fake.desireTaskMutex.Lock()
+	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
+		guid   string
+		domain string
+		def    *models.TaskDefinition
+	}{guid, domain, def})
+	fake.desireTaskMutex.Unlock()
+	if fake.DesireTaskStub != nil {
+		return fake.DesireTaskStub(guid, domain, def)
+	} else {
+		return fake.desireTaskReturns.result1
+	}
 }
 
-func (fake *FakeClient) PingReturns(result1 bool) {
-	fake.PingStub = nil
-	fake.pingReturns = struct {
-		result1 bool
+func (fake *FakeClient) DesireTaskCallCount() int {
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	return len(fake.desireTaskArgsForCall)
+}
+
+func (fake *FakeClient) DesireTaskArgsForCall(i int) (string, string, *models.TaskDefinition) {
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	return fake.desireTaskArgsForCall[i].guid, fake.desireTaskArgsForCall[i].domain, fake.desireTaskArgsForCall[i].def
+}
+
+func (fake *FakeClient) DesireTaskReturns(result1 error) {
+	fake.DesireTaskStub = nil
+	fake.desireTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) Tasks() ([]*models.Task, error) {
+	fake.tasksMutex.Lock()
+	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct{}{})
+	fake.tasksMutex.Unlock()
+	if fake.TasksStub != nil {
+		return fake.TasksStub()
+	} else {
+		return fake.tasksReturns.result1, fake.tasksReturns.result2
+	}
+}
+
+func (fake *FakeClient) TasksCallCount() int {
+	fake.tasksMutex.RLock()
+	defer fake.tasksMutex.RUnlock()
+	return len(fake.tasksArgsForCall)
+}
+
+func (fake *FakeClient) TasksReturns(result1 []*models.Task, result2 error) {
+	fake.TasksStub = nil
+	fake.tasksReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) TasksByDomain(domain string) ([]*models.Task, error) {
+	fake.tasksByDomainMutex.Lock()
+	fake.tasksByDomainArgsForCall = append(fake.tasksByDomainArgsForCall, struct {
+		domain string
+	}{domain})
+	fake.tasksByDomainMutex.Unlock()
+	if fake.TasksByDomainStub != nil {
+		return fake.TasksByDomainStub(domain)
+	} else {
+		return fake.tasksByDomainReturns.result1, fake.tasksByDomainReturns.result2
+	}
+}
+
+func (fake *FakeClient) TasksByDomainCallCount() int {
+	fake.tasksByDomainMutex.RLock()
+	defer fake.tasksByDomainMutex.RUnlock()
+	return len(fake.tasksByDomainArgsForCall)
+}
+
+func (fake *FakeClient) TasksByDomainArgsForCall(i int) string {
+	fake.tasksByDomainMutex.RLock()
+	defer fake.tasksByDomainMutex.RUnlock()
+	return fake.tasksByDomainArgsForCall[i].domain
+}
+
+func (fake *FakeClient) TasksByDomainReturns(result1 []*models.Task, result2 error) {
+	fake.TasksByDomainStub = nil
+	fake.tasksByDomainReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) TasksByCellID(cellId string) ([]*models.Task, error) {
+	fake.tasksByCellIDMutex.Lock()
+	fake.tasksByCellIDArgsForCall = append(fake.tasksByCellIDArgsForCall, struct {
+		cellId string
+	}{cellId})
+	fake.tasksByCellIDMutex.Unlock()
+	if fake.TasksByCellIDStub != nil {
+		return fake.TasksByCellIDStub(cellId)
+	} else {
+		return fake.tasksByCellIDReturns.result1, fake.tasksByCellIDReturns.result2
+	}
+}
+
+func (fake *FakeClient) TasksByCellIDCallCount() int {
+	fake.tasksByCellIDMutex.RLock()
+	defer fake.tasksByCellIDMutex.RUnlock()
+	return len(fake.tasksByCellIDArgsForCall)
+}
+
+func (fake *FakeClient) TasksByCellIDArgsForCall(i int) string {
+	fake.tasksByCellIDMutex.RLock()
+	defer fake.tasksByCellIDMutex.RUnlock()
+	return fake.tasksByCellIDArgsForCall[i].cellId
+}
+
+func (fake *FakeClient) TasksByCellIDReturns(result1 []*models.Task, result2 error) {
+	fake.TasksByCellIDStub = nil
+	fake.tasksByCellIDReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) TaskByGuid(guid string) (*models.Task, error) {
+	fake.taskByGuidMutex.Lock()
+	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
+		guid string
+	}{guid})
+	fake.taskByGuidMutex.Unlock()
+	if fake.TaskByGuidStub != nil {
+		return fake.TaskByGuidStub(guid)
+	} else {
+		return fake.taskByGuidReturns.result1, fake.taskByGuidReturns.result2
+	}
+}
+
+func (fake *FakeClient) TaskByGuidCallCount() int {
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	return len(fake.taskByGuidArgsForCall)
+}
+
+func (fake *FakeClient) TaskByGuidArgsForCall(i int) string {
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	return fake.taskByGuidArgsForCall[i].guid
+}
+
+func (fake *FakeClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
+	fake.TaskByGuidStub = nil
+	fake.taskByGuidReturns = struct {
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) CancelTask(taskGuid string) error {
+	fake.cancelTaskMutex.Lock()
+	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
+		taskGuid string
+	}{taskGuid})
+	fake.cancelTaskMutex.Unlock()
+	if fake.CancelTaskStub != nil {
+		return fake.CancelTaskStub(taskGuid)
+	} else {
+		return fake.cancelTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) CancelTaskCallCount() int {
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	return len(fake.cancelTaskArgsForCall)
+}
+
+func (fake *FakeClient) CancelTaskArgsForCall(i int) string {
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	return fake.cancelTaskArgsForCall[i].taskGuid
+}
+
+func (fake *FakeClient) CancelTaskReturns(result1 error) {
+	fake.CancelTaskStub = nil
+	fake.cancelTaskReturns = struct {
+		result1 error
 	}{result1}
 }
 
@@ -783,221 +949,6 @@ func (fake *FakeClient) RemoveDesiredLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) Tasks() ([]*models.Task, error) {
-	fake.tasksMutex.Lock()
-	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct{}{})
-	fake.tasksMutex.Unlock()
-	if fake.TasksStub != nil {
-		return fake.TasksStub()
-	} else {
-		return fake.tasksReturns.result1, fake.tasksReturns.result2
-	}
-}
-
-func (fake *FakeClient) TasksCallCount() int {
-	fake.tasksMutex.RLock()
-	defer fake.tasksMutex.RUnlock()
-	return len(fake.tasksArgsForCall)
-}
-
-func (fake *FakeClient) TasksReturns(result1 []*models.Task, result2 error) {
-	fake.TasksStub = nil
-	fake.tasksReturns = struct {
-		result1 []*models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeClient) TasksByDomain(domain string) ([]*models.Task, error) {
-	fake.tasksByDomainMutex.Lock()
-	fake.tasksByDomainArgsForCall = append(fake.tasksByDomainArgsForCall, struct {
-		domain string
-	}{domain})
-	fake.tasksByDomainMutex.Unlock()
-	if fake.TasksByDomainStub != nil {
-		return fake.TasksByDomainStub(domain)
-	} else {
-		return fake.tasksByDomainReturns.result1, fake.tasksByDomainReturns.result2
-	}
-}
-
-func (fake *FakeClient) TasksByDomainCallCount() int {
-	fake.tasksByDomainMutex.RLock()
-	defer fake.tasksByDomainMutex.RUnlock()
-	return len(fake.tasksByDomainArgsForCall)
-}
-
-func (fake *FakeClient) TasksByDomainArgsForCall(i int) string {
-	fake.tasksByDomainMutex.RLock()
-	defer fake.tasksByDomainMutex.RUnlock()
-	return fake.tasksByDomainArgsForCall[i].domain
-}
-
-func (fake *FakeClient) TasksByDomainReturns(result1 []*models.Task, result2 error) {
-	fake.TasksByDomainStub = nil
-	fake.tasksByDomainReturns = struct {
-		result1 []*models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeClient) TasksByCellID(cellId string) ([]*models.Task, error) {
-	fake.tasksByCellIDMutex.Lock()
-	fake.tasksByCellIDArgsForCall = append(fake.tasksByCellIDArgsForCall, struct {
-		cellId string
-	}{cellId})
-	fake.tasksByCellIDMutex.Unlock()
-	if fake.TasksByCellIDStub != nil {
-		return fake.TasksByCellIDStub(cellId)
-	} else {
-		return fake.tasksByCellIDReturns.result1, fake.tasksByCellIDReturns.result2
-	}
-}
-
-func (fake *FakeClient) TasksByCellIDCallCount() int {
-	fake.tasksByCellIDMutex.RLock()
-	defer fake.tasksByCellIDMutex.RUnlock()
-	return len(fake.tasksByCellIDArgsForCall)
-}
-
-func (fake *FakeClient) TasksByCellIDArgsForCall(i int) string {
-	fake.tasksByCellIDMutex.RLock()
-	defer fake.tasksByCellIDMutex.RUnlock()
-	return fake.tasksByCellIDArgsForCall[i].cellId
-}
-
-func (fake *FakeClient) TasksByCellIDReturns(result1 []*models.Task, result2 error) {
-	fake.TasksByCellIDStub = nil
-	fake.tasksByCellIDReturns = struct {
-		result1 []*models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeClient) TaskByGuid(guid string) (*models.Task, error) {
-	fake.taskByGuidMutex.Lock()
-	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
-		guid string
-	}{guid})
-	fake.taskByGuidMutex.Unlock()
-	if fake.TaskByGuidStub != nil {
-		return fake.TaskByGuidStub(guid)
-	} else {
-		return fake.taskByGuidReturns.result1, fake.taskByGuidReturns.result2
-	}
-}
-
-func (fake *FakeClient) TaskByGuidCallCount() int {
-	fake.taskByGuidMutex.RLock()
-	defer fake.taskByGuidMutex.RUnlock()
-	return len(fake.taskByGuidArgsForCall)
-}
-
-func (fake *FakeClient) TaskByGuidArgsForCall(i int) string {
-	fake.taskByGuidMutex.RLock()
-	defer fake.taskByGuidMutex.RUnlock()
-	return fake.taskByGuidArgsForCall[i].guid
-}
-
-func (fake *FakeClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
-	fake.TaskByGuidStub = nil
-	fake.taskByGuidReturns = struct {
-		result1 *models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeClient) DesireTask(guid string, domain string, def *models.TaskDefinition) error {
-	fake.desireTaskMutex.Lock()
-	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
-		guid   string
-		domain string
-		def    *models.TaskDefinition
-	}{guid, domain, def})
-	fake.desireTaskMutex.Unlock()
-	if fake.DesireTaskStub != nil {
-		return fake.DesireTaskStub(guid, domain, def)
-	} else {
-		return fake.desireTaskReturns.result1
-	}
-}
-
-func (fake *FakeClient) DesireTaskCallCount() int {
-	fake.desireTaskMutex.RLock()
-	defer fake.desireTaskMutex.RUnlock()
-	return len(fake.desireTaskArgsForCall)
-}
-
-func (fake *FakeClient) DesireTaskArgsForCall(i int) (string, string, *models.TaskDefinition) {
-	fake.desireTaskMutex.RLock()
-	defer fake.desireTaskMutex.RUnlock()
-	return fake.desireTaskArgsForCall[i].guid, fake.desireTaskArgsForCall[i].domain, fake.desireTaskArgsForCall[i].def
-}
-
-func (fake *FakeClient) DesireTaskReturns(result1 error) {
-	fake.DesireTaskStub = nil
-	fake.desireTaskReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeClient) CancelTask(taskGuid string) error {
-	fake.cancelTaskMutex.Lock()
-	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
-		taskGuid string
-	}{taskGuid})
-	fake.cancelTaskMutex.Unlock()
-	if fake.CancelTaskStub != nil {
-		return fake.CancelTaskStub(taskGuid)
-	} else {
-		return fake.cancelTaskReturns.result1
-	}
-}
-
-func (fake *FakeClient) CancelTaskCallCount() int {
-	fake.cancelTaskMutex.RLock()
-	defer fake.cancelTaskMutex.RUnlock()
-	return len(fake.cancelTaskArgsForCall)
-}
-
-func (fake *FakeClient) CancelTaskArgsForCall(i int) string {
-	fake.cancelTaskMutex.RLock()
-	defer fake.cancelTaskMutex.RUnlock()
-	return fake.cancelTaskArgsForCall[i].taskGuid
-}
-
-func (fake *FakeClient) CancelTaskReturns(result1 error) {
-	fake.CancelTaskStub = nil
-	fake.cancelTaskReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeClient) SubscribeToEvents() (events.EventSource, error) {
-	fake.subscribeToEventsMutex.Lock()
-	fake.subscribeToEventsArgsForCall = append(fake.subscribeToEventsArgsForCall, struct{}{})
-	fake.subscribeToEventsMutex.Unlock()
-	if fake.SubscribeToEventsStub != nil {
-		return fake.SubscribeToEventsStub()
-	} else {
-		return fake.subscribeToEventsReturns.result1, fake.subscribeToEventsReturns.result2
-	}
-}
-
-func (fake *FakeClient) SubscribeToEventsCallCount() int {
-	fake.subscribeToEventsMutex.RLock()
-	defer fake.subscribeToEventsMutex.RUnlock()
-	return len(fake.subscribeToEventsArgsForCall)
-}
-
-func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, result2 error) {
-	fake.SubscribeToEventsStub = nil
-	fake.subscribeToEventsReturns = struct {
-		result1 events.EventSource
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeClient) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
 	fake.subscribeToDesiredLRPEventsMutex.Lock()
 	fake.subscribeToDesiredLRPEventsArgsForCall = append(fake.subscribeToDesiredLRPEventsArgsForCall, struct{}{})
@@ -1071,6 +1022,30 @@ func (fake *FakeClient) SubscribeToTaskEventsReturns(result1 events.EventSource,
 		result1 events.EventSource
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) Ping() bool {
+	fake.pingMutex.Lock()
+	fake.pingArgsForCall = append(fake.pingArgsForCall, struct{}{})
+	fake.pingMutex.Unlock()
+	if fake.PingStub != nil {
+		return fake.PingStub()
+	} else {
+		return fake.pingReturns.result1
+	}
+}
+
+func (fake *FakeClient) PingCallCount() int {
+	fake.pingMutex.RLock()
+	defer fake.pingMutex.RUnlock()
+	return len(fake.pingArgsForCall)
+}
+
+func (fake *FakeClient) PingReturns(result1 bool) {
+	fake.PingStub = nil
+	fake.pingReturns = struct {
+		result1 bool
+	}{result1}
 }
 
 func (fake *FakeClient) Cells() ([]*models.CellPresence, error) {
@@ -1661,6 +1636,31 @@ func (fake *FakeClient) DeleteTaskReturns(result1 error) {
 	fake.deleteTaskReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeClient) SubscribeToEvents() (events.EventSource, error) {
+	fake.subscribeToEventsMutex.Lock()
+	fake.subscribeToEventsArgsForCall = append(fake.subscribeToEventsArgsForCall, struct{}{})
+	fake.subscribeToEventsMutex.Unlock()
+	if fake.SubscribeToEventsStub != nil {
+		return fake.SubscribeToEventsStub()
+	} else {
+		return fake.subscribeToEventsReturns.result1, fake.subscribeToEventsReturns.result2
+	}
+}
+
+func (fake *FakeClient) SubscribeToEventsCallCount() int {
+	fake.subscribeToEventsMutex.RLock()
+	defer fake.subscribeToEventsMutex.RUnlock()
+	return len(fake.subscribeToEventsArgsForCall)
+}
+
+func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToEventsStub = nil
+	fake.subscribeToEventsReturns = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
 }
 
 var _ bbs.Client = new(FakeClient)

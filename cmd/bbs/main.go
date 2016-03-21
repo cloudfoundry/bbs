@@ -260,7 +260,23 @@ func main() {
 		clock,
 	)
 
-	handler := handlers.New(logger, db, desiredHub, actualHub, taskHub, serviceClient, migrationsDone)
+	repClientFactory := rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient())
+	auctioneerClient := initializeAuctioneerClient(logger)
+
+	handler := handlers.New(
+		logger,
+		*updateWorkers,
+		*convergenceWorkers,
+		db,
+		desiredHub,
+		actualHub,
+		taskHub,
+		cbWorkPool,
+		serviceClient,
+		auctioneerClient,
+		repClientFactory,
+		migrationsDone,
+	)
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(
 		logger,
@@ -378,11 +394,8 @@ func initializeEtcdDB(
 		desiredLRPCreationMaxTime,
 		cryptor,
 		storeClient,
-		initializeAuctioneerClient(logger),
 		serviceClient,
 		clock.NewClock(),
-		rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient()),
-		cbClient,
 	)
 }
 

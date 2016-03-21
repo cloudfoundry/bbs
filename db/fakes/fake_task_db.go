@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
@@ -53,16 +54,17 @@ type FakeTaskDB struct {
 		result1 bool
 		result2 error
 	}
-	CancelTaskStub        func(logger lager.Logger, taskGuid string) error
+	CancelTaskStub        func(logger lager.Logger, taskGuid string) (task *models.Task, err error)
 	cancelTaskMutex       sync.RWMutex
 	cancelTaskArgsForCall []struct {
 		logger   lager.Logger
 		taskGuid string
 	}
 	cancelTaskReturns struct {
-		result1 error
+		result1 *models.Task
+		result2 error
 	}
-	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) error
+	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) (task *models.Task, err error)
 	failTaskMutex       sync.RWMutex
 	failTaskArgsForCall []struct {
 		logger        lager.Logger
@@ -70,9 +72,10 @@ type FakeTaskDB struct {
 		failureReason string
 	}
 	failTaskReturns struct {
-		result1 error
+		result1 *models.Task
+		result2 error
 	}
-	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
+	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) (task *models.Task, err error)
 	completeTaskMutex       sync.RWMutex
 	completeTaskArgsForCall []struct {
 		logger        lager.Logger
@@ -83,7 +86,8 @@ type FakeTaskDB struct {
 		result        string
 	}
 	completeTaskReturns struct {
-		result1 error
+		result1 *models.Task
+		result2 error
 	}
 	ResolvingTaskStub        func(logger lager.Logger, taskGuid string) error
 	resolvingTaskMutex       sync.RWMutex
@@ -103,13 +107,17 @@ type FakeTaskDB struct {
 	deleteTaskReturns struct {
 		result1 error
 	}
-	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration)
+	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task)
 	convergeTasksMutex       sync.RWMutex
 	convergeTasksArgsForCall []struct {
 		logger                      lager.Logger
 		kickTaskDuration            time.Duration
 		expirePendingTaskDuration   time.Duration
 		expireCompletedTaskDuration time.Duration
+	}
+	convergeTasksReturns struct {
+		result1 []*auctioneer.TaskStartRequest
+		result2 []*models.Task
 	}
 }
 
@@ -251,7 +259,7 @@ func (fake *FakeTaskDB) StartTaskReturns(result1 bool, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) CancelTask(logger lager.Logger, taskGuid string) error {
+func (fake *FakeTaskDB) CancelTask(logger lager.Logger, taskGuid string) (task *models.Task, err error) {
 	fake.cancelTaskMutex.Lock()
 	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
 		logger   lager.Logger
@@ -261,7 +269,7 @@ func (fake *FakeTaskDB) CancelTask(logger lager.Logger, taskGuid string) error {
 	if fake.CancelTaskStub != nil {
 		return fake.CancelTaskStub(logger, taskGuid)
 	} else {
-		return fake.cancelTaskReturns.result1
+		return fake.cancelTaskReturns.result1, fake.cancelTaskReturns.result2
 	}
 }
 
@@ -277,14 +285,15 @@ func (fake *FakeTaskDB) CancelTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.cancelTaskArgsForCall[i].logger, fake.cancelTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeTaskDB) CancelTaskReturns(result1 error) {
+func (fake *FakeTaskDB) CancelTaskReturns(result1 *models.Task, result2 error) {
 	fake.CancelTaskStub = nil
 	fake.cancelTaskReturns = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) error {
+func (fake *FakeTaskDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) (task *models.Task, err error) {
 	fake.failTaskMutex.Lock()
 	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
 		logger        lager.Logger
@@ -295,7 +304,7 @@ func (fake *FakeTaskDB) FailTask(logger lager.Logger, taskGuid string, failureRe
 	if fake.FailTaskStub != nil {
 		return fake.FailTaskStub(logger, taskGuid, failureReason)
 	} else {
-		return fake.failTaskReturns.result1
+		return fake.failTaskReturns.result1, fake.failTaskReturns.result2
 	}
 }
 
@@ -311,14 +320,15 @@ func (fake *FakeTaskDB) FailTaskArgsForCall(i int) (lager.Logger, string, string
 	return fake.failTaskArgsForCall[i].logger, fake.failTaskArgsForCall[i].taskGuid, fake.failTaskArgsForCall[i].failureReason
 }
 
-func (fake *FakeTaskDB) FailTaskReturns(result1 error) {
+func (fake *FakeTaskDB) FailTaskReturns(result1 *models.Task, result2 error) {
 	fake.FailTaskStub = nil
 	fake.failTaskReturns = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) error {
+func (fake *FakeTaskDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) (task *models.Task, err error) {
 	fake.completeTaskMutex.Lock()
 	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
 		logger        lager.Logger
@@ -332,7 +342,7 @@ func (fake *FakeTaskDB) CompleteTask(logger lager.Logger, taskGuid string, cellI
 	if fake.CompleteTaskStub != nil {
 		return fake.CompleteTaskStub(logger, taskGuid, cellId, failed, failureReason, result)
 	} else {
-		return fake.completeTaskReturns.result1
+		return fake.completeTaskReturns.result1, fake.completeTaskReturns.result2
 	}
 }
 
@@ -348,11 +358,12 @@ func (fake *FakeTaskDB) CompleteTaskArgsForCall(i int) (lager.Logger, string, st
 	return fake.completeTaskArgsForCall[i].logger, fake.completeTaskArgsForCall[i].taskGuid, fake.completeTaskArgsForCall[i].cellId, fake.completeTaskArgsForCall[i].failed, fake.completeTaskArgsForCall[i].failureReason, fake.completeTaskArgsForCall[i].result
 }
 
-func (fake *FakeTaskDB) CompleteTaskReturns(result1 error) {
+func (fake *FakeTaskDB) CompleteTaskReturns(result1 *models.Task, result2 error) {
 	fake.CompleteTaskStub = nil
 	fake.completeTaskReturns = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeTaskDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
@@ -421,7 +432,7 @@ func (fake *FakeTaskDB) DeleteTaskReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeTaskDB) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) {
+func (fake *FakeTaskDB) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task) {
 	fake.convergeTasksMutex.Lock()
 	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
 		logger                      lager.Logger
@@ -431,7 +442,9 @@ func (fake *FakeTaskDB) ConvergeTasks(logger lager.Logger, kickTaskDuration time
 	}{logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
 	fake.convergeTasksMutex.Unlock()
 	if fake.ConvergeTasksStub != nil {
-		fake.ConvergeTasksStub(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+		return fake.ConvergeTasksStub(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+	} else {
+		return fake.convergeTasksReturns.result1, fake.convergeTasksReturns.result2
 	}
 }
 
@@ -445,6 +458,14 @@ func (fake *FakeTaskDB) ConvergeTasksArgsForCall(i int) (lager.Logger, time.Dura
 	fake.convergeTasksMutex.RLock()
 	defer fake.convergeTasksMutex.RUnlock()
 	return fake.convergeTasksArgsForCall[i].logger, fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
+}
+
+func (fake *FakeTaskDB) ConvergeTasksReturns(result1 []*auctioneer.TaskStartRequest, result2 []*models.Task) {
+	fake.ConvergeTasksStub = nil
+	fake.convergeTasksReturns = struct {
+		result1 []*auctioneer.TaskStartRequest
+		result2 []*models.Task
+	}{result1, result2}
 }
 
 var _ db.TaskDB = new(FakeTaskDB)

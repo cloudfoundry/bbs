@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/bbs/fake_bbs"
+	"github.com/cloudfoundry-incubator/rep/repfakes"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,6 +19,19 @@ func TestHandlers(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Handlers Suite")
 }
+
+var (
+	fakeServiceClient    *fake_bbs.FakeServiceClient
+	fakeRepClient        *repfakes.FakeClient
+	fakeRepClientFactory *repfakes.FakeClientFactory
+)
+
+var _ = BeforeEach(func() {
+	fakeServiceClient = new(fake_bbs.FakeServiceClient)
+	fakeRepClientFactory = new(repfakes.FakeClientFactory)
+	fakeRepClient = new(repfakes.FakeClient)
+	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
+})
 
 func newTestRequest(body interface{}) *http.Request {
 	var reader io.Reader
@@ -38,16 +53,4 @@ func newTestRequest(body interface{}) *http.Request {
 	request, err := http.NewRequest("", "", reader)
 	Expect(err).NotTo(HaveOccurred())
 	return request
-}
-
-type explodingReader struct {
-	ReadError error
-}
-
-func newExplodingReader(readErr error) explodingReader {
-	return explodingReader{readErr}
-}
-
-func (rc explodingReader) Read([]byte) (int, error) {
-	return 0, rc.ReadError
 }

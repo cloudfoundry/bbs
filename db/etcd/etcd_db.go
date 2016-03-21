@@ -6,13 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
-	"github.com/cloudfoundry-incubator/rep"
 	"github.com/coreos/go-etcd/etcd"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/clock"
@@ -38,8 +35,6 @@ const (
 
 	TaskSchemaRoot = V1SchemaRoot + "task"
 )
-
-const maxActualGroupGetterWorkPoolSize = 50
 
 func ActualLRPProcessDir(processGuid string) string {
 	return path.Join(ActualLRPSchemaRoot, processGuid)
@@ -93,10 +88,6 @@ type ETCDDB struct {
 	clock                     clock.Clock
 	inflightWatches           map[chan bool]bool
 	inflightWatchLock         *sync.Mutex
-	auctioneerClient          auctioneer.Client
-	repClientFactory          rep.ClientFactory
-
-	taskCompletionClient taskworkpool.TaskCompletionClient
 
 	serviceClient bbs.ServiceClient
 }
@@ -108,11 +99,8 @@ func NewETCD(
 	desiredLRPCreationTimeout time.Duration,
 	cryptor encryption.Cryptor,
 	storeClient StoreClient,
-	auctioneerClient auctioneer.Client,
 	serviceClient bbs.ServiceClient,
 	clock clock.Clock,
-	repClientFactory rep.ClientFactory,
-	taskCC taskworkpool.TaskCompletionClient,
 ) *ETCDDB {
 	return &ETCDDB{
 		format:                    serializationFormat,
@@ -124,9 +112,6 @@ func NewETCD(
 		clock:                     clock,
 		inflightWatches:           map[chan bool]bool{},
 		inflightWatchLock:         &sync.Mutex{},
-		auctioneerClient:          auctioneerClient,
-		repClientFactory:          repClientFactory,
-		taskCompletionClient:      taskCC,
 		serviceClient:             serviceClient,
 	}
 }

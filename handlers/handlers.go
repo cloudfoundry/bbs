@@ -5,25 +5,40 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/handlers/middleware"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
+	"github.com/cloudfoundry-incubator/rep"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 )
 
-func New(logger lager.Logger, db db.DB, desiredHub, actualHub, taskHub events.Hub, serviceClient bbs.ServiceClient, migrationsDone <-chan struct{}) http.Handler {
+func New(
+	logger lager.Logger,
+	updateWorkers int,
+	convergenceWorkersSize int,
+	db db.DB,
+	desiredHub, actualHub, taskHub events.Hub,
+	taskCompletionClient taskworkpool.TaskCompletionClient,
+	serviceClient bbs.ServiceClient,
+	auctioneerClient auctioneer.Client,
+	repClientFactory rep.ClientFactory,
+	migrationsDone <-chan struct{},
+) http.Handler {
+	retirer := NewActualLRPRetirer(db, repClientFactory, serviceClient)
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
-	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db)
-	evacuationHandler := NewEvacuationHandler(logger, db)
-	desiredLRPHandler := NewDesiredLRPHandler(logger, db)
-	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db)
-	taskHandler := NewTaskHandler(logger, db)
+	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, auctioneerClient, retirer)
+	evacuationHandler := NewEvacuationHandler(logger, db, db, db, auctioneerClient)
+	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, auctioneerClient, repClientFactory, serviceClient)
+	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, auctioneerClient, retirer, convergenceWorkersSize)
+	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
 	eventsHandler := NewEventHandler(logger, desiredHub, actualHub, taskHub)
 	cellsHandler := NewCellHandler(logger, serviceClient)
 
