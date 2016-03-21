@@ -331,14 +331,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			It("creates one ActualLRP per index", func() {
 				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(5))
 
+				expectedLRPKeys := []*models.ActualLRPKey{}
 				for i := 0; i < 5; i++ {
-					_, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
-					expectedLRPKey := &models.ActualLRPKey{
+					expectedLRPKeys = append(expectedLRPKeys, &models.ActualLRPKey{
 						ProcessGuid: desiredLRP.ProcessGuid,
 						Domain:      desiredLRP.Domain,
 						Index:       int32(i),
-					}
-					Expect(actualLRPKey).To(Equal(expectedLRPKey))
+					})
+				}
+
+				for i := 0; i < 5; i++ {
+					_, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
+					Expect(expectedLRPKeys).To(ContainElement(actualLRPKey))
 				}
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))

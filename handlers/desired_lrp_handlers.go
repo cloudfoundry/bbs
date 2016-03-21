@@ -114,6 +114,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Re
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
 	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
 }
+
 func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("update-desired-lrp")
 

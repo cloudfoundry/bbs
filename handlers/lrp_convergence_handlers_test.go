@@ -53,17 +53,17 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		cellID = "cell-id"
 		instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellID)
 
+		retiringActualLRP1.CellId = cellID
+		retiringActualLRP1.ActualLRPInstanceKey = instanceKey
+		retiringActualLRP1.State = models.ActualLRPStateClaimed
+		group1 := &models.ActualLRPGroup{Instance: retiringActualLRP1}
+
+		retiringActualLRP2.CellId = cellID
+		retiringActualLRP2.ActualLRPInstanceKey = instanceKey
+		retiringActualLRP2.State = models.ActualLRPStateClaimed
+		group2 := &models.ActualLRPGroup{Instance: retiringActualLRP2}
+
 		fakeLRPDB.ActualLRPGroupByProcessGuidAndIndexStub = func(_ lager.Logger, processGuid string, _ int32) (*models.ActualLRPGroup, error) {
-			retiringActualLRP1.CellId = cellID
-			retiringActualLRP1.ActualLRPInstanceKey = instanceKey
-			retiringActualLRP1.State = models.ActualLRPStateClaimed
-			group1 := &models.ActualLRPGroup{Instance: retiringActualLRP1}
-
-			retiringActualLRP2.CellId = cellID
-			retiringActualLRP2.ActualLRPInstanceKey = instanceKey
-			retiringActualLRP2.State = models.ActualLRPStateClaimed
-			group2 := &models.ActualLRPGroup{Instance: retiringActualLRP2}
-
 			if processGuid == retiringActualLRP1.ProcessGuid {
 				return group1, nil
 			}
