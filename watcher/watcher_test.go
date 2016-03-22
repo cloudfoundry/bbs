@@ -106,9 +106,9 @@ var _ = Describe("Watcher", func() {
 					})
 
 					It("requests a new desired watch after the retry interval", func() {
-						clock.Increment(retryWaitDuration / 2)
+						clock.WaitForWatcherAndIncrement(retryWaitDuration / 2)
 						Eventually(streamer.StreamCallCount).Should(Equal(1))
-						clock.Increment(retryWaitDuration * 2)
+						clock.WaitForWatcherAndIncrement(retryWaitDuration * 2)
 						Eventually(streamer.StreamCallCount).Should(Equal(2))
 					})
 
