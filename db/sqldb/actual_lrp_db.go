@@ -10,6 +10,35 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
+	return db.selectActualLRPs(logger, db.db, map[string]interface{}{
+		"domain = ?":  filter.Domain,
+		"cell_id = ?": filter.CellID,
+	}, NoLock)
+}
+
+func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
+	return db.selectActualLRPs(logger, db.db, map[string]interface{}{
+		"process_guid = ?": processGuid,
+	}, NoLock)
+}
+
+func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
+	groups, err := db.selectActualLRPs(logger, db.db, map[string]interface{}{
+		"process_guid = ?":   processGuid,
+		"instance_index = ?": index,
+	}, NoLock)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(groups) == 0 {
+		return nil, models.ErrResourceNotFound
+	}
+
+	return groups[0], nil
+}
+
 func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey) error {
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -36,33 +65,43 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, actualLRPKey *mod
 	return nil
 }
 
-func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
-	return db.selectActualLRPs(logger, db.db, map[string]interface{}{
-		"domain":  filter.Domain,
-		"cell_id": filter.CellID,
-	}, NoLock)
-}
+func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, processGuid string, index int32) (bool, error) {
+	var stateChange bool
 
-func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
-	return db.selectActualLRPs(logger, db.db, map[string]interface{}{
-		"process_guid": processGuid,
-	}, NoLock)
-}
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		actualLRP, err := db.fetchActualLRPForShare(logger, processGuid, index, false, tx)
+		if err != nil {
+			return err
+		}
 
-func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
-	groups, err := db.selectActualLRPs(logger, db.db, map[string]interface{}{
-		"process_guid":   processGuid,
-		"instance_index": index,
-	}, NoLock)
-	if err != nil {
-		return nil, err
-	}
+		if actualLRP.State == models.ActualLRPStateUnclaimed {
+			return nil
+		}
+		actualLRP.ModificationTag.Increment()
 
-	if len(groups) == 0 {
-		return nil, models.ErrResourceNotFound
-	}
+		_, err = tx.Exec(`
+				UPDATE actual_lrps
+				SET state = ?, instance_guid = ?, cell_id = ?,
+					modification_tag_index = ?, since = ?, net_info = ?
+				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?`,
+			models.ActualLRPStateUnclaimed,
+			"",
+			"",
+			actualLRP.ModificationTag.Index,
+			db.clock.Now(),
+			[]byte{},
+			processGuid, index, false,
+		)
+		if err != nil {
+			panic(err)
+			return err
+		}
 
-	return groups[0], nil
+		stateChange = true
+		return nil
+	})
+
+	return stateChange, err
 }
 
 func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
@@ -296,7 +335,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 	if len(netInfoData) > 0 {
 		err = db.serializer.Unmarshal(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
-			panic(err)
+			return nil, false, err
 		}
 	}
 
@@ -311,7 +350,7 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 		if value == "" {
 			continue
 		}
-		wheres = append(wheres, fmt.Sprintf("%s = ?", field))
+		wheres = append(wheres, field)
 		values = append(values, value)
 	}
 
@@ -336,14 +375,14 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 	if err != nil {
 		return nil, db.convertSQLError(err)
 	}
+	defer rows.Close()
 
 	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
 	result := []*models.ActualLRPGroup{}
 	for rows.Next() {
 		actualLRP, evacuating, err := db.scanToActualLRP(logger, rows)
 		if err != nil {
-			panic(err)
-			return nil, db.convertSQLError(err)
+			return nil, err
 		}
 		if mapOfGroups[actualLRP.ActualLRPKey] == nil {
 			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
@@ -359,11 +398,18 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 }
 
 func (db *SQLDB) fetchActualLRPForShare(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
-	groups, err := db.selectActualLRPs(logger, tx, map[string]interface{}{
-		"process_guid":   processGuid,
-		"instance_index": index,
-		"evacuating":     evacuating,
-	}, LockForShare)
+	expireTime := db.clock.Now().Round(time.Second)
+	conditions := map[string]interface{}{
+		"process_guid = ?":   processGuid,
+		"instance_index = ?": index,
+		"evacuating = ?":     evacuating,
+	}
+
+	if evacuating {
+		conditions["expire_time > ?"] = expireTime
+	}
+
+	groups, err := db.selectActualLRPs(logger, tx, conditions, LockForShare)
 	if err != nil {
 		return nil, err
 	}

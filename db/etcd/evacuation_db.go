@@ -7,44 +7,6 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-func (db *ETCDDB) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
-	processGuid := key.ProcessGuid
-	index := key.Index
-
-	logger = logger.Session("remove-evacuating", lager.Data{"process_guid": processGuid, "index": index})
-
-	logger.Debug("starting")
-	defer logger.Debug("complete")
-
-	node, err := db.fetchRaw(logger, EvacuatingActualLRPSchemaPath(processGuid, index))
-	bbsErr := models.ConvertError(err)
-	if bbsErr != nil {
-		if bbsErr.Type == models.Error_ResourceNotFound {
-			logger.Debug("evacuating-actual-lrp-not-found")
-			return nil
-		}
-		return bbsErr
-	}
-
-	lrp := models.ActualLRP{}
-	err = db.deserializeModel(logger, node, &lrp)
-	if err != nil {
-		return err
-	}
-
-	if !lrp.ActualLRPKey.Equal(key) || !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
-		return models.ErrActualLRPCannotBeRemoved
-	}
-
-	_, err = db.client.CompareAndDelete(EvacuatingActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), node.ModifiedIndex)
-	if err != nil {
-		logger.Error("failed-compare-and-delete", err)
-		return models.ErrActualLRPCannotBeRemoved
-	}
-
-	return nil
-}
-
 func (db *ETCDDB) EvacuateActualLRP(
 	logger lager.Logger,
 	lrpKey *models.ActualLRPKey,
@@ -82,6 +44,7 @@ func (db *ETCDDB) EvacuateActualLRP(
 	lrp.ActualLRPKey = *lrpKey
 	lrp.ActualLRPInstanceKey = *instanceKey
 	lrp.Since = db.clock.Now().UnixNano()
+	lrp.ModificationTag.Increment()
 
 	data, err := db.serializeModel(logger, &lrp)
 	if err != nil {
@@ -117,6 +80,44 @@ func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.Act
 	if err != nil {
 		logger.Error("failed", err)
 		return models.ErrActualLRPCannotBeEvacuated
+	}
+
+	return nil
+}
+
+func (db *ETCDDB) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+	processGuid := key.ProcessGuid
+	index := key.Index
+
+	logger = logger.Session("remove-evacuating", lager.Data{"process_guid": processGuid, "index": index})
+
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	node, err := db.fetchRaw(logger, EvacuatingActualLRPSchemaPath(processGuid, index))
+	bbsErr := models.ConvertError(err)
+	if bbsErr != nil {
+		if bbsErr.Type == models.Error_ResourceNotFound {
+			logger.Debug("evacuating-actual-lrp-not-found")
+			return nil
+		}
+		return bbsErr
+	}
+
+	lrp := models.ActualLRP{}
+	err = db.deserializeModel(logger, node, &lrp)
+	if err != nil {
+		return err
+	}
+
+	if !lrp.ActualLRPKey.Equal(key) || !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
+		return models.ErrActualLRPCannotBeRemoved
+	}
+
+	_, err = db.client.CompareAndDelete(EvacuatingActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), node.ModifiedIndex)
+	if err != nil {
+		logger.Error("failed-compare-and-delete", err)
+		return models.ErrActualLRPCannotBeRemoved
 	}
 
 	return nil

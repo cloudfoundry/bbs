@@ -67,6 +67,7 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterEach(func() {
 	truncateTables(db)
+	fakeGUIDProvider.NextGUIDReturns("", nil)
 })
 
 var _ = AfterSuite(func() {
@@ -162,6 +163,7 @@ const createActualLRPsSQL = `CREATE TABLE actual_lrps(
 	modification_tag_index INT,
 	crash_count INT NOT NULL DEFAULT 0,
 	crash_reason VARCHAR(255) NOT NULL DEFAULT "",
+	expire_time TIMESTAMP(6) DEFAULT 0,
 	PRIMARY KEY(process_guid, instance_index, evacuating)
 );`
 

@@ -1,11 +1,24 @@
 package sqldb
 
 import (
-	"database/sql"
-
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
+
+func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
+	_, err := db.db.Exec(
+		`INSERT INTO configurations (id, value) VALUES (?, ?)
+										ON DUPLICATE KEY UPDATE value = ?`,
+		key,
+		value,
+		value,
+	)
+	if err != nil {
+		return db.convertSQLError(err)
+	}
+
+	return nil
+}
 
 func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string, error) {
 	var value string
@@ -18,21 +31,4 @@ func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string,
 	}
 
 	return value, nil
-}
-
-func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		_, err := tx.Exec(
-			`INSERT INTO configurations (id, value) VALUES (?, ?)
-										ON DUPLICATE KEY UPDATE value = ?`,
-			key,
-			value,
-			value,
-		)
-		if err != nil {
-			return db.convertSQLError(err)
-		}
-
-		return nil
-	})
 }

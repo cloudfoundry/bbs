@@ -1285,4 +1285,89 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 		})
 	})
+
+	Describe("UnclaimActualLRP", func() {
+		var (
+			actualLRP *models.ActualLRP
+			guid      = "the-guid"
+			index     = int32(1)
+
+			actualLRPKey = &models.ActualLRPKey{
+				ProcessGuid: guid,
+				Index:       index,
+				Domain:      "the-domain",
+			}
+		)
+
+		Context("when the actual LRP exists", func() {
+			Context("When the actual LRP is claimed", func() {
+				BeforeEach(func() {
+					actualLRP = &models.ActualLRP{
+						ActualLRPKey: *actualLRPKey,
+					}
+
+					Expect(sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)).To(Succeed())
+					Expect(sqlDB.ClaimActualLRP(logger, guid, index, &actualLRP.ActualLRPInstanceKey)).To(Succeed())
+
+					_, err := sqlDB.UnclaimActualLRP(logger, guid, index)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("unclaims the actual LRP", func() {
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+				})
+
+				It("it removes the net info from the actualLRP", func() {
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actualLRPGroup.Instance.ActualLRPNetInfo).To(Equal(models.ActualLRPNetInfo{}))
+				})
+
+				It("it increments the modification tag on the actualLRP", func() {
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).ToNot(HaveOccurred())
+					// +2 because of claim AND unclaim
+					Expect(actualLRPGroup.Instance.ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + uint32(2)))
+				})
+
+				It("it clears the actualLRP's instance key", func() {
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actualLRPGroup.Instance.ActualLRPInstanceKey).To(Equal(models.ActualLRPInstanceKey{}))
+				})
+
+				It("it updates the actualLRP's update at timestamp", func() {
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actualLRPGroup.Instance.Since).To(BeNumerically(">", actualLRP.Since))
+				})
+			})
+
+			Context("When the actual LRP is unclaimed", func() {
+				BeforeEach(func() {
+					actualLRP = &models.ActualLRP{
+						ActualLRPKey: *actualLRPKey,
+					}
+
+					Expect(sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)).To(Succeed())
+				})
+
+				It("stateDidChange is false", func() {
+					didStateChange, err := sqlDB.UnclaimActualLRP(logger, guid, index)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(didStateChange).To(BeFalse())
+				})
+			})
+		})
+
+		Context("when the actual LRP doesn't exist", func() {
+			It("returns a resource not found error", func() {
+				_, err := sqlDB.UnclaimActualLRP(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+	})
 })

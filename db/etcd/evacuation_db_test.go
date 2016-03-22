@@ -12,6 +12,164 @@ import (
 )
 
 var _ = Describe("Evacuation", func() {
+	Describe("EvacuateActualLRP", func() {
+		var (
+			actualLRP *models.ActualLRP
+			index     int32
+			guid      string
+			ttl       uint64
+		)
+
+		BeforeEach(func() {
+			guid = "the-guid"
+			index = 1
+			ttl = 60
+			actualLRP = model_helpers.NewValidActualLRP(guid, index)
+
+			etcdHelper.SetRawEvacuatingActualLRP(actualLRP, ttl)
+
+			node, err := storeClient.Get(etcd.EvacuatingActualLRPSchemaPath(guid, index), false, false)
+			fakeStoreClient.GetReturns(node, err)
+		})
+
+		Context("when the something about the actual LRP has changed", func() {
+			BeforeEach(func() {
+				clock.IncrementBySeconds(5)
+				actualLRP.Since = clock.Now().UnixNano()
+			})
+
+			Context("when the lrp key changes", func() {
+				BeforeEach(func() {
+					actualLRP.Domain = "some-other-domain"
+				})
+
+				It("persists the evacuating lrp in etcd", func() {
+					err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRP.ModificationTag.Increment()
+					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+			})
+
+			Context("when the instance key changes", func() {
+				BeforeEach(func() {
+					actualLRP.ActualLRPInstanceKey.InstanceGuid = "i am different here me roar"
+				})
+
+				It("persists the evacuating lrp in etcd", func() {
+					err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRP.ModificationTag.Increment()
+					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+			})
+
+			Context("when the netinfo changes", func() {
+				BeforeEach(func() {
+					actualLRP.ActualLRPNetInfo.Ports = []*models.PortMapping{
+						models.NewPortMapping(6666, 7777),
+					}
+				})
+
+				It("persists the evacuating lrp in etcd", func() {
+					err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRP.ModificationTag.Increment()
+					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+			})
+
+			Context("when compare and swap fails", func() {
+				BeforeEach(func() {
+					actualLRP.Domain = "some-other-domain"
+					fakeStoreClient.CompareAndSwapReturns(nil, errors.New("compare and swap failed"))
+				})
+
+				It("returns an error", func() {
+					err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
+
+		Context("when the actual lrp data is the same", func() {
+			It("does nothing", func() {
+				err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when the evacuating actual lrp does not exist", func() {
+			BeforeEach(func() {
+				_, err := storeClient.Delete(etcd.EvacuatingActualLRPSchemaPath(guid, index), false)
+				Expect(err).NotTo(HaveOccurred())
+
+				actualLRP.CrashCount = 0
+				actualLRP.CrashReason = ""
+				actualLRP.Since = clock.Now().UnixNano()
+			})
+
+			It("creates the evacuating actual lrp", func() {
+				err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).NotTo(HaveOccurred())
+
+				actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroup.Evacuating.ModificationTag.Epoch).NotTo(BeNil())
+				Expect(actualLRPGroup.Evacuating.ModificationTag.Index).To(BeEquivalentTo((1)))
+
+				actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
+				Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+			})
+
+			Context("when create fails", func() {
+				BeforeEach(func() {
+					fakeStoreClient.GetReturns(nil, etcderrors.EtcdError{ErrorCode: etcd.ETCDErrKeyNotFound})
+					fakeStoreClient.CreateReturns(nil, errors.New("ohhhh noooo mr billlll"))
+				})
+
+				It("returns an error", func() {
+					err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
+
+		Context("when fetching the evacuating actual lrp fails", func() {
+			BeforeEach(func() {
+				fakeStoreClient.GetReturns(nil, errors.New("i failed"))
+			})
+
+			It("returns an error", func() {
+				err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when deserializing the data fails", func() {
+			BeforeEach(func() {
+				_, err := storeClient.Set(etcd.EvacuatingActualLRPSchemaPath(guid, index), []byte("{{"), ttl)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("RemoveEvacuatingActualLRP", func() {
 		var (
 			actualLRP *models.ActualLRP
@@ -112,161 +270,6 @@ var _ = Describe("Evacuation", func() {
 				err := etcdDBWithFakeStore.RemoveEvacuatingActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrActualLRPCannotBeRemoved))
-			})
-		})
-	})
-
-	Describe("EvacuateActualLRP", func() {
-		var (
-			actualLRP *models.ActualLRP
-			index     int32
-			guid      string
-			ttl       uint64
-		)
-
-		BeforeEach(func() {
-			guid = "the-guid"
-			index = 1
-			ttl = 60
-			actualLRP = model_helpers.NewValidActualLRP(guid, index)
-
-			etcdHelper.SetRawEvacuatingActualLRP(actualLRP, ttl)
-
-			node, err := storeClient.Get(etcd.EvacuatingActualLRPSchemaPath(guid, index), false, false)
-			fakeStoreClient.GetReturns(node, err)
-		})
-
-		Context("when the something about the actual LRP has changed", func() {
-			BeforeEach(func() {
-				clock.IncrementBySeconds(5)
-				actualLRP.Since = clock.Now().UnixNano()
-			})
-
-			Context("when the lrp key changes", func() {
-				BeforeEach(func() {
-					actualLRP.Domain = "some-other-domain"
-				})
-
-				It("persists the evacuating lrp in etcd", func() {
-					err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-					Expect(err).NotTo(HaveOccurred())
-
-					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
-				})
-			})
-
-			Context("when the instance key changes", func() {
-				BeforeEach(func() {
-					actualLRP.ActualLRPInstanceKey.InstanceGuid = "i am different here me roar"
-				})
-
-				It("persists the evacuating lrp in etcd", func() {
-					err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-					Expect(err).NotTo(HaveOccurred())
-
-					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
-				})
-			})
-
-			Context("when the netinfo changes", func() {
-				BeforeEach(func() {
-					actualLRP.ActualLRPNetInfo.Ports = []*models.PortMapping{
-						models.NewPortMapping(6666, 7777),
-					}
-				})
-
-				It("persists the evacuating lrp in etcd", func() {
-					err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-					Expect(err).NotTo(HaveOccurred())
-
-					actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
-				})
-			})
-
-			Context("when compare and swap fails", func() {
-				BeforeEach(func() {
-					actualLRP.Domain = "some-other-domain"
-					fakeStoreClient.CompareAndSwapReturns(nil, errors.New("compare and swap failed"))
-				})
-
-				It("returns an error", func() {
-					err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-					Expect(err).To(HaveOccurred())
-				})
-			})
-		})
-
-		Context("when the actual lrp data is the same", func() {
-			It("does nothing", func() {
-				err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeStoreClient.CompareAndSwapCallCount()).To(Equal(0))
-			})
-		})
-
-		Context("when the evacuating actual lrp does not exist", func() {
-			BeforeEach(func() {
-				_, err := storeClient.Delete(etcd.EvacuatingActualLRPSchemaPath(guid, index), false)
-				Expect(err).NotTo(HaveOccurred())
-
-				actualLRP.CrashCount = 0
-				actualLRP.CrashReason = ""
-				actualLRP.Since = clock.Now().UnixNano()
-			})
-
-			It("creates the evacuating actual lrp", func() {
-				err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-				Expect(err).NotTo(HaveOccurred())
-
-				actualLRPGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroup.Evacuating.ModificationTag.Epoch).NotTo(BeNil())
-				Expect(actualLRPGroup.Evacuating.ModificationTag.Index).To(BeEquivalentTo((1)))
-
-				actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
-				Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
-			})
-
-			Context("when create fails", func() {
-				BeforeEach(func() {
-					fakeStoreClient.GetReturns(nil, etcderrors.EtcdError{ErrorCode: etcd.ETCDErrKeyNotFound})
-					fakeStoreClient.CreateReturns(nil, errors.New("ohhhh noooo mr billlll"))
-				})
-
-				It("returns an error", func() {
-					err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-					Expect(err).To(HaveOccurred())
-				})
-			})
-		})
-
-		Context("when fetching the evacuating actual lrp fails", func() {
-			BeforeEach(func() {
-				fakeStoreClient.GetReturns(nil, errors.New("i failed"))
-			})
-
-			It("returns an error", func() {
-				err := etcdDBWithFakeStore.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when deserializing the data fails", func() {
-			BeforeEach(func() {
-				_, err := storeClient.Set(etcd.EvacuatingActualLRPSchemaPath(guid, index), []byte("{{"), ttl)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns an error", func() {
-				err := etcdDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-				Expect(err).To(HaveOccurred())
 			})
 		})
 	})

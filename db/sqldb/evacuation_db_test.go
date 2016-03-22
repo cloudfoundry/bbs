@@ -1,1056 +1,261 @@
-package etcd_test
+package sqldb_test
 
 import (
-	"errors"
-	"fmt"
+	"time"
 
-	"github.com/cloudfoundry-incubator/auctioneer"
-	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/coreos/go-etcd/etcd"
-
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Evacuation", func() {
-	Describe("EvacuateRunningActualLRP", func() {
-		Context("when the logging session is created and the started message is logged", func() {
-			It("logs the net info", func() {
-				etcdDB.EvacuateRunningActualLRP(logger, &lrpKey, &alphaInstanceKey, &alphaNetInfo, alphaEvacuationTTL)
+	var (
+		actualLRP *models.ActualLRP
+		guid      string
+		index     int32
+	)
 
-				Eventually(logger).Should(Say(
-					fmt.Sprintf(
-						`"actual_lrp_net_info":\{"address":"%s","ports":\[\{"container_port":%d,"host_port":%d\}\]\}`,
-						alphaNetInfo.Address,
-						alphaNetInfo.Ports[0].ContainerPort,
-						alphaNetInfo.Ports[0].HostPort,
-					),
-				))
+	BeforeEach(func() {
+		guid = "some-guid"
+		index = int32(1)
+		actualLRP = model_helpers.NewValidActualLRP(guid, index)
+		actualLRP.CrashCount = 0
+		actualLRP.CrashReason = ""
+		actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+		actualLRP.ModificationTag = models.ModificationTag{}
+		actualLRP.ModificationTag.Increment()
+		actualLRP.ModificationTag.Increment()
+
+		Expect(sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)).To(Succeed())
+		Expect(sqlDB.ClaimActualLRP(logger, guid, index, &actualLRP.ActualLRPInstanceKey)).To(Succeed())
+		Expect(sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)).To(Succeed())
+	})
+
+	Describe("EvacuateActualLRP", func() {
+		var ttl uint64
+
+		BeforeEach(func() {
+			ttl = 60
+
+			expireTime := fakeClock.Now().Add(time.Duration(ttl) * time.Second)
+			_, err := db.Exec(
+				`UPDATE actual_lrps SET evacuating = ?, expire_time = ?
+			    WHERE process_guid = ? AND instance_index = ? AND evacuating = ?`,
+				true,
+				expireTime,
+				actualLRP.ProcessGuid,
+				actualLRP.Index,
+				false,
+			)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when the something about the actual LRP has changed", func() {
+			BeforeEach(func() {
+				fakeClock.IncrementBySeconds(5)
+				actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+				actualLRP.ModificationTag.Increment()
+			})
+
+			Context("when the lrp key changes", func() {
+				BeforeEach(func() {
+					actualLRP.Domain = "some-other-domain"
+				})
+
+				It("persists the evacuating lrp in sqldb", func() {
+					err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+			})
+
+			Context("when the instance key changes", func() {
+				BeforeEach(func() {
+					actualLRP.ActualLRPInstanceKey.InstanceGuid = "i am different here me roar"
+				})
+
+				It("persists the evacuating lrp in etcd", func() {
+					err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+			})
+
+			Context("when the netinfo changes", func() {
+				BeforeEach(func() {
+					actualLRP.ActualLRPNetInfo.Ports = []*models.PortMapping{
+						models.NewPortMapping(6666, 7777),
+					}
+				})
+
+				It("persists the evacuating lrp in etcd", func() {
+					err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+			})
+		})
+
+		Context("when the evacuating actual lrp does not exist", func() {
+			Context("because the record is deleted", func() {
+				BeforeEach(func() {
+					_, err := db.Exec("DELETE FROM actual_lrps WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", actualLRP.ProcessGuid, actualLRP.Index, true)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRP.CrashCount = 0
+					actualLRP.CrashReason = ""
+					actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+				})
+
+				It("creates the evacuating actual lrp", func() {
+					err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating.ModificationTag.Epoch).NotTo(BeNil())
+					Expect(actualLRPGroup.Evacuating.ModificationTag.Index).To(BeEquivalentTo((0)))
+
+					actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+
+				Context("with an invalid net info", func() {
+					BeforeEach(func() {
+						actualLRP.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
+					})
+
+					It("returns an error", func() {
+						err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+						Expect(err).To(HaveOccurred())
+					})
+				})
+			})
+
+			Context("because the record has expired", func() {
+				BeforeEach(func() {
+					fakeClock.Increment(61 * time.Second)
+
+					actualLRP.CrashCount = 0
+					actualLRP.CrashReason = ""
+					actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+				})
+
+				It("updates the expired evacuating actual lrp", func() {
+					err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Evacuating.ModificationTag.Epoch).NotTo(BeNil())
+					Expect(actualLRPGroup.Evacuating.ModificationTag.Index).To(BeEquivalentTo((0)))
+
+					actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				})
+
+				Context("with an invalid net info", func() {
+					BeforeEach(func() {
+						actualLRP.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
+					})
+
+					It("returns an error", func() {
+						err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+						Expect(err).To(HaveOccurred())
+					})
+				})
+			})
+		})
+
+		Context("when the fetched lrp has not changed", func() {
+			It("does not update the record", func() {
+				err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).NotTo(HaveOccurred())
+
+				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+			})
+		})
+
+		Context("when deserializing the data fails", func() {
+			BeforeEach(func() {
+				_, err := db.Exec(`
+						UPDATE actual_lrps SET net_info = ?
+						WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+					`,
+					"garbage", actualLRP.ProcessGuid, actualLRP.Index, true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})
 
-	Describe("Tabular tests", func() {
-		claimedTest := func(base evacuationTest) evacuationTest {
-			return evacuationTest{
-				Name: base.Name,
-				Subject: func() (bool, error) {
-					return etcdDB.EvacuateClaimedActualLRP(logger, &lrpKey, &alphaInstanceKey)
-				},
-				InstanceLRP:   base.InstanceLRP,
-				EvacuatingLRP: base.EvacuatingLRP,
-				Result:        base.Result,
-			}
-		}
+	Describe("RemoveEvacuatingActualLRP", func() {
+		Context("when there is an evacuating actualLRP", func() {
+			BeforeEach(func() {
+				expireTime := fakeClock.Now().Add(5 * time.Second)
+				_, err := db.Exec("UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
+				Expect(err).NotTo(HaveOccurred())
+			})
 
-		runningTest := func(base evacuationTest) evacuationTest {
-			return evacuationTest{
-				Name: base.Name,
-				Subject: func() (bool, error) {
-					return etcdDB.EvacuateRunningActualLRP(logger, &lrpKey, &alphaInstanceKey, &alphaNetInfo, alphaEvacuationTTL)
-				},
-				InstanceLRP:   base.InstanceLRP,
-				EvacuatingLRP: base.EvacuatingLRP,
-				Result:        base.Result,
-			}
-		}
+			It("removes the evacuating actual LRP", func() {
+				err := sqlDB.RemoveEvacuatingActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+				Expect(err).ToNot(HaveOccurred())
 
-		stoppedTest := func(base evacuationTest) evacuationTest {
-			return evacuationTest{
-				Name: base.Name,
-				Subject: func() (bool, error) {
-					return etcdDB.EvacuateStoppedActualLRP(logger, &lrpKey, &alphaInstanceKey)
-				},
-				InstanceLRP:   base.InstanceLRP,
-				EvacuatingLRP: base.EvacuatingLRP,
-				Result:        base.Result,
-			}
-		}
+				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
 
-		crashedTest := func(base evacuationTest) evacuationTest {
-			return evacuationTest{
-				Name: base.Name,
-				Subject: func() (bool, error) {
-					return etcdDB.EvacuateCrashedActualLRP(logger, &lrpKey, &alphaInstanceKey, "crashed")
-				},
-				InstanceLRP:   base.InstanceLRP,
-				EvacuatingLRP: base.EvacuatingLRP,
-				Result:        base.Result,
-			}
-		}
+			Context("when the actual lrp instance key is not the same", func() {
+				BeforeEach(func() {
+					actualLRP.CellId = "a different cell"
+				})
 
-		removalTest := func(base evacuationTest) evacuationTest {
-			return evacuationTest{
-				Name: base.Name,
-				Subject: func() (bool, error) {
-					err := etcdDB.RemoveEvacuatingActualLRP(logger, &lrpKey, &alphaInstanceKey)
-					return false, err
-				},
-				InstanceLRP:   base.InstanceLRP,
-				EvacuatingLRP: base.EvacuatingLRP,
-				Result:        base.Result,
-			}
-		}
+				It("returns a ErrActualLRPCannotBeRemoved error", func() {
+					err := sqlDB.RemoveEvacuatingActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+					Expect(err).To(Equal(models.ErrActualLRPCannotBeRemoved))
+				})
+			})
 
-		claimedTests := []testable{
-			claimedTest(evacuationTest{
-				Name:   "when there is no instance or evacuating LRP",
-				Result: noInstanceNoEvacuating(false, nil),
-			}),
-			claimedTest(evacuationTest{
-				Name:        "when the instance is UNCLAIMED",
-				InstanceLRP: unclaimedLRP(),
-				Result:      instanceNoEvacuating(anUnchangedUnclaimedInstanceLRP(), false, nil),
-			}),
-			claimedTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on alpha",
-				InstanceLRP: claimedLRP(alphaInstanceKey),
-				Result:      instanceNoEvacuating(anUpdatedUnclaimedInstanceLRP(), false, nil),
-			}),
-			claimedTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on omega",
-				InstanceLRP: claimedLRP(omegaInstanceKey),
-				Result: instanceNoEvacuating(
-					anUnchangedClaimedInstanceLRP(omegaInstanceKey),
-					false,
-					models.ErrActualLRPCannotBeUnclaimed,
-				),
-			}),
-			claimedTest(evacuationTest{
-				Name:        "when the instance is RUNNING on alpha",
-				InstanceLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:      instanceNoEvacuating(anUpdatedUnclaimedInstanceLRP(), false, nil),
-			}),
-			claimedTest(evacuationTest{
-				Name:        "when the instance is RUNNING on omega",
-				InstanceLRP: runningLRP(omegaInstanceKey, omegaNetInfo),
-				Result: instanceNoEvacuating(
-					anUnchangedRunningInstanceLRP(omegaInstanceKey, omegaNetInfo),
-					false,
-					models.ErrActualLRPCannotBeUnclaimed,
-				),
-			}),
-			claimedTest(evacuationTest{
-				Name:        "when the instance is CRASHED",
-				InstanceLRP: crashedLRP(),
-				Result: instanceNoEvacuating(
-					anUnchangedCrashedInstanceLRP(),
-					false,
-					models.ErrActualLRPCannotBeUnclaimed,
-				),
-			}),
-			claimedTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on alpha",
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        noInstanceNoEvacuating(false, nil),
-			}),
-			claimedTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on beta",
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result:        evacuatingNoInstance(anUnchangedBetaEvacuatingLRP(), false, nil),
-			}),
-		}
+			Context("when the actualLRP is expired", func() {
+				BeforeEach(func() {
+					expireTime := fakeClock.Now()
+					_, err := db.Exec("UPDATE actual_lrps SET expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
 
-		runningTests := []testable{
-			runningTest(evacuationTest{
-				Name:        "when the instance is UNCLAIMED and there is no evacuating LRP",
-				InstanceLRP: unclaimedLRP(),
-				Result:      newTestResult(anUnchangedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:        "when the instance is UNCLAIMED with a placement error and there is no evacuating LRP",
-				InstanceLRP: unclaimedLRPWithPlacementError(),
-				Result: instanceNoEvacuating(
-					anUnchangedUnclaimedInstanceLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is UNCLAIMED and an evacuating LRP is RUNNING on alpha",
-				InstanceLRP:   unclaimedLRP(),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        newTestResult(anUnchangedUnclaimedInstanceLRP(), anUnchangedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is UNCLAIMED with a placement error and an evacuating LRP is RUNNING on alpha",
-				InstanceLRP:   unclaimedLRPWithPlacementError(),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result: instanceNoEvacuating(
-					anUnchangedUnclaimedInstanceLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is UNCLAIMED and an evacuating LRP is RUNNING on alpha with out-of-date net info",
-				InstanceLRP:   unclaimedLRP(),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, betaNetInfo),
-				Result:        newTestResult(anUnchangedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is UNCLAIMED and an evacuating LRP is RUNNING on beta",
-				InstanceLRP:   unclaimedLRP(),
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result: newTestResult(
-					anUnchangedUnclaimedInstanceLRP(),
-					anUnchangedBetaEvacuatingLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on alpha and there is no evacuating LRP",
-				InstanceLRP: claimedLRP(alphaInstanceKey),
-				Result:      newTestResult(anUpdatedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CLAIMED on alpha and an evacuating LRP is RUNNING on alpha",
-				InstanceLRP:   claimedLRP(alphaInstanceKey),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        newTestResult(anUpdatedUnclaimedInstanceLRP(), anUnchangedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CLAIMED on alpha and an evacuating LRP is RUNNING on alpha with out-of-date net info",
-				InstanceLRP:   claimedLRP(alphaInstanceKey),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, betaNetInfo),
-				Result:        newTestResult(anUpdatedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CLAIMED on alpha and an evacuating LRP is RUNNING on beta",
-				InstanceLRP:   claimedLRP(alphaInstanceKey),
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result:        newTestResult(anUpdatedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:        "when the instance is CLAIMED remotely and there is no evacuating LRP",
-				InstanceLRP: claimedLRP(omegaInstanceKey),
-				Result:      newTestResult(anUnchangedClaimedInstanceLRP(omegaInstanceKey), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CLAIMED remotely and an evacuating LRP is RUNNING on alpha",
-				InstanceLRP:   claimedLRP(omegaInstanceKey),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        newTestResult(anUnchangedClaimedInstanceLRP(omegaInstanceKey), anUnchangedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CLAIMED remotely and an evacuating LRP is RUNNING on alpha with out-of-date net info",
-				InstanceLRP:   claimedLRP(omegaInstanceKey),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, betaNetInfo),
-				Result:        newTestResult(anUnchangedClaimedInstanceLRP(omegaInstanceKey), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CLAIMED remotely and an evacuating LRP is RUNNING on beta",
-				InstanceLRP:   claimedLRP(omegaInstanceKey),
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result: newTestResult(
-					anUnchangedClaimedInstanceLRP(omegaInstanceKey),
-					anUnchangedBetaEvacuatingLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:        "when the instance is RUNNING on alpha and there is no evacuating LRP",
-				InstanceLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:      newTestResult(anUpdatedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is RUNNING on alpha and an evacuating LRP is RUNNING on alpha",
-				InstanceLRP:   runningLRP(alphaInstanceKey, alphaNetInfo),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        newTestResult(anUpdatedUnclaimedInstanceLRP(), anUnchangedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is RUNNING on alpha and an evacuating LRP is RUNNING on alpha with out-of-date net info",
-				InstanceLRP:   runningLRP(alphaInstanceKey, alphaNetInfo),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, betaNetInfo),
-				Result:        newTestResult(anUpdatedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is RUNNING on alpha and an evacuating LRP is RUNNING on beta",
-				InstanceLRP:   runningLRP(alphaInstanceKey, alphaNetInfo),
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result:        newTestResult(anUpdatedUnclaimedInstanceLRP(), anUpdatedAlphaEvacuatingLRP(), true, nil),
-			}),
-			runningTest(evacuationTest{
-				Name:        "when the instance is RUNNING on omega and there is no evacuating LRP",
-				InstanceLRP: runningLRP(omegaInstanceKey, omegaNetInfo),
-				Result: instanceNoEvacuating(
-					anUnchangedRunningInstanceLRP(omegaInstanceKey, omegaNetInfo),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is RUNNING on omega and an evacuating LRP is RUNNING on alpha",
-				InstanceLRP:   runningLRP(omegaInstanceKey, omegaNetInfo),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result: instanceNoEvacuating(
-					anUnchangedRunningInstanceLRP(omegaInstanceKey, omegaNetInfo),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is RUNNING on omega and an evacuating LRP is RUNNING on beta",
-				InstanceLRP:   runningLRP(omegaInstanceKey, omegaNetInfo),
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result: newTestResult(
-					anUnchangedRunningInstanceLRP(omegaInstanceKey, omegaNetInfo),
-					anUnchangedBetaEvacuatingLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:        "when the instance is CRASHED and there is no evacuating LRP",
-				InstanceLRP: crashedLRP(),
-				Result: instanceNoEvacuating(
-					anUnchangedCrashedInstanceLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CRASHED and an evacuating LRP is RUNNING on alpha",
-				InstanceLRP:   crashedLRP(),
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result: instanceNoEvacuating(
-					anUnchangedCrashedInstanceLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is CRASHED and an evacuating LRP is RUNNING on beta",
-				InstanceLRP:   crashedLRP(),
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result: newTestResult(
-					anUnchangedCrashedInstanceLRP(),
-					anUnchangedBetaEvacuatingLRP(),
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name: "when the instance is MISSING and there is no evacuating LRP",
-				Result: noInstanceNoEvacuating(
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is MISSING and an evacuating LRP is RUNNING on alpha",
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result: noInstanceNoEvacuating(
-					false,
-					nil,
-				),
-			}),
-			runningTest(evacuationTest{
-				Name:          "when the instance is MISSING and an evacuating LRP is RUNNING on beta",
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result: evacuatingNoInstance(
-					anUnchangedBetaEvacuatingLRP(),
-					false,
-					nil,
-				),
-			}),
-		}
+				It("does not return an error", func() {
+					err := sqlDB.RemoveEvacuatingActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
 
-		stoppedTests := []testable{
-			stoppedTest(evacuationTest{
-				Name:   "when there is no instance or evacuating LRP",
-				Result: noInstanceNoEvacuating(false, nil),
-			}),
-			stoppedTest(evacuationTest{
-				Name:        "when the instance is UNCLAIMED",
-				InstanceLRP: unclaimedLRP(),
-				Result: instanceNoEvacuating(
-					anUnchangedUnclaimedInstanceLRP(),
-					false,
-					models.ErrActualLRPCannotBeRemoved,
-				),
-			}),
-			stoppedTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on alpha",
-				InstanceLRP: claimedLRP(alphaInstanceKey),
-				Result:      noInstanceNoEvacuating(false, nil),
-			}),
-			stoppedTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on omega",
-				InstanceLRP: claimedLRP(omegaInstanceKey),
-				Result: instanceNoEvacuating(
-					anUnchangedClaimedInstanceLRP(omegaInstanceKey),
-					false,
-					models.ErrActualLRPCannotBeRemoved,
-				),
-			}),
-			stoppedTest(evacuationTest{
-				Name:        "when the instance is RUNNING on alpha",
-				InstanceLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:      noInstanceNoEvacuating(false, nil),
-			}),
-			stoppedTest(evacuationTest{
-				Name:        "when the instance is RUNNING on omega",
-				InstanceLRP: runningLRP(omegaInstanceKey, omegaNetInfo),
-				Result: instanceNoEvacuating(
-					anUnchangedRunningInstanceLRP(omegaInstanceKey, omegaNetInfo),
-					false,
-					models.ErrActualLRPCannotBeRemoved,
-				),
-			}),
-			stoppedTest(evacuationTest{
-				Name:        "when the instance is CRASHED",
-				InstanceLRP: crashedLRP(),
-				Result: instanceNoEvacuating(
-					anUnchangedCrashedInstanceLRP(),
-					false,
-					models.ErrActualLRPCannotBeRemoved,
-				),
-			}),
-			stoppedTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on alpha",
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        noInstanceNoEvacuating(false, nil),
-			}),
-			stoppedTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on beta",
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result:        evacuatingNoInstance(anUnchangedBetaEvacuatingLRP(), false, nil),
-			}),
-		}
-
-		crashedTests := []testable{
-			crashedTest(evacuationTest{
-				Name:   "when there is no instance or evacuating LRP",
-				Result: noInstanceNoEvacuating(false, nil),
-			}),
-			crashedTest(evacuationTest{
-				Name:        "when the instance is UNCLAIMED",
-				InstanceLRP: unclaimedLRP(),
-				Result: instanceNoEvacuating(
-					anUnchangedUnclaimedInstanceLRP(),
-					false,
-					models.ErrActualLRPCannotBeCrashed,
-				),
-			}),
-			crashedTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on alpha",
-				InstanceLRP: claimedLRP(alphaInstanceKey),
-				Result:      instanceNoEvacuating(anUpdatedUnclaimedInstanceLRPWithCrashCount(1), false, nil),
-			}),
-			crashedTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on omega",
-				InstanceLRP: claimedLRP(omegaInstanceKey),
-				Result: instanceNoEvacuating(
-					anUnchangedClaimedInstanceLRP(omegaInstanceKey),
-					false,
-					models.ErrActualLRPCannotBeCrashed,
-				),
-			}),
-			crashedTest(evacuationTest{
-				Name:        "when the instance is RUNNING on alpha",
-				InstanceLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:      instanceNoEvacuating(anUpdatedUnclaimedInstanceLRPWithCrashCount(1), false, nil),
-			}),
-			crashedTest(evacuationTest{
-				Name:        "when the instance is RUNNING on omega",
-				InstanceLRP: runningLRP(omegaInstanceKey, omegaNetInfo),
-				Result: instanceNoEvacuating(
-					anUnchangedRunningInstanceLRP(omegaInstanceKey, omegaNetInfo),
-					false,
-					models.ErrActualLRPCannotBeCrashed,
-				),
-			}),
-			crashedTest(evacuationTest{
-				Name:        "when the instance is CRASHED",
-				InstanceLRP: crashedLRP(),
-				Result: instanceNoEvacuating(
-					anUnchangedCrashedInstanceLRP(),
-					false,
-					models.ErrActualLRPCannotBeCrashed,
-				),
-			}),
-			crashedTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on alpha",
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        noInstanceNoEvacuating(false, nil),
-			}),
-			crashedTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on beta",
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result:        evacuatingNoInstance(anUnchangedBetaEvacuatingLRP(), false, nil),
-			}),
-		}
-
-		removalTests := []testable{
-			removalTest(evacuationTest{
-				Name:   "when there is no instance or evacuating LRP",
-				Result: noInstanceNoEvacuating(false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:        "when the instance is UNCLAIMED",
-				InstanceLRP: unclaimedLRP(),
-				Result:      instanceNoEvacuating(anUnchangedUnclaimedInstanceLRP(), false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on alpha",
-				InstanceLRP: claimedLRP(alphaInstanceKey),
-				Result:      instanceNoEvacuating(anUnchangedClaimedInstanceLRP(alphaInstanceKey), false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:        "when the instance is CLAIMED on omega",
-				InstanceLRP: claimedLRP(omegaInstanceKey),
-				Result:      instanceNoEvacuating(anUnchangedClaimedInstanceLRP(omegaInstanceKey), false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:        "when the instance is RUNNING on alpha",
-				InstanceLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:      instanceNoEvacuating(anUnchangedRunningInstanceLRP(alphaInstanceKey, alphaNetInfo), false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:        "when the instance is RUNNING on omega",
-				InstanceLRP: runningLRP(omegaInstanceKey, omegaNetInfo),
-				Result:      instanceNoEvacuating(anUnchangedRunningInstanceLRP(omegaInstanceKey, omegaNetInfo), false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:        "when the instance is CRASHED",
-				InstanceLRP: crashedLRP(),
-				Result:      instanceNoEvacuating(anUnchangedCrashedInstanceLRP(), false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on alpha",
-				EvacuatingLRP: runningLRP(alphaInstanceKey, alphaNetInfo),
-				Result:        noInstanceNoEvacuating(false, nil),
-			}),
-			removalTest(evacuationTest{
-				Name:          "when the evacuating LRP is RUNNING on beta",
-				EvacuatingLRP: runningLRP(betaInstanceKey, betaNetInfo),
-				Result: evacuatingNoInstance(
-					anUnchangedBetaEvacuatingLRP(),
-					false,
-					models.ErrActualLRPCannotBeRemoved,
-				),
-			}),
-		}
-
-		Context("when the LRP is to be CLAIMED", func() {
-			for _, test := range claimedTests {
-				test.Test()
-			}
+					_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrResourceNotFound))
+				})
+			})
 		})
 
-		Context("when the LRP is to be RUNNING", func() {
-			for _, test := range runningTests {
-				test.Test()
-			}
-		})
-
-		Context("when the LRP is to be STOPPED", func() {
-			for _, test := range stoppedTests {
-				test.Test()
-			}
-		})
-
-		Context("when the LRP is to be CRASHED", func() {
-			for _, test := range crashedTests {
-				test.Test()
-			}
-		})
-
-		Context("when the evacuating LRP is to be removed", func() {
-			for _, test := range removalTests {
-				test.Test()
-			}
+		Context("when the actualLRP does not exist", func() {
+			It("does not return an error", func() {
+				err := sqlDB.RemoveEvacuatingActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+				Expect(err).NotTo(HaveOccurred())
+			})
 		})
 	})
 })
-
-const (
-	initialTimestamp = 1138
-	timeIncrement    = 2279
-	finalTimestamp   = initialTimestamp + timeIncrement
-
-	alphaEvacuationTTL = 30
-	omegaEvacuationTTL = 1000
-	allowedTTLDecay    = 2
-
-	processGuid       = "process-guid"
-	alphaInstanceGuid = "alpha-instance-guid"
-	betaInstanceGuid  = "beta-instance-guid"
-	omegaInstanceGuid = "omega-instance-guid"
-	alphaCellID       = "alpha-cell-id"
-	betaCellID        = "beta-cell-id"
-	omegaCellID       = "omega-cell-id"
-	alphaAddress      = "alpha-address"
-	betaAddress       = "beta-address"
-	omegaAddress      = "omega-address"
-)
-
-var (
-	desiredLRP = models.DesiredLRP{
-		ProcessGuid: processGuid,
-		Domain:      "domain",
-		Instances:   1,
-		RootFs:      "some:rootfs",
-		Action:      models.WrapAction(&models.RunAction{Path: "/bin/true", User: "name"}),
-	}
-
-	index  int32 = 0
-	lrpKey       = models.NewActualLRPKey(desiredLRP.ProcessGuid, index, desiredLRP.Domain)
-
-	alphaInstanceKey = models.NewActualLRPInstanceKey(alphaInstanceGuid, alphaCellID)
-	betaInstanceKey  = models.NewActualLRPInstanceKey(betaInstanceGuid, betaCellID)
-	omegaInstanceKey = models.NewActualLRPInstanceKey(omegaInstanceGuid, omegaCellID)
-	emptyInstanceKey = models.ActualLRPInstanceKey{}
-
-	alphaPorts   = models.NewPortMapping(9872, 2349)
-	alphaNetInfo = models.NewActualLRPNetInfo(alphaAddress, alphaPorts)
-	betaPorts    = models.NewPortMapping(9868, 2353)
-	betaNetInfo  = models.NewActualLRPNetInfo(betaAddress, betaPorts)
-	omegaPorts   = models.NewPortMapping(9876, 2345)
-	omegaNetInfo = models.NewActualLRPNetInfo(omegaAddress, omegaPorts)
-	emptyNetInfo = models.EmptyActualLRPNetInfo()
-)
-
-type testable interface {
-	Test()
-}
-
-type evacuationTest struct {
-	Name          string
-	Subject       func() (bool, error)
-	InstanceLRP   lrpSetupFunc
-	EvacuatingLRP lrpSetupFunc
-	Result        testResult
-}
-
-func lrp(state string, instanceKey models.ActualLRPInstanceKey, netInfo models.ActualLRPNetInfo, placementError string) lrpSetupFunc {
-	return func() models.ActualLRP {
-		return models.ActualLRP{
-			ActualLRPKey:         lrpKey,
-			ActualLRPInstanceKey: instanceKey,
-			ActualLRPNetInfo:     netInfo,
-			State:                state,
-			Since:                clock.Now().UnixNano(),
-			PlacementError:       placementError,
-		}
-	}
-}
-
-func unclaimedLRP() lrpSetupFunc {
-	return lrp(models.ActualLRPStateUnclaimed, emptyInstanceKey, emptyNetInfo, "")
-}
-
-func unclaimedLRPWithPlacementError() lrpSetupFunc {
-	return lrp(models.ActualLRPStateUnclaimed, emptyInstanceKey, emptyNetInfo, "some-placement-error")
-}
-
-func claimedLRP(instanceKey models.ActualLRPInstanceKey) lrpSetupFunc {
-	return lrp(models.ActualLRPStateClaimed, instanceKey, emptyNetInfo, "")
-}
-
-func runningLRP(instanceKey models.ActualLRPInstanceKey, netInfo models.ActualLRPNetInfo) lrpSetupFunc {
-	return lrp(models.ActualLRPStateRunning, instanceKey, netInfo, "")
-}
-
-func crashedLRP() lrpSetupFunc {
-	actualFunc := lrp(models.ActualLRPStateCrashed, emptyInstanceKey, emptyNetInfo, "")
-	return func() models.ActualLRP {
-		actual := actualFunc()
-		actual.CrashReason = "crashed"
-		return actual
-	}
-}
-
-type lrpStatus struct {
-	State string
-	models.ActualLRPInstanceKey
-	models.ActualLRPNetInfo
-	ShouldUpdate bool
-}
-
-type instanceLRPStatus struct {
-	lrpStatus
-	CrashCount  int32
-	CrashReason string
-}
-
-type evacuatingLRPStatus struct {
-	lrpStatus
-	TTL uint64
-}
-
-type testResult struct {
-	Instance         *instanceLRPStatus
-	Evacuating       *evacuatingLRPStatus
-	AuctionRequested bool
-	ReturnedError    error
-	RetainContainer  bool
-}
-
-func anUpdatedAlphaEvacuatingLRP() *evacuatingLRPStatus {
-	return newEvacuatingLRPStatus(alphaInstanceKey, alphaNetInfo, true)
-}
-
-func anUnchangedAlphaEvacuatingLRP() *evacuatingLRPStatus {
-	return newEvacuatingLRPStatus(alphaInstanceKey, alphaNetInfo, false)
-}
-
-func anUnchangedBetaEvacuatingLRP() *evacuatingLRPStatus {
-	return newEvacuatingLRPStatus(betaInstanceKey, betaNetInfo, false)
-}
-
-func newEvacuatingLRPStatus(instanceKey models.ActualLRPInstanceKey, netInfo models.ActualLRPNetInfo, shouldUpdate bool) *evacuatingLRPStatus {
-	status := &evacuatingLRPStatus{
-		lrpStatus: lrpStatus{
-			State:                models.ActualLRPStateRunning,
-			ActualLRPInstanceKey: instanceKey,
-			ActualLRPNetInfo:     netInfo,
-			ShouldUpdate:         shouldUpdate,
-		},
-	}
-
-	if shouldUpdate {
-		status.TTL = alphaEvacuationTTL
-	}
-
-	return status
-}
-
-func anUpdatedUnclaimedInstanceLRP() *instanceLRPStatus {
-	return anUpdatedUnclaimedInstanceLRPWithCrashCount(0)
-}
-
-func anUpdatedUnclaimedInstanceLRPWithCrashCount(crashCount int32) *instanceLRPStatus {
-	reason := ""
-	if crashCount > 0 {
-		reason = "crashed"
-	}
-	return &instanceLRPStatus{
-		lrpStatus: lrpStatus{
-			State:                models.ActualLRPStateUnclaimed,
-			ActualLRPInstanceKey: emptyInstanceKey,
-			ActualLRPNetInfo:     emptyNetInfo,
-			ShouldUpdate:         true,
-		},
-		CrashCount:  crashCount,
-		CrashReason: reason,
-	}
-}
-
-func anUnchangedInstanceLRP(state string, instanceKey models.ActualLRPInstanceKey, netInfo models.ActualLRPNetInfo) *instanceLRPStatus {
-	return &instanceLRPStatus{
-		lrpStatus: lrpStatus{
-			State:                state,
-			ActualLRPInstanceKey: instanceKey,
-			ActualLRPNetInfo:     netInfo,
-			ShouldUpdate:         false,
-		},
-	}
-}
-
-func anUnchangedUnclaimedInstanceLRP() *instanceLRPStatus {
-	return anUnchangedInstanceLRP(models.ActualLRPStateUnclaimed, emptyInstanceKey, emptyNetInfo)
-}
-
-func anUnchangedClaimedInstanceLRP(instanceKey models.ActualLRPInstanceKey) *instanceLRPStatus {
-	return anUnchangedInstanceLRP(models.ActualLRPStateClaimed, instanceKey, emptyNetInfo)
-}
-
-func anUnchangedRunningInstanceLRP(instanceKey models.ActualLRPInstanceKey, netInfo models.ActualLRPNetInfo) *instanceLRPStatus {
-	return anUnchangedInstanceLRP(models.ActualLRPStateRunning, instanceKey, netInfo)
-}
-
-func anUnchangedCrashedInstanceLRP() *instanceLRPStatus {
-	instance := anUnchangedInstanceLRP(models.ActualLRPStateCrashed, emptyInstanceKey, emptyNetInfo)
-	instance.CrashReason = "crashed"
-	return instance
-}
-
-func newTestResult(instanceStatus *instanceLRPStatus, evacuatingStatus *evacuatingLRPStatus, retainContainer bool, err error) testResult {
-	result := testResult{
-		Instance:        instanceStatus,
-		Evacuating:      evacuatingStatus,
-		ReturnedError:   err,
-		RetainContainer: retainContainer,
-	}
-
-	if instanceStatus != nil && instanceStatus.ShouldUpdate {
-		result.AuctionRequested = true
-	}
-
-	return result
-}
-
-func instanceNoEvacuating(instanceStatus *instanceLRPStatus, retainContainer bool, err error) testResult {
-	return newTestResult(instanceStatus, nil, retainContainer, err)
-}
-
-func evacuatingNoInstance(evacuatingStatus *evacuatingLRPStatus, retainContainer bool, err error) testResult {
-	return newTestResult(nil, evacuatingStatus, retainContainer, err)
-}
-
-func noInstanceNoEvacuating(retainContainer bool, err error) testResult {
-	return newTestResult(nil, nil, retainContainer, err)
-}
-
-func (t evacuationTest) Test() {
-	Context(t.Name, func() {
-		var evacuateErr error
-		var initialTimestamp int64
-		var initialInstanceModificationIndex uint32
-		var initialEvacuatingModificationIndex uint32
-		var retainContainer bool
-
-		BeforeEach(func() {
-			initialTimestamp = clock.Now().UnixNano()
-
-			etcdHelper.SetRawDesiredLRP(&desiredLRP)
-			if t.InstanceLRP != nil {
-				actualLRP := t.InstanceLRP()
-				initialInstanceModificationIndex = actualLRP.ModificationTag.Index
-				etcdHelper.SetRawActualLRP(&actualLRP)
-			}
-			if t.EvacuatingLRP != nil {
-				evacuatingLRP := t.EvacuatingLRP()
-				initialEvacuatingModificationIndex = evacuatingLRP.ModificationTag.Index
-				etcdHelper.SetRawEvacuatingActualLRP(&evacuatingLRP, omegaEvacuationTTL)
-			}
-		})
-
-		JustBeforeEach(func() {
-			clock.Increment(timeIncrement)
-			retainContainer, evacuateErr = t.Subject()
-		})
-
-		if t.Result.ReturnedError == nil {
-			It("does not return an error", func() {
-				Expect(evacuateErr).NotTo(HaveOccurred())
-			})
-		} else {
-			It(fmt.Sprintf("returned error should be '%s'", t.Result.ReturnedError.Error()), func() {
-				Expect(evacuateErr).To(Equal(t.Result.ReturnedError))
-			})
-		}
-
-		if t.Result.RetainContainer == true {
-			It("returns true", func() {
-				Expect(retainContainer).To(Equal(true))
-			})
-
-		} else {
-			It("returns false", func() {
-				Expect(retainContainer).To(Equal(false))
-			})
-
-		}
-
-		if t.Result.AuctionRequested {
-			It("starts an auction", func() {
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-
-				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(&desiredLRP, int(index))
-				requestedAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-				Expect(requestedAuctions).To(HaveLen(1))
-
-				Expect(*requestedAuctions[0]).To(Equal(expectedStartRequest))
-			})
-
-			Context("when starting the auction fails", func() {
-				BeforeEach(func() {
-					fakeAuctioneerClient.RequestLRPAuctionsReturns(errors.New("error"))
-				})
-
-				It("returns an UnknownError", func() {
-					Expect(evacuateErr).To(Equal(models.ErrUnknownError))
-				})
-			})
-
-			Context("when the desired LRP no longer exists", func() {
-				BeforeEach(func() {
-					etcdHelper.DeleteDesiredLRP(desiredLRP.ProcessGuid)
-				})
-
-				It("the actual LRP is also deleted", func() {
-					Expect(evacuateErr).NotTo(HaveOccurred())
-
-					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, t.InstanceLRP().ProcessGuid, t.InstanceLRP().Index)
-					if err == nil {
-						// LRP remaining in one of evacuating or ...not
-						Expect(group.Instance).To(BeNil())
-					} else {
-						// No LRP remaining at all (no group returned)
-						Expect(err).To(Equal(models.ErrResourceNotFound))
-					}
-				})
-			})
-		} else {
-			It("does not start an auction", func() {
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
-			})
-		}
-
-		if t.Result.Instance == nil {
-			It("removes the /instance actualLRP", func() {
-				_, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-				Expect(err).To(Equal(models.ErrResourceNotFound))
-			})
-		} else {
-			if t.Result.Instance.ShouldUpdate {
-				It("updates the /instance Since", func() {
-					lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(lrpInBBS.Since).To(Equal(clock.Now().UnixNano()))
-				})
-
-				It("updates the /instance ModificationTag", func() {
-					lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(lrpInBBS.ModificationTag.Index).To(Equal(initialInstanceModificationIndex + 1))
-				})
-			} else {
-				It("does not update the /instance Since", func() {
-					lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(lrpInBBS.Since).To(Equal(initialTimestamp))
-				})
-			}
-
-			It("has the expected /instance state", func() {
-				lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(lrpInBBS.State).To(Equal(t.Result.Instance.State))
-			})
-
-			It("has the expected /instance crash count", func() {
-				lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(lrpInBBS.CrashCount).To(Equal(t.Result.Instance.CrashCount))
-			})
-
-			It("has the expected /instance crash reason", func() {
-				lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(lrpInBBS.CrashReason).To(Equal(t.Result.Instance.CrashReason))
-			})
-
-			It("has the expected /instance instance key", func() {
-				lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(lrpInBBS.ActualLRPInstanceKey).To(Equal(t.Result.Instance.ActualLRPInstanceKey))
-			})
-
-			It("has the expected /instance net info", func() {
-				lrpInBBS, err := etcdHelper.GetInstanceActualLRP(&lrpKey)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(lrpInBBS.ActualLRPNetInfo).To(Equal(t.Result.Instance.ActualLRPNetInfo))
-			})
-		}
-
-		if t.Result.Evacuating == nil {
-			It("removes the /evacuating actualLRP", func() {
-				_, err := getEvacuatingActualLRPTTL(lrpKey)
-				Expect(err).To(Equal(models.ErrResourceNotFound))
-			})
-		} else {
-			if t.Result.Evacuating.ShouldUpdate {
-				It("updates the /evacuating Since", func() {
-					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
-					Expect(err).NotTo(HaveOccurred())
-					lrpInBBS := group.Evacuating
-
-					Expect(lrpInBBS.Since).To(Equal(clock.Now().UnixNano()))
-				})
-
-				It("updates the /evacuating TTL to the desired value", func() {
-					ttl, err := getEvacuatingActualLRPTTL(lrpKey)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(ttl).To(BeNumerically("~", t.Result.Evacuating.TTL, allowedTTLDecay))
-				})
-
-				It("updates the /evacuating ModificationTag", func() {
-					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
-					Expect(err).NotTo(HaveOccurred())
-					lrpInBBS := group.Evacuating
-
-					Expect(lrpInBBS.ModificationTag.Index).To(Equal(initialEvacuatingModificationIndex + 1))
-				})
-			} else {
-				It("does not update the /evacuating Since", func() {
-					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
-					Expect(err).NotTo(HaveOccurred())
-					lrpInBBS := group.Evacuating
-
-					Expect(lrpInBBS.Since).To(Equal(initialTimestamp))
-				})
-
-				It("does not update the /evacuating TTL", func() {
-					ttl, err := getEvacuatingActualLRPTTL(lrpKey)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(ttl).To(BeNumerically("~", omegaEvacuationTTL, allowedTTLDecay))
-				})
-			}
-
-			It("has the expected /evacuating state", func() {
-				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
-				Expect(err).NotTo(HaveOccurred())
-				lrpInBBS := group.Evacuating
-
-				Expect(lrpInBBS.State).To(Equal(t.Result.Evacuating.State))
-			})
-
-			It("has the expected /evacuating instance key", func() {
-				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
-				Expect(err).NotTo(HaveOccurred())
-				lrpInBBS := group.Evacuating
-
-				Expect(lrpInBBS.ActualLRPInstanceKey).To(Equal(t.Result.Evacuating.ActualLRPInstanceKey))
-			})
-
-			It("has the expected /evacuating net info", func() {
-				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
-				Expect(err).NotTo(HaveOccurred())
-				lrpInBBS := group.Evacuating
-
-				Expect(lrpInBBS.ActualLRPNetInfo).To(Equal(t.Result.Evacuating.ActualLRPNetInfo))
-			})
-		}
-	})
-}
-
-func getEvacuatingActualLRPTTL(lrpKey models.ActualLRPKey) (int64, error) {
-	node, err := storeClient.Get(etcddb.EvacuatingActualLRPSchemaPath(lrpKey.ProcessGuid, lrpKey.Index), false, true)
-	if etcdErrCode(err) == etcddb.ETCDErrKeyNotFound {
-		return 0, models.ErrResourceNotFound
-	}
-	Expect(err).NotTo(HaveOccurred())
-
-	return node.Node.TTL, nil
-}
-
-func etcdErrCode(err error) int {
-	if err != nil {
-		switch err.(type) {
-		case etcd.EtcdError:
-			return err.(etcd.EtcdError).ErrorCode
-		case *etcd.EtcdError:
-			return err.(*etcd.EtcdError).ErrorCode
-		}
-	}
-	return 0
-}
