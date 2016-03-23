@@ -447,7 +447,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					BeforeEach(func() {
 						actualLRPGroups = []*models.ActualLRPGroup{}
-						for i := 0; i < 5; i++ {
+						for i := 4; i >= 0; i-- {
 							actualLRPGroups = append(actualLRPGroups, &models.ActualLRPGroup{
 								Instance: model_helpers.NewValidActualLRP("some-guid", int32(i)),
 							})
@@ -468,11 +468,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-						Expect(key).To(Equal(actualLRPGroups[3].Instance.ActualLRPKey))
-						Expect(instanceKey).To(Equal(actualLRPGroups[3].Instance.ActualLRPInstanceKey))
+						Expect(key).To(Equal(actualLRPGroups[0].Instance.ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPGroups[0].Instance.ActualLRPInstanceKey))
 						key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
-						Expect(key).To(Equal(actualLRPGroups[4].Instance.ActualLRPKey))
-						Expect(instanceKey).To(Equal(actualLRPGroups[4].Instance.ActualLRPInstanceKey))
+						Expect(key).To(Equal(actualLRPGroups[1].Instance.ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPGroups[1].Instance.ActualLRPInstanceKey))
 					})
 
 					Context("when fetching cell presence fails", func() {
