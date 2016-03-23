@@ -78,21 +78,22 @@ func (t *Task) VersionDownTo(v format.Version) *Task {
 	}
 }
 
-func (t *Task) ValidateTransitionTo(state Task_State) error {
+func (t *Task) ValidateTransitionTo(to Task_State) error {
 	var valid bool
-	switch state {
+	from := t.State
+	switch to {
 	case Task_Running:
-		valid = t.State == Task_Pending
+		valid = from == Task_Pending
 	case Task_Completed:
-		valid = t.State == Task_Running
+		valid = from == Task_Running
 	case Task_Resolving:
-		valid = t.State == Task_Completed
+		valid = from == Task_Completed
 	}
 
 	if !valid {
 		return NewError(
 			Error_InvalidStateTransition,
-			fmt.Sprintf("Cannot transition from %s to %s", t.State.String(), state.String()),
+			fmt.Sprintf("Cannot transition from %s to %s", from.String(), to.String()),
 		)
 	}
 

@@ -9,6 +9,36 @@ import (
 
 const NO_TTL = 0
 
+func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
+	logger = logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
+	logger.Info("starting")
+	defer logger.Info("finished")
+
+	now := db.clock.Now().UnixNano()
+	task := &models.Task{
+		TaskDefinition: taskDef,
+		TaskGuid:       taskGuid,
+		Domain:         domain,
+		State:          models.Task_Pending,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+
+	value, err := db.serializeModel(logger, task)
+	if err != nil {
+		return err
+	}
+
+	logger.Debug("persisting-task")
+	_, err = db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL)
+	if err != nil {
+		return ErrorFromEtcdError(logger, err)
+	}
+	logger.Debug("succeeded-persisting-task")
+
+	return nil
+}
+
 func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
 	root, err := db.fetchRecursiveRaw(logger, TaskSchemaRoot)
 	bbsErr := models.ConvertError(err)
@@ -67,35 +97,6 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 	return task, node.ModifiedIndex, nil
 }
 
-func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
-	logger = logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
-	logger.Info("starting")
-	defer logger.Info("finished")
-
-	task := &models.Task{
-		TaskDefinition: taskDef,
-		TaskGuid:       taskGuid,
-		Domain:         domain,
-		State:          models.Task_Pending,
-		CreatedAt:      db.clock.Now().UnixNano(),
-		UpdatedAt:      db.clock.Now().UnixNano(),
-	}
-
-	value, err := db.serializeModel(logger, task)
-	if err != nil {
-		return err
-	}
-
-	logger.Debug("persisting-task")
-	_, err = db.client.Create(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL)
-	if err != nil {
-		return ErrorFromEtcdError(logger, err)
-	}
-	logger.Debug("succeeded-persisting-task")
-
-	return nil
-}
-
 func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool, error) {
 	logger = logger.Session("start-task", lager.Data{"task-guid": taskGuid, "cell-id": cellID})
 
@@ -115,9 +116,7 @@ func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool,
 		return false, nil
 	}
 
-	err = validateStateTransition(task.State, models.Task_Running)
-	if err != nil {
-		logger.Error("invalid-state-transition", err)
+	if err = task.ValidateTransitionTo(models.Task_Running); err != nil {
 		return false, err
 	}
 
@@ -155,10 +154,11 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task
 	}
 	logger.Info("succeeded-getting-task")
 
-	if task.State == models.Task_Resolving || task.State == models.Task_Completed {
-		err = models.NewTaskTransitionError(task.State, models.Task_Completed)
-		logger.Error("invalid-state-transition", err)
-		return nil, "", err
+	if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
+		if task.State != models.Task_Pending {
+			logger.Error("invalid-state-transition", err)
+			return nil, "", err
+		}
 	}
 
 	logger.Info("completing-task")
@@ -171,29 +171,6 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task
 
 	logger.Info("succeeded-completing-task")
 	return task, cellID, nil
-}
-
-func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, error) {
-	logger = logger.Session("fail-task", lager.Data{"task-guid": taskGuid})
-
-	logger.Info("starting")
-	defer logger.Info("finished")
-
-	logger.Info("getting-task")
-	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
-	if err != nil {
-		logger.Error("failed-getting-task", err)
-		return nil, err
-	}
-	logger.Info("succeeded-getting-task")
-
-	if task.State == models.Task_Resolving || task.State == models.Task_Completed {
-		err = models.NewTaskTransitionError(task.State, models.Task_Completed)
-		logger.Error("invalid-state-transition", err)
-		return nil, err
-	}
-
-	return task, db.completeTask(logger, task, index, true, failureReason, "")
 }
 
 // The cell calls this when it has finished running the task (be it success or failure)
@@ -220,13 +197,36 @@ func (db *ETCDDB) CompleteTask(logger lager.Logger, taskGuid, cellId string, fai
 		return nil, err
 	}
 
-	err = validateStateTransition(task.State, models.Task_Completed)
-	if err != nil {
+	if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
 		logger.Error("invalid-state-transition", err)
 		return nil, err
 	}
 
 	return task, db.completeTask(logger, task, index, failed, failureReason, result)
+}
+
+func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, error) {
+	logger = logger.Session("fail-task", lager.Data{"task-guid": taskGuid})
+
+	logger.Info("starting")
+	defer logger.Info("finished")
+
+	logger.Info("getting-task")
+	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
+	if err != nil {
+		logger.Error("failed-getting-task", err)
+		return nil, err
+	}
+	logger.Info("succeeded-getting-task")
+
+	if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
+		if task.State != models.Task_Pending {
+			logger.Error("invalid-state-transition", err)
+			return nil, err
+		}
+	}
+
+	return task, db.completeTask(logger, task, index, true, failureReason, "")
 }
 
 func (db *ETCDDB) completeTask(logger lager.Logger, task *models.Task, index uint64, failed bool, failureReason, result string) error {
@@ -274,7 +274,7 @@ func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	}
 	logger.Info("succeeded-getting-task")
 
-	err = validateStateTransition(task.State, models.Task_Resolving)
+	err = task.ValidateTransitionTo(models.Task_Resolving)
 	if err != nil {
 		logger.Error("invalid-state-transition", err)
 		return err

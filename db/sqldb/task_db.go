@@ -118,38 +118,21 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) error {
 				return err
 			}
 		}
-
-		now := db.clock.Now()
-		_, err = tx.Exec(
-			`UPDATE tasks SET
-				state = ?, updated_at = ?, cell_id = ?, first_completed_at = ?,
-				failed = ?, failure_reason = ?, result = ?
-				WHERE guid = ?`,
-			models.Task_Completed,
-			now,
-			"",
-			now,
-			true,
-			"task was cancelled",
-			"",
-			taskGuid,
-		)
-		if err != nil {
-			return db.convertSQLError(err)
-		}
-
-		return nil
+		return db.completeTask(logger, task, true, "task was cancelled", "", tx)
 	})
 }
 
-func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) error {
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) (*models.Task, error) {
+	var task *models.Task
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
 			return err
 		}
 
-		if task.CellId != cellID {
+		if task.CellId != cellID && task.State == models.Task_Running {
 			return models.NewRunningOnDifferentCellError(cellID, task.CellId)
 		}
 
@@ -157,37 +140,18 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 			return err
 		}
 
-		if task.State == models.Task_Pending {
-		}
-
-		now := db.clock.Now()
-		_, err = tx.Exec(
-			`UPDATE tasks SET
-				state = ?, updated_at = ?, first_completed_at = ?,
-				failed = ?, failure_reason = ?, result = ?, cell_id = ?
-			WHERE cell_id = ? AND guid = ?
-			`,
-			models.Task_Completed,
-			now,
-			now,
-			failed,
-			failureReason,
-			taskResult,
-			"",
-			cellID,
-			taskGuid,
-		)
-		if err != nil {
-			return db.convertSQLError(err)
-		}
-
-		return nil
+		return db.completeTask(logger, task, failed, failureReason, taskResult, tx)
 	})
+
+	return task, err
 }
 
-func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, error) {
+	var task *models.Task
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
 			return err
 		}
@@ -198,38 +162,56 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) e
 			}
 		}
 
-		now := db.clock.Now()
-		_, err = tx.Exec(
-			`UPDATE tasks SET
+		return db.completeTask(logger, task, true, failureReason, "", tx)
+	})
+
+	return task, err
+}
+
+func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx *sql.Tx) error {
+	now := db.clock.Now()
+	_, err := tx.Exec(
+		`UPDATE tasks SET
 		  state = ?, updated_at = ?, first_completed_at = ?,
 			failed = ?, failure_reason = ?, result = ?, cell_id = ?
 			WHERE guid = ?
 			`,
-			models.Task_Completed,
-			now,
-			now,
-			true,
-			failureReason,
-			"",
-			"",
-			taskGuid,
-		)
-		if err != nil {
-			return db.convertSQLError(err)
-		}
+		models.Task_Completed,
+		now,
+		now,
+		failed,
+		failureReason,
+		result,
+		"",
+		task.TaskGuid,
+	)
+	if err != nil {
+		return db.convertSQLError(err)
+	}
 
-		return nil
-	})
+	task.State = models.Task_Completed
+	task.UpdatedAt = now.UnixNano()
+	task.FirstCompletedAt = now.UnixNano()
+	task.Failed = failed
+	task.FailureReason = failureReason
+	task.Result = result
+	task.CellId = ""
+
+	return nil
 }
 
+// The stager calls this when it wants to claim a completed task.  This ensures that only one
+// stager ever attempts to handle a completed task
 func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
+			logger.Error("failed-getting-task", err)
 			return err
 		}
 
 		if err = task.ValidateTransitionTo(models.Task_Resolving); err != nil {
+			logger.Error("invalid-state-transition", err)
 			return err
 		}
 
@@ -244,6 +226,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 			taskGuid,
 		)
 		if err != nil {
+			logger.Error("failed-resolving-task", err)
 			return db.convertSQLError(err)
 		}
 
@@ -255,11 +238,14 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
+			logger.Error("failed-getting-task", err)
 			return err
 		}
 
 		if task.State != models.Task_Resolving {
-			return models.ErrBadRequest
+			err = models.NewTaskTransitionError(task.State, models.Task_Resolving)
+			logger.Error("invalid-state-transition", err)
+			return err
 		}
 
 		_, err = tx.Exec(
@@ -267,6 +253,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 			taskGuid,
 		)
 		if err != nil {
+			logger.Error("failed-deleting-task", err)
 			return db.convertSQLError(err)
 		}
 
