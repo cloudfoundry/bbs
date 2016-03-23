@@ -262,16 +262,24 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 
 		if group.Instance != nil {
 			lrp := group.Instance
-			cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
-			if err != nil {
-				logger.Error("failed-fetching-cell-presence", err)
-				continue
-			}
-			repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
-			logger.Debug("stopping-lrp-instance")
-			err = repClient.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
-			if err != nil {
-				logger.Error("failed-stopping-lrp-instance", err)
+			switch lrp.State {
+			case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
+				err = h.actualLRPDB.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index)
+				if err != nil {
+					logger.Error("failed-removing-lrp-instance", err)
+				}
+			default:
+				cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
+				if err != nil {
+					logger.Error("failed-fetching-cell-presence", err)
+					continue
+				}
+				repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
+				logger.Debug("stopping-lrp-instance")
+				err = repClient.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
+				if err != nil {
+					logger.Error("failed-stopping-lrp-instance", err)
+				}
 			}
 		}
 	}
