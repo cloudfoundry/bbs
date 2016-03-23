@@ -529,26 +529,33 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 						Expect(processGuid).To(Equal("some-guid"))
 
-						Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(2))
-						_, key := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
-						Expect(key).To(BeEquivalentTo(&models.ActualLRPKey{
-							ProcessGuid: "some-guid",
-							Index:       1,
-							Domain:      "some-domain",
-						}))
+						keys := make([]*models.ActualLRPKey, 2)
 
-						_, key = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(1)
-						Expect(key).To(BeEquivalentTo(&models.ActualLRPKey{
+						Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(2))
+						_, keys[0] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
+						_, keys[1] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(1)
+
+						Expect(keys).To(ContainElement(&models.ActualLRPKey{
 							ProcessGuid: "some-guid",
 							Index:       2,
 							Domain:      "some-domain",
 						}))
 
+						Expect(keys).To(ContainElement(&models.ActualLRPKey{
+							ProcessGuid: "some-guid",
+							Index:       1,
+							Domain:      "some-domain",
+						}))
+
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 						startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-						Expect(startRequests).To(BeEquivalentTo([]*auctioneer.LRPStartRequest{
-							{ProcessGuid: "some-guid", Domain: "some-domain", Indices: []int{1, 2}, Resource: rep.Resource{MemoryMB: 128, DiskMB: 512, RootFs: "some-stack"}},
-						}))
+						Expect(startRequests).To(HaveLen(1))
+						startReq := startRequests[0]
+						Expect(startReq.ProcessGuid).To(Equal("some-guid"))
+						Expect(startReq.Domain).To(Equal("some-domain"))
+						Expect(startReq.Resource).To(Equal(rep.Resource{MemoryMB: 128, DiskMB: 512, RootFs: "some-stack"}))
+						Expect(startReq.Indices).To(ContainElement(2))
+						Expect(startReq.Indices).To(ContainElement(1))
 					})
 				})
 
