@@ -416,7 +416,7 @@ var _ = Describe("Task Handlers", func() {
 					})
 
 					It("causes the workpool to complete its callback work", func() {
-						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
+						Eventually(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(1))
 					})
 				})
 
@@ -427,7 +427,7 @@ var _ = Describe("Task Handlers", func() {
 					})
 
 					It("does not complete the task callback", func() {
-						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(0))
+						Consistently(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(0))
 					})
 				})
 
@@ -560,7 +560,7 @@ var _ = Describe("Task Handlers", func() {
 				})
 
 				It("causes the workpool to complete its callback work", func() {
-					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
+					Eventually(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(1))
 				})
 			})
 
@@ -571,7 +571,7 @@ var _ = Describe("Task Handlers", func() {
 				})
 
 				It("does not complete the task callback", func() {
-					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(0))
+					Consistently(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(0))
 				})
 			})
 		})
@@ -652,7 +652,7 @@ var _ = Describe("Task Handlers", func() {
 					})
 
 					It("causes the workpool to complete its callback work", func() {
-						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(1))
+						Eventually(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(1))
 					})
 				})
 
@@ -663,7 +663,7 @@ var _ = Describe("Task Handlers", func() {
 					})
 
 					It("does not complete the task callback", func() {
-						Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(0))
+						Consistently(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(0))
 					})
 				})
 			})

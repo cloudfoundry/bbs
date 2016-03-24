@@ -142,7 +142,7 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 
 	if task.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, task)
 	}
 
 	if task.CellId == "" {
@@ -188,7 +188,7 @@ func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
 
 	if task.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, task)
 	}
 }
 
@@ -215,7 +215,7 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
 
 	if task.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, task)
 	}
 }
 
