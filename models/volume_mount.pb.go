@@ -59,10 +59,10 @@ func (x *BindMountMode) UnmarshalJSON(data []byte) error {
 }
 
 type VolumeMount struct {
-	Driver        string        `protobuf:"bytes,1,req,name=driver" json:"driver"`
-	VolumeId      string        `protobuf:"bytes,2,req,name=volume_id" json:"volume_id"`
-	ContainerPath string        `protobuf:"bytes,3,req,name=container_path" json:"container_path"`
-	Mode          BindMountMode `protobuf:"varint,4,req,name=mode,enum=models.BindMountMode" json:"mode"`
+	Driver        string        `protobuf:"bytes,1,opt,name=driver" json:"driver"`
+	VolumeId      string        `protobuf:"bytes,2,opt,name=volume_id" json:"volume_id"`
+	ContainerPath string        `protobuf:"bytes,3,opt,name=container_path" json:"container_path"`
+	Mode          BindMountMode `protobuf:"varint,4,opt,name=mode,enum=models.BindMountMode" json:"mode"`
 	Config        []byte        `protobuf:"bytes,5,opt,name=config" json:"config,omitempty"`
 }
 
@@ -307,7 +307,6 @@ func valueToStringVolumeMount(v interface{}) string {
 	return fmt.Sprintf("*%v", pv)
 }
 func (m *VolumeMount) Unmarshal(data []byte) error {
-	var hasFields [1]uint64
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
@@ -351,7 +350,6 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			m.Driver = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000001)
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VolumeId", wireType)
@@ -377,7 +375,6 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			m.VolumeId = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000002)
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ContainerPath", wireType)
@@ -403,7 +400,6 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			m.ContainerPath = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000004)
 		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
@@ -420,7 +416,6 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			hasFields[0] |= uint64(0x00000008)
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
@@ -468,18 +463,6 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			iNdEx += skippy
 		}
-	}
-	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("driver")
-	}
-	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("volume_id")
-	}
-	if hasFields[0]&uint64(0x00000004) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("container_path")
-	}
-	if hasFields[0]&uint64(0x00000008) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("mode")
 	}
 
 	return nil

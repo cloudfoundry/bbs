@@ -12,9 +12,9 @@ enum BindMountMode {
 }
 
 message VolumeMount {
-  required string driver = 1 [(gogoproto.jsontag) = "driver"];
-  required string volume_id = 2 [(gogoproto.jsontag) = "volume_id"];
-  required string container_path = 3 [(gogoproto.jsontag) = "container_path"];
-  required BindMountMode mode = 4 [(gogoproto.jsontag) = "mode"];
+  optional string driver = 1 [(gogoproto.jsontag) = "driver"];
+  optional string volume_id = 2 [(gogoproto.jsontag) = "volume_id"];
+  optional string container_path = 3 [(gogoproto.jsontag) = "container_path"];
+  optional BindMountMode mode = 4 [(gogoproto.jsontag) = "mode"];
   optional bytes config = 5 [(gogoproto.nullable) = true];
 }
