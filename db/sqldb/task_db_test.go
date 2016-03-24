@@ -339,17 +339,14 @@ var _ = Describe("TaskDB", func() {
 
 			It("cancels the task", func() {
 				fakeClock.Increment(time.Second)
-				nowTruncateMicroseconds := fakeClock.Now().Truncate(time.Microsecond)
+				now := fakeClock.Now().UnixNano()
 
-				err := sqlDB.CancelTask(logger, taskGuid)
-				Expect(err).NotTo(HaveOccurred())
-
-				task, err := sqlDB.TaskByGuid(logger, taskGuid)
+				task, err := sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(task.State).To(Equal(models.Task_Completed))
-				Expect(task.UpdatedAt).To(Equal(nowTruncateMicroseconds.UnixNano()))
-				Expect(task.FirstCompletedAt).To(Equal(nowTruncateMicroseconds.UnixNano()))
+				Expect(task.UpdatedAt).To(Equal(now))
+				Expect(task.FirstCompletedAt).To(Equal(now))
 				Expect(task.Failed).To(BeTrue())
 				Expect(task.FailureReason).To(Equal("task was cancelled"))
 				Expect(task.Result).To(Equal(""))
@@ -370,15 +367,13 @@ var _ = Describe("TaskDB", func() {
 
 				It("does not update the other task", func() {
 					fakeClock.Increment(time.Second)
-					nowTruncateMicroseconds := fakeClock.Now().Truncate(time.Microsecond)
+					now := fakeClock.Now().UnixNano()
 
-					err := sqlDB.CancelTask(logger, taskGuid)
+					task, err := sqlDB.CancelTask(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 
-					task, err := sqlDB.TaskByGuid(logger, taskGuid)
-					Expect(err).NotTo(HaveOccurred())
 					Expect(task.State).To(Equal(models.Task_Completed))
-					Expect(task.UpdatedAt).To(Equal(nowTruncateMicroseconds.UnixNano()))
+					Expect(task.UpdatedAt).To(Equal(now))
 
 					task, err = sqlDB.TaskByGuid(logger, anotherTask.TaskGuid)
 					Expect(err).NotTo(HaveOccurred())
@@ -399,17 +394,14 @@ var _ = Describe("TaskDB", func() {
 
 			It("cancels the task", func() {
 				fakeClock.Increment(time.Second)
-				nowTruncateMicroseconds := fakeClock.Now().Truncate(time.Microsecond)
+				now := fakeClock.Now().UnixNano()
 
-				err := sqlDB.CancelTask(logger, taskGuid)
-				Expect(err).NotTo(HaveOccurred())
-
-				task, err := sqlDB.TaskByGuid(logger, taskGuid)
+				task, err := sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(task.State).To(Equal(models.Task_Completed))
-				Expect(task.UpdatedAt).To(Equal(nowTruncateMicroseconds.UnixNano()))
-				Expect(task.FirstCompletedAt).To(Equal(nowTruncateMicroseconds.UnixNano()))
+				Expect(task.UpdatedAt).To(Equal(now))
+				Expect(task.FirstCompletedAt).To(Equal(now))
 				Expect(task.Failed).To(BeTrue())
 				Expect(task.FailureReason).To(Equal("task was cancelled"))
 				Expect(task.Result).To(Equal(""))
@@ -424,7 +416,7 @@ var _ = Describe("TaskDB", func() {
 				err := sqlDB.DesireTask(logger, taskDefinition, taskGuid, taskDomain)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = sqlDB.CancelTask(logger, taskGuid)
+				_, err = sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				beforeTask, err = sqlDB.TaskByGuid(logger, taskGuid)
@@ -432,7 +424,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("returns an InvalidStateTransition error", func() {
-				err := sqlDB.CancelTask(logger, taskGuid)
+				_, err := sqlDB.CancelTask(logger, taskGuid)
 				modelErr := models.ConvertError(err)
 				Expect(modelErr).NotTo(BeNil())
 				Expect(modelErr.Type).To(Equal(models.Error_InvalidStateTransition))
@@ -453,7 +445,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("returns an InvalidStateTransition error", func() {
-				err := sqlDB.CancelTask(logger, taskGuid)
+				_, err := sqlDB.CancelTask(logger, taskGuid)
 				modelErr := models.ConvertError(err)
 				Expect(modelErr).NotTo(BeNil())
 				Expect(modelErr.Type).To(Equal(models.Error_InvalidStateTransition))
@@ -466,7 +458,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when the task does not exist", func() {
 			It("returns an InvalidStateTransition error", func() {
-				err := sqlDB.CancelTask(logger, taskGuid)
+				_, err := sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})

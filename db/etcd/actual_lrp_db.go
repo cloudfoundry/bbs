@@ -89,14 +89,14 @@ func (db *ETCDDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid 
 }
 
 func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
-	group, _, err := db.rawActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+	group, err := db.rawActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 	return group, err
 }
 
-func (db *ETCDDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, uint64, error) {
+func (db *ETCDDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
 	node, err := db.fetchRecursiveRaw(logger, ActualLRPIndexDir(processGuid, index))
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	group := models.ActualLRPGroup{}
@@ -105,7 +105,7 @@ func (db *ETCDDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pr
 		deserializeErr := db.deserializeModel(logger, instanceNode, &lrp)
 		if deserializeErr != nil {
 			logger.Error("failed-parsing-actual-lrp", deserializeErr, lager.Data{"key": instanceNode.Key})
-			return nil, 0, deserializeErr
+			return nil, deserializeErr
 		}
 
 		if isInstanceActualLRPNode(instanceNode) {
@@ -118,10 +118,10 @@ func (db *ETCDDB) rawActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, pr
 	}
 
 	if group.Evacuating == nil && group.Instance == nil {
-		return nil, 0, models.ErrResourceNotFound
+		return nil, models.ErrResourceNotFound
 	}
 
-	return &group, node.ModifiedIndex, nil
+	return &group, nil
 }
 
 func (db *ETCDDB) rawActualLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRP, uint64, error) {

@@ -1056,6 +1056,13 @@ var _ = Describe("ActualLRPDB", func() {
 				Expect(lrpGroup.Instance.ModificationTag.Epoch).NotTo(BeEmpty())
 				Expect(lrpGroup.Instance.ModificationTag.Index).To(BeEquivalentTo(0))
 			})
+
+			It("set the InstanceKey", func() {
+				lrpGroup, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, "process-guid", 1)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lrpGroup.Instance.ActualLRPInstanceKey).To(Equal(instanceKey))
+			})
 		})
 	})
 

@@ -277,7 +277,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				Routes:     &routes,
 				Annotation: &annotation,
 			}
-			err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
@@ -285,12 +285,23 @@ var _ = Describe("DesiredLRPDB", func() {
 			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP.ApplyUpdate(update)))
 		})
 
+		It("returns the previous instance count", func() {
+			instances := int32(20)
+			update = &models.DesiredLRPUpdate{
+				Instances: &instances,
+			}
+
+			previousInstanceCount, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(previousInstanceCount).To(BeEquivalentTo(1))
+		})
+
 		It("updates only the fields in the update parameter", func() {
 			instances := int32(20)
 			update = &models.DesiredLRPUpdate{
 				Instances: &instances,
 			}
-			err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
@@ -300,7 +311,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		It("does nothing if update is empty", func() {
 			update = &models.DesiredLRPUpdate{}
-			err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
@@ -317,7 +328,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				update = &models.DesiredLRPUpdate{
 					Routes: &routes,
 				}
-				err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+				_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrBadRequest))
 			})
@@ -325,7 +336,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the desired lrp does not exist", func() {
 			It("returns a ResourceNotFound error", func() {
-				err := sqlDB.UpdateDesiredLRP(logger, "does-not-exist", update)
+				_, err := sqlDB.UpdateDesiredLRP(logger, "does-not-exist", update)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})

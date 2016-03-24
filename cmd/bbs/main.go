@@ -15,6 +15,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
+	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/encryptor"
 	"github.com/cloudfoundry-incubator/bbs/events"

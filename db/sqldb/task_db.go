@@ -106,9 +106,12 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 	return started, err
 }
 
-func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) error {
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task, error) {
+	var task *models.Task
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
 			return err
 		}
@@ -120,6 +123,8 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) error {
 		}
 		return db.completeTask(logger, task, true, "task was cancelled", "", tx)
 	})
+
+	return task, err
 }
 
 func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) (*models.Task, error) {

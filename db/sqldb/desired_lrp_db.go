@@ -108,11 +108,19 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	return results, nil
 }
 
-func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error {
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (int32, error) {
+	var previousInstanceCount int32
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		err := db.lockDesiredLRPByGuidForShare(logger, processGuid, tx)
 		if err != nil {
 			return err
+		}
+
+		row := db.db.QueryRow("SELECT instances FROM desired_lrps WHERE process_guid = ?", processGuid)
+
+		err = row.Scan(&previousInstanceCount)
+		if err != nil {
+			return models.ErrResourceNotFound
 		}
 
 		setKeys := []string{}
@@ -155,6 +163,8 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 
 		return nil
 	})
+
+	return previousInstanceCount, err
 }
 
 func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
