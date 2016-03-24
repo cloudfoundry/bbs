@@ -331,7 +331,7 @@ type FakeDB struct {
 		result1 bool
 		result2 error
 	}
-	CancelTaskStub        func(logger lager.Logger, taskGuid string) (task *models.Task, err error)
+	CancelTaskStub        func(logger lager.Logger, taskGuid string) (task *models.Task, cellID string, err error)
 	cancelTaskMutex       sync.RWMutex
 	cancelTaskArgsForCall []struct {
 		logger   lager.Logger
@@ -339,7 +339,8 @@ type FakeDB struct {
 	}
 	cancelTaskReturns struct {
 		result1 *models.Task
-		result2 error
+		result2 string
+		result3 error
 	}
 	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) (task *models.Task, err error)
 	failTaskMutex       sync.RWMutex
@@ -1480,7 +1481,7 @@ func (fake *FakeDB) StartTaskReturns(result1 bool, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeDB) CancelTask(logger lager.Logger, taskGuid string) (task *models.Task, err error) {
+func (fake *FakeDB) CancelTask(logger lager.Logger, taskGuid string) (task *models.Task, cellID string, err error) {
 	fake.cancelTaskMutex.Lock()
 	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
 		logger   lager.Logger
@@ -1490,7 +1491,7 @@ func (fake *FakeDB) CancelTask(logger lager.Logger, taskGuid string) (task *mode
 	if fake.CancelTaskStub != nil {
 		return fake.CancelTaskStub(logger, taskGuid)
 	} else {
-		return fake.cancelTaskReturns.result1, fake.cancelTaskReturns.result2
+		return fake.cancelTaskReturns.result1, fake.cancelTaskReturns.result2, fake.cancelTaskReturns.result3
 	}
 }
 
@@ -1506,12 +1507,13 @@ func (fake *FakeDB) CancelTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.cancelTaskArgsForCall[i].logger, fake.cancelTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeDB) CancelTaskReturns(result1 *models.Task, result2 error) {
+func (fake *FakeDB) CancelTaskReturns(result1 *models.Task, result2 string, result3 error) {
 	fake.CancelTaskStub = nil
 	fake.cancelTaskReturns = struct {
 		result1 *models.Task
-		result2 error
-	}{result1, result2}
+		result2 string
+		result3 error
+	}{result1, result2, result3}
 }
 
 func (fake *FakeDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) (task *models.Task, err error) {

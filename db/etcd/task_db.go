@@ -142,7 +142,7 @@ func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool,
 // The cell calls this when the user requested to cancel the task
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // Will fail if the task has already been cancelled or completed normally
-func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task, error) {
+func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task, string, error) {
 	logger = logger.Session("cancel-task", lager.Data{"task-guid": taskGuid})
 
 	logger.Info("starting")
@@ -151,25 +151,26 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task
 	task, index, err := db.taskByGuidWithIndex(logger, taskGuid)
 	if err != nil {
 		logger.Error("failed-to-fetch-task", err)
-		return nil, err
+		return nil, "", err
 	}
 	logger.Info("succeeded-getting-task")
 
 	if task.State == models.Task_Resolving || task.State == models.Task_Completed {
 		err = models.NewTaskTransitionError(task.State, models.Task_Completed)
 		logger.Error("invalid-state-transition", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	logger.Info("completing-task")
+	cellID := task.CellId
 	err = db.completeTask(logger, task, index, true, "task was cancelled", "")
 	if err != nil {
 		logger.Error("failed-completing-task", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	logger.Info("succeeded-completing-task")
-	return task, nil
+	return task, cellID, nil
 }
 
 func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, error) {

@@ -17,7 +17,7 @@ type TaskDB interface {
 
 	DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error
 	StartTask(logger lager.Logger, taskGuid, cellId string) (bool, error)
-	CancelTask(logger lager.Logger, taskGuid string) (task *models.Task, err error)
+	CancelTask(logger lager.Logger, taskGuid string) (task *models.Task, cellID string, err error)
 	FailTask(logger lager.Logger, taskGuid, failureReason string) (task *models.Task, err error)
 	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) (task *models.Task, err error)
 	ResolvingTask(logger lager.Logger, taskGuid string) error

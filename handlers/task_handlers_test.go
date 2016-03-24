@@ -370,7 +370,10 @@ var _ = Describe("Task Handlers", func() {
 	})
 
 	Describe("CancelTask", func() {
-		var request *http.Request
+		var (
+			request *http.Request
+			cellID  string
+		)
 
 		BeforeEach(func() {
 			requestBody = &models.TaskGuidRequest{
@@ -378,7 +381,8 @@ var _ = Describe("Task Handlers", func() {
 			}
 
 			task := model_helpers.NewValidTask("hi-bob")
-			fakeTaskDB.CancelTaskReturns(task, nil)
+			cellID = "the-cell"
+			fakeTaskDB.CancelTaskReturns(task, cellID, nil)
 
 			request = newTestRequest(requestBody)
 		})
@@ -412,7 +416,7 @@ var _ = Describe("Task Handlers", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
 						task.CompletionCallbackUrl = "bogus"
-						fakeTaskDB.CancelTaskReturns(task, nil)
+						fakeTaskDB.CancelTaskReturns(task, cellID, nil)
 					})
 
 					It("causes the workpool to complete its callback work", func() {
@@ -423,7 +427,7 @@ var _ = Describe("Task Handlers", func() {
 				Context("but the task has no complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						fakeTaskDB.CancelTaskReturns(task, nil)
+						fakeTaskDB.CancelTaskReturns(task, cellID, nil)
 					})
 
 					It("does not complete the task callback", func() {
@@ -432,6 +436,10 @@ var _ = Describe("Task Handlers", func() {
 				})
 
 				It("stops the task on the rep", func() {
+					Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(1))
+					_, actualCellID := fakeServiceClient.CellByIdArgsForCall(0)
+					Expect(actualCellID).To(Equal(cellID))
+
 					Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
 					guid := fakeRepClient.CancelTaskArgsForCall(0)
 					Expect(guid).To(Equal("task-guid"))
@@ -440,8 +448,7 @@ var _ = Describe("Task Handlers", func() {
 				Context("when the task has no cell id", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						task.CellId = ""
-						fakeTaskDB.CancelTaskReturns(task, nil)
+						fakeTaskDB.CancelTaskReturns(task, "", nil)
 					})
 
 					It("does not return an error", func() {
@@ -486,7 +493,7 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when cancelling the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.CancelTaskReturns(nil, models.ErrUnknownError)
+					fakeTaskDB.CancelTaskReturns(nil, "", models.ErrUnknownError)
 				})
 
 				It("responds with an error", func() {

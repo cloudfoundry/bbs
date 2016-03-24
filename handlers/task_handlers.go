@@ -134,7 +134,7 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	task, err := h.db.CancelTask(logger, request.TaskGuid)
+	task, cellID, err := h.db.CancelTask(logger, request.TaskGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -145,11 +145,11 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 		go h.taskCompletionClient.Submit(h.db, task)
 	}
 
-	if task.CellId == "" {
+	if cellID == "" {
 		return
 	}
 
-	cellPresence, err := h.serviceClient.CellById(logger, task.CellId)
+	cellPresence, err := h.serviceClient.CellById(logger, cellID)
 	if err != nil {
 		logger.Error("failed-fetching-cell-presence", err)
 		return

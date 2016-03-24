@@ -305,130 +305,137 @@ var _ = Describe("TaskDB", func() {
 	})
 
 	Describe("CancelTask", func() {
-		Context("when the store is reachable", func() {
-			var (
-				cancelError     error
-				taskAfterCancel *models.Task
-				taskReturned    *models.Task
-			)
+		var (
+			cancelError     error
+			taskAfterCancel *models.Task
+			taskReturned    *models.Task
+			cellIDReturned  string
+		)
 
-			JustBeforeEach(func() {
-				taskReturned, cancelError = etcdDB.CancelTask(logger, taskGuid)
-				taskAfterCancel, _ = etcdDB.TaskByGuid(logger, taskGuid)
+		JustBeforeEach(func() {
+			taskReturned, cellIDReturned, cancelError = etcdDB.CancelTask(logger, taskGuid)
+			taskAfterCancel, _ = etcdDB.TaskByGuid(logger, taskGuid)
+		})
+
+		itMarksTaskAsCancelled := func() {
+			It("does not error", func() {
+				Expect(cancelError).NotTo(HaveOccurred())
 			})
 
-			itMarksTaskAsCancelled := func() {
-				It("does not error", func() {
-					Expect(cancelError).NotTo(HaveOccurred())
-				})
-
-				It("returns the right task", func() {
-					Expect(taskReturned).To(Equal(taskAfterCancel))
-				})
-
-				It("marks the task as completed", func() {
-					Expect(taskAfterCancel.State).To(Equal(models.Task_Completed))
-				})
-
-				It("marks the task as failed", func() {
-					Expect(taskAfterCancel.Failed).To(BeTrue())
-				})
-
-				It("sets the failure reason to cancelled", func() {
-					Expect(taskAfterCancel.FailureReason).To(Equal("task was cancelled"))
-				})
-
-				It("bumps UpdatedAt", func() {
-					Expect(taskAfterCancel.UpdatedAt).To(Equal(clock.Now().UnixNano()))
-				})
-			}
-
-			Context("when the task is in pending state", func() {
-				BeforeEach(func() {
-					taskDef = model_helpers.NewValidTaskDefinition()
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
-					Expect(err).NotTo(HaveOccurred())
-				})
-
-				itMarksTaskAsCancelled()
+			It("returns the right task", func() {
+				Expect(taskReturned).To(Equal(taskAfterCancel))
 			})
 
-			Context("when the task is in running state", func() {
-				BeforeEach(func() {
-					taskDef = model_helpers.NewValidTaskDefinition()
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
-					Expect(err).NotTo(HaveOccurred())
-
-					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
-					Expect(err).NotTo(HaveOccurred())
-				})
-
-				itMarksTaskAsCancelled()
+			It("marks the task as completed", func() {
+				Expect(taskAfterCancel.State).To(Equal(models.Task_Completed))
 			})
 
-			Context("when the task is in completed state", func() {
-				BeforeEach(func() {
-					taskDef = model_helpers.NewValidTaskDefinition()
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
-					Expect(err).NotTo(HaveOccurred())
-
-					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
-					Expect(err).NotTo(HaveOccurred())
-
-					task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
-					Expect(err).NotTo(HaveOccurred())
-					Expect(task.TaskGuid).To(Equal(taskGuid))
-				})
-
-				It("returns an error", func() {
-					Expect(cancelError).To(HaveOccurred())
-					Expect(cancelError).To(Equal(models.NewTaskTransitionError(models.Task_Completed, models.Task_Completed)))
-				})
+			It("marks the task as failed", func() {
+				Expect(taskAfterCancel.Failed).To(BeTrue())
 			})
 
-			Context("when the task is in resolving state", func() {
-				BeforeEach(func() {
-					taskDef = model_helpers.NewValidTaskDefinition()
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
-					Expect(err).NotTo(HaveOccurred())
-
-					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
-					Expect(err).NotTo(HaveOccurred())
-
-					task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
-					Expect(err).NotTo(HaveOccurred())
-					Expect(task.TaskGuid).To(Equal(taskGuid))
-
-					err = etcdDB.ResolvingTask(logger, taskGuid)
-					Expect(err).NotTo(HaveOccurred())
-				})
-
-				It("returns an error", func() {
-					Expect(cancelError).To(HaveOccurred())
-					Expect(cancelError).To(Equal(models.NewTaskTransitionError(models.Task_Resolving, models.Task_Completed)))
-				})
+			It("sets the failure reason to cancelled", func() {
+				Expect(taskAfterCancel.FailureReason).To(Equal("task was cancelled"))
 			})
 
-			Context("when the task does not exist", func() {
-				It("returns an error", func() {
-					Expect(cancelError).To(HaveOccurred())
-					Expect(cancelError).To(Equal(models.ErrResourceNotFound))
-				})
+			It("bumps UpdatedAt", func() {
+				Expect(taskAfterCancel.UpdatedAt).To(Equal(clock.Now().UnixNano()))
+			})
+		}
+
+		Context("when the task is in pending state", func() {
+			BeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				Expect(err).NotTo(HaveOccurred())
 			})
 
-			Context("when the store returns some error other than key not found or timeout", func() {
-				BeforeEach(func() {
-					etcdRunner.Stop()
-				})
+			itMarksTaskAsCancelled()
 
-				AfterEach(func() {
-					etcdRunner.Start()
-				})
+			It("does not return a cellID", func() {
+				Expect(cellIDReturned).To(Equal(""))
+			})
+		})
 
-				It("returns an error", func() {
-					Expect(cancelError).To(HaveOccurred())
-					Expect(cancelError).To(Equal(models.ErrUnknownError))
-				})
+		Context("when the task is in running state", func() {
+			BeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			itMarksTaskAsCancelled()
+
+			It("returns the cellID on which the task was running", func() {
+				Expect(cellIDReturned).To(Equal(cellId))
+			})
+		})
+
+		Context("when the task is in completed state", func() {
+			BeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+
+				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task.TaskGuid).To(Equal(taskGuid))
+			})
+
+			It("returns an error", func() {
+				Expect(cancelError).To(HaveOccurred())
+				Expect(cancelError).To(Equal(models.NewTaskTransitionError(models.Task_Completed, models.Task_Completed)))
+			})
+		})
+
+		Context("when the task is in resolving state", func() {
+			BeforeEach(func() {
+				taskDef = model_helpers.NewValidTaskDefinition()
+				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				Expect(err).NotTo(HaveOccurred())
+
+				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task.TaskGuid).To(Equal(taskGuid))
+
+				err = etcdDB.ResolvingTask(logger, taskGuid)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				Expect(cancelError).To(HaveOccurred())
+				Expect(cancelError).To(Equal(models.NewTaskTransitionError(models.Task_Resolving, models.Task_Completed)))
+			})
+		})
+
+		Context("when the task does not exist", func() {
+			It("returns an error", func() {
+				Expect(cancelError).To(HaveOccurred())
+				Expect(cancelError).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the store returns some error other than key not found or timeout", func() {
+			BeforeEach(func() {
+				etcdRunner.Stop()
+			})
+
+			AfterEach(func() {
+				etcdRunner.Start()
+			})
+
+			It("returns an error", func() {
+				Expect(cancelError).To(HaveOccurred())
+				Expect(cancelError).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})
