@@ -68,6 +68,7 @@ type DesiredLRPRunInfo struct {
 	CachedDependencies            []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
 	LegacyDownloadUser            string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
+	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -176,6 +177,13 @@ func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatesPath() string {
 		return m.TrustedSystemCertificatesPath
 	}
 	return ""
+}
+
+func (m *DesiredLRPRunInfo) GetVolumeMounts() []*VolumeMount {
+	if m != nil {
+		return m.VolumeMounts
+	}
+	return nil
 }
 
 // helper message for marshalling routes
@@ -301,6 +309,7 @@ type DesiredLRP struct {
 	CachedDependencies            []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
 	LegacyDownloadUser            string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
+	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,25,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -467,6 +476,13 @@ func (m *DesiredLRP) GetTrustedSystemCertificatesPath() string {
 	return ""
 }
 
+func (m *DesiredLRP) GetVolumeMounts() []*VolumeMount {
+	if m != nil {
+		return m.VolumeMounts
+	}
+	return nil
+}
+
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -594,6 +610,14 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	}
 	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
 		return false
+	}
+	if len(this.VolumeMounts) != len(that1.VolumeMounts) {
+		return false
+	}
+	for i := range this.VolumeMounts {
+		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -852,6 +876,14 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
 		return false
 	}
+	if len(this.VolumeMounts) != len(that1.VolumeMounts) {
+		return false
+	}
+	for i := range this.VolumeMounts {
+		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
+			return false
+		}
+	}
 	return true
 }
 func (this *DesiredLRPSchedulingInfo) GoString() string {
@@ -887,7 +919,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath) + `}`}, ", ")
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -966,7 +999,8 @@ func (this *DesiredLRP) GoString() string {
 		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag),
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath) + `}`}, ", ")
+		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1182,6 +1216,20 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatesPath)))
 	i += copy(data[i:], m.TrustedSystemCertificatesPath)
+	if len(m.VolumeMounts) > 0 {
+		for _, msg := range m.VolumeMounts {
+			data[i] = 0x8a
+			i++
+			data[i] = 0x1
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -1507,6 +1555,20 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(len(m.TrustedSystemCertificatesPath)))
 	i += copy(data[i:], m.TrustedSystemCertificatesPath)
+	if len(m.VolumeMounts) > 0 {
+		for _, msg := range m.VolumeMounts {
+			data[i] = 0xca
+			i++
+			data[i] = 0x1
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -1606,6 +1668,12 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	l = len(m.TrustedSystemCertificatesPath)
 	n += 2 + l + sovDesiredLrp(uint64(l))
+	if len(m.VolumeMounts) > 0 {
+		for _, e := range m.VolumeMounts {
+			l = e.Size()
+			n += 2 + l + sovDesiredLrp(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1732,6 +1800,12 @@ func (m *DesiredLRP) Size() (n int) {
 	n += 2 + l + sovDesiredLrp(uint64(l))
 	l = len(m.TrustedSystemCertificatesPath)
 	n += 2 + l + sovDesiredLrp(uint64(l))
+	if len(m.VolumeMounts) > 0 {
+		for _, e := range m.VolumeMounts {
+			l = e.Size()
+			n += 2 + l + sovDesiredLrp(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1784,6 +1858,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
+		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1873,6 +1948,7 @@ func (this *DesiredLRP) String() string {
 		`CachedDependencies:` + strings.Replace(fmt.Sprintf("%v", this.CachedDependencies), "CachedDependency", "CachedDependency", 1) + `,`,
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
+		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2480,6 +2556,34 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.TrustedSystemCertificatesPath = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 17:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VolumeMounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VolumeMounts = append(m.VolumeMounts, &VolumeMount{})
+			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -3573,6 +3677,34 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.TrustedSystemCertificatesPath = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 25:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VolumeMounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VolumeMounts = append(m.VolumeMounts, &VolumeMount{})
+			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

@@ -67,6 +67,14 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		ModificationTag:               &modTag,
 		LegacyDownloadUser:            "legacy-jim",
 		TrustedSystemCertificatesPath: "/etc/somepath",
+		VolumeMounts: []*models.VolumeMount{
+			{
+				Driver:        "my-driver",
+				VolumeId:      "my-volume",
+				ContainerPath: "/mnt/mypath",
+				Mode:          models.BindMountMode_RO,
+			},
+		},
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())

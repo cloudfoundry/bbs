@@ -24,6 +24,7 @@
 		security_group.proto
 		task.proto
 		task_requests.proto
+		volume_mount.proto
 
 	It has these top-level messages:
 		Action
