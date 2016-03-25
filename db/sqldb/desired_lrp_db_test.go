@@ -54,7 +54,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			desiredLRP.Routes = &routes
 
-			Expect(desiredLRP.Equal(expectedDesiredLRP)).To(BeTrue())
+			Expect(desiredLRP).To(Equal(*expectedDesiredLRP))
 		})
 
 		Context("when serializing the run information fails", func() {

@@ -12,6 +12,10 @@ import (
 
 func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		logger = logger.Session("create-desired-lrp", lager.Data{"process-guid": desiredLRP.ProcessGuid})
+		logger.Debug("starting")
+		defer logger.Debug("complete")
+
 		routesData, err := json.Marshal(desiredLRP.Routes)
 		runInfo := desiredLRP.DesiredLRPRunInfo(db.clock.Now())
 
@@ -47,7 +51,13 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 }
 
 func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
-	row := db.db.QueryRow("SELECT * FROM desired_lrps WHERE process_guid = ?", processGuid)
+	row := db.db.QueryRow(`
+		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
+			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
+			run_info
+		FROM desired_lrps
+		WHERE process_guid = ?`,
+		processGuid)
 	return db.fetchDesiredLRP(logger, row)
 }
 
@@ -55,9 +65,19 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 	var rows *sql.Rows
 	var err error
 	if filter.Domain != "" {
-		rows, err = db.db.Query("SELECT * FROM desired_lrps WHERE domain = ?", filter.Domain)
+		rows, err = db.db.Query(`
+			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
+				disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
+				run_info
+			FROM desired_lrps
+			WHERE domain = ?`,
+			filter.Domain)
 	} else {
-		rows, err = db.db.Query("SELECT * FROM desired_lrps")
+		rows, err = db.db.Query(`
+			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
+				disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
+				run_info
+			FROM desired_lrps`)
 	}
 	if err != nil {
 		return nil, err
@@ -80,15 +100,16 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	var err error
 	if filter.Domain != "" {
 		rows, err = db.db.Query(`
-		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index
-			FROM desired_lrps WHERE domain = ?`,
+			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
+				disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index
+			FROM desired_lrps
+			WHERE domain = ?`,
 			filter.Domain,
 		)
 	} else {
 		rows, err = db.db.Query(`
-		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index
+			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
+				disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index
 			FROM desired_lrps`,
 		)
 	}
