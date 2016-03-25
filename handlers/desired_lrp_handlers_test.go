@@ -553,7 +553,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						startReq := startRequests[0]
 						Expect(startReq.ProcessGuid).To(Equal("some-guid"))
 						Expect(startReq.Domain).To(Equal("some-domain"))
-						Expect(startReq.Resource).To(Equal(rep.Resource{MemoryMB: 128, DiskMB: 512, RootFs: "some-stack"}))
+						Expect(startReq.Resource).To(Equal(rep.Resource{MemoryMB: 128, DiskMB: 512, RootFs: "some-stack", VolumeDrivers: []string{}}))
 						Expect(startReq.Indices).To(ContainElement(2))
 						Expect(startReq.Indices).To(ContainElement(1))
 					})
