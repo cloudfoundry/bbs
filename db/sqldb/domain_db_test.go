@@ -5,7 +5,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("DomainDB", func() {
@@ -46,8 +45,6 @@ var _ = Describe("DomainDB", func() {
 	})
 
 	Describe("UpsertDomain", func() {
-		var logger *lagertest.TestLogger
-
 		Context("when the domain is not present in the DB", func() {
 			It("inserts a new domain with the requested TTL", func() {
 				domain := "my-awesome-domain"
