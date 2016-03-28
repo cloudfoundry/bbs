@@ -9,8 +9,13 @@ import (
 )
 
 func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
+	logger = logger.Session("desire-task-sqldb", lager.Data{"task_guid": taskGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	taskDefData, err := db.serializeModel(logger, taskDef)
 	if err != nil {
+		logger.Error("failed-serializing-task-definition", err)
 		return err
 	}
 
@@ -29,6 +34,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 	)
 
 	if err != nil {
+		logger.Error("failed-inserting-task", err)
 		return db.convertSQLError(err)
 	}
 
@@ -36,6 +42,10 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 }
 
 func (db *SQLDB) Tasks(logger lager.Logger, taskFilter models.TaskFilter) ([]*models.Task, error) {
+	logger = logger.Session("tasks-sqldb", lager.Data{"filter": taskFilter})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	var rows *sql.Rows
 	var err error
 	if taskFilter.Domain != "" && taskFilter.CellID != "" {
@@ -48,7 +58,8 @@ func (db *SQLDB) Tasks(logger lager.Logger, taskFilter models.TaskFilter) ([]*mo
 		rows, err = db.db.Query("SELECT * FROM tasks")
 	}
 	if err != nil {
-		return nil, err
+		logger.Error("failed-query", err)
+		return nil, db.convertSQLError(err)
 	}
 	defer rows.Close()
 
@@ -56,33 +67,50 @@ func (db *SQLDB) Tasks(logger lager.Logger, taskFilter models.TaskFilter) ([]*mo
 	for rows.Next() {
 		task, err := db.fetchTask(logger, rows)
 		if err != nil {
+			logger.Error("failed-fetch", err)
 			return nil, err
 		}
 		results = append(results, task)
+	}
+
+	if rows.Err() != nil {
+		logger.Error("failed-getting-next-row", rows.Err())
+		return nil, db.convertSQLError(rows.Err())
 	}
 
 	return results, nil
 }
 
 func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
+	logger = logger.Session("task-by-guid-sqldb", lager.Data{"task_guid": taskGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	row := db.db.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
 	return db.fetchTask(logger, row)
 }
 
 func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, error) {
+	logger = logger.Session("start-task-sqldb", lager.Data{"task_guid": taskGuid, "cell_id": cellId})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	var started bool
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
 		if task.State == models.Task_Running && task.CellId == cellId {
+			logger.Debug("task-already-running-on-cell")
 			return nil
 		}
 
 		if err = task.ValidateTransitionTo(models.Task_Running); err != nil {
+			logger.Error("failed-to-transition-task-to-running", err)
 			return err
 		}
 
@@ -96,6 +124,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 			taskGuid,
 		)
 		if err != nil {
+			logger.Error("failed-to-update-task", err)
 			return db.convertSQLError(err)
 		}
 
@@ -107,6 +136,10 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 }
 
 func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task, string, error) {
+	logger = logger.Session("cancel-task-sqldb", lager.Data{"task_guid": taskGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	var task *models.Task
 	var cellID string
 
@@ -114,6 +147,7 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 		var err error
 		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -121,6 +155,7 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 
 		if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
 			if task.State != models.Task_Pending {
+				logger.Error("failed-to-transition-task-to-completed", err)
 				return err
 			}
 		}
@@ -131,20 +166,27 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 }
 
 func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) (*models.Task, error) {
+	logger = logger.Session("complete-task-sqldb", lager.Data{"task_guid": taskGuid, "cell_id": cellID})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	var task *models.Task
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
 		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
 		if task.CellId != cellID && task.State == models.Task_Running {
+			logger.Error("failed-task-already-running-on-different-cell", err)
 			return models.NewRunningOnDifferentCellError(cellID, task.CellId)
 		}
 
 		if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
+			logger.Error("failed-to-transition-task-to-completed", err)
 			return err
 		}
 
@@ -155,17 +197,23 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 }
 
 func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, error) {
+	logger = logger.Session("fail-task-sqldb", lager.Data{"task_guid": taskGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	var task *models.Task
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
 		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
 		if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
 			if task.State != models.Task_Pending {
+				logger.Error("failed-to-transition-task-to-completed", err)
 				return err
 			}
 		}
@@ -176,45 +224,17 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 	return task, err
 }
 
-func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx *sql.Tx) error {
-	now := db.clock.Now()
-	_, err := tx.Exec(
-		`UPDATE tasks SET
-		  state = ?, updated_at = ?, first_completed_at = ?,
-			failed = ?, failure_reason = ?, result = ?, cell_id = ?
-			WHERE guid = ?
-			`,
-		models.Task_Completed,
-		now,
-		now,
-		failed,
-		failureReason,
-		result,
-		"",
-		task.TaskGuid,
-	)
-	if err != nil {
-		return db.convertSQLError(err)
-	}
-
-	task.State = models.Task_Completed
-	task.UpdatedAt = now.UnixNano()
-	task.FirstCompletedAt = now.UnixNano()
-	task.Failed = failed
-	task.FailureReason = failureReason
-	task.Result = result
-	task.CellId = ""
-
-	return nil
-}
-
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
 // stager ever attempts to handle a completed task
 func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
+	logger = logger.Session("resolving-task-sqldb", lager.Data{"task_guid": taskGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
-			logger.Error("failed-getting-task", err)
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -243,10 +263,14 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 }
 
 func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
+	logger = logger.Session("delete-task-sqldb", lager.Data{"task_guid": taskGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
 		if err != nil {
-			logger.Error("failed-getting-task", err)
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -267,6 +291,39 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 
 		return nil
 	})
+}
+
+func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx *sql.Tx) error {
+	now := db.clock.Now()
+	_, err := tx.Exec(
+		`UPDATE tasks SET
+		  state = ?, updated_at = ?, first_completed_at = ?,
+			failed = ?, failure_reason = ?, result = ?, cell_id = ?
+			WHERE guid = ?
+			`,
+		models.Task_Completed,
+		now,
+		now,
+		failed,
+		failureReason,
+		result,
+		"",
+		task.TaskGuid,
+	)
+	if err != nil {
+		logger.Error("failed-updating-task", err)
+		return db.convertSQLError(err)
+	}
+
+	task.State = models.Task_Completed
+	task.UpdatedAt = now.UnixNano()
+	task.FirstCompletedAt = now.UnixNano()
+	task.Failed = failed
+	task.FailureReason = failureReason
+	task.Result = result
+	task.CellId = ""
+
+	return nil
 }
 
 func (db *SQLDB) fetchTaskForShare(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
@@ -296,6 +353,7 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner) (*models.Tas
 		&taskDefData,
 	)
 	if err != nil {
+		logger.Error("failed-scanning-row", err)
 		return nil, models.ErrResourceNotFound
 	}
 
