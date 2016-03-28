@@ -106,8 +106,9 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 	return started, err
 }
 
-func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task, error) {
+func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task, string, error) {
 	var task *models.Task
+	var cellID string
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
@@ -115,6 +116,8 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 		if err != nil {
 			return err
 		}
+
+		cellID = task.CellId
 
 		if err = task.ValidateTransitionTo(models.Task_Completed); err != nil {
 			if task.State != models.Task_Pending {
@@ -124,7 +127,7 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 		return db.completeTask(logger, task, true, "task was cancelled", "", tx)
 	})
 
-	return task, err
+	return task, cellID, err
 }
 
 func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) (*models.Task, error) {

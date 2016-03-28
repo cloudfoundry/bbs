@@ -130,19 +130,6 @@ func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 	}
 }
 
-func (desired *DesiredLRP) ApplyUpdate(update *DesiredLRPUpdate) *DesiredLRP {
-	if update.Instances != nil {
-		desired.Instances = *update.Instances
-	}
-	if update.Routes != nil {
-		desired.Routes = update.Routes
-	}
-	if update.Annotation != nil {
-		desired.Annotation = *update.Annotation
-	}
-	return desired
-}
-
 func (d *DesiredLRP) DesiredLRPKey() DesiredLRPKey {
 	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.LogGuid)
 }

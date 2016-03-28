@@ -341,7 +341,7 @@ var _ = Describe("TaskDB", func() {
 				fakeClock.Increment(time.Second)
 				now := fakeClock.Now().UnixNano()
 
-				task, err := sqlDB.CancelTask(logger, taskGuid)
+				task, cellID, err := sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(task.State).To(Equal(models.Task_Completed))
@@ -351,6 +351,7 @@ var _ = Describe("TaskDB", func() {
 				Expect(task.FailureReason).To(Equal("task was cancelled"))
 				Expect(task.Result).To(Equal(""))
 				Expect(task.CellId).To(Equal(""))
+				Expect(cellID).To(Equal(""))
 			})
 
 			Context("when there are multiple tasks", func() {
@@ -369,7 +370,7 @@ var _ = Describe("TaskDB", func() {
 					fakeClock.Increment(time.Second)
 					now := fakeClock.Now().UnixNano()
 
-					task, err := sqlDB.CancelTask(logger, taskGuid)
+					task, _, err := sqlDB.CancelTask(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(task.State).To(Equal(models.Task_Completed))
@@ -396,7 +397,7 @@ var _ = Describe("TaskDB", func() {
 				fakeClock.Increment(time.Second)
 				now := fakeClock.Now().UnixNano()
 
-				task, err := sqlDB.CancelTask(logger, taskGuid)
+				task, cellID, err := sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(task.State).To(Equal(models.Task_Completed))
@@ -406,6 +407,7 @@ var _ = Describe("TaskDB", func() {
 				Expect(task.FailureReason).To(Equal("task was cancelled"))
 				Expect(task.Result).To(Equal(""))
 				Expect(task.CellId).To(Equal(""))
+				Expect(cellID).To(Equal("the-cell"))
 			})
 		})
 
@@ -416,7 +418,7 @@ var _ = Describe("TaskDB", func() {
 				err := sqlDB.DesireTask(logger, taskDefinition, taskGuid, taskDomain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.CancelTask(logger, taskGuid)
+				_, _, err = sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				beforeTask, err = sqlDB.TaskByGuid(logger, taskGuid)
@@ -424,7 +426,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("returns an InvalidStateTransition error", func() {
-				_, err := sqlDB.CancelTask(logger, taskGuid)
+				_, _, err := sqlDB.CancelTask(logger, taskGuid)
 				modelErr := models.ConvertError(err)
 				Expect(modelErr).NotTo(BeNil())
 				Expect(modelErr.Type).To(Equal(models.Error_InvalidStateTransition))
@@ -445,7 +447,7 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			It("returns an InvalidStateTransition error", func() {
-				_, err := sqlDB.CancelTask(logger, taskGuid)
+				_, _, err := sqlDB.CancelTask(logger, taskGuid)
 				modelErr := models.ConvertError(err)
 				Expect(modelErr).NotTo(BeNil())
 				Expect(modelErr.Type).To(Equal(models.Error_InvalidStateTransition))
@@ -458,7 +460,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when the task does not exist", func() {
 			It("returns an InvalidStateTransition error", func() {
-				_, err := sqlDB.CancelTask(logger, taskGuid)
+				_, _, err := sqlDB.CancelTask(logger, taskGuid)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})

@@ -282,7 +282,13 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP.ApplyUpdate(update)))
+
+			expectedDesiredLRP.Instances = instances
+			expectedDesiredLRP.Annotation = annotation
+			expectedDesiredLRP.Routes = &routes
+			expectedDesiredLRP.ModificationTag.Increment()
+
+			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
 		})
 
 		It("returns the previous instance count", func() {
@@ -306,17 +312,23 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP.ApplyUpdate(update)))
+
+			expectedDesiredLRP.Instances = instances
+			expectedDesiredLRP.ModificationTag.Increment()
+
+			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
 		})
 
-		It("does nothing if update is empty", func() {
+		It("updates only the modification tag if update is empty", func() {
 			update = &models.DesiredLRPUpdate{}
 			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP.ApplyUpdate(update)))
+
+			expectedDesiredLRP.ModificationTag.Increment()
+			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
 		})
 
 		Context("when routes param is invalid", func() {

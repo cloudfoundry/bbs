@@ -51,6 +51,10 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 }
 
 func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
+	logger = logger.Session("desire-lrp-by-process-guid", lager.Data{"process_guid": processGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	row := db.db.QueryRow(`
 		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
 			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
@@ -62,6 +66,10 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 }
 
 func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+	logger = logger.Session("desired-lrps", lager.Data{"filter": filter})
+	logger.Debug("start")
+	defer logger.Debug("complete")
+
 	var rows *sql.Rows
 	var err error
 	if filter.Domain != "" {
@@ -74,12 +82,13 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 			filter.Domain)
 	} else {
 		rows, err = db.db.Query(`
-			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-				disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
-				run_info
-			FROM desired_lrps`)
+		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
+			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
+			run_info
+		FROM desired_lrps`)
 	}
 	if err != nil {
+		logger.Error("failed-query", err)
 		return nil, err
 	}
 
@@ -87,15 +96,26 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 	for rows.Next() {
 		desiredLRP, err := db.fetchDesiredLRP(logger, rows)
 		if err != nil {
+			logger.Error("failed-reading-row", err)
 			continue
 		}
 		results = append(results, desiredLRP)
+	}
+
+	if rows.Err() != nil {
+		err = db.convertSQLError(rows.Err())
+		logger.Error("failed-fetching-row", err)
+		return nil, err
 	}
 
 	return results, nil
 }
 
 func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+	logger = logger.Session("desired-lrp-scheduling-infos", lager.Data{"filter": filter})
+	logger.Debug("start")
+	defer logger.Debug("complete")
+
 	var rows *sql.Rows
 	var err error
 	if filter.Domain != "" {
@@ -121,15 +141,26 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	for rows.Next() {
 		desiredLRPSchedulingInfo, err := db.fetchDesiredLRPSchedulingInfo(logger, rows)
 		if err != nil {
+			logger.Error("failed-reading-row", err)
 			continue
 		}
 		results = append(results, desiredLRPSchedulingInfo)
+	}
+
+	if rows.Err() != nil {
+		err = db.convertSQLError(rows.Err())
+		logger.Error("failed-fetching-row", err)
+		return nil, err
 	}
 
 	return results, nil
 }
 
 func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (int32, error) {
+	logger = logger.Session("update-desired-lrp", lager.Data{"process-guid": processGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	var previousInstanceCount int32
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		err := db.lockDesiredLRPByGuidForShare(logger, processGuid, tx)
@@ -137,15 +168,18 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			return err
 		}
 
-		row := db.db.QueryRow("SELECT instances FROM desired_lrps WHERE process_guid = ?", processGuid)
+		var previousModificationTagIndex int32
 
-		err = row.Scan(&previousInstanceCount)
+		row := db.db.QueryRow("SELECT instances, modification_tag_index FROM desired_lrps WHERE process_guid = ?", processGuid)
+
+		err = row.Scan(&previousInstanceCount, &previousModificationTagIndex)
 		if err != nil {
 			return models.ErrResourceNotFound
 		}
 
-		setKeys := []string{}
-		setValues := []interface{}{}
+		setKeys := []string{"modification_tag_index = ?"}
+		setValues := []interface{}{previousModificationTagIndex + 1}
+
 		if update.Annotation != nil {
 			setKeys = append(setKeys, "annotation = ?")
 			setValues = append(setValues, *update.Annotation)
@@ -159,14 +193,11 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		if update.Routes != nil {
 			routeData, err := json.Marshal(update.Routes)
 			if err != nil {
+				logger.Error("failed-marshalling-routes", err)
 				return models.ErrBadRequest
 			}
 			setKeys = append(setKeys, "routes = ?")
 			setValues = append(setValues, routeData)
-		}
-
-		if len(setKeys) == 0 {
-			return nil
 		}
 
 		setValues = append(setValues, processGuid)
@@ -174,12 +205,16 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		query := fmt.Sprintf("UPDATE desired_lrps SET %s WHERE process_guid = ?", strings.Join(setKeys, ", "))
 		stmt, err := tx.Prepare(query)
 		if err != nil {
-			return db.convertSQLError(err)
+			err = db.convertSQLError(err)
+			logger.Error("failed-preparing-query", err)
+			return err
 		}
 
 		_, err = stmt.Exec(setValues...)
 		if err != nil {
-			return db.convertSQLError(err)
+			err = db.convertSQLError(err)
+			logger.Error("failed-executing-query", err)
+			return err
 		}
 
 		return nil
@@ -189,6 +224,10 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 }
 
 func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
+	logger = logger.Session("remove-desired-lrp", lager.Data{"process-guid": processGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		err := db.lockDesiredLRPByGuidForShare(logger, processGuid, tx)
 		if err != nil {
@@ -197,8 +236,9 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 
 		_, err = tx.Exec("DELETE FROM desired_lrps WHERE process_guid = ?", processGuid)
 		if err != nil {
-			panic(err)
-			return db.convertSQLError(err)
+			err = db.convertSQLError(err)
+			logger.Error("failed-deleting-from-db", err)
+			return err
 		}
 
 		return nil

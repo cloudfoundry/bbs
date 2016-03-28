@@ -297,13 +297,14 @@ var _ = Describe("DesiredLRP", func() {
 		It("updates instances", func() {
 			instances := int32(100)
 			update := &models.DesiredLRPUpdate{Instances: &instances}
+			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
-			expectedLRP := desiredLRP
-			expectedLRP.Instances = instances
+			expectedSchedulingInfo := schedulingInfo
+			expectedSchedulingInfo.Instances = instances
+			expectedSchedulingInfo.ModificationTag.Increment()
 
-			updatedLRP := desiredLRP.ApplyUpdate(update)
-			Expect(*updatedLRP).To(Equal(expectedLRP))
-			Expect(updatedLRP.Instances).To(Equal(instances))
+			schedulingInfo.ApplyUpdate(update)
+			Expect(schedulingInfo).To(Equal(expectedSchedulingInfo))
 		})
 
 		It("allows empty routes to be set", func() {
@@ -311,12 +312,14 @@ var _ = Describe("DesiredLRP", func() {
 				Routes: &models.Routes{},
 			}
 
-			expectedLRP := desiredLRP
-			expectedLRP.Routes = &models.Routes{}
+			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
-			updatedLRP := desiredLRP.ApplyUpdate(update)
-			Expect(*updatedLRP).To(Equal(expectedLRP))
-			Expect(updatedLRP.Routes).To(Equal(&models.Routes{}))
+			expectedSchedulingInfo := schedulingInfo
+			expectedSchedulingInfo.Routes = models.Routes{}
+			expectedSchedulingInfo.ModificationTag.Increment()
+
+			schedulingInfo.ApplyUpdate(update)
+			Expect(schedulingInfo).To(Equal(expectedSchedulingInfo))
 		})
 
 		It("allows annotation to be set", func() {
@@ -325,12 +328,14 @@ var _ = Describe("DesiredLRP", func() {
 				Annotation: &annotation,
 			}
 
-			expectedLRP := desiredLRP
-			expectedLRP.Annotation = annotation
+			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
-			updatedLRP := desiredLRP.ApplyUpdate(update)
-			Expect(*updatedLRP).To(Equal(expectedLRP))
-			Expect(updatedLRP.Annotation).To(Equal(annotation))
+			expectedSchedulingInfo := schedulingInfo
+			expectedSchedulingInfo.Annotation = annotation
+			expectedSchedulingInfo.ModificationTag.Increment()
+
+			schedulingInfo.ApplyUpdate(update)
+			Expect(schedulingInfo).To(Equal(expectedSchedulingInfo))
 		})
 
 		It("allows empty annotation to be set", func() {
@@ -339,12 +344,14 @@ var _ = Describe("DesiredLRP", func() {
 				Annotation: &emptyAnnotation,
 			}
 
-			expectedLRP := desiredLRP
-			expectedLRP.Annotation = emptyAnnotation
+			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
-			updatedLRP := desiredLRP.ApplyUpdate(update)
-			Expect(*updatedLRP).To(Equal(expectedLRP))
-			Expect(updatedLRP.Annotation).To(Equal(emptyAnnotation))
+			expectedSchedulingInfo := schedulingInfo
+			expectedSchedulingInfo.Annotation = emptyAnnotation
+			expectedSchedulingInfo.ModificationTag.Increment()
+
+			schedulingInfo.ApplyUpdate(update)
+			Expect(schedulingInfo).To(Equal(expectedSchedulingInfo))
 		})
 
 		It("updates routes", func() {
@@ -355,14 +362,16 @@ var _ = Describe("DesiredLRP", func() {
 				},
 			}
 
-			expectedLRP := desiredLRP
-			expectedLRP.Routes = &models.Routes{
+			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+
+			expectedSchedulingInfo := schedulingInfo
+			expectedSchedulingInfo.Routes = models.Routes{
 				"router": &rawMessage,
 			}
+			expectedSchedulingInfo.ModificationTag.Increment()
 
-			updatedLRP := desiredLRP.ApplyUpdate(update)
-			Expect(*updatedLRP).To(Equal(expectedLRP))
-			Expect(updatedLRP.Routes).To(Equal(&models.Routes{"router": &rawMessage}))
+			schedulingInfo.ApplyUpdate(update)
+			Expect(schedulingInfo).To(Equal(expectedSchedulingInfo))
 		})
 	})
 
