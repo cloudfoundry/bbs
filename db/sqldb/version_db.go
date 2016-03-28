@@ -10,8 +10,13 @@ import (
 const VersionID = "version"
 
 func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error {
+	logger = logger.Session("set-version-sqldb", lager.Data{"version": version})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	versionJSON, err := json.Marshal(version)
 	if err != nil {
+		logger.Error("failed-marshalling-version", err)
 		return err
 	}
 
@@ -19,6 +24,10 @@ func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error 
 }
 
 func (db *SQLDB) Version(logger lager.Logger) (*models.Version, error) {
+	logger = logger.Session("version-sqldb")
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
 	versionJSON, err := db.getConfigurationValue(logger, VersionID)
 	if err != nil {
 		return nil, err
@@ -27,6 +36,7 @@ func (db *SQLDB) Version(logger lager.Logger) (*models.Version, error) {
 	var version models.Version
 	err = json.Unmarshal([]byte(versionJSON), &version)
 	if err != nil {
+		logger.Error("failed-to-deserialize-version", err)
 		return nil, models.ErrDeserializeJSON
 	}
 
