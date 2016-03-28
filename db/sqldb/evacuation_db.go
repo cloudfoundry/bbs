@@ -16,7 +16,9 @@ func (db *SQLDB) EvacuateActualLRP(
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
 ) error {
-	logger = logger.Session("evacuate-lrp")
+	logger = logger.Session("evacuate-lrp-sqldb", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		processGuid := lrpKey.ProcessGuid
@@ -24,21 +26,25 @@ func (db *SQLDB) EvacuateActualLRP(
 
 		actualLRP, err := db.fetchActualLRPForShare(logger, processGuid, index, true, tx)
 		if err == models.ErrResourceNotFound {
+			logger.Debug("creating-evacuating-lrp")
 			return db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
 		}
 
 		if err != nil {
+			logger.Error("failed-locking-lrp", err)
 			return err
 		}
 
 		if actualLRP.ActualLRPKey.Equal(lrpKey) &&
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
 			reflect.DeepEqual(actualLRP.ActualLRPNetInfo, *netInfo) {
+			logger.Debug("evacuating-lrp-already-exists")
 			return nil
 		}
 
 		netInfoData, err := db.serializer.Marshal(logger, db.format, netInfo)
 		if err != nil {
+			logger.Error("failed-serializing-net-info", err)
 			return err
 		}
 
@@ -62,7 +68,49 @@ func (db *SQLDB) EvacuateActualLRP(
 		)
 
 		if err != nil {
+			logger.Error("failed-update-evacuating-lrp", err)
 			return db.convertSQLError(err)
+		}
+
+		return nil
+	})
+}
+
+func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+	logger = logger.Session("remove-evacuating-lrp-sqldb", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		processGuid := lrpKey.ProcessGuid
+		index := lrpKey.Index
+
+		lrp, err := db.fetchActualLRPForShare(logger, processGuid, index, true, tx)
+		if err == models.ErrResourceNotFound {
+			logger.Debug("evacuating-lrp-does-not-exist")
+			return nil
+		}
+
+		if err != nil {
+			logger.Error("failed-fetching-actual-lrp", err)
+			return err
+		}
+
+		if !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
+			logger.Debug("actual-lrp-instance-key-mismatch", lager.Data{"instance-key-param": instanceKey, "instance-key-from-db": lrp.ActualLRPInstanceKey})
+			return models.ErrActualLRPCannotBeRemoved
+		}
+
+		_, err = tx.Exec(`
+				DELETE FROM actual_lrps
+					WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+			`,
+			processGuid, index, true,
+		)
+
+		if err != nil {
+			logger.Error("failed-delete", err)
+			return models.ErrActualLRPCannotBeRemoved
 		}
 
 		return nil
@@ -75,10 +123,9 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
 	tx *sql.Tx) error {
-	logger.Session("creating-evacuating-actual-lrp")
-
 	netInfoData, err := db.serializer.Marshal(logger, db.format, netInfo)
 	if err != nil {
+		logger.Error("failed-serializing-net-info", err)
 		return err
 	}
 
@@ -116,45 +163,8 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	)
 
 	if err != nil {
+		logger.Error("failed-insert-evacuating-lrp", err)
 		return db.convertSQLError(err)
 	}
 	return nil
-}
-
-func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
-	logger = logger.Session("remove-evacuating-lrp")
-
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		processGuid := lrpKey.ProcessGuid
-		index := lrpKey.Index
-
-		lrp, err := db.fetchActualLRPForShare(logger, processGuid, index, true, tx)
-		if err == models.ErrResourceNotFound {
-			return nil
-		}
-
-		if err != nil {
-			logger.Error("failed-fetching-actual-lrp", err)
-			return err
-		}
-
-		if !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
-			logger.Debug("actual-lrp-instance-key-mismatch", lager.Data{"instance-key-param": instanceKey, "instance-key-from-db": lrp.ActualLRPInstanceKey})
-			return models.ErrActualLRPCannotBeRemoved
-		}
-
-		_, err = tx.Exec(`
-				DELETE FROM actual_lrps
-					WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
-			`,
-			processGuid, index, true,
-		)
-
-		if err != nil {
-			logger.Error("failed-delete", err)
-			return models.ErrActualLRPCannotBeRemoved
-		}
-
-		return nil
-	})
 }
