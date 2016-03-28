@@ -18,6 +18,8 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 		return nil, db.convertSQLError(err)
 	}
 
+	defer rows.Close()
+
 	var domain string
 	var results []string
 	for rows.Next() {

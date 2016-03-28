@@ -509,6 +509,12 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 		}
 	}
+
+	if rows.Err() != nil {
+		logger.Error("failed-getting-next-row", rows.Err())
+		return nil, db.convertSQLError(rows.Err())
+	}
+
 	return result, nil
 }
 

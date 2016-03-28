@@ -95,6 +95,8 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	results := []*models.DesiredLRP{}
 	for rows.Next() {
 		desiredLRP, err := db.fetchDesiredLRP(logger, rows)
@@ -139,6 +141,8 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 		logger.Error("failed-query", err)
 		return nil, db.convertSQLError(err)
 	}
+
+	defer rows.Close()
 
 	results := []*models.DesiredLRPSchedulingInfo{}
 	for rows.Next() {
