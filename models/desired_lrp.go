@@ -147,7 +147,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 	if d.ModificationTag != nil {
 		modificationTag = *d.ModificationTag
 	}
-	return NewDesiredLRPSchedulingInfo(d.DesiredLRPKey(), d.Annotation, d.Instances, d.DesiredLRPResource(), routes, modificationTag)
+	return NewDesiredLRPSchedulingInfo(d.DesiredLRPKey(), d.Annotation, d.Instances, d.DesiredLRPResource(), routes, modificationTag, d.VolumeMounts)
 }
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
@@ -332,7 +332,7 @@ func (key DesiredLRPKey) Validate() error {
 	return validationError.ToError()
 }
 
-func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances int32, resource DesiredLRPResource, routes Routes, modTag ModificationTag) DesiredLRPSchedulingInfo {
+func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances int32, resource DesiredLRPResource, routes Routes, modTag ModificationTag, volumeMounts []*VolumeMount) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
 		DesiredLRPKey:      key,
 		Annotation:         annotation,
@@ -340,6 +340,7 @@ func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances
 		DesiredLRPResource: resource,
 		Routes:             routes,
 		ModificationTag:    modTag,
+		VolumeMounts:       volumeMounts,
 	}
 }
 

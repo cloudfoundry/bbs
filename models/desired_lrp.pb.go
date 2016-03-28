@@ -32,6 +32,7 @@ type DesiredLRPSchedulingInfo struct {
 	DesiredLRPResource `protobuf:"bytes,4,opt,name=desired_lrp_resource,embedded=desired_lrp_resource" json:""`
 	Routes             Routes `protobuf:"bytes,5,opt,name=routes,customtype=Routes" json:"routes"`
 	ModificationTag    `protobuf:"bytes,6,opt,name=modification_tag,embedded=modification_tag" json:""`
+	VolumeMounts       []*VolumeMount `protobuf:"bytes,7,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
 }
 
 func (m *DesiredLRPSchedulingInfo) Reset()      { *m = DesiredLRPSchedulingInfo{} }
@@ -49,6 +50,13 @@ func (m *DesiredLRPSchedulingInfo) GetInstances() int32 {
 		return m.Instances
 	}
 	return 0
+}
+
+func (m *DesiredLRPSchedulingInfo) GetVolumeMounts() []*VolumeMount {
+	if m != nil {
+		return m.VolumeMounts
+	}
+	return nil
 }
 
 type DesiredLRPRunInfo struct {
@@ -521,6 +529,14 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if !this.ModificationTag.Equal(&that1.ModificationTag) {
 		return false
 	}
+	if len(this.VolumeMounts) != len(that1.VolumeMounts) {
+		return false
+	}
+	for i := range this.VolumeMounts {
+		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
+			return false
+		}
+	}
 	return true
 }
 func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
@@ -896,7 +912,8 @@ func (this *DesiredLRPSchedulingInfo) GoString() string {
 		`Instances:` + fmt.Sprintf("%#v", this.Instances),
 		`DesiredLRPResource:` + strings.Replace(this.DesiredLRPResource.GoString(), `&`, ``, 1),
 		`Routes:` + fmt.Sprintf("%#v", this.Routes),
-		`ModificationTag:` + strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1) + `}`}, ", ")
+		`ModificationTag:` + strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1),
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
 	return s
 }
 func (this *DesiredLRPRunInfo) GoString() string {
@@ -1082,6 +1099,18 @@ func (m *DesiredLRPSchedulingInfo) MarshalTo(data []byte) (int, error) {
 		return 0, err
 	}
 	i += n4
+	if len(m.VolumeMounts) > 0 {
+		for _, msg := range m.VolumeMounts {
+			data[i] = 0x3a
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -1613,6 +1642,12 @@ func (m *DesiredLRPSchedulingInfo) Size() (n int) {
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	l = m.ModificationTag.Size()
 	n += 1 + l + sovDesiredLrp(uint64(l))
+	if len(m.VolumeMounts) > 0 {
+		for _, e := range m.VolumeMounts {
+			l = e.Size()
+			n += 1 + l + sovDesiredLrp(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1833,6 +1868,7 @@ func (this *DesiredLRPSchedulingInfo) String() string {
 		`DesiredLRPResource:` + strings.Replace(strings.Replace(this.DesiredLRPResource.String(), "DesiredLRPResource", "DesiredLRPResource", 1), `&`, ``, 1) + `,`,
 		`Routes:` + fmt.Sprintf("%v", this.Routes) + `,`,
 		`ModificationTag:` + strings.Replace(strings.Replace(this.ModificationTag.String(), "ModificationTag", "ModificationTag", 1), `&`, ``, 1) + `,`,
+		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2126,6 +2162,34 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.ModificationTag.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VolumeMounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VolumeMounts = append(m.VolumeMounts, &VolumeMount{})
+			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -352,12 +352,30 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				It("emits start auction requests", func() {
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-					expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1, 2, 3, 4)
+					volumeDrivers := []string{}
+					for _, volumeMount := range desiredLRP.VolumeMounts {
+						volumeDrivers = append(volumeDrivers, volumeMount.Driver)
+					}
 
+					expectedStartRequest := auctioneer.LRPStartRequest{
+						ProcessGuid: desiredLRP.ProcessGuid,
+						Domain:      desiredLRP.Domain,
+						Indices:     []int{0, 1, 2, 3, 4},
+						Resource: rep.Resource{
+							MemoryMB:      desiredLRP.MemoryMb,
+							DiskMB:        desiredLRP.DiskMb,
+							RootFs:        desiredLRP.RootFs,
+							VolumeDrivers: volumeDrivers,
+						},
+					}
+
+					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 					startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 					Expect(startAuctions).To(HaveLen(1))
-					Expect(startAuctions[0].ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
+					Expect(startAuctions[0].ProcessGuid).To(Equal(expectedStartRequest.ProcessGuid))
+					Expect(startAuctions[0].Domain).To(Equal(expectedStartRequest.Domain))
 					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
+					Expect(startAuctions[0].Resource).To(Equal(expectedStartRequest.Resource))
 				})
 			})
 		})

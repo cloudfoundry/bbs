@@ -21,6 +21,7 @@ message DesiredLRPSchedulingInfo {
 
   optional bytes routes = 5 [(gogoproto.customtype) = "Routes"];
   optional ModificationTag modification_tag = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  repeated VolumeMount volume_mounts = 7 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
 }
 
 message DesiredLRPRunInfo {

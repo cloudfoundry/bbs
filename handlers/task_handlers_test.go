@@ -13,6 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
+	"github.com/cloudfoundry-incubator/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -240,7 +241,23 @@ var _ = Describe("Task Handlers", func() {
 			It("requests an auction", func() {
 				Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
 
-				expectedStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDef)
+				var volumeMounts []string
+				for _, volMount := range taskDef.VolumeMounts {
+					volumeMounts = append(volumeMounts, volMount.Driver)
+				}
+
+				expectedStartRequest := auctioneer.TaskStartRequest{
+					Task: rep.Task{
+						TaskGuid: taskGuid,
+						Domain:   domain,
+						Resource: rep.Resource{
+							MemoryMB:      256,
+							DiskMB:        1024,
+							RootFs:        "docker:///docker.com/docker",
+							VolumeDrivers: volumeMounts,
+						},
+					},
+				}
 
 				requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
 				Expect(requestedTasks).To(HaveLen(1))
