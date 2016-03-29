@@ -42,14 +42,16 @@ var _ = BeforeSuite(func() {
 	fakeGUIDProvider = &fakes.FakeGUIDProvider{}
 	logger = lagertest.NewTestLogger("sql-db")
 
-	db, err = sql.Open("mysql", "root:password@/")
+	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
+	// in diego-release.
+	db, err = sql.Open("mysql", "diego:diego_password@/")
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
 	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
-	db, err = sql.Open("mysql", fmt.Sprintf("root:password@/diego_%d?parseTime=true", GinkgoParallelNode()))
+	db, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/diego_%d?parseTime=true", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
