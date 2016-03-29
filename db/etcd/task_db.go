@@ -91,7 +91,7 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 	deserializeErr := db.deserializeModel(logger, node, task)
 	if deserializeErr != nil {
 		logger.Error("failed-parsing-desired-task", deserializeErr)
-		return nil, 0, models.ErrDeserializeJSON
+		return nil, 0, models.ErrDeserialize
 	}
 
 	return task, node.ModifiedIndex, nil

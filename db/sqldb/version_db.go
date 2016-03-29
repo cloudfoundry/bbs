@@ -37,7 +37,7 @@ func (db *SQLDB) Version(logger lager.Logger) (*models.Version, error) {
 	err = json.Unmarshal([]byte(versionJSON), &version)
 	if err != nil {
 		logger.Error("failed-to-deserialize-version", err)
-		return nil, models.ErrDeserializeJSON
+		return nil, models.ErrDeserialize
 	}
 
 	return &version, nil

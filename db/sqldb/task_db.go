@@ -360,7 +360,7 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner) (*models.Tas
 	var taskDef models.TaskDefinition
 	err = db.deserializeModel(logger, taskDefData, &taskDef)
 	if err != nil {
-		return nil, models.ErrDeserializeJSON
+		return nil, models.ErrDeserialize
 	}
 
 	task := &models.Task{

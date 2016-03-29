@@ -71,14 +71,9 @@ var (
 		Message: "the request failed for an unknown reason",
 	}
 
-	ErrSerializeJSON = &Error{
-		Type:    Error_InvalidJSON,
-		Message: "could not serialize JSON",
-	}
-
-	ErrDeserializeJSON = &Error{
-		Type:    Error_InvalidJSON,
-		Message: "could not deserialize JSON",
+	ErrDeserialize = &Error{
+		Type:    Error_Deserialize,
+		Message: "could not deserialize record",
 	}
 
 	ErrFailedToOpenEnvelope = &Error{

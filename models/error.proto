@@ -43,8 +43,11 @@ message Error {
 
     DesiredLRPSchedulingInfoCannotBeUpdated = 25;
 
-		GUIDGeneration = 26;
+    GUIDGeneration = 26;
+
+    Deserialize = 27;
   }
+
   optional Type type = 1 [(gogoproto.nullable) = false];
   optional string message = 2 [(gogoproto.nullable) = false];
 }

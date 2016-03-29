@@ -96,12 +96,12 @@ var _ = Describe("Version", func() {
 		})
 
 		Context("when the version key is not valid json", func() {
-			It("returns a ErrDeserializeJSON", func() {
+			It("returns a ErrDeserialize", func() {
 				_, err := db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VersionID, "{{")
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)
-				Expect(err).To(MatchError(models.ErrDeserializeJSON))
+				Expect(err).To(MatchError(models.ErrDeserializenk))
 			})
 		})
 	})

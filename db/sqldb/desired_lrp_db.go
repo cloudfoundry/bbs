@@ -296,7 +296,7 @@ func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*mode
 	var routes models.Routes
 	err = json.Unmarshal(routeData, &routes)
 	if err != nil {
-		return nil, models.ErrDeserializeJSON
+		return nil, models.ErrDeserialize
 	}
 
 	desiredLRP.Routes = &routes
@@ -328,7 +328,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfo(logger lager.Logger, scanner RowS
 	var routes models.Routes
 	err = json.Unmarshal(routeData, &routes)
 	if err != nil {
-		return nil, models.ErrDeserializeJSON
+		return nil, models.ErrDeserialize
 	}
 
 	desiredLRPSchedulingInfo.Routes = routes

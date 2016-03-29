@@ -32,7 +32,7 @@ func (db *ETCDDB) Version(logger lager.Logger) (*models.Version, error) {
 	var version models.Version
 	err = json.Unmarshal([]byte(node.Value), &version)
 	if err != nil {
-		return nil, models.ErrDeserializeJSON
+		return nil, models.ErrDeserialize
 	}
 
 	return &version, nil

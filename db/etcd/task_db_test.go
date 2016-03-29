@@ -137,7 +137,7 @@ var _ = Describe("TaskDB", func() {
 
 			It("errors", func() {
 				_, err := etcdDB.TaskByGuid(logger, "some-other-guid")
-				Expect(err).To(Equal(models.ErrDeserializeJSON))
+				Expect(err).To(Equal(models.ErrDeserialize))
 			})
 		})
 
