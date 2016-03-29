@@ -101,7 +101,7 @@ var _ = Describe("Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)
-				Expect(err).To(MatchError(models.ErrDeserializenk))
+				Expect(err).To(MatchError(models.ErrDeserialize))
 			})
 		})
 	})
