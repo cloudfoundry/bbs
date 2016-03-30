@@ -18,3 +18,7 @@ message VolumeMount {
   optional BindMountMode mode = 4 [(gogoproto.jsontag) = "mode"];
   optional bytes config = 5 [(gogoproto.nullable) = true];
 }
+
+message VolumePlacement {
+  repeated string driver_names = 1 [(gogoproto.jsontag) = "driver_names"];
+}
