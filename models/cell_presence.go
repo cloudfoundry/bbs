@@ -29,6 +29,14 @@ func (set CellSet) HasCellID(cellID string) bool {
 	return ok
 }
 
+func (set CellSet) CellIDs() []string {
+	keys := make([]string, 0, len(set))
+	for k := range set {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func NewCellCapacity(memoryMB, diskMB, containers int32) CellCapacity {
 	return CellCapacity{
 		MemoryMb:   memoryMB,

@@ -65,7 +65,7 @@ func (db *SQLDB) Tasks(logger lager.Logger, taskFilter models.TaskFilter) ([]*mo
 
 	results := []*models.Task{}
 	for rows.Next() {
-		task, err := db.fetchTask(logger, rows)
+		task, err := db.fetchTask(logger, rows, db.db)
 		if err != nil {
 			logger.Error("failed-fetch", err)
 			return nil, err
@@ -87,7 +87,7 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	defer logger.Debug("complete")
 
 	row := db.db.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
-	return db.fetchTask(logger, row)
+	return db.fetchTask(logger, row, db.db)
 }
 
 func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, error) {
@@ -328,10 +328,10 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 
 func (db *SQLDB) fetchTaskForShare(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
 	row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ? LOCK IN SHARE MODE", taskGuid)
-	return db.fetchTask(logger, row)
+	return db.fetchTask(logger, row, tx)
 }
 
-func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner) (*models.Task, error) {
+func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable) (*models.Task, error) {
 	var guid, domain, cellID, failureReason string
 	var result sql.NullString
 	var createdAt, updatedAt, firstCompletedAt time.Time
@@ -360,6 +360,14 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner) (*models.Tas
 	var taskDef models.TaskDefinition
 	err = db.deserializeModel(logger, taskDefData, &taskDef)
 	if err != nil {
+		_, err = tx.Exec(
+			`DELETE FROM tasks WHERE guid = ?`,
+			guid,
+		)
+		if err != nil {
+			logger.Error("failed-deleting-task", err)
+			return nil, db.convertSQLError(err)
+		}
 		return nil, models.ErrDeserialize
 	}
 

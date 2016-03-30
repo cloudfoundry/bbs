@@ -208,8 +208,13 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			expectedDesiredLRPs = []*models.DesiredLRP{}
 			expectedDesiredLRPSchedulingInfos = []*models.DesiredLRPSchedulingInfo{}
-			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-1"))
-			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-2"))
+			desiredLRP1 := model_helpers.NewValidDesiredLRP("d-1")
+			desiredLRP1.VolumeMounts = nil
+			desiredLRP2 := model_helpers.NewValidDesiredLRP("d-2")
+			desiredLRP2.VolumeMounts = nil
+
+			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP1)
+			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP2)
 			for i, expectedDesiredLRP := range expectedDesiredLRPs {
 				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
 				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
