@@ -104,6 +104,20 @@ func (m *VolumeMount) GetConfig() []byte {
 	return nil
 }
 
+type VolumePlacement struct {
+	DriverNames []string `protobuf:"bytes,1,rep,name=driver_names" json:"driver_names"`
+}
+
+func (m *VolumePlacement) Reset()      { *m = VolumePlacement{} }
+func (*VolumePlacement) ProtoMessage() {}
+
+func (m *VolumePlacement) GetDriverNames() []string {
+	if m != nil {
+		return m.DriverNames
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("models.BindMountMode", BindMountMode_name, BindMountMode_value)
 }
@@ -151,6 +165,36 @@ func (this *VolumeMount) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *VolumePlacement) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*VolumePlacement)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if len(this.DriverNames) != len(that1.DriverNames) {
+		return false
+	}
+	for i := range this.DriverNames {
+		if this.DriverNames[i] != that1.DriverNames[i] {
+			return false
+		}
+	}
+	return true
+}
 func (this *VolumeMount) GoString() string {
 	if this == nil {
 		return "nil"
@@ -161,6 +205,14 @@ func (this *VolumeMount) GoString() string {
 		`ContainerPath:` + fmt.Sprintf("%#v", this.ContainerPath),
 		`Mode:` + fmt.Sprintf("%#v", this.Mode),
 		`Config:` + valueToGoStringVolumeMount(this.Config, "byte") + `}`}, ", ")
+	return s
+}
+func (this *VolumePlacement) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.VolumePlacement{` +
+		`DriverNames:` + fmt.Sprintf("%#v", this.DriverNames) + `}`}, ", ")
 	return s
 }
 func valueToGoStringVolumeMount(v interface{}, typ string) string {
@@ -227,6 +279,39 @@ func (m *VolumeMount) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *VolumePlacement) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *VolumePlacement) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.DriverNames) > 0 {
+		for _, s := range m.DriverNames {
+			data[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			data[i] = uint8(l)
+			i++
+			i += copy(data[i:], s)
+		}
+	}
+	return i, nil
+}
+
 func encodeFixed64VolumeMount(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -271,6 +356,18 @@ func (m *VolumeMount) Size() (n int) {
 	return n
 }
 
+func (m *VolumePlacement) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.DriverNames) > 0 {
+		for _, s := range m.DriverNames {
+			l = len(s)
+			n += 1 + l + sovVolumeMount(uint64(l))
+		}
+	}
+	return n
+}
+
 func sovVolumeMount(x uint64) (n int) {
 	for {
 		n++
@@ -294,6 +391,16 @@ func (this *VolumeMount) String() string {
 		`ContainerPath:` + fmt.Sprintf("%v", this.ContainerPath) + `,`,
 		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
 		`Config:` + valueToStringVolumeMount(this.Config) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *VolumePlacement) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&VolumePlacement{`,
+		`DriverNames:` + fmt.Sprintf("%v", this.DriverNames) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -440,6 +547,76 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Config = append([]byte{}, data[iNdEx:postIndex]...)
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipVolumeMount(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *VolumePlacement) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DriverNames", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DriverNames = append(m.DriverNames, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

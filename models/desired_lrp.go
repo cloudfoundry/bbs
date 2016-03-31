@@ -147,7 +147,14 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 	if d.ModificationTag != nil {
 		modificationTag = *d.ModificationTag
 	}
-	return NewDesiredLRPSchedulingInfo(d.DesiredLRPKey(), d.Annotation, d.Instances, d.DesiredLRPResource(), routes, modificationTag, d.VolumeMounts)
+
+	var volumePlacement VolumePlacement
+	volumePlacement.DriverNames = []string{}
+	for _, mount := range d.VolumeMounts {
+		volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
+	}
+
+	return NewDesiredLRPSchedulingInfo(d.DesiredLRPKey(), d.Annotation, d.Instances, d.DesiredLRPResource(), routes, modificationTag, &volumePlacement)
 }
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
@@ -332,7 +339,7 @@ func (key DesiredLRPKey) Validate() error {
 	return validationError.ToError()
 }
 
-func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances int32, resource DesiredLRPResource, routes Routes, modTag ModificationTag, volumeMounts []*VolumeMount) DesiredLRPSchedulingInfo {
+func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances int32, resource DesiredLRPResource, routes Routes, modTag ModificationTag, volumePlacement *VolumePlacement) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
 		DesiredLRPKey:      key,
 		Annotation:         annotation,
@@ -340,7 +347,7 @@ func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances
 		DesiredLRPResource: resource,
 		Routes:             routes,
 		ModificationTag:    modTag,
-		VolumeMounts:       volumeMounts,
+		VolumePlacement:    volumePlacement,
 	}
 }
 
