@@ -363,7 +363,15 @@ func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*mode
 	var runInformation models.DesiredLRPRunInfo
 	err = db.deserializeModel(logger, runInformationData, &runInformation)
 	if err != nil {
-		return nil, err
+		_, err := db.db.Exec(`
+				DELETE FROM desired_lrps
+				WHERE process_guid = ?
+				`, desiredLRP.ProcessGuid)
+
+		if err != nil {
+			logger.Error("failed-deleting-invalid-row", err)
+		}
+		return nil, models.ErrDeserialize
 	}
 	desiredLRP.AddRunInfo(runInformation)
 

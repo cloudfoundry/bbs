@@ -129,6 +129,28 @@ var _ = Describe("DesiredLRPDB", func() {
 			Expect(desiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 		})
 
+		It("prunes all desired lrps with invalid run infos", func() {
+			desiredLRPWithInvalidRunInfo := model_helpers.NewValidDesiredLRP("invalid")
+			Expect(sqlDB.DesireLRP(logger, desiredLRPWithInvalidRunInfo)).To(Succeed())
+			_, err := db.Exec(`UPDATE desired_lrps SET run_info = 'garbage' WHERE process_guid = 'invalid'`)
+			Expect(err).NotTo(HaveOccurred())
+
+			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(desiredLRPs).To(HaveLen(2))
+
+			rows, err := db.Query(`SELECT process_guid FROM desired_lrps`)
+			Expect(err).NotTo(HaveOccurred())
+			processGuids := []string{}
+			for rows.Next() {
+				var processGuid string
+				err := rows.Scan(&processGuid)
+				Expect(err).NotTo(HaveOccurred())
+				processGuids = append(processGuids, processGuid)
+			}
+			Expect(processGuids).NotTo(ContainElement("invalid"))
+		})
+
 		Context("when filtering by domain", func() {
 			It("returns the filtered desired lrps", func() {
 				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{"domain-1"})

@@ -6,6 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -317,6 +318,19 @@ var _ = Describe("ActualLRPDB", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(actualLRPGroups).To(ConsistOf(allActualLRPGroups))
+		})
+
+		It("prunes all actual lrps containing invalid data", func() {
+			actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
+			err := sqlDB.StartActualLRP(logger, &actualLRPWithInvalidData.ActualLRPKey, &actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = db.Exec(`UPDATE actual_lrps SET net_info = 'garbage' WHERE process_guid = 'invalid'`)
+			Expect(err).NotTo(HaveOccurred())
+
+			actualLRPGroups, err := sqlDB.ActualLRPGroups(logger, models.ActualLRPFilter{})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(actualLRPGroups).NotTo(ContainElement(actualLRPWithInvalidData))
 		})
 
 		Context("when filtering on domains", func() {

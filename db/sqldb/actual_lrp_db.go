@@ -441,7 +441,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
-			return nil, false, err
+			return &actualLRP, evacuating, models.ErrDeserialize
 		}
 	}
 
@@ -487,6 +487,17 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 	result := []*models.ActualLRPGroup{}
 	for rows.Next() {
 		actualLRP, evacuating, err := db.scanToActualLRP(logger, rows)
+		if err == models.ErrDeserialize && lockMode != LockForShare {
+			_, err := q.Exec(`
+				DELETE FROM actual_lrps
+				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+				`, actualLRP.ProcessGuid, actualLRP.Index, evacuating)
+			if err != nil {
+				logger.Error("failed-cleaning-up-invalid-actual-lrp", err)
+			}
+			continue
+		}
+
 		if err != nil {
 			logger.Error("failed-scanning-actual-lrp", err)
 			return nil, err
