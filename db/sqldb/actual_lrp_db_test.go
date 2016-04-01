@@ -67,11 +67,8 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
 		var actualLRP *models.ActualLRP
-		var now int64
 
 		BeforeEach(func() {
-			now = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
-
 			actualLRP = &models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey("some-guid", 0, "some-domain"),
 				State:        models.ActualLRPStateUnclaimed,

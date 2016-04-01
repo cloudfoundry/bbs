@@ -22,39 +22,9 @@ var _ = Describe("DesiredLRPDB", func() {
 			err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
-			var desiredLRP models.DesiredLRP
-			desiredLRP.ModificationTag = &models.ModificationTag{}
-			var routeData, runInformationData []byte
-
-			row := db.QueryRow("SELECT * FROM desired_lrps WHERE process_guid = ?", expectedDesiredLRP.ProcessGuid)
-			err = row.Scan(
-				&desiredLRP.ProcessGuid,
-				&desiredLRP.Domain,
-				&desiredLRP.LogGuid,
-				&desiredLRP.Annotation,
-				&desiredLRP.Instances,
-				&desiredLRP.MemoryMb,
-				&desiredLRP.DiskMb,
-				&desiredLRP.RootFs,
-				&routeData,
-				&desiredLRP.ModificationTag.Epoch,
-				&desiredLRP.ModificationTag.Index,
-				&runInformationData,
-			)
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, "the-guid")
 			Expect(err).NotTo(HaveOccurred())
-
-			var runInformation models.DesiredLRPRunInfo
-			err = serializer.Unmarshal(logger, runInformationData, &runInformation)
-			Expect(err).NotTo(HaveOccurred())
-			desiredLRP.AddRunInfo(runInformation)
-
-			var routes models.Routes
-			err = json.Unmarshal(routeData, &routes)
-			Expect(err).NotTo(HaveOccurred())
-
-			desiredLRP.Routes = &routes
-
-			Expect(desiredLRP).To(Equal(*expectedDesiredLRP))
+			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
 		})
 
 		Context("when serializing the run information fails", func() {
@@ -160,9 +130,10 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		Context("when filtering by domain", func() {
-			It("returns a ResourceNotFound error", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{Domain: "domain-1"})
+			It("returns the filtered desired lrps", func() {
+				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{"domain-1"})
 				Expect(err).NotTo(HaveOccurred())
+
 				Expect(desiredLRPs).To(HaveLen(1))
 				Expect(desiredLRPs[0]).To(BeEquivalentTo(expectedDesiredLRPs[0]))
 			})
@@ -209,9 +180,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			expectedDesiredLRPs = []*models.DesiredLRP{}
 			expectedDesiredLRPSchedulingInfos = []*models.DesiredLRPSchedulingInfo{}
 			desiredLRP1 := model_helpers.NewValidDesiredLRP("d-1")
-			desiredLRP1.VolumeMounts = nil
 			desiredLRP2 := model_helpers.NewValidDesiredLRP("d-2")
-			desiredLRP2.VolumeMounts = nil
 
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP1)
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP2)
@@ -231,7 +200,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		Context("when filtering by domain", func() {
-			It("returns a ResourceNotFound error", func() {
+			It("returns the filtered schedulig infos", func() {
 				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{Domain: "domain-1"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPSchedulingInfos).To(HaveLen(1))

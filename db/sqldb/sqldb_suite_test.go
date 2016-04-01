@@ -64,7 +64,7 @@ var _ = BeforeSuite(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	sqlDB = sqldb.NewSQLDB(db, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock)
+	sqlDB = sqldb.NewSQLDB(db, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock)
 })
 
 var _ = AfterEach(func() {
@@ -145,6 +145,7 @@ const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
 	disk_mb INT NOT NULL,
 	rootfs VARCHAR(255) NOT NULL,
 	routes BLOB NOT NULL,
+	volume_placement BLOB NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
 	run_info BLOB NOT NULL

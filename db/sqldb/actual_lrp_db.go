@@ -215,7 +215,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			return models.ErrActualLRPCannotBeStarted
 		}
 
-		netInfoData, err := db.serializer.Marshal(logger, db.format, netInfo)
+		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
@@ -379,7 +379,7 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 }
 
 func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, tx *sql.Tx) error {
-	netInfoData, err := db.serializer.Marshal(logger, db.format, netInfo)
+	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
 		return err
 	}
@@ -440,7 +440,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 	}
 
 	if len(netInfoData) > 0 {
-		err = db.serializer.Unmarshal(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
+		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
 			return nil, false, err

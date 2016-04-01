@@ -120,7 +120,7 @@ func (db *ETCDDB) serializeModel(logger lager.Logger, model format.Versioner) ([
 	return encodedPayload, nil
 }
 
-func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model format.Versioner) error {
+func (db *ETCDDB) deserializeModel(logger lager.Logger, node *etcdclient.Node, model format.Versioner) error { // this is the number of desired instances
 	err := db.serializer.Unmarshal(logger, []byte(node.Value), model)
 	if err != nil {
 		logger.Error("failed-to-deserialize-model", err)

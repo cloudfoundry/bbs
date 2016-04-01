@@ -13,11 +13,12 @@ import (
 )
 
 type SQLDB struct {
-	db           *sql.DB
-	clock        clock.Clock
-	format       *format.Format
-	guidProvider guidprovier.GUIDProvider
-	serializer   format.Serializer
+	db                     *sql.DB
+	convergenceWorkersSize int
+	clock                  clock.Clock
+	format                 *format.Format
+	guidProvider           guidprovier.GUIDProvider
+	serializer             format.Serializer
 }
 
 type RowScanner interface {
@@ -39,13 +40,15 @@ const (
 
 func NewSQLDB(
 	db *sql.DB,
+	convergenceWorkersSize int,
 	serializationFormat *format.Format,
 	cryptor encryption.Cryptor,
 	guidProvider guidprovier.GUIDProvider,
 	clock clock.Clock,
 ) *SQLDB {
 	return &SQLDB{
-		db:           db,
+		db: db,
+		convergenceWorkersSize: convergenceWorkersSize,
 		clock:        clock,
 		format:       serializationFormat,
 		guidProvider: guidProvider,

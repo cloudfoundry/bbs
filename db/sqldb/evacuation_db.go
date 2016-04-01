@@ -42,7 +42,7 @@ func (db *SQLDB) EvacuateActualLRP(
 			return nil
 		}
 
-		netInfoData, err := db.serializer.Marshal(logger, db.format, netInfo)
+		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
 			logger.Error("failed-serializing-net-info", err)
 			return err
@@ -123,7 +123,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
 	tx *sql.Tx) error {
-	netInfoData, err := db.serializer.Marshal(logger, db.format, netInfo)
+	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
 		logger.Error("failed-serializing-net-info", err)
 		return err
