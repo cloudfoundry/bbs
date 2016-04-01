@@ -8,6 +8,10 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+const taskColumns = `tasks.guid, tasks.domain, tasks.updated_at, tasks.created_at,
+	tasks.first_completed_at, tasks.state, tasks.cell_id, tasks.result,
+	tasks.failed, tasks.failure_reason, tasks.task_definition`
+
 func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
 	logger = logger.Session("desire-task-sqldb", lager.Data{"task_guid": taskGuid})
 	logger.Debug("starting")
@@ -48,14 +52,15 @@ func (db *SQLDB) Tasks(logger lager.Logger, taskFilter models.TaskFilter) ([]*mo
 
 	var rows *sql.Rows
 	var err error
+
 	if taskFilter.Domain != "" && taskFilter.CellID != "" {
-		rows, err = db.db.Query("SELECT * FROM tasks WHERE domain = ? AND cell_id = ?", taskFilter.Domain, taskFilter.CellID)
+		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = ? AND cell_id = ?", taskFilter.Domain, taskFilter.CellID)
 	} else if taskFilter.Domain != "" {
-		rows, err = db.db.Query("SELECT * FROM tasks WHERE domain = ?", taskFilter.Domain)
+		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = ?", taskFilter.Domain)
 	} else if taskFilter.CellID != "" {
-		rows, err = db.db.Query("SELECT * FROM tasks WHERE cell_id = ?", taskFilter.CellID)
+		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE cell_id = ?", taskFilter.CellID)
 	} else {
-		rows, err = db.db.Query("SELECT * FROM tasks")
+		rows, err = db.db.Query("SELECT " + taskColumns + " FROM tasks")
 	}
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -86,7 +91,7 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.db.QueryRow("SELECT * FROM tasks WHERE guid = ?", taskGuid)
+	row := db.db.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = ?", taskGuid)
 	return db.fetchTask(logger, row, db.db)
 }
 
@@ -327,7 +332,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 }
 
 func (db *SQLDB) fetchTaskForShare(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
-	row := tx.QueryRow("SELECT * FROM tasks WHERE guid = ? LOCK IN SHARE MODE", taskGuid)
+	row := tx.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = ? LOCK IN SHARE MODE", taskGuid)
 	return db.fetchTask(logger, row, tx)
 }
 

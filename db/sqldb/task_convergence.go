@@ -93,7 +93,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 
 func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, kickTasksDuration, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
 	rows, err := db.db.Query(`
-		SELECT * FROM tasks
+		SELECT `+taskColumns+` FROM tasks
 		WHERE state = ? AND updated_at < ? AND created_at > ?
 		`,
 		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration), db.clock.Now().Add(-expirePendingTaskDuration))
@@ -194,7 +194,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 
 func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
 	rows, err := db.db.Query(`
-		SELECT * FROM tasks
+		SELECT `+taskColumns+` FROM tasks
 		WHERE state = ? AND updated_at < ?
 		`,
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration))
@@ -227,11 +227,12 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 func (db *SQLDB) countTasks(logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
 	row := db.db.QueryRow(`
 		SELECT
-			COUNT(IF(state = '1', 1, NULL)) AS pending_tasks,
-			COUNT(IF(state = '2', 1, NULL)) AS running_tasks,
-			COUNT(IF(state = '3', 1, NULL)) AS completed_tasks,
-			COUNT(IF(state = '4', 1, NULL)) AS resolving_tasks
-		FROM tasks`)
+			COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,
+			COUNT(IF(state = ?, 1, NULL)) AS running_tasks,
+			COUNT(IF(state = ?, 1, NULL)) AS completed_tasks,
+			COUNT(IF(state = ?, 1, NULL)) AS resolving_tasks
+		FROM tasks
+		`, models.Task_Pending, models.Task_Running, models.Task_Completed, models.Task_Resolving)
 	err := row.Scan(&pendingCount, &runningCount, &completedCount, &resolvingCount)
 	if err != nil {
 		logger.Error("failed-query", err)
