@@ -100,7 +100,7 @@ func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Tim
 		JOIN domains ON desired_lrps.domain = domains.domain
 		WHERE actual_lrps.state = ? AND actual_lrps.since < ? AND actual_lrps.evacuating = ?
 	`, models.ActualLRPStateUnclaimed,
-		now.Add(-models.StaleUnclaimedActualLRPDuration),
+		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
 		false)
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -143,9 +143,8 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 	for rows.Next() {
 		var index int
 		actual := &models.ActualLRP{}
-		var since time.Time
 
-		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &since, &actual.CrashCount)
+		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &actual.Since, &actual.CrashCount)
 		if err != nil {
 			continue
 		}
@@ -153,7 +152,6 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 		actual.ProcessGuid = schedulingInfo.ProcessGuid
 		actual.Domain = schedulingInfo.Domain
 		actual.State = models.ActualLRPStateCrashed
-		actual.Since = since.UnixNano()
 
 		if actual.ShouldRestartCrash(now, restartCalculator) {
 			c.submit(func() {
@@ -399,7 +397,8 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	_, err := db.db.Exec(`
 		DELETE FROM domains
 		WHERE expire_time <= ?
-	`, now)
+	`, now.UnixNano())
+
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -409,7 +408,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
 	_, err := db.db.Exec(`
 		DELETE FROM actual_lrps
 		WHERE evacuating = ? AND expire_time <= ?
-	`, true, now)
+	`, true, now.UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}

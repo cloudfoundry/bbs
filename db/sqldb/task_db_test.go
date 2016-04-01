@@ -41,7 +41,7 @@ var _ = Describe("TaskDB", func() {
 
 				var guid, domain, cellID, failureReason string
 				var result sql.NullString
-				var createdAt, updatedAt, firstCompletedAt time.Time
+				var createdAt, updatedAt, firstCompletedAt int64
 				var state int32
 				var failed bool
 				var taskDefData []byte
@@ -63,9 +63,9 @@ var _ = Describe("TaskDB", func() {
 
 				Expect(domain).To(Equal(taskDomain))
 				Expect(guid).To(Equal(taskGuid))
-				Expect(createdAt).To(Equal(fakeClock.Now().UTC().Truncate(time.Microsecond)))
-				Expect(updatedAt).To(Equal(fakeClock.Now().UTC().Truncate(time.Microsecond)))
-				Expect(firstCompletedAt).To(Equal(time.Time{}))
+				Expect(createdAt).To(Equal(fakeClock.Now().UTC().UnixNano()))
+				Expect(updatedAt).To(Equal(fakeClock.Now().UTC().UnixNano()))
+				Expect(firstCompletedAt).To(BeEquivalentTo(0))
 				Expect(state).To(BeEquivalentTo(models.Task_Pending))
 				Expect(result.String).To(Equal(""))
 				Expect(failureReason).To(Equal(""))
@@ -241,7 +241,7 @@ var _ = Describe("TaskDB", func() {
 			Expect(task.State).To(Equal(models.Task_Running))
 			Expect(task.CellId).To(Equal(expectedTask.CellId))
 			Expect(task.TaskDefinition).To(BeEquivalentTo(expectedTask.TaskDefinition))
-			Expect(task.UpdatedAt).To(Equal(fakeClock.Now().Truncate(time.Microsecond).UnixNano()))
+			Expect(task.UpdatedAt).To(Equal(fakeClock.Now().UnixNano()))
 		})
 
 		Context("when the cell id is toooooo long", func() {
@@ -500,7 +500,7 @@ var _ = Describe("TaskDB", func() {
 				Context("on the same cell", func() {
 					It("completes the task with the specified values", func() {
 						fakeClock.Increment(time.Second)
-						nowTruncateMicroseconds := fakeClock.Now().Truncate(time.Microsecond)
+						nowTruncateMicroseconds := fakeClock.Now()
 						now := fakeClock.Now()
 
 						task, err := sqlDB.CompleteTask(logger, taskGuid, cellID, true, "it blew up", "i am the result")
@@ -624,7 +624,7 @@ var _ = Describe("TaskDB", func() {
 			Context("when the task is pending", func() {
 				It("fails the task", func() {
 					fakeClock.Increment(time.Second)
-					nowTruncateMicroseconds := fakeClock.Now().Truncate(time.Microsecond)
+					nowTruncateMicroseconds := fakeClock.Now()
 					now := fakeClock.Now()
 
 					task, err := sqlDB.FailTask(logger, taskGuid, failureReason)
@@ -689,7 +689,7 @@ var _ = Describe("TaskDB", func() {
 
 				It("fails the task", func() {
 					fakeClock.Increment(time.Second)
-					nowTruncateMicroseconds := fakeClock.Now().Truncate(time.Microsecond)
+					nowTruncateMicroseconds := fakeClock.Now()
 					now := fakeClock.Now()
 
 					failureReason := "I failed."
@@ -816,7 +816,7 @@ var _ = Describe("TaskDB", func() {
 
 				It("resolves the task", func() {
 					fakeClock.Increment(time.Second)
-					nowTruncateMicroseconds := fakeClock.Now().Truncate(time.Microsecond)
+					nowTruncateMicroseconds := fakeClock.Now()
 
 					err := sqlDB.ResolvingTask(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
@@ -1018,13 +1018,6 @@ func insertTask(db *sql.DB, serializer format.Serializer, task *models.Task, mal
 		taskDefData = []byte("{{{{{{{{{{")
 	}
 
-	createdAt := time.Unix(0, task.CreatedAt).Truncate(time.Microsecond)
-	task.CreatedAt = createdAt.UnixNano()
-	updatedAt := time.Unix(0, task.UpdatedAt).Truncate(time.Microsecond)
-	task.UpdatedAt = updatedAt.UnixNano()
-	firstCompletedAt := time.Unix(0, task.FirstCompletedAt).Truncate(time.Microsecond)
-	task.FirstCompletedAt = firstCompletedAt.UnixNano()
-
 	result, err := db.Exec(
 		`INSERT INTO tasks
 						  (guid, domain, created_at, updated_at, first_completed_at, state,
@@ -1032,9 +1025,9 @@ func insertTask(db *sql.DB, serializer format.Serializer, task *models.Task, mal
 					    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		task.TaskGuid,
 		task.Domain,
-		createdAt,
-		updatedAt,
-		firstCompletedAt,
+		task.CreatedAt,
+		task.UpdatedAt,
+		task.FirstCompletedAt,
 		task.State,
 		task.CellId,
 		task.Result,

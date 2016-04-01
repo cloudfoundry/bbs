@@ -22,7 +22,7 @@ var _ = Describe("Evacuation", func() {
 		actualLRP = model_helpers.NewValidActualLRP(guid, index)
 		actualLRP.CrashCount = 0
 		actualLRP.CrashReason = ""
-		actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+		actualLRP.Since = fakeClock.Now().UnixNano()
 		actualLRP.ModificationTag = models.ModificationTag{}
 		actualLRP.ModificationTag.Increment()
 		actualLRP.ModificationTag.Increment()
@@ -38,7 +38,7 @@ var _ = Describe("Evacuation", func() {
 		BeforeEach(func() {
 			ttl = 60
 
-			expireTime := fakeClock.Now().Add(time.Duration(ttl) * time.Second)
+			expireTime := fakeClock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
 			_, err := db.Exec(
 				`UPDATE actual_lrps SET evacuating = ?, expire_time = ?
 			    WHERE process_guid = ? AND instance_index = ? AND evacuating = ?`,
@@ -54,7 +54,7 @@ var _ = Describe("Evacuation", func() {
 		Context("when the something about the actual LRP has changed", func() {
 			BeforeEach(func() {
 				fakeClock.IncrementBySeconds(5)
-				actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+				actualLRP.Since = fakeClock.Now().UnixNano()
 				actualLRP.ModificationTag.Increment()
 			})
 
@@ -114,7 +114,7 @@ var _ = Describe("Evacuation", func() {
 
 					actualLRP.CrashCount = 0
 					actualLRP.CrashReason = ""
-					actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+					actualLRP.Since = fakeClock.Now().UnixNano()
 				})
 
 				It("creates the evacuating actual lrp", func() {
@@ -148,7 +148,7 @@ var _ = Describe("Evacuation", func() {
 
 					actualLRP.CrashCount = 0
 					actualLRP.CrashReason = ""
-					actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+					actualLRP.Since = fakeClock.Now().UnixNano()
 				})
 
 				It("updates the expired evacuating actual lrp", func() {
@@ -208,7 +208,7 @@ var _ = Describe("Evacuation", func() {
 	Describe("RemoveEvacuatingActualLRP", func() {
 		Context("when there is an evacuating actualLRP", func() {
 			BeforeEach(func() {
-				expireTime := fakeClock.Now().Add(5 * time.Second)
+				expireTime := fakeClock.Now().Add(5 * time.Second).UnixNano()
 				_, err := db.Exec("UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -235,7 +235,7 @@ var _ = Describe("Evacuation", func() {
 
 			Context("when the actualLRP is expired", func() {
 				BeforeEach(func() {
-					expireTime := fakeClock.Now()
+					expireTime := fakeClock.Now().UnixNano()
 					_, err := db.Exec("UPDATE actual_lrps SET expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
 					Expect(err).NotTo(HaveOccurred())
 				})

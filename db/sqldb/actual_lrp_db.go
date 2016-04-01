@@ -80,7 +80,6 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 		return models.ErrGUIDGeneration
 	}
 
-	now := db.clock.Now()
 	_, err = db.db.Exec(`
 		INSERT INTO actual_lrps
 			(process_guid, instance_index, domain, state, since, net_info, modification_tag_epoch, modification_tag_index)
@@ -89,7 +88,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 		key.Index,
 		key.Domain,
 		models.ActualLRPStateUnclaimed,
-		now,
+		db.clock.Now().UnixNano(),
 		[]byte{},
 		guid,
 		0,
@@ -130,7 +129,7 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 			"",
 			"",
 			actualLRP.ModificationTag.Index,
-			db.clock.Now(),
+			db.clock.Now().UnixNano(),
 			[]byte{},
 			processGuid, index, false,
 		)
@@ -221,7 +220,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			return err
 		}
 
-		now := db.clock.Now()
+		now := db.clock.Now().UnixNano()
 		actualLRP.ModificationTag.Increment()
 		placementError := ""
 		evacuating := false
@@ -294,7 +293,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			instanceGuid,
 			cellID,
 			actualLRP.ModificationTag.Index,
-			db.clock.Now(),
+			db.clock.Now().UnixNano(),
 			[]byte{},
 			newCrashCount, crashReason,
 			key.ProcessGuid, key.Index, evacuating,
@@ -327,7 +326,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 			return models.ErrActualLRPCannotBeFailed
 		}
 
-		now := db.clock.Now()
+		now := db.clock.Now().UnixNano()
 		actualLRP.ModificationTag.Increment()
 		evacuating := false
 
@@ -384,7 +383,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 		return err
 	}
 
-	now := db.clock.Now()
+	now := db.clock.Now().UnixNano()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
 		return models.ErrGUIDGeneration
@@ -414,7 +413,6 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 
 func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.ActualLRP, bool, error) {
 	var netInfoData []byte
-	var since time.Time
 	var actualLRP models.ActualLRP
 	var evacuating bool
 
@@ -427,7 +425,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 		&actualLRP.InstanceGuid,
 		&actualLRP.CellId,
 		&actualLRP.PlacementError,
-		&since,
+		&actualLRP.Since,
 		&netInfoData,
 		&actualLRP.ModificationTag.Epoch,
 		&actualLRP.ModificationTag.Index,
@@ -447,7 +445,6 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 		}
 	}
 
-	actualLRP.Since = since.UnixNano()
 	return &actualLRP, evacuating, nil
 }
 
@@ -519,7 +516,7 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 }
 
 func (db *SQLDB) fetchActualLRPForShare(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
-	expireTime := db.clock.Now().Round(time.Second)
+	expireTime := db.clock.Now().Round(time.Second).UnixNano()
 	conditions := map[whereClause]interface{}{
 		whereProcessGuidEquals:   processGuid,
 		whereInstanceIndexEquals: index,

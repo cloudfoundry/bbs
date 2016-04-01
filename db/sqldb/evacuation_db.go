@@ -60,7 +60,7 @@ func (db *SQLDB) EvacuateActualLRP(
 			instanceKey.CellId,
 			netInfoData,
 			actualLRP.State,
-			db.clock.Now(),
+			db.clock.Now().UnixNano(),
 			actualLRP.ModificationTag.Index,
 			lrpKey.ProcessGuid,
 			lrpKey.Index,
@@ -155,11 +155,11 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		instanceKey.CellId,
 		models.ActualLRPStateRunning,
 		netInfoData,
-		now,
+		now.UnixNano(),
 		guid,
 		0,
 		true,
-		expireTime,
+		expireTime.UnixNano(),
 	)
 
 	if err != nil {

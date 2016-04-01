@@ -113,7 +113,7 @@ var createTablesSQL = []string{
 
 const createDomainSQL = `CREATE TABLE domains(
 	domain VARCHAR(255) PRIMARY KEY,
-	expire_time TIMESTAMP(6) DEFAULT 0
+	expire_time BIGINT DEFAULT 0
 );`
 
 const createConfigurationsSQL = `CREATE TABLE configurations(
@@ -124,9 +124,9 @@ const createConfigurationsSQL = `CREATE TABLE configurations(
 const createTasksSQL = `CREATE TABLE tasks(
 	guid VARCHAR(255) PRIMARY KEY,
 	domain VARCHAR(255) NOT NULL,
-	updated_at TIMESTAMP(6) DEFAULT 0,
-	created_at TIMESTAMP(6) DEFAULT 0,
-	first_completed_at TIMESTAMP(6) DEFAULT 0,
+	updated_at BIGINT DEFAULT 0,
+	created_at BIGINT DEFAULT 0,
+	first_completed_at BIGINT DEFAULT 0,
 	state INT,
 	cell_id VARCHAR(255) NOT NULL DEFAULT "",
 	result TEXT,
@@ -160,13 +160,13 @@ const createActualLRPsSQL = `CREATE TABLE actual_lrps(
 	instance_guid VARCHAR(255) NOT NULL DEFAULT "",
 	cell_id VARCHAR(255) NOT NULL DEFAULT "",
 	placement_error VARCHAR(255) NOT NULL DEFAULT "",
-	since TIMESTAMP(6) DEFAULT 0,
+	since BIGINT DEFAULT 0,
 	net_info BLOB NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
 	crash_count INT NOT NULL DEFAULT 0,
 	crash_reason VARCHAR(255) NOT NULL DEFAULT "",
-	expire_time TIMESTAMP(6) DEFAULT 0,
+	expire_time BIGINT DEFAULT 0,
 	PRIMARY KEY(process_guid, instance_index, evacuating)
 );`
 

@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
@@ -23,7 +22,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 		return err
 	}
 
-	now := db.clock.Now()
+	now := db.clock.Now().UnixNano()
 
 	_, err = db.db.Exec(
 		`INSERT INTO tasks (guid, domain, created_at, updated_at, first_completed_at, state, task_definition)
@@ -32,7 +31,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 		domain,
 		now,
 		now,
-		time.Time{},
+		0,
 		models.Task_Pending,
 		taskDefData,
 	)
@@ -119,7 +118,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 			return err
 		}
 
-		now := db.clock.Now()
+		now := db.clock.Now().UnixNano()
 		_, err = tx.Exec(`
 				UPDATE tasks SET state = ?, updated_at = ?, cell_id = ?
 				WHERE guid = ?`,
@@ -248,7 +247,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 			return err
 		}
 
-		now := db.clock.Now()
+		now := db.clock.Now().UnixNano()
 		_, err = tx.Exec(
 			`UPDATE tasks SET
 		  state = ?, updated_at = ?
@@ -299,7 +298,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 }
 
 func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx *sql.Tx) error {
-	now := db.clock.Now()
+	now := db.clock.Now().UnixNano()
 	_, err := tx.Exec(
 		`UPDATE tasks SET
 		  state = ?, updated_at = ?, first_completed_at = ?,
@@ -321,8 +320,8 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	}
 
 	task.State = models.Task_Completed
-	task.UpdatedAt = now.UnixNano()
-	task.FirstCompletedAt = now.UnixNano()
+	task.UpdatedAt = now
+	task.FirstCompletedAt = now
 	task.Failed = failed
 	task.FailureReason = failureReason
 	task.Result = result
@@ -339,7 +338,7 @@ func (db *SQLDB) fetchTaskForShare(logger lager.Logger, taskGuid string, tx *sql
 func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable) (*models.Task, error) {
 	var guid, domain, cellID, failureReason string
 	var result sql.NullString
-	var createdAt, updatedAt, firstCompletedAt time.Time
+	var createdAt, updatedAt, firstCompletedAt int64
 	var state int32
 	var failed bool
 	var taskDefData []byte
@@ -379,9 +378,9 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 	task := &models.Task{
 		TaskGuid:         guid,
 		Domain:           domain,
-		CreatedAt:        createdAt.UnixNano(),
-		UpdatedAt:        updatedAt.UnixNano(),
-		FirstCompletedAt: firstCompletedAt.UnixNano(),
+		CreatedAt:        createdAt,
+		UpdatedAt:        updatedAt,
+		FirstCompletedAt: firstCompletedAt,
 		State:            models.Task_State(state),
 		CellId:           cellID,
 		Result:           result.String,

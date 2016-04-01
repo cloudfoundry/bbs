@@ -222,7 +222,7 @@ var _ = Describe("LRPConvergence", func() {
 		processGuid = "expired-evacuating-actual-lrp"
 		err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
 		Expect(err).NotTo(HaveOccurred())
-		_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ?`, true, fakeClock.Now(), processGuid)
+		_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ?`, true, fakeClock.Now().UnixNano(), processGuid)
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeClock.Increment(1 * time.Second)

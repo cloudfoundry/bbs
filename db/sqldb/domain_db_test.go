@@ -11,18 +11,18 @@ var _ = Describe("DomainDB", func() {
 	Describe("Domains", func() {
 		Context("when there are domains in the DB", func() {
 			BeforeEach(func() {
-				futureTime := fakeClock.Now().Add(5 * time.Second)
+				futureTime := fakeClock.Now().Add(5 * time.Second).UnixNano()
 				_, err := db.Exec("INSERT INTO domains VALUES (?, ?)", "jims-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = db.Exec("INSERT INTO domains VALUES (?, ?)", "amelias-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				pastTime := fakeClock.Now().Add(-5 * time.Second)
+				pastTime := fakeClock.Now().Add(-5 * time.Second).UnixNano()
 				_, err = db.Exec("INSERT INTO domains VALUES (?, ?)", "past-domain", pastTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec("INSERT INTO domains VALUES (?, ?)", "current-domain", fakeClock.Now().Round(time.Second))
+				_, err = db.Exec("INSERT INTO domains VALUES (?, ?)", "current-domain", fakeClock.Now().Round(time.Second).UnixNano())
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -57,13 +57,13 @@ var _ = Describe("DomainDB", func() {
 				defer rows.Close()
 
 				var domainName string
-				var expireTime time.Time
+				var expireTime int64
 
 				Expect(rows.Next()).To(BeTrue())
 				err = rows.Scan(&domainName, &expireTime)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domainName).To(Equal(domain))
-				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(5432) * time.Second).Truncate(time.Microsecond)
+				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(5432) * time.Second).UnixNano()
 				Expect(expireTime).To(BeEquivalentTo(expectedExpireTime))
 			})
 
@@ -103,13 +103,13 @@ var _ = Describe("DomainDB", func() {
 				defer rows.Close()
 
 				var domainName string
-				var expireTime time.Time
+				var expireTime int64
 
 				Expect(rows.Next()).To(BeTrue())
 				err = rows.Scan(&domainName, &expireTime)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domainName).To(Equal(existingDomain))
-				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(1) * time.Second).Truncate(time.Microsecond)
+				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(1) * time.Second).UnixNano()
 				Expect(expireTime).To(BeEquivalentTo(expectedExpireTime))
 			})
 		})

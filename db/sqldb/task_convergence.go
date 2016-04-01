@@ -78,7 +78,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 		WHERE state = ? AND created_at < ?
 		`,
 		true, "not started within time limit", "",
-		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration))
+		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 		return 0
@@ -96,7 +96,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 		SELECT `+taskColumns+` FROM tasks
 		WHERE state = ? AND updated_at < ? AND created_at > ?
 		`,
-		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration), db.clock.Now().Add(-expirePendingTaskDuration))
+		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration).UnixNano(), db.clock.Now().Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -166,7 +166,7 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 		WHERE state = ? AND updated_at < ?
 		`,
 		models.Task_Completed,
-		models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration))
+		models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -177,7 +177,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 		DELETE FROM tasks
 		WHERE state = ? AND first_completed_at < ?
 		`,
-		models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration))
+		models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 		return 0
@@ -197,7 +197,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 		SELECT `+taskColumns+` FROM tasks
 		WHERE state = ? AND updated_at < ?
 		`,
-		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration))
+		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}

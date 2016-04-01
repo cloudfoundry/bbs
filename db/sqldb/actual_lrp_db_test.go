@@ -29,7 +29,7 @@ var _ = Describe("ActualLRPDB", func() {
 		It("persists the actual lrp into the database", func() {
 			Expect(sqlDB.CreateUnclaimedActualLRP(logger, key)).To(Succeed())
 
-			actualLRP := models.NewUnclaimedActualLRP(*key, fakeClock.Now().Truncate(time.Microsecond).UnixNano())
+			actualLRP := models.NewUnclaimedActualLRP(*key, fakeClock.Now().UnixNano())
 			actualLRP.ModificationTag.Epoch = "my-awesome-guid"
 			actualLRP.ModificationTag.Index = 0
 
@@ -81,7 +81,7 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 
 		It("returns the existing actual lrp group", func() {
-			actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+			actualLRP.Since = fakeClock.Now().UnixNano()
 
 			group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 			Expect(err).NotTo(HaveOccurred())
@@ -97,7 +97,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns the existing actual lrp group", func() {
-				actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+				actualLRP.Since = fakeClock.Now().UnixNano()
 
 				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 				Expect(err).NotTo(HaveOccurred())
@@ -115,7 +115,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns the existing actual lrp group", func() {
-				actualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+				actualLRP.Since = fakeClock.Now().UnixNano()
 
 				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 				Expect(err).NotTo(HaveOccurred())
@@ -162,7 +162,7 @@ var _ = Describe("ActualLRPDB", func() {
 					ActualLRPKey:         *actualLRPKey1,
 					ActualLRPInstanceKey: *instanceKey1,
 					State:                models.ActualLRPStateClaimed,
-					Since:                lrpCreationTime.Truncate(time.Microsecond).UnixNano(),
+					Since:                lrpCreationTime.UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 1,
@@ -189,7 +189,7 @@ var _ = Describe("ActualLRPDB", func() {
 					ActualLRPKey:         *actualLRPKey2,
 					ActualLRPInstanceKey: *instanceKey2,
 					State:                models.ActualLRPStateClaimed,
-					Since:                lrpCreationTime.Truncate(time.Microsecond).UnixNano(),
+					Since:                lrpCreationTime.UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 1,
@@ -215,7 +215,7 @@ var _ = Describe("ActualLRPDB", func() {
 					ActualLRPKey:         *actualLRPKey3,
 					ActualLRPInstanceKey: *instanceKey3,
 					State:                models.ActualLRPStateClaimed,
-					Since:                lrpCreationTime.Truncate(time.Microsecond).UnixNano(),
+					Since:                lrpCreationTime.UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 1,
@@ -233,7 +233,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Instance: &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey4,
 					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().Truncate(time.Microsecond).UnixNano(),
+					Since:        fakeClock.Now().UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 0,
@@ -261,7 +261,7 @@ var _ = Describe("ActualLRPDB", func() {
 					ActualLRPKey:         *actualLRPKey5,
 					ActualLRPInstanceKey: *instanceKey5,
 					State:                models.ActualLRPStateClaimed,
-					Since:                lrpCreationTime.Truncate(time.Microsecond).UnixNano(),
+					Since:                lrpCreationTime.UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 1,
@@ -293,7 +293,7 @@ var _ = Describe("ActualLRPDB", func() {
 					ActualLRPKey:         *actualLRPKey6,
 					ActualLRPInstanceKey: *instanceKey6,
 					State:                models.ActualLRPStateClaimed,
-					Since:                lrpCreationTime.Truncate(time.Microsecond).UnixNano(),
+					Since:                lrpCreationTime.UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 1,
@@ -303,7 +303,7 @@ var _ = Describe("ActualLRPDB", func() {
 					ActualLRPKey:         *actualLRPKey6,
 					ActualLRPInstanceKey: *instanceKey6,
 					State:                models.ActualLRPStateClaimed,
-					Since:                lrpCreationTime.Truncate(time.Microsecond).UnixNano(),
+					Since:                lrpCreationTime.UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 1,
@@ -381,7 +381,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Instance: &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey1,
 					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().Truncate(time.Microsecond).UnixNano(),
+					Since:        fakeClock.Now().UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 0,
@@ -405,7 +405,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Instance: &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey2,
 					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().Truncate(time.Microsecond).UnixNano(),
+					Since:        fakeClock.Now().UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 0,
@@ -414,7 +414,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Evacuating: &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey2,
 					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().Truncate(time.Microsecond).UnixNano(),
+					Since:        fakeClock.Now().UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 0,
@@ -434,7 +434,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Instance: &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey3,
 					State:        models.ActualLRPStateClaimed,
-					Since:        fakeClock.Now().Truncate(time.Microsecond).UnixNano(),
+					Since:        fakeClock.Now().UnixNano(),
 					ModificationTag: models.ModificationTag{
 						Epoch: "mod-tag-guid",
 						Index: 0,
@@ -500,7 +500,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.State = models.ActualLRPStateClaimed
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.ModificationTag.Increment()
-					expectedActualLRP.Since = lrpCreationTime.Truncate(time.Microsecond).UnixNano()
+					expectedActualLRP.Since = lrpCreationTime.UnixNano()
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
 					Expect(err).NotTo(HaveOccurred())
@@ -526,7 +526,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.State = models.ActualLRPStateClaimed
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 						expectedActualLRP.ModificationTag.Increment()
-						expectedActualLRP.Since = lrpCreationTime.Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = lrpCreationTime.UnixNano()
 
 						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
 						Expect(err).NotTo(HaveOccurred())
@@ -549,7 +549,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.State = models.ActualLRPStateClaimed
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 						expectedActualLRP.ModificationTag.Increment()
-						expectedActualLRP.Since = lrpCreationTime.Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = lrpCreationTime.UnixNano()
 
 						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
 						Expect(err).NotTo(HaveOccurred())
@@ -618,7 +618,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 						expectedActualLRP.State = models.ActualLRPStateClaimed
-						expectedActualLRP.Since = lrpCreationTime.Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = lrpCreationTime.UnixNano()
 						expectedActualLRP.ModificationTag.Increment()
 						Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 						Expect(actualLRPGroup.Evacuating).To(BeNil())
@@ -757,7 +757,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.State = models.ActualLRPStateRunning
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
-					expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 					expectedActualLRP.ModificationTag = models.ModificationTag{
 						Epoch: "my-awesome-guid",
 						Index: 1,
@@ -783,7 +783,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.State = models.ActualLRPStateRunning
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
-					expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 					expectedActualLRP.ModificationTag = models.ModificationTag{
 						Epoch: "my-awesome-guid",
 						Index: 2,
@@ -805,7 +805,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ActualLRPInstanceKey = *otherInstanceKey
 						expectedActualLRP.State = models.ActualLRPStateRunning
 						expectedActualLRP.ActualLRPNetInfo = *netInfo
-						expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ModificationTag = models.ModificationTag{
 							Epoch: "my-awesome-guid",
 							Index: 2,
@@ -887,7 +887,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 						expectedActualLRP.State = models.ActualLRPStateRunning
 						expectedActualLRP.ActualLRPNetInfo = *netInfo
-						expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ModificationTag = models.ModificationTag{
 							Epoch: "my-awesome-guid",
 							Index: 2,
@@ -941,7 +941,7 @@ var _ = Describe("ActualLRPDB", func() {
 				expectedActualLRP.State = models.ActualLRPStateRunning
 				expectedActualLRP.ActualLRPNetInfo = *netInfo
 				expectedActualLRP.ActualLRPInstanceKey = *instanceKey
-				expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+				expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
 				Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 			})
@@ -1000,7 +1000,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashCount = 1
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
-						expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
 						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 					})
@@ -1031,7 +1031,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashCount = models.DefaultImmediateRestarts + 3
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
-						expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
 						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 					})
@@ -1041,7 +1041,7 @@ var _ = Describe("ActualLRPDB", func() {
 							_, err := db.Exec(`
 								UPDATE actual_lrps SET since = ?
 								WHERE process_guid = ? AND instance_index = ?`,
-								fakeClock.Now().Add(-(models.CrashResetTimeout + 1*time.Second)),
+								fakeClock.Now().Add(-(models.CrashResetTimeout + 1*time.Second)).UnixNano(),
 								actualLRP.ProcessGuid,
 								actualLRP.Index,
 							)
@@ -1090,12 +1090,12 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
-						expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.State = models.ActualLRPStateUnclaimed
 						expectedActualLRP.CrashCount = models.DefaultImmediateRestarts
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
-						expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
 						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 					})
@@ -1126,7 +1126,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashCount = models.DefaultImmediateRestarts + 3
 						expectedActualLRP.CrashReason = "some other failure reason"
 						expectedActualLRP.ModificationTag.Increment()
-						expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
 						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 					})
@@ -1208,7 +1208,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP := *actualLRP
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
 					expectedActualLRP.PlacementError = "failing the LRP"
-					expectedActualLRP.Since = fakeClock.Now().Truncate(time.Microsecond).UnixNano()
+					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 					expectedActualLRP.ModificationTag = models.ModificationTag{
 						Epoch: "my-awesome-guid",
 						Index: 1,

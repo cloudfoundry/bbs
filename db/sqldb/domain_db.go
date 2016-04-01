@@ -11,7 +11,7 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	expireTime := db.clock.Now().Round(time.Second)
+	expireTime := db.clock.Now().Round(time.Second).UnixNano()
 	rows, err := db.db.Query("SELECT domain FROM domains WHERE expire_time > ?", expireTime)
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -43,7 +43,7 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second)
+	expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
 	_, err := db.db.Exec(
 		`INSERT INTO domains (domain, expire_time) VALUES (?, ?)
 										ON DUPLICATE KEY UPDATE expire_time = ?`,
