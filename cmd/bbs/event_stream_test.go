@@ -48,16 +48,27 @@ var _ = Describe("Events API", func() {
 
 			primerLRP := model_helpers.NewValidDesiredLRP("primer-guid")
 			primeEventStream(eventChannel, models.EventTypeDesiredLRPRemoved, func() {
-				etcdHelper.SetRawDesiredLRP(primerLRP)
+				err := client.DesireLRP(primerLRP)
+				Expect(err).NotTo(HaveOccurred())
 			}, func() {
-				etcdHelper.DeleteDesiredLRP(primerLRP.ProcessGuid)
+				err := client.RemoveDesiredLRP("primer-guid")
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		It("does not emit latency metrics", func() {
+			timeout := time.After(50 * time.Millisecond)
+		METRICS:
+			for {
+				select {
+				case <-testMetricsChan:
+				case <-timeout:
+					break METRICS
+				}
+			}
 			eventSource.Close()
 
-			timeout := time.After(50 * time.Millisecond)
+			timeout = time.After(50 * time.Millisecond)
 			for {
 				select {
 				case envelope := <-testMetricsChan:
@@ -135,9 +146,11 @@ var _ = Describe("Events API", func() {
 
 			primerLRP := model_helpers.NewValidActualLRP("primer-guid", 0)
 			primeEventStream(eventChannel, models.EventTypeActualLRPRemoved, func() {
-				etcdHelper.SetRawActualLRP(primerLRP)
+				err := client.StartActualLRP(&primerLRP.ActualLRPKey, &primerLRP.ActualLRPInstanceKey, &primerLRP.ActualLRPNetInfo)
+				Expect(err).NotTo(HaveOccurred())
 			}, func() {
-				etcdHelper.DeleteActualLRP(primerLRP.ProcessGuid, primerLRP.Index)
+				err := client.RemoveActualLRP("primer-guid", 0)
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
@@ -148,8 +161,8 @@ var _ = Describe("Events API", func() {
 
 		It("receives events", func() {
 			By("creating a ActualLRP")
-			etcdHelper.SetRawDesiredLRP(desiredLRP)
-			etcdHelper.SetRawActualLRP(baseLRP)
+			err := client.DesireLRP(desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
 
 			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(processGuid, 0)
 			Expect(err).NotTo(HaveOccurred())
@@ -181,10 +194,12 @@ var _ = Describe("Events API", func() {
 			Expect(actualLRPChangedEvent.After).To(Equal(actualLRPGroup))
 
 			By("evacuating the ActualLRP")
+			initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
 			_, err = client.EvacuateRunningActualLRP(&key, &instanceKey, &netInfo, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(auctioneerServer.ReceivedRequests()).To(HaveLen(1))
-			request := auctioneerServer.ReceivedRequests()[0]
+			auctioneerRequests := auctioneerServer.ReceivedRequests()
+			Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
+			request := auctioneerRequests[len(auctioneerRequests)-1]
 			Expect(request.Method).To(Equal("POST"))
 			Expect(request.RequestURI).To(Equal("/v1/lrps"))
 
@@ -218,10 +233,12 @@ var _ = Describe("Events API", func() {
 			}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 			evacuatingBefore := evacuatingLRP
+			initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
 			_, err = client.EvacuateRunningActualLRP(&key, &newInstanceKey, &netInfo, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(auctioneerServer.ReceivedRequests()).To(HaveLen(2))
-			request = auctioneerServer.ReceivedRequests()[1]
+			auctioneerRequests = auctioneerServer.ReceivedRequests()
+			Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
+			request = auctioneerRequests[len(auctioneerRequests)-1]
 			Expect(request.Method).To(Equal("POST"))
 			Expect(request.RequestURI).To(Equal("/v1/lrps"))
 
@@ -307,9 +324,11 @@ var _ = Describe("Events API", func() {
 
 			primerLRP := model_helpers.NewValidDesiredLRP("primer-guid")
 			primeEventStream(eventChannel, models.EventTypeDesiredLRPRemoved, func() {
-				etcdHelper.SetRawDesiredLRP(primerLRP)
+				err := client.DesireLRP(primerLRP)
+				Expect(err).NotTo(HaveOccurred())
 			}, func() {
-				etcdHelper.DeleteDesiredLRP(primerLRP.ProcessGuid)
+				err := client.RemoveDesiredLRP("primer-guid")
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
@@ -417,8 +436,18 @@ var _ = Describe("Events API", func() {
 			Expect(taskChangedEvent.Before.FailureReason).To(BeEmpty())
 			Expect(taskChangedEvent.After.FailureReason).To(Equal("i failed"))
 
+			By("resolving the Task")
+			err = client.ResolvingTask(task.TaskGuid)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(eventChannel).Should(Receive(&event))
+			taskChangedEvent, ok = event.(*models.TaskChangedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(taskChangedEvent.Before.State).To(Equal(models.Task_Completed))
+			Expect(taskChangedEvent.After.State).To(Equal(models.Task_Resolving))
+
 			By("removing the Task")
-			etcdHelper.DeleteTask(task.TaskGuid)
+			err = client.DeleteTask(task.TaskGuid)
+			Expect(err).NotTo(HaveOccurred())
 			Eventually(eventChannel).Should(Receive(&event))
 
 			taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
@@ -437,6 +466,7 @@ PRIMING:
 		case <-eventChannel:
 			break PRIMING
 		case <-time.After(50 * time.Millisecond):
+			cleanup()
 			primer()
 		}
 	}
@@ -448,6 +478,14 @@ PRIMING:
 		Eventually(eventChannel).Should(Receive(&event))
 		if event.EventType() == eventType {
 			break
+		}
+	}
+
+	for {
+		select {
+		case <-eventChannel:
+		case <-time.After(50 * time.Millisecond):
+			return
 		}
 	}
 }
