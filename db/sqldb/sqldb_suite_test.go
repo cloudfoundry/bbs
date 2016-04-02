@@ -113,7 +113,9 @@ var createTablesSQL = []string{
 
 const createDomainSQL = `CREATE TABLE domains(
 	domain VARCHAR(255) PRIMARY KEY,
-	expire_time BIGINT DEFAULT 0
+	expire_time BIGINT DEFAULT 0,
+
+	INDEX(expire_time)
 );`
 
 const createConfigurationsSQL = `CREATE TABLE configurations(
@@ -132,7 +134,14 @@ const createTasksSQL = `CREATE TABLE tasks(
 	result TEXT,
 	failed BOOL DEFAULT false,
 	failure_reason VARCHAR(255) NOT NULL DEFAULT "",
-	task_definition BLOB NOT NULL
+	task_definition BLOB NOT NULL,
+
+	INDEX(domain),
+	INDEX(state),
+	INDEX(cell_id),
+	INDEX(updated_at),
+	INDEX(created_at),
+	INDEX(first_completed_at)
 );`
 
 const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
@@ -148,7 +157,9 @@ const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
 	volume_placement BLOB NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
-	run_info BLOB NOT NULL
+	run_info BLOB NOT NULL,
+
+	INDEX(domain)
 );`
 
 const createActualLRPsSQL = `CREATE TABLE actual_lrps(
@@ -167,7 +178,13 @@ const createActualLRPsSQL = `CREATE TABLE actual_lrps(
 	crash_count INT NOT NULL DEFAULT 0,
 	crash_reason VARCHAR(255) NOT NULL DEFAULT "",
 	expire_time BIGINT DEFAULT 0,
-	PRIMARY KEY(process_guid, instance_index, evacuating)
+
+	PRIMARY KEY(process_guid, instance_index, evacuating),
+	INDEX(domain),
+	INDEX(cell_id),
+	INDEX(since),
+	INDEX(state),
+	INDEX(expire_time)
 );`
 
 func randStr(strSize int) string {
