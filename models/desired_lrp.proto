@@ -9,6 +9,7 @@ import "cached_dependency.proto";
 import "security_group.proto";
 import "environment_variables.proto";
 import "volume_mount.proto";
+import "network.proto";
 
 message DesiredLRPSchedulingInfo {
   optional DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
@@ -44,6 +45,7 @@ message DesiredLRPRunInfo {
   optional string legacy_download_user = 15 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
   optional string trusted_system_certificates_path = 16 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 17 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
+  optional Network network = 18 [(gogoproto.jsontag) = "network,omitempty"];
 }
 
 // helper message for marshalling routes
@@ -95,4 +97,5 @@ message DesiredLRP {
   optional string legacy_download_user = 23 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
   optional string trusted_system_certificates_path = 24 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 25 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
+  optional Network network = 26 [(gogoproto.jsontag) = "network,omitempty"];
 }

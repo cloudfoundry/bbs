@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+package models;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.goproto_enum_prefix_all) = true;
+
+message Network {
+  optional string network_id = 1 [(gogoproto.customname) = "NetworkID", (gogoproto.jsontag) = "network_id,omitempty"];
+}
+

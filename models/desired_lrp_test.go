@@ -244,7 +244,10 @@ var _ = Describe("DesiredLRP", func() {
       "epoch": "some-guid",
       "index": 0
     },
-		"trusted_system_certificates_path": "/etc/cf-system-certificates"
+		"trusted_system_certificates_path": "/etc/cf-system-certificates",
+		"network": {
+			"network_id": "some-network-id"
+		}
   }`
 
 	BeforeEach(func() {
@@ -811,15 +814,15 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}), ""),
-		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}), "process_guid"),
-		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}), "name"),
-		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}), "inner-action"),
-		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}), "inner-action"),
-		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}), "inner-action"),
-		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}), "cpu_weight"),
-		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here", From: "there"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}), "legacy_download_user"),
-		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}), "cached_dependency"),
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), ""),
+		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "process_guid"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "name"),
+		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "inner-action"),
+		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "inner-action"),
+		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "inner-action"),
+		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeout, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "cpu_weight"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here", From: "there"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "legacy_download_user"),
+		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeout, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil), "cached_dependency"),
 	)
 })
 
