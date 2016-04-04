@@ -1,10 +1,9 @@
 package main_test
 
 import (
-	"time"
-
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -21,6 +20,10 @@ var _ = Describe("ActualLRP API", func() {
 		baseDomain       = "base-domain"
 		baseInstanceGuid = "base-instance-guid"
 
+		evacuatingProcessGuid  = "evacuating-process-guid"
+		evacuatingDomain       = "evacuating-domain"
+		evacuatingInstanceGuid = "evacuating-instance-guid"
+
 		otherProcessGuid  = "other-process-guid"
 		otherDomain       = "other-domain"
 		otherInstanceGuid = "other-instance-guid"
@@ -32,27 +35,28 @@ var _ = Describe("ActualLRP API", func() {
 		crashingDomain       = "crashing-domain"
 		crashingInstanceGuid = "crashing-instance-guid"
 
-		baseIndex      = 1
-		otherIndex     = 1
-		unclaimedIndex = 2
-		crashingIndex  = 1
-
-		evacuatingInstanceGuid = "evacuating-instance-guid"
+		baseIndex       = 0
+		otherIndex      = 0
+		evacuatingIndex = 0
+		unclaimedIndex  = 0
+		crashingIndex   = 0
 	)
 
 	var (
 		expectedActualLRPGroups []*models.ActualLRPGroup
 		actualActualLRPGroups   []*models.ActualLRPGroup
 
-		baseLRP       *models.ActualLRP
-		otherLRP      *models.ActualLRP
-		evacuatingLRP *models.ActualLRP
-		unclaimedLRP  *models.ActualLRP
-		crashingLRP   *models.ActualLRP
+		baseLRP               *models.ActualLRP
+		otherLRP              *models.ActualLRP
+		evacuatingLRP         *models.ActualLRP
+		evacuatingInstanceLRP *models.ActualLRP
+		unclaimedLRP          *models.ActualLRP
+		crashingLRP           *models.ActualLRP
 
 		baseLRPKey         models.ActualLRPKey
 		baseLRPInstanceKey models.ActualLRPInstanceKey
 
+		evacuatingLRPKey         models.ActualLRPKey
 		evacuatingLRPInstanceKey models.ActualLRPInstanceKey
 
 		otherLRPKey         models.ActualLRPKey
@@ -80,6 +84,7 @@ var _ = Describe("ActualLRP API", func() {
 		baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
 
+		evacuatingLRPKey = models.NewActualLRPKey(evacuatingProcessGuid, evacuatingIndex, evacuatingDomain)
 		evacuatingLRPInstanceKey = models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID)
 		otherLRPKey = models.NewActualLRPKey(otherProcessGuid, otherIndex, otherDomain)
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
@@ -96,15 +101,18 @@ var _ = Describe("ActualLRP API", func() {
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
-			Since:                time.Now().UnixNano(),
 		}
 
 		evacuatingLRP = &models.ActualLRP{
-			ActualLRPKey:         baseLRPKey,
+			ActualLRPKey:         evacuatingLRPKey,
 			ActualLRPInstanceKey: evacuatingLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
-			Since:                time.Now().UnixNano() - 1000,
+		}
+
+		evacuatingInstanceLRP = &models.ActualLRP{
+			ActualLRPKey: evacuatingLRPKey,
+			State:        models.ActualLRPStateUnclaimed,
 		}
 
 		otherLRP = &models.ActualLRP{
@@ -112,32 +120,58 @@ var _ = Describe("ActualLRP API", func() {
 			ActualLRPInstanceKey: otherLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
-			Since:                time.Now().UnixNano(),
 		}
 
 		unclaimedLRP = &models.ActualLRP{
 			ActualLRPKey: unclaimedLRPKey,
 			State:        models.ActualLRPStateUnclaimed,
-			Since:        time.Now().UnixNano(),
 		}
 
 		crashingLRP = &models.ActualLRP{
-			ActualLRPKey:         crashingLRPKey,
-			ActualLRPInstanceKey: crashingLRPInstanceKey,
-			ActualLRPNetInfo:     netInfo,
-			State:                models.ActualLRPStateRunning,
-			CrashCount:           100,
-			Since:                time.Now().UnixNano(),
+			ActualLRPKey: crashingLRPKey,
+			State:        models.ActualLRPStateCrashed,
+			CrashReason:  "crash",
+			CrashCount:   3,
 		}
 
-		etcdHelper.CreateValidDesiredLRP(baseLRP.ActualLRPKey.ProcessGuid)
-		etcdHelper.CreateValidDesiredLRP(otherLRP.ActualLRPKey.ProcessGuid)
+		var err error
 
-		etcdHelper.SetRawActualLRP(baseLRP)
-		etcdHelper.SetRawActualLRP(otherLRP)
-		etcdHelper.SetRawEvacuatingActualLRP(evacuatingLRP, noExpirationTTL)
-		etcdHelper.SetRawActualLRP(unclaimedLRP)
-		etcdHelper.SetRawActualLRP(crashingLRP)
+		baseDesiredLRP := model_helpers.NewValidDesiredLRP(baseLRP.ProcessGuid)
+		baseDesiredLRP.Domain = baseDomain
+		err = client.DesireLRP(baseDesiredLRP)
+		Expect(err).NotTo(HaveOccurred())
+		err = client.StartActualLRP(&baseLRPKey, &baseLRPInstanceKey, &netInfo)
+		Expect(err).NotTo(HaveOccurred())
+
+		otherDesiredLRP := model_helpers.NewValidDesiredLRP(otherLRP.ProcessGuid)
+		otherDesiredLRP.Domain = otherDomain
+		Expect(client.DesireLRP(otherDesiredLRP)).To(Succeed())
+		err = client.StartActualLRP(&otherLRPKey, &otherLRPInstanceKey, &netInfo)
+		Expect(err).NotTo(HaveOccurred())
+
+		evacuatingDesiredLRP := model_helpers.NewValidDesiredLRP(evacuatingLRP.ProcessGuid)
+		evacuatingDesiredLRP.Domain = evacuatingDomain
+		err = client.DesireLRP(evacuatingDesiredLRP)
+		Expect(err).NotTo(HaveOccurred())
+		err = client.StartActualLRP(&evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = client.EvacuateRunningActualLRP(&evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, noExpirationTTL)
+		Expect(err).NotTo(HaveOccurred())
+
+		unclaimedDesiredLRP := model_helpers.NewValidDesiredLRP(unclaimedLRP.ProcessGuid)
+		unclaimedDesiredLRP.Domain = unclaimedDomain
+		err = client.DesireLRP(unclaimedDesiredLRP)
+		Expect(err).NotTo(HaveOccurred())
+
+		crashingDesiredLRP := model_helpers.NewValidDesiredLRP(crashingLRP.ProcessGuid)
+		crashingDesiredLRP.Domain = crashingDomain
+		Expect(client.DesireLRP(crashingDesiredLRP)).To(Succeed())
+		for i := 0; i < 3; i++ {
+			err = client.StartActualLRP(&crashingLRPKey, &crashingLRPInstanceKey, &netInfo)
+			Expect(err).NotTo(HaveOccurred())
+			err = client.CrashActualLRP(&crashingLRPKey, &crashingLRPInstanceKey, "crash")
+			Expect(err).NotTo(HaveOccurred())
+		}
 	})
 
 	AfterEach(func() {
@@ -147,6 +181,17 @@ var _ = Describe("ActualLRP API", func() {
 	Describe("ActualLRPGroups", func() {
 		JustBeforeEach(func() {
 			actualActualLRPGroups, getErr = client.ActualLRPGroups(filter)
+			for _, group := range actualActualLRPGroups {
+				if group.Instance != nil {
+					group.Instance.Since = 0
+					group.Instance.ModificationTag = models.ModificationTag{}
+				}
+
+				if group.Evacuating != nil {
+					group.Evacuating.Since = 0
+					group.Evacuating.ModificationTag = models.ModificationTag{}
+				}
+			}
 		})
 
 		It("responds without error", func() {
@@ -155,13 +200,14 @@ var _ = Describe("ActualLRP API", func() {
 
 		Context("when not filtering", func() {
 			It("returns all actual lrps from the bbs", func() {
-				Expect(actualActualLRPGroups).To(HaveLen(4))
 				expectedActualLRPGroups = []*models.ActualLRPGroup{
-					{Instance: baseLRP, Evacuating: evacuatingLRP},
+					{Instance: baseLRP},
+					{Instance: evacuatingInstanceLRP, Evacuating: evacuatingLRP},
 					{Instance: otherLRP},
 					{Instance: unclaimedLRP},
 					{Instance: crashingLRP},
 				}
+
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
@@ -172,7 +218,7 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested domain", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}}
+				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP}}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
@@ -183,7 +229,10 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested cell", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}}
+				expectedActualLRPGroups = []*models.ActualLRPGroup{
+					{Instance: baseLRP},
+					{Evacuating: evacuatingLRP},
+				}
 				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
 			})
 		})
@@ -197,8 +246,12 @@ var _ = Describe("ActualLRP API", func() {
 		It("returns all actual lrps from the bbs", func() {
 			Expect(getErr).NotTo(HaveOccurred())
 			Expect(actualActualLRPGroups).To(HaveLen(1))
-			expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP, Evacuating: evacuatingLRP}}
-			Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
+			baseLRP.ModificationTag.Increment()
+
+			fetchedActualLRPGroup := actualActualLRPGroups[0]
+			fetchedActualLRPGroup.Instance.Since = 0
+			fetchedActualLRPGroup.Instance.ModificationTag.Epoch = ""
+			Expect(fetchedActualLRPGroup.Instance).To(Equal(baseLRP))
 		})
 	})
 
@@ -249,6 +302,8 @@ var _ = Describe("ActualLRP API", func() {
 
 			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
 			Expect(evacuating).To(BeFalse())
+			fetchedActualLRP.ModificationTag.Epoch = ""
+			fetchedActualLRP.Since = 0
 
 			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
 		})
@@ -283,6 +338,7 @@ var _ = Describe("ActualLRP API", func() {
 
 			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
 			Expect(evacuating).To(BeFalse())
+			fetchedActualLRP.ModificationTag.Epoch = ""
 			fetchedActualLRP.Since = 0
 
 			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
@@ -324,18 +380,18 @@ var _ = Describe("ActualLRP API", func() {
 
 		JustBeforeEach(func() {
 			errorMessage = "some bad ocurred"
-			crashErr = client.CrashActualLRP(&crashingLRPKey, &crashingLRPInstanceKey, errorMessage)
+			crashErr = client.CrashActualLRP(&baseLRPKey, &baseLRPInstanceKey, errorMessage)
 		})
 
 		It("crashes the actual_lrp", func() {
 			Expect(crashErr).NotTo(HaveOccurred())
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(crashingProcessGuid, crashingIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex)
 			Expect(err).NotTo(HaveOccurred())
 
 			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
-			Expect(fetchedActualLRP.State).To(Equal(models.ActualLRPStateCrashed))
-			Expect(fetchedActualLRP.CrashCount).To(Equal(int32(101)))
+			Expect(fetchedActualLRP.State).To(Equal(models.ActualLRPStateUnclaimed))
+			Expect(fetchedActualLRP.CrashCount).To(Equal(int32(1)))
 			Expect(fetchedActualLRP.CrashReason).To(Equal(errorMessage))
 		})
 	})

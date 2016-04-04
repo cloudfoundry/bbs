@@ -20,20 +20,25 @@ var _ = Describe("Evacuation API", func() {
 		ginkgomon.Kill(bbsProcess)
 	})
 
+	var actual *models.ActualLRP
+
+	BeforeEach(func() {
+		actual = model_helpers.NewValidActualLRP("some-process-guid", 1)
+		actual.State = models.ActualLRPStateRunning
+		desiredLRP := model_helpers.NewValidDesiredLRP(actual.ProcessGuid)
+		desiredLRP.Instances = 2
+		err := client.DesireLRP(desiredLRP)
+		Expect(err).NotTo(HaveOccurred())
+		err = client.ClaimActualLRP(actual.ProcessGuid, 1, &actual.ActualLRPInstanceKey)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
 	Describe("RemoveEvacuatingActualLRP", func() {
-		var actual *models.ActualLRP
-		const noExpirationTTL = 0
-
-		BeforeEach(func() {
-			actual = model_helpers.NewValidActualLRP("some-process-guid", 1)
-			actual.State = models.ActualLRPStateRunning
-			etcdHelper.SetRawEvacuatingActualLRP(actual, noExpirationTTL)
-			etcdHelper.SetRawActualLRP(actual)
-			etcdHelper.CreateValidDesiredLRP(actual.ProcessGuid)
-		})
-
 		It("removes the evacuating actual_lrp", func() {
-			err := client.RemoveEvacuatingActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+			_, err := client.EvacuateClaimedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.RemoveEvacuatingActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
 			Expect(err).NotTo(HaveOccurred())
 
 			group, err := client.ActualLRPGroupByProcessGuidAndIndex(actual.ProcessGuid, int(actual.Index))
@@ -43,15 +48,6 @@ var _ = Describe("Evacuation API", func() {
 	})
 
 	Describe("EvacuateClaimedActualLRP", func() {
-		var actual *models.ActualLRP
-
-		BeforeEach(func() {
-			actual = model_helpers.NewValidActualLRP("some-process-guid", 1)
-			actual = models.NewClaimedActualLRP(actual.ActualLRPKey, actual.ActualLRPInstanceKey, actual.Since)
-			etcdHelper.SetRawActualLRP(actual)
-			etcdHelper.CreateValidDesiredLRP(actual.ProcessGuid)
-		})
-
 		It("removes the claimed actual_lrp without evacuating", func() {
 			keepContainer, evacuateErr := client.EvacuateClaimedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
 			Expect(keepContainer).To(BeFalse())
@@ -66,13 +62,9 @@ var _ = Describe("Evacuation API", func() {
 	})
 
 	Describe("EvacuateRunningActualLRP", func() {
-		var actual *models.ActualLRP
-
 		BeforeEach(func() {
-			actual = model_helpers.NewValidActualLRP("some-process-guid", 1)
-			actual.State = models.ActualLRPStateRunning
-			etcdHelper.SetRawActualLRP(actual)
-			etcdHelper.CreateValidDesiredLRP(actual.ProcessGuid)
+			err := client.StartActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("runs the evacuating ActualLRP and unclaims the instance ActualLRP", func() {
@@ -90,15 +82,9 @@ var _ = Describe("Evacuation API", func() {
 	})
 
 	Describe("EvacuateStoppedActualLRP", func() {
-		var actual *models.ActualLRP
-		const noExpirationTTL = 0
-
 		BeforeEach(func() {
-			actual = model_helpers.NewValidActualLRP("some-process-guid", 1)
-			actual.State = models.ActualLRPStateRunning
-			etcdHelper.SetRawEvacuatingActualLRP(actual, noExpirationTTL)
-			etcdHelper.SetRawActualLRP(actual)
-			etcdHelper.CreateValidDesiredLRP(actual.ProcessGuid)
+			err := client.StartActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("deletes the container and both actualLRPs", func() {
@@ -111,13 +97,9 @@ var _ = Describe("Evacuation API", func() {
 	})
 
 	Describe("EvacuateCrashedActualLRP", func() {
-		var actual *models.ActualLRP
-
 		BeforeEach(func() {
-			actual = model_helpers.NewValidActualLRP("some-process-guid", 1)
-			actual.State = models.ActualLRPStateRunning
-			etcdHelper.SetRawActualLRP(actual)
-			etcdHelper.CreateValidDesiredLRP(actual.ProcessGuid)
+			err := client.StartActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("removes the crashed evacuating LRP and unclaims the instance ActualLRP", func() {

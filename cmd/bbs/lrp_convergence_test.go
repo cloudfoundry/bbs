@@ -3,6 +3,7 @@ package main_test
 import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -26,7 +27,10 @@ var _ = Describe("Convergence API", func() {
 			)
 			consulHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
-			etcdHelper.CreateValidDesiredLRP(processGuid)
+			err := client.DesireLRP(model_helpers.NewValidDesiredLRP(processGuid))
+			Expect(err).NotTo(HaveOccurred())
+			err = client.RemoveActualLRP(processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {

@@ -1,8 +1,10 @@
 package main_test
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -30,7 +32,7 @@ var _ = Describe("DesiredLRP API", func() {
 		filter = models.DesiredLRPFilter{}
 		expectedDesiredLRPs = []*models.DesiredLRP{}
 		actualDesiredLRPs = []*models.DesiredLRP{}
-		desiredLRPs = etcdHelper.CreateDesiredLRPsInDomains(map[string]int{
+		desiredLRPs = createDesiredLRPsInDomains(client, map[string]int{
 			"domain-1": 2,
 			"domain-2": 3,
 		})
@@ -43,6 +45,9 @@ var _ = Describe("DesiredLRP API", func() {
 	Describe("DesiredLRPs", func() {
 		JustBeforeEach(func() {
 			actualDesiredLRPs, getErr = client.DesiredLRPs(filter)
+			for _, lrp := range actualDesiredLRPs {
+				lrp.ModificationTag.Epoch = "epoch"
+			}
 		})
 
 		It("responds without error", func() {
@@ -93,6 +98,7 @@ var _ = Describe("DesiredLRP API", func() {
 		JustBeforeEach(func() {
 			expectedDesiredLRP = desiredLRPs["domain-1"][0]
 			desiredLRP, getErr = client.DesiredLRPByProcessGuid(expectedDesiredLRP.GetProcessGuid())
+			desiredLRP.ModificationTag.Epoch = "epoch"
 		})
 
 		It("responds without error", func() {
@@ -107,6 +113,9 @@ var _ = Describe("DesiredLRP API", func() {
 	Describe("DesiredLRPSchedulingInfos", func() {
 		JustBeforeEach(func() {
 			schedulingInfos, getErr = client.DesiredLRPSchedulingInfos(filter)
+			for _, schedulingInfo := range schedulingInfos {
+				schedulingInfo.ModificationTag.Epoch = "epoch"
+			}
 		})
 
 		It("responds without error", func() {
@@ -251,3 +260,23 @@ var _ = Describe("DesiredLRP API", func() {
 		})
 	})
 })
+
+func createDesiredLRPsInDomains(client bbs.Client, domainCounts map[string]int) map[string][]*models.DesiredLRP {
+	createdDesiredLRPs := map[string][]*models.DesiredLRP{}
+
+	for domain, count := range domainCounts {
+		createdDesiredLRPs[domain] = []*models.DesiredLRP{}
+
+		for i := 0; i < count; i++ {
+			guid := fmt.Sprintf("guid-%d-for-%s", i, domain)
+			desiredLRP := model_helpers.NewValidDesiredLRP(guid)
+			desiredLRP.Domain = domain
+			err := client.DesireLRP(desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			createdDesiredLRPs[domain] = append(createdDesiredLRPs[domain], desiredLRP)
+		}
+	}
+
+	return createdDesiredLRPs
+}

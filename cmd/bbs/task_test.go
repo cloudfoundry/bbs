@@ -8,6 +8,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 )
 
 var _ = Describe("Task API", func() {
@@ -18,21 +19,47 @@ var _ = Describe("Task API", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
 		expectedTasks[1].Domain = "b-domain"
-		expectedTasks[1].CellId = "b-cell"
 		for _, t := range expectedTasks {
-			etcdHelper.SetRawTask(t)
+			err := client.DesireTask(t.TaskGuid, t.Domain, t.TaskDefinition)
+			Expect(err).NotTo(HaveOccurred())
 		}
+		client.StartTask(expectedTasks[1].TaskGuid, "b-cell")
 	})
 
 	AfterEach(func() {
 		ginkgomon.Kill(bbsProcess)
 	})
 
+	MatchTask := func(task *models.Task) types.GomegaMatcher {
+		return SatisfyAll(
+			WithTransform(func(t *models.Task) string {
+				return t.TaskGuid
+			}, Equal(task.TaskGuid)),
+			WithTransform(func(t *models.Task) string {
+				return t.Domain
+			}, Equal(task.Domain)),
+			WithTransform(func(t *models.Task) *models.TaskDefinition {
+				return t.TaskDefinition
+			}, Equal(task.TaskDefinition)),
+		)
+	}
+
+	MatchTasks := func(tasks []*models.Task) types.GomegaMatcher {
+		matchers := []types.GomegaMatcher{}
+		matchers = append(matchers, HaveLen(len(tasks)))
+
+		for _, task := range tasks {
+			matchers = append(matchers, ContainElement(MatchTask(task)))
+		}
+
+		return SatisfyAll(matchers...)
+	}
+
 	Describe("Tasks", func() {
 		It("has the correct number of responses", func() {
 			actualTasks, err := client.Tasks()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actualTasks).To(ConsistOf(expectedTasks))
+			Expect(actualTasks).To(MatchTasks(expectedTasks))
 		})
 	})
 
@@ -41,7 +68,7 @@ var _ = Describe("Task API", func() {
 			domain := expectedTasks[0].Domain
 			actualTasks, err := client.TasksByDomain(domain)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actualTasks).To(ConsistOf(expectedTasks[0]))
+			Expect(actualTasks).To(MatchTasks([]*models.Task{expectedTasks[0]}))
 		})
 	})
 
@@ -49,7 +76,7 @@ var _ = Describe("Task API", func() {
 		It("has the correct number of responses", func() {
 			actualTasks, err := client.TasksByCellID("b-cell")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actualTasks).To(ConsistOf(expectedTasks[1]))
+			Expect(actualTasks).To(MatchTasks([]*models.Task{expectedTasks[1]}))
 		})
 	})
 
@@ -57,7 +84,7 @@ var _ = Describe("Task API", func() {
 		It("returns the task", func() {
 			task, err := client.TaskByGuid(expectedTasks[0].TaskGuid)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(task).To(Equal(expectedTasks[0]))
+			Expect(task).To(MatchTask(expectedTasks[0]))
 		})
 	})
 
@@ -69,7 +96,7 @@ var _ = Describe("Task API", func() {
 
 			task, err := client.TaskByGuid(expectedTask.TaskGuid)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(task.TaskDefinition).To(Equal(expectedTask.TaskDefinition))
+			Expect(task).To(MatchTask(expectedTask))
 		})
 	})
 

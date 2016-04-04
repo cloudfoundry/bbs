@@ -1,7 +1,6 @@
 package main_test
 
 import (
-	"crypto/rand"
 	"fmt"
 	"net"
 	"net/http"
@@ -12,9 +11,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/db/etcd/test/etcd_helpers"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
@@ -34,8 +30,6 @@ import (
 
 	"testing"
 	"time"
-
-	"github.com/pivotal-golang/clock/fakeclock"
 )
 
 var etcdPort int
@@ -56,7 +50,6 @@ var bbsRunner *ginkgomon.Runner
 var bbsProcess ifrit.Process
 var consulRunner *consulrunner.ClusterRunner
 var consulClient consuladapter.Client
-var etcdHelper *etcd_helpers.ETCDHelper
 var consulHelper *test_helpers.ConsulHelper
 var auctioneerServer *ghttp.Server
 var testMetricsListener net.PacketConn
@@ -161,13 +154,6 @@ var _ = BeforeEach(func() {
 		ActiveKeyLabel: "label",
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
-	encryptionKey, err := encryption.NewKey("label", "key")
-	Expect(err).NotTo(HaveOccurred())
-	keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
-	Expect(err).NotTo(HaveOccurred())
-	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-	clock := fakeclock.NewFakeClock(time.Now())
-	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient, clock)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 })
 
