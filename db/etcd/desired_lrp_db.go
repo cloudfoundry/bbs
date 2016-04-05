@@ -197,17 +197,18 @@ func (db *ETCDDB) rawDesiredLRPRunInfo(logger lager.Logger, processGuid string) 
 	return model, nil
 }
 
-func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
+func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, uint64, error) {
 	var wg sync.WaitGroup
 
 	var schedulingInfo *models.DesiredLRPSchedulingInfo
 	var runInfo *models.DesiredLRPRunInfo
 	var schedulingErr, runErr error
 
+	var index uint64
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		schedulingInfo, _, schedulingErr = db.rawDesiredLRPSchedulingInfo(logger, processGuid)
+		schedulingInfo, index, schedulingErr = db.rawDesiredLRPSchedulingInfo(logger, processGuid)
 	}()
 
 	wg.Add(1)
@@ -219,19 +220,19 @@ func (db *ETCDDB) rawDesiredLRPByProcessGuid(logger lager.Logger, processGuid st
 	wg.Wait()
 
 	if schedulingErr != nil {
-		return nil, schedulingErr
+		return nil, 0, schedulingErr
 	}
 
 	if runErr != nil {
-		return nil, runErr
+		return nil, 0, runErr
 	}
 
 	desiredLRP := models.NewDesiredLRP(*schedulingInfo, *runInfo)
-	return &desiredLRP, nil
+	return &desiredLRP, index, nil
 }
 
 func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
-	lrp, err := db.rawDesiredLRPByProcessGuid(logger, processGuid)
+	lrp, _, err := db.rawDesiredLRPByProcessGuid(logger, processGuid)
 	return lrp, err
 }
 
@@ -324,25 +325,26 @@ func (db *ETCDDB) createDesiredLRPRunInfo(logger lager.Logger, runInfo *models.D
 	return nil
 }
 
-func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (int32, error) {
+func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
 	logger = logger.Session("update-desired-lrp", lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
 	var schedulingInfo *models.DesiredLRPSchedulingInfo
 	var err error
-	var previousInstanceCount int32
+	var beforeDesiredLRP *models.DesiredLRP
 
 	for i := 0; i < 2; i++ {
 		var index uint64
 
-		schedulingInfo, index, err = db.rawDesiredLRPSchedulingInfo(logger, processGuid)
+		beforeDesiredLRP, index, err = db.rawDesiredLRPByProcessGuid(logger, processGuid)
 		if err != nil {
-			logger.Error("failed-to-fetch-scheduling-info", err)
+			logger.Error("failed-to-fetch-desired-lrp", err)
 			break
 		}
 
-		previousInstanceCount = schedulingInfo.Instances
+		schedulingInfoValue := beforeDesiredLRP.DesiredLRPSchedulingInfo()
+		schedulingInfo = &schedulingInfoValue
 		schedulingInfo.ApplyUpdate(update)
 
 		err = db.updateDesiredLRPSchedulingInfo(logger, schedulingInfo, index)
@@ -360,10 +362,10 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 	}
 
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return previousInstanceCount, nil
+	return beforeDesiredLRP, nil
 }
 
 // RemoveDesiredLRP deletes the DesiredLRPSchedulingInfo and the DesiredLRPRunInfo

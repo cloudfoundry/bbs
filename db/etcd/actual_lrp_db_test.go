@@ -339,11 +339,12 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP does not exist", func() {
 			It("creates a new unclaimed actual LRP", func() {
-				err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
+				actualLRPGroup, err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
 				Expect(err).NotTo(HaveOccurred())
 
 				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
 				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroup).To(Equal(group))
 
 				actualLRP, evacuating := group.Resolve()
 				Expect(evacuating).To(BeFalse())
@@ -367,7 +368,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("errors", func() {
-					err := etcdDBWithFakeStore.CreateUnclaimedActualLRP(logger, lrpKey)
+					_, err := etcdDBWithFakeStore.CreateUnclaimedActualLRP(logger, lrpKey)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -381,7 +382,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns a ResourceExists error", func() {
-				err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
+				_, err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -404,7 +405,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP does not exist", func() {
 			It("fails with a resource not found", func() {
-				err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+				_, err := etcdDB.UnclaimActualLRP(logger, lrpKey)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 
@@ -415,7 +416,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("errors", func() {
-					err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
+					_, err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -429,7 +430,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("transitions the actual lrp into the unclaimed state", func() {
-				err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+				_, err := etcdDB.UnclaimActualLRP(logger, lrpKey)
 				Expect(err).NotTo(HaveOccurred())
 
 				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -449,6 +450,12 @@ var _ = Describe("ActualLRPDB", func() {
 				}))
 			})
 
+			It("returns the previous actual lrp group", func() {
+				beforeActualGroup, err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+			})
+
 			Context("when the actual lrp is already unclaimed", func() {
 				BeforeEach(func() {
 					actualLRP.State = models.ActualLRPStateUnclaimed
@@ -458,7 +465,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns an error", func() {
-					err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+					_, err := etcdDB.UnclaimActualLRP(logger, lrpKey)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -472,7 +479,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns an error", func() {
-					err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
+					_, err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -483,7 +490,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns an error", func() {
-					err := etcdDB.UnclaimActualLRP(logger, lrpKey)
+					_, err := etcdDB.UnclaimActualLRP(logger, lrpKey)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -495,7 +502,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns an error", func() {
-				err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
+				_, err := etcdDBWithFakeStore.UnclaimActualLRP(logger, lrpKey)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -503,8 +510,9 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("ClaimActualLRP", func() {
 		var (
-			actualLRP *models.ActualLRP
-			claimErr  error
+			actualLRP         *models.ActualLRP
+			beforeActualGroup *models.ActualLRPGroup
+			claimErr          error
 
 			lrpKey      models.ActualLRPKey
 			instanceKey models.ActualLRPInstanceKey
@@ -515,7 +523,7 @@ var _ = Describe("ActualLRPDB", func() {
 		)
 
 		JustBeforeEach(func() {
-			claimErr = etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
+			beforeActualGroup, claimErr = etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -578,6 +586,10 @@ var _ = Describe("ActualLRPDB", func() {
 
 					Expect(lrpGroupInBBS.Instance.ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + 1))
 				})
+
+				It("returns the existing actual lrp group", func() {
+					Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+				})
 			})
 
 			Context("when the existing ActualLRP is Claimed", func() {
@@ -586,8 +598,11 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					instanceGuid = "some-instance-guid"
 					instanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
-					err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
+					_, err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 					Expect(err).NotTo(HaveOccurred())
+					actualLRP.State = models.ActualLRPStateClaimed
+					actualLRP.ActualLRPInstanceKey = instanceKey
+					actualLRP.ModificationTag.Increment()
 				})
 
 				Context("with the same cell and instance guid", func() {
@@ -616,6 +631,10 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(lrpGroupInBBS.Instance.Since).To(Equal(previousTime))
+					})
+
+					It("returns the existing actual lrp group", func() {
+						Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
 					})
 				})
 
@@ -693,6 +712,10 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(lrpGroupInBBS.Instance.Address).To(BeEmpty())
 						Expect(lrpGroupInBBS.Instance.Ports).To(BeEmpty())
 					})
+
+					It("returns the existing actual lrp group", func() {
+						Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+					})
 				})
 
 				Context("with a different cell", func() {
@@ -743,6 +766,10 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(lrp.Instance.PlacementError).To(BeEmpty())
 				})
+
+				It("returns the existing actual lrp group", func() {
+					Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+				})
 			})
 		})
 
@@ -769,10 +796,13 @@ var _ = Describe("ActualLRPDB", func() {
 			lrpKey      models.ActualLRPKey
 			instanceKey models.ActualLRPInstanceKey
 			netInfo     models.ActualLRPNetInfo
+
+			beforeActualGroup *models.ActualLRPGroup
+			updated           bool
 		)
 
 		JustBeforeEach(func() {
-			startErr = etcdDB.StartActualLRP(logger, &lrpKey, &instanceKey, &netInfo)
+			beforeActualGroup, updated, startErr = etcdDB.StartActualLRP(logger, &lrpKey, &instanceKey, &netInfo)
 		})
 
 		Context("when the logging session is created and the starting message is logged", func() {
@@ -832,6 +862,11 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateRunning))
 				})
 
+				It("returns the existing actual LRP", func() {
+					Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+					Expect(updated).To(BeTrue())
+				})
+
 				Context("when there is a placement error", func() {
 					BeforeEach(func() {
 						actualLRP.PlacementError = "insufficient resources"
@@ -873,8 +908,12 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					instanceGuid = "some-instance-guid"
 					instanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
-					err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
+					_, err := etcdDB.ClaimActualLRP(logger, processGuid, index, &instanceKey)
 					Expect(err).NotTo(HaveOccurred())
+
+					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					Expect(err).NotTo(HaveOccurred())
+					actualLRP = group.Instance
 				})
 
 				Context("with the same cell and instance guid", func() {
@@ -893,6 +932,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(lrpGroupInBBS.Instance.State).To(Equal(models.ActualLRPStateRunning))
+					})
+
+					It("returns the existing actual LRP", func() {
+						Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+						Expect(updated).To(BeTrue())
 					})
 				})
 
@@ -944,8 +988,12 @@ var _ = Describe("ActualLRPDB", func() {
 					existingInstanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
 					existingNetInfo := models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
 
-					err := etcdDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, &existingInstanceKey, &existingNetInfo)
+					_, _, err := etcdDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, &existingInstanceKey, &existingNetInfo)
 					Expect(err).NotTo(HaveOccurred())
+
+					group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					Expect(err).NotTo(HaveOccurred())
+					actualLRP = group.Instance
 				})
 
 				Context("with the same cell and instance guid", func() {
@@ -973,6 +1021,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(lrpGroupInBBS.Instance.ActualLRPNetInfo).To(Equal(netInfo))
 					})
 
+					It("returns the existing actual LRP", func() {
+						Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+						Expect(updated).To(BeTrue())
+					})
+
 					Context("and the same net info", func() {
 						var previousTime int64
 						BeforeEach(func() {
@@ -987,6 +1040,10 @@ var _ = Describe("ActualLRPDB", func() {
 							Expect(err).NotTo(HaveOccurred())
 
 							Expect(lrpGroupInBBS.Instance.Since).To(Equal(previousTime))
+						})
+
+						It("signals that it hasn't updated the lrp", func() {
+							Expect(updated).To(BeFalse())
 						})
 					})
 				})
@@ -1063,13 +1120,19 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Expect(lrpGroup.Instance.ActualLRPInstanceKey).To(Equal(instanceKey))
 			})
+
+			It("returns no existing lrp but true updated", func() {
+				Expect(beforeActualGroup).To(BeNil())
+				Expect(updated).To(BeTrue())
+			})
 		})
 	})
 
 	Describe("FailActualLRP", func() {
 		var (
-			failErr   error
-			actualLRP *models.ActualLRP
+			failErr           error
+			actualLRP         *models.ActualLRP
+			beforeActualGroup *models.ActualLRPGroup
 
 			lrpKey       models.ActualLRPKey
 			instanceKey  models.ActualLRPInstanceKey
@@ -1081,7 +1144,7 @@ var _ = Describe("ActualLRPDB", func() {
 		)
 
 		JustBeforeEach(func() {
-			failErr = etcdDB.FailActualLRP(logger, &lrpKey, errorMessage)
+			beforeActualGroup, failErr = etcdDB.FailActualLRP(logger, &lrpKey, errorMessage)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -1118,6 +1181,10 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(lrpGroupInBBS.Instance.ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + 1))
+				})
+
+				It("returns the existing actual lrp", func() {
+					Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
 				})
 			})
 

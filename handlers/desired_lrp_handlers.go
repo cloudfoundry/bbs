@@ -6,6 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/rep"
 	"github.com/cloudfoundry/gunk/workpool"
@@ -15,6 +16,8 @@ import (
 type DesiredLRPHandler struct {
 	desiredLRPDB       db.DesiredLRPDB
 	actualLRPDB        db.ActualLRPDB
+	desiredHub         events.Hub
+	actualHub          events.Hub
 	auctioneerClient   auctioneer.Client
 	repClientFactory   rep.ClientFactory
 	serviceClient      bbs.ServiceClient
@@ -27,6 +30,8 @@ func NewDesiredLRPHandler(
 	updateWorkersCount int,
 	desiredLRPDB db.DesiredLRPDB,
 	actualLRPDB db.ActualLRPDB,
+	desiredHub events.Hub,
+	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	repClientFactory rep.ClientFactory,
 	serviceClient bbs.ServiceClient,
@@ -34,6 +39,8 @@ func NewDesiredLRPHandler(
 	return &DesiredLRPHandler{
 		desiredLRPDB:       desiredLRPDB,
 		actualLRPDB:        actualLRPDB,
+		desiredHub:         desiredHub,
+		actualHub:          actualHub,
 		auctioneerClient:   auctioneerClient,
 		repClientFactory:   repClientFactory,
 		serviceClient:      serviceClient,
@@ -111,6 +118,14 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Re
 		return
 	}
 
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.DesiredLrp.ProcessGuid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
+
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
 	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
 }
@@ -135,7 +150,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 	logger = logger.WithData(lager.Data{"update": request.Update, "guid": request.ProcessGuid})
 
 	logger.Debug("updating-desired-lrp")
-	previousInstanceCount, err := h.desiredLRPDB.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
+	beforeDesiredLRP, err := h.desiredLRPDB.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
 	if err != nil {
 		logger.Debug("failed-updating-desired-lrp")
 		response.Error = models.ConvertError(err)
@@ -143,13 +158,15 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 	}
 	logger.Debug("completed-updating-desired-lrp")
 
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+	if err != nil {
+		logger.Error("failed-fetching-desired-lrp", err)
+		return
+	}
+
 	if request.Update.Instances != nil {
 		logger.Debug("updating-lrp-instances")
-		desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
-		if err != nil {
-			logger.Error("failed-fetching-desired-lrp", err)
-			return
-		}
+		previousInstanceCount := beforeDesiredLRP.Instances
 
 		requestedInstances := *request.Update.Instances - previousInstanceCount
 
@@ -166,6 +183,8 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 			h.stopInstancesFrom(logger, request.ProcessGuid, int(numExtraActualLRP))
 		}
 	}
+
+	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
 }
 
 func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Request) {
@@ -181,11 +200,19 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Re
 		return
 	}
 
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
 	err = h.desiredLRPDB.RemoveDesiredLRP(logger, request.ProcessGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
+
+	go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP))
 
 	h.stopInstancesFrom(logger, request.ProcessGuid, 0)
 }
@@ -221,10 +248,11 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 	for i, key := range keys {
 		key := key
 		works[i] = func() {
-			err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
+			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
 			if err != nil {
 				logger.Info("failed-creating-actual-lrp", lager.Data{"actual_lrp_key": key, "err-message": err.Error()})
 			} else {
+				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
 				createdIndicesChan <- int(key.Index)
 			}
 		}

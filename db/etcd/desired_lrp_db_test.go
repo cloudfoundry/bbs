@@ -3,6 +3,7 @@ package etcd_test
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -428,16 +429,27 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns the previous instance count", func() {
-				previousCount, modelErr := etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
+				beforeDesiredLRP, modelErr := etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
 				Expect(modelErr).NotTo(HaveOccurred())
-				Expect(previousCount).To(BeNumerically("==", 5))
+				beforeDesiredLRP.ModificationTag.Epoch = "epoch"
+				Expect(beforeDesiredLRP).To(Equal(lrp))
 			})
 
 			Context("when the compare and swap fails", func() {
 				BeforeEach(func() {
-					resp, err := storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaPath(lrp.ProcessGuid), false, false)
+					schedInfoResp, err := storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaPath(lrp.ProcessGuid), false, false)
 					Expect(err).NotTo(HaveOccurred())
-					fakeStoreClient.GetReturns(resp, nil) // return the pre-updated desired lrps
+
+					runInfoResp, err := storeClient.Get(etcd.DesiredLRPRunInfoSchemaPath(lrp.ProcessGuid), false, false)
+					Expect(err).NotTo(HaveOccurred())
+
+					fakeStoreClient.GetStub = func(key string, _, _ bool) (*etcdclient.Response, error) {
+						if strings.Contains(key, etcd.DesiredLRPRunInfoSchemaRoot) {
+							return runInfoResp, nil
+						} else {
+							return schedInfoResp, nil
+						}
+					}
 				})
 
 				Context("for a CAS failure", func() {
