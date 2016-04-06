@@ -106,6 +106,89 @@ var _ = Describe("Events API", func() {
 		})
 	})
 
+	Describe("Desired LRPs", func() {
+		BeforeEach(func() {
+			routeMessage := json.RawMessage([]byte(`[{"port":8080,"hostnames":["original-route"]}]`))
+			routes := &models.Routes{"cf-router": &routeMessage}
+
+			desiredLRP = &models.DesiredLRP{
+				ProcessGuid: "some-guid",
+				Domain:      "some-domain",
+				RootFs:      "some:rootfs",
+				Routes:      routes,
+				Action: models.WrapAction(&models.RunAction{
+					User:      "me",
+					Dir:       "/tmp",
+					Path:      "true",
+					LogSource: "logs",
+				}),
+			}
+		})
+
+		JustBeforeEach(func() {
+			var err error
+			eventSource, err = client.SubscribeToDesiredLRPEvents()
+			Expect(err).NotTo(HaveOccurred())
+
+			eventChannel = streamEvents(eventSource)
+
+			primerLRP := model_helpers.NewValidDesiredLRP("primer-guid")
+			primeEventStream(eventChannel, models.EventTypeDesiredLRPRemoved, func() {
+				err := client.DesireLRP(primerLRP)
+				Expect(err).NotTo(HaveOccurred())
+			}, func() {
+				err := client.RemoveDesiredLRP("primer-guid")
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		AfterEach(func() {
+			err := eventSource.Close()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("receives events", func() {
+			By("creating a DesiredLRP")
+			err := client.DesireLRP(desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			desiredLRP, err := client.DesiredLRPByProcessGuid(desiredLRP.ProcessGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			var event models.Event
+			Eventually(eventChannel).Should(Receive(&event))
+
+			desiredLRPCreatedEvent, ok := event.(*models.DesiredLRPCreatedEvent)
+			Expect(ok).To(BeTrue())
+
+			Expect(desiredLRPCreatedEvent.DesiredLrp).To(Equal(desiredLRP))
+
+			By("updating an existing DesiredLRP")
+			routeMessage := json.RawMessage([]byte(`[{"port":8080,"hostnames":["new-route"]}]`))
+			newRoutes := &models.Routes{
+				"cf-router": &routeMessage,
+			}
+			err = client.UpdateDesiredLRP(desiredLRP.ProcessGuid, &models.DesiredLRPUpdate{Routes: newRoutes})
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+
+			desiredLRPChangedEvent, ok := event.(*models.DesiredLRPChangedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(desiredLRPChangedEvent.After.Routes).To(Equal(newRoutes))
+
+			By("removing the DesiredLRP")
+			err = client.RemoveDesiredLRP(desiredLRP.ProcessGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+
+			desiredLRPRemovedEvent, ok := event.(*models.DesiredLRPRemovedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(desiredLRPRemovedEvent.DesiredLrp.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
+		})
+	})
+
 	Describe("Actual LRPs", func() {
 		const (
 			processGuid     = "some-process-guid"
@@ -293,166 +376,6 @@ var _ = Describe("Events API", func() {
 			actualLRPRemovedEvent = event.(*models.ActualLRPRemovedEvent)
 			response = actualLRPRemovedEvent.ActualLrpGroup.GetEvacuating()
 			Expect(*response).To(Equal(evacuatingLRP))
-		})
-	})
-
-	Describe("Desired LRPs", func() {
-		BeforeEach(func() {
-			routeMessage := json.RawMessage([]byte(`[{"port":8080,"hostnames":["original-route"]}]`))
-			routes := &models.Routes{"cf-router": &routeMessage}
-
-			desiredLRP = &models.DesiredLRP{
-				ProcessGuid: "some-guid",
-				Domain:      "some-domain",
-				RootFs:      "some:rootfs",
-				Routes:      routes,
-				Action: models.WrapAction(&models.RunAction{
-					User:      "me",
-					Dir:       "/tmp",
-					Path:      "true",
-					LogSource: "logs",
-				}),
-			}
-		})
-
-		JustBeforeEach(func() {
-			var err error
-			eventSource, err = client.SubscribeToDesiredLRPEvents()
-			Expect(err).NotTo(HaveOccurred())
-
-			eventChannel = streamEvents(eventSource)
-
-			primerLRP := model_helpers.NewValidDesiredLRP("primer-guid")
-			primeEventStream(eventChannel, models.EventTypeDesiredLRPRemoved, func() {
-				err := client.DesireLRP(primerLRP)
-				Expect(err).NotTo(HaveOccurred())
-			}, func() {
-				err := client.RemoveDesiredLRP("primer-guid")
-				Expect(err).NotTo(HaveOccurred())
-			})
-		})
-
-		AfterEach(func() {
-			err := eventSource.Close()
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("receives events", func() {
-			By("creating a DesiredLRP")
-			err := client.DesireLRP(desiredLRP)
-			Expect(err).NotTo(HaveOccurred())
-
-			desiredLRP, err := client.DesiredLRPByProcessGuid(desiredLRP.ProcessGuid)
-			Expect(err).NotTo(HaveOccurred())
-
-			var event models.Event
-			Eventually(eventChannel).Should(Receive(&event))
-
-			desiredLRPCreatedEvent, ok := event.(*models.DesiredLRPCreatedEvent)
-			Expect(ok).To(BeTrue())
-
-			Expect(desiredLRPCreatedEvent.DesiredLrp).To(Equal(desiredLRP))
-
-			By("updating an existing DesiredLRP")
-			routeMessage := json.RawMessage([]byte(`[{"port":8080,"hostnames":["new-route"]}]`))
-			newRoutes := &models.Routes{
-				"cf-router": &routeMessage,
-			}
-			err = client.UpdateDesiredLRP(desiredLRP.ProcessGuid, &models.DesiredLRPUpdate{Routes: newRoutes})
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(eventChannel).Should(Receive(&event))
-
-			desiredLRPChangedEvent, ok := event.(*models.DesiredLRPChangedEvent)
-			Expect(ok).To(BeTrue())
-			Expect(desiredLRPChangedEvent.After.Routes).To(Equal(newRoutes))
-
-			By("removing the DesiredLRP")
-			err = client.RemoveDesiredLRP(desiredLRP.ProcessGuid)
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(eventChannel).Should(Receive(&event))
-
-			desiredLRPRemovedEvent, ok := event.(*models.DesiredLRPRemovedEvent)
-			Expect(ok).To(BeTrue())
-			Expect(desiredLRPRemovedEvent.DesiredLrp.ProcessGuid).To(Equal(desiredLRP.ProcessGuid))
-		})
-	})
-
-	Describe("Tasks", func() {
-		var taskGuid string
-		var taskDef *models.TaskDefinition
-
-		BeforeEach(func() {
-			taskGuid = "example-guid"
-			taskDef = &models.TaskDefinition{
-				RootFs: "http://neopets.com",
-				Action: models.WrapAction(&models.RunAction{
-					User:      "me",
-					Dir:       "/tmp",
-					Path:      "true",
-					LogSource: "logs",
-				}),
-			}
-		})
-
-		JustBeforeEach(func() {
-			var err error
-			eventSource, err = client.SubscribeToTaskEvents()
-			Expect(err).NotTo(HaveOccurred())
-
-			eventChannel = streamEvents(eventSource)
-		})
-
-		AfterEach(func() {
-			err := eventSource.Close()
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("receives events", func() {
-			By("creating a Task")
-			err := client.DesireTask(taskGuid, "domain", taskDef)
-			Expect(err).NotTo(HaveOccurred())
-
-			task, err := client.TaskByGuid(taskGuid)
-			Expect(err).NotTo(HaveOccurred())
-
-			var event models.Event
-			Eventually(eventChannel).Should(Receive(&event))
-
-			taskCreatedEvent, ok := event.(*models.TaskCreatedEvent)
-			Expect(ok).To(BeTrue())
-
-			Expect(taskCreatedEvent.Task).To(Equal(task))
-
-			By("updating an existing Task")
-			err = client.FailTask(task.TaskGuid, "i failed")
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(eventChannel).Should(Receive(&event))
-
-			taskChangedEvent, ok := event.(*models.TaskChangedEvent)
-			Expect(ok).To(BeTrue())
-			Expect(taskChangedEvent.Before.FailureReason).To(BeEmpty())
-			Expect(taskChangedEvent.After.FailureReason).To(Equal("i failed"))
-
-			By("resolving the Task")
-			err = client.ResolvingTask(task.TaskGuid)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(eventChannel).Should(Receive(&event))
-			taskChangedEvent, ok = event.(*models.TaskChangedEvent)
-			Expect(ok).To(BeTrue())
-			Expect(taskChangedEvent.Before.State).To(Equal(models.Task_Completed))
-			Expect(taskChangedEvent.After.State).To(Equal(models.Task_Resolving))
-
-			By("removing the Task")
-			err = client.DeleteTask(task.TaskGuid)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(eventChannel).Should(Receive(&event))
-
-			taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
-			Expect(ok).To(BeTrue())
-			Expect(taskRemovedEvent.Task.TaskGuid).To(Equal(task.TaskGuid))
 		})
 	})
 })
