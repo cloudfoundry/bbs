@@ -25,7 +25,6 @@ var _ = Describe("Event Handlers", func() {
 		logger     lager.Logger
 		desiredHub events.Hub
 		actualHub  events.Hub
-		taskHub    events.Hub
 
 		handler         *handlers.EventHandler
 		eventStreamDone chan struct{}
@@ -36,8 +35,7 @@ var _ = Describe("Event Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		desiredHub = events.NewHub()
 		actualHub = events.NewHub()
-		taskHub = events.NewHub()
-		handler = handlers.NewEventHandler(logger, desiredHub, actualHub, taskHub)
+		handler = handlers.NewEventHandler(logger, desiredHub, actualHub)
 
 		eventStreamDone = make(chan struct{})
 	})
@@ -45,7 +43,6 @@ var _ = Describe("Event Handlers", func() {
 	AfterEach(func() {
 		desiredHub.Close()
 		actualHub.Close()
-		taskHub.Close()
 		server.Close()
 	})
 
@@ -214,19 +211,6 @@ var _ = Describe("Event Handlers", func() {
 
 		Describe("Subscribe to Actual Events", func() {
 			ItStreamsEventsFromHub(&actualHub)
-		})
-	})
-
-	Describe("SubscribeToTaskEvents", func() {
-		BeforeEach(func() {
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.SubscribeToTaskEvents(w, r)
-				close(eventStreamDone)
-			}))
-		})
-
-		Describe("Subscribe to Task Events", func() {
-			ItStreamsEventsFromHub(&taskHub)
 		})
 	})
 })

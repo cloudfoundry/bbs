@@ -23,7 +23,7 @@ func New(
 	updateWorkers int,
 	convergenceWorkersSize int,
 	db db.DB,
-	desiredHub, actualHub, taskHub events.Hub,
+	desiredHub, actualHub events.Hub,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
 	serviceClient bbs.ServiceClient,
 	auctioneerClient auctioneer.Client,
@@ -39,7 +39,7 @@ func New(
 	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, auctioneerClient, repClientFactory, serviceClient)
 	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, auctioneerClient, serviceClient, retirer, convergenceWorkersSize)
 	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
-	eventsHandler := NewEventHandler(logger, desiredHub, actualHub, taskHub)
+	eventsHandler := NewEventHandler(logger, desiredHub, actualHub)
 	cellsHandler := NewCellHandler(logger, serviceClient)
 
 	emitter := middleware.NewLatencyEmitter(logger)
@@ -105,7 +105,6 @@ func New(
 		bbs.EventStreamRoute_r0:        route(eventsHandler.Subscribe_r0),
 		bbs.DesiredLRPEventStreamRoute: route(eventsHandler.SubscribeToDesiredLRPEvents),
 		bbs.ActualLRPEventStreamRoute:  route(eventsHandler.SubscribeToActualLRPEvents),
-		bbs.TaskEventStreamRoute:       route(eventsHandler.SubscribeToTaskEvents),
 
 		// Cells
 		bbs.CellsRoute: route(emitter.EmitLatency(cellsHandler.Cells)),

@@ -3,7 +3,6 @@ package watcher_test
 import (
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/cloudfoundry-incubator/bbs/watcher"
 	"github.com/pivotal-golang/lager/lagertest"
 
@@ -181,84 +180,6 @@ var _ = Describe("ActualStreamer", func() {
 
 				actualLRPRemovedEvent := event.(*models.ActualLRPRemovedEvent)
 				Expect(actualLRPRemovedEvent.ActualLrpGroup).To(Equal(actualLRPGroup))
-			})
-		})
-	})
-})
-
-var _ = Describe("TaskStreamer", func() {
-	var (
-		taskCreateCB func(*models.Task)
-		taskChangeCB func(*models.TaskChange)
-		taskDeleteCB func(*models.Task)
-		eventDB      *fakes.FakeEventDB
-		streamer     *watcher.TaskStreamer
-		eventChan    chan models.Event
-	)
-
-	BeforeEach(func() {
-		logger := lagertest.NewTestLogger("test")
-
-		eventDB = &fakes.FakeEventDB{}
-		streamer = watcher.NewTaskStreamer(eventDB)
-
-		eventChan = make(chan models.Event, 1)
-		streamer.Stream(logger, eventChan)
-
-		Eventually(eventDB.WatchForTaskChangesCallCount).Should(Equal(1))
-		_, taskCreateCB, taskChangeCB, taskDeleteCB = eventDB.WatchForTaskChangesArgsForCall(0)
-	})
-
-	Describe("Task changes", func() {
-		var task *models.Task
-
-		BeforeEach(func() {
-			task = model_helpers.NewValidTask("some-task-guid")
-		})
-
-		Context("when a create arrives", func() {
-			BeforeEach(func() {
-				taskCreateCB(task)
-			})
-
-			It("emits an TaskCreatedEvent to the hub", func() {
-				var event models.Event
-				Eventually(eventChan).Should(Receive(&event))
-				Expect(event).To(BeAssignableToTypeOf(&models.TaskCreatedEvent{}))
-
-				taskCreatedEvent := event.(*models.TaskCreatedEvent)
-				Expect(taskCreatedEvent.Task).To(Equal(task))
-			})
-		})
-
-		Context("when a change arrives", func() {
-			BeforeEach(func() {
-				taskChangeCB(&models.TaskChange{Before: task, After: task})
-			})
-
-			It("emits a TaskChangedEvent to the hub", func() {
-				var event models.Event
-				Eventually(eventChan).Should(Receive(&event))
-				Expect(event).To(BeAssignableToTypeOf(&models.TaskChangedEvent{}))
-
-				taskChangedEvent := event.(*models.TaskChangedEvent)
-				Expect(taskChangedEvent.Before).To(Equal(task))
-				Expect(taskChangedEvent.After).To(Equal(task))
-			})
-		})
-
-		Context("when a delete arrives", func() {
-			BeforeEach(func() {
-				taskDeleteCB(task)
-			})
-
-			It("emits an ActualLRPRemovedEvent to the hub", func() {
-				var event models.Event
-				Eventually(eventChan).Should(Receive(&event))
-				Expect(event).To(BeAssignableToTypeOf(&models.TaskRemovedEvent{}))
-
-				taskRemovedEvent := event.(*models.TaskRemovedEvent)
-				Expect(taskRemovedEvent.Task).To(Equal(task))
 			})
 		})
 	})

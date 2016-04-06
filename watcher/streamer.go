@@ -69,32 +69,3 @@ func (s *ActualStreamer) Stream(logger lager.Logger, eventChan chan<- models.Eve
 			eventChan <- models.NewActualLRPRemovedEvent(deleted)
 		})
 }
-
-type TaskStreamer struct {
-	eventDB db.EventDB
-}
-
-func NewTaskStreamer(eventDB db.EventDB) *TaskStreamer {
-	return &TaskStreamer{
-		eventDB: eventDB,
-	}
-}
-
-func (s *TaskStreamer) Stream(logger lager.Logger, eventChan chan<- models.Event) (chan<- bool, <-chan error) {
-	return s.eventDB.WatchForTaskChanges(logger,
-		func(created *models.Task) {
-			logger.Debug("handling-task-create")
-			eventChan <- models.NewTaskCreatedEvent(created)
-		},
-		func(changed *models.TaskChange) {
-			logger.Debug("handling-task-change")
-			eventChan <- models.NewTaskChangedEvent(
-				changed.Before,
-				changed.After,
-			)
-		},
-		func(deleted *models.Task) {
-			logger.Debug("handling-task-delete")
-			eventChan <- models.NewTaskRemovedEvent(deleted)
-		})
-}

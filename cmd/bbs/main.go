@@ -249,17 +249,6 @@ func main() {
 		clock,
 	)
 
-	taskHub := events.NewHub()
-	taskStreamer := watcher.NewTaskStreamer(db)
-	taskWatcher := watcher.NewWatcher(
-		logger,
-		"tasks",
-		bbsWatchRetryWaitDuration,
-		taskStreamer,
-		taskHub,
-		clock,
-	)
-
 	repClientFactory := rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient())
 	auctioneerClient := initializeAuctioneerClient(logger)
 
@@ -270,7 +259,6 @@ func main() {
 		db,
 		desiredHub,
 		actualHub,
-		taskHub,
 		cbWorkPool,
 		serviceClient,
 		auctioneerClient,
@@ -304,7 +292,6 @@ func main() {
 		{"encryptor", encryptor},
 		{"desired-watcher", desiredWatcher},
 		{"actual-watcher", actualWatcher},
-		{"task-watcher", taskWatcher},
 		{"metrics", *metricsNotifier},
 		{"registration-runner", registrationRunner},
 	}

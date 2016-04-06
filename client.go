@@ -167,9 +167,6 @@ type ExternalEventClient interface {
 
 	// Returns an EventSource for watching changes to ActualLRPs
 	SubscribeToActualLRPEvents() (events.EventSource, error)
-
-	// Returns an EventSource for watching changes to Tasks
-	SubscribeToTaskEvents() (events.EventSource, error)
 }
 
 func newClient(url string) *client {
@@ -687,23 +684,6 @@ func (c *client) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
 func (c *client) SubscribeToActualLRPEvents() (events.EventSource, error) {
 	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
 		request, err := c.reqGen.CreateRequest(ActualLRPEventStreamRoute, nil, nil)
-		if err != nil {
-			panic(err) // totally shouldn't happen
-		}
-
-		return request
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return events.NewEventSource(eventSource), nil
-}
-
-func (c *client) SubscribeToTaskEvents() (events.EventSource, error) {
-	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
-		request, err := c.reqGen.CreateRequest(TaskEventStreamRoute, nil, nil)
 		if err != nil {
 			panic(err) // totally shouldn't happen
 		}
