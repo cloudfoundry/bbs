@@ -159,6 +159,7 @@ type ExternalDesiredLRPClient interface {
 }
 
 /*
+** EXPERIMENTAL **
 The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {

@@ -134,9 +134,9 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks/converge", Method: "POST", Name: ConvergeTasksRoute},
 
 	// Event Streaming
-	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0}, // Deprecated
-	{Path: "/v1/desired_lrp_events", Method: "GET", Name: DesiredLRPEventStreamRoute},
-	{Path: "/v1/actual_lrp_events", Method: "GET", Name: ActualLRPEventStreamRoute},
+	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},
+	{Path: "/v1/desired_lrp_events", Method: "GET", Name: DesiredLRPEventStreamRoute}, // Experimental
+	{Path: "/v1/actual_lrp_events", Method: "GET", Name: ActualLRPEventStreamRoute},   // Experimental
 
 	// Cells
 	{Path: "/v1/cells/list.r1", Method: "GET", Name: CellsRoute},
