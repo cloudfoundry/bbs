@@ -77,6 +77,7 @@ type DesiredLRPRunInfo struct {
 	LegacyDownloadUser            string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	Network                       *Network              `protobuf:"bytes,18,opt,name=network" json:"network,omitempty"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -190,6 +191,13 @@ func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatesPath() string {
 func (m *DesiredLRPRunInfo) GetVolumeMounts() []*VolumeMount {
 	if m != nil {
 		return m.VolumeMounts
+	}
+	return nil
+}
+
+func (m *DesiredLRPRunInfo) GetNetwork() *Network {
+	if m != nil {
+		return m.Network
 	}
 	return nil
 }
@@ -318,6 +326,7 @@ type DesiredLRP struct {
 	LegacyDownloadUser            string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,25,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	Network                       *Network               `protobuf:"bytes,26,opt,name=network" json:"network,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -491,6 +500,13 @@ func (m *DesiredLRP) GetVolumeMounts() []*VolumeMount {
 	return nil
 }
 
+func (m *DesiredLRP) GetNetwork() *Network {
+	if m != nil {
+		return m.Network
+	}
+	return nil
+}
+
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -629,6 +645,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
 			return false
 		}
+	}
+	if !this.Network.Equal(that1.Network) {
+		return false
 	}
 	return true
 }
@@ -895,6 +914,9 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
+	if !this.Network.Equal(that1.Network) {
+		return false
+	}
 	return true
 }
 func (this *DesiredLRPSchedulingInfo) GoString() string {
@@ -932,7 +954,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
+		`Network:` + fmt.Sprintf("%#v", this.Network) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -1012,7 +1035,8 @@ func (this *DesiredLRP) GoString() string {
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
+		`Network:` + fmt.Sprintf("%#v", this.Network) + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1252,6 +1276,18 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	if m.Network != nil {
+		data[i] = 0x92
+		i++
+		data[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(m.Network.Size()))
+		n10, err := m.Network.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
 	return i, nil
 }
 
@@ -1319,11 +1355,11 @@ func (m *DesiredLRPUpdate) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x12
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Routes.Size()))
-		n10, err := m.Routes.MarshalTo(data[i:])
+		n11, err := m.Routes.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n11
 	}
 	if m.Annotation != nil {
 		data[i] = 0x1a
@@ -1438,21 +1474,21 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x32
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Setup.Size()))
-		n11, err := m.Setup.MarshalTo(data[i:])
+		n12, err := m.Setup.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n12
 	}
 	if m.Action != nil {
 		data[i] = 0x3a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Action.Size()))
-		n12, err := m.Action.MarshalTo(data[i:])
+		n13, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n13
 	}
 	data[i] = 0x40
 	i++
@@ -1461,11 +1497,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x4a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Monitor.Size()))
-		n13, err := m.Monitor.MarshalTo(data[i:])
+		n14, err := m.Monitor.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n14
 	}
 	data[i] = 0x50
 	i++
@@ -1495,11 +1531,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x7a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Routes.Size()))
-		n14, err := m.Routes.MarshalTo(data[i:])
+		n15, err := m.Routes.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n15
 	}
 	data[i] = 0x82
 	i++
@@ -1545,11 +1581,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.ModificationTag.Size()))
-		n15, err := m.ModificationTag.MarshalTo(data[i:])
+		n16, err := m.ModificationTag.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n15
+		i += n16
 	}
 	if len(m.CachedDependencies) > 0 {
 		for _, msg := range m.CachedDependencies {
@@ -1590,6 +1626,18 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 			}
 			i += n
 		}
+	}
+	if m.Network != nil {
+		data[i] = 0xd2
+		i++
+		data[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(m.Network.Size()))
+		n17, err := m.Network.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
 	}
 	return i, nil
 }
@@ -1699,6 +1747,10 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 			l = e.Size()
 			n += 2 + l + sovDesiredLrp(uint64(l))
 		}
+	}
+	if m.Network != nil {
+		l = m.Network.Size()
+		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
 	return n
 }
@@ -1832,6 +1884,10 @@ func (m *DesiredLRP) Size() (n int) {
 			n += 2 + l + sovDesiredLrp(uint64(l))
 		}
 	}
+	if m.Network != nil {
+		l = m.Network.Size()
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	return n
 }
 
@@ -1886,6 +1942,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
+		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1976,6 +2033,7 @@ func (this *DesiredLRP) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
+		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2639,6 +2697,36 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			m.VolumeMounts = append(m.VolumeMounts, &VolumeMount{})
 			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 18:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Network", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Network == nil {
+				m.Network = &Network{}
+			}
+			if err := m.Network.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3760,6 +3848,36 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.VolumeMounts = append(m.VolumeMounts, &VolumeMount{})
 			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 26:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Network", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Network == nil {
+				m.Network = &Network{}
+			}
+			if err := m.Network.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
