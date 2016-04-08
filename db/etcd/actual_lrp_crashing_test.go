@@ -157,6 +157,8 @@ func (t crashTest) Test() {
 			instanceKey              *models.ActualLRPInstanceKey
 			initialTimestamp         int64
 			initialModificationIndex uint32
+
+			beforeActualGroup *models.ActualLRPGroup
 		)
 
 		BeforeEach(func() {
@@ -181,7 +183,7 @@ func (t crashTest) Test() {
 
 		JustBeforeEach(func() {
 			clock.Increment(600)
-			shouldRestart, crashErr = etcdDB.CrashActualLRP(logger, actualLRPKey, instanceKey, "crashed")
+			beforeActualGroup, shouldRestart, crashErr = etcdDB.CrashActualLRP(logger, actualLRPKey, instanceKey, "crashed")
 		})
 
 		if t.Result.ReturnedErr == nil {
@@ -217,6 +219,13 @@ func (t crashTest) Test() {
 				actualLRP, err := etcdHelper.GetInstanceActualLRP(actualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRP.ModificationTag.Index).To(Equal(initialModificationIndex + 1))
+			})
+
+			It("returns the existing actual lrp", func() {
+				actualLRP := t.LRP()
+				actualLRP.Since = 0
+				beforeActualGroup.Instance.Since = 0
+				Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: &actualLRP}))
 			})
 		} else {
 			It("does not update the Since", func() {

@@ -287,15 +287,15 @@ var _ = Describe("DesiredLRPDB", func() {
 			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
 		})
 
-		It("returns the previous instance count", func() {
+		It("returns the desired lrp from before the update", func() {
 			instances := int32(20)
 			update = &models.DesiredLRPUpdate{
 				Instances: &instances,
 			}
 
-			previousInstanceCount, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			beforeDesiredLRP, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(previousInstanceCount).To(BeEquivalentTo(1))
+			Expect(beforeDesiredLRP).To(Equal(expectedDesiredLRP))
 		})
 
 		It("updates only the fields in the update parameter", func() {

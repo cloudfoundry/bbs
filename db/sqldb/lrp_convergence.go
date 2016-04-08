@@ -155,7 +155,7 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 
 		if actual.ShouldRestartCrash(now, restartCalculator) {
 			c.submit(func() {
-				err = c.UnclaimActualLRP(logger, &actual.ActualLRPKey)
+				_, err = c.UnclaimActualLRP(logger, &actual.ActualLRPKey)
 				if err != nil {
 					logger.Error("failed-unclaiming-actual-lrp", err)
 					return
@@ -253,7 +253,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger) {
 				index := int32(i)
 
 				c.submit(func() {
-					err := c.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: schedulingInfo.ProcessGuid, Domain: schedulingInfo.Domain, Index: index})
+					_, err := c.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: schedulingInfo.ProcessGuid, Domain: schedulingInfo.Domain, Index: index})
 					if err != nil {
 						logger.Error("failed-creating-missing-actual-lrp", err)
 					}
@@ -492,4 +492,8 @@ func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 	if err != nil {
 		logger.Error("failed-sending-desired-lrps-metric", err)
 	}
+}
+
+func (db *SQLDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error) {
+	panic("not implemented")
 }

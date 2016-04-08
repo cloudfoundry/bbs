@@ -71,14 +71,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.db.QueryRow(`
-		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
-			run_info
-		FROM desired_lrps
-		WHERE process_guid = ?`,
-		processGuid)
-	return db.fetchDesiredLRP(logger, row)
+	return db.selectDesiredLRPByGuid(logger, processGuid, db.db, NoLock)
 }
 
 func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
@@ -177,31 +170,22 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	return results, nil
 }
 
-func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (int32, error) {
+func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
 	logger = logger.Session("update-desired-lrp-sqldb", lager.Data{"process_guid": processGuid})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	var previousInstanceCount int32
+	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		err := db.lockDesiredLRPByGuidForShare(logger, processGuid, tx)
+		var err error
+		beforeDesiredLRP, err = db.selectDesiredLRPByGuid(logger, processGuid, tx, LockForShare)
 		if err != nil {
 			logger.Error("failed-lock-desired", err)
 			return err
 		}
 
-		var previousModificationTagIndex int32
-
-		row := db.db.QueryRow("SELECT instances, modification_tag_index FROM desired_lrps WHERE process_guid = ?", processGuid)
-
-		err = row.Scan(&previousInstanceCount, &previousModificationTagIndex)
-		if err != nil {
-			logger.Error("failed-scan-row", err)
-			return models.ErrResourceNotFound
-		}
-
 		setKeys := []string{"modification_tag_index = ?"}
-		setValues := []interface{}{previousModificationTagIndex + 1}
+		setValues := []interface{}{beforeDesiredLRP.ModificationTag.Index + 1}
 
 		if update.Annotation != nil {
 			setKeys = append(setKeys, "annotation = ?")
@@ -241,7 +225,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		return nil
 	})
 
-	return previousInstanceCount, err
+	return beforeDesiredLRP, err
 }
 
 func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
@@ -336,6 +320,24 @@ func (db *SQLDB) lockDesiredLRPByGuidForShare(logger lager.Logger, processGuid s
 		return models.ErrResourceNotFound
 	}
 	return nil
+}
+
+func (db *SQLDB) selectDesiredLRPByGuid(logger lager.Logger, processGuid string, q Queryable, lockMode int) (*models.DesiredLRP, error) {
+	query := `
+		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
+			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
+			run_info
+		FROM desired_lrps
+		WHERE process_guid = ?
+	`
+	switch lockMode {
+	case LockForShare:
+		query += "LOCK IN SHARE MODE\n"
+	case LockForUpdate:
+		query += "FOR UPDATE\n"
+	}
+	row := q.QueryRow(query, processGuid)
+	return db.fetchDesiredLRP(logger, row)
 }
 
 func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*models.DesiredLRP, error) {
