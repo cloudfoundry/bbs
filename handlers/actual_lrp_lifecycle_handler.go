@@ -50,18 +50,13 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		response.Error = models.ConvertError(err)
 		return
 	}
-	beforeActualLRPGroup, err := h.db.ClaimActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-	afterActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
+	before, after, err := h.db.ClaimActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(beforeActualLRPGroup, afterActualLRPGroup))
+	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 }
 
 func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *http.Request) {
@@ -80,19 +75,13 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
-	beforeActualLRPGroup, updated, err := h.db.StartActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
+	before, after, err := h.db.StartActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
-	if updated {
-		afterActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
-		if err != nil {
-			response.Error = models.ConvertError(err)
-			return
-		}
-
-		go h.actualHub.Emit(models.NewActualLRPChangedEvent(beforeActualLRPGroup, afterActualLRPGroup))
+	if !after.Equal(before) {
+		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 	}
 }
 
@@ -112,7 +101,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 	actualLRPKey := request.ActualLrpKey
 	actualLRPInstanceKey := request.ActualLrpInstanceKey
 
-	beforeActualLRPGroup, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, request.ErrorMessage)
+	before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, request.ErrorMessage)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -136,13 +125,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 		}
 	}
 
-	afterActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(beforeActualLRPGroup, afterActualLRPGroup))
+	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 }
 
 func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *http.Request) {
@@ -160,19 +143,13 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *ht
 		return
 	}
 
-	beforeActualLRPGroup, err := h.db.FailActualLRP(logger, request.ActualLrpKey, request.ErrorMessage)
+	before, after, err := h.db.FailActualLRP(logger, request.ActualLrpKey, request.ErrorMessage)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	afterActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(beforeActualLRPGroup, afterActualLRPGroup))
+	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 }
 
 func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *http.Request) {
