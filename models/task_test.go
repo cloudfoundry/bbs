@@ -111,10 +111,8 @@ var _ = Describe("Task", func() {
 					},
 				},
 
-				Annotation: `[{"anything": "you want!"}]... dude`,
-				// TODO: UNCOMMENT ME ONCE YOU SWITCH TO PROTOBUFS
-				//CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
-				CompletionCallbackUrl: "http://@a.b.c/d/e/f",
+				Annotation:            `[{"anything": "you want!"}]... dude`,
+				CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
 			},
 			TaskGuid:         "some-guid",
 			Domain:           "some-domain",

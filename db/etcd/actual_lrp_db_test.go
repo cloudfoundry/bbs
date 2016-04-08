@@ -1206,8 +1206,12 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(lrpGroupInBBS.Instance.ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + 1))
 				})
 
-				It("returns the existing actual lrp", func() {
+				It("returns the previous and subsequent actual lrp", func() {
 					Expect(beforeActualGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(afterActualGroup).To(Equal(lrpGroupInBBS))
 				})
 			})
 
