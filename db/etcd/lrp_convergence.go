@@ -39,7 +39,7 @@ const (
 	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
 )
 
-func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey, []*models.ActualLRPKey) {
 	convergeStart := db.clock.Now()
 	convergeLRPRunsCounter.Increment()
 	logger = logger.Session("etcd")
@@ -547,7 +547,7 @@ func CalculateConvergence(
 	return changes
 }
 
-func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string]*models.DesiredLRP, changes *models.ConvergenceChanges) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string]*models.DesiredLRP, changes *models.ConvergenceChanges) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey, []*models.ActualLRPKey) {
 	startRequests := newStartRequests(desiredLRPs)
 	for _, actual := range changes.StaleUnclaimedActualLRPs {
 		startRequests.Add(logger, &actual.ActualLRPKey)
@@ -560,22 +560,10 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 		keysToRetire[i] = &actual.ActualLRPKey
 	}
 
-	keysWithMissingCells := []*models.ActualLRPKeyWithSchedulingInfo{}
-	for _, actual := range changes.ActualLRPsWithMissingCells {
-		desiredLRP, ok := desiredLRPs[actual.ProcessGuid]
-		if !ok {
-			logger.Debug("actual-with-missing-cell-no-desired")
-			continue
-		}
-
-		schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-
-		key := &models.ActualLRPKeyWithSchedulingInfo{
-			Key:            &actual.ActualLRPKey,
-			SchedulingInfo: &schedInfo,
-		}
-
-		keysWithMissingCells = append(keysWithMissingCells, key)
+	keysToUnclaim := make([]*models.ActualLRPKey, len(changes.ActualLRPsWithMissingCells))
+	for i, actual := range changes.ActualLRPsWithMissingCells {
+		keysToUnclaim[i] = &actual.ActualLRPKey
+		startRequests.Add(logger, &actual.ActualLRPKey)
 	}
 
 	for _, actualKey := range changes.ActualLRPKeysForMissingIndices {
@@ -596,7 +584,7 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 	throttler.Work()
 	logger.Debug("done-waiting-for-lrp-convergence-work")
 
-	return startRequests.Slice(), keysWithMissingCells, keysToRetire
+	return startRequests.Slice(), keysToUnclaim, keysToRetire
 }
 
 func (db *ETCDDB) resolveActualsWithMissingIndices(logger lager.Logger, desired *models.DesiredLRP, actualKey *models.ActualLRPKey, starts *startRequests) func() {

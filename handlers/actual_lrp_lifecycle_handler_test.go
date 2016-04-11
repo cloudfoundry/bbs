@@ -223,7 +223,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				fakeActualLRPDB.StartActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, &models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
 			})
 
-			It("responds with no error", func() {
+			It("response with no error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := &models.ActualLRPLifecycleResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
@@ -240,29 +240,13 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(*actualNetInfo).To(Equal(netInfo))
 			})
 
-			Context("when the actual lrp was created", func() {
-				BeforeEach(func() {
-					fakeActualLRPDB.StartActualLRPReturns(nil, &models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
-				})
-
-				It("emits a created event to the hub", func() {
-					Eventually(actualHub.EmitCallCount).Should(Equal(1))
-					event := actualHub.EmitArgsForCall(0)
-					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
-					Expect(ok).To(BeTrue())
-					Expect(createdEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: &afterActualLRP}))
-				})
-			})
-
-			Context("when the actual lrp was updated", func() {
-				It("emits a change event to the hub", func() {
-					Eventually(actualHub.EmitCallCount).Should(Equal(1))
-					event := actualHub.EmitArgsForCall(0)
-					changedEvent, ok := event.(*models.ActualLRPChangedEvent)
-					Expect(ok).To(BeTrue())
-					Expect(changedEvent.Before).To(Equal(&models.ActualLRPGroup{Instance: &actualLRP}))
-					Expect(changedEvent.After).To(Equal(&models.ActualLRPGroup{Instance: &afterActualLRP}))
-				})
+			It("emits a change event to the hub", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				changedEvent, ok := event.(*models.ActualLRPChangedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(changedEvent.Before).To(Equal(&models.ActualLRPGroup{Instance: &actualLRP}))
+				Expect(changedEvent.After).To(Equal(&models.ActualLRPGroup{Instance: &afterActualLRP}))
 			})
 
 			Context("when the actual lrp wasn't updated", func() {

@@ -314,7 +314,7 @@ func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, e
 	}
 
 	logger.Info("succeeded")
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: lrp}, nil
+	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, nil, nil
 }
 
 func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {

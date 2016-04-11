@@ -33,7 +33,7 @@ const (
 	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
 )
 
-func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey, []*models.ActualLRPKey) {
 	convergeStart := db.clock.Now()
 	convergeLRPRunsCounter.Increment()
 	logger = logger.Session("converge-lrps-sqldb")
@@ -69,8 +69,6 @@ type convergence struct {
 
 	guidsToStartRequests map[string]*auctioneer.LRPStartRequest
 	startRequestsMutex   sync.Mutex
-
-	keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
 
 	keysToRetire []*models.ActualLRPKey
 	keysMutex    sync.Mutex
@@ -288,7 +286,6 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger) {
 func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
 	values := make([]interface{}, 0, 1+len(cellSet))
 	values = append(values, false)
-	keysWithMissingCells := make([]*models.ActualLRPKeyWithSchedulingInfo, 0)
 
 	for k := range cellSet {
 		values = append(values, k)
@@ -314,17 +311,10 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 	}
 
 	for rows.Next() {
-		var index int32
+		var index int
 		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index)
 		if err == nil {
-			keysWithMissingCells = append(keysWithMissingCells, &models.ActualLRPKeyWithSchedulingInfo{
-				Key: &models.ActualLRPKey{
-					ProcessGuid: schedulingInfo.ProcessGuid,
-					Domain:      schedulingInfo.Domain,
-					Index:       index,
-				},
-				SchedulingInfo: schedulingInfo,
-			})
+			c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, index)
 		}
 	}
 
@@ -332,7 +322,29 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	c.keysWithMissingCells = keysWithMissingCells
+	values = make([]interface{}, 0, 2+len(cellSet))
+	values = append(values, models.ActualLRPStateUnclaimed, false)
+
+	for k := range cellSet {
+		values = append(values, k)
+	}
+
+	stmt, err = c.db.Prepare(fmt.Sprintf(`
+		UPDATE actual_lrps
+		JOIN domains ON actual_lrps.domain = domains.domain
+		SET state = ?
+		WHERE actual_lrps.evacuating = ?
+			AND actual_lrps.cell_id NOT IN (%s) AND actual_lrps.cell_id <> ''
+		`, strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ",")))
+	if err != nil {
+		logger.Error("failed-preparing-query", err)
+		return
+	}
+
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		logger.Error("failed-updating", err)
+	}
 }
 
 func (c *convergence) addStartRequestFromSchedulingInfo(logger lager.Logger, schedulingInfo *models.DesiredLRPSchedulingInfo, indices ...int) {
@@ -363,7 +375,7 @@ func (c *convergence) submit(work func()) {
 	})
 }
 
-func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey, []*models.ActualLRPKey) {
 	c.poolWg.Wait()
 	c.startRequestsMutex.Lock()
 	defer c.startRequestsMutex.Unlock()
@@ -378,7 +390,7 @@ func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest
 	extraLRPs.Send(len(c.keysToRetire))
 	c.emitLRPMetrics(logger)
 
-	return startRequests, c.keysWithMissingCells, c.keysToRetire
+	return startRequests, nil, c.keysToRetire
 }
 
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {

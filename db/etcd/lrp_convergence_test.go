@@ -822,9 +822,9 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP   *models.DesiredLRP
 			freshDomain  = "some-fresh-domain"
 
-			keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
-			startRequests        []*auctioneer.LRPStartRequest
-			lrpKey0, lrpKey1     models.ActualLRPKey
+			keysToUnclaim    []*models.ActualLRPKey
+			startRequests    []*auctioneer.LRPStartRequest
+			lrpKey0, lrpKey1 models.ActualLRPKey
 
 			cells models.CellSet
 		)
@@ -852,7 +852,7 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		JustBeforeEach(func() {
-			startRequests, keysWithMissingCells, _ = etcdDB.ConvergeLRPs(logger, cells)
+			startRequests, keysToUnclaim, _ = etcdDB.ConvergeLRPs(logger, cells)
 		})
 
 		Context("when the cell is present", func() {
@@ -871,11 +871,10 @@ var _ = Describe("LRPConvergence", func() {
 			It("returns the lrp keys to be unclaimed and their start requests", func() {
 				Expect(logger.TestSink).To(gbytes.Say("missing-cell"))
 
-				expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
-				Expect(keysWithMissingCells).To(ConsistOf(&models.ActualLRPKeyWithSchedulingInfo{
-					Key:            &lrpKey0,
-					SchedulingInfo: &expectedSched,
-				}))
+				Expect(keysToUnclaim).To(ConsistOf(&lrpKey0))
+
+				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+				Expect(startRequests).To(ConsistOf(&expectedStartRequest))
 			})
 
 			It("should prune LRP directories for apps that are no longer running", func() {

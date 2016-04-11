@@ -15,8 +15,3 @@ type ConvergenceChanges struct {
 	RestartableCrashedActualLRPs   []*ActualLRP
 	StaleUnclaimedActualLRPs       []*ActualLRP
 }
-
-type ActualLRPKeyWithSchedulingInfo struct {
-	Key            *ActualLRPKey
-	SchedulingInfo *DesiredLRPSchedulingInfo
-}

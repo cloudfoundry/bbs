@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
@@ -49,7 +48,15 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	startRequests, keysWithMissingCells, keysToRetire := h.db.ConvergeLRPs(logger, cellSet)
+	startRequests, keysToUnclaim, keysToRetire := h.db.ConvergeLRPs(logger, cellSet)
+
+	startLogger := logger.WithData(lager.Data{"start-requests-count": len(startRequests)})
+	startLogger.Debug("requesting-start-auctions")
+	err = h.auctioneerClient.RequestLRPAuctions(startRequests)
+	if err != nil {
+		startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp-start-auctions": startRequests})
+	}
+	startLogger.Debug("done-requesting-start-auctions")
 
 	retireLogger := logger.WithData(lager.Data{"retiring-lrp-count": len(keysToRetire)})
 	works := []func(){}
@@ -58,17 +65,12 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 		works = append(works, func() { h.retirer.RetireActualLRP(retireLogger, key.ProcessGuid, key.Index) })
 	}
 
-	startRequestLock := &sync.Mutex{}
-	for _, key := range keysWithMissingCells {
+	for _, key := range keysToUnclaim {
 		key := key
 		works = append(works, func() {
-			before, after, err := h.db.UnclaimActualLRP(logger, key.Key)
+			before, after, err := h.db.UnclaimActualLRP(logger, key)
 			if err == nil {
 				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
-				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
-				startRequestLock.Lock()
-				startRequests = append(startRequests, &startRequest)
-				startRequestLock.Unlock()
 			}
 		})
 	}
@@ -82,14 +84,6 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	retireLogger.Debug("retiring-actual-lrps")
 	throttler.Work()
 	retireLogger.Debug("done-retiring-actual-lrps")
-
-	startLogger := logger.WithData(lager.Data{"start-requests-count": len(startRequests)})
-	startLogger.Debug("requesting-start-auctions")
-	err = h.auctioneerClient.RequestLRPAuctions(startRequests)
-	if err != nil {
-		startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp-start-auctions": startRequests})
-	}
-	startLogger.Debug("done-requesting-start-auctions")
 
 	response := &models.ConvergeLRPsResponse{}
 	writeResponse(w, response)

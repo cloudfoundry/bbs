@@ -80,10 +80,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 		response.Error = models.ConvertError(err)
 		return
 	}
-
-	if before == nil {
-		go h.actualHub.Emit(models.NewActualLRPCreatedEvent(after))
-	} else if !before.Equal(after) {
+	if !after.Equal(before) {
 		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 	}
 }

@@ -236,8 +236,8 @@ var _ = Describe("LRPConvergence", func() {
 
 		It("emits metrics for lrps", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
-			Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(7)))
-			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(25))) // 16 + 10 evac
+			Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(6)))
+			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(26))) // 16 + 10 evac
 			Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(1)))
 			Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(3)))
 			Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(2)))
@@ -286,19 +286,20 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("returns the start requests and actual lrp keys for actuals with missing cells", func() {
-		_, keysWithMissingCells, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		startRequests, keysToUnclaim, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		Expect(startRequests).NotTo(BeEmpty())
 
 		processGuid := "desired-with-missing-cell-actuals" + "-" + freshDomain
 		desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 		Expect(err).NotTo(HaveOccurred())
 
+		lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+
+		Expect(startRequests).To(ContainElement(&lrpStartRequest))
+
 		actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
 		Expect(err).NotTo(HaveOccurred())
-		expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
-		Expect(keysWithMissingCells).To(ConsistOf(&models.ActualLRPKeyWithSchedulingInfo{
-			Key:            &actualLRPGroup.Instance.ActualLRPKey,
-			SchedulingInfo: &expectedSched,
-		}))
+		Expect(keysToUnclaim).To(ConsistOf(actualLRPGroup.Instance.ActualLRPKey))
 	})
 
 	It("creates actual LRPs with missing indices, and returns it to be started", func() {
@@ -473,7 +474,7 @@ var _ = Describe("LRPConvergence", func() {
 			beforeActuals = append(beforeActuals, actuals)
 		}
 
-		startRequests, keysWithMissingCells, keysToRetire := sqlDB.ConvergeLRPs(logger, cellSet)
+		startRequests, keysToUnclaim, keysToRetire := sqlDB.ConvergeLRPs(logger, cellSet)
 
 		startGuids := make([]string, 0, len(startRequests))
 		for _, startRequest := range startRequests {
@@ -492,9 +493,9 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(retiredGuids).NotTo(ContainElement(processGuid))
 		}
 
-		guidsToUnclaim := make([]string, 0, len(keysWithMissingCells))
-		for _, keyWithMissingCell := range keysWithMissingCells {
-			guidsToUnclaim = append(guidsToUnclaim, keyWithMissingCell.Key.ProcessGuid)
+		guidsToUnclaim := make([]string, 0, len(keysToUnclaim))
+		for _, keyToUnclaim := range keysToUnclaim {
+			guidsToUnclaim = append(guidsToUnclaim, keyToUnclaim.ProcessGuid)
 		}
 		for _, processGuid := range processGuids {
 			Expect(guidsToUnclaim).NotTo(ContainElement(processGuid))

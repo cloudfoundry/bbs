@@ -245,7 +245,7 @@ type FakeDB struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
-	ConvergeLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey)
+	ConvergeLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (startRequest []*auctioneer.LRPStartRequest, keysToUnclaim []*models.ActualLRPKey, keysToRetire []*models.ActualLRPKey)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
 		logger  lager.Logger
@@ -253,7 +253,7 @@ type FakeDB struct {
 	}
 	convergeLRPsReturns struct {
 		result1 []*auctioneer.LRPStartRequest
-		result2 []*models.ActualLRPKeyWithSchedulingInfo
+		result2 []*models.ActualLRPKey
 		result3 []*models.ActualLRPKey
 	}
 	GatherAndPruneLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error)
@@ -1156,7 +1156,7 @@ func (fake *FakeDB) RemoveDesiredLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey) {
+func (fake *FakeDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequest []*auctioneer.LRPStartRequest, keysToUnclaim []*models.ActualLRPKey, keysToRetire []*models.ActualLRPKey) {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
 		logger  lager.Logger
@@ -1182,11 +1182,11 @@ func (fake *FakeDB) ConvergeLRPsArgsForCall(i int) (lager.Logger, models.CellSet
 	return fake.convergeLRPsArgsForCall[i].logger, fake.convergeLRPsArgsForCall[i].cellSet
 }
 
-func (fake *FakeDB) ConvergeLRPsReturns(result1 []*auctioneer.LRPStartRequest, result2 []*models.ActualLRPKeyWithSchedulingInfo, result3 []*models.ActualLRPKey) {
+func (fake *FakeDB) ConvergeLRPsReturns(result1 []*auctioneer.LRPStartRequest, result2 []*models.ActualLRPKey, result3 []*models.ActualLRPKey) {
 	fake.ConvergeLRPsStub = nil
 	fake.convergeLRPsReturns = struct {
 		result1 []*auctioneer.LRPStartRequest
-		result2 []*models.ActualLRPKeyWithSchedulingInfo
+		result2 []*models.ActualLRPKey
 		result3 []*models.ActualLRPKey
 	}{result1, result2, result3}
 }
