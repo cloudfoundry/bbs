@@ -27,15 +27,16 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		responseRecorder     *httptest.ResponseRecorder
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 
-		keysToAuction []*auctioneer.LRPStartRequest
-		keysToRetire  []*models.ActualLRPKey
-		keysToUnclaim []*models.ActualLRPKey
+		keysToAuction        []*auctioneer.LRPStartRequest
+		keysToRetire         []*models.ActualLRPKey
+		keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
 
 		retiringActualLRP1 *models.ActualLRP
 		retiringActualLRP2 *models.ActualLRP
 
-		unclaimingActualLRP1 *models.ActualLRP
-		unclaimingActualLRP2 *models.ActualLRP
+		desiredLRP1, desiredLRP2 models.DesiredLRPSchedulingInfo
+		unclaimingActualLRP1     *models.ActualLRP
+		unclaimingActualLRP2     *models.ActualLRP
 
 		cellID  string
 		cellSet models.CellSet
@@ -50,15 +51,21 @@ var _ = Describe("LRP Convergence Handlers", func() {
 
 		request1 := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("to-auction-1"), 1, 2)
 		request2 := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("to-auction-2"), 0, 4)
-		keysToAuction = []*auctioneer.LRPStartRequest{&request1, &request2}
 
 		retiringActualLRP1 = model_helpers.NewValidActualLRP("to-retire-1", 0)
 		retiringActualLRP2 = model_helpers.NewValidActualLRP("to-retire-2", 1)
 		keysToRetire = []*models.ActualLRPKey{&retiringActualLRP1.ActualLRPKey, &retiringActualLRP2.ActualLRPKey}
 
+		desiredLRP1 = model_helpers.NewValidDesiredLRP("to-unclaim-1").DesiredLRPSchedulingInfo()
 		unclaimingActualLRP1 = model_helpers.NewValidActualLRP("to-unclaim-1", 0)
+		desiredLRP2 = model_helpers.NewValidDesiredLRP("to-unclaim-2").DesiredLRPSchedulingInfo()
 		unclaimingActualLRP2 = model_helpers.NewValidActualLRP("to-unclaim-2", 1)
-		keysToUnclaim = []*models.ActualLRPKey{&unclaimingActualLRP1.ActualLRPKey, &unclaimingActualLRP2.ActualLRPKey}
+		keysWithMissingCells = []*models.ActualLRPKeyWithSchedulingInfo{
+			{Key: &unclaimingActualLRP1.ActualLRPKey, SchedulingInfo: &desiredLRP1},
+			{Key: &unclaimingActualLRP2.ActualLRPKey, SchedulingInfo: &desiredLRP2},
+		}
+
+		keysToAuction = []*auctioneer.LRPStartRequest{&request1, &request2}
 
 		cellID = "cell-id"
 		instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellID)
@@ -96,7 +103,7 @@ var _ = Describe("LRP Convergence Handlers", func() {
 			return nil, nil, models.ErrResourceNotFound
 		}
 
-		fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysToUnclaim, keysToRetire)
+		fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysWithMissingCells, keysToRetire)
 
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
@@ -154,21 +161,19 @@ var _ = Describe("LRP Convergence Handlers", func() {
 	It("auctions off the returned keys", func() {
 		Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-		startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-		Expect(startAuctions).To(HaveLen(2))
-		Expect(startAuctions).To(ConsistOf(keysToAuction))
-	})
+		unclaimedStartRequest1 := auctioneer.NewLRPStartRequestFromSchedulingInfo(&desiredLRP1, 0)
+		unclaimedStartRequest2 := auctioneer.NewLRPStartRequestFromSchedulingInfo(&desiredLRP2, 1)
 
-	It("auctions off the returned keys", func() {
-		Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+		expectedStartRequests := append(keysToAuction, &unclaimedStartRequest1)
+		expectedStartRequests = append(expectedStartRequests, &unclaimedStartRequest2)
 
 		startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-		Expect(startAuctions).To(HaveLen(2))
-		Expect(startAuctions).To(ConsistOf(keysToAuction))
+		Expect(startAuctions).To(HaveLen(4))
+		Expect(startAuctions).To(ConsistOf(expectedStartRequests))
 	})
 
-	It("unclaims the returned keys", func() {
-		Eventually(fakeLRPDB.UnclaimActualLRPCallCount()).Should(Equal(2))
+	It("unclaims and auctions the actual lrps with missing cells", func() {
+		Eventually(fakeLRPDB.UnclaimActualLRPCallCount).Should(Equal(2))
 
 		unclaimedKeys := []*models.ActualLRPKey{}
 		for i := 0; i < fakeLRPDB.UnclaimActualLRPCallCount(); i++ {
@@ -190,6 +195,25 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		group2 := &models.ActualLRPGroup{Instance: unclaimingActualLRP2}
 		Expect(changeEvents).To(ContainElement(models.NewActualLRPChangedEvent(group1, group1)))
 		Expect(changeEvents).To(ContainElement(models.NewActualLRPChangedEvent(group2, group2)))
+	})
+
+	Context("when unclaiming the actual lrp fails", func() {
+		BeforeEach(func() {
+			fakeLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("terrrible"))
+		})
+
+		It("auctions off the returned keys", func() {
+			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+
+			startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			Expect(startAuctions).To(HaveLen(2))
+			Expect(startAuctions).To(ConsistOf(keysToAuction))
+		})
+
+		It("does not emit change events", func() {
+			Eventually(fakeLRPDB.UnclaimActualLRPCallCount).Should(Equal(2))
+			Consistently(actualHub.EmitCallCount).Should(Equal(0))
+		})
 	})
 
 	Describe("stopping extra LRPs", func() {
