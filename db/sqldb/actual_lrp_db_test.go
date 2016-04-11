@@ -163,7 +163,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			fakeClock.Increment(time.Hour)
 
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey1.ProcessGuid, actualLRPKey1.Index, instanceKey1)
+			_, err = sqlDB.ClaimActualLRP(logger, actualLRPKey1.ProcessGuid, actualLRPKey1.Index, instanceKey1)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
@@ -192,7 +192,7 @@ var _ = Describe("ActualLRPDB", func() {
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(time.Hour)
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, instanceKey2)
+			_, err = sqlDB.ClaimActualLRP(logger, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, instanceKey2)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
@@ -220,7 +220,7 @@ var _ = Describe("ActualLRPDB", func() {
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3)
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(time.Hour)
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey3.ProcessGuid, actualLRPKey3.Index, instanceKey3)
+			_, err = sqlDB.ClaimActualLRP(logger, actualLRPKey3.ProcessGuid, actualLRPKey3.Index, instanceKey3)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
@@ -267,7 +267,7 @@ var _ = Describe("ActualLRPDB", func() {
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey5)
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(time.Hour)
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
+			_, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
 			Expect(err).NotTo(HaveOccurred())
 			_, err = db.Exec("UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, false)
 			Expect(err).NotTo(HaveOccurred())
@@ -297,13 +297,13 @@ var _ = Describe("ActualLRPDB", func() {
 			lrpCreationTime = fakeClock.Now()
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
+			_, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
 			Expect(err).NotTo(HaveOccurred())
 			_, err = db.Exec("UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
+			_, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(err).NotTo(HaveOccurred())
@@ -532,7 +532,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and the actual lrp is UNCLAIMED", func() {
 				It("claims the actual lrp", func() {
-					_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+					_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP.State = models.ActualLRPStateClaimed
@@ -547,16 +547,12 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+					beforeActualLRPGroup, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
 					expectedActualLRP.Since = lrpCreationTime.UnixNano()
 					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: expectedActualLRP}))
-
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
 				})
 
 				Context("and there is a placement error", func() {
@@ -572,7 +568,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("clears the placement error", func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP.State = models.ActualLRPStateClaimed
@@ -591,13 +587,13 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("and the actual lrp is CLAIMED", func() {
 				Context("when the actual lrp is already claimed with the same instance key", func() {
 					BeforeEach(func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 						expectedActualLRP.ModificationTag.Increment()
 					})
 
 					It("increments the modification tag", func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 						expectedActualLRP.State = models.ActualLRPStateClaimed
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
@@ -613,7 +609,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("when the actual lrp is claimed by another cell", func() {
 					BeforeEach(func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 
 						group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
@@ -629,7 +625,7 @@ var _ = Describe("ActualLRPDB", func() {
 							CellId:       "different-cell",
 						}
 
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).To(HaveOccurred())
 
 						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
@@ -665,7 +661,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("with the same cell and instance guid", func() {
 					It("reverts the RUNNING actual lrp to the CLAIMED state", func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 
 						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
@@ -692,7 +688,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("returns an error", func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).To(HaveOccurred())
 
 						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
@@ -713,7 +709,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("returns an error", func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).To(HaveOccurred())
 
 						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
@@ -736,7 +732,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns an error", func() {
-					_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+					_, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 					Expect(err).To(HaveOccurred())
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
@@ -766,7 +762,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns a ResourceNotFound error", func() {
-				_, _, err := sqlDB.ClaimActualLRP(logger, "i-do-not-exist", 1, instanceKey)
+				_, err := sqlDB.ClaimActualLRP(logger, "i-do-not-exist", 1, instanceKey)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
@@ -825,7 +821,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRPGroup, updated, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
 					expectedActualLRP := *actualLRP
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
@@ -835,16 +831,13 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 0,
 					}
 					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+					Expect(updated).To(BeTrue())
 				})
 			})
 
 			Context("and the actual lrp has been CLAIMED", func() {
 				BeforeEach(func() {
-					_, _, err := sqlDB.ClaimActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, instanceKey)
+					_, err := sqlDB.ClaimActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 					fakeClock.Increment(time.Hour)
 				})
@@ -870,9 +863,8 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRPGroup, updated, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
-
 					expectedActualLRP := *actualLRP
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.State = models.ActualLRPStateClaimed
@@ -883,11 +875,8 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 1,
 					}
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-					Expect(err).NotTo(HaveOccurred())
-
 					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+					Expect(updated).To(BeTrue())
 				})
 
 				Context("and the instance key is different", func() {
@@ -934,10 +923,10 @@ var _ = Describe("ActualLRPDB", func() {
 								Expect(beforeActualLRPGroup).To(BeEquivalentTo(afterActualLRPGroup))
 							})
 
-							It("returns the same actual lrp group for before and after", func() {
-								beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+							It("signals that it hasn't updated the lrp", func() {
+								_, updated, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 								Expect(err).NotTo(HaveOccurred())
-								Expect(beforeActualLRPGroup).To(Equal(afterActualLRPGroup))
+								Expect(updated).To(BeFalse())
 							})
 						})
 
@@ -955,18 +944,23 @@ var _ = Describe("ActualLRPDB", func() {
 							})
 
 							It("updates the net info", func() {
-								beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, newNetInfo)
+								_, _, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, newNetInfo)
 								Expect(err).NotTo(HaveOccurred())
 
-								Expect(beforeActualLRPGroup).To(Equal(expectedActualLRPGroup))
-
-								actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+								afterActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 								Expect(err).NotTo(HaveOccurred())
 
 								expectedActualLRPGroup.Instance.ActualLRPNetInfo = *newNetInfo
 								expectedActualLRPGroup.Instance.ModificationTag.Increment()
-								Expect(actualLRPGroup).To(BeEquivalentTo(expectedActualLRPGroup))
-								Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+								Expect(expectedActualLRPGroup).To(BeEquivalentTo(afterActualLRPGroup))
+							})
+
+							It("returns the existing actual lrp", func() {
+								beforeActualLRPGroup, updated, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, newNetInfo)
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(beforeActualLRPGroup).To(Equal(expectedActualLRPGroup))
+								Expect(updated).To(BeTrue())
 							})
 						})
 					})
@@ -992,36 +986,39 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("transitions the state to RUNNING", func() {
-						beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+						_, _, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 						Expect(err).NotTo(HaveOccurred())
 
-						Expect(err).NotTo(HaveOccurred())
-						expectedBeforeActualLRP := *actualLRP
-						expectedBeforeActualLRP.ActualLRPInstanceKey = *instanceKey
-						expectedBeforeActualLRP.State = models.ActualLRPStateCrashed
-						// we crash directly in the DB, so no since
-						expectedBeforeActualLRP.Since = fakeClock.Now().Add(-2 * time.Hour).UnixNano()
-						expectedBeforeActualLRP.ModificationTag = models.ModificationTag{
-							Epoch: "my-awesome-guid",
-							Index: 1,
-						}
-						Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedBeforeActualLRP}))
-
-						fetchedActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 						Expect(err).NotTo(HaveOccurred())
 
-						expectedAfterActualLRP := *actualLRP
-						expectedAfterActualLRP.ActualLRPInstanceKey = *instanceKey
-						expectedAfterActualLRP.State = models.ActualLRPStateRunning
-						expectedAfterActualLRP.ActualLRPNetInfo = *netInfo
-						expectedAfterActualLRP.Since = fakeClock.Now().UnixNano()
-						expectedAfterActualLRP.ModificationTag = models.ModificationTag{
+						expectedActualLRP := *actualLRP
+						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
+						expectedActualLRP.State = models.ActualLRPStateRunning
+						expectedActualLRP.ActualLRPNetInfo = *netInfo
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ModificationTag = models.ModificationTag{
 							Epoch: "my-awesome-guid",
 							Index: 2,
 						}
 
-						Expect(fetchedActualLRPGroup.Instance).To(BeEquivalentTo(&expectedAfterActualLRP))
-						Expect(afterActualLRPGroup).To(BeEquivalentTo(fetchedActualLRPGroup))
+						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+					})
+
+					It("returns the existing actual lrp", func() {
+						beforeActualLRPGroup, updated, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+						Expect(err).NotTo(HaveOccurred())
+						expectedActualLRP := *actualLRP
+						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
+						expectedActualLRP.State = models.ActualLRPStateCrashed
+						// we crash directly in the DB, so no since
+						expectedActualLRP.Since = fakeClock.Now().Add(-2 * time.Hour).UnixNano()
+						expectedActualLRP.ModificationTag = models.ModificationTag{
+							Epoch: "my-awesome-guid",
+							Index: 1,
+						}
+						Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
+						Expect(updated).To(BeTrue())
 					})
 				})
 			})
@@ -1059,11 +1056,10 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("creates the actual lrp", func() {
-				beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+				_, _, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &models.ActualLRP{}}))
 
-				fetchedActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 				Expect(err).NotTo(HaveOccurred())
 
 				expectedActualLRP := *actualLRP
@@ -1072,8 +1068,14 @@ var _ = Describe("ActualLRPDB", func() {
 				expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 				expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-				Expect(*fetchedActualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-				Expect(afterActualLRPGroup).To(BeEquivalentTo(fetchedActualLRPGroup))
+				Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+			})
+
+			It("signals that it created an lrp", func() {
+				beforeActualLRPGroup, updated, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updated).To(BeTrue())
+				Expect(beforeActualLRPGroup).To(BeNil())
 			})
 		})
 	})
@@ -1117,8 +1119,8 @@ var _ = Describe("ActualLRPDB", func() {
 					actualLRP.ModificationTag.Increment()
 				})
 
-				It("returns the before and after actual lrps", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+				It("returns the existing actual lrp", func() {
+					beforeActualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1128,16 +1130,11 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
 
 					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
 				})
 
 				Context("and it should be restarted", func() {
 					It("updates the lrp and sets its state to UNCLAIMED", func() {
-						_, _, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+						_, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeTrue())
 
@@ -1168,7 +1165,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("updates the lrp and sets its state to CRASHED", func() {
-						_, _, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+						_, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeFalse())
 
@@ -1198,7 +1195,7 @@ var _ = Describe("ActualLRPDB", func() {
 						})
 
 						It("resets the crash count to 1", func() {
-							_, _, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+							_, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 							Expect(err).NotTo(HaveOccurred())
 							Expect(shouldRestart).To(BeFalse())
 
@@ -1213,14 +1210,14 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and it's CLAIMED", func() {
 				BeforeEach(func() {
-					_, _, err := sqlDB.ClaimActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, instanceKey)
+					_, err := sqlDB.ClaimActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 					fakeClock.Increment(time.Hour)
 					actualLRP.ModificationTag.Increment()
 				})
 
-				It("returns the previous and current actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+				It("returns the existing actual lrp", func() {
+					beforeActualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1229,10 +1226,6 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.Since = fakeClock.Now().Add(-2 * time.Hour).UnixNano()
 
 					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
 				})
 
 				Context("and it should be restarted", func() {
@@ -1248,7 +1241,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("updates the lrp and sets its state to UNCLAIMED", func() {
-						_, _, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+						_, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeTrue())
 
@@ -1279,7 +1272,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("updates the lrp and sets its state to CRASHED", func() {
-						_, _, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "some other failure reason")
+						_, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "some other failure reason")
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeFalse())
 
@@ -1304,13 +1297,13 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 					actualLRP.ModificationTag.Increment()
 
-					_, _, _, err = sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					_, _, err = sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).NotTo(HaveOccurred())
 					actualLRP.ModificationTag.Increment()
 				})
 
 				It("returns a cannot crash error", func() {
-					_, _, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					_, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(models.ErrActualLRPCannotBeCrashed))
 				})
@@ -1318,7 +1311,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and it's UNCLAIMED", func() {
 				It("returns a cannot crash error", func() {
-					_, _, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					_, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(models.ErrActualLRPCannotBeCrashed))
 				})
@@ -1338,7 +1331,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Domain:      "the-domain",
 				}
 
-				_, _, _, err := sqlDB.CrashActualLRP(logger, key, instanceKey, "because it didn't go well")
+				_, _, err := sqlDB.CrashActualLRP(logger, key, instanceKey, "because it didn't go well")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
@@ -1366,7 +1359,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and the state is UNCLAIMED", func() {
 				It("fails the LRP", func() {
-					_, _, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
+					_, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
@@ -1384,11 +1377,8 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 				})
 
-				It("returns the previous and current actual lrp", func() {
-					beforeActualLRP, afterActualLRP, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
-					Expect(err).NotTo(HaveOccurred())
-
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+				It("returns the existing actual lrp", func() {
+					beforeActualLRP, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1399,7 +1389,6 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 0,
 					}
 					Expect(beforeActualLRP).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-					Expect(afterActualLRP).To(Equal(actualLRPGroup))
 				})
 			})
 
@@ -1409,13 +1398,13 @@ var _ = Describe("ActualLRPDB", func() {
 						InstanceGuid: "the-instance-guid",
 						CellId:       "the-cell-id",
 					}
-					_, _, err := sqlDB.ClaimActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, instanceKey)
+					_, err := sqlDB.ClaimActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 					fakeClock.Increment(time.Hour)
 				})
 
 				It("returns a cannot be failed error", func() {
-					_, _, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
+					_, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(models.ErrActualLRPCannotBeFailed))
 				})
@@ -1424,7 +1413,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actualLRP does not exist", func() {
 			It("returns a not found error", func() {
-				_, _, err := sqlDB.FailActualLRP(logger, actualLRPKey, "failing the LRP")
+				_, err := sqlDB.FailActualLRP(logger, actualLRPKey, "failing the LRP")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
@@ -1499,7 +1488,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP exists", func() {
 			Context("When the actual LRP is claimed", func() {
-				var beforeActualLRPGroup, afterActualLRPGroup *models.ActualLRPGroup
+				var beforeActualLRPGroup *models.ActualLRPGroup
 
 				BeforeEach(func() {
 					actualLRP = &models.ActualLRP{
@@ -1508,13 +1497,13 @@ var _ = Describe("ActualLRPDB", func() {
 
 					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.ClaimActualLRP(logger, guid, index, &actualLRP.ActualLRPInstanceKey)
+					_, err = sqlDB.ClaimActualLRP(logger, guid, index, &actualLRP.ActualLRPInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				JustBeforeEach(func() {
 					var err error
-					beforeActualLRPGroup, afterActualLRPGroup, err = sqlDB.UnclaimActualLRP(logger, actualLRPKey)
+					beforeActualLRPGroup, err = sqlDB.UnclaimActualLRP(logger, actualLRPKey)
 					Expect(err).ToNot(HaveOccurred())
 				})
 
@@ -1549,7 +1538,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(actualLRPGroup.Instance.Since).To(BeNumerically(">", actualLRP.Since))
 				})
 
-				It("returns the previous and current actual lrp", func() {
+				It("returns the existing actual lrp", func() {
 					expectedActualLRP := *actualLRP
 					expectedActualLRP.State = models.ActualLRPStateClaimed
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
@@ -1558,10 +1547,6 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 1,
 					}
 					Expect(beforeActualLRPGroup).To(BeEquivalentTo(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-					Expect(err).ToNot(HaveOccurred())
-					Expect(afterActualLRPGroup).To(BeEquivalentTo(actualLRPGroup))
 				})
 			})
 
@@ -1576,7 +1561,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns an error", func() {
-					_, _, err := sqlDB.UnclaimActualLRP(logger, actualLRPKey)
+					_, err := sqlDB.UnclaimActualLRP(logger, actualLRPKey)
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(models.ErrActualLRPCannotBeUnclaimed))
 				})
@@ -1585,7 +1570,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP doesn't exist", func() {
 			It("returns a resource not found error", func() {
-				_, _, err := sqlDB.UnclaimActualLRP(logger, actualLRPKey)
+				_, err := sqlDB.UnclaimActualLRP(logger, actualLRPKey)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})

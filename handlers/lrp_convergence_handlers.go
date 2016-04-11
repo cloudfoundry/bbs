@@ -6,7 +6,6 @@ import (
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
-	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"
@@ -15,23 +14,14 @@ import (
 type LRPConvergenceHandler struct {
 	logger                 lager.Logger
 	db                     db.LRPDB
-	actualHub              events.Hub
 	auctioneerClient       auctioneer.Client
 	serviceClient          bbs.ServiceClient
 	retirer                ActualLRPRetirer
 	convergenceWorkersSize int
 }
 
-func NewLRPConvergenceHandler(
-	logger lager.Logger,
-	db db.LRPDB,
-	actualHub events.Hub,
-	auctioneerClient auctioneer.Client,
-	serviceClient bbs.ServiceClient,
-	retirer ActualLRPRetirer,
-	convergenceWorkersSize int,
-) *LRPConvergenceHandler {
-	return &LRPConvergenceHandler{logger, db, actualHub, auctioneerClient, serviceClient, retirer, convergenceWorkersSize}
+func NewLRPConvergenceHandler(logger lager.Logger, db db.LRPDB, auctioneerClient auctioneer.Client, serviceClient bbs.ServiceClient, retirer ActualLRPRetirer, convergenceWorkersSize int) *LRPConvergenceHandler {
+	return &LRPConvergenceHandler{logger, db, auctioneerClient, serviceClient, retirer, convergenceWorkersSize}
 }
 
 func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Request) {
@@ -48,7 +38,7 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	startRequests, keysToUnclaim, keysToRetire := h.db.ConvergeLRPs(logger, cellSet)
+	startRequests, keysToRetire := h.db.ConvergeLRPs(logger, cellSet)
 
 	startLogger := logger.WithData(lager.Data{"start-requests-count": len(startRequests)})
 	startLogger.Debug("requesting-start-auctions")
@@ -65,23 +55,13 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 		works = append(works, func() { h.retirer.RetireActualLRP(retireLogger, key.ProcessGuid, key.Index) })
 	}
 
-	for _, key := range keysToUnclaim {
-		key := key
-		works = append(works, func() {
-			before, after, err := h.db.UnclaimActualLRP(logger, key)
-			if err == nil {
-				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
-			}
-		})
-	}
-
 	throttler, err := workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": h.convergenceWorkersSize, "num-works": len(works)})
 		return
 	}
 
-	retireLogger.Debug("retiring-actual-lrps")
+	startLogger.Debug("retiring-actual-lrps")
 	throttler.Work()
 	retireLogger.Debug("done-retiring-actual-lrps")
 

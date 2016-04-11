@@ -138,7 +138,7 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req 
 		}
 	}
 
-	_, _, _, err = h.actualLRPDB.CrashActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
+	_, _, err = h.actualLRPDB.CrashActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
 		logger.Error("failed-crashing-actual-lrp", err)
@@ -304,12 +304,16 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req 
 }
 
 func (h *EvacuationHandler) unclaimAndRequestAuction(logger lager.Logger, lrpKey *models.ActualLRPKey) error {
-	before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, lrpKey)
+	beforeActualLRPGroup, err := h.actualLRPDB.UnclaimActualLRP(logger, lrpKey)
 	if err != nil {
 		return err
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	afterActualLRPGroup, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, lrpKey.ProcessGuid, lrpKey.Index)
+	if err != nil {
+		return err
+	}
+	go h.actualHub.Emit(models.NewActualLRPChangedEvent(beforeActualLRPGroup, afterActualLRPGroup))
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, lrpKey.ProcessGuid)
 	if err != nil {

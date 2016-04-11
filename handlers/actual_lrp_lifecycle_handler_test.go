@@ -100,7 +100,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when claiming the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ClaimActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, &models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
+				fakeActualLRPDB.ClaimActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
 			})
 
 			It("response with no error", func() {
@@ -132,7 +133,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when claiming the actual lrp fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ClaimActualLRPReturns(nil, nil, models.ErrUnknownError)
+				fakeActualLRPDB.ClaimActualLRPReturns(nil, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -151,7 +152,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ClaimActualLRPReturns(nil, nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.ClaimActualLRPReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("responds with an error", func() {
@@ -220,7 +221,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when starting the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, &models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
+				fakeActualLRPDB.StartActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, true, nil)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
 			})
 
 			It("response with no error", func() {
@@ -251,7 +253,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			Context("when the actual lrp wasn't updated", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.StartActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, &models.ActualLRPGroup{Instance: &actualLRP}, nil)
+					fakeActualLRPDB.StartActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, false, nil)
 				})
 
 				It("does not emit a change event to the hub", func() {
@@ -262,7 +264,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when starting the actual lrp fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(nil, nil, models.ErrUnknownError)
+				fakeActualLRPDB.StartActualLRPReturns(nil, false, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -281,7 +283,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(nil, nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.StartActualLRPReturns(nil, false, models.ErrResourceNotFound)
 			})
 
 			It("responds with an error", func() {
@@ -364,7 +366,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				}
 
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
-				fakeActualLRPDB.CrashActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, &models.ActualLRPGroup{Instance: &afterActualLRP}, true, nil)
+				fakeActualLRPDB.CrashActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, true, nil)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
 			})
 
 			It("response with no error", func() {
@@ -418,7 +421,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 				Context("when the actual lrp should not be restarted (e.g., crashed)", func() {
 					BeforeEach(func() {
-						fakeActualLRPDB.CrashActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, &models.ActualLRPGroup{Instance: &actualLRP}, false, nil)
+						fakeActualLRPDB.CrashActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, false, nil)
 					})
 
 					It("does not request an auction", func() {
@@ -466,7 +469,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when crashing the actual lrp fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.CrashActualLRPReturns(nil, nil, false, models.ErrUnknownError)
+				fakeActualLRPDB.CrashActualLRPReturns(nil, false, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -485,7 +488,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.CrashActualLRPReturns(nil, nil, false, models.ErrResourceNotFound)
+				fakeActualLRPDB.CrashActualLRPReturns(nil, false, models.ErrResourceNotFound)
 			})
 
 			It("responds with an error", func() {
@@ -836,7 +839,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when failing the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.FailActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, &models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: &afterActualLRP}, nil)
+				fakeActualLRPDB.FailActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
 			})
 
 			It("fails the actual lrp by process guid and index", func() {
@@ -866,7 +870,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when failing the actual lrp fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.FailActualLRPReturns(nil, nil, models.ErrUnknownError)
+				fakeActualLRPDB.FailActualLRPReturns(nil, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -885,7 +889,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.FailActualLRPReturns(nil, nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.FailActualLRPReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("responds with an error", func() {

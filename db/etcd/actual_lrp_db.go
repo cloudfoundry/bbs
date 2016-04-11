@@ -102,17 +102,17 @@ func (db *ETCDDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actu
 	return &models.ActualLRPGroup{Instance: lrp}, db.createRawActualLRP(logger, lrp)
 }
 
-func (db *ETCDDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *ETCDDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
 	actualLRP, modifiedIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
-		return nil, nil, bbsErr
+		return nil, bbsErr
 	}
 	beforeActualLRP := *actualLRP
 
 	if actualLRP.State == models.ActualLRPStateUnclaimed {
 		logger.Debug("already-unclaimed")
-		return nil, nil, models.ErrActualLRPCannotBeUnclaimed
+		return nil, models.ErrActualLRPCannotBeUnclaimed
 	}
 
 	actualLRP.State = models.ActualLRPStateUnclaimed
@@ -124,31 +124,31 @@ func (db *ETCDDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey
 
 	data, err := db.serializeModel(logger, actualLRP)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), data, 0, modifiedIndex)
 	if err != nil {
 		logger.Error("failed-compare-and-swap", err)
-		return nil, nil, ErrorFromEtcdError(logger, err)
+		return nil, ErrorFromEtcdError(logger, err)
 	}
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, nil
+	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, nil
 }
 
-func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, error) {
 	logger = logger.Session("claim-actual-lrp", lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance-key": instanceKey})
 	logger.Info("starting")
 
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, nil, err
+		return nil, err
 	}
 	beforeActualLRP := *lrp
 
 	if !lrp.AllowsTransitionTo(&lrp.ActualLRPKey, instanceKey, models.ActualLRPStateClaimed) {
-		return nil, nil, models.ErrActualLRPCannotBeClaimed
+		return nil, models.ErrActualLRPCannotBeClaimed
 	}
 
 	lrp.PlacementError = ""
@@ -160,36 +160,35 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 	err = lrp.Validate()
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, nil, models.NewError(models.Error_InvalidRecord, err.Error())
+		return nil, models.NewError(models.Error_InvalidRecord, err.Error())
 	}
 
 	lrpData, serializeErr := db.serializeModel(logger, lrp)
 	if serializeErr != nil {
-		return nil, nil, serializeErr
+		return nil, serializeErr
 	}
 
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(processGuid, index), lrpData, 0, prevIndex)
 	if err != nil {
 		logger.Error("compare-and-swap-failed", err)
-		return nil, nil, models.ErrActualLRPCannotBeClaimed
+		return nil, models.ErrActualLRPCannotBeClaimed
 	}
 	logger.Info("succeeded")
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: lrp}, nil
+	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, nil
 }
 
-func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, bool, error) {
 	logger = logger.Session("start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
 	logger.Info("starting")
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
 		if bbsErr.Type == models.Error_ResourceNotFound {
-			lrp, err := db.createRunningActualLRP(logger, key, instanceKey, netInfo)
-			return nil, &models.ActualLRPGroup{Instance: lrp}, err
+			return nil, true, db.createRunningActualLRP(logger, key, instanceKey, netInfo)
 		}
 		logger.Error("failed-to-get-actual-lrp", err)
-		return nil, nil, err
+		return nil, false, err
 	}
 	beforeActualLRP := *lrp
 
@@ -198,13 +197,12 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 		lrp.ActualLRPNetInfo.Equal(netInfo) &&
 		lrp.State == models.ActualLRPStateRunning {
 		logger.Info("succeeded")
-		lrpGroup := &models.ActualLRPGroup{Instance: lrp}
-		return lrpGroup, lrpGroup, nil
+		return nil, false, nil
 	}
 
 	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateRunning) {
 		logger.Error("failed-to-transition-actual-lrp-to-started", nil)
-		return nil, nil, models.ErrActualLRPCannotBeStarted
+		return nil, false, models.ErrActualLRPCannotBeStarted
 	}
 
 	lrp.ModificationTag.Increment()
@@ -216,27 +214,27 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 
 	lrpData, serializeErr := db.serializeModel(logger, lrp)
 	if serializeErr != nil {
-		return nil, nil, serializeErr
+		return nil, false, serializeErr
 	}
 
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpData, 0, prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, nil, models.ErrActualLRPCannotBeStarted
+		return nil, false, models.ErrActualLRPCannotBeStarted
 	}
 
 	logger.Info("succeeded")
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: lrp}, nil
+	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, true, nil
 }
 
-func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (*models.ActualLRPGroup, *models.ActualLRPGroup, bool, error) {
+func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (*models.ActualLRPGroup, bool, error) {
 	logger = logger.Session("crash-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey})
 	logger.Info("starting")
 
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	if err != nil {
 		logger.Error("failed-to-get-actual-lrp", err)
-		return nil, nil, false, err
+		return nil, false, err
 	}
 	beforeActualLRP := *lrp
 
@@ -252,7 +250,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 	logger.Debug("retrieved-lrp")
 	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateCrashed) {
 		logger.Error("failed-to-transition-to-crashed", nil, lager.Data{"from-state": lrp.State, "same-instance-key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
-		return nil, nil, false, models.ErrActualLRPCannotBeCrashed
+		return nil, false, models.ErrActualLRPCannotBeCrashed
 	}
 
 	lrp.State = models.ActualLRPStateCrashed
@@ -271,31 +269,31 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 
 	lrpData, serializeErr := db.serializeModel(logger, lrp)
 	if serializeErr != nil {
-		return nil, nil, false, serializeErr
+		return nil, false, serializeErr
 	}
 
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpData, 0, prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, nil, false, models.ErrActualLRPCannotBeCrashed
+		return nil, false, models.ErrActualLRPCannotBeCrashed
 	}
 
 	logger.Info("succeeded")
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: lrp}, immediateRestart, nil
+	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, immediateRestart, nil
 }
 
-func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) (*models.ActualLRPGroup, error) {
 	logger = logger.Session("fail-actual-lrp", lager.Data{"actual_lrp_key": key})
 	logger.Info("starting")
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	if err != nil {
 		logger.Error("failed-to-get-actual-lrp", err)
-		return nil, nil, err
+		return nil, err
 	}
 	beforeActualLRP := *lrp
 
 	if lrp.State != models.ActualLRPStateUnclaimed {
-		return nil, nil, models.ErrActualLRPCannotBeFailed
+		return nil, models.ErrActualLRPCannotBeFailed
 	}
 
 	lrp.ModificationTag.Increment()
@@ -304,17 +302,17 @@ func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, e
 
 	lrpData, serialErr := db.serializeModel(logger, lrp)
 	if serialErr != nil {
-		return nil, nil, serialErr
+		return nil, serialErr
 	}
 
 	_, err = db.client.CompareAndSwap(ActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpData, 0, prevIndex)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, nil, models.ErrActualLRPCannotBeFailed
+		return nil, models.ErrActualLRPCannotBeFailed
 	}
 
 	logger.Info("succeeded")
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, nil, nil
+	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, nil
 }
 
 func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {
@@ -598,11 +596,11 @@ func (db *ETCDDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP)
 	return nil
 }
 
-func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
+func (db *ETCDDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
 	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
 	if err != nil {
-		return nil, models.ErrActualLRPCannotBeStarted
+		return models.ErrActualLRPCannotBeStarted
 	}
 
-	return lrp, db.createRawActualLRP(logger, lrp)
+	return db.createRawActualLRP(logger, lrp)
 }
