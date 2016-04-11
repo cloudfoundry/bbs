@@ -187,13 +187,8 @@ var _ = Describe("Evacuation Handlers", func() {
 			}
 			afterActual = model_helpers.NewValidActualLRP("process-guid", 1)
 			afterActual.State = models.ActualLRPStateUnclaimed
-			fakeActualLRPDB.UnclaimActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexStub = func(_ lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
-				if fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount() > 1 {
-					return &models.ActualLRPGroup{Instance: afterActual}, nil
-				}
-				return &models.ActualLRPGroup{Evacuating: actual}, nil
-			}
+			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Evacuating: actual}, nil)
+			fakeActualLRPDB.UnclaimActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, &models.ActualLRPGroup{Instance: afterActual}, nil)
 
 			request = newTestRequest(requestBody)
 		})
@@ -281,7 +276,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when unclaiming the lrp instance fails", func() {
 			Context("because the instance does not exist", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.UnclaimActualLRPReturns(nil, models.ErrResourceNotFound)
+					fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, models.ErrResourceNotFound)
 				})
 
 				It("does not keep the container and does not return an error", func() {
@@ -303,7 +298,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 			Context("for another reason", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.UnclaimActualLRPReturns(nil, errors.New("can't unclaim this"))
+					fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("can't unclaim this"))
 				})
 
 				It("returns the error and keeps the container", func() {
@@ -433,7 +428,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when crashing the actual lrp fails", func() {
 			Context("because the error does not exist", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.CrashActualLRPReturns(nil, false, models.ErrResourceNotFound)
+					fakeActualLRPDB.CrashActualLRPReturns(nil, nil, false, models.ErrResourceNotFound)
 				})
 
 				It("does not return an error or keep the container", func() {
@@ -447,7 +442,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 			Context("for another reason", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.CrashActualLRPReturns(nil, false, errors.New("failed-crashing-dawg"))
+					fakeActualLRPDB.CrashActualLRPReturns(nil, nil, false, errors.New("failed-crashing-dawg"))
 				})
 
 				It("returns an error and does not keep the container", func() {
@@ -512,13 +507,8 @@ var _ = Describe("Evacuation Handlers", func() {
 				Evacuating: evacuatingActual,
 			}
 
-			fakeActualLRPDB.UnclaimActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexStub = func(_ lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
-				if fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount() > 1 {
-					return &models.ActualLRPGroup{Instance: afterActual}, nil
-				}
-				return actualLRPGroup, nil
-			}
+			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(actualLRPGroup, nil)
+			fakeActualLRPDB.UnclaimActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, &models.ActualLRPGroup{Instance: afterActual}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -903,7 +893,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					Context("when unclaiming fails", func() {
 						BeforeEach(func() {
-							fakeActualLRPDB.UnclaimActualLRPReturns(nil, errors.New("unclaiming failed"))
+							fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("unclaiming failed"))
 						})
 
 						It("returns an error and keeps the contianer", func() {
@@ -991,7 +981,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					Context("when unclaiming fails", func() {
 						BeforeEach(func() {
-							fakeActualLRPDB.UnclaimActualLRPReturns(nil, errors.New("unclaiming failed"))
+							fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("unclaiming failed"))
 						})
 
 						It("returns an error and keeps the contianer", func() {

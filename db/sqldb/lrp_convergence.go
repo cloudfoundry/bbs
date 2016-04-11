@@ -33,7 +33,7 @@ const (
 	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
 )
 
-func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey) {
+func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey, []*models.ActualLRPKey) {
 	convergeStart := db.clock.Now()
 	convergeLRPRunsCounter.Increment()
 	logger = logger.Session("converge-lrps-sqldb")
@@ -155,7 +155,7 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 
 		if actual.ShouldRestartCrash(now, restartCalculator) {
 			c.submit(func() {
-				_, err = c.UnclaimActualLRP(logger, &actual.ActualLRPKey)
+				_, _, err = c.UnclaimActualLRP(logger, &actual.ActualLRPKey)
 				if err != nil {
 					logger.Error("failed-unclaiming-actual-lrp", err)
 					return
@@ -375,7 +375,7 @@ func (c *convergence) submit(work func()) {
 	})
 }
 
-func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey) {
+func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKey, []*models.ActualLRPKey) {
 	c.poolWg.Wait()
 	c.startRequestsMutex.Lock()
 	defer c.startRequestsMutex.Unlock()
@@ -390,7 +390,7 @@ func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest
 	extraLRPs.Send(len(c.keysToRetire))
 	c.emitLRPMetrics(logger)
 
-	return startRequests, c.keysToRetire
+	return startRequests, nil, c.keysToRetire
 }
 
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
