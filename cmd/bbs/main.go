@@ -24,7 +24,6 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
-	"github.com/cloudfoundry-incubator/bbs/watcher"
 	"github.com/cloudfoundry-incubator/cf-debug-server"
 	"github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
@@ -228,26 +227,7 @@ func main() {
 	)
 
 	desiredHub := events.NewHub()
-	desiredStreamer := watcher.NewDesiredStreamer(db)
-	desiredWatcher := watcher.NewWatcher(
-		logger,
-		"desired-lrps",
-		bbsWatchRetryWaitDuration,
-		desiredStreamer,
-		desiredHub,
-		clock,
-	)
-
 	actualHub := events.NewHub()
-	actualStreamer := watcher.NewActualStreamer(db)
-	actualWatcher := watcher.NewWatcher(
-		logger,
-		"actual-lrps",
-		bbsWatchRetryWaitDuration,
-		actualStreamer,
-		actualHub,
-		clock,
-	)
 
 	repClientFactory := rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient())
 	auctioneerClient := initializeAuctioneerClient(logger)
@@ -290,8 +270,6 @@ func main() {
 		{"server", server},
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
-		{"desired-watcher", desiredWatcher},
-		{"actual-watcher", actualWatcher},
 		{"metrics", *metricsNotifier},
 		{"registration-runner", registrationRunner},
 	}

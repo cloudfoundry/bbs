@@ -15,19 +15,23 @@ func (db *SQLDB) EvacuateActualLRP(
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
-) error {
+) (*models.ActualLRPGroup, error) {
 	logger = logger.Session("evacuate-lrp-sqldb", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	var actualLRP *models.ActualLRP
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		actualLRP, err := db.fetchActualLRPForShare(logger, processGuid, index, true, tx)
+		actualLRP, err = db.fetchActualLRPForShare(logger, processGuid, index, true, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
-			return db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
+			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
+			return err
 		}
 
 		if err != nil {
@@ -42,28 +46,33 @@ func (db *SQLDB) EvacuateActualLRP(
 			return nil
 		}
 
+		now := db.clock.Now().UnixNano()
+		actualLRP.ModificationTag.Increment()
+		actualLRP.ActualLRPKey = *lrpKey
+		actualLRP.ActualLRPInstanceKey = *instanceKey
+		actualLRP.Since = now
+		actualLRP.ActualLRPNetInfo = *netInfo
+
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
 			logger.Error("failed-serializing-net-info", err)
 			return err
 		}
 
-		actualLRP.ModificationTag.Increment()
-
 		_, err = tx.Exec(`
 					UPDATE actual_lrps SET domain = ?, instance_guid = ?, cell_id = ?, net_info = ?,
 					  state = ?, since = ?, modification_tag_index = ?
 					  WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
 				`,
-			lrpKey.Domain,
-			instanceKey.InstanceGuid,
-			instanceKey.CellId,
+			actualLRP.Domain,
+			actualLRP.InstanceGuid,
+			actualLRP.CellId,
 			netInfoData,
 			actualLRP.State,
-			db.clock.Now().UnixNano(),
+			actualLRP.Since,
 			actualLRP.ModificationTag.Index,
-			lrpKey.ProcessGuid,
-			lrpKey.Index,
+			actualLRP.ProcessGuid,
+			actualLRP.Index,
 			true,
 		)
 
@@ -74,6 +83,8 @@ func (db *SQLDB) EvacuateActualLRP(
 
 		return nil
 	})
+
+	return &models.ActualLRPGroup{Evacuating: actualLRP}, err
 }
 
 func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
@@ -122,20 +133,28 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
-	tx *sql.Tx) error {
+	tx *sql.Tx) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
 		logger.Error("failed-serializing-net-info", err)
-		return err
+		return nil, err
 	}
 
 	now := db.clock.Now()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
-		return models.ErrGUIDGeneration
+		return nil, models.ErrGUIDGeneration
 	}
 
 	expireTime := now.Add(time.Duration(ttl) * time.Second)
+	actualLRP := &models.ActualLRP{
+		ActualLRPKey:         *lrpKey,
+		ActualLRPInstanceKey: *instanceKey,
+		ActualLRPNetInfo:     *netInfo,
+		State:                models.ActualLRPStateRunning,
+		Since:                now.UnixNano(),
+		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
+	}
 
 	_, err = tx.Exec(`
 					INSERT INTO actual_lrps
@@ -148,23 +167,24 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 						modification_tag_epoch = VALUES(modification_tag_epoch),
 						modification_tag_index = VALUES(modification_tag_index)
 						`,
-		lrpKey.ProcessGuid,
-		lrpKey.Index,
-		lrpKey.Domain,
-		instanceKey.InstanceGuid,
-		instanceKey.CellId,
-		models.ActualLRPStateRunning,
+		actualLRP.ProcessGuid,
+		actualLRP.Index,
+		actualLRP.Domain,
+		actualLRP.InstanceGuid,
+		actualLRP.CellId,
+		actualLRP.State,
 		netInfoData,
-		now.UnixNano(),
-		guid,
-		0,
+		actualLRP.Since,
+		actualLRP.ModificationTag.Epoch,
+		actualLRP.ModificationTag.Index,
 		true,
 		expireTime.UnixNano(),
 	)
 
 	if err != nil {
 		logger.Error("failed-insert-evacuating-lrp", err)
-		return db.convertSQLError(err)
+		return nil, db.convertSQLError(err)
 	}
-	return nil
+
+	return actualLRP, nil
 }

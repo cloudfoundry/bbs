@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/rep"
 	"github.com/pivotal-golang/lager"
@@ -14,12 +15,13 @@ type ActualLRPRetirer interface {
 
 type actualLRPRetirer struct {
 	db               db.ActualLRPDB
+	actualHub        events.Hub
 	repClientFactory rep.ClientFactory
 	serviceClient    bbs.ServiceClient
 }
 
-func NewActualLRPRetirer(db db.ActualLRPDB, repClientFactory rep.ClientFactory, serviceClient bbs.ServiceClient) *actualLRPRetirer {
-	return &actualLRPRetirer{db, repClientFactory, serviceClient}
+func NewActualLRPRetirer(db db.ActualLRPDB, actualHub events.Hub, repClientFactory rep.ClientFactory, serviceClient bbs.ServiceClient) *actualLRPRetirer {
+	return &actualLRPRetirer{db, actualHub, repClientFactory, serviceClient}
 }
 
 func (r *actualLRPRetirer) RetireActualLRP(logger lager.Logger, processGuid string, index int32) error {
@@ -43,12 +45,18 @@ func (r *actualLRPRetirer) RetireActualLRP(logger lager.Logger, processGuid stri
 		switch lrp.State {
 		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
 			err = r.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index)
+			if err == nil {
+				go r.actualHub.Emit(models.NewActualLRPRemovedEvent(lrpGroup))
+			}
 		case models.ActualLRPStateClaimed, models.ActualLRPStateRunning:
 			cell, err = r.serviceClient.CellById(logger, lrp.CellId)
 			if err != nil {
 				bbsErr := models.ConvertError(err)
 				if bbsErr.Type == models.Error_ResourceNotFound {
 					err = r.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index)
+					if err == nil {
+						go r.actualHub.Emit(models.NewActualLRPRemovedEvent(lrpGroup))
+					}
 				}
 				return err
 			}

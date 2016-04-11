@@ -849,7 +849,7 @@ var _ = Describe("LRPConvergence", func() {
 			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrp1, 1))
 
 			instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
-			err := etcdDB.ClaimActualLRP(logger, processGuid, 0, &instanceKey)
+			_, err := etcdDB.ClaimActualLRP(logger, processGuid, 0, &instanceKey)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -966,7 +966,7 @@ var _ = Describe("LRPConvergence", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
-					err = etcdDB.ClaimActualLRP(
+					_, err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ActualLRPKey.ProcessGuid,
 						actualLRPGroup.Instance.ActualLRPKey.Index,
@@ -1045,7 +1045,7 @@ var _ = Describe("LRPConvergence", func() {
 
 					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
 					netInfo := models.NewActualLRPNetInfo("host", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
-					err = etcdDB.ClaimActualLRP(
+					_, err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ProcessGuid,
 						actualLRPGroup.Instance.Index,
@@ -1053,7 +1053,7 @@ var _ = Describe("LRPConvergence", func() {
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.StartActualLRP(
+					_, _, err = etcdDB.StartActualLRP(
 						logger,
 						&actualLRPGroup.Instance.ActualLRPKey,
 						&instanceKey,
@@ -1166,7 +1166,7 @@ var _ = Describe("LRPConvergence", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
-					err = etcdDB.ClaimActualLRP(
+					_, err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ActualLRPKey.ProcessGuid,
 						actualLRPGroup.Instance.ActualLRPKey.Index,
@@ -1224,7 +1224,7 @@ var _ = Describe("LRPConvergence", func() {
 
 					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
 					netInfo := models.NewActualLRPNetInfo("host", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
-					err = etcdDB.ClaimActualLRP(
+					_, err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ActualLRPKey.ProcessGuid,
 						actualLRPGroup.Instance.ActualLRPKey.Index,
@@ -1232,7 +1232,7 @@ var _ = Describe("LRPConvergence", func() {
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					err = etcdDB.StartActualLRP(
+					_, _, err = etcdDB.StartActualLRP(
 						logger,
 						&actualLRPGroup.Instance.ActualLRPKey,
 						&instanceKey,
