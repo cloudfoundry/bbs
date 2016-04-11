@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
-	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/fake_bbs"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -90,8 +89,7 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		cellSet = models.CellSet{"cell-id": &cellPresence}
 		fakeServiceClient.CellsReturns(cellSet, nil)
 
-		actualHub := &eventfakes.FakeHub{}
-		retirer := handlers.NewActualLRPRetirer(fakeLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
+		retirer := handlers.NewActualLRPRetirer(fakeLRPDB, fakeRepClientFactory, fakeServiceClient)
 		handler = handlers.NewLRPConvergenceHandler(logger, fakeLRPDB, fakeAuctioneerClient, fakeServiceClient, retirer, 2)
 	})
 

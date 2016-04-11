@@ -49,7 +49,7 @@ type FakeDesiredLRPDB struct {
 	desireLRPReturns struct {
 		result1 error
 	}
-	UpdateDesiredLRPStub        func(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (beforeDesiredLRP *models.DesiredLRP, err error)
+	UpdateDesiredLRPStub        func(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (previousInstanceCount int32, err error)
 	updateDesiredLRPMutex       sync.RWMutex
 	updateDesiredLRPArgsForCall []struct {
 		logger      lager.Logger
@@ -57,7 +57,7 @@ type FakeDesiredLRPDB struct {
 		update      *models.DesiredLRPUpdate
 	}
 	updateDesiredLRPReturns struct {
-		result1 *models.DesiredLRP
+		result1 int32
 		result2 error
 	}
 	RemoveDesiredLRPStub        func(logger lager.Logger, processGuid string) error
@@ -206,7 +206,7 @@ func (fake *FakeDesiredLRPDB) DesireLRPReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (beforeDesiredLRP *models.DesiredLRP, err error) {
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (previousInstanceCount int32, err error) {
 	fake.updateDesiredLRPMutex.Lock()
 	fake.updateDesiredLRPArgsForCall = append(fake.updateDesiredLRPArgsForCall, struct {
 		logger      lager.Logger
@@ -233,10 +233,10 @@ func (fake *FakeDesiredLRPDB) UpdateDesiredLRPArgsForCall(i int) (lager.Logger, 
 	return fake.updateDesiredLRPArgsForCall[i].logger, fake.updateDesiredLRPArgsForCall[i].processGuid, fake.updateDesiredLRPArgsForCall[i].update
 }
 
-func (fake *FakeDesiredLRPDB) UpdateDesiredLRPReturns(result1 *models.DesiredLRP, result2 error) {
+func (fake *FakeDesiredLRPDB) UpdateDesiredLRPReturns(result1 int32, result2 error) {
 	fake.UpdateDesiredLRPStub = nil
 	fake.updateDesiredLRPReturns = struct {
-		result1 *models.DesiredLRP
+		result1 int32
 		result2 error
 	}{result1, result2}
 }

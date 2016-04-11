@@ -80,6 +80,7 @@ func (hub *hub) Subscribe() (EventSource, error) {
 
 func (hub *hub) Emit(event models.Event) {
 	hub.lock.Lock()
+
 	size := len(hub.subscribers)
 
 	for sub, _ := range hub.subscribers {

@@ -13,7 +13,7 @@ func (db *ETCDDB) EvacuateActualLRP(
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
-) (*models.ActualLRPGroup, error) {
+) error {
 	logger = logger.Session("evacuate-actual-lrp", lager.Data{"process_guid": lrpKey.ProcessGuid, "index": lrpKey.Index})
 
 	logger.Debug("starting")
@@ -25,19 +25,19 @@ func (db *ETCDDB) EvacuateActualLRP(
 		if bbsErr.Type == models.Error_ResourceNotFound {
 			return db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl)
 		}
-		return nil, bbsErr
+		return bbsErr
 	}
 
 	lrp := models.ActualLRP{}
 	err = db.deserializeModel(logger, node, &lrp)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if lrp.ActualLRPKey.Equal(lrpKey) &&
 		lrp.ActualLRPInstanceKey.Equal(instanceKey) &&
 		reflect.DeepEqual(lrp.ActualLRPNetInfo, *netInfo) {
-		return &models.ActualLRPGroup{Evacuating: &lrp}, nil
+		return nil
 	}
 
 	lrp.ActualLRPNetInfo = *netInfo
@@ -49,40 +49,40 @@ func (db *ETCDDB) EvacuateActualLRP(
 	data, err := db.serializeModel(logger, &lrp)
 	if err != nil {
 		logger.Error("failed-serializing", err)
-		return nil, err
+		return err
 	}
 
 	_, err = db.client.CompareAndSwap(EvacuatingActualLRPSchemaPath(lrp.ProcessGuid, lrp.Index), data, ttl, node.ModifiedIndex)
 	if err != nil {
-		return nil, ErrorFromEtcdError(logger, err)
+		return ErrorFromEtcdError(logger, err)
 	}
 
-	return &models.ActualLRPGroup{Evacuating: &lrp}, nil
+	return nil
 }
 
-func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) (*models.ActualLRPGroup, error) {
+func (db *ETCDDB) createEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, evacuatingTTLInSeconds uint64) (err error) {
 	logger.Debug("create-evacuating-actual-lrp")
-	defer logger.Debug("create-evacuating-actual-lrp-complete")
+	defer logger.Debug("create-evacuating-actual-lrp-complete", lager.Data{"error": err})
 
 	lrp, err := db.newRunningActualLRP(key, instanceKey, netInfo)
 	if err != nil {
-		return nil, models.ErrActualLRPCannotBeEvacuated
+		return models.ErrActualLRPCannotBeEvacuated
 	}
 
 	lrp.ModificationTag.Increment()
 
 	lrpData, err := db.serializeModel(logger, lrp)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, err = db.client.Create(EvacuatingActualLRPSchemaPath(key.ProcessGuid, key.Index), lrpData, evacuatingTTLInSeconds)
 	if err != nil {
 		logger.Error("failed", err)
-		return nil, models.ErrActualLRPCannotBeEvacuated
+		return models.ErrActualLRPCannotBeEvacuated
 	}
 
-	return &models.ActualLRPGroup{Evacuating: lrp}, nil
+	return nil
 }
 
 func (db *ETCDDB) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {

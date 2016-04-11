@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
 	"github.com/cloudfoundry-incubator/bbs/db/fakes"
-	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -26,8 +25,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		fakeDesiredLRPDB     *fakes.FakeDesiredLRPDB
 		fakeActualLRPDB      *fakes.FakeActualLRPDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
-		desiredHub           *eventfakes.FakeHub
-		actualHub            *eventfakes.FakeHub
 
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DesiredLRPHandler
@@ -37,27 +34,13 @@ var _ = Describe("DesiredLRP Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		var err error
 		fakeDesiredLRPDB = new(fakes.FakeDesiredLRPDB)
 		fakeActualLRPDB = new(fakes.FakeActualLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		desiredHub = new(eventfakes.FakeHub)
-		actualHub = new(eventfakes.FakeHub)
-		Expect(err).NotTo(HaveOccurred())
-		handler = handlers.NewDesiredLRPHandler(
-			logger,
-			5,
-			fakeDesiredLRPDB,
-			fakeActualLRPDB,
-			desiredHub,
-			actualHub,
-			fakeAuctioneerClient,
-			fakeRepClientFactory,
-			fakeServiceClient,
-		)
+		handler = handlers.NewDesiredLRPHandler(logger, 5, fakeDesiredLRPDB, fakeActualLRPDB, fakeAuctioneerClient, fakeRepClientFactory, fakeServiceClient)
 	})
 
 	Describe("DesiredLRPs", func() {
@@ -327,21 +310,9 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		Context("when creating desired lrp in DB succeeds", func() {
-			var createdActualLRPGroups []*models.ActualLRPGroup
-
 			BeforeEach(func() {
-				createdActualLRPGroups = []*models.ActualLRPGroup{}
-				for i := 0; i < 5; i++ {
-					createdActualLRPGroups = append(createdActualLRPGroups, &models.ActualLRPGroup{Instance: model_helpers.NewValidActualLRP("some-guid", int32(i))})
-				}
 				fakeDesiredLRPDB.DesireLRPReturns(nil)
-				fakeActualLRPDB.CreateUnclaimedActualLRPStub = func(_ lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
-					if int(key.Index) > len(createdActualLRPGroups)-1 {
-						return nil, errors.New("boom")
-					}
-					return createdActualLRPGroups[int(key.Index)], nil
-				}
-				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
+				fakeActualLRPDB.CreateUnclaimedActualLRPReturns(nil)
 			})
 
 			It("creates desired lrp", func() {
@@ -357,36 +328,21 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(response.Error).To(BeNil())
 			})
 
-			It("emits a create event to the hub", func() {
-				Eventually(desiredHub.EmitCallCount).Should(Equal(1))
-				event := desiredHub.EmitArgsForCall(0)
-				createEvent, ok := event.(*models.DesiredLRPCreatedEvent)
-				Expect(ok).To(BeTrue())
-				Expect(createEvent.DesiredLrp).To(Equal(desiredLRP))
-			})
-
-			It("creates and emits an event for one ActualLRP per index", func() {
+			It("creates one ActualLRP per index", func() {
 				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(5))
-				Eventually(actualHub.EmitCallCount).Should(Equal(5))
 
 				expectedLRPKeys := []*models.ActualLRPKey{}
-
 				for i := 0; i < 5; i++ {
 					expectedLRPKeys = append(expectedLRPKeys, &models.ActualLRPKey{
 						ProcessGuid: desiredLRP.ProcessGuid,
 						Domain:      desiredLRP.Domain,
 						Index:       int32(i),
 					})
-
 				}
 
 				for i := 0; i < 5; i++ {
 					_, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
 					Expect(expectedLRPKeys).To(ContainElement(actualLRPKey))
-					event := actualHub.EmitArgsForCall(i)
-					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
-					Expect(ok).To(BeTrue())
-					Expect(createdActualLRPGroups).To(ContainElement(createdEvent.ActualLrpGroup))
 				}
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -446,10 +402,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 	Describe("UpdateDesiredLRP", func() {
 		var (
-			processGuid      string
-			update           *models.DesiredLRPUpdate
-			beforeDesiredLRP *models.DesiredLRP
-			afterDesiredLRP  *models.DesiredLRP
+			processGuid string
+			update      *models.DesiredLRPUpdate
 
 			requestBody interface{}
 		)
@@ -457,11 +411,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		BeforeEach(func() {
 			processGuid = "some-guid"
 			someText := "some-text"
-			beforeDesiredLRP = model_helpers.NewValidDesiredLRP(processGuid)
-			beforeDesiredLRP.Instances = 4
-			afterDesiredLRP = model_helpers.NewValidDesiredLRP(processGuid)
-			afterDesiredLRP.Annotation = someText
-
 			update = &models.DesiredLRPUpdate{
 				Annotation: &someText,
 			}
@@ -478,8 +427,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when updating desired lrp in DB succeeds", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
-				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(afterDesiredLRP, nil)
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(5, nil)
 			})
 
 			It("updates the desired lrp", func() {
@@ -495,16 +443,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(response.Error).To(BeNil())
 			})
 
-			It("emits a create event to the hub", func(done Done) {
-				Eventually(desiredHub.EmitCallCount).Should(Equal(1))
-				event := desiredHub.EmitArgsForCall(0)
-				changeEvent, ok := event.(*models.DesiredLRPChangedEvent)
-				Expect(ok).To(BeTrue())
-				Expect(changeEvent.Before).To(Equal(beforeDesiredLRP))
-				Expect(changeEvent.After).To(Equal(afterDesiredLRP))
-				close(done)
-			})
-
 			Context("when the number of instances changes", func() {
 				BeforeEach(func() {
 					instances := int32(3)
@@ -516,7 +454,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						RootFs:      "some-stack",
 						MemoryMb:    128,
 						DiskMb:      512,
-						Instances:   3,
 					}
 
 					fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
@@ -595,8 +532,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					var runningActualLRPGroup *models.ActualLRPGroup
 
 					BeforeEach(func() {
-						beforeDesiredLRP.Instances = 1
-						fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
+						fakeDesiredLRPDB.UpdateDesiredLRPReturns(1, nil)
 						runningActualLRPGroup = &models.ActualLRPGroup{
 							Instance: model_helpers.NewValidActualLRP("some-guid", 0),
 						}
@@ -679,7 +615,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.UpdateDesiredLRPReturns(nil, models.ErrUnknownError)
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(0, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
@@ -714,11 +650,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		Context("when removing desired lrp in DB succeeds", func() {
-			var desiredLRP *models.DesiredLRP
-
 			BeforeEach(func() {
-				desiredLRP = model_helpers.NewValidDesiredLRP("guid")
-				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 				fakeDesiredLRPDB.RemoveDesiredLRPReturns(nil)
 			})
 
@@ -733,19 +665,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
-			})
-
-			It("emits a delete event to the hub", func(done Done) {
-				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-				_, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
-				Expect(actualProcessGuid).To(Equal(processGuid))
-
-				Eventually(desiredHub.EmitCallCount).Should(Equal(1))
-				event := desiredHub.EmitArgsForCall(0)
-				removeEvent, ok := event.(*models.DesiredLRPRemovedEvent)
-				Expect(ok).To(BeTrue())
-				Expect(removeEvent.DesiredLrp).To(Equal(desiredLRP))
-				close(done)
 			})
 
 			Context("when there are running instances on a present cell", func() {

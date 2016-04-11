@@ -69,7 +69,7 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 	return groups[0], nil
 }
 
-func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
 	logger.Session("create-unclaimed-actual-lrp-sqldb", lager.Data{"key": key})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
@@ -77,10 +77,9 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
 		logger.Error("failed-to-generate-guid", err)
-		return nil, models.ErrGUIDGeneration
+		return models.ErrGUIDGeneration
 	}
 
-	now := db.clock.Now().UnixNano()
 	_, err = db.db.Exec(`
 		INSERT INTO actual_lrps
 			(process_guid, instance_index, domain, state, since, net_info, modification_tag_epoch, modification_tag_index)
@@ -89,41 +88,31 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 		key.Index,
 		key.Domain,
 		models.ActualLRPStateUnclaimed,
-		now,
+		db.clock.Now().UnixNano(),
 		[]byte{},
 		guid,
 		0,
 	)
 	if err != nil {
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
-		return nil, db.convertSQLError(err)
+		return db.convertSQLError(err)
 	}
-	return &models.ActualLRPGroup{
-		Instance: &models.ActualLRP{
-			ActualLRPKey:    *key,
-			State:           models.ActualLRPStateUnclaimed,
-			Since:           now,
-			ModificationTag: models.ModificationTag{Epoch: guid, Index: 0},
-		},
-	}, nil
+	return nil
 }
 
-func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
 	logger.Session("unclaim-actual-lrp-sqldb", lager.Data{"key": key})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	var beforeActualLRP models.ActualLRP
 	processGuid := key.ProcessGuid
 	index := key.Index
-
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		actualLRP, err := db.fetchActualLRPForShare(logger, processGuid, index, false, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
 		}
-		beforeActualLRP = *actualLRP
 
 		if actualLRP.State == models.ActualLRPStateUnclaimed {
 			logger.Debug("already-unclaimed")
@@ -152,22 +141,20 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		return nil
 	})
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, err
+	return err
 }
 
-func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, error) {
+func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
 	logger.Session("claim-actual-lrp-sqldb", lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	var beforeActualLRP models.ActualLRP
-	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		actualLRP, err := db.fetchActualLRPForShare(logger, processGuid, index, false, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
 		}
-		beforeActualLRP = *actualLRP
 
 		if !actualLRP.AllowsTransitionTo(&actualLRP.ActualLRPKey, instanceKey, models.ActualLRPStateClaimed) {
 			logger.Error("cannot-transition-to-claimed", nil, lager.Data{"from_state": actualLRP.State, "same_instance_key": actualLRP.ActualLRPInstanceKey.Equal(instanceKey)})
@@ -195,23 +182,17 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 
 		return nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, nil
 }
 
-func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, bool, error) {
+func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
 	logger = logger.Session("start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
 	logger.Debug("starting")
 	defer logger.Debug("completed")
 
-	var beforeActualLRPGroup *models.ActualLRPGroup = nil
-	updated := false
-	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		actualLRP, err := db.fetchActualLRPForShare(logger, key.ProcessGuid, key.Index, false, tx)
+
 		if err == models.ErrResourceNotFound {
-			updated = true
 			return db.createRunningActualLRP(logger, key, instanceKey, netInfo, tx)
 		}
 
@@ -219,8 +200,6 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
 		}
-
-		beforeActualLRPCopy := *actualLRP
 
 		if actualLRP.ActualLRPKey.Equal(key) &&
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
@@ -260,32 +239,23 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			return db.convertSQLError(err)
 		}
 
-		beforeActualLRPGroup = &models.ActualLRPGroup{Instance: &beforeActualLRPCopy}
-		updated = true
 		return nil
 	})
-	if err != nil {
-		return nil, false, err
-	}
-	return beforeActualLRPGroup, updated, nil
 }
 
-func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (*models.ActualLRPGroup, bool, error) {
+func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (bool, error) {
 	logger.Session("crash-actual-lrp-sqldb", lager.Data{"key": key, "instanceKey": instanceKey, "crash_reason": crashReason})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	var immediateRestart = false
-	var beforeActualLRP models.ActualLRP
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		var err error
 		actualLRP, err := db.fetchActualLRPForShare(logger, key.ProcessGuid, key.Index, false, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
 		}
-		beforeActualLRP = *actualLRP
 
 		latestChangeTime := time.Duration(db.clock.Now().UnixNano() - actualLRP.Since)
 
@@ -336,23 +306,20 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		return nil
 	})
 
-	actualLRPGroup := &models.ActualLRPGroup{Instance: &beforeActualLRP}
-	return actualLRPGroup, immediateRestart, err
+	return immediateRestart, err
 }
 
-func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) (*models.ActualLRPGroup, error) {
+func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) error {
 	logger = logger.Session("fail-actual-lrp", lager.Data{"actual_lrp_key": key, "placement_error": placementError})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	var beforeActualLRP models.ActualLRP
-	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		actualLRP, err := db.fetchActualLRPForShare(logger, key.ProcessGuid, key.Index, false, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
 		}
-		beforeActualLRP = *actualLRP
 
 		if actualLRP.State != models.ActualLRPStateUnclaimed {
 			logger.Error("failed-transition-to-unclaimed", nil, lager.Data{"from_state": actualLRP.State})
@@ -377,8 +344,6 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 
 		return nil
 	})
-
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, err
 }
 
 func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	thepackagedb "github.com/cloudfoundry-incubator/bbs/db"
 	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
@@ -23,7 +22,7 @@ import (
 
 var (
 	db               *sql.DB
-	sqlDB            thepackagedb.DB
+	sqlDB            *sqldb.SQLDB
 	fakeClock        *fakeclock.FakeClock
 	fakeGUIDProvider *fakes.FakeGUIDProvider
 	logger           *lagertest.TestLogger

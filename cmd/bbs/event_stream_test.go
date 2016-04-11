@@ -226,6 +226,7 @@ var _ = Describe("Events API", func() {
 					return event
 				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
+				evacuatingBefore := evacuatingLRP
 				initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
 				_, err = client.EvacuateRunningActualLRP(&key, &newInstanceKey, &netInfo, 0)
 				Expect(err).NotTo(HaveOccurred())
@@ -242,10 +243,13 @@ var _ = Describe("Events API", func() {
 				Eventually(func() models.Event {
 					Eventually(eventChannel).Should(Receive(&event))
 					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
-				actualLRPCreatedEvent = event.(*models.ActualLRPCreatedEvent)
-				response = actualLRPCreatedEvent.ActualLrpGroup.GetEvacuating()
+				actualLRPChangedEvent = event.(*models.ActualLRPChangedEvent)
+				response = actualLRPChangedEvent.Before.GetEvacuating()
+				Expect(*response).To(Equal(evacuatingBefore))
+
+				response = actualLRPChangedEvent.After.GetEvacuating()
 				Expect(*response).To(Equal(evacuatingLRP))
 
 				// discard instance -> UNCLAIMED

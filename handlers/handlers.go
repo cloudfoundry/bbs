@@ -30,13 +30,13 @@ func New(
 	repClientFactory rep.ClientFactory,
 	migrationsDone <-chan struct{},
 ) http.Handler {
-	retirer := NewActualLRPRetirer(db, actualHub, repClientFactory, serviceClient)
+	retirer := NewActualLRPRetirer(db, repClientFactory, serviceClient)
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db)
 	actualLRPHandler := NewActualLRPHandler(logger, db)
-	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, actualHub, auctioneerClient, retirer)
-	evacuationHandler := NewEvacuationHandler(logger, db, db, db, actualHub, auctioneerClient)
-	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient)
+	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, auctioneerClient, retirer)
+	evacuationHandler := NewEvacuationHandler(logger, db, db, db, auctioneerClient)
+	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, auctioneerClient, repClientFactory, serviceClient)
 	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, auctioneerClient, serviceClient, retirer, convergenceWorkersSize)
 	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
 	eventsHandler := NewEventHandler(logger, desiredHub, actualHub)
