@@ -75,7 +75,7 @@ var _ = Describe("Event Handlers", func() {
 				It("emits events from the hub to the connection", func() {
 					reader := sse.NewReadCloser(response.Body)
 
-					hub.Emit(&eventfakes.FakeEvent{"A"})
+					hub.Emit(&eventfakes.FakeEvent{Token: "A"})
 					encodedPayload := base64.StdEncoding.EncodeToString([]byte("A"))
 
 					Expect(reader.Next()).To(Equal(sse.Event{
@@ -84,7 +84,7 @@ var _ = Describe("Event Handlers", func() {
 						Data: []byte(encodedPayload),
 					}))
 
-					hub.Emit(&eventfakes.FakeEvent{"B"})
+					hub.Emit(&eventfakes.FakeEvent{Token: "B"})
 
 					encodedPayload = base64.StdEncoding.EncodeToString([]byte("B"))
 					Expect(reader.Next()).To(Equal(sse.Event{
@@ -125,7 +125,7 @@ var _ = Describe("Event Handlers", func() {
 				Context("when the client closes the response body", func() {
 					It("returns early", func() {
 						reader := sse.NewReadCloser(response.Body)
-						hub.Emit(eventfakes.FakeEvent{"A"})
+						hub.Emit(eventfakes.FakeEvent{Token: "A"})
 						err := reader.Close()
 						Expect(err).NotTo(HaveOccurred())
 						Eventually(eventStreamDone, 10).Should(BeClosed())

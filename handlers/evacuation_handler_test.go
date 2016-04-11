@@ -1023,8 +1023,8 @@ var _ = Describe("Evacuation Handlers", func() {
 
 						Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 						_, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
+						Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
+						Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
 					})
 
 					It("emits events to the hub", func() {

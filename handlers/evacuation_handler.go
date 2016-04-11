@@ -189,9 +189,9 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			response.Error = models.ConvertError(err)
 			return
-		} else {
-			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating}))
 		}
+
+		go h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating}))
 		response.KeepContainer = false
 		return
 	}
@@ -227,7 +227,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 		(instance.State == models.ActualLRPStateRunning && !instance.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) ||
 		instance.State == models.ActualLRPStateCrashed {
 		response.KeepContainer = false
-		err = h.db.RemoveEvacuatingActualLRP(logger, &instance.ActualLRPKey, &instance.ActualLRPInstanceKey)
+		err = h.db.RemoveEvacuatingActualLRP(logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
 		if err == nil {
 			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating}))
 		}
@@ -244,9 +244,9 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 		if err != nil {
 			response.Error = models.ConvertError(err)
 			return
-		} else {
-			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(group))
 		}
+
+		go h.actualHub.Emit(models.NewActualLRPCreatedEvent(group))
 
 		err = h.unclaimAndRequestAuction(logger, request.ActualLrpKey)
 		if err != nil {
