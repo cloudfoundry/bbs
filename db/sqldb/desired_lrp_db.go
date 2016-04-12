@@ -16,7 +16,6 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-
 		routesData, err := json.Marshal(desiredLRP.Routes)
 		runInfo := desiredLRP.DesiredLRPRunInfo(db.clock.Now())
 
@@ -37,6 +36,14 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 			logger.Error("failed-to-serialize-model", err)
 			return err
 		}
+
+		guid, err := db.guidProvider.NextGUID()
+		if err != nil {
+			logger.Error("failed-to-generate-guid", err)
+			return models.ErrGUIDGeneration
+		}
+
+		desiredLRP.ModificationTag = &models.ModificationTag{Epoch: guid, Index: 0}
 
 		_, err = tx.Exec(`
 			INSERT INTO desired_lrps

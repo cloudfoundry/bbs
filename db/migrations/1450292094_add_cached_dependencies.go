@@ -24,7 +24,7 @@ func NewAddCachedDependencies() migration.Migration {
 	return &AddCachedDependencies{}
 }
 
-func (a AddCachedDependencies) Version() int64 {
+func (a *AddCachedDependencies) Version() int64 {
 	return 1450292094
 }
 
@@ -36,10 +36,10 @@ func (a *AddCachedDependencies) SetCryptor(cryptor encryption.Cryptor) {
 	a.serializer = format.NewSerializer(cryptor)
 }
 
-func (a AddCachedDependencies) Up(logger lager.Logger) error {
+func (a *AddCachedDependencies) Up(logger lager.Logger) error {
 	return nil
 }
 
-func (a AddCachedDependencies) Down(logger lager.Logger) error {
+func (a *AddCachedDependencies) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
 }

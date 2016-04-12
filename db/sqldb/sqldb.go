@@ -17,7 +17,7 @@ type SQLDB struct {
 	convergenceWorkersSize int
 	clock                  clock.Clock
 	format                 *format.Format
-	guidProvider           guidprovier.GUIDProvider
+	guidProvider           guidprovider.GUIDProvider
 	serializer             format.Serializer
 }
 
@@ -43,7 +43,7 @@ func NewSQLDB(
 	convergenceWorkersSize int,
 	serializationFormat *format.Format,
 	cryptor encryption.Cryptor,
-	guidProvider guidprovier.GUIDProvider,
+	guidProvider guidprovider.GUIDProvider,
 	clock clock.Clock,
 ) *SQLDB {
 	return &SQLDB{

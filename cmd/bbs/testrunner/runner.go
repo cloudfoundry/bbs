@@ -20,7 +20,11 @@ type Args struct {
 	EtcdClientSessionCacheSize int
 	EtcdCluster                string
 	EtcdMaxIdleConnsPerHost    int
-	MetricsReportInterval      time.Duration
+
+	DatabaseConnectionString string
+	DatabaseDriver           string
+
+	MetricsReportInterval time.Duration
 
 	ActiveKeyLabel string
 	EncryptionKeys []string
@@ -43,6 +47,8 @@ func (args Args) ArgSlice() []string {
 		"-etcdKeyFile", args.EtcdClientKey,
 		"-etcdClientSessionCacheSize", strconv.Itoa(args.EtcdClientSessionCacheSize),
 		"-etcdMaxIdleConnsPerHost", strconv.Itoa(args.EtcdMaxIdleConnsPerHost),
+		"-databaseConnectionString", args.DatabaseConnectionString,
+		"-databaseDriver", args.DatabaseDriver,
 		"-listenAddress", args.Address,
 		"-logLevel", "debug",
 		"-metricsReportInterval", args.MetricsReportInterval.String(),

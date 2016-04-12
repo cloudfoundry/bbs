@@ -15,7 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Encryption", func() {
+var _ = XDescribe("Encryption", func() {
 	var task *models.Task
 
 	BeforeEach(func() {
@@ -63,7 +63,6 @@ var _ = Describe("Encryption", func() {
 
 				Expect(task.TaskGuid).To(Equal(decodedTask.TaskGuid))
 			})
-
 		})
 
 		Context("when provided a multiple encryption keys", func() {

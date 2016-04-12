@@ -237,15 +237,15 @@ var _ = Describe("LRPConvergence", func() {
 		It("emits metrics for lrps", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
 			Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(7)))
-			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(25))) // 16 + 10 evac
+			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(29))) // 15 fresh + 4 expired + 10 evac
 			Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(1)))
-			Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(3)))
-			Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(2)))
+			Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(2)))
+			Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(1)))
 		})
 
 		It("emits missing LRP metrics", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
-			Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(13)))
+			Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(16)))
 		})
 
 		It("emits extra LRP metrics", func() {
@@ -274,81 +274,164 @@ var _ = Describe("LRPConvergence", func() {
 
 	It("returns start requests for stale unclaimed actual LRPs", func() {
 		startRequests, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
-		Expect(startRequests).NotTo(BeEmpty())
 
-		processGuid := "desired-with-stale-actuals" + "-" + freshDomain
-		desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
-		Expect(err).NotTo(HaveOccurred())
+		By("fresh domain", func() {
+			Expect(startRequests).NotTo(BeEmpty())
 
-		lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
+			processGuid := "desired-with-stale-actuals" + "-" + freshDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
 
-		Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
+
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+		})
+
+		By("expired domain", func() {
+			Expect(startRequests).NotTo(BeEmpty())
+
+			processGuid := "desired-with-stale-actuals" + "-" + expiredDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
+
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+		})
 	})
 
 	It("returns the start requests and actual lrp keys for actuals with missing cells", func() {
 		_, keysWithMissingCells, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 
-		processGuid := "desired-with-missing-cell-actuals" + "-" + freshDomain
-		desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
-		Expect(err).NotTo(HaveOccurred())
+		By("fresh domain", func() {
+			processGuid := "desired-with-missing-cell-actuals" + "-" + freshDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
 
-		actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-		Expect(err).NotTo(HaveOccurred())
-		expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
-		Expect(keysWithMissingCells).To(ConsistOf(&models.ActualLRPKeyWithSchedulingInfo{
-			Key:            &actualLRPGroup.Instance.ActualLRPKey,
-			SchedulingInfo: &expectedSched,
-		}))
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
+			expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
+			Expect(keysWithMissingCells).To(ContainElement(&models.ActualLRPKeyWithSchedulingInfo{
+				Key:            &actualLRPGroup.Instance.ActualLRPKey,
+				SchedulingInfo: &expectedSched,
+			}))
+		})
+
+		By("expired domain", func() {
+			processGuid := "desired-with-missing-cell-actuals" + "-" + expiredDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
+			expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
+			Expect(keysWithMissingCells).To(ContainElement(&models.ActualLRPKeyWithSchedulingInfo{
+				Key:            &actualLRPGroup.Instance.ActualLRPKey,
+				SchedulingInfo: &expectedSched,
+			}))
+		})
 	})
 
 	It("creates actual LRPs with missing indices, and returns it to be started", func() {
 		startRequests, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(startRequests).NotTo(BeEmpty())
 
-		processGuid := "desired-with-missing-all-actuals" + "-" + freshDomain
-		desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
-		Expect(err).NotTo(HaveOccurred())
+		By("missing all actuals, fresh domain", func() {
+			processGuid := "desired-with-missing-all-actuals" + "-" + freshDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
 
-		lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
 
-		Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
 
-		actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+		})
 
-		processGuid = "desired-with-missing-some-actuals" + "-" + freshDomain
-		desiredLRP, err = sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
-		Expect(err).NotTo(HaveOccurred())
+		By("missing some actuals, fresh domain", func() {
+			processGuid := "desired-with-missing-some-actuals" + "-" + freshDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
 
-		lrpStartRequest = auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1, 3)
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1, 3)
 
-		Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
 
-		actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 1)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 1)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 
-		actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 3)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 3)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+		})
+
+		By("missing all actuals, expired domain", func() {
+			processGuid := "desired-with-missing-all-actuals" + "-" + expiredDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+		})
+
+		By("missing some actuals, expired domain", func() {
+			processGuid := "desired-with-missing-some-actuals" + "-" + expiredDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1, 3)
+
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 1)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+
+			actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 3)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+		})
 	})
 
 	It("unclaims actual LRPs that are crashed and restartable, and returns it to be started", func() {
 		startRequests, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(startRequests).NotTo(BeEmpty())
 
-		processGuid := "desired-with-restartable-crashed-actuals" + "-" + freshDomain
-		desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
-		Expect(err).NotTo(HaveOccurred())
+		By("fresh domain", func() {
+			processGuid := "desired-with-restartable-crashed-actuals" + "-" + freshDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
 
-		lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
 
-		Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
 
-		actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+		})
+
+		By("expired domain", func() {
+			processGuid := "desired-with-restartable-crashed-actuals" + "-" + expiredDomain
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+
+			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+
+			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+		})
 	})
 
 	It("returns extra actual LRPs to be retired", func() {
@@ -449,12 +532,7 @@ var _ = Describe("LRPConvergence", func() {
 			"normal-desired-lrp" + "-" + freshDomain,
 			"normal-desired-lrp-with-unclaimed-actuals" + "-" + freshDomain,
 			"desired-with-non-restartable-crashed-actuals" + "-" + freshDomain,
-			"desired-with-stale-actuals" + "-" + expiredDomain,
-			"desired-with-missing-cell-actuals" + "-" + expiredDomain,
 			"desired-with-extra-actuals" + "-" + expiredDomain,
-			"desired-with-missing-all-actuals" + "-" + expiredDomain,
-			"desired-with-missing-some-actuals" + "-" + expiredDomain,
-			"desired-with-restartable-crashed-actuals" + "-" + expiredDomain,
 		}
 
 		fetch := func(processGuid string) (*models.DesiredLRP, []*models.ActualLRPGroup) {

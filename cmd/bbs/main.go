@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"crypto/tls"
+	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
@@ -13,12 +14,15 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs"
+	"github.com/cloudfoundry-incubator/bbs/db"
 	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
+	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/encryptor"
 	"github.com/cloudfoundry-incubator/bbs/events"
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"github.com/cloudfoundry-incubator/bbs/guidprovider"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/metrics"
 	"github.com/cloudfoundry-incubator/bbs/migration"
@@ -150,9 +154,20 @@ var desiredLRPCreationTimeout = flag.Duration(
 	"Expected maximum time to create all components of a desired LRP",
 )
 
-const (
-	dropsondeOrigin = "bbs"
+var databaseConnectionString = flag.String(
+	"databaseConnectionString",
+	"",
+	"SQL database connection string",
+)
 
+var databaseDriver = flag.String(
+	"databaseDriver",
+	"mysql",
+	"SQL database driver name",
+)
+
+const (
+	dropsondeOrigin           = "bbs"
 	bbsWatchRetryWaitDuration = 3 * time.Second
 )
 
@@ -163,6 +178,8 @@ func main() {
 	encryptionFlags := encryption.AddEncryptionFlags(flag.CommandLine)
 
 	flag.Parse()
+
+	validateSQLFlags()
 
 	cf_http.Initialize(*communicationTimeout)
 
@@ -211,14 +228,41 @@ func main() {
 	}
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
-	db := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
+	etcdDB := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
 
-	encryptor := encryptor.New(logger, db, keyManager, cryptor, storeClient, clock)
+	var activeDB db.DB
+	var sqlDB *sqldb.SQLDB
+	activeDB = etcdDB
+
+	// If SQL database info is passed in, use SQL instead of ETCD
+	if *databaseDriver != "" && *databaseConnectionString != "" {
+		sqlConn, err := sql.Open(*databaseDriver, *databaseConnectionString)
+		if err != nil {
+			// TODO: Handle Errors
+			logger.Fatal("failed-to-open-sql", err)
+		}
+
+		err = sqlConn.Ping()
+		if err != nil {
+			// TODO: Handle Errors
+			logger.Fatal("sql-failed-to-connect", err)
+		}
+
+		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock)
+		err = sqlDB.CreateInitialSchema(logger)
+		if err != nil {
+			// TODO: Handle Errors
+			logger.Fatal("sql-failed-create-initial-schema", err)
+		}
+		activeDB = sqlDB
+	}
+
+	encryptor := encryptor.New(logger, activeDB, keyManager, cryptor, storeClient, clock)
 
 	migrationsDone := make(chan struct{})
 
 	migrationManager := migration.NewManager(logger,
-		db,
+		etcdDB,
 		cryptor,
 		storeClient,
 		migrations.Migrations,
@@ -236,7 +280,7 @@ func main() {
 		logger,
 		*updateWorkers,
 		*convergenceWorkers,
-		db,
+		activeDB,
 		desiredHub,
 		actualHub,
 		cbWorkPool,
@@ -401,4 +445,8 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	return etcddb.NewStoreClient(etcdClient)
+}
+
+func validateSQLFlags() {
+	//TODO: Do some validation.
 }

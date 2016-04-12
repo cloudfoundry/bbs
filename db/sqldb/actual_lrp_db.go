@@ -331,6 +331,13 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		actualLRP.ModificationTag.Increment()
 		actualLRP.State = models.ActualLRPStateCrashed
 
+		actualLRP.ActualLRPInstanceKey.InstanceGuid = ""
+		actualLRP.ActualLRPInstanceKey.CellId = ""
+		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
+		actualLRP.CrashCount = newCrashCount
+		actualLRP.CrashReason = crashReason
+		evacuating := false
+
 		if actualLRP.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
 			actualLRP.State = models.ActualLRPStateUnclaimed
 			immediateRestart = true
@@ -338,12 +345,6 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 		now := db.clock.Now().UnixNano()
 		actualLRP.Since = now
-		actualLRP.ActualLRPInstanceKey.InstanceGuid = ""
-		actualLRP.ActualLRPInstanceKey.CellId = ""
-		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
-		actualLRP.CrashCount = newCrashCount
-		actualLRP.CrashReason = crashReason
-		evacuating := false
 
 		_, err = tx.Exec(`
 				UPDATE actual_lrps

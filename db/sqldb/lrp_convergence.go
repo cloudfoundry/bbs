@@ -52,12 +52,17 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	db.pruneDomains(logger, now)
 	db.pruneEvacuatingActualLRPs(logger, now)
 
-	db.emitDomainMetrics(logger)
+	domainSet, err := db.domainSet(logger)
+	if err != nil {
+		return nil, nil, nil
+	}
+
+	db.emitDomainMetrics(logger, domainSet)
 
 	converge := newConvergence(db)
 	converge.staleUnclaimedActualLRPs(logger, now)
 	converge.actualLRPsWithMissingCells(logger, cellSet)
-	converge.lrpInstanceCounts(logger)
+	converge.lrpInstanceCounts(logger, domainSet)
 	converge.orphanedActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
@@ -99,7 +104,6 @@ func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Tim
 		SELECT `+schedulingInfoColumns+`, actual_lrps.instance_index
 		FROM desired_lrps
 		JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-		JOIN domains ON desired_lrps.domain = domains.domain
 		WHERE actual_lrps.state = ? AND actual_lrps.since < ? AND actual_lrps.evacuating = ?
 	`, models.ActualLRPStateUnclaimed,
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
@@ -133,7 +137,6 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 		SELECT `+schedulingInfoColumns+`, actual_lrps.instance_index, actual_lrps.since, actual_lrps.crash_count
 		FROM desired_lrps
 		JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-		JOIN domains ON desired_lrps.domain = domains.domain
 		WHERE actual_lrps.evacuating = ?
 			AND actual_lrps.state = ?
 	`, false, models.ActualLRPStateCrashed)
@@ -213,14 +216,13 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 
 // Creates and adds missing Actual LRPs to the list of start requests.
 // Adds extra Actual LRPs  to the list of keys to retire.
-func (c *convergence) lrpInstanceCounts(logger lager.Logger) {
+func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}) {
 	rows, err := c.db.Query(`
 		SELECT `+schedulingInfoColumns+`,
 			COUNT(actual_lrps.instance_index) AS actual_instances,
 			GROUP_CONCAT(actual_lrps.instance_index) AS existing_indices
 		FROM desired_lrps
 		LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = ?
-		JOIN domains ON desired_lrps.domain = domains.domain
 		GROUP BY desired_lrps.process_guid
 		HAVING actual_instances <> desired_lrps.instances
 	`, false)
@@ -267,11 +269,13 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger) {
 
 		if actualInstances > int(schedulingInfo.Instances) {
 			for i := int(schedulingInfo.Instances); i < actualInstances; i++ {
-				c.addKeyToRetire(logger, &models.ActualLRPKey{
-					ProcessGuid: schedulingInfo.ProcessGuid,
-					Index:       int32(i),
-					Domain:      schedulingInfo.Domain,
-				})
+				if _, ok := domainSet[schedulingInfo.Domain]; ok {
+					c.addKeyToRetire(logger, &models.ActualLRPKey{
+						ProcessGuid: schedulingInfo.ProcessGuid,
+						Index:       int32(i),
+						Domain:      schedulingInfo.Domain,
+					})
+				}
 			}
 		}
 	}
@@ -298,7 +302,6 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		SELECT `+schedulingInfoColumns+`, actual_lrps.instance_index
 		FROM desired_lrps
 		JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-		JOIN domains ON desired_lrps.domain = domains.domain
 		WHERE actual_lrps.evacuating = ?
 			AND actual_lrps.cell_id NOT IN (%s) AND actual_lrps.cell_id <> ''
 		`, strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ",")))
@@ -336,6 +339,10 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 }
 
 func (c *convergence) addStartRequestFromSchedulingInfo(logger lager.Logger, schedulingInfo *models.DesiredLRPSchedulingInfo, indices ...int) {
+	if len(indices) == 0 {
+		return
+	}
+
 	c.startRequestsMutex.Lock()
 	defer c.startRequestsMutex.Unlock()
 
@@ -402,15 +409,23 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
 	}
 }
 
-func (db *SQLDB) emitDomainMetrics(logger lager.Logger) {
+func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {
 	logger.Debug("listing-domains")
 	domains, err := db.Domains(logger)
 	if err != nil {
 		logger.Error("failed-listing-domains", err)
-		return
+		return nil, err
 	}
 	logger.Debug("succeeded-listing-domains")
+	m := make(map[string]struct{}, len(domains))
 	for _, domain := range domains {
+		m[domain] = struct{}{}
+	}
+	return m, nil
+}
+
+func (db *SQLDB) emitDomainMetrics(logger lager.Logger, domainSet map[string]struct{}) {
+	for domain := range domainSet {
 		metric.Metric(domainMetricPrefix + domain).Send(1)
 	}
 }

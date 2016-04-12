@@ -42,4 +42,4 @@ func (fake *FakeGUIDProvider) NextGUIDReturns(result1 string, result2 error) {
 	}{result1, result2}
 }
 
-var _ guidprovier.GUIDProvider = new(FakeGUIDProvider)
+var _ guidprovider.GUIDProvider = new(FakeGUIDProvider)

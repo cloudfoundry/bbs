@@ -1160,7 +1160,7 @@ var _ = Describe("ActualLRPDB", func() {
 						_, err := db.Exec(`
 								UPDATE actual_lrps SET crash_count = ?
 								WHERE process_guid = ? AND instance_index = ?`,
-							models.DefaultImmediateRestarts+2,
+							models.DefaultImmediateRestarts+1,
 							actualLRP.ProcessGuid,
 							actualLRP.Index,
 						)
@@ -1177,7 +1177,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 						expectedActualLRP := *actualLRP
 						expectedActualLRP.State = models.ActualLRPStateCrashed
-						expectedActualLRP.CrashCount = models.DefaultImmediateRestarts + 3
+						expectedActualLRP.CrashCount = models.DefaultImmediateRestarts + 2
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
@@ -1200,7 +1200,7 @@ var _ = Describe("ActualLRPDB", func() {
 						It("resets the crash count to 1", func() {
 							_, _, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 							Expect(err).NotTo(HaveOccurred())
-							Expect(shouldRestart).To(BeFalse())
+							Expect(shouldRestart).To(BeTrue())
 
 							actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 							Expect(err).NotTo(HaveOccurred())
@@ -1240,7 +1240,7 @@ var _ = Describe("ActualLRPDB", func() {
 						_, err := db.Exec(`
 								UPDATE actual_lrps SET crash_count = ?
 								WHERE process_guid = ? AND instance_index = ?`,
-							models.DefaultImmediateRestarts-1,
+							models.DefaultImmediateRestarts-2,
 							actualLRP.ProcessGuid,
 							actualLRP.Index,
 						)
@@ -1257,7 +1257,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 						expectedActualLRP := *actualLRP
 						expectedActualLRP.State = models.ActualLRPStateUnclaimed
-						expectedActualLRP.CrashCount = models.DefaultImmediateRestarts
+						expectedActualLRP.CrashCount = models.DefaultImmediateRestarts - 1
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
