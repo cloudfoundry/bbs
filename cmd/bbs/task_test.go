@@ -3,12 +3,12 @@ package main_test
 import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	. "github.com/cloudfoundry-incubator/bbs/models/test/matchers"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/types"
 )
 
 var _ = Describe("Task API", func() {
@@ -29,31 +29,6 @@ var _ = Describe("Task API", func() {
 	AfterEach(func() {
 		ginkgomon.Kill(bbsProcess)
 	})
-
-	MatchTask := func(task *models.Task) types.GomegaMatcher {
-		return SatisfyAll(
-			WithTransform(func(t *models.Task) string {
-				return t.TaskGuid
-			}, Equal(task.TaskGuid)),
-			WithTransform(func(t *models.Task) string {
-				return t.Domain
-			}, Equal(task.Domain)),
-			WithTransform(func(t *models.Task) *models.TaskDefinition {
-				return t.TaskDefinition
-			}, Equal(task.TaskDefinition)),
-		)
-	}
-
-	MatchTasks := func(tasks []*models.Task) types.GomegaMatcher {
-		matchers := []types.GomegaMatcher{}
-		matchers = append(matchers, HaveLen(len(tasks)))
-
-		for _, task := range tasks {
-			matchers = append(matchers, ContainElement(MatchTask(task)))
-		}
-
-		return SatisfyAll(matchers...)
-	}
 
 	Describe("Tasks", func() {
 		It("has the correct number of responses", func() {

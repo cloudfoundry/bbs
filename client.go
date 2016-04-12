@@ -648,9 +648,9 @@ func (c *client) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expi
 	return response.Error.ToError()
 }
 
-func (c *client) SubscribeToEvents() (events.EventSource, error) {
+func (c *client) subscribeToEvents(route string) (events.EventSource, error) {
 	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
-		request, err := c.reqGen.CreateRequest(EventStreamRoute_r0, nil, nil)
+		request, err := c.reqGen.CreateRequest(route, nil, nil)
 		if err != nil {
 			panic(err) // totally shouldn't happen
 		}
@@ -663,40 +663,18 @@ func (c *client) SubscribeToEvents() (events.EventSource, error) {
 	}
 
 	return events.NewEventSource(eventSource), nil
+}
+
+func (c *client) SubscribeToEvents() (events.EventSource, error) {
+	return c.subscribeToEvents(EventStreamRoute_r0)
 }
 
 func (c *client) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
-	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
-		request, err := c.reqGen.CreateRequest(DesiredLRPEventStreamRoute, nil, nil)
-		if err != nil {
-			panic(err) // totally shouldn't happen
-		}
-
-		return request
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return events.NewEventSource(eventSource), nil
+	return c.subscribeToEvents(DesiredLRPEventStreamRoute)
 }
 
 func (c *client) SubscribeToActualLRPEvents() (events.EventSource, error) {
-	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
-		request, err := c.reqGen.CreateRequest(ActualLRPEventStreamRoute, nil, nil)
-		if err != nil {
-			panic(err) // totally shouldn't happen
-		}
-
-		return request
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return events.NewEventSource(eventSource), nil
+	return c.subscribeToEvents(ActualLRPEventStreamRoute)
 }
 
 func (c *client) Cells() ([]*models.CellPresence, error) {
@@ -763,7 +741,10 @@ func (c *client) do(request *http.Request, responseObject proto.Message) error {
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer func() {
+		// don't worry about errors when closing the body
+		_ = response.Body.Close()
+	}()
 
 	var parsedContentType string
 	if contentType, ok := response.Header[ContentTypeHeader]; ok {

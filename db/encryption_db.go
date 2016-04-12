@@ -7,4 +7,5 @@ import "github.com/pivotal-golang/lager"
 type EncryptionDB interface {
 	EncryptionKeyLabel(logger lager.Logger) (string, error)
 	SetEncryptionKeyLabel(logger lager.Logger, encryptionKeyLabel string) error
+	PerformEncryption(logger lager.Logger) error
 }

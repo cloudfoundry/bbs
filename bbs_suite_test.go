@@ -38,7 +38,7 @@ var _ = AfterSuite(func() {
 })
 
 var _ = BeforeEach(func() {
-	consulRunner.Reset()
+	_ = consulRunner.Reset()
 	consulClient = consulRunner.NewClient()
 
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)

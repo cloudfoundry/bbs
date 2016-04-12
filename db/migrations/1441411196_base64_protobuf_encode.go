@@ -26,7 +26,7 @@ func NewBase64ProtobufEncode() migration.Migration {
 	return &Base64ProtobufEncode{}
 }
 
-func (b Base64ProtobufEncode) Version() int64 {
+func (b *Base64ProtobufEncode) Version() int64 {
 	return 1441411196
 }
 
@@ -38,7 +38,7 @@ func (b *Base64ProtobufEncode) SetCryptor(cryptor encryption.Cryptor) {
 	b.serializer = format.NewSerializer(cryptor)
 }
 
-func (b Base64ProtobufEncode) Up(logger lager.Logger) error {
+func (b *Base64ProtobufEncode) Up(logger lager.Logger) error {
 	// Desired LRPs
 	response, err := b.storeClient.Get(deprecations.DesiredLRPSchemaRoot, false, true)
 	if err != nil {
@@ -112,11 +112,11 @@ func (b Base64ProtobufEncode) Up(logger lager.Logger) error {
 	return nil
 }
 
-func (b Base64ProtobufEncode) Down(logger lager.Logger) error {
+func (b *Base64ProtobufEncode) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
 }
 
-func (b Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner) error {
+func (b *Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner) error {
 	err := b.serializer.Unmarshal(logger, []byte(node.Value), model)
 	if err != nil {
 		return err

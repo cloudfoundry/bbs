@@ -25,7 +25,7 @@ func NewSplitDesiredLRP() migration.Migration {
 	return &SplitDesiredLRP{}
 }
 
-func (m SplitDesiredLRP) Version() int64 {
+func (m *SplitDesiredLRP) Version() int64 {
 	return 1442529338
 }
 
@@ -37,7 +37,7 @@ func (m *SplitDesiredLRP) SetCryptor(cryptor encryption.Cryptor) {
 	m.serializer = format.NewSerializer(cryptor)
 }
 
-func (m SplitDesiredLRP) Up(logger lager.Logger) error {
+func (m *SplitDesiredLRP) Up(logger lager.Logger) error {
 	_, err := m.storeClient.Delete(etcd.DesiredLRPSchedulingInfoSchemaRoot, true)
 	if err != nil {
 		logger.Error("failed-to-delete-dir", err, lager.Data{"key": etcd.DesiredLRPSchedulingInfoSchemaRoot})
@@ -80,11 +80,11 @@ func (m SplitDesiredLRP) Up(logger lager.Logger) error {
 	return nil
 }
 
-func (m SplitDesiredLRP) Down(logger lager.Logger) error {
+func (m *SplitDesiredLRP) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
 }
 
-func (m SplitDesiredLRP) WriteRunInfo(logger lager.Logger, desiredLRP models.DesiredLRP) {
+func (m *SplitDesiredLRP) WriteRunInfo(logger lager.Logger, desiredLRP models.DesiredLRP) {
 	environmentVariables := make([]models.EnvironmentVariable, len(desiredLRP.EnvironmentVariables))
 	for i := range desiredLRP.EnvironmentVariables {
 		environmentVariables[i] = *desiredLRP.EnvironmentVariables[i]
@@ -121,7 +121,7 @@ func (m SplitDesiredLRP) WriteRunInfo(logger lager.Logger, desiredLRP models.Des
 	}
 }
 
-func (m SplitDesiredLRP) WriteSchedulingInfo(logger lager.Logger, desiredLRP models.DesiredLRP) {
+func (m *SplitDesiredLRP) WriteSchedulingInfo(logger lager.Logger, desiredLRP models.DesiredLRP) {
 	schedulingInfo := models.DesiredLRPSchedulingInfo{
 		DesiredLRPKey:      desiredLRP.DesiredLRPKey(),
 		Annotation:         desiredLRP.Annotation,

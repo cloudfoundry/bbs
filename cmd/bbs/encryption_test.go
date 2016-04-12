@@ -1,13 +1,9 @@
 package main_test
 
 import (
-	"crypto/rand"
-
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	. "github.com/cloudfoundry-incubator/bbs/models/test/matchers"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -43,31 +39,29 @@ var _ = Describe("Encryption", func() {
 				bbsArgs.EncryptionKeys = []string{"label:some phrase"}
 			})
 
-			It("writes the value as base64 encoded encrypted protobufs with metadata", func() {
-				res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
+			It("can write/read to the database", func() {
+				tasks, err := client.Tasks()
 				Expect(err).NotTo(HaveOccurred())
-
-				var decodedTask models.Task
-
-				encryptionKey, err := encryption.NewKey("label", "some phrase")
-				Expect(err).NotTo(HaveOccurred())
-				keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
-				Expect(err).NotTo(HaveOccurred())
-				cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-				serializer := format.NewSerializer(cryptor)
-
-				encoding := res.Node.Value[:format.EnvelopeOffset]
-				Expect(format.Encoding{encoding[0], encoding[1]}).To(Equal(format.BASE64_ENCRYPTED))
-				err = serializer.Unmarshal(logger, []byte(res.Node.Value), &decodedTask)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(task.TaskGuid).To(Equal(decodedTask.TaskGuid))
+				Expect(tasks).To(ContainElement(MatchTask(task)))
 			})
-
 		})
 
 		Context("when provided a multiple encryption keys", func() {
+			var oldTask *models.Task
+
 			BeforeEach(func() {
+				oldTask = model_helpers.NewValidTask("old-task")
+
+				bbsArgs.ActiveKeyLabel = "oldkey"
+				bbsArgs.EncryptionKeys = []string{"oldkey:old phrase"}
+				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+				bbsProcess = ginkgomon.Invoke(bbsRunner)
+
+				err := client.DesireTask(oldTask.TaskGuid, oldTask.Domain, oldTask.TaskDefinition)
+				Expect(err).NotTo(HaveOccurred())
+
+				ginkgomon.Interrupt(bbsProcess)
+
 				bbsArgs.ActiveKeyLabel = "newkey"
 				bbsArgs.EncryptionKeys = []string{
 					"newkey:new phrase",
@@ -75,87 +69,26 @@ var _ = Describe("Encryption", func() {
 				}
 			})
 
-			It("writes the value as base64 encoded encrypted protobufs with metadata using the active key", func() {
-				res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
+			It("can read data that was written with old/new keys", func() {
+				tasks, err := client.Tasks()
 				Expect(err).NotTo(HaveOccurred())
-
-				var decodedTask models.Task
-
-				encryptionKey, err := encryption.NewKey("newkey", "new phrase")
-				Expect(err).NotTo(HaveOccurred())
-				keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
-				Expect(err).NotTo(HaveOccurred())
-				cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-				serializer := format.NewSerializer(cryptor)
-
-				encoding := res.Node.Value[:format.EnvelopeOffset]
-				Expect(format.Encoding{encoding[0], encoding[1]}).To(Equal(format.BASE64_ENCRYPTED))
-				err = serializer.Unmarshal(logger, []byte(res.Node.Value), &decodedTask)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(task.TaskGuid).To(Equal(decodedTask.TaskGuid))
+				Expect(tasks).To(ContainElement(MatchTask(oldTask)))
+				Expect(tasks).To(ContainElement(MatchTask(task)))
 			})
 
-			It("can read existing data that was written used an old key", func() {
-				encryptionKey, err := encryption.NewKey("oldkey", "old phrase")
+			It("doesn't need the oldkey after migrating", func() {
+				ginkgomon.Interrupt(bbsProcess)
+
+				bbsArgs.ActiveKeyLabel = "newkey"
+				bbsArgs.EncryptionKeys = []string{"newkey:new phrase"}
+
+				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+				bbsProcess = ginkgomon.Invoke(bbsRunner)
+
+				tasks, err := client.Tasks()
 				Expect(err).NotTo(HaveOccurred())
-				keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
-				Expect(err).NotTo(HaveOccurred())
-				cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-				serializer := format.NewSerializer(cryptor)
-
-				encryptedPayload, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, task)
-				Expect(err).NotTo(HaveOccurred())
-				_, err = etcdClient.Set(etcddb.TaskSchemaPathByGuid(task.TaskGuid), string(encryptedPayload), etcddb.NO_TTL)
-				Expect(err).NotTo(HaveOccurred())
-
-				returnedTask, err := client.TaskByGuid(task.TaskGuid)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(returnedTask).To(Equal(task))
-			})
-		})
-	})
-
-	Describe("encryptor", func() {
-		Context("when there is data unencrypted in the database", func() {
-			BeforeEach(func() {
-				serializer := format.NewSerializer(nil)
-
-				encodedPayload, err := serializer.Marshal(logger, format.ENCODED_PROTO, task)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = etcdClient.Set(etcddb.TaskSchemaPathByGuid(task.TaskGuid), string(encodedPayload), etcddb.NO_TTL)
-				Expect(err).NotTo(HaveOccurred())
-
-				bbsArgs.EncryptionKeys = []string{"my-label:my-secure-passphrase"}
-				bbsArgs.ActiveKeyLabel = "my-label"
-			})
-
-			It("eventually rewrites existing data in encrypted format", func() {
-				checkEncoding := func() format.Encoding {
-					res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
-					Expect(err).NotTo(HaveOccurred())
-
-					header := res.Node.Value[:format.EnvelopeOffset]
-					return format.Encoding{header[0], header[1]}
-				}
-				Eventually(checkEncoding).Should(Equal(format.BASE64_ENCRYPTED))
-
-				var decodedTask models.Task
-
-				res, err := etcdClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
-
-				encryptionKey, err := encryption.NewKey("my-label", "my-secure-passphrase")
-				Expect(err).NotTo(HaveOccurred())
-				keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
-				Expect(err).NotTo(HaveOccurred())
-				cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-				serializer := format.NewSerializer(cryptor)
-
-				err = serializer.Unmarshal(logger, []byte(res.Node.Value), &decodedTask)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(task.TaskGuid).To(Equal(decodedTask.TaskGuid))
+				Expect(tasks).To(ContainElement(MatchTask(oldTask)))
+				Expect(tasks).To(ContainElement(MatchTask(task)))
 			})
 		})
 	})

@@ -153,7 +153,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by domain", func() {
 			It("returns the filtered desired lrps", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{"domain-1"})
+				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{Domain: "domain-1"})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(1))

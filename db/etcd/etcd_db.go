@@ -83,6 +83,7 @@ type ETCDDB struct {
 	updateWorkersSize         int
 	desiredLRPCreationTimeout time.Duration
 	serializer                format.Serializer
+	cryptor                   encryption.Cryptor
 	client                    StoreClient
 	clock                     clock.Clock
 	inflightWatches           map[chan bool]bool
@@ -104,6 +105,7 @@ func NewETCD(
 		updateWorkersSize:         updateWorkersSize,
 		desiredLRPCreationTimeout: desiredLRPCreationTimeout,
 		serializer:                format.NewSerializer(cryptor),
+		cryptor:                   cryptor,
 		client:                    storeClient,
 		clock:                     clock,
 		inflightWatches:           map[chan bool]bool{},

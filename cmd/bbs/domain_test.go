@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
 	events "github.com/cloudfoundry/sonde-go/events"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -27,7 +26,7 @@ var _ = Describe("Domain API", func() {
 
 		BeforeEach(func() {
 			existingDomain = "existing-domain"
-			_, err := etcdClient.Set(etcddb.DomainSchemaPath(existingDomain), "", 100)
+			err := client.UpsertDomain(existingDomain, 100*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -79,21 +78,22 @@ var _ = Describe("Domain API", func() {
 		})
 
 		It("updates the TTL when updating an existing domain", func() {
-			err := client.UpsertDomain(existingDomain, 200*time.Second)
+			err := client.UpsertDomain(existingDomain, 1*time.Second)
 			Expect(err).ToNot(HaveOccurred())
 
-			etcdEntry, err := etcdClient.Get(etcddb.DomainSchemaPath(existingDomain), false, false)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(etcdEntry.Node.TTL).To(BeNumerically(">", 100))
+			Eventually(func() []string {
+				domains, err := client.Domains()
+				Expect(err).NotTo(HaveOccurred())
+				return domains
+			}).ShouldNot(ContainElement(existingDomain))
 		})
 
 		It("creates a domain with the desired TTL", func() {
 			err := client.UpsertDomain("new-domain", 54*time.Second)
 			Expect(err).ToNot(HaveOccurred())
-
-			etcdEntry, err := etcdClient.Get(etcddb.DomainSchemaPath("new-domain"), false, false)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(etcdEntry.Node.TTL).To(BeNumerically("<=", 54))
+			domains, err := client.Domains()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(domains).To(ContainElement("new-domain"))
 		})
 	})
 
@@ -105,7 +105,7 @@ var _ = Describe("Domain API", func() {
 		BeforeEach(func() {
 			expectedDomains = []string{"domain-0", "domain-1"}
 			for i, d := range expectedDomains {
-				_, err := etcdClient.Set(etcddb.DomainSchemaPath(d), "", uint64(100*(i+1)))
+				err := client.UpsertDomain(d, time.Second*time.Duration(100*(i+1)))
 				Expect(err).NotTo(HaveOccurred())
 			}
 

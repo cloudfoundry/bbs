@@ -1,6 +1,8 @@
 package main_test
 
 import (
+	"database/sql"
+	"flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -32,28 +34,35 @@ import (
 	"time"
 )
 
-var etcdPort int
-var etcdUrl string
-var etcdRunner *etcdstorerunner.ETCDClusterRunner
-var etcdClient *etcdclient.Client
-var storeClient etcd.StoreClient
+var (
+	etcdPort    int
+	etcdUrl     string
+	etcdRunner  *etcdstorerunner.ETCDClusterRunner
+	etcdClient  *etcdclient.Client
+	storeClient etcd.StoreClient
 
-var logger lager.Logger
+	logger lager.Logger
 
-var client bbs.Client
-var bbsBinPath string
-var bbsAddress string
-var bbsPort int
-var bbsURL *url.URL
-var bbsArgs testrunner.Args
-var bbsRunner *ginkgomon.Runner
-var bbsProcess ifrit.Process
-var consulRunner *consulrunner.ClusterRunner
-var consulClient consuladapter.Client
-var consulHelper *test_helpers.ConsulHelper
-var auctioneerServer *ghttp.Server
-var testMetricsListener net.PacketConn
-var testMetricsChan chan *events.Envelope
+	client              bbs.Client
+	bbsBinPath          string
+	bbsAddress          string
+	bbsPort             int
+	bbsURL              *url.URL
+	bbsArgs             testrunner.Args
+	bbsRunner           *ginkgomon.Runner
+	bbsProcess          ifrit.Process
+	consulRunner        *consulrunner.ClusterRunner
+	consulClient        consuladapter.Client
+	consulHelper        *test_helpers.ConsulHelper
+	auctioneerServer    *ghttp.Server
+	testMetricsListener net.PacketConn
+	testMetricsChan     chan *events.Envelope
+
+	sqlDBName string
+	db        *sql.DB
+)
+
+var useSQL = flag.Bool("useSQL", false, "run integration tests against a local MySQL instance")
 
 func TestBBS(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -74,6 +83,23 @@ var _ = SynchronizedBeforeSuite(
 		etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
 		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
 
+		if *useSQL {
+			// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
+			// in diego-release.
+			var err error
+			db, err = sql.Open("mysql", "diego:diego_password@/")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(db.Ping()).NotTo(HaveOccurred())
+
+			_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
+			Expect(err).NotTo(HaveOccurred())
+
+			sqlDBName = fmt.Sprintf("diego_%d", GinkgoParallelNode())
+			db, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/%s", sqlDBName))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(db.Ping()).NotTo(HaveOccurred())
+		}
+
 		consulRunner = consulrunner.NewClusterRunner(
 			9001+config.GinkgoConfig.ParallelNode*consulrunner.PortOffsetLength,
 			1,
@@ -88,6 +114,12 @@ var _ = SynchronizedBeforeSuite(
 )
 
 var _ = SynchronizedAfterSuite(func() {
+	if *useSQL {
+		_, err := db.Exec(fmt.Sprintf("DROP DATABASE %s", sqlDBName))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(db.Close()).To(Succeed())
+	}
+
 	etcdRunner.Stop()
 	consulRunner.Stop()
 }, func() {
@@ -153,12 +185,35 @@ var _ = BeforeEach(func() {
 		EncryptionKeys: []string{"label:key"},
 		ActiveKeyLabel: "label",
 	}
+	if *useSQL {
+		bbsArgs.DatabaseDriver = "mysql"
+		bbsArgs.DatabaseConnectionString = fmt.Sprintf("diego:diego_password@/%s", sqlDBName)
+	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 })
 
 var _ = AfterEach(func() {
+	if *useSQL {
+		truncateTables(db)
+	}
 	auctioneerServer.Close()
 	testMetricsListener.Close()
 	Eventually(testMetricsChan).Should(BeClosed())
 })
+
+func truncateTables(db *sql.DB) {
+	for _, query := range truncateTablesSQL {
+		result, err := db.Exec(query)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
+	}
+}
+
+var truncateTablesSQL = []string{
+	"TRUNCATE TABLE domains",
+	"TRUNCATE TABLE configurations",
+	"TRUNCATE TABLE tasks",
+	"TRUNCATE TABLE desired_lrps",
+	"TRUNCATE TABLE actual_lrps",
+}

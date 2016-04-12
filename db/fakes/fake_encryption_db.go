@@ -27,6 +27,14 @@ type FakeEncryptionDB struct {
 	setEncryptionKeyLabelReturns struct {
 		result1 error
 	}
+	PerformEncryptionStub        func(logger lager.Logger) error
+	performEncryptionMutex       sync.RWMutex
+	performEncryptionArgsForCall []struct {
+		logger lager.Logger
+	}
+	performEncryptionReturns struct {
+		result1 error
+	}
 }
 
 func (fake *FakeEncryptionDB) EncryptionKeyLabel(logger lager.Logger) (string, error) {
@@ -91,6 +99,38 @@ func (fake *FakeEncryptionDB) SetEncryptionKeyLabelArgsForCall(i int) (lager.Log
 func (fake *FakeEncryptionDB) SetEncryptionKeyLabelReturns(result1 error) {
 	fake.SetEncryptionKeyLabelStub = nil
 	fake.setEncryptionKeyLabelReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeEncryptionDB) PerformEncryption(logger lager.Logger) error {
+	fake.performEncryptionMutex.Lock()
+	fake.performEncryptionArgsForCall = append(fake.performEncryptionArgsForCall, struct {
+		logger lager.Logger
+	}{logger})
+	fake.performEncryptionMutex.Unlock()
+	if fake.PerformEncryptionStub != nil {
+		return fake.PerformEncryptionStub(logger)
+	} else {
+		return fake.performEncryptionReturns.result1
+	}
+}
+
+func (fake *FakeEncryptionDB) PerformEncryptionCallCount() int {
+	fake.performEncryptionMutex.RLock()
+	defer fake.performEncryptionMutex.RUnlock()
+	return len(fake.performEncryptionArgsForCall)
+}
+
+func (fake *FakeEncryptionDB) PerformEncryptionArgsForCall(i int) lager.Logger {
+	fake.performEncryptionMutex.RLock()
+	defer fake.performEncryptionMutex.RUnlock()
+	return fake.performEncryptionArgsForCall[i].logger
+}
+
+func (fake *FakeEncryptionDB) PerformEncryptionReturns(result1 error) {
+	fake.PerformEncryptionStub = nil
+	fake.performEncryptionReturns = struct {
 		result1 error
 	}{result1}
 }

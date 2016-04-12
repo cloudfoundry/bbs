@@ -2,14 +2,13 @@ package encryptor_test
 
 import (
 	"crypto/rand"
+	"errors"
 	"os"
 
-	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/encryptor"
-	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
@@ -33,7 +32,7 @@ var _ = Describe("Encryptor", func() {
 		signals    chan os.Signal
 		runErrChan chan error
 
-		task *models.Task
+		fakeDB *fakes.FakeEncryptionDB
 
 		sender *fake.FakeMetricSender
 	)
@@ -46,6 +45,8 @@ var _ = Describe("Encryptor", func() {
 		ready = make(chan struct{})
 		signals = make(chan os.Signal)
 
+		fakeDB = new(fakes.FakeEncryptionDB)
+
 		logger = lagertest.NewTestLogger("test")
 
 		oldKey, err := encryption.NewKey("old-key", "old-passphrase")
@@ -55,18 +56,11 @@ var _ = Describe("Encryptor", func() {
 		Expect(err).NotTo(HaveOccurred())
 		cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 
-		task = model_helpers.NewValidTask("task-1")
-		serializer := format.NewSerializer(nil)
-
-		encodedPayload, err := serializer.Marshal(logger, format.ENCODED_PROTO, task)
-		Expect(err).NotTo(HaveOccurred())
-
-		_, err = storeClient.Set(etcddb.TaskSchemaPathByGuid(task.TaskGuid), encodedPayload, etcddb.NO_TTL)
-		Expect(err).NotTo(HaveOccurred())
+		fakeDB.EncryptionKeyLabelReturns("", models.ErrResourceNotFound)
 	})
 
 	JustBeforeEach(func() {
-		runner = encryptor.New(logger, etcdDB, keyManager, cryptor, storeClient, clock.NewClock())
+		runner = encryptor.New(logger, fakeDB, keyManager, cryptor, clock.NewClock())
 		encryptorProcess = ifrit.Background(runner)
 	})
 
@@ -85,66 +79,42 @@ var _ = Describe("Encryptor", func() {
 
 	Context("when there is no current encryption key", func() {
 		BeforeEach(func() {
-			// intentianally left blank
+			fakeDB.EncryptionKeyLabelReturns("", models.ErrResourceNotFound)
 		})
 
 		It("encrypts all the existing records", func() {
 			Eventually(encryptorProcess.Ready()).Should(BeClosed())
 			Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
-
-			res, err := storeClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
-			Expect(err).NotTo(HaveOccurred())
-
-			var decodedTask models.Task
-
-			encryptionKey, err := encryption.NewKey("label", "passphrase")
-			Expect(err).NotTo(HaveOccurred())
-			keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
-			Expect(err).NotTo(HaveOccurred())
-			cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-			serializer := format.NewSerializer(cryptor)
-
-			encoding := res.Node.Value[:format.EnvelopeOffset]
-			Expect(format.Encoding{encoding[0], encoding[1]}).To(Equal(format.BASE64_ENCRYPTED))
-			err = serializer.Unmarshal(logger, []byte(res.Node.Value), &decodedTask)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(task.TaskGuid).To(Equal(decodedTask.TaskGuid))
+			Expect(fakeDB.PerformEncryptionCallCount()).To(Equal(1))
 		})
 
 		It("writes the current encryption key", func() {
-			Eventually(func() (string, error) {
-				return etcdDB.EncryptionKeyLabel(logger)
-			}).Should(Equal("label"))
+			Eventually(fakeDB.SetEncryptionKeyLabelCallCount).Should(Equal(1))
+			_, newLabel := fakeDB.SetEncryptionKeyLabelArgsForCall(0)
+			Expect(newLabel).To(Equal("label"))
 		})
 	})
 
-	Context("when there's a broken value in the database", func() {
+	Context("when encrypting fails", func() {
 		BeforeEach(func() {
-			_, err := storeClient.Set(etcddb.TaskSchemaPathByGuid("invalid-task"), []byte("01borked-data"), etcddb.NO_TTL)
-			Expect(err).NotTo(HaveOccurred())
+			fakeDB.PerformEncryptionReturns(errors.New("something is broken"))
 		})
 
 		It("does not fail and logs the error", func() {
 			Eventually(encryptorProcess.Ready()).Should(BeClosed())
 			Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
 
-			Expect(logger.LogMessages()).To(ContainElement("test.encryptor.failed-to-read-node"))
+			Expect(logger.LogMessages()).To(ContainElement("test.encryptor.encryption-failed"))
 		})
 
-		It("writes the current encryption key", func() {
-			Eventually(func() (string, error) {
-				return etcdDB.EncryptionKeyLabel(logger)
-			}).Should(Equal("label"))
+		It("does not change the key in the db", func() {
+			Consistently(fakeDB.SetEncryptionKeyLabelCallCount).Should(Equal(0))
 		})
 	})
 
 	Context("when fetching the current encryption key fails", func() {
 		BeforeEach(func() {
-			etcdRunner.Stop()
-		})
-		AfterEach(func() {
-			etcdRunner.Start()
+			fakeDB.EncryptionKeyLabelReturns("", errors.New("can't fetch"))
 		})
 
 		It("fails early", func() {
@@ -157,7 +127,7 @@ var _ = Describe("Encryptor", func() {
 
 	Context("when the current encryption key is not known to the encryptor", func() {
 		BeforeEach(func() {
-			etcdDB.SetEncryptionKeyLabel(logger, "some-unknown-key")
+			fakeDB.EncryptionKeyLabelReturns("some-unknown-key", nil)
 		})
 
 		It("shuts down wihtout signalling ready", func() {
@@ -167,59 +137,38 @@ var _ = Describe("Encryptor", func() {
 			Expect(encryptorProcess.Ready()).ToNot(BeClosed())
 		})
 
-		It("does not change the version", func() {
-			Consistently(func() (string, error) {
-				return etcdDB.EncryptionKeyLabel(logger)
-			}).Should(Equal("some-unknown-key"))
+		It("does not change the key in the db", func() {
+			Consistently(fakeDB.SetEncryptionKeyLabelCallCount).Should(Equal(0))
 		})
 	})
 
 	Context("when the current encryption key is the same as the encryptor's encryption key", func() {
 		BeforeEach(func() {
-			etcdDB.SetEncryptionKeyLabel(logger, "label")
+			fakeDB.EncryptionKeyLabelReturns("label", nil)
 		})
 
 		It("signals ready and does not change the version", func() {
 			Eventually(encryptorProcess.Ready()).Should(BeClosed())
-			Consistently(func() (string, error) {
-				return etcdDB.EncryptionKeyLabel(logger)
-			}).Should(Equal("label"))
+			Consistently(fakeDB.SetEncryptionKeyLabelCallCount).Should(Equal(0))
 		})
 	})
 
 	Context("when the current encryption key is one of the encryptor's decryption keys", func() {
 		BeforeEach(func() {
-			etcdDB.SetEncryptionKeyLabel(logger, "old-key")
+			fakeDB.EncryptionKeyLabelReturns("old-key", nil)
 		})
 
 		It("encrypts all the existing records", func() {
 			Eventually(encryptorProcess.Ready()).Should(BeClosed())
 			Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
 
-			res, err := storeClient.Get(etcddb.TaskSchemaPathByGuid(task.TaskGuid), false, false)
-			Expect(err).NotTo(HaveOccurred())
-
-			var decodedTask models.Task
-
-			encryptionKey, err := encryption.NewKey("label", "passphrase")
-			Expect(err).NotTo(HaveOccurred())
-			keyManager, err := encryption.NewKeyManager(encryptionKey, nil)
-			Expect(err).NotTo(HaveOccurred())
-			cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-			serializer := format.NewSerializer(cryptor)
-
-			encoding := res.Node.Value[:format.EnvelopeOffset]
-			Expect(format.Encoding{encoding[0], encoding[1]}).To(Equal(format.BASE64_ENCRYPTED))
-			err = serializer.Unmarshal(logger, []byte(res.Node.Value), &decodedTask)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(task.TaskGuid).To(Equal(decodedTask.TaskGuid))
+			Expect(fakeDB.PerformEncryptionCallCount()).To(Equal(1))
 		})
 
 		It("writes the current encryption key", func() {
-			Eventually(func() (string, error) {
-				return etcdDB.EncryptionKeyLabel(logger)
-			}).Should(Equal("label"))
+			Eventually(fakeDB.SetEncryptionKeyLabelCallCount).Should(Equal(1))
+			_, newLabel := fakeDB.SetEncryptionKeyLabelArgsForCall(0)
+			Expect(newLabel).To(Equal("label"))
 		})
 	})
 })
