@@ -285,7 +285,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 }
 
 func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
-	logger = logger.Session("fail-actual-lrp", lager.Data{"actual_lrp_key": key})
+	logger = logger.Session("fail-actual-lrp", lager.Data{"actual_lrp_key": key, "error_message": errorMessage})
 	logger.Info("starting")
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	if err != nil {
