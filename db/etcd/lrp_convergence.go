@@ -111,7 +111,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 	guids := map[string]struct{}{}
 
 	// always fetch actualLRPs before desiredLRPs to ensure correctness
-	logger.Info("gathering-and-pruning-actual-lrps")
+	logger.Debug("gathering-and-pruning-actual-lrps")
 	lrpMetricCounter := &LRPMetricCounter{}
 
 	actuals, err := db.gatherAndPruneActualLRPs(logger, guids, lrpMetricCounter) // modifies guids
@@ -129,10 +129,10 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 
 		return &models.ConvergenceInput{}, err
 	}
-	logger.Info("succeeded-gathering-and-pruning-actual-lrps")
+	logger.Debug("succeeded-gathering-and-pruning-actual-lrps")
 
 	// always fetch desiredLRPs after actualLRPs to ensure correctness
-	logger.Info("gathering-and-pruning-desired-lrps")
+	logger.Debug("gathering-and-pruning-desired-lrps")
 	desireds, err := db.GatherAndPruneDesiredLRPs(logger, guids, lrpMetricCounter) // modifies guids
 	if err != nil {
 		logger.Error("failed-gathering-and-pruning-desired-lrps", err)
@@ -142,7 +142,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 
 		return &models.ConvergenceInput{}, err
 	}
-	logger.Info("succeeded-gathering-and-pruning-desired-lrps")
+	logger.Debug("succeeded-gathering-and-pruning-desired-lrps")
 
 	lrpMetricCounter.Send(logger)
 
@@ -191,7 +191,7 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 	var guidsLock, actualsLock, guidKeysToDeleteLock, indexKeysToDeleteLock,
 		crashingDesiredsLock, actualsToDeleteLock sync.Mutex
 
-	logger.Info("walking-actual-lrp-tree")
+	logger.Debug("walking-actual-lrp-tree")
 	works := []func(){}
 	crashingDesireds := map[string]struct{}{}
 
@@ -259,7 +259,7 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 			}
 		})
 	}
-	logger.Info("done-walking-actual-lrp-tree")
+	logger.Debug("done-walking-actual-lrp-tree")
 
 	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
@@ -338,7 +338,7 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 	var guidsLock, schedulingInfosLock, runInfosLock sync.Mutex
 
 	works := []func(){}
-	logger.Info("walking-desired-lrp-components-tree")
+	logger.Debug("walking-desired-lrp-components-tree")
 
 	for _, componentRoot := range desiredLRPsRoot.Nodes {
 		switch componentRoot.Key {
@@ -396,7 +396,7 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 	malformedSchedulingInfosMetric.Add(uint64(malformedSchedulingInfos))
 	malformedRunInfosMetric.Add(uint64(malformedRunInfos))
 
-	logger.Info("done-walking-desired-lrp-tree")
+	logger.Debug("done-walking-desired-lrp-tree")
 
 	desireds := make(map[string]*models.DesiredLRP)
 	var schedInfosToDelete []string

@@ -75,6 +75,12 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
+	logger = logger.WithData(lager.Data{
+		"actual_lrp_key":          request.ActualLrpKey,
+		"actual_lrp_instance_key": request.ActualLrpInstanceKey,
+		"net_info":                request.ActualLrpNetInfo,
+	})
+
 	before, after, err := h.db.StartActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
 	if err != nil {
 		response.Error = models.ConvertError(err)

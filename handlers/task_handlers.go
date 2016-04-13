@@ -113,6 +113,7 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
+		logger = logger.WithData(lager.Data{"task-guid": request.TaskGuid, "cell-id": request.CellId})
 		response.ShouldStart, err = h.db.StartTask(logger, request.TaskGuid, request.CellId)
 	}
 

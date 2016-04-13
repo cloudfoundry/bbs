@@ -133,9 +133,6 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Re
 func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("update-desired-lrp")
 
-	logger.Info("starting")
-	defer logger.Info("complete")
-
 	request := &models.UpdateDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
 	defer writeResponse(w, response)

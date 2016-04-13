@@ -119,7 +119,7 @@ func (db *ETCDDB) desiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 }
 
 func (db *ETCDDB) deserializeScheduleInfos(logger lager.Logger, nodes etcd.Nodes, filter models.DesiredLRPFilter) (map[string]*models.DesiredLRPSchedulingInfo, guidSet) {
-	logger.Info("deserializing-scheduling-infos", lager.Data{"count": len(nodes)})
+	logger.Debug("deserializing-scheduling-infos", lager.Data{"count": len(nodes)})
 
 	components := make(map[string]*models.DesiredLRPSchedulingInfo)
 	malformedModels := newGuidSet()
@@ -279,7 +279,6 @@ func (db *ETCDDB) createDesiredLRPSchedulingInfo(logger lager.Logger, scheduling
 		return err
 	}
 
-	logger.Info("persisting-scheduling-info")
 	_, err = db.client.Create(DesiredLRPSchedulingInfoSchemaPath(schedulingInfo.ProcessGuid), serializedSchedInfo, NO_TTL)
 	err = ErrorFromEtcdError(logger, err)
 	if err != nil {
@@ -287,7 +286,6 @@ func (db *ETCDDB) createDesiredLRPSchedulingInfo(logger lager.Logger, scheduling
 		return err
 	}
 
-	logger.Info("succeeded-persisting-scheduling-info")
 	return nil
 }
 
@@ -314,19 +312,17 @@ func (db *ETCDDB) createDesiredLRPRunInfo(logger lager.Logger, runInfo *models.D
 		return err
 	}
 
-	logger.Info("persisting-run-info")
 	_, err = db.client.Create(DesiredLRPRunInfoSchemaPath(runInfo.ProcessGuid), serializedRunInfo, NO_TTL)
 	if err != nil {
 		logger.Error("failed-persisting-run-info", err)
 		return ErrorFromEtcdError(logger, err)
 	}
-	logger.Info("succeeded-persisting-run-info")
 
 	return nil
 }
 
 func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
-	logger = logger.Session("update-desired-lrp", lager.Data{"process-guid": processGuid})
+	logger = logger.Session("update-desired-lrp-etcd", lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -378,7 +374,6 @@ func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) erro
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	logger.Info("deleting-scheduling-info")
 	_, schedulingInfoErr := db.client.Delete(DesiredLRPSchedulingInfoSchemaPath(processGuid), true)
 	schedulingInfoErr = ErrorFromEtcdError(logger, schedulingInfoErr)
 	if schedulingInfoErr != nil && schedulingInfoErr != models.ErrResourceNotFound {
@@ -386,7 +381,6 @@ func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) erro
 		return schedulingInfoErr
 	}
 
-	logger.Info("deleting-run-info")
 	_, runInfoErr := db.client.Delete(DesiredLRPRunInfoSchemaPath(processGuid), true)
 	runInfoErr = ErrorFromEtcdError(logger, runInfoErr)
 	if runInfoErr != nil && runInfoErr != models.ErrResourceNotFound {
