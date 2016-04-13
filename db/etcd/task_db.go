@@ -1,8 +1,6 @@
 package etcd
 
 import (
-	"fmt"
-
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -320,14 +318,4 @@ func (db *ETCDDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 
 	_, err = db.client.Delete(TaskSchemaPathByGuid(taskGuid), false)
 	return ErrorFromEtcdError(logger, err)
-}
-
-func validateStateTransition(from, to models.Task_State) error {
-	if (from == models.Task_Pending && to == models.Task_Running) ||
-		(from == models.Task_Running && to == models.Task_Completed) ||
-		(from == models.Task_Completed && to == models.Task_Resolving) {
-		return nil
-	} else {
-		return models.NewError(models.Error_InvalidStateTransition, fmt.Sprintf("Cannot transition from %s to %s", from.String(), to.String()))
-	}
 }

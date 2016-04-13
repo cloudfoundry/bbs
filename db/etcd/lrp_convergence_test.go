@@ -722,7 +722,14 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP.Instances = 2
 			etcdHelper.SetRawDesiredLRP(desiredLRP)
 
-			cellPresence := models.NewCellPresence(cellId, "cell.example.com", "the-zone", models.CellCapacity{128, 1024, 3}, []string{}, []string{})
+			cellPresence := models.NewCellPresence(
+				cellId,
+				"cell.example.com",
+				"the-zone",
+				models.CellCapacity{MemoryMb: 128, DiskMb: 1024, Containers: 3},
+				[]string{},
+				[]string{},
+			)
 			cells = models.CellSet{cellId: &cellPresence}
 		})
 
@@ -838,7 +845,14 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP.Domain = freshDomain
 			etcdHelper.SetRawDesiredLRP(desiredLRP)
 
-			cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.CellCapacity{128, 1024, 3}, []string{}, []string{})
+			cellPresence := models.NewCellPresence(
+				"cell-id",
+				"cell.example.com",
+				"the-zone",
+				models.CellCapacity{MemoryMb: 128, DiskMb: 1024, Containers: 3},
+				[]string{},
+				[]string{},
+			)
 
 			lrpKey0 = models.NewActualLRPKey(processGuid, 0, freshDomain)
 			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrpKey0, 1))
@@ -1204,7 +1218,7 @@ var _ = Describe("LRPConvergence", func() {
 					higherIndexActualLRP := &models.ActualLRP{
 						ActualLRPKey:         models.NewActualLRPKey(desiredLRP.ProcessGuid, index, desiredLRP.Domain),
 						ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", "cell-id"),
-						ActualLRPNetInfo:     models.NewActualLRPNetInfo("127.0.0.1", &models.PortMapping{8080, 80}),
+						ActualLRPNetInfo:     models.NewActualLRPNetInfo("127.0.0.1", &models.PortMapping{ContainerPort: 8080, HostPort: 80}),
 						State:                models.ActualLRPStateRunning,
 						Since:                clock.Now().UnixNano(),
 					}
@@ -1696,7 +1710,7 @@ func newUnstartableCrashedActualLRP(d *models.DesiredLRP, index int32) *models.A
 }
 
 func newCellPresence(cellID string) *models.CellPresence {
-	cellPresence := models.NewCellPresence(cellID, "1.2.3.4", "az-1", models.CellCapacity{128, 1024, 3}, []string{}, nil)
+	cellPresence := models.NewCellPresence(cellID, "1.2.3.4", "az-1", models.NewCellCapacity(128, 1024, 3), []string{}, nil)
 	return &cellPresence
 }
 
