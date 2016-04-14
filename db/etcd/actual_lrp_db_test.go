@@ -573,11 +573,9 @@ var _ = Describe("ActualLRPDB", func() {
 					instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", cellID)
 				})
 
-				It("does not error", func() {
-					Expect(claimErr).NotTo(HaveOccurred())
-				})
-
 				It("claims the actual LRP", func() {
+					Expect(claimErr).NotTo(HaveOccurred())
+
 					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -623,11 +621,9 @@ var _ = Describe("ActualLRPDB", func() {
 						clock.IncrementBySeconds(1)
 					})
 
-					It("does not return an error", func() {
-						Expect(claimErr).NotTo(HaveOccurred())
-					})
-
 					It("does not alter the state of the persisted LRP", func() {
+						Expect(claimErr).NotTo(HaveOccurred())
+
 						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 						Expect(err).NotTo(HaveOccurred())
 
@@ -933,11 +929,9 @@ var _ = Describe("ActualLRPDB", func() {
 						netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
 					})
 
-					It("does not return an error", func() {
-						Expect(startErr).NotTo(HaveOccurred())
-					})
-
 					It("promotes the persisted LRP to RUNNING", func() {
+						Expect(startErr).NotTo(HaveOccurred())
+
 						lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
 						Expect(err).NotTo(HaveOccurred())
 

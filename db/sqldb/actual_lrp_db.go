@@ -192,11 +192,12 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.PlacementError = ""
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
+		actualLRP.Since = db.clock.Now().UnixNano()
 
 		_, err = tx.Exec(`
 				UPDATE actual_lrps
 				SET state = ?, instance_guid = ?, cell_id = ?, placement_error = ?,
-					modification_tag_index = ?, net_info = ?
+					modification_tag_index = ?, net_info = ?, since = ?
 				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?`,
 			actualLRP.State,
 			actualLRP.ActualLRPInstanceKey.InstanceGuid,
@@ -204,6 +205,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 			actualLRP.PlacementError,
 			actualLRP.ModificationTag.Index,
 			[]byte{},
+			actualLRP.Since,
 			processGuid, index, false,
 		)
 		if err != nil {

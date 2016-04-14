@@ -151,11 +151,16 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 		return nil, nil, models.ErrActualLRPCannotBeClaimed
 	}
 
+	if lrp.State == models.ActualLRPStateClaimed && lrp.ActualLRPInstanceKey.Equal(instanceKey) {
+		return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: lrp}, nil
+	}
+
 	lrp.PlacementError = ""
 	lrp.State = models.ActualLRPStateClaimed
 	lrp.ActualLRPInstanceKey = *instanceKey
 	lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 	lrp.ModificationTag.Increment()
+	lrp.Since = db.clock.Now().UnixNano()
 
 	err = lrp.Validate()
 	if err != nil {
