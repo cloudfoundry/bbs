@@ -1,11 +1,13 @@
 package models_test
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -50,6 +52,10 @@ var _ = Describe("Task", func() {
 		"first_completed_at": 1393371971000000030,
 		"state": "Pending",
 		"annotation": "[{\"anything\": \"you want!\"}]... dude",
+		"properties": {
+			"some-key": "some-value",
+			"some-other-key": "some-other-value"
+		},
 		"egress_rules": [
 			{
 				"protocol": "tcp",
@@ -67,7 +73,7 @@ var _ = Describe("Task", func() {
 				"log": false
 			}
 		],
-		"completion_callback_url":"http://@a.b.c/d/e/f"
+		"completion_callback_url":"http://user:password@a.b.c/d/e/f"
 	}`
 
 		task = models.Task{
@@ -111,7 +117,11 @@ var _ = Describe("Task", func() {
 					},
 				},
 
-				Annotation:            `[{"anything": "you want!"}]... dude`,
+				Annotation: `[{"anything": "you want!"}]... dude`,
+				Properties: map[string]string{
+					"some-key":       "some-value",
+					"some-other-key": "some-other-value",
+				},
 				CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
 			},
 			TaskGuid:         "some-guid",
@@ -125,6 +135,23 @@ var _ = Describe("Task", func() {
 			Failed:           true,
 			FailureReason:    "because i said so",
 		}
+	})
+
+	Describe("serialization", func() {
+		It("successfully round trips through json and protobuf", func() {
+			jsonSerialization, err := json.Marshal(task)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(jsonSerialization).To(MatchJSON(taskPayload))
+
+			protoSerialization, err := proto.Marshal(&task)
+			Expect(err).NotTo(HaveOccurred())
+
+			var protoDeserialization models.Task
+			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(protoDeserialization).To(Equal(task))
+		})
 	})
 
 	Describe("VersionDownTo V0", func() {
