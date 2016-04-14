@@ -185,7 +185,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		beforeDesiredLRP, err = db.selectDesiredLRPByGuid(logger, processGuid, tx, LockForShare)
+		beforeDesiredLRP, err = db.selectDesiredLRPByGuid(logger, processGuid, tx, LockForUpdate)
 		if err != nil {
 			logger.Error("failed-lock-desired", err)
 			return err
@@ -241,7 +241,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		err := db.lockDesiredLRPByGuidForShare(logger, processGuid, tx)
+		err := db.lockDesiredLRPByGuidForUpdate(logger, processGuid, tx)
 		if err != nil {
 			logger.Error("failed-lock-desired", err)
 			return err
@@ -316,8 +316,8 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	return schedulingInfo, nil
 }
 
-func (db *SQLDB) lockDesiredLRPByGuidForShare(logger lager.Logger, processGuid string, tx *sql.Tx) error {
-	row := tx.QueryRow("SELECT COUNT(*) FROM desired_lrps WHERE process_guid = ? LOCK IN SHARE MODE", processGuid)
+func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid string, tx *sql.Tx) error {
+	row := tx.QueryRow("SELECT COUNT(*) FROM desired_lrps WHERE process_guid = ? FOR UPDATE", processGuid)
 	var count int
 	err := row.Scan(&count)
 	if err != nil {

@@ -120,7 +120,7 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForShare(logger, processGuid, index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
@@ -175,7 +175,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 	var actualLRP *models.ActualLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForShare(logger, processGuid, index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
@@ -233,7 +233,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForShare(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
 		if err == models.ErrResourceNotFound {
 			actualLRP, err = db.createRunningActualLRP(logger, key, instanceKey, netInfo, tx)
 			return err
@@ -313,7 +313,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForShare(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
@@ -389,7 +389,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForShare(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
@@ -617,7 +617,7 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 	return result, nil
 }
 
-func (db *SQLDB) fetchActualLRPForShare(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
 	expireTime := db.clock.Now().Round(time.Second).UnixNano()
 	conditions := map[whereClause]interface{}{
 		whereProcessGuidEquals:   processGuid,
@@ -629,7 +629,7 @@ func (db *SQLDB) fetchActualLRPForShare(logger lager.Logger, processGuid string,
 		conditions[whereExpireTimeGreaterThan] = expireTime
 	}
 
-	groups, err := db.selectActualLRPs(logger, tx, conditions, LockForShare)
+	groups, err := db.selectActualLRPs(logger, tx, conditions, LockForUpdate)
 	if err != nil {
 		return nil, err
 	}

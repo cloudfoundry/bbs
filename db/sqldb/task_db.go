@@ -102,7 +102,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 	var started bool
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		task, err := db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
 			logger.Error("failed-locking-task", err)
 			return err
@@ -149,7 +149,7 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
+		task, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
 			logger.Error("failed-locking-task", err)
 			return err
@@ -178,7 +178,7 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
+		task, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
 			logger.Error("failed-locking-task", err)
 			return err
@@ -209,7 +209,7 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		task, err = db.fetchTaskForShare(logger, taskGuid, tx)
+		task, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
 			logger.Error("failed-locking-task", err)
 			return err
@@ -236,7 +236,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		task, err := db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
 			logger.Error("failed-locking-task", err)
 			return err
@@ -272,7 +272,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		task, err := db.fetchTaskForShare(logger, taskGuid, tx)
+		task, err := db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
 			logger.Error("failed-locking-task", err)
 			return err
@@ -330,8 +330,8 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	return nil
 }
 
-func (db *SQLDB) fetchTaskForShare(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
-	row := tx.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = ? LOCK IN SHARE MODE", taskGuid)
+func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
+	row := tx.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = ? FOR UPDATE", taskGuid)
 	return db.fetchTask(logger, row, tx)
 }
 
