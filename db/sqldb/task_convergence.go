@@ -72,6 +72,8 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 }
 
 func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) int64 {
+	logger = logger.Session("fail-expired-pending-tasks")
+
 	result, err := db.db.Exec(`
 		UPDATE tasks
 		SET failed = ?, failure_reason = ?, result = ?
@@ -92,6 +94,8 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 }
 
 func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, kickTasksDuration, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
+	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
+
 	rows, err := db.db.Query(`
 		SELECT `+taskColumns+` FROM tasks
 		WHERE state = ? AND updated_at < ? AND created_at > ?
@@ -125,6 +129,8 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 }
 
 func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet models.CellSet) int64 {
+	logger = logger.Session("fail-tasks-with-disappeared-cells")
+
 	values := make([]interface{}, 0, 4+len(cellSet))
 	values = append(values,
 		true, "cell disappeared before completion", "",
@@ -160,6 +166,8 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 }
 
 func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDuration time.Duration) {
+	logger = logger.Session("demote-kickable-resolving-tasks")
+
 	_, err := db.db.Exec(`
 		UPDATE tasks
 		SET state = ?
@@ -173,6 +181,8 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 }
 
 func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireCompletedTaskDuration time.Duration) int64 {
+	logger = logger.Session("delete-expired-completed-tasks")
+
 	result, err := db.db.Exec(`
 		DELETE FROM tasks
 		WHERE state = ? AND first_completed_at < ?
@@ -193,6 +203,8 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 }
 
 func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
+	logger = logger.Session("get-kickable-complete-tasks-for-completion")
+
 	rows, err := db.db.Query(`
 		SELECT `+taskColumns+` FROM tasks
 		WHERE state = ? AND updated_at < ?
@@ -225,6 +237,8 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 }
 
 func (db *SQLDB) countTasks(logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
+	logger = logger.Session("count-tasks")
+
 	row := db.db.QueryRow(`
 		SELECT
 			COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,

@@ -100,6 +100,8 @@ func newConvergence(db *SQLDB) *convergence {
 
 // Adds stale UNCLAIMED Actual LRPs to the list of start requests.
 func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Time) {
+	logger = logger.Session("stale-unclaimed-actual-lrps")
+
 	rows, err := c.db.Query(`
 		SELECT `+schedulingInfoColumns+`, actual_lrps.instance_index
 		FROM desired_lrps
@@ -131,6 +133,8 @@ func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Tim
 // Adds CRASHED Actual LRPs that can be restarted to the list of start requests
 // and transitions them to UNCLAIMED.
 func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
+
+	logger = logger.Session("crashed-actual-lrps")
 	restartCalculator := models.NewDefaultRestartCalculator()
 
 	rows, err := c.db.Query(`
@@ -181,6 +185,8 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 // Adds orphaned Actual LRPs (ones with no corresponding Desired LRP) to the
 // list of keys to retire.
 func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
+	logger = logger.Session("orphaned-actual-lrps")
+
 	rows, err := c.db.Query(`
 		SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
 		FROM actual_lrps
@@ -217,6 +223,8 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 // Creates and adds missing Actual LRPs to the list of start requests.
 // Adds extra Actual LRPs  to the list of keys to retire.
 func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}) {
+	logger = logger.Session("lrp-instance-counts")
+
 	rows, err := c.db.Query(`
 		SELECT `+schedulingInfoColumns+`,
 			COUNT(actual_lrps.instance_index) AS actual_instances,
@@ -290,6 +298,8 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
 // convergence) and add them to the list of start requests.
 func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
+	logger = logger.Session("actual-lrps-with-missing-cells")
+
 	values := make([]interface{}, 0, 1+len(cellSet))
 	values = append(values, false)
 	keysWithMissingCells := make([]*models.ActualLRPKeyWithSchedulingInfo, 0)
@@ -389,6 +399,8 @@ func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest
 }
 
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
+	logger = logger.Session("prune-domains")
+
 	_, err := db.db.Exec(`
 		DELETE FROM domains
 		WHERE expire_time <= ?
@@ -400,6 +412,8 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 }
 
 func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
+	logger = logger.Session("prune-evacuating-actual-lrps")
+
 	_, err := db.db.Exec(`
 		DELETE FROM actual_lrps
 		WHERE evacuating = ? AND expire_time <= ?
@@ -431,6 +445,8 @@ func (db *SQLDB) emitDomainMetrics(logger lager.Logger, domainSet map[string]str
 }
 
 func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
+	logger = logger.Session("emit-lrp-metrics")
+
 	var desiredInstances, claimedInstances, unclaimedInstances, runningInstances, crashedInstances, crashingDesireds int
 
 	row := db.db.QueryRow(`
