@@ -77,6 +77,7 @@ type DesiredLRPRunInfo struct {
 	LegacyDownloadUser            string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	Properties                    map[string]string     `protobuf:"bytes,18,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -190,6 +191,13 @@ func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatesPath() string {
 func (m *DesiredLRPRunInfo) GetVolumeMounts() []*VolumeMount {
 	if m != nil {
 		return m.VolumeMounts
+	}
+	return nil
+}
+
+func (m *DesiredLRPRunInfo) GetProperties() map[string]string {
+	if m != nil {
+		return m.Properties
 	}
 	return nil
 }
@@ -318,6 +326,7 @@ type DesiredLRP struct {
 	LegacyDownloadUser            string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,25,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	Properties                    map[string]string      `protobuf:"bytes,26,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -491,6 +500,13 @@ func (m *DesiredLRP) GetVolumeMounts() []*VolumeMount {
 	return nil
 }
 
+func (m *DesiredLRP) GetProperties() map[string]string {
+	if m != nil {
+		return m.Properties
+	}
+	return nil
+}
+
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -627,6 +643,14 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	}
 	for i := range this.VolumeMounts {
 		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
+			return false
+		}
+	}
+	if len(this.Properties) != len(that1.Properties) {
+		return false
+	}
+	for i := range this.Properties {
+		if this.Properties[i] != that1.Properties[i] {
 			return false
 		}
 	}
@@ -895,6 +919,14 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
+	if len(this.Properties) != len(that1.Properties) {
+		return false
+	}
+	for i := range this.Properties {
+		if this.Properties[i] != that1.Properties[i] {
+			return false
+		}
+	}
 	return true
 }
 func (this *DesiredLRPSchedulingInfo) GoString() string {
@@ -915,6 +947,16 @@ func (this *DesiredLRPRunInfo) GoString() string {
 	if this == nil {
 		return "nil"
 	}
+	keysForProperties := make([]string, 0, len(this.Properties))
+	for k, _ := range this.Properties {
+		keysForProperties = append(keysForProperties, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
+	mapStringForProperties := "map[string]string{"
+	for _, k := range keysForProperties {
+		mapStringForProperties += fmt.Sprintf("%#v: %#v,", k, this.Properties[k])
+	}
+	mapStringForProperties += "}"
 	s := strings.Join([]string{`&models.DesiredLRPRunInfo{` +
 		`DesiredLRPKey:` + strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1),
 		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%#v", this.EnvironmentVariables), `&`, ``, 1),
@@ -932,7 +974,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
+		`Properties:` + mapStringForProperties + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -987,6 +1030,16 @@ func (this *DesiredLRP) GoString() string {
 	if this == nil {
 		return "nil"
 	}
+	keysForProperties := make([]string, 0, len(this.Properties))
+	for k, _ := range this.Properties {
+		keysForProperties = append(keysForProperties, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
+	mapStringForProperties := "map[string]string{"
+	for _, k := range keysForProperties {
+		mapStringForProperties += fmt.Sprintf("%#v: %#v,", k, this.Properties[k])
+	}
+	mapStringForProperties += "}"
 	s := strings.Join([]string{`&models.DesiredLRP{` +
 		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
 		`Domain:` + fmt.Sprintf("%#v", this.Domain),
@@ -1012,7 +1065,8 @@ func (this *DesiredLRP) GoString() string {
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
+		`Properties:` + mapStringForProperties + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1250,6 +1304,30 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 				return 0, err
 			}
 			i += n
+		}
+	}
+	if len(m.Properties) > 0 {
+		keysForProperties := make([]string, 0, len(m.Properties))
+		for k, _ := range m.Properties {
+			keysForProperties = append(keysForProperties, k)
+		}
+		github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
+		for _, k := range keysForProperties {
+			data[i] = 0x92
+			i++
+			data[i] = 0x1
+			i++
+			v := m.Properties[k]
+			mapSize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			i = encodeVarintDesiredLrp(data, i, uint64(mapSize))
+			data[i] = 0xa
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(len(k)))
+			i += copy(data[i:], k)
+			data[i] = 0x12
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(len(v)))
+			i += copy(data[i:], v)
 		}
 	}
 	return i, nil
@@ -1591,6 +1669,30 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	if len(m.Properties) > 0 {
+		keysForProperties := make([]string, 0, len(m.Properties))
+		for k, _ := range m.Properties {
+			keysForProperties = append(keysForProperties, k)
+		}
+		github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
+		for _, k := range keysForProperties {
+			data[i] = 0xd2
+			i++
+			data[i] = 0x1
+			i++
+			v := m.Properties[k]
+			mapSize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			i = encodeVarintDesiredLrp(data, i, uint64(mapSize))
+			data[i] = 0xa
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(len(k)))
+			i += copy(data[i:], k)
+			data[i] = 0x12
+			i++
+			i = encodeVarintDesiredLrp(data, i, uint64(len(v)))
+			i += copy(data[i:], v)
+		}
+	}
 	return i, nil
 }
 
@@ -1698,6 +1800,14 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		for _, e := range m.VolumeMounts {
 			l = e.Size()
 			n += 2 + l + sovDesiredLrp(uint64(l))
+		}
+	}
+	if len(m.Properties) > 0 {
+		for k, v := range m.Properties {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			n += mapEntrySize + 2 + sovDesiredLrp(uint64(mapEntrySize))
 		}
 	}
 	return n
@@ -1832,6 +1942,14 @@ func (m *DesiredLRP) Size() (n int) {
 			n += 2 + l + sovDesiredLrp(uint64(l))
 		}
 	}
+	if len(m.Properties) > 0 {
+		for k, v := range m.Properties {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			n += mapEntrySize + 2 + sovDesiredLrp(uint64(mapEntrySize))
+		}
+	}
 	return n
 }
 
@@ -1868,6 +1986,16 @@ func (this *DesiredLRPRunInfo) String() string {
 	if this == nil {
 		return "nil"
 	}
+	keysForProperties := make([]string, 0, len(this.Properties))
+	for k, _ := range this.Properties {
+		keysForProperties = append(keysForProperties, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
+	mapStringForProperties := "map[string]string{"
+	for _, k := range keysForProperties {
+		mapStringForProperties += fmt.Sprintf("%v: %v,", k, this.Properties[k])
+	}
+	mapStringForProperties += "}"
 	s := strings.Join([]string{`&DesiredLRPRunInfo{`,
 		`DesiredLRPKey:` + strings.Replace(strings.Replace(this.DesiredLRPKey.String(), "DesiredLRPKey", "DesiredLRPKey", 1), `&`, ``, 1) + `,`,
 		`EnvironmentVariables:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1), `&`, ``, 1) + `,`,
@@ -1886,6 +2014,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
+		`Properties:` + mapStringForProperties + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1950,6 +2079,16 @@ func (this *DesiredLRP) String() string {
 	if this == nil {
 		return "nil"
 	}
+	keysForProperties := make([]string, 0, len(this.Properties))
+	for k, _ := range this.Properties {
+		keysForProperties = append(keysForProperties, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
+	mapStringForProperties := "map[string]string{"
+	for _, k := range keysForProperties {
+		mapStringForProperties += fmt.Sprintf("%v: %v,", k, this.Properties[k])
+	}
+	mapStringForProperties += "}"
 	s := strings.Join([]string{`&DesiredLRP{`,
 		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
 		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
@@ -1976,6 +2115,7 @@ func (this *DesiredLRP) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
+		`Properties:` + mapStringForProperties + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2641,6 +2781,100 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 18:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var keykey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				keykey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			var stringLenmapkey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLenmapkey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if stringLenmapkey < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			postStringIndexmapkey := iNdEx + int(stringLenmapkey)
+			if postStringIndexmapkey > l {
+				return io.ErrUnexpectedEOF
+			}
+			mapkey := string(data[iNdEx:postStringIndexmapkey])
+			iNdEx = postStringIndexmapkey
+			var valuekey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				valuekey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			var stringLenmapvalue uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if stringLenmapvalue < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			postStringIndexmapvalue := iNdEx + int(stringLenmapvalue)
+			if postStringIndexmapvalue > l {
+				return io.ErrUnexpectedEOF
+			}
+			mapvalue := string(data[iNdEx:postStringIndexmapvalue])
+			iNdEx = postStringIndexmapvalue
+			if m.Properties == nil {
+				m.Properties = make(map[string]string)
+			}
+			m.Properties[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -3762,6 +3996,100 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 26:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var keykey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				keykey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			var stringLenmapkey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLenmapkey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if stringLenmapkey < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			postStringIndexmapkey := iNdEx + int(stringLenmapkey)
+			if postStringIndexmapkey > l {
+				return io.ErrUnexpectedEOF
+			}
+			mapkey := string(data[iNdEx:postStringIndexmapkey])
+			iNdEx = postStringIndexmapkey
+			var valuekey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				valuekey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			var stringLenmapvalue uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if stringLenmapvalue < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			postStringIndexmapvalue := iNdEx + int(stringLenmapvalue)
+			if postStringIndexmapvalue > l {
+				return io.ErrUnexpectedEOF
+			}
+			mapvalue := string(data[iNdEx:postStringIndexmapvalue])
+			iNdEx = postStringIndexmapvalue
+			if m.Properties == nil {
+				m.Properties = make(map[string]string)
+			}
+			m.Properties[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
