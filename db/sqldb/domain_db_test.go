@@ -1,6 +1,7 @@
 package sqldb_test
 
 import (
+	"math"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -65,6 +66,26 @@ var _ = Describe("DomainDB", func() {
 				Expect(domainName).To(Equal(domain))
 				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(5432) * time.Second).UnixNano()
 				Expect(expireTime).To(BeEquivalentTo(expectedExpireTime))
+			})
+
+			It("never expires when the ttl is Zero", func() {
+				domain := "my-awesome-domain"
+
+				bbsErr := sqlDB.UpsertDomain(logger, domain, 0)
+				Expect(bbsErr).NotTo(HaveOccurred())
+
+				rows, err := db.Query("SELECT * FROM domains;")
+				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
+
+				var domainName string
+				var expireTime int64
+
+				Expect(rows.Next()).To(BeTrue())
+				err = rows.Scan(&domainName, &expireTime)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(domainName).To(Equal(domain))
+				Expect(expireTime).To(BeNumerically("==", math.MaxInt64))
 			})
 
 			Context("when the domain is too long", func() {

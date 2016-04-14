@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"math"
 	"time"
 
 	"github.com/pivotal-golang/lager"
@@ -44,6 +45,9 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 	defer logger.Debug("complete")
 
 	expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
+	if ttl == 0 {
+		expireTime = math.MaxInt64
+	}
 	_, err := db.db.Exec(
 		`INSERT INTO domains (domain, expire_time) VALUES (?, ?)
 										ON DUPLICATE KEY UPDATE expire_time = ?`,
