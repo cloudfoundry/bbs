@@ -187,6 +187,10 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 			return models.ErrActualLRPCannotBeClaimed
 		}
 
+		if actualLRP.State == models.ActualLRPStateClaimed && actualLRP.ActualLRPInstanceKey.Equal(instanceKey) {
+			return nil
+		}
+
 		actualLRP.ModificationTag.Increment()
 		actualLRP.State = models.ActualLRPStateClaimed
 		actualLRP.ActualLRPInstanceKey = *instanceKey

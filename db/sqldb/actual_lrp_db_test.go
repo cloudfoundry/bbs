@@ -591,13 +591,18 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 					})
 
-					It("increments the modification tag", func() {
-						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
-						Expect(err).NotTo(HaveOccurred())
+					It("does not update the actual lrp", func() {
 						expectedActualLRP.State = models.ActualLRPStateClaimed
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
-						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+
+						fakeClock.Increment(time.Hour)
+
+						beforeActualLRP, afterActualLRP, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(beforeActualLRP).To(Equal(afterActualLRP))
+						Expect(afterActualLRP).To(Equal(&models.ActualLRPGroup{Instance: expectedActualLRP}))
 
 						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
 						Expect(err).NotTo(HaveOccurred())
