@@ -179,8 +179,14 @@ func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index 
 }
 
 func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
-	logger.Debug("starting")
-	defer logger.Debug("completed")
+	logger = logger.WithData(lager.Data{
+		"actual_lrp_key":          key,
+		"actual_lrp_instance_key": instanceKey,
+		"net_info":                netInfo,
+	})
+
+	logger.Info("starting")
+	defer logger.Info("completed")
 
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	bbsErr := models.ConvertError(err)
