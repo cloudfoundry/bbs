@@ -65,6 +65,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		LegacyDownloadUser:            runInfo.LegacyDownloadUser,
 		TrustedSystemCertificatesPath: runInfo.TrustedSystemCertificatesPath,
 		VolumeMounts:                  runInfo.VolumeMounts,
+		Properties:                    runInfo.Properties,
 	}
 }
 
@@ -185,6 +186,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.LegacyDownloadUser,
 		d.TrustedSystemCertificatesPath,
 		d.VolumeMounts,
+		d.Properties,
 	)
 }
 
@@ -433,6 +435,7 @@ func NewDesiredLRPRunInfo(
 	legacyDownloadUser string,
 	trustedSystemCertificatesPath string,
 	volumeMounts []*VolumeMount,
+	properties map[string]string,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -452,6 +455,7 @@ func NewDesiredLRPRunInfo(
 		LegacyDownloadUser:            legacyDownloadUser,
 		TrustedSystemCertificatesPath: trustedSystemCertificatesPath,
 		VolumeMounts:                  volumeMounts,
+		Properties:                    properties,
 	}
 }
 
