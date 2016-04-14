@@ -160,6 +160,12 @@ var databaseConnectionString = flag.String(
 	"SQL database connection string",
 )
 
+var maxDatabaseConnections = flag.Int(
+	"maxDatabaseConnections",
+	200,
+	"Max numbers of SQL database connections",
+)
+
 var databaseDriver = flag.String(
 	"databaseDriver",
 	"mysql",
@@ -238,6 +244,7 @@ func main() {
 		if err != nil {
 			logger.Fatal("failed-to-open-sql", err)
 		}
+		sqlConn.SetMaxOpenConns(*maxDatabaseConnections)
 
 		err = sqlConn.Ping()
 		if err != nil {
