@@ -8,6 +8,7 @@ import "environment_variables.proto";
 import "security_group.proto";
 import "cached_dependency.proto";
 import "volume_mount.proto";
+import "network.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
@@ -30,7 +31,7 @@ message TaskDefinition {
   optional string legacy_download_user = 16 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
   optional string trusted_system_certificates_path = 17 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 18 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
-  map<string, string> network_properties = 19 [(gogoproto.jsontag) = "network_properties,omitempty"];
+  optional Network network = 19 [(gogoproto.jsontag) = "network,omitempty"];
 }
 
 message Task {

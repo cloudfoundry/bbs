@@ -52,9 +52,11 @@ var _ = Describe("Task", func() {
 		"first_completed_at": 1393371971000000030,
 		"state": "Pending",
 		"annotation": "[{\"anything\": \"you want!\"}]... dude",
-		"network_properties": {
-			"some-key": "some-value",
-			"some-other-key": "some-other-value"
+		"network": {
+			"properties": {
+				"some-key": "some-value",
+				"some-other-key": "some-other-value"
+			}
 		},
 		"egress_rules": [
 			{
@@ -118,9 +120,11 @@ var _ = Describe("Task", func() {
 				},
 
 				Annotation: `[{"anything": "you want!"}]... dude`,
-				NetworkProperties: map[string]string{
-					"some-key":       "some-value",
-					"some-other-key": "some-other-value",
+				Network: &models.Network{
+					Properties: map[string]string{
+						"some-key":       "some-value",
+						"some-other-key": "some-other-value",
+					},
 				},
 				CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
 			},

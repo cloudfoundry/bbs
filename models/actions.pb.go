@@ -20,6 +20,7 @@
 		events.proto
 		lrp_convergence_request.proto
 		modification_tag.proto
+		network.proto
 		ping.proto
 		security_group.proto
 		task.proto

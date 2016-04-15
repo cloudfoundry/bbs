@@ -59,9 +59,11 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		LogGuid:     "some-log-guid",
 		MetricsGuid: "some-metrics-guid",
 		Annotation:  "some-annotation",
-		NetworkProperties: map[string]string{
-			"some-key":       "some-value",
-			"some-other-key": "some-other-value",
+		Network: &models.Network{
+			Properties: map[string]string{
+				"some-key":       "some-value",
+				"some-other-key": "some-other-value",
+			},
 		},
 		EgressRules: []*models.SecurityGroupRule{{
 			Protocol:     models.TCPProtocol,
@@ -129,9 +131,11 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 			},
 		},
 		Annotation: `[{"anything": "you want!"}]... dude`,
-		NetworkProperties: map[string]string{
-			"some-key":       "some-value",
-			"some-other-key": "some-other-value",
+		Network: &models.Network{
+			Properties: map[string]string{
+				"some-key":       "some-value",
+				"some-other-key": "some-other-value",
+			},
 		},
 		LegacyDownloadUser:            "legacy-jim",
 		TrustedSystemCertificatesPath: "/etc/somepath",

@@ -65,7 +65,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		LegacyDownloadUser:            runInfo.LegacyDownloadUser,
 		TrustedSystemCertificatesPath: runInfo.TrustedSystemCertificatesPath,
 		VolumeMounts:                  runInfo.VolumeMounts,
-		NetworkProperties:             runInfo.NetworkProperties,
+		Network:                       runInfo.Network,
 	}
 }
 
@@ -95,6 +95,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.LegacyDownloadUser = runInfo.LegacyDownloadUser
 	desiredLRP.TrustedSystemCertificatesPath = runInfo.TrustedSystemCertificatesPath
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
+	desiredLRP.Network = runInfo.Network
 }
 
 func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLRP {
@@ -186,7 +187,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.LegacyDownloadUser,
 		d.TrustedSystemCertificatesPath,
 		d.VolumeMounts,
-		d.NetworkProperties,
+		d.Network,
 	)
 }
 
@@ -435,7 +436,7 @@ func NewDesiredLRPRunInfo(
 	legacyDownloadUser string,
 	trustedSystemCertificatesPath string,
 	volumeMounts []*VolumeMount,
-	networkProperties map[string]string,
+	network *Network,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -455,7 +456,7 @@ func NewDesiredLRPRunInfo(
 		LegacyDownloadUser:            legacyDownloadUser,
 		TrustedSystemCertificatesPath: trustedSystemCertificatesPath,
 		VolumeMounts:                  volumeMounts,
-		NetworkProperties:             networkProperties,
+		Network:                       network,
 	}
 }
 

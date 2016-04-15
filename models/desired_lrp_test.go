@@ -245,10 +245,12 @@ var _ = Describe("DesiredLRP", func() {
       "index": 0
     },
     "trusted_system_certificates_path": "/etc/cf-system-certificates",
-    "network_properties": {
-      "key": "value",
-      "another_key": "another_value"
-    }
+    "network": {
+			"properties": {
+				"key": "value",
+				"another_key": "another_value"
+			}
+		}
   }`
 
 	BeforeEach(func() {
