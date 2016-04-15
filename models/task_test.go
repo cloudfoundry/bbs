@@ -52,7 +52,7 @@ var _ = Describe("Task", func() {
 		"first_completed_at": 1393371971000000030,
 		"state": "Pending",
 		"annotation": "[{\"anything\": \"you want!\"}]... dude",
-		"properties": {
+		"network_properties": {
 			"some-key": "some-value",
 			"some-other-key": "some-other-value"
 		},
@@ -118,7 +118,7 @@ var _ = Describe("Task", func() {
 				},
 
 				Annotation: `[{"anything": "you want!"}]... dude`,
-				Properties: map[string]string{
+				NetworkProperties: map[string]string{
 					"some-key":       "some-value",
 					"some-other-key": "some-other-value",
 				},

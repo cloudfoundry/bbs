@@ -85,7 +85,7 @@ type TaskDefinition struct {
 	LegacyDownloadUser            string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,18,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
-	Properties                    map[string]string      `protobuf:"bytes,19,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	NetworkProperties             map[string]string      `protobuf:"bytes,19,rep,name=network_properties" json:"network_properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
@@ -217,9 +217,9 @@ func (m *TaskDefinition) GetVolumeMounts() []*VolumeMount {
 	return nil
 }
 
-func (m *TaskDefinition) GetProperties() map[string]string {
+func (m *TaskDefinition) GetNetworkProperties() map[string]string {
 	if m != nil {
-		return m.Properties
+		return m.NetworkProperties
 	}
 	return nil
 }
@@ -415,11 +415,11 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if len(this.Properties) != len(that1.Properties) {
+	if len(this.NetworkProperties) != len(that1.NetworkProperties) {
 		return false
 	}
-	for i := range this.Properties {
-		if this.Properties[i] != that1.Properties[i] {
+	for i := range this.NetworkProperties {
+		if this.NetworkProperties[i] != that1.NetworkProperties[i] {
 			return false
 		}
 	}
@@ -484,16 +484,16 @@ func (this *TaskDefinition) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	keysForProperties := make([]string, 0, len(this.Properties))
-	for k, _ := range this.Properties {
-		keysForProperties = append(keysForProperties, k)
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-	mapStringForProperties := "map[string]string{"
-	for _, k := range keysForProperties {
-		mapStringForProperties += fmt.Sprintf("%#v: %#v,", k, this.Properties[k])
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%#v: %#v,", k, this.NetworkProperties[k])
 	}
-	mapStringForProperties += "}"
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&models.TaskDefinition{` +
 		`RootFs:` + fmt.Sprintf("%#v", this.RootFs),
 		`EnvironmentVariables:` + fmt.Sprintf("%#v", this.EnvironmentVariables),
@@ -513,7 +513,7 @@ func (this *TaskDefinition) GoString() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
 		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Properties:` + mapStringForProperties + `}`}, ", ")
+		`NetworkProperties:` + mapStringForNetworkProperties + `}`}, ", ")
 	return s
 }
 func (this *Task) GoString() string {
@@ -691,18 +691,18 @@ func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
-	if len(m.Properties) > 0 {
-		keysForProperties := make([]string, 0, len(m.Properties))
-		for k, _ := range m.Properties {
-			keysForProperties = append(keysForProperties, k)
+	if len(m.NetworkProperties) > 0 {
+		keysForNetworkProperties := make([]string, 0, len(m.NetworkProperties))
+		for k, _ := range m.NetworkProperties {
+			keysForNetworkProperties = append(keysForNetworkProperties, k)
 		}
-		github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-		for _, k := range keysForProperties {
+		github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+		for _, k := range keysForNetworkProperties {
 			data[i] = 0x9a
 			i++
 			data[i] = 0x1
 			i++
-			v := m.Properties[k]
+			v := m.NetworkProperties[k]
 			mapSize := 1 + len(k) + sovTask(uint64(len(k))) + 1 + len(v) + sovTask(uint64(len(v)))
 			i = encodeVarintTask(data, i, uint64(mapSize))
 			data[i] = 0xa
@@ -866,8 +866,8 @@ func (m *TaskDefinition) Size() (n int) {
 			n += 2 + l + sovTask(uint64(l))
 		}
 	}
-	if len(m.Properties) > 0 {
-		for k, v := range m.Properties {
+	if len(m.NetworkProperties) > 0 {
+		for k, v := range m.NetworkProperties {
 			_ = k
 			_ = v
 			mapEntrySize := 1 + len(k) + sovTask(uint64(len(k))) + 1 + len(v) + sovTask(uint64(len(v)))
@@ -919,16 +919,16 @@ func (this *TaskDefinition) String() string {
 	if this == nil {
 		return "nil"
 	}
-	keysForProperties := make([]string, 0, len(this.Properties))
-	for k, _ := range this.Properties {
-		keysForProperties = append(keysForProperties, k)
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-	mapStringForProperties := "map[string]string{"
-	for _, k := range keysForProperties {
-		mapStringForProperties += fmt.Sprintf("%v: %v,", k, this.Properties[k])
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%v: %v,", k, this.NetworkProperties[k])
 	}
-	mapStringForProperties += "}"
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&TaskDefinition{`,
 		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
 		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
@@ -948,7 +948,7 @@ func (this *TaskDefinition) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
-		`Properties:` + mapStringForProperties + `,`,
+		`NetworkProperties:` + mapStringForNetworkProperties + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1434,7 +1434,7 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 19:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NetworkProperties", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1521,10 +1521,10 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			mapvalue := string(data[iNdEx:postStringIndexmapvalue])
 			iNdEx = postStringIndexmapvalue
-			if m.Properties == nil {
-				m.Properties = make(map[string]string)
+			if m.NetworkProperties == nil {
+				m.NetworkProperties = make(map[string]string)
 			}
-			m.Properties[mapkey] = mapvalue
+			m.NetworkProperties[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

@@ -245,7 +245,7 @@ var _ = Describe("DesiredLRP", func() {
       "index": 0
     },
     "trusted_system_certificates_path": "/etc/cf-system-certificates",
-    "properties": {
+    "network_properties": {
       "key": "value",
       "another_key": "another_value"
     }
