@@ -59,7 +59,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		LogGuid:     "some-log-guid",
 		MetricsGuid: "some-metrics-guid",
 		Annotation:  "some-annotation",
-		Properties: map[string]string{
+		NetworkProperties: map[string]string{
 			"some-key":       "some-value",
 			"some-other-key": "some-other-value",
 		},
@@ -129,7 +129,7 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 			},
 		},
 		Annotation: `[{"anything": "you want!"}]... dude`,
-		Properties: map[string]string{
+		NetworkProperties: map[string]string{
 			"some-key":       "some-value",
 			"some-other-key": "some-other-value",
 		},

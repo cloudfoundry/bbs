@@ -77,7 +77,7 @@ type DesiredLRPRunInfo struct {
 	LegacyDownloadUser            string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
-	Properties                    map[string]string     `protobuf:"bytes,18,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	NetworkProperties             map[string]string     `protobuf:"bytes,18,rep,name=network_properties" json:"network_properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -195,9 +195,9 @@ func (m *DesiredLRPRunInfo) GetVolumeMounts() []*VolumeMount {
 	return nil
 }
 
-func (m *DesiredLRPRunInfo) GetProperties() map[string]string {
+func (m *DesiredLRPRunInfo) GetNetworkProperties() map[string]string {
 	if m != nil {
-		return m.Properties
+		return m.NetworkProperties
 	}
 	return nil
 }
@@ -326,7 +326,7 @@ type DesiredLRP struct {
 	LegacyDownloadUser            string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,25,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
-	Properties                    map[string]string      `protobuf:"bytes,26,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	NetworkProperties             map[string]string      `protobuf:"bytes,26,rep,name=network_properties" json:"network_properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -500,9 +500,9 @@ func (m *DesiredLRP) GetVolumeMounts() []*VolumeMount {
 	return nil
 }
 
-func (m *DesiredLRP) GetProperties() map[string]string {
+func (m *DesiredLRP) GetNetworkProperties() map[string]string {
 	if m != nil {
-		return m.Properties
+		return m.NetworkProperties
 	}
 	return nil
 }
@@ -646,11 +646,11 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if len(this.Properties) != len(that1.Properties) {
+	if len(this.NetworkProperties) != len(that1.NetworkProperties) {
 		return false
 	}
-	for i := range this.Properties {
-		if this.Properties[i] != that1.Properties[i] {
+	for i := range this.NetworkProperties {
+		if this.NetworkProperties[i] != that1.NetworkProperties[i] {
 			return false
 		}
 	}
@@ -919,11 +919,11 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if len(this.Properties) != len(that1.Properties) {
+	if len(this.NetworkProperties) != len(that1.NetworkProperties) {
 		return false
 	}
-	for i := range this.Properties {
-		if this.Properties[i] != that1.Properties[i] {
+	for i := range this.NetworkProperties {
+		if this.NetworkProperties[i] != that1.NetworkProperties[i] {
 			return false
 		}
 	}
@@ -947,16 +947,16 @@ func (this *DesiredLRPRunInfo) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	keysForProperties := make([]string, 0, len(this.Properties))
-	for k, _ := range this.Properties {
-		keysForProperties = append(keysForProperties, k)
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-	mapStringForProperties := "map[string]string{"
-	for _, k := range keysForProperties {
-		mapStringForProperties += fmt.Sprintf("%#v: %#v,", k, this.Properties[k])
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%#v: %#v,", k, this.NetworkProperties[k])
 	}
-	mapStringForProperties += "}"
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&models.DesiredLRPRunInfo{` +
 		`DesiredLRPKey:` + strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1),
 		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%#v", this.EnvironmentVariables), `&`, ``, 1),
@@ -975,7 +975,7 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
 		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Properties:` + mapStringForProperties + `}`}, ", ")
+		`NetworkProperties:` + mapStringForNetworkProperties + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -1030,16 +1030,16 @@ func (this *DesiredLRP) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	keysForProperties := make([]string, 0, len(this.Properties))
-	for k, _ := range this.Properties {
-		keysForProperties = append(keysForProperties, k)
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-	mapStringForProperties := "map[string]string{"
-	for _, k := range keysForProperties {
-		mapStringForProperties += fmt.Sprintf("%#v: %#v,", k, this.Properties[k])
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%#v: %#v,", k, this.NetworkProperties[k])
 	}
-	mapStringForProperties += "}"
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&models.DesiredLRP{` +
 		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
 		`Domain:` + fmt.Sprintf("%#v", this.Domain),
@@ -1066,7 +1066,7 @@ func (this *DesiredLRP) GoString() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
 		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Properties:` + mapStringForProperties + `}`}, ", ")
+		`NetworkProperties:` + mapStringForNetworkProperties + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1306,18 +1306,18 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
-	if len(m.Properties) > 0 {
-		keysForProperties := make([]string, 0, len(m.Properties))
-		for k, _ := range m.Properties {
-			keysForProperties = append(keysForProperties, k)
+	if len(m.NetworkProperties) > 0 {
+		keysForNetworkProperties := make([]string, 0, len(m.NetworkProperties))
+		for k, _ := range m.NetworkProperties {
+			keysForNetworkProperties = append(keysForNetworkProperties, k)
 		}
-		github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-		for _, k := range keysForProperties {
+		github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+		for _, k := range keysForNetworkProperties {
 			data[i] = 0x92
 			i++
 			data[i] = 0x1
 			i++
-			v := m.Properties[k]
+			v := m.NetworkProperties[k]
 			mapSize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
 			i = encodeVarintDesiredLrp(data, i, uint64(mapSize))
 			data[i] = 0xa
@@ -1669,18 +1669,18 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
-	if len(m.Properties) > 0 {
-		keysForProperties := make([]string, 0, len(m.Properties))
-		for k, _ := range m.Properties {
-			keysForProperties = append(keysForProperties, k)
+	if len(m.NetworkProperties) > 0 {
+		keysForNetworkProperties := make([]string, 0, len(m.NetworkProperties))
+		for k, _ := range m.NetworkProperties {
+			keysForNetworkProperties = append(keysForNetworkProperties, k)
 		}
-		github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-		for _, k := range keysForProperties {
+		github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+		for _, k := range keysForNetworkProperties {
 			data[i] = 0xd2
 			i++
 			data[i] = 0x1
 			i++
-			v := m.Properties[k]
+			v := m.NetworkProperties[k]
 			mapSize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
 			i = encodeVarintDesiredLrp(data, i, uint64(mapSize))
 			data[i] = 0xa
@@ -1802,8 +1802,8 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 			n += 2 + l + sovDesiredLrp(uint64(l))
 		}
 	}
-	if len(m.Properties) > 0 {
-		for k, v := range m.Properties {
+	if len(m.NetworkProperties) > 0 {
+		for k, v := range m.NetworkProperties {
 			_ = k
 			_ = v
 			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
@@ -1942,8 +1942,8 @@ func (m *DesiredLRP) Size() (n int) {
 			n += 2 + l + sovDesiredLrp(uint64(l))
 		}
 	}
-	if len(m.Properties) > 0 {
-		for k, v := range m.Properties {
+	if len(m.NetworkProperties) > 0 {
+		for k, v := range m.NetworkProperties {
 			_ = k
 			_ = v
 			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
@@ -1986,16 +1986,16 @@ func (this *DesiredLRPRunInfo) String() string {
 	if this == nil {
 		return "nil"
 	}
-	keysForProperties := make([]string, 0, len(this.Properties))
-	for k, _ := range this.Properties {
-		keysForProperties = append(keysForProperties, k)
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-	mapStringForProperties := "map[string]string{"
-	for _, k := range keysForProperties {
-		mapStringForProperties += fmt.Sprintf("%v: %v,", k, this.Properties[k])
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%v: %v,", k, this.NetworkProperties[k])
 	}
-	mapStringForProperties += "}"
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&DesiredLRPRunInfo{`,
 		`DesiredLRPKey:` + strings.Replace(strings.Replace(this.DesiredLRPKey.String(), "DesiredLRPKey", "DesiredLRPKey", 1), `&`, ``, 1) + `,`,
 		`EnvironmentVariables:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1), `&`, ``, 1) + `,`,
@@ -2014,7 +2014,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
-		`Properties:` + mapStringForProperties + `,`,
+		`NetworkProperties:` + mapStringForNetworkProperties + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2079,16 +2079,16 @@ func (this *DesiredLRP) String() string {
 	if this == nil {
 		return "nil"
 	}
-	keysForProperties := make([]string, 0, len(this.Properties))
-	for k, _ := range this.Properties {
-		keysForProperties = append(keysForProperties, k)
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-	mapStringForProperties := "map[string]string{"
-	for _, k := range keysForProperties {
-		mapStringForProperties += fmt.Sprintf("%v: %v,", k, this.Properties[k])
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%v: %v,", k, this.NetworkProperties[k])
 	}
-	mapStringForProperties += "}"
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&DesiredLRP{`,
 		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
 		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
@@ -2115,7 +2115,7 @@ func (this *DesiredLRP) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
-		`Properties:` + mapStringForProperties + `,`,
+		`NetworkProperties:` + mapStringForNetworkProperties + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2784,7 +2784,7 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 18:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NetworkProperties", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2871,10 +2871,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			mapvalue := string(data[iNdEx:postStringIndexmapvalue])
 			iNdEx = postStringIndexmapvalue
-			if m.Properties == nil {
-				m.Properties = make(map[string]string)
+			if m.NetworkProperties == nil {
+				m.NetworkProperties = make(map[string]string)
 			}
-			m.Properties[mapkey] = mapvalue
+			m.NetworkProperties[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -3999,7 +3999,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 26:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NetworkProperties", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4086,10 +4086,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			mapvalue := string(data[iNdEx:postStringIndexmapvalue])
 			iNdEx = postStringIndexmapvalue
-			if m.Properties == nil {
-				m.Properties = make(map[string]string)
+			if m.NetworkProperties == nil {
+				m.NetworkProperties = make(map[string]string)
 			}
-			m.Properties[mapkey] = mapvalue
+			m.NetworkProperties[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
