@@ -16,6 +16,7 @@ import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
 import reflect "reflect"
+import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
 
 import io "io"
 
@@ -84,6 +85,7 @@ type TaskDefinition struct {
 	LegacyDownloadUser            string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,18,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	NetworkProperties             map[string]string      `protobuf:"bytes,19,rep,name=network_properties" json:"network_properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
@@ -211,6 +213,13 @@ func (m *TaskDefinition) GetTrustedSystemCertificatesPath() string {
 func (m *TaskDefinition) GetVolumeMounts() []*VolumeMount {
 	if m != nil {
 		return m.VolumeMounts
+	}
+	return nil
+}
+
+func (m *TaskDefinition) GetNetworkProperties() map[string]string {
+	if m != nil {
+		return m.NetworkProperties
 	}
 	return nil
 }
@@ -406,6 +415,14 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 			return false
 		}
 	}
+	if len(this.NetworkProperties) != len(that1.NetworkProperties) {
+		return false
+	}
+	for i := range this.NetworkProperties {
+		if this.NetworkProperties[i] != that1.NetworkProperties[i] {
+			return false
+		}
+	}
 	return true
 }
 func (this *Task) Equal(that interface{}) bool {
@@ -467,6 +484,16 @@ func (this *TaskDefinition) GoString() string {
 	if this == nil {
 		return "nil"
 	}
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%#v: %#v,", k, this.NetworkProperties[k])
+	}
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&models.TaskDefinition{` +
 		`RootFs:` + fmt.Sprintf("%#v", this.RootFs),
 		`EnvironmentVariables:` + fmt.Sprintf("%#v", this.EnvironmentVariables),
@@ -485,7 +512,8 @@ func (this *TaskDefinition) GoString() string {
 		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts) + `}`}, ", ")
+		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
+		`NetworkProperties:` + mapStringForNetworkProperties + `}`}, ", ")
 	return s
 }
 func (this *Task) GoString() string {
@@ -663,6 +691,30 @@ func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
+	if len(m.NetworkProperties) > 0 {
+		keysForNetworkProperties := make([]string, 0, len(m.NetworkProperties))
+		for k, _ := range m.NetworkProperties {
+			keysForNetworkProperties = append(keysForNetworkProperties, k)
+		}
+		github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+		for _, k := range keysForNetworkProperties {
+			data[i] = 0x9a
+			i++
+			data[i] = 0x1
+			i++
+			v := m.NetworkProperties[k]
+			mapSize := 1 + len(k) + sovTask(uint64(len(k))) + 1 + len(v) + sovTask(uint64(len(v)))
+			i = encodeVarintTask(data, i, uint64(mapSize))
+			data[i] = 0xa
+			i++
+			i = encodeVarintTask(data, i, uint64(len(k)))
+			i += copy(data[i:], k)
+			data[i] = 0x12
+			i++
+			i = encodeVarintTask(data, i, uint64(len(v)))
+			i += copy(data[i:], v)
+		}
+	}
 	return i, nil
 }
 
@@ -814,6 +866,14 @@ func (m *TaskDefinition) Size() (n int) {
 			n += 2 + l + sovTask(uint64(l))
 		}
 	}
+	if len(m.NetworkProperties) > 0 {
+		for k, v := range m.NetworkProperties {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovTask(uint64(len(k))) + 1 + len(v) + sovTask(uint64(len(v)))
+			n += mapEntrySize + 2 + sovTask(uint64(mapEntrySize))
+		}
+	}
 	return n
 }
 
@@ -859,6 +919,16 @@ func (this *TaskDefinition) String() string {
 	if this == nil {
 		return "nil"
 	}
+	keysForNetworkProperties := make([]string, 0, len(this.NetworkProperties))
+	for k, _ := range this.NetworkProperties {
+		keysForNetworkProperties = append(keysForNetworkProperties, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForNetworkProperties)
+	mapStringForNetworkProperties := "map[string]string{"
+	for _, k := range keysForNetworkProperties {
+		mapStringForNetworkProperties += fmt.Sprintf("%v: %v,", k, this.NetworkProperties[k])
+	}
+	mapStringForNetworkProperties += "}"
 	s := strings.Join([]string{`&TaskDefinition{`,
 		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
 		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
@@ -878,6 +948,7 @@ func (this *TaskDefinition) String() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
+		`NetworkProperties:` + mapStringForNetworkProperties + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1360,6 +1431,100 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			if err := m.VolumeMounts[len(m.VolumeMounts)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 19:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NetworkProperties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthTask
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var keykey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				keykey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			var stringLenmapkey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLenmapkey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if stringLenmapkey < 0 {
+				return ErrInvalidLengthTask
+			}
+			postStringIndexmapkey := iNdEx + int(stringLenmapkey)
+			if postStringIndexmapkey > l {
+				return io.ErrUnexpectedEOF
+			}
+			mapkey := string(data[iNdEx:postStringIndexmapkey])
+			iNdEx = postStringIndexmapkey
+			var valuekey uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				valuekey |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			var stringLenmapvalue uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if stringLenmapvalue < 0 {
+				return ErrInvalidLengthTask
+			}
+			postStringIndexmapvalue := iNdEx + int(stringLenmapvalue)
+			if postStringIndexmapvalue > l {
+				return io.ErrUnexpectedEOF
+			}
+			mapvalue := string(data[iNdEx:postStringIndexmapvalue])
+			iNdEx = postStringIndexmapvalue
+			if m.NetworkProperties == nil {
+				m.NetworkProperties = make(map[string]string)
+			}
+			m.NetworkProperties[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
