@@ -34,7 +34,7 @@ func (g guidSet) ToMap() map[string]struct{} {
 }
 
 func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
-	logger = logger.Session("desired-lrps", lager.Data{"filter": filter})
+	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Info("start")
 	defer logger.Info("complete")
 
@@ -46,7 +46,7 @@ func (db *ETCDDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilte
 }
 
 func (db *ETCDDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
-	logger = logger.Session("desired-lrp-scheduling-infos", lager.Data{"filter": filter})
+	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Info("start")
 	defer logger.Info("complete")
 
@@ -240,7 +240,7 @@ func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid strin
 // to ensure that the complete model is available and there are no races in
 // Desired Watches, DesiredLRPRunInfo is created before DesiredLRPSchedulingInfo.
 func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
-	logger = logger.Session("create-desired-lrp", lager.Data{"process-guid": desiredLRP.ProcessGuid})
+	logger = logger.WithData(lager.Data{"process-guid": desiredLRP.ProcessGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -322,7 +322,6 @@ func (db *ETCDDB) createDesiredLRPRunInfo(logger lager.Logger, runInfo *models.D
 }
 
 func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
-	logger = logger.Session("update-desired-lrp-etcd", lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -370,7 +369,7 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 // RunInfo fails to delete, the orphaned DesiredLRPRunInfo will be garbage
 // collected later by convergence.
 func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
-	logger = logger.Session("remove-desired-lrp", lager.Data{"process-guid": processGuid})
+	logger = logger.WithData(lager.Data{"process-guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 

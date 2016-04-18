@@ -33,7 +33,6 @@ func (db *ETCDDB) ConvergeTasks(
 	cellSet models.CellSet,
 	kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
 ) ([]*auctioneer.TaskStartRequest, []*models.Task) {
-	logger = logger.Session("converge-tasks")
 	logger.Info("starting-convergence")
 	defer logger.Info("finished-convergence")
 

@@ -84,7 +84,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 
 func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrps")
+	logger := h.logger.Session("desired-lrp-scheduling-infos")
 
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPSchedulingInfosResponse{}

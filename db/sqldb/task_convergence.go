@@ -25,7 +25,6 @@ const (
 )
 
 func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, []*models.Task) {
-	logger = logger.Session("converge-tasks-sqldb")
 	logger.Info("starting")
 	defer logger.Info("completed")
 

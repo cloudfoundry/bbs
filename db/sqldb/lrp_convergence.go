@@ -36,7 +36,6 @@ const (
 func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
 	convergeStart := db.clock.Now()
 	convergeLRPRunsCounter.Increment()
-	logger = logger.Session("converge-lrps-sqldb")
 	logger.Info("starting")
 	defer logger.Info("completed")
 

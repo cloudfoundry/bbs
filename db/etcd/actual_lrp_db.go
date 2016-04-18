@@ -137,7 +137,7 @@ func (db *ETCDDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey
 }
 
 func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
-	logger = logger.Session("claim-actual-lrp", lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance-key": instanceKey})
+	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance-key": instanceKey})
 	logger.Info("starting")
 
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, processGuid, index)
@@ -240,7 +240,7 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 }
 
 func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (*models.ActualLRPGroup, *models.ActualLRPGroup, bool, error) {
-	logger = logger.Session("crash-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey})
+	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey})
 	logger.Info("starting")
 
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
@@ -295,7 +295,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 }
 
 func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
-	logger = logger.Session("fail-actual-lrp", lager.Data{"actual_lrp_key": key, "error_message": errorMessage})
+	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "error_message": errorMessage})
 	logger.Info("starting")
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	if err != nil {
@@ -328,7 +328,7 @@ func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, e
 }
 
 func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {
-	logger = logger.Session("remove-actual-lrp", lager.Data{"process_guid": processGuid, "index": index})
+	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		return err

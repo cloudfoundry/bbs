@@ -20,9 +20,9 @@ func LogWrap(logger lager.Logger, handler http.Handler) http.HandlerFunc {
 			"request": r.URL.String(),
 		})
 
-		requestLog.Info("serving")
+		requestLog.Debug("serving")
 		handler.ServeHTTP(w, r)
-		requestLog.Info("done")
+		requestLog.Debug("done")
 	}
 }
 

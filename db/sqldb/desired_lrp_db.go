@@ -11,7 +11,7 @@ import (
 )
 
 func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
-	logger = logger.Session("create-desired-lrp-sqldb", lager.Data{"process_guid": desiredLRP.ProcessGuid})
+	logger = logger.WithData(lager.Data{"process_guid": desiredLRP.ProcessGuid})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -74,7 +74,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 }
 
 func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
-	logger = logger.Session("desire-lrp-by-process-guid-sqldb", lager.Data{"process_guid": processGuid})
+	logger = logger.WithData(lager.Data{"process_guid": processGuid})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -82,7 +82,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 }
 
 func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
-	logger = logger.Session("desired-lrps-sqldb", lager.Data{"filter": filter})
+	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Debug("start")
 	defer logger.Debug("complete")
 
@@ -129,7 +129,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 }
 
 func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
-	logger = logger.Session("desired-lrp-scheduling-infos-sqldb", lager.Data{"filter": filter})
+	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Debug("start")
 	defer logger.Debug("complete")
 
@@ -178,7 +178,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 }
 
 func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
-	logger = logger.Session("update-desired-lrp-sqldb", lager.Data{"process_guid": processGuid})
+	logger = logger.WithData(lager.Data{"process_guid": processGuid})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -236,7 +236,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 }
 
 func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
-	logger = logger.Session("remove-desired-lrp-sqldb", lager.Data{"process_guid": processGuid})
+	logger = logger.WithData(lager.Data{"process_guid": processGuid})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 

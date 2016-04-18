@@ -124,10 +124,6 @@ var _ = Describe("Convergence of Tasks", func() {
 					Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(2)))
 				})
 
-				It("logs that it sends an auction for the pending task", func() {
-					Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.requesting-auction-for-pending-task"))
-				})
-
 				It("returns the tasks to be auctioned", func() {
 					Expect(tasksToAuction).To(HaveLen(2))
 					Expect([]string{tasksToAuction[0].TaskGuid, tasksToAuction[1].TaskGuid}).To(ConsistOf(taskGuid, taskGuid2))
@@ -150,10 +146,6 @@ var _ = Describe("Convergence of Tasks", func() {
 
 				It("bumps the compare-and-swap counter", func() {
 					Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(2)))
-				})
-
-				It("logs an error", func() {
-					Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.failed-to-start-in-time"))
 				})
 			})
 		})
@@ -192,10 +184,6 @@ var _ = Describe("Convergence of Tasks", func() {
 
 					Expect(returnedTask.Failed).To(Equal(true))
 					Expect(returnedTask.FailureReason).To(ContainSubstring("cell"))
-				})
-
-				It("logs that the cell disappeared", func() {
-					Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.cell-disappeared"))
 				})
 
 				It("bumps the compare-and-swap counter", func() {
@@ -244,10 +232,6 @@ var _ = Describe("Convergence of Tasks", func() {
 						Expect([]string{tasksToComplete[0].TaskGuid, tasksToComplete[1].TaskGuid}).To(ConsistOf(taskGuid, taskGuid2))
 					})
 
-					It("logs that it kicks the completed task", func() {
-						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.kicking-completed-task"))
-					})
-
 					It("bumps the convergence tasks kicked counter", func() {
 						Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(2)))
 					})
@@ -261,10 +245,6 @@ var _ = Describe("Convergence of Tasks", func() {
 					It("should delete the task", func() {
 						_, modelErr := etcdDB.TaskByGuid(logger, taskGuid)
 						Expect(modelErr).To(Equal(models.ErrResourceNotFound))
-					})
-
-					It("logs that it failed to start resolving the task in time", func() {
-						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.failed-to-start-resolving-in-time"))
 					})
 				})
 
@@ -334,10 +314,6 @@ var _ = Describe("Convergence of Tasks", func() {
 					Expect(returnedTask.UpdatedAt).To(Equal(clock.Now().UnixNano()))
 				})
 
-				It("logs that it is demoting task from resolving to completed", func() {
-					Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.demoting-resolving-to-completed"))
-				})
-
 				It("returns the task to complete", func() {
 					Expect(tasksToComplete).To(HaveLen(1))
 					Expect(tasksToComplete[0].TaskGuid).To(Equal(taskGuid))
@@ -356,10 +332,6 @@ var _ = Describe("Convergence of Tasks", func() {
 				It("should delete the task", func() {
 					_, err := etcdDB.TaskByGuid(logger, taskGuid)
 					Expect(err).To(Equal(models.ErrResourceNotFound))
-				})
-
-				It("logs that has failed to resolve task in time", func() {
-					Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.failed-to-resolve-in-time"))
 				})
 			})
 		})
