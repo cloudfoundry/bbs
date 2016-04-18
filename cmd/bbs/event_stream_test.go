@@ -34,7 +34,6 @@ var _ = Describe("Events API", func() {
 	})
 
 	AfterEach(func() {
-		Eventually(eventChannel).Should(BeClosed())
 		ginkgomon.Kill(bbsProcess)
 	})
 
@@ -59,6 +58,7 @@ var _ = Describe("Events API", func() {
 		AfterEach(func() {
 			err := eventSource.Close()
 			Expect(err).NotTo(HaveOccurred())
+			Eventually(eventChannel).Should(BeClosed())
 		})
 
 		Describe("Desired LRPs", func() {
@@ -334,15 +334,20 @@ var _ = Describe("Events API", func() {
 
 			Expect(delta).To(BeEquivalentTo(1))
 		})
+	})
 
-		It("cleans up exiting connections when killing the BBS", func(done Done) {
-			go func() {
-				_, err := eventSource.Next()
-				Expect(err).To(HaveOccurred())
-				close(done)
-			}()
-			ginkgomon.Interrupt(bbsProcess)
-		})
+	It("cleans up exiting connections when killing the BBS", func(done Done) {
+		var err error
+		eventSource, err = client.SubscribeToEvents()
+		Expect(err).NotTo(HaveOccurred())
+
+		go func() {
+			_, err := eventSource.Next()
+			Expect(err).To(HaveOccurred())
+			close(done)
+		}()
+
+		ginkgomon.Interrupt(bbsProcess)
 	})
 })
 
