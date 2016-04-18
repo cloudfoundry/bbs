@@ -37,7 +37,7 @@ func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler) *T
 		panic("callbackHandler cannot be nil")
 	}
 	return &TaskCompletionWorkPool{
-		logger:          logger,
+		logger:          logger.Session("task-completion-workpool"),
 		maxWorkers:      maxWorkers,
 		callbackHandler: cbHandler,
 		httpClient:      cf_http.NewClient(),
@@ -46,12 +46,17 @@ func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler) *T
 
 func (twp *TaskCompletionWorkPool) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	cbWorkPool, err := workpool.NewWorkPool(twp.maxWorkers)
+	logger := twp.logger
+	logger.Info("starting")
+
 	if err != nil {
-		twp.logger.Error("callback-workpool-creation-failed", err)
+		logger.Error("creation-failed", err)
 		return err
 	}
 	twp.callbackWorkPool = cbWorkPool
 	close(ready)
+	logger.Info("started")
+	defer logger.Info("finished")
 
 	<-signals
 	go twp.callbackWorkPool.Stop()
@@ -63,8 +68,9 @@ func (twp *TaskCompletionWorkPool) Submit(taskDB db.TaskDB, task *models.Task) {
 	if twp.callbackWorkPool == nil {
 		panic("called submit before workpool was started")
 	}
+	logger := twp.logger
 	twp.callbackWorkPool.Submit(func() {
-		twp.callbackHandler(twp.logger, twp.httpClient, taskDB, task)
+		twp.callbackHandler(logger, twp.httpClient, taskDB, task)
 	})
 }
 

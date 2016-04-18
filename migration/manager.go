@@ -53,6 +53,7 @@ func NewManager(
 
 func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := m.logger.Session("migration-manager")
+	logger.Info("starting")
 
 	var bbsMigrationVersion int64
 	if len(m.migrations) > 0 {
@@ -67,7 +68,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				return err
 			}
 
-			m.finishAndWait(signals, ready)
+			m.finishAndWait(logger, signals, ready)
 			return nil
 		} else {
 			return err
@@ -143,13 +144,15 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		logger.Error("failed-to-send-migration-duration-metric", err)
 	}
 
-	m.finishAndWait(signals, ready)
+	m.finishAndWait(logger, signals, ready)
 	return nil
 }
 
-func (m *Manager) finishAndWait(signals <-chan os.Signal, ready chan<- struct{}) {
+func (m *Manager) finishAndWait(logger lager.Logger, signals <-chan os.Signal, ready chan<- struct{}) {
 	close(ready)
 	close(m.migrationsDone)
+	logger.Info("started")
+	defer logger.Info("finished")
 
 	select {
 	case <-signals:

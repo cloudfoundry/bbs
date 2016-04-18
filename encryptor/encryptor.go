@@ -42,6 +42,7 @@ func New(
 
 func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := m.logger.Session("encryptor")
+	logger.Info("starting")
 
 	currentEncryptionKey, err := m.db.EncryptionKeyLabel(logger)
 	if err != nil {
@@ -55,6 +56,8 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 
 	close(ready)
+	logger.Info("started")
+	defer logger.Info("finished")
 
 	if currentEncryptionKey != m.keyManager.EncryptionKey().Label() {
 		encryptionStart := m.clock.Now()
@@ -73,8 +76,6 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		}
 	}
 
-	select {
-	case <-signals:
-		return nil
-	}
+	<-signals
+	return nil
 }

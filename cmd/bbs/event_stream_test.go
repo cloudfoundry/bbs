@@ -334,6 +334,15 @@ var _ = Describe("Events API", func() {
 
 			Expect(delta).To(BeEquivalentTo(1))
 		})
+
+		It("cleans up exiting connections when killing the BBS", func(done Done) {
+			go func() {
+				_, err := eventSource.Next()
+				Expect(err).To(HaveOccurred())
+				close(done)
+			}()
+			ginkgomon.Interrupt(bbsProcess)
+		})
 	})
 })
 

@@ -312,10 +312,11 @@ func main() {
 
 	members := grouper.Members{
 		{"lock-maintainer", maintainer},
-		{"workPool", cbWorkPool},
+		{"workpool", cbWorkPool},
 		{"server", server},
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
+		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
 		{"metrics", *metricsNotifier},
 		{"registration-runner", registrationRunner},
 	}
@@ -339,6 +340,26 @@ func main() {
 	}
 
 	logger.Info("exited")
+}
+
+func hubMaintainer(logger lager.Logger, desiredHub, actualHub events.Hub) ifrit.RunFunc {
+	return func(signals <-chan os.Signal, ready chan<- struct{}) error {
+		logger := logger.Session("hub-maintainer")
+		close(ready)
+		logger.Info("started")
+		defer logger.Info("finished")
+
+		<-signals
+		err := desiredHub.Close()
+		if err != nil {
+			logger.Error("error-closing-desired-hub", err)
+		}
+		err = actualHub.Close()
+		if err != nil {
+			logger.Error("error-closing-actual-hub", err)
+		}
+		return nil
+	}
 }
 
 func initializeRegistrationRunner(
