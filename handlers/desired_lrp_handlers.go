@@ -144,7 +144,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 		return
 	}
 
-	logger = logger.WithData(lager.Data{"update": request.Update, "guid": request.ProcessGuid})
+	logger = logger.WithData(lager.Data{"guid": request.ProcessGuid})
 
 	logger.Debug("updating-desired-lrp")
 	beforeDesiredLRP, err := h.desiredLRPDB.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
