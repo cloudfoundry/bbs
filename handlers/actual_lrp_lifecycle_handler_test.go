@@ -88,8 +88,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 					1,
 					"domain-0",
 				),
-				State: models.ActualLRPStateUnclaimed,
-				Since: 1138,
+				State: models.ActualLRPStateClaimed,
+				Since: 1140,
 			}
 		})
 
@@ -127,6 +127,20 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(ok).To(BeTrue())
 				Expect(changedEvent.Before).To(Equal(&models.ActualLRPGroup{Instance: &actualLRP}))
 				Expect(changedEvent.After).To(Equal(&models.ActualLRPGroup{Instance: &afterActualLRP}))
+			})
+
+			Context("when the actual lrp did not actually change", func() {
+				BeforeEach(func() {
+					fakeActualLRPDB.ClaimActualLRPReturns(
+						&models.ActualLRPGroup{Instance: &afterActualLRP},
+						&models.ActualLRPGroup{Instance: &afterActualLRP},
+						nil,
+					)
+				})
+
+				It("does not emit a change event to the hub", func() {
+					Eventually(actualHub.EmitCallCount).Should(Equal(0))
+				})
 			})
 		})
 

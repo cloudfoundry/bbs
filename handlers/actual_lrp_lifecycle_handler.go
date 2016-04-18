@@ -56,7 +56,9 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		return
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	if !after.Equal(before) {
+		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	}
 }
 
 func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *http.Request) {
