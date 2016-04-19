@@ -75,12 +75,27 @@ var _ = Describe("Migration Manager", func() {
 		ginkgomon.Kill(migrationProcess)
 	})
 
+	Context("when no etcd store is present", func() {
+		BeforeEach(func() {
+			storeClient = nil
+		})
+
+		It("closes the ready channel immediately", func() {
+			Eventually(migrationProcess.Ready).Should(BeClosed())
+		})
+
+		It("exits after being signalled", func() {
+			ginkgomon.Interrupt(migrationProcess)
+			Eventually(migrationProcess.Wait).Should(Receive(BeNil()))
+		})
+	})
+
 	It("fetches the migration version from the database", func() {
 		Eventually(fakeDB.VersionCallCount).Should(Equal(1))
 		Consistently(fakeDB.VersionCallCount).Should(Equal(1))
 
 		ginkgomon.Interrupt(migrationProcess)
-		Eventually(migrationProcess.Wait()).Should(Receive(BeNil()))
+		Eventually(migrationProcess.Wait).Should(Receive(BeNil()))
 	})
 
 	Context("when there is no version", func() {

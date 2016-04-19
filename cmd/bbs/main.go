@@ -34,6 +34,7 @@ import (
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/locket"
 	"github.com/cloudfoundry-incubator/rep"
+	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/hashicorp/consul/api"
@@ -172,9 +173,16 @@ var databaseDriver = flag.String(
 	"SQL database driver name",
 )
 
+var noETCD = flag.Bool(
+	"noETCD",
+	false,
+	"indicates the bbs is deployed without an etcd cluster",
+)
+
 const (
 	dropsondeOrigin           = "bbs"
 	bbsWatchRetryWaitDuration = 3 * time.Second
+	bbsMasterElected          = metric.Counter("BBSMasterElected")
 )
 
 func main() {
@@ -216,12 +224,6 @@ func main() {
 
 	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
 
-	etcdOptions, err := etcdFlags.Validate()
-	if err != nil {
-		logger.Fatal("etcd-validation-failed", err)
-	}
-	storeClient := initializeEtcdStoreClient(logger, etcdOptions)
-
 	key, keys, err := encryptionFlags.Parse()
 	if err != nil {
 		logger.Fatal("cannot-setup-encryption", err)
@@ -232,7 +234,28 @@ func main() {
 	}
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
-	etcdDB := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
+	var (
+		etcdDB          db.DB
+		storeClient     etcddb.StoreClient
+		metricsNotifier *metrics.PeriodicMetronNotifier
+	)
+
+	if !*noETCD {
+		etcdOptions, err := etcdFlags.Validate()
+		if err != nil {
+			logger.Fatal("etcd-validation-failed", err)
+		}
+		storeClient = initializeEtcdStoreClient(logger, etcdOptions)
+
+		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
+
+		metricsNotifier = metrics.NewPeriodicMetronNotifier(
+			logger,
+			*reportInterval,
+			etcdOptions,
+			clock,
+		)
+	}
 
 	var activeDB db.DB
 	var sqlDB *sqldb.SQLDB
@@ -292,13 +315,6 @@ func main() {
 		migrationsDone,
 	)
 
-	metricsNotifier := metrics.NewPeriodicMetronNotifier(
-		logger,
-		*reportInterval,
-		etcdOptions,
-		clock,
-	)
-
 	var server ifrit.Runner
 	if *requireSSL {
 		tlsConfig, err := cf_http.NewTLSConfig(*certFile, *keyFile, *caFile)
@@ -317,9 +333,13 @@ func main() {
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
-		{"metrics", *metricsNotifier},
-		{"registration-runner", registrationRunner},
 	}
+
+	if !*noETCD {
+		members = append(members, grouper.Member{"etcd-metrics", *metricsNotifier})
+	}
+
+	members = append(members, grouper.Member{"registration-runner", registrationRunner})
 
 	if dbgAddr := cf_debug_server.DebugAddress(flag.CommandLine); dbgAddr != "" {
 		members = append(grouper.Members{
@@ -331,6 +351,7 @@ func main() {
 
 	monitor := ifrit.Invoke(sigmon.New(group))
 
+	bbsMasterElected.Increment()
 	logger.Info("started")
 
 	err = <-monitor.Wait()

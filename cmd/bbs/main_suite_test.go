@@ -109,7 +109,9 @@ var _ = SynchronizedBeforeSuite(
 		consulRunner.Start()
 		consulRunner.WaitUntilReady()
 
-		etcdRunner.Start()
+		if !*useSQL {
+			etcdRunner.Start()
+		}
 	},
 )
 
@@ -129,7 +131,7 @@ var _ = SynchronizedAfterSuite(func() {
 var _ = BeforeEach(func() {
 	logger = lagertest.NewTestLogger("test")
 
-	etcdRunner.Reset()
+	// etcdRunner.Reset()
 
 	consulRunner.Reset()
 	consulClient = consulRunner.NewClient()
@@ -181,6 +183,7 @@ var _ = BeforeEach(func() {
 		DropsondePort:         port,
 		EtcdCluster:           etcdUrl,
 		MetricsReportInterval: 10 * time.Millisecond,
+		NoEtcd:                *useSQL,
 
 		EncryptionKeys: []string{"label:key"},
 		ActiveKeyLabel: "label",

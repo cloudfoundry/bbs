@@ -20,6 +20,7 @@ type Args struct {
 	EtcdClientSessionCacheSize int
 	EtcdCluster                string
 	EtcdMaxIdleConnsPerHost    int
+	NoEtcd                     bool
 
 	DatabaseConnectionString string
 	DatabaseDriver           string

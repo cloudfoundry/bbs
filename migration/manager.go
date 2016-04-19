@@ -13,6 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
+	"github.com/tedsuo/ifrit"
 )
 
 const (
@@ -29,6 +30,11 @@ type Manager struct {
 	clock          clock.Clock
 }
 
+type NoopManager struct {
+	logger         lager.Logger
+	migrationsDone chan<- struct{}
+}
+
 func NewManager(
 	logger lager.Logger,
 	db db.DB,
@@ -37,8 +43,15 @@ func NewManager(
 	migrations Migrations,
 	migrationsDone chan<- struct{},
 	clock clock.Clock,
-) Manager {
+) ifrit.Runner {
 	sort.Sort(migrations)
+
+	if storeClient == nil {
+		return NoopManager{
+			logger:         logger,
+			migrationsDone: migrationsDone,
+		}
+	}
 
 	return Manager{
 		logger:         logger,
@@ -49,6 +62,11 @@ func NewManager(
 		migrationsDone: migrationsDone,
 		clock:          clock,
 	}
+}
+
+func (n NoopManager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+	finishAndWait(n.logger, signals, ready, n.migrationsDone)
+	return nil
 }
 
 func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -68,7 +86,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				return err
 			}
 
-			m.finishAndWait(logger, signals, ready)
+			finishAndWait(logger, signals, ready, m.migrationsDone)
 			return nil
 		} else {
 			return err
@@ -144,13 +162,13 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		logger.Error("failed-to-send-migration-duration-metric", err)
 	}
 
-	m.finishAndWait(logger, signals, ready)
+	finishAndWait(logger, signals, ready, m.migrationsDone)
 	return nil
 }
 
-func (m *Manager) finishAndWait(logger lager.Logger, signals <-chan os.Signal, ready chan<- struct{}) {
+func finishAndWait(logger lager.Logger, signals <-chan os.Signal, ready chan<- struct{}, migrationsDone chan<- struct{}) {
 	close(ready)
-	close(m.migrationsDone)
+	close(migrationsDone)
 	logger.Info("started")
 	defer logger.Info("finished")
 
