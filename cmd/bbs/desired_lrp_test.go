@@ -261,7 +261,7 @@ var _ = Describe("DesiredLRP API", func() {
 	})
 })
 
-func createDesiredLRPsInDomains(client bbs.Client, domainCounts map[string]int) map[string][]*models.DesiredLRP {
+func createDesiredLRPsInDomains(client bbs.InternalClient, domainCounts map[string]int) map[string][]*models.DesiredLRP {
 	createdDesiredLRPs := map[string][]*models.DesiredLRP{}
 
 	for domain, count := range domainCounts {

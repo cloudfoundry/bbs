@@ -1631,4 +1631,4 @@ func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, res
 	}{result1, result2}
 }
 
-var _ bbs.Client = new(FakeClient)
+var _ bbs.InternalClient = new(FakeClient)

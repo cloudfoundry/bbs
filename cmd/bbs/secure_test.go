@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("Secure", func() {
 	var (
-		client bbs.Client
+		client bbs.InternalClient
 		err    error
 
 		basePath string

@@ -43,7 +43,7 @@ var (
 
 	logger lager.Logger
 
-	client              bbs.Client
+	client              bbs.InternalClient
 	bbsBinPath          string
 	bbsAddress          string
 	bbsPort             int

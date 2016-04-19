@@ -27,16 +27,17 @@ const (
 	DeleteContainer      = false
 )
 
-//go:generate counterfeiter -o fake_bbs/fake_client.go . Client
+//go:generate counterfeiter -o fake_bbs/fake_client.go . InternalClient
 
 /*
-The Client interface exposes all available endpoints of the BBS server,
+The InternalClient interface exposes all available endpoints of the BBS server,
 including private endpoints which should be used exclusively by internal Diego
-components. To interact with the BBS from outside of Diego, the ExternalClient
+components. To interact with the BBS from outside of Diego, the Client
 should be used instead.
 */
-type Client interface {
-	ExternalClient
+type InternalClient interface {
+	Client
+	ExperimentalExternalEventClient
 
 	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
 	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
@@ -58,16 +59,14 @@ type Client interface {
 	CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error
 	ResolvingTask(taskGuid string) error
 	DeleteTask(taskGuid string) error
-
-	SubscribeToEvents() (events.EventSource, error)
 }
 
 /*
-The External Client can be used to access the BBS's public functionality.
+The External InternalClient can be used to access the BBS's public functionality.
 It exposes methods for basic LRP and Task Lifecycles, Domain manipulation, and
 event subscription.
 */
-type ExternalClient interface {
+type Client interface {
 	ExternalTaskClient
 	ExternalDomainClient
 	ExternalActualLRPClient
@@ -159,10 +158,17 @@ type ExternalDesiredLRPClient interface {
 }
 
 /*
-** EXPERIMENTAL **
 The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
+	SubscribeToEvents() (events.EventSource, error)
+}
+
+/*
+** EXPERIMENTAL **
+The ExperimentalExternalEventClient is used to subscribe to groups of Events.
+*/
+type ExperimentalExternalEventClient interface {
 	// Returns an EventSource for watching changes to DesiredLRPs
 	SubscribeToDesiredLRPEvents() (events.EventSource, error)
 
@@ -178,19 +184,19 @@ func newClient(url string) *client {
 	}
 }
 
-func NewClient(url string) Client {
+func NewClient(url string) InternalClient {
 	return newClient(url)
 }
 
-func NewSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (Client, error) {
+func NewSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
 	return newSecureClient(url, caFile, certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, false)
 }
 
-func NewSecureSkipVerifyClient(url, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (Client, error) {
+func NewSecureSkipVerifyClient(url, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
 	return newSecureClient(url, "", certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, true)
 }
 
-func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool) (Client, error) {
+func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool) (InternalClient, error) {
 	client := newClient(url)
 
 	tlsConfig, err := cf_http.NewTLSConfig(certFile, keyFile, caFile)
