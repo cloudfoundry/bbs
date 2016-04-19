@@ -589,4 +589,15 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(beforeDesireds).To(Equal(afterDesireds))
 		Expect(beforeActuals).To(Equal(afterActuals))
 	})
+
+	Context("when the cell set is empty", func() {
+		BeforeEach(func() {
+			cellSet = models.NewCellSetFromList([]*models.CellPresence{})
+		})
+
+		It("reports all actual lrps as missing cells", func() {
+			_, actualsWithMissingCells, _ := sqlDB.ConvergeLRPs(logger, models.CellSet{})
+			Expect(len(actualsWithMissingCells)).To(Equal(21))
+		})
+	})
 })

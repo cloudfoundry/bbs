@@ -149,6 +149,9 @@ var _ = Describe("Convergence of Tasks", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			fakeClock.IncrementBySeconds(1)
+		})
+
+		JustBeforeEach(func() {
 			tasksToAuction, tasksToComplete = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
@@ -277,6 +280,20 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.State).To(Equal(models.Task_Resolving))
 				Expect(tasksToComplete).NotTo(ContainElement(task))
+			})
+		})
+
+		Context("when the cell state list is empty", func() {
+			BeforeEach(func() {
+				cellSet = models.NewCellSetFromList([]*models.CellPresence{})
+			})
+
+			It("fails the running task", func() {
+				task, err := sqlDB.TaskByGuid(logger, "running-task")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(task.Failed).To(BeTrue())
+				Expect(task.FailureReason).To(Equal("cell disappeared before completion"))
+				Expect(task.Result).To(Equal(""))
 			})
 		})
 	})

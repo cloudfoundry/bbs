@@ -307,13 +307,18 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		values = append(values, k)
 	}
 
-	stmt, err := c.db.Prepare(fmt.Sprintf(`
-		SELECT `+schedulingInfoColumns+`, actual_lrps.instance_index
+	query := `
+		SELECT ` + schedulingInfoColumns + `, actual_lrps.instance_index
 		FROM desired_lrps
 		JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-		WHERE actual_lrps.evacuating = ?
-			AND actual_lrps.cell_id NOT IN (%s) AND actual_lrps.cell_id <> ''
-		`, strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ",")))
+		WHERE actual_lrps.evacuating = ?`
+
+	if len(cellSet) != 0 {
+		query = fmt.Sprintf(`%s AND actual_lrps.cell_id NOT IN (%s) AND actual_lrps.cell_id <> ''`,
+			query, strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ","))
+	}
+
+	stmt, err := c.db.Prepare(query)
 	if err != nil {
 		logger.Error("failed-preparing-query", err)
 		return

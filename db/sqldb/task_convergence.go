@@ -139,11 +139,17 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 		values = append(values, k)
 	}
 
-	stmt, err := db.db.Prepare(fmt.Sprintf(`
+	query := `
 		UPDATE tasks
 		SET failed = ?, failure_reason = ?, result = ?
-		WHERE state = ? AND cell_id NOT IN (%s)
-		`, strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ",")))
+		WHERE state = ?`
+
+	if len(cellSet) != 0 {
+		query = fmt.Sprintf(`%s AND cell_id NOT IN (%s)`,
+			query, strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ","))
+	}
+
+	stmt, err := db.db.Prepare(query)
 	if err != nil {
 		logger.Error("failed-preparing-statement", err)
 		return 0
