@@ -477,13 +477,13 @@ func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 	}
 
 	row = db.db.QueryRow(`
-		SELECT SUM(desired_lrps.instances) AS desired_instances
+		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances
 		FROM desired_lrps
 	`)
 
 	err = row.Scan(&desiredInstances)
 	if err != nil {
-		logger.Error("failed-query", err)
+		logger.Error("failed-desired-instances-query", err)
 	}
 
 	err = unclaimedLRPs.Send(unclaimedInstances)

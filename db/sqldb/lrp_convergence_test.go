@@ -9,9 +9,11 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	"github.com/cloudfoundry/dropsonde/metrics"
+	"github.com/pivotal-golang/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("LRPConvergence", func() {
@@ -235,12 +237,15 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		It("emits metrics for lrps", func() {
-			sqlDB.ConvergeLRPs(logger, cellSet)
+			convergenceLogger := lagertest.NewTestLogger("convergence")
+			sqlDB.ConvergeLRPs(convergenceLogger, cellSet)
+			Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(35)))
 			Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(7)))
 			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(29))) // 15 fresh + 4 expired + 10 evac
 			Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(1)))
 			Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(2)))
 			Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(1)))
+			Consistently(convergenceLogger).ShouldNot(gbytes.Say("failed-.*"))
 		})
 
 		It("emits missing LRP metrics", func() {
