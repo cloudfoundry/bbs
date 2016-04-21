@@ -73,13 +73,15 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) int64 {
 	logger = logger.Session("fail-expired-pending-tasks")
 
+	now := db.clock.Now()
+
 	result, err := db.db.Exec(`
 		UPDATE tasks
-		SET failed = ?, failure_reason = ?, result = ?
+		SET failed = ?, failure_reason = ?, result = ?, state = ?, first_completed_at = ?, updated_at = ?
 		WHERE state = ? AND created_at < ?
 		`,
-		true, "not started within time limit", "",
-		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration).UnixNano())
+		true, "not started within time limit", "", models.Task_Completed, now.UnixNano(), now.UnixNano(),
+		models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 		return 0
@@ -132,7 +134,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 
 	values := make([]interface{}, 0, 4+len(cellSet))
 	values = append(values,
-		true, "cell disappeared before completion", "",
+		true, "cell disappeared before completion", "", models.Task_Completed, db.clock.Now().UnixNano(), db.clock.Now().UnixNano(),
 		models.Task_Running)
 
 	for k := range cellSet {
@@ -141,7 +143,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 
 	query := `
 		UPDATE tasks
-		SET failed = ?, failure_reason = ?, result = ?
+		SET failed = ?, failure_reason = ?, result = ?, state = ?, first_completed_at = ?, updated_at = ?
 		WHERE state = ?`
 
 	if len(cellSet) != 0 {

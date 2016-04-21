@@ -166,9 +166,9 @@ var _ = Describe("Convergence of Tasks", func() {
 		})
 
 		It("emits task status count metrics", func() {
-			Expect(sender.GetValue("TasksPending").Value).To(Equal(float64(3)))
-			Expect(sender.GetValue("TasksRunning").Value).To(Equal(float64(2)))
-			Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(3)))
+			Expect(sender.GetValue("TasksPending").Value).To(Equal(float64(2)))
+			Expect(sender.GetValue("TasksRunning").Value).To(Equal(float64(1)))
+			Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(5)))
 			Expect(sender.GetValue("TasksResolving").Value).To(Equal(float64(1)))
 
 			Expect(sender.GetCounter("ConvergenceTasksPruned")).To(Equal(uint64(4)))
@@ -182,6 +182,9 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(task.FailureReason).To(Equal("not started within time limit"))
 				Expect(task.Failed).To(BeTrue())
 				Expect(task.Result).To(Equal(""))
+				Expect(task.State).To(Equal(models.Task_Completed))
+				Expect(task.UpdatedAt).To(Equal(fakeClock.Now().UnixNano()))
+				Expect(task.FirstCompletedAt).To(Equal(fakeClock.Now().UnixNano()))
 
 				taskRequest := auctioneer.NewTaskStartRequestFromModel("pending-expired-task", domain, taskDef)
 				Expect(tasksToAuction).NotTo(ContainElement(&taskRequest))
@@ -220,6 +223,9 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(task.FailureReason).To(Equal("cell disappeared before completion"))
 				Expect(task.Failed).To(BeTrue())
 				Expect(task.Result).To(Equal(""))
+				Expect(task.State).To(Equal(models.Task_Completed))
+				Expect(task.UpdatedAt).To(Equal(fakeClock.Now().UnixNano()))
+				Expect(task.FirstCompletedAt).To(Equal(fakeClock.Now().UnixNano()))
 			})
 
 			It("doesn't do anything when their cells are present", func() {
@@ -230,6 +236,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.FailureReason).NotTo(Equal("cell disappeared before completion"))
 				Expect(task.Failed).NotTo(BeTrue())
+				Expect(task.State).To(Equal(models.Task_Running))
 			})
 		})
 
