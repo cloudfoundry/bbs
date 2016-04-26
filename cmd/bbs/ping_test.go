@@ -12,48 +12,28 @@ import (
 )
 
 var _ = Describe("Ping API", func() {
-	AfterEach(func() {
-		if bbsProcess != nil {
-			ginkgomon.Kill(bbsProcess)
-		}
-	})
-
 	Describe("Ping", func() {
-		Context("when the BBS Server is up", func() {
-			BeforeEach(func() {
-				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
-				bbsProcess = ginkgomon.Invoke(bbsRunner)
+		It("returns true when the bbs is running", func() {
+			defer ginkgomon.Kill(bbsProcess)
+
+			By("having the bbs down", func() {
+				Expect(client.Ping()).To(BeFalse())
 			})
 
-			It("returns true", func() {
-				Expect(client.Ping()).To(BeTrue())
-			})
-		})
-
-		Context("when the BBS Server is not the leader", func() {
-			var competingBBSLockProcess ifrit.Process
-			BeforeEach(func() {
+			By("starting the bbs without a lock", func() {
 				competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.LockTTL)
-				competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
+				competingBBSLockProcess := ifrit.Invoke(competingBBSLock)
+				defer ginkgomon.Kill(competingBBSLockProcess)
 
 				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 				bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
-
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
-			})
 
-			AfterEach(func() {
-				ginkgomon.Kill(competingBBSLockProcess)
-			})
-
-			It("returns false", func() {
 				Expect(client.Ping()).To(BeFalse())
 			})
-		})
 
-		Context("when the BBS Server down", func() {
-			It("returns false", func() {
-				Expect(client.Ping()).To(BeFalse())
+			By("finally acquiring the lock", func() {
+				Eventually(client.Ping).Should(BeTrue())
 			})
 		})
 	})
