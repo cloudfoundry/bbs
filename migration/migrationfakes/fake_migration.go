@@ -2,11 +2,13 @@
 package migrationfakes
 
 import (
+	"database/sql"
 	"sync"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/migration"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -42,6 +44,22 @@ type FakeMigration struct {
 	setCryptorMutex       sync.RWMutex
 	setCryptorArgsForCall []struct {
 		cryptor encryption.Cryptor
+	}
+	SetClockStub        func(c clock.Clock)
+	setClockMutex       sync.RWMutex
+	setClockArgsForCall []struct {
+		c clock.Clock
+	}
+	SetRawSQLDBStub        func(rawSQLDB *sql.DB)
+	setRawSQLDBMutex       sync.RWMutex
+	setRawSQLDBArgsForCall []struct {
+		rawSQLDB *sql.DB
+	}
+	RequiresSQLStub        func() bool
+	requiresSQLMutex       sync.RWMutex
+	requiresSQLArgsForCall []struct{}
+	requiresSQLReturns     struct {
+		result1 bool
 	}
 }
 
@@ -177,6 +195,76 @@ func (fake *FakeMigration) SetCryptorArgsForCall(i int) encryption.Cryptor {
 	fake.setCryptorMutex.RLock()
 	defer fake.setCryptorMutex.RUnlock()
 	return fake.setCryptorArgsForCall[i].cryptor
+}
+
+func (fake *FakeMigration) SetClock(c clock.Clock) {
+	fake.setClockMutex.Lock()
+	fake.setClockArgsForCall = append(fake.setClockArgsForCall, struct {
+		c clock.Clock
+	}{c})
+	fake.setClockMutex.Unlock()
+	if fake.SetClockStub != nil {
+		fake.SetClockStub(c)
+	}
+}
+
+func (fake *FakeMigration) SetClockCallCount() int {
+	fake.setClockMutex.RLock()
+	defer fake.setClockMutex.RUnlock()
+	return len(fake.setClockArgsForCall)
+}
+
+func (fake *FakeMigration) SetClockArgsForCall(i int) clock.Clock {
+	fake.setClockMutex.RLock()
+	defer fake.setClockMutex.RUnlock()
+	return fake.setClockArgsForCall[i].c
+}
+
+func (fake *FakeMigration) SetRawSQLDB(rawSQLDB *sql.DB) {
+	fake.setRawSQLDBMutex.Lock()
+	fake.setRawSQLDBArgsForCall = append(fake.setRawSQLDBArgsForCall, struct {
+		rawSQLDB *sql.DB
+	}{rawSQLDB})
+	fake.setRawSQLDBMutex.Unlock()
+	if fake.SetRawSQLDBStub != nil {
+		fake.SetRawSQLDBStub(rawSQLDB)
+	}
+}
+
+func (fake *FakeMigration) SetRawSQLDBCallCount() int {
+	fake.setRawSQLDBMutex.RLock()
+	defer fake.setRawSQLDBMutex.RUnlock()
+	return len(fake.setRawSQLDBArgsForCall)
+}
+
+func (fake *FakeMigration) SetRawSQLDBArgsForCall(i int) *sql.DB {
+	fake.setRawSQLDBMutex.RLock()
+	defer fake.setRawSQLDBMutex.RUnlock()
+	return fake.setRawSQLDBArgsForCall[i].rawSQLDB
+}
+
+func (fake *FakeMigration) RequiresSQL() bool {
+	fake.requiresSQLMutex.Lock()
+	fake.requiresSQLArgsForCall = append(fake.requiresSQLArgsForCall, struct{}{})
+	fake.requiresSQLMutex.Unlock()
+	if fake.RequiresSQLStub != nil {
+		return fake.RequiresSQLStub()
+	} else {
+		return fake.requiresSQLReturns.result1
+	}
+}
+
+func (fake *FakeMigration) RequiresSQLCallCount() int {
+	fake.requiresSQLMutex.RLock()
+	defer fake.requiresSQLMutex.RUnlock()
+	return len(fake.requiresSQLArgsForCall)
+}
+
+func (fake *FakeMigration) RequiresSQLReturns(result1 bool) {
+	fake.RequiresSQLStub = nil
+	fake.requiresSQLReturns = struct {
+		result1 bool
+	}{result1}
 }
 
 var _ migration.Migration = new(FakeMigration)

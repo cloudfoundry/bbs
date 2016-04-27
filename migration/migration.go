@@ -1,8 +1,11 @@
 package migration
 
 import (
+	"database/sql"
+
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -14,4 +17,7 @@ type Migration interface {
 	Down(logger lager.Logger) error
 	SetStoreClient(storeClient etcd.StoreClient)
 	SetCryptor(cryptor encryption.Cryptor)
+	SetClock(c clock.Clock)
+	SetRawSQLDB(rawSQLDB *sql.DB)
+	RequiresSQL() bool
 }

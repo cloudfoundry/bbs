@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"sort"
@@ -21,9 +22,11 @@ const (
 
 type Manager struct {
 	logger         lager.Logger
-	db             db.DB
-	cryptor        encryption.Cryptor
+	etcdDB         db.DB
 	storeClient    etcd.StoreClient
+	sqlDB          db.DB
+	rawSQLDB       *sql.DB
+	cryptor        encryption.Cryptor
 	migrations     []Migration
 	migrationsDone chan<- struct{}
 	clock          clock.Clock
@@ -31,9 +34,11 @@ type Manager struct {
 
 func NewManager(
 	logger lager.Logger,
-	db db.DB,
+	etcdDB db.DB,
+	etcdStoreClient etcd.StoreClient,
+	sqlDB db.DB,
+	rawSQLDB *sql.DB,
 	cryptor encryption.Cryptor,
-	storeClient etcd.StoreClient,
 	migrations Migrations,
 	migrationsDone chan<- struct{},
 	clock clock.Clock,
@@ -42,9 +47,11 @@ func NewManager(
 
 	return Manager{
 		logger:         logger,
-		db:             db,
+		etcdDB:         etcdDB,
+		storeClient:    etcdStoreClient,
+		sqlDB:          sqlDB,
+		rawSQLDB:       rawSQLDB,
 		cryptor:        cryptor,
-		storeClient:    storeClient,
 		migrations:     migrations,
 		migrationsDone: migrationsDone,
 		clock:          clock,
@@ -55,24 +62,21 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := m.logger.Session("migration-manager")
 	logger.Info("starting")
 
-	var bbsMigrationVersion int64
-	if len(m.migrations) > 0 {
-		bbsMigrationVersion = m.migrations[len(m.migrations)-1].Version()
+	possibleMigrationCount, maxMigrationVersion := m.findMaxTargetVersion()
+
+	version, err := m.resolveStoredVersion(logger, maxMigrationVersion)
+	if err != nil {
+		return err
 	}
 
-	version, err := m.db.Version(logger)
-	if err != nil {
-		if models.ConvertError(err) == models.ErrResourceNotFound {
-			err = m.writeVersion(bbsMigrationVersion, bbsMigrationVersion)
-			if err != nil {
-				return err
-			}
-
-			m.finishAndWait(logger, signals, ready)
-			return nil
-		} else {
+	if version == nil {
+		err = m.writeVersion(maxMigrationVersion, maxMigrationVersion)
+		if err != nil {
 			return err
 		}
+
+		m.finishAndWait(logger, signals, ready)
+		return nil
 	}
 
 	if version.TargetVersion < version.CurrentVersion {
@@ -83,28 +87,28 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		)
 	}
 
-	if version.CurrentVersion > bbsMigrationVersion {
+	if version.CurrentVersion > maxMigrationVersion {
 		return fmt.Errorf(
 			"Existing DB version (%d) exceeds bbs version (%d)",
 			version.CurrentVersion,
-			bbsMigrationVersion,
+			maxMigrationVersion,
 		)
 	}
 
-	if version.TargetVersion != bbsMigrationVersion {
-		if version.TargetVersion > bbsMigrationVersion {
-			version.TargetVersion = bbsMigrationVersion
+	if version.TargetVersion != maxMigrationVersion {
+		if version.TargetVersion > maxMigrationVersion {
+			version.TargetVersion = maxMigrationVersion
 		}
 
-		m.writeVersion(version.CurrentVersion, bbsMigrationVersion)
+		m.writeVersion(version.CurrentVersion, maxMigrationVersion)
 	}
 
 	migrateStart := m.clock.Now()
-	if version.CurrentVersion != bbsMigrationVersion {
+	if version.CurrentVersion != maxMigrationVersion {
 		lastVersion := version.CurrentVersion
 		nextVersion := version.CurrentVersion
 
-		for _, currentMigration := range m.migrations {
+		for _, currentMigration := range m.migrations[:possibleMigrationCount] {
 			if lastVersion < currentMigration.Version() {
 				if nextVersion > currentMigration.Version() {
 					return fmt.Errorf(
@@ -122,6 +126,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				})
 				currentMigration.SetCryptor(m.cryptor)
 				currentMigration.SetStoreClient(m.storeClient)
+				currentMigration.SetRawSQLDB(m.rawSQLDB)
+
 				err = currentMigration.Up(m.logger)
 				if err != nil {
 					return err
@@ -132,6 +138,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 		}
 
+		// we're done migrating
 		err = m.writeVersion(lastVersion, nextVersion)
 		if err != nil {
 			return err
@@ -148,6 +155,49 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	return nil
 }
 
+func (m *Manager) findMaxTargetVersion() (int, int64) {
+	if len(m.migrations) > 0 {
+		if m.rawSQLDB == nil {
+			for i, migration := range m.migrations {
+				if migration.RequiresSQL() {
+					return i, m.migrations[i-1].Version()
+				}
+			}
+		}
+		return len(m.migrations), m.migrations[len(m.migrations)-1].Version()
+	}
+	return 0, 0
+}
+
+// returns nil, nil if no version is found
+func (m *Manager) resolveStoredVersion(logger lager.Logger, maxMigrationVersion int64) (*models.Version, error) {
+	var (
+		version *models.Version
+		err     error
+	)
+
+	if m.hasSQLConfigured() {
+		version, err = m.sqlDB.Version(logger)
+		if err == nil {
+			return version, nil
+		} else if models.ConvertError(err) != models.ErrResourceNotFound {
+			return nil, err
+		}
+	}
+
+	if m.hasETCDConfigured() {
+		version, err = m.etcdDB.Version(logger)
+		if err != nil {
+			if models.ConvertError(err) == models.ErrResourceNotFound {
+				return nil, nil // totally fresh deploy
+			}
+			return nil, err
+		}
+		return version, nil
+	}
+	return nil, nil
+}
+
 func (m *Manager) finishAndWait(logger lager.Logger, signals <-chan os.Signal, ready chan<- struct{}) {
 	close(ready)
 	close(m.migrationsDone)
@@ -161,10 +211,36 @@ func (m *Manager) finishAndWait(logger lager.Logger, signals <-chan os.Signal, r
 }
 
 func (m *Manager) writeVersion(currentVersion, targetVersion int64) error {
-	return m.db.SetVersion(m.logger, &models.Version{
-		CurrentVersion: currentVersion,
-		TargetVersion:  targetVersion,
-	})
+	if m.hasSQLConfigured() {
+		err := m.sqlDB.SetVersion(m.logger, &models.Version{
+			CurrentVersion: currentVersion,
+			TargetVersion:  targetVersion,
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if m.hasETCDConfigured() {
+		err := m.etcdDB.SetVersion(m.logger, &models.Version{
+			CurrentVersion: currentVersion,
+			TargetVersion:  targetVersion,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) hasETCDConfigured() bool {
+	return m.storeClient != nil
+}
+
+func (m *Manager) hasSQLConfigured() bool {
+	return m.rawSQLDB != nil
 }
 
 type Migrations []Migration

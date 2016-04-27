@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
@@ -10,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	goetcd "github.com/coreos/go-etcd/etcd"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -114,6 +116,14 @@ func (b *Base64ProtobufEncode) Up(logger lager.Logger) error {
 
 func (b *Base64ProtobufEncode) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
+}
+
+func (b *Base64ProtobufEncode) SetRawSQLDB(*sql.DB) {}
+
+func (b *Base64ProtobufEncode) SetClock(clock.Clock) {}
+
+func (b *Base64ProtobufEncode) RequiresSQL() bool {
+	return false
 }
 
 func (b *Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner) error {
