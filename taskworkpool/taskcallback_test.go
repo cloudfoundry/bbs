@@ -213,7 +213,7 @@ var _ = Describe("TaskWorker", func() {
 						statusCodes <- 200
 
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
-						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.handle-completed-task.delete-task-failed"))
+						Eventually(logger.TestSink.LogMessages).Should(ContainElement("test.handle-completed-task.delete-task-failed"))
 					})
 				})
 
