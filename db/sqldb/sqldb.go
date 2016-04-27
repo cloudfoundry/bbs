@@ -2,6 +2,7 @@ package sqldb
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
@@ -62,23 +63,33 @@ func NewSQLDB(
 }
 
 func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx *sql.Tx) error) error {
-	tx, err := db.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
+	var err error
 
-	err = f(logger, tx)
-	if err != nil {
-		return err
+	for attempts := 0; attempts < 5; attempts++ {
+		err = func() error {
+			tx, err := db.db.Begin()
+			if err != nil {
+				return err
+			}
+			defer tx.Rollback()
+
+			err = f(logger, tx)
+			if err != nil {
+				return err
+			}
+
+			return tx.Commit()
+		}()
+
+		if db.convertSQLError(err) == models.ErrDeadlock {
+			logger.Error("deadlock-transaction-lambda", err, lager.Data{"attempts": attempts})
+			time.Sleep(500 * time.Millisecond)
+		} else {
+			break
+		}
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (db *SQLDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
@@ -114,6 +125,8 @@ func (db *SQLDB) convertMySQLError(err *mysql.MySQLError) *models.Error {
 	switch err.Number {
 	case 1062:
 		return models.ErrResourceExists
+	case 1213:
+		return models.ErrDeadlock
 	case 1406:
 		return models.ErrBadRequest
 	default:

@@ -46,6 +46,8 @@ message Error {
     GUIDGeneration = 26;
 
     Deserialize = 27;
+
+    Deadlock = 28;
   }
 
   optional Type type = 1 [(gogoproto.nullable) = false];

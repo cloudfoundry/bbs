@@ -54,6 +54,7 @@ const (
 	Error_DesiredLRPSchedulingInfoCannotBeUpdated Error_Type = 25
 	Error_GUIDGeneration                          Error_Type = 26
 	Error_Deserialize                             Error_Type = 27
+	Error_Deadlock                                Error_Type = 28
 )
 
 var Error_Type_name = map[int32]string{
@@ -85,6 +86,7 @@ var Error_Type_name = map[int32]string{
 	25: "DesiredLRPSchedulingInfoCannotBeUpdated",
 	26: "GUIDGeneration",
 	27: "Deserialize",
+	28: "Deadlock",
 }
 var Error_Type_value = map[string]int32{
 	"UnknownError":                            0,
@@ -115,6 +117,7 @@ var Error_Type_value = map[string]int32{
 	"DesiredLRPSchedulingInfoCannotBeUpdated": 25,
 	"GUIDGeneration":                          26,
 	"Deserialize":                             27,
+	"Deadlock":                                28,
 }
 
 func (x Error_Type) Enum() *Error_Type {
