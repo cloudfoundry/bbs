@@ -9,11 +9,14 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
+	"github.com/cloudfoundry/storeadapter/storerunner/mysqlrunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
 	"github.com/pivotal-golang/lager/lagertest"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/ginkgomon"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -27,7 +30,9 @@ var (
 	etcdClient  *etcdclient.Client
 	storeClient etcd.StoreClient
 
-	rawSQLDB *sql.DB
+	rawSQLDB     *sql.DB
+	mySQLProcess ifrit.Process
+	mySQLRunner  *mysqlrunner.MySQLRunner
 
 	cryptor   encryption.Cryptor
 	fakeClock *fakeclock.FakeClock
@@ -48,17 +53,14 @@ var _ = BeforeSuite(func() {
 
 	etcdRunner.Start()
 
+	mySQLRunner = mysqlrunner.NewMySQLRunner(fmt.Sprintf("diego_%d", GinkgoParallelNode()))
+	mySQLProcess = ginkgomon.Invoke(mySQLRunner)
+
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
 	var err error
-	rawSQLDB, err = sql.Open("mysql", "diego:diego_password@/")
-	Expect(err).NotTo(HaveOccurred())
-	Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 
-	_, err = rawSQLDB.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
-	Expect(err).NotTo(HaveOccurred())
-
-	rawSQLDB, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/diego_%d", GinkgoParallelNode()))
+	rawSQLDB, err = sql.Open("mysql", mySQLRunner.ConnectionString())
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 
@@ -74,8 +76,7 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 
-	_, err := rawSQLDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
-	Expect(err).NotTo(HaveOccurred())
+	ginkgomon.Kill(mySQLProcess)
 
 	Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
 })
@@ -87,4 +88,6 @@ var _ = BeforeEach(func() {
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	storeClient = etcd.NewStoreClient(etcdClient)
+
+	mySQLRunner.Reset()
 })
