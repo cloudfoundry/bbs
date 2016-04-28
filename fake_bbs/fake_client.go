@@ -10,7 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 )
 
-type FakeClient struct {
+type FakeInternalClient struct {
 	DesireTaskStub        func(guid, domain string, def *models.TaskDefinition) error
 	desireTaskMutex       sync.RWMutex
 	desireTaskArgsForCall []struct {
@@ -167,17 +167,10 @@ type FakeClient struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
-	SubscribeToDesiredLRPEventsStub        func() (events.EventSource, error)
-	subscribeToDesiredLRPEventsMutex       sync.RWMutex
-	subscribeToDesiredLRPEventsArgsForCall []struct{}
-	subscribeToDesiredLRPEventsReturns     struct {
-		result1 events.EventSource
-		result2 error
-	}
-	SubscribeToActualLRPEventsStub        func() (events.EventSource, error)
-	subscribeToActualLRPEventsMutex       sync.RWMutex
-	subscribeToActualLRPEventsArgsForCall []struct{}
-	subscribeToActualLRPEventsReturns     struct {
+	SubscribeToEventsStub        func() (events.EventSource, error)
+	subscribeToEventsMutex       sync.RWMutex
+	subscribeToEventsArgsForCall []struct{}
+	subscribeToEventsReturns     struct {
 		result1 events.EventSource
 		result2 error
 	}
@@ -192,6 +185,20 @@ type FakeClient struct {
 	cellsArgsForCall []struct{}
 	cellsReturns     struct {
 		result1 []*models.CellPresence
+		result2 error
+	}
+	SubscribeToDesiredLRPEventsStub        func() (events.EventSource, error)
+	subscribeToDesiredLRPEventsMutex       sync.RWMutex
+	subscribeToDesiredLRPEventsArgsForCall []struct{}
+	subscribeToDesiredLRPEventsReturns     struct {
+		result1 events.EventSource
+		result2 error
+	}
+	SubscribeToActualLRPEventsStub        func() (events.EventSource, error)
+	subscribeToActualLRPEventsMutex       sync.RWMutex
+	subscribeToActualLRPEventsArgsForCall []struct{}
+	subscribeToActualLRPEventsReturns     struct {
+		result1 events.EventSource
 		result2 error
 	}
 	ClaimActualLRPStub        func(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
@@ -357,16 +364,9 @@ type FakeClient struct {
 	deleteTaskReturns struct {
 		result1 error
 	}
-	SubscribeToEventsStub        func() (events.EventSource, error)
-	subscribeToEventsMutex       sync.RWMutex
-	subscribeToEventsArgsForCall []struct{}
-	subscribeToEventsReturns     struct {
-		result1 events.EventSource
-		result2 error
-	}
 }
 
-func (fake *FakeClient) DesireTask(guid string, domain string, def *models.TaskDefinition) error {
+func (fake *FakeInternalClient) DesireTask(guid string, domain string, def *models.TaskDefinition) error {
 	fake.desireTaskMutex.Lock()
 	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
 		guid   string
@@ -381,26 +381,26 @@ func (fake *FakeClient) DesireTask(guid string, domain string, def *models.TaskD
 	}
 }
 
-func (fake *FakeClient) DesireTaskCallCount() int {
+func (fake *FakeInternalClient) DesireTaskCallCount() int {
 	fake.desireTaskMutex.RLock()
 	defer fake.desireTaskMutex.RUnlock()
 	return len(fake.desireTaskArgsForCall)
 }
 
-func (fake *FakeClient) DesireTaskArgsForCall(i int) (string, string, *models.TaskDefinition) {
+func (fake *FakeInternalClient) DesireTaskArgsForCall(i int) (string, string, *models.TaskDefinition) {
 	fake.desireTaskMutex.RLock()
 	defer fake.desireTaskMutex.RUnlock()
 	return fake.desireTaskArgsForCall[i].guid, fake.desireTaskArgsForCall[i].domain, fake.desireTaskArgsForCall[i].def
 }
 
-func (fake *FakeClient) DesireTaskReturns(result1 error) {
+func (fake *FakeInternalClient) DesireTaskReturns(result1 error) {
 	fake.DesireTaskStub = nil
 	fake.desireTaskReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) Tasks() ([]*models.Task, error) {
+func (fake *FakeInternalClient) Tasks() ([]*models.Task, error) {
 	fake.tasksMutex.Lock()
 	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct{}{})
 	fake.tasksMutex.Unlock()
@@ -411,13 +411,13 @@ func (fake *FakeClient) Tasks() ([]*models.Task, error) {
 	}
 }
 
-func (fake *FakeClient) TasksCallCount() int {
+func (fake *FakeInternalClient) TasksCallCount() int {
 	fake.tasksMutex.RLock()
 	defer fake.tasksMutex.RUnlock()
 	return len(fake.tasksArgsForCall)
 }
 
-func (fake *FakeClient) TasksReturns(result1 []*models.Task, result2 error) {
+func (fake *FakeInternalClient) TasksReturns(result1 []*models.Task, result2 error) {
 	fake.TasksStub = nil
 	fake.tasksReturns = struct {
 		result1 []*models.Task
@@ -425,7 +425,7 @@ func (fake *FakeClient) TasksReturns(result1 []*models.Task, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeClient) TasksByDomain(domain string) ([]*models.Task, error) {
+func (fake *FakeInternalClient) TasksByDomain(domain string) ([]*models.Task, error) {
 	fake.tasksByDomainMutex.Lock()
 	fake.tasksByDomainArgsForCall = append(fake.tasksByDomainArgsForCall, struct {
 		domain string
@@ -438,19 +438,19 @@ func (fake *FakeClient) TasksByDomain(domain string) ([]*models.Task, error) {
 	}
 }
 
-func (fake *FakeClient) TasksByDomainCallCount() int {
+func (fake *FakeInternalClient) TasksByDomainCallCount() int {
 	fake.tasksByDomainMutex.RLock()
 	defer fake.tasksByDomainMutex.RUnlock()
 	return len(fake.tasksByDomainArgsForCall)
 }
 
-func (fake *FakeClient) TasksByDomainArgsForCall(i int) string {
+func (fake *FakeInternalClient) TasksByDomainArgsForCall(i int) string {
 	fake.tasksByDomainMutex.RLock()
 	defer fake.tasksByDomainMutex.RUnlock()
 	return fake.tasksByDomainArgsForCall[i].domain
 }
 
-func (fake *FakeClient) TasksByDomainReturns(result1 []*models.Task, result2 error) {
+func (fake *FakeInternalClient) TasksByDomainReturns(result1 []*models.Task, result2 error) {
 	fake.TasksByDomainStub = nil
 	fake.tasksByDomainReturns = struct {
 		result1 []*models.Task
@@ -458,7 +458,7 @@ func (fake *FakeClient) TasksByDomainReturns(result1 []*models.Task, result2 err
 	}{result1, result2}
 }
 
-func (fake *FakeClient) TasksByCellID(cellId string) ([]*models.Task, error) {
+func (fake *FakeInternalClient) TasksByCellID(cellId string) ([]*models.Task, error) {
 	fake.tasksByCellIDMutex.Lock()
 	fake.tasksByCellIDArgsForCall = append(fake.tasksByCellIDArgsForCall, struct {
 		cellId string
@@ -471,19 +471,19 @@ func (fake *FakeClient) TasksByCellID(cellId string) ([]*models.Task, error) {
 	}
 }
 
-func (fake *FakeClient) TasksByCellIDCallCount() int {
+func (fake *FakeInternalClient) TasksByCellIDCallCount() int {
 	fake.tasksByCellIDMutex.RLock()
 	defer fake.tasksByCellIDMutex.RUnlock()
 	return len(fake.tasksByCellIDArgsForCall)
 }
 
-func (fake *FakeClient) TasksByCellIDArgsForCall(i int) string {
+func (fake *FakeInternalClient) TasksByCellIDArgsForCall(i int) string {
 	fake.tasksByCellIDMutex.RLock()
 	defer fake.tasksByCellIDMutex.RUnlock()
 	return fake.tasksByCellIDArgsForCall[i].cellId
 }
 
-func (fake *FakeClient) TasksByCellIDReturns(result1 []*models.Task, result2 error) {
+func (fake *FakeInternalClient) TasksByCellIDReturns(result1 []*models.Task, result2 error) {
 	fake.TasksByCellIDStub = nil
 	fake.tasksByCellIDReturns = struct {
 		result1 []*models.Task
@@ -491,7 +491,7 @@ func (fake *FakeClient) TasksByCellIDReturns(result1 []*models.Task, result2 err
 	}{result1, result2}
 }
 
-func (fake *FakeClient) TaskByGuid(guid string) (*models.Task, error) {
+func (fake *FakeInternalClient) TaskByGuid(guid string) (*models.Task, error) {
 	fake.taskByGuidMutex.Lock()
 	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
 		guid string
@@ -504,19 +504,19 @@ func (fake *FakeClient) TaskByGuid(guid string) (*models.Task, error) {
 	}
 }
 
-func (fake *FakeClient) TaskByGuidCallCount() int {
+func (fake *FakeInternalClient) TaskByGuidCallCount() int {
 	fake.taskByGuidMutex.RLock()
 	defer fake.taskByGuidMutex.RUnlock()
 	return len(fake.taskByGuidArgsForCall)
 }
 
-func (fake *FakeClient) TaskByGuidArgsForCall(i int) string {
+func (fake *FakeInternalClient) TaskByGuidArgsForCall(i int) string {
 	fake.taskByGuidMutex.RLock()
 	defer fake.taskByGuidMutex.RUnlock()
 	return fake.taskByGuidArgsForCall[i].guid
 }
 
-func (fake *FakeClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
+func (fake *FakeInternalClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
 	fake.TaskByGuidStub = nil
 	fake.taskByGuidReturns = struct {
 		result1 *models.Task
@@ -524,7 +524,7 @@ func (fake *FakeClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeClient) CancelTask(taskGuid string) error {
+func (fake *FakeInternalClient) CancelTask(taskGuid string) error {
 	fake.cancelTaskMutex.Lock()
 	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
 		taskGuid string
@@ -537,26 +537,26 @@ func (fake *FakeClient) CancelTask(taskGuid string) error {
 	}
 }
 
-func (fake *FakeClient) CancelTaskCallCount() int {
+func (fake *FakeInternalClient) CancelTaskCallCount() int {
 	fake.cancelTaskMutex.RLock()
 	defer fake.cancelTaskMutex.RUnlock()
 	return len(fake.cancelTaskArgsForCall)
 }
 
-func (fake *FakeClient) CancelTaskArgsForCall(i int) string {
+func (fake *FakeInternalClient) CancelTaskArgsForCall(i int) string {
 	fake.cancelTaskMutex.RLock()
 	defer fake.cancelTaskMutex.RUnlock()
 	return fake.cancelTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeClient) CancelTaskReturns(result1 error) {
+func (fake *FakeInternalClient) CancelTaskReturns(result1 error) {
 	fake.CancelTaskStub = nil
 	fake.cancelTaskReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) Domains() ([]string, error) {
+func (fake *FakeInternalClient) Domains() ([]string, error) {
 	fake.domainsMutex.Lock()
 	fake.domainsArgsForCall = append(fake.domainsArgsForCall, struct{}{})
 	fake.domainsMutex.Unlock()
@@ -567,13 +567,13 @@ func (fake *FakeClient) Domains() ([]string, error) {
 	}
 }
 
-func (fake *FakeClient) DomainsCallCount() int {
+func (fake *FakeInternalClient) DomainsCallCount() int {
 	fake.domainsMutex.RLock()
 	defer fake.domainsMutex.RUnlock()
 	return len(fake.domainsArgsForCall)
 }
 
-func (fake *FakeClient) DomainsReturns(result1 []string, result2 error) {
+func (fake *FakeInternalClient) DomainsReturns(result1 []string, result2 error) {
 	fake.DomainsStub = nil
 	fake.domainsReturns = struct {
 		result1 []string
@@ -581,7 +581,7 @@ func (fake *FakeClient) DomainsReturns(result1 []string, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeClient) UpsertDomain(domain string, ttl time.Duration) error {
+func (fake *FakeInternalClient) UpsertDomain(domain string, ttl time.Duration) error {
 	fake.upsertDomainMutex.Lock()
 	fake.upsertDomainArgsForCall = append(fake.upsertDomainArgsForCall, struct {
 		domain string
@@ -595,26 +595,26 @@ func (fake *FakeClient) UpsertDomain(domain string, ttl time.Duration) error {
 	}
 }
 
-func (fake *FakeClient) UpsertDomainCallCount() int {
+func (fake *FakeInternalClient) UpsertDomainCallCount() int {
 	fake.upsertDomainMutex.RLock()
 	defer fake.upsertDomainMutex.RUnlock()
 	return len(fake.upsertDomainArgsForCall)
 }
 
-func (fake *FakeClient) UpsertDomainArgsForCall(i int) (string, time.Duration) {
+func (fake *FakeInternalClient) UpsertDomainArgsForCall(i int) (string, time.Duration) {
 	fake.upsertDomainMutex.RLock()
 	defer fake.upsertDomainMutex.RUnlock()
 	return fake.upsertDomainArgsForCall[i].domain, fake.upsertDomainArgsForCall[i].ttl
 }
 
-func (fake *FakeClient) UpsertDomainReturns(result1 error) {
+func (fake *FakeInternalClient) UpsertDomainReturns(result1 error) {
 	fake.UpsertDomainStub = nil
 	fake.upsertDomainReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) ActualLRPGroups(arg1 models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
+func (fake *FakeInternalClient) ActualLRPGroups(arg1 models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupsMutex.Lock()
 	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct {
 		arg1 models.ActualLRPFilter
@@ -627,19 +627,19 @@ func (fake *FakeClient) ActualLRPGroups(arg1 models.ActualLRPFilter) ([]*models.
 	}
 }
 
-func (fake *FakeClient) ActualLRPGroupsCallCount() int {
+func (fake *FakeInternalClient) ActualLRPGroupsCallCount() int {
 	fake.actualLRPGroupsMutex.RLock()
 	defer fake.actualLRPGroupsMutex.RUnlock()
 	return len(fake.actualLRPGroupsArgsForCall)
 }
 
-func (fake *FakeClient) ActualLRPGroupsArgsForCall(i int) models.ActualLRPFilter {
+func (fake *FakeInternalClient) ActualLRPGroupsArgsForCall(i int) models.ActualLRPFilter {
 	fake.actualLRPGroupsMutex.RLock()
 	defer fake.actualLRPGroupsMutex.RUnlock()
 	return fake.actualLRPGroupsArgsForCall[i].arg1
 }
 
-func (fake *FakeClient) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup, result2 error) {
+func (fake *FakeInternalClient) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup, result2 error) {
 	fake.ActualLRPGroupsStub = nil
 	fake.actualLRPGroupsReturns = struct {
 		result1 []*models.ActualLRPGroup
@@ -647,7 +647,7 @@ func (fake *FakeClient) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup,
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {
+func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupsByProcessGuidMutex.Lock()
 	fake.actualLRPGroupsByProcessGuidArgsForCall = append(fake.actualLRPGroupsByProcessGuidArgsForCall, struct {
 		processGuid string
@@ -660,19 +660,19 @@ func (fake *FakeClient) ActualLRPGroupsByProcessGuid(processGuid string) ([]*mod
 	}
 }
 
-func (fake *FakeClient) ActualLRPGroupsByProcessGuidCallCount() int {
+func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidCallCount() int {
 	fake.actualLRPGroupsByProcessGuidMutex.RLock()
 	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
 	return len(fake.actualLRPGroupsByProcessGuidArgsForCall)
 }
 
-func (fake *FakeClient) ActualLRPGroupsByProcessGuidArgsForCall(i int) string {
+func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidArgsForCall(i int) string {
 	fake.actualLRPGroupsByProcessGuidMutex.RLock()
 	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
 	return fake.actualLRPGroupsByProcessGuidArgsForCall[i].processGuid
 }
 
-func (fake *FakeClient) ActualLRPGroupsByProcessGuidReturns(result1 []*models.ActualLRPGroup, result2 error) {
+func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidReturns(result1 []*models.ActualLRPGroup, result2 error) {
 	fake.ActualLRPGroupsByProcessGuidStub = nil
 	fake.actualLRPGroupsByProcessGuidReturns = struct {
 		result1 []*models.ActualLRPGroup
@@ -680,7 +680,7 @@ func (fake *FakeClient) ActualLRPGroupsByProcessGuidReturns(result1 []*models.Ac
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {
+func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.Lock()
 	fake.actualLRPGroupByProcessGuidAndIndexArgsForCall = append(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall, struct {
 		processGuid string
@@ -694,19 +694,19 @@ func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndex(processGuid string, 
 	}
 }
 
-func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexCallCount() int {
+func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexCallCount() int {
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
 	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
 	return len(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall)
 }
 
-func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexArgsForCall(i int) (string, int) {
+func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexArgsForCall(i int) (string, int) {
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
 	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
 	return fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].processGuid, fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i].index
 }
 
-func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *models.ActualLRPGroup, result2 error) {
+func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *models.ActualLRPGroup, result2 error) {
 	fake.ActualLRPGroupByProcessGuidAndIndexStub = nil
 	fake.actualLRPGroupByProcessGuidAndIndexReturns = struct {
 		result1 *models.ActualLRPGroup
@@ -714,7 +714,7 @@ func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *mode
 	}{result1, result2}
 }
 
-func (fake *FakeClient) RetireActualLRP(key *models.ActualLRPKey) error {
+func (fake *FakeInternalClient) RetireActualLRP(key *models.ActualLRPKey) error {
 	fake.retireActualLRPMutex.Lock()
 	fake.retireActualLRPArgsForCall = append(fake.retireActualLRPArgsForCall, struct {
 		key *models.ActualLRPKey
@@ -727,26 +727,26 @@ func (fake *FakeClient) RetireActualLRP(key *models.ActualLRPKey) error {
 	}
 }
 
-func (fake *FakeClient) RetireActualLRPCallCount() int {
+func (fake *FakeInternalClient) RetireActualLRPCallCount() int {
 	fake.retireActualLRPMutex.RLock()
 	defer fake.retireActualLRPMutex.RUnlock()
 	return len(fake.retireActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) RetireActualLRPArgsForCall(i int) *models.ActualLRPKey {
+func (fake *FakeInternalClient) RetireActualLRPArgsForCall(i int) *models.ActualLRPKey {
 	fake.retireActualLRPMutex.RLock()
 	defer fake.retireActualLRPMutex.RUnlock()
 	return fake.retireActualLRPArgsForCall[i].key
 }
 
-func (fake *FakeClient) RetireActualLRPReturns(result1 error) {
+func (fake *FakeInternalClient) RetireActualLRPReturns(result1 error) {
 	fake.RetireActualLRPStub = nil
 	fake.retireActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) DesiredLRPs(arg1 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+func (fake *FakeInternalClient) DesiredLRPs(arg1 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	fake.desiredLRPsMutex.Lock()
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
 		arg1 models.DesiredLRPFilter
@@ -759,19 +759,19 @@ func (fake *FakeClient) DesiredLRPs(arg1 models.DesiredLRPFilter) ([]*models.Des
 	}
 }
 
-func (fake *FakeClient) DesiredLRPsCallCount() int {
+func (fake *FakeInternalClient) DesiredLRPsCallCount() int {
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
 	return len(fake.desiredLRPsArgsForCall)
 }
 
-func (fake *FakeClient) DesiredLRPsArgsForCall(i int) models.DesiredLRPFilter {
+func (fake *FakeInternalClient) DesiredLRPsArgsForCall(i int) models.DesiredLRPFilter {
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
 	return fake.desiredLRPsArgsForCall[i].arg1
 }
 
-func (fake *FakeClient) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2 error) {
+func (fake *FakeInternalClient) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2 error) {
 	fake.DesiredLRPsStub = nil
 	fake.desiredLRPsReturns = struct {
 		result1 []*models.DesiredLRP
@@ -779,7 +779,7 @@ func (fake *FakeClient) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2
 	}{result1, result2}
 }
 
-func (fake *FakeClient) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {
+func (fake *FakeInternalClient) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {
 	fake.desiredLRPByProcessGuidMutex.Lock()
 	fake.desiredLRPByProcessGuidArgsForCall = append(fake.desiredLRPByProcessGuidArgsForCall, struct {
 		processGuid string
@@ -792,19 +792,19 @@ func (fake *FakeClient) DesiredLRPByProcessGuid(processGuid string) (*models.Des
 	}
 }
 
-func (fake *FakeClient) DesiredLRPByProcessGuidCallCount() int {
+func (fake *FakeInternalClient) DesiredLRPByProcessGuidCallCount() int {
 	fake.desiredLRPByProcessGuidMutex.RLock()
 	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
 	return len(fake.desiredLRPByProcessGuidArgsForCall)
 }
 
-func (fake *FakeClient) DesiredLRPByProcessGuidArgsForCall(i int) string {
+func (fake *FakeInternalClient) DesiredLRPByProcessGuidArgsForCall(i int) string {
 	fake.desiredLRPByProcessGuidMutex.RLock()
 	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
 	return fake.desiredLRPByProcessGuidArgsForCall[i].processGuid
 }
 
-func (fake *FakeClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 error) {
+func (fake *FakeInternalClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 error) {
 	fake.DesiredLRPByProcessGuidStub = nil
 	fake.desiredLRPByProcessGuidReturns = struct {
 		result1 *models.DesiredLRP
@@ -812,7 +812,7 @@ func (fake *FakeClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLR
 	}{result1, result2}
 }
 
-func (fake *FakeClient) DesiredLRPSchedulingInfos(arg1 models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+func (fake *FakeInternalClient) DesiredLRPSchedulingInfos(arg1 models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
 	fake.desiredLRPSchedulingInfosMutex.Lock()
 	fake.desiredLRPSchedulingInfosArgsForCall = append(fake.desiredLRPSchedulingInfosArgsForCall, struct {
 		arg1 models.DesiredLRPFilter
@@ -825,19 +825,19 @@ func (fake *FakeClient) DesiredLRPSchedulingInfos(arg1 models.DesiredLRPFilter) 
 	}
 }
 
-func (fake *FakeClient) DesiredLRPSchedulingInfosCallCount() int {
+func (fake *FakeInternalClient) DesiredLRPSchedulingInfosCallCount() int {
 	fake.desiredLRPSchedulingInfosMutex.RLock()
 	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
 	return len(fake.desiredLRPSchedulingInfosArgsForCall)
 }
 
-func (fake *FakeClient) DesiredLRPSchedulingInfosArgsForCall(i int) models.DesiredLRPFilter {
+func (fake *FakeInternalClient) DesiredLRPSchedulingInfosArgsForCall(i int) models.DesiredLRPFilter {
 	fake.desiredLRPSchedulingInfosMutex.RLock()
 	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
 	return fake.desiredLRPSchedulingInfosArgsForCall[i].arg1
 }
 
-func (fake *FakeClient) DesiredLRPSchedulingInfosReturns(result1 []*models.DesiredLRPSchedulingInfo, result2 error) {
+func (fake *FakeInternalClient) DesiredLRPSchedulingInfosReturns(result1 []*models.DesiredLRPSchedulingInfo, result2 error) {
 	fake.DesiredLRPSchedulingInfosStub = nil
 	fake.desiredLRPSchedulingInfosReturns = struct {
 		result1 []*models.DesiredLRPSchedulingInfo
@@ -845,7 +845,7 @@ func (fake *FakeClient) DesiredLRPSchedulingInfosReturns(result1 []*models.Desir
 	}{result1, result2}
 }
 
-func (fake *FakeClient) DesireLRP(arg1 *models.DesiredLRP) error {
+func (fake *FakeInternalClient) DesireLRP(arg1 *models.DesiredLRP) error {
 	fake.desireLRPMutex.Lock()
 	fake.desireLRPArgsForCall = append(fake.desireLRPArgsForCall, struct {
 		arg1 *models.DesiredLRP
@@ -858,26 +858,26 @@ func (fake *FakeClient) DesireLRP(arg1 *models.DesiredLRP) error {
 	}
 }
 
-func (fake *FakeClient) DesireLRPCallCount() int {
+func (fake *FakeInternalClient) DesireLRPCallCount() int {
 	fake.desireLRPMutex.RLock()
 	defer fake.desireLRPMutex.RUnlock()
 	return len(fake.desireLRPArgsForCall)
 }
 
-func (fake *FakeClient) DesireLRPArgsForCall(i int) *models.DesiredLRP {
+func (fake *FakeInternalClient) DesireLRPArgsForCall(i int) *models.DesiredLRP {
 	fake.desireLRPMutex.RLock()
 	defer fake.desireLRPMutex.RUnlock()
 	return fake.desireLRPArgsForCall[i].arg1
 }
 
-func (fake *FakeClient) DesireLRPReturns(result1 error) {
+func (fake *FakeInternalClient) DesireLRPReturns(result1 error) {
 	fake.DesireLRPStub = nil
 	fake.desireLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error {
+func (fake *FakeInternalClient) UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error {
 	fake.updateDesiredLRPMutex.Lock()
 	fake.updateDesiredLRPArgsForCall = append(fake.updateDesiredLRPArgsForCall, struct {
 		processGuid string
@@ -891,26 +891,26 @@ func (fake *FakeClient) UpdateDesiredLRP(processGuid string, update *models.Desi
 	}
 }
 
-func (fake *FakeClient) UpdateDesiredLRPCallCount() int {
+func (fake *FakeInternalClient) UpdateDesiredLRPCallCount() int {
 	fake.updateDesiredLRPMutex.RLock()
 	defer fake.updateDesiredLRPMutex.RUnlock()
 	return len(fake.updateDesiredLRPArgsForCall)
 }
 
-func (fake *FakeClient) UpdateDesiredLRPArgsForCall(i int) (string, *models.DesiredLRPUpdate) {
+func (fake *FakeInternalClient) UpdateDesiredLRPArgsForCall(i int) (string, *models.DesiredLRPUpdate) {
 	fake.updateDesiredLRPMutex.RLock()
 	defer fake.updateDesiredLRPMutex.RUnlock()
 	return fake.updateDesiredLRPArgsForCall[i].processGuid, fake.updateDesiredLRPArgsForCall[i].update
 }
 
-func (fake *FakeClient) UpdateDesiredLRPReturns(result1 error) {
+func (fake *FakeInternalClient) UpdateDesiredLRPReturns(result1 error) {
 	fake.UpdateDesiredLRPStub = nil
 	fake.updateDesiredLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) RemoveDesiredLRP(processGuid string) error {
+func (fake *FakeInternalClient) RemoveDesiredLRP(processGuid string) error {
 	fake.removeDesiredLRPMutex.Lock()
 	fake.removeDesiredLRPArgsForCall = append(fake.removeDesiredLRPArgsForCall, struct {
 		processGuid string
@@ -923,76 +923,51 @@ func (fake *FakeClient) RemoveDesiredLRP(processGuid string) error {
 	}
 }
 
-func (fake *FakeClient) RemoveDesiredLRPCallCount() int {
+func (fake *FakeInternalClient) RemoveDesiredLRPCallCount() int {
 	fake.removeDesiredLRPMutex.RLock()
 	defer fake.removeDesiredLRPMutex.RUnlock()
 	return len(fake.removeDesiredLRPArgsForCall)
 }
 
-func (fake *FakeClient) RemoveDesiredLRPArgsForCall(i int) string {
+func (fake *FakeInternalClient) RemoveDesiredLRPArgsForCall(i int) string {
 	fake.removeDesiredLRPMutex.RLock()
 	defer fake.removeDesiredLRPMutex.RUnlock()
 	return fake.removeDesiredLRPArgsForCall[i].processGuid
 }
 
-func (fake *FakeClient) RemoveDesiredLRPReturns(result1 error) {
+func (fake *FakeInternalClient) RemoveDesiredLRPReturns(result1 error) {
 	fake.RemoveDesiredLRPStub = nil
 	fake.removeDesiredLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
-	fake.subscribeToDesiredLRPEventsMutex.Lock()
-	fake.subscribeToDesiredLRPEventsArgsForCall = append(fake.subscribeToDesiredLRPEventsArgsForCall, struct{}{})
-	fake.subscribeToDesiredLRPEventsMutex.Unlock()
-	if fake.SubscribeToDesiredLRPEventsStub != nil {
-		return fake.SubscribeToDesiredLRPEventsStub()
+func (fake *FakeInternalClient) SubscribeToEvents() (events.EventSource, error) {
+	fake.subscribeToEventsMutex.Lock()
+	fake.subscribeToEventsArgsForCall = append(fake.subscribeToEventsArgsForCall, struct{}{})
+	fake.subscribeToEventsMutex.Unlock()
+	if fake.SubscribeToEventsStub != nil {
+		return fake.SubscribeToEventsStub()
 	} else {
-		return fake.subscribeToDesiredLRPEventsReturns.result1, fake.subscribeToDesiredLRPEventsReturns.result2
+		return fake.subscribeToEventsReturns.result1, fake.subscribeToEventsReturns.result2
 	}
 }
 
-func (fake *FakeClient) SubscribeToDesiredLRPEventsCallCount() int {
-	fake.subscribeToDesiredLRPEventsMutex.RLock()
-	defer fake.subscribeToDesiredLRPEventsMutex.RUnlock()
-	return len(fake.subscribeToDesiredLRPEventsArgsForCall)
+func (fake *FakeInternalClient) SubscribeToEventsCallCount() int {
+	fake.subscribeToEventsMutex.RLock()
+	defer fake.subscribeToEventsMutex.RUnlock()
+	return len(fake.subscribeToEventsArgsForCall)
 }
 
-func (fake *FakeClient) SubscribeToDesiredLRPEventsReturns(result1 events.EventSource, result2 error) {
-	fake.SubscribeToDesiredLRPEventsStub = nil
-	fake.subscribeToDesiredLRPEventsReturns = struct {
+func (fake *FakeInternalClient) SubscribeToEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToEventsStub = nil
+	fake.subscribeToEventsReturns = struct {
 		result1 events.EventSource
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeClient) SubscribeToActualLRPEvents() (events.EventSource, error) {
-	fake.subscribeToActualLRPEventsMutex.Lock()
-	fake.subscribeToActualLRPEventsArgsForCall = append(fake.subscribeToActualLRPEventsArgsForCall, struct{}{})
-	fake.subscribeToActualLRPEventsMutex.Unlock()
-	if fake.SubscribeToActualLRPEventsStub != nil {
-		return fake.SubscribeToActualLRPEventsStub()
-	} else {
-		return fake.subscribeToActualLRPEventsReturns.result1, fake.subscribeToActualLRPEventsReturns.result2
-	}
-}
-
-func (fake *FakeClient) SubscribeToActualLRPEventsCallCount() int {
-	fake.subscribeToActualLRPEventsMutex.RLock()
-	defer fake.subscribeToActualLRPEventsMutex.RUnlock()
-	return len(fake.subscribeToActualLRPEventsArgsForCall)
-}
-
-func (fake *FakeClient) SubscribeToActualLRPEventsReturns(result1 events.EventSource, result2 error) {
-	fake.SubscribeToActualLRPEventsStub = nil
-	fake.subscribeToActualLRPEventsReturns = struct {
-		result1 events.EventSource
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeClient) Ping() bool {
+func (fake *FakeInternalClient) Ping() bool {
 	fake.pingMutex.Lock()
 	fake.pingArgsForCall = append(fake.pingArgsForCall, struct{}{})
 	fake.pingMutex.Unlock()
@@ -1003,20 +978,20 @@ func (fake *FakeClient) Ping() bool {
 	}
 }
 
-func (fake *FakeClient) PingCallCount() int {
+func (fake *FakeInternalClient) PingCallCount() int {
 	fake.pingMutex.RLock()
 	defer fake.pingMutex.RUnlock()
 	return len(fake.pingArgsForCall)
 }
 
-func (fake *FakeClient) PingReturns(result1 bool) {
+func (fake *FakeInternalClient) PingReturns(result1 bool) {
 	fake.PingStub = nil
 	fake.pingReturns = struct {
 		result1 bool
 	}{result1}
 }
 
-func (fake *FakeClient) Cells() ([]*models.CellPresence, error) {
+func (fake *FakeInternalClient) Cells() ([]*models.CellPresence, error) {
 	fake.cellsMutex.Lock()
 	fake.cellsArgsForCall = append(fake.cellsArgsForCall, struct{}{})
 	fake.cellsMutex.Unlock()
@@ -1027,13 +1002,13 @@ func (fake *FakeClient) Cells() ([]*models.CellPresence, error) {
 	}
 }
 
-func (fake *FakeClient) CellsCallCount() int {
+func (fake *FakeInternalClient) CellsCallCount() int {
 	fake.cellsMutex.RLock()
 	defer fake.cellsMutex.RUnlock()
 	return len(fake.cellsArgsForCall)
 }
 
-func (fake *FakeClient) CellsReturns(result1 []*models.CellPresence, result2 error) {
+func (fake *FakeInternalClient) CellsReturns(result1 []*models.CellPresence, result2 error) {
 	fake.CellsStub = nil
 	fake.cellsReturns = struct {
 		result1 []*models.CellPresence
@@ -1041,7 +1016,57 @@ func (fake *FakeClient) CellsReturns(result1 []*models.CellPresence, result2 err
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
+func (fake *FakeInternalClient) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
+	fake.subscribeToDesiredLRPEventsMutex.Lock()
+	fake.subscribeToDesiredLRPEventsArgsForCall = append(fake.subscribeToDesiredLRPEventsArgsForCall, struct{}{})
+	fake.subscribeToDesiredLRPEventsMutex.Unlock()
+	if fake.SubscribeToDesiredLRPEventsStub != nil {
+		return fake.SubscribeToDesiredLRPEventsStub()
+	} else {
+		return fake.subscribeToDesiredLRPEventsReturns.result1, fake.subscribeToDesiredLRPEventsReturns.result2
+	}
+}
+
+func (fake *FakeInternalClient) SubscribeToDesiredLRPEventsCallCount() int {
+	fake.subscribeToDesiredLRPEventsMutex.RLock()
+	defer fake.subscribeToDesiredLRPEventsMutex.RUnlock()
+	return len(fake.subscribeToDesiredLRPEventsArgsForCall)
+}
+
+func (fake *FakeInternalClient) SubscribeToDesiredLRPEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToDesiredLRPEventsStub = nil
+	fake.subscribeToDesiredLRPEventsReturns = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeInternalClient) SubscribeToActualLRPEvents() (events.EventSource, error) {
+	fake.subscribeToActualLRPEventsMutex.Lock()
+	fake.subscribeToActualLRPEventsArgsForCall = append(fake.subscribeToActualLRPEventsArgsForCall, struct{}{})
+	fake.subscribeToActualLRPEventsMutex.Unlock()
+	if fake.SubscribeToActualLRPEventsStub != nil {
+		return fake.SubscribeToActualLRPEventsStub()
+	} else {
+		return fake.subscribeToActualLRPEventsReturns.result1, fake.subscribeToActualLRPEventsReturns.result2
+	}
+}
+
+func (fake *FakeInternalClient) SubscribeToActualLRPEventsCallCount() int {
+	fake.subscribeToActualLRPEventsMutex.RLock()
+	defer fake.subscribeToActualLRPEventsMutex.RUnlock()
+	return len(fake.subscribeToActualLRPEventsArgsForCall)
+}
+
+func (fake *FakeInternalClient) SubscribeToActualLRPEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToActualLRPEventsStub = nil
+	fake.subscribeToActualLRPEventsReturns = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeInternalClient) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
 	fake.claimActualLRPMutex.Lock()
 	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
 		processGuid string
@@ -1056,26 +1081,26 @@ func (fake *FakeClient) ClaimActualLRP(processGuid string, index int, instanceKe
 	}
 }
 
-func (fake *FakeClient) ClaimActualLRPCallCount() int {
+func (fake *FakeInternalClient) ClaimActualLRPCallCount() int {
 	fake.claimActualLRPMutex.RLock()
 	defer fake.claimActualLRPMutex.RUnlock()
 	return len(fake.claimActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) ClaimActualLRPArgsForCall(i int) (string, int, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) ClaimActualLRPArgsForCall(i int) (string, int, *models.ActualLRPInstanceKey) {
 	fake.claimActualLRPMutex.RLock()
 	defer fake.claimActualLRPMutex.RUnlock()
 	return fake.claimActualLRPArgsForCall[i].processGuid, fake.claimActualLRPArgsForCall[i].index, fake.claimActualLRPArgsForCall[i].instanceKey
 }
 
-func (fake *FakeClient) ClaimActualLRPReturns(result1 error) {
+func (fake *FakeInternalClient) ClaimActualLRPReturns(result1 error) {
 	fake.ClaimActualLRPStub = nil
 	fake.claimActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
+func (fake *FakeInternalClient) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
 	fake.startActualLRPMutex.Lock()
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
 		key         *models.ActualLRPKey
@@ -1090,26 +1115,26 @@ func (fake *FakeClient) StartActualLRP(key *models.ActualLRPKey, instanceKey *mo
 	}
 }
 
-func (fake *FakeClient) StartActualLRPCallCount() int {
+func (fake *FakeInternalClient) StartActualLRPCallCount() int {
 	fake.startActualLRPMutex.RLock()
 	defer fake.startActualLRPMutex.RUnlock()
 	return len(fake.startActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) StartActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
+func (fake *FakeInternalClient) StartActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
 	fake.startActualLRPMutex.RLock()
 	defer fake.startActualLRPMutex.RUnlock()
 	return fake.startActualLRPArgsForCall[i].key, fake.startActualLRPArgsForCall[i].instanceKey, fake.startActualLRPArgsForCall[i].netInfo
 }
 
-func (fake *FakeClient) StartActualLRPReturns(result1 error) {
+func (fake *FakeInternalClient) StartActualLRPReturns(result1 error) {
 	fake.StartActualLRPStub = nil
 	fake.startActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+func (fake *FakeInternalClient) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
 	fake.crashActualLRPMutex.Lock()
 	fake.crashActualLRPArgsForCall = append(fake.crashActualLRPArgsForCall, struct {
 		key          *models.ActualLRPKey
@@ -1124,26 +1149,26 @@ func (fake *FakeClient) CrashActualLRP(key *models.ActualLRPKey, instanceKey *mo
 	}
 }
 
-func (fake *FakeClient) CrashActualLRPCallCount() int {
+func (fake *FakeInternalClient) CrashActualLRPCallCount() int {
 	fake.crashActualLRPMutex.RLock()
 	defer fake.crashActualLRPMutex.RUnlock()
 	return len(fake.crashActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) CrashActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
+func (fake *FakeInternalClient) CrashActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
 	fake.crashActualLRPMutex.RLock()
 	defer fake.crashActualLRPMutex.RUnlock()
 	return fake.crashActualLRPArgsForCall[i].key, fake.crashActualLRPArgsForCall[i].instanceKey, fake.crashActualLRPArgsForCall[i].errorMessage
 }
 
-func (fake *FakeClient) CrashActualLRPReturns(result1 error) {
+func (fake *FakeInternalClient) CrashActualLRPReturns(result1 error) {
 	fake.CrashActualLRPStub = nil
 	fake.crashActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
+func (fake *FakeInternalClient) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
 	fake.failActualLRPMutex.Lock()
 	fake.failActualLRPArgsForCall = append(fake.failActualLRPArgsForCall, struct {
 		key          *models.ActualLRPKey
@@ -1157,26 +1182,26 @@ func (fake *FakeClient) FailActualLRP(key *models.ActualLRPKey, errorMessage str
 	}
 }
 
-func (fake *FakeClient) FailActualLRPCallCount() int {
+func (fake *FakeInternalClient) FailActualLRPCallCount() int {
 	fake.failActualLRPMutex.RLock()
 	defer fake.failActualLRPMutex.RUnlock()
 	return len(fake.failActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) FailActualLRPArgsForCall(i int) (*models.ActualLRPKey, string) {
+func (fake *FakeInternalClient) FailActualLRPArgsForCall(i int) (*models.ActualLRPKey, string) {
 	fake.failActualLRPMutex.RLock()
 	defer fake.failActualLRPMutex.RUnlock()
 	return fake.failActualLRPArgsForCall[i].key, fake.failActualLRPArgsForCall[i].errorMessage
 }
 
-func (fake *FakeClient) FailActualLRPReturns(result1 error) {
+func (fake *FakeInternalClient) FailActualLRPReturns(result1 error) {
 	fake.FailActualLRPStub = nil
 	fake.failActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) RemoveActualLRP(processGuid string, index int) error {
+func (fake *FakeInternalClient) RemoveActualLRP(processGuid string, index int) error {
 	fake.removeActualLRPMutex.Lock()
 	fake.removeActualLRPArgsForCall = append(fake.removeActualLRPArgsForCall, struct {
 		processGuid string
@@ -1190,26 +1215,26 @@ func (fake *FakeClient) RemoveActualLRP(processGuid string, index int) error {
 	}
 }
 
-func (fake *FakeClient) RemoveActualLRPCallCount() int {
+func (fake *FakeInternalClient) RemoveActualLRPCallCount() int {
 	fake.removeActualLRPMutex.RLock()
 	defer fake.removeActualLRPMutex.RUnlock()
 	return len(fake.removeActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) RemoveActualLRPArgsForCall(i int) (string, int) {
+func (fake *FakeInternalClient) RemoveActualLRPArgsForCall(i int) (string, int) {
 	fake.removeActualLRPMutex.RLock()
 	defer fake.removeActualLRPMutex.RUnlock()
 	return fake.removeActualLRPArgsForCall[i].processGuid, fake.removeActualLRPArgsForCall[i].index
 }
 
-func (fake *FakeClient) RemoveActualLRPReturns(result1 error) {
+func (fake *FakeInternalClient) RemoveActualLRPReturns(result1 error) {
 	fake.RemoveActualLRPStub = nil
 	fake.removeActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) EvacuateClaimedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) (bool, error) {
+func (fake *FakeInternalClient) EvacuateClaimedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) (bool, error) {
 	fake.evacuateClaimedActualLRPMutex.Lock()
 	fake.evacuateClaimedActualLRPArgsForCall = append(fake.evacuateClaimedActualLRPArgsForCall, struct {
 		arg1 *models.ActualLRPKey
@@ -1223,19 +1248,19 @@ func (fake *FakeClient) EvacuateClaimedActualLRP(arg1 *models.ActualLRPKey, arg2
 	}
 }
 
-func (fake *FakeClient) EvacuateClaimedActualLRPCallCount() int {
+func (fake *FakeInternalClient) EvacuateClaimedActualLRPCallCount() int {
 	fake.evacuateClaimedActualLRPMutex.RLock()
 	defer fake.evacuateClaimedActualLRPMutex.RUnlock()
 	return len(fake.evacuateClaimedActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) EvacuateClaimedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) EvacuateClaimedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.evacuateClaimedActualLRPMutex.RLock()
 	defer fake.evacuateClaimedActualLRPMutex.RUnlock()
 	return fake.evacuateClaimedActualLRPArgsForCall[i].arg1, fake.evacuateClaimedActualLRPArgsForCall[i].arg2
 }
 
-func (fake *FakeClient) EvacuateClaimedActualLRPReturns(result1 bool, result2 error) {
+func (fake *FakeInternalClient) EvacuateClaimedActualLRPReturns(result1 bool, result2 error) {
 	fake.EvacuateClaimedActualLRPStub = nil
 	fake.evacuateClaimedActualLRPReturns = struct {
 		result1 bool
@@ -1243,7 +1268,7 @@ func (fake *FakeClient) EvacuateClaimedActualLRPReturns(result1 bool, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakeClient) EvacuateRunningActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey, arg3 *models.ActualLRPNetInfo, arg4 uint64) (bool, error) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey, arg3 *models.ActualLRPNetInfo, arg4 uint64) (bool, error) {
 	fake.evacuateRunningActualLRPMutex.Lock()
 	fake.evacuateRunningActualLRPArgsForCall = append(fake.evacuateRunningActualLRPArgsForCall, struct {
 		arg1 *models.ActualLRPKey
@@ -1259,19 +1284,19 @@ func (fake *FakeClient) EvacuateRunningActualLRP(arg1 *models.ActualLRPKey, arg2
 	}
 }
 
-func (fake *FakeClient) EvacuateRunningActualLRPCallCount() int {
+func (fake *FakeInternalClient) EvacuateRunningActualLRPCallCount() int {
 	fake.evacuateRunningActualLRPMutex.RLock()
 	defer fake.evacuateRunningActualLRPMutex.RUnlock()
 	return len(fake.evacuateRunningActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) EvacuateRunningActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) {
 	fake.evacuateRunningActualLRPMutex.RLock()
 	defer fake.evacuateRunningActualLRPMutex.RUnlock()
 	return fake.evacuateRunningActualLRPArgsForCall[i].arg1, fake.evacuateRunningActualLRPArgsForCall[i].arg2, fake.evacuateRunningActualLRPArgsForCall[i].arg3, fake.evacuateRunningActualLRPArgsForCall[i].arg4
 }
 
-func (fake *FakeClient) EvacuateRunningActualLRPReturns(result1 bool, result2 error) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRPReturns(result1 bool, result2 error) {
 	fake.EvacuateRunningActualLRPStub = nil
 	fake.evacuateRunningActualLRPReturns = struct {
 		result1 bool
@@ -1279,7 +1304,7 @@ func (fake *FakeClient) EvacuateRunningActualLRPReturns(result1 bool, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakeClient) EvacuateStoppedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) (bool, error) {
+func (fake *FakeInternalClient) EvacuateStoppedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) (bool, error) {
 	fake.evacuateStoppedActualLRPMutex.Lock()
 	fake.evacuateStoppedActualLRPArgsForCall = append(fake.evacuateStoppedActualLRPArgsForCall, struct {
 		arg1 *models.ActualLRPKey
@@ -1293,19 +1318,19 @@ func (fake *FakeClient) EvacuateStoppedActualLRP(arg1 *models.ActualLRPKey, arg2
 	}
 }
 
-func (fake *FakeClient) EvacuateStoppedActualLRPCallCount() int {
+func (fake *FakeInternalClient) EvacuateStoppedActualLRPCallCount() int {
 	fake.evacuateStoppedActualLRPMutex.RLock()
 	defer fake.evacuateStoppedActualLRPMutex.RUnlock()
 	return len(fake.evacuateStoppedActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) EvacuateStoppedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) EvacuateStoppedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.evacuateStoppedActualLRPMutex.RLock()
 	defer fake.evacuateStoppedActualLRPMutex.RUnlock()
 	return fake.evacuateStoppedActualLRPArgsForCall[i].arg1, fake.evacuateStoppedActualLRPArgsForCall[i].arg2
 }
 
-func (fake *FakeClient) EvacuateStoppedActualLRPReturns(result1 bool, result2 error) {
+func (fake *FakeInternalClient) EvacuateStoppedActualLRPReturns(result1 bool, result2 error) {
 	fake.EvacuateStoppedActualLRPStub = nil
 	fake.evacuateStoppedActualLRPReturns = struct {
 		result1 bool
@@ -1313,7 +1338,7 @@ func (fake *FakeClient) EvacuateStoppedActualLRPReturns(result1 bool, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakeClient) EvacuateCrashedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey, arg3 string) (bool, error) {
+func (fake *FakeInternalClient) EvacuateCrashedActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey, arg3 string) (bool, error) {
 	fake.evacuateCrashedActualLRPMutex.Lock()
 	fake.evacuateCrashedActualLRPArgsForCall = append(fake.evacuateCrashedActualLRPArgsForCall, struct {
 		arg1 *models.ActualLRPKey
@@ -1328,19 +1353,19 @@ func (fake *FakeClient) EvacuateCrashedActualLRP(arg1 *models.ActualLRPKey, arg2
 	}
 }
 
-func (fake *FakeClient) EvacuateCrashedActualLRPCallCount() int {
+func (fake *FakeInternalClient) EvacuateCrashedActualLRPCallCount() int {
 	fake.evacuateCrashedActualLRPMutex.RLock()
 	defer fake.evacuateCrashedActualLRPMutex.RUnlock()
 	return len(fake.evacuateCrashedActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) EvacuateCrashedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
+func (fake *FakeInternalClient) EvacuateCrashedActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
 	fake.evacuateCrashedActualLRPMutex.RLock()
 	defer fake.evacuateCrashedActualLRPMutex.RUnlock()
 	return fake.evacuateCrashedActualLRPArgsForCall[i].arg1, fake.evacuateCrashedActualLRPArgsForCall[i].arg2, fake.evacuateCrashedActualLRPArgsForCall[i].arg3
 }
 
-func (fake *FakeClient) EvacuateCrashedActualLRPReturns(result1 bool, result2 error) {
+func (fake *FakeInternalClient) EvacuateCrashedActualLRPReturns(result1 bool, result2 error) {
 	fake.EvacuateCrashedActualLRPStub = nil
 	fake.evacuateCrashedActualLRPReturns = struct {
 		result1 bool
@@ -1348,7 +1373,7 @@ func (fake *FakeClient) EvacuateCrashedActualLRPReturns(result1 bool, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakeClient) RemoveEvacuatingActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) error {
+func (fake *FakeInternalClient) RemoveEvacuatingActualLRP(arg1 *models.ActualLRPKey, arg2 *models.ActualLRPInstanceKey) error {
 	fake.removeEvacuatingActualLRPMutex.Lock()
 	fake.removeEvacuatingActualLRPArgsForCall = append(fake.removeEvacuatingActualLRPArgsForCall, struct {
 		arg1 *models.ActualLRPKey
@@ -1362,26 +1387,26 @@ func (fake *FakeClient) RemoveEvacuatingActualLRP(arg1 *models.ActualLRPKey, arg
 	}
 }
 
-func (fake *FakeClient) RemoveEvacuatingActualLRPCallCount() int {
+func (fake *FakeInternalClient) RemoveEvacuatingActualLRPCallCount() int {
 	fake.removeEvacuatingActualLRPMutex.RLock()
 	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
 	return len(fake.removeEvacuatingActualLRPArgsForCall)
 }
 
-func (fake *FakeClient) RemoveEvacuatingActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) RemoveEvacuatingActualLRPArgsForCall(i int) (*models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.removeEvacuatingActualLRPMutex.RLock()
 	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
 	return fake.removeEvacuatingActualLRPArgsForCall[i].arg1, fake.removeEvacuatingActualLRPArgsForCall[i].arg2
 }
 
-func (fake *FakeClient) RemoveEvacuatingActualLRPReturns(result1 error) {
+func (fake *FakeInternalClient) RemoveEvacuatingActualLRPReturns(result1 error) {
 	fake.RemoveEvacuatingActualLRPStub = nil
 	fake.removeEvacuatingActualLRPReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) ConvergeLRPs() error {
+func (fake *FakeInternalClient) ConvergeLRPs() error {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct{}{})
 	fake.convergeLRPsMutex.Unlock()
@@ -1392,20 +1417,20 @@ func (fake *FakeClient) ConvergeLRPs() error {
 	}
 }
 
-func (fake *FakeClient) ConvergeLRPsCallCount() int {
+func (fake *FakeInternalClient) ConvergeLRPsCallCount() int {
 	fake.convergeLRPsMutex.RLock()
 	defer fake.convergeLRPsMutex.RUnlock()
 	return len(fake.convergeLRPsArgsForCall)
 }
 
-func (fake *FakeClient) ConvergeLRPsReturns(result1 error) {
+func (fake *FakeInternalClient) ConvergeLRPsReturns(result1 error) {
 	fake.ConvergeLRPsStub = nil
 	fake.convergeLRPsReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) ConvergeTasks(kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) error {
+func (fake *FakeInternalClient) ConvergeTasks(kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) error {
 	fake.convergeTasksMutex.Lock()
 	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
 		kickTaskDuration            time.Duration
@@ -1420,26 +1445,26 @@ func (fake *FakeClient) ConvergeTasks(kickTaskDuration time.Duration, expirePend
 	}
 }
 
-func (fake *FakeClient) ConvergeTasksCallCount() int {
+func (fake *FakeInternalClient) ConvergeTasksCallCount() int {
 	fake.convergeTasksMutex.RLock()
 	defer fake.convergeTasksMutex.RUnlock()
 	return len(fake.convergeTasksArgsForCall)
 }
 
-func (fake *FakeClient) ConvergeTasksArgsForCall(i int) (time.Duration, time.Duration, time.Duration) {
+func (fake *FakeInternalClient) ConvergeTasksArgsForCall(i int) (time.Duration, time.Duration, time.Duration) {
 	fake.convergeTasksMutex.RLock()
 	defer fake.convergeTasksMutex.RUnlock()
 	return fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
 }
 
-func (fake *FakeClient) ConvergeTasksReturns(result1 error) {
+func (fake *FakeInternalClient) ConvergeTasksReturns(result1 error) {
 	fake.ConvergeTasksStub = nil
 	fake.convergeTasksReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) StartTask(taskGuid string, cellID string) (bool, error) {
+func (fake *FakeInternalClient) StartTask(taskGuid string, cellID string) (bool, error) {
 	fake.startTaskMutex.Lock()
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
 		taskGuid string
@@ -1453,19 +1478,19 @@ func (fake *FakeClient) StartTask(taskGuid string, cellID string) (bool, error) 
 	}
 }
 
-func (fake *FakeClient) StartTaskCallCount() int {
+func (fake *FakeInternalClient) StartTaskCallCount() int {
 	fake.startTaskMutex.RLock()
 	defer fake.startTaskMutex.RUnlock()
 	return len(fake.startTaskArgsForCall)
 }
 
-func (fake *FakeClient) StartTaskArgsForCall(i int) (string, string) {
+func (fake *FakeInternalClient) StartTaskArgsForCall(i int) (string, string) {
 	fake.startTaskMutex.RLock()
 	defer fake.startTaskMutex.RUnlock()
 	return fake.startTaskArgsForCall[i].taskGuid, fake.startTaskArgsForCall[i].cellID
 }
 
-func (fake *FakeClient) StartTaskReturns(result1 bool, result2 error) {
+func (fake *FakeInternalClient) StartTaskReturns(result1 bool, result2 error) {
 	fake.StartTaskStub = nil
 	fake.startTaskReturns = struct {
 		result1 bool
@@ -1473,7 +1498,7 @@ func (fake *FakeClient) StartTaskReturns(result1 bool, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeClient) FailTask(taskGuid string, failureReason string) error {
+func (fake *FakeInternalClient) FailTask(taskGuid string, failureReason string) error {
 	fake.failTaskMutex.Lock()
 	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
 		taskGuid      string
@@ -1487,26 +1512,26 @@ func (fake *FakeClient) FailTask(taskGuid string, failureReason string) error {
 	}
 }
 
-func (fake *FakeClient) FailTaskCallCount() int {
+func (fake *FakeInternalClient) FailTaskCallCount() int {
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
 	return len(fake.failTaskArgsForCall)
 }
 
-func (fake *FakeClient) FailTaskArgsForCall(i int) (string, string) {
+func (fake *FakeInternalClient) FailTaskArgsForCall(i int) (string, string) {
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
 	return fake.failTaskArgsForCall[i].taskGuid, fake.failTaskArgsForCall[i].failureReason
 }
 
-func (fake *FakeClient) FailTaskReturns(result1 error) {
+func (fake *FakeInternalClient) FailTaskReturns(result1 error) {
 	fake.FailTaskStub = nil
 	fake.failTaskReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) CompleteTask(taskGuid string, cellId string, failed bool, failureReason string, result string) error {
+func (fake *FakeInternalClient) CompleteTask(taskGuid string, cellId string, failed bool, failureReason string, result string) error {
 	fake.completeTaskMutex.Lock()
 	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
 		taskGuid      string
@@ -1523,26 +1548,26 @@ func (fake *FakeClient) CompleteTask(taskGuid string, cellId string, failed bool
 	}
 }
 
-func (fake *FakeClient) CompleteTaskCallCount() int {
+func (fake *FakeInternalClient) CompleteTaskCallCount() int {
 	fake.completeTaskMutex.RLock()
 	defer fake.completeTaskMutex.RUnlock()
 	return len(fake.completeTaskArgsForCall)
 }
 
-func (fake *FakeClient) CompleteTaskArgsForCall(i int) (string, string, bool, string, string) {
+func (fake *FakeInternalClient) CompleteTaskArgsForCall(i int) (string, string, bool, string, string) {
 	fake.completeTaskMutex.RLock()
 	defer fake.completeTaskMutex.RUnlock()
 	return fake.completeTaskArgsForCall[i].taskGuid, fake.completeTaskArgsForCall[i].cellId, fake.completeTaskArgsForCall[i].failed, fake.completeTaskArgsForCall[i].failureReason, fake.completeTaskArgsForCall[i].result
 }
 
-func (fake *FakeClient) CompleteTaskReturns(result1 error) {
+func (fake *FakeInternalClient) CompleteTaskReturns(result1 error) {
 	fake.CompleteTaskStub = nil
 	fake.completeTaskReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) ResolvingTask(taskGuid string) error {
+func (fake *FakeInternalClient) ResolvingTask(taskGuid string) error {
 	fake.resolvingTaskMutex.Lock()
 	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
 		taskGuid string
@@ -1555,26 +1580,26 @@ func (fake *FakeClient) ResolvingTask(taskGuid string) error {
 	}
 }
 
-func (fake *FakeClient) ResolvingTaskCallCount() int {
+func (fake *FakeInternalClient) ResolvingTaskCallCount() int {
 	fake.resolvingTaskMutex.RLock()
 	defer fake.resolvingTaskMutex.RUnlock()
 	return len(fake.resolvingTaskArgsForCall)
 }
 
-func (fake *FakeClient) ResolvingTaskArgsForCall(i int) string {
+func (fake *FakeInternalClient) ResolvingTaskArgsForCall(i int) string {
 	fake.resolvingTaskMutex.RLock()
 	defer fake.resolvingTaskMutex.RUnlock()
 	return fake.resolvingTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeClient) ResolvingTaskReturns(result1 error) {
+func (fake *FakeInternalClient) ResolvingTaskReturns(result1 error) {
 	fake.ResolvingTaskStub = nil
 	fake.resolvingTaskReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) DeleteTask(taskGuid string) error {
+func (fake *FakeInternalClient) DeleteTask(taskGuid string) error {
 	fake.deleteTaskMutex.Lock()
 	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
 		taskGuid string
@@ -1587,48 +1612,23 @@ func (fake *FakeClient) DeleteTask(taskGuid string) error {
 	}
 }
 
-func (fake *FakeClient) DeleteTaskCallCount() int {
+func (fake *FakeInternalClient) DeleteTaskCallCount() int {
 	fake.deleteTaskMutex.RLock()
 	defer fake.deleteTaskMutex.RUnlock()
 	return len(fake.deleteTaskArgsForCall)
 }
 
-func (fake *FakeClient) DeleteTaskArgsForCall(i int) string {
+func (fake *FakeInternalClient) DeleteTaskArgsForCall(i int) string {
 	fake.deleteTaskMutex.RLock()
 	defer fake.deleteTaskMutex.RUnlock()
 	return fake.deleteTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeClient) DeleteTaskReturns(result1 error) {
+func (fake *FakeInternalClient) DeleteTaskReturns(result1 error) {
 	fake.DeleteTaskStub = nil
 	fake.deleteTaskReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeClient) SubscribeToEvents() (events.EventSource, error) {
-	fake.subscribeToEventsMutex.Lock()
-	fake.subscribeToEventsArgsForCall = append(fake.subscribeToEventsArgsForCall, struct{}{})
-	fake.subscribeToEventsMutex.Unlock()
-	if fake.SubscribeToEventsStub != nil {
-		return fake.SubscribeToEventsStub()
-	} else {
-		return fake.subscribeToEventsReturns.result1, fake.subscribeToEventsReturns.result2
-	}
-}
-
-func (fake *FakeClient) SubscribeToEventsCallCount() int {
-	fake.subscribeToEventsMutex.RLock()
-	defer fake.subscribeToEventsMutex.RUnlock()
-	return len(fake.subscribeToEventsArgsForCall)
-}
-
-func (fake *FakeClient) SubscribeToEventsReturns(result1 events.EventSource, result2 error) {
-	fake.SubscribeToEventsStub = nil
-	fake.subscribeToEventsReturns = struct {
-		result1 events.EventSource
-		result2 error
-	}{result1, result2}
-}
-
-var _ bbs.InternalClient = new(FakeClient)
+var _ bbs.InternalClient = new(FakeInternalClient)
