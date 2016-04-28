@@ -61,6 +61,11 @@ var (
 		Message: "the requested resource is in a conflicting state",
 	}
 
+	ErrDeadlock = &Error{
+		Type:    Error_Deadlock,
+		Message: "the request failed due to deadlock",
+	}
+
 	ErrBadRequest = &Error{
 		Type:    Error_InvalidRequest,
 		Message: "the request received is invalid",
