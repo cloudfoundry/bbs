@@ -31,3 +31,12 @@ message DesiredLRPChangedEvent {
 message DesiredLRPRemovedEvent {
   optional DesiredLRP desired_lrp = 1;
 }
+
+message ActualLRPCrashedEvent {
+  optional ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional int32 crash_count = 3;
+  optional string crash_reason = 4 [(gogoproto.jsontag) = "crash_reason,omitempty"];
+  optional int64 since = 5;
+  optional string domain = 6;
+}

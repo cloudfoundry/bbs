@@ -371,8 +371,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 					1,
 					"domain-0",
 				),
-				State: models.ActualLRPStateUnclaimed,
-				Since: 1138,
+				State:       models.ActualLRPStateUnclaimed,
+				Since:       1138,
+				CrashCount:  1,
+				CrashReason: errorMessage,
 			}
 		})
 
@@ -414,11 +416,27 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(actualErrorMessage).To(Equal(errorMessage))
 			})
 
-			It("emits a change event to the hub", func() {
-				Eventually(actualHub.EmitCallCount).Should(Equal(1))
-				event := actualHub.EmitArgsForCall(0)
-				changedEvent, ok := event.(*models.ActualLRPChangedEvent)
+			It("emits a crash and change event to the hub", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(2))
+				event1 := actualHub.EmitArgsForCall(0)
+				event2 := actualHub.EmitArgsForCall(1)
+				crashEvent, ok := event1.(*models.ActualLRPCrashedEvent)
+				if !ok {
+					crashEvent, ok = event2.(*models.ActualLRPCrashedEvent)
+				}
+
 				Expect(ok).To(BeTrue())
+				Expect(crashEvent.ActualLRPKey).To(Equal(actualLRP.ActualLRPKey))
+				Expect(crashEvent.ActualLRPInstanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
+				Expect(crashEvent.Since).To(Equal(int64(1138)))
+				Expect(crashEvent.CrashCount).To(Equal(int32(1)))
+				Expect(crashEvent.CrashReason).To(Equal(errorMessage))
+
+				changedEvent, ok := event1.(*models.ActualLRPChangedEvent)
+				if !ok {
+					changedEvent, ok = event2.(*models.ActualLRPChangedEvent)
+				}
+
 				Expect(changedEvent.Before).To(Equal(&models.ActualLRPGroup{Instance: &actualLRP}))
 				Expect(changedEvent.After).To(Equal(&models.ActualLRPGroup{Instance: &afterActualLRP}))
 			})
