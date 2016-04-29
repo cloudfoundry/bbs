@@ -130,6 +130,8 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 		}
 	}
 
+	actualLRP, _ := after.Resolve()
+	go h.actualHub.Emit(models.NewActualLRPCrashedEvent(actualLRP))
 	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 }
 
