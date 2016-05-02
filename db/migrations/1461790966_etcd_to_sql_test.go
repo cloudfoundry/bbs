@@ -45,6 +45,27 @@ var _ = Describe("ETCD to SQL Migration", func() {
 			migrationErr = migration.Up(logger)
 		})
 
+		Context("when etcd is not configured", func() {
+			BeforeEach(func() {
+				storeClient = nil
+			})
+
+			It("creates the sql schema and returns", func() {
+				Expect(migrationErr).NotTo(HaveOccurred())
+				rows, err := rawSQLDB.Query(`SHOW TABLES`)
+				Expect(err).NotTo(HaveOccurred())
+
+				tables := []string{}
+				for rows.Next() {
+					var tableName string
+					err := rows.Scan(&tableName)
+					Expect(err).NotTo(HaveOccurred())
+					tables = append(tables, tableName)
+				}
+				Expect(tables).To(ConsistOf("domains", "desired_lrps", "actual_lrps", "tasks"))
+			})
+		})
+
 		Describe("Domains", func() {
 			BeforeEach(func() {
 				_, err := storeClient.Set(etcddb.DomainSchemaPath("domain-1"), []byte(""), 100)
@@ -101,6 +122,12 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					_, err = storeClient.Set(etcddb.DesiredLRPRunInfoSchemaPath(processGuid), runInfoData, 0)
 					Expect(err).NotTo(HaveOccurred())
 
+					encoder := format.NewEncoder(cryptor)
+					encryptedVolumePlacement, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, schedulingInfo.VolumePlacement)
+					Expect(err).NotTo(HaveOccurred())
+					volumePlacementData, err := encoder.Decode(encryptedVolumePlacement)
+					Expect(err).NotTo(HaveOccurred())
+
 					existingDesiredLRPs = append(existingDesiredLRPs, migrations.ETCDToSQLDesiredLRP{
 						ProcessGuid: desiredLRP.ProcessGuid, Domain: desiredLRP.Domain,
 						LogGuid: desiredLRP.LogGuid, Annotation: desiredLRP.Annotation,
@@ -108,6 +135,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 						DiskMB: desiredLRP.DiskMb, MemoryMB: desiredLRP.MemoryMb,
 						Routes: routesData, ModificationTagEpoch: desiredLRP.ModificationTag.Epoch,
 						ModificationTagIndex: desiredLRP.ModificationTag.Index, RunInfo: runInfoData,
+						VolumePlacement: volumePlacementData,
 					})
 				}
 			})
@@ -119,7 +147,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					SELECT
 						process_guid, domain, log_guid, annotation, instances, memory_mb,
 						disk_mb, rootfs, routes, modification_tag_epoch,
-						modification_tag_index, run_info
+						modification_tag_index, run_info, volume_placement
 					FROM desired_lrps
 				`)
 				Expect(err).NotTo(HaveOccurred())
@@ -129,14 +157,17 @@ var _ = Describe("ETCD to SQL Migration", func() {
 				for rows.Next() {
 					var desiredLRPTest migrations.ETCDToSQLDesiredLRP
 
+					var encodedVolumePlacement []byte
 					err := rows.Scan(&desiredLRPTest.ProcessGuid, &desiredLRPTest.Domain,
 						&desiredLRPTest.LogGuid, &desiredLRPTest.Annotation,
 						&desiredLRPTest.Instances, &desiredLRPTest.MemoryMB,
 						&desiredLRPTest.DiskMB, &desiredLRPTest.RootFS,
 						&desiredLRPTest.Routes, &desiredLRPTest.ModificationTagEpoch,
-						&desiredLRPTest.ModificationTagIndex, &desiredLRPTest.RunInfo)
+						&desiredLRPTest.ModificationTagIndex, &desiredLRPTest.RunInfo, &encodedVolumePlacement)
 					Expect(err).NotTo(HaveOccurred())
 
+					encoder := format.NewEncoder(cryptor)
+					desiredLRPTest.VolumePlacement, err = encoder.Decode(encodedVolumePlacement)
 					desiredLRPs = append(desiredLRPs, desiredLRPTest)
 				}
 

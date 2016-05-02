@@ -8,7 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
-	lol "github.com/cloudfoundry-incubator/bbs/migration"
+	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
@@ -23,7 +23,7 @@ type SplitDesiredLRP struct {
 	storeClient etcd.StoreClient
 }
 
-func NewSplitDesiredLRP() lol.Migration {
+func NewSplitDesiredLRP() migration.Migration {
 	return &SplitDesiredLRP{}
 }
 

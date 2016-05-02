@@ -219,20 +219,41 @@ var _ = Describe("Migration Manager", func() {
 		})
 
 		Context("when there is no version", func() {
+			var (
+				fakeMigrationToSQL   *migrationfakes.FakeMigration
+				fakeSQLOnlyMigration *migrationfakes.FakeMigration
+			)
+
 			BeforeEach(func() {
 				fakeSQLDB.VersionReturns(nil, models.ErrResourceNotFound)
-				fakeMigration.VersionReturns(9)
+				fakeMigration.VersionReturns(99)
+
+				fakeMigrationToSQL = &migrationfakes.FakeMigration{}
+				fakeMigrationToSQL.VersionReturns(100)
+				fakeMigrationToSQL.RequiresSQLReturns(true)
+
+				fakeSQLOnlyMigration = &migrationfakes.FakeMigration{}
+				fakeSQLOnlyMigration.VersionReturns(101)
+				fakeSQLOnlyMigration.RequiresSQLReturns(true)
+
+				migrations = []migration.Migration{fakeMigrationToSQL, fakeMigration, fakeSQLOnlyMigration}
 			})
 
-			It("creates a version with the correct target version and does not run any migrations", func() {
-				Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(1))
+			It("creates a version table and seeds it with the lowest sql-requiring version", func() {
+				Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(2))
 				Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(0))
 
 				_, version := fakeSQLDB.SetVersionArgsForCall(0)
-				Expect(version.CurrentVersion).To(BeEquivalentTo(9))
-				Expect(version.TargetVersion).To(BeEquivalentTo(9))
+				Expect(version.CurrentVersion).To(BeEquivalentTo(99))
+				Expect(version.TargetVersion).To(BeEquivalentTo(101))
+
+				_, version = fakeSQLDB.SetVersionArgsForCall(1)
+				Expect(version.CurrentVersion).To(BeEquivalentTo(101))
+				Expect(version.TargetVersion).To(BeEquivalentTo(101))
 
 				Expect(fakeMigration.UpCallCount()).To(Equal(0))
+				Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
+				Expect(fakeSQLOnlyMigration.UpCallCount()).To(Equal(1))
 			})
 		})
 

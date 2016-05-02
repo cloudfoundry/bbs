@@ -236,11 +236,13 @@ func main() {
 
 	var activeDB db.DB
 	var sqlDB *sqldb.SQLDB
+	var sqlConn *sql.DB
 	activeDB = etcdDB
 
 	// If SQL database info is passed in, use SQL instead of ETCD
 	if *databaseDriver != "" && *databaseConnectionString != "" {
-		sqlConn, err := sql.Open(*databaseDriver, *databaseConnectionString)
+		var err error
+		sqlConn, err = sql.Open(*databaseDriver, *databaseConnectionString)
 		if err != nil {
 			logger.Fatal("failed-to-open-sql", err)
 		}
@@ -252,9 +254,9 @@ func main() {
 		}
 
 		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, *updateWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock)
-		err = sqlDB.CreateInitialSchema(logger)
+		err = sqlDB.CreateConfigurationsTable(logger)
 		if err != nil {
-			logger.Fatal("sql-failed-create-initial-schema", err)
+			logger.Fatal("sql-failed-create-configurations-table", err)
 		}
 		activeDB = sqlDB
 	}
@@ -265,8 +267,10 @@ func main() {
 
 	migrationManager := migration.NewManager(logger,
 		etcdDB,
-		cryptor,
 		storeClient,
+		sqlDB,
+		sqlConn,
+		cryptor,
 		migrations.Migrations,
 		migrationsDone,
 		clock,

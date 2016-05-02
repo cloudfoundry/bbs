@@ -49,7 +49,8 @@ type ETCDToSQLDesiredLRP struct {
 	ModificationTagIndex uint32
 
 	// DesiredLRPRunInfo
-	RunInfo []byte
+	RunInfo         []byte
+	VolumePlacement []byte
 }
 
 type ETCDToSQLActualLRP struct {
@@ -127,6 +128,10 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
+	if e.storeClient == nil {
+		return nil
+	}
+
 	response, err := e.storeClient.Get(etcd.DomainSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-domains", err)
@@ -182,15 +187,20 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 				continue
 			}
 
+			volumePlacementData, err := e.serializer.Marshal(logger, format.ENCRYPTED_PROTO, schedInfo.VolumePlacement)
+			if err != nil {
+				logger.Error("failed-marshalling-volume-placements", err)
+			}
+
 			_, err = e.rawSQLDB.Exec(`
 				INSERT INTO desired_lrps
 					(process_guid, domain, log_guid, annotation, instances, memory_mb,
-					disk_mb, rootfs, routes, modification_tag_epoch,
-					modification_tag_index, run_info, volume_placement)
+					disk_mb, rootfs, volume_placement, routes, modification_tag_epoch,
+					modification_tag_index, run_info)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`, schedInfo.ProcessGuid, schedInfo.Domain, schedInfo.LogGuid, schedInfo.Annotation,
-				schedInfo.Instances, schedInfo.MemoryMb, schedInfo.DiskMb, schedInfo.RootFs, routeData,
-				schedInfo.ModificationTag.Epoch, schedInfo.ModificationTag.Index, []byte(node.Value), []byte{})
+				schedInfo.Instances, schedInfo.MemoryMb, schedInfo.DiskMb, schedInfo.RootFs, volumePlacementData,
+				routeData, schedInfo.ModificationTag.Epoch, schedInfo.ModificationTag.Index, []byte(node.Value))
 			if err != nil {
 				logger.Error("failed-inserting-desired-lrp", err)
 				continue
@@ -216,6 +226,9 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 						}
 
 						netInfoData, err := e.serializer.Marshal(logger, format.ENCRYPTED_PROTO, &actualLRP.ActualLRPNetInfo)
+						if err != nil {
+							logger.Error("failed-to-marshal-net-info", err)
+						}
 
 						_, err = e.rawSQLDB.Exec(`
 							INSERT INTO actual_lrps

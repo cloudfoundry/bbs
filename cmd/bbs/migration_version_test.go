@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io"
 	"os"
@@ -16,9 +17,10 @@ import (
 
 var _ = Describe("Migration Version", func() {
 	var migrationFixtureFilePath, migrationFilePath string
+
 	BeforeEach(func() {
-		migrationFixtureFilePath = "fixtures/9999999999_test_migration.go"
-		migrationFilePath = "../../db/migrations/9999999999_test_migration.go"
+		migrationFixtureFilePath = "fixtures/9999999999_sql_test_migration.go"
+		migrationFilePath = "../../db/migrations/9999999999_sql_test_migration.go"
 		migrationFixtureFile, err := os.Open(migrationFixtureFilePath)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -57,21 +59,57 @@ var _ = Describe("Migration Version", func() {
 		bbsBinPath = string(bbsConfig)
 	})
 
-	Context("Running Migrations", func() {
-		It("loads and runs the given migrations", func() {
-			response, err := storeClient.Get(etcd.VersionKey, false, false)
-			Expect(err).NotTo(HaveOccurred())
+	Context("Running Migrations Without SQL", func() {
+		It("loads and runs the given migrations up to the last etcd migration", func() {
+			if !useSQL {
+				response, err := storeClient.Get(etcd.VersionKey, false, false)
+				Expect(err).NotTo(HaveOccurred())
 
-			var version models.Version
-			err = json.Unmarshal([]byte(response.Node.Value), &version)
-			Expect(err).NotTo(HaveOccurred())
+				var version models.Version
+				err = json.Unmarshal([]byte(response.Node.Value), &version)
+				Expect(err).NotTo(HaveOccurred())
 
-			Expect(version.CurrentVersion).To(BeEquivalentTo(9999999999))
-			Expect(version.TargetVersion).To(BeEquivalentTo(9999999999))
+				// the final etcd migration
+				Expect(version.CurrentVersion).To(BeEquivalentTo(1450292094))
+				Expect(version.TargetVersion).To(BeEquivalentTo(1450292094))
+			}
 
-			response, err = storeClient.Get("/test/key", false, false)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(response.Node.Value).To(Equal("jim is awesome"))
+		})
+	})
+
+	Context("Running Migrations With SQL", func() {
+		var (
+			sqlConn *sql.DB
+			err     error
+		)
+
+		BeforeEach(func() {
+			if useSQL {
+				sqlConn, err = sql.Open("mysql", mySQLRunner.ConnectionString())
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
+
+		It("loads and runs all the migrations", func() {
+			if useSQL {
+				var versionJSON string
+				err := sqlConn.QueryRow(
+					`SELECT value FROM configurations WHERE id = 'version'`,
+				).Scan(&versionJSON)
+				Expect(err).NotTo(HaveOccurred())
+
+				var version models.Version
+				err = json.Unmarshal([]byte(versionJSON), &version)
+				Expect(err).NotTo(HaveOccurred())
+
+				// the sql test migration
+				Expect(version.CurrentVersion).To(BeEquivalentTo(9999999999))
+				Expect(version.TargetVersion).To(BeEquivalentTo(9999999999))
+
+				var table interface{}
+				err = sqlConn.QueryRow(`SHOW TABLES LIKE 'sweet_table'`).Scan(&table)
+				Expect(err).NotTo(HaveOccurred())
+			}
 		})
 	})
 })
