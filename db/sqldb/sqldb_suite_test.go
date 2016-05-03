@@ -4,17 +4,21 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"os"
 	"time"
 
 	thepackagedb "github.com/cloudfoundry-incubator/bbs/db"
+	"github.com/cloudfoundry-incubator/bbs/db/migrations"
 	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/guidprovider/fakes"
+	"github.com/cloudfoundry-incubator/bbs/migration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
 	"github.com/pivotal-golang/lager/lagertest"
+	"github.com/tedsuo/ifrit"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -29,6 +33,7 @@ var (
 	logger           *lagertest.TestLogger
 	cryptor          encryption.Cryptor
 	serializer       format.Serializer
+	migrationProcess ifrit.Process
 )
 
 func TestSql(t *testing.T) {
@@ -64,10 +69,27 @@ var _ = BeforeSuite(func() {
 	serializer = format.NewSerializer(cryptor)
 
 	internalSQLDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock)
-	internalSQLDB.CreateInitialSchema(logger)
+	err = internalSQLDB.CreateConfigurationsTable(logger)
+	if err != nil {
+		logger.Fatal("sql-failed-create-configurations-table", err)
+	}
 
-	// Force compilation to fail if sqldb does not match db.DB interface
 	sqlDB = internalSQLDB
+
+	migrationsDone := make(chan struct{})
+
+	migrationManager := migration.NewManager(logger,
+		nil,
+		nil,
+		sqlDB,
+		db,
+		cryptor,
+		migrations.Migrations,
+		migrationsDone,
+		fakeClock,
+	)
+
+	migrationProcess = ifrit.Invoke(migrationManager)
 })
 
 var _ = AfterEach(func() {
@@ -76,6 +98,7 @@ var _ = AfterEach(func() {
 })
 
 var _ = AfterSuite(func() {
+	migrationProcess.Signal(os.Kill)
 	_, err := db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 

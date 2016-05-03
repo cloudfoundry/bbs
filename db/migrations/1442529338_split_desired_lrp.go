@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
@@ -9,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -82,6 +84,14 @@ func (m *SplitDesiredLRP) Up(logger lager.Logger) error {
 
 func (m *SplitDesiredLRP) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
+}
+
+func (m *SplitDesiredLRP) SetRawSQLDB(rawSQLDB *sql.DB) {}
+
+func (m *SplitDesiredLRP) SetClock(clock.Clock) {}
+
+func (m *SplitDesiredLRP) RequiresSQL() bool {
+	return false
 }
 
 func (m *SplitDesiredLRP) WriteRunInfo(logger lager.Logger, desiredLRP models.DesiredLRP) {

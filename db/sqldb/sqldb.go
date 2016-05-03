@@ -62,6 +62,18 @@ func NewSQLDB(
 	}
 }
 
+func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
+	_, err := db.db.Exec(`CREATE TABLE IF NOT EXISTS configurations(
+			id VARCHAR(255) PRIMARY KEY,
+			value VARCHAR(255)
+		);`)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx *sql.Tx) error) error {
 	var err error
 

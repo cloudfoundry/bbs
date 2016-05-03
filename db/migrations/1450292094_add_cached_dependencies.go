@@ -1,12 +1,14 @@
 package migrations
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
+	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -42,4 +44,12 @@ func (a *AddCachedDependencies) Up(logger lager.Logger) error {
 
 func (a *AddCachedDependencies) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
+}
+
+func (a *AddCachedDependencies) SetRawSQLDB(rawSQLDB *sql.DB) {}
+
+func (a *AddCachedDependencies) SetClock(clock.Clock) {}
+
+func (a *AddCachedDependencies) RequiresSQL() bool {
+	return false
 }
