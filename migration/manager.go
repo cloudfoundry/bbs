@@ -76,11 +76,13 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 
 	if !m.hasSQLConfigured() {
+		logger.Info("no-sql-configuration")
 		maxMigrationVersion = lastETCDMigrationVersion
 	}
 
 	if version == nil {
 		if m.hasETCDConfigured() && !m.hasSQLConfigured() {
+			logger.Info("fresh-etcd-skipping-migrations")
 			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion)
 			if err != nil {
 				return err
@@ -89,6 +91,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			m.finishAndWait(logger, signals, ready)
 			return nil
 		} else if m.hasSQLConfigured() {
+			logger.Info("sql-is-configured")
 			version = &models.Version{
 				CurrentVersion: lastETCDMigrationVersion,
 				TargetVersion:  maxMigrationVersion,
@@ -125,6 +128,11 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			version.TargetVersion = maxMigrationVersion
 		}
 
+		logger.Info("running-migrations", lager.Data{
+			"from-version": version.CurrentVersion,
+			"to-version":   maxMigrationVersion,
+		})
+
 		m.writeVersion(version.CurrentVersion, maxMigrationVersion)
 	}
 
@@ -148,14 +156,16 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				}
 				nextVersion = currentMigration.Version()
 
-				logger.Debug("running-migration", lager.Data{
+				logger.Info("running-migration", lager.Data{
 					"CurrentVersion":   lastVersion,
 					"NextVersion":      nextVersion,
 					"MigrationVersion": currentMigration.Version(),
 				})
+
 				currentMigration.SetCryptor(m.cryptor)
 				currentMigration.SetStoreClient(m.storeClient)
 				currentMigration.SetRawSQLDB(m.rawSQLDB)
+				currentMigration.SetClock(m.clock)
 
 				err = currentMigration.Up(m.logger)
 				if err != nil {
@@ -167,7 +177,6 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 		}
 
-		// we're done migrating
 		err = m.writeVersion(lastVersion, nextVersion)
 		if err != nil {
 			return err
@@ -245,8 +254,8 @@ func (m *Manager) resolveStoredVersion(logger lager.Logger) (*models.Version, er
 func (m *Manager) finishAndWait(logger lager.Logger, signals <-chan os.Signal, ready chan<- struct{}) {
 	close(ready)
 	close(m.migrationsDone)
-	logger.Info("started")
-	defer logger.Info("finished")
+	logger.Info("finished-migrations")
+	defer logger.Info("exited")
 
 	select {
 	case <-signals:
