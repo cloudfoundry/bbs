@@ -129,10 +129,9 @@ var _ = Describe("EventSource", func() {
 
 		Describe("Actual LRP Events", func() {
 			var actualLRPGroup *models.ActualLRPGroup
-			var actualLRP *models.ActualLRP
 
 			BeforeEach(func() {
-				actualLRP = models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
+				actualLRP := models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
 				actualLRPGroup = models.NewRunningActualLRPGroup(actualLRP)
 			})
 
@@ -220,35 +219,6 @@ var _ = Describe("EventSource", func() {
 					actualLRPRemovedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(actualLRPRemovedEvent).To(Equal(expectedEvent))
-				})
-			})
-
-			Context("when receiving a ActualLRPCrashedEvent", func() {
-				var expectedEvent *models.ActualLRPCrashedEvent
-
-				BeforeEach(func() {
-					expectedEvent = models.NewActualLRPCrashedEvent(actualLRP)
-					payload, err := proto.Marshal(expectedEvent)
-					Expect(err).NotTo(HaveOccurred())
-					payload = []byte(base64.StdEncoding.EncodeToString(payload))
-
-					fakeRawEventSource.NextReturns(
-						sse.Event{
-							ID:   "sup",
-							Name: string(expectedEvent.EventType()),
-							Data: payload,
-						},
-						nil,
-					)
-				})
-
-				It("returns the event", func() {
-					event, err := eventSource.Next()
-					Expect(err).NotTo(HaveOccurred())
-
-					actualLRPCrashedEvent, ok := event.(*models.ActualLRPCrashedEvent)
-					Expect(ok).To(BeTrue())
-					Expect(actualLRPCrashedEvent).To(Equal(expectedEvent))
 				})
 			})
 		})

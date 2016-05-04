@@ -122,38 +122,6 @@ func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 	return nil
 }
 
-type ActualLRPCrashedEvent struct {
-	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,embedded=actual_lrp_key" json:""`
-	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,embedded=actual_lrp_instance_key" json:""`
-	CrashCount           int32  `protobuf:"varint,3,opt,name=crash_count" json:"crash_count"`
-	CrashReason          string `protobuf:"bytes,4,opt,name=crash_reason" json:"crash_reason,omitempty"`
-	Since                int64  `protobuf:"varint,5,opt,name=since" json:"since"`
-}
-
-func (m *ActualLRPCrashedEvent) Reset()      { *m = ActualLRPCrashedEvent{} }
-func (*ActualLRPCrashedEvent) ProtoMessage() {}
-
-func (m *ActualLRPCrashedEvent) GetCrashCount() int32 {
-	if m != nil {
-		return m.CrashCount
-	}
-	return 0
-}
-
-func (m *ActualLRPCrashedEvent) GetCrashReason() string {
-	if m != nil {
-		return m.CrashReason
-	}
-	return ""
-}
-
-func (m *ActualLRPCrashedEvent) GetSince() int64 {
-	if m != nil {
-		return m.Since
-	}
-	return 0
-}
-
 func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -310,43 +278,6 @@ func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
-	if that == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	}
-
-	that1, ok := that.(*ActualLRPCrashedEvent)
-	if !ok {
-		return false
-	}
-	if that1 == nil {
-		if this == nil {
-			return true
-		}
-		return false
-	} else if this == nil {
-		return false
-	}
-	if !this.ActualLRPKey.Equal(&that1.ActualLRPKey) {
-		return false
-	}
-	if !this.ActualLRPInstanceKey.Equal(&that1.ActualLRPInstanceKey) {
-		return false
-	}
-	if this.CrashCount != that1.CrashCount {
-		return false
-	}
-	if this.CrashReason != that1.CrashReason {
-		return false
-	}
-	if this.Since != that1.Since {
-		return false
-	}
-	return true
-}
 func (this *ActualLRPCreatedEvent) GoString() string {
 	if this == nil {
 		return "nil"
@@ -395,18 +326,6 @@ func (this *DesiredLRPRemovedEvent) GoString() string {
 	}
 	s := strings.Join([]string{`&models.DesiredLRPRemovedEvent{` +
 		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
-	return s
-}
-func (this *ActualLRPCrashedEvent) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRPCrashedEvent{` +
-		`ActualLRPKey:` + strings.Replace(this.ActualLRPKey.GoString(), `&`, ``, 1),
-		`ActualLRPInstanceKey:` + strings.Replace(this.ActualLRPInstanceKey.GoString(), `&`, ``, 1),
-		`CrashCount:` + fmt.Sprintf("%#v", this.CrashCount),
-		`CrashReason:` + fmt.Sprintf("%#v", this.CrashReason),
-		`Since:` + fmt.Sprintf("%#v", this.Since) + `}`}, ", ")
 	return s
 }
 func valueToGoStringEvents(v interface{}, typ string) string {
@@ -622,50 +541,6 @@ func (m *DesiredLRPRemovedEvent) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
-func (m *ActualLRPCrashedEvent) Marshal() (data []byte, err error) {
-	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
-	if err != nil {
-		return nil, err
-	}
-	return data[:n], nil
-}
-
-func (m *ActualLRPCrashedEvent) MarshalTo(data []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	data[i] = 0xa
-	i++
-	i = encodeVarintEvents(data, i, uint64(m.ActualLRPKey.Size()))
-	n9, err := m.ActualLRPKey.MarshalTo(data[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n9
-	data[i] = 0x12
-	i++
-	i = encodeVarintEvents(data, i, uint64(m.ActualLRPInstanceKey.Size()))
-	n10, err := m.ActualLRPInstanceKey.MarshalTo(data[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n10
-	data[i] = 0x18
-	i++
-	i = encodeVarintEvents(data, i, uint64(m.CrashCount))
-	data[i] = 0x22
-	i++
-	i = encodeVarintEvents(data, i, uint64(len(m.CrashReason)))
-	i += copy(data[i:], m.CrashReason)
-	data[i] = 0x28
-	i++
-	i = encodeVarintEvents(data, i, uint64(m.Since))
-	return i, nil
-}
-
 func encodeFixed64Events(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -761,20 +636,6 @@ func (m *DesiredLRPRemovedEvent) Size() (n int) {
 	return n
 }
 
-func (m *ActualLRPCrashedEvent) Size() (n int) {
-	var l int
-	_ = l
-	l = m.ActualLRPKey.Size()
-	n += 1 + l + sovEvents(uint64(l))
-	l = m.ActualLRPInstanceKey.Size()
-	n += 1 + l + sovEvents(uint64(l))
-	n += 1 + sovEvents(uint64(m.CrashCount))
-	l = len(m.CrashReason)
-	n += 1 + l + sovEvents(uint64(l))
-	n += 1 + sovEvents(uint64(m.Since))
-	return n
-}
-
 func sovEvents(x uint64) (n int) {
 	for {
 		n++
@@ -846,20 +707,6 @@ func (this *DesiredLRPRemovedEvent) String() string {
 	}
 	s := strings.Join([]string{`&DesiredLRPRemovedEvent{`,
 		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPCrashedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPCrashedEvent{`,
-		`ActualLRPKey:` + strings.Replace(strings.Replace(this.ActualLRPKey.String(), "ActualLRPKey", "ActualLRPKey", 1), `&`, ``, 1) + `,`,
-		`ActualLRPInstanceKey:` + strings.Replace(strings.Replace(this.ActualLRPInstanceKey.String(), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1), `&`, ``, 1) + `,`,
-		`CrashCount:` + fmt.Sprintf("%v", this.CrashCount) + `,`,
-		`CrashReason:` + fmt.Sprintf("%v", this.CrashReason) + `,`,
-		`Since:` + fmt.Sprintf("%v", this.Since) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1356,162 +1203,6 @@ func (m *DesiredLRPRemovedEvent) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
-			skippy, err := skipEvents(data[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	return nil
-}
-func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
-	l := len(data)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := data[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ActualLRPKey", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ActualLRPKey.Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ActualLRPInstanceKey", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + msglen
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ActualLRPInstanceKey.Unmarshal(data[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CrashCount", wireType)
-			}
-			m.CrashCount = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.CrashCount |= (int32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CrashReason", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CrashReason = string(data[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Since", wireType)
-			}
-			m.Since = 0
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				m.Since |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			var sizeOfWire int
 			for {

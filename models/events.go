@@ -21,7 +21,6 @@ const (
 	EventTypeActualLRPCreated = "actual_lrp_created"
 	EventTypeActualLRPChanged = "actual_lrp_changed"
 	EventTypeActualLRPRemoved = "actual_lrp_removed"
-	EventTypeActualLRPCrashed = "actual_lrp_crashed"
 
 	EventTypeTaskCreated = "task_created"
 	EventTypeTaskChanged = "task_changed"
@@ -101,24 +100,6 @@ func (event *ActualLRPChangedEvent) EventType() string {
 func (event *ActualLRPChangedEvent) Key() string {
 	actualLRP, _ := event.Before.Resolve()
 	return actualLRP.GetInstanceGuid()
-}
-
-func NewActualLRPCrashedEvent(actualLRP *ActualLRP) *ActualLRPCrashedEvent {
-	return &ActualLRPCrashedEvent{
-		ActualLRPKey:         actualLRP.ActualLRPKey,
-		ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
-		CrashCount:           actualLRP.CrashCount,
-		CrashReason:          actualLRP.CrashReason,
-		Since:                actualLRP.Since,
-	}
-}
-
-func (event *ActualLRPCrashedEvent) EventType() string {
-	return EventTypeActualLRPCrashed
-}
-
-func (event *ActualLRPCrashedEvent) Key() string {
-	return event.ActualLRPInstanceKey.InstanceGuid
 }
 
 func NewActualLRPRemovedEvent(actualLRPGroup *ActualLRPGroup) *ActualLRPRemovedEvent {
