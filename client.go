@@ -15,6 +15,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/gogo/protobuf/proto"
+	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 	"github.com/vito/go-sse/sse"
 )
@@ -27,7 +28,8 @@ const (
 	DeleteContainer      = false
 )
 
-//go:generate counterfeiter -o fake_bbs/fake_client.go . InternalClient
+//go:generate counterfeiter -o fake_bbs/fake_internal_client.go . InternalClient
+//go:generate counterfeiter -o fake_bbs/fake_client.go . Client
 
 /*
 The InternalClient interface exposes all available endpoints of the BBS server,
@@ -39,26 +41,26 @@ type InternalClient interface {
 	Client
 	ExperimentalExternalEventClient
 
-	ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
-	StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
-	CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
-	FailActualLRP(key *models.ActualLRPKey, errorMessage string) error
-	RemoveActualLRP(processGuid string, index int) error
+	ClaimActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
+	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
+	CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
+	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
+	RemoveActualLRP(logger lager.Logger, processGuid string, index int) error
 
-	EvacuateClaimedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateRunningActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, error)
-	EvacuateStoppedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateCrashedActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
-	RemoveEvacuatingActualLRP(*models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, error)
+	EvacuateStoppedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateCrashedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
+	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 
-	ConvergeLRPs() error
+	ConvergeLRPs(logger lager.Logger) error
 
-	ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
-	StartTask(taskGuid string, cellID string) (bool, error)
-	FailTask(taskGuid, failureReason string) error
-	CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error
-	ResolvingTask(taskGuid string) error
-	DeleteTask(taskGuid string) error
+	ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+	StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, error)
+	FailTask(logger lager.Logger, taskGuid, failureReason string) error
+	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
+	ResolvingTask(logger lager.Logger, taskGuid string) error
+	DeleteTask(logger lager.Logger, taskGuid string) error
 }
 
 /*
@@ -74,10 +76,10 @@ type Client interface {
 	ExternalEventClient
 
 	// Returns true if the BBS server is reachable
-	Ping() bool
+	Ping(logger lager.Logger) bool
 
 	// Lists all Cells
-	Cells() ([]*models.CellPresence, error)
+	Cells(logger lager.Logger) ([]*models.CellPresence, error)
 }
 
 /*
@@ -88,22 +90,22 @@ https://github.com/cloudfoundry-incubator/bbs/tree/master/doc/tasks.md
 */
 type ExternalTaskClient interface {
 	// Creates a Task from the given TaskDefinition
-	DesireTask(guid, domain string, def *models.TaskDefinition) error
+	DesireTask(logger lager.Logger, guid, domain string, def *models.TaskDefinition) error
 
 	// Lists all Tasks
-	Tasks() ([]*models.Task, error)
+	Tasks(logger lager.Logger) ([]*models.Task, error)
 
 	// Lists all Tasks of the given domain
-	TasksByDomain(domain string) ([]*models.Task, error)
+	TasksByDomain(logger lager.Logger, domain string) ([]*models.Task, error)
 
 	// Lists all Tasks on the given cell
-	TasksByCellID(cellId string) ([]*models.Task, error)
+	TasksByCellID(logger lager.Logger, cellId string) ([]*models.Task, error)
 
 	// Returns the Task with the given guid
-	TaskByGuid(guid string) (*models.Task, error)
+	TaskByGuid(logger lager.Logger, guid string) (*models.Task, error)
 
 	// Cancels the Task with the given task guid
-	CancelTask(taskGuid string) error
+	CancelTask(logger lager.Logger, taskGuid string) error
 }
 
 /*
@@ -111,10 +113,10 @@ The ExternalDomainClient is used to access and update Diego's domains.
 */
 type ExternalDomainClient interface {
 	// Lists the active domains
-	Domains() ([]string, error)
+	Domains(logger lager.Logger) ([]string, error)
 
 	// Creates a domain or bumps the ttl on an existing domain
-	UpsertDomain(domain string, ttl time.Duration) error
+	UpsertDomain(logger lager.Logger, domain string, ttl time.Duration) error
 }
 
 /*
@@ -122,16 +124,16 @@ The ExternalActualLRPClient is used to access and retire Actual LRPs
 */
 type ExternalActualLRPClient interface {
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
-	ActualLRPGroups(models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 
 	// Returns all ActualLRPGroups that have the given process guid
-	ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error)
 
 	// Returns the ActualLRPGroup with the given process guid and instance index
-	ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error)
+	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error)
 
 	// Shuts down the ActualLRP matching the given ActualLRPKey, but does not modify the desired state
-	RetireActualLRP(key *models.ActualLRPKey) error
+	RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
 }
 
 /*
@@ -139,29 +141,29 @@ The ExternalDesiredLRPClient is used to access and manipulate Disired LRPs.
 */
 type ExternalDesiredLRPClient interface {
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
-	DesiredLRPs(models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+	DesiredLRPs(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 
 	// Returns the DesiredLRP with the given process guid
-	DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error)
+	DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error)
 
 	// Returns all DesiredLRPSchedulingInfos that match the given DesiredLRPFilter
-	DesiredLRPSchedulingInfos(models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
+	DesiredLRPSchedulingInfos(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 
 	// Creates the given DesiredLRP and its corresponding ActualLRPs
-	DesireLRP(*models.DesiredLRP) error
+	DesireLRP(lager.Logger, *models.DesiredLRP) error
 
 	// Updates the DesiredLRP matching the given process guid
-	UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error
+	UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error
 
 	// Removes the DesiredLRP matching the given process guid
-	RemoveDesiredLRP(processGuid string) error
+	RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 }
 
 /*
 The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
-	SubscribeToEvents() (events.EventSource, error)
+	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
 }
 
 /*
@@ -170,10 +172,10 @@ The ExperimentalExternalEventClient is used to subscribe to groups of Events.
 */
 type ExperimentalExternalEventClient interface {
 	// Returns an EventSource for watching changes to DesiredLRPs
-	SubscribeToDesiredLRPEvents() (events.EventSource, error)
+	SubscribeToDesiredLRPEvents(logger lager.Logger) (events.EventSource, error)
 
 	// Returns an EventSource for watching changes to ActualLRPs
-	SubscribeToActualLRPEvents() (events.EventSource, error)
+	SubscribeToActualLRPEvents(logger lager.Logger) (events.EventSource, error)
 }
 
 func newClient(url string) *client {
@@ -230,7 +232,7 @@ type client struct {
 	reqGen              *rata.RequestGenerator
 }
 
-func (c *client) Ping() bool {
+func (c *client) Ping(logger lager.Logger) bool {
 	response := models.PingResponse{}
 	err := c.doRequest(PingRoute, nil, nil, nil, &response)
 	if err != nil {
@@ -239,7 +241,7 @@ func (c *client) Ping() bool {
 	return response.Available
 }
 
-func (c *client) Domains() ([]string, error) {
+func (c *client) Domains(logger lager.Logger) ([]string, error) {
 	response := models.DomainsResponse{}
 	err := c.doRequest(DomainsRoute, nil, nil, nil, &response)
 	if err != nil {
@@ -248,7 +250,7 @@ func (c *client) Domains() ([]string, error) {
 	return response.Domains, response.Error.ToError()
 }
 
-func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
+func (c *client) UpsertDomain(logger lager.Logger, domain string, ttl time.Duration) error {
 	request := models.UpsertDomainRequest{
 		Domain: domain,
 		Ttl:    uint32(ttl.Seconds()),
@@ -261,7 +263,7 @@ func (c *client) UpsertDomain(domain string, ttl time.Duration) error {
 	return response.Error.ToError()
 }
 
-func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
+func (c *client) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	request := models.ActualLRPGroupsRequest{
 		Domain: filter.Domain,
 		CellId: filter.CellID,
@@ -275,7 +277,7 @@ func (c *client) ActualLRPGroups(filter models.ActualLRPFilter) ([]*models.Actua
 	return response.ActualLrpGroups, response.Error.ToError()
 }
 
-func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.ActualLRPGroup, error) {
+func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
 	request := models.ActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: processGuid,
 	}
@@ -288,7 +290,7 @@ func (c *client) ActualLRPGroupsByProcessGuid(processGuid string) ([]*models.Act
 	return response.ActualLrpGroups, response.Error.ToError()
 }
 
-func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index int) (*models.ActualLRPGroup, error) {
+func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error) {
 	request := models.ActualLRPGroupByProcessGuidAndIndexRequest{
 		ProcessGuid: processGuid,
 		Index:       int32(index),
@@ -302,7 +304,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(processGuid string, index i
 	return response.ActualLrpGroup, response.Error.ToError()
 }
 
-func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
+func (c *client) ClaimActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
 	request := models.ClaimActualLRPRequest{
 		ProcessGuid:          processGuid,
 		Index:                int32(index),
@@ -316,7 +318,7 @@ func (c *client) ClaimActualLRP(processGuid string, index int, instanceKey *mode
 	return response.Error.ToError()
 }
 
-func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
+func (c *client) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
 	request := models.StartActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
@@ -331,7 +333,7 @@ func (c *client) StartActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 	return response.Error.ToError()
 }
 
-func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+func (c *client) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
 	request := models.CrashActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
@@ -346,7 +348,7 @@ func (c *client) CrashActualLRP(key *models.ActualLRPKey, instanceKey *models.Ac
 	return response.Error.ToError()
 }
 
-func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) error {
+func (c *client) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {
 	request := models.FailActualLRPRequest{
 		ActualLrpKey: key,
 		ErrorMessage: errorMessage,
@@ -360,7 +362,7 @@ func (c *client) FailActualLRP(key *models.ActualLRPKey, errorMessage string) er
 	return response.Error.ToError()
 }
 
-func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
+func (c *client) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
 	request := models.RetireActualLRPRequest{
 		ActualLrpKey: key,
 	}
@@ -373,7 +375,7 @@ func (c *client) RetireActualLRP(key *models.ActualLRPKey) error {
 	return response.Error.ToError()
 }
 
-func (c *client) RemoveActualLRP(processGuid string, index int) error {
+func (c *client) RemoveActualLRP(logger lager.Logger, processGuid string, index int) error {
 	request := models.RemoveActualLRPRequest{
 		ProcessGuid: processGuid,
 		Index:       int32(index),
@@ -386,14 +388,14 @@ func (c *client) RemoveActualLRP(processGuid string, index int) error {
 	return response.Error.ToError()
 }
 
-func (c *client) EvacuateClaimedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
+func (c *client) EvacuateClaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
 	return c.doEvacRequest(EvacuateClaimedActualLRPRoute, KeepContainer, &models.EvacuateClaimedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 	})
 }
 
-func (c *client) EvacuateCrashedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, error) {
+func (c *client) EvacuateCrashedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, error) {
 	return c.doEvacRequest(EvacuateCrashedActualLRPRoute, DeleteContainer, &models.EvacuateCrashedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
@@ -401,14 +403,14 @@ func (c *client) EvacuateCrashedActualLRP(key *models.ActualLRPKey, instanceKey 
 	})
 }
 
-func (c *client) EvacuateStoppedActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
+func (c *client) EvacuateStoppedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
 	return c.doEvacRequest(EvacuateStoppedActualLRPRoute, DeleteContainer, &models.EvacuateStoppedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 	})
 }
 
-func (c *client) EvacuateRunningActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, ttl uint64) (bool, error) {
+func (c *client) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, ttl uint64) (bool, error) {
 	return c.doEvacRequest(EvacuateRunningActualLRPRoute, KeepContainer, &models.EvacuateRunningActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
@@ -417,7 +419,7 @@ func (c *client) EvacuateRunningActualLRP(key *models.ActualLRPKey, instanceKey 
 	})
 }
 
-func (c *client) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
 	request := models.RemoveEvacuatingActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
@@ -432,7 +434,7 @@ func (c *client) RemoveEvacuatingActualLRP(key *models.ActualLRPKey, instanceKey
 	return response.Error.ToError()
 }
 
-func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	request := models.DesiredLRPsRequest{
 		Domain: filter.Domain,
 	}
@@ -445,7 +447,7 @@ func (c *client) DesiredLRPs(filter models.DesiredLRPFilter) ([]*models.DesiredL
 	return response.DesiredLrps, response.Error.ToError()
 }
 
-func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP, error) {
+func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {
 	request := models.DesiredLRPByProcessGuidRequest{
 		ProcessGuid: processGuid,
 	}
@@ -458,7 +460,7 @@ func (c *client) DesiredLRPByProcessGuid(processGuid string) (*models.DesiredLRP
 	return response.DesiredLrp, response.Error.ToError()
 }
 
-func (c *client) DesiredLRPSchedulingInfos(filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
 	request := models.DesiredLRPsRequest{
 		Domain: filter.Domain,
 	}
@@ -480,14 +482,14 @@ func (c *client) doDesiredLRPLifecycleRequest(route string, request proto.Messag
 	return response.Error.ToError()
 }
 
-func (c *client) DesireLRP(desiredLRP *models.DesiredLRP) error {
+func (c *client) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	request := models.DesireLRPRequest{
 		DesiredLrp: desiredLRP,
 	}
 	return c.doDesiredLRPLifecycleRequest(DesireDesiredLRPRoute, &request)
 }
 
-func (c *client) UpdateDesiredLRP(processGuid string, update *models.DesiredLRPUpdate) error {
+func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error {
 	request := models.UpdateDesiredLRPRequest{
 		ProcessGuid: processGuid,
 		Update:      update,
@@ -495,14 +497,14 @@ func (c *client) UpdateDesiredLRP(processGuid string, update *models.DesiredLRPU
 	return c.doDesiredLRPLifecycleRequest(UpdateDesiredLRPRoute, &request)
 }
 
-func (c *client) RemoveDesiredLRP(processGuid string) error {
+func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
 	request := models.RemoveDesiredLRPRequest{
 		ProcessGuid: processGuid,
 	}
 	return c.doDesiredLRPLifecycleRequest(RemoveDesiredLRPRoute, &request)
 }
 
-func (c *client) ConvergeLRPs() error {
+func (c *client) ConvergeLRPs(logger lager.Logger) error {
 	route := ConvergeLRPsRoute
 	response := models.ConvergeLRPsResponse{}
 	err := c.doRequest(route, nil, nil, nil, &response)
@@ -512,7 +514,7 @@ func (c *client) ConvergeLRPs() error {
 	return response.Error.ToError()
 }
 
-func (c *client) Tasks() ([]*models.Task, error) {
+func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error) {
 	request := models.TasksRequest{}
 	response := models.TasksResponse{}
 	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
@@ -523,7 +525,7 @@ func (c *client) Tasks() ([]*models.Task, error) {
 	return response.Tasks, response.Error.ToError()
 }
 
-func (c *client) TasksByDomain(domain string) ([]*models.Task, error) {
+func (c *client) TasksByDomain(logger lager.Logger, domain string) ([]*models.Task, error) {
 	request := models.TasksRequest{
 		Domain: domain,
 	}
@@ -536,7 +538,7 @@ func (c *client) TasksByDomain(domain string) ([]*models.Task, error) {
 	return response.Tasks, response.Error.ToError()
 }
 
-func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
+func (c *client) TasksByCellID(logger lager.Logger, cellId string) ([]*models.Task, error) {
 	request := models.TasksRequest{
 		CellId: cellId,
 	}
@@ -549,7 +551,7 @@ func (c *client) TasksByCellID(cellId string) ([]*models.Task, error) {
 	return response.Tasks, response.Error.ToError()
 }
 
-func (c *client) TaskByGuid(taskGuid string) (*models.Task, error) {
+func (c *client) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
 	request := models.TaskByGuidRequest{
 		TaskGuid: taskGuid,
 	}
@@ -571,7 +573,7 @@ func (c *client) doTaskLifecycleRequest(route string, request proto.Message) err
 	return response.Error.ToError()
 }
 
-func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinition) error {
+func (c *client) DesireTask(logger lager.Logger, taskGuid, domain string, taskDef *models.TaskDefinition) error {
 	route := DesireTaskRoute
 	request := models.DesireTaskRequest{
 		TaskGuid:       taskGuid,
@@ -581,7 +583,7 @@ func (c *client) DesireTask(taskGuid, domain string, taskDef *models.TaskDefinit
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
+func (c *client) StartTask(logger lager.Logger, taskGuid string, cellId string) (bool, error) {
 	request := &models.StartTaskRequest{
 		TaskGuid: taskGuid,
 		CellId:   cellId,
@@ -594,7 +596,7 @@ func (c *client) StartTask(taskGuid string, cellId string) (bool, error) {
 	return response.ShouldStart, response.Error.ToError()
 }
 
-func (c *client) CancelTask(taskGuid string) error {
+func (c *client) CancelTask(logger lager.Logger, taskGuid string) error {
 	request := models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
@@ -602,7 +604,7 @@ func (c *client) CancelTask(taskGuid string) error {
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) ResolvingTask(taskGuid string) error {
+func (c *client) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	request := models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
@@ -610,7 +612,7 @@ func (c *client) ResolvingTask(taskGuid string) error {
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) DeleteTask(taskGuid string) error {
+func (c *client) DeleteTask(logger lager.Logger, taskGuid string) error {
 	request := models.TaskGuidRequest{
 		TaskGuid: taskGuid,
 	}
@@ -618,7 +620,7 @@ func (c *client) DeleteTask(taskGuid string) error {
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) FailTask(taskGuid, failureReason string) error {
+func (c *client) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
 	request := models.FailTaskRequest{
 		TaskGuid:      taskGuid,
 		FailureReason: failureReason,
@@ -627,7 +629,7 @@ func (c *client) FailTask(taskGuid, failureReason string) error {
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) CompleteTask(taskGuid, cellId string, failed bool, failureReason, result string) error {
+func (c *client) CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error {
 	request := models.CompleteTaskRequest{
 		TaskGuid:      taskGuid,
 		CellId:        cellId,
@@ -639,7 +641,7 @@ func (c *client) CompleteTask(taskGuid, cellId string, failed bool, failureReaso
 	return c.doTaskLifecycleRequest(route, &request)
 }
 
-func (c *client) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error {
+func (c *client) ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error {
 	request := &models.ConvergeTasksRequest{
 		KickTaskDuration:            kickTaskDuration.Nanoseconds(),
 		ExpirePendingTaskDuration:   expirePendingTaskDuration.Nanoseconds(),
@@ -671,19 +673,19 @@ func (c *client) subscribeToEvents(route string) (events.EventSource, error) {
 	return events.NewEventSource(eventSource), nil
 }
 
-func (c *client) SubscribeToEvents() (events.EventSource, error) {
+func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(EventStreamRoute_r0)
 }
 
-func (c *client) SubscribeToDesiredLRPEvents() (events.EventSource, error) {
+func (c *client) SubscribeToDesiredLRPEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(DesiredLRPEventStreamRoute)
 }
 
-func (c *client) SubscribeToActualLRPEvents() (events.EventSource, error) {
+func (c *client) SubscribeToActualLRPEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(ActualLRPEventStreamRoute)
 }
 
-func (c *client) Cells() ([]*models.CellPresence, error) {
+func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {
 	response := models.CellsResponse{}
 	err := c.doRequest(CellsRoute, nil, nil, nil, &response)
 	if err != nil {

@@ -49,12 +49,12 @@ var _ = Describe("Secure", func() {
 			keyFile := path.Join(basePath, "green-certs", "client.key")
 			client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(client.Ping()).To(BeTrue())
+			Expect(client.Ping(logger)).To(BeTrue())
 		})
 
 		It("fails for a client with no SSL", func() {
 			client = bbs.NewClient(bbsURL.String())
-			Expect(client.Ping()).To(BeFalse())
+			Expect(client.Ping(logger)).To(BeFalse())
 		})
 
 		It("fails for a client configured with the wrong certificates", func() {
@@ -63,7 +63,7 @@ var _ = Describe("Secure", func() {
 			keyFile := path.Join(basePath, "blue-certs", "client.key")
 			client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(client.Ping()).To(BeFalse())
+			Expect(client.Ping(logger)).To(BeFalse())
 		})
 
 		It("fails for a client configured with a different ca certificate", func() {
@@ -72,7 +72,7 @@ var _ = Describe("Secure", func() {
 			keyFile := path.Join(basePath, "green-certs", "client.key")
 			client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(client.Ping()).To(BeFalse())
+			Expect(client.Ping(logger)).To(BeFalse())
 		})
 
 		It("fails to create the client if certs are not valid", func() {
@@ -100,7 +100,7 @@ var _ = Describe("Secure", func() {
 			keyFile := path.Join(basePath, "blue-certs", "client.key")
 			client, err = bbs.NewSecureSkipVerifyClient(bbsURL.String(), certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(client.Ping()).To(BeFalse())
+			Expect(client.Ping(logger)).To(BeFalse())
 		})
 	})
 })

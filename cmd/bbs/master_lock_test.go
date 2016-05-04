@@ -30,7 +30,7 @@ var _ = Describe("MasterLock", func() {
 		})
 
 		It("is not reachable", func() {
-			_, err := client.Domains()
+			_, err := client.Domains(logger)
 			Expect(err).To(HaveOccurred())
 		})
 
@@ -38,7 +38,7 @@ var _ = Describe("MasterLock", func() {
 			ginkgomon.Kill(competingBBSLockProcess)
 
 			Eventually(func() error {
-				_, err := client.Domains()
+				_, err := client.Domains(logger)
 				return err
 			}).ShouldNot(HaveOccurred())
 		})

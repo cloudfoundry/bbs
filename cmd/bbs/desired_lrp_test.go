@@ -44,7 +44,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 	Describe("DesiredLRPs", func() {
 		JustBeforeEach(func() {
-			actualDesiredLRPs, getErr = client.DesiredLRPs(filter)
+			actualDesiredLRPs, getErr = client.DesiredLRPs(logger, filter)
 			for _, lrp := range actualDesiredLRPs {
 				lrp.ModificationTag.Epoch = "epoch"
 			}
@@ -97,7 +97,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 		JustBeforeEach(func() {
 			expectedDesiredLRP = desiredLRPs["domain-1"][0]
-			desiredLRP, getErr = client.DesiredLRPByProcessGuid(expectedDesiredLRP.GetProcessGuid())
+			desiredLRP, getErr = client.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.GetProcessGuid())
 			desiredLRP.ModificationTag.Epoch = "epoch"
 		})
 
@@ -112,7 +112,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 	Describe("DesiredLRPSchedulingInfos", func() {
 		JustBeforeEach(func() {
-			schedulingInfos, getErr = client.DesiredLRPSchedulingInfos(filter)
+			schedulingInfos, getErr = client.DesiredLRPSchedulingInfos(logger, filter)
 			for _, schedulingInfo := range schedulingInfos {
 				schedulingInfo.ModificationTag.Epoch = "epoch"
 			}
@@ -173,12 +173,12 @@ var _ = Describe("DesiredLRP API", func() {
 		})
 
 		JustBeforeEach(func() {
-			desireErr = client.DesireLRP(desiredLRP)
+			desireErr = client.DesireLRP(logger, desiredLRP)
 		})
 
 		It("creates the desired LRP in the system", func() {
 			Expect(desireErr).NotTo(HaveOccurred())
-			persistedDesiredLRP, err := client.DesiredLRPByProcessGuid("super-lrp")
+			persistedDesiredLRP, err := client.DesiredLRPByProcessGuid(logger, "super-lrp")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(persistedDesiredLRP.DesiredLRPKey()).To(Equal(desiredLRP.DesiredLRPKey()))
 			Expect(persistedDesiredLRP.DesiredLRPResource()).To(Equal(desiredLRP.DesiredLRPResource()))
@@ -195,7 +195,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 			It("has an action with SuppressLogOutput set to true", func() {
 				Expect(desireErr).NotTo(HaveOccurred())
-				persistedDesiredLRP, err := client.DesiredLRPByProcessGuid("super-lrp")
+				persistedDesiredLRP, err := client.DesiredLRPByProcessGuid(logger, "super-lrp")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(persistedDesiredLRP.Action.RunAction.SuppressLogOutput).To(BeTrue())
 			})
@@ -208,7 +208,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 			It("has an action with SuppressLogOutput set to false", func() {
 				Expect(desireErr).NotTo(HaveOccurred())
-				persistedDesiredLRP, err := client.DesiredLRPByProcessGuid("super-lrp")
+				persistedDesiredLRP, err := client.DesiredLRPByProcessGuid(logger, "super-lrp")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(persistedDesiredLRP.Action.RunAction.SuppressLogOutput).To(BeFalse())
 			})
@@ -224,14 +224,14 @@ var _ = Describe("DesiredLRP API", func() {
 
 		JustBeforeEach(func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
-			err := client.DesireLRP(desiredLRP)
+			err := client.DesireLRP(logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
-			removeErr = client.RemoveDesiredLRP("super-lrp")
+			removeErr = client.RemoveDesiredLRP(logger, "super-lrp")
 		})
 
 		It("creates the desired LRP in the system", func() {
 			Expect(removeErr).NotTo(HaveOccurred())
-			_, err := client.DesiredLRPByProcessGuid("super-lrp")
+			_, err := client.DesiredLRPByProcessGuid(logger, "super-lrp")
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(models.ErrResourceNotFound))
 		})
@@ -246,15 +246,15 @@ var _ = Describe("DesiredLRP API", func() {
 
 		JustBeforeEach(func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
-			err := client.DesireLRP(desiredLRP)
+			err := client.DesireLRP(logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			three := int32(3)
-			updateErr = client.UpdateDesiredLRP("super-lrp", &models.DesiredLRPUpdate{Instances: &three})
+			updateErr = client.UpdateDesiredLRP(logger, "super-lrp", &models.DesiredLRPUpdate{Instances: &three})
 		})
 
 		It("creates the desired LRP in the system", func() {
 			Expect(updateErr).NotTo(HaveOccurred())
-			persistedDesiredLRP, err := client.DesiredLRPByProcessGuid("super-lrp")
+			persistedDesiredLRP, err := client.DesiredLRPByProcessGuid(logger, "super-lrp")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(persistedDesiredLRP.Instances).To(Equal(int32(3)))
 		})
@@ -271,7 +271,7 @@ func createDesiredLRPsInDomains(client bbs.InternalClient, domainCounts map[stri
 			guid := fmt.Sprintf("guid-%d-for-%s", i, domain)
 			desiredLRP := model_helpers.NewValidDesiredLRP(guid)
 			desiredLRP.Domain = domain
-			err := client.DesireLRP(desiredLRP)
+			err := client.DesireLRP(logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
 			createdDesiredLRPs[domain] = append(createdDesiredLRPs[domain], desiredLRP)

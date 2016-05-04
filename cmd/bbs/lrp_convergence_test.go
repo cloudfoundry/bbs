@@ -27,9 +27,9 @@ var _ = Describe("Convergence API", func() {
 			)
 			consulHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
-			err := client.DesireLRP(model_helpers.NewValidDesiredLRP(processGuid))
+			err := client.DesireLRP(logger, model_helpers.NewValidDesiredLRP(processGuid))
 			Expect(err).NotTo(HaveOccurred())
-			err = client.RemoveActualLRP(processGuid, 0)
+			err = client.RemoveActualLRP(logger, processGuid, 0)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -38,10 +38,10 @@ var _ = Describe("Convergence API", func() {
 		})
 
 		It("converges the lrps", func() {
-			err := client.ConvergeLRPs()
+			err := client.ConvergeLRPs(logger)
 			Expect(err).NotTo(HaveOccurred())
 
-			groups, err := client.ActualLRPGroupsByProcessGuid(processGuid)
+			groups, err := client.ActualLRPGroupsByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(groups).To(HaveLen(1))
 		})

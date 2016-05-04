@@ -27,21 +27,21 @@ var _ = Describe("Evacuation API", func() {
 		actual.State = models.ActualLRPStateRunning
 		desiredLRP := model_helpers.NewValidDesiredLRP(actual.ProcessGuid)
 		desiredLRP.Instances = 2
-		err := client.DesireLRP(desiredLRP)
+		err := client.DesireLRP(logger, desiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.ClaimActualLRP(actual.ProcessGuid, 1, &actual.ActualLRPInstanceKey)
+		err = client.ClaimActualLRP(logger, actual.ProcessGuid, 1, &actual.ActualLRPInstanceKey)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("RemoveEvacuatingActualLRP", func() {
 		It("removes the evacuating actual_lrp", func() {
-			_, err := client.EvacuateClaimedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+			_, err := client.EvacuateClaimedActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = client.RemoveEvacuatingActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+			err = client.RemoveEvacuatingActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
 			Expect(err).NotTo(HaveOccurred())
 
-			group, err := client.ActualLRPGroupByProcessGuidAndIndex(actual.ProcessGuid, int(actual.Index))
+			group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(group.Evacuating).To(BeNil())
 		})
@@ -49,11 +49,11 @@ var _ = Describe("Evacuation API", func() {
 
 	Describe("EvacuateClaimedActualLRP", func() {
 		It("removes the claimed actual_lrp without evacuating", func() {
-			keepContainer, evacuateErr := client.EvacuateClaimedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+			keepContainer, evacuateErr := client.EvacuateClaimedActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
 			Expect(keepContainer).To(BeFalse())
 			Expect(evacuateErr).NotTo(HaveOccurred())
 
-			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(actual.ProcessGuid, int(actual.Index))
+			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualLRPGroup.Evacuating).To(BeNil())
 			Expect(actualLRPGroup.Instance).NotTo(BeNil())
@@ -63,16 +63,16 @@ var _ = Describe("Evacuation API", func() {
 
 	Describe("EvacuateRunningActualLRP", func() {
 		BeforeEach(func() {
-			err := client.StartActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
+			err := client.StartActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("runs the evacuating ActualLRP and unclaims the instance ActualLRP", func() {
-			keepContainer, err := client.EvacuateRunningActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo, uint64(10000))
+			keepContainer, err := client.EvacuateRunningActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo, uint64(10000))
 			Expect(keepContainer).To(BeTrue())
 			Expect(err).NotTo(HaveOccurred())
 
-			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(actual.ProcessGuid, int(actual.Index))
+			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualLRPGroup.Evacuating).NotTo(BeNil())
 			Expect(actualLRPGroup.Instance).NotTo(BeNil())
@@ -83,31 +83,31 @@ var _ = Describe("Evacuation API", func() {
 
 	Describe("EvacuateStoppedActualLRP", func() {
 		BeforeEach(func() {
-			err := client.StartActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
+			err := client.StartActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("deletes the container and both actualLRPs", func() {
-			keepContainer, err := client.EvacuateStoppedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+			keepContainer, err := client.EvacuateStoppedActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
 			Expect(keepContainer).To(BeFalse())
 			Expect(err).NotTo(HaveOccurred())
-			_, err = client.ActualLRPGroupByProcessGuidAndIndex(actual.ProcessGuid, int(actual.Index))
+			_, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
 			Expect(err).To(Equal(models.ErrResourceNotFound))
 		})
 	})
 
 	Describe("EvacuateCrashedActualLRP", func() {
 		BeforeEach(func() {
-			err := client.StartActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
+			err := client.StartActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("removes the crashed evacuating LRP and unclaims the instance ActualLRP", func() {
-			keepContainer, evacuateErr := client.EvacuateCrashedActualLRP(&actual.ActualLRPKey, &actual.ActualLRPInstanceKey, "some-reason")
+			keepContainer, evacuateErr := client.EvacuateCrashedActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, "some-reason")
 			Expect(keepContainer).Should(BeFalse())
 			Expect(evacuateErr).NotTo(HaveOccurred())
 
-			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(actual.ProcessGuid, int(actual.Index))
+			actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualLRPGroup.Evacuating).To(BeNil())
 			Expect(actualLRPGroup.Instance).ToNot(BeNil())

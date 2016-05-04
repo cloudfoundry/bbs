@@ -20,10 +20,10 @@ var _ = Describe("Task API", func() {
 		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
 		expectedTasks[1].Domain = "b-domain"
 		for _, t := range expectedTasks {
-			err := client.DesireTask(t.TaskGuid, t.Domain, t.TaskDefinition)
+			err := client.DesireTask(logger, t.TaskGuid, t.Domain, t.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 		}
-		client.StartTask(expectedTasks[1].TaskGuid, "b-cell")
+		client.StartTask(logger, expectedTasks[1].TaskGuid, "b-cell")
 	})
 
 	AfterEach(func() {
@@ -32,7 +32,7 @@ var _ = Describe("Task API", func() {
 
 	Describe("Tasks", func() {
 		It("has the correct number of responses", func() {
-			actualTasks, err := client.Tasks()
+			actualTasks, err := client.Tasks(logger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualTasks).To(MatchTasks(expectedTasks))
 		})
@@ -41,7 +41,7 @@ var _ = Describe("Task API", func() {
 	Describe("TasksByDomain", func() {
 		It("has the correct number of responses", func() {
 			domain := expectedTasks[0].Domain
-			actualTasks, err := client.TasksByDomain(domain)
+			actualTasks, err := client.TasksByDomain(logger, domain)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualTasks).To(MatchTasks([]*models.Task{expectedTasks[0]}))
 		})
@@ -49,7 +49,7 @@ var _ = Describe("Task API", func() {
 
 	Describe("TasksByCellID", func() {
 		It("has the correct number of responses", func() {
-			actualTasks, err := client.TasksByCellID("b-cell")
+			actualTasks, err := client.TasksByCellID(logger, "b-cell")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualTasks).To(MatchTasks([]*models.Task{expectedTasks[1]}))
 		})
@@ -57,7 +57,7 @@ var _ = Describe("Task API", func() {
 
 	Describe("TaskByGuid", func() {
 		It("returns the task", func() {
-			task, err := client.TaskByGuid(expectedTasks[0].TaskGuid)
+			task, err := client.TaskByGuid(logger, expectedTasks[0].TaskGuid)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(task).To(MatchTask(expectedTasks[0]))
 		})
@@ -66,10 +66,10 @@ var _ = Describe("Task API", func() {
 	Describe("DesireTask", func() {
 		It("adds the desired task", func() {
 			expectedTask := model_helpers.NewValidTask("task-1")
-			err := client.DesireTask(expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
+			err := client.DesireTask(logger, expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 
-			task, err := client.TaskByGuid(expectedTask.TaskGuid)
+			task, err := client.TaskByGuid(logger, expectedTask.TaskGuid)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(task).To(MatchTask(expectedTask))
 		})
@@ -81,26 +81,26 @@ var _ = Describe("Task API", func() {
 		const cellId = "cell-1"
 
 		BeforeEach(func() {
-			err := client.DesireTask(taskGuid, "test", taskDef)
+			err := client.DesireTask(logger, taskGuid, "test", taskDef)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Describe("StartTask", func() {
 			It("changes the task state from pending to running", func() {
-				task, err := client.TaskByGuid(taskGuid)
+				task, err := client.TaskByGuid(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.State).To(Equal(models.Task_Pending))
 
-				_, err = client.StartTask(taskGuid, cellId)
+				_, err = client.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				task, err = client.TaskByGuid(taskGuid)
+				task, err = client.TaskByGuid(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.State).To(Equal(models.Task_Running))
 			})
 
 			It("shouldStart is true", func() {
-				shouldStart, err := client.StartTask(taskGuid, cellId)
+				shouldStart, err := client.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(shouldStart).To(BeTrue())
 			})
@@ -108,10 +108,10 @@ var _ = Describe("Task API", func() {
 
 		Describe("CancelTask", func() {
 			It("cancel the desired task", func() {
-				err := client.CancelTask(taskGuid)
+				err := client.CancelTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
-				task, err := client.TaskByGuid(taskGuid)
+				task, err := client.TaskByGuid(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.FailureReason).To(Equal("task was cancelled"))
 			})
@@ -119,16 +119,16 @@ var _ = Describe("Task API", func() {
 
 		Context("task has been started", func() {
 			BeforeEach(func() {
-				_, err := client.StartTask(taskGuid, cellId)
+				_, err := client.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Describe("FailTask", func() {
 				It("marks the task completed and sets FailureReason", func() {
-					err := client.FailTask(taskGuid, "some failure happened")
+					err := client.FailTask(logger, taskGuid, "some failure happened")
 					Expect(err).NotTo(HaveOccurred())
 
-					task, err := client.TaskByGuid(taskGuid)
+					task, err := client.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.State).To(Equal(models.Task_Completed))
 					Expect(task.FailureReason).To(Equal("some failure happened"))
@@ -137,14 +137,14 @@ var _ = Describe("Task API", func() {
 
 			Describe("CompleteTask", func() {
 				It("changes the task state from running to completed", func() {
-					task, err := client.TaskByGuid(taskGuid)
+					task, err := client.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.State).To(Equal(models.Task_Running))
 
-					err = client.CompleteTask(taskGuid, cellId, false, "", "result")
+					err = client.CompleteTask(logger, taskGuid, cellId, false, "", "result")
 					Expect(err).NotTo(HaveOccurred())
 
-					task, err = client.TaskByGuid(taskGuid)
+					task, err = client.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.State).To(Equal(models.Task_Completed))
 				})
@@ -152,16 +152,16 @@ var _ = Describe("Task API", func() {
 
 			Context("task has been completed", func() {
 				BeforeEach(func() {
-					err := client.CompleteTask(taskGuid, cellId, false, "", "result")
+					err := client.CompleteTask(logger, taskGuid, cellId, false, "", "result")
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				Describe("ResolvingTask", func() {
 					It("changes the task state from completed to resolving", func() {
-						err := client.ResolvingTask(taskGuid)
+						err := client.ResolvingTask(logger, taskGuid)
 						Expect(err).NotTo(HaveOccurred())
 
-						task, err := client.TaskByGuid(taskGuid)
+						task, err := client.TaskByGuid(logger, taskGuid)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(task.State).To(Equal(models.Task_Resolving))
 					})
@@ -169,16 +169,16 @@ var _ = Describe("Task API", func() {
 
 				Context("task is resolving", func() {
 					BeforeEach(func() {
-						err := client.ResolvingTask(taskGuid)
+						err := client.ResolvingTask(logger, taskGuid)
 						Expect(err).NotTo(HaveOccurred())
 					})
 
 					Describe("DeleteTask", func() {
 						It("deletes the task", func() {
-							err := client.DeleteTask(taskGuid)
+							err := client.DeleteTask(logger, taskGuid)
 							Expect(err).NotTo(HaveOccurred())
 
-							_, err = client.TaskByGuid(taskGuid)
+							_, err = client.TaskByGuid(logger, taskGuid)
 							Expect(err).To(Equal(models.ErrResourceNotFound))
 						})
 					})

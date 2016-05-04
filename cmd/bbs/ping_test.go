@@ -17,7 +17,7 @@ var _ = Describe("Ping API", func() {
 			defer ginkgomon.Kill(bbsProcess)
 
 			By("having the bbs down", func() {
-				Expect(client.Ping()).To(BeFalse())
+				Expect(client.Ping(logger)).To(BeFalse())
 			})
 
 			By("starting the bbs without a lock", func() {
@@ -29,11 +29,13 @@ var _ = Describe("Ping API", func() {
 				bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-				Expect(client.Ping()).To(BeFalse())
+				Expect(client.Ping(logger)).To(BeFalse())
 			})
 
 			By("finally acquiring the lock", func() {
-				Eventually(client.Ping).Should(BeTrue())
+				Eventually(func() bool {
+					return client.Ping(logger)
+				}).Should(BeTrue())
 			})
 		})
 	})

@@ -26,12 +26,12 @@ var _ = Describe("Domain API", func() {
 
 		BeforeEach(func() {
 			existingDomain = "existing-domain"
-			err := client.UpsertDomain(existingDomain, 100*time.Second)
+			err := client.UpsertDomain(logger, existingDomain, 100*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("does emit latency metrics", func() {
-			err := client.UpsertDomain(existingDomain, 200*time.Second)
+			err := client.UpsertDomain(logger, existingDomain, 200*time.Second)
 			Expect(err).ToNot(HaveOccurred())
 
 			var sawRequestLatency bool
@@ -53,7 +53,7 @@ var _ = Describe("Domain API", func() {
 		})
 
 		It("emits request counting metrics", func() {
-			err := client.UpsertDomain(existingDomain, 200*time.Second)
+			err := client.UpsertDomain(logger, existingDomain, 200*time.Second)
 			Expect(err).ToNot(HaveOccurred())
 
 			timeout := time.After(50 * time.Millisecond)
@@ -78,20 +78,20 @@ var _ = Describe("Domain API", func() {
 		})
 
 		It("updates the TTL when updating an existing domain", func() {
-			err := client.UpsertDomain(existingDomain, 1*time.Second)
+			err := client.UpsertDomain(logger, existingDomain, 1*time.Second)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() []string {
-				domains, err := client.Domains()
+				domains, err := client.Domains(logger)
 				Expect(err).NotTo(HaveOccurred())
 				return domains
 			}).ShouldNot(ContainElement(existingDomain))
 		})
 
 		It("creates a domain with the desired TTL", func() {
-			err := client.UpsertDomain("new-domain", 54*time.Second)
+			err := client.UpsertDomain(logger, "new-domain", 54*time.Second)
 			Expect(err).ToNot(HaveOccurred())
-			domains, err := client.Domains()
+			domains, err := client.Domains(logger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(domains).To(ContainElement("new-domain"))
 		})
@@ -105,11 +105,11 @@ var _ = Describe("Domain API", func() {
 		BeforeEach(func() {
 			expectedDomains = []string{"domain-0", "domain-1"}
 			for i, d := range expectedDomains {
-				err := client.UpsertDomain(d, time.Second*time.Duration(100*(i+1)))
+				err := client.UpsertDomain(logger, d, time.Second*time.Duration(100*(i+1)))
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			actualDomains, getErr = client.Domains()
+			actualDomains, getErr = client.Domains(logger)
 		})
 
 		It("responds without error", func() {

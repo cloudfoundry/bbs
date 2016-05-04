@@ -29,7 +29,7 @@ var _ = Describe("Encryption", func() {
 
 	Describe("read-write encrypted data", func() {
 		JustBeforeEach(func() {
-			err := client.DesireTask(task.TaskGuid, task.Domain, task.TaskDefinition)
+			err := client.DesireTask(logger, task.TaskGuid, task.Domain, task.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -40,7 +40,7 @@ var _ = Describe("Encryption", func() {
 			})
 
 			It("can write/read to the database", func() {
-				tasks, err := client.Tasks()
+				tasks, err := client.Tasks(logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tasks).To(ContainElement(MatchTask(task)))
 			})
@@ -57,7 +57,7 @@ var _ = Describe("Encryption", func() {
 				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-				err := client.DesireTask(oldTask.TaskGuid, oldTask.Domain, oldTask.TaskDefinition)
+				err := client.DesireTask(logger, oldTask.TaskGuid, oldTask.Domain, oldTask.TaskDefinition)
 				Expect(err).NotTo(HaveOccurred())
 
 				ginkgomon.Interrupt(bbsProcess)
@@ -70,7 +70,7 @@ var _ = Describe("Encryption", func() {
 			})
 
 			It("can read data that was written with old/new keys", func() {
-				tasks, err := client.Tasks()
+				tasks, err := client.Tasks(logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tasks).To(ContainElement(MatchTask(oldTask)))
 				Expect(tasks).To(ContainElement(MatchTask(task)))
@@ -85,7 +85,7 @@ var _ = Describe("Encryption", func() {
 				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-				tasks, err := client.Tasks()
+				tasks, err := client.Tasks(logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tasks).To(ContainElement(MatchTask(oldTask)))
 				Expect(tasks).To(ContainElement(MatchTask(task)))

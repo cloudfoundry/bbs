@@ -138,38 +138,38 @@ var _ = Describe("ActualLRP API", func() {
 
 		baseDesiredLRP := model_helpers.NewValidDesiredLRP(baseLRP.ProcessGuid)
 		baseDesiredLRP.Domain = baseDomain
-		err = client.DesireLRP(baseDesiredLRP)
+		err = client.DesireLRP(logger, baseDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(&baseLRPKey, &baseLRPInstanceKey, &netInfo)
+		err = client.StartActualLRP(logger, &baseLRPKey, &baseLRPInstanceKey, &netInfo)
 		Expect(err).NotTo(HaveOccurred())
 
 		otherDesiredLRP := model_helpers.NewValidDesiredLRP(otherLRP.ProcessGuid)
 		otherDesiredLRP.Domain = otherDomain
-		Expect(client.DesireLRP(otherDesiredLRP)).To(Succeed())
-		err = client.StartActualLRP(&otherLRPKey, &otherLRPInstanceKey, &netInfo)
+		Expect(client.DesireLRP(logger, otherDesiredLRP)).To(Succeed())
+		err = client.StartActualLRP(logger, &otherLRPKey, &otherLRPInstanceKey, &netInfo)
 		Expect(err).NotTo(HaveOccurred())
 
 		evacuatingDesiredLRP := model_helpers.NewValidDesiredLRP(evacuatingLRP.ProcessGuid)
 		evacuatingDesiredLRP.Domain = evacuatingDomain
-		err = client.DesireLRP(evacuatingDesiredLRP)
+		err = client.DesireLRP(logger, evacuatingDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(&evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo)
+		err = client.StartActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = client.EvacuateRunningActualLRP(&evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, noExpirationTTL)
+		_, err = client.EvacuateRunningActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, noExpirationTTL)
 		Expect(err).NotTo(HaveOccurred())
 
 		unclaimedDesiredLRP := model_helpers.NewValidDesiredLRP(unclaimedLRP.ProcessGuid)
 		unclaimedDesiredLRP.Domain = unclaimedDomain
-		err = client.DesireLRP(unclaimedDesiredLRP)
+		err = client.DesireLRP(logger, unclaimedDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
 
 		crashingDesiredLRP := model_helpers.NewValidDesiredLRP(crashingLRP.ProcessGuid)
 		crashingDesiredLRP.Domain = crashingDomain
-		Expect(client.DesireLRP(crashingDesiredLRP)).To(Succeed())
+		Expect(client.DesireLRP(logger, crashingDesiredLRP)).To(Succeed())
 		for i := 0; i < 3; i++ {
-			err = client.StartActualLRP(&crashingLRPKey, &crashingLRPInstanceKey, &netInfo)
+			err = client.StartActualLRP(logger, &crashingLRPKey, &crashingLRPInstanceKey, &netInfo)
 			Expect(err).NotTo(HaveOccurred())
-			err = client.CrashActualLRP(&crashingLRPKey, &crashingLRPInstanceKey, "crash")
+			err = client.CrashActualLRP(logger, &crashingLRPKey, &crashingLRPInstanceKey, "crash")
 			Expect(err).NotTo(HaveOccurred())
 		}
 	})
@@ -180,7 +180,7 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("ActualLRPGroups", func() {
 		JustBeforeEach(func() {
-			actualActualLRPGroups, getErr = client.ActualLRPGroups(filter)
+			actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)
 			for _, group := range actualActualLRPGroups {
 				if group.Instance != nil {
 					group.Instance.Since = 0
@@ -240,7 +240,7 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("ActualLRPGroupsByProcessGuid", func() {
 		JustBeforeEach(func() {
-			actualActualLRPGroups, getErr = client.ActualLRPGroupsByProcessGuid(baseProcessGuid)
+			actualActualLRPGroups, getErr = client.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 		})
 
 		It("returns all actual lrps from the bbs", func() {
@@ -262,7 +262,7 @@ var _ = Describe("ActualLRP API", func() {
 		)
 
 		JustBeforeEach(func() {
-			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex)
+			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 		})
 
 		It("responds without error", func() {
@@ -286,7 +286,7 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			claimErr = client.ClaimActualLRP(unclaimedProcessGuid, unclaimedIndex, &instanceKey)
+			claimErr = client.ClaimActualLRP(logger, unclaimedProcessGuid, unclaimedIndex, &instanceKey)
 		})
 
 		It("claims the actual_lrp", func() {
@@ -297,7 +297,7 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.ActualLRPInstanceKey = instanceKey
 			expectedActualLRP.ModificationTag.Increment()
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())
 
 			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
@@ -320,7 +320,7 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			startErr = client.StartActualLRP(&unclaimedLRPKey, &instanceKey, &netInfo)
+			startErr = client.StartActualLRP(logger, &unclaimedLRPKey, &instanceKey, &netInfo)
 		})
 
 		It("starts the actual_lrp", func() {
@@ -333,7 +333,7 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.ModificationTag.Increment()
 			expectedActualLRP.Since = 0
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())
 
 			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
@@ -358,13 +358,13 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			failErr = client.FailActualLRP(&unclaimedLRPKey, errorMessage)
+			failErr = client.FailActualLRP(logger, &unclaimedLRPKey, errorMessage)
 		})
 
 		It("fails the actual_lrp", func() {
 			Expect(failErr).NotTo(HaveOccurred())
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())
 
 			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
@@ -380,13 +380,13 @@ var _ = Describe("ActualLRP API", func() {
 
 		JustBeforeEach(func() {
 			errorMessage = "some bad ocurred"
-			crashErr = client.CrashActualLRP(&baseLRPKey, &baseLRPInstanceKey, errorMessage)
+			crashErr = client.CrashActualLRP(logger, &baseLRPKey, &baseLRPInstanceKey, errorMessage)
 		})
 
 		It("crashes the actual_lrp", func() {
 			Expect(crashErr).NotTo(HaveOccurred())
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(baseProcessGuid, baseIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 			Expect(err).NotTo(HaveOccurred())
 
 			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
@@ -402,13 +402,13 @@ var _ = Describe("ActualLRP API", func() {
 		)
 
 		JustBeforeEach(func() {
-			retireErr = client.RetireActualLRP(&unclaimedLRPKey)
+			retireErr = client.RetireActualLRP(logger, &unclaimedLRPKey)
 		})
 
 		It("retires the actual_lrp", func() {
 			Expect(retireErr).NotTo(HaveOccurred())
 
-			_, err := client.ActualLRPGroupByProcessGuidAndIndex(unclaimedProcessGuid, unclaimedIndex)
+			_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).To(Equal(models.ErrResourceNotFound))
 		})
 	})
@@ -424,13 +424,13 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			removeErr = client.RemoveActualLRP(otherProcessGuid, otherIndex)
+			removeErr = client.RemoveActualLRP(logger, otherProcessGuid, otherIndex)
 		})
 
 		It("removes the actual_lrp", func() {
 			Expect(removeErr).NotTo(HaveOccurred())
 
-			_, err := client.ActualLRPGroupByProcessGuidAndIndex(otherProcessGuid, otherIndex)
+			_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, otherProcessGuid, otherIndex)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(models.ErrResourceNotFound))
 		})
