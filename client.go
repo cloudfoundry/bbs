@@ -234,7 +234,7 @@ type client struct {
 
 func (c *client) Ping(logger lager.Logger) bool {
 	response := models.PingResponse{}
-	err := c.doRequest(PingRoute, nil, nil, nil, &response)
+	err := c.doRequest(logger, PingRoute, nil, nil, nil, &response)
 	if err != nil {
 		return false
 	}
@@ -243,7 +243,7 @@ func (c *client) Ping(logger lager.Logger) bool {
 
 func (c *client) Domains(logger lager.Logger) ([]string, error) {
 	response := models.DomainsResponse{}
-	err := c.doRequest(DomainsRoute, nil, nil, nil, &response)
+	err := c.doRequest(logger, DomainsRoute, nil, nil, nil, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func (c *client) UpsertDomain(logger lager.Logger, domain string, ttl time.Durat
 		Ttl:    uint32(ttl.Seconds()),
 	}
 	response := models.UpsertDomainResponse{}
-	err := c.doRequest(UpsertDomainRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, UpsertDomainRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 	}
@@ -269,7 +269,7 @@ func (c *client) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 		CellId: filter.CellID,
 	}
 	response := models.ActualLRPGroupsResponse{}
-	err := c.doRequest(ActualLRPGroupsRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, ActualLRPGroupsRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +282,7 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 		ProcessGuid: processGuid,
 	}
 	response := models.ActualLRPGroupsResponse{}
-	err := c.doRequest(ActualLRPGroupsByProcessGuidRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, ActualLRPGroupsByProcessGuidRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +296,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 		Index:       int32(index),
 	}
 	response := models.ActualLRPGroupResponse{}
-	err := c.doRequest(ActualLRPGroupByProcessGuidAndIndexRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, ActualLRPGroupByProcessGuidAndIndexRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +311,7 @@ func (c *client) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		ActualLrpInstanceKey: instanceKey,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(ClaimActualLRPRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, ClaimActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 	}
@@ -325,7 +325,7 @@ func (c *client) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		ActualLrpNetInfo:     netInfo,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(StartActualLRPRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, StartActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 
@@ -340,7 +340,7 @@ func (c *client) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		ErrorMessage:         errorMessage,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(CrashActualLRPRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, CrashActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 
@@ -354,7 +354,7 @@ func (c *client) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, er
 		ErrorMessage: errorMessage,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(FailActualLRPRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, FailActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 
@@ -367,7 +367,7 @@ func (c *client) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) 
 		ActualLrpKey: key,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(RetireActualLRPRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, RetireActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 
@@ -381,7 +381,7 @@ func (c *client) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 		Index:       int32(index),
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(RemoveActualLRPRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, RemoveActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 	}
@@ -389,14 +389,14 @@ func (c *client) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 }
 
 func (c *client) EvacuateClaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
-	return c.doEvacRequest(EvacuateClaimedActualLRPRoute, KeepContainer, &models.EvacuateClaimedActualLRPRequest{
+	return c.doEvacRequest(logger, EvacuateClaimedActualLRPRoute, KeepContainer, &models.EvacuateClaimedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 	})
 }
 
 func (c *client) EvacuateCrashedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, error) {
-	return c.doEvacRequest(EvacuateCrashedActualLRPRoute, DeleteContainer, &models.EvacuateCrashedActualLRPRequest{
+	return c.doEvacRequest(logger, EvacuateCrashedActualLRPRoute, DeleteContainer, &models.EvacuateCrashedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 		ErrorMessage:         errorMessage,
@@ -404,14 +404,14 @@ func (c *client) EvacuateCrashedActualLRP(logger lager.Logger, key *models.Actua
 }
 
 func (c *client) EvacuateStoppedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
-	return c.doEvacRequest(EvacuateStoppedActualLRPRoute, DeleteContainer, &models.EvacuateStoppedActualLRPRequest{
+	return c.doEvacRequest(logger, EvacuateStoppedActualLRPRoute, DeleteContainer, &models.EvacuateStoppedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 	})
 }
 
 func (c *client) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, ttl uint64) (bool, error) {
-	return c.doEvacRequest(EvacuateRunningActualLRPRoute, KeepContainer, &models.EvacuateRunningActualLRPRequest{
+	return c.doEvacRequest(logger, EvacuateRunningActualLRPRoute, KeepContainer, &models.EvacuateRunningActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 		ActualLrpNetInfo:     netInfo,
@@ -426,7 +426,7 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.Actu
 	}
 
 	response := models.RemoveEvacuatingActualLRPResponse{}
-	err := c.doRequest(RemoveEvacuatingActualLRPRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, RemoveEvacuatingActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {
 		return err
 	}
@@ -439,7 +439,7 @@ func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		Domain: filter.Domain,
 	}
 	response := models.DesiredLRPsResponse{}
-	err := c.doRequest(DesiredLRPsRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, DesiredLRPsRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -452,7 +452,7 @@ func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 		ProcessGuid: processGuid,
 	}
 	response := models.DesiredLRPResponse{}
-	err := c.doRequest(DesiredLRPByProcessGuidRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, DesiredLRPByProcessGuidRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +465,7 @@ func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 		Domain: filter.Domain,
 	}
 	response := models.DesiredLRPSchedulingInfosResponse{}
-	err := c.doRequest(DesiredLRPSchedulingInfosRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, DesiredLRPSchedulingInfosRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -473,9 +473,9 @@ func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	return response.DesiredLrpSchedulingInfos, response.Error.ToError()
 }
 
-func (c *client) doDesiredLRPLifecycleRequest(route string, request proto.Message) error {
+func (c *client) doDesiredLRPLifecycleRequest(logger lager.Logger, route string, request proto.Message) error {
 	response := models.DesiredLRPLifecycleResponse{}
-	err := c.doRequest(route, nil, nil, request, &response)
+	err := c.doRequest(logger, route, nil, nil, request, &response)
 	if err != nil {
 		return err
 	}
@@ -486,7 +486,7 @@ func (c *client) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	request := models.DesireLRPRequest{
 		DesiredLrp: desiredLRP,
 	}
-	return c.doDesiredLRPLifecycleRequest(DesireDesiredLRPRoute, &request)
+	return c.doDesiredLRPLifecycleRequest(logger, DesireDesiredLRPRoute, &request)
 }
 
 func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error {
@@ -494,20 +494,20 @@ func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		ProcessGuid: processGuid,
 		Update:      update,
 	}
-	return c.doDesiredLRPLifecycleRequest(UpdateDesiredLRPRoute, &request)
+	return c.doDesiredLRPLifecycleRequest(logger, UpdateDesiredLRPRoute, &request)
 }
 
 func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
 	request := models.RemoveDesiredLRPRequest{
 		ProcessGuid: processGuid,
 	}
-	return c.doDesiredLRPLifecycleRequest(RemoveDesiredLRPRoute, &request)
+	return c.doDesiredLRPLifecycleRequest(logger, RemoveDesiredLRPRoute, &request)
 }
 
 func (c *client) ConvergeLRPs(logger lager.Logger) error {
 	route := ConvergeLRPsRoute
 	response := models.ConvergeLRPsResponse{}
-	err := c.doRequest(route, nil, nil, nil, &response)
+	err := c.doRequest(logger, route, nil, nil, nil, &response)
 	if err != nil {
 		return err
 	}
@@ -517,7 +517,7 @@ func (c *client) ConvergeLRPs(logger lager.Logger) error {
 func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error) {
 	request := models.TasksRequest{}
 	response := models.TasksResponse{}
-	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, TasksRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +530,7 @@ func (c *client) TasksByDomain(logger lager.Logger, domain string) ([]*models.Ta
 		Domain: domain,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, TasksRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -543,7 +543,7 @@ func (c *client) TasksByCellID(logger lager.Logger, cellId string) ([]*models.Ta
 		CellId: cellId,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(TasksRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, TasksRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -556,7 +556,7 @@ func (c *client) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 		TaskGuid: taskGuid,
 	}
 	response := models.TaskResponse{}
-	err := c.doRequest(TaskByGuidRoute, nil, nil, &request, &response)
+	err := c.doRequest(logger, TaskByGuidRoute, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -564,9 +564,9 @@ func (c *client) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	return response.Task, response.Error.ToError()
 }
 
-func (c *client) doTaskLifecycleRequest(route string, request proto.Message) error {
+func (c *client) doTaskLifecycleRequest(logger lager.Logger, route string, request proto.Message) error {
 	response := models.TaskLifecycleResponse{}
-	err := c.doRequest(route, nil, nil, request, &response)
+	err := c.doRequest(logger, route, nil, nil, request, &response)
 	if err != nil {
 		return err
 	}
@@ -580,7 +580,7 @@ func (c *client) DesireTask(logger lager.Logger, taskGuid, domain string, taskDe
 		Domain:         domain,
 		TaskDefinition: taskDef,
 	}
-	return c.doTaskLifecycleRequest(route, &request)
+	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
 func (c *client) StartTask(logger lager.Logger, taskGuid string, cellId string) (bool, error) {
@@ -589,7 +589,7 @@ func (c *client) StartTask(logger lager.Logger, taskGuid string, cellId string) 
 		CellId:   cellId,
 	}
 	response := &models.StartTaskResponse{}
-	err := c.doRequest(StartTaskRoute, nil, nil, request, response)
+	err := c.doRequest(logger, StartTaskRoute, nil, nil, request, response)
 	if err != nil {
 		return false, err
 	}
@@ -601,7 +601,7 @@ func (c *client) CancelTask(logger lager.Logger, taskGuid string) error {
 		TaskGuid: taskGuid,
 	}
 	route := CancelTaskRoute
-	return c.doTaskLifecycleRequest(route, &request)
+	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
 func (c *client) ResolvingTask(logger lager.Logger, taskGuid string) error {
@@ -609,7 +609,7 @@ func (c *client) ResolvingTask(logger lager.Logger, taskGuid string) error {
 		TaskGuid: taskGuid,
 	}
 	route := ResolvingTaskRoute
-	return c.doTaskLifecycleRequest(route, &request)
+	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
 func (c *client) DeleteTask(logger lager.Logger, taskGuid string) error {
@@ -617,7 +617,7 @@ func (c *client) DeleteTask(logger lager.Logger, taskGuid string) error {
 		TaskGuid: taskGuid,
 	}
 	route := DeleteTaskRoute
-	return c.doTaskLifecycleRequest(route, &request)
+	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
 func (c *client) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
@@ -626,7 +626,7 @@ func (c *client) FailTask(logger lager.Logger, taskGuid, failureReason string) e
 		FailureReason: failureReason,
 	}
 	route := FailTaskRoute
-	return c.doTaskLifecycleRequest(route, &request)
+	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
 func (c *client) CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error {
@@ -638,7 +638,7 @@ func (c *client) CompleteTask(logger lager.Logger, taskGuid, cellId string, fail
 		Result:        result,
 	}
 	route := CompleteTaskRoute
-	return c.doTaskLifecycleRequest(route, &request)
+	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
 func (c *client) ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error {
@@ -649,7 +649,7 @@ func (c *client) ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePend
 	}
 	response := models.ConvergeTasksResponse{}
 	route := ConvergeTasksRoute
-	err := c.doRequest(route, nil, nil, request, &response)
+	err := c.doRequest(logger, route, nil, nil, request, &response)
 	if err != nil {
 		return err
 	}
@@ -687,7 +687,7 @@ func (c *client) SubscribeToActualLRPEvents(logger lager.Logger) (events.EventSo
 
 func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {
 	response := models.CellsResponse{}
-	err := c.doRequest(CellsRoute, nil, nil, nil, &response)
+	err := c.doRequest(logger, CellsRoute, nil, nil, nil, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -715,9 +715,9 @@ func (c *client) createRequest(requestName string, params rata.Params, queryPara
 	return request, nil
 }
 
-func (c *client) doEvacRequest(route string, defaultKeepContainer bool, request proto.Message) (bool, error) {
+func (c *client) doEvacRequest(logger lager.Logger, route string, defaultKeepContainer bool, request proto.Message) (bool, error) {
 	var response models.EvacuationResponse
-	err := c.doRequest(route, nil, nil, request, &response)
+	err := c.doRequest(logger, route, nil, nil, request, &response)
 	if err != nil {
 		return defaultKeepContainer, err
 	}
@@ -725,19 +725,26 @@ func (c *client) doEvacRequest(route string, defaultKeepContainer bool, request 
 	return response.KeepContainer, response.Error.ToError()
 }
 
-func (c *client) doRequest(requestName string, params rata.Params, queryParams url.Values, requestBody, responseBody proto.Message) error {
+func (c *client) doRequest(logger lager.Logger, requestName string, params rata.Params, queryParams url.Values, requestBody, responseBody proto.Message) error {
+	logger = logger.Session("do-request")
 	var err error
 	var request *http.Request
 
 	for attempts := 0; attempts < 3; attempts++ {
+		logger.Debug("creating-request", lager.Data{"attempt": attempts + 1})
 		request, err = c.createRequest(requestName, params, queryParams, requestBody)
 		if err != nil {
+			logger.Error("failed-creating-request", err)
 			return err
 		}
+
+		logger.Debug("doing-request", lager.Data{"attempt": attempts + 1})
 		err = c.do(request, responseBody)
 		if err != nil {
+			logger.Error("failed-doing-request", err)
 			time.Sleep(500 * time.Millisecond)
 		} else {
+			logger.Debug("complete")
 			break
 		}
 	}
