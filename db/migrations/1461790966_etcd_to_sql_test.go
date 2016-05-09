@@ -23,6 +23,10 @@ var _ = Describe("ETCD to SQL Migration", func() {
 	)
 
 	BeforeEach(func() {
+		if !useSQL {
+			Skip("SQL backing is not available")
+		}
+
 		migration = migrations.NewETCDToSQL()
 		serializer = format.NewSerializer(cryptor)
 

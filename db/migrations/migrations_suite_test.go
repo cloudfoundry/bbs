@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
@@ -37,6 +38,8 @@ var (
 	cryptor   encryption.Cryptor
 	fakeClock *fakeclock.FakeClock
 	logger    *lagertest.TestLogger
+
+	useSQL bool
 )
 
 func TestMigrations(t *testing.T) {
@@ -53,16 +56,19 @@ var _ = BeforeSuite(func() {
 
 	etcdRunner.Start()
 
-	mySQLRunner = mysqlrunner.NewMySQLRunner(fmt.Sprintf("diego_%d", GinkgoParallelNode()))
-	mySQLProcess = ginkgomon.Invoke(mySQLRunner)
+	useSQL = os.Getenv("USE_SQL") == "true"
+	if useSQL {
+		mySQLRunner = mysqlrunner.NewMySQLRunner(fmt.Sprintf("diego_%d", GinkgoParallelNode()))
+		mySQLProcess = ginkgomon.Invoke(mySQLRunner)
 
-	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
-	// in diego-release.
-	var err error
+		// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
+		// in diego-release.
+		var err error
 
-	rawSQLDB, err = sql.Open("mysql", mySQLRunner.ConnectionString())
-	Expect(err).NotTo(HaveOccurred())
-	Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
+		rawSQLDB, err = sql.Open("mysql", mySQLRunner.ConnectionString())
+		Expect(err).NotTo(HaveOccurred())
+		Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
+	}
 
 	encryptionKey, err := encryption.NewKey("label", "passphrase")
 	Expect(err).NotTo(HaveOccurred())
@@ -76,9 +82,10 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 
-	ginkgomon.Kill(mySQLProcess)
-
-	Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
+	if useSQL {
+		ginkgomon.Kill(mySQLProcess)
+		Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
+	}
 })
 
 var _ = BeforeEach(func() {
@@ -89,5 +96,7 @@ var _ = BeforeEach(func() {
 
 	storeClient = etcd.NewStoreClient(etcdClient)
 
-	mySQLRunner.Reset()
+	if useSQL {
+		mySQLRunner.Reset()
+	}
 })
