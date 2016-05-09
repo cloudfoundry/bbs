@@ -1,6 +1,7 @@
 package migrations_test
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -24,6 +25,11 @@ var _ = Describe("ETCD to SQL Migration", func() {
 	BeforeEach(func() {
 		migration = migrations.NewETCDToSQL()
 		serializer = format.NewSerializer(cryptor)
+
+		rawSQLDB.Exec("DROP TABLE domains;")
+		rawSQLDB.Exec("DROP TABLE tasks;")
+		rawSQLDB.Exec("DROP TABLE desired_lrps;")
+		rawSQLDB.Exec("DROP TABLE actual_lrps;")
 	})
 
 	It("appends itself to the migration list", func() {
@@ -43,6 +49,60 @@ var _ = Describe("ETCD to SQL Migration", func() {
 			migration.SetCryptor(cryptor)
 			migration.SetClock(fakeClock)
 			migrationErr = migration.Up(logger)
+		})
+
+		Context("when there is existing data in the database", func() {
+			BeforeEach(func() {
+				var err error
+
+				_, err = rawSQLDB.Exec(`CREATE TABLE domains( domain VARCHAR(255) PRIMARY KEY);`)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = rawSQLDB.Exec(`CREATE TABLE desired_lrps( process_guid VARCHAR(255) PRIMARY KEY);`)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = rawSQLDB.Exec(`CREATE TABLE actual_lrps( process_guid VARCHAR(255) PRIMARY KEY);`)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = rawSQLDB.Exec(`CREATE TABLE tasks( guid VARCHAR(255) PRIMARY KEY);`)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = rawSQLDB.Exec(`INSERT INTO domains VALUES ('test-domain')`)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = rawSQLDB.Exec(`INSERT INTO desired_lrps VALUES ('test-guid')`)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = rawSQLDB.Exec(`INSERT INTO actual_lrps VALUES ('test-guid')`)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = rawSQLDB.Exec(`INSERT INTO tasks VALUES ('test-guid')`)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should truncate the tables and start migration", func() {
+				var value string
+				err := rawSQLDB.QueryRow(`SELECT domain FROM domains WHERE domain='test-domain'`).Scan(&value)
+				Expect(err).To(MatchError(sql.ErrNoRows))
+			})
+
+			It("should truncate desired_lrps table", func() {
+				var value string
+				err := rawSQLDB.QueryRow(`SELECT process_guid FROM desired_lrps WHERE process_guid='test-guid'`).Scan(&value)
+				Expect(err).To(MatchError(sql.ErrNoRows))
+			})
+
+			It("should truncate actual_lrps table", func() {
+				var value string
+				err := rawSQLDB.QueryRow(`SELECT process_guid FROM actual_lrps WHERE process_guid='test-guid'`).Scan(&value)
+				Expect(err).To(MatchError(sql.ErrNoRows))
+			})
+
+			It("should truncate tasks table", func() {
+				var value string
+				err := rawSQLDB.QueryRow(`SELECT guid FROM tasks WHERE guid='test-guid'`).Scan(&value)
+				Expect(err).To(MatchError(sql.ErrNoRows))
+			})
 		})
 
 		Context("when etcd is not configured", func() {

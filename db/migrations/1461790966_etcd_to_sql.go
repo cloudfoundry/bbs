@@ -114,7 +114,30 @@ func (e *ETCDToSQL) SetClock(c clock.Clock) {
 	e.clock = c
 }
 
+func truncateTables(db *sql.DB) error {
+	tableNames := []string{
+		"domains",
+		"tasks",
+		"desired_lrps",
+		"actual_lrps",
+	}
+	for _, tableName := range tableNames {
+		var value int
+		// check whether the table exists before truncating
+		err := db.QueryRow("SELECT 1 FROM ? LIMIT 1;", tableName).Scan(&value)
+		if err == sql.ErrNoRows {
+			continue
+		}
+		_, err = db.Exec("TRUNCATE TABLE " + tableName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (e *ETCDToSQL) Up(logger lager.Logger) error {
+	truncateTables(e.rawSQLDB)
 	var createTablesSQL = []string{
 		createDomainSQL,
 		createDesiredLRPsSQL,
