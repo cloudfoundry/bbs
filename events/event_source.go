@@ -187,6 +187,15 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 		}
 
 		return event, nil
+
+	case models.EventTypeActualLRPCrashed:
+		event := new(models.ActualLRPCrashedEvent)
+		err := proto.Unmarshal(data, event)
+		if err != nil {
+			return nil, NewInvalidPayloadError(rawEvent.Name, err)
+		}
+
+		return event, nil
 	}
 
 	return nil, ErrUnrecognizedEventType
