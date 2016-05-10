@@ -50,7 +50,7 @@ message RunAction {
 
 message TimeoutAction {
   optional Action action = 1;
-  optional int64 timeout = 2;
+  optional int64 timeout_ms = 2;
   optional string log_source = 3 [(gogoproto.jsontag) = "log_source,omitempty"];
 }
 

@@ -55,7 +55,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		Setup:                         runInfo.Setup,
 		Action:                        runInfo.Action,
 		Monitor:                       runInfo.Monitor,
-		StartTimeout:                  runInfo.StartTimeout,
+		StartTimeoutMs:                runInfo.StartTimeoutMs,
 		Privileged:                    runInfo.Privileged,
 		CpuWeight:                     runInfo.CpuWeight,
 		Ports:                         runInfo.Ports,
@@ -85,7 +85,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.Setup = runInfo.Setup
 	desiredLRP.Action = runInfo.Action
 	desiredLRP.Monitor = runInfo.Monitor
-	desiredLRP.StartTimeout = runInfo.StartTimeout
+	desiredLRP.StartTimeoutMs = runInfo.StartTimeoutMs
 	desiredLRP.Privileged = runInfo.Privileged
 	desiredLRP.CpuWeight = runInfo.CpuWeight
 	desiredLRP.Ports = runInfo.Ports
@@ -177,7 +177,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.Setup,
 		d.Action,
 		d.Monitor,
-		d.StartTimeout,
+		d.StartTimeoutMs,
 		d.Privileged,
 		d.CpuWeight,
 		d.Ports,
@@ -426,7 +426,7 @@ func NewDesiredLRPRunInfo(
 	setup,
 	action,
 	monitor *Action,
-	startTimeout uint32,
+	startTimeoutMs int64,
 	privileged bool,
 	cpuWeight uint32,
 	ports []uint32,
@@ -446,7 +446,7 @@ func NewDesiredLRPRunInfo(
 		Setup:                         setup,
 		Action:                        action,
 		Monitor:                       monitor,
-		StartTimeout:                  startTimeout,
+		StartTimeoutMs:                startTimeoutMs,
 		Privileged:                    privileged,
 		CpuWeight:                     cpuWeight,
 		Ports:                         ports,

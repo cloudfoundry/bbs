@@ -310,7 +310,7 @@ func (m *RunAction) GetSuppressLogOutput() bool {
 
 type TimeoutAction struct {
 	Action    *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	Timeout   int64   `protobuf:"varint,2,opt,name=timeout" json:"timeout"`
+	TimeoutMs int64   `protobuf:"varint,2,opt,name=timeout_ms" json:"timeout_ms"`
 	LogSource string  `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
 }
 
@@ -324,9 +324,9 @@ func (m *TimeoutAction) GetAction() *Action {
 	return nil
 }
 
-func (m *TimeoutAction) GetTimeout() int64 {
+func (m *TimeoutAction) GetTimeoutMs() int64 {
 	if m != nil {
-		return m.Timeout
+		return m.TimeoutMs
 	}
 	return 0
 }
@@ -691,7 +691,7 @@ func (this *TimeoutAction) Equal(that interface{}) bool {
 	if !this.Action.Equal(that1.Action) {
 		return false
 	}
-	if this.Timeout != that1.Timeout {
+	if this.TimeoutMs != that1.TimeoutMs {
 		return false
 	}
 	if this.LogSource != that1.LogSource {
@@ -956,7 +956,7 @@ func (this *TimeoutAction) GoString() string {
 	}
 	s := strings.Join([]string{`&models.TimeoutAction{` +
 		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`Timeout:` + fmt.Sprintf("%#v", this.Timeout),
+		`TimeoutMs:` + fmt.Sprintf("%#v", this.TimeoutMs),
 		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
 	return s
 }
@@ -1335,7 +1335,7 @@ func (m *TimeoutAction) MarshalTo(data []byte) (int, error) {
 	}
 	data[i] = 0x10
 	i++
-	i = encodeVarintActions(data, i, uint64(m.Timeout))
+	i = encodeVarintActions(data, i, uint64(m.TimeoutMs))
 	data[i] = 0x1a
 	i++
 	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
@@ -1685,7 +1685,7 @@ func (m *TimeoutAction) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
-	n += 1 + sovActions(uint64(m.Timeout))
+	n += 1 + sovActions(uint64(m.TimeoutMs))
 	l = len(m.LogSource)
 	n += 1 + l + sovActions(uint64(l))
 	return n
@@ -1855,7 +1855,7 @@ func (this *TimeoutAction) String() string {
 	}
 	s := strings.Join([]string{`&TimeoutAction{`,
 		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`Timeout:` + fmt.Sprintf("%v", this.Timeout) + `,`,
+		`TimeoutMs:` + fmt.Sprintf("%v", this.TimeoutMs) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
 		`}`,
 	}, "")
@@ -2969,16 +2969,16 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutMs", wireType)
 			}
-			m.Timeout = 0
+			m.TimeoutMs = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				m.Timeout |= (int64(b) & 0x7F) << shift
+				m.TimeoutMs |= (int64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}

@@ -173,7 +173,7 @@ func (a TimeoutAction) Validate() error {
 		}
 	}
 
-	if a.GetTimeout() <= 0 {
+	if a.GetTimeoutMs() <= 0 {
 		validationError = validationError.Append(ErrInvalidField{"timeout"})
 	}
 
@@ -371,8 +371,8 @@ func EmitProgressFor(action ActionInterface, startMessage string, successMessage
 
 func Timeout(action ActionInterface, timeout time.Duration) *TimeoutAction {
 	return &TimeoutAction{
-		Action:  WrapAction(action),
-		Timeout: (int64)(timeout),
+		Action:    WrapAction(action),
+		TimeoutMs: (int64)(timeout),
 	}
 }
 

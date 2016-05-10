@@ -59,7 +59,7 @@ var _ = Describe("Split Desired LRP Migration", func() {
 			EnvironmentVariables: []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
 			Setup:                models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 			Action:               models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-			StartTimeout:         15,
+			StartTimeoutMs:       15,
 			Monitor: models.WrapAction(models.EmitProgressFor(
 				models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
 					10*time.Second,
@@ -155,7 +155,7 @@ var _ = Describe("Split Desired LRP Migration", func() {
 				Expect(runInfo.Setup).To(Equal(existingDesiredLRP.Setup))
 				Expect(runInfo.Action).To(Equal(existingDesiredLRP.Action))
 				Expect(runInfo.Monitor).To(Equal(existingDesiredLRP.Monitor))
-				Expect(runInfo.StartTimeout).To(Equal(existingDesiredLRP.StartTimeout))
+				Expect(runInfo.StartTimeoutMs).To(Equal(existingDesiredLRP.StartTimeoutMs))
 				Expect(runInfo.Privileged).To(Equal(existingDesiredLRP.Privileged))
 				Expect(runInfo.CpuWeight).To(Equal(existingDesiredLRP.CpuWeight))
 				Expect(runInfo.Ports).To(Equal(existingDesiredLRP.Ports))

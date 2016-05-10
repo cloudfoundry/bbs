@@ -32,7 +32,7 @@ message DesiredLRPRunInfo {
   optional Action action = 4;
   optional Action monitor = 5;
 
-  optional uint32 start_timeout = 6;
+  optional int64 start_timeout_ms = 6;
   optional bool privileged = 7;
 
   optional uint32 cpu_weight = 8;
@@ -79,7 +79,7 @@ message DesiredLRP {
   repeated EnvironmentVariable environment_variables = 5 [(gogoproto.jsontag) = "env"];
   optional Action setup = 6;
   optional Action action = 7;
-  optional uint32 start_timeout = 8;
+  optional int64 start_timeout_ms = 8;
   optional Action monitor = 9;
   optional int32 disk_mb = 10;
   optional int32 memory_mb = 11;
