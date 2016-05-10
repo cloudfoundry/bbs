@@ -3,10 +3,12 @@ package main
 import (
 	"crypto/rand"
 	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -36,6 +38,7 @@ import (
 	"github.com/cloudfoundry-incubator/rep"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
+	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/clock"
@@ -172,6 +175,12 @@ var databaseDriver = flag.String(
 	"SQL database driver name",
 )
 
+var sqlCACertFile = flag.String(
+	"sqlCACertFile",
+	"",
+	"SQL database client cert, if supplied, require TLS to SQL",
+)
+
 const (
 	dropsondeOrigin           = "bbs"
 	bbsWatchRetryWaitDuration = 3 * time.Second
@@ -242,7 +251,28 @@ func main() {
 	// If SQL database info is passed in, use SQL instead of ETCD
 	if *databaseDriver != "" && *databaseConnectionString != "" {
 		var err error
+		if *sqlCACertFile != "" {
+			certBytes, err := ioutil.ReadFile(*sqlCACertFile)
+			if err != nil {
+				logger.Fatal("failed-to-read-sql-ca-file", err)
+			}
+
+			caCertPool := x509.NewCertPool()
+			if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
+				logger.Fatal("failed-to-parse-sql-ca", err)
+			}
+
+			tlsConfig := &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            caCertPool,
+			}
+
+			mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
+			*databaseConnectionString = fmt.Sprintf("%s%s", *databaseConnectionString, "?tls=bbs-tls")
+		}
+
 		sqlConn, err = sql.Open(*databaseDriver, *databaseConnectionString)
+
 		if err != nil {
 			logger.Fatal("failed-to-open-sql", err)
 		}
