@@ -27,13 +27,13 @@ type ActionInterface interface {
 	Validate() error
 }
 
-func (*Action) Version() format.Version {
-	return format.V0
-}
+// func (*Action) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*Action) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*Action) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *Action) Validate() error {
 	if a == nil {
@@ -51,13 +51,13 @@ func (a *Action) Validate() error {
 	return nil
 }
 
-func (*DownloadAction) Version() format.Version {
-	return format.V0
-}
+// func (*DownloadAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*DownloadAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*DownloadAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *DownloadAction) ActionType() string {
 	return ActionTypeDownload
@@ -85,13 +85,13 @@ func (a DownloadAction) Validate() error {
 	return nil
 }
 
-func (*UploadAction) Version() format.Version {
-	return format.V0
-}
+// func (*UploadAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*UploadAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*UploadAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *UploadAction) ActionType() string {
 	return ActionTypeUpload
@@ -119,13 +119,13 @@ func (a UploadAction) Validate() error {
 	return nil
 }
 
-func (*RunAction) Version() format.Version {
-	return format.V0
-}
+// func (*RunAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*RunAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*RunAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *RunAction) ActionType() string {
 	return ActionTypeRun
@@ -149,13 +149,13 @@ func (a RunAction) Validate() error {
 	return nil
 }
 
-func (*TimeoutAction) Version() format.Version {
-	return format.V0
-}
+// func (*TimeoutAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*TimeoutAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*TimeoutAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *TimeoutAction) ActionType() string {
 	return ActionTypeTimeout
@@ -173,8 +173,8 @@ func (a TimeoutAction) Validate() error {
 		}
 	}
 
-	if a.GetTimeout() <= 0 {
-		validationError = validationError.Append(ErrInvalidField{"timeout"})
+	if a.GetTimeoutMs() <= 0 {
+		validationError = validationError.Append(ErrInvalidField{"timeout_ms"})
 	}
 
 	if !validationError.Empty() {
@@ -184,13 +184,13 @@ func (a TimeoutAction) Validate() error {
 	return nil
 }
 
-func (*TryAction) Version() format.Version {
-	return format.V0
-}
+// func (*TryAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*TryAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*TryAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *TryAction) ActionType() string {
 	return ActionTypeTry
@@ -219,9 +219,9 @@ func (*ParallelAction) Version() format.Version {
 	return format.V0
 }
 
-func (*ParallelAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*ParallelAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *ParallelAction) ActionType() string {
 	return ActionTypeParallel
@@ -253,13 +253,13 @@ func (a ParallelAction) Validate() error {
 	return nil
 }
 
-func (*CodependentAction) Version() format.Version {
-	return format.V0
-}
+// func (*CodependentAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*CodependentAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*CodependentAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *CodependentAction) ActionType() string {
 	return ActionTypeCodependent
@@ -291,13 +291,13 @@ func (a CodependentAction) Validate() error {
 	return nil
 }
 
-func (*SerialAction) Version() format.Version {
-	return format.V0
-}
+// func (*SerialAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*SerialAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*SerialAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *SerialAction) ActionType() string {
 	return ActionTypeSerial
@@ -329,13 +329,13 @@ func (a SerialAction) Validate() error {
 	return nil
 }
 
-func (*EmitProgressAction) Version() format.Version {
-	return format.V0
-}
+// func (*EmitProgressAction) Version() format.Version {
+// 	return format.V0
+// }
 
-func (*EmitProgressAction) MigrateFromVersion(v format.Version) error {
-	return nil
-}
+// func (*EmitProgressAction) MigrateFromVersion(v format.Version) error {
+// 	return nil
+// }
 
 func (a *EmitProgressAction) ActionType() string {
 	return ActionTypeEmitProgress
@@ -371,8 +371,8 @@ func EmitProgressFor(action ActionInterface, startMessage string, successMessage
 
 func Timeout(action ActionInterface, timeout time.Duration) *TimeoutAction {
 	return &TimeoutAction{
-		Action:  WrapAction(action),
-		Timeout: (int64)(timeout),
+		Action:    WrapAction(action),
+		TimeoutMs: (int64)(timeout / 1000000),
 	}
 }
 
@@ -418,4 +418,78 @@ func WrapAction(action ActionInterface) *Action {
 	a := &Action{}
 	a.SetValue(action)
 	return a
+}
+
+func (action *Action) SetDeprecatedTimeoutNs() {
+	if action == nil {
+		return
+	}
+
+	a := action.GetValue()
+	switch actionModel := a.(type) {
+	case *RunAction, *DownloadAction, *UploadAction:
+		return
+
+	case *TimeoutAction:
+		timeoutAction := actionModel
+		timeoutAction.DeprecatedTimeoutNs = timeoutAction.TimeoutMs * int64(time.Millisecond)
+
+	case *EmitProgressAction:
+		actionModel.Action.SetDeprecatedTimeoutNs()
+
+	case *TryAction:
+		actionModel.Action.SetDeprecatedTimeoutNs()
+
+	case *ParallelAction:
+		for _, subaction := range actionModel.Actions {
+			subaction.SetDeprecatedTimeoutNs()
+		}
+
+	case *SerialAction:
+		for _, subaction := range actionModel.Actions {
+			subaction.SetDeprecatedTimeoutNs()
+		}
+
+	case *CodependentAction:
+		for _, subaction := range actionModel.Actions {
+			subaction.SetDeprecatedTimeoutNs()
+		}
+	}
+}
+
+func (action *Action) SetTimeoutMsFromDeprecatedTimeoutNs() {
+	if action == nil {
+		return
+	}
+
+	a := action.GetValue()
+	switch actionModel := a.(type) {
+	case *RunAction, *DownloadAction, *UploadAction:
+		return
+
+	case *TimeoutAction:
+		timeoutAction := actionModel
+		timeoutAction.TimeoutMs = timeoutAction.DeprecatedTimeoutNs / int64(time.Millisecond)
+
+	case *EmitProgressAction:
+		actionModel.Action.SetDeprecatedTimeoutNs()
+
+	case *TryAction:
+		actionModel.Action.SetDeprecatedTimeoutNs()
+
+	case *ParallelAction:
+		for _, subaction := range actionModel.Actions {
+			subaction.SetDeprecatedTimeoutNs()
+		}
+
+	case *SerialAction:
+		for _, subaction := range actionModel.Actions {
+			subaction.SetDeprecatedTimeoutNs()
+		}
+
+	case *CodependentAction:
+		for _, subaction := range actionModel.Actions {
+			subaction.SetDeprecatedTimeoutNs()
+		}
+	}
 }
