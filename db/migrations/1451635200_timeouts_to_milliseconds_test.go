@@ -56,12 +56,10 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 		})
 	})
 
-	FDescribe("Up", func() {
+	Describe("Up", func() {
 
 		var (
-			// expectedDesiredLRP *models.DesiredLRP
-			expectedTask *models.Task
-			taskGuid     string
+			taskGuid string
 
 			migrationErr error
 		)
@@ -76,13 +74,15 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 		Describe("Task Migration", func() {
 			BeforeEach(func() {
 				taskGuid = "task-guid-1"
-				expectedTask = model_helpers.NewValidTask(taskGuid)
-				// Model changed but this is test setup and we store the timeout in nanos
-				expectedTask.Action = models.WrapAction(&models.TimeoutAction{Action: model_helpers.NewValidAction(), TimeoutMs: 5 * int64(time.Second)})
+				oldTask := model_helpers.NewValidTask(taskGuid)
+				oldTask.Action = models.WrapAction(&models.TimeoutAction{Action: model_helpers.NewValidAction(),
+					DeprecatedTimeoutNs: 5 * int64(time.Second),
+					TimeoutMs:           99999, // this must be set to pass validation on marshalling
+				})
 
-				taskData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, expectedTask)
+				taskData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, oldTask)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = storeClient.Set(etcddb.TaskSchemaPath(expectedTask), taskData, 0)
+				_, err = storeClient.Set(etcddb.TaskSchemaPath(oldTask), taskData, 0)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -103,10 +103,30 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 			BeforeEach(func() {
 				processGuid = "process-guid-1"
 				desiredLRP = model_helpers.NewValidDesiredLRP(processGuid)
-				desiredLRP.Action = models.WrapAction(models.Timeout(&models.RunAction{Path: "ls", User: "name"}, 4*time.Second))
-				desiredLRP.Setup = models.WrapAction(models.Timeout(&models.RunAction{Path: "ls", User: "name"}, 7*time.Second))
+				desiredLRP.DeprecatedStartTimeoutS = 15
+				desiredLRP.Action = models.WrapAction(&models.TimeoutAction{Action: models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+					DeprecatedTimeoutNs: 4 * int64(time.Second),
+					TimeoutMs:           99999, // this must be set to pass validation on marshalling
+				})
+
+				desiredLRP.Setup = models.WrapAction(&models.TimeoutAction{Action: models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+					DeprecatedTimeoutNs: 7 * int64(time.Second),
+					TimeoutMs:           99999, // this must be set to pass validation on marshalling
+				})
+				desiredLRP.Monitor = models.WrapAction(models.EmitProgressFor(
+					&models.TimeoutAction{
+						Action:              models.WrapAction(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"})))),
+						DeprecatedTimeoutNs: 10 * int64(time.Second),
+						TimeoutMs:           99999, // this must be set to pass validation on marshalling
+					},
+					"start-message",
+					"success-message",
+					"failure-message",
+				))
 
 				schedulingInfo, runInfo := desiredLRP.CreateComponents(fakeClock.Now())
+				runInfo.DeprecatedStartTimeoutS = 15
+
 				_, err := json.Marshal(desiredLRP.Routes)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -130,8 +150,7 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 				Expect(migrationErr).NotTo(HaveOccurred())
 				desiredLRP, err := db.DesiredLRPByProcessGuid(logger, processGuid)
 				Expect(err).ToNot(HaveOccurred())
-				// switch to uint64 when tests passed
-				Expect(desiredLRP.GetStartTimeoutMs()).To(Equal(uint32(15000)))
+				Expect(desiredLRP.GetStartTimeoutMs()).To(Equal(int64(15000)))
 			})
 
 			It("changes monitor action startTimeout to milliseconds", func() {

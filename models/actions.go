@@ -174,7 +174,7 @@ func (a TimeoutAction) Validate() error {
 	}
 
 	if a.GetTimeoutMs() <= 0 {
-		validationError = validationError.Append(ErrInvalidField{"timeout"})
+		validationError = validationError.Append(ErrInvalidField{"timeout_ms"})
 	}
 
 	if !validationError.Empty() {

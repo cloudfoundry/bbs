@@ -83,10 +83,12 @@ func (b *TimeoutToMilliseconds) Up(logger lager.Logger) error {
 				continue
 			}
 			logger.Info("update-run-info", lager.Data{"runInfo": runInfo})
-			runInfo.StartTimeoutMs *= 1000
+			runInfo.StartTimeoutMs = int64(runInfo.DeprecatedStartTimeoutS) * 1000
 			updateTimeoutInAction(logger, runInfo.GetMonitor())
 			updateTimeoutInAction(logger, runInfo.GetSetup())
 			updateTimeoutInAction(logger, runInfo.GetAction())
+
+			runInfo.DeprecatedStartTimeoutS = 0
 
 			value, err := b.serializer.Marshal(logger, format.ENCODED_PROTO, runInfo)
 			if err != nil {
@@ -124,7 +126,7 @@ func updateTimeoutInAction(logger lager.Logger, action *models.Action) {
 
 	case *models.TimeoutAction:
 		timeoutAction := actionModel
-		timeoutAction.TimeoutMs /= 1000000
+		timeoutAction.TimeoutMs = timeoutAction.DeprecatedTimeoutNs / 1000000
 
 	case *models.EmitProgressAction:
 		updateTimeoutInAction(logger, actionModel.Action)

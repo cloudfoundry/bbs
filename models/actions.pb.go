@@ -309,9 +309,10 @@ func (m *RunAction) GetSuppressLogOutput() bool {
 }
 
 type TimeoutAction struct {
-	Action    *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	TimeoutMs int64   `protobuf:"varint,2,opt,name=timeout_ms" json:"timeout_ms"`
-	LogSource string  `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
+	Action              *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
+	DeprecatedTimeoutNs int64   `protobuf:"varint,2,opt,name=deprecated_timeout_ns" json:"deprecated_timeout_ns,omitempty"`
+	LogSource           string  `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
+	TimeoutMs           int64   `protobuf:"varint,4,opt,name=timeout_ms" json:"timeout_ms"`
 }
 
 func (m *TimeoutAction) Reset()      { *m = TimeoutAction{} }
@@ -324,9 +325,9 @@ func (m *TimeoutAction) GetAction() *Action {
 	return nil
 }
 
-func (m *TimeoutAction) GetTimeoutMs() int64 {
+func (m *TimeoutAction) GetDeprecatedTimeoutNs() int64 {
 	if m != nil {
-		return m.TimeoutMs
+		return m.DeprecatedTimeoutNs
 	}
 	return 0
 }
@@ -336,6 +337,13 @@ func (m *TimeoutAction) GetLogSource() string {
 		return m.LogSource
 	}
 	return ""
+}
+
+func (m *TimeoutAction) GetTimeoutMs() int64 {
+	if m != nil {
+		return m.TimeoutMs
+	}
+	return 0
 }
 
 type EmitProgressAction struct {
@@ -691,10 +699,13 @@ func (this *TimeoutAction) Equal(that interface{}) bool {
 	if !this.Action.Equal(that1.Action) {
 		return false
 	}
-	if this.TimeoutMs != that1.TimeoutMs {
+	if this.DeprecatedTimeoutNs != that1.DeprecatedTimeoutNs {
 		return false
 	}
 	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.TimeoutMs != that1.TimeoutMs {
 		return false
 	}
 	return true
@@ -956,8 +967,9 @@ func (this *TimeoutAction) GoString() string {
 	}
 	s := strings.Join([]string{`&models.TimeoutAction{` +
 		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`TimeoutMs:` + fmt.Sprintf("%#v", this.TimeoutMs),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+		`DeprecatedTimeoutNs:` + fmt.Sprintf("%#v", this.DeprecatedTimeoutNs),
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
+		`TimeoutMs:` + fmt.Sprintf("%#v", this.TimeoutMs) + `}`}, ", ")
 	return s
 }
 func (this *EmitProgressAction) GoString() string {
@@ -1335,11 +1347,14 @@ func (m *TimeoutAction) MarshalTo(data []byte) (int, error) {
 	}
 	data[i] = 0x10
 	i++
-	i = encodeVarintActions(data, i, uint64(m.TimeoutMs))
+	i = encodeVarintActions(data, i, uint64(m.DeprecatedTimeoutNs))
 	data[i] = 0x1a
 	i++
 	i = encodeVarintActions(data, i, uint64(len(m.LogSource)))
 	i += copy(data[i:], m.LogSource)
+	data[i] = 0x20
+	i++
+	i = encodeVarintActions(data, i, uint64(m.TimeoutMs))
 	return i, nil
 }
 
@@ -1685,9 +1700,10 @@ func (m *TimeoutAction) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
-	n += 1 + sovActions(uint64(m.TimeoutMs))
+	n += 1 + sovActions(uint64(m.DeprecatedTimeoutNs))
 	l = len(m.LogSource)
 	n += 1 + l + sovActions(uint64(l))
+	n += 1 + sovActions(uint64(m.TimeoutMs))
 	return n
 }
 
@@ -1855,8 +1871,9 @@ func (this *TimeoutAction) String() string {
 	}
 	s := strings.Join([]string{`&TimeoutAction{`,
 		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`TimeoutMs:` + fmt.Sprintf("%v", this.TimeoutMs) + `,`,
+		`DeprecatedTimeoutNs:` + fmt.Sprintf("%v", this.DeprecatedTimeoutNs) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`TimeoutMs:` + fmt.Sprintf("%v", this.TimeoutMs) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2969,16 +2986,16 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutMs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeprecatedTimeoutNs", wireType)
 			}
-			m.TimeoutMs = 0
+			m.DeprecatedTimeoutNs = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				m.TimeoutMs |= (int64(b) & 0x7F) << shift
+				m.DeprecatedTimeoutNs |= (int64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3008,6 +3025,22 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutMs", wireType)
+			}
+			m.TimeoutMs = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.TimeoutMs |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			var sizeOfWire int
 			for {

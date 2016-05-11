@@ -65,7 +65,8 @@ type DesiredLRPRunInfo struct {
 	Setup                         *Action               `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
 	Action                        *Action               `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
 	Monitor                       *Action               `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
-	StartTimeoutMs                int64                 `protobuf:"varint,6,opt,name=start_timeout_ms" json:"start_timeout_ms"`
+	StartTimeoutMs                int64                 `protobuf:"varint,19,opt,name=start_timeout_ms" json:"start_timeout_ms"`
+	DeprecatedStartTimeoutS       uint32                `protobuf:"varint,6,opt,name=deprecated_start_timeout_s" json:"deprecated_timeout_ns,omitempty"`
 	Privileged                    bool                  `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
 	CpuWeight                     uint32                `protobuf:"varint,8,opt,name=cpu_weight" json:"cpu_weight"`
 	Ports                         []uint32              `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
@@ -114,6 +115,13 @@ func (m *DesiredLRPRunInfo) GetMonitor() *Action {
 func (m *DesiredLRPRunInfo) GetStartTimeoutMs() int64 {
 	if m != nil {
 		return m.StartTimeoutMs
+	}
+	return 0
+}
+
+func (m *DesiredLRPRunInfo) GetDeprecatedStartTimeoutS() uint32 {
+	if m != nil {
+		return m.DeprecatedStartTimeoutS
 	}
 	return 0
 }
@@ -308,7 +316,8 @@ type DesiredLRP struct {
 	EnvironmentVariables          []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables" json:"env"`
 	Setup                         *Action                `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
 	Action                        *Action                `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
-	StartTimeoutMs                int64                  `protobuf:"varint,8,opt,name=start_timeout_ms" json:"start_timeout_ms"`
+	StartTimeoutMs                int64                  `protobuf:"varint,27,opt,name=start_timeout_ms" json:"start_timeout_ms"`
+	DeprecatedStartTimeoutS       uint32                 `protobuf:"varint,8,opt,name=deprecated_start_timeout_s" json:"deprecated_timeout_ns,omitempty"`
 	Monitor                       *Action                `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
 	DiskMb                        int32                  `protobuf:"varint,10,opt,name=disk_mb" json:"disk_mb"`
 	MemoryMb                      int32                  `protobuf:"varint,11,opt,name=memory_mb" json:"memory_mb"`
@@ -384,6 +393,13 @@ func (m *DesiredLRP) GetAction() *Action {
 func (m *DesiredLRP) GetStartTimeoutMs() int64 {
 	if m != nil {
 		return m.StartTimeoutMs
+	}
+	return 0
+}
+
+func (m *DesiredLRP) GetDeprecatedStartTimeoutS() uint32 {
+	if m != nil {
+		return m.DeprecatedStartTimeoutS
 	}
 	return 0
 }
@@ -591,6 +607,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		return false
 	}
 	if this.StartTimeoutMs != that1.StartTimeoutMs {
+		return false
+	}
+	if this.DeprecatedStartTimeoutS != that1.DeprecatedStartTimeoutS {
 		return false
 	}
 	if this.Privileged != that1.Privileged {
@@ -839,6 +858,9 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if this.StartTimeoutMs != that1.StartTimeoutMs {
 		return false
 	}
+	if this.DeprecatedStartTimeoutS != that1.DeprecatedStartTimeoutS {
+		return false
+	}
 	if !this.Monitor.Equal(that1.Monitor) {
 		return false
 	}
@@ -944,6 +966,7 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`Action:` + fmt.Sprintf("%#v", this.Action),
 		`Monitor:` + fmt.Sprintf("%#v", this.Monitor),
 		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs),
+		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS),
 		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
 		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
 		`Ports:` + fmt.Sprintf("%#v", this.Ports),
@@ -1019,6 +1042,7 @@ func (this *DesiredLRP) GoString() string {
 		`Setup:` + fmt.Sprintf("%#v", this.Setup),
 		`Action:` + fmt.Sprintf("%#v", this.Action),
 		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs),
+		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS),
 		`Monitor:` + fmt.Sprintf("%#v", this.Monitor),
 		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
 		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
@@ -1198,7 +1222,7 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 	}
 	data[i] = 0x30
 	i++
-	i = encodeVarintDesiredLrp(data, i, uint64(m.StartTimeoutMs))
+	i = encodeVarintDesiredLrp(data, i, uint64(m.DeprecatedStartTimeoutS))
 	data[i] = 0x38
 	i++
 	if m.Privileged {
@@ -1288,6 +1312,11 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 		}
 		i += n10
 	}
+	data[i] = 0x98
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(m.StartTimeoutMs))
 	return i, nil
 }
 
@@ -1492,7 +1521,7 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 	}
 	data[i] = 0x40
 	i++
-	i = encodeVarintDesiredLrp(data, i, uint64(m.StartTimeoutMs))
+	i = encodeVarintDesiredLrp(data, i, uint64(m.DeprecatedStartTimeoutS))
 	if m.Monitor != nil {
 		data[i] = 0x4a
 		i++
@@ -1639,6 +1668,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		}
 		i += n17
 	}
+	data[i] = 0xd8
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(m.StartTimeoutMs))
 	return i, nil
 }
 
@@ -1713,7 +1747,7 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		l = m.Monitor.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
-	n += 1 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	n += 1 + sovDesiredLrp(uint64(m.DeprecatedStartTimeoutS))
 	n += 2
 	n += 1 + sovDesiredLrp(uint64(m.CpuWeight))
 	if len(m.Ports) > 0 {
@@ -1752,6 +1786,7 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		l = m.Network.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
+	n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
 	return n
 }
 
@@ -1832,7 +1867,7 @@ func (m *DesiredLRP) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
-	n += 1 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	n += 1 + sovDesiredLrp(uint64(m.DeprecatedStartTimeoutS))
 	if m.Monitor != nil {
 		l = m.Monitor.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
@@ -1888,6 +1923,7 @@ func (m *DesiredLRP) Size() (n int) {
 		l = m.Network.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
+	n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
 	return n
 }
 
@@ -1930,7 +1966,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`Setup:` + strings.Replace(fmt.Sprintf("%v", this.Setup), "Action", "Action", 1) + `,`,
 		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
 		`Monitor:` + strings.Replace(fmt.Sprintf("%v", this.Monitor), "Action", "Action", 1) + `,`,
-		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
+		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%v", this.DeprecatedStartTimeoutS) + `,`,
 		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
 		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
 		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
@@ -1943,6 +1979,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
+		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2015,7 +2052,7 @@ func (this *DesiredLRP) String() string {
 		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%v", this.EnvironmentVariables), "EnvironmentVariable", "EnvironmentVariable", 1) + `,`,
 		`Setup:` + strings.Replace(fmt.Sprintf("%v", this.Setup), "Action", "Action", 1) + `,`,
 		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
+		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%v", this.DeprecatedStartTimeoutS) + `,`,
 		`Monitor:` + strings.Replace(fmt.Sprintf("%v", this.Monitor), "Action", "Action", 1) + `,`,
 		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
 		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
@@ -2034,6 +2071,7 @@ func (this *DesiredLRP) String() string {
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
+		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2436,16 +2474,16 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StartTimeoutMs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeprecatedStartTimeoutS", wireType)
 			}
-			m.StartTimeoutMs = 0
+			m.DeprecatedStartTimeoutS = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				m.StartTimeoutMs |= (int64(b) & 0x7F) << shift
+				m.DeprecatedStartTimeoutS |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2730,6 +2768,22 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTimeoutMs", wireType)
+			}
+			m.StartTimeoutMs = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.StartTimeoutMs |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			var sizeOfWire int
 			for {
@@ -3432,16 +3486,16 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 8:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StartTimeoutMs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeprecatedStartTimeoutS", wireType)
 			}
-			m.StartTimeoutMs = 0
+			m.DeprecatedStartTimeoutS = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				m.StartTimeoutMs |= (int64(b) & 0x7F) << shift
+				m.DeprecatedStartTimeoutS |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3881,6 +3935,22 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 27:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTimeoutMs", wireType)
+			}
+			m.StartTimeoutMs = 0
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				m.StartTimeoutMs |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			var sizeOfWire int
 			for {

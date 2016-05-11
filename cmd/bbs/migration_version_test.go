@@ -70,8 +70,8 @@ var _ = Describe("Migration Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				// the final etcd migration
-				Expect(version.CurrentVersion).To(BeEquivalentTo(1450292094))
-				Expect(version.TargetVersion).To(BeEquivalentTo(1450292094))
+				Expect(version.CurrentVersion).To(BeEquivalentTo(1451635200))
+				Expect(version.TargetVersion).To(BeEquivalentTo(1451635200))
 			}
 
 		})
