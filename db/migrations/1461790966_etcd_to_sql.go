@@ -210,6 +210,10 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 				continue
 			}
 
+			if schedInfo.VolumePlacement == nil {
+				schedInfo.VolumePlacement = &models.VolumePlacement{}
+			}
+
 			volumePlacementData, err := e.serializer.Marshal(logger, format.ENCRYPTED_PROTO, schedInfo.VolumePlacement)
 			if err != nil {
 				logger.Error("failed-marshalling-volume-placements", err)

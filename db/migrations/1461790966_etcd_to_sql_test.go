@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/migrations"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -167,12 +168,31 @@ var _ = Describe("ETCD to SQL Migration", func() {
 			)
 
 			BeforeEach(func() {
+				encoder := format.NewEncoder(cryptor)
+
 				desiredLRPsToCreate = 3
 				for i := 0; i < desiredLRPsToCreate; i++ {
 					processGuid := fmt.Sprintf("process-guid-%d", i)
-					desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
+					var desiredLRP *models.DesiredLRP
+					desiredLRP = model_helpers.NewValidDesiredLRP(processGuid)
 
 					schedulingInfo, runInfo := desiredLRP.CreateComponents(fakeClock.Now())
+
+					var (
+						encryptedVolumePlacement []byte
+						err                      error
+					)
+					if i == 0 { // test for nil and full VolumePlacements
+						schedulingInfo.VolumePlacement = nil
+						encryptedVolumePlacement, err = serializer.Marshal(logger, format.ENCRYPTED_PROTO, &models.VolumePlacement{})
+					} else {
+						encryptedVolumePlacement, err = serializer.Marshal(logger, format.ENCRYPTED_PROTO, schedulingInfo.VolumePlacement)
+					}
+					Expect(err).NotTo(HaveOccurred())
+
+					volumePlacementData, err := encoder.Decode(encryptedVolumePlacement)
+					Expect(err).NotTo(HaveOccurred())
+
 					routesData, err := json.Marshal(desiredLRP.Routes)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -184,12 +204,6 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					runInfoData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, &runInfo)
 					Expect(err).NotTo(HaveOccurred())
 					_, err = storeClient.Set(etcddb.DesiredLRPRunInfoSchemaPath(processGuid), runInfoData, 0)
-					Expect(err).NotTo(HaveOccurred())
-
-					encoder := format.NewEncoder(cryptor)
-					encryptedVolumePlacement, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, schedulingInfo.VolumePlacement)
-					Expect(err).NotTo(HaveOccurred())
-					volumePlacementData, err := encoder.Decode(encryptedVolumePlacement)
 					Expect(err).NotTo(HaveOccurred())
 
 					existingDesiredLRPs = append(existingDesiredLRPs, migrations.ETCDToSQLDesiredLRP{
