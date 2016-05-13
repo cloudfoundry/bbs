@@ -32,8 +32,7 @@ message DesiredLRPRunInfo {
   optional Action action = 4;
   optional Action monitor = 5;
 
-  optional int64 start_timeout_ms = 19;
-  optional uint32 deprecated_start_timeout_s = 6 [(gogoproto.jsontag) = "deprecated_timeout_ns,omitempty", deprecated=true];
+  optional uint32 deprecated_start_timeout_s = 6 [(gogoproto.jsontag) = "start_timeout,omitempty", deprecated=true];
 
   optional bool privileged = 7;
 
@@ -48,6 +47,8 @@ message DesiredLRPRunInfo {
   optional string trusted_system_certificates_path = 16 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 17 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 18 [(gogoproto.jsontag) = "network,omitempty"];
+
+  optional int64 start_timeout_ms = 19;
 }
 
 // helper message for marshalling routes

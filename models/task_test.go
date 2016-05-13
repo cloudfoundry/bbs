@@ -158,99 +158,120 @@ var _ = Describe("Task", func() {
 		})
 	})
 
-	Describe("VersionDownTo V0", func() {
-		var (
-			downloadAction1, downloadAction2 *models.DownloadAction
-		)
+	Describe("VersionDownTo", func() {
+		Context("V1", func() {
+			var task *models.Task
 
-		BeforeEach(func() {
-			task.CachedDependencies = []*models.CachedDependency{
-				{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
-				{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
-			}
-			task.LegacyDownloadUser = "bob"
-
-			downloadAction1 = &models.DownloadAction{
-				Artifact:  "name-1",
-				From:      "from-1",
-				To:        "to-1",
-				CacheKey:  "cache-key-1",
-				LogSource: "log-source-1",
-				User:      "bob",
-			}
-
-			downloadAction2 = &models.DownloadAction{
-				Artifact:  "name-2",
-				From:      "from-2",
-				To:        "to-2",
-				CacheKey:  "cache-key-2",
-				LogSource: "log-source-2",
-				User:      "bob",
-			}
-		})
-
-		Context("when there is no existing setup action", func() {
 			BeforeEach(func() {
-				task.Action = nil
+				task.Action = models.WrapAction(models.Timeout(
+					&models.RunAction{
+						Path: "/the/path",
+						User: "the user",
+					},
+					10*time.Millisecond,
+				))
 			})
 
-			It("converts a cache dependency into download action", func() {
-				newTask := task.VersionDownTo(format.V0)
-				Expect(newTask.Action.SerialAction.Actions).To(HaveLen(1))
-				Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+			It("converts TimeoutMs to Timeout in Nanoseconds", func() {
+				task.VersionDownTo(format.V1)
+				Expect(task.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(Equal(10 * time.Millisecond))
+			})
+		})
 
-				Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(*downloadAction1))
-				Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(*downloadAction2))
+		Context("V0", func() {
+			var (
+				downloadAction1, downloadAction2 *models.DownloadAction
+			)
 
-				Expect(*newTask.Action).To(Equal(models.Action{
-					SerialAction: &models.SerialAction{
-						Actions: []*models.Action{
-							{
-								ParallelAction: &models.ParallelAction{
-									Actions: []*models.Action{
-										&models.Action{DownloadAction: downloadAction1},
-										&models.Action{DownloadAction: downloadAction2},
+			BeforeEach(func() {
+				task.CachedDependencies = []*models.CachedDependency{
+					{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
+					{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
+				}
+				task.LegacyDownloadUser = "bob"
+
+				downloadAction1 = &models.DownloadAction{
+					Artifact:  "name-1",
+					From:      "from-1",
+					To:        "to-1",
+					CacheKey:  "cache-key-1",
+					LogSource: "log-source-1",
+					User:      "bob",
+				}
+
+				downloadAction2 = &models.DownloadAction{
+					Artifact:  "name-2",
+					From:      "from-2",
+					To:        "to-2",
+					CacheKey:  "cache-key-2",
+					LogSource: "log-source-2",
+					User:      "bob",
+				}
+			})
+
+			Context("when there is no existing setup action", func() {
+				BeforeEach(func() {
+					task.Action = nil
+				})
+
+				It("converts a cache dependency into download action", func() {
+					newTask := task.VersionDownTo(format.V0)
+					Expect(newTask.Action.SerialAction.Actions).To(HaveLen(1))
+					Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+
+					Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(*downloadAction1))
+					Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(*downloadAction2))
+
+					Expect(*newTask.Action).To(Equal(models.Action{
+						SerialAction: &models.SerialAction{
+							Actions: []*models.Action{
+								{
+									ParallelAction: &models.ParallelAction{
+										Actions: []*models.Action{
+											&models.Action{DownloadAction: downloadAction1},
+											&models.Action{DownloadAction: downloadAction2},
+										},
 									},
 								},
 							},
 						},
-					},
-				}))
+					}))
+				})
 			})
-		})
 
-		Context("when there is an existing action", func() {
-			It("appends the new converted step action to the front", func() {
-				newTask := task.VersionDownTo(format.V0)
-				Expect(newTask.Action.SerialAction.Actions).To(HaveLen(2))
-				Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+			Context("when there is an existing action", func() {
+				It("appends the new converted step action to the front", func() {
+					newTask := task.VersionDownTo(format.V0)
+					Expect(newTask.Action.SerialAction.Actions).To(HaveLen(2))
+					Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
-				Expect(*newTask.Action).To(Equal(models.Action{
-					SerialAction: &models.SerialAction{
-						Actions: []*models.Action{
-							{
-								ParallelAction: &models.ParallelAction{
-									Actions: []*models.Action{
-										&models.Action{DownloadAction: downloadAction1},
-										&models.Action{DownloadAction: downloadAction2},
+					Expect(*newTask.Action).To(Equal(models.Action{
+						SerialAction: &models.SerialAction{
+							Actions: []*models.Action{
+								{
+									ParallelAction: &models.ParallelAction{
+										Actions: []*models.Action{
+											&models.Action{DownloadAction: downloadAction1},
+											&models.Action{DownloadAction: downloadAction2},
+										},
 									},
 								},
+								task.Action,
 							},
-							task.Action,
 						},
-					},
-				}))
-			})
-		})
-
-		Context("when there are no cache dependencies", func() {
-			BeforeEach(func() {
-				task.CachedDependencies = nil
+					}))
+				})
 			})
 
-			It("keeps the current action", func() {
-				newTask := task.VersionDownTo(format.V0)
-				Expect(*newTask.Action).To(Equal(*task.Action))
+			Context("when there are no cache dependencies", func() {
+				BeforeEach(func() {
+					task.CachedDependencies = nil
+				})
+
+				It("keeps the current action", func() {
+					newTask := task.VersionDownTo(format.V0)
+					Expect(*newTask.Action).To(Equal(*task.Action))
+				})
 			})
 		})
 	})

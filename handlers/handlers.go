@@ -98,6 +98,7 @@ func New(
 		bbs.DeleteTaskRoute:    route(emitter.EmitLatency(taskHandler.DeleteTask)),
 		bbs.ConvergeTasksRoute: route(emitter.EmitLatency(taskHandler.ConvergeTasks)),
 
+		bbs.TasksRoute_r1:      route(emitter.EmitLatency(taskHandler.Tasks_r1)),
 		bbs.TasksRoute_r0:      route(emitter.EmitLatency(taskHandler.Tasks_r0)),
 		bbs.TaskByGuidRoute_r0: route(emitter.EmitLatency(taskHandler.TaskByGuid_r0)),
 

@@ -310,7 +310,7 @@ func (m *RunAction) GetSuppressLogOutput() bool {
 
 type TimeoutAction struct {
 	Action              *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	DeprecatedTimeoutNs int64   `protobuf:"varint,2,opt,name=deprecated_timeout_ns" json:"deprecated_timeout_ns,omitempty"`
+	DeprecatedTimeoutNs int64   `protobuf:"varint,2,opt,name=deprecated_timeout_ns" json:"timeout,omitempty"`
 	LogSource           string  `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
 	TimeoutMs           int64   `protobuf:"varint,4,opt,name=timeout_ms" json:"timeout_ms"`
 }

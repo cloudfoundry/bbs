@@ -372,7 +372,7 @@ func EmitProgressFor(action ActionInterface, startMessage string, successMessage
 func Timeout(action ActionInterface, timeout time.Duration) *TimeoutAction {
 	return &TimeoutAction{
 		Action:    WrapAction(action),
-		TimeoutMs: (int64)(timeout),
+		TimeoutMs: (int64)(timeout / 1000000),
 	}
 }
 

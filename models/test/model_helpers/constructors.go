@@ -42,7 +42,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		},
 		Setup:          models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 		Action:         models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-		StartTimeoutMs: 15,
+		StartTimeoutMs: 15000,
 		Monitor: models.WrapAction(models.EmitProgressFor(
 			models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
 				10*time.Second,

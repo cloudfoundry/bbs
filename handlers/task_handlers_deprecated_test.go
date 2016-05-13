@@ -150,6 +150,115 @@ var _ = Describe("Task Handlers", func() {
 		})
 	})
 
+	Describe("Tasks_r1", func() {
+		BeforeEach(func() {
+			task1 = models.Task{Domain: "domain-1"}
+			task2 = models.Task{CellId: "cell-id"}
+			requestBody = &models.TasksRequest{}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.Tasks_r1(responseRecorder, request)
+		})
+
+		Context("when reading tasks from DB succeeds", func() {
+			var tasks []*models.Task
+
+			BeforeEach(func() {
+				tasks = []*models.Task{&task1, &task2}
+				fakeTaskDB.TasksReturns(tasks, nil)
+			})
+
+			It("returns a list of task", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TasksResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.Tasks).To(Equal(tasks))
+			})
+
+			It("calls the DB with no filter", func() {
+				Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
+				_, filter := fakeTaskDB.TasksArgsForCall(0)
+				Expect(filter).To(Equal(models.TaskFilter{}))
+			})
+
+			Context("and filtering by domain", func() {
+				BeforeEach(func() {
+					requestBody = &models.TasksRequest{
+						Domain: "domain-1",
+					}
+				})
+
+				It("calls the DB with a domain filter", func() {
+					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
+					_, filter := fakeTaskDB.TasksArgsForCall(0)
+					Expect(filter.Domain).To(Equal("domain-1"))
+				})
+			})
+
+			Context("and filtering by cell id", func() {
+				BeforeEach(func() {
+					requestBody = &models.TasksRequest{
+						CellId: "cell-id",
+					}
+				})
+
+				It("calls the DB with a cell filter", func() {
+					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
+					_, filter := fakeTaskDB.TasksArgsForCall(0)
+					Expect(filter.CellID).To(Equal("cell-id"))
+				})
+			})
+
+			Context("and the tasks have timeout not timeout_ms", func() {
+				BeforeEach(func() {
+					task1.TaskDefinition = &models.TaskDefinition{}
+					task2.TaskDefinition = &models.TaskDefinition{}
+
+					task1.Action = &models.Action{
+						TimeoutAction: &models.TimeoutAction{
+							Action: models.WrapAction(&models.UploadAction{
+								From: "web_location",
+							}),
+							TimeoutMs: 10000,
+						},
+					}
+				})
+
+				It("translates the timeoutMs to timeout", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.TasksResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+					Expect(response.Tasks).To(HaveLen(2))
+					Expect(response.Tasks[0]).To(Equal(task1.VersionDownTo(format.V1)))
+					Expect(response.Tasks[1]).To(Equal(task2.VersionDownTo(format.V1)))
+				})
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeTaskDB.TasksReturns(nil, models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TasksResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
 	Describe("TaskByGuid_r0", func() {
 		var taskGuid = "task-guid"
 

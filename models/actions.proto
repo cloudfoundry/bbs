@@ -50,7 +50,7 @@ message RunAction {
 
 message TimeoutAction {
   optional Action action = 1;
-  optional int64 deprecated_timeout_ns = 2 [(gogoproto.jsontag) = "deprecated_timeout_ns,omitempty", deprecated=true];
+  optional int64 deprecated_timeout_ns = 2 [(gogoproto.jsontag) = "timeout,omitempty", deprecated=true];
   optional string log_source = 3 [(gogoproto.jsontag) = "log_source,omitempty"];
   optional int64 timeout_ms = 4;
 }

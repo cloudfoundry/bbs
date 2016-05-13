@@ -65,8 +65,7 @@ type DesiredLRPRunInfo struct {
 	Setup                         *Action               `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
 	Action                        *Action               `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
 	Monitor                       *Action               `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
-	StartTimeoutMs                int64                 `protobuf:"varint,19,opt,name=start_timeout_ms" json:"start_timeout_ms"`
-	DeprecatedStartTimeoutS       uint32                `protobuf:"varint,6,opt,name=deprecated_start_timeout_s" json:"deprecated_timeout_ns,omitempty"`
+	DeprecatedStartTimeoutS       uint32                `protobuf:"varint,6,opt,name=deprecated_start_timeout_s" json:"start_timeout,omitempty"`
 	Privileged                    bool                  `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
 	CpuWeight                     uint32                `protobuf:"varint,8,opt,name=cpu_weight" json:"cpu_weight"`
 	Ports                         []uint32              `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
@@ -79,6 +78,7 @@ type DesiredLRPRunInfo struct {
 	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
 	Network                       *Network              `protobuf:"bytes,18,opt,name=network" json:"network,omitempty"`
+	StartTimeoutMs                int64                 `protobuf:"varint,19,opt,name=start_timeout_ms" json:"start_timeout_ms"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -110,13 +110,6 @@ func (m *DesiredLRPRunInfo) GetMonitor() *Action {
 		return m.Monitor
 	}
 	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetStartTimeoutMs() int64 {
-	if m != nil {
-		return m.StartTimeoutMs
-	}
-	return 0
 }
 
 func (m *DesiredLRPRunInfo) GetDeprecatedStartTimeoutS() uint32 {
@@ -208,6 +201,13 @@ func (m *DesiredLRPRunInfo) GetNetwork() *Network {
 		return m.Network
 	}
 	return nil
+}
+
+func (m *DesiredLRPRunInfo) GetStartTimeoutMs() int64 {
+	if m != nil {
+		return m.StartTimeoutMs
+	}
+	return 0
 }
 
 // helper message for marshalling routes
@@ -606,9 +606,6 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	if !this.Monitor.Equal(that1.Monitor) {
 		return false
 	}
-	if this.StartTimeoutMs != that1.StartTimeoutMs {
-		return false
-	}
 	if this.DeprecatedStartTimeoutS != that1.DeprecatedStartTimeoutS {
 		return false
 	}
@@ -666,6 +663,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		}
 	}
 	if !this.Network.Equal(that1.Network) {
+		return false
+	}
+	if this.StartTimeoutMs != that1.StartTimeoutMs {
 		return false
 	}
 	return true
@@ -965,7 +965,6 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`Setup:` + fmt.Sprintf("%#v", this.Setup),
 		`Action:` + fmt.Sprintf("%#v", this.Action),
 		`Monitor:` + fmt.Sprintf("%#v", this.Monitor),
-		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs),
 		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS),
 		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
 		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
@@ -978,7 +977,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
 		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Network:` + fmt.Sprintf("%#v", this.Network) + `}`}, ", ")
+		`Network:` + fmt.Sprintf("%#v", this.Network),
+		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {

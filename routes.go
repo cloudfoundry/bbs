@@ -47,7 +47,7 @@ const (
 	ConvergeLRPsRoute = "ConvergeLRPs"
 
 	// Tasks
-	TasksRoute         = "Tasks_r1"
+	TasksRoute         = "Tasks_r2"
 	TaskByGuidRoute    = "TaskByGuid_r1"
 	DesireTaskRoute    = "DesireTask"
 	StartTaskRoute     = "StartTask"
@@ -57,6 +57,8 @@ const (
 	ResolvingTaskRoute = "ResolvingTask"
 	DeleteTaskRoute    = "DeleteTask"
 	ConvergeTasksRoute = "ConvergeTasks"
+
+	TasksRoute_r1 = "Tasks_r1" // Deprecated
 
 	TasksRoute_r0      = "Tasks"      // Deprecated
 	TaskByGuidRoute_r0 = "TaskByGuid" // Deprecated
@@ -115,9 +117,10 @@ var Routes = rata.Routes{
 	{Path: "/v1/lrps/converge", Method: "POST", Name: ConvergeLRPsRoute},
 
 	// Tasks
-	{Path: "/v1/tasks/list.r1", Method: "POST", Name: TasksRoute},
+	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},
 	{Path: "/v1/tasks/get_by_task_guid.r1", Method: "POST", Name: TaskByGuidRoute},
 
+	{Path: "/v1/tasks/list.r1", Method: "POST", Name: TasksRoute_r1},
 	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute_r0},                 // Deprecated
 	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute_r0}, // Deprecated
 

@@ -88,8 +88,6 @@ func (b *TimeoutToMilliseconds) Up(logger lager.Logger) error {
 			updateTimeoutInAction(logger, runInfo.GetSetup())
 			updateTimeoutInAction(logger, runInfo.GetAction())
 
-			runInfo.DeprecatedStartTimeoutS = 0
-
 			value, err := b.serializer.Marshal(logger, format.ENCODED_PROTO, runInfo)
 			if err != nil {
 				return err

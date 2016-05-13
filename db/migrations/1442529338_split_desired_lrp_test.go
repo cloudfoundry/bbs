@@ -52,14 +52,14 @@ var _ = Describe("Split Desired LRP Migration", func() {
 		myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 		modTag := models.NewModificationTag("epoch", 0)
 		desiredLRP := &models.DesiredLRP{
-			ProcessGuid:          guid,
-			Domain:               "some-domain",
-			RootFs:               "some:rootfs",
-			Instances:            1,
-			EnvironmentVariables: []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
-			Setup:                models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-			Action:               models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-			StartTimeoutMs:       15,
+			ProcessGuid:             guid,
+			Domain:                  "some-domain",
+			RootFs:                  "some:rootfs",
+			Instances:               1,
+			EnvironmentVariables:    []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
+			Setup:                   models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+			Action:                  models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+			DeprecatedStartTimeoutS: 15,
 			Monitor: models.WrapAction(models.EmitProgressFor(
 				models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
 					10*time.Second,
