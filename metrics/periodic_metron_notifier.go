@@ -39,10 +39,14 @@ func NewPeriodicMetronNotifier(logger lager.Logger,
 func (notifier PeriodicMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := notifier.Logger.Session("metrics-notifier", lager.Data{"interval": notifier.Interval.String()})
 	logger.Info("starting")
+	var etcdMetrics *etcd.ETCDMetrics
+	var err error
 
-	etcdMetrics, err := etcd.NewETCDMetrics(notifier.Logger, notifier.ETCDOptions)
-	if err != nil {
-		return err
+	if notifier.ETCDOptions.IsConfigured {
+		etcdMetrics, err = etcd.NewETCDMetrics(notifier.Logger, notifier.ETCDOptions)
+		if err != nil {
+			return err
+		}
 	}
 
 	ticker := notifier.Clock.NewTicker(notifier.Interval)
@@ -60,7 +64,9 @@ func (notifier PeriodicMetronNotifier) Run(signals <-chan os.Signal, ready chan<
 		case <-ticker.C():
 			startedAt := notifier.Clock.Now()
 
-			etcdMetrics.Send()
+			if etcdMetrics != nil {
+				etcdMetrics.Send()
+			}
 
 			finishedAt := notifier.Clock.Now()
 

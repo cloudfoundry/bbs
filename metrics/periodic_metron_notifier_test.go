@@ -39,6 +39,7 @@ var _ = Describe("PeriodicMetronNotifier", func() {
 
 		sender = fake.NewFakeMetricSender()
 		dropsonde_metrics.Initialize(sender, nil)
+		etcdOptions.IsConfigured = true
 	})
 
 	JustBeforeEach(func() {
@@ -64,38 +65,18 @@ var _ = Describe("PeriodicMetronNotifier", func() {
 	})
 
 	Context("when the report interval elapses", func() {
-		JustBeforeEach(func() {
-			fakeClock.Increment(reportInterval)
-		})
+		var (
+			etcd1 *ghttp.Server
+			etcd2 *ghttp.Server
+			etcd3 *ghttp.Server
+		)
 
-		Context("when the etcd cluster is around", func() {
-			var (
-				etcd1 *ghttp.Server
-				etcd2 *ghttp.Server
-				etcd3 *ghttp.Server
-			)
+		BeforeEach(func() {
+			etcd1 = ghttp.NewServer()
+			etcd2 = ghttp.NewServer()
+			etcd3 = ghttp.NewServer()
 
-			BeforeEach(func() {
-				etcd1 = ghttp.NewServer()
-				etcd2 = ghttp.NewServer()
-				etcd3 = ghttp.NewServer()
-
-				etcdOptions.ClusterUrls = []string{
-					etcd1.URL(),
-					etcd2.URL(),
-					etcd3.URL(),
-				}
-			})
-
-			AfterEach(func() {
-				etcd1.Close()
-				etcd2.Close()
-				etcd3.Close()
-			})
-
-			Context("when the etcd server gives valid JSON", func() {
-				BeforeEach(func() {
-					etcd1.RouteToHandler("GET", "/v2/stats/self", ghttp.RespondWith(200, `
+			etcd1.RouteToHandler("GET", "/v2/stats/self", ghttp.RespondWith(200, `
             {
               "name": "node1",
 							"id": "node1-id",
@@ -115,11 +96,11 @@ var _ = Describe("PeriodicMetronNotifier", func() {
             }
 	        `))
 
-					etcd1.RouteToHandler("GET", "/v2/stats/leader", func(w http.ResponseWriter, r *http.Request) {
-						http.Redirect(w, r, etcd2.URL(), 302)
-					})
+			etcd1.RouteToHandler("GET", "/v2/stats/leader", func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, etcd2.URL(), 302)
+			})
 
-					etcd2.RouteToHandler("GET", "/v2/stats/self", ghttp.RespondWith(200, `
+			etcd2.RouteToHandler("GET", "/v2/stats/self", ghttp.RespondWith(200, `
             {
               "name": "node2",
 							"id": "node2-id",
@@ -139,7 +120,7 @@ var _ = Describe("PeriodicMetronNotifier", func() {
             }
 	        `))
 
-					etcd2.RouteToHandler("GET", "/v2/stats/leader", ghttp.RespondWith(200, `
+			etcd2.RouteToHandler("GET", "/v2/stats/leader", ghttp.RespondWith(200, `
 						{
 						  "leader": "node2-id",
 						  "followers": {
@@ -173,7 +154,7 @@ var _ = Describe("PeriodicMetronNotifier", func() {
 						}
 	        `))
 
-					etcd2.RouteToHandler("GET", "/v2/stats/store", ghttp.RespondWith(200, `
+			etcd2.RouteToHandler("GET", "/v2/stats/store", ghttp.RespondWith(200, `
 						{
 							"getsSuccess": 10195,
 							"getsFail": 26705,
@@ -194,11 +175,11 @@ var _ = Describe("PeriodicMetronNotifier", func() {
 						}
 					`))
 
-					etcd2.RouteToHandler("GET", "/v2/keys", func(w http.ResponseWriter, r *http.Request) {
-						w.Header().Set("X-Raft-Term", "123")
-					})
+			etcd2.RouteToHandler("GET", "/v2/keys", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("X-Raft-Term", "123")
+			})
 
-					etcd3.RouteToHandler("GET", "/v2/stats/self", ghttp.RespondWith(200, `
+			etcd3.RouteToHandler("GET", "/v2/stats/self", ghttp.RespondWith(200, `
             {
               "name": "node3",
 							"id": "node3-id",
@@ -218,61 +199,89 @@ var _ = Describe("PeriodicMetronNotifier", func() {
             }
 	        `))
 
-					etcd3.RouteToHandler("GET", "/v2/stats/leader", func(w http.ResponseWriter, r *http.Request) {
-						http.Redirect(w, r, etcd2.URL(), 302)
-					})
-				})
+			etcd3.RouteToHandler("GET", "/v2/stats/leader", func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, etcd2.URL(), 302)
+			})
 
-				It("should emit them", func() {
-					Eventually(func() fake.Metric {
-						return sender.GetValue("ETCDLeader")
-					}).Should(Equal(fake.Metric{
-						Value: 1,
-						Unit:  "Metric",
-					}))
+			etcdOptions.ClusterUrls = []string{
+				etcd1.URL(),
+				etcd2.URL(),
+				etcd3.URL(),
+			}
+		})
 
-					Eventually(func() fake.Metric {
-						return sender.GetValue("ETCDReceivedBandwidthRate")
-					}).Should(Equal(fake.Metric{
-						Value: 2,
-						Unit:  "B/s",
-					}))
+		JustBeforeEach(func() {
+			fakeClock.Increment(reportInterval)
+		})
 
-					Eventually(func() fake.Metric {
-						return sender.GetValue("ETCDSentBandwidthRate")
-					}).Should(Equal(fake.Metric{
-						Value: 3,
-						Unit:  "B/s",
-					}))
+		AfterEach(func() {
+			etcd1.Close()
+			etcd2.Close()
+			etcd3.Close()
+		})
 
-					Eventually(func() fake.Metric {
-						return sender.GetValue("ETCDReceivedRequestRate")
-					}).Should(Equal(fake.Metric{
-						Value: 4,
-						Unit:  "Req/s",
-					}))
+		Context("when the etcd cluster is around", func() {
+			It("should emit them", func() {
+				Eventually(func() fake.Metric {
+					return sender.GetValue("ETCDLeader")
+				}).Should(Equal(fake.Metric{
+					Value: 1,
+					Unit:  "Metric",
+				}))
 
-					Eventually(func() fake.Metric {
-						return sender.GetValue("ETCDSentRequestRate")
-					}).Should(Equal(fake.Metric{
-						Value: 5,
-						Unit:  "Req/s",
-					}))
+				Eventually(func() fake.Metric {
+					return sender.GetValue("ETCDReceivedBandwidthRate")
+				}).Should(Equal(fake.Metric{
+					Value: 2,
+					Unit:  "B/s",
+				}))
 
-					Eventually(func() fake.Metric {
-						return sender.GetValue("ETCDRaftTerm")
-					}).Should(Equal(fake.Metric{
-						Value: 123,
-						Unit:  "Metric",
-					}))
+				Eventually(func() fake.Metric {
+					return sender.GetValue("ETCDSentBandwidthRate")
+				}).Should(Equal(fake.Metric{
+					Value: 3,
+					Unit:  "B/s",
+				}))
 
-					Eventually(func() fake.Metric {
-						return sender.GetValue("ETCDWatchers")
-					}).Should(Equal(fake.Metric{
-						Value: 12,
-						Unit:  "Metric",
-					}))
-				})
+				Eventually(func() fake.Metric {
+					return sender.GetValue("ETCDReceivedRequestRate")
+				}).Should(Equal(fake.Metric{
+					Value: 4,
+					Unit:  "Req/s",
+				}))
+
+				Eventually(func() fake.Metric {
+					return sender.GetValue("ETCDSentRequestRate")
+				}).Should(Equal(fake.Metric{
+					Value: 5,
+					Unit:  "Req/s",
+				}))
+
+				Eventually(func() fake.Metric {
+					return sender.GetValue("ETCDRaftTerm")
+				}).Should(Equal(fake.Metric{
+					Value: 123,
+					Unit:  "Metric",
+				}))
+
+				Eventually(func() fake.Metric {
+					return sender.GetValue("ETCDWatchers")
+				}).Should(Equal(fake.Metric{
+					Value: 12,
+					Unit:  "Metric",
+				}))
+			})
+		})
+
+		Context("when the etcd cluster is not around", func() {
+			BeforeEach(func() {
+				etcdOptions.IsConfigured = false
+			})
+
+			It("does not emit any metrics", func() {
+				Consistently(func() fake.Metric {
+					return sender.GetValue("ETCDLeader")
+				}).Should(Equal(fake.Metric{}))
 			})
 		})
 	})

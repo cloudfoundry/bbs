@@ -75,6 +75,7 @@ type ETCDOptions struct {
 	IsSSL                  bool
 	ClientSessionCacheSize int
 	MaxIdleConnsPerHost    int
+	IsConfigured           bool
 }
 
 type ETCDDB struct {

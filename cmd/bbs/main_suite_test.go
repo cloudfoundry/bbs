@@ -186,3 +186,7 @@ var _ = AfterEach(func() {
 		mySQLRunner.Reset()
 	}
 })
+
+func UseSQL() bool {
+	return os.Getenv("USE_SQL") == "true"
+}

@@ -225,11 +225,11 @@ func main() {
 
 	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
 
-	etcdOptions, err := etcdFlags.Validate()
-	if err != nil {
-		logger.Fatal("etcd-validation-failed", err)
-	}
-	storeClient := initializeEtcdStoreClient(logger, etcdOptions)
+	var activeDB db.DB
+	var sqlDB *sqldb.SQLDB
+	var sqlConn *sql.DB
+	var storeClient etcddb.StoreClient
+	var etcdDB *etcddb.ETCDDB
 
 	key, keys, err := encryptionFlags.Parse()
 	if err != nil {
@@ -241,12 +241,16 @@ func main() {
 	}
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
-	etcdDB := initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
+	etcdOptions, err := etcdFlags.Validate()
+	if err != nil {
+		logger.Fatal("etcd-validation-failed", err)
+	}
 
-	var activeDB db.DB
-	var sqlDB *sqldb.SQLDB
-	var sqlConn *sql.DB
-	activeDB = etcdDB
+	if etcdOptions.IsConfigured {
+		storeClient = initializeEtcdStoreClient(logger, etcdOptions)
+		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
+		activeDB = etcdDB
+	}
 
 	// If SQL database info is passed in, use SQL instead of ETCD
 	if *databaseDriver != "" && *databaseConnectionString != "" {
@@ -289,6 +293,10 @@ func main() {
 			logger.Fatal("sql-failed-create-configurations-table", err)
 		}
 		activeDB = sqlDB
+	}
+
+	if activeDB == nil {
+		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
 	encryptor := encryptor.New(logger, activeDB, keyManager, cryptor, clock)

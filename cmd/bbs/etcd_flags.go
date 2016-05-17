@@ -25,7 +25,7 @@ func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
 	flagSet.StringVar(
 		&flags.clusterUrls,
 		"etcdCluster",
-		"http://127.0.0.1:4001",
+		"",
 		"comma-separated list of etcd URLs (scheme://ip:port)",
 	)
 	flagSet.StringVar(
@@ -63,6 +63,11 @@ func AddETCDFlags(flagSet *flag.FlagSet) *ETCDFlags {
 }
 
 func (flags *ETCDFlags) Validate() (*etcd.ETCDOptions, error) {
+	if flags.clusterUrls == "" && flags.etcdCaFile == "" &&
+		flags.etcdKeyFile == "" && flags.etcdCertFile == "" {
+		return &etcd.ETCDOptions{IsConfigured: false}, nil
+	}
+
 	scheme := ""
 	clusterUrls := strings.Split(flags.clusterUrls, ",")
 	for i, uString := range clusterUrls {
@@ -101,5 +106,6 @@ func (flags *ETCDFlags) Validate() (*etcd.ETCDOptions, error) {
 		IsSSL:       isSSL,
 		ClientSessionCacheSize: flags.clientSessionCacheSize,
 		MaxIdleConnsPerHost:    flags.maxIdleConnsPerHost,
+		IsConfigured:           true,
 	}, nil
 }
