@@ -4,11 +4,11 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	"github.com/cloudfoundry/storeadapter/storerunner/mysqlrunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -38,8 +38,6 @@ var (
 	cryptor   encryption.Cryptor
 	fakeClock *fakeclock.FakeClock
 	logger    *lagertest.TestLogger
-
-	useSQL bool
 )
 
 func TestMigrations(t *testing.T) {
@@ -56,8 +54,7 @@ var _ = BeforeSuite(func() {
 
 	etcdRunner.Start()
 
-	useSQL = os.Getenv("USE_SQL") == "true"
-	if useSQL {
+	if test_helpers.UseSQL() {
 		mySQLRunner = mysqlrunner.NewMySQLRunner(fmt.Sprintf("diego_%d", GinkgoParallelNode()))
 		mySQLProcess = ginkgomon.Invoke(mySQLRunner)
 
@@ -82,7 +79,7 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 
-	if useSQL {
+	if test_helpers.UseSQL() {
 		ginkgomon.Kill(mySQLProcess)
 		Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
 	}
@@ -96,7 +93,7 @@ var _ = BeforeEach(func() {
 
 	storeClient = etcd.NewStoreClient(etcdClient)
 
-	if useSQL {
+	if test_helpers.UseSQL() {
 		mySQLRunner.Reset()
 	}
 })

@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 
@@ -60,7 +59,6 @@ var (
 
 	mySQLProcess ifrit.Process
 	mySQLRunner  *mysqlrunner.MySQLRunner
-	useSQL       bool
 )
 
 func TestBBS(t *testing.T) {
@@ -75,7 +73,6 @@ var _ = SynchronizedBeforeSuite(
 		return []byte(bbsConfig)
 	},
 	func(bbsConfig []byte) {
-		useSQL = os.Getenv("USE_SQL") != ""
 		bbsBinPath = string(bbsConfig)
 		SetDefaultEventuallyTimeout(15 * time.Second)
 
@@ -83,7 +80,7 @@ var _ = SynchronizedBeforeSuite(
 		etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
 		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
 
-		if useSQL {
+		if test_helpers.UseSQL() {
 			mySQLRunner = mysqlrunner.NewMySQLRunner(fmt.Sprintf("diego_%d", GinkgoParallelNode()))
 			mySQLProcess = ginkgomon.Invoke(mySQLRunner)
 		}
@@ -169,7 +166,7 @@ var _ = BeforeEach(func() {
 		EncryptionKeys: []string{"label:key"},
 		ActiveKeyLabel: "label",
 	}
-	if useSQL {
+	if test_helpers.UseSQL() {
 		bbsArgs.DatabaseDriver = "mysql"
 		bbsArgs.DatabaseConnectionString = mySQLRunner.ConnectionString()
 	}
@@ -182,11 +179,7 @@ var _ = AfterEach(func() {
 	testMetricsListener.Close()
 	Eventually(testMetricsChan).Should(BeClosed())
 
-	if useSQL {
+	if test_helpers.UseSQL() {
 		mySQLRunner.Reset()
 	}
 })
-
-func UseSQL() bool {
-	return os.Getenv("USE_SQL") == "true"
-}

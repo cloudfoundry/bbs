@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -13,7 +14,7 @@ import (
 )
 
 var _ = Describe("BBS With Only SQL", func() {
-	if UseSQL() {
+	if test_helpers.UseSQL() {
 		BeforeEach(func() {
 			port, err := strconv.Atoi(strings.TrimPrefix(testMetricsListener.LocalAddr().String(), "127.0.0.1:"))
 			Expect(err).NotTo(HaveOccurred())

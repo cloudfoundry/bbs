@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -59,9 +60,9 @@ var _ = Describe("Migration Version", func() {
 		bbsBinPath = string(bbsConfig)
 	})
 
-	Context("Running Migrations Without SQL", func() {
-		It("loads and runs the given migrations up to the last etcd migration", func() {
-			if !useSQL {
+	if !test_helpers.UseSQL() {
+		Context("Running Migrations Without SQL", func() {
+			It("loads and runs the given migrations up to the last etcd migration", func() {
 				response, err := storeClient.Get(etcd.VersionKey, false, false)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -72,26 +73,23 @@ var _ = Describe("Migration Version", func() {
 				// the final etcd migration
 				Expect(version.CurrentVersion).To(BeEquivalentTo(1451635200))
 				Expect(version.TargetVersion).To(BeEquivalentTo(1451635200))
-			}
-
+			})
 		})
-	})
+	}
 
-	Context("Running Migrations With SQL", func() {
-		var (
-			sqlConn *sql.DB
-			err     error
-		)
+	if test_helpers.UseSQL() {
+		Context("Running Migrations With SQL", func() {
+			var (
+				sqlConn *sql.DB
+				err     error
+			)
 
-		BeforeEach(func() {
-			if useSQL {
+			BeforeEach(func() {
 				sqlConn, err = sql.Open("mysql", mySQLRunner.ConnectionString())
 				Expect(err).NotTo(HaveOccurred())
-			}
-		})
+			})
 
-		It("loads and runs all the migrations", func() {
-			if useSQL {
+			It("loads and runs all the migrations", func() {
 				var versionJSON string
 				err := sqlConn.QueryRow(
 					`SELECT value FROM configurations WHERE id = 'version'`,
@@ -109,7 +107,7 @@ var _ = Describe("Migration Version", func() {
 				var table interface{}
 				err = sqlConn.QueryRow(`SHOW TABLES LIKE 'sweet_table'`).Scan(&table)
 				Expect(err).NotTo(HaveOccurred())
-			}
+			})
 		})
-	})
+	}
 })
