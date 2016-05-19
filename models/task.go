@@ -70,7 +70,11 @@ func (t *Task) Copy() *Task {
 func (t *Task) VersionDownTo(v format.Version) *Task {
 	t = t.Copy()
 	switch v {
+	case format.V1:
+		t.Action.SetDeprecatedTimeoutNs()
+		return t
 	case format.V0:
+		t.Action.SetDeprecatedTimeoutNs()
 		t.TaskDefinition = newTaskDefWithCachedDependenciesAsActions(t.TaskDefinition)
 		return t
 	default:
@@ -182,7 +186,7 @@ func (def *TaskDefinition) Validate() error {
 }
 
 func (t *TaskDefinition) Version() format.Version {
-	return format.V1
+	return format.V2
 }
 
 func (t *TaskDefinition) MigrateFromVersion(v format.Version) error {
