@@ -34,7 +34,6 @@ var (
 	cryptor          encryption.Cryptor
 	serializer       format.Serializer
 	migrationProcess ifrit.Process
-	useSQL           bool
 )
 
 func TestSql(t *testing.T) {
@@ -44,11 +43,6 @@ func TestSql(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	useSQL = os.Getenv("USE_SQL") == "true"
-	if !useSQL {
-		return
-	}
-
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
 	fakeGUIDProvider = &fakes.FakeGUIDProvider{}
@@ -98,27 +92,17 @@ var _ = BeforeSuite(func() {
 	migrationProcess = ifrit.Invoke(migrationManager)
 })
 
-var _ = BeforeEach(func() {
-	if !useSQL {
-		Skip("SQL Backend not available")
-	}
-})
-
 var _ = AfterEach(func() {
-	if useSQL {
-		truncateTables(db)
-		fakeGUIDProvider.NextGUIDReturns("", nil)
-	}
+	truncateTables(db)
+	fakeGUIDProvider.NextGUIDReturns("", nil)
 })
 
 var _ = AfterSuite(func() {
-	if useSQL {
-		migrationProcess.Signal(os.Kill)
-		_, err := db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
-		Expect(err).NotTo(HaveOccurred())
+	migrationProcess.Signal(os.Kill)
+	_, err := db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	Expect(err).NotTo(HaveOccurred())
 
-		Expect(db.Close()).NotTo(HaveOccurred())
-	}
+	Expect(db.Close()).NotTo(HaveOccurred())
 })
 
 func truncateTables(db *sql.DB) {

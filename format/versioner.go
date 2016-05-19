@@ -7,17 +7,15 @@ type Version byte
 const (
 	V0 Version = 0
 	V1         = 1
-	V2         = 2
 )
 
-var ValidVersions = []Version{V0, V1, V2}
+var ValidVersions = []Version{V0, V1}
 
 //go:generate counterfeiter . Versioner
 type Versioner interface {
 	MigrateFromVersion(v Version) error
-	Version() Version
-
 	Validate() error
+	Version() Version
 }
 
 //go:generate counterfeiter . ProtoVersioner

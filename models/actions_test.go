@@ -285,7 +285,7 @@ var _ = Describe("Actions", func() {
 						"suppress_log_output": false
 					}
 				},
-				"timeout_ms": 10
+				"timeout": 10000000
 			}`,
 			models.WrapAction(
 				models.Timeout(
@@ -311,7 +311,7 @@ var _ = Describe("Actions", func() {
 								User: "someone",
 							},
 						},
-						TimeoutMs: int64(time.Second / 1000000),
+						Timeout: int64(time.Second),
 					}
 
 					err := timeoutAction.Validate()
@@ -323,7 +323,7 @@ var _ = Describe("Actions", func() {
 				{
 					"action",
 					&models.TimeoutAction{
-						TimeoutMs: int64(time.Second / 1000000),
+						Timeout: int64(time.Second),
 					},
 				},
 				{
@@ -335,11 +335,11 @@ var _ = Describe("Actions", func() {
 								User: "someone",
 							},
 						},
-						TimeoutMs: int64(time.Second / 1000000),
+						Timeout: int64(time.Second),
 					},
 				},
 				{
-					"timeout_ms",
+					"timeout",
 					&models.TimeoutAction{
 						Action: &models.Action{
 							UploadAction: &models.UploadAction{

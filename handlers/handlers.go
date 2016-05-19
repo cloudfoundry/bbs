@@ -84,10 +84,7 @@ func New(
 		bbs.RemoveDesiredLRPRoute:          route(emitter.EmitLatency(desiredLRPHandler.RemoveDesiredLRP)),
 
 		bbs.DesiredLRPsRoute_r0:             route(emitter.EmitLatency(desiredLRPHandler.DesiredLRPs_r0)),
-		bbs.DesiredLRPsRoute_r1:             route(emitter.EmitLatency(desiredLRPHandler.DesiredLRPs_r1)),
 		bbs.DesiredLRPByProcessGuidRoute_r0: route(emitter.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid_r0)),
-		bbs.DesiredLRPByProcessGuidRoute_r1: route(emitter.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid_r1)),
-		bbs.DesireDesiredLRPRoute_r0:        route(emitter.EmitLatency(desiredLRPHandler.DesireDesiredLRP_r0)),
 
 		// Tasks
 		bbs.TasksRoute:         route(emitter.EmitLatency(taskHandler.Tasks)),
@@ -101,11 +98,8 @@ func New(
 		bbs.DeleteTaskRoute:    route(emitter.EmitLatency(taskHandler.DeleteTask)),
 		bbs.ConvergeTasksRoute: route(emitter.EmitLatency(taskHandler.ConvergeTasks)),
 
-		bbs.TasksRoute_r1:      route(emitter.EmitLatency(taskHandler.Tasks_r1)),
 		bbs.TasksRoute_r0:      route(emitter.EmitLatency(taskHandler.Tasks_r0)),
-		bbs.TaskByGuidRoute_r1: route(emitter.EmitLatency(taskHandler.TaskByGuid_r1)),
 		bbs.TaskByGuidRoute_r0: route(emitter.EmitLatency(taskHandler.TaskByGuid_r0)),
-		bbs.DesireTaskRoute_r0: route(emitter.EmitLatency(taskHandler.DesireTask_r0)),
 
 		// Events
 		bbs.EventStreamRoute_r0:        route(eventsHandler.Subscribe_r0),

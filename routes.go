@@ -31,29 +31,25 @@ const (
 	EvacuateRunningActualLRPRoute  = "EvacuateRunningActualLRP"
 
 	// Desired LRPs
-	DesiredLRPsRoute               = "DesiredLRPs_r2"
+	DesiredLRPsRoute               = "DesiredLRPs_r1"
 	DesiredLRPSchedulingInfosRoute = "DesiredLRPSchedulingInfos"
-	DesiredLRPByProcessGuidRoute   = "DesiredLRPByProcessGuid_r2"
+	DesiredLRPByProcessGuidRoute   = "DesiredLRPByProcessGuid_r1"
 
-	DesiredLRPsRoute_r1             = "DesiredLRPs_r1" // Deprecated
-	DesiredLRPByProcessGuidRoute_r1 = "DesiredLRPByProcessGuid_r1"
 	DesiredLRPsRoute_r0             = "DesiredLRPs"             // Deprecated
 	DesiredLRPByProcessGuidRoute_r0 = "DesiredLRPByProcessGuid" // Deprecated
 
 	// Desire LRP Lifecycle
-	DesireDesiredLRPRoute = "DesireDesiredLRP_r1"
+	DesireDesiredLRPRoute = "DesireDesiredLRP"
 	UpdateDesiredLRPRoute = "UpdateDesireLRP"
 	RemoveDesiredLRPRoute = "RemoveDesiredLRP"
-
-	DesireDesiredLRPRoute_r0 = "DesireDesiredLRP"
 
 	// LRP Convergence
 	ConvergeLRPsRoute = "ConvergeLRPs"
 
 	// Tasks
-	TasksRoute         = "Tasks_r2"
-	TaskByGuidRoute    = "TaskByGuid_r2"
-	DesireTaskRoute    = "DesireTask_r1"
+	TasksRoute         = "Tasks_r1"
+	TaskByGuidRoute    = "TaskByGuid_r1"
+	DesireTaskRoute    = "DesireTask"
 	StartTaskRoute     = "StartTask"
 	CancelTaskRoute    = "CancelTask"
 	FailTaskRoute      = "FailTask"
@@ -62,10 +58,6 @@ const (
 	DeleteTaskRoute    = "DeleteTask"
 	ConvergeTasksRoute = "ConvergeTasks"
 
-	TasksRoute_r1      = "Tasks_r1"      // Deprecated
-	TaskByGuidRoute_r1 = "TaskByGuid_r1" // Deprecated
-
-	DesireTaskRoute_r0 = "DesireTask" // Deprecated
 	TasksRoute_r0      = "Tasks"      // Deprecated
 	TaskByGuidRoute_r0 = "TaskByGuid" // Deprecated
 
@@ -115,33 +107,28 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r0}, // Deprecated
 
 	// Desire LPR Lifecycle
-	{Path: "/v1/desired_lrp/desire.r1", Method: "POST", Name: DesireDesiredLRPRoute},
+	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
-	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute_r0}, // Deprecated
 
 	// LRP Convergence
 	{Path: "/v1/lrps/converge", Method: "POST", Name: ConvergeLRPsRoute},
 
 	// Tasks
-	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},
-	{Path: "/v1/tasks/get_by_task_guid.r2", Method: "POST", Name: TaskByGuidRoute},
+	{Path: "/v1/tasks/list.r1", Method: "POST", Name: TasksRoute},
+	{Path: "/v1/tasks/get_by_task_guid.r1", Method: "POST", Name: TaskByGuidRoute},
 
-	{Path: "/v1/tasks/list.r1", Method: "POST", Name: TasksRoute_r1},                  // Deprecated
-	{Path: "/v1/tasks/get_by_task_guid.r1", Method: "POST", Name: TaskByGuidRoute_r1}, // Deprecated
-	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute_r0},                     // Deprecated
-	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute_r0},     // Deprecated
+	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute_r0},                 // Deprecated
+	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute_r0}, // Deprecated
 
 	// Task Lifecycle
-	{Path: "/v1/tasks/desire.r1", Method: "POST", Name: DesireTaskRoute},
+	{Path: "/v1/tasks/desire", Method: "POST", Name: DesireTaskRoute},
 	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
 	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute},
 	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
 	{Path: "/v1/tasks/complete", Method: "POST", Name: CompleteTaskRoute},
 	{Path: "/v1/tasks/resolving", Method: "POST", Name: ResolvingTaskRoute},
 	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute},
-
-	{Path: "/v1/tasks/desire", Method: "POST", Name: DesireTaskRoute_r0}, // Deprecated
 
 	// Task Convergence
 	{Path: "/v1/tasks/converge", Method: "POST", Name: ConvergeTasksRoute},

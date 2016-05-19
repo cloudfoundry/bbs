@@ -158,10 +158,10 @@ var _ = Describe("Event Handlers", func() {
 				Expect(migratedLRP).NotTo(Equal(desiredLRP))
 				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
 
+				desiredHub.Emit(event)
+
 				expectedEvent, err := events.NewEventFromModelEvent(0, migratedEvent)
 				Expect(err).NotTo(HaveOccurred())
-
-				desiredHub.Emit(event)
 
 				Expect(reader.Next()).To(Equal(expectedEvent))
 			})

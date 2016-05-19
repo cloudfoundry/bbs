@@ -3,19 +3,20 @@ package models_test
 import (
 	"testing"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/format"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 type ValidatorErrorCase struct {
 	Message string
-	models.Validator
+	format.Versioner
 }
 
 func testValidatorErrorCase(testCase ValidatorErrorCase) {
 	message := testCase.Message
-	model := testCase.Validator
+	model := testCase.Versioner
 
 	Context("when invalid", func() {
 		It("returns an error indicating '"+message+"'", func() {

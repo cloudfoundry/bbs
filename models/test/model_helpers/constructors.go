@@ -40,9 +40,9 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		CachedDependencies: []*models.CachedDependency{
 			{Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
 		},
-		Setup:          models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-		Action:         models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-		StartTimeoutMs: 15000,
+		Setup:        models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+		Action:       models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+		StartTimeout: 15,
 		Monitor: models.WrapAction(models.EmitProgressFor(
 			models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
 				10*time.Second,

@@ -111,7 +111,7 @@ func (m *SplitDesiredLRP) WriteRunInfo(logger lager.Logger, desiredLRP models.De
 		Setup:                desiredLRP.Setup,
 		Action:               desiredLRP.Action,
 		Monitor:              desiredLRP.Monitor,
-		StartTimeoutMs:       desiredLRP.StartTimeoutMs,
+		StartTimeout:         desiredLRP.StartTimeout,
 		Privileged:           desiredLRP.Privileged,
 		CpuWeight:            desiredLRP.CpuWeight,
 		Ports:                desiredLRP.Ports,

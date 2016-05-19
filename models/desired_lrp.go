@@ -55,7 +55,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		Setup:                         runInfo.Setup,
 		Action:                        runInfo.Action,
 		Monitor:                       runInfo.Monitor,
-		StartTimeoutMs:                runInfo.StartTimeoutMs,
+		StartTimeout:                  runInfo.StartTimeout,
 		Privileged:                    runInfo.Privileged,
 		CpuWeight:                     runInfo.CpuWeight,
 		Ports:                         runInfo.Ports,
@@ -85,7 +85,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.Setup = runInfo.Setup
 	desiredLRP.Action = runInfo.Action
 	desiredLRP.Monitor = runInfo.Monitor
-	desiredLRP.StartTimeoutMs = runInfo.StartTimeoutMs
+	desiredLRP.StartTimeout = runInfo.StartTimeout
 	desiredLRP.Privileged = runInfo.Privileged
 	desiredLRP.CpuWeight = runInfo.CpuWeight
 	desiredLRP.Ports = runInfo.Ports
@@ -116,27 +116,16 @@ func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLR
 }
 
 func (*DesiredLRP) Version() format.Version {
-	return format.V2
+	return format.V1
 }
 
-func (d *DesiredLRP) MigrateFromVersion(v format.Version) error {
+func (*DesiredLRP) MigrateFromVersion(v format.Version) error {
 	return nil
 }
 
 func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 	switch v {
-
-	case format.V1:
-		d.Action.SetDeprecatedTimeoutNs()
-		d.Setup.SetDeprecatedTimeoutNs()
-		d.Monitor.SetDeprecatedTimeoutNs()
-		d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
-		return d
 	case format.V0:
-		d.Action.SetDeprecatedTimeoutNs()
-		d.Setup.SetDeprecatedTimeoutNs()
-		d.Monitor.SetDeprecatedTimeoutNs()
-		d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
 		return newDesiredLRPWithCachedDependenciesAsSetupActions(d)
 	default:
 		return d.Copy()
@@ -188,7 +177,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.Setup,
 		d.Action,
 		d.Monitor,
-		d.StartTimeoutMs,
+		d.StartTimeout,
 		d.Privileged,
 		d.CpuWeight,
 		d.Ports,
@@ -437,7 +426,7 @@ func NewDesiredLRPRunInfo(
 	setup,
 	action,
 	monitor *Action,
-	startTimeoutMs int64,
+	startTimeout uint32,
 	privileged bool,
 	cpuWeight uint32,
 	ports []uint32,
@@ -457,7 +446,7 @@ func NewDesiredLRPRunInfo(
 		Setup:                         setup,
 		Action:                        action,
 		Monitor:                       monitor,
-		StartTimeoutMs:                startTimeoutMs,
+		StartTimeout:                  startTimeout,
 		Privileged:                    privileged,
 		CpuWeight:                     cpuWeight,
 		Ports:                         ports,
