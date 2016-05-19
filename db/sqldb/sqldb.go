@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/guidprovider"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
@@ -126,6 +127,8 @@ func (db *SQLDB) convertSQLError(err error) *models.Error {
 		switch err.(type) {
 		case *mysql.MySQLError:
 			return db.convertMySQLError(err.(*mysql.MySQLError))
+		case *pq.Error:
+			return db.convertPostgresError(err.(*pq.Error))
 		}
 	}
 
@@ -140,6 +143,17 @@ func (db *SQLDB) convertMySQLError(err *mysql.MySQLError) *models.Error {
 		return models.ErrDeadlock
 	case 1406:
 		return models.ErrBadRequest
+	default:
+		return models.ErrUnknownError
+	}
+}
+
+func (db *SQLDB) convertPostgresError(err *pq.Error) *models.Error {
+	switch err.Code {
+	case "22001":
+		return models.ErrBadRequest
+	case "23505":
+		return models.ErrResourceExists
 	default:
 		return models.ErrUnknownError
 	}

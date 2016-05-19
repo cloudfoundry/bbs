@@ -20,8 +20,9 @@ var _ = Describe("Encryption", func() {
 			err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
 			Expect(err).NotTo(HaveOccurred())
 
-			rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyID)
+			rows, err := db.Query("SELECT value FROM configurations WHERE id = $1", sqldb.EncryptionKeyID)
 			Expect(err).NotTo(HaveOccurred())
+			defer rows.Close()
 			Expect(rows.Next()).To(BeTrue())
 			var label string
 			err = rows.Scan(&label)
@@ -49,8 +50,9 @@ var _ = Describe("Encryption", func() {
 				err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyID)
+				rows, err := db.Query("SELECT value FROM configurations WHERE id = $1", sqldb.EncryptionKeyID)
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 				Expect(rows.Next()).To(BeTrue())
 				var label string
 				err = rows.Scan(&label)
@@ -72,7 +74,7 @@ var _ = Describe("Encryption", func() {
 		Context("when the encription key label key exists", func() {
 			It("retrieves the encrption key label from the database", func() {
 				label := "expectedLabel"
-				_, err := db.Exec("INSERT INTO configurations VALUES (?, ?)", sqldb.EncryptionKeyID, label)
+				_, err := db.Exec("INSERT INTO configurations VALUES ($1, $2)", sqldb.EncryptionKeyID, label)
 				Expect(err).NotTo(HaveOccurred())
 
 				keyLabel, err := sqlDB.EncryptionKeyLabel(logger)
@@ -137,14 +139,14 @@ var _ = Describe("Encryption", func() {
 			encoded4, err := encoder.Encode(format.BASE64_ENCRYPTED, value4)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = db.Exec("INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)", taskGuid, "fake-domain", encoded1)
+			_, err = db.Exec("INSERT INTO tasks (guid, domain, task_definition) VALUES ($1, $2, $3)", taskGuid, "fake-domain", encoded1)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = db.Exec(`
 				INSERT INTO desired_lrps
 					(process_guid, domain, log_guid, instances, run_info, memory_mb,
 					disk_mb, rootfs, routes, volume_placement, modification_tag_epoch)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 				processGuid, "fake-domain", "some-log-guid", 1, encoded2, 10, 10,
 				"some-root-fs", []byte("{}"), encoded3, 10)
 			Expect(err).NotTo(HaveOccurred())
@@ -152,7 +154,7 @@ var _ = Describe("Encryption", func() {
 			_, err = db.Exec(`
 				INSERT INTO actual_lrps
 					(process_guid, domain, net_info, instance_index, modification_tag_epoch, state)
-				VALUES (?, ?, ?, ?, ?, ?)`,
+				VALUES ($1, $2, $3, $4, $5, $6)`,
 				processGuid, "fake-domain", encoded4, 0, 10, "yo")
 			Expect(err).NotTo(HaveOccurred())
 
@@ -166,7 +168,7 @@ var _ = Describe("Encryption", func() {
 			encoder = format.NewEncoder(cryptor)
 
 			var result []byte
-			row := db.QueryRow("SELECT task_definition FROM tasks WHERE guid = ?", taskGuid)
+			row := db.QueryRow("SELECT task_definition FROM tasks WHERE guid = $1", taskGuid)
 			err = row.Scan(&result)
 			Expect(err).NotTo(HaveOccurred())
 			decrypted1, err := encoder.Decode(result)
@@ -174,7 +176,7 @@ var _ = Describe("Encryption", func() {
 			Expect(decrypted1).To(Equal(value1))
 
 			var runInfo, volumePlacement []byte
-			row = db.QueryRow("SELECT run_info, volume_placement FROM desired_lrps WHERE process_guid = ?", processGuid)
+			row = db.QueryRow("SELECT run_info, volume_placement FROM desired_lrps WHERE process_guid = $1", processGuid)
 			err = row.Scan(&runInfo, &volumePlacement)
 			Expect(err).NotTo(HaveOccurred())
 			decrypted2, err := encoder.Decode(runInfo)
@@ -185,7 +187,7 @@ var _ = Describe("Encryption", func() {
 			Expect(decrypted3).To(Equal(value3))
 
 			var netInfo []byte
-			row = db.QueryRow("SELECT net_info FROM actual_lrps WHERE process_guid = ?", processGuid)
+			row = db.QueryRow("SELECT net_info FROM actual_lrps WHERE process_guid = $1", processGuid)
 			err = row.Scan(&netInfo)
 			Expect(err).NotTo(HaveOccurred())
 			decrypted4, err := encoder.Decode(netInfo)
@@ -206,7 +208,7 @@ var _ = Describe("Encryption", func() {
 			encoded1, err := encoder.Encode(format.BASE64_ENCRYPTED, value1)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = db.Exec("INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)", taskGuid, "fake-domain", encoded1)
+			_, err = db.Exec("INSERT INTO tasks (guid, domain, task_definition) VALUES ($1, $2, $3)", taskGuid, "fake-domain", encoded1)
 			Expect(err).NotTo(HaveOccurred())
 
 			cryptor = makeCryptor("new", "old")

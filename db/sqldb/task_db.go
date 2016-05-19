@@ -26,7 +26,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 
 	_, err = db.db.Exec(
 		`INSERT INTO tasks (guid, domain, created_at, updated_at, first_completed_at, state, task_definition)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		taskGuid,
 		domain,
 		now,
@@ -53,11 +53,11 @@ func (db *SQLDB) Tasks(logger lager.Logger, taskFilter models.TaskFilter) ([]*mo
 	var err error
 
 	if taskFilter.Domain != "" && taskFilter.CellID != "" {
-		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = ? AND cell_id = ?", taskFilter.Domain, taskFilter.CellID)
+		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = $1 AND cell_id = $2", taskFilter.Domain, taskFilter.CellID)
 	} else if taskFilter.Domain != "" {
-		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = ?", taskFilter.Domain)
+		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = $1", taskFilter.Domain)
 	} else if taskFilter.CellID != "" {
-		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE cell_id = ?", taskFilter.CellID)
+		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE cell_id = $1", taskFilter.CellID)
 	} else {
 		rows, err = db.db.Query("SELECT " + taskColumns + " FROM tasks")
 	}
@@ -90,7 +90,7 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.db.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = ?", taskGuid)
+	row := db.db.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = $1", taskGuid)
 	return db.fetchTask(logger, row, db.db)
 }
 
@@ -120,8 +120,8 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 
 		now := db.clock.Now().UnixNano()
 		_, err = tx.Exec(`
-				UPDATE tasks SET state = ?, updated_at = ?, cell_id = ?
-				WHERE guid = ?`,
+				UPDATE tasks SET state = $1, updated_at = $2, cell_id =$3
+				WHERE guid = $4`,
 			models.Task_Running,
 			now,
 			cellId,
@@ -250,8 +250,8 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 		now := db.clock.Now().UnixNano()
 		_, err = tx.Exec(
 			`UPDATE tasks SET
-		  state = ?, updated_at = ?
-			WHERE guid = ?
+		  state = $1, updated_at = $2
+			WHERE guid = $3
 			`,
 			models.Task_Resolving,
 			now,
@@ -285,7 +285,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 		}
 
 		_, err = tx.Exec(
-			`DELETE FROM tasks WHERE guid = ?`,
+			`DELETE FROM tasks WHERE guid = $1`,
 			taskGuid,
 		)
 		if err != nil {
@@ -301,9 +301,9 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	now := db.clock.Now().UnixNano()
 	_, err := tx.Exec(
 		`UPDATE tasks SET
-		  state = ?, updated_at = ?, first_completed_at = ?,
-			failed = ?, failure_reason = ?, result = ?, cell_id = ?
-			WHERE guid = ?
+		  state = $1, updated_at = $2, first_completed_at = $3,
+			failed = $4, failure_reason = $5, result = $6, cell_id = $7
+			WHERE guid = $8
 			`,
 		models.Task_Completed,
 		now,
@@ -331,7 +331,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 }
 
 func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
-	row := tx.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = ? FOR UPDATE", taskGuid)
+	row := tx.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = $1 FOR UPDATE", taskGuid)
 	return db.fetchTask(logger, row, tx)
 }
 
@@ -366,7 +366,7 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 	if err != nil {
 		logger.Info("deleting-malformed-task-from-db", lager.Data{"guid": guid})
 		_, err = tx.Exec(
-			`DELETE FROM tasks WHERE guid = ?`,
+			`DELETE FROM tasks WHERE guid = $1`,
 			guid,
 		)
 		if err != nil {

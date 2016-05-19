@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("DesiredLRPDB", func() {
+var _ = FDescribe("DesiredLRPDB", func() {
 	Describe("DesireLRP", func() {
 		var expectedDesiredLRP *models.DesiredLRP
 
@@ -65,7 +65,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET run_info = ? WHERE process_guid = ?", "{{", expectedDesiredLRP.ProcessGuid)
+				result, err := db.Exec("UPDATE desired_lrps SET run_info = $1 WHERE process_guid = $2", "{{", expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -81,7 +81,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?", "{{", expectedDesiredLRP.ProcessGuid)
+				result, err := db.Exec("UPDATE desired_lrps SET routes = $1 WHERE process_guid = $2", "{{", expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -128,6 +128,8 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			rows, err := db.Query(`SELECT process_guid FROM desired_lrps`)
 			Expect(err).NotTo(HaveOccurred())
+			defer rows.Close()
+
 			processGuids := []string{}
 			for rows.Next() {
 				var processGuid string
@@ -150,7 +152,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET run_info = ? WHERE process_guid = ?", "{{", expectedDesiredLRPs[0].ProcessGuid)
+				result, err := db.Exec("UPDATE desired_lrps SET run_info = $1 WHERE process_guid = $2", "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -166,7 +168,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?", "{{", expectedDesiredLRPs[0].ProcessGuid)
+				result, err := db.Exec("UPDATE desired_lrps SET routes = $1 WHERE process_guid = $2", "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -219,7 +221,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?", "{{", expectedDesiredLRPs[0].ProcessGuid)
+				result, err := db.Exec("UPDATE desired_lrps SET routes = $1 WHERE process_guid = $2", "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())

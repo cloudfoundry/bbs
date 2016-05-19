@@ -7,8 +7,8 @@ import (
 
 func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
 	_, err := db.db.Exec(
-		`INSERT INTO configurations (id, value) VALUES (?, ?)
-										ON DUPLICATE KEY UPDATE value = ?`,
+		`INSERT INTO configurations (id, value) VALUES ($1, $2)
+										ON CONFLICT (id) DO UPDATE SET value = $3`,
 		key,
 		value,
 		value,
@@ -24,7 +24,7 @@ func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) e
 func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string, error) {
 	var value string
 	err := db.db.QueryRow(
-		"SELECT value FROM configurations WHERE id = ?",
+		"SELECT value FROM configurations WHERE id = $1",
 		key,
 	).Scan(&value)
 	if err != nil {

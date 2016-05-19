@@ -17,8 +17,9 @@ var _ = Describe("Version", func() {
 				err := sqlDB.SetVersion(logger, expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.VersionID)
+				rows, err := db.Query("SELECT value FROM configurations WHERE id = $1", sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 
 				Expect(rows.Next()).To(BeTrue())
 
@@ -41,10 +42,9 @@ var _ = Describe("Version", func() {
 				versionJSON, err := json.Marshal(existingVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec(`
-				INSERT INTO configurations (id, value) VALUES (?, ?)
-				  ON DUPLICATE KEY UPDATE value = ?
-				`, sqldb.VersionID, versionJSON, versionJSON)
+				result, err := db.Exec(`
+				  INSERT INTO configurations (id, value) VALUES ($1, $2)
+					  ON CONFLICT (id) DO UPDATE SET value = $3`, sqldb.VersionID, versionJSON, versionJSON)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -54,8 +54,9 @@ var _ = Describe("Version", func() {
 				err := sqlDB.SetVersion(logger, version)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.VersionID)
+				rows, err := db.Query("SELECT value FROM configurations WHERE id = $1", sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 
 				Expect(rows.Next()).To(BeTrue())
 
@@ -80,9 +81,10 @@ var _ = Describe("Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = db.Exec(`
-				  INSERT INTO configurations (id, value) VALUES (?, ?)
-					  ON DUPLICATE KEY UPDATE value = ?
-				  `, sqldb.VersionID, value, value)
+					INSERT INTO configurations (id, value) VALUES ($1, $2)
+					  ON CONFLICT (id) DO UPDATE SET value = $3`,
+					sqldb.VersionID, value, value)
+
 				Expect(err).NotTo(HaveOccurred())
 
 				version, err := sqlDB.Version(logger)
@@ -108,9 +110,8 @@ var _ = Describe("Version", func() {
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserialize", func() {
 				_, err := db.Exec(`
-				INSERT INTO configurations (id, value) VALUES (?, ?)
-				  ON DUPLICATE KEY UPDATE value = ?
-				`, sqldb.VersionID, "{{", "{{")
+				  INSERT INTO configurations (id, value) VALUES ($1, $2)
+					  ON CONFLICT (id) DO UPDATE SET value = $3`, sqldb.VersionID, "{{", "{{")
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)

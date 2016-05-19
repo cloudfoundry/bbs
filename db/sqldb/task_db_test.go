@@ -35,8 +35,9 @@ var _ = Describe("TaskDB", func() {
 			It("persists the task", func() {
 				Expect(errDesire).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT * FROM tasks WHERE guid = ?", taskGuid)
+				rows, err := db.Query("SELECT * FROM tasks WHERE guid = $1", taskGuid)
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 				Expect(rows.Next()).To(BeTrue())
 
 				var guid, domain, cellID, failureReason string
@@ -91,6 +92,7 @@ var _ = Describe("TaskDB", func() {
 
 				rows, err := db.Query("SELECT count(*) FROM tasks;")
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 				Expect(rows.Next()).To(BeTrue())
 
 				var count int
@@ -1022,7 +1024,7 @@ func insertTask(db *sql.DB, serializer format.Serializer, task *models.Task, mal
 		`INSERT INTO tasks
 						  (guid, domain, created_at, updated_at, first_completed_at, state,
 							cell_id, result, failed, failure_reason, task_definition)
-					    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 		task.TaskGuid,
 		task.Domain,
 		task.CreatedAt,

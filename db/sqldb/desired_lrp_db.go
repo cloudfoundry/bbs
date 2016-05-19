@@ -50,7 +50,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 				(process_guid, domain, log_guid, annotation, instances, memory_mb,
 				disk_mb, rootfs, volume_placement, modification_tag_epoch, modification_tag_index,
 				routes, run_info)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 			desiredLRP.ProcessGuid,
 			desiredLRP.Domain,
 			desiredLRP.LogGuid,
@@ -94,7 +94,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 				disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
 				run_info
 			FROM desired_lrps
-			WHERE domain = ?`,
+			WHERE domain = $1`,
 			filter.Domain)
 	} else {
 		rows, err = db.db.Query(`
@@ -107,7 +107,6 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		logger.Error("failed-query", err)
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	results := []*models.DesiredLRP{}
@@ -141,7 +140,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 				disk_mb, rootfs, routes, volume_placement, modification_tag_epoch,
 				modification_tag_index
 			FROM desired_lrps
-			WHERE domain = ?`,
+			WHERE domain = $1`,
 			filter.Domain,
 		)
 	} else {
@@ -156,7 +155,6 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 		logger.Error("failed-query", err)
 		return nil, db.convertSQLError(err)
 	}
-
 	defer rows.Close()
 
 	results := []*models.DesiredLRPSchedulingInfo{}
@@ -191,17 +189,20 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			return err
 		}
 
-		setKeys := []string{"modification_tag_index = ?"}
+		setKeys := []string{"modification_tag_index = $1"}
 		setValues := []interface{}{beforeDesiredLRP.ModificationTag.Index + 1}
 
+		bindVarIndex := 2
 		if update.Annotation != nil {
-			setKeys = append(setKeys, "annotation = ?")
+			setKeys = append(setKeys, fmt.Sprintf("annotation = $%d", bindVarIndex))
 			setValues = append(setValues, *update.Annotation)
+			bindVarIndex++
 		}
 
 		if update.Instances != nil {
-			setKeys = append(setKeys, "instances = ?")
+			setKeys = append(setKeys, fmt.Sprintf("instances = $%d", bindVarIndex))
 			setValues = append(setValues, *update.Instances)
+			bindVarIndex++
 		}
 
 		if update.Routes != nil {
@@ -210,13 +211,15 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 				logger.Error("failed-marshalling-routes", err)
 				return models.ErrBadRequest
 			}
-			setKeys = append(setKeys, "routes = ?")
+			setKeys = append(setKeys, fmt.Sprintf("routes = $%d", bindVarIndex))
 			setValues = append(setValues, routeData)
+			bindVarIndex++
 		}
 
 		setValues = append(setValues, processGuid)
 
-		query := fmt.Sprintf("UPDATE desired_lrps SET %s WHERE process_guid = ?", strings.Join(setKeys, ", "))
+		query := fmt.Sprintf("UPDATE desired_lrps SET %s WHERE process_guid = $%d", strings.Join(setKeys, ", "), bindVarIndex)
+		bindVarIndex++
 		stmt, err := tx.Prepare(query)
 		if err != nil {
 			logger.Error("failed-preparing-query", err)
@@ -247,7 +250,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 			return err
 		}
 
-		_, err = tx.Exec("DELETE FROM desired_lrps WHERE process_guid = ?", processGuid)
+		_, err = tx.Exec("DELETE FROM desired_lrps WHERE process_guid = $1", processGuid)
 		if err != nil {
 			logger.Error("failed-deleting-from-db", err)
 			return db.convertSQLError(err)
@@ -317,14 +320,14 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 }
 
 func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid string, tx *sql.Tx) error {
-	row := tx.QueryRow("SELECT COUNT(*) FROM desired_lrps WHERE process_guid = ? FOR UPDATE", processGuid)
+	row := tx.QueryRow("SELECT 1 FROM desired_lrps WHERE process_guid = $1 FOR UPDATE", processGuid)
 	var count int
 	err := row.Scan(&count)
-	if err != nil {
-		return db.convertSQLError(err)
-	}
-	if count == 0 {
+	if err == sql.ErrNoRows {
 		return models.ErrResourceNotFound
+	} else if err != nil {
+		logger.Error("jim", err)
+		return db.convertSQLError(err)
 	}
 	return nil
 }
@@ -335,7 +338,7 @@ func (db *SQLDB) selectDesiredLRPByGuid(logger lager.Logger, processGuid string,
 			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
 			run_info
 		FROM desired_lrps
-		WHERE process_guid = ?
+		WHERE process_guid = $1
 	`
 	switch lockMode {
 	case LockForUpdate:
@@ -372,7 +375,7 @@ func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*mode
 	if err != nil {
 		_, err := db.db.Exec(`
 				DELETE FROM desired_lrps
-				WHERE process_guid = ?
+				WHERE process_guid = $1
 				`, desiredLRP.ProcessGuid)
 
 		if err != nil {

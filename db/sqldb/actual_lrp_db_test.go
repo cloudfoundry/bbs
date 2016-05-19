@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("ActualLRPDB", func() {
+var _ = FDescribe("ActualLRPDB", func() {
 	BeforeEach(func() {
 		fakeGUIDProvider.NextGUIDReturns("my-awesome-guid", nil)
 	})
@@ -97,7 +97,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there's just an evacuating LRP", func() {
 			BeforeEach(func() {
-				_, err := db.Exec("UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, actualLRP.ProcessGuid, actualLRP.Index, false)
+				_, err := db.Exec("UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2 AND instance_index = $3 AND evacuating = $4", true, actualLRP.ProcessGuid, actualLRP.Index, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -114,7 +114,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there are both instance and evacuating LRPs", func() {
 			BeforeEach(func() {
-				_, err := db.Exec("UPDATE actual_lrps SET evacuating = true WHERE process_guid = ?", actualLRP.ProcessGuid)
+				_, err := db.Exec("UPDATE actual_lrps SET evacuating = true WHERE process_guid = $1", actualLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
@@ -265,7 +265,7 @@ var _ = Describe("ActualLRPDB", func() {
 			fakeClock.Increment(time.Hour)
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec("UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, false)
+			_, err = db.Exec("UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2 AND instance_index = $3 AND evacuating = $4", true, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, false)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Evacuating: &models.ActualLRP{
@@ -294,7 +294,7 @@ var _ = Describe("ActualLRPDB", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec("UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
+			_, err = db.Exec("UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2 AND instance_index = $3 AND evacuating = $4", true, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
 			Expect(err).NotTo(HaveOccurred())
@@ -425,7 +425,7 @@ var _ = Describe("ActualLRPDB", func() {
 			fakeClock.Increment(time.Hour)
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec("UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?", true, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, false)
+			_, err = db.Exec("UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2 AND instance_index = $3 AND evacuating = $4", true, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, false)
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
 			Expect(err).NotTo(HaveOccurred())
@@ -557,8 +557,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and there is a placement error", func() {
 					BeforeEach(func() {
 						_, err := db.Exec(`
-								UPDATE actual_lrps SET placement_error = ?
-								WHERE process_guid = ? AND instance_index = ?`,
+								UPDATE actual_lrps SET placement_error = $1
+								WHERE process_guid = $2 AND instance_index = $3`,
 							"i am placement errror, how are you?",
 							expectedActualLRP.ProcessGuid,
 							expectedActualLRP.Index,
@@ -651,8 +651,8 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = db.Exec(`
-								UPDATE actual_lrps SET state = ?, net_info = ?, cell_id = ?, instance_guid = ?
-								WHERE process_guid = ? AND instance_index = ?`,
+								UPDATE actual_lrps SET state = $1, net_info = $2, cell_id = $3, instance_guid = $4
+								WHERE process_guid = $5 AND instance_index = $6`,
 						models.ActualLRPStateRunning,
 						netInfoData,
 						instanceKey.CellId,
@@ -726,8 +726,8 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("and the actual lrp is CRASHED", func() {
 				BeforeEach(func() {
 					_, err := db.Exec(`
-							UPDATE actual_lrps SET state = ?
-							WHERE process_guid = ? AND instance_index = ?`,
+							UPDATE actual_lrps SET state = $1
+							WHERE process_guid = $2 AND instance_index = $3`,
 						models.ActualLRPStateCrashed,
 						expectedActualLRP.ProcessGuid,
 						expectedActualLRP.Index,
@@ -982,8 +982,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and the actual lrp is CRASHED", func() {
 					BeforeEach(func() {
 						_, err := db.Exec(`
-								UPDATE actual_lrps SET state = ?
-								WHERE process_guid = ? AND instance_index = ?`,
+								UPDATE actual_lrps SET state = $1
+								WHERE process_guid = $2 AND instance_index = $3`,
 							models.ActualLRPStateCrashed,
 							actualLRP.ProcessGuid,
 							actualLRP.Index,
@@ -1158,8 +1158,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and it should NOT be restarted", func() {
 					BeforeEach(func() {
 						_, err := db.Exec(`
-								UPDATE actual_lrps SET crash_count = ?
-								WHERE process_guid = ? AND instance_index = ?`,
+								UPDATE actual_lrps SET crash_count = $1
+								WHERE process_guid = $2 AND instance_index = $3`,
 							models.DefaultImmediateRestarts+1,
 							actualLRP.ProcessGuid,
 							actualLRP.Index,
@@ -1188,8 +1188,8 @@ var _ = Describe("ActualLRPDB", func() {
 					Context("and it has NOT been updated recently", func() {
 						BeforeEach(func() {
 							_, err := db.Exec(`
-								UPDATE actual_lrps SET since = ?
-								WHERE process_guid = ? AND instance_index = ?`,
+								UPDATE actual_lrps SET since = $1
+								WHERE process_guid = $2 AND instance_index = $3`,
 								fakeClock.Now().Add(-(models.CrashResetTimeout + 1*time.Second)).UnixNano(),
 								actualLRP.ProcessGuid,
 								actualLRP.Index,
@@ -1238,8 +1238,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and it should be restarted", func() {
 					BeforeEach(func() {
 						_, err := db.Exec(`
-								UPDATE actual_lrps SET crash_count = ?
-								WHERE process_guid = ? AND instance_index = ?`,
+								UPDATE actual_lrps SET crash_count = $1
+								WHERE process_guid = $2 AND instance_index = $3`,
 							models.DefaultImmediateRestarts-2,
 							actualLRP.ProcessGuid,
 							actualLRP.Index,
@@ -1269,8 +1269,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and it should NOT be restarted", func() {
 					BeforeEach(func() {
 						_, err := db.Exec(`
-								UPDATE actual_lrps SET crash_count = ?
-								WHERE process_guid = ? AND instance_index = ?`,
+								UPDATE actual_lrps SET crash_count = $1
+								WHERE process_guid = $2 AND instance_index = $3`,
 							models.DefaultImmediateRestarts+2,
 							actualLRP.ProcessGuid,
 							actualLRP.Index,

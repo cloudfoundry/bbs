@@ -20,7 +20,7 @@ import (
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 
 	"testing"
 )
@@ -56,14 +56,14 @@ var _ = BeforeSuite(func() {
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
-	db, err = sql.Open("mysql", "diego:diego_password@/")
+	db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
 	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
-	db, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/diego_%d", GinkgoParallelNode()))
+	db, err = sql.Open("postgres", fmt.Sprintf("postgres://diego:diego_pw@localhost/diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
@@ -117,9 +117,13 @@ var _ = AfterEach(func() {
 var _ = AfterSuite(func() {
 	if useSQL {
 		migrationProcess.Signal(os.Kill)
-		_, err := db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+		var err error
+		Expect(db.Close()).NotTo(HaveOccurred())
+		db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
 		Expect(err).NotTo(HaveOccurred())
-
+		Expect(db.Ping()).NotTo(HaveOccurred())
+		_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+		Expect(err).NotTo(HaveOccurred())
 		Expect(db.Close()).NotTo(HaveOccurred())
 	}
 })

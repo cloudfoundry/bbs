@@ -58,11 +58,13 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColum
 	if err != nil {
 		return db.convertSQLError(err)
 	}
+	defer rows.Next()
+
 	selectQuery := fmt.Sprintf(
-		"SELECT %s FROM %s WHERE %s = ? FOR UPDATE",
+		"SELECT %s FROM %s WHERE %s = $1 FOR UPDATE",
 		blobColumn, tableName, primaryKey)
 	updateQuery := fmt.Sprintf(
-		"UPDATE %s SET %s = ? WHERE %s = ?",
+		"UPDATE %s SET %s = $1 WHERE %s = $2",
 		tableName, blobColumn, primaryKey)
 	for rows.Next() {
 		var guid string
