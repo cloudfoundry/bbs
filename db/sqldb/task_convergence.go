@@ -61,7 +61,8 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 	tasksPruned += failedFetches
 	tasksKicked += uint64(len(tasksToComplete))
 
-	pendingCount, runningCount, completedCount, resolvingCount := db.countTasks(logger)
+	pendingCount, runningCount, completedCount, resolvingCount := db.countTasksByState(logger.Session("count-tasks"), db.db)
+
 	sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
 
 	tasksKickedCounter.Add(tasksKicked)
@@ -75,17 +76,21 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 
 	now := db.clock.Now()
 
-	result, err := db.db.Exec(`
-		UPDATE tasks
-		SET failed = ?, failure_reason = ?, result = ?, state = ?, first_completed_at = ?, updated_at = ?
-		WHERE state = ? AND created_at < ?
-		`,
-		true, "not started within time limit", "", models.Task_Completed, now.UnixNano(), now.UnixNano(),
-		models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
+	result, err := db.update(logger, db.db, tasksTable,
+		SQLAttributes{
+			"failed":             true,
+			"failure_reason":     "not started within time limit",
+			"result":             "",
+			"state":              models.Task_Completed,
+			"first_completed_at": now.UnixNano(),
+			"updated_at":         now.UnixNano(),
+		},
+		"state = ? AND created_at < ?", models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 		return 0
 	}
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		logger.Error("failed-rows-affected", err)
@@ -97,11 +102,11 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, kickTasksDuration, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
-	rows, err := db.db.Query(`
-		SELECT `+taskColumns+` FROM tasks
-		WHERE state = ? AND updated_at < ? AND created_at > ?
-		`,
-		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration).UnixNano(), db.clock.Now().Add(-expirePendingTaskDuration).UnixNano())
+	rows, err := db.all(logger, db.db, tasksTable,
+		taskColumns, NoLockRow,
+		"state = ? AND updated_at < ? AND created_at > ?",
+		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration).UnixNano(), db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
+	)
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -132,34 +137,36 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet models.CellSet) int64 {
 	logger = logger.Session("fail-tasks-with-disappeared-cells")
 
-	values := make([]interface{}, 0, 4+len(cellSet))
-	values = append(values,
-		true, "cell disappeared before completion", "", models.Task_Completed, db.clock.Now().UnixNano(), db.clock.Now().UnixNano(),
-		models.Task_Running)
+	values := make([]interface{}, 0, 1+len(cellSet))
+	values = append(values, models.Task_Running)
 
 	for k := range cellSet {
 		values = append(values, k)
 	}
 
-	query := `
-		UPDATE tasks
-		SET failed = ?, failure_reason = ?, result = ?, state = ?, first_completed_at = ?, updated_at = ?
-		WHERE state = ?`
-
+	wheres := "state = ?"
 	if len(cellSet) != 0 {
-		query = fmt.Sprintf(`%s AND cell_id NOT IN (%s)`,
-			query, strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ","))
+		cellSetArgs := make([]string, len(cellSet))
+		for i := 0; i < len(cellSet); i++ {
+			cellSetArgs[i] = fmt.Sprintf("$%d", i+8)
+		}
+		wheres += fmt.Sprintf(" AND cell_id NOT IN (%s)", strings.Join(cellSetArgs, ","))
 	}
+	now := db.clock.Now().UnixNano()
 
-	stmt, err := db.db.Prepare(query)
+	result, err := db.update(logger, db.db, tasksTable,
+		SQLAttributes{
+			"failed":             true,
+			"failure_reason":     "cell disappeared before completion",
+			"result":             "",
+			"state":              models.Task_Completed,
+			"first_completed_at": now,
+			"updated_at":         now,
+		},
+		wheres, values...,
+	)
 	if err != nil {
-		logger.Error("failed-preparing-statement", err)
-		return 0
-	}
-
-	result, err := stmt.Exec(values...)
-	if err != nil {
-		logger.Error("failed-query", err)
+		logger.Error("failed-updating-tasks", err)
 		return 0
 	}
 
@@ -174,27 +181,20 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 
 func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDuration time.Duration) {
 	logger = logger.Session("demote-kickable-resolving-tasks")
-
-	_, err := db.db.Exec(`
-		UPDATE tasks
-		SET state = ?
-		WHERE state = ? AND updated_at < ?
-		`,
-		models.Task_Completed,
-		models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano())
+	_, err := db.update(logger, db.db, tasksTable,
+		SQLAttributes{"state": models.Task_Completed},
+		"state = ? AND updated_at < ?",
+		models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
+	)
 	if err != nil {
-		logger.Error("failed-query", err)
+		logger.Error("failed-updating-tasks", err)
 	}
 }
 
 func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireCompletedTaskDuration time.Duration) int64 {
 	logger = logger.Session("delete-expired-completed-tasks")
 
-	result, err := db.db.Exec(`
-		DELETE FROM tasks
-		WHERE state = ? AND first_completed_at < ?
-		`,
-		models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano())
+	result, err := db.delete(logger, db.db, tasksTable, "state = ? AND first_completed_at < ?", models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 		return 0
@@ -212,11 +212,11 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
 	logger = logger.Session("get-kickable-complete-tasks-for-completion")
 
-	rows, err := db.db.Query(`
-		SELECT `+taskColumns+` FROM tasks
-		WHERE state = ? AND updated_at < ?
-		`,
-		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano())
+	rows, err := db.all(logger, db.db, tasksTable,
+		taskColumns, NoLockRow,
+		"state = ? AND updated_at < ?",
+		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
+	)
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -241,24 +241,6 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 	}
 
 	return tasksToComplete, failedFetches
-}
-
-func (db *SQLDB) countTasks(logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
-	logger = logger.Session("count-tasks")
-
-	row := db.db.QueryRow(`
-		SELECT
-			COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,
-			COUNT(IF(state = ?, 1, NULL)) AS running_tasks,
-			COUNT(IF(state = ?, 1, NULL)) AS completed_tasks,
-			COUNT(IF(state = ?, 1, NULL)) AS resolving_tasks
-		FROM tasks
-		`, models.Task_Pending, models.Task_Running, models.Task_Completed, models.Task_Resolving)
-	err := row.Scan(&pendingCount, &runningCount, &completedCount, &resolvingCount)
-	if err != nil {
-		logger.Error("failed-query", err)
-	}
-	return
 }
 
 func sendTaskMetrics(logger lager.Logger, pendingCount, runningCount, completedCount, resolvingCount int) {

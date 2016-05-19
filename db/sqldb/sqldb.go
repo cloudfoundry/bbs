@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/guidprovider"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
@@ -22,6 +23,7 @@ type SQLDB struct {
 	guidProvider           guidprovider.GUIDProvider
 	serializer             format.Serializer
 	cryptor                encryption.Cryptor
+	flavor                 string
 }
 
 type RowScanner interface {
@@ -48,6 +50,7 @@ func NewSQLDB(
 	cryptor encryption.Cryptor,
 	guidProvider guidprovider.GUIDProvider,
 	clock clock.Clock,
+	flavor string,
 ) *SQLDB {
 	return &SQLDB{
 		db: db,
@@ -58,19 +61,8 @@ func NewSQLDB(
 		guidProvider:           guidProvider,
 		serializer:             format.NewSerializer(cryptor),
 		cryptor:                cryptor,
+		flavor:                 flavor,
 	}
-}
-
-func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
-	_, err := db.db.Exec(`CREATE TABLE IF NOT EXISTS configurations(
-			id VARCHAR(255) PRIMARY KEY,
-			value VARCHAR(255)
-		);`)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx *sql.Tx) error) error {
@@ -126,6 +118,8 @@ func (db *SQLDB) convertSQLError(err error) *models.Error {
 		switch err.(type) {
 		case *mysql.MySQLError:
 			return db.convertMySQLError(err.(*mysql.MySQLError))
+		case *pq.Error:
+			return db.convertPostgresError(err.(*pq.Error))
 		}
 	}
 
@@ -140,6 +134,17 @@ func (db *SQLDB) convertMySQLError(err *mysql.MySQLError) *models.Error {
 		return models.ErrDeadlock
 	case 1406:
 		return models.ErrBadRequest
+	default:
+		return models.ErrUnknownError
+	}
+}
+
+func (db *SQLDB) convertPostgresError(err *pq.Error) *models.Error {
+	switch err.Code {
+	case "22001":
+		return models.ErrBadRequest
+	case "23505":
+		return models.ErrResourceExists
 	default:
 		return models.ErrUnknownError
 	}

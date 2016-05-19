@@ -149,11 +149,13 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 
 	logger.Info("creating-tables")
 	for _, query := range createTablesSQL {
+		logger.Info("creating the table", lager.Data{"query": query})
 		_, err := e.rawSQLDB.Exec(query)
 		if err != nil {
 			logger.Error("failed-creating-tables", err)
 			return err
 		}
+		logger.Info("created the table", lager.Data{"query": query})
 	}
 
 	if e.storeClient == nil {
@@ -339,9 +341,7 @@ func (e *ETCDToSQL) RequiresSQL() bool {
 
 const createDomainSQL = `CREATE TABLE IF NOT EXISTS domains(
 	domain VARCHAR(255) PRIMARY KEY,
-	expire_time BIGINT DEFAULT 0,
-
-	INDEX(expire_time)
+	expire_time BIGINT DEFAULT 0
 );`
 
 const createDesiredLRPsSQL = `CREATE TABLE IF NOT EXISTS desired_lrps(
@@ -353,13 +353,11 @@ const createDesiredLRPsSQL = `CREATE TABLE IF NOT EXISTS desired_lrps(
 	memory_mb INT NOT NULL,
 	disk_mb INT NOT NULL,
 	rootfs VARCHAR(255) NOT NULL,
-	routes BLOB NOT NULL,
-	volume_placement BLOB NOT NULL,
+	routes BYTEA NOT NULL,
+	volume_placement BYTEA NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
-	run_info BLOB NOT NULL,
-
-	INDEX(domain)
+	run_info BYTEA NOT NULL
 );`
 
 const createActualLRPsSQL = `CREATE TABLE IF NOT EXISTS actual_lrps(
@@ -368,23 +366,18 @@ const createActualLRPsSQL = `CREATE TABLE IF NOT EXISTS actual_lrps(
 	evacuating BOOL DEFAULT false,
 	domain VARCHAR(255) NOT NULL,
 	state VARCHAR(255) NOT NULL,
-	instance_guid VARCHAR(255) NOT NULL DEFAULT "",
-	cell_id VARCHAR(255) NOT NULL DEFAULT "",
-	placement_error VARCHAR(255) NOT NULL DEFAULT "",
+	instance_guid VARCHAR(255) NOT NULL DEFAULT '',
+	cell_id VARCHAR(255) NOT NULL DEFAULT '',
+	placement_error VARCHAR(255) NOT NULL DEFAULT '',
 	since BIGINT DEFAULT 0,
-	net_info BLOB NOT NULL,
+	net_info BYTEA NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
 	crash_count INT NOT NULL DEFAULT 0,
-	crash_reason VARCHAR(255) NOT NULL DEFAULT "",
+	crash_reason VARCHAR(255) NOT NULL DEFAULT '',
 	expire_time BIGINT DEFAULT 0,
 
-	PRIMARY KEY(process_guid, instance_index, evacuating),
-	INDEX(domain),
-	INDEX(cell_id),
-	INDEX(since),
-	INDEX(state),
-	INDEX(expire_time)
+	PRIMARY KEY(process_guid, instance_index, evacuating)
 );`
 
 const createTasksSQL = `CREATE TABLE IF NOT EXISTS tasks(
@@ -394,16 +387,9 @@ const createTasksSQL = `CREATE TABLE IF NOT EXISTS tasks(
 	created_at BIGINT DEFAULT 0,
 	first_completed_at BIGINT DEFAULT 0,
 	state INT,
-	cell_id VARCHAR(255) NOT NULL DEFAULT "",
+	cell_id VARCHAR(255) NOT NULL DEFAULT '',
 	result TEXT,
 	failed BOOL DEFAULT false,
-	failure_reason VARCHAR(255) NOT NULL DEFAULT "",
-	task_definition BLOB NOT NULL,
-
-	INDEX(domain),
-	INDEX(state),
-	INDEX(cell_id),
-	INDEX(updated_at),
-	INDEX(created_at),
-	INDEX(first_completed_at)
+	failure_reason VARCHAR(255) NOT NULL DEFAULT '',
+	task_definition BYTEA NOT NULL
 );`

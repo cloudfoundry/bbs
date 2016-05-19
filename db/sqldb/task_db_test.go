@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -35,8 +36,13 @@ var _ = Describe("TaskDB", func() {
 			It("persists the task", func() {
 				Expect(errDesire).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT * FROM tasks WHERE guid = ?", taskGuid)
+				queryStr := "SELECT * FROM tasks WHERE guid = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				rows, err := db.Query(queryStr, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 				Expect(rows.Next()).To(BeTrue())
 
 				var guid, domain, cellID, failureReason string
@@ -91,6 +97,7 @@ var _ = Describe("TaskDB", func() {
 
 				rows, err := db.Query("SELECT count(*) FROM tasks;")
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 				Expect(rows.Next()).To(BeTrue())
 
 				var count int
@@ -1018,11 +1025,15 @@ func insertTask(db *sql.DB, serializer format.Serializer, task *models.Task, mal
 		taskDefData = []byte("{{{{{{{{{{")
 	}
 
-	result, err := db.Exec(
-		`INSERT INTO tasks
+	queryStr := `INSERT INTO tasks
 						  (guid, domain, created_at, updated_at, first_completed_at, state,
 							cell_id, result, failed, failure_reason, task_definition)
-					    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	if test_helpers.UsePostgres() {
+		queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+	}
+	result, err := db.Exec(
+		queryStr,
 		task.TaskGuid,
 		task.Domain,
 		task.CreatedAt,

@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	"github.com/cloudfoundry/dropsonde/metrics"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -53,7 +54,11 @@ var _ = Describe("LRPConvergence", func() {
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(models.StaleUnclaimedActualLRPDuration)
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			queryStr := `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-missing-cell-actuals" + "-" + domain
@@ -65,7 +70,11 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "actual-with-missing-cell" + "-" + domain, CellId: "missing-cell"})
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-extra-actuals" + "-" + domain
@@ -82,7 +91,11 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 1, &models.ActualLRPInstanceKey{InstanceGuid: "extra-actual" + "-" + domain, CellId: "existing-cell"})
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-missing-all-actuals" + "-" + domain
@@ -91,7 +104,11 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRPWithMissingAllActuals.Instances = 1
 			err = sqlDB.DesireLRP(logger, desiredLRPWithMissingAllActuals)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-missing-some-actuals" + "-" + domain
@@ -104,7 +121,11 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 2, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-restartable-crashed-actuals" + "-" + domain
@@ -124,20 +145,32 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, _, err = sqlDB.CrashActualLRP(logger, crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, "because it failed")
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`
+			queryStr = `
 				UPDATE actual_lrps
 				SET state = ?
 				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
-			`, models.ActualLRPStateCrashed, processGuid, 0, false)
+			`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, models.ActualLRPStateCrashed, processGuid, 0, false)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "actual-with-no-desired" + "-" + domain
 			actualLRPWithNoDesired := &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPWithNoDesired)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 		}
 
@@ -197,11 +230,15 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, _, _, err = sqlDB.CrashActualLRP(logger, crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, "because it failed")
 		Expect(err).NotTo(HaveOccurred())
-		_, err = db.Exec(`
+		queryStr := `
 			UPDATE actual_lrps
 			SET crash_count = ?, state = ?
 			WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
-			`, models.DefaultMaxRestarts+1, models.ActualLRPStateCrashed, processGuid, 0, false)
+			`
+		if test_helpers.UsePostgres() {
+			queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+		}
+		_, err = db.Exec(queryStr, models.DefaultMaxRestarts+1, models.ActualLRPStateCrashed, processGuid, 0, false)
 		Expect(err).NotTo(HaveOccurred())
 		crashedActualLRPKey = &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain}
 		_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey)
@@ -214,17 +251,25 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, _, _, err = sqlDB.CrashActualLRP(logger, crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, "because it failed")
 		Expect(err).NotTo(HaveOccurred())
-		_, err = db.Exec(`
+		queryStr = `
 			UPDATE actual_lrps
 			SET crash_count = ?, state = ?
 			WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
-			`, models.DefaultMaxRestarts+1, models.ActualLRPStateCrashed, processGuid, 1, false)
+			`
+		if test_helpers.UsePostgres() {
+			queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+		}
+		_, err = db.Exec(queryStr, models.DefaultMaxRestarts+1, models.ActualLRPStateCrashed, processGuid, 1, false)
 		Expect(err).NotTo(HaveOccurred())
 
 		processGuid = "expired-evacuating-actual-lrp"
 		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
 		Expect(err).NotTo(HaveOccurred())
-		_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ?`, true, fakeClock.Now().UnixNano(), processGuid)
+		queryStr = `UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ?`
+		if test_helpers.UsePostgres() {
+			queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+		}
+		_, err = db.Exec(queryStr, true, fakeClock.Now().UnixNano(), processGuid)
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeClock.Increment(1 * time.Second)

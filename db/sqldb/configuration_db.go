@@ -6,12 +6,9 @@ import (
 )
 
 func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
-	_, err := db.db.Exec(
-		`INSERT INTO configurations (id, value) VALUES (?, ?)
-										ON DUPLICATE KEY UPDATE value = ?`,
-		key,
-		value,
-		value,
+	_, err := db.upsert(logger, db.db, "configurations",
+		SQLAttributes{"id": key},
+		SQLAttributes{"value": value},
 	)
 	if err != nil {
 		logger.Error("failed-setting-config-value", err, lager.Data{"key": key})
@@ -23,9 +20,9 @@ func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) e
 
 func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string, error) {
 	var value string
-	err := db.db.QueryRow(
-		"SELECT value FROM configurations WHERE id = ?",
-		key,
+	err := db.one(logger, db.db, "configurations",
+		ColumnList{"value"}, NoLockRow,
+		"id = ?", key,
 	).Scan(&value)
 	if err != nil {
 		logger.Error("failed-fetching-config-value", err, lager.Data{"key": key})

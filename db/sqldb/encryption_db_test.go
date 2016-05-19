@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 )
 
 var _ = Describe("Encryption", func() {
@@ -20,8 +21,13 @@ var _ = Describe("Encryption", func() {
 			err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
 			Expect(err).NotTo(HaveOccurred())
 
-			rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyID)
+			queryStr := `SELECT value FROM configurations WHERE id = ?`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			rows, err := db.Query(queryStr, sqldb.EncryptionKeyID)
 			Expect(err).NotTo(HaveOccurred())
+			defer rows.Close()
 			Expect(rows.Next()).To(BeTrue())
 			var label string
 			err = rows.Scan(&label)
@@ -49,8 +55,13 @@ var _ = Describe("Encryption", func() {
 				err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = ?", sqldb.EncryptionKeyID)
+				queryStr := "SELECT value FROM configurations WHERE id = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				rows, err := db.Query(queryStr, sqldb.EncryptionKeyID)
 				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
 				Expect(rows.Next()).To(BeTrue())
 				var label string
 				err = rows.Scan(&label)
@@ -72,7 +83,11 @@ var _ = Describe("Encryption", func() {
 		Context("when the encription key label key exists", func() {
 			It("retrieves the encrption key label from the database", func() {
 				label := "expectedLabel"
-				_, err := db.Exec("INSERT INTO configurations VALUES (?, ?)", sqldb.EncryptionKeyID, label)
+				queryStr := "INSERT INTO configurations VALUES (?, ?)"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr, sqldb.EncryptionKeyID, label)
 				Expect(err).NotTo(HaveOccurred())
 
 				keyLabel, err := sqlDB.EncryptionKeyLabel(logger)
@@ -137,28 +152,39 @@ var _ = Describe("Encryption", func() {
 			encoded4, err := encoder.Encode(format.BASE64_ENCRYPTED, value4)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = db.Exec("INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)", taskGuid, "fake-domain", encoded1)
+			queryStr := "INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, taskGuid, "fake-domain", encoded1)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = db.Exec(`
+			queryStr = `
 				INSERT INTO desired_lrps
 					(process_guid, domain, log_guid, instances, run_info, memory_mb,
 					disk_mb, rootfs, routes, volume_placement, modification_tag_epoch)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				processGuid, "fake-domain", "some-log-guid", 1, encoded2, 10, 10,
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, processGuid, "fake-domain", "some-log-guid", 1, encoded2, 10, 10,
 				"some-root-fs", []byte("{}"), encoded3, 10)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = db.Exec(`
+			queryStr = `
 				INSERT INTO actual_lrps
 					(process_guid, domain, net_info, instance_index, modification_tag_epoch, state)
-				VALUES (?, ?, ?, ?, ?, ?)`,
+				VALUES (?, ?, ?, ?, ?, ?)`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr,
 				processGuid, "fake-domain", encoded4, 0, 10, "yo")
 			Expect(err).NotTo(HaveOccurred())
 
 			cryptor = makeCryptor("new", "old")
 
-			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock)
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, sqldb.Postgres)
 			err = sqlDB.PerformEncryption(logger)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -166,7 +192,11 @@ var _ = Describe("Encryption", func() {
 			encoder = format.NewEncoder(cryptor)
 
 			var result []byte
-			row := db.QueryRow("SELECT task_definition FROM tasks WHERE guid = ?", taskGuid)
+			queryStr = "SELECT task_definition FROM tasks WHERE guid = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			row := db.QueryRow(queryStr, taskGuid)
 			err = row.Scan(&result)
 			Expect(err).NotTo(HaveOccurred())
 			decrypted1, err := encoder.Decode(result)
@@ -174,7 +204,11 @@ var _ = Describe("Encryption", func() {
 			Expect(decrypted1).To(Equal(value1))
 
 			var runInfo, volumePlacement []byte
-			row = db.QueryRow("SELECT run_info, volume_placement FROM desired_lrps WHERE process_guid = ?", processGuid)
+			queryStr = "SELECT run_info, volume_placement FROM desired_lrps WHERE process_guid = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			row = db.QueryRow(queryStr, processGuid)
 			err = row.Scan(&runInfo, &volumePlacement)
 			Expect(err).NotTo(HaveOccurred())
 			decrypted2, err := encoder.Decode(runInfo)
@@ -185,7 +219,11 @@ var _ = Describe("Encryption", func() {
 			Expect(decrypted3).To(Equal(value3))
 
 			var netInfo []byte
-			row = db.QueryRow("SELECT net_info FROM actual_lrps WHERE process_guid = ?", processGuid)
+			queryStr = "SELECT net_info FROM actual_lrps WHERE process_guid = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			row = db.QueryRow(queryStr, processGuid)
 			err = row.Scan(&netInfo)
 			Expect(err).NotTo(HaveOccurred())
 			decrypted4, err := encoder.Decode(netInfo)
@@ -206,12 +244,16 @@ var _ = Describe("Encryption", func() {
 			encoded1, err := encoder.Encode(format.BASE64_ENCRYPTED, value1)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = db.Exec("INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)", taskGuid, "fake-domain", encoded1)
+			queryStr := "INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, taskGuid, "fake-domain", encoded1)
 			Expect(err).NotTo(HaveOccurred())
 
 			cryptor = makeCryptor("new", "old")
 
-			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock)
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, sqldb.Postgres)
 			err = sqlDB.PerformEncryption(logger)
 			Expect(err).NotTo(HaveOccurred())
 		})

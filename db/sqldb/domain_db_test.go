@@ -4,6 +4,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -13,17 +14,22 @@ var _ = Describe("DomainDB", func() {
 		Context("when there are domains in the DB", func() {
 			BeforeEach(func() {
 				futureTime := fakeClock.Now().Add(5 * time.Second).UnixNano()
-				_, err := db.Exec("INSERT INTO domains VALUES (?, ?)", "jims-domain", futureTime)
+
+				queryStr := "INSERT INTO domains VALUES (?, ?)"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr, "jims-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec("INSERT INTO domains VALUES (?, ?)", "amelias-domain", futureTime)
+				_, err = db.Exec(queryStr, "amelias-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
 				pastTime := fakeClock.Now().Add(-5 * time.Second).UnixNano()
-				_, err = db.Exec("INSERT INTO domains VALUES (?, ?)", "past-domain", pastTime)
+				_, err = db.Exec(queryStr, "past-domain", pastTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec("INSERT INTO domains VALUES (?, ?)", "current-domain", fakeClock.Now().Round(time.Second).UnixNano())
+				_, err = db.Exec(queryStr, "current-domain", fakeClock.Now().Round(time.Second).UnixNano())
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -74,7 +80,7 @@ var _ = Describe("DomainDB", func() {
 				bbsErr := sqlDB.UpsertDomain(logger, domain, 0)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT * FROM domains;")
+				rows, err := db.Query("SELECT * FROM domains")
 				Expect(err).NotTo(HaveOccurred())
 				defer rows.Close()
 
@@ -113,6 +119,8 @@ var _ = Describe("DomainDB", func() {
 
 				rowsCount, err := db.Query("SELECT COUNT(*) FROM domains;")
 				Expect(err).NotTo(HaveOccurred())
+				defer rowsCount.Close()
+
 				Expect(rowsCount.Next()).To(BeTrue())
 				var domainCount int
 				err = rowsCount.Scan(&domainCount)
