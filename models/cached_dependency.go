@@ -1,6 +1,10 @@
 package models
 
-import "github.com/cloudfoundry-incubator/bbs/format"
+import (
+	"strings"
+
+	"github.com/cloudfoundry-incubator/bbs/format"
+)
 
 func (a *CachedDependency) Validate() error {
 	var validationError ValidationError
@@ -11,6 +15,20 @@ func (a *CachedDependency) Validate() error {
 
 	if a.GetTo() == "" {
 		validationError = validationError.Append(ErrInvalidField{"to"})
+	}
+
+	if a.GetChecksumValue() != "" && a.GetChecksumAlgorithm() == "" {
+		validationError = validationError.Append(ErrInvalidField{"checksum algorithm"})
+	}
+
+	if a.GetChecksumValue() == "" && a.GetChecksumAlgorithm() != "" {
+		validationError = validationError.Append(ErrInvalidField{"checksum value"})
+	}
+
+	if a.GetChecksumValue() != "" && a.GetChecksumAlgorithm() != "" {
+		if !contains([]string{"md5", "sha1", "sha256"}, strings.ToLower(a.GetChecksumAlgorithm())) {
+			validationError = validationError.Append(ErrInvalidField{"invalid algorithm"})
+		}
 	}
 
 	if !validationError.Empty() {

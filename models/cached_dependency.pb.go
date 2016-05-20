@@ -23,11 +23,13 @@ var _ = proto.Marshal
 var _ = math.Inf
 
 type CachedDependency struct {
-	Name      string `protobuf:"bytes,1,opt,name=name" json:"name"`
-	From      string `protobuf:"bytes,2,opt,name=from" json:"from"`
-	To        string `protobuf:"bytes,3,opt,name=to" json:"to"`
-	CacheKey  string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key"`
-	LogSource string `protobuf:"bytes,5,opt,name=log_source" json:"log_source"`
+	Name              string `protobuf:"bytes,1,opt,name=name" json:"name"`
+	From              string `protobuf:"bytes,2,opt,name=from" json:"from"`
+	To                string `protobuf:"bytes,3,opt,name=to" json:"to"`
+	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key"`
+	LogSource         string `protobuf:"bytes,5,opt,name=log_source" json:"log_source"`
+	ChecksumAlgorithm string `protobuf:"bytes,6,opt,name=checksum_algorithm" json:"checksum_algorithm,omitempty"`
+	ChecksumValue     string `protobuf:"bytes,7,opt,name=checksum_value" json:"checksum_value,omitempty"`
 }
 
 func (m *CachedDependency) Reset()      { *m = CachedDependency{} }
@@ -68,6 +70,20 @@ func (m *CachedDependency) GetLogSource() string {
 	return ""
 }
 
+func (m *CachedDependency) GetChecksumAlgorithm() string {
+	if m != nil {
+		return m.ChecksumAlgorithm
+	}
+	return ""
+}
+
+func (m *CachedDependency) GetChecksumValue() string {
+	if m != nil {
+		return m.ChecksumValue
+	}
+	return ""
+}
+
 func (this *CachedDependency) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -103,6 +119,12 @@ func (this *CachedDependency) Equal(that interface{}) bool {
 	if this.LogSource != that1.LogSource {
 		return false
 	}
+	if this.ChecksumAlgorithm != that1.ChecksumAlgorithm {
+		return false
+	}
+	if this.ChecksumValue != that1.ChecksumValue {
+		return false
+	}
 	return true
 }
 func (this *CachedDependency) GoString() string {
@@ -114,7 +136,9 @@ func (this *CachedDependency) GoString() string {
 		`From:` + fmt.Sprintf("%#v", this.From),
 		`To:` + fmt.Sprintf("%#v", this.To),
 		`CacheKey:` + fmt.Sprintf("%#v", this.CacheKey),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
+		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
+		`ChecksumAlgorithm:` + fmt.Sprintf("%#v", this.ChecksumAlgorithm),
+		`ChecksumValue:` + fmt.Sprintf("%#v", this.ChecksumValue) + `}`}, ", ")
 	return s
 }
 func valueToGoStringCachedDependency(v interface{}, typ string) string {
@@ -177,6 +201,14 @@ func (m *CachedDependency) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintCachedDependency(data, i, uint64(len(m.LogSource)))
 	i += copy(data[i:], m.LogSource)
+	data[i] = 0x32
+	i++
+	i = encodeVarintCachedDependency(data, i, uint64(len(m.ChecksumAlgorithm)))
+	i += copy(data[i:], m.ChecksumAlgorithm)
+	data[i] = 0x3a
+	i++
+	i = encodeVarintCachedDependency(data, i, uint64(len(m.ChecksumValue)))
+	i += copy(data[i:], m.ChecksumValue)
 	return i, nil
 }
 
@@ -220,6 +252,10 @@ func (m *CachedDependency) Size() (n int) {
 	n += 1 + l + sovCachedDependency(uint64(l))
 	l = len(m.LogSource)
 	n += 1 + l + sovCachedDependency(uint64(l))
+	l = len(m.ChecksumAlgorithm)
+	n += 1 + l + sovCachedDependency(uint64(l))
+	l = len(m.ChecksumValue)
+	n += 1 + l + sovCachedDependency(uint64(l))
 	return n
 }
 
@@ -246,6 +282,8 @@ func (this *CachedDependency) String() string {
 		`To:` + fmt.Sprintf("%v", this.To) + `,`,
 		`CacheKey:` + fmt.Sprintf("%v", this.CacheKey) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
+		`ChecksumAlgorithm:` + fmt.Sprintf("%v", this.ChecksumAlgorithm) + `,`,
+		`ChecksumValue:` + fmt.Sprintf("%v", this.ChecksumValue) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -401,6 +439,56 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChecksumAlgorithm", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthCachedDependency
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChecksumAlgorithm = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChecksumValue", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthCachedDependency
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChecksumValue = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

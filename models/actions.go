@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/format"
@@ -78,11 +79,34 @@ func (a DownloadAction) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"user"})
 	}
 
+	if a.GetChecksumValue() != "" && a.GetChecksumAlgorithm() == "" {
+		validationError = validationError.Append(ErrInvalidField{"checksum algorithm"})
+	}
+
+	if a.GetChecksumValue() == "" && a.GetChecksumAlgorithm() != "" {
+		validationError = validationError.Append(ErrInvalidField{"checksum value"})
+	}
+
+	if a.GetChecksumValue() != "" && a.GetChecksumAlgorithm() != "" {
+		if !contains([]string{"md5", "sha1", "sha256"}, strings.ToLower(a.GetChecksumAlgorithm())) {
+			validationError = validationError.Append(ErrInvalidField{"invalid algorithm"})
+		}
+	}
+
 	if !validationError.Empty() {
 		return validationError
 	}
 
 	return nil
+}
+
+func contains(array []string, element string) bool {
+	for _, item := range array {
+		if item == element {
+			return true
+		}
+	}
+	return false
 }
 
 // func (*UploadAction) Version() format.Version {

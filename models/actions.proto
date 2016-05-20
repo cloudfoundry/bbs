@@ -27,7 +27,9 @@ message DownloadAction {
   optional string cache_key = 4;
   optional string log_source = 5 [(gogoproto.jsontag) = "log_source,omitempty"];
   optional string user = 6;
-}
+  optional string checksum_algorithm = 7 [(gogoproto.jsontag) = "checksum_algorithm,omitempty"];
+  optional string checksum_value = 8 [(gogoproto.jsontag) = "checksum_value,omitempty"];
+} 
 
 message UploadAction {
   optional string artifact = 1 [ (gogoproto.jsontag) = "artifact,omitempty"];
