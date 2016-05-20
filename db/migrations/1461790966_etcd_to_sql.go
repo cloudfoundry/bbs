@@ -137,6 +137,8 @@ func truncateTables(db *sql.DB) error {
 }
 
 func (e *ETCDToSQL) Up(logger lager.Logger) error {
+	logger = logger.Session("etcd-to-sql")
+	logger.Info("tuncating-tables")
 	truncateTables(e.rawSQLDB)
 	var createTablesSQL = []string{
 		createDomainSQL,
@@ -144,17 +146,22 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		createActualLRPsSQL,
 		createTasksSQL,
 	}
+
+	logger.Info("creating-tables")
 	for _, query := range createTablesSQL {
 		_, err := e.rawSQLDB.Exec(query)
 		if err != nil {
+			logger.Error("failed-creating-tables", err)
 			return err
 		}
 	}
 
 	if e.storeClient == nil {
+		logger.Info("skipping-migration-because-no-etcd-configured")
 		return nil
 	}
 
+	logger.Info("migrating-domains")
 	response, err := e.storeClient.Get(etcd.DomainSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-domains", err)
@@ -177,6 +184,7 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
+	logger.Info("migrating-desired-lrp-scheduling-infos")
 	response, err = e.storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp-scheduling-infos", err)
@@ -196,6 +204,7 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
+	logger.Info("migrating-desired-lrp-run-infos")
 	response, err = e.storeClient.Get(etcd.DesiredLRPRunInfoSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp-run-infos", err)
@@ -235,6 +244,7 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
+	logger.Info("migrating-actual-lrps")
 	response, err = e.storeClient.Get(etcd.ActualLRPSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrps", err)
@@ -277,6 +287,7 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
+	logger.Info("migrating-tasks")
 	response, err = e.storeClient.Get(etcd.TaskSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)

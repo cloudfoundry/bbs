@@ -45,6 +45,7 @@ var (
 	client              bbs.InternalClient
 	bbsBinPath          string
 	bbsAddress          string
+	bbsHealthAddress    string
 	bbsPort             int
 	bbsURL              *url.URL
 	bbsArgs             testrunner.Args
@@ -122,8 +123,9 @@ var _ = BeforeEach(func() {
 	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
 	auctioneerServer.AllowUnhandledRequests = true
 
-	bbsPort = 6700 + GinkgoParallelNode()
+	bbsPort = 6700 + GinkgoParallelNode()*2
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", bbsPort)
+	bbsHealthAddress = fmt.Sprintf("127.0.0.1:%d", bbsPort+1)
 
 	bbsURL = &url.URL{
 		Scheme: "http",
@@ -162,6 +164,8 @@ var _ = BeforeEach(func() {
 		DropsondePort:         port,
 		EtcdCluster:           etcdUrl,
 		MetricsReportInterval: 10 * time.Millisecond,
+
+		HealthAddress: bbsHealthAddress,
 
 		EncryptionKeys: []string{"label:key"},
 		ActiveKeyLabel: "label",

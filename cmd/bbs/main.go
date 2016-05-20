@@ -79,6 +79,12 @@ var keyFile = flag.String(
 	"the private key file to use with ssl authentication",
 )
 
+var healthAddress = flag.String(
+	"healthAddress",
+	"",
+	"The host:port that the healthcheck server is bound to.",
+)
+
 var advertiseURL = flag.String(
 	"advertiseURL",
 	"",
@@ -221,6 +227,15 @@ func main() {
 		logger.Fatal("failed-invalid-listen-port", err)
 	}
 
+	_, portString, err = net.SplitHostPort(*healthAddress)
+	if err != nil {
+		logger.Fatal("failed-invalid-health-address", err)
+	}
+	_, err = net.LookupPort("tcp", portString)
+	if err != nil {
+		logger.Fatal("failed-invalid-health-port", err)
+	}
+
 	registrationRunner := initializeRegistrationRunner(logger, consulClient, portNum, clock)
 
 	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
@@ -352,7 +367,10 @@ func main() {
 		server = http_server.New(*listenAddress, handler)
 	}
 
+	healthcheckServer := http_server.New(*healthAddress, http.HandlerFunc(healthCheckHandler))
+
 	members := grouper.Members{
+		{"healthcheck", healthcheckServer},
 		{"lock-maintainer", maintainer},
 		{"workpool", cbWorkPool},
 		{"server", server},
@@ -382,6 +400,10 @@ func main() {
 	}
 
 	logger.Info("exited")
+}
+
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 func hubMaintainer(logger lager.Logger, desiredHub, actualHub events.Hub) ifrit.RunFunc {
