@@ -21,6 +21,8 @@ type Args struct {
 	EtcdCluster                string
 	EtcdMaxIdleConnsPerHost    int
 
+	HealthAddress string
+
 	DatabaseConnectionString string
 	DatabaseDriver           string
 
@@ -49,6 +51,7 @@ func (args Args) ArgSlice() []string {
 		"-etcdMaxIdleConnsPerHost", strconv.Itoa(args.EtcdMaxIdleConnsPerHost),
 		"-databaseConnectionString", args.DatabaseConnectionString,
 		"-databaseDriver", args.DatabaseDriver,
+		"-healthAddress", args.HealthAddress,
 		"-listenAddress", args.Address,
 		"-logLevel", "debug",
 		"-metricsReportInterval", args.MetricsReportInterval.String(),

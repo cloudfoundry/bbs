@@ -45,6 +45,7 @@ var (
 	client              bbs.InternalClient
 	bbsBinPath          string
 	bbsAddress          string
+	bbsHealthAddress    string
 	bbsPort             int
 	bbsURL              *url.URL
 	bbsArgs             testrunner.Args
@@ -124,6 +125,7 @@ var _ = BeforeEach(func() {
 
 	bbsPort = 6700 + GinkgoParallelNode()
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", bbsPort)
+	bbsHealthAddress = fmt.Sprintf("127.0.0.1:%d", bbsPort+1)
 
 	bbsURL = &url.URL{
 		Scheme: "http",

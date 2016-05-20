@@ -167,7 +167,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				currentMigration.SetRawSQLDB(m.rawSQLDB)
 				currentMigration.SetClock(m.clock)
 
-				err = currentMigration.Up(m.logger)
+				err = currentMigration.Up(m.logger.Session("migration"))
 				if err != nil {
 					return err
 				}
