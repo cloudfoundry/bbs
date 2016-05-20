@@ -139,12 +139,14 @@ func (m *Action) GetCodependentAction() *CodependentAction {
 }
 
 type DownloadAction struct {
-	Artifact  string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
-	From      string `protobuf:"bytes,2,opt,name=from" json:"from"`
-	To        string `protobuf:"bytes,3,opt,name=to" json:"to"`
-	CacheKey  string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key"`
-	LogSource string `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
-	User      string `protobuf:"bytes,6,opt,name=user" json:"user"`
+	Artifact          string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
+	From              string `protobuf:"bytes,2,opt,name=from" json:"from"`
+	To                string `protobuf:"bytes,3,opt,name=to" json:"to"`
+	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key"`
+	LogSource         string `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
+	User              string `protobuf:"bytes,6,opt,name=user" json:"user"`
+	ChecksumAlgorithm string `protobuf:"bytes,7,opt,name=checksum_algorithm" json:"checksum_algorithm,omitempty"`
+	ChecksumValue     string `protobuf:"bytes,8,opt,name=checksum_value" json:"checksum_value,omitempty"`
 }
 
 func (m *DownloadAction) Reset()      { *m = DownloadAction{} }
@@ -188,6 +190,20 @@ func (m *DownloadAction) GetLogSource() string {
 func (m *DownloadAction) GetUser() string {
 	if m != nil {
 		return m.User
+	}
+	return ""
+}
+
+func (m *DownloadAction) GetChecksumAlgorithm() string {
+	if m != nil {
+		return m.ChecksumAlgorithm
+	}
+	return ""
+}
+
+func (m *DownloadAction) GetChecksumValue() string {
+	if m != nil {
+		return m.ChecksumValue
 	}
 	return ""
 }
@@ -581,6 +597,12 @@ func (this *DownloadAction) Equal(that interface{}) bool {
 	if this.User != that1.User {
 		return false
 	}
+	if this.ChecksumAlgorithm != that1.ChecksumAlgorithm {
+		return false
+	}
+	if this.ChecksumValue != that1.ChecksumValue {
+		return false
+	}
 	return true
 }
 func (this *UploadAction) Equal(that interface{}) bool {
@@ -931,7 +953,9 @@ func (this *DownloadAction) GoString() string {
 		`To:` + fmt.Sprintf("%#v", this.To),
 		`CacheKey:` + fmt.Sprintf("%#v", this.CacheKey),
 		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`User:` + fmt.Sprintf("%#v", this.User) + `}`}, ", ")
+		`User:` + fmt.Sprintf("%#v", this.User),
+		`ChecksumAlgorithm:` + fmt.Sprintf("%#v", this.ChecksumAlgorithm),
+		`ChecksumValue:` + fmt.Sprintf("%#v", this.ChecksumValue) + `}`}, ", ")
 	return s
 }
 func (this *UploadAction) GoString() string {
@@ -1200,6 +1224,14 @@ func (m *DownloadAction) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintActions(data, i, uint64(len(m.User)))
 	i += copy(data[i:], m.User)
+	data[i] = 0x3a
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.ChecksumAlgorithm)))
+	i += copy(data[i:], m.ChecksumAlgorithm)
+	data[i] = 0x42
+	i++
+	i = encodeVarintActions(data, i, uint64(len(m.ChecksumValue)))
+	i += copy(data[i:], m.ChecksumValue)
 	return i, nil
 }
 
@@ -1643,6 +1675,10 @@ func (m *DownloadAction) Size() (n int) {
 	n += 1 + l + sovActions(uint64(l))
 	l = len(m.User)
 	n += 1 + l + sovActions(uint64(l))
+	l = len(m.ChecksumAlgorithm)
+	n += 1 + l + sovActions(uint64(l))
+	l = len(m.ChecksumValue)
+	n += 1 + l + sovActions(uint64(l))
 	return n
 }
 
@@ -1830,6 +1866,8 @@ func (this *DownloadAction) String() string {
 		`CacheKey:` + fmt.Sprintf("%v", this.CacheKey) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
 		`User:` + fmt.Sprintf("%v", this.User) + `,`,
+		`ChecksumAlgorithm:` + fmt.Sprintf("%v", this.ChecksumAlgorithm) + `,`,
+		`ChecksumValue:` + fmt.Sprintf("%v", this.ChecksumValue) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2493,6 +2531,56 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.User = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChecksumAlgorithm", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthActions
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChecksumAlgorithm = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChecksumValue", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthActions
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChecksumValue = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

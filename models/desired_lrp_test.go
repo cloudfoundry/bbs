@@ -29,7 +29,9 @@ var _ = Describe("DesiredLRP", func() {
               "from": "http://file-server.service.cf.internal:8080/v1/static/buildpack_app_lifecycle/buildpack_app_lifecycle.tgz",
               "to": "/tmp/lifecycle",
               "cache_key": "buildpack-cflinuxfs2-lifecycle",
-							"user": "someone"
+							"user": "someone",
+							"checksum_algorithm": "md5",
+							"checksum_value": "some random value"
             }
           },
           {
@@ -706,6 +708,31 @@ var _ = Describe("DesiredLRP", func() {
 					},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "legacy_download_user")
+			})
+
+			It("requires a valid checksum algorithm", func() {
+				desiredLRP.CachedDependencies = []*models.CachedDependency{
+					{
+						To:                "here",
+						From:              "there",
+						ChecksumAlgorithm: "wrong algorithm",
+						ChecksumValue:     "sum value",
+					},
+				}
+				desiredLRP.LegacyDownloadUser = "user"
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "invalid algorithm")
+			})
+
+			It("requires a valid checksum value", func() {
+				desiredLRP.CachedDependencies = []*models.CachedDependency{
+					{
+						To:                "here",
+						From:              "there",
+						ChecksumAlgorithm: "md5",
+					},
+				}
+				desiredLRP.LegacyDownloadUser = "user"
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "value")
 			})
 		})
 	})

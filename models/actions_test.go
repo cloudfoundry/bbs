@@ -92,62 +92,142 @@ var _ = Describe("Actions", func() {
 	})
 
 	Describe("Download", func() {
-		itSerializesAndDeserializes(
-			`{
+		var downloadAction *models.DownloadAction
+
+		Context("with checksum algorithm and value missing", func() {
+			itSerializesAndDeserializes(
+				`{
 					"artifact": "mouse",
 					"from": "web_location",
 					"to": "local_location",
 					"cache_key": "elephant",
 					"user": "someone"
 			}`,
-			models.WrapAction(&models.DownloadAction{
-				Artifact: "mouse",
-				From:     "web_location",
-				To:       "local_location",
-				CacheKey: "elephant",
-				User:     "someone",
-			}),
-		)
+				models.WrapAction(&models.DownloadAction{
+					Artifact: "mouse",
+					From:     "web_location",
+					To:       "local_location",
+					CacheKey: "elephant",
+					User:     "someone",
+				}),
+			)
 
-		Describe("Validate", func() {
-			var downloadAction *models.DownloadAction
+			Describe("Validate", func() {
 
-			Context("when the action has 'from', 'to', and 'user' specified", func() {
-				It("is valid", func() {
+				Context("when the action has 'from', 'to', and 'user' specified", func() {
+					It("is valid", func() {
+						downloadAction = &models.DownloadAction{
+							From: "web_location",
+							To:   "local_location",
+							User: "someone",
+						}
+
+						err := downloadAction.Validate()
+						Expect(err).NotTo(HaveOccurred())
+					})
+				})
+
+				for _, testCase := range []ValidatorErrorCase{
+					{
+						"from",
+						&models.DownloadAction{
+							To: "local_location",
+						},
+					},
+					{
+						"to",
+						&models.DownloadAction{
+							From: "web_location",
+						},
+					},
+					{
+						"user",
+						&models.DownloadAction{
+							From: "web_location",
+							To:   "local_location",
+						},
+					},
+				} {
+					testValidatorErrorCase(testCase)
+				}
+			})
+		})
+
+		Context("with checksum algorithm / value", func() {
+			itSerializesAndDeserializes(
+				`{
+					"artifact": "mouse",
+					"from": "web_location",
+					"to": "local_location",
+					"cache_key": "elephant",
+					"user": "someone",
+					"checksum_algorithm": "md5",
+					"checksum_value": "some checksum"
+			}`,
+				models.WrapAction(&models.DownloadAction{
+					Artifact:          "mouse",
+					From:              "web_location",
+					To:                "local_location",
+					CacheKey:          "elephant",
+					User:              "someone",
+					ChecksumAlgorithm: "md5",
+					ChecksumValue:     "some checksum",
+				}),
+			)
+
+			Describe("Validate", func() {
+				BeforeEach(func() {
 					downloadAction = &models.DownloadAction{
-						From: "web_location",
-						To:   "local_location",
-						User: "someone",
+						From:              "web_location",
+						To:                "local_location",
+						User:              "someone",
+						ChecksumAlgorithm: "md5",
+						ChecksumValue:     "some checksum",
 					}
+				})
 
+				It("is valid", func() {
 					err := downloadAction.Validate()
 					Expect(err).NotTo(HaveOccurred())
 				})
-			})
 
-			for _, testCase := range []ValidatorErrorCase{
-				{
-					"from",
-					&models.DownloadAction{
-						To: "local_location",
-					},
-				},
-				{
-					"to",
-					&models.DownloadAction{
-						From: "web_location",
-					},
-				},
-				{
-					"user",
-					&models.DownloadAction{
-						From: "web_location",
-						To:   "local_location",
-					},
-				},
-			} {
-				testValidatorErrorCase(testCase)
-			}
+				Context("with checksum", func() {
+					for _, testCase := range []ValidatorErrorCase{
+						ValidatorErrorCase{
+							"checksum value",
+							&models.DownloadAction{
+								From:              "web_location",
+								To:                "local_location",
+								User:              "someone",
+								ChecksumAlgorithm: "md5",
+								ChecksumValue:     "",
+							},
+						},
+						ValidatorErrorCase{
+							"checksum algorithm",
+							&models.DownloadAction{
+								From:              "web_location",
+								To:                "local_location",
+								User:              "someone",
+								ChecksumAlgorithm: "",
+								ChecksumValue:     "some checksum",
+							},
+						},
+						ValidatorErrorCase{
+							"invalid algorithm",
+							&models.DownloadAction{
+								From:              "web_location",
+								To:                "local_location",
+								User:              "someone",
+								ChecksumAlgorithm: "invlalid-alg",
+								ChecksumValue:     "some checksum",
+							},
+						},
+					} {
+						testValidatorErrorCase(testCase)
+					}
+				})
+			})
 		})
 	})
 

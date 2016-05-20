@@ -96,6 +96,8 @@ action := &models.DownloadAction{
   Artifact: "download name",
   CacheKey: "some-cache-key",
   LogSource: "some-log-source",
+  ChecksumAlgorithm: "md5",
+  ChecksumValue = "some-checksum-value",
 }
 ```
 
@@ -131,6 +133,13 @@ If specified, the Diego cell will cache the downloaded asset. Its cached-downloa
 If provided, logs emitted by this action will be tagged with the provided
 `LogSource`.  Otherwise the container-level `LogSource` is used.
 
+#### `ChecksumAlgorithm` [optional]
+
+If provided, the ChecksumValue must also be set.  It defines the checksum algorithm used to validate downloaded contents.  Must be one of `md5`, `sha1`, or `sha256`
+
+#### `ChecksumValue` [optional]
+
+If provided, the ChecksumAlgorithm must also be set.  It provides the checksum to validate against.
 
 ## `UploadAction`
 

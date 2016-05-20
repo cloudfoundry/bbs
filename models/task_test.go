@@ -33,7 +33,9 @@ var _ = Describe("Task", func() {
 				"from":"old_location",
 				"to":"new_location",
 				"cache_key":"the-cache-key",
-				"user":"someone"
+				"user":"someone",
+				"checksum_algorithm": "md5",
+				"checksum_value": "some value"
 			}
 		},
 		"result_file":"some-file.txt",
@@ -88,10 +90,12 @@ var _ = Describe("Task", func() {
 					},
 				},
 				Action: models.WrapAction(&models.DownloadAction{
-					From:     "old_location",
-					To:       "new_location",
-					CacheKey: "the-cache-key",
-					User:     "someone",
+					From:              "old_location",
+					To:                "new_location",
+					CacheKey:          "the-cache-key",
+					User:              "someone",
+					ChecksumAlgorithm: "md5",
+					ChecksumValue:     "some value",
 				}),
 				MemoryMb:    256,
 				DiskMb:      1024,
@@ -495,6 +499,24 @@ var _ = Describe("Task", func() {
 						CachedDependencies: []*models.CachedDependency{
 							{
 								To: "here",
+							},
+						},
+					},
+				},
+			},
+			{
+				"invalid algorithm",
+				&models.Task{
+					TaskGuid: "guid-1",
+					Domain:   "some-domain",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some-rootfs",
+						CachedDependencies: []*models.CachedDependency{
+							{
+								To:                "here",
+								From:              "there",
+								ChecksumAlgorithm: "wrong algorithm",
+								ChecksumValue:     "some value",
 							},
 						},
 					},

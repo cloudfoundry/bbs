@@ -22,6 +22,8 @@ err := client.DesireTask(
         To: "/usr/local/app",
         CacheKey: "cache-key",
         LogSource: "log-source",
+        ChecksumAlgorithm: "md5",
+        ChecksumValue: "the-checksum",
       },
     },
     Action: models.WrapAction(&models.RunAction{
@@ -141,9 +143,13 @@ CachedDependencies: []*models.CachedDependency{
     To: "/usr/local/app",
     CacheKey: "cache-key",
     LogSource: "log-source",
+    ChecksumAlgorithm: "md5",
+    ChecksumValue: "the-checksum",
   },
 },
 ```
+
+The `ChecksumAlgorithm` and `ChecksumValue` are optional and used to validate the downloaded binary.  They must be used together.
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
