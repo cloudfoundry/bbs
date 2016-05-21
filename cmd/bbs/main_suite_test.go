@@ -164,8 +164,7 @@ var _ = BeforeEach(func() {
 		DropsondePort:         port,
 		EtcdCluster:           etcdUrl,
 		MetricsReportInterval: 10 * time.Millisecond,
-
-		HealthAddress: bbsHealthAddress,
+		HealthAddress:         bbsHealthAddress,
 
 		EncryptionKeys: []string{"label:key"},
 		ActiveKeyLabel: "label",

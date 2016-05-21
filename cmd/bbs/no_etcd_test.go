@@ -21,6 +21,7 @@ var _ = Describe("BBS With Only SQL", func() {
 
 			bbsArgs = testrunner.Args{
 				Address:               bbsAddress,
+				HealthAddress:         bbsHealthAddress,
 				AdvertiseURL:          bbsURL.String(),
 				AuctioneerAddress:     auctioneerServer.URL(),
 				ConsulCluster:         consulRunner.ConsulCluster(),
