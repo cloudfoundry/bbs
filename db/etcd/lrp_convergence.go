@@ -109,7 +109,6 @@ func (lmc LRPMetricCounter) Send(logger lager.Logger) {
 
 func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error) {
 	guids := map[string]struct{}{}
-
 	// always fetch actualLRPs before desiredLRPs to ensure correctness
 	logger.Debug("gathering-and-pruning-actual-lrps")
 	lrpMetricCounter := &LRPMetricCounter{}
@@ -206,6 +205,15 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 				for _, actualNode := range indexGroup.Nodes {
 					actual := new(models.ActualLRP)
 					err := db.deserializeModel(logger, actualNode, actual)
+					if err != nil {
+						actualsToDeleteLock.Lock()
+						actualsToDelete = append(actualsToDelete, actualNode.Key)
+						actualsToDeleteLock.Unlock()
+
+						continue
+					}
+
+					err = actual.Validate()
 					if err != nil {
 						actualsToDeleteLock.Lock()
 						actualsToDelete = append(actualsToDelete, actualNode.Key)
@@ -333,8 +341,8 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 	schedulingInfos := map[string]*models.DesiredLRPSchedulingInfo{}
 	runInfos := map[string]*models.DesiredLRPRunInfo{}
 
-	var malformedSchedulingInfos int32
-	var malformedRunInfos int32
+	var malformedSchedulingInfos, malformedRunInfos []string
+
 	var guidsLock, schedulingInfosLock, runInfosLock sync.Mutex
 
 	works := []func(){}
@@ -348,9 +356,11 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 				works = append(works, func() {
 					var schedulingInfo models.DesiredLRPSchedulingInfo
 					err := db.deserializeModel(logger, node, &schedulingInfo)
-					if err != nil {
+					if err != nil || schedulingInfo.Validate() != nil {
 						logger.Error("failed-to-deserialize-scheduling-info", err)
-						atomic.AddInt32(&malformedSchedulingInfos, 1)
+						schedulingInfosLock.Lock()
+						malformedSchedulingInfos = append(malformedSchedulingInfos, node.Key)
+						schedulingInfosLock.Unlock()
 					} else {
 						schedulingInfosLock.Lock()
 						schedulingInfos[schedulingInfo.ProcessGuid] = &schedulingInfo
@@ -369,9 +379,10 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 				works = append(works, func() {
 					var runInfo models.DesiredLRPRunInfo
 					err := db.deserializeModel(logger, node, &runInfo)
-					if err != nil {
-						logger.Error("failed-to-deserialize-run-info", err)
-						atomic.AddInt32(&malformedRunInfos, 1)
+					if err != nil || runInfo.Validate() != nil {
+						runInfosLock.Lock()
+						malformedRunInfos = append(malformedRunInfos, node.Key)
+						runInfosLock.Unlock()
 					} else {
 						runInfosLock.Lock()
 						runInfos[runInfo.ProcessGuid] = &runInfo
@@ -393,8 +404,11 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 
 	throttler.Work()
 
-	malformedSchedulingInfosMetric.Add(uint64(malformedSchedulingInfos))
-	malformedRunInfosMetric.Add(uint64(malformedRunInfos))
+	db.batchDeleteNodes(malformedSchedulingInfos, logger)
+	db.batchDeleteNodes(malformedRunInfos, logger)
+
+	malformedSchedulingInfosMetric.Add(uint64(len(malformedSchedulingInfos)))
+	malformedRunInfosMetric.Add(uint64(len(malformedRunInfos)))
 
 	logger.Debug("done-walking-desired-lrp-tree")
 

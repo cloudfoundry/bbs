@@ -43,10 +43,6 @@ func validateCachedDependencies(
 	return validationError
 }
 
-func (c *CachedDependency) MigrateFromVersion(v format.Version) error {
-	return nil
-}
-
 func (c *CachedDependency) Version() format.Version {
 	return format.V0
 }

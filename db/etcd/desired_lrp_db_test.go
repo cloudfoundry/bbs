@@ -480,28 +480,6 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 		})
 
-		Context("When the updates are invalid", func() {
-			It("instances cannot be less than zero", func() {
-				instances := int32(-1)
-
-				update := &models.DesiredLRPUpdate{
-					Instances: &instances,
-				}
-
-				desiredBeforeUpdate, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = etcdDB.UpdateDesiredLRP(logger, lrp.ProcessGuid, update)
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("instances"))
-
-				desiredAfterUpdate, err := etcdDB.DesiredLRPByProcessGuid(logger, lrp.ProcessGuid)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(desiredAfterUpdate).To(Equal(desiredBeforeUpdate))
-			})
-		})
-
 		Context("When the LRP does not exist", func() {
 			It("returns an ErrorKeyNotFound", func() {
 				instances := int32(0)

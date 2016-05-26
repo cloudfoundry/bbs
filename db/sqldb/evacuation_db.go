@@ -75,7 +75,6 @@ func (db *SQLDB) EvacuateActualLRP(
 			actualLRP.Index,
 			true,
 		)
-
 		if err != nil {
 			logger.Error("failed-update-evacuating-lrp", err)
 			return db.convertSQLError(err)

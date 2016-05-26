@@ -50,6 +50,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 		response.Error = models.ConvertError(err)
 		return
 	}
+
 	before, after, err := h.db.ClaimActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
 	if err != nil {
 		response.Error = models.ConvertError(err)

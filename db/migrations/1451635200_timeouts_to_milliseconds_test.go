@@ -57,10 +57,8 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 	})
 
 	Describe("Up", func() {
-
 		var (
-			taskGuid string
-
+			taskGuid     string
 			migrationErr error
 		)
 
@@ -77,7 +75,6 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 				oldTask := model_helpers.NewValidTask(taskGuid)
 				oldTask.Action = models.WrapAction(&models.TimeoutAction{Action: model_helpers.NewValidAction(),
 					DeprecatedTimeoutNs: 5 * int64(time.Second),
-					TimeoutMs:           99999, // this must be set to pass validation on marshalling
 				})
 
 				taskData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, oldTask)
@@ -106,18 +103,15 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 				desiredLRP.DeprecatedStartTimeoutS = 15
 				desiredLRP.Action = models.WrapAction(&models.TimeoutAction{Action: models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 					DeprecatedTimeoutNs: 4 * int64(time.Second),
-					TimeoutMs:           99999, // this must be set to pass validation on marshalling
 				})
 
 				desiredLRP.Setup = models.WrapAction(&models.TimeoutAction{Action: models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 					DeprecatedTimeoutNs: 7 * int64(time.Second),
-					TimeoutMs:           99999, // this must be set to pass validation on marshalling
 				})
 				desiredLRP.Monitor = models.WrapAction(models.EmitProgressFor(
 					&models.TimeoutAction{
 						Action:              models.WrapAction(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"})))),
 						DeprecatedTimeoutNs: 10 * int64(time.Second),
-						TimeoutMs:           99999, // this must be set to pass validation on marshalling
 					},
 					"start-message",
 					"success-message",

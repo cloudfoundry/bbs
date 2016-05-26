@@ -137,17 +137,6 @@ var _ = Describe("Evacuation", func() {
 					actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
 					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
 				})
-
-				Context("with an invalid net info", func() {
-					BeforeEach(func() {
-						actualLRP.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
-					})
-
-					It("returns an error", func() {
-						_, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-						Expect(err).To(HaveOccurred())
-					})
-				})
 			})
 
 			Context("because the record has expired", func() {
@@ -172,17 +161,6 @@ var _ = Describe("Evacuation", func() {
 
 					actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
 					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
-				})
-
-				Context("with an invalid net info", func() {
-					BeforeEach(func() {
-						actualLRP.ActualLRPNetInfo = models.EmptyActualLRPNetInfo()
-					})
-
-					It("returns an error", func() {
-						_, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-						Expect(err).To(HaveOccurred())
-					})
 				})
 			})
 		})

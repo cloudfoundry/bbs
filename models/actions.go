@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/cloudfoundry-incubator/bbs/format"
 )
 
 const (
@@ -27,14 +25,6 @@ type ActionInterface interface {
 	Validate() error
 }
 
-// func (*Action) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*Action) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
-
 func (a *Action) Validate() error {
 	if a == nil {
 		return nil
@@ -50,14 +40,6 @@ func (a *Action) Validate() error {
 	}
 	return nil
 }
-
-// func (*DownloadAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*DownloadAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
 
 func (a *DownloadAction) ActionType() string {
 	return ActionTypeDownload
@@ -85,14 +67,6 @@ func (a DownloadAction) Validate() error {
 	return nil
 }
 
-// func (*UploadAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*UploadAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
-
 func (a *UploadAction) ActionType() string {
 	return ActionTypeUpload
 }
@@ -119,14 +93,6 @@ func (a UploadAction) Validate() error {
 	return nil
 }
 
-// func (*RunAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*RunAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
-
 func (a *RunAction) ActionType() string {
 	return ActionTypeRun
 }
@@ -148,14 +114,6 @@ func (a RunAction) Validate() error {
 
 	return nil
 }
-
-// func (*TimeoutAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*TimeoutAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
 
 func (a *TimeoutAction) ActionType() string {
 	return ActionTypeTimeout
@@ -184,14 +142,6 @@ func (a TimeoutAction) Validate() error {
 	return nil
 }
 
-// func (*TryAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*TryAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
-
 func (a *TryAction) ActionType() string {
 	return ActionTypeTry
 }
@@ -214,14 +164,6 @@ func (a TryAction) Validate() error {
 
 	return nil
 }
-
-func (*ParallelAction) Version() format.Version {
-	return format.V0
-}
-
-// func (*ParallelAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
 
 func (a *ParallelAction) ActionType() string {
 	return ActionTypeParallel
@@ -253,14 +195,6 @@ func (a ParallelAction) Validate() error {
 	return nil
 }
 
-// func (*CodependentAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*CodependentAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
-
 func (a *CodependentAction) ActionType() string {
 	return ActionTypeCodependent
 }
@@ -291,14 +225,6 @@ func (a CodependentAction) Validate() error {
 	return nil
 }
 
-// func (*SerialAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*SerialAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
-
 func (a *SerialAction) ActionType() string {
 	return ActionTypeSerial
 }
@@ -328,14 +254,6 @@ func (a SerialAction) Validate() error {
 
 	return nil
 }
-
-// func (*EmitProgressAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*EmitProgressAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
 
 func (a *EmitProgressAction) ActionType() string {
 	return ActionTypeEmitProgress

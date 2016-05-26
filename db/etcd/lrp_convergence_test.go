@@ -811,14 +811,52 @@ var _ = Describe("LRPConvergence", func() {
 
 	Context("when the desired LRP has malformed JSON", func() {
 		const processGuid = "bogus-desired"
+
 		BeforeEach(func() {
 			etcdHelper.CreateMalformedDesiredLRP(processGuid)
-
 			etcdDB.ConvergeLRPs(logger, models.CellSet{})
 		})
 
 		It("logs", func() {
 			Expect(logger.TestSink).To(gbytes.Say("failed-to-deserialize-scheduling-info"))
+		})
+	})
+
+	Context("when the desired LRP has invalid data", func() {
+		BeforeEach(func() {
+			desiredLRP := model_helpers.NewValidDesiredLRP("process-guid")
+			desiredLRP.Instances = -1
+			desiredLRP.CpuWeight = 666
+
+			etcdHelper.SetRawDesiredLRP(desiredLRP)
+			clock.Increment(10000 * time.Second)
+			etcdDB.ConvergeLRPs(logger, models.CellSet{})
+		})
+
+		It("deletes the invalid scheduling info and run info", func() {
+			_, err := storeClient.Get(etcd.DesiredLRPRunInfoSchemaPath("process-guid"), false, false)
+			Expect(err).To(HaveOccurred())
+
+			_, err = storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaPath("process-guid"), false, false)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("when the acutal LRP has invalid data", func() {
+		BeforeEach(func() {
+			desiredLRP := model_helpers.NewValidDesiredLRP("process-guid")
+			etcdHelper.SetRawDesiredLRP(desiredLRP)
+
+			actualLRP := model_helpers.NewValidActualLRP("process-guid", 9)
+			actualLRP.Since = 0
+			etcdHelper.SetRawActualLRP(actualLRP)
+
+			etcdDB.ConvergeLRPs(logger, models.CellSet{})
+		})
+
+		It("deletes the invalid scheduling info and run info", func() {
+			_, err := storeClient.Get(etcd.ActualLRPSchemaPath("process-guid", 9), false, false)
+			Expect(err).To(HaveOccurred())
 		})
 	})
 

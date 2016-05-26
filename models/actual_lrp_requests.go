@@ -54,6 +54,26 @@ func (request *RemoveActualLRPRequest) Validate() error {
 	return nil
 }
 
+func (request *ClaimActualLRPRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ProcessGuid == "" {
+		validationError = validationError.Append(ErrInvalidField{"process_guid"})
+	}
+
+	if request.ActualLrpInstanceKey == nil {
+		validationError = validationError.Append(ErrInvalidField{"actual_lrp_instance_key"})
+	} else if err := request.ActualLrpInstanceKey.Validate(); err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
 func (request *StartActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -72,26 +92,6 @@ func (request *StartActualLRPRequest) Validate() error {
 	if request.ActualLrpNetInfo == nil {
 		validationError = validationError.Append(ErrInvalidField{"actual_lrp_net_info"})
 	} else if err := request.ActualLrpNetInfo.Validate(); err != nil {
-		validationError = validationError.Append(err)
-	}
-
-	if !validationError.Empty() {
-		return validationError
-	}
-
-	return nil
-}
-
-func (request *ClaimActualLRPRequest) Validate() error {
-	var validationError ValidationError
-
-	if request.ProcessGuid == "" {
-		validationError = validationError.Append(ErrInvalidField{"process_guid"})
-	}
-
-	if request.ActualLrpInstanceKey == nil {
-		validationError = validationError.Append(ErrInvalidField{"actual_lrp_instance_key"})
-	} else if err := request.ActualLrpInstanceKey.Validate(); err != nil {
 		validationError = validationError.Append(err)
 	}
 

@@ -119,10 +119,6 @@ func (*DesiredLRP) Version() format.Version {
 	return format.V2
 }
 
-func (d *DesiredLRP) MigrateFromVersion(v format.Version) error {
-	return nil
-}
-
 func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 	switch v {
 
@@ -382,10 +378,6 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 	return format.V0
 }
 
-func (*DesiredLRPSchedulingInfo) MigrateFromVersion(v format.Version) error {
-	return nil
-}
-
 func (s DesiredLRPSchedulingInfo) Validate() error {
 	var ve ValidationError
 
@@ -503,8 +495,4 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 func (*DesiredLRPRunInfo) Version() format.Version {
 	return format.V0
-}
-
-func (*DesiredLRPRunInfo) MigrateFromVersion(v format.Version) error {
-	return nil
 }

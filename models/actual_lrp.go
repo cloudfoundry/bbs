@@ -59,10 +59,6 @@ func (*ActualLRPNetInfo) Version() format.Version {
 	return format.V0
 }
 
-func (*ActualLRPNetInfo) MigrateFromVersion(v format.Version) error {
-	return nil
-}
-
 func NewPortMapping(hostPort, containerPort uint32) *PortMapping {
 	return &PortMapping{
 		HostPort:      hostPort,
@@ -197,10 +193,6 @@ func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, 
 
 func (*ActualLRP) Version() format.Version {
 	return format.V0
-}
-
-func (*ActualLRP) MigrateFromVersion(v format.Version) error {
-	return nil
 }
 
 func (actual ActualLRP) Validate() error {

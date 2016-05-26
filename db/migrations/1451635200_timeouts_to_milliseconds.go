@@ -64,7 +64,6 @@ func (b *TimeoutToMilliseconds) Up(logger lager.Logger) error {
 			if err != nil {
 				return err
 			}
-
 		}
 	}
 
@@ -97,7 +96,6 @@ func (b *TimeoutToMilliseconds) Up(logger lager.Logger) error {
 			if err != nil {
 				return err
 			}
-
 		}
 	}
 

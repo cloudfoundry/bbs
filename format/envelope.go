@@ -21,7 +21,7 @@ const (
 const EnvelopeOffset int = 2
 
 func UnmarshalEnvelope(logger lager.Logger, unencodedPayload []byte, model Versioner) error {
-	envelopeFormat, version := EnvelopeMetadataFromPayload(unencodedPayload)
+	envelopeFormat, _ := EnvelopeMetadataFromPayload(unencodedPayload)
 
 	var err error
 	switch envelopeFormat {
@@ -40,22 +40,7 @@ func UnmarshalEnvelope(logger lager.Logger, unencodedPayload []byte, model Versi
 		logger.Error("cannot-unmarshal-unknown-serialization-format", err)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	err = model.MigrateFromVersion(version)
-	if err != nil {
-		logger.Error("failed-to-migrate", err)
-		return err
-	}
-
-	err = model.Validate()
-	if err != nil {
-		logger.Error("invalid-record", err)
-		return err
-	}
-	return nil
+	return err
 }
 
 func MarshalEnvelope(format EnvelopeFormat, model Versioner) ([]byte, error) {
@@ -126,12 +111,6 @@ func UnmarshalJSON(logger lager.Logger, marshaledPayload []byte, model Versioner
 }
 
 func MarshalJSON(v Versioner) ([]byte, error) {
-	if !isNil(v) {
-		if err := v.Validate(); err != nil {
-			return nil, err
-		}
-	}
-
 	bytes, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
@@ -150,12 +129,6 @@ func UnmarshalProto(logger lager.Logger, marshaledPayload []byte, model ProtoVer
 }
 
 func MarshalProto(v ProtoVersioner) ([]byte, error) {
-	if !isNil(v) {
-		if err := v.Validate(); err != nil {
-			return nil, err
-		}
-	}
-
 	bytes, err := proto.Marshal(v)
 	if err != nil {
 		return nil, err

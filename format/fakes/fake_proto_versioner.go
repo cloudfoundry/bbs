@@ -17,28 +17,20 @@ type FakeProtoVersioner struct {
 	stringReturns     struct {
 		result1 string
 	}
-	ProtoMessageStub              func()
-	protoMessageMutex             sync.RWMutex
-	protoMessageArgsForCall       []struct{}
-	MigrateFromVersionStub        func(v format.Version) error
-	migrateFromVersionMutex       sync.RWMutex
-	migrateFromVersionArgsForCall []struct {
-		v format.Version
-	}
-	migrateFromVersionReturns struct {
-		result1 error
+	ProtoMessageStub        func()
+	protoMessageMutex       sync.RWMutex
+	protoMessageArgsForCall []struct{}
+	VersionStub             func() format.Version
+	versionMutex            sync.RWMutex
+	versionArgsForCall      []struct{}
+	versionReturns          struct {
+		result1 format.Version
 	}
 	ValidateStub        func() error
 	validateMutex       sync.RWMutex
 	validateArgsForCall []struct{}
 	validateReturns     struct {
 		result1 error
-	}
-	VersionStub        func() format.Version
-	versionMutex       sync.RWMutex
-	versionArgsForCall []struct{}
-	versionReturns     struct {
-		result1 format.Version
 	}
 }
 
@@ -96,35 +88,27 @@ func (fake *FakeProtoVersioner) ProtoMessageCallCount() int {
 	return len(fake.protoMessageArgsForCall)
 }
 
-func (fake *FakeProtoVersioner) MigrateFromVersion(v format.Version) error {
-	fake.migrateFromVersionMutex.Lock()
-	fake.migrateFromVersionArgsForCall = append(fake.migrateFromVersionArgsForCall, struct {
-		v format.Version
-	}{v})
-	fake.migrateFromVersionMutex.Unlock()
-	if fake.MigrateFromVersionStub != nil {
-		return fake.MigrateFromVersionStub(v)
+func (fake *FakeProtoVersioner) Version() format.Version {
+	fake.versionMutex.Lock()
+	fake.versionArgsForCall = append(fake.versionArgsForCall, struct{}{})
+	fake.versionMutex.Unlock()
+	if fake.VersionStub != nil {
+		return fake.VersionStub()
 	} else {
-		return fake.migrateFromVersionReturns.result1
+		return fake.versionReturns.result1
 	}
 }
 
-func (fake *FakeProtoVersioner) MigrateFromVersionCallCount() int {
-	fake.migrateFromVersionMutex.RLock()
-	defer fake.migrateFromVersionMutex.RUnlock()
-	return len(fake.migrateFromVersionArgsForCall)
+func (fake *FakeProtoVersioner) VersionCallCount() int {
+	fake.versionMutex.RLock()
+	defer fake.versionMutex.RUnlock()
+	return len(fake.versionArgsForCall)
 }
 
-func (fake *FakeProtoVersioner) MigrateFromVersionArgsForCall(i int) format.Version {
-	fake.migrateFromVersionMutex.RLock()
-	defer fake.migrateFromVersionMutex.RUnlock()
-	return fake.migrateFromVersionArgsForCall[i].v
-}
-
-func (fake *FakeProtoVersioner) MigrateFromVersionReturns(result1 error) {
-	fake.MigrateFromVersionStub = nil
-	fake.migrateFromVersionReturns = struct {
-		result1 error
+func (fake *FakeProtoVersioner) VersionReturns(result1 format.Version) {
+	fake.VersionStub = nil
+	fake.versionReturns = struct {
+		result1 format.Version
 	}{result1}
 }
 
@@ -149,30 +133,6 @@ func (fake *FakeProtoVersioner) ValidateReturns(result1 error) {
 	fake.ValidateStub = nil
 	fake.validateReturns = struct {
 		result1 error
-	}{result1}
-}
-
-func (fake *FakeProtoVersioner) Version() format.Version {
-	fake.versionMutex.Lock()
-	fake.versionArgsForCall = append(fake.versionArgsForCall, struct{}{})
-	fake.versionMutex.Unlock()
-	if fake.VersionStub != nil {
-		return fake.VersionStub()
-	} else {
-		return fake.versionReturns.result1
-	}
-}
-
-func (fake *FakeProtoVersioner) VersionCallCount() int {
-	fake.versionMutex.RLock()
-	defer fake.versionMutex.RUnlock()
-	return len(fake.versionArgsForCall)
-}
-
-func (fake *FakeProtoVersioner) VersionReturns(result1 format.Version) {
-	fake.VersionStub = nil
-	fake.versionReturns = struct {
-		result1 format.Version
 	}{result1}
 }
 

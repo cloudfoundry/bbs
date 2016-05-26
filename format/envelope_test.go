@@ -1,8 +1,6 @@
 package format_test
 
 import (
-	"errors"
-
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/format/fakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -40,16 +38,6 @@ var _ = Describe("Envelope", func() {
 			_, err := format.MarshalEnvelope(format.PROTO, model)
 			Expect(err).To(MatchError("Model object incompatible with envelope format"))
 		})
-
-		Context("when model validation fails", func() {
-			It("returns an error ", func() {
-				model := &fakes.FakeVersioner{}
-				model.ValidateReturns(errors.New("go away"))
-
-				_, err := format.MarshalEnvelope(format.PROTO, model)
-				Expect(err).To(HaveOccurred())
-			})
-		})
 	})
 
 	Describe("Unmarshal", func() {
@@ -63,16 +51,6 @@ var _ = Describe("Envelope", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(*resultingTask).To(BeEquivalentTo(*task))
-		})
-
-		It("calls MigrateFromVersion on on the model object with the envelope version", func() {
-			model := &fakes.FakeVersioner{}
-			payload := []byte{byte(format.JSON), byte(format.V0), '{', '}'}
-
-			err := format.UnmarshalEnvelope(logger, payload, model)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(model.MigrateFromVersionCallCount()).To(Equal(1))
-			Expect(model.MigrateFromVersionArgsForCall(0)).To(Equal(format.V0))
 		})
 
 		It("returns an error when the serialization format is unknown", func() {

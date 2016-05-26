@@ -87,6 +87,23 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 		})
 
+		Context("when a Task is invalid", func() {
+			BeforeEach(func() {
+				task := model_helpers.NewValidTask(taskGuid)
+				task.Domain = ""
+				etcdHelper.SetRawTask(task)
+			})
+
+			It("should delete it", func() {
+				_, modelErr := etcdDB.TaskByGuid(logger, taskGuid)
+				Expect(modelErr).To(BeEquivalentTo(models.ErrResourceNotFound))
+			})
+
+			It("bumps the pruned counter", func() {
+				Expect(sender.GetCounter("ConvergenceTasksPruned")).To(Equal(uint64(1)))
+			})
+		})
+
 		Context("when Tasks are pending", func() {
 			BeforeEach(func() {
 				expectedTasks := []*models.Task{

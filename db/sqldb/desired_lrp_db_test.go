@@ -27,19 +27,6 @@ var _ = Describe("DesiredLRPDB", func() {
 			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
 		})
 
-		Context("when serializing the run information fails", func() {
-			BeforeEach(func() {
-				expectedDesiredLRP.CpuWeight = 1000
-			})
-
-			It("returns a bad request error", func() {
-				err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
-				modelErr := models.ConvertError(err)
-				Expect(modelErr).NotTo(BeNil())
-				Expect(modelErr.Type).To(Equal(models.Error_InvalidRecord))
-			})
-		})
-
 		Context("when the process_guid is already taken", func() {
 			BeforeEach(func() {
 				err := sqlDB.DesireLRP(logger, expectedDesiredLRP)

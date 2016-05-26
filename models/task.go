@@ -25,10 +25,6 @@ func (t *Task) Version() format.Version {
 	return format.V1
 }
 
-func (t *Task) MigrateFromVersion(v format.Version) error {
-	return nil
-}
-
 func (t *Task) LagerData() lager.Data {
 	return lager.Data{
 		"task-guid": t.TaskGuid,
@@ -187,8 +183,4 @@ func (def *TaskDefinition) Validate() error {
 
 func (t *TaskDefinition) Version() format.Version {
 	return format.V2
-}
-
-func (t *TaskDefinition) MigrateFromVersion(v format.Version) error {
-	return nil
 }
