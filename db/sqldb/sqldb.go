@@ -37,7 +37,6 @@ type Queryable interface {
 
 const (
 	NoLock = iota
-	LockForShare
 	LockForUpdate
 )
 

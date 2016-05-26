@@ -539,6 +539,11 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 	return &actualLRP, evacuating, nil
 }
 
+type actualToDelete struct {
+	*models.ActualLRP
+	evacuating bool
+}
+
 func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions map[whereClause]interface{}, lockMode int) ([]*models.ActualLRPGroup, error) {
 	wheres := []string{}
 	values := []interface{}{}
@@ -561,8 +566,6 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 		query += fmt.Sprintf("WHERE %s\n", strings.Join(wheres, " AND "))
 	}
 	switch lockMode {
-	case LockForShare:
-		query += "LOCK IN SHARE MODE\n"
 	case LockForUpdate:
 		query += "FOR UPDATE\n"
 	}
@@ -576,16 +579,11 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 
 	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
 	result := []*models.ActualLRPGroup{}
+	actualsToDelete := []*actualToDelete{}
 	for rows.Next() {
 		actualLRP, evacuating, err := db.scanToActualLRP(logger, rows)
-		if err == models.ErrDeserialize && lockMode != LockForShare {
-			_, err := q.Exec(`
-				DELETE FROM actual_lrps
-				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
-				`, actualLRP.ProcessGuid, actualLRP.Index, evacuating)
-			if err != nil {
-				logger.Error("failed-cleaning-up-invalid-actual-lrp", err)
-			}
+		if err == models.ErrDeserialize {
+			actualsToDelete = append(actualsToDelete, &actualToDelete{actualLRP, evacuating})
 			continue
 		}
 
@@ -612,6 +610,16 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 	if rows.Err() != nil {
 		logger.Error("failed-getting-next-row", rows.Err())
 		return nil, db.convertSQLError(rows.Err())
+	}
+
+	for _, actual := range actualsToDelete {
+		_, err := q.Exec(`
+				DELETE FROM actual_lrps
+				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+				`, actual.ProcessGuid, actual.Index, actual.evacuating)
+		if err != nil {
+			logger.Error("failed-cleaning-up-invalid-actual-lrp", err)
+		}
 	}
 
 	return result, nil

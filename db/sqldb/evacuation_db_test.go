@@ -186,9 +186,19 @@ var _ = Describe("Evacuation", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("returns an error", func() {
-				_, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-				Expect(err).To(HaveOccurred())
+			It("removes the invalid record and inserts a replacement", func() {
+				group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).NotTo(HaveOccurred())
+
+				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(group).To(BeEquivalentTo(actualLRPGroup))
+
+				Expect(actualLRPGroup.Evacuating.ModificationTag.Epoch).NotTo(BeNil())
+				Expect(actualLRPGroup.Evacuating.ModificationTag.Index).To(BeEquivalentTo((0)))
+
+				actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
+				Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
 			})
 		})
 	})

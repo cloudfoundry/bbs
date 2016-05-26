@@ -338,8 +338,6 @@ func (db *SQLDB) selectDesiredLRPByGuid(logger lager.Logger, processGuid string,
 		WHERE process_guid = ?
 	`
 	switch lockMode {
-	case LockForShare:
-		query += "LOCK IN SHARE MODE\n"
 	case LockForUpdate:
 		query += "FOR UPDATE\n"
 	}
