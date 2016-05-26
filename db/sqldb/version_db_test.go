@@ -42,7 +42,7 @@ var _ = Describe("Version", func() {
 				versionJSON, err := json.Marshal(existingVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				result, err := db.Exec(`
+				_, err = db.Exec(`
 				  INSERT INTO configurations (id, value) VALUES ($1, $2)
 					  ON CONFLICT (id) DO UPDATE SET value = $3`, sqldb.VersionID, versionJSON, versionJSON)
 				Expect(err).NotTo(HaveOccurred())

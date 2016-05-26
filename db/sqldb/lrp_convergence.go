@@ -418,6 +418,7 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
+	fmt.Printf("\n\n\n DELETING FROM ACTUALS YO 5\n\n\n\n")
 	_, err := db.db.Exec(`
 		DELETE FROM actual_lrps
 		WHERE evacuating = ? AND expire_time <= ?

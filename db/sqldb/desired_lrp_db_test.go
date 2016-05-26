@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("DesiredLRPDB", func() {
+var _ = Describe("DesiredLRPDB", func() {
 	Describe("DesireLRP", func() {
 		var expectedDesiredLRP *models.DesiredLRP
 

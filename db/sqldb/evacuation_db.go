@@ -2,6 +2,7 @@ package sqldb
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -60,9 +61,9 @@ func (db *SQLDB) EvacuateActualLRP(
 		}
 
 		_, err = tx.Exec(`
-					UPDATE actual_lrps SET domain = ?, instance_guid = ?, cell_id = ?, net_info = ?,
-					  state = ?, since = ?, modification_tag_index = ?
-					  WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+					UPDATE actual_lrps SET domain = $1, instance_guid = $2, cell_id = $3, net_info = $4,
+					  state = $5, since = $6, modification_tag_index = $7
+					  WHERE process_guid = $8 AND instance_index = $9 AND evacuating = $10
 				`,
 			actualLRP.Domain,
 			actualLRP.InstanceGuid,
@@ -111,9 +112,10 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
+		fmt.Printf("\n\n\n DELETING FROM ACTUALS YO 4\n\n\n\n")
 		_, err = tx.Exec(`
 				DELETE FROM actual_lrps
-					WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+					WHERE process_guid = $1 AND instance_index = $2 AND evacuating = $3
 			`,
 			processGuid, index, true,
 		)
@@ -159,12 +161,12 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 					INSERT INTO actual_lrps
 						(process_guid, instance_index, domain, instance_guid, cell_id, state, net_info, since,
 						  modification_tag_epoch, modification_tag_index, evacuating)
-						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-						ON DUPLICATE KEY UPDATE expire_time = ?, domain = VALUES(domain),
-						instance_guid = VALUES(instance_guid), cell_id = VALUES(cell_id),
-						state = VALUES(state), net_info = VALUES(net_info), since = VALUES(since),
-						modification_tag_epoch = VALUES(modification_tag_epoch),
-						modification_tag_index = VALUES(modification_tag_index)
+						VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+						ON CONFLICT (process_guid, instance_index, evacuating) DO UPDATE SET expire_time = $12, domain = EXCLUDED.domain,
+						instance_guid = EXCLUDED.instance_guid, cell_id = EXCLUDED.cell_id,
+						state = EXCLUDED.state, net_info = EXCLUDED.net_info, since = EXCLUDED.since,
+						modification_tag_epoch = EXCLUDED.modification_tag_epoch,
+						modification_tag_index = EXCLUDED.modification_tag_index
 						`,
 		actualLRP.ProcessGuid,
 		actualLRP.Index,

@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("ActualLRPDB", func() {
+var _ = Describe("ActualLRPDB", func() {
 	BeforeEach(func() {
 		fakeGUIDProvider.NextGUIDReturns("my-awesome-guid", nil)
 	})

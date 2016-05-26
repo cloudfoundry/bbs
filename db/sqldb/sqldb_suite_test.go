@@ -116,7 +116,9 @@ var _ = AfterEach(func() {
 
 var _ = AfterSuite(func() {
 	if useSQL {
-		migrationProcess.Signal(os.Kill)
+		if migrationProcess != nil {
+			migrationProcess.Signal(os.Kill)
+		}
 		var err error
 		Expect(db.Close()).NotTo(HaveOccurred())
 		db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
@@ -130,7 +132,9 @@ var _ = AfterSuite(func() {
 
 func truncateTables(db *sql.DB) {
 	for _, query := range truncateTablesSQL {
+		println("Truncating table ", query)
 		result, err := db.Exec(query)
+		println("truncated table ", query)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
 	}
