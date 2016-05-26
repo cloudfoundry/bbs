@@ -96,6 +96,9 @@ var _ = BeforeSuite(func() {
 	)
 
 	migrationProcess = ifrit.Invoke(migrationManager)
+
+	Consistently(migrationProcess.Wait()).ShouldNot(Receive())
+	Eventually(migrationsDone).Should(BeClosed())
 })
 
 var _ = BeforeEach(func() {

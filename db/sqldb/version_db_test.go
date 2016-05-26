@@ -41,9 +41,11 @@ var _ = Describe("Version", func() {
 				versionJSON, err := json.Marshal(existingVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				result, err := db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VersionID, versionJSON)
+				_, err = db.Exec(`
+				INSERT INTO configurations (id, value) VALUES (?, ?)
+				  ON DUPLICATE KEY UPDATE value = ?
+				`, sqldb.VersionID, versionJSON, versionJSON)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(result.RowsAffected()).To(BeEquivalentTo(1))
 			})
 
 			It("updates the version in the db", func() {
@@ -77,7 +79,10 @@ var _ = Describe("Version", func() {
 				value, err := json.Marshal(expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VersionID, value)
+				_, err = db.Exec(`
+				  INSERT INTO configurations (id, value) VALUES (?, ?)
+					  ON DUPLICATE KEY UPDATE value = ?
+				  `, sqldb.VersionID, value, value)
 				Expect(err).NotTo(HaveOccurred())
 
 				version, err := sqlDB.Version(logger)
@@ -88,6 +93,11 @@ var _ = Describe("Version", func() {
 		})
 
 		Context("when the version key does not exist", func() {
+			BeforeEach(func() {
+				_, err := db.Exec(`DELETE FROM configurations`)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
 			It("returns a ErrResourceNotFound", func() {
 				version, err := sqlDB.Version(logger)
 				Expect(err).To(MatchError(models.ErrResourceNotFound))
@@ -97,7 +107,10 @@ var _ = Describe("Version", func() {
 
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserialize", func() {
-				_, err := db.Exec("INSERT INTO configurations (id, value) VALUES (?, ?)", sqldb.VersionID, "{{")
+				_, err := db.Exec(`
+				INSERT INTO configurations (id, value) VALUES (?, ?)
+				  ON DUPLICATE KEY UPDATE value = ?
+				`, sqldb.VersionID, "{{", "{{")
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)

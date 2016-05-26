@@ -8,6 +8,7 @@ import (
 )
 
 //go:generate counterfeiter . Key
+
 type Key interface {
 	Label() string
 	Block() cipher.Block
