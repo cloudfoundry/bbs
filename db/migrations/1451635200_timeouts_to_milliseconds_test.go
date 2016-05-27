@@ -58,36 +58,47 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 
 	Describe("Up", func() {
 		var (
-			taskGuid     string
+			task         *models.Task
 			migrationErr error
 		)
 
-		JustBeforeEach(func() {
-			migration.SetStoreClient(storeClient)
-			migration.SetCryptor(cryptor)
-			migration.SetClock(fakeClock)
-			migrationErr = migration.Up(logger)
-		})
-
 		Describe("Task Migration", func() {
 			BeforeEach(func() {
-				taskGuid = "task-guid-1"
-				oldTask := model_helpers.NewValidTask(taskGuid)
-				oldTask.Action = models.WrapAction(&models.TimeoutAction{Action: model_helpers.NewValidAction(),
+				task = model_helpers.NewValidTask("task-guid-1")
+				task.Action = models.WrapAction(&models.TimeoutAction{Action: model_helpers.NewValidAction(),
 					DeprecatedTimeoutNs: 5 * int64(time.Second),
 				})
+			})
 
-				taskData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, oldTask)
+			JustBeforeEach(func() {
+				taskData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, task)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = storeClient.Set(etcddb.TaskSchemaPath(oldTask), taskData, 0)
+				_, err = storeClient.Set(etcddb.TaskSchemaPath(task), taskData, 0)
 				Expect(err).NotTo(HaveOccurred())
+
+				migration.SetStoreClient(storeClient)
+				migration.SetCryptor(cryptor)
+				migration.SetClock(fakeClock)
+				migrationErr = migration.Up(logger)
 			})
 
 			It("changes task timeoutAction timeout to milliseconds", func() {
 				Expect(migrationErr).NotTo(HaveOccurred())
-				task, err := db.TaskByGuid(logger, taskGuid)
+				newTask, err := db.TaskByGuid(logger, task.TaskGuid)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(task.Action.GetTimeoutAction().GetTimeoutMs()).To(Equal(int64(5000)))
+				Expect(newTask.Action.GetTimeoutAction().GetTimeoutMs()).To(Equal(int64(5000)))
+			})
+
+			Context("when there are no actions", func() {
+				BeforeEach(func() {
+					task.Action = nil
+				})
+
+				It("does nothing", func() {
+					Expect(migrationErr).NotTo(HaveOccurred())
+					_, err := db.TaskByGuid(logger, task.TaskGuid)
+					Expect(err).NotTo(HaveOccurred())
+				})
 			})
 		})
 
@@ -117,7 +128,9 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 					"success-message",
 					"failure-message",
 				))
+			})
 
+			JustBeforeEach(func() {
 				schedulingInfo, runInfo := desiredLRP.CreateComponents(fakeClock.Now())
 				runInfo.DeprecatedStartTimeoutS = 15
 
@@ -138,6 +151,11 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = encoder.Decode(encryptedVolumePlacement)
 				Expect(err).NotTo(HaveOccurred())
+
+				migration.SetStoreClient(storeClient)
+				migration.SetCryptor(cryptor)
+				migration.SetClock(fakeClock)
+				migrationErr = migration.Up(logger)
 			})
 
 			It("changes desiredLRP startTimeout to milliseconds", func() {
@@ -166,6 +184,20 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 				desiredLRP, err := db.DesiredLRPByProcessGuid(logger, processGuid)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(desiredLRP.GetSetup().GetTimeoutAction().GetTimeoutMs()).To(Equal(int64(7000)))
+			})
+
+			Context("when there are no actions", func() {
+				BeforeEach(func() {
+					desiredLRP.Action = nil
+					desiredLRP.Monitor = nil
+					desiredLRP.Setup = nil
+				})
+
+				It("does nothing", func() {
+					Expect(migrationErr).NotTo(HaveOccurred())
+					_, err := db.DesiredLRPByProcessGuid(logger, processGuid)
+					Expect(err).ToNot(HaveOccurred())
+				})
 			})
 		})
 	})

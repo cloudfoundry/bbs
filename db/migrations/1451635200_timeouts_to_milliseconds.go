@@ -115,6 +115,11 @@ func (b *TimeoutToMilliseconds) RequiresSQL() bool {
 }
 
 func updateTimeoutInAction(logger lager.Logger, action *models.Action) {
+	if action == nil {
+		logger.Debug("no-action-to-convert")
+		return
+	}
+
 	a := action.GetValue()
 	switch actionModel := a.(type) {
 	case *models.RunAction, *models.DownloadAction, *models.UploadAction:
