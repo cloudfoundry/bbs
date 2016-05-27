@@ -132,9 +132,7 @@ var _ = AfterSuite(func() {
 
 func truncateTables(db *sql.DB) {
 	for _, query := range truncateTablesSQL {
-		println("Truncating table ", query)
 		result, err := db.Exec(query)
-		println("truncated table ", query)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
 	}

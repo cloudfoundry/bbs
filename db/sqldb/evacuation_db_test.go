@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Evacuation", func() {
+var _ = Describe("Evacuation", func() {
 	var (
 		actualLRP *models.ActualLRP
 		guid      string

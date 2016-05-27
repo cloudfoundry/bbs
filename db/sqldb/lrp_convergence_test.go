@@ -16,7 +16,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("LRPConvergence", func() {
+var _ = FDescribe("LRPConvergence", func() {
 	var (
 		freshDomain      string
 		expiredDomain    string
@@ -53,7 +53,7 @@ var _ = Describe("LRPConvergence", func() {
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(models.StaleUnclaimedActualLRPDuration)
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2`, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-missing-cell-actuals" + "-" + domain
@@ -65,7 +65,7 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "actual-with-missing-cell" + "-" + domain, CellId: "missing-cell"})
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2`, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-extra-actuals" + "-" + domain
@@ -82,7 +82,7 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 1, &models.ActualLRPInstanceKey{InstanceGuid: "extra-actual" + "-" + domain, CellId: "existing-cell"})
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2`, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-missing-all-actuals" + "-" + domain
@@ -91,7 +91,7 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRPWithMissingAllActuals.Instances = 1
 			err = sqlDB.DesireLRP(logger, desiredLRPWithMissingAllActuals)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2`, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-missing-some-actuals" + "-" + domain
@@ -104,7 +104,7 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 2, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2`, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "desired-with-restartable-crashed-actuals" + "-" + domain
@@ -126,18 +126,18 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = db.Exec(`
 				UPDATE actual_lrps
-				SET state = ?
-				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+				SET state = $1
+				WHERE process_guid = $2 AND instance_index = $3 AND evacuating = $4
 			`, models.ActualLRPStateCrashed, processGuid, 0, false)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2`, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "actual-with-no-desired" + "-" + domain
 			actualLRPWithNoDesired := &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPWithNoDesired)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`, evacuating, processGuid)
+			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1 WHERE process_guid = $2`, evacuating, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 		}
 
@@ -199,8 +199,8 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, err = db.Exec(`
 			UPDATE actual_lrps
-			SET crash_count = ?, state = ?
-			WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+			SET crash_count = $1, state = $2
+			WHERE process_guid = $3 AND instance_index = $4 AND evacuating = $5
 			`, models.DefaultMaxRestarts+1, models.ActualLRPStateCrashed, processGuid, 0, false)
 		Expect(err).NotTo(HaveOccurred())
 		crashedActualLRPKey = &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain}
@@ -216,15 +216,15 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, err = db.Exec(`
 			UPDATE actual_lrps
-			SET crash_count = ?, state = ?
-			WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
+			SET crash_count = $1, state = $2
+			WHERE process_guid = $3 AND instance_index = $4 AND evacuating = $5
 			`, models.DefaultMaxRestarts+1, models.ActualLRPStateCrashed, processGuid, 1, false)
 		Expect(err).NotTo(HaveOccurred())
 
 		processGuid = "expired-evacuating-actual-lrp"
 		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
 		Expect(err).NotTo(HaveOccurred())
-		_, err = db.Exec(`UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ?`, true, fakeClock.Now().UnixNano(), processGuid)
+		_, err = db.Exec(`UPDATE actual_lrps SET evacuating = $1, expire_time = $2 WHERE process_guid = $3`, true, fakeClock.Now().UnixNano(), processGuid)
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeClock.Increment(1 * time.Second)
@@ -532,7 +532,7 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(fetchActuals()).NotTo(ContainElement("expired-evacuating-actual-lrp"))
 	})
 
-	It("ignores LRPs that don't need convergence", func() {
+	FIt("ignores LRPs that don't need convergence", func() {
 		processGuids := []string{
 			"normal-desired-lrp" + "-" + freshDomain,
 			"normal-desired-lrp-with-unclaimed-actuals" + "-" + freshDomain,
