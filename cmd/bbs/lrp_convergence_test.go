@@ -33,10 +33,6 @@ var _ = Describe("Convergence API", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			ginkgomon.Kill(bbsProcess)
-		})
-
 		It("converges the lrps", func() {
 			err := client.ConvergeLRPs(logger)
 			Expect(err).NotTo(HaveOccurred())

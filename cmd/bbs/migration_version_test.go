@@ -51,7 +51,6 @@ var _ = Describe("Migration Version", func() {
 	})
 
 	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
 		err := os.RemoveAll(migrationFilePath)
 		Expect(err).NotTo(HaveOccurred())
 

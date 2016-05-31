@@ -16,10 +16,6 @@ var _ = Describe("ServiceRegistration", func() {
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 		})
 
-		AfterEach(func() {
-			ginkgomon.Kill(bbsProcess)
-		})
-
 		It("registers itself with consul", func() {
 			client := consulRunner.NewClient()
 			services, err := client.Agent().Services()

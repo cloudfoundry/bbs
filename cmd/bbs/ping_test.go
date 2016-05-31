@@ -16,8 +16,6 @@ import (
 var _ = Describe("Ping API", func() {
 	Describe("Protobuf Ping", func() {
 		It("returns true when the bbs is running", func() {
-			defer ginkgomon.Kill(bbsProcess)
-
 			By("having the bbs down", func() {
 				Expect(client.Ping(logger)).To(BeFalse())
 			})
@@ -44,7 +42,6 @@ var _ = Describe("Ping API", func() {
 
 	Describe("HTTP Ping", func() {
 		It("returns true when the bbs is running", func() {
-			defer ginkgomon.Kill(bbsProcess)
 			var ping = func() bool {
 				resp, err := http.Get("http://" + bbsHealthAddress + "/ping")
 				if err != nil {

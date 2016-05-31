@@ -17,10 +17,6 @@ var _ = Describe("Domain API", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	Describe("UpsertDomain", func() {
 		var existingDomain string
 

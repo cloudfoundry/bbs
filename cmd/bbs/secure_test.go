@@ -31,10 +31,6 @@ var _ = Describe("Secure", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	Context("when configuring mutual SSL", func() {
 		BeforeEach(func() {
 			bbsArgs.RequireSSL = true

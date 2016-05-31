@@ -25,7 +25,6 @@ var _ = Describe("MasterLock", func() {
 		})
 
 		AfterEach(func() {
-			ginkgomon.Kill(bbsProcess)
 			ginkgomon.Kill(competingBBSLockProcess)
 		})
 
@@ -49,10 +48,6 @@ var _ = Describe("MasterLock", func() {
 			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 			consulRunner.Reset()
-		})
-
-		AfterEach(func() {
-			ginkgomon.Kill(bbsProcess)
 		})
 
 		It("exits with an error", func() {

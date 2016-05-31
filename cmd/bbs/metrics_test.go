@@ -14,10 +14,6 @@ var _ = Describe("ETCD Metrics", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	It("starts emitting metrics", func() {
 		Eventually(testMetricsChan).Should(Receive())
 	})

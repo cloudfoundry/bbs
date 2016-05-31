@@ -23,10 +23,6 @@ var _ = Describe("Encryption", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	Describe("read-write encrypted data", func() {
 		JustBeforeEach(func() {
 			err := client.DesireTask(logger, task.TaskGuid, task.Domain, task.TaskDefinition)

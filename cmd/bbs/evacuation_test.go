@@ -16,10 +16,6 @@ var _ = Describe("Evacuation API", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	var actual *models.ActualLRP
 
 	BeforeEach(func() {

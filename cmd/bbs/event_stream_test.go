@@ -33,10 +33,6 @@ var _ = Describe("Events API", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	Describe("Legacy Events", func() {
 		JustBeforeEach(func() {
 			var err error

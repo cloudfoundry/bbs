@@ -38,10 +38,6 @@ var _ = Describe("DesiredLRP API", func() {
 		})
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	Describe("DesiredLRPs", func() {
 		JustBeforeEach(func() {
 			actualDesiredLRPs, getErr = client.DesiredLRPs(logger, filter)

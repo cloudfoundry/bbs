@@ -174,10 +174,6 @@ var _ = Describe("ActualLRP API", func() {
 		}
 	})
 
-	AfterEach(func() {
-		ginkgomon.Kill(bbsProcess)
-	})
-
 	Describe("ActualLRPGroups", func() {
 		JustBeforeEach(func() {
 			actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)

@@ -178,6 +178,20 @@ var _ = BeforeEach(func() {
 })
 
 var _ = AfterEach(func() {
+	ginkgomon.Kill(bbsProcess)
+
+	// Make sure the healthcheck server is really gone before trying to start up
+	// the bbs again in another test.
+	Eventually(func() error {
+		conn, err := net.Dial("tcp", bbsHealthAddress)
+		if err == nil {
+			conn.Close()
+			return nil
+		}
+
+		return err
+	}).Should(HaveOccurred())
+
 	auctioneerServer.Close()
 	testMetricsListener.Close()
 	Eventually(testMetricsChan).Should(BeClosed())

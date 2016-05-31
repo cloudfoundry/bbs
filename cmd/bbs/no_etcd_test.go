@@ -42,8 +42,8 @@ var _ = Describe("BBS With Only SQL", func() {
 			})
 
 			It("returns a validation error", func() {
-				process := ifrit.Invoke(bbsRunner)
-				Eventually(process.Wait()).Should(Receive(HaveOccurred()))
+				bbsProcess = ifrit.Invoke(bbsRunner)
+				Eventually(bbsProcess.Wait()).Should(Receive(HaveOccurred()))
 			})
 		})
 
@@ -62,8 +62,8 @@ var _ = Describe("BBS With Only SQL", func() {
 
 			Context("when sql is not configured", func() {
 				It("the bbs returns a validation error", func() {
-					process := ifrit.Invoke(bbsRunner)
-					Eventually(process.Wait()).Should(Receive(HaveOccurred()))
+					bbsProcess = ifrit.Invoke(bbsRunner)
+					Eventually(bbsProcess.Wait()).Should(Receive(HaveOccurred()))
 				})
 			})
 		})
