@@ -13,7 +13,8 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 	defer logger.Debug("complete")
 
 	expireTime := db.clock.Now().Round(time.Second).UnixNano()
-	rows, err := db.db.Query("SELECT domain FROM domains WHERE expire_time > $1", expireTime)
+	rows, err := db.db.Query(db.getQuery(DomainsQuery),
+		expireTime)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, db.convertSQLError(err)
@@ -48,9 +49,7 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 	if ttl == 0 {
 		expireTime = math.MaxInt64
 	}
-	_, err := db.db.Exec(
-		`INSERT INTO domains (domain, expire_time) VALUES ($1, $2)
-										ON CONFLICT (domain) DO UPDATE SET expire_time = $3`,
+	_, err := db.db.Exec(db.getQuery(UpsertDomainQuery),
 		domain,
 		expireTime,
 		expireTime,

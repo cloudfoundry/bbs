@@ -58,8 +58,10 @@ var (
 	testMetricsListener net.PacketConn
 	testMetricsChan     chan *events.Envelope
 
-	mySQLProcess ifrit.Process
-	mySQLRunner  *mysqlrunner.MySQLRunner
+	mySQLProcess    ifrit.Process
+	mySQLRunner     *mysqlrunner.MySQLRunner
+	postgresProcess ifrit.Process
+	postgresRunner  *postgresrunner.postgresRunner
 )
 
 func TestBBS(t *testing.T) {

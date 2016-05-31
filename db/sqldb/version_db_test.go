@@ -5,11 +5,12 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/models"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Version", func() {
+var _ = FDescribe("Version", func() {
 	Describe("SetVersion", func() {
 		Context("when the version is not set", func() {
 			It("sets the version into the database", func() {
@@ -17,7 +18,11 @@ var _ = Describe("Version", func() {
 				err := sqlDB.SetVersion(logger, expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = $1", sqldb.VersionID)
+				queryStr := "SELECT value FROM configurations WHERE id = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				rows, err := db.Query(queryStr, sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 				defer rows.Close()
 
@@ -42,9 +47,13 @@ var _ = Describe("Version", func() {
 				versionJSON, err := json.Marshal(existingVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec(`
-				  INSERT INTO configurations (id, value) VALUES ($1, $2)
-					  ON CONFLICT (id) DO UPDATE SET value = $3`, sqldb.VersionID, versionJSON, versionJSON)
+				queryStr := `
+				  INSERT INTO configurations (id, value) VALUES (?, ?)
+					  ON CONFLICT (id) DO UPDATE SET value = ?`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err = db.Exec(queryStr, sqldb.VersionID, versionJSON, versionJSON)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -54,7 +63,11 @@ var _ = Describe("Version", func() {
 				err := sqlDB.SetVersion(logger, version)
 				Expect(err).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT value FROM configurations WHERE id = $1", sqldb.VersionID)
+				queryStr := "SELECT value FROM configurations WHERE id = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				rows, err := db.Query(queryStr, sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 				defer rows.Close()
 
@@ -80,9 +93,13 @@ var _ = Describe("Version", func() {
 				value, err := json.Marshal(expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec(`
-					INSERT INTO configurations (id, value) VALUES ($1, $2)
-					  ON CONFLICT (id) DO UPDATE SET value = $3`,
+				queryStr := `
+					INSERT INTO configurations (id, value) VALUES (?, ?)
+					  ON CONFLICT (id) DO UPDATE SET value = ?`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err = db.Exec(queryStr,
 					sqldb.VersionID, value, value)
 
 				Expect(err).NotTo(HaveOccurred())
@@ -109,9 +126,13 @@ var _ = Describe("Version", func() {
 
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserialize", func() {
-				_, err := db.Exec(`
-				  INSERT INTO configurations (id, value) VALUES ($1, $2)
-					  ON CONFLICT (id) DO UPDATE SET value = $3`, sqldb.VersionID, "{{", "{{")
+				queryStr := `
+				  INSERT INTO configurations (id, value) VALUES (?, ?)
+					  ON CONFLICT (id) DO UPDATE SET value = ?`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr, sqldb.VersionID, "{{", "{{")
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)

@@ -224,7 +224,18 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}) {
 	logger = logger.Session("lrp-instance-counts")
 
-	logger.Info("\n\n\n\n\n\n\n\n YOU CARE ABOUT ME!")
+	println(`
+		SELECT ` + schedulingInfoColumns + `,
+			COUNT(actual_lrps.instance_index) AS actual_instances,
+			STRING_AGG(actual_lrps.instance_index::text, ',') AS existing_indices
+		FROM desired_lrps
+		LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = $1
+		GROUP BY desired_lrps.process_guid
+		HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
+	`)
+
+	time.Sleep(10000 * time.Second)
+
 	rows, err := c.db.Query(`
 		SELECT `+schedulingInfoColumns+`,
 			COUNT(actual_lrps.instance_index) AS actual_instances,
@@ -252,13 +263,11 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		indices := []int{}
 		existingIndices := strings.Split(existingIndicesStr.String, ",")
 
-		logger.Info("before-create-missing", lager.Data{"Guid": schedulingInfo.ProcessGuid, "actual_instances": actualInstances, "desired_instances": schedulingInfo.Instances, "Indices": existingIndices})
 		for i := 0; i < int(schedulingInfo.Instances); i++ {
 			found := false
 			for _, indexStr := range existingIndices {
 				if indexStr == strconv.Itoa(i) {
 					found = true
-					logger.Info("Found existing index")
 					break
 				}
 			}
@@ -323,12 +332,10 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		for i := 0; i < len(cellSet); i++ {
 			cellSetArgs[i] = fmt.Sprintf("$%d", i+2)
 		}
-		query = fmt.Sprintf(`%s AND cell_id NOT IN (%s) and cell_id IS NOT NULL`,
+		query = fmt.Sprintf(`%s AND cell_id NOT IN (%s) AND cell_id <> ''`,
 			query, strings.Join(cellSetArgs, ","))
 	}
 
-	fmt.Println(query)
-	fmt.Println(values)
 	stmt, err := c.db.Prepare(query)
 	if err != nil {
 		logger.Error("failed-preparing-query", err)
@@ -344,7 +351,6 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 	for rows.Next() {
 		var index int32
 		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index)
-		fmt.Printf("ADD KEY WITH MISSING CELL %v\n", schedulingInfo.ProcessGuid)
 		if err == nil {
 			keysWithMissingCells = append(keysWithMissingCells, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
@@ -462,27 +468,27 @@ func (db *SQLDB) emitDomainMetrics(logger lager.Logger, domainSet map[string]str
 
 func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 	logger = logger.Session("emit-lrp-metrics")
-
 	var desiredInstances, claimedInstances, unclaimedInstances, runningInstances, crashedInstances, crashingDesireds int
 
-	logger.Info("you care about me")
 	row := db.db.QueryRow(`
 		SELECT
 		  COUNT(*) FILTER (WHERE actual_lrps.state = $1) AS claimed_instances,
 		  COUNT(*) FILTER (WHERE actual_lrps.state = $2) AS unclaimed_instances,
 		  COUNT(*) FILTER (WHERE actual_lrps.state = $3) AS running_instances,
-		  COUNT(*) FILTER (WHERE actual_lrps.state = $4) AS crashed_instances
+		  COUNT(*) FILTER (WHERE actual_lrps.state = $4) AS crashed_instances,
+			COUNT(DISTINCT process_guid) FILTER (WHERE actual_lrps.state = $5) AS crashing_desireds
 		FROM actual_lrps
-		WHERE evacuating = $5
+		WHERE evacuating = $6
 	`,
 		models.ActualLRPStateClaimed,
 		models.ActualLRPStateUnclaimed,
 		models.ActualLRPStateRunning,
 		models.ActualLRPStateCrashed,
+		models.ActualLRPStateCrashed,
 		false,
 	)
 
-	err := row.Scan(&claimedInstances, &unclaimedInstances, &runningInstances, &crashedInstances) //, &crashingDesireds)
+	err := row.Scan(&claimedInstances, &unclaimedInstances, &runningInstances, &crashedInstances, &crashingDesireds)
 	if err != nil {
 		logger.Error("failed-query", err)
 	}

@@ -74,7 +74,7 @@ var _ = BeforeSuite(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	internalSQLDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock)
+	internalSQLDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, sqldb.Postgres)
 	err = internalSQLDB.CreateConfigurationsTable(logger)
 	if err != nil {
 		logger.Fatal("sql-failed-create-configurations-table", err)

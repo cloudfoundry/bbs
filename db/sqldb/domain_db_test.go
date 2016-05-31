@@ -4,26 +4,32 @@ import (
 	"math"
 	"time"
 
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("DomainDB", func() {
+var _ = FDescribe("DomainDB", func() {
 	Describe("Domains", func() {
 		Context("when there are domains in the DB", func() {
 			BeforeEach(func() {
 				futureTime := fakeClock.Now().Add(5 * time.Second).UnixNano()
-				_, err := db.Exec("INSERT INTO domains VALUES ($1, $2)", "jims-domain", futureTime)
+
+				queryStr := "INSERT INTO domains VALUES (?, ?)"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr, "jims-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec("INSERT INTO domains VALUES ($1, $2)", "amelias-domain", futureTime)
+				_, err = db.Exec(queryStr, "amelias-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
 				pastTime := fakeClock.Now().Add(-5 * time.Second).UnixNano()
-				_, err = db.Exec("INSERT INTO domains VALUES ($1, $2)", "past-domain", pastTime)
+				_, err = db.Exec(queryStr, "past-domain", pastTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec("INSERT INTO domains VALUES ($1, $2)", "current-domain", fakeClock.Now().Round(time.Second).UnixNano())
+				_, err = db.Exec(queryStr, "current-domain", fakeClock.Now().Round(time.Second).UnixNano())
 				Expect(err).NotTo(HaveOccurred())
 			})
 

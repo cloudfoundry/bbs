@@ -1,16 +1,16 @@
 package sqldb_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Evacuation", func() {
+var _ = FDescribe("Evacuation", func() {
 	var (
 		actualLRP *models.ActualLRP
 		guid      string
@@ -43,9 +43,11 @@ var _ = Describe("Evacuation", func() {
 			ttl = 60
 
 			expireTime := fakeClock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
-			_, err := db.Exec(
-				`UPDATE actual_lrps SET evacuating = $1, expire_time = $2
-			    WHERE process_guid = $3 AND instance_index = $4 AND evacuating = $5`,
+			queryStr := "UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err := db.Exec(queryStr,
 				true,
 				expireTime,
 				actualLRP.ProcessGuid,
@@ -116,8 +118,11 @@ var _ = Describe("Evacuation", func() {
 		Context("when the evacuating actual lrp does not exist", func() {
 			Context("because the record is deleted", func() {
 				BeforeEach(func() {
-					fmt.Printf("\n\n\n DELETING FROM ACTUALS YO 3\n\n\n\n")
-					_, err := db.Exec("DELETE FROM actual_lrps WHERE process_guid = $1 AND instance_index = $2 AND evacuating = $3", actualLRP.ProcessGuid, actualLRP.Index, true)
+					queryStr := "DELETE FROM actual_lrps WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+					_, err := db.Exec(queryStr, actualLRP.ProcessGuid, actualLRP.Index, true)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRP.CrashCount = 0
@@ -180,10 +185,11 @@ var _ = Describe("Evacuation", func() {
 
 		Context("when deserializing the data fails", func() {
 			BeforeEach(func() {
-				_, err := db.Exec(`
-						UPDATE actual_lrps SET net_info = $1
-						WHERE process_guid = $2 AND instance_index = $3 AND evacuating = $4
-					`,
+				queryStr := "UPDATE actual_lrps SET net_info = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr,
 					"garbage", actualLRP.ProcessGuid, actualLRP.Index, true)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -209,7 +215,11 @@ var _ = Describe("Evacuation", func() {
 		Context("when there is an evacuating actualLRP", func() {
 			BeforeEach(func() {
 				expireTime := fakeClock.Now().Add(5 * time.Second).UnixNano()
-				_, err := db.Exec("UPDATE actual_lrps SET evacuating = $1, expire_time = $2 WHERE process_guid = $3 AND instance_index = $4 AND evacuating = $5", true, expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
+				queryStr := "UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr, true, expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -236,7 +246,11 @@ var _ = Describe("Evacuation", func() {
 			Context("when the actualLRP is expired", func() {
 				BeforeEach(func() {
 					expireTime := fakeClock.Now().UnixNano()
-					_, err := db.Exec("UPDATE actual_lrps SET expire_time = $1 WHERE process_guid = $2 AND instance_index = $3 AND evacuating = $4", expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
+					queryStr := "UPDATE actual_lrps SET expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+					_, err := db.Exec(queryStr, expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

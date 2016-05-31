@@ -61,10 +61,10 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColum
 	defer rows.Next()
 
 	selectQuery := fmt.Sprintf(
-		"SELECT %s FROM %s WHERE %s = $1 FOR UPDATE",
+		db.getQuery(ReEncryptSelectQuery),
 		blobColumn, tableName, primaryKey)
 	updateQuery := fmt.Sprintf(
-		"UPDATE %s SET %s = $1 WHERE %s = $2",
+		db.getQuery(ReEncryptUpdateQuery),
 		tableName, blobColumn, primaryKey)
 	for rows.Next() {
 		var guid string

@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Convergence of Tasks", func() {
+var _ = FDescribe("Convergence of Tasks", func() {
 	var (
 		sender *fake.FakeMetricSender
 

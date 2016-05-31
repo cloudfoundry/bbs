@@ -45,12 +45,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 
 		desiredLRP.ModificationTag = &models.ModificationTag{Epoch: guid, Index: 0}
 
-		_, err = tx.Exec(`
-			INSERT INTO desired_lrps
-				(process_guid, domain, log_guid, annotation, instances, memory_mb,
-				disk_mb, rootfs, volume_placement, modification_tag_epoch, modification_tag_index,
-				routes, run_info)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+		_, err = tx.Exec(db.getQuery(DesireLRPQuery),
 			desiredLRP.ProcessGuid,
 			desiredLRP.Domain,
 			desiredLRP.LogGuid,
@@ -89,19 +84,10 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 	var rows *sql.Rows
 	var err error
 	if filter.Domain != "" {
-		rows, err = db.db.Query(`
-			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-				disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
-				run_info
-			FROM desired_lrps
-			WHERE domain = $1`,
+		rows, err = db.db.Query(db.getQuery(DesiredLRPsByDomainQuery),
 			filter.Domain)
 	} else {
-		rows, err = db.db.Query(`
-		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
-			run_info
-		FROM desired_lrps`)
+		rows, err = db.db.Query(db.getQuery(DesiredLRPsQuery))
 	}
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -135,21 +121,11 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	var rows *sql.Rows
 	var err error
 	if filter.Domain != "" {
-		rows, err = db.db.Query(`
-			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-				disk_mb, rootfs, routes, volume_placement, modification_tag_epoch,
-				modification_tag_index
-			FROM desired_lrps
-			WHERE domain = $1`,
+		rows, err = db.db.Query(db.getQuery(DesiredLRPSchedulingInfoByDomainQuery),
 			filter.Domain,
 		)
 	} else {
-		rows, err = db.db.Query(`
-			SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-				disk_mb, rootfs, routes, volume_placement, modification_tag_epoch,
-				modification_tag_index
-			FROM desired_lrps`,
-		)
+		rows, err = db.db.Query(db.getQuery(DesiredLRPSchedulingInfoQuery))
 	}
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -326,20 +302,13 @@ func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid 
 	if err == sql.ErrNoRows {
 		return models.ErrResourceNotFound
 	} else if err != nil {
-		logger.Error("jim", err)
 		return db.convertSQLError(err)
 	}
 	return nil
 }
 
 func (db *SQLDB) selectDesiredLRPByGuid(logger lager.Logger, processGuid string, q Queryable, lockMode int) (*models.DesiredLRP, error) {
-	query := `
-		SELECT process_guid, domain, log_guid, annotation, instances, memory_mb,
-			disk_mb, rootfs, routes, modification_tag_epoch, modification_tag_index,
-			run_info
-		FROM desired_lrps
-		WHERE process_guid = $1
-	`
+	query := db.getQuery(SelectDesiredLRPByGuidQuery)
 	switch lockMode {
 	case LockForUpdate:
 		query += "FOR UPDATE\n"
@@ -373,10 +342,8 @@ func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*mode
 	var runInformation models.DesiredLRPRunInfo
 	err = db.deserializeModel(logger, runInformationData, &runInformation)
 	if err != nil {
-		_, err := db.db.Exec(`
-				DELETE FROM desired_lrps
-				WHERE process_guid = $1
-				`, desiredLRP.ProcessGuid)
+		_, err := db.db.Exec(db.getQuery(DeleteDesiredLRPQuery),
+			desiredLRP.ProcessGuid)
 
 		if err != nil {
 			logger.Error("failed-deleting-invalid-row", err)

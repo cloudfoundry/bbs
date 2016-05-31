@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -112,7 +111,6 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
-		fmt.Printf("\n\n\n DELETING FROM ACTUALS YO 4\n\n\n\n")
 		_, err = tx.Exec(`
 				DELETE FROM actual_lrps
 					WHERE process_guid = $1 AND instance_index = $2 AND evacuating = $3

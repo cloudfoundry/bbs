@@ -81,10 +81,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 	}
 
 	now := db.clock.Now().UnixNano()
-	_, err = db.db.Exec(`
-		INSERT INTO actual_lrps
-			(process_guid, instance_index, domain, state, since, net_info, modification_tag_epoch, modification_tag_index)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+	_, err = db.db.Exec(db.getQuery(CreateUnclaimedActualLRPQuery),
 		key.ProcessGuid,
 		key.Index,
 		key.Domain,
@@ -140,11 +137,7 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 
-		_, err = tx.Exec(`
-				UPDATE actual_lrps
-				SET state = $1, instance_guid = $2, cell_id = $3,
-					modification_tag_index = $4, since = $5, net_info = $6
-				WHERE process_guid = $7 AND instance_index = $8 AND evacuating = $9`,
+		_, err = tx.Exec(db.getQuery(UnclaimActualLRPQuery),
 			actualLRP.State,
 			actualLRP.ActualLRPInstanceKey.CellId,
 			actualLRP.ActualLRPInstanceKey.InstanceGuid,
@@ -198,11 +191,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 		actualLRP.Since = db.clock.Now().UnixNano()
 
-		_, err = tx.Exec(`
-				UPDATE actual_lrps
-				SET state = $1, instance_guid = $2, cell_id = $3, placement_error = $4,
-					modification_tag_index = $5, net_info = $6, since = $7
-				WHERE process_guid = $8 AND instance_index = $9 AND evacuating = $10`,
+		_, err = tx.Exec(db.getQuery(ClaimActualLRPQuery),
 			actualLRP.State,
 			actualLRP.ActualLRPInstanceKey.InstanceGuid,
 			actualLRP.ActualLRPInstanceKey.CellId,
@@ -275,11 +264,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			return err
 		}
 
-		_, err = tx.Exec(`
-					UPDATE actual_lrps SET instance_guid = $1, cell_id = $2, net_info = $3,
-					state = $4, since = $5, modification_tag_index = $6, placement_error = $7
-					WHERE process_guid = $8 AND instance_index = $9 AND evacuating = $10
-				`,
+		_, err = tx.Exec(db.getQuery(StartActualLRPQuery),
 			actualLRP.InstanceGuid,
 			actualLRP.CellId,
 			netInfoData,
@@ -352,12 +337,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		now := db.clock.Now().UnixNano()
 		actualLRP.Since = now
 
-		_, err = tx.Exec(`
-				UPDATE actual_lrps
-				SET state = $1, instance_guid = $2, cell_id = $3,
-					modification_tag_index = $4, since = $5, net_info = $6,
-					crash_count = $7, crash_reason = $8
-				WHERE process_guid = $9 AND instance_index = $10 AND evacuating = $11`,
+		_, err = tx.Exec(db.getQuery(CrashActualLRPQuery),
 			actualLRP.State,
 			actualLRP.ActualLRPInstanceKey.InstanceGuid,
 			actualLRP.ActualLRPInstanceKey.CellId,
@@ -407,10 +387,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		actualLRP.Since = now
 		evacuating := false
 
-		_, err = tx.Exec(`
-					UPDATE actual_lrps SET since = $1, modification_tag_index = $2, placement_error = $3
-					WHERE process_guid = $4 AND instance_index = $5 AND evacuating = $6
-				`,
+		_, err = tx.Exec(db.getQuery(FailActualLRPQuery),
 			now,
 			actualLRP.ModificationTag.Index,
 			actualLRP.PlacementError,
@@ -435,11 +412,7 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		fmt.Printf("\n\n\n DELETING FROM ACTUALS YO 1\n\n\n\n")
-		result, err := tx.Exec(`
-					DELETE FROM actual_lrps
-					WHERE process_guid = $1 AND instance_index = $2 AND evacuating = $3
-				`,
+		result, err := tx.Exec(db.getQuery(RemoveActualLRPQuery),
 			processGuid, index, false,
 		)
 		if err != nil {
@@ -481,10 +454,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 		return nil, err
 	}
 
-	_, err = tx.Exec(`
-				INSERT INTO actual_lrps
-					(process_guid, instance_index, domain, instance_guid, cell_id, state, net_info, since, modification_tag_epoch, modification_tag_index)
-					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+	_, err = tx.Exec(db.getQuery(CreateRunningActualLRPQuery),
 		actualLRP.ActualLRPKey.ProcessGuid,
 		actualLRP.ActualLRPKey.Index,
 		actualLRP.ActualLRPKey.Domain,
@@ -555,21 +525,19 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 			continue
 		}
 
-		postgresField := strings.Replace(field.string, "?", fmt.Sprintf("$%d", index), -1)
+		if db.flavor == Postgres {
+			postgresField := strings.Replace(field.string, "?", fmt.Sprintf("$%d", index), -1)
+			wheres = append(wheres, postgresField)
+		} else {
+			wheres = append(wheres, field.string)
+		}
 
-		wheres = append(wheres, postgresField)
 		values = append(values, value)
 
 		index++
 	}
 
-	query := `
-		SELECT process_guid, instance_index, evacuating, domain, state,
-			instance_guid, cell_id, placement_error, since, net_info,
-			modification_tag_epoch, modification_tag_index, crash_count,
-			crash_reason
-		FROM actual_lrps
-	`
+	query := db.getQuery(SelectActualLRPQuery)
 	if len(wheres) > 0 {
 		query += fmt.Sprintf("WHERE %s\n", strings.Join(wheres, " AND "))
 	}
@@ -621,10 +589,8 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 	}
 
 	for _, actual := range actualsToDelete {
-		_, err := q.Exec(`
-				DELETE FROM actual_lrps
-				WHERE process_guid = $1 AND instance_index = $2 AND evacuating = $3
-				`, actual.ProcessGuid, actual.Index, actual.evacuating)
+		_, err := q.Exec(db.getQuery(RemoveActualLRPQuery),
+			actual.ProcessGuid, actual.Index, actual.evacuating)
 		if err != nil {
 			logger.Error("failed-cleaning-up-invalid-actual-lrp", err)
 		}

@@ -6,11 +6,12 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("DesiredLRPDB", func() {
+var _ = FDescribe("DesiredLRPDB", func() {
 	Describe("DesireLRP", func() {
 		var expectedDesiredLRP *models.DesiredLRP
 
@@ -65,7 +66,12 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET run_info = $1 WHERE process_guid = $2", "{{", expectedDesiredLRP.ProcessGuid)
+
+				queryStr := `UPDATE desired_lrps SET run_info = ? WHERE process_guid = ?`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				result, err := db.Exec(queryStr, "{{", expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -81,7 +87,11 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET routes = $1 WHERE process_guid = $2", "{{", expectedDesiredLRP.ProcessGuid)
+				queryStr := `UPDATE desired_lrps SET routes = ? WHERE process_guid = ?`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				result, err := db.Exec(queryStr, "{{", expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -119,7 +129,12 @@ var _ = Describe("DesiredLRPDB", func() {
 		It("prunes all desired lrps with invalid run infos", func() {
 			desiredLRPWithInvalidRunInfo := model_helpers.NewValidDesiredLRP("invalid")
 			Expect(sqlDB.DesireLRP(logger, desiredLRPWithInvalidRunInfo)).To(Succeed())
-			_, err := db.Exec(`UPDATE desired_lrps SET run_info = 'garbage' WHERE process_guid = 'invalid'`)
+
+			queryStr := `UPDATE desired_lrps SET run_info = 'garbage' WHERE process_guid = 'invalid'`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err := db.Exec(queryStr)
 			Expect(err).NotTo(HaveOccurred())
 
 			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
@@ -152,7 +167,11 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET run_info = $1 WHERE process_guid = $2", "{{", expectedDesiredLRPs[0].ProcessGuid)
+				queryStr := "UPDATE desired_lrps SET run_info = ? WHERE process_guid = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				result, err := db.Exec(queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -168,7 +187,11 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET routes = $1 WHERE process_guid = $2", "{{", expectedDesiredLRPs[0].ProcessGuid)
+				queryStr := "UPDATE desired_lrps SET routes = ? WHERE process_guid = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				result, err := db.Exec(queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -221,7 +244,11 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				result, err := db.Exec("UPDATE desired_lrps SET routes = $1 WHERE process_guid = $2", "{{", expectedDesiredLRPs[0].ProcessGuid)
+				queryStr := "UPDATE desired_lrps SET routes = ? WHERE process_guid = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				result, err := db.Exec(queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())

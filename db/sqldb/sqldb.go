@@ -23,6 +23,7 @@ type SQLDB struct {
 	guidProvider           guidprovider.GUIDProvider
 	serializer             format.Serializer
 	cryptor                encryption.Cryptor
+	flavor                 string
 }
 
 type RowScanner interface {
@@ -49,6 +50,7 @@ func NewSQLDB(
 	cryptor encryption.Cryptor,
 	guidProvider guidprovider.GUIDProvider,
 	clock clock.Clock,
+	flavor string,
 ) *SQLDB {
 	return &SQLDB{
 		db: db,
@@ -59,6 +61,7 @@ func NewSQLDB(
 		guidProvider:           guidProvider,
 		serializer:             format.NewSerializer(cryptor),
 		cryptor:                cryptor,
+		flavor:                 flavor,
 	}
 }
 
