@@ -81,7 +81,7 @@ func (b *TimeoutToMilliseconds) Up(logger lager.Logger) error {
 				logger.Error("failed-to-deserialize-desired-lrp-run-info", err)
 				continue
 			}
-			logger.Info("update-run-info", lager.Data{"runInfo": runInfo})
+			logger.Info("update-run-info", lager.Data{"deprecated_timeout_ns": runInfo.DeprecatedStartTimeoutS})
 			runInfo.StartTimeoutMs = int64(runInfo.DeprecatedStartTimeoutS) * 1000
 			updateTimeoutInAction(logger, runInfo.GetMonitor())
 			updateTimeoutInAction(logger, runInfo.GetSetup())

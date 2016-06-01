@@ -296,10 +296,13 @@ The `TimeoutAction` cancels the wrapped action if it does not finish within the 
 ```go
 action := &models.TimeoutAction{
   Action: differentAction,
-  Timeout: int64(10 * time.Second),
+  TimeoutMs: int64(10 * time.Second) / 1000000,
   LogSource: "log-source",
 }
 ```
+
+The `DeprecatedTimeoutNs` field has been deprecated in favor of `TimeoutMs`.
+The `TimeoutMs` field is required and will be translated into `DeprecatedTimeoutNs` for older clients.
 
 #### `Action` [required]
 
