@@ -81,7 +81,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 	}
 
 	now := db.clock.Now().UnixNano()
-	_, err = db.db.Exec(db.getQuery(CreateUnclaimedActualLRPQuery),
+	_, err = db.db.Exec(db.getQuery(InsertActualLRPQuery),
 		key.ProcessGuid,
 		key.Index,
 		key.Domain,
@@ -412,7 +412,7 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		result, err := tx.Exec(db.getQuery(RemoveActualLRPQuery),
+		result, err := tx.Exec(db.getQuery(DeleteActualLRPQuery),
 			processGuid, index, false,
 		)
 		if err != nil {
@@ -589,7 +589,7 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 	}
 
 	for _, actual := range actualsToDelete {
-		_, err := q.Exec(db.getQuery(RemoveActualLRPQuery),
+		_, err := q.Exec(db.getQuery(DeleteActualLRPQuery),
 			actual.ProcessGuid, actual.Index, actual.evacuating)
 		if err != nil {
 			logger.Error("failed-cleaning-up-invalid-actual-lrp", err)

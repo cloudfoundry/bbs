@@ -14,7 +14,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 )
 
-var _ = FDescribe("Encryption", func() {
+var _ = Describe("Encryption", func() {
 	Describe("SetEncryptionKeyLabel", func() {
 		It("sets the encryption key label into the database", func() {
 			expectedLabel := "expectedLabel"

@@ -2,14 +2,12 @@ package sqldb
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
-
-const taskColumns = `tasks.guid, tasks.domain, tasks.updated_at, tasks.created_at,
-	tasks.first_completed_at, tasks.state, tasks.cell_id, tasks.result,
-	tasks.failed, tasks.failure_reason, tasks.task_definition`
 
 func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
 	logger = logger.Session("desire-task-sql", lager.Data{"task_guid": taskGuid})
@@ -24,9 +22,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 
 	now := db.clock.Now().UnixNano()
 
-	_, err = db.db.Exec(
-		`INSERT INTO tasks (guid, domain, created_at, updated_at, first_completed_at, state, task_definition)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+	_, err = db.db.Exec(db.getQuery(InsertTaskQuery),
 		taskGuid,
 		domain,
 		now,
@@ -44,23 +40,43 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 	return nil
 }
 
-func (db *SQLDB) Tasks(logger lager.Logger, taskFilter models.TaskFilter) ([]*models.Task, error) {
-	logger = logger.Session("tasks-sql", lager.Data{"filter": taskFilter})
+func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
+	logger = logger.Session("tasks-sql", lager.Data{"filter": filter})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	var rows *sql.Rows
 	var err error
-
-	if taskFilter.Domain != "" && taskFilter.CellID != "" {
-		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = $1 AND cell_id = $2", taskFilter.Domain, taskFilter.CellID)
-	} else if taskFilter.Domain != "" {
-		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE domain = $1", taskFilter.Domain)
-	} else if taskFilter.CellID != "" {
-		rows, err = db.db.Query("SELECT "+taskColumns+" FROM tasks WHERE cell_id = $1", taskFilter.CellID)
-	} else {
-		rows, err = db.db.Query("SELECT " + taskColumns + " FROM tasks")
+	conditions := map[whereClause]interface{}{
+		whereDomainEquals: filter.Domain,
+		whereCellIdEquals: filter.CellID,
 	}
+	wheres := []string{}
+	values := []interface{}{}
+
+	index := 1
+	for field, value := range conditions {
+		if value == "" {
+			continue
+		}
+
+		if db.flavor == Postgres {
+			postgresField := strings.Replace(field.string, "?", fmt.Sprintf("$%d", index), -1)
+			wheres = append(wheres, postgresField)
+		} else {
+			wheres = append(wheres, field.string)
+		}
+
+		values = append(values, value)
+
+		index++
+	}
+
+	query := db.getQuery(SelectTasksBaseQuery)
+	if len(wheres) > 0 {
+		query += fmt.Sprintf(" WHERE %s\n", strings.Join(wheres, " AND "))
+	}
+	rows, err = db.db.Query(query, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, db.convertSQLError(err)
@@ -90,7 +106,7 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.db.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = $1", taskGuid)
+	row := db.db.QueryRow(db.getQuery(SelectTaskByGuidQuery), taskGuid)
 	return db.fetchTask(logger, row, db.db)
 }
 
@@ -119,9 +135,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 		}
 
 		now := db.clock.Now().UnixNano()
-		_, err = tx.Exec(`
-				UPDATE tasks SET state = $1, updated_at = $2, cell_id =$3
-				WHERE guid = $4`,
+		_, err = tx.Exec(db.getQuery(UpdateTaskByGuidQuery),
 			models.Task_Running,
 			now,
 			cellId,
@@ -248,13 +262,10 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 		}
 
 		now := db.clock.Now().UnixNano()
-		_, err = tx.Exec(
-			`UPDATE tasks SET
-		  state = $1, updated_at = $2
-			WHERE guid = $3
-			`,
+		_, err = tx.Exec(db.getQuery(UpdateTaskByGuidQuery),
 			models.Task_Resolving,
 			now,
+			task.CellId,
 			taskGuid,
 		)
 		if err != nil {
@@ -284,10 +295,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 			return err
 		}
 
-		_, err = tx.Exec(
-			`DELETE FROM tasks WHERE guid = $1`,
-			taskGuid,
-		)
+		_, err = tx.Exec(db.getQuery(DeleteTaskQuery), taskGuid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
 			return db.convertSQLError(err)
@@ -299,12 +307,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 
 func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx *sql.Tx) error {
 	now := db.clock.Now().UnixNano()
-	_, err := tx.Exec(
-		`UPDATE tasks SET
-		  state = $1, updated_at = $2, first_completed_at = $3,
-			failed = $4, failure_reason = $5, result = $6, cell_id = $7
-			WHERE guid = $8
-			`,
+	_, err := tx.Exec(db.getQuery(CompleteTaskByGuidQuery),
 		models.Task_Completed,
 		now,
 		now,
@@ -331,7 +334,8 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 }
 
 func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
-	row := tx.QueryRow("SELECT "+taskColumns+" FROM tasks WHERE guid = $1 FOR UPDATE", taskGuid)
+	query := db.getQuery(SelectTaskByGuidQuery) + " FOR UPDATE"
+	row := tx.QueryRow(query, taskGuid)
 	return db.fetchTask(logger, row, tx)
 }
 
@@ -365,10 +369,7 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 	err = db.deserializeModel(logger, taskDefData, &taskDef)
 	if err != nil {
 		logger.Info("deleting-malformed-task-from-db", lager.Data{"guid": guid})
-		_, err = tx.Exec(
-			`DELETE FROM tasks WHERE guid = $1`,
-			guid,
-		)
+		_, err = tx.Exec(db.getQuery(DeleteTaskQuery), guid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
 			return nil, db.convertSQLError(err)

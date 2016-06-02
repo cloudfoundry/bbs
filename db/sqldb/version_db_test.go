@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Version", func() {
+var _ = Describe("Version", func() {
 	Describe("SetVersion", func() {
 		Context("when the version is not set", func() {
 			It("sets the version into the database", func() {

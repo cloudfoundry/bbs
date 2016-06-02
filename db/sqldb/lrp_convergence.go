@@ -101,12 +101,7 @@ func newConvergence(db *SQLDB) *convergence {
 func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("stale-unclaimed-actual-lrps")
 
-	rows, err := c.db.Query(`
-		SELECT `+schedulingInfoColumns+`, actual_lrps.instance_index
-		FROM desired_lrps
-		JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-		WHERE actual_lrps.state = $1 AND actual_lrps.since < $2 AND actual_lrps.evacuating = $3
-	`, models.ActualLRPStateUnclaimed,
+	rows, err := c.db.Query(c.getQuery(SelectStaleLRPsQuery), models.ActualLRPStateUnclaimed,
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
 		false)
 	if err != nil {
@@ -136,13 +131,7 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("crashed-actual-lrps")
 	restartCalculator := models.NewDefaultRestartCalculator()
 
-	rows, err := c.db.Query(`
-		SELECT `+schedulingInfoColumns+`, actual_lrps.instance_index, actual_lrps.since, actual_lrps.crash_count
-		FROM desired_lrps
-		JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-		WHERE actual_lrps.evacuating = $1
-		AND actual_lrps.state = $2
-	`, false, models.ActualLRPStateCrashed)
+	rows, err := c.db.Query(c.getQuery(SelectLRPsByStateQuery), false, models.ActualLRPStateCrashed)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -186,13 +175,7 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 	logger = logger.Session("orphaned-actual-lrps")
 
-	rows, err := c.db.Query(`
-		SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
-		FROM actual_lrps
-		JOIN domains ON actual_lrps.domain = domains.domain
-		WHERE actual_lrps.evacuating = $1
-			AND actual_lrps.process_guid NOT IN (SELECT process_guid FROM desired_lrps)
-	`, false)
+	rows, err := c.db.Query(c.getQuery(SelectOrphanedActualLRPsQuery), false)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -224,27 +207,7 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}) {
 	logger = logger.Session("lrp-instance-counts")
 
-	println(`
-		SELECT ` + schedulingInfoColumns + `,
-			COUNT(actual_lrps.instance_index) AS actual_instances,
-			STRING_AGG(actual_lrps.instance_index::text, ',') AS existing_indices
-		FROM desired_lrps
-		LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = $1
-		GROUP BY desired_lrps.process_guid
-		HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
-	`)
-
-	time.Sleep(10000 * time.Second)
-
-	rows, err := c.db.Query(`
-		SELECT `+schedulingInfoColumns+`,
-			COUNT(actual_lrps.instance_index) AS actual_instances,
-			STRING_AGG(actual_lrps.instance_index::text, ',') AS existing_indices
-		FROM desired_lrps
-		LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = $1
-		GROUP BY desired_lrps.process_guid
-		HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
-	`, false)
+	rows, err := c.db.Query(c.getQuery(SelectLRPInstanceCountsQuery), false)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -321,19 +284,19 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		values = append(values, k)
 	}
 
-	query := `
-		SELECT ` + schedulingInfoColumns + `, actual_lrps.instance_index
-		FROM desired_lrps
-		JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-		WHERE actual_lrps.evacuating = $1`
-
+	query := c.getQuery(SelectLRPsQuery)
 	if len(cellSet) != 0 {
-		cellSetArgs := make([]string, len(cellSet))
-		for i := 0; i < len(cellSet); i++ {
-			cellSetArgs[i] = fmt.Sprintf("$%d", i+2)
+		cellSetArgs := strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ",")
+
+		if c.flavor == Postgres {
+			strParts := strings.Split(cellSetArgs, "?")
+			for i := 1; i < len(strParts); i++ {
+				strParts[i-1] += fmt.Sprintf("$%d", i+1)
+			}
+			cellSetArgs = strings.Join(strParts, "")
 		}
-		query = fmt.Sprintf(`%s AND cell_id NOT IN (%s) AND cell_id <> ''`,
-			query, strings.Join(cellSetArgs, ","))
+		query = fmt.Sprintf(`%s AND actual_lrps.cell_id NOT IN (%s) AND actual_lrps.cell_id <> ''`,
+			query, cellSetArgs)
 	}
 
 	stmt, err := c.db.Prepare(query)
@@ -423,10 +386,7 @@ func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-domains")
 
-	_, err := db.db.Exec(`
-		DELETE FROM domains
-		WHERE expire_time <= $1
-	`, now.UnixNano())
+	_, err := db.db.Exec(db.getQuery(PruneDomainsQuery), now.UnixNano())
 
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -436,10 +396,7 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
-	_, err := db.db.Exec(`
-		DELETE FROM actual_lrps
-		WHERE evacuating = $1 AND expire_time <= $2
-	`, true, now.UnixNano())
+	_, err := db.db.Exec(db.getQuery(PruneActualLRPsQuery), true, now.UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -470,16 +427,7 @@ func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 	logger = logger.Session("emit-lrp-metrics")
 	var desiredInstances, claimedInstances, unclaimedInstances, runningInstances, crashedInstances, crashingDesireds int
 
-	row := db.db.QueryRow(`
-		SELECT
-		  COUNT(*) FILTER (WHERE actual_lrps.state = $1) AS claimed_instances,
-		  COUNT(*) FILTER (WHERE actual_lrps.state = $2) AS unclaimed_instances,
-		  COUNT(*) FILTER (WHERE actual_lrps.state = $3) AS running_instances,
-		  COUNT(*) FILTER (WHERE actual_lrps.state = $4) AS crashed_instances,
-			COUNT(DISTINCT process_guid) FILTER (WHERE actual_lrps.state = $5) AS crashing_desireds
-		FROM actual_lrps
-		WHERE evacuating = $6
-	`,
+	row := db.db.QueryRow(db.getQuery(SelectLRPMetricsQuery),
 		models.ActualLRPStateClaimed,
 		models.ActualLRPStateUnclaimed,
 		models.ActualLRPStateRunning,
@@ -493,10 +441,7 @@ func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 		logger.Error("failed-query", err)
 	}
 
-	row = db.db.QueryRow(`
-		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances
-		FROM desired_lrps
-	`)
+	row = db.db.QueryRow(db.getQuery(CountDesiredInstancesQuery))
 
 	err = row.Scan(&desiredInstances)
 	if err != nil {

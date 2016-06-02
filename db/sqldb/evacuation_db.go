@@ -59,11 +59,7 @@ func (db *SQLDB) EvacuateActualLRP(
 			return err
 		}
 
-		_, err = tx.Exec(`
-					UPDATE actual_lrps SET domain = $1, instance_guid = $2, cell_id = $3, net_info = $4,
-					  state = $5, since = $6, modification_tag_index = $7
-					  WHERE process_guid = $8 AND instance_index = $9 AND evacuating = $10
-				`,
+		_, err = tx.Exec(db.getQuery(EvacuateActualLRPQuery),
 			actualLRP.Domain,
 			actualLRP.InstanceGuid,
 			actualLRP.CellId,
@@ -111,10 +107,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
-		_, err = tx.Exec(`
-				DELETE FROM actual_lrps
-					WHERE process_guid = $1 AND instance_index = $2 AND evacuating = $3
-			`,
+		_, err = tx.Exec(db.getQuery(DeleteActualLRPQuery),
 			processGuid, index, true,
 		)
 
@@ -155,17 +148,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
 	}
 
-	_, err = tx.Exec(`
-					INSERT INTO actual_lrps
-						(process_guid, instance_index, domain, instance_guid, cell_id, state, net_info, since,
-						  modification_tag_epoch, modification_tag_index, evacuating)
-						VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-						ON CONFLICT (process_guid, instance_index, evacuating) DO UPDATE SET expire_time = $12, domain = EXCLUDED.domain,
-						instance_guid = EXCLUDED.instance_guid, cell_id = EXCLUDED.cell_id,
-						state = EXCLUDED.state, net_info = EXCLUDED.net_info, since = EXCLUDED.since,
-						modification_tag_epoch = EXCLUDED.modification_tag_epoch,
-						modification_tag_index = EXCLUDED.modification_tag_index
-						`,
+	_, err = tx.Exec(db.getQuery(UpsertActualLRPQuery),
 		actualLRP.ProcessGuid,
 		actualLRP.Index,
 		actualLRP.Domain,

@@ -17,7 +17,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = FDescribe("LRPConvergence", func() {
+var _ = Describe("LRPConvergence", func() {
 	var (
 		freshDomain      string
 		expiredDomain    string
@@ -276,7 +276,7 @@ var _ = FDescribe("LRPConvergence", func() {
 	})
 
 	Describe("general metrics", func() {
-		FIt("emits a metric for domains", func() {
+		It("emits a metric for domains", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
 			Expect(sender.GetValue("Domain." + freshDomain).Value).To(Equal(float64(1)))
 		})

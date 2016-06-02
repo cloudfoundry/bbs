@@ -3,7 +3,6 @@ package sqldb
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -83,11 +82,16 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 
 	var rows *sql.Rows
 	var err error
+	query := db.getQuery(DesiredLRPsQuery)
 	if filter.Domain != "" {
-		rows, err = db.db.Query(db.getQuery(DesiredLRPsByDomainQuery),
-			filter.Domain)
+		wheres := "domain = ?"
+		if db.flavor == Postgres {
+			wheres = strings.Replace(wheres, "?", "$1", -1)
+		}
+		query += " WHERE " + wheres
+		rows, err = db.db.Query(query, filter.Domain)
 	} else {
-		rows, err = db.db.Query(db.getQuery(DesiredLRPsQuery))
+		rows, err = db.db.Query(query)
 	}
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -119,13 +123,17 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	defer logger.Debug("complete")
 
 	var rows *sql.Rows
+	query := db.getQuery(DesiredLRPSchedulingInfoQuery)
 	var err error
 	if filter.Domain != "" {
-		rows, err = db.db.Query(db.getQuery(DesiredLRPSchedulingInfoByDomainQuery),
-			filter.Domain,
-		)
+		wheres := "domain = ?"
+		if db.flavor == Postgres {
+			wheres = strings.Replace(wheres, "?", "$1", -1)
+		}
+		query += " WHERE " + wheres
+		rows, err = db.db.Query(query, filter.Domain)
 	} else {
-		rows, err = db.db.Query(db.getQuery(DesiredLRPSchedulingInfoQuery))
+		rows, err = db.db.Query(query)
 	}
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -165,20 +173,18 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			return err
 		}
 
-		setKeys := []string{"modification_tag_index = $1"}
 		setValues := []interface{}{beforeDesiredLRP.ModificationTag.Index + 1}
 
-		bindVarIndex := 2
 		if update.Annotation != nil {
-			setKeys = append(setKeys, fmt.Sprintf("annotation = $%d", bindVarIndex))
 			setValues = append(setValues, *update.Annotation)
-			bindVarIndex++
+		} else {
+			setValues = append(setValues, beforeDesiredLRP.Annotation)
 		}
 
 		if update.Instances != nil {
-			setKeys = append(setKeys, fmt.Sprintf("instances = $%d", bindVarIndex))
 			setValues = append(setValues, *update.Instances)
-			bindVarIndex++
+		} else {
+			setValues = append(setValues, beforeDesiredLRP.Instances)
 		}
 
 		if update.Routes != nil {
@@ -187,16 +193,19 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 				logger.Error("failed-marshalling-routes", err)
 				return models.ErrBadRequest
 			}
-			setKeys = append(setKeys, fmt.Sprintf("routes = $%d", bindVarIndex))
 			setValues = append(setValues, routeData)
-			bindVarIndex++
+		} else {
+			routeData, err := json.Marshal(beforeDesiredLRP.Routes)
+			if err != nil {
+				logger.Error("failed-marshalling-routes", err)
+				return models.ErrBadRequest
+			}
+			setValues = append(setValues, routeData)
 		}
 
 		setValues = append(setValues, processGuid)
 
-		query := fmt.Sprintf("UPDATE desired_lrps SET %s WHERE process_guid = $%d", strings.Join(setKeys, ", "), bindVarIndex)
-		bindVarIndex++
-		stmt, err := tx.Prepare(query)
+		stmt, err := tx.Prepare(db.getQuery(UpdateDesiredLRPQuery))
 		if err != nil {
 			logger.Error("failed-preparing-query", err)
 			return db.convertSQLError(err)
@@ -226,7 +235,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 			return err
 		}
 
-		_, err = tx.Exec("DELETE FROM desired_lrps WHERE process_guid = $1", processGuid)
+		_, err = tx.Exec(db.getQuery(DeleteDesiredLRPQuery), processGuid)
 		if err != nil {
 			logger.Error("failed-deleting-from-db", err)
 			return db.convertSQLError(err)
@@ -235,20 +244,6 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 		return nil
 	})
 }
-
-var schedulingInfoColumns = `
-	desired_lrps.process_guid,
-	desired_lrps.domain,
-	desired_lrps.log_guid,
-	desired_lrps.annotation,
-	desired_lrps.instances,
-	desired_lrps.memory_mb,
-	desired_lrps.disk_mb,
-	desired_lrps.rootfs,
-	desired_lrps.routes,
-	desired_lrps.volume_placement,
-	desired_lrps.modification_tag_epoch,
-	desired_lrps.modification_tag_index`
 
 // "rows" needs to have the columns defined in the schedulingInfoColumns constant
 func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scanner RowScanner, dest ...interface{}) (*models.DesiredLRPSchedulingInfo, error) {
@@ -296,7 +291,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 }
 
 func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid string, tx *sql.Tx) error {
-	row := tx.QueryRow("SELECT 1 FROM desired_lrps WHERE process_guid = $1 FOR UPDATE", processGuid)
+	row := tx.QueryRow(db.getQuery(LockDesiredLRPByGuidQuery), processGuid)
 	var count int
 	err := row.Scan(&count)
 	if err == sql.ErrNoRows {

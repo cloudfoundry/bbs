@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("DomainDB", func() {
+var _ = Describe("DomainDB", func() {
 	Describe("Domains", func() {
 		Context("when there are domains in the DB", func() {
 			BeforeEach(func() {

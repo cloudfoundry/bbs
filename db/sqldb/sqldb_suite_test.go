@@ -35,6 +35,7 @@ var (
 	serializer       format.Serializer
 	migrationProcess ifrit.Process
 	useSQL           bool
+	usePostgres      bool
 )
 
 func TestSql(t *testing.T) {
@@ -48,6 +49,7 @@ var _ = BeforeSuite(func() {
 	if !useSQL {
 		return
 	}
+	usePostgres = os.Getenv("USE_POSTGRES") == "true"
 
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
@@ -56,14 +58,22 @@ var _ = BeforeSuite(func() {
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
-	db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
+	if usePostgres {
+		db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
+	} else {
+		db, err = sql.Open("mysql", "diego:diego_password@/")
+	}
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
 	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
-	db, err = sql.Open("postgres", fmt.Sprintf("postgres://diego:diego_pw@localhost/diego_%d", GinkgoParallelNode()))
+	if usePostgres {
+		db, err = sql.Open("postgres", fmt.Sprintf("postgres://diego:diego_pw@localhost/diego_%d", GinkgoParallelNode()))
+	} else {
+		db, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/diego_%d", GinkgoParallelNode()))
+	}
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
@@ -120,10 +130,12 @@ var _ = AfterSuite(func() {
 			migrationProcess.Signal(os.Kill)
 		}
 		var err error
-		Expect(db.Close()).NotTo(HaveOccurred())
-		db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(db.Ping()).NotTo(HaveOccurred())
+		if usePostgres {
+			Expect(db.Close()).NotTo(HaveOccurred())
+			db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(db.Ping()).NotTo(HaveOccurred())
+		}
 		_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(db.Close()).NotTo(HaveOccurred())
