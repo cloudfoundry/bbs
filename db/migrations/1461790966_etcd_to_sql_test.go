@@ -254,13 +254,13 @@ var _ = Describe("ETCD to SQL Migration", func() {
 
 			Describe("Actual LRPs", func() {
 				var (
-					existingActualLRPs []migrations.ETCDToSQLActualLRP
-					actualLRPsToCreate int
+					existingActualLRPs   []migrations.ETCDToSQLActualLRP
+					instanceLRPsToCreate int
 				)
 
 				BeforeEach(func() {
-					actualLRPsToCreate = 3
-					for i := 0; i < actualLRPsToCreate; i++ {
+					instanceLRPsToCreate = 3
+					for i := 0; i < instanceLRPsToCreate; i++ {
 						processGuid := fmt.Sprintf("process-guid-%d", i)
 						actualLRP := model_helpers.NewValidActualLRP(processGuid, int32(i))
 
@@ -291,9 +291,16 @@ var _ = Describe("ETCD to SQL Migration", func() {
 							ModificationTagIndex: actualLRP.ModificationTag.Index,
 						})
 					}
+
+					actualLRP := model_helpers.NewValidActualLRP("evacuating-lrp", 0)
+
+					actualLRPData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, actualLRP)
+					Expect(err).NotTo(HaveOccurred())
+					_, err = storeClient.Set(etcddb.EvacuatingActualLRPSchemaPath("evacuating-lrp", 0), actualLRPData, 0)
+					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("creates a actual lrp in sqldb for each actual lrp in etcd", func() {
+				It("only creates an actual lrp in sqldb for each /instance/ actual lrp in etcd", func() {
 					Expect(migrationErr).NotTo(HaveOccurred())
 
 					rows, err := rawSQLDB.Query(`
@@ -327,7 +334,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 						actualLRPs = append(actualLRPs, actualLRPTest)
 					}
 
-					Expect(actualLRPs).To(HaveLen(actualLRPsToCreate))
+					Expect(actualLRPs).To(HaveLen(instanceLRPsToCreate))
 					Expect(actualLRPs).To(BeEquivalentTo(existingActualLRPs))
 				})
 			})

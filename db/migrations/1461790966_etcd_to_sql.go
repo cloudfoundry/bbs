@@ -254,6 +254,7 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		for _, parent := range response.Node.Nodes {
 			for _, indices := range parent.Nodes {
 				for _, node := range indices.Nodes {
+					// we're going to explicitly ignore evacuating lrps for simplicity's sake
 					if path.Base(node.Key) == "instance" {
 						actualLRP := new(models.ActualLRP)
 						err := e.serializer.Unmarshal(logger, []byte(node.Value), actualLRP)
