@@ -357,7 +357,7 @@ func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-domains")
 
-	_, err := db.delete(logger, db.db, "domains", "expire_time <= ?", now.UnixNano())
+	_, err := db.delete(logger, db.db, domainsTable, "expire_time <= ?", now.UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -366,7 +366,7 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
-	_, err := db.delete(logger, db.db, "actual_lrps", "evacuating = ? AND expire_time <= ?", true, now.UnixNano())
+	_, err := db.delete(logger, db.db, actualLRPsTable, "evacuating = ? AND expire_time <= ?", true, now.UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}

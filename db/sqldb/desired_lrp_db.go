@@ -44,7 +44,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 
 		desiredLRP.ModificationTag = &models.ModificationTag{Epoch: guid, Index: 0}
 
-		_, err = db.insert(logger, tx, "desired_lrps",
+		_, err = db.insert(logger, tx, desiredLRPsTable,
 			SQLAttributes{
 				"process_guid":           desiredLRP.ProcessGuid,
 				"domain":                 desiredLRP.Domain,
@@ -74,7 +74,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.one(logger, db.db, "desired_lrps",
+	row := db.one(logger, db.db, desiredLRPsTable,
 		desiredLRPColumns, NoLockRow,
 		"process_guid = ?", processGuid,
 	)
@@ -94,7 +94,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		values = append(values, filter.Domain)
 	}
 
-	rows, err := db.all(logger, db.db, "desired_lrps",
+	rows, err := db.all(logger, db.db, desiredLRPsTable,
 		desiredLRPColumns, NoLockRow,
 		strings.Join(wheres, " AND "), values...,
 	)
@@ -135,7 +135,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 		values = append(values, filter.Domain)
 	}
 
-	rows, err := db.all(logger, db.db, "desired_lrps",
+	rows, err := db.all(logger, db.db, desiredLRPsTable,
 		schedulingInfoColumns, NoLockRow,
 		strings.Join(wheres, " AND "), values...,
 	)
@@ -171,7 +171,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		row := db.one(logger, tx, "desired_lrps",
+		row := db.one(logger, tx, desiredLRPsTable,
 			desiredLRPColumns, LockRow,
 			"process_guid = ?", processGuid,
 		)
@@ -200,7 +200,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			updateAttributes["routes"] = routeData
 		}
 
-		_, err = db.update(logger, tx, "desired_lrps", updateAttributes, `process_guid = ?`, processGuid)
+		_, err = db.update(logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
 		if err != nil {
 			logger.Error("failed-executing-query", err)
 			return db.convertSQLError(err)
@@ -224,7 +224,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 			return err
 		}
 
-		_, err = db.delete(logger, tx, "desired_lrps", "process_guid = ?", processGuid)
+		_, err = db.delete(logger, tx, desiredLRPsTable, "process_guid = ?", processGuid)
 		if err != nil {
 			logger.Error("failed-deleting-from-db", err)
 			return db.convertSQLError(err)
@@ -280,7 +280,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 }
 
 func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid string, tx *sql.Tx) error {
-	row := db.one(logger, tx, "desired_lrps",
+	row := db.one(logger, tx, desiredLRPsTable,
 		ColumnList{"1"}, LockRow,
 		"process_guid = ?", processGuid,
 	)
@@ -305,7 +305,7 @@ func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*mode
 	var runInfo models.DesiredLRPRunInfo
 	err = db.deserializeModel(logger, runInfoData, &runInfo)
 	if err != nil {
-		_, err := db.delete(logger, db.db, "desired_lrps", "process_guid = ?", schedulingInfo.ProcessGuid)
+		_, err := db.delete(logger, db.db, desiredLRPsTable, "process_guid = ?", schedulingInfo.ProcessGuid)
 		if err != nil {
 			logger.Error("failed-deleting-invalid-row", err)
 		}

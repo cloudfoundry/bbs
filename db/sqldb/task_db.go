@@ -21,7 +21,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 
 	now := db.clock.Now().UnixNano()
 
-	_, err = db.insert(logger, db.db, "tasks",
+	_, err = db.insert(logger, db.db, tasksTable,
 		SQLAttributes{
 			"guid":               taskGuid,
 			"domain":             domain,
@@ -58,7 +58,7 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 		values = append(values, filter.CellID)
 	}
 
-	rows, err := db.all(logger, db.db, "tasks",
+	rows, err := db.all(logger, db.db, tasksTable,
 		taskColumns, NoLockRow,
 		strings.Join(wheres, " AND "), values...,
 	)
@@ -91,7 +91,7 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.one(logger, db.db, "tasks",
+	row := db.one(logger, db.db, tasksTable,
 		taskColumns, NoLockRow,
 		"guid = ?", taskGuid,
 	)
@@ -123,7 +123,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 		}
 
 		now := db.clock.Now().UnixNano()
-		_, err = db.update(logger, tx, "tasks",
+		_, err = db.update(logger, tx, tasksTable,
 			SQLAttributes{
 				"state":      models.Task_Running,
 				"updated_at": now,
@@ -251,7 +251,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 		}
 
 		now := db.clock.Now().UnixNano()
-		_, err = db.update(logger, tx, "tasks",
+		_, err = db.update(logger, tx, tasksTable,
 			SQLAttributes{
 				"state":      models.Task_Resolving,
 				"updated_at": now,
@@ -285,7 +285,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 			return err
 		}
 
-		_, err = db.delete(logger, tx, "tasks", "guid = ?", taskGuid)
+		_, err = db.delete(logger, tx, tasksTable, "guid = ?", taskGuid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
 			return db.convertSQLError(err)
@@ -297,7 +297,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 
 func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx *sql.Tx) error {
 	now := db.clock.Now().UnixNano()
-	_, err := db.update(logger, tx, "tasks",
+	_, err := db.update(logger, tx, tasksTable,
 		SQLAttributes{
 			"failed":             failed,
 			"failure_reason":     failureReason,
@@ -326,7 +326,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 }
 
 func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
-	row := db.one(logger, tx, "tasks",
+	row := db.one(logger, tx, tasksTable,
 		taskColumns, LockRow,
 		"guid = ?", taskGuid,
 	)
@@ -363,7 +363,7 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 	err = db.deserializeModel(logger, taskDefData, &taskDef)
 	if err != nil {
 		logger.Info("deleting-malformed-task-from-db", lager.Data{"guid": guid})
-		_, err = db.delete(logger, tx, "tasks", "guid = ?", guid)
+		_, err = db.delete(logger, tx, tasksTable, "guid = ?", guid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
 			return nil, db.convertSQLError(err)

@@ -26,59 +26,66 @@ type SQLAttributes map[string]interface{}
 
 type ColumnList []string
 
+const (
+	tasksTable       = "tasks"
+	desiredLRPsTable = "desired_lrps"
+	actualLRPsTable  = "actual_lrps"
+	domainsTable     = "domains"
+)
+
 var (
 	schedulingInfoColumns = ColumnList{
-		"desired_lrps.process_guid",
-		"desired_lrps.domain",
-		"desired_lrps.log_guid",
-		"desired_lrps.annotation",
-		"desired_lrps.instances",
-		"desired_lrps.memory_mb",
-		"desired_lrps.disk_mb",
-		"desired_lrps.rootfs",
-		"desired_lrps.routes",
-		"desired_lrps.volume_placement",
-		"desired_lrps.modification_tag_epoch",
-		"desired_lrps.modification_tag_index",
+		desiredLRPsTable + ".process_guid",
+		desiredLRPsTable + ".domain",
+		desiredLRPsTable + ".log_guid",
+		desiredLRPsTable + ".annotation",
+		desiredLRPsTable + ".instances",
+		desiredLRPsTable + ".memory_mb",
+		desiredLRPsTable + ".disk_mb",
+		desiredLRPsTable + ".rootfs",
+		desiredLRPsTable + ".routes",
+		desiredLRPsTable + ".volume_placement",
+		desiredLRPsTable + ".modification_tag_epoch",
+		desiredLRPsTable + ".modification_tag_index",
 	}
 
 	desiredLRPColumns = append(schedulingInfoColumns,
-		"desired_lrps.run_info",
+		desiredLRPsTable+".run_info",
 	)
 
 	taskColumns = ColumnList{
-		"tasks.guid",
-		"tasks.domain",
-		"tasks.updated_at",
-		"tasks.created_at",
-		"tasks.first_completed_at",
-		"tasks.state",
-		"tasks.cell_id",
-		"tasks.result",
-		"tasks.failed",
-		"tasks.failure_reason",
-		"tasks.task_definition",
+		tasksTable + ".guid",
+		tasksTable + ".domain",
+		tasksTable + ".updated_at",
+		tasksTable + ".created_at",
+		tasksTable + ".first_completed_at",
+		tasksTable + ".state",
+		tasksTable + ".cell_id",
+		tasksTable + ".result",
+		tasksTable + ".failed",
+		tasksTable + ".failure_reason",
+		tasksTable + ".task_definition",
 	}
 
 	actualLRPColumns = ColumnList{
-		"actual_lrps.process_guid",
-		"actual_lrps.instance_index",
-		"actual_lrps.evacuating",
-		"actual_lrps.domain",
-		"actual_lrps.state",
-		"actual_lrps.instance_guid",
-		"actual_lrps.cell_id",
-		"actual_lrps.placement_error",
-		"actual_lrps.since",
-		"actual_lrps.net_info",
-		"actual_lrps.modification_tag_epoch",
-		"actual_lrps.modification_tag_index",
-		"actual_lrps.crash_count",
-		"actual_lrps.crash_reason",
+		actualLRPsTable + ".process_guid",
+		actualLRPsTable + ".instance_index",
+		actualLRPsTable + ".evacuating",
+		actualLRPsTable + ".domain",
+		actualLRPsTable + ".state",
+		actualLRPsTable + ".instance_guid",
+		actualLRPsTable + ".cell_id",
+		actualLRPsTable + ".placement_error",
+		actualLRPsTable + ".since",
+		actualLRPsTable + ".net_info",
+		actualLRPsTable + ".modification_tag_epoch",
+		actualLRPsTable + ".modification_tag_index",
+		actualLRPsTable + ".crash_count",
+		actualLRPsTable + ".crash_reason",
 	}
 
 	domainColumns = ColumnList{
-		"domain",
+		domainsTable + ".domain",
 	}
 )
 

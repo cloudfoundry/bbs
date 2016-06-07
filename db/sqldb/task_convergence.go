@@ -76,7 +76,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 
 	now := db.clock.Now()
 
-	result, err := db.update(logger, db.db, "tasks",
+	result, err := db.update(logger, db.db, tasksTable,
 		SQLAttributes{
 			"failed":             true,
 			"failure_reason":     "not started within time limit",
@@ -102,7 +102,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, kickTasksDuration, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
-	rows, err := db.all(logger, db.db, "tasks",
+	rows, err := db.all(logger, db.db, tasksTable,
 		taskColumns, NoLockRow,
 		"state = ? AND updated_at < ? AND created_at > ?",
 		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration).UnixNano(), db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
@@ -154,7 +154,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 	}
 	now := db.clock.Now().UnixNano()
 
-	result, err := db.update(logger, db.db, "tasks",
+	result, err := db.update(logger, db.db, tasksTable,
 		SQLAttributes{
 			"failed":             true,
 			"failure_reason":     "cell disappeared before completion",
@@ -181,7 +181,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 
 func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDuration time.Duration) {
 	logger = logger.Session("demote-kickable-resolving-tasks")
-	_, err := db.update(logger, db.db, "tasks",
+	_, err := db.update(logger, db.db, tasksTable,
 		SQLAttributes{"state": models.Task_Completed},
 		"state = ? AND updated_at < ?",
 		models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
@@ -194,7 +194,7 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireCompletedTaskDuration time.Duration) int64 {
 	logger = logger.Session("delete-expired-completed-tasks")
 
-	result, err := db.delete(logger, db.db, "tasks", "state = ? AND first_completed_at < ?", models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano())
+	result, err := db.delete(logger, db.db, tasksTable, "state = ? AND first_completed_at < ?", models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 		return 0
@@ -212,7 +212,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
 	logger = logger.Session("get-kickable-complete-tasks-for-completion")
 
-	rows, err := db.all(logger, db.db, "tasks",
+	rows, err := db.all(logger, db.db, tasksTable,
 		taskColumns, NoLockRow,
 		"state = ? AND updated_at < ?",
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),

@@ -29,16 +29,16 @@ func (db *SQLDB) EncryptionKeyLabel(logger lager.Logger) (string, error) {
 func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
 	errCh := make(chan error)
 	go func() {
-		errCh <- db.reEncrypt(logger, "tasks", "guid", "task_definition")
+		errCh <- db.reEncrypt(logger, tasksTable, "guid", "task_definition")
 	}()
 	go func() {
-		errCh <- db.reEncrypt(logger, "desired_lrps", "process_guid", "run_info")
+		errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", "run_info")
 	}()
 	go func() {
-		errCh <- db.reEncrypt(logger, "desired_lrps", "process_guid", "volume_placement")
+		errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", "volume_placement")
 	}()
 	go func() {
-		errCh <- db.reEncrypt(logger, "actual_lrps", "process_guid", "net_info")
+		errCh <- db.reEncrypt(logger, actualLRPsTable, "process_guid", "net_info")
 	}()
 
 	for i := 0; i < 4; i++ {
