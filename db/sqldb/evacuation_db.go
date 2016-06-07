@@ -59,17 +59,18 @@ func (db *SQLDB) EvacuateActualLRP(
 			return err
 		}
 
-		_, err = tx.Exec(db.getQuery(EvacuateActualLRPQuery),
-			actualLRP.Domain,
-			actualLRP.InstanceGuid,
-			actualLRP.CellId,
-			netInfoData,
-			actualLRP.State,
-			actualLRP.Since,
-			actualLRP.ModificationTag.Index,
-			actualLRP.ProcessGuid,
-			actualLRP.Index,
-			true,
+		_, err = db.update(logger, tx, "actual_lrps",
+			SQLAttributes{
+				"domain":                 actualLRP.Domain,
+				"instance_guid":          actualLRP.InstanceGuid,
+				"cell_id":                actualLRP.CellId,
+				"net_info":               netInfoData,
+				"state":                  actualLRP.State,
+				"since":                  actualLRP.Since,
+				"modification_tag_index": actualLRP.ModificationTag.Index,
+			},
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
+			actualLRP.ProcessGuid, actualLRP.Index, true,
 		)
 		if err != nil {
 			logger.Error("failed-update-evacuating-lrp", err)
@@ -107,10 +108,10 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
-		_, err = tx.Exec(db.getQuery(DeleteActualLRPQuery),
+		_, err = db.delete(logger, tx, "actual_lrps",
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			processGuid, index, true,
 		)
-
 		if err != nil {
 			logger.Error("failed-delete", err)
 			return models.ErrActualLRPCannotBeRemoved
@@ -125,7 +126,8 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
-	tx *sql.Tx) (*models.ActualLRP, error) {
+	tx *sql.Tx,
+) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
 		logger.Error("failed-serializing-net-info", err)
@@ -148,21 +150,24 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
 	}
 
-	_, err = tx.Exec(db.getQuery(UpsertActualLRPQuery),
-		actualLRP.ProcessGuid,
-		actualLRP.Index,
-		actualLRP.Domain,
-		actualLRP.InstanceGuid,
-		actualLRP.CellId,
-		actualLRP.State,
-		netInfoData,
-		actualLRP.Since,
-		actualLRP.ModificationTag.Epoch,
-		actualLRP.ModificationTag.Index,
-		true,
-		expireTime.UnixNano(),
+	_, err = db.upsert(logger, tx, "actual_lrps",
+		SQLAttributes{
+			"process_guid":   actualLRP.ProcessGuid,
+			"instance_index": actualLRP.Index,
+			"evacuating":     true,
+		},
+		SQLAttributes{
+			"domain":                 actualLRP.Domain,
+			"instance_guid":          actualLRP.InstanceGuid,
+			"cell_id":                actualLRP.CellId,
+			"state":                  actualLRP.State,
+			"net_info":               netInfoData,
+			"since":                  actualLRP.Since,
+			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
+			"modification_tag_index": actualLRP.ModificationTag.Index,
+			"expire_time":            expireTime.UnixNano(),
+		},
 	)
-
 	if err != nil {
 		logger.Error("failed-insert-evacuating-lrp", err)
 		return nil, db.convertSQLError(err)

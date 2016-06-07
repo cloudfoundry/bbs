@@ -65,15 +65,6 @@ func NewSQLDB(
 	}
 }
 
-func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
-	_, err := db.db.Exec(db.getQuery(CreateConfigurationsTableQuery))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx *sql.Tx) error) error {
 	var err error
 

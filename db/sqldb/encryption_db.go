@@ -60,12 +60,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColum
 	}
 	defer rows.Next()
 
-	selectQuery := fmt.Sprintf(
-		db.getQuery(ReEncryptSelectQuery),
-		blobColumn, tableName, primaryKey)
-	updateQuery := fmt.Sprintf(
-		db.getQuery(ReEncryptUpdateQuery),
-		tableName, blobColumn, primaryKey)
+	where := fmt.Sprintf("%s = ?", primaryKey)
 	for rows.Next() {
 		var guid string
 		err := rows.Scan(&guid)
@@ -76,7 +71,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColum
 
 		err = db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 			var blob []byte
-			row := tx.QueryRow(selectQuery, guid)
+			row := db.one(logger, tx, tableName, ColumnList{blobColumn}, LockRow, where, guid)
 			err := row.Scan(&blob)
 			if err != nil {
 				logger.Error("failed-to-scan-blob", err)
@@ -93,7 +88,10 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColum
 				logger.Error("failed-to-encode-blob", err)
 				return err
 			}
-			_, err = tx.Exec(updateQuery, encryptedPayload, guid)
+			_, err = db.update(logger, tx, tableName,
+				SQLAttributes{blobColumn: encryptedPayload},
+				where, guid,
+			)
 			if err != nil {
 				logger.Error("failed-to-update-blob", err)
 				return db.convertSQLError(err)

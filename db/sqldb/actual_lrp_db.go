@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 
@@ -10,31 +9,34 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-// Using a whereClause instead of a string, to make it more awkward for
-// someone to use selectActualLRPs in a sql-injectable way. It's not perfect,
-// but it will hopefully make someone stop and consider when using that method.
-type whereClause struct {
-	string
-}
-
-var (
-	whereProcessGuidEquals     = whereClause{"process_guid = ?"}
-	whereCellIdEquals          = whereClause{"cell_id = ?"}
-	whereDomainEquals          = whereClause{"domain = ?"}
-	whereInstanceIndexEquals   = whereClause{"instance_index = ?"}
-	whereEvacuatingEquals      = whereClause{"evacuating = ?"}
-	whereExpireTimeGreaterThan = whereClause{"expire_time > ?"}
-)
-
 func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.selectActualLRPs(logger, db.db, map[whereClause]interface{}{
-		whereDomainEquals: filter.Domain,
-		whereCellIdEquals: filter.CellID,
-	}, NoLock)
+	var wheres []string
+	var values []interface{}
+
+	if filter.Domain != "" {
+		wheres = append(wheres, "domain = ?")
+		values = append(values, filter.Domain)
+	}
+
+	if filter.CellID != "" {
+		wheres = append(wheres, "cell_id = ?")
+		values = append(values, filter.CellID)
+	}
+
+	rows, err := db.all(logger, db.db, "actual_lrps",
+		actualLRPColumns, NoLockRow,
+		strings.Join(wheres, " AND "), values...,
+	)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return nil, db.convertSQLError(err)
+	}
+	defer rows.Close()
+	return db.scanAndCleanupActualLRPs(logger, db.db, rows)
 }
 
 func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
@@ -42,9 +44,16 @@ func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.selectActualLRPs(logger, db.db, map[whereClause]interface{}{
-		whereProcessGuidEquals: processGuid,
-	}, NoLock)
+	rows, err := db.all(logger, db.db, "actual_lrps",
+		actualLRPColumns, NoLockRow,
+		"process_guid = ?", processGuid,
+	)
+	if err != nil {
+		logger.Error("failed-select-query", err)
+		return nil, db.convertSQLError(err)
+	}
+	defer rows.Close()
+	return db.scanAndCleanupActualLRPs(logger, db.db, rows)
 }
 
 func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
@@ -52,12 +61,17 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	groups, err := db.selectActualLRPs(logger, db.db, map[whereClause]interface{}{
-		whereProcessGuidEquals:   processGuid,
-		whereInstanceIndexEquals: index,
-	}, NoLock)
+	rows, err := db.all(logger, db.db, "actual_lrps",
+		actualLRPColumns, NoLockRow,
+		"process_guid = ? AND instance_index = ?", processGuid, index,
+	)
 	if err != nil {
 		logger.Error("failed-select-query", err)
+		return nil, db.convertSQLError(err)
+	}
+	defer rows.Close()
+	groups, err := db.scanAndCleanupActualLRPs(logger, db.db, rows)
+	if err != nil {
 		return nil, err
 	}
 
@@ -81,15 +95,17 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 	}
 
 	now := db.clock.Now().UnixNano()
-	_, err = db.db.Exec(db.getQuery(InsertActualLRPQuery),
-		key.ProcessGuid,
-		key.Index,
-		key.Domain,
-		models.ActualLRPStateUnclaimed,
-		now,
-		[]byte{},
-		guid,
-		0,
+	_, err = db.insert(logger, db.db, "actual_lrps",
+		SQLAttributes{
+			"process_guid":           key.ProcessGuid,
+			"instance_index":         key.Index,
+			"domain":                 key.Domain,
+			"state":                  models.ActualLRPStateUnclaimed,
+			"since":                  now,
+			"net_info":               []byte{},
+			"modification_tag_epoch": guid,
+			"modification_tag_index": 0,
+		},
 	)
 	if err != nil {
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
@@ -137,16 +153,17 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 
-		_, err = tx.Exec(db.getQuery(UnclaimActualLRPQuery),
-			actualLRP.State,
-			actualLRP.ActualLRPInstanceKey.CellId,
-			actualLRP.ActualLRPInstanceKey.InstanceGuid,
-			actualLRP.ModificationTag.Index,
-			db.clock.Now().UnixNano(),
-			[]byte{},
-			processGuid,
-			index,
-			false,
+		_, err = db.update(logger, tx, "actual_lrps",
+			SQLAttributes{
+				"state":                  actualLRP.State,
+				"cell_id":                actualLRP.CellId,
+				"instance_guid":          actualLRP.InstanceGuid,
+				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"since":                  actualLRP.Since,
+				"net_info":               []byte{},
+			},
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
+			processGuid, index, false,
 		)
 		if err != nil {
 			logger.Error("failed-to-unclaim-actual-lrp", err)
@@ -191,14 +208,17 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 		actualLRP.Since = db.clock.Now().UnixNano()
 
-		_, err = tx.Exec(db.getQuery(ClaimActualLRPQuery),
-			actualLRP.State,
-			actualLRP.ActualLRPInstanceKey.InstanceGuid,
-			actualLRP.ActualLRPInstanceKey.CellId,
-			actualLRP.PlacementError,
-			actualLRP.ModificationTag.Index,
-			[]byte{},
-			actualLRP.Since,
+		_, err = db.update(logger, tx, "actual_lrps",
+			SQLAttributes{
+				"state":                  actualLRP.State,
+				"cell_id":                actualLRP.CellId,
+				"instance_guid":          actualLRP.InstanceGuid,
+				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"placement_error":        actualLRP.PlacementError,
+				"since":                  actualLRP.Since,
+				"net_info":               []byte{},
+			},
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			processGuid, index, false,
 		)
 		if err != nil {
@@ -264,17 +284,18 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			return err
 		}
 
-		_, err = tx.Exec(db.getQuery(StartActualLRPQuery),
-			actualLRP.InstanceGuid,
-			actualLRP.CellId,
-			netInfoData,
-			actualLRP.State,
-			now,
-			actualLRP.ModificationTag.Index,
-			actualLRP.PlacementError,
-			key.ProcessGuid,
-			key.Index,
-			evacuating,
+		_, err = db.update(logger, tx, "actual_lrps",
+			SQLAttributes{
+				"state":                  actualLRP.State,
+				"cell_id":                actualLRP.CellId,
+				"instance_guid":          actualLRP.InstanceGuid,
+				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"placement_error":        actualLRP.PlacementError,
+				"since":                  actualLRP.Since,
+				"net_info":               netInfoData,
+			},
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
+			key.ProcessGuid, key.Index, evacuating,
 		)
 		if err != nil {
 			logger.Error("failed-starting-actual-lrp", err)
@@ -337,15 +358,19 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		now := db.clock.Now().UnixNano()
 		actualLRP.Since = now
 
-		_, err = tx.Exec(db.getQuery(CrashActualLRPQuery),
-			actualLRP.State,
-			actualLRP.ActualLRPInstanceKey.InstanceGuid,
-			actualLRP.ActualLRPInstanceKey.CellId,
-			actualLRP.ModificationTag.Index,
-			actualLRP.Since,
-			[]byte{},
-			actualLRP.CrashCount,
-			actualLRP.CrashReason,
+		_, err = db.update(logger, tx, "actual_lrps",
+			SQLAttributes{
+				"state":                  actualLRP.State,
+				"cell_id":                actualLRP.CellId,
+				"instance_guid":          actualLRP.InstanceGuid,
+				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"placement_error":        actualLRP.PlacementError,
+				"crash_count":            actualLRP.CrashCount,
+				"crash_reason":           actualLRP.CrashReason,
+				"since":                  actualLRP.Since,
+				"net_info":               []byte{},
+			},
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			key.ProcessGuid, key.Index, evacuating,
 		)
 		if err != nil {
@@ -387,13 +412,14 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		actualLRP.Since = now
 		evacuating := false
 
-		_, err = tx.Exec(db.getQuery(FailActualLRPQuery),
-			now,
-			actualLRP.ModificationTag.Index,
-			actualLRP.PlacementError,
-			actualLRP.ActualLRPKey.ProcessGuid,
-			actualLRP.ActualLRPKey.Index,
-			evacuating,
+		_, err = db.update(logger, tx, "actual_lrps",
+			SQLAttributes{
+				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"placement_error":        actualLRP.PlacementError,
+				"since":                  actualLRP.Since,
+			},
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
+			key.ProcessGuid, key.Index, evacuating,
 		)
 		if err != nil {
 			logger.Error("failed-failing-actual-lrp", err)
@@ -412,7 +438,8 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		result, err := tx.Exec(db.getQuery(DeleteActualLRPQuery),
+		result, err := db.delete(logger, tx, "actual_lrps",
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			processGuid, index, false,
 		)
 		if err != nil {
@@ -454,17 +481,19 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 		return nil, err
 	}
 
-	_, err = tx.Exec(db.getQuery(CreateRunningActualLRPQuery),
-		actualLRP.ActualLRPKey.ProcessGuid,
-		actualLRP.ActualLRPKey.Index,
-		actualLRP.ActualLRPKey.Domain,
-		actualLRP.ActualLRPInstanceKey.InstanceGuid,
-		actualLRP.ActualLRPInstanceKey.CellId,
-		actualLRP.State,
-		netInfoData,
-		actualLRP.Since,
-		actualLRP.ModificationTag.Epoch,
-		actualLRP.ModificationTag.Index,
+	_, err = db.insert(logger, tx, "actual_lrps",
+		SQLAttributes{
+			"process_guid":           actualLRP.ActualLRPKey.ProcessGuid,
+			"instance_index":         actualLRP.ActualLRPKey.Index,
+			"domain":                 actualLRP.ActualLRPKey.Domain,
+			"instance_guid":          actualLRP.ActualLRPInstanceKey.InstanceGuid,
+			"cell_id":                actualLRP.ActualLRPInstanceKey.CellId,
+			"state":                  actualLRP.State,
+			"net_info":               netInfoData,
+			"since":                  actualLRP.Since,
+			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
+			"modification_tag_index": actualLRP.ModificationTag.Index,
+		},
 	)
 	if err != nil {
 		logger.Error("failed-creating-running-actual-lrp", err)
@@ -515,44 +544,36 @@ type actualToDelete struct {
 	evacuating bool
 }
 
-func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions map[whereClause]interface{}, lockMode int) ([]*models.ActualLRPGroup, error) {
-	wheres := []string{}
-	values := []interface{}{}
-
-	index := 1
-	for field, value := range conditions {
-		if value == "" {
-			continue
-		}
-
-		if db.flavor == Postgres {
-			postgresField := strings.Replace(field.string, "?", fmt.Sprintf("$%d", index), -1)
-			wheres = append(wheres, postgresField)
-		} else {
-			wheres = append(wheres, field.string)
-		}
-
-		values = append(values, value)
-
-		index++
+func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
+	expireTime := db.clock.Now().Round(time.Second).UnixNano()
+	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
+	bindings := []interface{}{processGuid, index, evacuating}
+	if evacuating {
+		wheres += " AND expire_time > ?"
+		bindings = append(bindings, expireTime)
 	}
 
-	query := db.getQuery(SelectActualLRPQuery)
-	if len(wheres) > 0 {
-		query += fmt.Sprintf("WHERE %s\n", strings.Join(wheres, " AND "))
-	}
-	switch lockMode {
-	case LockForUpdate:
-		query += "FOR UPDATE\n"
-	}
-
-	rows, err := q.Query(query, values...)
+	rows, err := db.all(logger, tx, "actual_lrps",
+		actualLRPColumns, LockRow, wheres, bindings...)
 	if err != nil {
-		logger.Error("failed-fetching-actual-lrps", err)
-		return nil, db.convertSQLError(err)
+		logger.Error("failed-query", err)
+		return nil, err
 	}
-	defer rows.Close()
+	groups, err := db.scanAndCleanupActualLRPs(logger, tx, rows)
+	if err != nil {
+		return nil, err
+	}
 
+	if len(groups) == 0 {
+		return nil, models.ErrResourceNotFound
+	}
+
+	actualLRP, _ := groups[0].Resolve()
+
+	return actualLRP, nil
+}
+
+func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q Queryable, rows *sql.Rows) ([]*models.ActualLRPGroup, error) {
 	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
 	result := []*models.ActualLRPGroup{}
 	actualsToDelete := []*actualToDelete{}
@@ -589,38 +610,14 @@ func (db *SQLDB) selectActualLRPs(logger lager.Logger, q Queryable, conditions m
 	}
 
 	for _, actual := range actualsToDelete {
-		_, err := q.Exec(db.getQuery(DeleteActualLRPQuery),
-			actual.ProcessGuid, actual.Index, actual.evacuating)
+		_, err := db.delete(logger, q, "actual_lrps",
+			"process_guid = ? AND instance_index = ? AND evacuating = ?",
+			actual.ProcessGuid, actual.Index, actual.evacuating,
+		)
 		if err != nil {
 			logger.Error("failed-cleaning-up-invalid-actual-lrp", err)
 		}
 	}
 
 	return result, nil
-}
-
-func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
-	expireTime := db.clock.Now().Round(time.Second).UnixNano()
-	conditions := map[whereClause]interface{}{
-		whereProcessGuidEquals:   processGuid,
-		whereInstanceIndexEquals: index,
-		whereEvacuatingEquals:    evacuating,
-	}
-
-	if evacuating {
-		conditions[whereExpireTimeGreaterThan] = expireTime
-	}
-
-	groups, err := db.selectActualLRPs(logger, tx, conditions, LockForUpdate)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(groups) == 0 {
-		return nil, models.ErrResourceNotFound
-	}
-
-	actualLRP, _ := groups[0].Resolve()
-
-	return actualLRP, nil
 }

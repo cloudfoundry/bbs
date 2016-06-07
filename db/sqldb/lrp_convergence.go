@@ -101,9 +101,7 @@ func newConvergence(db *SQLDB) *convergence {
 func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("stale-unclaimed-actual-lrps")
 
-	rows, err := c.db.Query(c.getQuery(SelectStaleLRPsQuery), models.ActualLRPStateUnclaimed,
-		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
-		false)
+	rows, err := c.selectStaleUnclaimedLRPs(logger, c.db, now)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -131,7 +129,7 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("crashed-actual-lrps")
 	restartCalculator := models.NewDefaultRestartCalculator()
 
-	rows, err := c.db.Query(c.getQuery(SelectLRPsByStateQuery), false, models.ActualLRPStateCrashed)
+	rows, err := c.selectCrashedLRPs(logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -175,7 +173,7 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 	logger = logger.Session("orphaned-actual-lrps")
 
-	rows, err := c.db.Query(c.getQuery(SelectOrphanedActualLRPsQuery), false)
+	rows, err := c.selectOrphanedActualLRPs(logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -207,7 +205,7 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}) {
 	logger = logger.Session("lrp-instance-counts")
 
-	rows, err := c.db.Query(c.getQuery(SelectLRPInstanceCountsQuery), false)
+	rows, err := c.selectLRPInstanceCounts(logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -276,36 +274,9 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 	// time.Sleep(1000 * time.Second)
 	logger = logger.Session("actual-lrps-with-missing-cells")
 
-	values := make([]interface{}, 0, 1+len(cellSet))
-	values = append(values, false)
 	keysWithMissingCells := make([]*models.ActualLRPKeyWithSchedulingInfo, 0)
 
-	for k := range cellSet {
-		values = append(values, k)
-	}
-
-	query := c.getQuery(SelectLRPsQuery)
-	if len(cellSet) != 0 {
-		cellSetArgs := strings.Join(strings.Split(strings.Repeat("?", len(cellSet)), ""), ",")
-
-		if c.flavor == Postgres {
-			strParts := strings.Split(cellSetArgs, "?")
-			for i := 1; i < len(strParts); i++ {
-				strParts[i-1] += fmt.Sprintf("$%d", i+1)
-			}
-			cellSetArgs = strings.Join(strParts, "")
-		}
-		query = fmt.Sprintf(`%s AND actual_lrps.cell_id NOT IN (%s) AND actual_lrps.cell_id <> ''`,
-			query, cellSetArgs)
-	}
-
-	stmt, err := c.db.Prepare(query)
-	if err != nil {
-		logger.Error("failed-preparing-query", err)
-		return
-	}
-
-	rows, err := stmt.Query(values...)
+	rows, err := c.selectLRPsWithMissingCells(logger, c.db, cellSet)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -386,8 +357,7 @@ func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-domains")
 
-	_, err := db.db.Exec(db.getQuery(PruneDomainsQuery), now.UnixNano())
-
+	_, err := db.delete(logger, db.db, "domains", "expire_time <= ?", now.UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -396,7 +366,7 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
-	_, err := db.db.Exec(db.getQuery(PruneActualLRPsQuery), true, now.UnixNano())
+	_, err := db.delete(logger, db.db, "actual_lrps", "evacuating = ? AND expire_time <= ?", true, now.UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -424,29 +394,11 @@ func (db *SQLDB) emitDomainMetrics(logger lager.Logger, domainSet map[string]str
 }
 
 func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
+	var err error
 	logger = logger.Session("emit-lrp-metrics")
-	var desiredInstances, claimedInstances, unclaimedInstances, runningInstances, crashedInstances, crashingDesireds int
+	claimedInstances, unclaimedInstances, runningInstances, crashedInstances, crashingDesireds := db.countActualLRPsByState(logger, db.db)
 
-	row := db.db.QueryRow(db.getQuery(SelectLRPMetricsQuery),
-		models.ActualLRPStateClaimed,
-		models.ActualLRPStateUnclaimed,
-		models.ActualLRPStateRunning,
-		models.ActualLRPStateCrashed,
-		models.ActualLRPStateCrashed,
-		false,
-	)
-
-	err := row.Scan(&claimedInstances, &unclaimedInstances, &runningInstances, &crashedInstances, &crashingDesireds)
-	if err != nil {
-		logger.Error("failed-query", err)
-	}
-
-	row = db.db.QueryRow(db.getQuery(CountDesiredInstancesQuery))
-
-	err = row.Scan(&desiredInstances)
-	if err != nil {
-		logger.Error("failed-desired-instances-query", err)
-	}
+	desiredInstances := db.countDesiredInstances(logger, db.db)
 
 	err = unclaimedLRPs.Send(unclaimedInstances)
 	if err != nil {

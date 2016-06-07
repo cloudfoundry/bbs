@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -22,16 +21,17 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 
 	now := db.clock.Now().UnixNano()
 
-	_, err = db.db.Exec(db.getQuery(InsertTaskQuery),
-		taskGuid,
-		domain,
-		now,
-		now,
-		0,
-		models.Task_Pending,
-		taskDefData,
+	_, err = db.insert(logger, db.db, "tasks",
+		SQLAttributes{
+			"guid":               taskGuid,
+			"domain":             domain,
+			"created_at":         now,
+			"updated_at":         now,
+			"first_completed_at": 0,
+			"state":              models.Task_Pending,
+			"task_definition":    taskDefData,
+		},
 	)
-
 	if err != nil {
 		logger.Error("failed-inserting-task", err)
 		return db.convertSQLError(err)
@@ -45,38 +45,23 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	var rows *sql.Rows
-	var err error
-	conditions := map[whereClause]interface{}{
-		whereDomainEquals: filter.Domain,
-		whereCellIdEquals: filter.CellID,
-	}
 	wheres := []string{}
 	values := []interface{}{}
 
-	index := 1
-	for field, value := range conditions {
-		if value == "" {
-			continue
-		}
-
-		if db.flavor == Postgres {
-			postgresField := strings.Replace(field.string, "?", fmt.Sprintf("$%d", index), -1)
-			wheres = append(wheres, postgresField)
-		} else {
-			wheres = append(wheres, field.string)
-		}
-
-		values = append(values, value)
-
-		index++
+	if filter.Domain != "" {
+		wheres = append(wheres, "domain = ?")
+		values = append(values, filter.Domain)
 	}
 
-	query := db.getQuery(SelectTasksBaseQuery)
-	if len(wheres) > 0 {
-		query += fmt.Sprintf(" WHERE %s\n", strings.Join(wheres, " AND "))
+	if filter.CellID != "" {
+		wheres = append(wheres, "cell_id = ?")
+		values = append(values, filter.CellID)
 	}
-	rows, err = db.db.Query(query, values...)
+
+	rows, err := db.all(logger, db.db, "tasks",
+		taskColumns, NoLockRow,
+		strings.Join(wheres, " AND "), values...,
+	)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, db.convertSQLError(err)
@@ -106,7 +91,10 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.db.QueryRow(db.getQuery(SelectTaskByGuidQuery), taskGuid)
+	row := db.one(logger, db.db, "tasks",
+		taskColumns, NoLockRow,
+		"guid = ?", taskGuid,
+	)
 	return db.fetchTask(logger, row, db.db)
 }
 
@@ -135,14 +123,15 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 		}
 
 		now := db.clock.Now().UnixNano()
-		_, err = tx.Exec(db.getQuery(UpdateTaskByGuidQuery),
-			models.Task_Running,
-			now,
-			cellId,
-			taskGuid,
+		_, err = db.update(logger, tx, "tasks",
+			SQLAttributes{
+				"state":      models.Task_Running,
+				"updated_at": now,
+				"cell_id":    cellId,
+			},
+			"guid = ?", taskGuid,
 		)
 		if err != nil {
-			logger.Error("failed-to-update-task", err)
 			return db.convertSQLError(err)
 		}
 
@@ -262,14 +251,15 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 		}
 
 		now := db.clock.Now().UnixNano()
-		_, err = tx.Exec(db.getQuery(UpdateTaskByGuidQuery),
-			models.Task_Resolving,
-			now,
-			task.CellId,
-			taskGuid,
+		_, err = db.update(logger, tx, "tasks",
+			SQLAttributes{
+				"state":      models.Task_Resolving,
+				"updated_at": now,
+			},
+			"guid = ?", taskGuid,
 		)
 		if err != nil {
-			logger.Error("failed-resolving-task", err)
+			logger.Error("failed-updating-tasks", err)
 			return db.convertSQLError(err)
 		}
 
@@ -295,7 +285,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 			return err
 		}
 
-		_, err = tx.Exec(db.getQuery(DeleteTaskQuery), taskGuid)
+		_, err = db.delete(logger, tx, "tasks", "guid = ?", taskGuid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
 			return db.convertSQLError(err)
@@ -307,18 +297,20 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 
 func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx *sql.Tx) error {
 	now := db.clock.Now().UnixNano()
-	_, err := tx.Exec(db.getQuery(CompleteTaskByGuidQuery),
-		models.Task_Completed,
-		now,
-		now,
-		failed,
-		failureReason,
-		result,
-		"",
-		task.TaskGuid,
+	_, err := db.update(logger, tx, "tasks",
+		SQLAttributes{
+			"failed":             failed,
+			"failure_reason":     failureReason,
+			"result":             result,
+			"state":              models.Task_Completed,
+			"first_completed_at": now,
+			"updated_at":         now,
+			"cell_id":            "",
+		},
+		"guid = ?", task.TaskGuid,
 	)
 	if err != nil {
-		logger.Error("failed-updating-task", err)
+		logger.Error("failed-updating-tasks", err)
 		return db.convertSQLError(err)
 	}
 
@@ -334,8 +326,10 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 }
 
 func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
-	query := db.getQuery(SelectTaskByGuidQuery) + " FOR UPDATE"
-	row := tx.QueryRow(query, taskGuid)
+	row := db.one(logger, tx, "tasks",
+		taskColumns, LockRow,
+		"guid = ?", taskGuid,
+	)
 	return db.fetchTask(logger, row, tx)
 }
 
@@ -369,7 +363,7 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 	err = db.deserializeModel(logger, taskDefData, &taskDef)
 	if err != nil {
 		logger.Info("deleting-malformed-task-from-db", lager.Data{"guid": guid})
-		_, err = tx.Exec(db.getQuery(DeleteTaskQuery), guid)
+		_, err = db.delete(logger, tx, "tasks", "guid = ?", guid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
 			return nil, db.convertSQLError(err)
