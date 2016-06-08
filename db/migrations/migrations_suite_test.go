@@ -10,7 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
-	"github.com/cloudfoundry/storeadapter/storerunner/mysqlrunner"
+	"github.com/cloudfoundry/storeadapter/storerunner/sqlrunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,9 +31,9 @@ var (
 	etcdClient  *etcdclient.Client
 	storeClient etcd.StoreClient
 
-	rawSQLDB     *sql.DB
-	mySQLProcess ifrit.Process
-	mySQLRunner  *mysqlrunner.MySQLRunner
+	rawSQLDB   *sql.DB
+	sqlProcess ifrit.Process
+	sqlRunner  sqlrunner.SQLRunner
 
 	cryptor   encryption.Cryptor
 	fakeClock *fakeclock.FakeClock
@@ -55,14 +55,15 @@ var _ = BeforeSuite(func() {
 	etcdRunner.Start()
 
 	if test_helpers.UseSQL() {
-		mySQLRunner = mysqlrunner.NewMySQLRunner(fmt.Sprintf("diego_%d", GinkgoParallelNode()))
-		mySQLProcess = ginkgomon.Invoke(mySQLRunner)
+		dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
+		sqlRunner = test_helpers.NewSQLRunner(dbName)
+		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
 		// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 		// in diego-release.
 		var err error
 
-		rawSQLDB, err = sql.Open("mysql", mySQLRunner.ConnectionString())
+		rawSQLDB, err = sql.Open(sqlRunner.DriverName(), sqlRunner.ConnectionString())
 		Expect(err).NotTo(HaveOccurred())
 		Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 	}
@@ -80,7 +81,7 @@ var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 
 	if test_helpers.UseSQL() {
-		ginkgomon.Kill(mySQLProcess)
+		ginkgomon.Kill(sqlProcess)
 		Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
 	}
 })
@@ -94,6 +95,6 @@ var _ = BeforeEach(func() {
 	storeClient = etcd.NewStoreClient(etcdClient)
 
 	if test_helpers.UseSQL() {
-		mySQLRunner.Reset()
+		sqlRunner.Reset()
 	}
 })

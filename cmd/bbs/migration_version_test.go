@@ -84,8 +84,12 @@ var _ = Describe("Migration Version", func() {
 			)
 
 			BeforeEach(func() {
-				sqlConn, err = sql.Open("mysql", mySQLRunner.ConnectionString())
+				sqlConn, err = sql.Open(sqlRunner.DriverName(), sqlRunner.ConnectionString())
 				Expect(err).NotTo(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				sqlConn.Close()
 			})
 
 			It("loads and runs all the migrations", func() {
@@ -103,9 +107,10 @@ var _ = Describe("Migration Version", func() {
 				Expect(version.CurrentVersion).To(BeEquivalentTo(9999999999))
 				Expect(version.TargetVersion).To(BeEquivalentTo(9999999999))
 
-				var table interface{}
-				err = sqlConn.QueryRow(`SHOW TABLES LIKE 'sweet_table'`).Scan(&table)
+				var count int
+				err = sqlConn.QueryRow(`SELECT count(*) FROM information_schema.tables WHERE table_name = 'sweet_table'`).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
 			})
 		})
 	}

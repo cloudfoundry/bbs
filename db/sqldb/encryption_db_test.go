@@ -184,7 +184,7 @@ var _ = Describe("Encryption", func() {
 
 			cryptor = makeCryptor("new", "old")
 
-			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, sqldb.Postgres)
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
 			err = sqlDB.PerformEncryption(logger)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -253,7 +253,7 @@ var _ = Describe("Encryption", func() {
 
 			cryptor = makeCryptor("new", "old")
 
-			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, sqldb.Postgres)
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
 			err = sqlDB.PerformEncryption(logger)
 			Expect(err).NotTo(HaveOccurred())
 		})

@@ -112,6 +112,7 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 	case Postgres:
 		columns = append(columns, "STRING_AGG(actual_lrps.instance_index::text, ',') AS existing_indices")
 	case MySQL:
+		columns = append(columns, "GROUP_CONCAT(actual_lrps.instance_index) AS existing_indices")
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + db.flavor)
@@ -163,7 +164,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 		strings.Join(wheres, " AND "),
 	)
 
-	return q.Query(db.rebind(query), bindings...)
+	return q.Query(db.Rebind(query), bindings...)
 }
 
 func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
@@ -179,7 +180,7 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows,
 		),
 	)
 
-	return q.Query(db.rebind(query), models.ActualLRPStateCrashed, false)
+	return q.Query(db.Rebind(query), models.ActualLRPStateCrashed, false)
 }
 
 func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now time.Time) (*sql.Rows, error) {
@@ -192,7 +193,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now 
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
 	)
 
-	return q.Query(db.rebind(query),
+	return q.Query(db.Rebind(query),
 		models.ActualLRPStateUnclaimed,
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
 		false,
@@ -206,7 +207,7 @@ func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 	`
 
 	var desiredInstances int
-	row := q.QueryRow(db.rebind(query))
+	row := q.QueryRow(db.Rebind(query))
 	err := row.Scan(&desiredInstances)
 	if err != nil {
 		logger.Error("failed-desired-instances-query", err)
@@ -229,6 +230,16 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q Queryable) (claim
 			WHERE evacuating = $6
 		`
 	case MySQL:
+		query = `
+			SELECT
+				COUNT(IF(actual_lrps.state = ?, 1, NULL)) AS claimed_instances,
+				COUNT(IF(actual_lrps.state = ?, 1, NULL)) AS unclaimed_instances,
+				COUNT(IF(actual_lrps.state = ?, 1, NULL)) AS running_instances,
+				COUNT(IF(actual_lrps.state = ?, 1, NULL)) AS crashed_instances,
+				COUNT(DISTINCT IF(state = ?, process_guid, NULL)) AS crashing_desireds
+			FROM actual_lrps
+			WHERE evacuating = ?
+		`
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + db.flavor)
@@ -255,6 +266,14 @@ func (db *SQLDB) countTasksByState(logger lager.Logger, q Queryable) (pendingCou
 			FROM tasks
 		`
 	case MySQL:
+		query = `
+			SELECT
+				COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,
+				COUNT(IF(state = ?, 1, NULL)) AS running_tasks,
+				COUNT(IF(state = ?, 1, NULL)) AS completed_tasks,
+				COUNT(IF(state = ?, 1, NULL)) AS resolving_tasks
+			FROM tasks
+		`
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + db.flavor)
@@ -285,7 +304,7 @@ func (db *SQLDB) one(logger lager.Logger, q Queryable, table string,
 		query += "\nFOR UPDATE"
 	}
 
-	return q.QueryRow(db.rebind(query), whereBindings...)
+	return q.QueryRow(db.Rebind(query), whereBindings...)
 }
 
 // SELECT <columns> FROM <table> WHERE ... [FOR UPDATE]
@@ -303,7 +322,7 @@ func (db *SQLDB) all(logger lager.Logger, q Queryable, table string,
 		query += "\nFOR UPDATE"
 	}
 
-	return q.Query(db.rebind(query), whereBindings...)
+	return q.Query(db.Rebind(query), whereBindings...)
 }
 
 func (db *SQLDB) upsert(logger lager.Logger, q Queryable, table string, keyAttributes, updateAttributes SQLAttributes) (sql.Result, error) {
@@ -347,12 +366,24 @@ func (db *SQLDB) upsert(logger lager.Logger, q Queryable, table string, keyAttri
 			strings.Join(updateBindings, ", "),
 		)
 	case MySQL:
+		query = fmt.Sprintf(`
+				INSERT INTO %s
+					(%s)
+				VALUES (%s)
+				ON DUPLICATE KEY UPDATE
+					%s
+			`,
+			table,
+			strings.Join(columns, ", "),
+			insertBindings,
+			strings.Join(updateBindings, ", "),
+		)
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + db.flavor)
 	}
 
-	return q.Exec(db.rebind(query), bindingValues...)
+	return q.Exec(db.Rebind(query), bindingValues...)
 }
 
 // INSERT INTO <table> (...) VALUES ...
@@ -375,7 +406,7 @@ func (db *SQLDB) insert(logger lager.Logger, q Queryable, table string, attribut
 	query += fmt.Sprintf("(%s)", strings.Join(attributeNames, ", "))
 	query += fmt.Sprintf("VALUES (%s)", strings.Join(attributeBindings, ", "))
 
-	return q.Exec(db.rebind(query), bindings...)
+	return q.Exec(db.Rebind(query), bindings...)
 }
 
 // UPDATE <table> SET ... WHERE ...
@@ -399,7 +430,7 @@ func (db *SQLDB) update(logger lager.Logger, q Queryable, table string, updates 
 		bindings = append(bindings, whereBindings...)
 	}
 
-	return q.Exec(db.rebind(query), bindings...)
+	return q.Exec(db.Rebind(query), bindings...)
 }
 
 // DELETE FROM <table> WHERE ...
@@ -410,10 +441,10 @@ func (db *SQLDB) delete(logger lager.Logger, q Queryable, table string, wheres s
 		query += "WHERE " + wheres
 	}
 
-	return q.Exec(db.rebind(query), whereBindings...)
+	return q.Exec(db.Rebind(query), whereBindings...)
 }
 
-func (db *SQLDB) rebind(query string) string {
+func (db *SQLDB) Rebind(query string) string {
 	if db.flavor == MySQL {
 		return query
 	}

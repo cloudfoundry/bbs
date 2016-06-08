@@ -20,7 +20,6 @@ var _ = Describe("Events API", func() {
 		eventChannel chan models.Event
 
 		eventSource    events.EventSource
-		baseLRP        *models.ActualLRP
 		desiredLRP     *models.DesiredLRP
 		key            models.ActualLRPKey
 		instanceKey    models.ActualLRPInstanceKey
@@ -140,12 +139,6 @@ var _ = Describe("Events API", func() {
 						Path: "true",
 						User: "me",
 					}),
-				}
-
-				baseLRP = &models.ActualLRP{
-					ActualLRPKey: key,
-					State:        models.ActualLRPStateUnclaimed,
-					Since:        time.Now().UnixNano(),
 				}
 			})
 

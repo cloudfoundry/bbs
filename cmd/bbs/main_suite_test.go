@@ -16,7 +16,7 @@ import (
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
-	"github.com/cloudfoundry/storeadapter/storerunner/mysqlrunner"
+	"github.com/cloudfoundry/storeadapter/storerunner/sqlrunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
@@ -58,10 +58,8 @@ var (
 	testMetricsListener net.PacketConn
 	testMetricsChan     chan *events.Envelope
 
-	mySQLProcess    ifrit.Process
-	mySQLRunner     *mysqlrunner.MySQLRunner
-	postgresProcess ifrit.Process
-	postgresRunner  *postgresrunner.postgresRunner
+	sqlProcess ifrit.Process
+	sqlRunner  sqlrunner.SQLRunner
 )
 
 func TestBBS(t *testing.T) {
@@ -84,8 +82,9 @@ var _ = SynchronizedBeforeSuite(
 		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
 
 		if test_helpers.UseSQL() {
-			mySQLRunner = mysqlrunner.NewMySQLRunner(fmt.Sprintf("diego_%d", GinkgoParallelNode()))
-			mySQLProcess = ginkgomon.Invoke(mySQLRunner)
+			dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
+			sqlRunner = test_helpers.NewSQLRunner(dbName)
+			sqlProcess = ginkgomon.Invoke(sqlRunner)
 		}
 
 		consulRunner = consulrunner.NewClusterRunner(
@@ -102,7 +101,7 @@ var _ = SynchronizedBeforeSuite(
 )
 
 var _ = SynchronizedAfterSuite(func() {
-	ginkgomon.Kill(mySQLProcess)
+	ginkgomon.Kill(sqlProcess)
 
 	etcdRunner.Stop()
 	consulRunner.Stop()
@@ -172,8 +171,8 @@ var _ = BeforeEach(func() {
 		ActiveKeyLabel: "label",
 	}
 	if test_helpers.UseSQL() {
-		bbsArgs.DatabaseDriver = "mysql"
-		bbsArgs.DatabaseConnectionString = mySQLRunner.ConnectionString()
+		bbsArgs.DatabaseDriver = sqlRunner.DriverName()
+		bbsArgs.DatabaseConnectionString = sqlRunner.ConnectionString()
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
@@ -199,6 +198,8 @@ var _ = AfterEach(func() {
 	Eventually(testMetricsChan).Should(BeClosed())
 
 	if test_helpers.UseSQL() {
-		mySQLRunner.Reset()
+		sqlRunner.Reset()
 	}
+
+	ginkgomon.Kill(bbsProcess)
 })
