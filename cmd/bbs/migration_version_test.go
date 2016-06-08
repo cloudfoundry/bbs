@@ -101,6 +101,7 @@ var _ = Describe("Migration Version", func() {
 
 				var version models.Version
 				err = json.Unmarshal([]byte(versionJSON), &version)
+
 				Expect(err).NotTo(HaveOccurred())
 
 				// the sql test migration

@@ -14,6 +14,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/guidprovider/fakes"
 	"github.com/cloudfoundry-incubator/bbs/migration"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
@@ -26,17 +27,16 @@ import (
 )
 
 var (
-	db               *sql.DB
-	sqlDB            *sqldb.SQLDB
-	fakeClock        *fakeclock.FakeClock
-	fakeGUIDProvider *fakes.FakeGUIDProvider
-	logger           *lagertest.TestLogger
-	cryptor          encryption.Cryptor
-	serializer       format.Serializer
-	migrationProcess ifrit.Process
-	useSQL           bool
-	usePostgres      bool
-	dbFlavor         string
+	db                                   *sql.DB
+	sqlDB                                *sqldb.SQLDB
+	fakeClock                            *fakeclock.FakeClock
+	fakeGUIDProvider                     *fakes.FakeGUIDProvider
+	logger                               *lagertest.TestLogger
+	cryptor                              encryption.Cryptor
+	serializer                           format.Serializer
+	migrationProcess                     ifrit.Process
+	dbDriverName, dbBaseConnectionString string
+	dbFlavor                             string
 )
 
 func TestSql(t *testing.T) {
@@ -46,35 +46,37 @@ func TestSql(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	useSQL = os.Getenv("USE_SQL") == "true"
-	if !useSQL {
+	if !test_helpers.UseSQL() {
 		return
 	}
-	usePostgres = os.Getenv("USE_POSTGRES") == "true"
 
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
 	fakeGUIDProvider = &fakes.FakeGUIDProvider{}
 	logger = lagertest.NewTestLogger("sql-db")
 
+	if test_helpers.UsePostgres() {
+		dbDriverName = "postgres"
+		dbBaseConnectionString = "postgres://diego:diego_pw@localhost/"
+		dbFlavor = sqldb.Postgres
+	} else if test_helpers.UseMySQL() {
+		dbDriverName = "mysql"
+		dbBaseConnectionString = "diego:diego_password@/"
+		dbFlavor = sqldb.MySQL
+	} else {
+		panic("Unsupported driver")
+	}
+
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
-	if usePostgres {
-		db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
-	} else {
-		db, err = sql.Open("mysql", "diego:diego_password@/")
-	}
+	db, err = sql.Open(dbDriverName, dbBaseConnectionString)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
 	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
-	if usePostgres {
-		db, err = sql.Open("postgres", fmt.Sprintf("postgres://diego:diego_pw@localhost/diego_%d", GinkgoParallelNode()))
-	} else {
-		db, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/diego_%d", GinkgoParallelNode()))
-	}
+	db, err = sql.Open(dbDriverName, fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
@@ -84,11 +86,6 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
-
-	dbFlavor = sqldb.MySQL
-	if usePostgres {
-		dbFlavor = sqldb.Postgres
-	}
 
 	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
 	err = sqlDB.CreateConfigurationsTable(logger)
@@ -101,7 +98,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = BeforeEach(func() {
-	if !useSQL {
+	if !test_helpers.UseSQL() {
 		Skip("SQL Backend not available")
 	}
 
@@ -125,24 +122,22 @@ var _ = BeforeEach(func() {
 })
 
 var _ = AfterEach(func() {
-	if useSQL {
+	if test_helpers.UseSQL() {
 		fakeGUIDProvider.NextGUIDReturns("", nil)
 		truncateTables(db)
 	}
 })
 
 var _ = AfterSuite(func() {
-	if useSQL {
+	if test_helpers.UseSQL() {
 		if migrationProcess != nil {
 			migrationProcess.Signal(os.Kill)
 		}
-		var err error
-		if usePostgres {
-			Expect(db.Close()).NotTo(HaveOccurred())
-			db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(db.Ping()).NotTo(HaveOccurred())
-		}
+
+		Expect(db.Close()).NotTo(HaveOccurred())
+		db, err := sql.Open(dbDriverName, dbBaseConnectionString)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(db.Ping()).NotTo(HaveOccurred())
 		_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(db.Close()).NotTo(HaveOccurred())
