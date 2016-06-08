@@ -47,13 +47,8 @@ var _ = Describe("Version", func() {
 				versionJSON, err := json.Marshal(existingVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				queryStr := `
-				  INSERT INTO configurations (id, value) VALUES (?, ?)
-					  ON CONFLICT (id) DO UPDATE SET value = ?`
-				if test_helpers.UsePostgres() {
-					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-				}
-				_, err = db.Exec(queryStr, sqldb.VersionID, versionJSON, versionJSON)
+				queryStr := "UPDATE configurations SET value = ? WHERE id = ?"
+				_, err = db.Exec(sqlDB.Rebind(queryStr), versionJSON, sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -90,18 +85,7 @@ var _ = Describe("Version", func() {
 		Context("when the version exists", func() {
 			It("retrieves the version from the database", func() {
 				expectedVersion := &models.Version{CurrentVersion: 199, TargetVersion: 200}
-				value, err := json.Marshal(expectedVersion)
-				Expect(err).NotTo(HaveOccurred())
-
-				queryStr := `
-					INSERT INTO configurations (id, value) VALUES (?, ?)
-					  ON CONFLICT (id) DO UPDATE SET value = ?`
-				if test_helpers.UsePostgres() {
-					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-				}
-				_, err = db.Exec(queryStr,
-					sqldb.VersionID, value, value)
-
+				err := sqlDB.SetVersion(logger, expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
 				version, err := sqlDB.Version(logger)
@@ -113,7 +97,7 @@ var _ = Describe("Version", func() {
 
 		Context("when the version key does not exist", func() {
 			BeforeEach(func() {
-				_, err := db.Exec(`DELETE FROM configurations`)
+				_, err := db.Exec("DELETE FROM configurations")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -126,13 +110,8 @@ var _ = Describe("Version", func() {
 
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserialize", func() {
-				queryStr := `
-				  INSERT INTO configurations (id, value) VALUES (?, ?)
-					  ON CONFLICT (id) DO UPDATE SET value = ?`
-				if test_helpers.UsePostgres() {
-					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-				}
-				_, err := db.Exec(queryStr, sqldb.VersionID, "{{", "{{")
+				queryStr := "UPDATE configurations SET value = '{{' WHERE id = ?"
+				_, err := db.Exec(sqlDB.Rebind(queryStr), sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)

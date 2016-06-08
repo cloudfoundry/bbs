@@ -27,7 +27,7 @@ import (
 
 var (
 	db               *sql.DB
-	sqlDB            thepackagedb.DB
+	sqlDB            *sqldb.SQLDB
 	fakeClock        *fakeclock.FakeClock
 	fakeGUIDProvider *fakes.FakeGUIDProvider
 	logger           *lagertest.TestLogger
@@ -36,6 +36,7 @@ var (
 	migrationProcess ifrit.Process
 	useSQL           bool
 	usePostgres      bool
+	dbFlavor         string
 )
 
 func TestSql(t *testing.T) {
@@ -84,13 +85,25 @@ var _ = BeforeSuite(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	internalSQLDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, sqldb.Postgres)
-	err = internalSQLDB.CreateConfigurationsTable(logger)
+	dbFlavor = sqldb.MySQL
+	if usePostgres {
+		dbFlavor = sqldb.Postgres
+	}
+
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
+	err = sqlDB.CreateConfigurationsTable(logger)
 	if err != nil {
 		logger.Fatal("sql-failed-create-configurations-table", err)
 	}
 
-	sqlDB = internalSQLDB
+	// ensures sqlDB matches the db.DB interface
+	var _ thepackagedb.DB = sqlDB
+})
+
+var _ = BeforeEach(func() {
+	if !useSQL {
+		Skip("SQL Backend not available")
+	}
 
 	migrationsDone := make(chan struct{})
 
@@ -111,16 +124,10 @@ var _ = BeforeSuite(func() {
 	Eventually(migrationsDone).Should(BeClosed())
 })
 
-var _ = BeforeEach(func() {
-	if !useSQL {
-		Skip("SQL Backend not available")
-	}
-})
-
 var _ = AfterEach(func() {
 	if useSQL {
-		truncateTables(db)
 		fakeGUIDProvider.NextGUIDReturns("", nil)
+		truncateTables(db)
 	}
 })
 

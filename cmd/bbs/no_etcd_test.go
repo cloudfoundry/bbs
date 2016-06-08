@@ -50,8 +50,8 @@ var _ = Describe("BBS With Only SQL", func() {
 		Context("when etcd is not configured at all", func() {
 			Context("and sql is configured", func() {
 				BeforeEach(func() {
-					bbsArgs.DatabaseDriver = "mysql"
-					bbsArgs.DatabaseConnectionString = mySQLRunner.ConnectionString()
+					bbsArgs.DatabaseDriver = sqlRunner.DriverName()
+					bbsArgs.DatabaseConnectionString = sqlRunner.ConnectionString()
 				})
 
 				It("the bbs eventually responds to ping", func() {

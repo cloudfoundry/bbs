@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
@@ -146,11 +145,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 
 	wheres := "state = ?"
 	if len(cellSet) != 0 {
-		cellSetArgs := make([]string, len(cellSet))
-		for i := 0; i < len(cellSet); i++ {
-			cellSetArgs[i] = fmt.Sprintf("$%d", i+8)
-		}
-		wheres += fmt.Sprintf(" AND cell_id NOT IN (%s)", strings.Join(cellSetArgs, ","))
+		wheres += fmt.Sprintf(" AND cell_id NOT IN (%s)", questionMarks(len(cellSet)))
 	}
 	now := db.clock.Now().UnixNano()
 

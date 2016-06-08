@@ -12,16 +12,15 @@ import (
 
 var _ = Describe("Unavailable Handler", func() {
 	var (
-		fakeServer          *ghttp.Server
-		handler             *handlers.UnavailableHandler
-		serviceReady, ready chan struct{}
+		fakeServer   *ghttp.Server
+		handler      *handlers.UnavailableHandler
+		serviceReady chan struct{}
 
 		request *http.Request
 	)
 
 	BeforeEach(func() {
 		serviceReady = make(chan struct{})
-		ready = make(chan struct{})
 
 		fakeServer = ghttp.NewServer()
 		handler = handlers.NewUnavailableHandler(fakeServer, serviceReady)

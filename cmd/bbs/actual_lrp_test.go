@@ -266,8 +266,10 @@ var _ = Describe("ActualLRP API", func() {
 		})
 
 		It("returns all actual lrps from the bbs", func() {
-			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: baseLRP, Evacuating: evacuatingLRP}
-			Expect(actualActualLRPGroups).To(Equal(expectedActualLRPGroups))
+			actualLRPGroup.Instance.Since = 0
+			actualLRPGroup.Instance.ModificationTag = models.ModificationTag{}
+			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: baseLRP}
+			Expect(actualLRPGroup).To(Equal(expectedActualLRPGroup))
 		})
 	})
 
@@ -343,17 +345,12 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("FailActualLRP", func() {
 		var (
-			instanceKey  models.ActualLRPInstanceKey
 			errorMessage string
 			failErr      error
 		)
 
 		JustBeforeEach(func() {
 			errorMessage = "some bad ocurred"
-			instanceKey = models.ActualLRPInstanceKey{
-				CellId:       "my-cell-id",
-				InstanceGuid: "my-instance-guid",
-			}
 			failErr = client.FailActualLRP(logger, &unclaimedLRPKey, errorMessage)
 		})
 
@@ -411,15 +408,10 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("RemoveActualLRP", func() {
 		var (
-			instanceKey models.ActualLRPInstanceKey
-			removeErr   error
+			removeErr error
 		)
 
 		JustBeforeEach(func() {
-			instanceKey = models.ActualLRPInstanceKey{
-				CellId:       "my-cell-id",
-				InstanceGuid: "my-instance-guid",
-			}
 			removeErr = client.RemoveActualLRP(logger, otherProcessGuid, otherIndex)
 		})
 

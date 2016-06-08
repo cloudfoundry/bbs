@@ -291,10 +291,10 @@ func main() {
 		}
 
 		sqlConn, err = sql.Open(*databaseDriver, *databaseConnectionString)
-
 		if err != nil {
 			logger.Fatal("failed-to-open-sql", err)
 		}
+		defer sqlConn.Close()
 		sqlConn.SetMaxOpenConns(*maxDatabaseConnections)
 
 		err = sqlConn.Ping()
@@ -302,7 +302,7 @@ func main() {
 			logger.Fatal("sql-failed-to-connect", err)
 		}
 
-		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, *updateWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock)
+		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, *updateWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock, *databaseDriver)
 		err = sqlDB.CreateConfigurationsTable(logger)
 		if err != nil {
 			logger.Fatal("sql-failed-create-configurations-table", err)
@@ -394,6 +394,9 @@ func main() {
 	logger.Info("started")
 
 	err = <-monitor.Wait()
+	if sqlConn != nil {
+		sqlConn.Close()
+	}
 	if err != nil {
 		logger.Error("exited-with-failure", err)
 		os.Exit(1)
