@@ -97,7 +97,7 @@ action := &models.DownloadAction{
   CacheKey: "some-cache-key",
   LogSource: "some-log-source",
   ChecksumAlgorithm: "md5",
-  ChecksumValue = "some-checksum-value",
+  ChecksumValue: "some-checksum-value",
 }
 ```
 
@@ -135,7 +135,7 @@ If provided, logs emitted by this action will be tagged with the provided
 
 #### `ChecksumAlgorithm` [optional]
 
-If provided, the ChecksumValue must also be set.  It defines the checksum algorithm used to validate downloaded contents.  Must be one of `md5`, `sha1`, or `sha256`
+If provided, the ChecksumValue must also be set.  It defines the checksum algorithm used to validate downloaded contents.  Must be one of `md5`, `sha1`, or `sha256`.
 
 #### `ChecksumValue` [optional]
 
