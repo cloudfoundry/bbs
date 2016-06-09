@@ -40,6 +40,14 @@ func (b *Base64ProtobufEncode) SetCryptor(cryptor encryption.Cryptor) {
 	b.serializer = format.NewSerializer(cryptor)
 }
 
+func (b *Base64ProtobufEncode) RequiresSQL() bool {
+	return false
+}
+
+func (b *Base64ProtobufEncode) SetRawSQLDB(*sql.DB)  {}
+func (b *Base64ProtobufEncode) SetClock(clock.Clock) {}
+func (b *Base64ProtobufEncode) SetDBFlavor(string)   {}
+
 func (b *Base64ProtobufEncode) Up(logger lager.Logger) error {
 	// Desired LRPs
 	response, err := b.storeClient.Get(deprecations.DesiredLRPSchemaRoot, false, true)
@@ -116,14 +124,6 @@ func (b *Base64ProtobufEncode) Up(logger lager.Logger) error {
 
 func (b *Base64ProtobufEncode) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
-}
-
-func (b *Base64ProtobufEncode) SetRawSQLDB(*sql.DB) {}
-
-func (b *Base64ProtobufEncode) SetClock(clock.Clock) {}
-
-func (b *Base64ProtobufEncode) RequiresSQL() bool {
-	return false
 }
 
 func (b *Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner) error {

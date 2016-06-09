@@ -38,18 +38,18 @@ func (a *AddCachedDependencies) SetCryptor(cryptor encryption.Cryptor) {
 	a.serializer = format.NewSerializer(cryptor)
 }
 
+func (a *AddCachedDependencies) RequiresSQL() bool {
+	return false
+}
+
+func (a *AddCachedDependencies) SetRawSQLDB(rawSQLDB *sql.DB) {}
+func (a *AddCachedDependencies) SetClock(clock.Clock)         {}
+func (a *AddCachedDependencies) SetDBFlavor(string)           {}
+
 func (a *AddCachedDependencies) Up(logger lager.Logger) error {
 	return nil
 }
 
 func (a *AddCachedDependencies) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
-}
-
-func (a *AddCachedDependencies) SetRawSQLDB(rawSQLDB *sql.DB) {}
-
-func (a *AddCachedDependencies) SetClock(clock.Clock) {}
-
-func (a *AddCachedDependencies) RequiresSQL() bool {
-	return false
 }

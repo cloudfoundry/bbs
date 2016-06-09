@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/migration"
@@ -25,6 +26,7 @@ type ETCDToSQL struct {
 	storeClient etcd.StoreClient
 	clock       clock.Clock
 	rawSQLDB    *sql.DB
+	dbFlavor    string
 }
 
 type ETCDToSQLDesiredLRP struct {
@@ -110,11 +112,60 @@ func (e *ETCDToSQL) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *ETCDToSQL) SetClock(c clock.Clock) {
-	e.clock = c
+func (e *ETCDToSQL) SetRawSQLDB(db *sql.DB) {
+	e.rawSQLDB = db
 }
 
-func truncateTables(db *sql.DB) error {
+func (e *ETCDToSQL) RequiresSQL() bool         { return true }
+func (e *ETCDToSQL) SetClock(c clock.Clock)    { e.clock = c }
+func (e *ETCDToSQL) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
+
+func (e *ETCDToSQL) Up(logger lager.Logger) error {
+	logger = logger.Session("etcd-to-sql")
+	logger.Info("tuncating-tables")
+
+	// Ignore the error as the tables may not exist
+	_ = dropTables(e.rawSQLDB)
+
+	err := createTables(logger, e.rawSQLDB)
+	if err != nil {
+		return err
+	}
+
+	err = createIndices(logger, e.rawSQLDB)
+	if err != nil {
+		return err
+	}
+
+	if e.storeClient == nil {
+		logger.Info("skipping-migration-because-no-etcd-configured")
+		return nil
+	}
+
+	if err := e.migrateDomains(logger); err != nil {
+		return err
+	}
+
+	if err := e.migrateDesiredLRPs(logger); err != nil {
+		return err
+	}
+
+	if err := e.migrateActualLRPs(logger); err != nil {
+		return err
+	}
+
+	if err := e.migrateTasks(logger); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *ETCDToSQL) Down(logger lager.Logger) error {
+	return errors.New("not implemented")
+}
+
+func dropTables(db *sql.DB) error {
 	tableNames := []string{
 		"domains",
 		"tasks",
@@ -128,7 +179,7 @@ func truncateTables(db *sql.DB) error {
 		if err == sql.ErrNoRows {
 			continue
 		}
-		_, err = db.Exec("TRUNCATE TABLE " + tableName)
+		_, err = db.Exec("DROP TABLE " + tableName)
 		if err != nil {
 			return err
 		}
@@ -136,10 +187,7 @@ func truncateTables(db *sql.DB) error {
 	return nil
 }
 
-func (e *ETCDToSQL) Up(logger lager.Logger) error {
-	logger = logger.Session("etcd-to-sql")
-	logger.Info("tuncating-tables")
-	truncateTables(e.rawSQLDB)
+func createTables(logger lager.Logger, db *sql.DB) error {
 	var createTablesSQL = []string{
 		createDomainSQL,
 		createDesiredLRPsSQL,
@@ -150,7 +198,7 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 	logger.Info("creating-tables")
 	for _, query := range createTablesSQL {
 		logger.Info("creating the table", lager.Data{"query": query})
-		_, err := e.rawSQLDB.Exec(query)
+		_, err := db.Exec(query)
 		if err != nil {
 			logger.Error("failed-creating-tables", err)
 			return err
@@ -158,12 +206,35 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		logger.Info("created the table", lager.Data{"query": query})
 	}
 
-	if e.storeClient == nil {
-		logger.Info("skipping-migration-because-no-etcd-configured")
-		return nil
+	return nil
+}
+
+func createIndices(logger lager.Logger, db *sql.DB) error {
+	logger.Info("creating-indices")
+	createIndicesSQL := []string{}
+	createIndicesSQL = append(createIndicesSQL, createDomainsIndices...)
+	createIndicesSQL = append(createIndicesSQL, createDesiredLRPsIndices...)
+	createIndicesSQL = append(createIndicesSQL, createActualLRPsIndices...)
+	createIndicesSQL = append(createIndicesSQL, createTasksIndices...)
+
+	for _, query := range createIndicesSQL {
+		logger.Info("creating the index", lager.Data{"query": query})
+		_, err := db.Exec(query)
+		if err != nil {
+			logger.Error("failed-creating-index", err)
+			return err
+		}
+		logger.Info("created the index", lager.Data{"query": query})
 	}
 
-	logger.Info("migrating-domains")
+	return nil
+}
+
+func (e *ETCDToSQL) migrateDomains(logger lager.Logger) error {
+	logger = logger.Session("migrating-domains")
+	logger.Debug("starting")
+	defer logger.Debug("finished")
+
 	response, err := e.storeClient.Get(etcd.DomainSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-domains", err)
@@ -174,11 +245,11 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 			domain := path.Base(node.Key)
 			expireTime := e.clock.Now().UnixNano() + int64(time.Second)*node.TTL
 
-			_, err := e.rawSQLDB.Exec(`
-			INSERT INTO domains
-			(domain, expire_time)
-			VALUES (?, ?)
-		`, domain, expireTime)
+			_, err := e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
+				INSERT INTO domains
+				(domain, expire_time)
+				VALUES (?, ?)
+		  `, e.dbFlavor), domain, expireTime)
 			if err != nil {
 				logger.Error("failed-inserting-domain", err)
 				continue
@@ -186,8 +257,14 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
-	logger.Info("migrating-desired-lrp-scheduling-infos")
-	response, err = e.storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaRoot, false, true)
+	return nil
+}
+
+func (e *ETCDToSQL) migrateDesiredLRPs(logger lager.Logger) error {
+	logger = logger.Session("migrating-desired-lrp-scheduling-infos")
+	logger.Debug("starting")
+	defer logger.Debug("finished")
+	response, err := e.storeClient.Get(etcd.DesiredLRPSchedulingInfoSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp-scheduling-infos", err)
 	}
@@ -230,13 +307,13 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 				logger.Error("failed-marshalling-volume-placements", err)
 			}
 
-			_, err = e.rawSQLDB.Exec(`
+			_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
 				INSERT INTO desired_lrps
 					(process_guid, domain, log_guid, annotation, instances, memory_mb,
 					disk_mb, rootfs, volume_placement, routes, modification_tag_epoch,
 					modification_tag_index, run_info)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			`, schedInfo.ProcessGuid, schedInfo.Domain, schedInfo.LogGuid, schedInfo.Annotation,
+			`, e.dbFlavor), schedInfo.ProcessGuid, schedInfo.Domain, schedInfo.LogGuid, schedInfo.Annotation,
 				schedInfo.Instances, schedInfo.MemoryMb, schedInfo.DiskMb, schedInfo.RootFs, volumePlacementData,
 				routeData, schedInfo.ModificationTag.Epoch, schedInfo.ModificationTag.Index, []byte(node.Value))
 			if err != nil {
@@ -246,8 +323,14 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
-	logger.Info("migrating-actual-lrps")
-	response, err = e.storeClient.Get(etcd.ActualLRPSchemaRoot, false, true)
+	return nil
+}
+
+func (e *ETCDToSQL) migrateActualLRPs(logger lager.Logger) error {
+	logger = logger.Session("migrating-actual-lrps")
+	logger.Debug("starting")
+	defer logger.Debug("finished")
+	response, err := e.storeClient.Get(etcd.ActualLRPSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrps", err)
 	}
@@ -270,13 +353,13 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 							logger.Error("failed-to-marshal-net-info", err)
 						}
 
-						_, err = e.rawSQLDB.Exec(`
+						_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
 							INSERT INTO actual_lrps
 								(process_guid, instance_index, domain, instance_guid, cell_id,
 								net_info, crash_count, crash_reason, state, placement_error, since,
 								modification_tag_epoch, modification_tag_index)
 							VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-						`, actualLRP.ProcessGuid, actualLRP.Index, actualLRP.Domain, actualLRP.InstanceGuid,
+						`, e.dbFlavor), actualLRP.ProcessGuid, actualLRP.Index, actualLRP.Domain, actualLRP.InstanceGuid,
 							actualLRP.CellId, netInfoData, actualLRP.CrashCount, actualLRP.CrashReason,
 							actualLRP.State, actualLRP.PlacementError, actualLRP.Since,
 							actualLRP.ModificationTag.Epoch, actualLRP.ModificationTag.Index)
@@ -290,8 +373,14 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 		}
 	}
 
-	logger.Info("migrating-tasks")
-	response, err = e.storeClient.Get(etcd.TaskSchemaRoot, false, true)
+	return nil
+}
+
+func (e *ETCDToSQL) migrateTasks(logger lager.Logger) error {
+	logger = logger.Session("migrating-tasks")
+	logger.Debug("starting")
+	defer logger.Debug("finished")
+	response, err := e.storeClient.Get(etcd.TaskSchemaRoot, false, true)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 	}
@@ -307,13 +396,13 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 
 			definitionData, err := e.serializer.Marshal(logger, format.ENCRYPTED_PROTO, task.TaskDefinition)
 
-			_, err = e.rawSQLDB.Exec(`
+			_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
 							INSERT INTO tasks
 								(guid, domain, updated_at, created_at, first_completed_at,
 								state, cell_id, result, failed, failure_reason,
 								task_definition)
 							VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-						`,
+						`, e.dbFlavor),
 				task.TaskGuid, task.Domain, task.UpdatedAt, task.CreatedAt,
 				task.FirstCompletedAt, task.State, task.CellId, task.Result,
 				task.Failed, task.FailureReason, definitionData)
@@ -327,24 +416,12 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 	return nil
 }
 
-func (e *ETCDToSQL) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
-}
-
-func (e *ETCDToSQL) SetRawSQLDB(rawSQLDB *sql.DB) {
-	e.rawSQLDB = rawSQLDB
-}
-
-func (e *ETCDToSQL) RequiresSQL() bool {
-	return true
-}
-
-const createDomainSQL = `CREATE TABLE IF NOT EXISTS domains(
+const createDomainSQL = `CREATE TABLE domains(
 	domain VARCHAR(255) PRIMARY KEY,
 	expire_time BIGINT DEFAULT 0
 );`
 
-const createDesiredLRPsSQL = `CREATE TABLE IF NOT EXISTS desired_lrps(
+const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
 	process_guid VARCHAR(255) PRIMARY KEY,
 	domain VARCHAR(255) NOT NULL,
 	log_guid VARCHAR(255) NOT NULL,
@@ -353,14 +430,14 @@ const createDesiredLRPsSQL = `CREATE TABLE IF NOT EXISTS desired_lrps(
 	memory_mb INT NOT NULL,
 	disk_mb INT NOT NULL,
 	rootfs VARCHAR(255) NOT NULL,
-	routes BYTEA NOT NULL,
-	volume_placement BYTEA NOT NULL,
+	routes TEXT NOT NULL,
+	volume_placement TEXT NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
-	run_info BYTEA NOT NULL
+	run_info TEXT NOT NULL
 );`
 
-const createActualLRPsSQL = `CREATE TABLE IF NOT EXISTS actual_lrps(
+const createActualLRPsSQL = `CREATE TABLE actual_lrps(
 	process_guid VARCHAR(255),
 	instance_index INT,
 	evacuating BOOL DEFAULT false,
@@ -370,7 +447,7 @@ const createActualLRPsSQL = `CREATE TABLE IF NOT EXISTS actual_lrps(
 	cell_id VARCHAR(255) NOT NULL DEFAULT '',
 	placement_error VARCHAR(255) NOT NULL DEFAULT '',
 	since BIGINT DEFAULT 0,
-	net_info BYTEA NOT NULL,
+	net_info TEXT NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
 	crash_count INT NOT NULL DEFAULT 0,
@@ -380,7 +457,7 @@ const createActualLRPsSQL = `CREATE TABLE IF NOT EXISTS actual_lrps(
 	PRIMARY KEY(process_guid, instance_index, evacuating)
 );`
 
-const createTasksSQL = `CREATE TABLE IF NOT EXISTS tasks(
+const createTasksSQL = `CREATE TABLE tasks(
 	guid VARCHAR(255) PRIMARY KEY,
 	domain VARCHAR(255) NOT NULL,
 	updated_at BIGINT DEFAULT 0,
@@ -391,5 +468,30 @@ const createTasksSQL = `CREATE TABLE IF NOT EXISTS tasks(
 	result TEXT,
 	failed BOOL DEFAULT false,
 	failure_reason VARCHAR(255) NOT NULL DEFAULT '',
-	task_definition BYTEA NOT NULL
+	task_definition TEXT NOT NULL
 );`
+
+var createDomainsIndices = []string{
+	`CREATE INDEX domains_expire_time_idx ON domains (expire_time)`,
+}
+
+var createDesiredLRPsIndices = []string{
+	`CREATE INDEX desired_lrps_domain_idx ON desired_lrps (domain)`,
+}
+
+var createActualLRPsIndices = []string{
+	`CREATE INDEX actual_lrps_domain_idx ON actual_lrps (domain)`,
+	`CREATE INDEX actual_lrps_cell_id_idx ON actual_lrps (cell_id)`,
+	`CREATE INDEX actual_lrps_since_idx ON actual_lrps (since)`,
+	`CREATE INDEX actual_lrps_state_idx ON actual_lrps (state)`,
+	`CREATE INDEX actual_lrps_expire_time_idx ON actual_lrps (expire_time)`,
+}
+
+var createTasksIndices = []string{
+	`CREATE INDEX tasks_domain_idx ON tasks (domain)`,
+	`CREATE INDEX tasks_state_idx ON tasks (state)`,
+	`CREATE INDEX tasks_cell_id_idx ON tasks (cell_id)`,
+	`CREATE INDEX tasks_updated_at_idx ON tasks (updated_at)`,
+	`CREATE INDEX tasks_created_at_idx ON tasks (created_at)`,
+	`CREATE INDEX tasks_first_completed_at_idx ON tasks (first_completed_at)`,
+}

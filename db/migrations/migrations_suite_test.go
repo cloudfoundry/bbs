@@ -81,8 +81,8 @@ var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 
 	if test_helpers.UseSQL() {
-		ginkgomon.Kill(sqlProcess)
 		Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
+		ginkgomon.Kill(sqlProcess, 5*time.Second)
 	}
 })
 

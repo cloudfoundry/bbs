@@ -2,6 +2,7 @@ package sqldb_test
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/cloudfoundry-incubator/auctioneer"
@@ -333,6 +334,10 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
+
+			for _, startRequest := range startRequests {
+				sort.Ints(startRequest.Indices)
+			}
 
 			Expect(startRequests).To(ContainElement(&lrpStartRequest))
 		})
