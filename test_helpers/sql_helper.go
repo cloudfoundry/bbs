@@ -5,9 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cloudfoundry/storeadapter/storerunner/mysqlrunner"
-	"github.com/cloudfoundry/storeadapter/storerunner/postgresrunner"
-	"github.com/cloudfoundry/storeadapter/storerunner/sqlrunner"
+	"github.com/cloudfoundry-incubator/bbs/test_helpers/sqlrunner"
 )
 
 func UseSQL() bool {
@@ -26,9 +24,9 @@ func NewSQLRunner(dbName string) sqlrunner.SQLRunner {
 	var sqlRunner sqlrunner.SQLRunner
 
 	if UseMySQL() {
-		sqlRunner = mysqlrunner.NewMySQLRunner(dbName)
+		sqlRunner = sqlrunner.NewMySQLRunner(dbName)
 	} else if UsePostgres() {
-		sqlRunner = postgresrunner.NewPostgresRunner(dbName)
+		sqlRunner = sqlrunner.NewPostgresRunner(dbName)
 	} else {
 		panic("driver not supported")
 	}
