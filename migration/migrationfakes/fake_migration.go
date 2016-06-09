@@ -55,6 +55,11 @@ type FakeMigration struct {
 	setRawSQLDBArgsForCall []struct {
 		rawSQLDB *sql.DB
 	}
+	SetDBFlavorStub        func(flavor string)
+	setDBFlavorMutex       sync.RWMutex
+	setDBFlavorArgsForCall []struct {
+		flavor string
+	}
 	RequiresSQLStub        func() bool
 	requiresSQLMutex       sync.RWMutex
 	requiresSQLArgsForCall []struct{}
@@ -241,6 +246,29 @@ func (fake *FakeMigration) SetRawSQLDBArgsForCall(i int) *sql.DB {
 	fake.setRawSQLDBMutex.RLock()
 	defer fake.setRawSQLDBMutex.RUnlock()
 	return fake.setRawSQLDBArgsForCall[i].rawSQLDB
+}
+
+func (fake *FakeMigration) SetDBFlavor(flavor string) {
+	fake.setDBFlavorMutex.Lock()
+	fake.setDBFlavorArgsForCall = append(fake.setDBFlavorArgsForCall, struct {
+		flavor string
+	}{flavor})
+	fake.setDBFlavorMutex.Unlock()
+	if fake.SetDBFlavorStub != nil {
+		fake.SetDBFlavorStub(flavor)
+	}
+}
+
+func (fake *FakeMigration) SetDBFlavorCallCount() int {
+	fake.setDBFlavorMutex.RLock()
+	defer fake.setDBFlavorMutex.RUnlock()
+	return len(fake.setDBFlavorArgsForCall)
+}
+
+func (fake *FakeMigration) SetDBFlavorArgsForCall(i int) string {
+	fake.setDBFlavorMutex.RLock()
+	defer fake.setDBFlavorMutex.RUnlock()
+	return fake.setDBFlavorArgsForCall[i].flavor
 }
 
 func (fake *FakeMigration) RequiresSQL() bool {

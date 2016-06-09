@@ -103,6 +103,25 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 	return nil
 }
 
+// Takes in a query that uses question marks to represent unbound SQL parameters
+// and converts those to '$1, $2', etc. if the DB flavor is postgres.
+// e.g., `SELECT * FROM table_name WHERE col = ? AND col2 = ?` becomes
+//       `SELECT * FROM table_name WHERE col = $1 AND col2 = $2`
+func RebindForFlavor(query, flavor string) string {
+	if flavor == MySQL {
+		return query
+	}
+	if flavor != Postgres {
+		panic(fmt.Sprintf("Unrecognized DB flavor '%s'", flavor))
+	}
+
+	strParts := strings.Split(query, "?")
+	for i := 1; i < len(strParts); i++ {
+		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
+	}
+	return strings.Join(strParts, "")
+}
+
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	var query string
 	columns := schedulingInfoColumns
@@ -164,7 +183,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 		strings.Join(wheres, " AND "),
 	)
 
-	return q.Query(db.Rebind(query), bindings...)
+	return q.Query(db.rebind(query), bindings...)
 }
 
 func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
@@ -180,7 +199,7 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows,
 		),
 	)
 
-	return q.Query(db.Rebind(query), models.ActualLRPStateCrashed, false)
+	return q.Query(db.rebind(query), models.ActualLRPStateCrashed, false)
 }
 
 func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now time.Time) (*sql.Rows, error) {
@@ -193,7 +212,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now 
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
 	)
 
-	return q.Query(db.Rebind(query),
+	return q.Query(db.rebind(query),
 		models.ActualLRPStateUnclaimed,
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
 		false,
@@ -207,7 +226,7 @@ func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 	`
 
 	var desiredInstances int
-	row := q.QueryRow(db.Rebind(query))
+	row := q.QueryRow(db.rebind(query))
 	err := row.Scan(&desiredInstances)
 	if err != nil {
 		logger.Error("failed-desired-instances-query", err)
@@ -304,7 +323,7 @@ func (db *SQLDB) one(logger lager.Logger, q Queryable, table string,
 		query += "\nFOR UPDATE"
 	}
 
-	return q.QueryRow(db.Rebind(query), whereBindings...)
+	return q.QueryRow(db.rebind(query), whereBindings...)
 }
 
 // SELECT <columns> FROM <table> WHERE ... [FOR UPDATE]
@@ -322,7 +341,7 @@ func (db *SQLDB) all(logger lager.Logger, q Queryable, table string,
 		query += "\nFOR UPDATE"
 	}
 
-	return q.Query(db.Rebind(query), whereBindings...)
+	return q.Query(db.rebind(query), whereBindings...)
 }
 
 func (db *SQLDB) upsert(logger lager.Logger, q Queryable, table string, keyAttributes, updateAttributes SQLAttributes) (sql.Result, error) {
@@ -383,7 +402,7 @@ func (db *SQLDB) upsert(logger lager.Logger, q Queryable, table string, keyAttri
 		panic("database flavor not implemented: " + db.flavor)
 	}
 
-	return q.Exec(db.Rebind(query), bindingValues...)
+	return q.Exec(db.rebind(query), bindingValues...)
 }
 
 // INSERT INTO <table> (...) VALUES ...
@@ -406,7 +425,7 @@ func (db *SQLDB) insert(logger lager.Logger, q Queryable, table string, attribut
 	query += fmt.Sprintf("(%s)", strings.Join(attributeNames, ", "))
 	query += fmt.Sprintf("VALUES (%s)", strings.Join(attributeBindings, ", "))
 
-	return q.Exec(db.Rebind(query), bindings...)
+	return q.Exec(db.rebind(query), bindings...)
 }
 
 // UPDATE <table> SET ... WHERE ...
@@ -430,7 +449,7 @@ func (db *SQLDB) update(logger lager.Logger, q Queryable, table string, updates 
 		bindings = append(bindings, whereBindings...)
 	}
 
-	return q.Exec(db.Rebind(query), bindings...)
+	return q.Exec(db.rebind(query), bindings...)
 }
 
 // DELETE FROM <table> WHERE ...
@@ -441,19 +460,11 @@ func (db *SQLDB) delete(logger lager.Logger, q Queryable, table string, wheres s
 		query += "WHERE " + wheres
 	}
 
-	return q.Exec(db.Rebind(query), whereBindings...)
+	return q.Exec(db.rebind(query), whereBindings...)
 }
 
-func (db *SQLDB) Rebind(query string) string {
-	if db.flavor == MySQL {
-		return query
-	}
-
-	strParts := strings.Split(query, "?")
-	for i := 1; i < len(strParts); i++ {
-		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
-	}
-	return strings.Join(strParts, "")
+func (db *SQLDB) rebind(query string) string {
+	return RebindForFlavor(query, db.flavor)
 }
 
 func questionMarks(count int) string {

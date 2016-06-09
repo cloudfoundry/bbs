@@ -39,6 +39,14 @@ func (m *SplitDesiredLRP) SetCryptor(cryptor encryption.Cryptor) {
 	m.serializer = format.NewSerializer(cryptor)
 }
 
+func (m *SplitDesiredLRP) RequiresSQL() bool {
+	return false
+}
+
+func (m *SplitDesiredLRP) SetRawSQLDB(rawSQLDB *sql.DB) {}
+func (m *SplitDesiredLRP) SetClock(clock.Clock)         {}
+func (m *SplitDesiredLRP) SetDBFlavor(string)           {}
+
 func (m *SplitDesiredLRP) Up(logger lager.Logger) error {
 	_, err := m.storeClient.Delete(etcd.DesiredLRPSchedulingInfoSchemaRoot, true)
 	if err != nil {
@@ -84,14 +92,6 @@ func (m *SplitDesiredLRP) Up(logger lager.Logger) error {
 
 func (m *SplitDesiredLRP) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
-}
-
-func (m *SplitDesiredLRP) SetRawSQLDB(rawSQLDB *sql.DB) {}
-
-func (m *SplitDesiredLRP) SetClock(clock.Clock) {}
-
-func (m *SplitDesiredLRP) RequiresSQL() bool {
-	return false
 }
 
 func (m *SplitDesiredLRP) WriteRunInfo(logger lager.Logger, desiredLRP models.DesiredLRP) {

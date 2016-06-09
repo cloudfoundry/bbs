@@ -48,7 +48,7 @@ var _ = Describe("Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				queryStr := "UPDATE configurations SET value = ? WHERE id = ?"
-				_, err = db.Exec(sqlDB.Rebind(queryStr), versionJSON, sqldb.VersionID)
+				_, err = db.Exec(sqldb.RebindForFlavor(queryStr, dbDriverName), versionJSON, sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -111,7 +111,7 @@ var _ = Describe("Version", func() {
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserialize", func() {
 				queryStr := "UPDATE configurations SET value = '{{' WHERE id = ?"
-				_, err := db.Exec(sqlDB.Rebind(queryStr), sqldb.VersionID)
+				_, err := db.Exec(sqldb.RebindForFlavor(queryStr, dbDriverName), sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)

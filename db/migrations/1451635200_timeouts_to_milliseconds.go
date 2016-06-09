@@ -106,13 +106,13 @@ func (b *TimeoutToMilliseconds) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
 }
 
-func (b *TimeoutToMilliseconds) SetRawSQLDB(*sql.DB) {}
-
-func (b *TimeoutToMilliseconds) SetClock(clock.Clock) {}
-
 func (b *TimeoutToMilliseconds) RequiresSQL() bool {
 	return false
 }
+
+func (b *TimeoutToMilliseconds) SetRawSQLDB(*sql.DB)  {}
+func (b *TimeoutToMilliseconds) SetClock(clock.Clock) {}
+func (b *TimeoutToMilliseconds) SetDBFlavor(string)   {}
 
 func updateTimeoutInAction(logger lager.Logger, action *models.Action) {
 	if action == nil {

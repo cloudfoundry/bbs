@@ -19,5 +19,6 @@ type Migration interface {
 	SetCryptor(cryptor encryption.Cryptor)
 	SetClock(c clock.Clock)
 	SetRawSQLDB(rawSQLDB *sql.DB)
+	SetDBFlavor(flavor string)
 	RequiresSQL() bool
 }

@@ -34,6 +34,7 @@ func (t *SQLTestMigration) SetRawSQLDB(rawSQLDB *sql.DB) {
 }
 
 func (*SQLTestMigration) SetClock(clock.Clock) {}
+func (*SQLTestMigration) SetDBFlavor(string)   {}
 
 func (*SQLTestMigration) RequiresSQL() bool {
 	return true

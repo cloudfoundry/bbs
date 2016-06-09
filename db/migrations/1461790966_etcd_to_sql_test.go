@@ -51,6 +51,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 				migration.SetRawSQLDB(rawSQLDB)
 				migration.SetCryptor(cryptor)
 				migration.SetClock(fakeClock)
+				migration.SetDBFlavor(sqlRunner.DriverName())
 				migrationErr = migration.Up(logger)
 			})
 
@@ -115,8 +116,9 @@ var _ = Describe("ETCD to SQL Migration", func() {
 
 				It("creates the sql schema and returns", func() {
 					Expect(migrationErr).NotTo(HaveOccurred())
-					rows, err := rawSQLDB.Query(`SHOW TABLES`)
+					rows, err := rawSQLDB.Query(`SELECT table_name FROM information_schema.tables`)
 					Expect(err).NotTo(HaveOccurred())
+					defer rows.Close()
 
 					tables := []string{}
 					for rows.Next() {
@@ -125,7 +127,10 @@ var _ = Describe("ETCD to SQL Migration", func() {
 						Expect(err).NotTo(HaveOccurred())
 						tables = append(tables, tableName)
 					}
-					Expect(tables).To(ConsistOf("domains", "desired_lrps", "actual_lrps", "tasks"))
+					Expect(tables).To(ContainElement("domains"))
+					Expect(tables).To(ContainElement("desired_lrps"))
+					Expect(tables).To(ContainElement("actual_lrps"))
+					Expect(tables).To(ContainElement("tasks"))
 				})
 			})
 
@@ -142,6 +147,8 @@ var _ = Describe("ETCD to SQL Migration", func() {
 
 					rows, err := rawSQLDB.Query(`SELECT domain, expire_time FROM domains`)
 					Expect(err).NotTo(HaveOccurred())
+					defer rows.Close()
+
 					domains := map[string]int64{}
 					for rows.Next() {
 						var domain string
@@ -220,13 +227,14 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					Expect(migrationErr).NotTo(HaveOccurred())
 
 					rows, err := rawSQLDB.Query(`
-					SELECT
-						process_guid, domain, log_guid, annotation, instances, memory_mb,
-						disk_mb, rootfs, routes, modification_tag_epoch,
-						modification_tag_index, run_info, volume_placement
-					FROM desired_lrps
-				`)
+						SELECT
+							process_guid, domain, log_guid, annotation, instances, memory_mb,
+							disk_mb, rootfs, routes, modification_tag_epoch,
+							modification_tag_index, run_info, volume_placement
+						FROM desired_lrps
+					`)
 					Expect(err).NotTo(HaveOccurred())
+					defer rows.Close()
 
 					desiredLRPs := []migrations.ETCDToSQLDesiredLRP{}
 
@@ -247,8 +255,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 						desiredLRPs = append(desiredLRPs, desiredLRPTest)
 					}
 
-					Expect(desiredLRPs).To(HaveLen(desiredLRPsToCreate))
-					Expect(desiredLRPs).To(BeEquivalentTo(existingDesiredLRPs))
+					Expect(desiredLRPs).To(ConsistOf(existingDesiredLRPs))
 				})
 			})
 
@@ -311,6 +318,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					FROM actual_lrps
 				`)
 					Expect(err).NotTo(HaveOccurred())
+					defer rows.Close()
 
 					actualLRPs := []migrations.ETCDToSQLActualLRP{}
 					encoder := format.NewEncoder(cryptor)
@@ -334,8 +342,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 						actualLRPs = append(actualLRPs, actualLRPTest)
 					}
 
-					Expect(actualLRPs).To(HaveLen(instanceLRPsToCreate))
-					Expect(actualLRPs).To(BeEquivalentTo(existingActualLRPs))
+					Expect(actualLRPs).To(ConsistOf(existingActualLRPs))
 				})
 			})
 
@@ -388,6 +395,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					FROM tasks
 				`)
 					Expect(err).NotTo(HaveOccurred())
+					defer rows.Close()
 
 					tasks := []migrations.ETCDToSQLTask{}
 					encoder := format.NewEncoder(cryptor)
@@ -409,7 +417,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					}
 
 					Expect(tasks).To(HaveLen(tasksToCreate))
-					Expect(tasks).To(BeEquivalentTo(existingTasks))
+					Expect(tasks).To(ConsistOf(existingTasks))
 				})
 			})
 		})
