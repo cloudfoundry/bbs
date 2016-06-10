@@ -3,6 +3,7 @@ package sqldb_test
 import (
 	"crypto/rand"
 	"fmt"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,7 +17,7 @@ import (
 
 var _ = Describe("Encryption", func() {
 	Describe("SetEncryptionKeyLabel", func() {
-		It("sets the encryption key label into the database", func() {
+		FIt("sets the encryption key label into the database", func() {
 			expectedLabel := "expectedLabel"
 			err := sqlDB.SetEncryptionKeyLabel(logger, expectedLabel)
 			Expect(err).NotTo(HaveOccurred())
@@ -25,6 +26,7 @@ var _ = Describe("Encryption", func() {
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
+			time.Sleep(100000 * time.Second)
 			rows, err := db.Query(queryStr, sqldb.EncryptionKeyID)
 			Expect(err).NotTo(HaveOccurred())
 			defer rows.Close()
