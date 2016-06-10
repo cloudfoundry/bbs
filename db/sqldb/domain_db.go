@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"database/sql"
 	"math"
 	"time"
 
@@ -47,17 +48,20 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
-	if ttl == 0 {
-		expireTime = math.MaxInt64
-	}
-	_, err := db.upsert(logger, db.db, domainsTable,
-		SQLAttributes{"domain": domain},
-		SQLAttributes{"expire_time": expireTime},
-	)
-	if err != nil {
-		logger.Error("failed-upsert-domain", err)
-		return db.convertSQLError(err)
-	}
-	return nil
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
+		if ttl == 0 {
+			expireTime = math.MaxInt64
+		}
+
+		_, err := db.upsert(logger, tx, domainsTable,
+			SQLAttributes{"domain": domain},
+			SQLAttributes{"expire_time": expireTime},
+		)
+		if err != nil {
+			logger.Error("failed-upsert-domain", err)
+			return db.convertSQLError(err)
+		}
+		return nil
+	})
 }

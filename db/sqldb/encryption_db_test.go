@@ -25,6 +25,7 @@ var _ = Describe("Encryption", func() {
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
+
 			rows, err := db.Query(queryStr, sqldb.EncryptionKeyID)
 			Expect(err).NotTo(HaveOccurred())
 			defer rows.Close()

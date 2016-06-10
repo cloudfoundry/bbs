@@ -1,21 +1,25 @@
 package sqldb
 
 import (
+	"database/sql"
+
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
 func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
-	_, err := db.upsert(logger, db.db, "configurations",
-		SQLAttributes{"id": key},
-		SQLAttributes{"value": value},
-	)
-	if err != nil {
-		logger.Error("failed-setting-config-value", err, lager.Data{"key": key})
-		return db.convertSQLError(err)
-	}
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		_, err := db.upsert(logger, tx, "configurations",
+			SQLAttributes{"id": key},
+			SQLAttributes{"value": value},
+		)
+		if err != nil {
+			logger.Error("failed-setting-config-value", err, lager.Data{"key": key})
+			return db.convertSQLError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string, error) {
