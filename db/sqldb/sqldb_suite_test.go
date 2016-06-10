@@ -113,6 +113,7 @@ var _ = BeforeEach(func() {
 		migrations.Migrations,
 		migrationsDone,
 		fakeClock,
+		dbDriverName,
 	)
 
 	migrationProcess = ifrit.Invoke(migrationManager)

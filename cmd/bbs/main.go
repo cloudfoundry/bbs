@@ -327,6 +327,7 @@ func main() {
 		migrations.Migrations,
 		migrationsDone,
 		clock,
+		*databaseDriver,
 	)
 
 	desiredHub := events.NewHub()

@@ -31,6 +31,7 @@ type Manager struct {
 	migrations     []Migration
 	migrationsDone chan<- struct{}
 	clock          clock.Clock
+	databaseDriver string
 }
 
 func NewManager(
@@ -43,6 +44,7 @@ func NewManager(
 	migrations Migrations,
 	migrationsDone chan<- struct{},
 	clock clock.Clock,
+	databaseDriver string,
 ) Manager {
 	sort.Sort(migrations)
 
@@ -56,6 +58,7 @@ func NewManager(
 		migrations:     migrations,
 		migrationsDone: migrationsDone,
 		clock:          clock,
+		databaseDriver: databaseDriver,
 	}
 }
 
@@ -166,6 +169,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				currentMigration.SetStoreClient(m.storeClient)
 				currentMigration.SetRawSQLDB(m.rawSQLDB)
 				currentMigration.SetClock(m.clock)
+				currentMigration.SetDBFlavor(m.databaseDriver)
 
 				err = currentMigration.Up(m.logger.Session("migration"))
 				if err != nil {

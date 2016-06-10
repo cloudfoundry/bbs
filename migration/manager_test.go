@@ -67,7 +67,7 @@ var _ = Describe("Migration Manager", func() {
 	})
 
 	JustBeforeEach(func() {
-		manager = migration.NewManager(logger, fakeETCDDB, etcdStoreClient, fakeSQLDB, rawSQLDB, cryptor, migrations, migrationsDone, clock.NewClock())
+		manager = migration.NewManager(logger, fakeETCDDB, etcdStoreClient, fakeSQLDB, rawSQLDB, cryptor, migrations, migrationsDone, clock.NewClock(), "db-driver")
 		migrationProcess = ifrit.Background(manager)
 	})
 
