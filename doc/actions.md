@@ -1,6 +1,6 @@
 # Available Actions
 
-[Tasks](tasks.md) and LRPs express their work in terms of composable Actions. The following types of Action are available:
+[Tasks](tasks.md) and [LRPs](lrps.md) express their work in terms of composable Actions. The following types of Action are available:
 
 - Basic Actions:
     - [`RunAction`](#runaction): Runs a process in the container.

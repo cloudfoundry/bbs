@@ -5,7 +5,7 @@ Diego is Cloud Foundry's next generation container runtime, and the BBS server i
 The BBS accepts client requests from both inside and outside a Diego cluster, dispatching work to the [auctioneer](http://github.com/cloudfoundry-incubator/auctioneer) so it can balance work among the [cells](http://github.com/cloudfoundry-incubator/rep). In Diego, there are two distinct types of work:
 
 - [**Tasks**](tasks.md) are one-off processes that Diego guarantees will run at most once.
-- **Long-Running Processes** (LRPs) are processes that Diego monitors for health continually.  Diego can distribute, run, and monitor several identical instances of a given LRP. When an LRP instance crashes, Diego restarts it automatically.
+- [**Long-Running Processes**](lrps.md) (LRPs) are processes that Diego monitors for health continually.  Diego can distribute, run, and monitor several identical instances of a given LRP. When an LRP instance crashes, Diego restarts it automatically.
 
 Tasks and LRP instances run in [Garden](http://github.com/cloudfoundry-incubator/garden) containers on Diego Cells.  The filesystem mounted into these containers can be either a 'preloaded' rootfs colocated with the Diego cell or an arbitrary Docker image. Diego also provides some additional [environment variables](environment.md) to processes running in its containers.
 
