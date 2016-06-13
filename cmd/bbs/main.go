@@ -270,27 +270,9 @@ func main() {
 	// If SQL database info is passed in, use SQL instead of ETCD
 	if *databaseDriver != "" && *databaseConnectionString != "" {
 		var err error
-		if *sqlCACertFile != "" {
-			certBytes, err := ioutil.ReadFile(*sqlCACertFile)
-			if err != nil {
-				logger.Fatal("failed-to-read-sql-ca-file", err)
-			}
+		connectionString := appendSSLConnectionStringParam(logger, *databaseDriver, *databaseConnectionString, *sqlCACertFile)
 
-			caCertPool := x509.NewCertPool()
-			if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
-				logger.Fatal("failed-to-parse-sql-ca", err)
-			}
-
-			tlsConfig := &tls.Config{
-				InsecureSkipVerify: false,
-				RootCAs:            caCertPool,
-			}
-
-			mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
-			*databaseConnectionString = fmt.Sprintf("%s%s", *databaseConnectionString, "?tls=bbs-tls")
-		}
-
-		sqlConn, err = sql.Open(*databaseDriver, *databaseConnectionString)
+		sqlConn, err = sql.Open(*databaseDriver, connectionString)
 		if err != nil {
 			logger.Fatal("failed-to-open-sql", err)
 		}
@@ -404,6 +386,39 @@ func main() {
 	}
 
 	logger.Info("exited")
+}
+
+func appendSSLConnectionStringParam(logger lager.Logger, driverName, databaseConnectionString, sqlCACertFile string) string {
+	switch driverName {
+	case "mysql":
+		if sqlCACertFile != "" {
+			certBytes, err := ioutil.ReadFile(sqlCACertFile)
+			if err != nil {
+				logger.Fatal("failed-to-read-sql-ca-file", err)
+			}
+
+			caCertPool := x509.NewCertPool()
+			if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
+				logger.Fatal("failed-to-parse-sql-ca", err)
+			}
+
+			tlsConfig := &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            caCertPool,
+			}
+
+			mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
+			databaseConnectionString = fmt.Sprintf("%s?tls=bbs-tls", databaseConnectionString)
+		}
+	case "postgres":
+		if sqlCACertFile == "" {
+			databaseConnectionString = fmt.Sprintf("%s?sslmode=disable", databaseConnectionString)
+		} else {
+			databaseConnectionString = fmt.Sprintf("%s?sslmode=verify-ca&sslrootcert=%s", databaseConnectionString, sqlCACertFile)
+		}
+	}
+
+	return databaseConnectionString
 }
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
