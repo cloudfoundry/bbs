@@ -103,7 +103,7 @@ var _ = Describe("Migration Manager", func() {
 
 				BeforeEach(func() {
 					fakeMigrationToSQL = &migrationfakes.FakeMigration{}
-					fakeMigrationToSQL.VersionReturns(101)
+					fakeMigrationToSQL.VersionReturns(102)
 					fakeMigrationToSQL.RequiresSQLReturns(true)
 
 					dbVersion.CurrentVersion = 99
@@ -119,17 +119,18 @@ var _ = Describe("Migration Manager", func() {
 					Expect(fakeETCDDB.SetVersionCallCount()).To(Equal(2))
 
 					_, version := fakeETCDDB.SetVersionArgsForCall(0)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 101}))
+					Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
 
 					_, version = fakeETCDDB.SetVersionArgsForCall(1)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 101, TargetVersion: 101}))
+					// Current Version set to last ETCD migration plus 1
+					Expect(version).To(Equal(&models.Version{CurrentVersion: 101, TargetVersion: 102}))
 
 					Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(2))
 					_, version = fakeSQLDB.SetVersionArgsForCall(0)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 101}))
+					Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
 
 					_, version = fakeSQLDB.SetVersionArgsForCall(1)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 101, TargetVersion: 101}))
+					Expect(version).To(Equal(&models.Version{CurrentVersion: 102, TargetVersion: 102}))
 
 					Expect(fakeMigration.UpCallCount()).To(Equal(1))
 					Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
@@ -142,6 +143,43 @@ var _ = Describe("Migration Manager", func() {
 					Eventually(migrationProcess.Ready()).Should(BeClosed())
 					Expect(migrationsDone).To(BeClosed())
 					Expect(fakeMigrationToSQL.SetRawSQLDBCallCount()).To(Equal(1))
+					Expect(fakeMigrationToSQL.SetStoreClientCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("etcd to sql has already been run", func() {
+				var fakeMigrationToSQL *migrationfakes.FakeMigration
+
+				BeforeEach(func() {
+					fakeMigrationToSQL = &migrationfakes.FakeMigration{}
+					fakeMigrationToSQL.VersionReturns(103)
+					fakeMigrationToSQL.RequiresSQLReturns(true)
+
+					// Current Version is 1 more than the last ETCD Migration (99)
+					dbVersion.CurrentVersion = 100
+					dbVersion.TargetVersion = 103
+					fakeMigration.VersionReturns(99)
+
+					migrations = []migration.Migration{fakeMigrationToSQL, fakeMigration}
+				})
+
+				It("sorts all the migrations and runs them", func() {
+					Eventually(migrationProcess.Ready()).Should(BeClosed())
+					Expect(migrationsDone).To(BeClosed())
+					Expect(fakeETCDDB.SetVersionCallCount()).To(Equal(1))
+
+					Expect(fakeMigration.UpCallCount()).To(Equal(0))
+					Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
+
+					Expect(fakeMigration.DownCallCount()).To(Equal(0))
+					Expect(fakeMigrationToSQL.DownCallCount()).To(Equal(0))
+				})
+
+				It("sets the raw SQL db and the storeClient on the migration to SQL", func() {
+					Eventually(migrationProcess.Ready()).Should(BeClosed())
+					Expect(migrationsDone).To(BeClosed())
+					Expect(fakeMigrationToSQL.SetRawSQLDBCallCount()).To(Equal(1))
+					Expect(fakeMigrationToSQL.SetStoreClientCallCount()).To(Equal(0))
 				})
 			})
 

@@ -86,7 +86,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	if version == nil {
 		if m.hasETCDConfigured() && !m.hasSQLConfigured() {
 			logger.Info("fresh-etcd-skipping-migrations")
-			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion)
+			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion, lastETCDMigrationVersion)
 			if err != nil {
 				return err
 			}
@@ -99,7 +99,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				CurrentVersion: lastETCDMigrationVersion,
 				TargetVersion:  maxMigrationVersion,
 			}
-			err = m.writeVersion(lastETCDMigrationVersion, maxMigrationVersion)
+			err = m.writeVersion(lastETCDMigrationVersion, maxMigrationVersion, lastETCDMigrationVersion)
 			if err != nil {
 				return err
 			}
@@ -136,7 +136,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			"to-version":   maxMigrationVersion,
 		})
 
-		m.writeVersion(version.CurrentVersion, maxMigrationVersion)
+		m.writeVersion(version.CurrentVersion, maxMigrationVersion, lastETCDMigrationVersion)
 	}
 
 	migrateStart := m.clock.Now()
@@ -166,7 +166,9 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				})
 
 				currentMigration.SetCryptor(m.cryptor)
-				currentMigration.SetStoreClient(m.storeClient)
+				if lastVersion <= lastETCDMigrationVersion {
+					currentMigration.SetStoreClient(m.storeClient)
+				}
 				currentMigration.SetRawSQLDB(m.rawSQLDB)
 				currentMigration.SetClock(m.clock)
 				currentMigration.SetDBFlavor(m.databaseDriver)
@@ -181,7 +183,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 		}
 
-		err = m.writeVersion(lastVersion, nextVersion)
+		err = m.writeVersion(lastVersion, nextVersion, lastETCDMigrationVersion)
 		if err != nil {
 			return err
 		}
@@ -267,7 +269,7 @@ func (m *Manager) finishAndWait(logger lager.Logger, signals <-chan os.Signal, r
 	}
 }
 
-func (m *Manager) writeVersion(currentVersion, targetVersion int64) error {
+func (m *Manager) writeVersion(currentVersion, targetVersion, lastETCDMigrationVersion int64) error {
 	if m.hasSQLConfigured() {
 		err := m.sqlDB.SetVersion(m.logger, &models.Version{
 			CurrentVersion: currentVersion,
@@ -280,6 +282,10 @@ func (m *Manager) writeVersion(currentVersion, targetVersion int64) error {
 	}
 
 	if m.hasETCDConfigured() {
+		if currentVersion > lastETCDMigrationVersion {
+			// make it lastETCDMigration plus 1 to indicate it's past ETCD to SQL
+			currentVersion = lastETCDMigrationVersion + 1
+		}
 		err := m.etcdDB.SetVersion(m.logger, &models.Version{
 			CurrentVersion: currentVersion,
 			TargetVersion:  targetVersion,
