@@ -16,7 +16,7 @@ First, let's discuss DesiredLRPs.
 
 When desiring an LRP you `POST` a valid `DesiredLRPCreateRequest`.  The [API reference](api_lrps.md) includes the details of the request.  Here we simply describe what goes into a `DesiredLRPCreateRequest`:
 
-```
+```json
 {
     "process_guid": "some-guid",
     "domain": "some-domain",
