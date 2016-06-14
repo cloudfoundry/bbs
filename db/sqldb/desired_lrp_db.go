@@ -100,7 +100,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 	)
 	if err != nil {
 		logger.Error("failed-query", err)
-		return nil, err
+		return nil, db.convertSQLError(err)
 	}
 	defer rows.Close()
 

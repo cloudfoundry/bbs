@@ -557,11 +557,11 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 		actualLRPColumns, LockRow, wheres, bindings...)
 	if err != nil {
 		logger.Error("failed-query", err)
-		return nil, err
+		return nil, db.convertSQLError(err)
 	}
 	groups, err := db.scanAndCleanupActualLRPs(logger, tx, rows)
 	if err != nil {
-		return nil, err
+		return nil, db.convertSQLError(err)
 	}
 
 	if len(groups) == 0 {
