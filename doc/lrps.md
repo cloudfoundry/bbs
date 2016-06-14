@@ -47,10 +47,13 @@ When desiring an LRP you `POST` a valid `DesiredLRPCreateRequest`.  The [API ref
     "legacy_download_user": "some-legacy-user",
     "trusted_systems_certificates_path": "/etc/some-path",
     "volume_mounts": [
-        "driver": "some-driver",
-        "voldume_id": "some-valume-id",
-        "container_path": "/mnt/some-path",
-        "mode": 0
+        {
+            "driver": "some-driver",
+            "voldume_id": "some-valume-id",
+            "container_path": "/mnt/some-path",
+            "mode": 0,
+            "config": "ZXhhbXBsZQ=="
+        }
     ],
 
     "rootfs": "VALID-ROOTFS",
@@ -64,10 +67,10 @@ When desiring an LRP you `POST` a valid `DesiredLRPCreateRequest`.  The [API ref
     "memory_mb": 128,    
     "privileged": true,
 
-    "setup": ACTION,
-    "action":  ACTION,
-    "monitor": ACTION,
-    "start_timeout_ms": N milliseconds,
+    "setup": {...},
+    "action":  {...},
+    "monitor": {...},
+    "start_timeout_ms": 1500,
 
     "ports": [8080, 5050],
     "routes": {
