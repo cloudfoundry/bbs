@@ -11,9 +11,9 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
 - [Overview of Tasks](tasks.md)
     - [Defining Tasks](defining-tasks.md)
     - [Task Examples](task-examples.md)
-- Overview of Long Running Processes (LRPs)
-    - Defining LRPs
-    - LRP Examples
+- [Overview of Long Running Processes](lrps.md) (LRPs)
+    - [Defining LRPs](defining-lrps.md)
+    - [LRP Examples](lrp-examples.md)
 - [Actions](actions.md)
 - Domains
 - Event Streams
