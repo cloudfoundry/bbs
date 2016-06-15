@@ -59,8 +59,6 @@ type InternalClient interface {
 	StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, error)
 	FailTask(logger lager.Logger, taskGuid, failureReason string) error
 	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
-	ResolvingTask(logger lager.Logger, taskGuid string) error
-	DeleteTask(logger lager.Logger, taskGuid string) error
 }
 
 /*
@@ -106,6 +104,12 @@ type ExternalTaskClient interface {
 
 	// Cancels the Task with the given task guid
 	CancelTask(logger lager.Logger, taskGuid string) error
+
+	// Resolves a Task with the given guid
+	ResolvingTask(logger lager.Logger, taskGuid string) error
+
+	// Deletes a completed task with the given guid
+	DeleteTask(logger lager.Logger, taskGuid string) error
 }
 
 /*

@@ -71,6 +71,24 @@ type FakeClient struct {
 	cancelTaskReturns struct {
 		result1 error
 	}
+	ResolvingTaskStub        func(logger lager.Logger, taskGuid string) error
+	resolvingTaskMutex       sync.RWMutex
+	resolvingTaskArgsForCall []struct {
+		logger   lager.Logger
+		taskGuid string
+	}
+	resolvingTaskReturns struct {
+		result1 error
+	}
+	DeleteTaskStub        func(logger lager.Logger, taskGuid string) error
+	deleteTaskMutex       sync.RWMutex
+	deleteTaskArgsForCall []struct {
+		logger   lager.Logger
+		taskGuid string
+	}
+	deleteTaskReturns struct {
+		result1 error
+	}
 	DomainsStub        func(logger lager.Logger) ([]string, error)
 	domainsMutex       sync.RWMutex
 	domainsArgsForCall []struct {
@@ -415,6 +433,72 @@ func (fake *FakeClient) CancelTaskArgsForCall(i int) (lager.Logger, string) {
 func (fake *FakeClient) CancelTaskReturns(result1 error) {
 	fake.CancelTaskStub = nil
 	fake.cancelTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ResolvingTask(logger lager.Logger, taskGuid string) error {
+	fake.resolvingTaskMutex.Lock()
+	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
+		logger   lager.Logger
+		taskGuid string
+	}{logger, taskGuid})
+	fake.resolvingTaskMutex.Unlock()
+	if fake.ResolvingTaskStub != nil {
+		return fake.ResolvingTaskStub(logger, taskGuid)
+	} else {
+		return fake.resolvingTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) ResolvingTaskCallCount() int {
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	return len(fake.resolvingTaskArgsForCall)
+}
+
+func (fake *FakeClient) ResolvingTaskArgsForCall(i int) (lager.Logger, string) {
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	return fake.resolvingTaskArgsForCall[i].logger, fake.resolvingTaskArgsForCall[i].taskGuid
+}
+
+func (fake *FakeClient) ResolvingTaskReturns(result1 error) {
+	fake.ResolvingTaskStub = nil
+	fake.resolvingTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) DeleteTask(logger lager.Logger, taskGuid string) error {
+	fake.deleteTaskMutex.Lock()
+	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
+		logger   lager.Logger
+		taskGuid string
+	}{logger, taskGuid})
+	fake.deleteTaskMutex.Unlock()
+	if fake.DeleteTaskStub != nil {
+		return fake.DeleteTaskStub(logger, taskGuid)
+	} else {
+		return fake.deleteTaskReturns.result1
+	}
+}
+
+func (fake *FakeClient) DeleteTaskCallCount() int {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	return len(fake.deleteTaskArgsForCall)
+}
+
+func (fake *FakeClient) DeleteTaskArgsForCall(i int) (lager.Logger, string) {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	return fake.deleteTaskArgsForCall[i].logger, fake.deleteTaskArgsForCall[i].taskGuid
+}
+
+func (fake *FakeClient) DeleteTaskReturns(result1 error) {
+	fake.DeleteTaskStub = nil
+	fake.deleteTaskReturns = struct {
 		result1 error
 	}{result1}
 }
