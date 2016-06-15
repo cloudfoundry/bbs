@@ -21,7 +21,7 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
 - API Reference
     - Authorization
     - Tasks
-    - [LRPs](api_lrps.md)
+    - [LRPs](api-lrps.md)
     - Cells
     - Domains
     - Events
