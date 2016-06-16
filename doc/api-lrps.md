@@ -21,7 +21,8 @@ func (c *client) ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*model
 * `logger lager.Logger`
   * The logging sink
 * `filter models.ActualLRPFilter`
-  * The filter can optionally define a Domain or CellId to limit the result set.  You can provide 1, both, or none of those fields.
+  * `Domain string`
+  * `CellId string`
 
 #### Output
 * `[]*models.ActualLRPGroup`
@@ -287,7 +288,7 @@ func (c *client) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 * `logger lager.Logger`
   * The logging sink
 * `desiredLRP *models.DesiredLRP`
-  * See the [LRP Examples page](https://github.com/cloudfoundry-incubator/bbs/blob/wip-lrp-doc/doc/lrp-examples.md)
+  * See the [LRP Examples page](lrp-examples.md)
     for how to create a desired LRP
 
 #### Output
@@ -295,7 +296,7 @@ func (c *client) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
   * Non-nil if error occurred
 
 #### Example
-See the [LRP Examples page](https://github.com/cloudfoundry-incubator/bbs/blob/wip-lrp-doc/doc/lrp-examples.md)
+See the [LRP Examples page](lrp-examples.md)
 for example
 
 ## UpdateDesiredLRP
