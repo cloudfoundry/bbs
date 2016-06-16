@@ -91,7 +91,7 @@ refer to it by its `ProcessGuid`.
 - If you attempt to create a DesiredLRP with a `ProcessGuid` that matches that
   of an existing DesiredLRP, Diego will attempt to update the existing
   DesiredLRP.  This is subject to the rules described in [updating
-  DesiredLRPs](#updating-desiredlrps) below.
+  DesiredLRPs](lrps.md#updating-desiredlrps) below.
 
 
 ##### `Domain` [required]
@@ -224,7 +224,7 @@ After completing any `Setup` action, Diego will launch the `Action` action.  Thi
 
 ##### `Monitor` [optional]
 
-If provided, Diego will monitor the long running processes encoded in `Action` by periodically invoking the `Monitor` action.  If the `Monitor` action returns succesfully (exit status code 0), the container is deemed "healthy", otherwise the container is deemed "unhealthy".  Monitoring is quite flexible in Diego and is outlined in more detail [below](#monitoring-health).
+If provided, Diego will monitor the long running processes encoded in `Action` by periodically invoking the `Monitor` action.  If the `Monitor` action returns succesfully (exit status code 0), the container is deemed "healthy", otherwise the container is deemed "unhealthy".  Monitoring is quite flexible in Diego and is outlined in more detail [here](lrps.md#monitoring-health).
 
 ##### `StartTimeoutMs` [required]
 
