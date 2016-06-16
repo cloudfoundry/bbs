@@ -25,5 +25,6 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
     - Cells
     - Domains
     - Events
+- [Fields common to Tasks and LRPs](common-models.md)
 
 Many of the documents are still in the process of being converted from the documents about the now obsolete [receptor](https://github.com/cloudfoundry-incubator/receptor/tree/master/doc) component.
