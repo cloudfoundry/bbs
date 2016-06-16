@@ -4,24 +4,26 @@ This reference does not cover the protobuf payload supplied to each endpoint.
 
 For detailed information on the structs and types listed see [models documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models)
 
-# ActualLRP
+# ActualLRP APIs
+
+## ActualLRPs
 Returns all ActualLRPGroups matching the given ActualLRPFilter
 
-## BBS API Endpoint
+### BBS API Endpoint
 To fetch all the ActualLRPs: post an ActualLRPGroupsRequest to "/v1/actual_lrp_groups/list"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `filter models.ActualLRPFilter`
   * The filter can optionally define a Domain or CellId to limit the result set.  You can provide 1, both, or none of those fields.
 
-### Output
+#### Output
 * `[]*models.ActualLRPGroup`
   * `Instance *ActualLRP`
     * [See ActualLRP Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRP)
@@ -31,7 +33,7 @@ func (c *client) ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*model
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 actualLRPGroups, err := client.ActualLRPGroups(logger, &models.ActualLRPFilter{
@@ -44,26 +46,26 @@ if err != nil {
 ```
 
 
-# ActualLRPsByProcessGuid
+## ActualLRPsByProcessGuid
 Returns all ActualLRPGroups that have the given process guid
 
-## BBS API Endpoint
+### BBS API Endpoint
 To fetch all the ActualLRPs by a processGuid: post an
 ActualLRPGroupsByProcessGuidRequest to
 "/v1/actual_lrp_groups/list_by_process_guid"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error)
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `processGuid string`
   * The process Guid
 
-### Output
+#### Output
 * `[]*models.ActualLRPGroup`
   * `Instance *ActualLRP`
     * [See ActualLRP Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRP)
@@ -73,7 +75,7 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 actualLRPGroups, err := client.ActualLRPGroupsByProcessGuid(logger, "my-guid")
@@ -82,19 +84,19 @@ if err != nil {
 }
 ```
 
-# ActualLRPGroupByProcessGuidAndIndex
+## ActualLRPGroupByProcessGuidAndIndex
 Returns the ActualLRPGroup with the given process guid and instance index
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post an ActualLRPGroupByProcessGuidAndIndexRequest to
 "/v1/actual_lrp_groups/get_by_process_guid_and_index"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error)
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `processGuid string`
@@ -102,7 +104,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 * `index int`
   * The instance index
 
-### Output
+#### Output
 * `*models.ActualLRPGroup`
   * `Instance *ActualLRP`
     * [See ActualLRP Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRP)
@@ -112,7 +114,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "my-guid", 0)
@@ -122,18 +124,18 @@ if err != nil {
 ```
 
 
-# RetireActualLRP
+## RetireActualLRP
 Shuts down the ActualLRP matching the given ActualLRPKey, but does not modify the desired state
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post a RetireActualLRPRequest to "/v1/actual_lrps/retire"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `key *models.ActualLRPKey`
@@ -144,11 +146,11 @@ func (c *client) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) 
   * `Domain string`
     * The domain
 
-### Output
+#### Output
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 err := client.RetireActualLRP(logger, &models.ActualLRPKey{
@@ -160,34 +162,35 @@ if err != nil {
     log.Printf("failed to retire actual lrps: " + err.Error())
 }
 ```
+# DesiredLRP APIs
 
-# DesiredLRPs
+## DesiredLRPs
 Lists all DesiredLRPs that match the given DesiredLRPFilter
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post a DesiredLRPsRequest to "/v1/desired_lrps/list.r1"
 
 DEPRECATED: Post a DesiredLRPsRequest to "/v1/desired_lrps/list"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `filter models.DesiredLRPFilter`
   * `Domain string`
     * The domain (optional)
 
-### Output
+#### Output
 * `[]*models.DesiredLRP`
   * [See DesiredLRP Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#DesiredLRP)
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 desiredLRPS, err := client.DesiredLRPs(logger, &models.DesiredLRPFilter{
@@ -198,32 +201,32 @@ if err != nil {
 }
 ```
 
-# DesiredLRPByProcessGuid
+## DesiredLRPByProcessGuid
 Returns the DesiredLRP with the given process guid
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post a DesiredLRPByProcessGuidRequest to "/v1/desired_lrps/get_by_process_guid.r1"
 
 DEPRECATED: Post a DesiredLRPByProcessGuidRequest to "/v1/desired_lrps/get_by_process_guid"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error)
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `processGuid string`
   * The process Guid
 
-### Output
+#### Output
 * `*models.DesiredLRP`
   * [See DesiredLRP Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#DesiredLRP)
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 desiredLRP, err := client.DesiredLRPByProcessGuid(logger, "some-processs-guid")
@@ -232,31 +235,31 @@ if err != nil {
 }
 ```
 
-# DesiredLRPSchedulingInfos
+## DesiredLRPSchedulingInfos
 Returns all DesiredLRPSchedulingInfos that match the given DesiredLRPFilter
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post a DesiredLRPsRequest to "/v1/desired_lrp_scheduling_infos/list"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `filter models.DesiredLRPFilter`
   * `Domain string`
     * The domain (optional)
 
-### Output
+#### Output
 * `[]*models.DesiredLRPSchedulingInfo`
   * [See DesiredLRPSchedulingInfo Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#DesiredLRPSchedulingInfo)
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 info, err := client.DesiredLRPSchedulingInfos(logger, &models.DesiredLRPFilter{
@@ -267,46 +270,46 @@ if err != nil {
 }
 ```
 
-# DesireLRP
+## DesireLRP
 Creates the given DesiredLRP and its corresponding ActualLRPs
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post a DesireLRPRequest to "/v1/desired_lrp/desire.r1"
 
 DEPRECATED: Post a DesireLRPRequest to "/v1/desired_lrp/desire"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `desiredLRP *models.DesiredLRP`
   * See the [LRP Examples page](https://github.com/cloudfoundry-incubator/bbs/blob/wip-lrp-doc/doc/lrp-examples.md)
     for how to create a desired LRP
 
-### Output
+#### Output
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 See the [LRP Examples page](https://github.com/cloudfoundry-incubator/bbs/blob/wip-lrp-doc/doc/lrp-examples.md)
 for example
 
-# UpdateDesiredLRP
+## UpdateDesiredLRP
 Updates the DesiredLRP matching the given process guid
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post a UpdateDesiredLRPRequest to "/v1/desired_lrp/update"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `processGuid string`
@@ -319,11 +322,11 @@ func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
   * `Annotation *string`
     * A string annotation
 
-### Output
+#### Output
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 instances := 4
@@ -338,28 +341,28 @@ if err != nil {
 }
 ```
 
-# RemoveDesiredLRP
+## RemoveDesiredLRP
 Removes the DesiredLRP matching the given process guid
 
-## BBS API Endpoint
+### BBS API Endpoint
 Post a RemoveDesiredLRPRequest to "/v1/desired_lrp/remove"
 
-## Golang Client API
+### Golang Client API
 ```
 func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 ```
 
-### Input
+#### Input
 * `logger lager.Logger`
   * The logging sink
 * `processGuid string`
   * The process Guid
 
-### Output
+#### Output
 * `error`
   * Non-nil if error occurred
 
-### Example
+#### Example
 ```
 client := bbs.NewClient(url)
 err := client.RemoveDesiredLRP(logger, "some-process-guid")
