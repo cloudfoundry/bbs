@@ -147,11 +147,11 @@ To pull the image from a different registry than the default (Docker Hub), speci
 
 ##### `EnvironmentVariables` [optional]
 
-See [Environment Variables Description](common-models.md#environment-variables) for details.
+See [Environment Variables Description](common-models.md#environmentvariables-optional) for details.
 
 ##### `CachedDependencies` [optional]
 
-See [Cached Dependencies Description](common-models.md#cached-dependencies) for details.
+See [Cached Dependencies Description](common-models.md#cacheddependencies-optional) for details.
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -159,7 +159,7 @@ An absolute path inside the container's filesystem where trusted system certific
 
 ##### `VolumeMounts` [optional]
 
-See [Volume Mounts Description](common-models.md#volume-mounts) for details.
+See [Volume Mounts Description](common-models.md#volumemounts-optional) for details.
 
 #### Container Limits
 
@@ -227,7 +227,7 @@ Diego can open and expose arbitrary `Ports` inside the container.  There are pla
 
 By default network access for any container is limited but some LRPs might need specific network access and that can be setup using `EgressRules` field.  Rules are evaluated in reverse order of their position, i.e., the last one takes precedence.
 
-See [Security Group Rules Description](common-models.md#security-group-rule) for details.
+See [Security Group Rules Description](common-models.md#securitygrouprule) for details.
 
 ##### `Ports` [optional]
 

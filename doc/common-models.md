@@ -26,7 +26,23 @@ The `ChecksumAlgorithm` and `ChecksumValue` are optional and used to validate th
 
 ##### `VolumeMounts` [optional]
 
-TODO
+Volume Mounts are used to specify persistent storage to be attached to a container in either a Task or LRP.
+
+You can define the specific storage subsystem driver, volumeId, path in the container, bind mount mode as well as
+some driver specific configuration information.
+
+See the model documentation for VolumeMount [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#VolumeMount)
+
+```go
+VolumeMounts: []*models.VolumeMount{
+  {
+    Driver:        "my-driver",
+    VolumeId:      "my-volume",
+    ContainerPath: "/mnt/mypath",
+    Mode:          models.BindMountMode_RO,
+  },
+}
+```
 
 ##### `SecurityGroupRule`
 
