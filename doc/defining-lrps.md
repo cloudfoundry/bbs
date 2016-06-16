@@ -147,29 +147,11 @@ To pull the image from a different registry than the default (Docker Hub), speci
 
 ##### `EnvironmentVariables` [optional]
 
-Diego supports the notion of container-level environment variables.  All processes that run in the container will inherit these environment variables.
-
-For more details on the environment variables provided to processes in the container, read [Container Runtime Environment](environment.md).
+See [Environment Variables Description](common-models.md#environment-variables) for details.
 
 ##### `CachedDependencies` [optional]
 
-List of dependencies to cache on the Diego Cell and then to bind-mount into the container at the specified location. For example:
-
-```go
-CachedDependencies: []*models.CachedDependency{
-  {
-    Name: "app bits",
-    From: "https://blobstore.com/bits/app-bits",
-    To: "/usr/local/app",
-    CacheKey: "cache-key",
-    LogSource: "log-source",
-    ChecksumAlgorithm: "md5",
-    ChecksumValue: "the-checksum",
-  },
-},
-```
-
-The `ChecksumAlgorithm` and `ChecksumValue` are optional and used to validate the downloaded binary.  They must be used together.
+See [Cached Dependencies Description](common-models.md#cached-dependencies) for details.
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -177,7 +159,7 @@ An absolute path inside the container's filesystem where trusted system certific
 
 ##### `VolumeMounts` [optional]
 
-TODO
+See [Volume Mounts Description](common-models.md#volume-mounts) for details.
 
 #### Container Limits
 
@@ -245,7 +227,7 @@ Diego can open and expose arbitrary `Ports` inside the container.  There are pla
 
 By default network access for any container is limited but some LRPs might need specific network access and that can be setup using `EgressRules` field.  Rules are evaluated in reverse order of their position, i.e., the last one takes precedence.
 
-> Lattice users: Lattice is intended to be a single-tenant cluster environment.  In Lattice there are no network-access constraints on the containers so there is no need to specify `EgressRules`.
+See [Security Group Rules Description](common-models.md#security-group-rule) for details.
 
 ##### `Ports` [optional]
 
