@@ -1,4 +1,4 @@
-## Defining LRPs
+### Defining LRPs
 
 This document explains the fields available when defining a new LRP. For a higher-level overview of the Diego LRP API, see the [LRPs Overview](lrps.md).
 
@@ -78,9 +78,9 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 })
 ```
 
-### LRP Identifiers
+#### LRP Identifiers
 
-#### `ProcessGuid` [required]
+##### `ProcessGuid` [required]
 
 It is up to the consumer of Diego to provide a *globally unique*
 `ProcessGuid`.  To subsequently fetch the DesiredLRP and its ActualLRP you
@@ -94,7 +94,7 @@ refer to it by its `ProcessGuid`.
   DesiredLRPs](#updating-desiredlrps) below.
 
 
-#### `Domain` [required]
+##### `Domain` [required]
 
 The consumer of Diego may organize LRPs into groupings called 'domains'.  These
 are purely organizational (for example, for enabling multiple consumers to use
@@ -103,17 +103,17 @@ or lifecycle.  It is possible to fetch all LRPs in a given domain.
 
 - It is an error to provide an empty `Domain` field.
 
-### Instances
+#### Instances
 
-#### `Instances` [required]
+##### `Instances` [required]
 
 Diego can run and manage multiple instances (`ActualLRP`s) for each
 `DesiredLRP`. `Instances` specifies the number of desired instances and must
 not be less than zero.
 
-### Container Contents and Environment
+#### Container Contents and Environment
 
-#### `RootFs` [required]
+##### `RootFs` [required]
 
 The `RootFs` field specifies the root filesystem to mount into the container.  Diego can be configured with a set of *preloaded* RootFSes.  These are named root filesystems that are already on the Diego Cells.
 
@@ -145,13 +145,13 @@ To pull the image from a different registry than the default (Docker Hub), speci
 > [Lattice](https://github.com/cloudfoundry-incubator/lattice) does not ship with any preloaded root filesystems. You must specify a Docker image when using Lattice. You can mount the filesystem provided by diego-release by specifying `"rootfs": "docker:///cloudfoundry/cflinuxfs2"`.
 
 
-#### `EnvironmentVariables` [optional]
+##### `EnvironmentVariables` [optional]
 
 Diego supports the notion of container-level environment variables.  All processes that run in the container will inherit these environment variables.
 
 For more details on the environment variables provided to processes in the container, read [Container Runtime Environment](environment.md).
 
-#### `CachedDependencies` [optional]
+##### `CachedDependencies` [optional]
 
 List of dependencies to cache on the Diego Cell and then to bind-mount into the container at the specified location. For example:
 
@@ -171,24 +171,24 @@ CachedDependencies: []*models.CachedDependency{
 
 The `ChecksumAlgorithm` and `ChecksumValue` are optional and used to validate the downloaded binary.  They must be used together.
 
-#### `TrustedSystemCertificatesPath` [optional]
+##### `TrustedSystemCertificatesPath` [optional]
 
 An absolute path inside the container's filesystem where trusted system certificates will be provided if an operator has specified them.
 
-#### `VolumeMounts` [optional]
+##### `VolumeMounts` [optional]
 
 TODO
 
-### Container Limits
+#### Container Limits
 
-#### `CpuWeight` [optional]
+##### `CpuWeight` [optional]
 
 To control the CPU shares provided to a container, set `CpuWeight`.  This must be a positive number between `1` and `100`, inclusive.  The `CpuWeight` enforces a relative fair share of the CPU among containers.  It's best explained with examples.  Consider the following scenarios (we shall assume that each container is running a busy process that is attempting to consume as many CPU resources as possible):
 
 - Two containers, with equal values of `CpuWeight`: both containers will receive equal shares of CPU time.
 - Two containers, one with `"cpu_weight": 50` and the other with `"cpu_weight": 100`: the later will get (roughly) 2/3 of the CPU time, the former 1/3.
 
-#### `DiskMb` [optional]
+##### `DiskMb` [optional]
 
 A disk quota applied to the entire container.  Any data written on top of the RootFS counts against the Disk Quota.  Processes that attempt to exceed this limit will not be allowed to write to disk.
 
@@ -196,7 +196,7 @@ A disk quota applied to the entire container.  Any data written on top of the Ro
 - If set to 0 no disk constraints are applied to the container
 - The units are megabytes
 
-#### `MemoryMb` [optional]
+##### `MemoryMb` [optional]
 
 A memory limit applied to the entire container.  If the aggregate memory consumption by all processs running in the container exceeds this value, the container will be destroyed.
 
@@ -204,29 +204,29 @@ A memory limit applied to the entire container.  If the aggregate memory consump
 - If set to 0 no memory constraints are applied to the container
 - The units are megabytes
 
-#### `Privileged` [optional]
+##### `Privileged` [optional]
 
 If false, Diego will create a container that is in a user namespace.  Processes that succesfully obtain escalated privileges (i.e. root access) will actually only be root within the user namespace and will not be able to maliciously modify the host VM.  If true, Diego creates a container with no user namespace -- escalating to root gives the user *real* root access.
 
-### Actions
+#### Actions
 
 When an LRP instance is instantiated, a container is created with the specified `RootFs` mounted.  Diego is responsible for performing any container setup necessary to successfully launch processes and monitor said processes.
 
-#### `Setup` [optional]
+##### `Setup` [optional]
 
 After creating a container, Diego will first run the action specified in the `Setup` field.  This field is optional and is typically used to download files and run (short-lived) processes that configure the container.  For more details on the available actions see [actions](actions.md).
 
 - If the `Setup` action fails the `ActualLRP` is considered to have crashed and will be restarted
 
-#### `Action` [required]
+##### `Action` [required]
 
 After completing any `Setup` action, Diego will launch the `Action` action.  This `Action` is intended to launch any long-running processes.  For more details on the available actions see [actions](actions.md).
 
-#### `Monitor` [optional]
+##### `Monitor` [optional]
 
 If provided, Diego will monitor the long running processes encoded in `Action` by periodically invoking the `Monitor` action.  If the `Monitor` action returns succesfully (exit status code 0), the container is deemed "healthy", otherwise the container is deemed "unhealthy".  Monitoring is quite flexible in Diego and is outlined in more detail [below](#monitoring-health).
 
-#### `StartTimeoutMs` [required]
+##### `StartTimeoutMs` [required]
 
 If provided, Diego will give the `Action` action up to `StartTimeoutMs` seconds to become healthy before marking the LRP as failed.
 
@@ -234,12 +234,12 @@ The `DeprecatedStartTimeoutS` field has been deprecated in favor of
 `StartTimeoutMs`. The `StartTimeoutMs` field is required and will be translated
 into `DeprecatedStartTimeoutS` for older clients.
 
-#### `LegacyDownloadUser` [optional]
+##### `LegacyDownloadUser` [optional]
 
 For backwards compatibility, `LegacyDownloadUser` specifies the user for a
 `DownloadAction`.
 
-### Networking
+#### Networking
 
 Diego can open and expose arbitrary `Ports` inside the container.  There are plans to generalize this support and make it possible to build custom service discovery solutions on top of Diego.  The API is likely to change in backward-incompatible ways as we work these requirements out.
 
@@ -247,7 +247,7 @@ By default network access for any container is limited but some LRPs might need 
 
 > Lattice users: Lattice is intended to be a single-tenant cluster environment.  In Lattice there are no network-access constraints on the containers so there is no need to specify `EgressRules`.
 
-#### `Ports` [optional]
+##### `Ports` [optional]
 
 `Ports` is a list of ports to open in the container.  Processes running in the
 container can bind to these ports to receive incoming traffic.  These ports are
@@ -255,22 +255,22 @@ only valid within the container namespace and an arbitrary host-side port is
 created when the container is created.  This host-side port is made available
 on the `ActualLRP`.
 
-#### `Routes` [optional]
+##### `Routes` [optional]
 
 `Routes` is a map where the keys identify route providers and the values hold
 information for the providers to consume.  The information in the map must be
 valid JSON but is not proessed by Diego.  The total length of the routing
 information must not exceed 4096 bytes.
 
-#### `EgressRules` [optional]
+##### `EgressRules` [optional]
 `EgressRules` are a list of egress firewall rules that are applied to a
 container running in Diego.
 
-##### `Protocol` [required]
+###### `Protocol` [required]
 The protocol of the rule that can be one of the following `tcp`, `udp`,`icmp`,
 `all`.
 
-##### `Destinations` [required]
+###### `Destinations` [required]
 The destinations of the rule that is a list of either an IP Address (1.2.3.4)
 or an IP range (1.2.3.4-2.3.4.5) or a CIDR (1.2.3.4/5)
 
@@ -285,21 +285,21 @@ and end of the port range, inclusive.
 - Either `Ports` or `PortRange` must be provided for protocol `tcp` and `udp`.
 - It is an error to provide both.
 
-##### `IcmpInfo` [optional]
+###### `IcmpInfo` [optional]
 - `Type` [required] will be an integer between 0 and 255
 - `Code` [required] will be an integer
 
 > `IcmpInfo` is required for protocol `icmp`.
 > It is an error when provided for other protocols.
 
-##### `Log` [optional]
+###### `Log` [optional]
 Enable logging of the rule
 > `Log` is optional for `tcp` and `all`.
 > It is an error to provide `Log` as true when protocol is `udp` or `icmp`.
 
 > Define all rules with `Log` enabled at the end of your `EgressRules` to guarantee logging.
 
-##### Examples
+###### Examples
 ***
 `ALL`
 ```
@@ -344,32 +344,32 @@ Enable logging of the rule
 }
 ```
 ***
-### Logging
+#### Logging
 
 
 Diego uses [loggregator](https://github.com/cloudfoundry/loggregator) to
 emit logs generated by container processes to the user.
 
-#### `LogGuid` [optional]
+##### `LogGuid` [optional]
 
 `LogGuid` controls the loggregator guid associated with logs coming from
 LRP processes.  One typically sets the `LogGuid` to the `ProcessGuid`
 though this is not strictly necessary.
 
-#### `LogSource` [optional]
+##### `LogSource` [optional]
 
 `LogSource` is an identifier emitted with each log line.  Individual
 `RunAction`s can override the `LogSource`.  This allows a consumer of
 the log stream to distinguish between the logs of different processes.
 
-#### `MetricsGuid` [optional]
+##### `MetricsGuid` [optional]
 
 The `MetricsGuid` field sets the `ApplicationId` on container metris coming
 from the DesiredLRP.
 
-#### Attaching Arbitrary Metadata
+##### Attaching Arbitrary Metadata
 
-#### `Annotation` [optional]
+##### `Annotation` [optional]
 
 Diego allows arbitrary annotations to be attached to a DesiredLRP.  The
 annotation must not exceed 10 kilobytes in size.
