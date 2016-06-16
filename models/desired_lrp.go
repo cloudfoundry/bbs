@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/models"
 )
 
 const PreloadedRootFSScheme = "preloaded"
@@ -67,82 +66,6 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		TrustedSystemCertificatesPath: runInfo.TrustedSystemCertificatesPath,
 		VolumeMounts:                  runInfo.VolumeMounts,
 		Network:                       runInfo.Network,
-	}
-}
-
-func () ExampleLRP() {
-	exampleLRP := &models.DesiredLRP{
-		ProcessGuid: "some-guid",
-		Domain:      "some-domain",
-		ModificationTag: &models.ModificationTag{
-			Epoch: "epoch",
-			Index: 0,
-		},
-
-		Instances: 17,
-		CachedDependencies: []*models.CachedDependency{
-			{
-				Name:      "app bits",
-				From:      "blobstore.com/bits/app-bits",
-				To:        "/usr/local/app",
-				CacheKey:  "some-cache-key",
-				LogSource: "some-log-source",
-			},
-			{
-				Name:              "app bits with checksum",
-				From:              "blobstore.com/bits/app-bits-checksum",
-				To:                "/usr/local/app-checksum",
-				CacheKey:          "some-cache-key",
-				LogSource:         "some-log-source",
-				ChecksumAlgorithm: "md5",
-				CheckSumValue:     "some-checksum-value",
-			},
-		},
-		LegacyDownloadUser:            "some-legacy-user",
-		TrustedSystemCertificatesPath: "/etc/some-path",
-		VolumeMounts: []*models.VolumeMount{
-			{
-				Driver:        "some-driver",
-				VolumeId:      "some-volume-id",
-				ContainerPath: "/mnt/some-path",
-				mode:          0,
-				config:        "ZXhhbXBsZQ==",
-			},
-		},
-
-		RootFs: "VALID-ROOTFS",
-		EnvironmentVariables: []*models.EnvironmentVariable{
-			{
-				Name:  "ENV_NAME_A",
-				Value: "ENV_VALUE_A",
-			},
-			{
-				Name:  "ENV_NAME_B",
-				Value: "ENV_NAME_B",
-			},
-		},
-
-		CpuWeight:  57,
-		DiskMb:     1024,
-		MemoryMb:   128,
-		Privileged: true,
-
-		Setup: models.WrapAction(&models.DownloadAction{
-			Artifact:          "some-artifact",
-			User:              "user",
-			From:              "blobstore.com/bits/app-bits/checksum",
-			To:                "/usr/local/app-checksum",
-			CacheKey:          "some-cache-key",
-			LogSource:         "some-log-source",
-			ChecksumAlgorithm: "md5",
-			ChecksumValue:     "some-checksum-value",
-		}),
-		Action: models.WrapAction(&models.RunAction{
-			User:           "user",
-			Path:           "echo",
-			Args:           []string{"hello world"},
-			ResourceLimits: &models.ResourceLimits{},
-		}),
 	}
 }
 
