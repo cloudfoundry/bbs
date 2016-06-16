@@ -11,14 +11,32 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 	Instances:            1,
 	EnvironmentVariables: []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
 	CachedDependencies: []*models.CachedDependency{
-		{Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
-		{Name: "app bits with checksum", From: "blobstore.com/bits/app-bits-checksum", To: "/usr/local/app-checksum", CacheKey: "cache-key", LogSource: "log-source", ChecksumAlgorithm: "md5", ChecksumValue: "checksum-value"},
+		{
+			Name: "app bits", 
+			From: "blobstore.com/bits/app-bits", 
+			To: "/usr/local/app", 
+			CacheKey: "cache-key", 
+			LogSource: "log-source"
+		},
+		{
+			Name: "app bits with checksum", 
+			From: "blobstore.com/bits/app-bits-checksum", 
+			To: "/usr/local/app-checksum", 
+			CacheKey: "cache-key", 
+			LogSource: "log-source", 
+			ChecksumAlgorithm: "md5", 
+			ChecksumValue: "checksum-value"
+		},
 	},
 	Setup:          models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 	Action:         models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 	StartTimeoutMs: 15000,
 	Monitor: models.WrapAction(models.EmitProgressFor(
-		models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
+		models.Timeout(
+			&models.RunAction{
+				Path: "ls", 
+				User: "name"
+			},
 			10*time.Second,
 		),
 		"start-message",
