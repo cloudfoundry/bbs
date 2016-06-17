@@ -432,7 +432,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
 }
 
-func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {
+func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
 	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
 	logger.Debug("starting")
 	defer logger.Debug("complete")

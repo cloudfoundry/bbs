@@ -115,12 +115,13 @@ type FakeLRPDB struct {
 		result2 *models.ActualLRPGroup
 		result3 error
 	}
-	RemoveActualLRPStub        func(logger lager.Logger, processGuid string, index int32) error
+	RemoveActualLRPStub        func(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error
 	removeActualLRPMutex       sync.RWMutex
 	removeActualLRPArgsForCall []struct {
 		logger      lager.Logger
 		processGuid string
 		index       int32
+		instanceKey *models.ActualLRPInstanceKey
 	}
 	removeActualLRPReturns struct {
 		result1 error
@@ -527,16 +528,17 @@ func (fake *FakeLRPDB) FailActualLRPReturns(result1 *models.ActualLRPGroup, resu
 	}{result1, result2, result3}
 }
 
-func (fake *FakeLRPDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {
+func (fake *FakeLRPDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
 	fake.removeActualLRPMutex.Lock()
 	fake.removeActualLRPArgsForCall = append(fake.removeActualLRPArgsForCall, struct {
 		logger      lager.Logger
 		processGuid string
 		index       int32
-	}{logger, processGuid, index})
+		instanceKey *models.ActualLRPInstanceKey
+	}{logger, processGuid, index, instanceKey})
 	fake.removeActualLRPMutex.Unlock()
 	if fake.RemoveActualLRPStub != nil {
-		return fake.RemoveActualLRPStub(logger, processGuid, index)
+		return fake.RemoveActualLRPStub(logger, processGuid, index, instanceKey)
 	} else {
 		return fake.removeActualLRPReturns.result1
 	}
@@ -548,10 +550,10 @@ func (fake *FakeLRPDB) RemoveActualLRPCallCount() int {
 	return len(fake.removeActualLRPArgsForCall)
 }
 
-func (fake *FakeLRPDB) RemoveActualLRPArgsForCall(i int) (lager.Logger, string, int32) {
+func (fake *FakeLRPDB) RemoveActualLRPArgsForCall(i int) (lager.Logger, string, int32, *models.ActualLRPInstanceKey) {
 	fake.removeActualLRPMutex.RLock()
 	defer fake.removeActualLRPMutex.RUnlock()
-	return fake.removeActualLRPArgsForCall[i].logger, fake.removeActualLRPArgsForCall[i].processGuid, fake.removeActualLRPArgsForCall[i].index
+	return fake.removeActualLRPArgsForCall[i].logger, fake.removeActualLRPArgsForCall[i].processGuid, fake.removeActualLRPArgsForCall[i].index, fake.removeActualLRPArgsForCall[i].instanceKey
 }
 
 func (fake *FakeLRPDB) RemoveActualLRPReturns(result1 error) {

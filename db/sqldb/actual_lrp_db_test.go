@@ -582,8 +582,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and there is a placement error", func() {
 					BeforeEach(func() {
 						queryStr := `
-								UPDATE actual_lrps SET placement_error = ?
-								WHERE process_guid = ? AND instance_index = ?`
+						UPDATE actual_lrps SET placement_error = ?
+						WHERE process_guid = ? AND instance_index = ?`
 						if test_helpers.UsePostgres() {
 							queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 						}
@@ -680,8 +680,8 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					queryStr := `
-								UPDATE actual_lrps SET state = ?, net_info = ?, cell_id = ?, instance_guid = ?
-								WHERE process_guid = ? AND instance_index = ?`
+				UPDATE actual_lrps SET state = ?, net_info = ?, cell_id = ?, instance_guid = ?
+				WHERE process_guid = ? AND instance_index = ?`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
@@ -759,8 +759,8 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("and the actual lrp is CRASHED", func() {
 				BeforeEach(func() {
 					queryStr := `
-							UPDATE actual_lrps SET state = ?
-							WHERE process_guid = ? AND instance_index = ?`
+			UPDATE actual_lrps SET state = ?
+			WHERE process_guid = ? AND instance_index = ?`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
@@ -1019,8 +1019,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and the actual lrp is CRASHED", func() {
 					BeforeEach(func() {
 						queryStr := `
-								UPDATE actual_lrps SET state = ?
-								WHERE process_guid = ? AND instance_index = ?`
+						UPDATE actual_lrps SET state = ?
+						WHERE process_guid = ? AND instance_index = ?`
 						if test_helpers.UsePostgres() {
 							queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 						}
@@ -1199,8 +1199,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and it should NOT be restarted", func() {
 					BeforeEach(func() {
 						queryStr := `
-								UPDATE actual_lrps SET crash_count = ?
-								WHERE process_guid = ? AND instance_index = ?`
+					UPDATE actual_lrps SET crash_count = ?
+					WHERE process_guid = ? AND instance_index = ?`
 						if test_helpers.UsePostgres() {
 							queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 						}
@@ -1233,8 +1233,8 @@ var _ = Describe("ActualLRPDB", func() {
 					Context("and it has NOT been updated recently", func() {
 						BeforeEach(func() {
 							queryStr := `
-								UPDATE actual_lrps SET since = ?
-								WHERE process_guid = ? AND instance_index = ?`
+					UPDATE actual_lrps SET since = ?
+					WHERE process_guid = ? AND instance_index = ?`
 							if test_helpers.UsePostgres() {
 								queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 							}
@@ -1287,8 +1287,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and it should be restarted", func() {
 					BeforeEach(func() {
 						queryStr := `
-								UPDATE actual_lrps SET crash_count = ?
-								WHERE process_guid = ? AND instance_index = ?`
+			UPDATE actual_lrps SET crash_count = ?
+			WHERE process_guid = ? AND instance_index = ?`
 						if test_helpers.UsePostgres() {
 							queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 						}
@@ -1322,8 +1322,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and it should NOT be restarted", func() {
 					BeforeEach(func() {
 						queryStr := `
-								UPDATE actual_lrps SET crash_count = ?
-								WHERE process_guid = ? AND instance_index = ?`
+		UPDATE actual_lrps SET crash_count = ?
+		WHERE process_guid = ? AND instance_index = ?`
 						if test_helpers.UsePostgres() {
 							queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 						}
@@ -1509,13 +1509,14 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
+
 				_, err = sqlDB.CreateUnclaimedActualLRP(logger, otherActualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.Increment(time.Hour)
 			})
 
 			It("removes the actual lrp", func() {
-				err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index)
+				err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
@@ -1524,17 +1525,47 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("keeps the other lrps around", func() {
-				err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index)
+				err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, otherActualLRPKey.ProcessGuid, otherActualLRPKey.Index)
 				Expect(err).NotTo(HaveOccurred())
 			})
+
+			Context("when an instance key is provided", func() {
+				var instanceKey models.ActualLRPInstanceKey
+
+				BeforeEach(func() {
+					instanceKey = models.NewActualLRPInstanceKey("instance-guid", "cell-id")
+
+					_, _, err := sqlDB.ClaimActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, &instanceKey)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("and it matches the existing actual lrp", func() {
+					It("removes the actual lrp", func() {
+						err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, &instanceKey)
+						Expect(err).NotTo(HaveOccurred())
+
+						_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(Equal(models.ErrResourceNotFound))
+					})
+				})
+
+				Context("and it does not match the existing actual lrp", func() {
+					It("returns an error", func() {
+						instanceKey.CellId = "not the right cell id"
+						err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, &instanceKey)
+						Expect(err).To(HaveOccurred())
+					})
+				})
+			})
 		})
 
 		Context("when the actual lrp does NOT exist", func() {
 			It("returns a resource not found error", func() {
-				err := sqlDB.RemoveActualLRP(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+				err := sqlDB.RemoveActualLRP(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index, nil)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})

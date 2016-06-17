@@ -64,4 +64,5 @@ message RetireActualLRPRequest {
 message RemoveActualLRPRequest {
   optional string process_guid = 1;
   optional int32 index = 2;
+  optional ActualLRPInstanceKey actual_lrp_instance_key = 3;
 }

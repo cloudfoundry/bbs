@@ -267,8 +267,9 @@ func (m *RetireActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 }
 
 type RemoveActualLRPRequest struct {
-	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
-	Index       int32  `protobuf:"varint,2,opt,name=index" json:"index"`
+	ProcessGuid          string                `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Index                int32                 `protobuf:"varint,2,opt,name=index" json:"index"`
+	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,3,opt,name=actual_lrp_instance_key" json:"actual_lrp_instance_key,omitempty"`
 }
 
 func (m *RemoveActualLRPRequest) Reset()      { *m = RemoveActualLRPRequest{} }
@@ -286,6 +287,13 @@ func (m *RemoveActualLRPRequest) GetIndex() int32 {
 		return m.Index
 	}
 	return 0
+}
+
+func (m *RemoveActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
 }
 
 func (this *ActualLRPLifecycleResponse) Equal(that interface{}) bool {
@@ -627,6 +635,9 @@ func (this *RemoveActualLRPRequest) Equal(that interface{}) bool {
 	if this.Index != that1.Index {
 		return false
 	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
 	return true
 }
 func (this *ActualLRPLifecycleResponse) GoString() string {
@@ -734,7 +745,8 @@ func (this *RemoveActualLRPRequest) GoString() string {
 	}
 	s := strings.Join([]string{`&models.RemoveActualLRPRequest{` +
 		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
-		`Index:` + fmt.Sprintf("%#v", this.Index) + `}`}, ", ")
+		`Index:` + fmt.Sprintf("%#v", this.Index),
+		`ActualLrpInstanceKey:` + fmt.Sprintf("%#v", this.ActualLrpInstanceKey) + `}`}, ", ")
 	return s
 }
 func valueToGoStringActualLrpRequests(v interface{}, typ string) string {
@@ -1148,6 +1160,16 @@ func (m *RemoveActualLRPRequest) MarshalTo(data []byte) (int, error) {
 	data[i] = 0x10
 	i++
 	i = encodeVarintActualLrpRequests(data, i, uint64(m.Index))
+	if m.ActualLrpInstanceKey != nil {
+		data[i] = 0x1a
+		i++
+		i = encodeVarintActualLrpRequests(data, i, uint64(m.ActualLrpInstanceKey.Size()))
+		n13, err := m.ActualLrpInstanceKey.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
 	return i, nil
 }
 
@@ -1320,6 +1342,10 @@ func (m *RemoveActualLRPRequest) Size() (n int) {
 	l = len(m.ProcessGuid)
 	n += 1 + l + sovActualLrpRequests(uint64(l))
 	n += 1 + sovActualLrpRequests(uint64(m.Index))
+	if m.ActualLrpInstanceKey != nil {
+		l = m.ActualLrpInstanceKey.Size()
+		n += 1 + l + sovActualLrpRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1464,6 +1490,7 @@ func (this *RemoveActualLRPRequest) String() string {
 	s := strings.Join([]string{`&RemoveActualLRPRequest{`,
 		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
 		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2626,6 +2653,36 @@ func (m *RemoveActualLRPRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActualLrpInstanceKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthActualLrpRequests
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ActualLrpInstanceKey == nil {
+				m.ActualLrpInstanceKey = &ActualLRPInstanceKey{}
+			}
+			if err := m.ActualLrpInstanceKey.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			var sizeOfWire int
 			for {
