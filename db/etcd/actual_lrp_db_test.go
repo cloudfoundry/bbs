@@ -1252,10 +1252,11 @@ var _ = Describe("ActualLRPDB", func() {
 			processGuid string
 			index       int32
 			domain      string
+			instanceKey *models.ActualLRPInstanceKey
 		)
 
 		JustBeforeEach(func() {
-			removeErr = etcdDB.RemoveActualLRP(logger, processGuid, index)
+			removeErr = etcdDB.RemoveActualLRP(logger, processGuid, index, instanceKey)
 		})
 
 		Context("when the actual LRP exists", func() {
@@ -1274,15 +1275,53 @@ var _ = Describe("ActualLRPDB", func() {
 				etcdHelper.SetRawActualLRP(actualLRP)
 			})
 
-			It("does not error", func() {
-				Expect(removeErr).NotTo(HaveOccurred())
+			Context("when the instance key isn't set", func() {
+				BeforeEach(func() {
+					instanceKey = nil
+				})
+
+				It("does not error", func() {
+					Expect(removeErr).NotTo(HaveOccurred())
+				})
+
+				It("removes the actual LRP", func() {
+					lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrResourceNotFound))
+					Expect(lrpGroupInBBS).To(BeNil())
+				})
 			})
 
-			It("removes the actual LRP", func() {
-				lrpGroupInBBS, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(models.ErrResourceNotFound))
-				Expect(lrpGroupInBBS).To(BeNil())
+			Context("when the instance key is set", func() {
+				var (
+					instanceGuid = "instance-key"
+				)
+
+				BeforeEach(func() {
+					actualLRP.ActualLRPInstanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
+					etcdHelper.SetRawActualLRP(actualLRP)
+				})
+
+				Context("and it matches the current instance key", func() {
+					BeforeEach(func() {
+						key := models.NewActualLRPInstanceKey(instanceGuid, cellID)
+						instanceKey = &key
+					})
+
+					It("removes the lrp", func() {
+						Expect(removeErr).NotTo(HaveOccurred())
+					})
+				})
+
+				Context("and it doesn't match the current instance key", func() {
+					BeforeEach(func() {
+						instanceKey = &otherLRPInstanceKey
+					})
+
+					It("returns an error", func() {
+						Expect(removeErr).To(MatchError(ContainSubstring("mismatch")))
+					})
+				})
 			})
 		})
 

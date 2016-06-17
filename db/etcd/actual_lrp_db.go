@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"errors"
 	"path"
 	"sync"
 	"sync/atomic"
@@ -327,11 +328,17 @@ func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, e
 	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: lrp}, nil
 }
 
-func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
+func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
+	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
+
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		return err
+	}
+
+	if instanceKey != nil && !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
+		logger.Info("instance key mismatch", lager.Data{"current key": lrp.ActualLRPInstanceKey, "request key": instanceKey})
+		return errors.New("instanceKey mismatch")
 	}
 
 	return db.removeActualLRP(logger, lrp, prevIndex)
