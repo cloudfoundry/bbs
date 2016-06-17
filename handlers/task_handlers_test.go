@@ -12,7 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
-	faketaskworkpool "github.com/cloudfoundry-incubator/bbs/taskworkpool/fakes"
+	"github.com/cloudfoundry-incubator/bbs/taskworkpool/taskworkpoolfakes"
 	"github.com/cloudfoundry-incubator/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,7 +24,7 @@ var _ = Describe("Task Handlers", func() {
 		logger                   *lagertest.TestLogger
 		fakeTaskDB               *dbfakes.FakeTaskDB
 		fakeAuctioneerClient     *auctioneerfakes.FakeClient
-		fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
+		fakeTaskCompletionClient *taskworkpoolfakes.FakeTaskCompletionClient
 
 		responseRecorder *httptest.ResponseRecorder
 
@@ -38,7 +38,7 @@ var _ = Describe("Task Handlers", func() {
 	BeforeEach(func() {
 		fakeTaskDB = new(dbfakes.FakeTaskDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
-		fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
+		fakeTaskCompletionClient = new(taskworkpoolfakes.FakeTaskCompletionClient)
 
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
