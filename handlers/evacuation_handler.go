@@ -293,7 +293,7 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req 
 		return
 	}
 
-	err = h.actualLRPDB.RemoveActualLRP(logger, guid, index)
+	err = h.actualLRPDB.RemoveActualLRP(logger, guid, index, request.ActualLrpInstanceKey)
 	if err != nil {
 		logger.Error("failed-to-remove-actual-lrp", err)
 		response.Error = models.ConvertError(err)

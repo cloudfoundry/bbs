@@ -327,11 +327,17 @@ func (db *ETCDDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, e
 	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: lrp}, nil
 }
 
-func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
+func (db *ETCDDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
+	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
+
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		return err
+	}
+
+	if instanceKey != nil && !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
+		logger.Debug("not-found", lager.Data{"actual_lrp_instance_key": lrp.ActualLRPInstanceKey, "instance_key": instanceKey})
+		return models.ErrResourceNotFound
 	}
 
 	return db.removeActualLRP(logger, lrp, prevIndex)

@@ -282,7 +282,7 @@ var _ = Describe("LRP Convergence Handlers", func() {
 						deletedLRPIndicies := make([]int32, 2)
 
 						for i := 0; i < 2; i++ {
-							_, deletedLRPGuid, deletedLRPIndex := fakeLRPDB.RemoveActualLRPArgsForCall(i)
+							_, deletedLRPGuid, deletedLRPIndex, _ := fakeLRPDB.RemoveActualLRPArgsForCall(i)
 							deletedLRPGuids[i] = deletedLRPGuid
 							deletedLRPIndicies[i] = deletedLRPIndex
 						}

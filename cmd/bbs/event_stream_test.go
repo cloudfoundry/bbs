@@ -248,7 +248,7 @@ var _ = Describe("Events API", func() {
 				Expect(err).NotTo(HaveOccurred())
 				actualLRP := *actualLRPGroup.GetInstance()
 
-				err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index))
+				err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(func() models.Event {

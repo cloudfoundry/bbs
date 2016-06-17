@@ -408,19 +408,50 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("RemoveActualLRP", func() {
 		var (
-			removeErr error
+			removeErr   error
+			instanceKey *models.ActualLRPInstanceKey
 		)
 
 		JustBeforeEach(func() {
-			removeErr = client.RemoveActualLRP(logger, otherProcessGuid, otherIndex)
+			removeErr = client.RemoveActualLRP(logger, otherProcessGuid, otherIndex, instanceKey)
 		})
 
-		It("removes the actual_lrp", func() {
-			Expect(removeErr).NotTo(HaveOccurred())
+		Describe("when the instance key isn't preset", func() {
+			BeforeEach(func() {
+				instanceKey = nil
+			})
 
-			_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, otherProcessGuid, otherIndex)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(Equal(models.ErrResourceNotFound))
+			It("removes the actual_lrp", func() {
+				Expect(removeErr).NotTo(HaveOccurred())
+
+				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, otherProcessGuid, otherIndex)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Describe("when the instance key is equal to the current instance key", func() {
+			BeforeEach(func() {
+				instanceKey = &otherLRPInstanceKey
+			})
+
+			It("removes the actual_lrp", func() {
+				Expect(removeErr).NotTo(HaveOccurred())
+
+				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, otherProcessGuid, otherIndex)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Describe("when the instance key is not equal to the current instance key", func() {
+			BeforeEach(func() {
+				instanceKey = &baseLRPInstanceKey
+			})
+
+			It("returns an error", func() {
+				Expect(removeErr).To(Equal(models.ErrResourceNotFound))
+			})
 		})
 	})
 })

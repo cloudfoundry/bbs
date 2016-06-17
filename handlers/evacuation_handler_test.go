@@ -1180,9 +1180,10 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		It("removes the actual lrp", func() {
 			Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
-			_, guid, index := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+			_, guid, index, actualLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 			Expect(guid).To(Equal("process-guid"))
 			Expect(index).To(BeEquivalentTo(1))
+			Expect(actualLRPInstanceKey).To(Equal(&actual.ActualLRPInstanceKey))
 		})
 
 		It("removes the evacuating actual lrp", func() {

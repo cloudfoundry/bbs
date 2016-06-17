@@ -44,7 +44,7 @@ func (r *actualLRPRetirer) RetireActualLRP(logger lager.Logger, processGuid stri
 
 		switch lrp.State {
 		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-			err = r.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index)
+			err = r.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 			if err == nil {
 				go r.actualHub.Emit(models.NewActualLRPRemovedEvent(lrpGroup))
 			}
@@ -53,7 +53,7 @@ func (r *actualLRPRetirer) RetireActualLRP(logger lager.Logger, processGuid stri
 			if err != nil {
 				bbsErr := models.ConvertError(err)
 				if bbsErr.Type == models.Error_ResourceNotFound {
-					err = r.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index)
+					err = r.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 					if err == nil {
 						go r.actualHub.Emit(models.NewActualLRPRemovedEvent(lrpGroup))
 					}

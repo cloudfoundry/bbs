@@ -45,7 +45,7 @@ type InternalClient interface {
 	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
 	CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
-	RemoveActualLRP(logger lager.Logger, processGuid string, index int) error
+	RemoveActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
 
 	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, error)
@@ -379,11 +379,13 @@ func (c *client) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) 
 	return response.Error.ToError()
 }
 
-func (c *client) RemoveActualLRP(logger lager.Logger, processGuid string, index int) error {
+func (c *client) RemoveActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
 	request := models.RemoveActualLRPRequest{
-		ProcessGuid: processGuid,
-		Index:       int32(index),
+		ProcessGuid:          processGuid,
+		Index:                int32(index),
+		ActualLrpInstanceKey: instanceKey,
 	}
+
 	response := models.ActualLRPLifecycleResponse{}
 	err := c.doRequest(logger, RemoveActualLRPRoute, nil, nil, &request, &response)
 	if err != nil {

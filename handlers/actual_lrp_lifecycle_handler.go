@@ -181,7 +181,7 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *
 		return
 	}
 
-	err = h.db.RemoveActualLRP(logger, request.ProcessGuid, request.Index)
+	err = h.db.RemoveActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return

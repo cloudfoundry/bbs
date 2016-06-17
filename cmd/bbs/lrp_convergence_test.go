@@ -29,7 +29,7 @@ var _ = Describe("Convergence API", func() {
 			processGuid = "some-process-guid"
 			err := client.DesireLRP(logger, model_helpers.NewValidDesiredLRP(processGuid))
 			Expect(err).NotTo(HaveOccurred())
-			err = client.RemoveActualLRP(logger, processGuid, 0)
+			err = client.RemoveActualLRP(logger, processGuid, 0, nil)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

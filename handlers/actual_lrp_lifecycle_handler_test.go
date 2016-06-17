@@ -636,9 +636,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(response.Error).To(BeNil())
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
-				_, deletedLRPGuid, deletedLRPIndex := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+				_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
+				Expect(deletedLRPInstanceKey).To(Equal(&actualLRPGroup.Instance.ActualLRPInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
@@ -676,9 +677,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(response.Error).To(BeNil())
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
-				_, deletedLRPGuid, deletedLRPIndex := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+				_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
+				Expect(deletedLRPInstanceKey).To(Equal(&actualLRPGroup.Instance.ActualLRPInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
@@ -778,9 +780,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 							Expect(response.Error).To(BeNil())
 							Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
-							_, deletedLRPGuid, deletedLRPIndex := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+							_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 							Expect(deletedLRPGuid).To(Equal(processGuid))
 							Expect(deletedLRPIndex).To(Equal(index))
+							Expect(deletedLRPInstanceKey).To(Equal(&instanceKey))
 						})
 
 						It("emits a removed event to the hub", func() {
@@ -962,11 +965,6 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		)
 
 		BeforeEach(func() {
-			requestBody = &models.RemoveActualLRPRequest{
-				ProcessGuid: processGuid,
-				Index:       index,
-			}
-
 			instanceKey = models.NewActualLRPInstanceKey(
 				"instance-guid-0",
 				"cell-id-0",
@@ -979,6 +977,12 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				),
 				State: models.ActualLRPStateUnclaimed,
 				Since: 1138,
+			}
+
+			requestBody = &models.RemoveActualLRPRequest{
+				ProcessGuid:          processGuid,
+				Index:                index,
+				ActualLrpInstanceKey: &instanceKey,
 			}
 
 			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
@@ -1001,17 +1005,19 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			It("removes the actual lrp by process guid and index", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
-				_, actualProcessGuid, idx := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+
+				_, actualProcessGuid, idx, actualInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 				Expect(idx).To(BeEquivalentTo(index))
+				Expect(actualInstanceKey).To(Equal(&instanceKey))
 			})
 
 			It("response with no error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := &models.ActualLRPLifecycleResponse{}
+
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
-
 				Expect(response.Error).To(BeNil())
 			})
 

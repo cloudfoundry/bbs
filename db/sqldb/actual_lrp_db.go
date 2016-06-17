@@ -432,16 +432,25 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
 }
 
-func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32) error {
+func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
 	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		result, err := db.delete(logger, tx, actualLRPsTable,
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			processGuid, index, false,
-		)
+		var err error
+		var result sql.Result
+		if instanceKey == nil {
+			result, err = db.delete(logger, tx, actualLRPsTable,
+				"process_guid = ? AND instance_index = ? AND evacuating = ?",
+				processGuid, index, false,
+			)
+		} else {
+			result, err = db.delete(logger, tx, actualLRPsTable,
+				"process_guid = ? AND instance_index = ? AND evacuating = ? AND instance_guid = ? AND cell_id = ?",
+				processGuid, index, false, instanceKey.InstanceGuid, instanceKey.CellId,
+			)
+		}
 		if err != nil {
 			logger.Error("failed-removing-actual-lrp", err)
 			return db.convertSQLError(err)
@@ -453,7 +462,7 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 			return err
 		}
 		if numRows == 0 {
-			logger.Debug("not-found")
+			logger.Debug("not-found", lager.Data{"instance_key": instanceKey})
 			return models.ErrResourceNotFound
 		}
 
