@@ -2,7 +2,7 @@ package format_test
 
 import (
 	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/format/fakes"
+	"github.com/cloudfoundry-incubator/bbs/format/formatfakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/gogo/protobuf/proto"
@@ -34,7 +34,7 @@ var _ = Describe("Envelope", func() {
 		})
 
 		It("returns an error when marshalling when the envelope doesn't support the model", func() {
-			model := &fakes.FakeVersioner{}
+			model := &formatfakes.FakeVersioner{}
 			_, err := format.MarshalEnvelope(format.PROTO, model)
 			Expect(err).To(MatchError("Model object incompatible with envelope format"))
 		})
@@ -54,14 +54,14 @@ var _ = Describe("Envelope", func() {
 		})
 
 		It("returns an error when the serialization format is unknown", func() {
-			model := &fakes.FakeVersioner{}
+			model := &formatfakes.FakeVersioner{}
 			payload := []byte{byte(format.EnvelopeFormat(99)), byte(format.V0), '{', '}'}
 			err := format.UnmarshalEnvelope(logger, payload, model)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("returns an error when the json payload is invalid", func() {
-			model := &fakes.FakeVersioner{}
+			model := &formatfakes.FakeVersioner{}
 			payload := []byte{byte(format.JSON), byte(format.V0), 'f', 'o', 'o'}
 			err := format.UnmarshalEnvelope(logger, payload, model)
 			Expect(err).To(HaveOccurred())
@@ -79,7 +79,7 @@ var _ = Describe("Envelope", func() {
 			payload, err := format.MarshalEnvelope(format.PROTO, task)
 			Expect(err).NotTo(HaveOccurred())
 
-			model := &fakes.FakeVersioner{}
+			model := &formatfakes.FakeVersioner{}
 			err = format.UnmarshalEnvelope(logger, payload, model)
 			Expect(err).To(MatchError("Model object incompatible with envelope format"))
 		})
