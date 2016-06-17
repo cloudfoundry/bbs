@@ -12,7 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/guidprovider/fakes"
+	"github.com/cloudfoundry-incubator/bbs/guidprovider/guidproviderfakes"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
@@ -30,7 +30,7 @@ var (
 	db                                   *sql.DB
 	sqlDB                                *sqldb.SQLDB
 	fakeClock                            *fakeclock.FakeClock
-	fakeGUIDProvider                     *fakes.FakeGUIDProvider
+	fakeGUIDProvider                     *guidproviderfakes.FakeGUIDProvider
 	logger                               *lagertest.TestLogger
 	cryptor                              encryption.Cryptor
 	serializer                           format.Serializer
@@ -52,7 +52,7 @@ var _ = BeforeSuite(func() {
 
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
-	fakeGUIDProvider = &fakes.FakeGUIDProvider{}
+	fakeGUIDProvider = &guidproviderfakes.FakeGUIDProvider{}
 	logger = lagertest.NewTestLogger("sql-db")
 
 	if test_helpers.UsePostgres() {
