@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/cloudfoundry-incubator/bbs/encryption"
-	encryption_fakes "github.com/cloudfoundry-incubator/bbs/encryption/fakes"
+	"github.com/cloudfoundry-incubator/bbs/encryption/encryptionfakes"
 	"github.com/cloudfoundry-incubator/bbs/format"
 
 	. "github.com/onsi/ginkgo"
@@ -102,7 +102,7 @@ var _ = Describe("Encoding", func() {
 				var cryptError = errors.New("boom")
 
 				BeforeEach(func() {
-					fakeCryptor := &encryption_fakes.FakeCryptor{}
+					fakeCryptor := &encryptionfakes.FakeCryptor{}
 					fakeCryptor.EncryptReturns(encryption.Encrypted{}, cryptError)
 					cryptor = fakeCryptor
 				})

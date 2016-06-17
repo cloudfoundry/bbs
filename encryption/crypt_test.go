@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/encryption/fakes"
+	"github.com/cloudfoundry-incubator/bbs/encryption/encryptionfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -113,13 +113,13 @@ var _ = Describe("Crypt", func() {
 	})
 
 	Context("when the encryption key is invalid", func() {
-		var key *fakes.FakeKey
+		var key *encryptionfakes.FakeKey
 
 		BeforeEach(func() {
 			desCipher, err := des.NewCipher([]byte("12345678"))
 			Expect(err).NotTo(HaveOccurred())
 
-			key = &fakes.FakeKey{}
+			key = &encryptionfakes.FakeKey{}
 			key.BlockReturns(desCipher)
 			keyManager, err = encryption.NewKeyManager(key, nil)
 			Expect(err).NotTo(HaveOccurred())

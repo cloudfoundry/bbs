@@ -7,7 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
-	fakeencryption "github.com/cloudfoundry-incubator/bbs/encryption/fakes"
+	"github.com/cloudfoundry-incubator/bbs/encryption/encryptionfakes"
 	"github.com/cloudfoundry-incubator/bbs/migration"
 	"github.com/cloudfoundry-incubator/bbs/migration/migrationfakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -59,7 +59,7 @@ var _ = Describe("Migration Manager", func() {
 
 		fakeSQLDB = &dbfakes.FakeDB{}
 
-		cryptor = &fakeencryption.FakeCryptor{}
+		cryptor = &encryptionfakes.FakeCryptor{}
 
 		fakeMigration = &migrationfakes.FakeMigration{}
 		fakeMigration.RequiresSQLReturns(false)

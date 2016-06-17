@@ -10,7 +10,7 @@ import (
 	"github.com/pivotal-golang/lager/lagertest"
 
 	"github.com/cloudfoundry-incubator/bbs/encryption"
-	encryption_fakes "github.com/cloudfoundry-incubator/bbs/encryption/fakes"
+	"github.com/cloudfoundry-incubator/bbs/encryption/encryptionfakes"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -19,7 +19,7 @@ import (
 var _ = Describe("Format", func() {
 	var (
 		serializer format.Serializer
-		cryptor    *encryption_fakes.FakeCryptor
+		cryptor    *encryptionfakes.FakeCryptor
 		encoder    format.Encoder
 		logger     lager.Logger
 		task       *models.Task
@@ -28,7 +28,7 @@ var _ = Describe("Format", func() {
 	BeforeEach(func() {
 		task = model_helpers.NewValidTask("a-guid")
 		logger = lagertest.NewTestLogger("test")
-		cryptor = &encryption_fakes.FakeCryptor{}
+		cryptor = &encryptionfakes.FakeCryptor{}
 		cryptor.EncryptStub = func(plaintext []byte) (encryption.Encrypted, error) {
 			nonce := [12]byte{}
 			return encryption.Encrypted{
