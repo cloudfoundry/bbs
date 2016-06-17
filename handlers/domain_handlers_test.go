@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
@@ -15,14 +15,14 @@ import (
 var _ = Describe("Domain Handlers", func() {
 	var (
 		logger           lager.Logger
-		fakeDomainDB     *fakes.FakeDomainDB
+		fakeDomainDB     *dbfakes.FakeDomainDB
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DomainHandler
 		requestBody      interface{}
 	)
 
 	BeforeEach(func() {
-		fakeDomainDB = new(fakes.FakeDomainDB)
+		fakeDomainDB = new(dbfakes.FakeDomainDB)
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()

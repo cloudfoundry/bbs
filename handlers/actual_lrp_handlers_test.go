@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
@@ -15,7 +15,7 @@ import (
 var _ = Describe("ActualLRP Handlers", func() {
 	var (
 		logger           lager.Logger
-		fakeActualLRPDB  *fakes.FakeActualLRPDB
+		fakeActualLRPDB  *dbfakes.FakeActualLRPDB
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.ActualLRPHandler
 
@@ -25,7 +25,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		fakeActualLRPDB = new(fakes.FakeActualLRPDB)
+		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()

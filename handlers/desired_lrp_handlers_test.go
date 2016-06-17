@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -23,8 +23,8 @@ import (
 var _ = Describe("DesiredLRP Handlers", func() {
 	var (
 		logger               *lagertest.TestLogger
-		fakeDesiredLRPDB     *fakes.FakeDesiredLRPDB
-		fakeActualLRPDB      *fakes.FakeActualLRPDB
+		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
+		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		desiredHub           *eventfakes.FakeHub
 		actualHub            *eventfakes.FakeHub
@@ -38,8 +38,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 	BeforeEach(func() {
 		var err error
-		fakeDesiredLRPDB = new(fakes.FakeDesiredLRPDB)
-		fakeActualLRPDB = new(fakes.FakeActualLRPDB)
+		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
+		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))

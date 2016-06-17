@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	fakeencryption "github.com/cloudfoundry-incubator/bbs/encryption/fakes"
 	"github.com/cloudfoundry-incubator/bbs/migration"
@@ -27,10 +27,10 @@ var _ = Describe("Migration Manager", func() {
 		migrationProcess ifrit.Process
 
 		logger          *lagertest.TestLogger
-		fakeETCDDB      *fakes.FakeDB
+		fakeETCDDB      *dbfakes.FakeDB
 		etcdStoreClient etcd.StoreClient
 
-		fakeSQLDB *fakes.FakeDB
+		fakeSQLDB *dbfakes.FakeDB
 		rawSQLDB  *sql.DB
 
 		migrations []migration.Migration
@@ -54,10 +54,10 @@ var _ = Describe("Migration Manager", func() {
 		dbVersion = &models.Version{}
 
 		logger = lagertest.NewTestLogger("test")
-		fakeETCDDB = &fakes.FakeDB{}
+		fakeETCDDB = &dbfakes.FakeDB{}
 		fakeETCDDB.VersionReturns(dbVersion, nil)
 
-		fakeSQLDB = &fakes.FakeDB{}
+		fakeSQLDB = &dbfakes.FakeDB{}
 
 		cryptor = &fakeencryption.FakeCryptor{}
 

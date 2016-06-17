@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -22,7 +22,7 @@ import (
 var _ = Describe("Task Handlers", func() {
 	var (
 		logger               lager.Logger
-		fakeTaskDB           *fakes.FakeTaskDB
+		fakeTaskDB           *dbfakes.FakeTaskDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		responseRecorder     *httptest.ResponseRecorder
 
@@ -35,7 +35,7 @@ var _ = Describe("Task Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		fakeTaskDB = new(fakes.FakeTaskDB)
+		fakeTaskDB = new(dbfakes.FakeTaskDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))

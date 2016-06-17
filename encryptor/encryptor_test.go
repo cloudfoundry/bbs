@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/encryption"
 	"github.com/cloudfoundry-incubator/bbs/encryptor"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -32,7 +32,7 @@ var _ = Describe("Encryptor", func() {
 		signals    chan os.Signal
 		runErrChan chan error
 
-		fakeDB *fakes.FakeEncryptionDB
+		fakeDB *dbfakes.FakeEncryptionDB
 
 		sender *fake.FakeMetricSender
 	)
@@ -45,7 +45,7 @@ var _ = Describe("Encryptor", func() {
 		ready = make(chan struct{})
 		signals = make(chan os.Signal)
 
-		fakeDB = new(fakes.FakeEncryptionDB)
+		fakeDB = new(dbfakes.FakeEncryptionDB)
 
 		logger = lagertest.NewTestLogger("test")
 

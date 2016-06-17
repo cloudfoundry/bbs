@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/fake_bbs"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -22,7 +22,7 @@ import (
 var _ = Describe("LRP Convergence Handlers", func() {
 	var (
 		logger               lager.Logger
-		fakeLRPDB            *fakes.FakeLRPDB
+		fakeLRPDB            *dbfakes.FakeLRPDB
 		actualHub            *eventfakes.FakeHub
 		responseRecorder     *httptest.ResponseRecorder
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
@@ -45,7 +45,7 @@ var _ = Describe("LRP Convergence Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		fakeLRPDB = new(fakes.FakeLRPDB)
+		fakeLRPDB = new(dbfakes.FakeLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lager.NewLogger("test")
 

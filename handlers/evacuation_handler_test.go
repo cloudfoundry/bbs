@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -23,9 +23,9 @@ import (
 var _ = Describe("Evacuation Handlers", func() {
 	var (
 		logger               lager.Logger
-		fakeEvacuationDB     *fakes.FakeEvacuationDB
-		fakeActualLRPDB      *fakes.FakeActualLRPDB
-		fakeDesiredLRPDB     *fakes.FakeDesiredLRPDB
+		fakeEvacuationDB     *dbfakes.FakeEvacuationDB
+		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
+		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		actualHub            *eventfakes.FakeHub
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		responseRecorder     *httptest.ResponseRecorder
@@ -33,9 +33,9 @@ var _ = Describe("Evacuation Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		fakeEvacuationDB = new(fakes.FakeEvacuationDB)
-		fakeActualLRPDB = new(fakes.FakeActualLRPDB)
-		fakeDesiredLRPDB = new(fakes.FakeDesiredLRPDB)
+		fakeEvacuationDB = new(dbfakes.FakeEvacuationDB)
+		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
+		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		actualHub = new(eventfakes.FakeHub)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lagertest.NewTestLogger("test")

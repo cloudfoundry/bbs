@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -22,7 +22,7 @@ import (
 var _ = Describe("Task Handlers", func() {
 	var (
 		logger                   *lagertest.TestLogger
-		fakeTaskDB               *fakes.FakeTaskDB
+		fakeTaskDB               *dbfakes.FakeTaskDB
 		fakeAuctioneerClient     *auctioneerfakes.FakeClient
 		fakeTaskCompletionClient *faketaskworkpool.FakeTaskCompletionClient
 
@@ -36,7 +36,7 @@ var _ = Describe("Task Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		fakeTaskDB = new(fakes.FakeTaskDB)
+		fakeTaskDB = new(dbfakes.FakeTaskDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		fakeTaskCompletionClient = new(faketaskworkpool.FakeTaskCompletionClient)
 

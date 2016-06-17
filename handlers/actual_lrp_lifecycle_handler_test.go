@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/auctioneer/auctioneerfakes"
-	"github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
 	"github.com/cloudfoundry-incubator/bbs/fake_bbs"
 	"github.com/cloudfoundry-incubator/bbs/handlers"
@@ -21,8 +21,8 @@ import (
 var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 	var (
 		logger               lager.Logger
-		fakeActualLRPDB      *fakes.FakeActualLRPDB
-		fakeDesiredLRPDB     *fakes.FakeDesiredLRPDB
+		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
+		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		actualHub            *eventfakes.FakeHub
 		responseRecorder     *httptest.ResponseRecorder
@@ -37,9 +37,9 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		fakeActualLRPDB = new(fakes.FakeActualLRPDB)
+		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
-		fakeDesiredLRPDB = new(fakes.FakeDesiredLRPDB)
+		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		logger = lager.NewLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()

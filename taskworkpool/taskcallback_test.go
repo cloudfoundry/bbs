@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	dbFakes "github.com/cloudfoundry-incubator/bbs/db/fakes"
+	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
 	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
@@ -45,7 +45,7 @@ var _ = Describe("TaskWorker", func() {
 	Describe("HandleCompletedTask", func() {
 		var (
 			callbackURL string
-			taskDB      *dbFakes.FakeTaskDB
+			taskDB      *dbfakes.FakeTaskDB
 			statusCodes chan int
 			reqCount    chan struct{}
 			task        *models.Task
@@ -63,7 +63,7 @@ var _ = Describe("TaskWorker", func() {
 			})
 
 			callbackURL = fakeServer.URL() + "/the-callback/url"
-			taskDB = new(dbFakes.FakeTaskDB)
+			taskDB = new(dbfakes.FakeTaskDB)
 			taskDB.ResolvingTaskReturns(nil)
 			taskDB.DeleteTaskReturns(nil)
 		})
