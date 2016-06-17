@@ -33,6 +33,7 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).NotTo(HaveOccurred())
 
+	m.db.Exec(fmt.Sprintf("DROP DATABASE %s", m.sqlDBName))
 	_, err = m.db.Exec(fmt.Sprintf("CREATE DATABASE %s", m.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 

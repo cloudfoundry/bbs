@@ -33,6 +33,7 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	Expect(err).NotTo(HaveOccurred())
 	Expect(p.db.Ping()).NotTo(HaveOccurred())
 
+	p.db.Exec(fmt.Sprintf("DROP DATABASE %s", p.sqlDBName))
 	_, err = p.db.Exec(fmt.Sprintf("CREATE DATABASE %s", p.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 
