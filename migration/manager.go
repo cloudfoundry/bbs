@@ -91,8 +91,14 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				return err
 			}
 
-			m.finishAndWait(logger, signals, ready)
-			return nil
+			close(ready)
+			m.finish(logger)
+
+			select {
+			case <-signals:
+				logger.Info("migration-interrupt")
+				return nil
+			}
 		} else if m.hasSQLConfigured() {
 			logger.Info("sql-is-configured")
 			version = &models.Version{
@@ -139,6 +145,29 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		m.writeVersion(version.CurrentVersion, maxMigrationVersion, lastETCDMigrationVersion)
 	}
 
+	close(ready)
+
+	errorChan := make(chan error)
+	go m.performMigration(logger, version, maxMigrationVersion, lastETCDMigrationVersion, errorChan)
+	defer logger.Info("exited")
+
+	select {
+	case err := <-errorChan:
+		logger.Error("migration-failed", err)
+		return err
+	case <-signals:
+		logger.Info("migration-interrupt")
+		return nil
+	}
+}
+
+func (m *Manager) performMigration(
+	logger lager.Logger,
+	version *models.Version,
+	maxMigrationVersion int64,
+	lastETCDMigrationVersion int64,
+	errorChan chan error,
+) {
 	migrateStart := m.clock.Now()
 	if version.CurrentVersion != maxMigrationVersion {
 		lastVersion := version.CurrentVersion
@@ -151,7 +180,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 			if lastVersion < currentMigration.Version() {
 				if nextVersion > currentMigration.Version() {
-					return fmt.Errorf(
+					errorChan <- fmt.Errorf(
 						"Existing DB target version (%d) exceeds pending migration version (%d)",
 						nextVersion,
 						currentMigration.Version(),
@@ -173,9 +202,10 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				currentMigration.SetClock(m.clock)
 				currentMigration.SetDBFlavor(m.databaseDriver)
 
-				err = currentMigration.Up(m.logger.Session("migration"))
+				err := currentMigration.Up(m.logger.Session("migration"))
 				if err != nil {
-					return err
+					errorChan <- err
+					return
 				}
 
 				lastVersion = currentMigration.Version()
@@ -183,20 +213,26 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 		}
 
-		err = m.writeVersion(lastVersion, nextVersion, lastETCDMigrationVersion)
+		err := m.writeVersion(lastVersion, nextVersion, lastETCDMigrationVersion)
 		if err != nil {
-			return err
+			errorChan <- err
+			return
 		}
 	}
 
 	logger.Debug("migrations-finished")
-	err = migrationDuration.Send(time.Since(migrateStart))
+	err := migrationDuration.Send(time.Since(migrateStart))
 	if err != nil {
-		logger.Error("failed-to-send-migration-duration-metric", err)
+		errorChan <- fmt.Errorf("failed-to-send-migration-duration-metric", err)
+		return
 	}
 
-	m.finishAndWait(logger, signals, ready)
-	return nil
+	m.finish(logger)
+}
+
+func (m *Manager) finish(logger lager.Logger) {
+	close(m.migrationsDone)
+	logger.Info("finished-migrations")
 }
 
 func (m *Manager) findMaxTargetVersion() (int, int64) {
@@ -255,18 +291,6 @@ func (m *Manager) resolveStoredVersion(logger lager.Logger) (*models.Version, er
 		return version, nil
 	}
 	return nil, nil
-}
-
-func (m *Manager) finishAndWait(logger lager.Logger, signals <-chan os.Signal, ready chan<- struct{}) {
-	close(ready)
-	close(m.migrationsDone)
-	logger.Info("finished-migrations")
-	defer logger.Info("exited")
-
-	select {
-	case <-signals:
-		return
-	}
 }
 
 func (m *Manager) writeVersion(currentVersion, targetVersion, lastETCDMigrationVersion int64) error {

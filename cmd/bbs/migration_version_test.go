@@ -46,7 +46,7 @@ var _ = Describe("Migration Version", func() {
 		_, err = storeClient.Set(etcd.VersionKey, value, etcd.NO_TTL)
 		Expect(err).NotTo(HaveOccurred())
 
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.WaitForMigration(bbsBinPath, bbsArgs)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 

@@ -73,9 +73,22 @@ func New(binPath string, args Args) *ginkgomon.Runner {
 	if args.MetricsReportInterval == 0 {
 		args.MetricsReportInterval = time.Minute
 	}
+
 	return ginkgomon.New(ginkgomon.Config{
 		Name:       "bbs",
 		Command:    exec.Command(binPath, args.ArgSlice()...),
 		StartCheck: "bbs.started",
+	})
+}
+
+func WaitForMigration(binPath string, args Args) *ginkgomon.Runner {
+	if args.MetricsReportInterval == 0 {
+		args.MetricsReportInterval = time.Minute
+	}
+
+	return ginkgomon.New(ginkgomon.Config{
+		Name:       "bbs",
+		Command:    exec.Command(binPath, args.ArgSlice()...),
+		StartCheck: "finished-migrations",
 	})
 }

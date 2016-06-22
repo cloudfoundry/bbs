@@ -16,6 +16,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock"
+	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -464,6 +465,38 @@ var _ = Describe("Migration Manager", func() {
 
 				Expect(fakeMigration.DownCallCount()).To(Equal(0))
 				Expect(fakeMigration102.DownCallCount()).To(Equal(0))
+			})
+
+			Describe("and one of the migrations takes a long time", func() {
+				var longMigrationExitChan chan struct{}
+
+				BeforeEach(func() {
+					longMigrationExitChan = make(chan struct{})
+					longMigration := &migrationfakes.FakeMigration{}
+					longMigration.UpStub = func(logger lager.Logger) error {
+						<-longMigrationExitChan
+						return nil
+					}
+					longMigration.VersionReturns(103)
+					migrations = []migration.Migration{longMigration}
+				})
+
+				AfterEach(func() {
+					longMigrationExitChan <- struct{}{}
+				})
+
+				It("should immediately report the migration process ready", func() {
+					Eventually(migrationProcess.Ready()).Should(BeClosed())
+				})
+
+				Context("when interrupted", func() {
+					JustBeforeEach(func() {
+						ginkgomon.Interrupt(migrationProcess)
+					})
+					It("exits and does not wait for the migration to finish", func() {
+						Eventually(migrationProcess.Wait()).Should(Receive())
+					})
+				})
 			})
 
 			It("sets the store client on the migration", func() {
