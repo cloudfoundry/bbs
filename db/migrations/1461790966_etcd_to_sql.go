@@ -122,7 +122,7 @@ func (e *ETCDToSQL) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *ETCDToSQL) Up(logger lager.Logger) error {
 	logger = logger.Session("etcd-to-sql")
-	logger.Info("tuncating-tables")
+	logger.Info("truncating-tables")
 
 	// Ignore the error as the tables may not exist
 	_ = dropTables(e.rawSQLDB)
