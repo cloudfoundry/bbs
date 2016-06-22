@@ -29,18 +29,19 @@ func New(
 	auctioneerClient auctioneer.Client,
 	repClientFactory rep.ClientFactory,
 	migrationsDone <-chan struct{},
+	exitChan chan struct{},
 ) http.Handler {
 	retirer := NewActualLRPRetirer(db, actualHub, repClientFactory, serviceClient)
 	pingHandler := NewPingHandler(logger)
-	domainHandler := NewDomainHandler(logger, db)
-	actualLRPHandler := NewActualLRPHandler(logger, db)
-	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, actualHub, auctioneerClient, retirer)
-	evacuationHandler := NewEvacuationHandler(logger, db, db, db, actualHub, auctioneerClient)
-	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient)
-	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, actualHub, auctioneerClient, serviceClient, retirer, convergenceWorkersSize)
-	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
+	domainHandler := NewDomainHandler(logger, db, exitChan)
+	actualLRPHandler := NewActualLRPHandler(logger, db, exitChan)
+	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, actualHub, auctioneerClient, retirer, exitChan)
+	evacuationHandler := NewEvacuationHandler(logger, db, db, db, actualHub, auctioneerClient, exitChan)
+	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
+	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, actualHub, auctioneerClient, serviceClient, retirer, convergenceWorkersSize, exitChan)
+	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, exitChan)
 	eventsHandler := NewEventHandler(logger, desiredHub, actualHub)
-	cellsHandler := NewCellHandler(logger, serviceClient)
+	cellsHandler := NewCellHandler(logger, serviceClient, exitChan)
 
 	emitter := middleware.NewLatencyEmitter(logger)
 
@@ -147,6 +148,13 @@ func parseRequest(logger lager.Logger, req *http.Request, request MessageValidat
 	}
 
 	return nil
+}
+
+func exitIfUnrecoverable(logger lager.Logger, exitCh chan<- struct{}, err *models.Error) {
+	if err != nil && err.Type == models.Error_Unrecoverable {
+		logger.Error("unrecoverable-error", err)
+		exitCh <- struct{}{}
+	}
 }
 
 func writeResponse(w http.ResponseWriter, message proto.Message) {

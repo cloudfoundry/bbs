@@ -9,10 +9,9 @@ import (
 )
 
 type EventHandler struct {
+	logger     lager.Logger
 	desiredHub events.Hub
 	actualHub  events.Hub
-
-	logger lager.Logger
 }
 
 func NewEventHandler(logger lager.Logger, desiredHub, actualHub events.Hub) *EventHandler {

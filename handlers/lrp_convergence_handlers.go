@@ -21,6 +21,7 @@ type LRPConvergenceHandler struct {
 	serviceClient          bbs.ServiceClient
 	retirer                ActualLRPRetirer
 	convergenceWorkersSize int
+	exitChan               chan<- struct{}
 }
 
 func NewLRPConvergenceHandler(
@@ -31,8 +32,18 @@ func NewLRPConvergenceHandler(
 	serviceClient bbs.ServiceClient,
 	retirer ActualLRPRetirer,
 	convergenceWorkersSize int,
+	exitChan chan<- struct{},
 ) *LRPConvergenceHandler {
-	return &LRPConvergenceHandler{logger, db, actualHub, auctioneerClient, serviceClient, retirer, convergenceWorkersSize}
+	return &LRPConvergenceHandler{
+		logger:                 logger,
+		db:                     db,
+		actualHub:              actualHub,
+		auctioneerClient:       auctioneerClient,
+		serviceClient:          serviceClient,
+		retirer:                retirer,
+		convergenceWorkersSize: convergenceWorkersSize,
+		exitChan:               exitChan,
+	}
 }
 
 func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Request) {

@@ -318,6 +318,8 @@ func main() {
 	repClientFactory := rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient())
 	auctioneerClient := initializeAuctioneerClient(logger)
 
+	exitChan := make(chan struct{})
+
 	handler := handlers.New(
 		logger,
 		*updateWorkers,
@@ -330,6 +332,7 @@ func main() {
 		auctioneerClient,
 		repClientFactory,
 		migrationsDone,
+		exitChan,
 	)
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(
@@ -373,6 +376,11 @@ func main() {
 	group := grouper.NewOrdered(os.Interrupt, members)
 
 	monitor := ifrit.Invoke(sigmon.New(group))
+	go func() {
+		<-exitChan
+		logger.Error("missing-sql-tables-detected-trigger-exit", models.ErrNoTable)
+		monitor.Signal(os.Interrupt)
+	}()
 
 	logger.Info("started")
 

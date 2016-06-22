@@ -20,7 +20,11 @@ type actualLRPRetirer struct {
 	serviceClient    bbs.ServiceClient
 }
 
-func NewActualLRPRetirer(db db.ActualLRPDB, actualHub events.Hub, repClientFactory rep.ClientFactory, serviceClient bbs.ServiceClient) *actualLRPRetirer {
+func NewActualLRPRetirer(db db.ActualLRPDB,
+	actualHub events.Hub,
+	repClientFactory rep.ClientFactory,
+	serviceClient bbs.ServiceClient,
+) *actualLRPRetirer {
 	return &actualLRPRetirer{db, actualHub, repClientFactory, serviceClient}
 }
 

@@ -30,6 +30,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		responseRecorder     *httptest.ResponseRecorder
 		handler              *handlers.EvacuationHandler
+		exitCh               chan struct{}
 	)
 
 	BeforeEach(func() {
@@ -41,7 +42,8 @@ var _ = Describe("Evacuation Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewEvacuationHandler(logger, fakeEvacuationDB, fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient)
+		exitCh = make(chan struct{}, 1)
+		handler = handlers.NewEvacuationHandler(logger, fakeEvacuationDB, fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient, exitCh)
 	})
 
 	Describe("RemoveEvacuatingActualLRP", func() {
@@ -129,6 +131,17 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Expect(response.Error).NotTo(BeNil())
 				Expect(response.Error).To(Equal(models.ErrBadRequest))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -249,6 +262,17 @@ var _ = Describe("Evacuation Handlers", func() {
 			Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when removing the evacuating lrp fails", func() {
 			BeforeEach(func() {
 				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("i failed"))
@@ -274,6 +298,17 @@ var _ = Describe("Evacuation Handlers", func() {
 		})
 
 		Context("when unclaiming the lrp instance fails", func() {
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
+				})
+			})
+
 			Context("because the instance does not exist", func() {
 				BeforeEach(func() {
 					fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, models.ErrResourceNotFound)
@@ -409,6 +444,17 @@ var _ = Describe("Evacuation Handlers", func() {
 			Expect(errorMessage).To(Equal("i failed"))
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when removing the evacuating actual lrp fails", func() {
 			BeforeEach(func() {
 				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("oh no!"))
@@ -426,6 +472,17 @@ var _ = Describe("Evacuation Handlers", func() {
 		})
 
 		Context("when crashing the actual lrp fails", func() {
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeActualLRPDB.CrashActualLRPReturns(nil, nil, false, models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
+				})
+			})
+
 			Context("because the error does not exist", func() {
 				BeforeEach(func() {
 					fakeActualLRPDB.CrashActualLRPReturns(nil, nil, false, models.ErrResourceNotFound)
@@ -561,6 +618,17 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("does not emit any events", func() {
 						Consistently(actualHub.EmitCallCount).Should(Equal(0))
+					})
+				})
+
+				Context("when the DB returns an unrecoverable error", func() {
+					BeforeEach(func() {
+						fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.NewUnrecoverableError(nil))
+					})
+
+					It("logs and writes to the exit channel", func() {
+						Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+						Eventually(exitCh).Should(Receive())
 					})
 				})
 
@@ -1230,6 +1298,17 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.RemoveActualLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when removing the actual lrp fails", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.RemoveActualLRPReturns(errors.New("boom!"))
@@ -1250,6 +1329,17 @@ var _ = Describe("Evacuation Handlers", func() {
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 

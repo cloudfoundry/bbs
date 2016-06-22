@@ -31,6 +31,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DesiredLRPHandler
+		exitCh           chan struct{}
 
 		desiredLRP1 models.DesiredLRP
 		desiredLRP2 models.DesiredLRP
@@ -47,6 +48,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		desiredHub = new(eventfakes.FakeHub)
 		actualHub = new(eventfakes.FakeHub)
 		Expect(err).NotTo(HaveOccurred())
+		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewDesiredLRPHandler(
 			logger,
 			5,
@@ -57,6 +59,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			fakeAuctioneerClient,
 			fakeRepClientFactory,
 			fakeServiceClient,
+			exitCh,
 		)
 	})
 
@@ -129,6 +132,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, models.ErrUnknownError)
@@ -198,6 +212,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -287,6 +312,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.DesiredLrpSchedulingInfos).To(BeEmpty())
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns([]*models.DesiredLRPSchedulingInfo{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -421,6 +457,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
 					Expect(startAuctions[0].Resource).To(Equal(expectedStartRequest.Resource))
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesireLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -677,6 +724,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.UpdateDesiredLRPReturns(nil, models.ErrUnknownError)
@@ -841,6 +899,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Expect(logger).To(gbytes.Say("failed-fetching-actual-lrps"))
 					})
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.RemoveDesiredLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 

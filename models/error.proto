@@ -48,6 +48,7 @@ message Error {
     Deserialize = 27;
 
     Deadlock = 28;
+    Unrecoverable = 29;
   }
 
   optional Type type = 1 [(gogoproto.nullable) = false];

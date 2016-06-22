@@ -55,6 +55,7 @@ const (
 	Error_GUIDGeneration                          Error_Type = 26
 	Error_Deserialize                             Error_Type = 27
 	Error_Deadlock                                Error_Type = 28
+	Error_Unrecoverable                           Error_Type = 29
 )
 
 var Error_Type_name = map[int32]string{
@@ -87,6 +88,7 @@ var Error_Type_name = map[int32]string{
 	26: "GUIDGeneration",
 	27: "Deserialize",
 	28: "Deadlock",
+	29: "Unrecoverable",
 }
 var Error_Type_value = map[string]int32{
 	"UnknownError":                            0,
@@ -118,6 +120,7 @@ var Error_Type_value = map[string]int32{
 	"GUIDGeneration":                          26,
 	"Deserialize":                             27,
 	"Deadlock":                                28,
+	"Unrecoverable":                           29,
 }
 
 func (x Error_Type) Enum() *Error_Type {

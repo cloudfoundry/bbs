@@ -17,6 +17,7 @@ type EvacuationHandler struct {
 	desiredLRPDB     db.DesiredLRPDB
 	actualHub        events.Hub
 	auctioneerClient auctioneer.Client
+	exitChan         chan<- struct{}
 	logger           lager.Logger
 }
 
@@ -27,6 +28,7 @@ func NewEvacuationHandler(
 	desiredLRPDB db.DesiredLRPDB,
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
+	exitChan chan<- struct{},
 ) *EvacuationHandler {
 	return &EvacuationHandler{
 		db:               db,
@@ -34,6 +36,7 @@ func NewEvacuationHandler(
 		desiredLRPDB:     desiredLRPDB,
 		actualHub:        actualHub,
 		auctioneerClient: auctioneerClient,
+		exitChan:         exitChan,
 		logger:           logger.Session("evacuation-handler"),
 	}
 }

@@ -16,15 +16,17 @@ import (
 	"github.com/cloudfoundry-incubator/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/lager"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("Task Handlers", func() {
 	var (
-		logger               lager.Logger
+		logger               *lagertest.TestLogger
 		fakeTaskDB           *dbfakes.FakeTaskDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		responseRecorder     *httptest.ResponseRecorder
+		exitCh               chan struct{}
 
 		handler *handlers.TaskHandler
 
@@ -37,10 +39,10 @@ var _ = Describe("Task Handlers", func() {
 	BeforeEach(func() {
 		fakeTaskDB = new(dbfakes.FakeTaskDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
-		logger = lager.NewLogger("test")
-		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewTaskHandler(logger, fakeTaskDB, nil, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory)
+		exitCh = make(chan struct{}, 1)
+		handler = handlers.NewTaskHandler(logger, fakeTaskDB, nil, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory, exitCh)
 	})
 
 	Describe("Tasks_r0", func() {
@@ -139,6 +141,17 @@ var _ = Describe("Task Handlers", func() {
 					Expect(response.Tasks[0]).To(Equal(task1.VersionDownTo(format.V0)))
 					Expect(response.Tasks[1]).To(Equal(task2.VersionDownTo(format.V0)))
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.TasksReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -251,6 +264,17 @@ var _ = Describe("Task Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.TasksReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeTaskDB.TasksReturns(nil, models.ErrUnknownError)
@@ -348,6 +372,17 @@ var _ = Describe("Task Handlers", func() {
 					Expect(response.Error).To(BeNil())
 					Expect(response.Task).To(Equal(task.VersionDownTo(format.V1)))
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.TaskByGuidReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -463,6 +498,17 @@ var _ = Describe("Task Handlers", func() {
 					Expect(response.Error).To(BeNil())
 					Expect(response.Task).To(Equal(task.VersionDownTo(format.V1)))
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.TaskByGuidReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -613,6 +659,17 @@ var _ = Describe("Task Handlers", func() {
 				It("does not request a second auction", func() {
 					Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.DesireTaskReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 

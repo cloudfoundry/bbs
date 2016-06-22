@@ -9,15 +9,17 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/lager"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("ActualLRP Handlers", func() {
 	var (
-		logger           lager.Logger
+		logger           *lagertest.TestLogger
 		fakeActualLRPDB  *dbfakes.FakeActualLRPDB
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.ActualLRPHandler
+		exitCh           chan struct{}
 
 		actualLRP1     models.ActualLRP
 		actualLRP2     models.ActualLRP
@@ -26,10 +28,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 	BeforeEach(func() {
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
-		logger = lager.NewLogger("test")
-		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewActualLRPHandler(logger, fakeActualLRPDB)
+		exitCh = make(chan struct{}, 1)
+		handler = handlers.NewActualLRPHandler(logger, fakeActualLRPDB, exitCh)
 	})
 
 	Describe("ActualLRPGroups", func() {
@@ -159,6 +161,17 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupsReturns([]*models.ActualLRPGroup{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.ActualLRPGroupsReturns([]*models.ActualLRPGroup{}, models.ErrUnknownError)
@@ -267,6 +280,17 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.ActualLrpGroups).To(BeNil())
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns([]*models.ActualLRPGroup{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -394,6 +418,17 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 

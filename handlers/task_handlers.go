@@ -20,6 +20,7 @@ type TaskHandler struct {
 	auctioneerClient     auctioneer.Client
 	serviceClient        bbs.ServiceClient
 	repClientFactory     rep.ClientFactory
+	exitChan             chan<- struct{}
 }
 
 func NewTaskHandler(
@@ -29,6 +30,7 @@ func NewTaskHandler(
 	auctioneerClient auctioneer.Client,
 	serviceClient bbs.ServiceClient,
 	repClientFactory rep.ClientFactory,
+	exitChan chan<- struct{},
 ) *TaskHandler {
 	return &TaskHandler{
 		db:                   db,
@@ -37,6 +39,7 @@ func NewTaskHandler(
 		auctioneerClient:     auctioneerClient,
 		serviceClient:        serviceClient,
 		repClientFactory:     repClientFactory,
+		exitChan:             exitChan,
 	}
 }
 
