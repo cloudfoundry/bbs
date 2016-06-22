@@ -471,7 +471,7 @@ var _ = Describe("Migration Manager", func() {
 				var longMigrationExitChan chan struct{}
 
 				BeforeEach(func() {
-					longMigrationExitChan = make(chan struct{})
+					longMigrationExitChan = make(chan struct{}, 1)
 					longMigration := &migrationfakes.FakeMigration{}
 					longMigration.UpStub = func(logger lager.Logger) error {
 						<-longMigrationExitChan
@@ -485,14 +485,25 @@ var _ = Describe("Migration Manager", func() {
 					longMigrationExitChan <- struct{}{}
 				})
 
-				It("should immediately report the migration process ready", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
+				It("should not close the channel until the migration finishes", func() {
+					Consistently(migrationProcess.Ready()).ShouldNot(BeClosed())
+				})
+
+				Context("when the migration finishes", func() {
+					JustBeforeEach(func() {
+						Eventually(longMigrationExitChan).Should(BeSent(struct{}{}))
+					})
+
+					It("should close the ready channel", func() {
+						Eventually(migrationProcess.Ready()).Should(BeClosed())
+					})
 				})
 
 				Context("when interrupted", func() {
 					JustBeforeEach(func() {
 						ginkgomon.Interrupt(migrationProcess)
 					})
+
 					It("exits and does not wait for the migration to finish", func() {
 						Eventually(migrationProcess.Wait()).Should(Receive())
 					})

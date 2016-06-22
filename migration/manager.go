@@ -91,8 +91,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				return err
 			}
 
-			close(ready)
-			m.finish(logger)
+			m.finish(logger, ready)
 
 			select {
 			case <-signals:
@@ -145,10 +144,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		m.writeVersion(version.CurrentVersion, maxMigrationVersion, lastETCDMigrationVersion)
 	}
 
-	close(ready)
-
 	errorChan := make(chan error)
-	go m.performMigration(logger, version, maxMigrationVersion, lastETCDMigrationVersion, errorChan)
+	go m.performMigration(logger, version, maxMigrationVersion, lastETCDMigrationVersion, errorChan, ready)
 	defer logger.Info("exited")
 
 	select {
@@ -167,6 +164,7 @@ func (m *Manager) performMigration(
 	maxMigrationVersion int64,
 	lastETCDMigrationVersion int64,
 	errorChan chan error,
+	readyChan chan<- struct{},
 ) {
 	migrateStart := m.clock.Now()
 	if version.CurrentVersion != maxMigrationVersion {
@@ -226,10 +224,11 @@ func (m *Manager) performMigration(
 		logger.Error("failed-to-send-migration-duration-metric", err)
 	}
 
-	m.finish(logger)
+	m.finish(logger, readyChan)
 }
 
-func (m *Manager) finish(logger lager.Logger) {
+func (m *Manager) finish(logger lager.Logger, ready chan<- struct{}) {
+	close(ready)
 	close(m.migrationsDone)
 	logger.Info("finished-migrations")
 }
