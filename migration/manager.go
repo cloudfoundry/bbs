@@ -223,8 +223,7 @@ func (m *Manager) performMigration(
 	logger.Debug("migrations-finished")
 	err := migrationDuration.Send(time.Since(migrateStart))
 	if err != nil {
-		errorChan <- fmt.Errorf("failed-to-send-migration-duration-metric", err)
-		return
+		logger.Error("failed-to-send-migration-duration-metric", err)
 	}
 
 	m.finish(logger)
