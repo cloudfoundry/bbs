@@ -39,5 +39,5 @@ go generate ./...
 
 ## SQL
 
-See the instructions in [Running the Experimental SQL Unit Tests](https://github.com/cloudfoundry-incubator/diego-release/blob/develop/CONTRIBUTING.md#running-the-experimental-sql-unit-tests)
+See the instructions in [Running the Experimental SQL Unit Tests](https://github.com/cloudfoundry/diego-release/blob/develop/CONTRIBUTING.md#running-the-experimental-sql-unit-tests)
 for testing against a SQL backend

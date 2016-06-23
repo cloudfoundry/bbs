@@ -123,7 +123,7 @@ Preloaded root filesystems look like:
 "rootfs": "preloaded:ROOTFS-NAME"
 ```
 
-Diego's [BOSH release](https://github.com/cloudfoundry-incubator/diego-release) ships with the `cflinuxfs2` filesystem root filesystem built to work with the Cloud Foundry buildpacks, which can be specified via
+Diego's [BOSH release](https://github.com/cloudfoundry/diego-release) ships with the `cflinuxfs2` filesystem root filesystem built to work with the Cloud Foundry buildpacks, which can be specified via
 ```
 "rootfs": "preloaded:cflinuxfs2"
 ```
