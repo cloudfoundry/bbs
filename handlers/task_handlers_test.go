@@ -16,6 +16,7 @@ import (
 	"github.com/cloudfoundry-incubator/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-golang/lager/lagertest"
 )
 
@@ -29,6 +30,7 @@ var _ = Describe("Task Handlers", func() {
 		responseRecorder *httptest.ResponseRecorder
 
 		handler *handlers.TaskHandler
+		exitCh  chan struct{}
 
 		requestBody interface{}
 
@@ -42,7 +44,8 @@ var _ = Describe("Task Handlers", func() {
 
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeTaskCompletionClient, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory)
+		exitCh = make(chan struct{}, 1)
+		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeTaskCompletionClient, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory, exitCh)
 	})
 
 	Describe("Tasks", func() {
@@ -112,6 +115,17 @@ var _ = Describe("Task Handlers", func() {
 					_, filter := fakeTaskDB.TasksArgsForCall(0)
 					Expect(filter.CellID).To(Equal("cell-id"))
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.TasksReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -299,6 +313,17 @@ var _ = Describe("Task Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.DesireTaskReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when desiring the task fails", func() {
 			BeforeEach(func() {
 				fakeTaskDB.DesireTaskReturns(models.ErrUnknownError)
@@ -366,6 +391,17 @@ var _ = Describe("Task Handlers", func() {
 
 					Expect(response.Error).To(BeNil())
 					Expect(response.ShouldStart).To(BeFalse())
+				})
+			})
+
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeTaskDB.StartTaskReturns(false, models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
 				})
 			})
 
@@ -600,6 +636,17 @@ var _ = Describe("Task Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.FailTaskReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when failing the task fails", func() {
 			BeforeEach(func() {
 				fakeTaskDB.FailTaskReturns(nil, models.ErrUnknownError)
@@ -693,6 +740,17 @@ var _ = Describe("Task Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.CompleteTaskReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when completing the task fails", func() {
 			BeforeEach(func() {
 				fakeTaskDB.CompleteTaskReturns(nil, models.ErrUnknownError)
@@ -733,6 +791,17 @@ var _ = Describe("Task Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
+				})
+			})
+
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeTaskDB.ResolvingTaskReturns(models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
 				})
 			})
 
@@ -777,6 +846,17 @@ var _ = Describe("Task Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
+				})
+			})
+
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeTaskDB.DeleteTaskReturns(models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
 				})
 			})
 
@@ -837,6 +917,17 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+			})
+
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeServiceClient.CellsReturns(nil, models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
+				})
 			})
 
 			Context("when fetching cells fails", func() {

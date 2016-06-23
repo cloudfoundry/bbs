@@ -17,12 +17,14 @@ import (
 	"github.com/cloudfoundry-incubator/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("DesiredLRP Handlers", func() {
 	var (
-		logger               lager.Logger
+		logger               *lagertest.TestLogger
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
@@ -30,6 +32,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		actualHub            *eventfakes.FakeHub
 		responseRecorder     *httptest.ResponseRecorder
 		handler              *handlers.DesiredLRPHandler
+		exitCh               chan struct{}
 
 		desiredLRP1 models.DesiredLRP
 		desiredLRP2 models.DesiredLRP
@@ -39,17 +42,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
-		logger = lager.NewLogger("test")
-		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		desiredHub = new(eventfakes.FakeHub)
 		actualHub = new(eventfakes.FakeHub)
+		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewDesiredLRPHandler(logger, 5, fakeDesiredLRPDB,
 			fakeActualLRPDB,
 			desiredHub,
 			actualHub,
 			fakeAuctioneerClient,
-			nil, nil)
+			nil, nil, exitCh)
 	})
 
 	Describe("DesiredLRPs_r0", func() {
@@ -149,6 +152,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.DesiredLrps).To(BeEmpty())
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -328,6 +342,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, models.ErrUnknownError)
@@ -420,6 +445,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -554,6 +590,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
@@ -759,6 +806,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
 					Expect(startAuctions[0].Resource).To(Equal(expectedStartRequest.Resource))
 				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesireLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 

@@ -16,12 +16,14 @@ import (
 	"github.com/cloudfoundry-incubator/rep/repfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("LRP Convergence Handlers", func() {
 	var (
-		logger               lager.Logger
+		logger               *lagertest.TestLogger
 		fakeLRPDB            *dbfakes.FakeLRPDB
 		actualHub            *eventfakes.FakeHub
 		responseRecorder     *httptest.ResponseRecorder
@@ -42,12 +44,13 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		cellSet models.CellSet
 
 		handler *handlers.LRPConvergenceHandler
+		exitCh  chan struct{}
 	)
 
 	BeforeEach(func() {
 		fakeLRPDB = new(dbfakes.FakeLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
-		logger = lager.NewLogger("test")
+		logger = lagertest.NewTestLogger("test")
 
 		request1 := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("to-auction-1"), 1, 2)
 		request2 := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("to-auction-2"), 0, 4)
@@ -119,8 +122,9 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		fakeServiceClient.CellsReturns(cellSet, nil)
 
 		actualHub = &eventfakes.FakeHub{}
+		exitCh = make(chan struct{}, 1)
 		retirer := handlers.NewActualLRPRetirer(fakeLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
-		handler = handlers.NewLRPConvergenceHandler(logger, fakeLRPDB, actualHub, fakeAuctioneerClient, fakeServiceClient, retirer, 2)
+		handler = handlers.NewLRPConvergenceHandler(logger, fakeLRPDB, actualHub, fakeAuctioneerClient, fakeServiceClient, retirer, 2, exitCh)
 	})
 
 	JustBeforeEach(func() {
@@ -142,6 +146,17 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		It("does not call ConvergeLRPs", func() {
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(0))
+		})
+	})
+
+	Context("when the DB returns an unrecoverable error", func() {
+		BeforeEach(func() {
+			fakeServiceClient.CellsReturns(nil, models.NewUnrecoverableError(nil))
+		})
+
+		It("logs and writes to the exit channel", func() {
+			Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+			Eventually(exitCh).Should(Receive())
 		})
 	})
 
@@ -205,6 +220,17 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		group2 := &models.ActualLRPGroup{Instance: unclaimingActualLRP2}
 		Expect(changeEvents).To(ContainElement(models.NewActualLRPChangedEvent(group1, group1)))
 		Expect(changeEvents).To(ContainElement(models.NewActualLRPChangedEvent(group2, group2)))
+	})
+
+	Context("when the DB returns an unrecoverable error", func() {
+		BeforeEach(func() {
+			fakeLRPDB.UnclaimActualLRPReturns(nil, nil, models.NewUnrecoverableError(nil))
+		})
+
+		It("logs and writes to the exit channel", func() {
+			Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+			Eventually(exitCh).Should(Receive())
+		})
 	})
 
 	Context("when unclaiming the actual lrp fails", func() {

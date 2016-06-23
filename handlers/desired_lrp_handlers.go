@@ -22,6 +22,7 @@ type DesiredLRPHandler struct {
 	repClientFactory   rep.ClientFactory
 	serviceClient      bbs.ServiceClient
 	updateWorkersCount int
+	exitChan           chan<- struct{}
 	logger             lager.Logger
 }
 
@@ -35,6 +36,7 @@ func NewDesiredLRPHandler(
 	auctioneerClient auctioneer.Client,
 	repClientFactory rep.ClientFactory,
 	serviceClient bbs.ServiceClient,
+	exitChan chan<- struct{},
 ) *DesiredLRPHandler {
 	return &DesiredLRPHandler{
 		desiredLRPDB:       desiredLRPDB,
@@ -45,6 +47,7 @@ func NewDesiredLRPHandler(
 		repClientFactory:   repClientFactory,
 		serviceClient:      serviceClient,
 		updateWorkersCount: updateWorkersCount,
+		exitChan:           exitChan,
 		logger:             logger.Session("desired-lrp-handler"),
 	}
 }
@@ -64,6 +67,7 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *http.Request) {
@@ -80,6 +84,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(w http.ResponseWriter, req *http.Request) {
@@ -97,6 +102,7 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(w http.ResponseWriter, req
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Request) {
@@ -104,6 +110,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Re
 
 	request := &models.DesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)
@@ -135,6 +142,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 
 	request := &models.UpdateDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)
@@ -189,6 +197,7 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Re
 
 	request := &models.RemoveDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)

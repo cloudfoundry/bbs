@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"database/sql"
-	"os"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/encryption"
@@ -136,11 +135,12 @@ func (db *SQLDB) convertMySQLError(err *mysql.MySQLError) *models.Error {
 	case 1406:
 		return models.ErrBadRequest
 	case 1146:
-		os.Exit(-2)
-		return models.ErrUnknownError
+		return models.NewUnrecoverableError(err)
 	default:
 		return models.ErrUnknownError
 	}
+
+	return nil
 }
 
 func (db *SQLDB) convertPostgresError(err *pq.Error) *models.Error {
@@ -150,8 +150,7 @@ func (db *SQLDB) convertPostgresError(err *pq.Error) *models.Error {
 	case "23505":
 		return models.ErrResourceExists
 	case "42P01":
-		os.Exit(-2)
-		return models.ErrUnknownError
+		return models.NewUnrecoverableError(err)
 	default:
 		return models.ErrUnknownError
 	}

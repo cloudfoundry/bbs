@@ -17,6 +17,7 @@ type EvacuationHandler struct {
 	desiredLRPDB     db.DesiredLRPDB
 	actualHub        events.Hub
 	auctioneerClient auctioneer.Client
+	exitChan         chan<- struct{}
 	logger           lager.Logger
 }
 
@@ -27,6 +28,7 @@ func NewEvacuationHandler(
 	desiredLRPDB db.DesiredLRPDB,
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
+	exitChan chan<- struct{},
 ) *EvacuationHandler {
 	return &EvacuationHandler{
 		db:               db,
@@ -34,6 +36,7 @@ func NewEvacuationHandler(
 		desiredLRPDB:     desiredLRPDB,
 		actualHub:        actualHub,
 		auctioneerClient: auctioneerClient,
+		exitChan:         exitChan,
 		logger:           logger.Session("evacuation-handler"),
 	}
 }
@@ -53,6 +56,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req
 	request := &models.RemoveEvacuatingActualLRPRequest{}
 	response := &models.RemoveEvacuatingActualLRPResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -83,6 +87,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req 
 
 	request := &models.EvacuateClaimedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)
@@ -98,6 +103,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req 
 		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
+			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
 		} else {
 			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
 		}
@@ -119,6 +125,7 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req 
 
 	request := &models.EvacuateCrashedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)
@@ -133,6 +140,7 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req 
 		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
+			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
 		} else {
 			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
 		}
@@ -152,6 +160,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 
 	response := &models.EvacuationResponse{}
 	response.KeepContainer = true
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	request := &models.EvacuateRunningActualLRPRequest{}
@@ -261,12 +270,17 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req 
 
 	request := &models.EvacuateStoppedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
+
+	var bbsErr *models.Error
+
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, bbsErr) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)
 	if err != nil {
 		logger.Error("failed-to-parse-request", err)
-		response.Error = models.ConvertError(err)
+		bbsErr = models.ConvertError(err)
+		response.Error = bbsErr
 		return
 	}
 
@@ -276,13 +290,15 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req 
 	group, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrp-group", err)
-		response.Error = models.ConvertError(err)
+		bbsErr = models.ConvertError(err)
+		response.Error = bbsErr
 		return
 	}
 
 	err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	if err != nil {
 		logger.Error("failed-removing-evacuating-actual-lrp", err)
+		bbsErr = models.ConvertError(err)
 	} else if group.Evacuating != nil {
 		go h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: group.Evacuating}))
 	}
@@ -296,7 +312,8 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req 
 	err = h.actualLRPDB.RemoveActualLRP(logger, guid, index, request.ActualLrpInstanceKey)
 	if err != nil {
 		logger.Error("failed-to-remove-actual-lrp", err)
-		response.Error = models.ConvertError(err)
+		bbsErr = models.ConvertError(err)
+		response.Error = bbsErr
 		return
 	} else {
 		go h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: group.Instance}))

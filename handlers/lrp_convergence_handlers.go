@@ -21,6 +21,7 @@ type LRPConvergenceHandler struct {
 	serviceClient          bbs.ServiceClient
 	retirer                ActualLRPRetirer
 	convergenceWorkersSize int
+	exitChan               chan<- struct{}
 }
 
 func NewLRPConvergenceHandler(
@@ -31,12 +32,26 @@ func NewLRPConvergenceHandler(
 	serviceClient bbs.ServiceClient,
 	retirer ActualLRPRetirer,
 	convergenceWorkersSize int,
+	exitChan chan<- struct{},
 ) *LRPConvergenceHandler {
-	return &LRPConvergenceHandler{logger, db, actualHub, auctioneerClient, serviceClient, retirer, convergenceWorkersSize}
+	return &LRPConvergenceHandler{
+		logger:                 logger,
+		db:                     db,
+		actualHub:              actualHub,
+		auctioneerClient:       auctioneerClient,
+		serviceClient:          serviceClient,
+		retirer:                retirer,
+		convergenceWorkersSize: convergenceWorkersSize,
+		exitChan:               exitChan,
+	}
 }
 
 func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Request) {
 	logger := h.logger.Session("converge-lrps")
+	response := &models.ConvergeLRPsResponse{}
+
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer writeResponse(w, response)
 
 	logger.Debug("listing-cells")
 	cellSet, err := h.serviceClient.Cells(logger)
@@ -45,6 +60,7 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 		cellSet = models.CellSet{}
 	} else if err != nil {
 		logger.Debug("failed-listing-cells")
+		response.Error = models.ConvertError(err)
 		return
 	}
 	logger.Debug("succeeded-listing-cells")
@@ -69,6 +85,9 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 				startRequestLock.Lock()
 				startRequests = append(startRequests, &startRequest)
 				startRequestLock.Unlock()
+			} else {
+				bbsErr := models.ConvertError(err)
+				exitIfUnrecoverable(logger, h.exitChan, bbsErr)
 			}
 		})
 	}
@@ -76,6 +95,7 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	throttler, err := workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": h.convergenceWorkersSize, "num_works": len(works)})
+		response.Error = models.ConvertError(err)
 		return
 	}
 
@@ -93,6 +113,5 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 		startLogger.Debug("done-requesting-start-auctions")
 	}
 
-	response := &models.ConvergeLRPsResponse{}
-	writeResponse(w, response)
+	response.Error = models.ConvertError(err)
 }

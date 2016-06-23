@@ -168,3 +168,10 @@ func NewRunningOnDifferentCellError(expectedCellId, actualCellId string) *Error 
 		Message: fmt.Sprintf("Running on cell %s not %s", actualCellId, expectedCellId),
 	}
 }
+
+func NewUnrecoverableError(err error) *Error {
+	return &Error{
+		Type:    Error_Unrecoverable,
+		Message: fmt.Sprint("Unrecoverable Error: ", err),
+	}
+}

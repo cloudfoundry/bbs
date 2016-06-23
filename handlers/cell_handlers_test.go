@@ -9,23 +9,25 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/lager"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("Cell Handlers", func() {
 	var (
-		logger            lager.Logger
+		logger            *lagertest.TestLogger
 		responseRecorder  *httptest.ResponseRecorder
 		handler           *handlers.CellHandler
 		fakeServiceClient *fake_bbs.FakeServiceClient
+		exitCh            chan struct{}
 	)
 
 	BeforeEach(func() {
 		fakeServiceClient = new(fake_bbs.FakeServiceClient)
-		logger = lager.NewLogger("test")
-		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewCellHandler(logger, fakeServiceClient)
+		exitCh = make(chan struct{}, 1)
+		handler = handlers.NewCellHandler(logger, fakeServiceClient, exitCh)
 	})
 
 	Describe("Cells", func() {
@@ -94,6 +96,17 @@ var _ = Describe("Cell Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.Cells).To(BeNil())
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeServiceClient.CellsReturns(nil,  models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 

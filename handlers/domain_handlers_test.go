@@ -9,24 +9,26 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/lager"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("Domain Handlers", func() {
 	var (
-		logger           lager.Logger
+		logger           *lagertest.TestLogger
 		fakeDomainDB     *dbfakes.FakeDomainDB
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DomainHandler
 		requestBody      interface{}
+		exitCh           chan struct{}
 	)
 
 	BeforeEach(func() {
 		fakeDomainDB = new(dbfakes.FakeDomainDB)
-		logger = lager.NewLogger("test")
-		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
-		handler = handlers.NewDomainHandler(logger, fakeDomainDB)
+		exitCh = make(chan struct{}, 1)
+		handler = handlers.NewDomainHandler(logger, fakeDomainDB, exitCh)
 	})
 
 	Describe("Upsert", func() {
@@ -109,6 +111,17 @@ var _ = Describe("Domain Handlers", func() {
 			})
 		})
 
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDomainDB.UpsertDomainReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeDomainDB.UpsertDomainReturns(models.ErrUnknownError)
@@ -173,6 +186,17 @@ var _ = Describe("Domain Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.Domains).To(BeNil())
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDomainDB.DomainsReturns([]string{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
 			})
 		})
 
