@@ -278,6 +278,7 @@ func main() {
 		}
 		defer sqlConn.Close()
 		sqlConn.SetMaxOpenConns(*maxDatabaseConnections)
+		sqlConn.SetMaxIdleConns(*maxDatabaseConnections)
 
 		err = sqlConn.Ping()
 		if err != nil {
