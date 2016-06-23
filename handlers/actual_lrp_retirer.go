@@ -25,7 +25,12 @@ func NewActualLRPRetirer(db db.ActualLRPDB,
 	repClientFactory rep.ClientFactory,
 	serviceClient bbs.ServiceClient,
 ) *actualLRPRetirer {
-	return &actualLRPRetirer{db, actualHub, repClientFactory, serviceClient}
+	return &actualLRPRetirer{
+		db:               db,
+		actualHub:        actualHub,
+		repClientFactory: repClientFactory,
+		serviceClient:    serviceClient,
+	}
 }
 
 func (r *actualLRPRetirer) RetireActualLRP(logger lager.Logger, processGuid string, index int32) error {

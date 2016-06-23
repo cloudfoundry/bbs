@@ -31,7 +31,9 @@ func (h *DesiredLRPHandler) DesiredLRPs_r0(w http.ResponseWriter, req *http.Requ
 	}
 
 	response.Error = models.ConvertError(err)
+
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesiredLRPs_r1(w http.ResponseWriter, req *http.Request) {
@@ -56,7 +58,9 @@ func (h *DesiredLRPHandler) DesiredLRPs_r1(w http.ResponseWriter, req *http.Requ
 	}
 
 	response.Error = models.ConvertError(err)
+
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(w http.ResponseWriter, req *http.Request) {
@@ -77,7 +81,9 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(w http.ResponseWriter, re
 	}
 
 	response.Error = models.ConvertError(err)
+
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r1(w http.ResponseWriter, req *http.Request) {
@@ -98,7 +104,9 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r1(w http.ResponseWriter, re
 	}
 
 	response.Error = models.ConvertError(err)
+
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesireDesiredLRP_r0(w http.ResponseWriter, req *http.Request) {
@@ -106,6 +114,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP_r0(w http.ResponseWriter, req *http
 
 	request := &models.DesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequestForDesireDesiredLRP_r0(logger, req, request)

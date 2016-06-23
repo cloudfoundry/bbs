@@ -58,6 +58,7 @@ func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
@@ -74,6 +75,7 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
@@ -83,6 +85,7 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -122,6 +125,7 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
@@ -129,6 +133,7 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)
@@ -176,6 +181,7 @@ func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.FailTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -203,6 +209,7 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.CompleteTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -237,6 +244,7 @@ func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, req *http.Request) {
@@ -253,6 +261,7 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
@@ -262,6 +271,7 @@ func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
 	request := &models.ConvergeTasksRequest{}
 	response := &models.ConvergeTasksResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)

@@ -34,6 +34,7 @@ func (h *TaskHandler) Tasks_r0(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) Tasks_r1(w http.ResponseWriter, req *http.Request) {
@@ -60,6 +61,7 @@ func (h *TaskHandler) Tasks_r1(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) TaskByGuid_r0(w http.ResponseWriter, req *http.Request) {
@@ -79,6 +81,7 @@ func (h *TaskHandler) TaskByGuid_r0(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) TaskByGuid_r1(w http.ResponseWriter, req *http.Request) {
@@ -98,6 +101,7 @@ func (h *TaskHandler) TaskByGuid_r1(w http.ResponseWriter, req *http.Request) {
 
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) DesireTask_r0(w http.ResponseWriter, req *http.Request) {
@@ -107,6 +111,7 @@ func (h *TaskHandler) DesireTask_r0(w http.ResponseWriter, req *http.Request) {
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequestForDesireTask_r0(logger, req, request)

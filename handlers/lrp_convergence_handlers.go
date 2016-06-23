@@ -103,5 +103,8 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	startLogger.Debug("done-requesting-start-auctions")
 
 	response := &models.ConvergeLRPsResponse{}
+	response.Error = models.ConvertError(err)
+
 	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
