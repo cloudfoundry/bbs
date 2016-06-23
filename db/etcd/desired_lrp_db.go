@@ -240,7 +240,7 @@ func (db *ETCDDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid strin
 // to ensure that the complete model is available and there are no races in
 // Desired Watches, DesiredLRPRunInfo is created before DesiredLRPSchedulingInfo.
 func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
-	logger = logger.WithData(lager.Data{"process-guid": desiredLRP.ProcessGuid})
+	logger = logger.WithData(lager.Data{"process_guid": desiredLRP.ProcessGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -369,7 +369,7 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 // RunInfo fails to delete, the orphaned DesiredLRPRunInfo will be garbage
 // collected later by convergence.
 func (db *ETCDDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
-	logger = logger.WithData(lager.Data{"process-guid": processGuid})
+	logger = logger.WithData(lager.Data{"process_guid": processGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 

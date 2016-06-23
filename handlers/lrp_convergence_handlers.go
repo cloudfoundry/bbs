@@ -51,7 +51,7 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 
 	startRequests, keysWithMissingCells, keysToRetire := h.db.ConvergeLRPs(logger, cellSet)
 
-	retireLogger := logger.WithData(lager.Data{"retiring-lrp-count": len(keysToRetire)})
+	retireLogger := logger.WithData(lager.Data{"retiring_lrp_count": len(keysToRetire)})
 	works := []func(){}
 	for _, key := range keysToRetire {
 		key := key
@@ -75,7 +75,7 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 
 	throttler, err := workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": h.convergenceWorkersSize, "num-works": len(works)})
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": h.convergenceWorkersSize, "num_works": len(works)})
 		return
 	}
 
@@ -83,12 +83,12 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	throttler.Work()
 	retireLogger.Debug("done-retiring-actual-lrps")
 
-	startLogger := logger.WithData(lager.Data{"start-requests-count": len(startRequests)})
+	startLogger := logger.WithData(lager.Data{"start_requests_count": len(startRequests)})
 	if len(startRequests) > 0 {
 		startLogger.Debug("requesting-start-auctions")
 		err = h.auctioneerClient.RequestLRPAuctions(startRequests)
 		if err != nil {
-			startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp-start-auctions": startRequests})
+			startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp_start_auctions": startRequests})
 		}
 		startLogger.Debug("done-requesting-start-auctions")
 	}

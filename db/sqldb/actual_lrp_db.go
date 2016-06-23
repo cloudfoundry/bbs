@@ -85,8 +85,8 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 
 func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"key": key})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -123,8 +123,6 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 
 func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"key": key})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
@@ -144,6 +142,8 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 			logger.Debug("already-unclaimed")
 			return models.ErrActualLRPCannotBeUnclaimed
 		}
+		logger.Info("starting")
+		defer logger.Info("complete")
 
 		now := db.clock.Now().UnixNano()
 		actualLRP.ModificationTag.Increment()
@@ -178,8 +178,8 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 
 func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
@@ -234,8 +234,6 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 
 func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
-	logger.Debug("starting")
-	defer logger.Debug("completed")
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
@@ -259,7 +257,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
 			actualLRP.ActualLRPNetInfo.Equal(netInfo) &&
 			actualLRP.State == models.ActualLRPStateRunning {
-			logger.Info("nothing-to-change")
+			logger.Debug("nothing-to-change")
 			return nil
 		}
 
@@ -267,6 +265,9 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			logger.Error("failed-to-transition-actual-lrp-to-started", nil)
 			return models.ErrActualLRPCannotBeStarted
 		}
+
+		logger.Info("starting")
+		defer logger.Info("completed")
 
 		now := db.clock.Now().UnixNano()
 		evacuating := false
@@ -309,9 +310,9 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 }
 
 func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (*models.ActualLRPGroup, *models.ActualLRPGroup, bool, error) {
-	logger = logger.WithData(lager.Data{"key": key, "instanceKey": instanceKey, "crash_reason": crashReason})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger = logger.WithData(lager.Data{"key": key, "instance_key": instanceKey, "crash_reason": crashReason})
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var immediateRestart = false
 	var beforeActualLRP models.ActualLRP
@@ -386,8 +387,8 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "placement_error": placementError})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
@@ -434,8 +435,8 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 
 func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
 	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error

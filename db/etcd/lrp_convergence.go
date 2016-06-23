@@ -277,24 +277,24 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 	throttler.Work()
 
 	if doPrune {
-		logger.Info("deleting-invalid-actual-lrps", lager.Data{"num-lrps": len(actualsToDelete)})
+		logger.Info("deleting-invalid-actual-lrps", lager.Data{"num_lrps": len(actualsToDelete)})
 		db.batchDeleteNodes(actualsToDelete, logger)
 		actualLRPsDeleted.Add(uint64(len(actualsToDelete)))
 
-		logger.Info("deleting-empty-actual-indices", lager.Data{"num-indices": len(indexKeysToDelete)})
+		logger.Info("deleting-empty-actual-indices", lager.Data{"num_indices": len(indexKeysToDelete)})
 		err = db.deleteLeaves(logger, indexKeysToDelete)
 		if err != nil {
-			logger.Error("failed-deleting-empty-actual-indices", err, lager.Data{"num-indices": len(indexKeysToDelete)})
+			logger.Error("failed-deleting-empty-actual-indices", err, lager.Data{"num_indices": len(indexKeysToDelete)})
 		} else {
-			logger.Info("succeeded-deleting-empty-actual-indices", lager.Data{"num-indices": len(indexKeysToDelete)})
+			logger.Info("succeeded-deleting-empty-actual-indices", lager.Data{"num_indices": len(indexKeysToDelete)})
 		}
 
-		logger.Info("deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
+		logger.Info("deleting-empty-actual-guids", lager.Data{"num_guids": len(guidKeysToDelete)})
 		err = db.deleteLeaves(logger, guidKeysToDelete)
 		if err != nil {
-			logger.Error("failed-deleting-empty-actual-guids", err, lager.Data{"num-guids": len(guidKeysToDelete)})
+			logger.Error("failed-deleting-empty-actual-guids", err, lager.Data{"num_guids": len(guidKeysToDelete)})
 		} else {
-			logger.Info("succeeded-deleting-empty-actual-guids", lager.Data{"num-guids": len(guidKeysToDelete)})
+			logger.Info("succeeded-deleting-empty-actual-guids", lager.Data{"num_guids": len(guidKeysToDelete)})
 		}
 	}
 
@@ -495,7 +495,7 @@ func CalculateConvergence(
 
 	for processGuid, _ := range input.AllProcessGuids {
 		pLog := sess.WithData(lager.Data{
-			"process-guid": processGuid,
+			"process_guid": processGuid,
 		})
 
 		desired, hasDesired := input.DesiredLRPs[processGuid]
@@ -517,7 +517,7 @@ func CalculateConvergence(
 
 			for i, actual := range actualsByIndex {
 				if actual.CellIsMissing(input.Cells) {
-					pLog.Info("missing-cell", lager.Data{"index": i, "cell-id": actual.CellId})
+					pLog.Info("missing-cell", lager.Data{"index": i, "cell_id": actual.CellId})
 					changes.ActualLRPsWithMissingCells = append(changes.ActualLRPsWithMissingCells, actual)
 					continue
 				}
@@ -602,7 +602,7 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 
 	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": db.convergenceWorkersSize, "num-works": len(works)})
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": db.convergenceWorkersSize, "num_works": len(works)})
 		return nil, nil, nil
 	}
 
@@ -616,7 +616,7 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 func (db *ETCDDB) resolveActualsWithMissingIndices(logger lager.Logger, desired *models.DesiredLRP, actualKey *models.ActualLRPKey, starts *startRequests) func() {
 	return func() {
 		logger = logger.Session("start-missing-actual", lager.Data{
-			"process-guid": actualKey.ProcessGuid,
+			"process_guid": actualKey.ProcessGuid,
 			"index":        actualKey.Index,
 		})
 
@@ -637,7 +637,7 @@ func (db *ETCDDB) resolveRestartableCrashedActualLRPS(logger lager.Logger, actua
 		actualKey := actualLRP.ActualLRPKey
 
 		logger = logger.Session("restart-crash", lager.Data{
-			"process-guid": actualKey.ProcessGuid,
+			"process_guid": actualKey.ProcessGuid,
 			"index":        actualKey.Index,
 		})
 
@@ -646,7 +646,7 @@ func (db *ETCDDB) resolveRestartableCrashedActualLRPS(logger lager.Logger, actua
 			return
 		}
 
-		logger.Debug("unclaiming-actual-lrp", lager.Data{"ProcessGuid": actualLRP.ActualLRPKey.ProcessGuid, "Index": actualLRP.ActualLRPKey.Index})
+		logger.Debug("unclaiming-actual-lrp", lager.Data{"process_guid": actualLRP.ActualLRPKey.ProcessGuid, "index": actualLRP.ActualLRPKey.Index})
 		_, err := db.unclaimActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
 		if err != nil {
 			logger.Error("failed-unclaiming-crash", err)
@@ -679,7 +679,7 @@ func (s *startRequests) Add(logger lager.Logger, actual *models.ActualLRPKey) {
 
 	desiredLRP, found := s.desiredMap[actual.ProcessGuid]
 	if !found {
-		logger.Info("failed-to-find-desired-lrp-for-stale-unclaimed-actual-lrp", lager.Data{"actual-lrp": actual})
+		logger.Info("failed-to-find-desired-lrp-for-stale-unclaimed-actual-lrp", lager.Data{"actual_lrp": actual})
 		return
 	}
 
@@ -691,7 +691,7 @@ func (s *startRequests) Add(logger lager.Logger, actual *models.ActualLRPKey) {
 		start.Indices = append(start.Indices, int(actual.Index))
 	}
 
-	logger.Info("adding-start-auction", lager.Data{"process-guid": desiredLRP.ProcessGuid, "index": actual.Index})
+	logger.Info("adding-start-auction", lager.Data{"process_guid": desiredLRP.ProcessGuid, "index": actual.Index})
 	s.startMap[desiredLRP.ProcessGuid] = start
 	s.instanceCount++
 }

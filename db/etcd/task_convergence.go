@@ -58,7 +58,7 @@ func (db *ETCDDB) ConvergeTasks(
 
 	logError := func(task *models.Task, message string) {
 		logger.Error(message, nil, lager.Data{
-			"task-guid": task.TaskGuid,
+			"task_guid": task.TaskGuid,
 		})
 	}
 
@@ -89,7 +89,7 @@ func (db *ETCDDB) ConvergeTasks(
 	completedCount := 0
 	resolvingCount := 0
 
-	logger.Debug("determining-convergence-work", lager.Data{"num-tasks": len(taskState.Nodes)})
+	logger.Debug("determining-convergence-work", lager.Data{"num_tasks": len(taskState.Nodes)})
 	for _, node := range taskState.Nodes {
 		task := new(models.Task)
 		err := db.deserializeModel(logger, node, task)
@@ -115,7 +115,7 @@ func (db *ETCDDB) ConvergeTasks(
 				scheduleForCASByIndex(node.ModifiedIndex, task)
 				tasksKicked++
 			} else if shouldKickTask {
-				logger.Info("requesting-auction-for-pending-task", lager.Data{"task-guid": task.TaskGuid})
+				logger.Info("requesting-auction-for-pending-task", lager.Data{"task_guid": task.TaskGuid})
 				start := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
 				tasksToAuction = append(tasksToAuction, &start)
 				tasksKicked++
@@ -136,7 +136,7 @@ func (db *ETCDDB) ConvergeTasks(
 				logError(task, "failed-to-start-resolving-in-time")
 				keysToDelete = append(keysToDelete, node.Key)
 			} else if shouldKickTask {
-				logger.Info("kicking-completed-task", lager.Data{"task-guid": task.TaskGuid})
+				logger.Info("kicking-completed-task", lager.Data{"task_guid": task.TaskGuid})
 				scheduleForCompletion(task)
 				tasksKicked++
 			}
@@ -147,7 +147,7 @@ func (db *ETCDDB) ConvergeTasks(
 				logError(task, "failed-to-resolve-in-time")
 				keysToDelete = append(keysToDelete, node.Key)
 			} else if shouldKickTask {
-				logger.Info("demoting-resolving-to-completed", lager.Data{"task-guid": task.TaskGuid})
+				logger.Info("demoting-resolving-to-completed", lager.Data{"task_guid": task.TaskGuid})
 				demoted := demoteToCompleted(task)
 				scheduleForCASByIndex(node.ModifiedIndex, demoted)
 				scheduleForCompletion(demoted)
@@ -156,26 +156,26 @@ func (db *ETCDDB) ConvergeTasks(
 		}
 	}
 	logger.Debug("done-determining-convergence-work", lager.Data{
-		"num-tasks-to-auction":  len(tasksToAuction),
-		"num-tasks-to-cas":      len(tasksToCAS),
-		"num-tasks-to-complete": len(tasksToComplete),
-		"num-keys-to-delete":    len(keysToDelete),
+		"num_tasks_to_auction":  len(tasksToAuction),
+		"num_tasks_to_cas":      len(tasksToCAS),
+		"num_tasks_to_complete": len(tasksToComplete),
+		"num_keys_to_delete":    len(keysToDelete),
 	})
 
 	sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
 
 	tasksKickedCounter.Add(tasksKicked)
-	logger.Debug("compare-and-swapping-tasks", lager.Data{"num-tasks-to-cas": len(tasksToCAS)})
+	logger.Debug("compare-and-swapping-tasks", lager.Data{"num_tasks_to_cas": len(tasksToCAS)})
 	err := db.batchCompareAndSwapTasks(tasksToCAS, logger)
 	if err != nil {
 		return nil, nil
 	}
-	logger.Debug("done-compare-and-swapping-tasks", lager.Data{"num-tasks-to-cas": len(tasksToCAS)})
+	logger.Debug("done-compare-and-swapping-tasks", lager.Data{"num_tasks_to_cas": len(tasksToCAS)})
 
 	tasksPrunedCounter.Add(uint64(len(keysToDelete)))
-	logger.Debug("deleting-keys", lager.Data{"num-keys-to-delete": len(keysToDelete)})
+	logger.Debug("deleting-keys", lager.Data{"num_keys_to_delete": len(keysToDelete)})
 	db.batchDeleteTasks(keysToDelete, logger)
-	logger.Debug("done-deleting-keys", lager.Data{"num-keys-to-delete": len(keysToDelete)})
+	logger.Debug("done-deleting-keys", lager.Data{"num_keys_to_delete": len(keysToDelete)})
 
 	return tasksToAuction, tasksToComplete
 }
@@ -217,7 +217,7 @@ func (db *ETCDDB) batchCompareAndSwapTasks(tasksToCAS []compareAndSwappableTask,
 		value, err := db.serializeModel(logger, task)
 		if err != nil {
 			logger.Error("failed-to-marshal", err, lager.Data{
-				"task-guid": task.TaskGuid,
+				"task_guid": task.TaskGuid,
 			})
 			continue
 		}
@@ -227,7 +227,7 @@ func (db *ETCDDB) batchCompareAndSwapTasks(tasksToCAS []compareAndSwappableTask,
 			_, err := db.client.CompareAndSwap(TaskSchemaPathByGuid(task.TaskGuid), value, NO_TTL, index)
 			if err != nil {
 				logger.Error("failed-to-compare-and-swap", err, lager.Data{
-					"task-guid": task.TaskGuid,
+					"task_guid": task.TaskGuid,
 				})
 			}
 		})
@@ -255,7 +255,7 @@ func (db *ETCDDB) batchDeleteTasks(taskGuids []string, logger lager.Logger) {
 			_, err := db.client.Delete(taskGuid, true)
 			if err != nil {
 				logger.Error("failed-to-delete", err, lager.Data{
-					"task-guid": taskGuid,
+					"task_guid": taskGuid,
 				})
 			}
 		})

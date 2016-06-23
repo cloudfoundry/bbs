@@ -52,7 +52,7 @@ func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
 
 func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColumn string) error {
 	logger = logger.WithData(
-		lager.Data{"table-name": tableName, "primary-key": primaryKey, "blob-column": blobColumn},
+		lager.Data{"table_name": tableName, "primary_key": primaryKey, "blob_column": blobColumn},
 	)
 	rows, err := db.db.Query(fmt.Sprintf("SELECT %s FROM %s", primaryKey, tableName))
 	if err != nil {

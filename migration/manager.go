@@ -137,8 +137,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		}
 
 		logger.Info("running-migrations", lager.Data{
-			"from-version": version.CurrentVersion,
-			"to-version":   maxMigrationVersion,
+			"from_version": version.CurrentVersion,
+			"to_version":   maxMigrationVersion,
 		})
 
 		m.writeVersion(version.CurrentVersion, maxMigrationVersion, lastETCDMigrationVersion)
@@ -187,9 +187,9 @@ func (m *Manager) performMigration(
 				nextVersion = currentMigration.Version()
 
 				logger.Info("running-migration", lager.Data{
-					"CurrentVersion":   lastVersion,
-					"NextVersion":      nextVersion,
-					"MigrationVersion": currentMigration.Version(),
+					"current_version":   lastVersion,
+					"next_version":      nextVersion,
+					"migration_version": currentMigration.Version(),
 				})
 
 				currentMigration.SetCryptor(m.cryptor)

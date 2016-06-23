@@ -8,7 +8,7 @@ import (
 )
 
 func (db *ETCDDB) SetEncryptionKeyLabel(logger lager.Logger, keyLabel string) error {
-	logger.Debug("set-encryption-key-label", lager.Data{"encryption-key-label": keyLabel})
+	logger.Debug("set-encryption-key-label", lager.Data{"encryption_key_label": keyLabel})
 	defer logger.Debug("set-encryption-key-label-finished")
 
 	_, err := db.client.Set(EncryptionKeyLabelKey, []byte(keyLabel), NO_TTL)
@@ -51,7 +51,7 @@ func (db *ETCDDB) rewriteNode(logger lager.Logger, node *etcd.Node) error {
 		encoder := format.NewEncoder(db.cryptor)
 		payload, err := encoder.Decode([]byte(node.Value))
 		if err != nil {
-			logger.Error("failed-to-read-node", err, lager.Data{"etcd-key": node.Key})
+			logger.Error("failed-to-read-node", err, lager.Data{"etcd_key": node.Key})
 			return nil
 		}
 		encryptedPayload, err := encoder.Encode(format.BASE64_ENCRYPTED, payload)
@@ -60,7 +60,7 @@ func (db *ETCDDB) rewriteNode(logger lager.Logger, node *etcd.Node) error {
 		}
 		_, err = db.client.CompareAndSwap(node.Key, encryptedPayload, NO_TTL, node.ModifiedIndex)
 		if err != nil {
-			logger.Info("failed-to-compare-and-swap", lager.Data{"err": err, "etcd-key": node.Key})
+			logger.Info("failed-to-compare-and-swap", lager.Data{"err": err, "etcd_key": node.Key})
 			return nil
 		}
 	} else {

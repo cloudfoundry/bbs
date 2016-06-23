@@ -8,7 +8,7 @@ import (
 const NO_TTL = 0
 
 func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
-	logger = logger.WithData(lager.Data{"task-guid": taskGuid})
+	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("finished")
 
@@ -69,7 +69,7 @@ func (db *ETCDDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*model
 		tasks = append(tasks, task)
 	}
 
-	logger.Debug("succeeded-performing-deserialization", lager.Data{"num-tasks": len(tasks)})
+	logger.Debug("succeeded-performing-deserialization", lager.Data{"num_tasks": len(tasks)})
 
 	return tasks, nil
 }
@@ -138,7 +138,7 @@ func (db *ETCDDB) StartTask(logger lager.Logger, taskGuid, cellID string) (bool,
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // Will fail if the task has already been cancelled or completed normally
 func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task, string, error) {
-	logger = logger.WithData(lager.Data{"task-guid": taskGuid})
+	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
@@ -173,7 +173,7 @@ func (db *ETCDDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task
 // This really really shouldn't fail.  If it does, blog about it and walk away. If it failed in a
 // consistent way (i.e. key already exists), there's probably a flaw in our design.
 func (db *ETCDDB) CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) (*models.Task, error) {
-	logger = logger.WithData(lager.Data{"task-guid": taskGuid, "cell-id": cellId})
+	logger = logger.WithData(lager.Data{"task_guid": taskGuid, "cell_id": cellId})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
@@ -199,7 +199,7 @@ func (db *ETCDDB) CompleteTask(logger lager.Logger, taskGuid, cellId string, fai
 }
 
 func (db *ETCDDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, error) {
-	logger = logger.WithData(lager.Data{"task-guid": taskGuid})
+	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
@@ -254,7 +254,7 @@ func (db *ETCDDB) markTaskCompleted(task *models.Task, failed bool, failureReaso
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
 // stager ever attempts to handle a completed task
 func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
-	logger = logger.WithData(lager.Data{"task-guid": taskGuid})
+	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")
@@ -290,7 +290,7 @@ func (db *ETCDDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 // stagerTaskBBS will retry this repeatedly if it gets a StoreTimeout error (up to N seconds?)
 // If this fails, the stager should assume that someone else is handling the completion and should bail
 func (db *ETCDDB) DeleteTask(logger lager.Logger, taskGuid string) error {
-	logger = logger.WithData(lager.Data{"task-guid": taskGuid})
+	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 
 	logger.Info("starting")
 	defer logger.Info("finished")

@@ -28,7 +28,7 @@ func (r *actualLRPRetirer) RetireActualLRP(logger lager.Logger, processGuid stri
 	var err error
 	var cell *models.CellPresence
 
-	logger = logger.Session("retire-actual-lrp", lager.Data{"process-guid": processGuid, "index": index})
+	logger = logger.Session("retire-actual-lrp", lager.Data{"process_guid": processGuid, "index": index})
 
 	for retryCount := 0; retryCount < models.RetireActualLRPRetryAttempts; retryCount++ {
 		var lrpGroup *models.ActualLRPGroup

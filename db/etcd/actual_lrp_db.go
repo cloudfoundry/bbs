@@ -67,7 +67,7 @@ func (db *ETCDDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFi
 		logger.Error("failed-performing-deserialization-work", err)
 		return []*models.ActualLRPGroup{}, models.ErrUnknownError
 	}
-	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num-actual-lrp-groups": len(groups)})
+	logger.Debug("succeeded-performing-deserialization-work", lager.Data{"num_actual_lrp_groups": len(groups)})
 
 	return groups, nil
 }
@@ -137,7 +137,7 @@ func (db *ETCDDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey
 }
 
 func (db *ETCDDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance-key": instanceKey})
+	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "actual_lrp_instance_key": instanceKey})
 	logger.Info("starting")
 
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, processGuid, index)
@@ -261,7 +261,7 @@ func (db *ETCDDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 
 	logger.Debug("retrieved-lrp")
 	if !lrp.AllowsTransitionTo(key, instanceKey, models.ActualLRPStateCrashed) {
-		logger.Error("failed-to-transition-to-crashed", nil, lager.Data{"from-state": lrp.State, "same-instance-key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
+		logger.Error("failed-to-transition-to-crashed", nil, lager.Data{"from_state": lrp.State, "same_instance_key": lrp.ActualLRPInstanceKey.Equal(instanceKey)})
 		return nil, nil, false, models.ErrActualLRPCannotBeCrashed
 	}
 
@@ -387,7 +387,7 @@ func (db *ETCDDB) parseActualLRPGroups(logger lager.Logger, node *etcd.Node, fil
 			groups = append(groups, group)
 		}
 	}
-	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num-actual-lrp-groups": len(groups)})
+	logger.Debug("succeeded-performing-parsing-actual-lrp-groups", lager.Data{"num_actual_lrp_groups": len(groups)})
 
 	return groups, nil
 }
@@ -422,7 +422,7 @@ func (db *ETCDDB) unclaimActualLRPWithIndex(
 	actualLRPInstanceKey *models.ActualLRPInstanceKey,
 ) (change stateChange, err error) {
 	logger = logger.Session("unclaim-actual-lrp-with-index")
-	defer logger.Debug("complete", lager.Data{"stateChange": change, "error": err})
+	defer logger.Debug("complete", lager.Data{"state_change": change, "error": err})
 
 	if !lrp.ActualLRPKey.Equal(actualLRPKey) {
 		logger.Error("failed-actual-lrp-key-differs", models.ErrActualLRPCannotBeUnclaimed)
@@ -527,7 +527,7 @@ func (db *ETCDDB) createActualLRP(logger lager.Logger, desiredLRP *models.Desire
 	var err error
 	if index >= desiredLRP.Instances {
 		err = models.NewError(models.Error_InvalidRecord, "Index too large")
-		logger.Error("actual-lrp-index-too-large", err, lager.Data{"actual-index": index, "desired-instances": desiredLRP.Instances})
+		logger.Error("actual-lrp-index-too-large", err, lager.Data{"actual_index": index, "desired_instances": desiredLRP.Instances})
 		return err
 	}
 
@@ -595,13 +595,13 @@ func (db *ETCDDB) newUnclaimedActualLRP(key *models.ActualLRPKey) (*models.Actua
 }
 
 func (db *ETCDDB) createRawActualLRP(logger lager.Logger, lrp *models.ActualLRP) error {
-	logger = logger.Session("creating-raw-actual-lrp", lager.Data{"actual-lrp": lrp})
+	logger = logger.Session("creating-raw-actual-lrp", lager.Data{"actual_lrp": lrp})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	lrpData, err := db.serializeModel(logger, lrp)
 	if err != nil {
-		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual-lrp": lrp})
+		logger.Error("failed-to-marshal-actual-lrp", err, lager.Data{"actual_lrp": lrp})
 		return err
 	}
 

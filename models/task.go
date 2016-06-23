@@ -27,10 +27,10 @@ func (t *Task) Version() format.Version {
 
 func (t *Task) LagerData() lager.Data {
 	return lager.Data{
-		"task-guid": t.TaskGuid,
+		"task_guid": t.TaskGuid,
 		"domain":    t.Domain,
 		"state":     t.State,
-		"cell-id":   t.CellId,
+		"cell_id":   t.CellId,
 	}
 }
 

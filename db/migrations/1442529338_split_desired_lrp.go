@@ -72,7 +72,7 @@ func (m *SplitDesiredLRP) Up(logger lager.Logger) error {
 			var desiredLRP models.DesiredLRP
 			err := m.serializer.Unmarshal(logger, []byte(node.Value), &desiredLRP)
 			if err != nil {
-				logger.Error("failed-unmarshaling-desired-lrp", err, lager.Data{"process-guid": desiredLRP.ProcessGuid})
+				logger.Error("failed-unmarshaling-desired-lrp", err, lager.Data{"process_guid": desiredLRP.ProcessGuid})
 				continue
 			}
 
@@ -122,12 +122,12 @@ func (m *SplitDesiredLRP) WriteRunInfo(logger lager.Logger, desiredLRP models.De
 
 	runInfoPayload, marshalErr := m.serializer.Marshal(logger, format.ENCRYPTED_PROTO, &runInfo)
 	if marshalErr != nil {
-		logger.Error("failed-marshaling-run-info", marshalErr, lager.Data{"process-guid": runInfo.ProcessGuid})
+		logger.Error("failed-marshaling-run-info", marshalErr, lager.Data{"process_guid": runInfo.ProcessGuid})
 	}
 
 	_, setErr := m.storeClient.Set(etcd.DesiredLRPRunInfoSchemaPath(runInfo.ProcessGuid), runInfoPayload, etcd.NO_TTL)
 	if setErr != nil {
-		logger.Error("failed-set-of-run-info", marshalErr, lager.Data{"process-guid": runInfo.ProcessGuid})
+		logger.Error("failed-set-of-run-info", marshalErr, lager.Data{"process_guid": runInfo.ProcessGuid})
 	}
 }
 
@@ -147,11 +147,11 @@ func (m *SplitDesiredLRP) WriteSchedulingInfo(logger lager.Logger, desiredLRP mo
 
 	schedulingInfoPayload, marshalErr := m.serializer.Marshal(logger, format.ENCRYPTED_PROTO, &schedulingInfo)
 	if marshalErr != nil {
-		logger.Error("failed-marshaling-scheduling-info", marshalErr, lager.Data{"process-guid": schedulingInfo.ProcessGuid})
+		logger.Error("failed-marshaling-scheduling-info", marshalErr, lager.Data{"process_guid": schedulingInfo.ProcessGuid})
 	}
 
 	_, setErr := m.storeClient.Set(etcd.DesiredLRPSchedulingInfoSchemaPath(desiredLRP.ProcessGuid), schedulingInfoPayload, etcd.NO_TTL)
 	if setErr != nil {
-		logger.Error("failed-set-of-scheduling-info", marshalErr, lager.Data{"process-guid": schedulingInfo.ProcessGuid})
+		logger.Error("failed-set-of-scheduling-info", marshalErr, lager.Data{"process_guid": schedulingInfo.ProcessGuid})
 	}
 }

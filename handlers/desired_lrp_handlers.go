@@ -167,7 +167,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 
 		requestedInstances := *request.Update.Instances - previousInstanceCount
 
-		logger = logger.WithData(lager.Data{"instances-delta": requestedInstances})
+		logger = logger.WithData(lager.Data{"instances_delta": requestedInstances})
 		if requestedInstances > 0 {
 			logger.Debug("increasing-the-instances")
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
@@ -230,7 +230,9 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 	createdIndices := h.createUnclaimedActualLRPs(logger, keys)
 	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
 
+	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
 	err := h.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&start})
+	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
 	}
@@ -247,7 +249,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 		works[i] = func() {
 			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
 			if err != nil {
-				logger.Info("failed-creating-actual-lrp", lager.Data{"actual_lrp_key": key, "err-message": err.Error()})
+				logger.Info("failed-creating-actual-lrp", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
 			} else {
 				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
 				createdIndicesChan <- int(key.Index)
@@ -258,7 +260,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 	throttlerSize := h.updateWorkersCount
 	throttler, err := workpool.NewThrottler(throttlerSize, works)
 	if err != nil {
-		logger.Error("failed-constructing-throttler", err, lager.Data{"max-workers": throttlerSize, "num-works": len(works)})
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": throttlerSize, "num_works": len(works)})
 		return []int{}
 	}
 

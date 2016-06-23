@@ -11,8 +11,8 @@ import (
 
 func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	logger = logger.WithData(lager.Data{"process_guid": desiredLRP.ProcessGuid})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		routesData, err := json.Marshal(desiredLRP.Routes)
@@ -165,8 +165,8 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 
 func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
 	logger = logger.WithData(lager.Data{"process_guid": processGuid})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
@@ -214,8 +214,8 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 
 func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
 	logger = logger.WithData(lager.Data{"process_guid": processGuid})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		err := db.lockDesiredLRPByGuidForUpdate(logger, processGuid, tx)

@@ -88,12 +88,14 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	logger = logger.WithData(lager.Data{"task_guid": request.TaskGuid})
 	err = h.db.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
+	logger.Debug("start-task-auction-request")
 	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(request.TaskGuid, request.Domain, request.TaskDefinition)
 	err = h.auctioneerClient.RequestTaskAuctions([]*auctioneer.TaskStartRequest{&taskStartRequest})
 	if err != nil {
@@ -113,7 +115,7 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		logger = logger.WithData(lager.Data{"task-guid": request.TaskGuid, "cell-id": request.CellId})
+		logger = logger.WithData(lager.Data{"task_guid": request.TaskGuid, "cell_id": request.CellId})
 		response.ShouldStart, err = h.db.StartTask(logger, request.TaskGuid, request.CellId)
 	}
 
@@ -150,20 +152,22 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	logger.Info("start-check-cell-presence", lager.Data{"cell_id": cellID})
 	cellPresence, err := h.serviceClient.CellById(logger, cellID)
 	if err != nil {
 		logger.Error("failed-fetching-cell-presence", err)
 		return
 	}
+	logger.Info("finished-check-cell-presence", lager.Data{"cell_id": cellID})
 
 	repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
+	logger.Info("start-rep-cancel-task", lager.Data{"task_guid": request.TaskGuid})
 	repClient.CancelTask(request.TaskGuid)
 	if err != nil {
 		logger.Error("failed-rep-cancel-task", err)
 		return
 	}
-
-	logger.Info("cell-client-succeeded-cancelling-task")
+	logger.Info("finished-rep-cancel-task", lager.Data{"task_guid": request.TaskGuid})
 }
 
 func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
@@ -287,21 +291,21 @@ func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
 	)
 
 	if len(tasksToAuction) > 0 {
-		logger.Debug("requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
+		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
 		if err := h.auctioneerClient.RequestTaskAuctions(tasksToAuction); err != nil {
 			taskGuids := make([]string, len(tasksToAuction))
 			for i, task := range tasksToAuction {
 				taskGuids[i] = task.TaskGuid
 			}
 			logger.Error("failed-to-request-auctions-for-pending-tasks", err,
-				lager.Data{"task-guids": taskGuids})
+				lager.Data{"task_guids": taskGuids})
 		}
-		logger.Debug("done-requesting-task-auctions", lager.Data{"num-tasks-to-auction": len(tasksToAuction)})
+		logger.Debug("done-requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
 	}
 
-	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
+	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
 	for _, task := range tasksToComplete {
 		h.taskCompletionClient.Submit(h.db, task)
 	}
-	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num-tasks-to-complete": len(tasksToComplete)})
+	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
 }

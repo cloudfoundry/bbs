@@ -134,7 +134,7 @@ func (db *serviceClient) CellEvents(logger lager.Logger) <-chan models.CellEvent
 				for i, key := range keys {
 					cellIDs[i] = path.Base(key)
 				}
-				logger.Info("cell-disappeared", lager.Data{"cell-ids": cellIDs})
+				logger.Info("cell-disappeared", lager.Data{"cell_ids": cellIDs})
 				events <- models.NewCellDisappearedEvent(cellIDs)
 			}
 		}
