@@ -84,12 +84,14 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	retireLogger.Debug("done-retiring-actual-lrps")
 
 	startLogger := logger.WithData(lager.Data{"start-requests-count": len(startRequests)})
-	startLogger.Debug("requesting-start-auctions")
-	err = h.auctioneerClient.RequestLRPAuctions(startRequests)
-	if err != nil {
-		startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp-start-auctions": startRequests})
+	if len(startRequests) > 0 {
+		startLogger.Debug("requesting-start-auctions")
+		err = h.auctioneerClient.RequestLRPAuctions(startRequests)
+		if err != nil {
+			startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp-start-auctions": startRequests})
+		}
+		startLogger.Debug("done-requesting-start-auctions")
 	}
-	startLogger.Debug("done-requesting-start-auctions")
 
 	response := &models.ConvergeLRPsResponse{}
 	writeResponse(w, response)

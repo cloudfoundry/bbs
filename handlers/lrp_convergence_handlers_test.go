@@ -172,6 +172,16 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		Expect(startAuctions).To(ConsistOf(expectedStartRequests))
 	})
 
+	Context("when no lrps to auction", func() {
+		BeforeEach(func() {
+			fakeLRPDB.ConvergeLRPsReturns(nil, nil, nil)
+		})
+
+		It("doesn't start the auctions", func() {
+			Consistently(fakeAuctioneerClient.RequestLRPAuctionsCallCount).Should(Equal(0))
+		})
+	})
+
 	It("unclaims and auctions the actual lrps with missing cells", func() {
 		Eventually(fakeLRPDB.UnclaimActualLRPCallCount).Should(Equal(2))
 
