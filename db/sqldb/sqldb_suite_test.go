@@ -37,6 +37,7 @@ var (
 	migrationProcess                     ifrit.Process
 	dbDriverName, dbBaseConnectionString string
 	dbFlavor                             string
+	EvacuationQuery                      string
 )
 
 func TestSql(t *testing.T) {
@@ -48,6 +49,11 @@ func TestSql(t *testing.T) {
 var _ = BeforeSuite(func() {
 	if !test_helpers.UseSQL() {
 		return
+	}
+
+	EvacuationQuery = "UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+	if test_helpers.UsePostgres() {
+		EvacuationQuery = test_helpers.ReplaceQuestionMarks(EvacuationQuery)
 	}
 
 	var err error

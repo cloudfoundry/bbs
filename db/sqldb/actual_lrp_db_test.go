@@ -2,6 +2,8 @@ package sqldb_test
 
 import (
 	"errors"
+	"fmt"
+	"math"
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/format"
@@ -98,11 +100,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there's just an evacuating LRP", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
-				if test_helpers.UsePostgres() {
-					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-				}
-				_, err := db.Exec(queryStr, true, actualLRP.ProcessGuid, actualLRP.Index, false)
+				_, err := db.Exec(EvacuationQuery, true, int64(math.MaxInt64), actualLRP.ProcessGuid, actualLRP.Index, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -117,9 +115,37 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 		})
 
+		Context("when there's an expired evacuating LRP", func() {
+			var err error
+
+			BeforeEach(func() {
+				oldExpiredTime := time.Now().Add(-time.Hour).UnixNano()
+				_, err = db.Exec(EvacuationQuery, true, oldExpiredTime, actualLRP.ProcessGuid, actualLRP.Index, false)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+			})
+
+			It("returns a ResourceNotFound error", func() {
+				Expect(err).To(MatchError(models.ErrResourceNotFound))
+			})
+
+			It("removes the lrp from the db", func() {
+				evacuationQuery := "SELECT count(*) from actual_lrps WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+				if test_helpers.UsePostgres() {
+					evacuationQuery = test_helpers.ReplaceQuestionMarks(evacuationQuery)
+				}
+
+				row := db.QueryRow(evacuationQuery, actualLRP.ProcessGuid, actualLRP.Index, true)
+				var count int
+				err := row.Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+			})
+		})
+
 		Context("when there are both instance and evacuating LRPs", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE actual_lrps SET evacuating = true WHERE process_guid = ?"
+				queryStr := fmt.Sprintf("UPDATE actual_lrps SET evacuating = true, expire_time = %d WHERE process_guid = ?", int64(math.MaxInt64))
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -274,11 +300,7 @@ var _ = Describe("ActualLRPDB", func() {
 			fakeClock.Increment(time.Hour)
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
 			Expect(err).NotTo(HaveOccurred())
-			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, true, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, false)
+			_, err = db.Exec(EvacuationQuery, true, int64(math.MaxInt64), actualLRPKey5.ProcessGuid, actualLRPKey5.Index, false)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Evacuating: &models.ActualLRP{
@@ -307,11 +329,7 @@ var _ = Describe("ActualLRPDB", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
 			Expect(err).NotTo(HaveOccurred())
-			queryStr = "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, true, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
+			_, err = db.Exec(EvacuationQuery, true, int64(math.MaxInt64), actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
 			Expect(err).NotTo(HaveOccurred())
@@ -446,11 +464,8 @@ var _ = Describe("ActualLRPDB", func() {
 			fakeClock.Increment(time.Hour)
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
 			Expect(err).NotTo(HaveOccurred())
-			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, true, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, false)
+			_, err = db.Exec(EvacuationQuery, true, int64(math.MaxInt64), actualLRPKey2.ProcessGuid, actualLRPKey2.Index, false)
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
 			Expect(err).NotTo(HaveOccurred())

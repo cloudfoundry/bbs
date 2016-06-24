@@ -512,10 +512,11 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 	return actualLRP, nil
 }
 
-func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.ActualLRP, bool, error) {
+func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.ActualLRP, bool, int64, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
 	var evacuating bool
+	var expireTime int64
 
 	err := row.Scan(
 		&actualLRP.ProcessGuid,
@@ -532,21 +533,22 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 		&actualLRP.ModificationTag.Index,
 		&actualLRP.CrashCount,
 		&actualLRP.CrashReason,
+		&expireTime,
 	)
 	if err != nil {
 		logger.Error("failed-scanning-actual-lrp", err)
-		return nil, false, db.convertSQLError(err)
+		return nil, false, 0, db.convertSQLError(err)
 	}
 
 	if len(netInfoData) > 0 {
 		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
-			return &actualLRP, evacuating, models.ErrDeserialize
+			return &actualLRP, evacuating, expireTime, models.ErrDeserialize
 		}
 	}
 
-	return &actualLRP, evacuating, nil
+	return &actualLRP, evacuating, expireTime, nil
 }
 
 type actualToDelete struct {
@@ -555,13 +557,8 @@ type actualToDelete struct {
 }
 
 func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
-	expireTime := db.clock.Now().Round(time.Second).UnixNano()
 	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
 	bindings := []interface{}{processGuid, index, evacuating}
-	if evacuating {
-		wheres += " AND expire_time > ?"
-		bindings = append(bindings, expireTime)
-	}
 
 	rows, err := db.all(logger, tx, actualLRPsTable,
 		actualLRPColumns, LockRow, wheres, bindings...)
@@ -584,11 +581,13 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 }
 
 func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q Queryable, rows *sql.Rows) ([]*models.ActualLRPGroup, error) {
+	expireTime := db.clock.Now().Truncate(time.Second).UnixNano()
+
 	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
 	result := []*models.ActualLRPGroup{}
 	actualsToDelete := []*actualToDelete{}
 	for rows.Next() {
-		actualLRP, evacuating, err := db.scanToActualLRP(logger, rows)
+		actualLRP, evacuating, lrpExpireTime, err := db.scanToActualLRP(logger, rows)
 		if err == models.ErrDeserialize {
 			actualsToDelete = append(actualsToDelete, &actualToDelete{actualLRP, evacuating})
 			continue
@@ -597,6 +596,12 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q Queryable, rows
 		if err != nil {
 			logger.Error("failed-scanning-actual-lrp", err)
 			return nil, err
+		}
+
+		// delete expired evacuating actual lrps
+		if evacuating && lrpExpireTime <= expireTime {
+			actualsToDelete = append(actualsToDelete, &actualToDelete{actualLRP, evacuating})
+			continue
 		}
 
 		// Every actual LRP has potentially 2 rows in the database: one for the instance

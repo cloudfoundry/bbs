@@ -1,6 +1,8 @@
 package main_test
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
@@ -14,7 +16,7 @@ var _ = Describe("ActualLRP API", func() {
 	const (
 		cellID          = "cell-id"
 		otherCellID     = "other-cell-id"
-		noExpirationTTL = 0
+		noExpirationTTL = uint64(time.Hour)
 
 		baseProcessGuid  = "base-process-guid"
 		baseDomain       = "base-domain"
