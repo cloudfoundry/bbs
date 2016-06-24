@@ -101,7 +101,7 @@ var _ = Describe("Cell Handlers", func() {
 
 		Context("when the DB returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeServiceClient.CellsReturns(nil,  models.NewUnrecoverableError(nil))
+				fakeServiceClient.CellsReturns(nil, models.NewUnrecoverableError(nil))
 			})
 
 			It("logs and writes to the exit channel", func() {

@@ -46,7 +46,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 
 	request := &models.ClaimActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
-	defer func () { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -74,7 +74,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 	request := &models.StartActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
-	defer func () { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -101,7 +101,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 
 	request := &models.CrashActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
-	defer func () { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err := parseRequest(logger, req, request)
@@ -151,7 +151,7 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *ht
 	request := &models.FailActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
-	defer func () { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -176,7 +176,7 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *
 	request := &models.RemoveActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
-	defer func () { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
