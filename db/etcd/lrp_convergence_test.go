@@ -868,7 +868,6 @@ var _ = Describe("LRPConvergence", func() {
 			freshDomain  = "some-fresh-domain"
 
 			keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
-			startRequests        []*auctioneer.LRPStartRequest
 			lrpKey0, lrpKey1     models.ActualLRPKey
 
 			cells models.CellSet
@@ -904,7 +903,7 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		JustBeforeEach(func() {
-			startRequests, keysWithMissingCells, _ = etcdDB.ConvergeLRPs(logger, cells)
+			_, keysWithMissingCells, _ = etcdDB.ConvergeLRPs(logger, cells)
 		})
 
 		Context("when the cell is present", func() {

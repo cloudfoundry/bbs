@@ -307,10 +307,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			Context("when the task is in resolving state for less than the convergence interval", func() {
-				var previousTime int64
-
 				BeforeEach(func() {
-					previousTime = clock.Now().UnixNano()
 					clock.IncrementBySeconds(1)
 				})
 
