@@ -121,7 +121,7 @@ var _ = Describe("Events API", func() {
 			const (
 				processGuid     = "some-process-guid"
 				domain          = "some-domain"
-				noExpirationTTL = 0
+				noExpirationTTL = uint64(time.Hour)
 			)
 
 			BeforeEach(func() {
@@ -178,7 +178,7 @@ var _ = Describe("Events API", func() {
 
 				By("evacuating the ActualLRP")
 				initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
-				_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, 0)
+				_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, noExpirationTTL)
 				Expect(err).NotTo(HaveOccurred())
 				auctioneerRequests := auctioneerServer.ReceivedRequests()
 				Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
@@ -216,7 +216,7 @@ var _ = Describe("Events API", func() {
 				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 				initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
-				_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, 0)
+				_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, noExpirationTTL)
 				Expect(err).NotTo(HaveOccurred())
 				auctioneerRequests = auctioneerServer.ReceivedRequests()
 				Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
