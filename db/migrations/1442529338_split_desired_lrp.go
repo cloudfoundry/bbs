@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/cloudfoundry-incubator/bbs/db/deprecations"
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/migration"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/db/deprecations"
+	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/migration"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )

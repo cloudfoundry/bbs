@@ -1,6 +1,6 @@
 package migrations
 
-import "github.com/cloudfoundry-incubator/bbs/migration"
+import "code.cloudfoundry.org/bbs/migration"
 
 var Migrations = []migration.Migration{}
 

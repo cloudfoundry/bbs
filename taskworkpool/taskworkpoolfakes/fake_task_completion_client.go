@@ -4,9 +4,9 @@ package taskworkpoolfakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/db"
-	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
+	"code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/taskworkpool"
 )
 
 type FakeTaskCompletionClient struct {

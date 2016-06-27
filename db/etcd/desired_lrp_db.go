@@ -3,7 +3,7 @@ package etcd
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"

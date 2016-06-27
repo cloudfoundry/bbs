@@ -1,9 +1,9 @@
 package etcd_helpers
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/format"
+	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/format"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"

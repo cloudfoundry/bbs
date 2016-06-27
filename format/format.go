@@ -1,7 +1,7 @@
 package format
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryption"
 	"github.com/pivotal-golang/lager"
 )
 

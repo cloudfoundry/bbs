@@ -3,7 +3,7 @@ package models
 import (
 	"strings"
 
-	"github.com/cloudfoundry-incubator/bbs/format"
+	"code.cloudfoundry.org/bbs/format"
 )
 
 func (a *CachedDependency) Validate() error {

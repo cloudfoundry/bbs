@@ -1,6 +1,6 @@
 package models
 
-import "github.com/cloudfoundry-incubator/bbs/format"
+import "code.cloudfoundry.org/bbs/format"
 
 func (*VolumePlacement) Version() format.Version {
 	return format.V1

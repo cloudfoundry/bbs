@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -150,11 +150,13 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
 	}
 
-	_, err = db.insert(logger, tx, "actual_lrps",
+	_, err = db.upsert(logger, tx, "actual_lrps",
 		SQLAttributes{
-			"process_guid":           actualLRP.ProcessGuid,
-			"instance_index":         actualLRP.Index,
-			"evacuating":             true,
+			"process_guid":   actualLRP.ProcessGuid,
+			"instance_index": actualLRP.Index,
+			"evacuating":     true,
+		},
+		SQLAttributes{
 			"domain":                 actualLRP.Domain,
 			"instance_guid":          actualLRP.InstanceGuid,
 			"cell_id":                actualLRP.CellId,

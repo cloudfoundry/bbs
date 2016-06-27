@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/cloudfoundry-incubator/bbs/format"
+	"code.cloudfoundry.org/bbs/format"
 	"github.com/pivotal-golang/lager"
 )
 

@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryption"
 )
 
 type Encoding [EncodingOffset]byte

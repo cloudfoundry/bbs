@@ -1,11 +1,9 @@
 package main_test
 
 import (
-	"time"
-
-	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -16,7 +14,7 @@ var _ = Describe("ActualLRP API", func() {
 	const (
 		cellID          = "cell-id"
 		otherCellID     = "other-cell-id"
-		noExpirationTTL = uint64(time.Hour)
+		noExpirationTTL = 0
 
 		baseProcessGuid  = "base-process-guid"
 		baseDomain       = "base-domain"

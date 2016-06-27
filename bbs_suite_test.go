@@ -1,7 +1,7 @@
 package bbs_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/test_helpers"
+	"code.cloudfoundry.org/bbs/test_helpers"
 	"github.com/cloudfoundry-incubator/consuladapter"
 	"github.com/cloudfoundry-incubator/consuladapter/consulrunner"
 	. "github.com/onsi/ginkgo"

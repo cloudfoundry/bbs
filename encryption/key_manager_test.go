@@ -1,7 +1,7 @@
 package encryption_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryption"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

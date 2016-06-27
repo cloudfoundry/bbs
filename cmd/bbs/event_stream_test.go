@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/events"
-	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	sonde_events "github.com/cloudfoundry/sonde-go/events"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -121,7 +121,7 @@ var _ = Describe("Events API", func() {
 			const (
 				processGuid     = "some-process-guid"
 				domain          = "some-domain"
-				noExpirationTTL = uint64(time.Hour)
+				noExpirationTTL = 0
 			)
 
 			BeforeEach(func() {
@@ -178,7 +178,7 @@ var _ = Describe("Events API", func() {
 
 				By("evacuating the ActualLRP")
 				initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
-				_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, noExpirationTTL)
+				_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, 0)
 				Expect(err).NotTo(HaveOccurred())
 				auctioneerRequests := auctioneerServer.ReceivedRequests()
 				Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
@@ -216,7 +216,7 @@ var _ = Describe("Events API", func() {
 				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 				initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
-				_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, noExpirationTTL)
+				_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, 0)
 				Expect(err).NotTo(HaveOccurred())
 				auctioneerRequests = auctioneerServer.ReceivedRequests()
 				Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))

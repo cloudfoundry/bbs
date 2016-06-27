@@ -7,14 +7,14 @@ import (
 	"os"
 	"time"
 
-	thepackagedb "github.com/cloudfoundry-incubator/bbs/db"
-	"github.com/cloudfoundry-incubator/bbs/db/migrations"
-	"github.com/cloudfoundry-incubator/bbs/db/sqldb"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/guidprovider/guidproviderfakes"
-	"github.com/cloudfoundry-incubator/bbs/migration"
-	"github.com/cloudfoundry-incubator/bbs/test_helpers"
+	thepackagedb "code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/db/migrations"
+	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
+	"code.cloudfoundry.org/bbs/migration"
+	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/clock/fakeclock"
@@ -37,7 +37,6 @@ var (
 	migrationProcess                     ifrit.Process
 	dbDriverName, dbBaseConnectionString string
 	dbFlavor                             string
-	EvacuationQuery                      string
 )
 
 func TestSql(t *testing.T) {
@@ -49,11 +48,6 @@ func TestSql(t *testing.T) {
 var _ = BeforeSuite(func() {
 	if !test_helpers.UseSQL() {
 		return
-	}
-
-	EvacuationQuery = "UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
-	if test_helpers.UsePostgres() {
-		EvacuationQuery = test_helpers.ReplaceQuestionMarks(EvacuationQuery)
 	}
 
 	var err error

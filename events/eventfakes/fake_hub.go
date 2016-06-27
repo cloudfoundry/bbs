@@ -4,8 +4,8 @@ package eventfakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/events"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/models"
 )
 
 type FakeHub struct {

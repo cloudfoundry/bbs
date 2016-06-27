@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/db/etcd"
 )
 
 type ETCDFlags struct {

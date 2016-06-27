@@ -4,7 +4,7 @@ package formatfakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/format"
+	"code.cloudfoundry.org/bbs/format"
 )
 
 type FakeVersioner struct {

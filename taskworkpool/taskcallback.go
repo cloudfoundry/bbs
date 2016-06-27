@@ -7,8 +7,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/cloudfoundry-incubator/bbs/db"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"

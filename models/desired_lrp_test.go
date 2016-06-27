@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"

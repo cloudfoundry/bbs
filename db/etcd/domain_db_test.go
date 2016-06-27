@@ -1,7 +1,7 @@
 package etcd_test
 
 import (
-	. "github.com/cloudfoundry-incubator/bbs/db/etcd"
+	. "code.cloudfoundry.org/bbs/db/etcd"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

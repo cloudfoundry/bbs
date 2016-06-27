@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/cloudfoundry-incubator/auctioneer"
-	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 

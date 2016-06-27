@@ -3,7 +3,7 @@ package main_test
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	events "github.com/cloudfoundry/sonde-go/events"
 	"github.com/tedsuo/ifrit/ginkgomon"
 

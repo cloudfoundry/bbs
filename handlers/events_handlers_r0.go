@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 )
 
 func (h *EventHandler) Subscribe_r0(w http.ResponseWriter, req *http.Request) {

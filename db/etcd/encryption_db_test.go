@@ -4,10 +4,10 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

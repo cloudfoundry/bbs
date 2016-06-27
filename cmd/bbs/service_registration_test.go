@@ -1,7 +1,7 @@
 package main_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"github.com/hashicorp/consul/api"
 	"github.com/tedsuo/ifrit/ginkgomon"
 

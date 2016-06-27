@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/guidprovider"
+	"code.cloudfoundry.org/bbs/guidprovider"
 )
 
 type FakeGUIDProvider struct {

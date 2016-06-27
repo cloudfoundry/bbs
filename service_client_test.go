@@ -3,8 +3,8 @@ package bbs_test
 import (
 	"os"
 
-	"github.com/cloudfoundry-incubator/bbs"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/cloudfoundry-incubator/locket"
 	"github.com/pivotal-golang/clock"
 	"github.com/tedsuo/ifrit"

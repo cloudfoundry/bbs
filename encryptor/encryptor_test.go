@@ -3,12 +3,11 @@ package encryptor_test
 import (
 	"crypto/rand"
 	"errors"
-	"os"
 
-	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/encryptor"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/db/dbfakes"
+	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryptor"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
@@ -28,10 +27,6 @@ var _ = Describe("Encryptor", func() {
 		cryptor    encryption.Cryptor
 		keyManager encryption.KeyManager
 
-		ready      chan struct{}
-		signals    chan os.Signal
-		runErrChan chan error
-
 		fakeDB *dbfakes.FakeEncryptionDB
 
 		sender *fake.FakeMetricSender
@@ -40,10 +35,6 @@ var _ = Describe("Encryptor", func() {
 	BeforeEach(func() {
 		sender = fake.NewFakeMetricSender()
 		metrics.Initialize(sender, nil)
-
-		runErrChan = make(chan error, 1)
-		ready = make(chan struct{})
-		signals = make(chan os.Signal)
 
 		fakeDB = new(dbfakes.FakeEncryptionDB)
 

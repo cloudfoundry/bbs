@@ -4,7 +4,7 @@ package encryptionfakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryption"
 )
 
 type FakeCryptor struct {

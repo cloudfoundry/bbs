@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	bbs_etcd "github.com/cloudfoundry-incubator/bbs/db/etcd"
+	bbs_etcd "code.cloudfoundry.org/bbs/db/etcd"
 	"github.com/coreos/go-etcd/etcd"
 )
 

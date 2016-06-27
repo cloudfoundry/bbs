@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 )
 
 const MAX_PENDING_SUBSCRIBER_EVENTS = 1024

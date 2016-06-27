@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/bbs/fake_bbs"
+	"code.cloudfoundry.org/bbs/fake_bbs"
 	"github.com/cloudfoundry-incubator/rep/repfakes"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"

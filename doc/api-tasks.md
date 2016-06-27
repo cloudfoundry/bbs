@@ -2,7 +2,7 @@
 
 This reference does not cover the protobuf payload supplied to each endpoint.
 
-For detailed information on the structs and types listed see [models documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models)
+For detailed information on the structs and types listed see [models documentation](https://godoc.org/code.cloudfoundry.org/bbs/models)
 
 # Tasks APIs
 
@@ -55,7 +55,7 @@ func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error)
 
 #### Output
 * `[]*models.Task`
-  * [See Task Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#Task)
+  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 
@@ -91,7 +91,7 @@ func (c *client) TasksByDomain(logger lager.Logger, domain string) ([]*models.Ta
 
 #### Output
 * `[]*models.Task`
-  * [See Task Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#Task)
+  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 
@@ -127,7 +127,7 @@ func (c *client) TasksByCellID(logger lager.Logger, cellId string) ([]*models.Ta
 
 #### Output
 * `[]*models.Task`
-  * [See Task Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#Task)
+  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 
@@ -165,7 +165,7 @@ func (c *client) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 
 #### Output
 * `*models.Task`
-  * [See Task Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#Task)
+  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 

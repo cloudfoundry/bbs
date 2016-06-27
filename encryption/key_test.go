@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryption"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

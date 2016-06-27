@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/format"
+	"code.cloudfoundry.org/bbs/format"
 )
 
 const (

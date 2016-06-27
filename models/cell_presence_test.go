@@ -1,38 +1,22 @@
 package models_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("CellPresence", func() {
-	var cellPresence models.CellPresence
-
-	var payload string
-
-	var capacity models.CellCapacity
+	var (
+		cellPresence models.CellPresence
+		capacity     models.CellCapacity
+	)
 
 	BeforeEach(func() {
 		capacity = models.NewCellCapacity(128, 1024, 3)
 		rootfsProviders := []string{"provider-1"}
 		preloadedRootFSes := []string{"provider-2"}
 		cellPresence = models.NewCellPresence("some-id", "some-address", "some-zone", capacity, rootfsProviders, preloadedRootFSes)
-
-		payload = `{
-    "cell_id":"some-id",
-    "rep_address": "some-address",
-    "zone": "some-zone",
-    "capacity": {
-       "memory_mb": 128,
-       "disk_mb": 1024,
-       "containers": 3
-		 },
-		 "rootfs_providers": {
-			 "provider-1": [],
-			 "preloaded": ["provider-2"]
-		 }
-   }`
 	})
 
 	Describe("Validate", func() {

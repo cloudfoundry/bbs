@@ -1,8 +1,8 @@
 package etcd
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/format"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/pivotal-golang/lager"
 )

@@ -11,8 +11,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/events"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pivotal-golang/lager"
@@ -84,7 +84,7 @@ type Client interface {
 The ExternalTaskClient is used to access Diego's ability to run one-off tasks.
 More information about this API can be found in the bbs docs:
 
-https://github.com/cloudfoundry-incubator/bbs/tree/master/doc/tasks.md
+https://code.cloudfoundry.org/bbs/tree/master/doc/tasks.md
 */
 type ExternalTaskClient interface {
 	// Creates a Task from the given TaskDefinition

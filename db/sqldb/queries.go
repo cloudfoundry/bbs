@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -82,7 +82,6 @@ var (
 		actualLRPsTable + ".modification_tag_index",
 		actualLRPsTable + ".crash_count",
 		actualLRPsTable + ".crash_reason",
-		actualLRPsTable + ".expire_time",
 	}
 
 	domainColumns = ColumnList{

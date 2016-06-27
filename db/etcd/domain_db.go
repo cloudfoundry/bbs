@@ -3,7 +3,7 @@ package etcd
 import (
 	"path"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/pivotal-golang/lager"
 )
 

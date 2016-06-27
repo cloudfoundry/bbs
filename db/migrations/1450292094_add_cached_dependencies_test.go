@@ -1,8 +1,8 @@
 package migrations_test
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db/migrations"
-	"github.com/cloudfoundry-incubator/bbs/migration"
+	"code.cloudfoundry.org/bbs/db/migrations"
+	"code.cloudfoundry.org/bbs/migration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-golang/lager/lagertest"

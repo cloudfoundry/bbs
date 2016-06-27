@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	etcddb "github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
+	etcddb "code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "github.com/onsi/gomega"
 )
 

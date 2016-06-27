@@ -4,7 +4,7 @@ package dbfakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/db"
+	"code.cloudfoundry.org/bbs/db"
 	"github.com/pivotal-golang/lager"
 )
 

@@ -3,7 +3,7 @@ package main_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"github.com/cloudfoundry-incubator/locket"
 	"github.com/pivotal-golang/clock"
 	"github.com/tedsuo/ifrit"

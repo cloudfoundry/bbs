@@ -3,8 +3,8 @@ package migration
 import (
 	"database/sql"
 
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/encryption"
+	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/encryption"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )

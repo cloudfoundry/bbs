@@ -5,17 +5,17 @@ Instead, it illustrates calls to the API via the Golang `bbs.Client` interface.
 Each method on that `Client` interface takes a `lager.Logger` as the first argument to log errors generated within the client.
 This first `Logger` argument will not be duplicated on the descriptions of the method arguments.
 
-For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models).
+For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://godoc.org/code.cloudfoundry.org/bbs/models).
 
 # ActualLRP APIs
 
 ## ActualLRPs
 
-Returns all [ActualLRPGroups](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroup) matching the given [ActualLRPFilter](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPFilter).
+Returns all [ActualLRPGroups](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroup) matching the given [ActualLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPFilter).
 
 ### BBS API Endpoint
 
-POST an [ActualLRPGroupsRequest](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroupsRequest) to `/v1/actual_lrp_groups/list`, and receive an [ActualLRPGroupsResponse](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroupsResponse).
+POST an [ActualLRPGroupsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsRequest) to `/v1/actual_lrp_groups/list`, and receive an [ActualLRPGroupsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsResponse).
 
 ### Golang Client API
 
@@ -31,7 +31,7 @@ func (c *client) ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*model
 
 #### Output
 
-* `[]*models.ActualLRPGroup`: Slice of ActualLRPGroups. Either the `Instance` or the `Evacuating` [`*models.ActualLRP`](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRP) may be present depending on the state of the LRP instances.
+* `[]*models.ActualLRPGroup`: Slice of ActualLRPGroups. Either the `Instance` or the `Evacuating` [`*models.ActualLRP`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRP) may be present depending on the state of the LRP instances.
 * `error`:  Non-nil if an error occurred.
 
 
@@ -51,12 +51,12 @@ if err != nil {
 
 ## ActualLRPsByProcessGuid
 
-Returns all [ActualLRPGroups](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroup) for the given process guid.
+Returns all [ActualLRPGroups](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroup) for the given process guid.
 
 ### BBS API Endpoint
 
 
-POST an [ActualLRPGroupsByProcessGuidRequest](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroupsByProcessGuidRequest) to `/v1/actual_lrp_groups/list_by_process_guid`, and receive an [ActualLRPGroupsResponse](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroupsResponse).
+POST an [ActualLRPGroupsByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsByProcessGuidRequest) to `/v1/actual_lrp_groups/list_by_process_guid`, and receive an [ActualLRPGroupsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsResponse).
 
 ### Golang Client API
 
@@ -70,7 +70,7 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 
 #### Output
 
-* `[]*models.ActualLRPGroup`: Slice of ActualLRPGroups. Either the `Instance` or the `Evacuating` [`*models.ActualLRP`](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRP) may be present depending on the state of the LRP instances.
+* `[]*models.ActualLRPGroup`: Slice of ActualLRPGroups. Either the `Instance` or the `Evacuating` [`*models.ActualLRP`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRP) may be present depending on the state of the LRP instances.
 * `error`:  Non-nil if an error occurred.
 
 
@@ -85,12 +85,12 @@ if err != nil {
 
 ## ActualLRPGroupByProcessGuidAndIndex
 
-Returns the [ActualLRPGroup](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroup) with the given process guid and instance index.
+Returns the [ActualLRPGroup](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroup) with the given process guid and instance index.
 
 ### BBS API Endpoint
 
-POST an [ActualLRPGroupByProcessGuidAndIndexRequest](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroupByProcessGuidAndIndexRequest) to
-"/v1/actual_lrp_groups/get_by_process_guid_and_index", and receive an [ActualLRPGroupResponse](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPGroupResponse).
+POST an [ActualLRPGroupByProcessGuidAndIndexRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupByProcessGuidAndIndexRequest) to
+"/v1/actual_lrp_groups/get_by_process_guid_and_index", and receive an [ActualLRPGroupResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupResponse).
 
 ### Golang Client API
 
@@ -105,7 +105,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 
 #### Output
 
-* `*models.ActualLRPGroup`: ActualLRPGroup for this LRP at this index. Either the `Instance` or the `Evacuating` [`*models.ActualLRP`](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRP) may be present depending on the state of the LRP instances.
+* `*models.ActualLRPGroup`: ActualLRPGroup for this LRP at this index. Either the `Instance` or the `Evacuating` [`*models.ActualLRP`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRP) may be present depending on the state of the LRP instances.
 * `error`:  Non-nil if an error occurred.
 
 
@@ -121,11 +121,11 @@ if err != nil {
 
 ## RetireActualLRP
 
-Stops the ActualLRP matching the given [ActualLRPKey](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPKey), but does not modify the desired state.
+Stops the ActualLRP matching the given [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey), but does not modify the desired state.
 
 ### BBS API Endpoint
 
-POST a [RetireActualLRPRequest](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#RetireActualLRPRequest) to `/v1/actual_lrps/retire`, and receive an [ActualLRPLifecycleResponse](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#ActualLRPLifecycleResponse).
+POST a [RetireActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RetireActualLRPRequest) to `/v1/actual_lrps/retire`, and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
@@ -178,7 +178,7 @@ func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 
 #### Output
 * `[]*models.DesiredLRP`
-  * [See DesiredLRP Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#DesiredLRP)
+  * [See DesiredLRP Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP)
 
 * `error`:  Non-nil if an error occurred.
 
@@ -214,7 +214,7 @@ func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 #### Output
 * `*models.DesiredLRP`
-  * [See DesiredLRP Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#DesiredLRP)
+  * [See DesiredLRP Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP)
 
 * `error`:  Non-nil if an error occurred.
 
@@ -247,7 +247,7 @@ func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 
 #### Output
 * `[]*models.DesiredLRPSchedulingInfo`
-  * [See DesiredLRPSchedulingInfo Documentation](https://godoc.org/github.com/cloudfoundry-incubator/bbs/models#DesiredLRPSchedulingInfo)
+  * [See DesiredLRPSchedulingInfo Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPSchedulingInfo)
 
 * `error`:  Non-nil if an error occurred.
 

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/encryption/encryptionfakes"
-	"github.com/cloudfoundry-incubator/bbs/format"
+	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
+	"code.cloudfoundry.org/bbs/format"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

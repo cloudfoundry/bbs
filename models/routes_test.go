@@ -3,7 +3,7 @@ package models_test
 import (
 	"encoding/json"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"

@@ -3,8 +3,8 @@ package deprecations
 import (
 	"path"
 
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/models"
 )
 
 var (

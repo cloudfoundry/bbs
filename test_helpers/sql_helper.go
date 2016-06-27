@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/bbs/test_helpers/sqlrunner"
+	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
 )
 
 func UseSQL() bool {

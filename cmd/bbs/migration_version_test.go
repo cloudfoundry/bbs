@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/cloudfoundry-incubator/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/test_helpers"
+	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -20,7 +20,7 @@ var _ = Describe("Migration Version", func() {
 	var migrationFixtureFilePath, migrationFilePath string
 
 	BeforeEach(func() {
-		migrationFixtureFilePath = "fixtures/9999999999_sql_test_migration.go"
+		migrationFixtureFilePath = "fixtures/9999999999_sql_test_migration.go.bs"
 		migrationFilePath = "../../db/migrations/9999999999_sql_test_migration.go"
 		migrationFixtureFile, err := os.Open(migrationFixtureFilePath)
 		Expect(err).NotTo(HaveOccurred())
@@ -37,7 +37,7 @@ var _ = Describe("Migration Version", func() {
 		err = migrationFile.Close()
 		Expect(err).NotTo(HaveOccurred())
 
-		bbsConfig, err := gexec.Build("github.com/cloudfoundry-incubator/bbs/cmd/bbs", "-race")
+		bbsConfig, err := gexec.Build("code.cloudfoundry.org/bbs/cmd/bbs", "-race")
 		Expect(err).NotTo(HaveOccurred())
 		bbsBinPath = string(bbsConfig)
 
@@ -54,7 +54,7 @@ var _ = Describe("Migration Version", func() {
 		err := os.RemoveAll(migrationFilePath)
 		Expect(err).NotTo(HaveOccurred())
 
-		bbsConfig, err := gexec.Build("github.com/cloudfoundry-incubator/bbs/cmd/bbs", "-race")
+		bbsConfig, err := gexec.Build("code.cloudfoundry.org/bbs/cmd/bbs", "-race")
 		Expect(err).NotTo(HaveOccurred())
 		bbsBinPath = string(bbsConfig)
 	})

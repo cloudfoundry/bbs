@@ -7,7 +7,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/gogo/protobuf/proto"
 	"github.com/vito/go-sse/sse"
 )

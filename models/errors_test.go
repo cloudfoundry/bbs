@@ -3,7 +3,7 @@ package models_test
 import (
 	"errors"
 
-	. "github.com/cloudfoundry-incubator/bbs/models"
+	. "code.cloudfoundry.org/bbs/models"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

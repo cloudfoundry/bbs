@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"code.cloudfoundry.org/bbs/models"
 	"github.com/cloudfoundry-incubator/auctioneer"
-	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/pivotal-golang/lager"
 )

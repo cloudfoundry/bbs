@@ -6,8 +6,8 @@ import (
 	"crypto/rand"
 	"io"
 
-	"github.com/cloudfoundry-incubator/bbs/encryption"
-	"github.com/cloudfoundry-incubator/bbs/encryption/encryptionfakes"
+	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

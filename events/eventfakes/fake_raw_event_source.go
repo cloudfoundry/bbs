@@ -4,7 +4,7 @@ package eventfakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/bbs/events"
+	"code.cloudfoundry.org/bbs/events"
 	"github.com/vito/go-sse/sse"
 )
 

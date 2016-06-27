@@ -3,8 +3,8 @@ package events_test
 import (
 	"strconv"
 
-	"github.com/cloudfoundry-incubator/bbs/events"
-	"github.com/cloudfoundry-incubator/bbs/events/eventfakes"
+	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/events/eventfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

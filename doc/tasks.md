@@ -25,7 +25,7 @@ Diego will automatically delete completed Tasks that remain unresolved after 2 m
 
 ## Defining Tasks
 
-When submitting a task, a valid `guid`, `domain`, and `TaskDefinition` should be provided to [a Client's DesireTask method](https://github.com/cloudfoundry-incubator/bbs/blob/master/client.go#L121). See [Defining Tasks](defining-tasks.md) for more detail on the `TaskDefinition` fields.
+When submitting a task, a valid `guid`, `domain`, and `TaskDefinition` should be provided to [a Client's DesireTask method](https://code.cloudfoundry.org/bbs/blob/master/client.go#L121). See [Defining Tasks](defining-tasks.md) for more detail on the `TaskDefinition` fields.
 
 
 ## Retreiving Tasks

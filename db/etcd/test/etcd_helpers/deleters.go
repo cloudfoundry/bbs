@@ -1,7 +1,7 @@
 package etcd_helpers
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/db/etcd"
 	. "github.com/onsi/gomega"
 )
 

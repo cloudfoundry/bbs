@@ -1,8 +1,8 @@
 package etcd_helpers
 
 import (
-	"github.com/cloudfoundry-incubator/bbs/db/etcd"
-	"github.com/cloudfoundry-incubator/bbs/models"
+	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/models"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 
 	. "github.com/onsi/gomega"

@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bbs/db/dbfakes"
-	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/bbs/models/test/model_helpers"
-	"github.com/cloudfoundry-incubator/bbs/taskworkpool"
+	"code.cloudfoundry.org/bbs/db/dbfakes"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/bbs/taskworkpool"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -47,7 +47,6 @@ var _ = Describe("TaskWorker", func() {
 			callbackURL string
 			taskDB      *dbfakes.FakeTaskDB
 			statusCodes chan int
-			reqCount    chan struct{}
 			task        *models.Task
 
 			httpClient *http.Client
@@ -56,7 +55,6 @@ var _ = Describe("TaskWorker", func() {
 		BeforeEach(func() {
 			httpClient = cf_http.NewClient()
 			statusCodes = make(chan int)
-			reqCount = make(chan struct{})
 
 			fakeServer.RouteToHandler("POST", "/the-callback/url", func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(<-statusCodes)
