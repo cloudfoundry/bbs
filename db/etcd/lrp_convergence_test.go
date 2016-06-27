@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/pivotal-golang/clock/fakeclock"
 	"github.com/pivotal-golang/lager/lagertest"
 

@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"

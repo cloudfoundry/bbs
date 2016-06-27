@@ -3,8 +3,8 @@ package db
 import (
 	"time"
 
+	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/pivotal-golang/lager"
 )
 

@@ -14,6 +14,7 @@ import (
 	"os"
 	"time"
 
+	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/db"
 	etcddb "code.cloudfoundry.org/bbs/db/etcd"
@@ -29,7 +30,6 @@ import (
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/taskworkpool"
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/cf-debug-server"
 	"github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"

@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/taskworkpool"
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/rep"
 	"github.com/pivotal-golang/lager"
 )

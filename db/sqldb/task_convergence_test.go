@@ -3,9 +3,9 @@ package sqldb_test
 import (
 	"time"
 
+	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
