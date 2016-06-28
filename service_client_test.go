@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry-incubator/locket"
+	"code.cloudfoundry.org/locket"
 	"github.com/pivotal-golang/clock"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"

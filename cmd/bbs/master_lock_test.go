@@ -2,7 +2,7 @@ package main_test
 
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"github.com/cloudfoundry-incubator/locket"
+	"code.cloudfoundry.org/locket"
 	"github.com/pivotal-golang/clock"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
