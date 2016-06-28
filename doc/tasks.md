@@ -5,7 +5,7 @@ Diego can run one-off work in the form of Tasks. When a Task is submitted, Diego
 
 ## The Task API
 
-We recommend interacting with Diego's Task functionality through the ExternalTaskClient interface. The calls exposed to external clients are specifically documented [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalTaskClient).
+We recommend interacting with Diego's Task functionality through the ExternalTaskClient interface. The calls exposed to external clients are specifically documented [here](https://godoc.org/github.com/cloudfoundry/bbs#ExternalTaskClient).
 
 
 ## The Task Lifecycle

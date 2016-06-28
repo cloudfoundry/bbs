@@ -16,7 +16,7 @@ First, let's discuss DesiredLRPs.
 
 We recommend interacting with Diego's LRP functionality through the
 ExternalDesiredLRPClient interface. The calls exposed to external clients are
-specifically documented [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalDesiredLRPClient).
+specifically documented [here](https://godoc.org/github.com/cloudfoundry/bbs#ExternalDesiredLRPClient).
 
 ## The LRP Lifecycle
 

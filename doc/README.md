@@ -2,7 +2,7 @@
 
 Diego's Bulletin Board System (BBS) is the central data store and orchestrator of a Diego cluster. It communicates via protocol-buffer-encoded RPC-style calls over HTTP.
 
-Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalClient) interface. This interface allows clients to create, read, update, delete, and subscribe to events about Tasks and LRPs.
+Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org/github.com/cloudfoundry/bbs#ExternalClient) interface. This interface allows clients to create, read, update, delete, and subscribe to events about Tasks and LRPs.
 
 ## Table of Contents
 
@@ -29,4 +29,4 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
     - Events
 - [Fields common to Tasks and LRPs](common-models.md)
 
-Many of the documents are still in the process of being converted from the documents about the now obsolete [receptor](https://github.com/cloudfoundry-incubator/receptor/tree/master/doc) component.
+Many of the documents are still in the process of being converted from the documents about the now obsolete [receptor](https://github.com/cloudfoundry-attic/receptor/tree/master/doc) component.

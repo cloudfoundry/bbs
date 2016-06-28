@@ -1,4 +1,6 @@
-# BBS Server [![GoDoc](https://godoc.org/github.com/cloudfoundry-incubator/bbs?status.svg)](https://godoc.org/github.com/cloudfoundry-incubator/bbs)
+# BBS Server [![GoDoc](https://godoc.org/github.com/cloudfoundry/bbs?status.svg)](https://godoc.org/github.com/cloudfoundry/bbs)
+
+**Note**: This repository should be imported as `code.cloudfoundry.org/bbs`.
 
 API to access the database for Diego.
 
@@ -7,9 +9,9 @@ A general overview of the BBS is documented [here](doc).
 ## API
 
 To interact with the BBS from outside of Diego, use the methods provided on the
-ExternalClient interface, documented [here](https://godoc.org/github.com/cloudfoundry-incubator/bbs#ExternalClient).
+ExternalClient interface, documented [here](https://godoc.org/github.com/cloudfoundry/bbs#ExternalClient).
 
-Components within Diego may use the full [Client interface](https://godoc.org/github.com/cloudfoundry-incubator/bbs#Client) to modify internal state.
+Components within Diego may use the full [Client interface](https://godoc.org/github.com/cloudfoundry/bbs#Client) to modify internal state.
 
 ## Code Generation
 
