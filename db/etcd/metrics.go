@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/cfhttp"
-	"github.com/cloudfoundry-incubator/runtime-schema/metric"
+	"code.cloudfoundry.org/runtimeschema/metric"
 	"github.com/cloudfoundry/gunk/urljoiner"
 	"github.com/pivotal-golang/lager"
 )

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloudfoundry-incubator/runtime-schema/metric"
+	"code.cloudfoundry.org/runtimeschema/metric"
 	"github.com/pivotal-golang/lager"
 )
 

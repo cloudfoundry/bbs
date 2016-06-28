@@ -12,7 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry-incubator/runtime-schema/metric"
+	"code.cloudfoundry.org/runtimeschema/metric"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )

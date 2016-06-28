@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"github.com/cloudfoundry/gunk/workpool"
 
-	"github.com/cloudfoundry-incubator/runtime-schema/metric"
+	"code.cloudfoundry.org/runtimeschema/metric"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
