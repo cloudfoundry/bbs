@@ -31,9 +31,9 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/consuladapter"
+	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/locket"
 	"code.cloudfoundry.org/rep"
-	"github.com/cloudfoundry-incubator/cf-debug-server"
 	"github.com/cloudfoundry-incubator/cf-lager"
 	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry/dropsonde"
@@ -193,7 +193,7 @@ const (
 )
 
 func main() {
-	cf_debug_server.AddFlags(flag.CommandLine)
+	debugserver.AddFlags(flag.CommandLine)
 	cf_lager.AddFlags(flag.CommandLine)
 	etcdFlags := AddETCDFlags(flag.CommandLine)
 	encryptionFlags := encryption.AddEncryptionFlags(flag.CommandLine)
@@ -368,9 +368,9 @@ func main() {
 		{"registration-runner", registrationRunner},
 	}
 
-	if dbgAddr := cf_debug_server.DebugAddress(flag.CommandLine); dbgAddr != "" {
+	if dbgAddr := debugserver.DebugAddress(flag.CommandLine); dbgAddr != "" {
 		members = append(grouper.Members{
-			{"debug-server", cf_debug_server.Runner(dbgAddr, reconfigurableSink)},
+			{"debug-server", debugserver.Runner(dbgAddr, reconfigurableSink)},
 		}, members...)
 	}
 
