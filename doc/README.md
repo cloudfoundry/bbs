@@ -14,6 +14,7 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
 - [Overview of Long Running Processes](lrps.md) (LRPs)
     - [Defining LRPs](defining-lrps.md)
     - [LRP Examples](lrp-examples.md)
+- [Overview of Cells](cells.md)
 - [Actions](actions.md)
 - Domains
 - Event Streams
@@ -22,7 +23,7 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
     - Authorization
     - [Tasks](api-tasks.md)
     - [LRPs](api-lrps.md)
-    - Cells
+    - [Cells](api-cells.md)
     - Domains
     - Events
 - [Fields common to Tasks and LRPs](common-models.md)
