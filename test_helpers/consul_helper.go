@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry-incubator/consuladapter"
+	"code.cloudfoundry.org/consuladapter"
 	"github.com/cloudfoundry-incubator/locket"
 	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
