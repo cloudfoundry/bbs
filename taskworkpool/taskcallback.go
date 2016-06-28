@@ -9,7 +9,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry-incubator/cf_http"
+	"code.cloudfoundry.org/cfhttp"
 	"github.com/cloudfoundry/gunk/workpool"
 	"github.com/pivotal-golang/lager"
 )
@@ -40,7 +40,7 @@ func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler) *T
 		logger:          logger.Session("task-completion-workpool"),
 		maxWorkers:      maxWorkers,
 		callbackHandler: cbHandler,
-		httpClient:      cf_http.NewClient(),
+		httpClient:      cfhttp.NewClient(),
 	}
 }
 

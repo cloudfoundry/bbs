@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool"
-	"github.com/cloudfoundry-incubator/cf_http"
+	"code.cloudfoundry.org/cfhttp"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
@@ -31,7 +31,7 @@ var _ = Describe("TaskWorker", func() {
 
 	BeforeEach(func() {
 		timeout = 1 * time.Second
-		cf_http.Initialize(timeout)
+		cfhttp.Initialize(timeout)
 		fakeServer = ghttp.NewServer()
 
 		logger = lagertest.NewTestLogger("test")
@@ -53,7 +53,7 @@ var _ = Describe("TaskWorker", func() {
 		)
 
 		BeforeEach(func() {
-			httpClient = cf_http.NewClient()
+			httpClient = cfhttp.NewClient()
 			statusCodes = make(chan int)
 
 			fakeServer.RouteToHandler("POST", "/the-callback/url", func(w http.ResponseWriter, req *http.Request) {

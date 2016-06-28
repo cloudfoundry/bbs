@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/cloudfoundry-incubator/cf_http"
+	"code.cloudfoundry.org/cfhttp"
 	"github.com/cloudfoundry-incubator/runtime-schema/metric"
 	"github.com/cloudfoundry/gunk/urljoiner"
 	"github.com/pivotal-golang/lager"
@@ -37,14 +37,14 @@ func NewETCDMetrics(logger lager.Logger, etcdOptions *ETCDOptions) (*ETCDMetrics
 	var tlsConfig *tls.Config
 	if etcdOptions.CertFile != "" && etcdOptions.KeyFile != "" {
 		var err error
-		tlsConfig, err = cf_http.NewTLSConfig(etcdOptions.CertFile, etcdOptions.KeyFile, etcdOptions.CAFile)
+		tlsConfig, err = cfhttp.NewTLSConfig(etcdOptions.CertFile, etcdOptions.KeyFile, etcdOptions.CAFile)
 		if err != nil {
 			return nil, err
 		}
 		tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(etcdOptions.ClientSessionCacheSize)
 	}
 
-	client := cf_http.NewClient()
+	client := cfhttp.NewClient()
 	client.CheckRedirect = func(*http.Request, []*http.Request) error {
 		return errRedirected
 	}

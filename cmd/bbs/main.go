@@ -30,12 +30,12 @@ import (
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/taskworkpool"
+	"code.cloudfoundry.org/cfhttp"
 	"code.cloudfoundry.org/cflager"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/locket"
 	"code.cloudfoundry.org/rep"
-	"github.com/cloudfoundry-incubator/cf_http"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/go-sql-driver/mysql"
@@ -200,7 +200,7 @@ func main() {
 
 	flag.Parse()
 
-	cf_http.Initialize(*communicationTimeout)
+	cfhttp.Initialize(*communicationTimeout)
 
 	logger, reconfigurableSink := cflager.New("bbs")
 	logger.Info("starting")
@@ -316,7 +316,7 @@ func main() {
 	desiredHub := events.NewHub()
 	actualHub := events.NewHub()
 
-	repClientFactory := rep.NewClientFactory(cf_http.NewClient(), cf_http.NewClient())
+	repClientFactory := rep.NewClientFactory(cfhttp.NewClient(), cfhttp.NewClient())
 	auctioneerClient := initializeAuctioneerClient(logger)
 
 	exitChan := make(chan struct{})
@@ -345,7 +345,7 @@ func main() {
 
 	var server ifrit.Runner
 	if *requireSSL {
-		tlsConfig, err := cf_http.NewTLSConfig(*certFile, *keyFile, *caFile)
+		tlsConfig, err := cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
 		if err != nil {
 			logger.Fatal("tls-configuration-failed", err)
 		}

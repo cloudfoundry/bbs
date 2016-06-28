@@ -13,7 +13,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry-incubator/cf_http"
+	"code.cloudfoundry.org/cfhttp"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
@@ -184,8 +184,8 @@ type ExperimentalExternalEventClient interface {
 
 func newClient(url string) *client {
 	return &client{
-		httpClient:          cf_http.NewClient(),
-		streamingHTTPClient: cf_http.NewStreamingClient(),
+		httpClient:          cfhttp.NewClient(),
+		streamingHTTPClient: cfhttp.NewStreamingClient(),
 		reqGen:              rata.NewRequestGenerator(url, Routes),
 	}
 }
@@ -205,7 +205,7 @@ func NewSecureSkipVerifyClient(url, certFile, keyFile string, clientSessionCache
 func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool) (InternalClient, error) {
 	client := newClient(url)
 
-	tlsConfig, err := cf_http.NewTLSConfig(certFile, keyFile, caFile)
+	tlsConfig, err := cfhttp.NewTLSConfig(certFile, keyFile, caFile)
 	if err != nil {
 		return nil, err
 	}
