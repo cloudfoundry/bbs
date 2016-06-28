@@ -8,6 +8,7 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
 
 - [API Overview](overview.md)
     - Implementation Details
+- [Overview of Domains](domains.md)
 - [Overview of Tasks](tasks.md)
     - [Defining Tasks](defining-tasks.md)
     - [Task Examples](task-examples.md)
