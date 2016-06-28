@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/fake_bbs"
-	"github.com/cloudfoundry-incubator/rep/repfakes"
+	"code.cloudfoundry.org/rep/repfakes"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
