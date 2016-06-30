@@ -12,9 +12,9 @@ import (
 	"code.cloudfoundry.org/bbs/handlers/middleware"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/taskworkpool"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
 	"github.com/gogo/protobuf/proto"
-	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 )
 

@@ -6,7 +6,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 func (h *DesiredLRPHandler) DesiredLRPs_r0(w http.ResponseWriter, req *http.Request) {

@@ -2,7 +2,7 @@ package etcd
 
 import (
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 const NO_TTL = 0

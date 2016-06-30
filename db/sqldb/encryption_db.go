@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"code.cloudfoundry.org/bbs/format"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 const EncryptionKeyID = "encryption_key_label"

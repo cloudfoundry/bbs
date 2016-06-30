@@ -6,8 +6,8 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
-	"github.com/pivotal-golang/lager"
 )
 
 const (

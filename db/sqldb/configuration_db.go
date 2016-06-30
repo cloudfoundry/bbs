@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {

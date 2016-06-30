@@ -11,8 +11,8 @@ import (
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/lager"
 	goetcd "github.com/coreos/go-etcd/etcd"
-	"github.com/pivotal-golang/lager"
 )
 
 func init() {

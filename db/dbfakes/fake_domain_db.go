@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/bbs/db"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 type FakeDomainDB struct {

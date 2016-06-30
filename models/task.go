@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"code.cloudfoundry.org/bbs/format"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 var taskGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)

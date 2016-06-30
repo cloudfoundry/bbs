@@ -6,8 +6,8 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
-	"github.com/pivotal-golang/lager"
 )
 
 const (

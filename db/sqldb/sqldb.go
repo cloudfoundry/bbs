@@ -9,9 +9,9 @@ import (
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/lager"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
-	"github.com/pivotal-golang/lager"
 )
 
 type SQLDB struct {

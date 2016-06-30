@@ -2,7 +2,7 @@ package db
 
 import (
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter . DesiredLRPDB

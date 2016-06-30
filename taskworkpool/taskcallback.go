@@ -10,8 +10,8 @@ import (
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/cfhttp"
+	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/gunk/workpool"
-	"github.com/pivotal-golang/lager"
 )
 
 const MAX_CB_RETRIES = 3

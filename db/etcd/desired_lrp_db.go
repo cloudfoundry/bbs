@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/lager"
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/nu7hatch/gouuid"
-	"github.com/pivotal-golang/lager"
 )
 
 type guidSet struct {

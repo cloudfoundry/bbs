@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {

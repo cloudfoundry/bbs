@@ -10,9 +10,9 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/lager"
 	"github.com/coreos/go-etcd/etcd"
 	etcdclient "github.com/coreos/go-etcd/etcd"
-	"github.com/pivotal-golang/lager"
 )
 
 const (

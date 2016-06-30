@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/gogo/protobuf/proto"
-	"github.com/pivotal-golang/lager"
 )
 
 type EnvelopeFormat byte

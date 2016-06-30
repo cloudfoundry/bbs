@@ -14,8 +14,8 @@ import (
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/cfhttp"
+	"code.cloudfoundry.org/lager"
 	"github.com/gogo/protobuf/proto"
-	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 	"github.com/vito/go-sse/sse"
 )

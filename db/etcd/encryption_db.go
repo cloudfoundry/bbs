@@ -3,8 +3,8 @@ package etcd
 import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/lager"
 	"github.com/coreos/go-etcd/etcd"
-	"github.com/pivotal-golang/lager"
 )
 
 func (db *ETCDDB) SetEncryptionKeyLabel(logger lager.Logger, keyLabel string) error {

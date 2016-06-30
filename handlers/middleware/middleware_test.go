@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/handlers/middleware"
+	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
-	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

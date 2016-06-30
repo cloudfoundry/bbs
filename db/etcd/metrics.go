@@ -8,9 +8,9 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/cfhttp"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
 	"github.com/cloudfoundry/gunk/urljoiner"
-	"github.com/pivotal-golang/lager"
 )
 
 var errRedirected = errors.New("redirected to leader")

@@ -2,7 +2,7 @@ package format
 
 import (
 	"code.cloudfoundry.org/bbs/encryption"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 type Format struct {

@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task) func()

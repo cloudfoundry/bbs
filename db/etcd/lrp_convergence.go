@@ -12,8 +12,8 @@ import (
 	"github.com/cloudfoundry/gunk/workpool"
 
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
-	"github.com/pivotal-golang/lager"
 )
 
 const (

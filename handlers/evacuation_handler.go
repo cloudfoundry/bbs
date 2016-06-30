@@ -7,8 +7,8 @@ import (
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/lager"
 	"github.com/gogo/protobuf/proto"
-	"github.com/pivotal-golang/lager"
 )
 
 type EvacuationHandler struct {
