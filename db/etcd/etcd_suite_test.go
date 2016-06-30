@@ -11,11 +11,11 @@ import (
 	"code.cloudfoundry.org/bbs/db/etcd/test/etcd_helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/clock/fakeclock"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/clock/fakeclock"
 	"github.com/pivotal-golang/lager/lagertest"
 
 	"testing"

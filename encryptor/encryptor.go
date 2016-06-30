@@ -7,8 +7,8 @@ import (
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/runtimeschema/metric"
-	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 

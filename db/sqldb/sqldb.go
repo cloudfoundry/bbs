@@ -8,9 +8,9 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/clock"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
-	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 

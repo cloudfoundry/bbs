@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/pivotal-golang/clock"
+	"code.cloudfoundry.org/clock"
 	"github.com/pivotal-golang/lager"
 )
 

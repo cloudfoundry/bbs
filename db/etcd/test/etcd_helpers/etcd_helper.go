@@ -4,7 +4,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
-	"github.com/pivotal-golang/clock"
+	"code.cloudfoundry.org/clock"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 )

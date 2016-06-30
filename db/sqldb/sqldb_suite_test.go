@@ -15,9 +15,9 @@ import (
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/clock/fakeclock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-golang/clock/fakeclock"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 

@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/locket"
-	"github.com/pivotal-golang/clock"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 

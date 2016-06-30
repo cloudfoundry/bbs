@@ -10,8 +10,8 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/clock"
 	goetcd "github.com/coreos/go-etcd/etcd"
-	"github.com/pivotal-golang/clock"
 	"github.com/pivotal-golang/lager"
 )
 

@@ -7,9 +7,9 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/metrics"
+	"code.cloudfoundry.org/clock/fakeclock"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
-	"github.com/pivotal-golang/clock/fakeclock"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 
