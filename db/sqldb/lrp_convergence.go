@@ -389,7 +389,7 @@ func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {
 
 func (db *SQLDB) emitDomainMetrics(logger lager.Logger, domainSet map[string]struct{}) {
 	for domain := range domainSet {
-		metric.Metric(domainMetricPrefix + domain).Send(1)
+		metric.Metric("Domain." + domain).Send(1)
 	}
 }
 

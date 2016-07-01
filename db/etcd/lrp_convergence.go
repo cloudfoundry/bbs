@@ -25,8 +25,6 @@ const (
 	actualLRPsDeleted              = metric.Counter("ConvergenceLRPPreProcessingActualLRPsDeleted")
 	orphanedRunInfosMetric         = metric.Counter("ConvergenceLRPPreProcessingOrphanedRunInfos")
 
-	domainMetricPrefix = "Domain."
-
 	desiredLRPs   = metric.Metric("LRPsDesired")
 	claimedLRPs   = metric.Metric("LRPsClaimed")
 	unclaimedLRPs = metric.Metric("LRPsUnclaimed")
@@ -152,7 +150,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 	}
 	logger.Debug("succeeded-listing-domains")
 	for _, domain := range domains {
-		metric.Metric(domainMetricPrefix + domain).Send(1)
+		metric.Metric("Domain." + domain).Send(1)
 	}
 
 	return &models.ConvergenceInput{
