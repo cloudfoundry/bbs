@@ -27,7 +27,8 @@ knowledge of the desired state is up-to-date.  We refer to this as the
 taking destructive actions to ensure eventual consistency (in particular, Diego
 will refuse to stop extra instances with no corresponding desired state).
 
-To maintain freshness you perform a simple [POST](#upserting-a-domain).  The
+To maintain freshness, [POST](#upserting-a-domain) a request to the
+`/v1/domains/upsert` endpoint.  The
 consumer typically supplies a TTL and attempts to bump the freshness of the
 domain before the TTL expires (verifying along the way, of course, that the
 contents of Diego's DesiredLRP are up-to-date).
@@ -39,8 +40,6 @@ eventual consistency operations.
 > Note: only destructive operations performed during an eventual consistency
 > convergence cycle are gated on freshness.  Diego will continue to start/stop
 > instances when explicitly instructed to.
-
-[back](README.md)
 
 ## API
 
@@ -55,13 +54,60 @@ to `/v1/domains/upsert`, and receive an
 
 
 You must repeat the POST before the `ttl` expires.  To make the domain never
-expire, set the `Ttl` field to 0 or omit the field.
+expire, set the `ttl` field to `0` or omit the field.
+
+### Golang Client API
+
+```go
+UpsertDomain(logger lager.Logger, domain string, ttl time.Duration) error
+```
+
+#### Inputs
+
+* `domain string`: Name of the domain to declare fresh.
+* `ttl time.Duration`: Duration of time for Diego to consider the domain fresh. The value `0` means to consider the domain fresh permanently, unless reset to a finite TTL by a later `UpsertDomain` call.
+
+#### Output
+
+* `error`:  Non-nil if an error occurred.
+
+
+#### Example
+
+```go
+client := bbs.NewClient(url)
+err := client.UpsertDomain(logger, "my-domain", 60*time.Second)
+```
+
 
 ### Fetching all "fresh" Domains
 
 To fetch all fresh domains:
 
-POST an empty body to `/v1/domains/list`, and receive an
+POST an empty body to `/v1/domains/list`, and receive a
 [DomainsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DomainsResponse).
 
-[back](README.md)
+
+### Golang Client API
+
+```go
+Domains(logger lager.Logger) ([]string, error)
+```
+
+#### Inputs
+
+None.
+
+
+#### Output
+
+* `[]string`: Slice of strings representing the current domains.
+* `error`:  Non-nil if an error occurred.
+
+
+#### Example
+
+```go
+client := bbs.NewClient(url)
+domains, err := client.Domains(logger)
+```
