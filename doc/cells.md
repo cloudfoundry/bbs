@@ -11,7 +11,7 @@ manages containers, and reports app status and other data to the BBS and Loggreg
 * Mediates all communication between the Cell and the BBS
 * Ensures synchronization between the set of Tasks and LRPs in the BBS with the containers present on the Cell
 * Maintains the presence of the Cell in the BBS
-* Runs Tasks and LRPs by asking the in-process Executor to create a container and RunAction recipes
+* Runs Tasks and LRPs by telling the in-process Executor to create a container and RunAction recipes
 
 ## Executor
 
