@@ -34,12 +34,11 @@ var _ = Describe("Convergence API", func() {
 		})
 
 		It("converges the lrps", func() {
-			err := client.ConvergeLRPs(logger)
-			Expect(err).NotTo(HaveOccurred())
-
-			groups, err := client.ActualLRPGroupsByProcessGuid(logger, processGuid)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(groups).To(HaveLen(1))
+			Eventually(func() []*models.ActualLRPGroup {
+				groups, err := client.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				Expect(err).NotTo(HaveOccurred())
+				return groups
+			}).Should(HaveLen(1))
 		})
 	})
 })

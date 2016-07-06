@@ -46,12 +46,15 @@ func NewLRPConvergenceHandler(
 	}
 }
 
-func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Request) {
+func (h *LRPConvergenceHandler) DeprecatedConvergeLRPs(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 	logger := h.logger.Session("converge-lrps")
 	response := &models.ConvergeLRPsResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
 
 	logger.Debug("listing-cells")
 	cellSet, err := h.serviceClient.Cells(logger)
@@ -61,7 +64,7 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	} else if err != nil {
 		logger.Debug("failed-listing-cells")
 		response.Error = models.ConvertError(err)
-		return
+		return err
 	}
 	logger.Debug("succeeded-listing-cells")
 
@@ -96,7 +99,7 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": h.convergenceWorkersSize, "num_works": len(works)})
 		response.Error = models.ConvertError(err)
-		return
+		return err
 	}
 
 	retireLogger.Debug("retiring-actual-lrps")
@@ -114,4 +117,5 @@ func (h *LRPConvergenceHandler) ConvergeLRPs(w http.ResponseWriter, req *http.Re
 	}
 
 	response.Error = models.ConvertError(err)
+	return err
 }

@@ -26,6 +26,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/handlers"
+	"code.cloudfoundry.org/bbs/handlers/converger/converger_process"
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
@@ -187,6 +188,30 @@ var sqlCACertFile = flag.String(
 	"SQL database client cert, if supplied, require TLS to SQL",
 )
 
+var convergeRepeatInterval = flag.Duration(
+	"convergeRepeatInterval",
+	30*time.Second,
+	"the interval between runs of the converge process",
+)
+
+var kickTaskDuration = flag.Duration(
+	"kickTaskDuration",
+	30*time.Second,
+	"the interval, in seconds, between kicks to tasks",
+)
+
+var expireCompletedTaskDuration = flag.Duration(
+	"expireCompletedTaskDuration",
+	120*time.Second,
+	"completed, unresolved tasks are deleted after this duration",
+)
+
+var expirePendingTaskDuration = flag.Duration(
+	"expirePendingTaskDuration",
+	30*time.Minute,
+	"unclaimed tasks are marked as failed, after this duration",
+)
+
 const (
 	dropsondeOrigin           = "bbs"
 	bbsWatchRetryWaitDuration = 3 * time.Second
@@ -321,7 +346,7 @@ func main() {
 
 	exitChan := make(chan struct{})
 
-	handler := handlers.New(
+	httpHandler, lrpConvergenceHandler, taskHandler := handlers.New(
 		logger,
 		*updateWorkers,
 		*convergenceWorkers,
@@ -343,15 +368,26 @@ func main() {
 		clock,
 	)
 
+	converger := converger_process.New(
+		lrpConvergenceHandler,
+		taskHandler,
+		serviceClient,
+		logger,
+		clock,
+		*convergeRepeatInterval,
+		*kickTaskDuration,
+		*expirePendingTaskDuration,
+		*expireCompletedTaskDuration)
+
 	var server ifrit.Runner
 	if *requireSSL {
 		tlsConfig, err := cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
 		if err != nil {
 			logger.Fatal("tls-configuration-failed", err)
 		}
-		server = http_server.NewTLSServer(*listenAddress, handler, tlsConfig)
+		server = http_server.NewTLSServer(*listenAddress, httpHandler, tlsConfig)
 	} else {
-		server = http_server.New(*listenAddress, handler)
+		server = http_server.New(*listenAddress, httpHandler)
 	}
 
 	healthcheckServer := http_server.New(*healthAddress, http.HandlerFunc(healthCheckHandler))
@@ -359,6 +395,7 @@ func main() {
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
 		{"lock-maintainer", maintainer},
+		{"converger", converger},
 		{"workpool", cbWorkPool},
 		{"server", server},
 		{"migration-manager", migrationManager},

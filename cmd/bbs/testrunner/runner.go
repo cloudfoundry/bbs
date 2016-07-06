@@ -35,6 +35,11 @@ type Args struct {
 	CAFile     string
 	KeyFile    string
 	CertFile   string
+
+	ConvergeRepeatInterval      time.Duration
+	KickTaskDuration            time.Duration
+	ExpireCompletedTaskDuration time.Duration
+	ExpirePendingTaskDuration   time.Duration
 }
 
 func (args Args) ArgSlice() []string {
@@ -60,6 +65,10 @@ func (args Args) ArgSlice() []string {
 		"-caFile", args.CAFile,
 		"-certFile", args.CertFile,
 		"-keyFile", args.KeyFile,
+		"-convergeRepeatInterval", args.ConvergeRepeatInterval.String(),
+		"-kickTaskDuration", args.KickTaskDuration.String(),
+		"-expireCompletedTaskDuration", args.ExpireCompletedTaskDuration.String(),
+		"-expirePendingTaskDuration", args.ExpirePendingTaskDuration.String(),
 	}
 
 	for _, key := range args.EncryptionKeys {

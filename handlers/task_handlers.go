@@ -268,21 +268,16 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, req *http.Request) {
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) DeprecatedConvergeTasks(w http.ResponseWriter, req *http.Request) {
+}
+
+func (h *TaskHandler) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error {
 	var err error
 	logger := h.logger.Session("converge-tasks")
 
-	request := &models.ConvergeTasksRequest{}
 	response := &models.ConvergeTasksResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
-
-	err = parseRequest(logger, req, request)
-
-	if err != nil {
-		response.Error = models.ConvertError(err)
-	}
 
 	logger.Debug("listing-cells")
 	cellSet, err := h.serviceClient.Cells(logger)
@@ -292,16 +287,16 @@ func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
 	} else if err != nil {
 		logger.Debug("failed-listing-cells")
 		response.Error = models.ConvertError(err)
-		return
+		return err
 	}
 	logger.Debug("succeeded-listing-cells")
 
 	tasksToAuction, tasksToComplete := h.db.ConvergeTasks(
 		logger,
 		cellSet,
-		time.Duration(request.KickTaskDuration),
-		time.Duration(request.ExpirePendingTaskDuration),
-		time.Duration(request.ExpireCompletedTaskDuration),
+		kickTaskDuration,
+		expirePendingTaskDuration,
+		expireCompletedTaskDuration,
 	)
 
 	if len(tasksToAuction) > 0 {
@@ -322,4 +317,5 @@ func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
 		h.taskCompletionClient.Submit(h.db, task)
 	}
 	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+	return nil
 }

@@ -30,7 +30,7 @@ func New(
 	repClientFactory rep.ClientFactory,
 	migrationsDone <-chan struct{},
 	exitChan chan struct{},
-) http.Handler {
+) (http.Handler, *LRPConvergenceHandler, *TaskHandler) {
 	retirer := NewActualLRPRetirer(db, actualHub, repClientFactory, serviceClient)
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db, exitChan)
@@ -74,7 +74,7 @@ func New(
 		bbs.EvacuateRunningActualLRPRoute:  route(emitter.EmitLatency(evacuationHandler.EvacuateRunningActualLRP)),
 
 		// LRP Convergence
-		bbs.ConvergeLRPsRoute: route(emitter.EmitLatency(lrpConvergenceHandler.ConvergeLRPs)),
+		bbs.ConvergeLRPsRoute: route(emitter.EmitLatency(lrpConvergenceHandler.DeprecatedConvergeLRPs)),
 
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:               route(emitter.EmitLatency(desiredLRPHandler.DesiredLRPs)),
@@ -100,7 +100,7 @@ func New(
 		bbs.CompleteTaskRoute:  route(emitter.EmitLatency(taskHandler.CompleteTask)),
 		bbs.ResolvingTaskRoute: route(emitter.EmitLatency(taskHandler.ResolvingTask)),
 		bbs.DeleteTaskRoute:    route(emitter.EmitLatency(taskHandler.DeleteTask)),
-		bbs.ConvergeTasksRoute: route(emitter.EmitLatency(taskHandler.ConvergeTasks)),
+		bbs.ConvergeTasksRoute: route(emitter.EmitLatency(taskHandler.DeprecatedConvergeTasks)),
 
 		bbs.TasksRoute_r1:      route(emitter.EmitLatency(taskHandler.Tasks_r1)),
 		bbs.TasksRoute_r0:      route(emitter.EmitLatency(taskHandler.Tasks_r0)),
@@ -128,11 +128,11 @@ func New(
 				migrationsDone,
 			),
 		),
-	)
+	), lrpConvergenceHandler, taskHandler
 }
 
 func route(f http.HandlerFunc) http.Handler {
-	return http.HandlerFunc(f)
+	return f
 }
 
 func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) error {
