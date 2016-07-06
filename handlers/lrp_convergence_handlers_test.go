@@ -2,7 +2,6 @@ package handlers_test
 
 import (
 	"errors"
-	"net/http"
 	"net/http/httptest"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -23,6 +22,7 @@ import (
 
 var _ = Describe("LRP Convergence Handlers", func() {
 	var (
+		err                  error
 		logger               *lagertest.TestLogger
 		fakeLRPDB            *dbfakes.FakeLRPDB
 		actualHub            *eventfakes.FakeHub
@@ -128,11 +128,11 @@ var _ = Describe("LRP Convergence Handlers", func() {
 	})
 
 	JustBeforeEach(func() {
-		handler.ConvergeLRPs(responseRecorder, nil)
+		err = handler.ConvergeLRPs()
 	})
 
 	It("calls ConvergeLRPs", func() {
-		Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+		Expect(err).NotTo(HaveOccurred())
 		Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(1))
 		_, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
 		Expect(actualCellSet).To(BeEquivalentTo(cellSet))
@@ -144,7 +144,7 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		})
 
 		It("does not call ConvergeLRPs", func() {
-			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			Expect(err).To(MatchError("kaboom"))
 			Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(0))
 		})
 	})
@@ -166,7 +166,7 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		})
 
 		It("calls ConvergeLRPs with an empty CellSet", func() {
-			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(1))
 			_, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
 			Expect(actualCellSet).To(BeEquivalentTo(models.CellSet{}))

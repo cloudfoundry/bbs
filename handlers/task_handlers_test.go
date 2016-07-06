@@ -880,30 +880,25 @@ var _ = Describe("Task Handlers", func() {
 	Describe("ConvergeTasks", func() {
 		Context("when the request is normal", func() {
 			var (
-				kickTaskDuration            = int64(10 * time.Second)
-				expirePendingTaskDuration   = int64(10 * time.Second)
-				expireCompletedTaskDuration = int64(10 * time.Second)
+				kickTaskDuration            = 10 * time.Second
+				expirePendingTaskDuration   = 10 * time.Second
+				expireCompletedTaskDuration = 10 * time.Second
 				cellSet                     models.CellSet
+				err                         error
 			)
 
 			BeforeEach(func() {
-				requestBody = &models.ConvergeTasksRequest{
-					KickTaskDuration:            kickTaskDuration,
-					ExpirePendingTaskDuration:   expirePendingTaskDuration,
-					ExpireCompletedTaskDuration: expireCompletedTaskDuration,
-				}
 				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil)
 				cellSet = models.CellSet{"cell-id": &cellPresence}
 				fakeServiceClient.CellsReturns(cellSet, nil)
 			})
 
 			JustBeforeEach(func() {
-				request := newTestRequest(requestBody)
-				handler.ConvergeTasks(responseRecorder, request)
+				err = handler.ConvergeTasks(kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 			})
 
 			It("calls ConvergeTasks", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
 				taskLogger, actualCellSet, actualKickDuration, actualPendingDuration, actualCompletedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("converge-tasks"))
@@ -936,7 +931,7 @@ var _ = Describe("Task Handlers", func() {
 				})
 
 				It("does not call ConvergeTasks", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					Expect(err).To(MatchError("kaboom"))
 					Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(0))
 				})
 			})
@@ -947,7 +942,7 @@ var _ = Describe("Task Handlers", func() {
 				})
 
 				It("calls ConvergeTasks with an empty CellSet", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					Expect(err).NotTo(HaveOccurred())
 					Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
 					_, actualCellSet, _, _, _ := fakeTaskDB.ConvergeTasksArgsForCall(0)
 					Expect(actualCellSet).To(BeEquivalentTo(models.CellSet{}))

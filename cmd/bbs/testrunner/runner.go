@@ -65,14 +65,14 @@ func (args Args) ArgSlice() []string {
 		"-caFile", args.CAFile,
 		"-certFile", args.CertFile,
 		"-keyFile", args.KeyFile,
-		"-convergeRepeatInterval", args.ConvergeRepeatInterval.String(),
-		"-kickTaskDuration", args.KickTaskDuration.String(),
-		"-expireCompletedTaskDuration", args.ExpireCompletedTaskDuration.String(),
-		"-expirePendingTaskDuration", args.ExpirePendingTaskDuration.String(),
 	}
 
 	for _, key := range args.EncryptionKeys {
 		arguments = append(arguments, "-encryptionKey="+key)
+	}
+
+	if args.ConvergeRepeatInterval > 0 {
+		arguments = append(arguments, "-convergeRepeatInterval", args.ConvergeRepeatInterval.String())
 	}
 
 	return arguments

@@ -52,18 +52,18 @@ func (h *LRPConvergenceHandler) DeprecatedConvergeLRPs(w http.ResponseWriter, re
 
 func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 	logger := h.logger.Session("converge-lrps")
-	response := &models.ConvergeLRPsResponse{}
+	var err error
 
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err)) }()
 
 	logger.Debug("listing-cells")
-	cellSet, err := h.serviceClient.Cells(logger)
+	var cellSet models.CellSet
+	cellSet, err = h.serviceClient.Cells(logger)
 	if err == models.ErrResourceNotFound {
 		logger.Debug("no-cells-found")
 		cellSet = models.CellSet{}
 	} else if err != nil {
 		logger.Debug("failed-listing-cells")
-		response.Error = models.ConvertError(err)
 		return err
 	}
 	logger.Debug("succeeded-listing-cells")
@@ -95,10 +95,10 @@ func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 		})
 	}
 
-	throttler, err := workpool.NewThrottler(h.convergenceWorkersSize, works)
+	var throttler *workpool.Throttler
+	throttler, err = workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": h.convergenceWorkersSize, "num_works": len(works)})
-		response.Error = models.ConvertError(err)
 		return err
 	}
 
@@ -116,6 +116,5 @@ func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 		startLogger.Debug("done-requesting-start-auctions")
 	}
 
-	response.Error = models.ConvertError(err)
 	return err
 }

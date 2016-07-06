@@ -275,9 +275,7 @@ func (h *TaskHandler) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration,
 	var err error
 	logger := h.logger.Session("converge-tasks")
 
-	response := &models.ConvergeTasksResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err)) }()
 
 	logger.Debug("listing-cells")
 	cellSet, err := h.serviceClient.Cells(logger)
@@ -286,7 +284,6 @@ func (h *TaskHandler) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration,
 		cellSet = models.CellSet{}
 	} else if err != nil {
 		logger.Debug("failed-listing-cells")
-		response.Error = models.ConvertError(err)
 		return err
 	}
 	logger.Debug("succeeded-listing-cells")
@@ -301,7 +298,8 @@ func (h *TaskHandler) ConvergeTasks(kickTaskDuration, expirePendingTaskDuration,
 
 	if len(tasksToAuction) > 0 {
 		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
-		if err := h.auctioneerClient.RequestTaskAuctions(tasksToAuction); err != nil {
+		err = h.auctioneerClient.RequestTaskAuctions(tasksToAuction)
+		if err != nil {
 			taskGuids := make([]string, len(tasksToAuction))
 			for i, task := range tasksToAuction {
 				taskGuids[i] = task.TaskGuid

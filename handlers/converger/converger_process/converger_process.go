@@ -1,7 +1,6 @@
 package converger_process
 
 import (
-	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -64,8 +63,6 @@ func New(
 func (c *ConvergerProcess) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := c.logger.Session("converger-process")
 	logger.Info("started")
-
-	fmt.Printf("################: interval %#v\n", c.convergeRepeatInterval)
 
 	convergeTimer := c.clock.NewTimer(c.convergeRepeatInterval)
 	defer func() {

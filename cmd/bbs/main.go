@@ -395,13 +395,13 @@ func main() {
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
 		{"lock-maintainer", maintainer},
-		{"converger", converger},
 		{"workpool", cbWorkPool},
 		{"server", server},
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
 		{"metrics", *metricsNotifier},
+		{"converger", converger},
 		{"registration-runner", registrationRunner},
 	}
 

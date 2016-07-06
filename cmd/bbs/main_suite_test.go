@@ -201,6 +201,4 @@ var _ = AfterEach(func() {
 	if test_helpers.UseSQL() {
 		sqlRunner.Reset()
 	}
-
-	ginkgomon.Kill(bbsProcess)
 })

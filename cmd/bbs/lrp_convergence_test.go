@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -40,5 +41,38 @@ var _ = Describe("Convergence API", func() {
 				return groups
 			}).Should(HaveLen(1))
 		})
+
+		Context("when a task is desired but its cell is dead", func() {
+			BeforeEach(func() {
+				task := model_helpers.NewValidTask("task-guid")
+
+				err := client.DesireTask(logger, task.TaskGuid, task.Domain, task.TaskDefinition)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = client.StartTask(logger, task.TaskGuid, "dead-cell")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("marks the task as completed and failed", func() {
+				Eventually(func() []*models.Task {
+					return getTasksByState(client, models.Task_Completed)
+				}).Should(HaveLen(1))
+
+				Expect(getTasksByState(client, models.Task_Completed)[0].Failed).To(BeTrue())
+			})
+		})
 	})
 })
+
+func getTasksByState(client bbs.InternalClient, state models.Task_State) []*models.Task {
+	tasks, err := client.Tasks(logger)
+	Expect(err).NotTo(HaveOccurred())
+
+	filteredTasks := make([]*models.Task, 0)
+	for _, task := range tasks {
+		if task.State == state {
+			filteredTasks = append(filteredTasks, task)
+		}
+	}
+	return filteredTasks
+}
