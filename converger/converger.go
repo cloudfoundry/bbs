@@ -1,4 +1,4 @@
-package converger_process
+package converger
 
 import (
 	"os"
@@ -9,16 +9,15 @@ import (
 	"github.com/nu7hatch/gouuid"
 
 	"code.cloudfoundry.org/bbs"
-	"code.cloudfoundry.org/bbs/handlers/converger"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
 )
 
-type ConvergerProcess struct {
+type Converger struct {
 	id                          string
 	bbsServiceClient            bbs.ServiceClient
-	lrpConvergenceHandler       converger.LrpConvergenceHandler
-	taskConvergenceHandler      converger.TaskConvergenceHandler
+	lrpConvergenceHandler       LrpConvergenceHandler
+	taskConvergenceHandler      TaskConvergenceHandler
 	logger                      lager.Logger
 	clock                       clock.Clock
 	convergeRepeatInterval      time.Duration
@@ -29,8 +28,8 @@ type ConvergerProcess struct {
 }
 
 func New(
-	lrpConvergenceHandler converger.LrpConvergenceHandler,
-	taskConvergenceHandler converger.TaskConvergenceHandler,
+	lrpConvergenceHandler LrpConvergenceHandler,
+	taskConvergenceHandler TaskConvergenceHandler,
 	bbsServiceClient bbs.ServiceClient,
 	logger lager.Logger,
 	clock clock.Clock,
@@ -38,14 +37,14 @@ func New(
 	kickTaskDuration,
 	expirePendingTaskDuration,
 	expireCompletedTaskDuration time.Duration,
-) *ConvergerProcess {
+) *Converger {
 
 	uuid, err := uuid.NewV4()
 	if err != nil {
 		panic("Failed to generate a random guid....:" + err.Error())
 	}
 
-	return &ConvergerProcess{
+	return &Converger{
 		id:                     uuid.String(),
 		bbsServiceClient:       bbsServiceClient,
 		lrpConvergenceHandler:  lrpConvergenceHandler,
@@ -60,7 +59,7 @@ func New(
 	}
 }
 
-func (c *ConvergerProcess) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+func (c *Converger) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := c.logger.Session("converger-process")
 	logger.Info("started")
 
@@ -94,7 +93,7 @@ func (c *ConvergerProcess) Run(signals <-chan os.Signal, ready chan<- struct{}) 
 	}
 }
 
-func (c *ConvergerProcess) converge() {
+func (c *Converger) converge() {
 	logger := c.logger.Session("executing-convergence")
 	wg := sync.WaitGroup{}
 

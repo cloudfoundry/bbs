@@ -4,7 +4,7 @@ package fake_handlers
 import (
 	"sync"
 
-	"code.cloudfoundry.org/bbs/handlers/converger"
+	"code.cloudfoundry.org/bbs/converger"
 )
 
 type FakeLrpConvergenceHandler struct {

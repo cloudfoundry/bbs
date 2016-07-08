@@ -1,4 +1,4 @@
-package converger_process_test
+package converger_test
 
 import (
 	. "github.com/onsi/ginkgo"

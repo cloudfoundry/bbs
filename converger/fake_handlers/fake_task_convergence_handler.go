@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"code.cloudfoundry.org/bbs/handlers/converger"
+	"code.cloudfoundry.org/bbs/converger"
 )
 
 type FakeTaskConvergenceHandler struct {

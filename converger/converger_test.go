@@ -1,4 +1,4 @@
-package converger_process_test
+package converger_test
 
 import (
 	"errors"
@@ -14,8 +14,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"code.cloudfoundry.org/bbs/handlers/converger/converger_process"
-	"code.cloudfoundry.org/bbs/handlers/converger/fake_handlers"
+	"code.cloudfoundry.org/bbs/converger"
+	"code.cloudfoundry.org/bbs/converger/fake_handlers"
 )
 
 const aBit = 100 * time.Millisecond
@@ -62,7 +62,7 @@ var _ = Describe("ConvergerProcess", func() {
 
 	JustBeforeEach(func() {
 		process = ifrit.Invoke(
-			converger_process.New(
+			converger.New(
 				fakeLrpConvergenceHandler,
 				fakeTaskConvergenceHandler,
 				fakeBBSServiceClient,

@@ -16,6 +16,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
+	"code.cloudfoundry.org/bbs/converger"
 	"code.cloudfoundry.org/bbs/db"
 	etcddb "code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/db/migrations"
@@ -26,7 +27,6 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/handlers"
-	"code.cloudfoundry.org/bbs/handlers/converger/converger_process"
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
@@ -191,7 +191,7 @@ var sqlCACertFile = flag.String(
 var convergeRepeatInterval = flag.Duration(
 	"convergeRepeatInterval",
 	30*time.Second,
-	"the interval between runs of the converge process",
+	"the interval between runs of the converger",
 )
 
 var kickTaskDuration = flag.Duration(
@@ -368,7 +368,7 @@ func main() {
 		clock,
 	)
 
-	converger := converger_process.New(
+	convergerProcess := converger.New(
 		lrpConvergenceHandler,
 		taskHandler,
 		serviceClient,
@@ -401,7 +401,7 @@ func main() {
 		{"encryptor", encryptor},
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
 		{"metrics", *metricsNotifier},
-		{"converger", converger},
+		{"converger", convergerProcess},
 		{"registration-runner", registrationRunner},
 	}
 
