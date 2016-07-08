@@ -346,7 +346,7 @@ func main() {
 
 	exitChan := make(chan struct{})
 
-	httpHandler, lrpConvergenceHandler, taskHandler := handlers.New(
+	handler := handlers.New(
 		logger,
 		*updateWorkers,
 		*convergenceWorkers,
@@ -369,8 +369,7 @@ func main() {
 	)
 
 	convergerProcess := converger.New(
-		lrpConvergenceHandler,
-		taskHandler,
+		activeDB,
 		serviceClient,
 		logger,
 		clock,
@@ -385,9 +384,9 @@ func main() {
 		if err != nil {
 			logger.Fatal("tls-configuration-failed", err)
 		}
-		server = http_server.NewTLSServer(*listenAddress, httpHandler, tlsConfig)
+		server = http_server.NewTLSServer(*listenAddress, handler, tlsConfig)
 	} else {
-		server = http_server.New(*listenAddress, httpHandler)
+		server = http_server.New(*listenAddress, handler)
 	}
 
 	healthcheckServer := http_server.New(*healthAddress, http.HandlerFunc(healthCheckHandler))

@@ -14,10 +14,11 @@ import (
 )
 
 type Converger struct {
-	id                          string
-	bbsServiceClient            bbs.ServiceClient
-	lrpConvergenceHandler       LrpConvergenceHandler
-	taskConvergenceHandler      TaskConvergenceHandler
+	id               string
+	bbsServiceClient bbs.ServiceClient
+	// lrpConvergenceHandler       LrpConvergenceHandler
+	// taskConvergenceHandler      TaskConvergenceHandler
+	taskController              TaskController
 	logger                      lager.Logger
 	clock                       clock.Clock
 	convergeRepeatInterval      time.Duration
@@ -28,10 +29,8 @@ type Converger struct {
 }
 
 func New(
-	lrpConvergenceHandler LrpConvergenceHandler,
-	taskConvergenceHandler TaskConvergenceHandler,
+	taskController TaskController,
 	bbsServiceClient bbs.ServiceClient,
-	logger lager.Logger,
 	clock clock.Clock,
 	convergeRepeatInterval,
 	kickTaskDuration,
@@ -44,13 +43,24 @@ func New(
 		panic("Failed to generate a random guid....:" + err.Error())
 	}
 
+	// retirer := handlers.NewActualLRPRetirer(db, actualHub, repClientFactory, serviceClient)
+
+	// lrpConvergenceHandler := handlers.NewLRPConvergenceHandler(
+	// 	logger,
+	// 	db,
+	// 	actualHub,
+	// 	auctioneerClient,
+	// 	serviceClient,
+	// 	retirer,
+	// 	convergenceWorkersSize,
+	// 	exitChan,
+	// )
+
 	return &Converger{
-		id:                     uuid.String(),
-		bbsServiceClient:       bbsServiceClient,
-		lrpConvergenceHandler:  lrpConvergenceHandler,
-		taskConvergenceHandler: taskConvergenceHandler,
-		logger:                 logger,
-		clock:                  clock,
+		id:               uuid.String(),
+		bbsServiceClient: bbsServiceClient,
+		logger:           logger,
+		clock:            clock,
 		convergeRepeatInterval:      convergeRepeatInterval,
 		kickTaskDuration:            kickTaskDuration,
 		expirePendingTaskDuration:   expirePendingTaskDuration,

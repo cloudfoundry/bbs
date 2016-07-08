@@ -4,104 +4,86 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
 
-func (h *TaskHandler) Tasks_r0(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) commonTasks(w http.ResponseWriter, req *http.Request, version format.Version) {
 	var err error
 	logger := h.logger.Session("tasks", lager.Data{"revision": 0})
 
 	request := &models.TasksRequest{}
 	response := &models.TasksResponse{}
 
+	defer exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	defer writeResponse(w, response)
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		filter := models.TaskFilter{Domain: request.Domain, CellID: request.CellId}
-		response.Tasks, err = h.db.Tasks(logger, filter)
-		if err == nil {
-			for i := range response.Tasks {
-				task := response.Tasks[i]
-				if task.TaskDefinition == nil {
-					continue
-				}
-				response.Tasks[i] = task.VersionDownTo(format.V0)
-			}
-		}
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
 	}
 
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	filter := models.TaskFilter{Domain: request.Domain, CellID: request.CellId}
+	response.Tasks, err = h.controller.Tasks(logger, filter.Domain, filter.CellID)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	for i := range response.Tasks {
+		task := response.Tasks[i]
+		if task.TaskDefinition == nil {
+			continue
+		}
+		response.Tasks[i] = task.VersionDownTo(version)
+	}
+}
+
+func (h *TaskHandler) Tasks_r0(w http.ResponseWriter, req *http.Request) {
+	h.commonTasks(w, req, format.V0)
 }
 
 func (h *TaskHandler) Tasks_r1(w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger := h.logger.Session("tasks", lager.Data{"revision": 0})
+	h.commonTasks(w, req, format.V1)
+}
 
-	request := &models.TasksRequest{}
-	response := &models.TasksResponse{}
+func (h *TaskHandler) commonTaskByGuid(w http.ResponseWriter, req *http.Request, version format.Version) {
+	var err error
+	logger := h.logger.Session("task-by-guid", lager.Data{"revision": 0})
+
+	request := &models.TaskByGuidRequest{}
+	response := &models.TaskResponse{}
+
+	defer exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		filter := models.TaskFilter{Domain: request.Domain, CellID: request.CellId}
-		response.Tasks, err = h.db.Tasks(logger, filter)
-		if err == nil {
-			for i := range response.Tasks {
-				task := response.Tasks[i]
-				if task.TaskDefinition == nil {
-					continue
-				}
-				response.Tasks[i] = task.VersionDownTo(format.V1)
-			}
-		}
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
 	}
 
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	response.Task, err = h.controller.TaskByGuid(logger, request.TaskGuid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	if response.Task.TaskDefinition != nil {
+		response.Task = response.Task.VersionDownTo(version)
+	}
 }
 
 func (h *TaskHandler) TaskByGuid_r0(w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger := h.logger.Session("task-by-guid", lager.Data{"revision": 0})
-
-	request := &models.TaskByGuidRequest{}
-	response := &models.TaskResponse{}
-
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		response.Task, err = h.db.TaskByGuid(logger, request.TaskGuid)
-		if err == nil && response.Task.TaskDefinition != nil {
-			response.Task = response.Task.VersionDownTo(format.V0)
-		}
-	}
-
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	h.commonTaskByGuid(w, req, format.V0)
 }
 
 func (h *TaskHandler) TaskByGuid_r1(w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger := h.logger.Session("task-by-guid", lager.Data{"revision": 0})
-
-	request := &models.TaskByGuidRequest{}
-	response := &models.TaskResponse{}
-
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		response.Task, err = h.db.TaskByGuid(logger, request.TaskGuid)
-		if err == nil && response.Task.TaskDefinition != nil {
-			response.Task = response.Task.VersionDownTo(format.V1)
-		}
-	}
-
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	h.commonTaskByGuid(w, req, format.V1)
 }
 
 func (h *TaskHandler) DesireTask_r0(w http.ResponseWriter, req *http.Request) {
@@ -111,28 +93,20 @@ func (h *TaskHandler) DesireTask_r0(w http.ResponseWriter, req *http.Request) {
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer exitIfUnrecoverable(logger, h.exitChan, response.Error)
 	defer writeResponse(w, response)
 
 	err = parseRequestForDesireTask_r0(logger, req, request)
 	if err != nil {
+		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	err = h.db.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
+	err = h.controller.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
-	}
-
-	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(request.TaskGuid, request.Domain, request.TaskDefinition)
-	err = h.auctioneerClient.RequestTaskAuctions([]*auctioneer.TaskStartRequest{&taskStartRequest})
-	if err != nil {
-		logger.Error("failed-requesting-task-auction", err)
-		// The creation succeeded, the auction request error can be dropped
-	} else {
-		logger.Debug("succeeded-requesting-task-auction")
 	}
 }
 

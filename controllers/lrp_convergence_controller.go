@@ -1,7 +1,6 @@
-package handlers
+package controllers
 
 import (
-	"net/http"
 	"sync"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -13,7 +12,7 @@ import (
 	"github.com/cloudfoundry/gunk/workpool"
 )
 
-type LRPConvergenceHandler struct {
+type LRPConvergenceController struct {
 	logger                 lager.Logger
 	db                     db.LRPDB
 	actualHub              events.Hub
@@ -24,7 +23,7 @@ type LRPConvergenceHandler struct {
 	exitChan               chan<- struct{}
 }
 
-func NewLRPConvergenceHandler(
+func NewLRPConvergenceController(
 	logger lager.Logger,
 	db db.LRPDB,
 	actualHub events.Hub,
@@ -33,8 +32,8 @@ func NewLRPConvergenceHandler(
 	retirer ActualLRPRetirer,
 	convergenceWorkersSize int,
 	exitChan chan<- struct{},
-) *LRPConvergenceHandler {
-	return &LRPConvergenceHandler{
+) *LRPConvergenceController {
+	return &LRPConvergenceController{
 		logger:                 logger,
 		db:                     db,
 		actualHub:              actualHub,
@@ -46,25 +45,20 @@ func NewLRPConvergenceHandler(
 	}
 }
 
-func (h *LRPConvergenceHandler) DeprecatedConvergeLRPs(w http.ResponseWriter, req *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-}
-
-func (h *LRPConvergenceHandler) ConvergeLRPs() error {
-	logger := h.logger.Session("converge-lrps")
+func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
+	logger = h.logger.Session("converge-lrps")
 	var err error
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err)) }()
 
 	logger.Debug("listing-cells")
 	var cellSet models.CellSet
 	cellSet, err = h.serviceClient.Cells(logger)
 	if err == models.ErrResourceNotFound {
-		logger.Debug("no-cells-found")
+		logger.Info("no-cells-found")
 		cellSet = models.CellSet{}
 	} else if err != nil {
-		logger.Debug("failed-listing-cells")
-		return err
+		logger.Error("failed-listing-cells", err)
+		// convergence should run again later
+		return nil
 	}
 	logger.Debug("succeeded-listing-cells")
 
@@ -76,6 +70,8 @@ func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 		key := key
 		works = append(works, func() { h.retirer.RetireActualLRP(retireLogger, key.ProcessGuid, key.Index) })
 	}
+
+	errChan := make(chan *models.Error)
 
 	startRequestLock := &sync.Mutex{}
 	for _, key := range keysWithMissingCells {
@@ -90,7 +86,15 @@ func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 				startRequestLock.Unlock()
 			} else {
 				bbsErr := models.ConvertError(err)
-				exitIfUnrecoverable(logger, h.exitChan, bbsErr)
+				if bbsErr.GetType() != models.Error_Unrecoverable {
+					return
+				}
+
+				logger.Error("unrecoverable-error", bbsErr)
+				select {
+				case errChan <- bbsErr:
+				default:
+				}
 			}
 		})
 	}
@@ -99,12 +103,18 @@ func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 	throttler, err = workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": h.convergenceWorkersSize, "num_works": len(works)})
-		return err
+		return nil
 	}
 
 	retireLogger.Debug("retiring-actual-lrps")
 	throttler.Work()
 	retireLogger.Debug("done-retiring-actual-lrps")
+
+	select {
+	case err := <-errChan:
+		return err
+	default:
+	}
 
 	startLogger := logger.WithData(lager.Data{"start_requests_count": len(startRequests)})
 	if len(startRequests) > 0 {
@@ -116,5 +126,5 @@ func (h *LRPConvergenceHandler) ConvergeLRPs() error {
 		startLogger.Debug("done-requesting-start-auctions")
 	}
 
-	return err
+	return nil
 }

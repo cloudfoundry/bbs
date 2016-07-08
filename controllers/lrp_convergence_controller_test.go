@@ -1,4 +1,4 @@
-package handlers_test
+package controllers_test
 
 import (
 	"errors"
@@ -6,10 +6,10 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
+	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/fake_bbs"
-	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/lager"
@@ -20,7 +20,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("LRP Convergence Handlers", func() {
+var _ = Describe("LRP Convergence Controllers", func() {
 	var (
 		err                  error
 		logger               *lagertest.TestLogger
@@ -43,8 +43,8 @@ var _ = Describe("LRP Convergence Handlers", func() {
 		cellID  string
 		cellSet models.CellSet
 
-		handler *handlers.LRPConvergenceHandler
-		exitCh  chan struct{}
+		controller *controllers.LRPConvergenceController
+		exitCh     chan struct{}
 	)
 
 	BeforeEach(func() {
@@ -123,12 +123,12 @@ var _ = Describe("LRP Convergence Handlers", func() {
 
 		actualHub = &eventfakes.FakeHub{}
 		exitCh = make(chan struct{}, 1)
-		retirer := handlers.NewActualLRPRetirer(fakeLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
-		handler = handlers.NewLRPConvergenceHandler(logger, fakeLRPDB, actualHub, fakeAuctioneerClient, fakeServiceClient, retirer, 2, exitCh)
+		retirer := controllers.NewActualLRPRetirer(fakeLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
+		controller = controllers.NewLRPConvergenceController(logger, fakeLRPDB, actualHub, fakeAuctioneerClient, fakeServiceClient, retirer, 2, exitCh)
 	})
 
 	JustBeforeEach(func() {
-		err = handler.ConvergeLRPs()
+		err = controller.ConvergeLRPs(logger)
 	})
 
 	It("calls ConvergeLRPs", func() {
