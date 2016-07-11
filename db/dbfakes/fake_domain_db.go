@@ -28,6 +28,8 @@ type FakeDomainDB struct {
 	upsertDomainReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeDomainDB) Domains(logger lager.Logger) ([]string, error) {
@@ -35,6 +37,7 @@ func (fake *FakeDomainDB) Domains(logger lager.Logger) ([]string, error) {
 	fake.domainsArgsForCall = append(fake.domainsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Domains", []interface{}{logger})
 	fake.domainsMutex.Unlock()
 	if fake.DomainsStub != nil {
 		return fake.DomainsStub(logger)
@@ -70,6 +73,7 @@ func (fake *FakeDomainDB) UpsertDomain(lgger lager.Logger, domain string, ttl ui
 		domain string
 		ttl    uint32
 	}{lgger, domain, ttl})
+	fake.recordInvocation("UpsertDomain", []interface{}{lgger, domain, ttl})
 	fake.upsertDomainMutex.Unlock()
 	if fake.UpsertDomainStub != nil {
 		return fake.UpsertDomainStub(lgger, domain, ttl)
@@ -95,6 +99,28 @@ func (fake *FakeDomainDB) UpsertDomainReturns(result1 error) {
 	fake.upsertDomainReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeDomainDB) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.domainsMutex.RLock()
+	defer fake.domainsMutex.RUnlock()
+	fake.upsertDomainMutex.RLock()
+	defer fake.upsertDomainMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeDomainDB) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ db.DomainDB = new(FakeDomainDB)

@@ -4,42 +4,40 @@ import (
 	"net/http"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs"
-	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/rep"
 )
 
+//go:generate counterfeiter -o fake_controllers/fake_task_controller.go . TaskController
+
+type TaskController interface {
+	Tasks(logger lager.Logger, domain, cellId string) ([]*models.Task, error)
+	TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error)
+	DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error
+	StartTask(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error)
+	CancelTask(logger lager.Logger, taskGuid string) error
+	FailTask(logger lager.Logger, taskGuid, failureReason string) error
+	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
+	ResolvingTask(logger lager.Logger, taskGuid string) error
+	DeleteTask(logger lager.Logger, taskGuid string) error
+	ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+}
+
 type TaskHandler struct {
-	db                   db.TaskDB
-	logger               lager.Logger
-	taskCompletionClient taskworkpool.TaskCompletionClient
-	auctioneerClient     auctioneer.Client
-	serviceClient        bbs.ServiceClient
-	repClientFactory     rep.ClientFactory
-	exitChan             chan<- struct{}
+	controller TaskController
+	exitChan   chan<- struct{}
+	logger     lager.Logger
 }
 
 func NewTaskHandler(
 	logger lager.Logger,
-	db db.TaskDB,
-	taskCompletionClient taskworkpool.TaskCompletionClient,
-	auctioneerClient auctioneer.Client,
-	serviceClient bbs.ServiceClient,
-	repClientFactory rep.ClientFactory,
+	controller TaskController,
 	exitChan chan<- struct{},
 ) *TaskHandler {
 	return &TaskHandler{
-		db:                   db,
-		logger:               logger.Session("task-handler"),
-		taskCompletionClient: taskCompletionClient,
-		auctioneerClient:     auctioneerClient,
-		serviceClient:        serviceClient,
-		repClientFactory:     repClientFactory,
-		exitChan:             exitChan,
+		logger:     logger.Session("task-http-handler"),
+		controller: controller,
+		exitChan:   exitChan,
 	}
 }
 
@@ -50,15 +48,18 @@ func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
 	request := &models.TasksRequest{}
 	response := &models.TasksResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { writeResponse(w, response) }()
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		filter := models.TaskFilter{Domain: request.Domain, CellID: request.CellId}
-		response.Tasks, err = h.db.Tasks(logger, filter)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
 	}
 
+	response.Tasks, err = h.controller.Tasks(logger, request.Domain, request.CellId)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
@@ -68,14 +69,18 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 	request := &models.TaskByGuidRequest{}
 	response := &models.TaskResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { writeResponse(w, response) }()
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		response.Task, err = h.db.TaskByGuid(logger, request.TaskGuid)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
 	}
 
+	response.Task, err = h.controller.TaskByGuid(logger, request.TaskGuid)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
@@ -86,30 +91,17 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response) }()
 
 	err = parseRequest(logger, req, request)
 	if err != nil {
+		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	logger = logger.WithData(lager.Data{"task_guid": request.TaskGuid})
-	err = h.db.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	logger.Debug("start-task-auction-request")
-	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(request.TaskGuid, request.Domain, request.TaskDefinition)
-	err = h.auctioneerClient.RequestTaskAuctions([]*auctioneer.TaskStartRequest{&taskStartRequest})
-	if err != nil {
-		logger.Error("failed-requesting-task-auction", err)
-		// The creation succeeded, the auction request error can be dropped
-	} else {
-		logger.Debug("succeeded-requesting-task-auction")
-	}
+	err = h.controller.DesireTask(h.logger, request.TaskDefinition, request.TaskGuid, request.Domain)
+	response.Error = models.ConvertError(err)
 }
 
 func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
@@ -119,15 +111,18 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.StartTaskRequest{}
 	response := &models.StartTaskResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { writeResponse(w, response) }()
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		logger = logger.WithData(lager.Data{"task_guid": request.TaskGuid, "cell_id": request.CellId})
-		response.ShouldStart, err = h.db.StartTask(logger, request.TaskGuid, request.CellId)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
 	}
 
+	response.ShouldStart, err = h.controller.StartTask(logger, request.TaskGuid, request.CellId)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
@@ -135,8 +130,9 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response) }()
 
 	err := parseRequest(logger, req, request)
 	if err != nil {
@@ -145,37 +141,8 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	task, cellID, err := h.db.CancelTask(logger, request.TaskGuid)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	if task.CompletionCallbackUrl != "" {
-		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
-	}
-
-	if cellID == "" {
-		return
-	}
-
-	logger.Info("start-check-cell-presence", lager.Data{"cell_id": cellID})
-	cellPresence, err := h.serviceClient.CellById(logger, cellID)
-	if err != nil {
-		logger.Error("failed-fetching-cell-presence", err)
-		return
-	}
-	logger.Info("finished-check-cell-presence", lager.Data{"cell_id": cellID})
-
-	repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
-	logger.Info("start-rep-cancel-task", lager.Data{"task_guid": request.TaskGuid})
-	repClient.CancelTask(request.TaskGuid)
-	if err != nil {
-		logger.Error("failed-rep-cancel-task", err)
-		return
-	}
-	logger.Info("finished-rep-cancel-task", lager.Data{"task_guid": request.TaskGuid})
+	err = h.controller.CancelTask(logger, request.TaskGuid)
+	response.Error = models.ConvertError(err)
 }
 
 func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
@@ -186,24 +153,17 @@ func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response) }()
 
 	err = parseRequest(logger, req, request)
 	if err != nil {
+		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	task, err := h.db.FailTask(logger, request.TaskGuid, request.FailureReason)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	if task.CompletionCallbackUrl != "" {
-		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
-	}
+	err = h.controller.FailTask(logger, request.TaskGuid, request.FailureReason)
+	response.Error = models.ConvertError(err)
 }
 
 func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
@@ -214,24 +174,17 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response) }()
 
 	err = parseRequest(logger, req, request)
 	if err != nil {
 		response.Error = models.ConvertError(err)
+		logger.Error("failed-parsing-request", err)
 		return
 	}
 
-	task, err := h.db.CompleteTask(logger, request.TaskGuid, request.CellId, request.Failed, request.FailureReason, request.Result)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	if task.CompletionCallbackUrl != "" {
-		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
-	}
+	err = h.controller.CompleteTask(logger, request.TaskGuid, request.CellId, request.Failed, request.FailureReason, request.Result)
+	response.Error = models.ConvertError(err)
 }
 
 func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
@@ -241,14 +194,18 @@ func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { writeResponse(w, response) }()
+
 	err = parseRequest(logger, req, request)
-	if err == nil {
-		err = h.db.ResolvingTask(logger, request.TaskGuid)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
 	}
 
+	err = h.controller.ResolvingTask(logger, request.TaskGuid)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, req *http.Request) {
@@ -258,68 +215,16 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, req *http.Request) {
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		err = h.db.DeleteTask(logger, request.TaskGuid)
-	}
-
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
-}
-
-func (h *TaskHandler) ConvergeTasks(w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger := h.logger.Session("converge-tasks")
-
-	request := &models.ConvergeTasksRequest{}
-	response := &models.ConvergeTasksResponse{}
-
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response) }()
 
 	err = parseRequest(logger, req, request)
-
 	if err != nil {
-		response.Error = models.ConvertError(err)
-	}
-
-	logger.Debug("listing-cells")
-	cellSet, err := h.serviceClient.Cells(logger)
-	if err == models.ErrResourceNotFound {
-		logger.Debug("no-cells-found")
-		cellSet = models.CellSet{}
-	} else if err != nil {
-		logger.Debug("failed-listing-cells")
+		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
 		return
 	}
-	logger.Debug("succeeded-listing-cells")
 
-	tasksToAuction, tasksToComplete := h.db.ConvergeTasks(
-		logger,
-		cellSet,
-		time.Duration(request.KickTaskDuration),
-		time.Duration(request.ExpirePendingTaskDuration),
-		time.Duration(request.ExpireCompletedTaskDuration),
-	)
-
-	if len(tasksToAuction) > 0 {
-		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
-		if err := h.auctioneerClient.RequestTaskAuctions(tasksToAuction); err != nil {
-			taskGuids := make([]string, len(tasksToAuction))
-			for i, task := range tasksToAuction {
-				taskGuids[i] = task.TaskGuid
-			}
-			logger.Error("failed-to-request-auctions-for-pending-tasks", err,
-				lager.Data{"task_guids": taskGuids})
-		}
-		logger.Debug("done-requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
-	}
-
-	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
-	for _, task := range tasksToComplete {
-		h.taskCompletionClient.Submit(h.db, task)
-	}
-	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+	err = h.controller.DeleteTask(logger, request.TaskGuid)
+	response.Error = models.ConvertError(err)
 }

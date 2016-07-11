@@ -120,9 +120,6 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute_r0}, // Deprecated
 
-	// LRP Convergence
-	{Path: "/v1/lrps/converge", Method: "POST", Name: ConvergeLRPsRoute},
-
 	// Tasks
 	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},
 	{Path: "/v1/tasks/get_by_task_guid.r2", Method: "POST", Name: TaskByGuidRoute},
@@ -142,9 +139,6 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute},
 
 	{Path: "/v1/tasks/desire", Method: "POST", Name: DesireTaskRoute_r0}, // Deprecated
-
-	// Task Convergence
-	{Path: "/v1/tasks/converge", Method: "POST", Name: ConvergeTasksRoute},
 
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},

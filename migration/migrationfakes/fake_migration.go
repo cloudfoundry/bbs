@@ -66,11 +66,14 @@ type FakeMigration struct {
 	requiresSQLReturns     struct {
 		result1 bool
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeMigration) Version() int64 {
 	fake.versionMutex.Lock()
 	fake.versionArgsForCall = append(fake.versionArgsForCall, struct{}{})
+	fake.recordInvocation("Version", []interface{}{})
 	fake.versionMutex.Unlock()
 	if fake.VersionStub != nil {
 		return fake.VersionStub()
@@ -97,6 +100,7 @@ func (fake *FakeMigration) Up(logger lager.Logger) error {
 	fake.upArgsForCall = append(fake.upArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Up", []interface{}{logger})
 	fake.upMutex.Unlock()
 	if fake.UpStub != nil {
 		return fake.UpStub(logger)
@@ -129,6 +133,7 @@ func (fake *FakeMigration) Down(logger lager.Logger) error {
 	fake.downArgsForCall = append(fake.downArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Down", []interface{}{logger})
 	fake.downMutex.Unlock()
 	if fake.DownStub != nil {
 		return fake.DownStub(logger)
@@ -161,6 +166,7 @@ func (fake *FakeMigration) SetStoreClient(storeClient etcd.StoreClient) {
 	fake.setStoreClientArgsForCall = append(fake.setStoreClientArgsForCall, struct {
 		storeClient etcd.StoreClient
 	}{storeClient})
+	fake.recordInvocation("SetStoreClient", []interface{}{storeClient})
 	fake.setStoreClientMutex.Unlock()
 	if fake.SetStoreClientStub != nil {
 		fake.SetStoreClientStub(storeClient)
@@ -184,6 +190,7 @@ func (fake *FakeMigration) SetCryptor(cryptor encryption.Cryptor) {
 	fake.setCryptorArgsForCall = append(fake.setCryptorArgsForCall, struct {
 		cryptor encryption.Cryptor
 	}{cryptor})
+	fake.recordInvocation("SetCryptor", []interface{}{cryptor})
 	fake.setCryptorMutex.Unlock()
 	if fake.SetCryptorStub != nil {
 		fake.SetCryptorStub(cryptor)
@@ -207,6 +214,7 @@ func (fake *FakeMigration) SetClock(c clock.Clock) {
 	fake.setClockArgsForCall = append(fake.setClockArgsForCall, struct {
 		c clock.Clock
 	}{c})
+	fake.recordInvocation("SetClock", []interface{}{c})
 	fake.setClockMutex.Unlock()
 	if fake.SetClockStub != nil {
 		fake.SetClockStub(c)
@@ -230,6 +238,7 @@ func (fake *FakeMigration) SetRawSQLDB(rawSQLDB *sql.DB) {
 	fake.setRawSQLDBArgsForCall = append(fake.setRawSQLDBArgsForCall, struct {
 		rawSQLDB *sql.DB
 	}{rawSQLDB})
+	fake.recordInvocation("SetRawSQLDB", []interface{}{rawSQLDB})
 	fake.setRawSQLDBMutex.Unlock()
 	if fake.SetRawSQLDBStub != nil {
 		fake.SetRawSQLDBStub(rawSQLDB)
@@ -253,6 +262,7 @@ func (fake *FakeMigration) SetDBFlavor(flavor string) {
 	fake.setDBFlavorArgsForCall = append(fake.setDBFlavorArgsForCall, struct {
 		flavor string
 	}{flavor})
+	fake.recordInvocation("SetDBFlavor", []interface{}{flavor})
 	fake.setDBFlavorMutex.Unlock()
 	if fake.SetDBFlavorStub != nil {
 		fake.SetDBFlavorStub(flavor)
@@ -274,6 +284,7 @@ func (fake *FakeMigration) SetDBFlavorArgsForCall(i int) string {
 func (fake *FakeMigration) RequiresSQL() bool {
 	fake.requiresSQLMutex.Lock()
 	fake.requiresSQLArgsForCall = append(fake.requiresSQLArgsForCall, struct{}{})
+	fake.recordInvocation("RequiresSQL", []interface{}{})
 	fake.requiresSQLMutex.Unlock()
 	if fake.RequiresSQLStub != nil {
 		return fake.RequiresSQLStub()
@@ -293,6 +304,42 @@ func (fake *FakeMigration) RequiresSQLReturns(result1 bool) {
 	fake.requiresSQLReturns = struct {
 		result1 bool
 	}{result1}
+}
+
+func (fake *FakeMigration) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.versionMutex.RLock()
+	defer fake.versionMutex.RUnlock()
+	fake.upMutex.RLock()
+	defer fake.upMutex.RUnlock()
+	fake.downMutex.RLock()
+	defer fake.downMutex.RUnlock()
+	fake.setStoreClientMutex.RLock()
+	defer fake.setStoreClientMutex.RUnlock()
+	fake.setCryptorMutex.RLock()
+	defer fake.setCryptorMutex.RUnlock()
+	fake.setClockMutex.RLock()
+	defer fake.setClockMutex.RUnlock()
+	fake.setRawSQLDBMutex.RLock()
+	defer fake.setRawSQLDBMutex.RUnlock()
+	fake.setDBFlavorMutex.RLock()
+	defer fake.setDBFlavorMutex.RUnlock()
+	fake.requiresSQLMutex.RLock()
+	defer fake.requiresSQLMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeMigration) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ migration.Migration = new(FakeMigration)

@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
+	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/handlers/middleware"
@@ -31,15 +32,15 @@ func New(
 	migrationsDone <-chan struct{},
 	exitChan chan struct{},
 ) http.Handler {
-	retirer := NewActualLRPRetirer(db, actualHub, repClientFactory, serviceClient)
+	retirer := controllers.NewActualLRPRetirer(db, actualHub, repClientFactory, serviceClient)
 	pingHandler := NewPingHandler(logger)
 	domainHandler := NewDomainHandler(logger, db, exitChan)
 	actualLRPHandler := NewActualLRPHandler(logger, db, exitChan)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(logger, db, db, actualHub, auctioneerClient, retirer, exitChan)
 	evacuationHandler := NewEvacuationHandler(logger, db, db, db, actualHub, auctioneerClient, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(logger, updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
-	lrpConvergenceHandler := NewLRPConvergenceHandler(logger, db, actualHub, auctioneerClient, serviceClient, retirer, convergenceWorkersSize, exitChan)
-	taskHandler := NewTaskHandler(logger, db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, exitChan)
+	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
+	taskHandler := NewTaskHandler(logger, taskController, exitChan)
 	eventsHandler := NewEventHandler(logger, desiredHub, actualHub)
 	cellsHandler := NewCellHandler(logger, serviceClient, exitChan)
 
@@ -73,9 +74,6 @@ func New(
 		bbs.EvacuateStoppedActualLRPRoute:  route(emitter.EmitLatency(evacuationHandler.EvacuateStoppedActualLRP)),
 		bbs.EvacuateRunningActualLRPRoute:  route(emitter.EmitLatency(evacuationHandler.EvacuateRunningActualLRP)),
 
-		// LRP Convergence
-		bbs.ConvergeLRPsRoute: route(emitter.EmitLatency(lrpConvergenceHandler.ConvergeLRPs)),
-
 		// Desired LRPs
 		bbs.DesiredLRPsRoute:               route(emitter.EmitLatency(desiredLRPHandler.DesiredLRPs)),
 		bbs.DesiredLRPByProcessGuidRoute:   route(emitter.EmitLatency(desiredLRPHandler.DesiredLRPByProcessGuid)),
@@ -100,7 +98,6 @@ func New(
 		bbs.CompleteTaskRoute:  route(emitter.EmitLatency(taskHandler.CompleteTask)),
 		bbs.ResolvingTaskRoute: route(emitter.EmitLatency(taskHandler.ResolvingTask)),
 		bbs.DeleteTaskRoute:    route(emitter.EmitLatency(taskHandler.DeleteTask)),
-		bbs.ConvergeTasksRoute: route(emitter.EmitLatency(taskHandler.ConvergeTasks)),
 
 		bbs.TasksRoute_r1:      route(emitter.EmitLatency(taskHandler.Tasks_r1)),
 		bbs.TasksRoute_r0:      route(emitter.EmitLatency(taskHandler.Tasks_r0)),
@@ -132,7 +129,7 @@ func New(
 }
 
 func route(f http.HandlerFunc) http.Handler {
-	return http.HandlerFunc(f)
+	return f
 }
 
 func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) error {

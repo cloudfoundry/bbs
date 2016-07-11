@@ -232,6 +232,8 @@ type FakeClient struct {
 		result1 []*models.CellPresence
 		result2 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeClient) DesireTask(logger lager.Logger, guid string, domain string, def *models.TaskDefinition) error {
@@ -242,6 +244,7 @@ func (fake *FakeClient) DesireTask(logger lager.Logger, guid string, domain stri
 		domain string
 		def    *models.TaskDefinition
 	}{logger, guid, domain, def})
+	fake.recordInvocation("DesireTask", []interface{}{logger, guid, domain, def})
 	fake.desireTaskMutex.Unlock()
 	if fake.DesireTaskStub != nil {
 		return fake.DesireTaskStub(logger, guid, domain, def)
@@ -274,6 +277,7 @@ func (fake *FakeClient) Tasks(logger lager.Logger) ([]*models.Task, error) {
 	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Tasks", []interface{}{logger})
 	fake.tasksMutex.Unlock()
 	if fake.TasksStub != nil {
 		return fake.TasksStub(logger)
@@ -308,6 +312,7 @@ func (fake *FakeClient) TasksByDomain(logger lager.Logger, domain string) ([]*mo
 		logger lager.Logger
 		domain string
 	}{logger, domain})
+	fake.recordInvocation("TasksByDomain", []interface{}{logger, domain})
 	fake.tasksByDomainMutex.Unlock()
 	if fake.TasksByDomainStub != nil {
 		return fake.TasksByDomainStub(logger, domain)
@@ -342,6 +347,7 @@ func (fake *FakeClient) TasksByCellID(logger lager.Logger, cellId string) ([]*mo
 		logger lager.Logger
 		cellId string
 	}{logger, cellId})
+	fake.recordInvocation("TasksByCellID", []interface{}{logger, cellId})
 	fake.tasksByCellIDMutex.Unlock()
 	if fake.TasksByCellIDStub != nil {
 		return fake.TasksByCellIDStub(logger, cellId)
@@ -376,6 +382,7 @@ func (fake *FakeClient) TaskByGuid(logger lager.Logger, guid string) (*models.Ta
 		logger lager.Logger
 		guid   string
 	}{logger, guid})
+	fake.recordInvocation("TaskByGuid", []interface{}{logger, guid})
 	fake.taskByGuidMutex.Unlock()
 	if fake.TaskByGuidStub != nil {
 		return fake.TaskByGuidStub(logger, guid)
@@ -410,6 +417,7 @@ func (fake *FakeClient) CancelTask(logger lager.Logger, taskGuid string) error {
 		logger   lager.Logger
 		taskGuid string
 	}{logger, taskGuid})
+	fake.recordInvocation("CancelTask", []interface{}{logger, taskGuid})
 	fake.cancelTaskMutex.Unlock()
 	if fake.CancelTaskStub != nil {
 		return fake.CancelTaskStub(logger, taskGuid)
@@ -443,6 +451,7 @@ func (fake *FakeClient) ResolvingTask(logger lager.Logger, taskGuid string) erro
 		logger   lager.Logger
 		taskGuid string
 	}{logger, taskGuid})
+	fake.recordInvocation("ResolvingTask", []interface{}{logger, taskGuid})
 	fake.resolvingTaskMutex.Unlock()
 	if fake.ResolvingTaskStub != nil {
 		return fake.ResolvingTaskStub(logger, taskGuid)
@@ -476,6 +485,7 @@ func (fake *FakeClient) DeleteTask(logger lager.Logger, taskGuid string) error {
 		logger   lager.Logger
 		taskGuid string
 	}{logger, taskGuid})
+	fake.recordInvocation("DeleteTask", []interface{}{logger, taskGuid})
 	fake.deleteTaskMutex.Unlock()
 	if fake.DeleteTaskStub != nil {
 		return fake.DeleteTaskStub(logger, taskGuid)
@@ -508,6 +518,7 @@ func (fake *FakeClient) Domains(logger lager.Logger) ([]string, error) {
 	fake.domainsArgsForCall = append(fake.domainsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Domains", []interface{}{logger})
 	fake.domainsMutex.Unlock()
 	if fake.DomainsStub != nil {
 		return fake.DomainsStub(logger)
@@ -543,6 +554,7 @@ func (fake *FakeClient) UpsertDomain(logger lager.Logger, domain string, ttl tim
 		domain string
 		ttl    time.Duration
 	}{logger, domain, ttl})
+	fake.recordInvocation("UpsertDomain", []interface{}{logger, domain, ttl})
 	fake.upsertDomainMutex.Unlock()
 	if fake.UpsertDomainStub != nil {
 		return fake.UpsertDomainStub(logger, domain, ttl)
@@ -576,6 +588,7 @@ func (fake *FakeClient) ActualLRPGroups(arg1 lager.Logger, arg2 models.ActualLRP
 		arg1 lager.Logger
 		arg2 models.ActualLRPFilter
 	}{arg1, arg2})
+	fake.recordInvocation("ActualLRPGroups", []interface{}{arg1, arg2})
 	fake.actualLRPGroupsMutex.Unlock()
 	if fake.ActualLRPGroupsStub != nil {
 		return fake.ActualLRPGroupsStub(arg1, arg2)
@@ -610,6 +623,7 @@ func (fake *FakeClient) ActualLRPGroupsByProcessGuid(logger lager.Logger, proces
 		logger      lager.Logger
 		processGuid string
 	}{logger, processGuid})
+	fake.recordInvocation("ActualLRPGroupsByProcessGuid", []interface{}{logger, processGuid})
 	fake.actualLRPGroupsByProcessGuidMutex.Unlock()
 	if fake.ActualLRPGroupsByProcessGuidStub != nil {
 		return fake.ActualLRPGroupsByProcessGuidStub(logger, processGuid)
@@ -645,6 +659,7 @@ func (fake *FakeClient) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger,
 		processGuid string
 		index       int
 	}{logger, processGuid, index})
+	fake.recordInvocation("ActualLRPGroupByProcessGuidAndIndex", []interface{}{logger, processGuid, index})
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.Unlock()
 	if fake.ActualLRPGroupByProcessGuidAndIndexStub != nil {
 		return fake.ActualLRPGroupByProcessGuidAndIndexStub(logger, processGuid, index)
@@ -679,6 +694,7 @@ func (fake *FakeClient) RetireActualLRP(logger lager.Logger, key *models.ActualL
 		logger lager.Logger
 		key    *models.ActualLRPKey
 	}{logger, key})
+	fake.recordInvocation("RetireActualLRP", []interface{}{logger, key})
 	fake.retireActualLRPMutex.Unlock()
 	if fake.RetireActualLRPStub != nil {
 		return fake.RetireActualLRPStub(logger, key)
@@ -712,6 +728,7 @@ func (fake *FakeClient) DesiredLRPs(arg1 lager.Logger, arg2 models.DesiredLRPFil
 		arg1 lager.Logger
 		arg2 models.DesiredLRPFilter
 	}{arg1, arg2})
+	fake.recordInvocation("DesiredLRPs", []interface{}{arg1, arg2})
 	fake.desiredLRPsMutex.Unlock()
 	if fake.DesiredLRPsStub != nil {
 		return fake.DesiredLRPsStub(arg1, arg2)
@@ -746,6 +763,7 @@ func (fake *FakeClient) DesiredLRPByProcessGuid(logger lager.Logger, processGuid
 		logger      lager.Logger
 		processGuid string
 	}{logger, processGuid})
+	fake.recordInvocation("DesiredLRPByProcessGuid", []interface{}{logger, processGuid})
 	fake.desiredLRPByProcessGuidMutex.Unlock()
 	if fake.DesiredLRPByProcessGuidStub != nil {
 		return fake.DesiredLRPByProcessGuidStub(logger, processGuid)
@@ -780,6 +798,7 @@ func (fake *FakeClient) DesiredLRPSchedulingInfos(arg1 lager.Logger, arg2 models
 		arg1 lager.Logger
 		arg2 models.DesiredLRPFilter
 	}{arg1, arg2})
+	fake.recordInvocation("DesiredLRPSchedulingInfos", []interface{}{arg1, arg2})
 	fake.desiredLRPSchedulingInfosMutex.Unlock()
 	if fake.DesiredLRPSchedulingInfosStub != nil {
 		return fake.DesiredLRPSchedulingInfosStub(arg1, arg2)
@@ -814,6 +833,7 @@ func (fake *FakeClient) DesireLRP(arg1 lager.Logger, arg2 *models.DesiredLRP) er
 		arg1 lager.Logger
 		arg2 *models.DesiredLRP
 	}{arg1, arg2})
+	fake.recordInvocation("DesireLRP", []interface{}{arg1, arg2})
 	fake.desireLRPMutex.Unlock()
 	if fake.DesireLRPStub != nil {
 		return fake.DesireLRPStub(arg1, arg2)
@@ -848,6 +868,7 @@ func (fake *FakeClient) UpdateDesiredLRP(logger lager.Logger, processGuid string
 		processGuid string
 		update      *models.DesiredLRPUpdate
 	}{logger, processGuid, update})
+	fake.recordInvocation("UpdateDesiredLRP", []interface{}{logger, processGuid, update})
 	fake.updateDesiredLRPMutex.Unlock()
 	if fake.UpdateDesiredLRPStub != nil {
 		return fake.UpdateDesiredLRPStub(logger, processGuid, update)
@@ -881,6 +902,7 @@ func (fake *FakeClient) RemoveDesiredLRP(logger lager.Logger, processGuid string
 		logger      lager.Logger
 		processGuid string
 	}{logger, processGuid})
+	fake.recordInvocation("RemoveDesiredLRP", []interface{}{logger, processGuid})
 	fake.removeDesiredLRPMutex.Unlock()
 	if fake.RemoveDesiredLRPStub != nil {
 		return fake.RemoveDesiredLRPStub(logger, processGuid)
@@ -913,6 +935,7 @@ func (fake *FakeClient) SubscribeToEvents(logger lager.Logger) (events.EventSour
 	fake.subscribeToEventsArgsForCall = append(fake.subscribeToEventsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("SubscribeToEvents", []interface{}{logger})
 	fake.subscribeToEventsMutex.Unlock()
 	if fake.SubscribeToEventsStub != nil {
 		return fake.SubscribeToEventsStub(logger)
@@ -946,6 +969,7 @@ func (fake *FakeClient) Ping(logger lager.Logger) bool {
 	fake.pingArgsForCall = append(fake.pingArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Ping", []interface{}{logger})
 	fake.pingMutex.Unlock()
 	if fake.PingStub != nil {
 		return fake.PingStub(logger)
@@ -978,6 +1002,7 @@ func (fake *FakeClient) Cells(logger lager.Logger) ([]*models.CellPresence, erro
 	fake.cellsArgsForCall = append(fake.cellsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Cells", []interface{}{logger})
 	fake.cellsMutex.Unlock()
 	if fake.CellsStub != nil {
 		return fake.CellsStub(logger)
@@ -1004,6 +1029,70 @@ func (fake *FakeClient) CellsReturns(result1 []*models.CellPresence, result2 err
 		result1 []*models.CellPresence
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	fake.tasksMutex.RLock()
+	defer fake.tasksMutex.RUnlock()
+	fake.tasksByDomainMutex.RLock()
+	defer fake.tasksByDomainMutex.RUnlock()
+	fake.tasksByCellIDMutex.RLock()
+	defer fake.tasksByCellIDMutex.RUnlock()
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	fake.domainsMutex.RLock()
+	defer fake.domainsMutex.RUnlock()
+	fake.upsertDomainMutex.RLock()
+	defer fake.upsertDomainMutex.RUnlock()
+	fake.actualLRPGroupsMutex.RLock()
+	defer fake.actualLRPGroupsMutex.RUnlock()
+	fake.actualLRPGroupsByProcessGuidMutex.RLock()
+	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
+	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
+	fake.retireActualLRPMutex.RLock()
+	defer fake.retireActualLRPMutex.RUnlock()
+	fake.desiredLRPsMutex.RLock()
+	defer fake.desiredLRPsMutex.RUnlock()
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	fake.desiredLRPSchedulingInfosMutex.RLock()
+	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	fake.subscribeToEventsMutex.RLock()
+	defer fake.subscribeToEventsMutex.RUnlock()
+	fake.pingMutex.RLock()
+	defer fake.pingMutex.RUnlock()
+	fake.cellsMutex.RLock()
+	defer fake.cellsMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeClient) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ bbs.Client = new(FakeClient)

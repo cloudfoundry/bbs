@@ -167,8 +167,9 @@ var _ = BeforeEach(func() {
 		MetricsReportInterval: 10 * time.Millisecond,
 		HealthAddress:         bbsHealthAddress,
 
-		EncryptionKeys: []string{"label:key"},
-		ActiveKeyLabel: "label",
+		EncryptionKeys:         []string{"label:key"},
+		ActiveKeyLabel:         "label",
+		ConvergeRepeatInterval: time.Second,
 	}
 	if test_helpers.UseSQL() {
 		bbsArgs.DatabaseDriver = sqlRunner.DriverName()
@@ -200,6 +201,4 @@ var _ = AfterEach(func() {
 	if test_helpers.UseSQL() {
 		sqlRunner.Reset()
 	}
-
-	ginkgomon.Kill(bbsProcess)
 })

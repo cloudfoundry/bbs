@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
+	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/fake_bbs"
@@ -52,7 +53,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		actualHub = &eventfakes.FakeHub{}
 		exitCh = make(chan struct{}, 1)
-		retirer := handlers.NewActualLRPRetirer(fakeActualLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
+		retirer := controllers.NewActualLRPRetirer(fakeActualLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
 		handler = handlers.NewActualLRPLifecycleHandler(logger, fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient, retirer, exitCh)
 	})
 

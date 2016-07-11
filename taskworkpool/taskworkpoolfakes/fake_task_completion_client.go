@@ -16,6 +16,8 @@ type FakeTaskCompletionClient struct {
 		taskDB db.TaskDB
 		task   *models.Task
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeTaskCompletionClient) Submit(taskDB db.TaskDB, task *models.Task) {
@@ -24,6 +26,7 @@ func (fake *FakeTaskCompletionClient) Submit(taskDB db.TaskDB, task *models.Task
 		taskDB db.TaskDB
 		task   *models.Task
 	}{taskDB, task})
+	fake.recordInvocation("Submit", []interface{}{taskDB, task})
 	fake.submitMutex.Unlock()
 	if fake.SubmitStub != nil {
 		fake.SubmitStub(taskDB, task)
@@ -40,6 +43,26 @@ func (fake *FakeTaskCompletionClient) SubmitArgsForCall(i int) (db.TaskDB, *mode
 	fake.submitMutex.RLock()
 	defer fake.submitMutex.RUnlock()
 	return fake.submitArgsForCall[i].taskDB, fake.submitArgsForCall[i].task
+}
+
+func (fake *FakeTaskCompletionClient) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.submitMutex.RLock()
+	defer fake.submitMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeTaskCompletionClient) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ taskworkpool.TaskCompletionClient = new(FakeTaskCompletionClient)

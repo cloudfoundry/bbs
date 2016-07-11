@@ -1,20 +1,14 @@
 package handlers_test
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
-	"time"
 
-	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
-	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/handlers"
+	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"code.cloudfoundry.org/bbs/taskworkpool/taskworkpoolfakes"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -22,10 +16,8 @@ import (
 
 var _ = Describe("Task Handlers", func() {
 	var (
-		logger                   *lagertest.TestLogger
-		fakeTaskDB               *dbfakes.FakeTaskDB
-		fakeAuctioneerClient     *auctioneerfakes.FakeClient
-		fakeTaskCompletionClient *taskworkpoolfakes.FakeTaskCompletionClient
+		logger     *lagertest.TestLogger
+		controller *fake_controllers.FakeTaskController
 
 		responseRecorder *httptest.ResponseRecorder
 
@@ -38,20 +30,18 @@ var _ = Describe("Task Handlers", func() {
 	)
 
 	BeforeEach(func() {
-		fakeTaskDB = new(dbfakes.FakeTaskDB)
-		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
-		fakeTaskCompletionClient = new(taskworkpoolfakes.FakeTaskCompletionClient)
-
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
-		handler = handlers.NewTaskHandler(logger, fakeTaskDB, fakeTaskCompletionClient, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory, exitCh)
+		controller = &fake_controllers.FakeTaskController{}
+		handler = handlers.NewTaskHandler(logger, controller, exitCh)
 	})
 
 	Describe("Tasks", func() {
 		var (
-			task1 models.Task
-			task2 models.Task
+			task1          models.Task
+			task2          models.Task
+			cellId, domain string
 		)
 
 		BeforeEach(func() {
@@ -61,16 +51,20 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			requestBody = &models.TasksRequest{
+				Domain: domain,
+				CellId: cellId,
+			}
+			request = newTestRequest(requestBody)
 			handler.Tasks(responseRecorder, request)
 		})
 
-		Context("when reading tasks from DB succeeds", func() {
+		Context("when reading tasks from controller succeeds", func() {
 			var tasks []*models.Task
 
 			BeforeEach(func() {
 				tasks = []*models.Task{&task1, &task2}
-				fakeTaskDB.TasksReturns(tasks, nil)
+				controller.TasksReturns(tasks, nil)
 			})
 
 			It("returns a list of task", func() {
@@ -83,44 +77,43 @@ var _ = Describe("Task Handlers", func() {
 				Expect(response.Tasks).To(Equal(tasks))
 			})
 
-			It("calls the DB with no filter", func() {
-				Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
-				_, filter := fakeTaskDB.TasksArgsForCall(0)
-				Expect(filter).To(Equal(models.TaskFilter{}))
+			It("calls the controller with no filter", func() {
+				Expect(controller.TasksCallCount()).To(Equal(1))
+				_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+				Expect(actualDomain).To(Equal(domain))
+				Expect(actualCellId).To(Equal(cellId))
 			})
 
 			Context("and filtering by domain", func() {
 				BeforeEach(func() {
-					requestBody = &models.TasksRequest{
-						Domain: "domain-1",
-					}
+					domain = "domain-1"
 				})
 
-				It("calls the DB with a domain filter", func() {
-					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
-					_, filter := fakeTaskDB.TasksArgsForCall(0)
-					Expect(filter.Domain).To(Equal("domain-1"))
+				It("calls the controller with a domain filter", func() {
+					Expect(controller.TasksCallCount()).To(Equal(1))
+					_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+					Expect(actualDomain).To(Equal(domain))
+					Expect(actualCellId).To(Equal(cellId))
 				})
 			})
 
 			Context("and filtering by cell id", func() {
 				BeforeEach(func() {
-					requestBody = &models.TasksRequest{
-						CellId: "cell-id",
-					}
+					cellId = "cell-id"
 				})
 
-				It("calls the DB with a cell filter", func() {
-					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
-					_, filter := fakeTaskDB.TasksArgsForCall(0)
-					Expect(filter.CellID).To(Equal("cell-id"))
+				It("calls the controller with a cell filter", func() {
+					Expect(controller.TasksCallCount()).To(Equal(1))
+					_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+					Expect(actualDomain).To(Equal(domain))
+					Expect(actualCellId).To(Equal(cellId))
 				})
 			})
 		})
 
-		Context("when the DB returns an unrecoverable error", func() {
+		Context("when the controller returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeTaskDB.TasksReturns(nil, models.NewUnrecoverableError(nil))
+				controller.TasksReturns(nil, models.NewUnrecoverableError(nil))
 			})
 
 			It("logs and writes to the exit channel", func() {
@@ -129,9 +122,9 @@ var _ = Describe("Task Handlers", func() {
 			})
 		})
 
-		Context("when the DB errors out", func() {
+		Context("when the controller errors out", func() {
 			BeforeEach(func() {
-				fakeTaskDB.TasksReturns(nil, models.ErrUnknownError)
+				controller.TasksReturns(nil, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
@@ -159,17 +152,17 @@ var _ = Describe("Task Handlers", func() {
 			handler.TaskByGuid(responseRecorder, request)
 		})
 
-		Context("when reading a task from the DB succeeds", func() {
+		Context("when reading a task from the controller succeeds", func() {
 			var task *models.Task
 
 			BeforeEach(func() {
 				task = &models.Task{TaskGuid: taskGuid}
-				fakeTaskDB.TaskByGuidReturns(task, nil)
+				controller.TaskByGuidReturns(task, nil)
 			})
 
 			It("fetches task by guid", func() {
-				Expect(fakeTaskDB.TaskByGuidCallCount()).To(Equal(1))
-				_, actualGuid := fakeTaskDB.TaskByGuidArgsForCall(0)
+				Expect(controller.TaskByGuidCallCount()).To(Equal(1))
+				_, actualGuid := controller.TaskByGuidArgsForCall(0)
 				Expect(actualGuid).To(Equal(taskGuid))
 			})
 
@@ -184,9 +177,9 @@ var _ = Describe("Task Handlers", func() {
 			})
 		})
 
-		Context("when the DB returns no task", func() {
+		Context("when the controller returns no task", func() {
 			BeforeEach(func() {
-				fakeTaskDB.TaskByGuidReturns(nil, models.ErrResourceNotFound)
+				controller.TaskByGuidReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("returns a resource not found error", func() {
@@ -199,9 +192,20 @@ var _ = Describe("Task Handlers", func() {
 			})
 		})
 
-		Context("when the DB errors out", func() {
+		Context("when the controller returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeTaskDB.TaskByGuidReturns(nil, models.ErrUnknownError)
+				controller.TaskByGuidReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when the controller errors out", func() {
+			BeforeEach(func() {
+				controller.TaskByGuidReturns(nil, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
@@ -238,8 +242,8 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when the desire is successful", func() {
 			It("desires the task with the requested definitions", func() {
-				Expect(fakeTaskDB.DesireTaskCallCount()).To(Equal(1))
-				_, actualTaskDef, actualTaskGuid, actualDomain := fakeTaskDB.DesireTaskArgsForCall(0)
+				Expect(controller.DesireTaskCallCount()).To(Equal(1))
+				_, actualTaskDef, actualTaskGuid, actualDomain := controller.DesireTaskArgsForCall(0)
 				Expect(actualTaskDef).To(Equal(taskDef))
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualDomain).To(Equal(domain))
@@ -251,71 +255,11 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 			})
-
-			It("requests an auction", func() {
-				Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
-
-				var volumeMounts []string
-				for _, volMount := range taskDef.VolumeMounts {
-					volumeMounts = append(volumeMounts, volMount.Driver)
-				}
-
-				expectedStartRequest := auctioneer.TaskStartRequest{
-					Task: rep.Task{
-						TaskGuid: taskGuid,
-						Domain:   domain,
-						Resource: rep.Resource{
-							MemoryMB:      256,
-							DiskMB:        1024,
-							RootFs:        "docker:///docker.com/docker",
-							VolumeDrivers: volumeMounts,
-						},
-					},
-				}
-
-				requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
-				Expect(requestedTasks).To(HaveLen(1))
-				Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
-			})
-
-			Context("when requesting a task auction succeeds", func() {
-				BeforeEach(func() {
-					fakeAuctioneerClient.RequestTaskAuctionsReturns(nil)
-				})
-
-				It("does not return an error", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(response.Error).To(BeNil())
-				})
-			})
-
-			Context("when requesting a task auction fails", func() {
-				BeforeEach(func() {
-					fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
-				})
-
-				It("does not return an error", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(response.Error).To(BeNil())
-				})
-
-				It("does not request a second auction", func() {
-					Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
-				})
-			})
 		})
 
-		Context("when the DB returns an unrecoverable error", func() {
+		Context("when the controller returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeTaskDB.DesireTaskReturns(models.NewUnrecoverableError(nil))
+				controller.DesireTaskReturns(models.NewUnrecoverableError(nil))
 			})
 
 			It("logs and writes to the exit channel", func() {
@@ -326,7 +270,7 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when desiring the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.DesireTaskReturns(models.ErrUnknownError)
+				controller.DesireTaskReturns(models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -355,8 +299,8 @@ var _ = Describe("Task Handlers", func() {
 			})
 
 			It("calls StartTask", func() {
-				Expect(fakeTaskDB.StartTaskCallCount()).To(Equal(1))
-				taskLogger, taskGuid, cellId := fakeTaskDB.StartTaskArgsForCall(0)
+				Expect(controller.StartTaskCallCount()).To(Equal(1))
+				taskLogger, taskGuid, cellId := controller.StartTaskArgsForCall(0)
 				Expect(taskLogger.SessionName()).To(ContainSubstring("start-task"))
 				Expect(taskGuid).To(Equal("task-guid"))
 				Expect(cellId).To(Equal("cell-id"))
@@ -364,7 +308,7 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when the task should start", func() {
 				BeforeEach(func() {
-					fakeTaskDB.StartTaskReturns(true, nil)
+					controller.StartTaskReturns(true, nil)
 				})
 
 				It("responds with true", func() {
@@ -380,7 +324,7 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when the task should not start", func() {
 				BeforeEach(func() {
-					fakeTaskDB.StartTaskReturns(false, nil)
+					controller.StartTaskReturns(false, nil)
 				})
 
 				It("responds with false", func() {
@@ -394,9 +338,9 @@ var _ = Describe("Task Handlers", func() {
 				})
 			})
 
-			Context("when the DB returns an unrecoverable error", func() {
+			Context("when the controller returns an unrecoverable error", func() {
 				BeforeEach(func() {
-					fakeTaskDB.StartTaskReturns(false, models.NewUnrecoverableError(nil))
+					controller.StartTaskReturns(false, models.NewUnrecoverableError(nil))
 				})
 
 				It("logs and writes to the exit channel", func() {
@@ -405,9 +349,9 @@ var _ = Describe("Task Handlers", func() {
 				})
 			})
 
-			Context("when the DB fails", func() {
+			Context("when the controller fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.StartTaskReturns(false, models.ErrResourceExists)
+					controller.StartTaskReturns(false, models.ErrResourceExists)
 				})
 
 				It("bubbles up the underlying model error", func() {
@@ -425,7 +369,6 @@ var _ = Describe("Task Handlers", func() {
 	Describe("CancelTask", func() {
 		var (
 			request *http.Request
-			cellID  string
 		)
 
 		BeforeEach(func() {
@@ -433,9 +376,7 @@ var _ = Describe("Task Handlers", func() {
 				TaskGuid: "task-guid",
 			}
 
-			task := model_helpers.NewValidTask("hi-bob")
-			cellID = "the-cell"
-			fakeTaskDB.CancelTaskReturns(task, cellID, nil)
+			controller.CancelTaskReturns(nil)
 
 			request = newTestRequest(requestBody)
 		})
@@ -446,15 +387,15 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		Context("when the cancel request is normal", func() {
-			Context("when canceling the task in the db succeeds", func() {
+			Context("when canceling the task in the controller succeeds", func() {
 				BeforeEach(func() {
 					cellPresence := models.CellPresence{CellId: "cell-id"}
 					fakeServiceClient.CellByIdReturns(&cellPresence, nil)
 				})
 
 				It("returns no error", func() {
-					Expect(fakeTaskDB.CancelTaskCallCount()).To(Equal(1))
-					taskLogger, taskGuid := fakeTaskDB.CancelTaskArgsForCall(0)
+					Expect(controller.CancelTaskCallCount()).To(Equal(1))
+					taskLogger, taskGuid := controller.CancelTaskArgsForCall(0)
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 
@@ -464,89 +405,11 @@ var _ = Describe("Task Handlers", func() {
 
 					Expect(response.Error).To(BeNil())
 				})
-
-				Context("and the task has a complete URL", func() {
-					BeforeEach(func() {
-						task := model_helpers.NewValidTask("hi-bob")
-						task.CompletionCallbackUrl = "bogus"
-						fakeTaskDB.CancelTaskReturns(task, cellID, nil)
-					})
-
-					It("causes the workpool to complete its callback work", func() {
-						Eventually(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(1))
-					})
-				})
-
-				Context("but the task has no complete URL", func() {
-					BeforeEach(func() {
-						task := model_helpers.NewValidTask("hi-bob")
-						fakeTaskDB.CancelTaskReturns(task, cellID, nil)
-					})
-
-					It("does not complete the task callback", func() {
-						Consistently(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(0))
-					})
-				})
-
-				It("stops the task on the rep", func() {
-					Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(1))
-					_, actualCellID := fakeServiceClient.CellByIdArgsForCall(0)
-					Expect(actualCellID).To(Equal(cellID))
-
-					Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
-					guid := fakeRepClient.CancelTaskArgsForCall(0)
-					Expect(guid).To(Equal("task-guid"))
-				})
-
-				Context("when the task has no cell id", func() {
-					BeforeEach(func() {
-						task := model_helpers.NewValidTask("hi-bob")
-						fakeTaskDB.CancelTaskReturns(task, "", nil)
-					})
-
-					It("does not return an error", func() {
-						response := &models.TaskLifecycleResponse{}
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
-						Expect(err).NotTo(HaveOccurred())
-						Expect(response.Error).To(BeNil())
-
-						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(0))
-						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
-					})
-				})
-
-				Context("when fetching the cell presence fails", func() {
-					BeforeEach(func() {
-						fakeServiceClient.CellByIdReturns(nil, errors.New("lol"))
-					})
-
-					It("does not return an error", func() {
-						response := &models.TaskLifecycleResponse{}
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
-						Expect(err).NotTo(HaveOccurred())
-						Expect(response.Error).To(BeNil())
-
-						Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(0))
-					})
-				})
-
-				Context("when we fail to cancel the task on the rep", func() {
-					BeforeEach(func() {
-						fakeRepClient.CancelTaskReturns(errors.New("lol"))
-					})
-
-					It("does not return an error", func() {
-						response := &models.TaskLifecycleResponse{}
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
-						Expect(err).NotTo(HaveOccurred())
-						Expect(response.Error).To(BeNil())
-					})
-				})
 			})
 
 			Context("when cancelling the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.CancelTaskReturns(nil, "", models.ErrUnknownError)
+					controller.CancelTaskReturns(models.ErrUnknownError)
 				})
 
 				It("responds with an error", func() {
@@ -555,6 +418,16 @@ var _ = Describe("Task Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrUnknownError))
+				})
+			})
+			Context("when the controller returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					controller.CancelTaskReturns(models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
 				})
 			})
 		})
@@ -584,8 +457,7 @@ var _ = Describe("Task Handlers", func() {
 			taskGuid = "task-guid"
 			failureReason = "just cuz ;)"
 
-			task := model_helpers.NewValidTask("hi-bob")
-			fakeTaskDB.FailTaskReturns(task, nil)
+			controller.FailTaskReturns(nil)
 
 			requestBody = &models.FailTaskRequest{
 				TaskGuid:      taskGuid,
@@ -600,7 +472,7 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when failing the task succeeds", func() {
 			It("returns no error", func() {
-				_, actualTaskGuid, actualFailureReason := fakeTaskDB.FailTaskArgsForCall(0)
+				_, actualTaskGuid, actualFailureReason := controller.FailTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualFailureReason).To(Equal(failureReason))
 
@@ -611,34 +483,11 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 			})
-
-			Context("and the task has a complete URL", func() {
-				BeforeEach(func() {
-					task := model_helpers.NewValidTask("hi-bob")
-					task.CompletionCallbackUrl = "bogus"
-					fakeTaskDB.FailTaskReturns(task, nil)
-				})
-
-				It("causes the workpool to complete its callback work", func() {
-					Eventually(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(1))
-				})
-			})
-
-			Context("but the task has no complete URL", func() {
-				BeforeEach(func() {
-					task := model_helpers.NewValidTask("hi-bob")
-					fakeTaskDB.FailTaskReturns(task, nil)
-				})
-
-				It("does not complete the task callback", func() {
-					Consistently(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(0))
-				})
-			})
 		})
 
-		Context("when the DB returns an unrecoverable error", func() {
+		Context("when the controller returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeTaskDB.FailTaskReturns(nil, models.NewUnrecoverableError(nil))
+				controller.FailTaskReturns(models.NewUnrecoverableError(nil))
 			})
 
 			It("logs and writes to the exit channel", func() {
@@ -649,7 +498,7 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when failing the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.FailTaskReturns(nil, models.ErrUnknownError)
+				controller.FailTaskReturns(models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -679,8 +528,7 @@ var _ = Describe("Task Handlers", func() {
 			failureReason = "some-error"
 			result = "yeah"
 
-			task := model_helpers.NewValidTask("hi-bob")
-			fakeTaskDB.CompleteTaskReturns(task, nil)
+			controller.CompleteTaskReturns(nil)
 
 			requestBody = &models.CompleteTaskRequest{
 				TaskGuid:      taskGuid,
@@ -698,8 +546,8 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when completing the task succeeds", func() {
 			It("returns no error", func() {
-				Expect(fakeTaskDB.CompleteTaskCallCount()).To(Equal(1))
-				_, actualTaskGuid, actualCellId, actualFailed, actualFailureReason, actualResult := fakeTaskDB.CompleteTaskArgsForCall(0)
+				Expect(controller.CompleteTaskCallCount()).To(Equal(1))
+				_, actualTaskGuid, actualCellId, actualFailed, actualFailureReason, actualResult := controller.CompleteTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualCellId).To(Equal(cellId))
 				Expect(actualFailed).To(Equal(failed))
@@ -713,36 +561,11 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 			})
-
-			Context("and completing succeeds", func() {
-				Context("and the task has a complete URL", func() {
-					BeforeEach(func() {
-						task := model_helpers.NewValidTask("hi-bob")
-						task.CompletionCallbackUrl = "bogus"
-						fakeTaskDB.CompleteTaskReturns(task, nil)
-					})
-
-					It("causes the workpool to complete its callback work", func() {
-						Eventually(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(1))
-					})
-				})
-
-				Context("but the task has no complete URL", func() {
-					BeforeEach(func() {
-						task := model_helpers.NewValidTask("hi-bob")
-						fakeTaskDB.CompleteTaskReturns(task, nil)
-					})
-
-					It("does not complete the task callback", func() {
-						Consistently(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(0))
-					})
-				})
-			})
 		})
 
-		Context("when the DB returns an unrecoverable error", func() {
+		Context("when the controller returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeTaskDB.CompleteTaskReturns(nil, models.NewUnrecoverableError(nil))
+				controller.CompleteTaskReturns(models.NewUnrecoverableError(nil))
 			})
 
 			It("logs and writes to the exit channel", func() {
@@ -753,7 +576,7 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when completing the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.CompleteTaskReturns(nil, models.ErrUnknownError)
+				controller.CompleteTaskReturns(models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
@@ -774,6 +597,7 @@ var _ = Describe("Task Handlers", func() {
 					TaskGuid: "task-guid",
 				}
 			})
+
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
 				handler.ResolvingTask(responseRecorder, request)
@@ -781,8 +605,8 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when resolvinging the task succeeds", func() {
 				It("returns no error", func() {
-					Expect(fakeTaskDB.ResolvingTaskCallCount()).To(Equal(1))
-					_, taskGuid := fakeTaskDB.ResolvingTaskArgsForCall(0)
+					Expect(controller.ResolvingTaskCallCount()).To(Equal(1))
+					_, taskGuid := controller.ResolvingTaskArgsForCall(0)
 					Expect(taskGuid).To(Equal("task-guid"))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -794,9 +618,9 @@ var _ = Describe("Task Handlers", func() {
 				})
 			})
 
-			Context("when the DB returns an unrecoverable error", func() {
+			Context("when the controller returns an unrecoverable error", func() {
 				BeforeEach(func() {
-					fakeTaskDB.ResolvingTaskReturns(models.NewUnrecoverableError(nil))
+					controller.ResolvingTaskReturns(models.NewUnrecoverableError(nil))
 				})
 
 				It("logs and writes to the exit channel", func() {
@@ -807,7 +631,7 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when desiring the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.ResolvingTaskReturns(models.ErrUnknownError)
+					controller.ResolvingTaskReturns(models.ErrUnknownError)
 				})
 
 				It("responds with an error", func() {
@@ -836,8 +660,8 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when deleting the task succeeds", func() {
 				It("returns no error", func() {
-					Expect(fakeTaskDB.DeleteTaskCallCount()).To(Equal(1))
-					_, taskGuid := fakeTaskDB.DeleteTaskArgsForCall(0)
+					Expect(controller.DeleteTaskCallCount()).To(Equal(1))
+					_, taskGuid := controller.DeleteTaskArgsForCall(0)
 					Expect(taskGuid).To(Equal("task-guid"))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -849,9 +673,9 @@ var _ = Describe("Task Handlers", func() {
 				})
 			})
 
-			Context("when the DB returns an unrecoverable error", func() {
+			Context("when the controller returns an unrecoverable error", func() {
 				BeforeEach(func() {
-					fakeTaskDB.DeleteTaskReturns(models.NewUnrecoverableError(nil))
+					controller.DeleteTaskReturns(models.NewUnrecoverableError(nil))
 				})
 
 				It("logs and writes to the exit channel", func() {
@@ -862,7 +686,7 @@ var _ = Describe("Task Handlers", func() {
 
 			Context("when desiring the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.DeleteTaskReturns(models.ErrUnknownError)
+					controller.DeleteTaskReturns(models.ErrUnknownError)
 				})
 
 				It("responds with an error", func() {
@@ -872,149 +696,6 @@ var _ = Describe("Task Handlers", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrUnknownError))
-				})
-			})
-		})
-	})
-
-	Describe("ConvergeTasks", func() {
-		Context("when the request is normal", func() {
-			var (
-				kickTaskDuration            = int64(10 * time.Second)
-				expirePendingTaskDuration   = int64(10 * time.Second)
-				expireCompletedTaskDuration = int64(10 * time.Second)
-				cellSet                     models.CellSet
-			)
-
-			BeforeEach(func() {
-				requestBody = &models.ConvergeTasksRequest{
-					KickTaskDuration:            kickTaskDuration,
-					ExpirePendingTaskDuration:   expirePendingTaskDuration,
-					ExpireCompletedTaskDuration: expireCompletedTaskDuration,
-				}
-				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil)
-				cellSet = models.CellSet{"cell-id": &cellPresence}
-				fakeServiceClient.CellsReturns(cellSet, nil)
-			})
-
-			JustBeforeEach(func() {
-				request := newTestRequest(requestBody)
-				handler.ConvergeTasks(responseRecorder, request)
-			})
-
-			It("calls ConvergeTasks", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
-				taskLogger, actualCellSet, actualKickDuration, actualPendingDuration, actualCompletedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
-				Expect(taskLogger.SessionName()).To(ContainSubstring("converge-tasks"))
-				Expect(actualCellSet).To(BeEquivalentTo(cellSet))
-				Expect(actualKickDuration).To(BeEquivalentTo(kickTaskDuration))
-				Expect(actualPendingDuration).To(BeEquivalentTo(expirePendingTaskDuration))
-				Expect(actualCompletedDuration).To(BeEquivalentTo(expireCompletedTaskDuration))
-
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(response.Error).To(BeNil())
-			})
-
-			Context("when the DB returns an unrecoverable error", func() {
-				BeforeEach(func() {
-					fakeServiceClient.CellsReturns(nil, models.NewUnrecoverableError(nil))
-				})
-
-				It("logs and writes to the exit channel", func() {
-					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
-					Eventually(exitCh).Should(Receive())
-				})
-			})
-
-			Context("when fetching cells fails", func() {
-				BeforeEach(func() {
-					fakeServiceClient.CellsReturns(nil, errors.New("kaboom"))
-				})
-
-				It("does not call ConvergeTasks", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(0))
-				})
-			})
-
-			Context("when fetching cells returns ErrResourceNotFound", func() {
-				BeforeEach(func() {
-					fakeServiceClient.CellsReturns(nil, models.ErrResourceNotFound)
-				})
-
-				It("calls ConvergeTasks with an empty CellSet", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
-					_, actualCellSet, _, _, _ := fakeTaskDB.ConvergeTasksArgsForCall(0)
-					Expect(actualCellSet).To(BeEquivalentTo(models.CellSet{}))
-				})
-			})
-
-			Context("when there are tasks to complete", func() {
-				const taskGuid1 = "to-complete-1"
-				const taskGuid2 = "to-complete-2"
-
-				BeforeEach(func() {
-					task1 := model_helpers.NewValidTask(taskGuid1)
-					task2 := model_helpers.NewValidTask(taskGuid2)
-					fakeTaskDB.ConvergeTasksReturns(nil, []*models.Task{task1, task2})
-				})
-
-				It("submits the tasks to the workpool", func() {
-					expectedCallCount := 2
-					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(expectedCallCount))
-
-					_, submittedTask1 := fakeTaskCompletionClient.SubmitArgsForCall(0)
-					_, submittedTask2 := fakeTaskCompletionClient.SubmitArgsForCall(1)
-					Expect([]string{submittedTask1.TaskGuid, submittedTask2.TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
-
-					task1Completions := 0
-					task2Completions := 0
-					for i := 0; i < expectedCallCount; i++ {
-						db, task := fakeTaskCompletionClient.SubmitArgsForCall(i)
-						Expect(db).To(Equal(fakeTaskDB))
-						if task.TaskGuid == taskGuid1 {
-							task1Completions++
-						} else if task.TaskGuid == taskGuid2 {
-							task2Completions++
-						}
-					}
-
-					Expect(task1Completions).To(Equal(1))
-					Expect(task2Completions).To(Equal(1))
-				})
-			})
-
-			Context("when there are tasks to auction", func() {
-				const taskGuid1 = "to-auction-1"
-				const taskGuid2 = "to-auction-2"
-
-				BeforeEach(func() {
-					taskStartRequest1 := auctioneer.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
-					taskStartRequest2 := auctioneer.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
-					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2}, nil)
-				})
-
-				It("requests an auction", func() {
-					Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
-
-					requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
-					Expect(requestedTasks).To(HaveLen(2))
-					Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
-				})
-
-				Context("when requesting an auction is unsuccessful", func() {
-					BeforeEach(func() {
-						fakeAuctioneerClient.RequestTaskAuctionsReturns(errors.New("oops"))
-					})
-
-					It("logs an error", func() {
-						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.task-handler.converge-tasks.failed-to-request-auctions-for-pending-tasks"))
-					})
 				})
 			})
 		})

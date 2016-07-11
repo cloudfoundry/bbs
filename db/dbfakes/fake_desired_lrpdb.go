@@ -69,6 +69,8 @@ type FakeDesiredLRPDB struct {
 	removeDesiredLRPReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
@@ -77,6 +79,7 @@ func (fake *FakeDesiredLRPDB) DesiredLRPs(logger lager.Logger, filter models.Des
 		logger lager.Logger
 		filter models.DesiredLRPFilter
 	}{logger, filter})
+	fake.recordInvocation("DesiredLRPs", []interface{}{logger, filter})
 	fake.desiredLRPsMutex.Unlock()
 	if fake.DesiredLRPsStub != nil {
 		return fake.DesiredLRPsStub(logger, filter)
@@ -111,6 +114,7 @@ func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(logger lager.Logger, proce
 		logger      lager.Logger
 		processGuid string
 	}{logger, processGuid})
+	fake.recordInvocation("DesiredLRPByProcessGuid", []interface{}{logger, processGuid})
 	fake.desiredLRPByProcessGuidMutex.Unlock()
 	if fake.DesiredLRPByProcessGuidStub != nil {
 		return fake.DesiredLRPByProcessGuidStub(logger, processGuid)
@@ -145,6 +149,7 @@ func (fake *FakeDesiredLRPDB) DesiredLRPSchedulingInfos(logger lager.Logger, fil
 		logger lager.Logger
 		filter models.DesiredLRPFilter
 	}{logger, filter})
+	fake.recordInvocation("DesiredLRPSchedulingInfos", []interface{}{logger, filter})
 	fake.desiredLRPSchedulingInfosMutex.Unlock()
 	if fake.DesiredLRPSchedulingInfosStub != nil {
 		return fake.DesiredLRPSchedulingInfosStub(logger, filter)
@@ -179,6 +184,7 @@ func (fake *FakeDesiredLRPDB) DesireLRP(logger lager.Logger, desiredLRP *models.
 		logger     lager.Logger
 		desiredLRP *models.DesiredLRP
 	}{logger, desiredLRP})
+	fake.recordInvocation("DesireLRP", []interface{}{logger, desiredLRP})
 	fake.desireLRPMutex.Unlock()
 	if fake.DesireLRPStub != nil {
 		return fake.DesireLRPStub(logger, desiredLRP)
@@ -213,6 +219,7 @@ func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(logger lager.Logger, processGuid 
 		processGuid string
 		update      *models.DesiredLRPUpdate
 	}{logger, processGuid, update})
+	fake.recordInvocation("UpdateDesiredLRP", []interface{}{logger, processGuid, update})
 	fake.updateDesiredLRPMutex.Unlock()
 	if fake.UpdateDesiredLRPStub != nil {
 		return fake.UpdateDesiredLRPStub(logger, processGuid, update)
@@ -247,6 +254,7 @@ func (fake *FakeDesiredLRPDB) RemoveDesiredLRP(logger lager.Logger, processGuid 
 		logger      lager.Logger
 		processGuid string
 	}{logger, processGuid})
+	fake.recordInvocation("RemoveDesiredLRP", []interface{}{logger, processGuid})
 	fake.removeDesiredLRPMutex.Unlock()
 	if fake.RemoveDesiredLRPStub != nil {
 		return fake.RemoveDesiredLRPStub(logger, processGuid)
@@ -272,6 +280,36 @@ func (fake *FakeDesiredLRPDB) RemoveDesiredLRPReturns(result1 error) {
 	fake.removeDesiredLRPReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeDesiredLRPDB) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.desiredLRPsMutex.RLock()
+	defer fake.desiredLRPsMutex.RUnlock()
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	fake.desiredLRPSchedulingInfosMutex.RLock()
+	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeDesiredLRPDB) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ db.DesiredLRPDB = new(FakeDesiredLRPDB)

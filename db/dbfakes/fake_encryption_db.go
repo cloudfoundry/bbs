@@ -35,6 +35,8 @@ type FakeEncryptionDB struct {
 	performEncryptionReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeEncryptionDB) EncryptionKeyLabel(logger lager.Logger) (string, error) {
@@ -42,6 +44,7 @@ func (fake *FakeEncryptionDB) EncryptionKeyLabel(logger lager.Logger) (string, e
 	fake.encryptionKeyLabelArgsForCall = append(fake.encryptionKeyLabelArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("EncryptionKeyLabel", []interface{}{logger})
 	fake.encryptionKeyLabelMutex.Unlock()
 	if fake.EncryptionKeyLabelStub != nil {
 		return fake.EncryptionKeyLabelStub(logger)
@@ -76,6 +79,7 @@ func (fake *FakeEncryptionDB) SetEncryptionKeyLabel(logger lager.Logger, encrypt
 		logger             lager.Logger
 		encryptionKeyLabel string
 	}{logger, encryptionKeyLabel})
+	fake.recordInvocation("SetEncryptionKeyLabel", []interface{}{logger, encryptionKeyLabel})
 	fake.setEncryptionKeyLabelMutex.Unlock()
 	if fake.SetEncryptionKeyLabelStub != nil {
 		return fake.SetEncryptionKeyLabelStub(logger, encryptionKeyLabel)
@@ -108,6 +112,7 @@ func (fake *FakeEncryptionDB) PerformEncryption(logger lager.Logger) error {
 	fake.performEncryptionArgsForCall = append(fake.performEncryptionArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("PerformEncryption", []interface{}{logger})
 	fake.performEncryptionMutex.Unlock()
 	if fake.PerformEncryptionStub != nil {
 		return fake.PerformEncryptionStub(logger)
@@ -133,6 +138,30 @@ func (fake *FakeEncryptionDB) PerformEncryptionReturns(result1 error) {
 	fake.performEncryptionReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeEncryptionDB) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.encryptionKeyLabelMutex.RLock()
+	defer fake.encryptionKeyLabelMutex.RUnlock()
+	fake.setEncryptionKeyLabelMutex.RLock()
+	defer fake.setEncryptionKeyLabelMutex.RUnlock()
+	fake.performEncryptionMutex.RLock()
+	defer fake.performEncryptionMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeEncryptionDB) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ db.EncryptionDB = new(FakeEncryptionDB)

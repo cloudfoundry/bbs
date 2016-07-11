@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
@@ -15,7 +16,7 @@ type ActualLRPLifecycleHandler struct {
 	desiredLRPDB     db.DesiredLRPDB
 	actualHub        events.Hub
 	auctioneerClient auctioneer.Client
-	retirer          ActualLRPRetirer
+	retirer          controllers.ActualLRPRetirer
 	exitChan         chan<- struct{}
 	logger           lager.Logger
 }
@@ -26,7 +27,7 @@ func NewActualLRPLifecycleHandler(
 	desiredLRPDB db.DesiredLRPDB,
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
-	retirer ActualLRPRetirer,
+	retirer controllers.ActualLRPRetirer,
 	exitChan chan<- struct{},
 ) *ActualLRPLifecycleHandler {
 	return &ActualLRPLifecycleHandler{

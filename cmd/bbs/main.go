@@ -16,6 +16,8 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
+	"code.cloudfoundry.org/bbs/controllers"
+	"code.cloudfoundry.org/bbs/converger"
 	"code.cloudfoundry.org/bbs/db"
 	etcddb "code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/db/migrations"
@@ -187,6 +189,30 @@ var sqlCACertFile = flag.String(
 	"SQL database client cert, if supplied, require TLS to SQL",
 )
 
+var convergeRepeatInterval = flag.Duration(
+	"convergeRepeatInterval",
+	30*time.Second,
+	"the interval between runs of the converger",
+)
+
+var kickTaskDuration = flag.Duration(
+	"kickTaskDuration",
+	30*time.Second,
+	"the interval, in seconds, between kicks to tasks",
+)
+
+var expireCompletedTaskDuration = flag.Duration(
+	"expireCompletedTaskDuration",
+	120*time.Second,
+	"completed, unresolved tasks are deleted after this duration",
+)
+
+var expirePendingTaskDuration = flag.Duration(
+	"expirePendingTaskDuration",
+	30*time.Minute,
+	"unclaimed tasks are marked as failed, after this duration",
+)
+
 const (
 	dropsondeOrigin           = "bbs"
 	bbsWatchRetryWaitDuration = 3 * time.Second
@@ -343,6 +369,21 @@ func main() {
 		clock,
 	)
 
+	retirer := controllers.NewActualLRPRetirer(activeDB, actualHub, repClientFactory, serviceClient)
+	lrpConvergenceController := controllers.NewLRPConvergenceController(logger, activeDB, actualHub, auctioneerClient, serviceClient, retirer, *convergenceWorkers)
+	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory)
+
+	convergerProcess := converger.New(
+		logger,
+		clock,
+		lrpConvergenceController,
+		taskController,
+		serviceClient,
+		*convergeRepeatInterval,
+		*kickTaskDuration,
+		*expirePendingTaskDuration,
+		*expireCompletedTaskDuration)
+
 	var server ifrit.Runner
 	if *requireSSL {
 		tlsConfig, err := cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
@@ -365,6 +406,7 @@ func main() {
 		{"encryptor", encryptor},
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
 		{"metrics", *metricsNotifier},
+		{"converger", convergerProcess},
 		{"registration-runner", registrationRunner},
 	}
 

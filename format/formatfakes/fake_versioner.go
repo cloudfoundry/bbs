@@ -20,11 +20,14 @@ type FakeVersioner struct {
 	validateReturns     struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeVersioner) Version() format.Version {
 	fake.versionMutex.Lock()
 	fake.versionArgsForCall = append(fake.versionArgsForCall, struct{}{})
+	fake.recordInvocation("Version", []interface{}{})
 	fake.versionMutex.Unlock()
 	if fake.VersionStub != nil {
 		return fake.VersionStub()
@@ -49,6 +52,7 @@ func (fake *FakeVersioner) VersionReturns(result1 format.Version) {
 func (fake *FakeVersioner) Validate() error {
 	fake.validateMutex.Lock()
 	fake.validateArgsForCall = append(fake.validateArgsForCall, struct{}{})
+	fake.recordInvocation("Validate", []interface{}{})
 	fake.validateMutex.Unlock()
 	if fake.ValidateStub != nil {
 		return fake.ValidateStub()
@@ -68,6 +72,28 @@ func (fake *FakeVersioner) ValidateReturns(result1 error) {
 	fake.validateReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeVersioner) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.versionMutex.RLock()
+	defer fake.versionMutex.RUnlock()
+	fake.validateMutex.RLock()
+	defer fake.validateMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeVersioner) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ format.Versioner = new(FakeVersioner)

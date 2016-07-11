@@ -28,6 +28,8 @@ type FakeVersionDB struct {
 	setVersionReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeVersionDB) Version(logger lager.Logger) (*models.Version, error) {
@@ -35,6 +37,7 @@ func (fake *FakeVersionDB) Version(logger lager.Logger) (*models.Version, error)
 	fake.versionArgsForCall = append(fake.versionArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
+	fake.recordInvocation("Version", []interface{}{logger})
 	fake.versionMutex.Unlock()
 	if fake.VersionStub != nil {
 		return fake.VersionStub(logger)
@@ -69,6 +72,7 @@ func (fake *FakeVersionDB) SetVersion(logger lager.Logger, version *models.Versi
 		logger  lager.Logger
 		version *models.Version
 	}{logger, version})
+	fake.recordInvocation("SetVersion", []interface{}{logger, version})
 	fake.setVersionMutex.Unlock()
 	if fake.SetVersionStub != nil {
 		return fake.SetVersionStub(logger, version)
@@ -94,6 +98,28 @@ func (fake *FakeVersionDB) SetVersionReturns(result1 error) {
 	fake.setVersionReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeVersionDB) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.versionMutex.RLock()
+	defer fake.versionMutex.RUnlock()
+	fake.setVersionMutex.RLock()
+	defer fake.setVersionMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeVersionDB) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ db.VersionDB = new(FakeVersionDB)

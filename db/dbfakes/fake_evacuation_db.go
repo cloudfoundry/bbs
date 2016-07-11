@@ -33,6 +33,8 @@ type FakeEvacuationDB struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) error {
@@ -42,6 +44,7 @@ func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRP(arg1 lager.Logger, arg2 
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3})
+	fake.recordInvocation("RemoveEvacuatingActualLRP", []interface{}{arg1, arg2, arg3})
 	fake.removeEvacuatingActualLRPMutex.Unlock()
 	if fake.RemoveEvacuatingActualLRPStub != nil {
 		return fake.RemoveEvacuatingActualLRPStub(arg1, arg2, arg3)
@@ -78,6 +81,7 @@ func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 lager.Logger, arg2 *models.
 		arg4 *models.ActualLRPNetInfo
 		arg5 uint64
 	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("EvacuateActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.evacuateActualLRPMutex.Unlock()
 	if fake.EvacuateActualLRPStub != nil {
 		return fake.EvacuateActualLRPStub(arg1, arg2, arg3, arg4, arg5)
@@ -104,6 +108,28 @@ func (fake *FakeEvacuationDB) EvacuateActualLRPReturns(result1 *models.ActualLRP
 		result1 *models.ActualLRPGroup
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeEvacuationDB) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.removeEvacuatingActualLRPMutex.RLock()
+	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
+	fake.evacuateActualLRPMutex.RLock()
+	defer fake.evacuateActualLRPMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeEvacuationDB) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ db.EvacuationDB = new(FakeEvacuationDB)

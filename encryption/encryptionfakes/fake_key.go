@@ -21,11 +21,14 @@ type FakeKey struct {
 	blockReturns     struct {
 		result1 cipher.Block
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeKey) Label() string {
 	fake.labelMutex.Lock()
 	fake.labelArgsForCall = append(fake.labelArgsForCall, struct{}{})
+	fake.recordInvocation("Label", []interface{}{})
 	fake.labelMutex.Unlock()
 	if fake.LabelStub != nil {
 		return fake.LabelStub()
@@ -50,6 +53,7 @@ func (fake *FakeKey) LabelReturns(result1 string) {
 func (fake *FakeKey) Block() cipher.Block {
 	fake.blockMutex.Lock()
 	fake.blockArgsForCall = append(fake.blockArgsForCall, struct{}{})
+	fake.recordInvocation("Block", []interface{}{})
 	fake.blockMutex.Unlock()
 	if fake.BlockStub != nil {
 		return fake.BlockStub()
@@ -69,6 +73,28 @@ func (fake *FakeKey) BlockReturns(result1 cipher.Block) {
 	fake.blockReturns = struct {
 		result1 cipher.Block
 	}{result1}
+}
+
+func (fake *FakeKey) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.labelMutex.RLock()
+	defer fake.labelMutex.RUnlock()
+	fake.blockMutex.RLock()
+	defer fake.blockMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeKey) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ encryption.Key = new(FakeKey)

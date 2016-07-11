@@ -15,11 +15,14 @@ type FakeGUIDProvider struct {
 		result1 string
 		result2 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeGUIDProvider) NextGUID() (string, error) {
 	fake.nextGUIDMutex.Lock()
 	fake.nextGUIDArgsForCall = append(fake.nextGUIDArgsForCall, struct{}{})
+	fake.recordInvocation("NextGUID", []interface{}{})
 	fake.nextGUIDMutex.Unlock()
 	if fake.NextGUIDStub != nil {
 		return fake.NextGUIDStub()
@@ -40,6 +43,26 @@ func (fake *FakeGUIDProvider) NextGUIDReturns(result1 string, result2 error) {
 		result1 string
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeGUIDProvider) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.nextGUIDMutex.RLock()
+	defer fake.nextGUIDMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeGUIDProvider) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ guidprovider.GUIDProvider = new(FakeGUIDProvider)
