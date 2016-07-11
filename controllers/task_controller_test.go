@@ -48,6 +48,8 @@ var _ = Describe("Task Controller", func() {
 		BeforeEach(func() {
 			task1 = models.Task{Domain: "domain-1"}
 			task2 = models.Task{CellId: "cell-id"}
+			domain = ""
+			cellId = ""
 		})
 
 		JustBeforeEach(func() {
