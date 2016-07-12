@@ -6,13 +6,37 @@ to those events as well as the type of events supported by the bbs
 
 ## Subscribing to events
 
-You can use the `SubscribeToEvents(logger lager.Logger) (events.EventSource, error)` client method to subscribe to events. For example
+You can use the `SubscribeToEvents(logger lager.Logger) (events.EventSource,
+error)` client method to subscribe to events. For example
 
 ``` go
 client := bbs.NewClient(url)
 es, err := client.SubscribeToEvents(logger)
 if err != nil {
     log.Printf("failed to subscribe to events: " + err.Error())
+}
+```
+
+You can then loop through the events by calling
+[Next](https://godoc.org/code.cloudfoundry.org/bbs/events#EventSource) in a
+loop, for example:
+
+``` go
+event, err := eventSource.Next()
+if err != nil {
+    log.Printf("failed to get next event: " + err.Error())
+}
+log.Printf("received event: %#v", event)
+```
+
+To access the event field values, you must convert the event to the right
+type. You can use the `EventType` method to determine the type of the event,
+for example:
+
+``` go
+if event.EventType() == models.EventTypeActualLRPCrashed {
+  crashEvent := event.(*models.ActualLRPCrashedEvent)
+  log.Printf("lrp has crashed. err: %s", crashEvent.CrashReason)
 }
 ```
 
