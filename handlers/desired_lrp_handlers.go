@@ -303,7 +303,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 			if lrp.Index >= int32(index) {
 				switch lrp.State {
 				case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-					err = h.actualLRPDB.RemoveActualLRP(logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+					err = h.actualLRPDB.RemoveActualLRP(logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, nil)
 					if err != nil {
 						logger.Error("failed-removing-lrp-instance", err)
 					}

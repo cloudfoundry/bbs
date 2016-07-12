@@ -875,12 +875,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					_, processGuid, index, actualLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 					Expect(index).To(BeEquivalentTo(3))
 					Expect(processGuid).To(Equal("some-guid"))
-					Expect(actualLRPInstanceKey).To(Equal(&unclaimedActualLRPGroup.Instance.ActualLRPInstanceKey))
+					Expect(actualLRPInstanceKey).To(BeNil())
 
 					_, processGuid, index, actualLRPInstanceKey = fakeActualLRPDB.RemoveActualLRPArgsForCall(1)
 					Expect(index).To(BeEquivalentTo(4))
 					Expect(processGuid).To(Equal("some-guid"))
-					Expect(actualLRPInstanceKey).To(Equal(&crashedActualLRPGroup.Instance.ActualLRPInstanceKey))
+					Expect(actualLRPInstanceKey).To(BeNil())
 				})
 
 				Context("when fetching the actual lrps fails", func() {
