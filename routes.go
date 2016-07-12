@@ -47,9 +47,6 @@ const (
 
 	DesireDesiredLRPRoute_r0 = "DesireDesiredLRP"
 
-	// LRP Convergence
-	ConvergeLRPsRoute = "ConvergeLRPs"
-
 	// Tasks
 	TasksRoute         = "Tasks_r2"
 	TaskByGuidRoute    = "TaskByGuid_r2"
@@ -60,7 +57,6 @@ const (
 	CompleteTaskRoute  = "CompleteTask"
 	ResolvingTaskRoute = "ResolvingTask"
 	DeleteTaskRoute    = "DeleteTask"
-	ConvergeTasksRoute = "ConvergeTasks"
 
 	TasksRoute_r1      = "Tasks_r1"      // Deprecated
 	TaskByGuidRoute_r1 = "TaskByGuid_r1" // Deprecated

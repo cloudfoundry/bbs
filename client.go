@@ -53,9 +53,6 @@ type InternalClient interface {
 	EvacuateCrashedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
 	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 
-	ConvergeLRPs(logger lager.Logger) error
-
-	ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
 	StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, error)
 	FailTask(logger lager.Logger, taskGuid, failureReason string) error
 	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
@@ -510,16 +507,6 @@ func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 	return c.doDesiredLRPLifecycleRequest(logger, RemoveDesiredLRPRoute, &request)
 }
 
-func (c *client) ConvergeLRPs(logger lager.Logger) error {
-	route := ConvergeLRPsRoute
-	response := models.ConvergeLRPsResponse{}
-	err := c.doRequest(logger, route, nil, nil, nil, &response)
-	if err != nil {
-		return err
-	}
-	return response.Error.ToError()
-}
-
 func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error) {
 	request := models.TasksRequest{}
 	response := models.TasksResponse{}
@@ -645,21 +632,6 @@ func (c *client) CompleteTask(logger lager.Logger, taskGuid, cellId string, fail
 	}
 	route := CompleteTaskRoute
 	return c.doTaskLifecycleRequest(logger, route, &request)
-}
-
-func (c *client) ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error {
-	request := &models.ConvergeTasksRequest{
-		KickTaskDuration:            kickTaskDuration.Nanoseconds(),
-		ExpirePendingTaskDuration:   expirePendingTaskDuration.Nanoseconds(),
-		ExpireCompletedTaskDuration: expireCompletedTaskDuration.Nanoseconds(),
-	}
-	response := models.ConvergeTasksResponse{}
-	route := ConvergeTasksRoute
-	err := c.doRequest(logger, route, nil, nil, request, &response)
-	if err != nil {
-		return err
-	}
-	return response.Error.ToError()
 }
 
 func (c *client) subscribeToEvents(route string) (events.EventSource, error) {
