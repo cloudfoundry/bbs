@@ -1,6 +1,8 @@
 package main_test
 
 import (
+	"time"
+
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
@@ -15,6 +17,8 @@ var _ = Describe("Convergence API", func() {
 		var processGuid string
 
 		BeforeEach(func() {
+			// make the converger more aggressive by running every second
+			bbsArgs.ConvergeRepeatInterval = time.Second
 			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 

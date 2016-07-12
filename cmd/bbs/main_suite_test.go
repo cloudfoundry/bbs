@@ -169,7 +169,7 @@ var _ = BeforeEach(func() {
 
 		EncryptionKeys:         []string{"label:key"},
 		ActiveKeyLabel:         "label",
-		ConvergeRepeatInterval: time.Second,
+		ConvergeRepeatInterval: time.Hour,
 	}
 	if test_helpers.UseSQL() {
 		bbsArgs.DatabaseDriver = sqlRunner.DriverName()
