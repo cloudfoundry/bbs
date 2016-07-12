@@ -205,14 +205,15 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Re
 		response.Error = models.ConvertError(err)
 		return
 	}
+	logger = logger.WithData(lager.Data{"process_guid": request.ProcessGuid})
 
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger.Session("fetch-desired"), request.ProcessGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	err = h.desiredLRPDB.RemoveDesiredLRP(logger, request.ProcessGuid)
+	err = h.desiredLRPDB.RemoveDesiredLRP(logger.Session("remove-desired"), request.ProcessGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -287,7 +288,8 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 }
 
 func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid string, index int) {
-	actualLRPGroups, err := h.actualLRPDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+	logger = logger.Session("stop-instances-from", lager.Data{"process_guid": processGuid, "index": index})
+	actualLRPGroups, err := h.actualLRPDB.ActualLRPGroupsByProcessGuid(logger.Session("fetch-actuals"), processGuid)
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrps", err)
 		return
@@ -301,7 +303,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 			if lrp.Index >= int32(index) {
 				switch lrp.State {
 				case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-					err = h.actualLRPDB.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+					err = h.actualLRPDB.RemoveActualLRP(logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 					if err != nil {
 						logger.Error("failed-removing-lrp-instance", err)
 					}
