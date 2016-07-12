@@ -7,26 +7,25 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
 ## Table of Contents
 
 - [API Overview](overview.md)
-    - Implementation Details
+  - Implementation Details
 - [Overview of Domains](domains.md)
 - [Overview of Tasks](tasks.md)
-    - [Defining Tasks](defining-tasks.md)
-    - [Task Examples](task-examples.md)
+  - [Defining Tasks](defining-tasks.md)
+  - [Task Examples](task-examples.md)
 - [Overview of Long Running Processes](lrps.md) (LRPs)
-    - [Defining LRPs](defining-lrps.md)
-    - [LRP Examples](lrp-examples.md)
+  - [Defining LRPs](defining-lrps.md)
+  - [LRP Examples](lrp-examples.md)
 - [Overview of Cells](cells.md)
 - [Actions](actions.md)
 - Domains
-- Event Streams
 - [The Container Runtime Environment](environment.md)
 - API Reference
-    - Authorization
-    - [Tasks](api-tasks.md)
-    - [LRPs](api-lrps.md)
-    - [Cells](api-cells.md)
-    - Domains
-    - Events
+  - Authorization
+  - [Tasks](api-tasks.md)
+  - [LRPs](api-lrps.md)
+  - [Cells](api-cells.md)
+  - [Events](events.md)
+  - Domains
 - [Fields common to Tasks and LRPs](common-models.md)
 
 Many of the documents are still in the process of being converted from the documents about the now obsolete [receptor](https://github.com/cloudfoundry-attic/receptor/tree/master/doc) component.
