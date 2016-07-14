@@ -76,10 +76,10 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		TrustedSystemCertificatesPath: "/etc/somepath",
 		VolumeMounts: []*models.VolumeMount{
 			{
-				Driver:        "my-driver",
-				VolumeId:      "my-volume",
-				ContainerPath: "/mnt/mypath",
-				Mode:          models.BindMountMode_RO,
+				Driver:             "my-driver",
+				DeprecatedVolumeId: "my-volume",
+				ContainerDir:       "/mnt/mypath",
+				DeprecatedMode:     models.BindMountMode_RO,
 			},
 		},
 	}
@@ -143,10 +143,10 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		TrustedSystemCertificatesPath: "/etc/somepath",
 		VolumeMounts: []*models.VolumeMount{
 			{
-				Driver:        "my-driver",
-				VolumeId:      "my-volume",
-				ContainerPath: "/mnt/mypath",
-				Mode:          models.BindMountMode_RO,
+				Driver:             "my-driver",
+				DeprecatedVolumeId: "my-volume",
+				ContainerDir:       "/mnt/mypath",
+				DeprecatedMode:     models.BindMountMode_RO,
 			},
 		},
 	}
