@@ -2,6 +2,17 @@
 // source: volume_mount.proto
 // DO NOT EDIT!
 
+/*
+	Package models is a generated protocol buffer package.
+
+	It is generated from these files:
+		volume_mount.proto
+
+	It has these top-level messages:
+		SharedDevice
+		VolumeMount
+		VolumePlacement
+*/
 package models
 
 import proto "github.com/gogo/protobuf/proto"
@@ -58,16 +69,61 @@ func (x *BindMountMode) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type SharedDevice struct {
+	VolumeId    string `protobuf:"bytes,1,req,name=volume_id" json:"volume_id"`
+	MountConfig string `protobuf:"bytes,2,opt,name=mount_config" json:"mount_config"`
+}
+
+func (m *SharedDevice) Reset()      { *m = SharedDevice{} }
+func (*SharedDevice) ProtoMessage() {}
+
+func (m *SharedDevice) GetVolumeId() string {
+	if m != nil {
+		return m.VolumeId
+	}
+	return ""
+}
+
+func (m *SharedDevice) GetMountConfig() string {
+	if m != nil {
+		return m.MountConfig
+	}
+	return ""
+}
+
 type VolumeMount struct {
-	Driver        string        `protobuf:"bytes,1,opt,name=driver" json:"driver"`
-	VolumeId      string        `protobuf:"bytes,2,opt,name=volume_id" json:"volume_id"`
-	ContainerPath string        `protobuf:"bytes,3,opt,name=container_path" json:"container_path"`
-	Mode          BindMountMode `protobuf:"varint,4,opt,name=mode,enum=models.BindMountMode" json:"mode"`
-	Config        []byte        `protobuf:"bytes,5,opt,name=config" json:"config,omitempty"`
+	DeprecatedVolumeId string        `protobuf:"bytes,2,opt,name=deprecated_volume_id" json:"volume_id"`
+	DeprecatedMode     BindMountMode `protobuf:"varint,4,opt,name=deprecated_mode,enum=models.BindMountMode" json:"mode"`
+	DeprecatedConfig   []byte        `protobuf:"bytes,5,opt,name=deprecated_config" json:"deprecated_config,omitempty"`
+	Driver             string        `protobuf:"bytes,1,opt,name=driver" json:"driver"`
+	ContainerDir       string        `protobuf:"bytes,3,opt,name=container_dir" json:"container_dir"`
+	Mode               string        `protobuf:"bytes,6,opt,name=mode" json:"mode"`
+	Shared             *SharedDevice `protobuf:"bytes,7,opt,name=shared" json:"shared,omitempty"`
 }
 
 func (m *VolumeMount) Reset()      { *m = VolumeMount{} }
 func (*VolumeMount) ProtoMessage() {}
+
+func (m *VolumeMount) GetDeprecatedVolumeId() string {
+	if m != nil {
+		return m.DeprecatedVolumeId
+	}
+	return ""
+}
+
+func (m *VolumeMount) GetDeprecatedMode() BindMountMode {
+	if m != nil {
+		return m.DeprecatedMode
+	}
+	return BindMountMode_RO
+}
+
+func (m *VolumeMount) GetDeprecatedConfig() []byte {
+	if m != nil {
+		return m.DeprecatedConfig
+	}
+	return nil
+}
 
 func (m *VolumeMount) GetDriver() string {
 	if m != nil {
@@ -76,30 +132,23 @@ func (m *VolumeMount) GetDriver() string {
 	return ""
 }
 
-func (m *VolumeMount) GetVolumeId() string {
+func (m *VolumeMount) GetContainerDir() string {
 	if m != nil {
-		return m.VolumeId
+		return m.ContainerDir
 	}
 	return ""
 }
 
-func (m *VolumeMount) GetContainerPath() string {
-	if m != nil {
-		return m.ContainerPath
-	}
-	return ""
-}
-
-func (m *VolumeMount) GetMode() BindMountMode {
+func (m *VolumeMount) GetMode() string {
 	if m != nil {
 		return m.Mode
 	}
-	return BindMountMode_RO
+	return ""
 }
 
-func (m *VolumeMount) GetConfig() []byte {
+func (m *VolumeMount) GetShared() *SharedDevice {
 	if m != nil {
-		return m.Config
+		return m.Shared
 	}
 	return nil
 }
@@ -128,6 +177,34 @@ func (x BindMountMode) String() string {
 	}
 	return strconv.Itoa(int(x))
 }
+func (this *SharedDevice) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*SharedDevice)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.VolumeId != that1.VolumeId {
+		return false
+	}
+	if this.MountConfig != that1.MountConfig {
+		return false
+	}
+	return true
+}
 func (this *VolumeMount) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -148,19 +225,25 @@ func (this *VolumeMount) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
+	if this.DeprecatedVolumeId != that1.DeprecatedVolumeId {
+		return false
+	}
+	if this.DeprecatedMode != that1.DeprecatedMode {
+		return false
+	}
+	if !bytes.Equal(this.DeprecatedConfig, that1.DeprecatedConfig) {
+		return false
+	}
 	if this.Driver != that1.Driver {
 		return false
 	}
-	if this.VolumeId != that1.VolumeId {
-		return false
-	}
-	if this.ContainerPath != that1.ContainerPath {
+	if this.ContainerDir != that1.ContainerDir {
 		return false
 	}
 	if this.Mode != that1.Mode {
 		return false
 	}
-	if !bytes.Equal(this.Config, that1.Config) {
+	if !this.Shared.Equal(that1.Shared) {
 		return false
 	}
 	return true
@@ -195,16 +278,27 @@ func (this *VolumePlacement) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *SharedDevice) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.SharedDevice{` +
+		`VolumeId:` + fmt.Sprintf("%#v", this.VolumeId),
+		`MountConfig:` + fmt.Sprintf("%#v", this.MountConfig) + `}`}, ", ")
+	return s
+}
 func (this *VolumeMount) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := strings.Join([]string{`&models.VolumeMount{` +
+		`DeprecatedVolumeId:` + fmt.Sprintf("%#v", this.DeprecatedVolumeId),
+		`DeprecatedMode:` + fmt.Sprintf("%#v", this.DeprecatedMode),
+		`DeprecatedConfig:` + valueToGoStringVolumeMount(this.DeprecatedConfig, "byte"),
 		`Driver:` + fmt.Sprintf("%#v", this.Driver),
-		`VolumeId:` + fmt.Sprintf("%#v", this.VolumeId),
-		`ContainerPath:` + fmt.Sprintf("%#v", this.ContainerPath),
+		`ContainerDir:` + fmt.Sprintf("%#v", this.ContainerDir),
 		`Mode:` + fmt.Sprintf("%#v", this.Mode),
-		`Config:` + valueToGoStringVolumeMount(this.Config, "byte") + `}`}, ", ")
+		`Shared:` + fmt.Sprintf("%#v", this.Shared) + `}`}, ", ")
 	return s
 }
 func (this *VolumePlacement) GoString() string {
@@ -240,6 +334,32 @@ func extensionToGoStringVolumeMount(e map[int32]github_com_gogo_protobuf_proto.E
 	s += strings.Join(ss, ",") + "}"
 	return s
 }
+func (m *SharedDevice) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *SharedDevice) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintVolumeMount(data, i, uint64(len(m.VolumeId)))
+	i += copy(data[i:], m.VolumeId)
+	data[i] = 0x12
+	i++
+	i = encodeVarintVolumeMount(data, i, uint64(len(m.MountConfig)))
+	i += copy(data[i:], m.MountConfig)
+	return i, nil
+}
+
 func (m *VolumeMount) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -261,20 +381,34 @@ func (m *VolumeMount) MarshalTo(data []byte) (int, error) {
 	i += copy(data[i:], m.Driver)
 	data[i] = 0x12
 	i++
-	i = encodeVarintVolumeMount(data, i, uint64(len(m.VolumeId)))
-	i += copy(data[i:], m.VolumeId)
+	i = encodeVarintVolumeMount(data, i, uint64(len(m.DeprecatedVolumeId)))
+	i += copy(data[i:], m.DeprecatedVolumeId)
 	data[i] = 0x1a
 	i++
-	i = encodeVarintVolumeMount(data, i, uint64(len(m.ContainerPath)))
-	i += copy(data[i:], m.ContainerPath)
+	i = encodeVarintVolumeMount(data, i, uint64(len(m.ContainerDir)))
+	i += copy(data[i:], m.ContainerDir)
 	data[i] = 0x20
 	i++
-	i = encodeVarintVolumeMount(data, i, uint64(m.Mode))
-	if m.Config != nil {
+	i = encodeVarintVolumeMount(data, i, uint64(m.DeprecatedMode))
+	if m.DeprecatedConfig != nil {
 		data[i] = 0x2a
 		i++
-		i = encodeVarintVolumeMount(data, i, uint64(len(m.Config)))
-		i += copy(data[i:], m.Config)
+		i = encodeVarintVolumeMount(data, i, uint64(len(m.DeprecatedConfig)))
+		i += copy(data[i:], m.DeprecatedConfig)
+	}
+	data[i] = 0x32
+	i++
+	i = encodeVarintVolumeMount(data, i, uint64(len(m.Mode)))
+	i += copy(data[i:], m.Mode)
+	if m.Shared != nil {
+		data[i] = 0x3a
+		i++
+		i = encodeVarintVolumeMount(data, i, uint64(m.Shared.Size()))
+		n1, err := m.Shared.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
 	}
 	return i, nil
 }
@@ -339,18 +473,34 @@ func encodeVarintVolumeMount(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	return offset + 1
 }
+func (m *SharedDevice) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.VolumeId)
+	n += 1 + l + sovVolumeMount(uint64(l))
+	l = len(m.MountConfig)
+	n += 1 + l + sovVolumeMount(uint64(l))
+	return n
+}
+
 func (m *VolumeMount) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Driver)
 	n += 1 + l + sovVolumeMount(uint64(l))
-	l = len(m.VolumeId)
+	l = len(m.DeprecatedVolumeId)
 	n += 1 + l + sovVolumeMount(uint64(l))
-	l = len(m.ContainerPath)
+	l = len(m.ContainerDir)
 	n += 1 + l + sovVolumeMount(uint64(l))
-	n += 1 + sovVolumeMount(uint64(m.Mode))
-	if m.Config != nil {
-		l = len(m.Config)
+	n += 1 + sovVolumeMount(uint64(m.DeprecatedMode))
+	if m.DeprecatedConfig != nil {
+		l = len(m.DeprecatedConfig)
+		n += 1 + l + sovVolumeMount(uint64(l))
+	}
+	l = len(m.Mode)
+	n += 1 + l + sovVolumeMount(uint64(l))
+	if m.Shared != nil {
+		l = m.Shared.Size()
 		n += 1 + l + sovVolumeMount(uint64(l))
 	}
 	return n
@@ -381,16 +531,29 @@ func sovVolumeMount(x uint64) (n int) {
 func sozVolumeMount(x uint64) (n int) {
 	return sovVolumeMount(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
+func (this *SharedDevice) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SharedDevice{`,
+		`VolumeId:` + fmt.Sprintf("%v", this.VolumeId) + `,`,
+		`MountConfig:` + fmt.Sprintf("%v", this.MountConfig) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func (this *VolumeMount) String() string {
 	if this == nil {
 		return "nil"
 	}
 	s := strings.Join([]string{`&VolumeMount{`,
 		`Driver:` + fmt.Sprintf("%v", this.Driver) + `,`,
-		`VolumeId:` + fmt.Sprintf("%v", this.VolumeId) + `,`,
-		`ContainerPath:` + fmt.Sprintf("%v", this.ContainerPath) + `,`,
+		`DeprecatedVolumeId:` + fmt.Sprintf("%v", this.DeprecatedVolumeId) + `,`,
+		`ContainerDir:` + fmt.Sprintf("%v", this.ContainerDir) + `,`,
+		`DeprecatedMode:` + fmt.Sprintf("%v", this.DeprecatedMode) + `,`,
+		`DeprecatedConfig:` + valueToStringVolumeMount(this.DeprecatedConfig) + `,`,
 		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
-		`Config:` + valueToStringVolumeMount(this.Config) + `,`,
+		`Shared:` + strings.Replace(fmt.Sprintf("%v", this.Shared), "SharedDevice", "SharedDevice", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -412,6 +575,106 @@ func valueToStringVolumeMount(v interface{}) string {
 	}
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
+}
+func (m *SharedDevice) Unmarshal(data []byte) error {
+	var hasFields [1]uint64
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VolumeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VolumeId = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MountConfig", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MountConfig = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipVolumeMount(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("volume_id")
+	}
+
+	return nil
 }
 func (m *VolumeMount) Unmarshal(data []byte) error {
 	l := len(data)
@@ -459,7 +722,7 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VolumeId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeprecatedVolumeId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -480,11 +743,11 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.VolumeId = string(data[iNdEx:postIndex])
+			m.DeprecatedVolumeId = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ContainerPath", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContainerDir", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -505,27 +768,27 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ContainerPath = string(data[iNdEx:postIndex])
+			m.ContainerDir = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeprecatedMode", wireType)
 			}
-			m.Mode = 0
+			m.DeprecatedMode = 0
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				m.Mode |= (BindMountMode(b) & 0x7F) << shift
+				m.DeprecatedMode |= (BindMountMode(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeprecatedConfig", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -546,7 +809,62 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Config = append([]byte{}, data[iNdEx:postIndex]...)
+			m.DeprecatedConfig = append([]byte{}, data[iNdEx:postIndex]...)
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Mode = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shared", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Shared == nil {
+				m.Shared = &SharedDevice{}
+			}
+			if err := m.Shared.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
