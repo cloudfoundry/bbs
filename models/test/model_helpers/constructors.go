@@ -77,6 +77,15 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		VolumeMounts: []*models.VolumeMount{
 			{
 				Driver:             "my-driver",
+				ContainerDir:       "/mnt/mypath",
+				Mode:     "r",
+				Shared: &models.SharedDevice{
+					VolumeId: "my-volume",
+				},
+			},
+			// TODO: this second entry tests api v2.9 backward cpmpatibility and should be removed soonish
+			{
+				Driver:             "my-driver",
 				DeprecatedVolumeId: "my-volume",
 				ContainerDir:       "/mnt/mypath",
 				DeprecatedMode:     models.BindMountMode_RO,
