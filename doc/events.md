@@ -1,13 +1,13 @@
 # Events
 
-BBS can optionally emit events when any desired or actual lrp is created,
-updated or removed. The following sections provide details on how to subscribe
-to those events as well as the type of events supported by the bbs
+The BBS emits events when a DesiredLRP or ActualLRP is created,
+updated, or deleted. The following sections provide details on how to subscribe
+to those events as well as the type of events supported by the BBS.
 
 ## Subscribing to events
 
 You can use the `SubscribeToEvents(logger lager.Logger) (events.EventSource,
-error)` client method to subscribe to events. For example
+error)` client method to subscribe to events. For example:
 
 ``` go
 client := bbs.NewClient(url)
@@ -40,65 +40,63 @@ if event.EventType() == models.EventTypeActualLRPCrashed {
 }
 ```
 
-Following types of events are emitted when changes to desired LRP and actual LRP are done:
+The following types of events are emitted:
 
-## Desired LRP events
+## DesiredLRP events
 
-### Desire LRP create event
+### `DesiredLRPCreatedEvent`
 
-When a new desired LRP is created a
+When a new DesiredLRP is created, a
 [DesiredLRPCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPCreatedEvent)
-is emitted. The field value of `DesiredLrp` will have information about the
-desired lrp that was just created.
+is emitted. The value of the `DesiredLrp` field contains information about the
+DesiredLRP that was just created.
 
-### Desired LRP change event
+### `DesiredLRPChangedEvent`
 
-When a desired LRP changes a
+When a DesiredLRP changes, a
 [DesiredLRPChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPChangedEvent)
-is emitted. The field value of `Before` and `After` have information about the
-desired lrp state before and after the change.
+is emitted. The value of the `Before` and `After` fields have information about the
+DesiredLRP before and after the change.
 
-### Desired LRP remove event
+### `DesiredLRPRemovedEvent`
 
-When a desired LRP is removed a
+When a DesiredLRP is deleted, a
 [DesiredLRPRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPRemovedEvent)
 is emitted. The field value of `DesiredLrp` will have information about the
-desired lrp that was just removed.
+DesiredLRP that was just removed.
 
-## Actual LRP events
+## ActualLRP events
 
-### Actual LRP create event
+### `ActualLRPCreatedEvent`
 
-When a new actual LRP is created a
-[ActualLRPCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPRemovedEvent)
-is emitted. The field value of `ActualLrpGroup` will contain more information
-about the actual lrp
+When a new ActualLRP is created, a
+[ActualLRPCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPCreatedEvent)
+is emitted. The value of the `ActualLrpGroup` field contains more information
+about the ActualLRP.
 
 
-### Actual LRP change event
+### `ActualLRPChangedEvent`
 
-When a actual LRP changes a
+When a ActualLRP changes, a
 [ActualLRPChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPChangedEvent)
-is emitted. The field value of `Before` and `After` have information about the
-actual lrp state before and after the change.
+is emitted. The value of the `Before` and `After` fields contains information about the
+ActualLRP state before and after the change.
 
-### Actual LRP remove event
+### `ActualLRPRemovedEvent`
 
-When a actual LRP is removed a
+When a ActualLRP is removed, a
 [ActualLRPRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPRemovedEvent)
-is emitted. The field value of `ActualLrp` will have information about the
-actual lrp that was just removed.
+is emitted. The value of the `ActualLrp` field contains information about the
+ActualLRP that was just removed.
 
-### Actual LRP crash event
+### `ActualLRPCrashedEvent`
 
-When a actual LRP crashes a
+When a ActualLRP crashes a
 [ActualLRPCrashedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPCrashedEvent)
 is emitted. The event will have the following field values:
 
-1. `ActualLRPKey`: the lrp key
-1. `ActualLRPInstanceKey`: the instance key
-1. `CrashCount`: the number of times the actual lrp has crashed
-1. `CrashReason`: the last error that caused the actual lrp to crash
-1. `Since`: the timestamp when the actual lrp last crashed
-
-[back](README.md)
+1. `ActualLRPKey`: The LRP key of the ActualLRP.
+1. `ActualLRPInstanceKey`: The instance key of the ActualLRP.
+1. `CrashCount`: The number of times the ActualLRP has crashed, including this latest crash.
+1. `CrashReason`: The last error that caused the ActualLRP to crash.
+1. `Since`: The timestamp when the ActualLRP last crashed, in nanoseconds in the Unix epoch.
