@@ -1,39 +1,39 @@
 # Internal Tasks API Reference
 
-This reference does not cover the protobuf payload supplied to each endpoint.
+Instead, it illustrates calls to the API via the Golang `bbs.Client` interface.
+Each method on that `Client` interface takes a `lager.Logger` as the first argument to log errors generated within the client.
+This first `Logger` argument will not be duplicated on the descriptions of the method arguments.
 
-For detailed information on the structs and types listed see [models documentation](https://godoc.org/code.cloudfoundry.org/bbs/models)
+For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://godoc.org/code.cloudfoundry.org/bbs/models).
 
 # Internal Tasks APIs
 
 ## StartTask
-```go
-{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
-```
 
 ### BBS API Endpoint
-Post a StartTaskRequest to "/v1/tasks/start"
+
+POST a [StartTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#StartTaskRequest)
+to `/v1/tasks/start`
+and receive a [StartTaskResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#StartTaskResponse).
 
 ### Golang Client API
+
 ```go
-func (c *client) StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, error)
+StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, error)
 ```
 
 #### Input
-* `logger lager.Logger`
-  * The logging sink
-* `taskGuid string`
-  * The task guid
-* `cellID string`
-  * Cell ID in which the tasks is started
+
+* `taskGuid string`: The GUID of the Task to start.
+* `cellID string`: ID of the cell intending to start the Task.
 
 #### Output
-* `bool`
-  * `true` if task should be started, `false` if not
-* `error`
-  * Non-nil if error occurred
+
+* `bool`: `true` if the Task should be started, `false` if not.
+* `error`: Non-nil if error occurred.
 
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 shouldStart, err := client.StartTask(logger, "task-guid", "cell-1")
@@ -48,31 +48,30 @@ if shouldStart {
 ```
 
 ## FailTask
-```go
-{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
-```
 
 ### BBS API Endpoint
-Post a FailTaskRequest to "/v1/tasks/fail"
+
+POST a [FailTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#FailTaskRequest)
+to `/v1/tasks/fail`
+and receive a [TaskLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
 
 ### Golang Client API
+
 ```go
-func (c *client) FailTask(logger lager.Logger, taskGuid, failureReason string) error
+FailTask(logger lager.Logger, taskGuid, failureReason string) error
 ```
 
 #### Input
-* `logger lager.Logger`
-  * The logging sink
-* `taskGuid string`
-  * The task guid
-* `failureReason string`
-  * Reason for which the task has failed
+
+* `taskGuid string`: The GUID of the Task to fail.
+* `failureReason string`: Reason why the Task failed.
 
 #### Output
-* `error`
-  * Non-nil if error occurred
+
+* `error`:  Non-nil if an error occurred.
 
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 err := client.FailTask(logger, "task-guid", "not enough resources")
@@ -82,37 +81,32 @@ if err != nil {
 ```
 
 ## CompleteTask
-```go
-{Path: "/v1/tasks/complete", Method: "POST", Name: CompleteTaskRoute},
-```
 
 ### BBS API Endpoint
-Post a CompleteTaskRequest to "/v1/tasks/fail"
+POST a [CompleteTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#CompleteTaskRequest)
+to `/v1/tasks/fail`
+and receive a [TaskLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
 
 ### Golang Client API
+
 ```go
-func (c *client) CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
+CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
 ```
 
 #### Input
-* `logger lager.Logger`
-  * The logging sink
-* `taskGuid string`
-  * The task guid
-* `cellId string`
-  * Cell ID in which the task ran
-* `failed bool`
-  * Whether the task failed or not
-* `failureReason string`
-  * Reason for which the task has failed
-* `result string`
-  * Task result in text format
+
+* `taskGuid string`: The GUID of the Task to complete.
+* `cellID string`: ID of the cell intending to complete the Task.
+* `failed bool`: Whether the Task failed.
+* `failureReason string`: If Task failed, the reason why the Task failed.
+* `result string`: If Task succeeded, result of the Task.
 
 #### Output
-* `error`
-  * Non-nil if error occurred
+
+* `error`:  Non-nil if an error occurred.
 
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 err = client.CompleteTask(logger, "task-guid", "cell-1", false, "", "result")
