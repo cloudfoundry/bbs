@@ -15,12 +15,14 @@ Returns all [ActualLRPGroups](https://godoc.org/code.cloudfoundry.org/bbs/models
 
 ### BBS API Endpoint
 
-POST an [ActualLRPGroupsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsRequest) to `/v1/actual_lrp_groups/list`, and receive an [ActualLRPGroupsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsResponse).
+POST an [ActualLRPGroupsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsRequest)
+to `/v1/actual_lrp_groups/list`
+and receive an [ActualLRPGroupsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsResponse).
 
 ### Golang Client API
 
 ```go
-func (c *client) ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
+ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 ```
 
 #### Inputs
@@ -56,12 +58,14 @@ Returns all [ActualLRPGroups](https://godoc.org/code.cloudfoundry.org/bbs/models
 ### BBS API Endpoint
 
 
-POST an [ActualLRPGroupsByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsByProcessGuidRequest) to `/v1/actual_lrp_groups/list_by_process_guid`, and receive an [ActualLRPGroupsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsResponse).
+POST an [ActualLRPGroupsByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsByProcessGuidRequest)
+to `/v1/actual_lrp_groups/list_by_process_guid`
+and receive an [ActualLRPGroupsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupsResponse).
 
 ### Golang Client API
 
 ```go
-func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error)
+ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error)
 ```
 
 #### Inputs
@@ -89,13 +93,15 @@ Returns the [ActualLRPGroup](https://godoc.org/code.cloudfoundry.org/bbs/models#
 
 ### BBS API Endpoint
 
-POST an [ActualLRPGroupByProcessGuidAndIndexRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupByProcessGuidAndIndexRequest) to
-"/v1/actual_lrp_groups/get_by_process_guid_and_index", and receive an [ActualLRPGroupResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupResponse).
+POST an [ActualLRPGroupByProcessGuidAndIndexRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupByProcessGuidAndIndexRequest)
+to
+`/v1/actual_lrp_groups/get_by_process_guid_and_index`
+and receive an [ActualLRPGroupResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroupResponse).
 
 ### Golang Client API
 
 ```go
-func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error)
+ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error)
 ```
 
 #### Inputs
@@ -125,12 +131,14 @@ Stops the ActualLRP matching the given [ActualLRPKey](https://godoc.org/code.clo
 
 ### BBS API Endpoint
 
-POST a [RetireActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RetireActualLRPRequest) to `/v1/actual_lrps/retire`, and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+POST a [RetireActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RetireActualLRPRequest)
+to `/v1/actual_lrps/retire`
+and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
 ```go
-func (c *client) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
+RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
 ```
 
 #### Inputs
@@ -158,32 +166,38 @@ if err != nil {
 # DesiredLRP APIs
 
 ## DesiredLRPs
-Lists all DesiredLRPs that match the given DesiredLRPFilter
+
+Lists all [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) that match the given [DesiredLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPFilter).
 
 ### BBS API Endpoint
-Post a DesiredLRPsRequest to "/v1/desired_lrps/list.r1"
 
-DEPRECATED: Post a DesiredLRPsRequest to "/v1/desired_lrps/list"
+POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest)
+to `/v1/desired_lrps/list.r1`
+and receive a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse) with V2 [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
+
+#### Deprecated Endpoints
+
+* POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest) to `/v1/desired_lrps/list` and receive a a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse) with V0 [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 
 ### Golang Client API
+
 ```go
-func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 ```
 
 #### Inputs
 
-* `filter models.DesiredLRPFilter`
-  * `Domain string`
-    * The domain (optional)
+* `filter models.DesiredLRPFilter`: [DesiredLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPFilter) to restrict the DesiredLRPs returned.
+  * `Domain string`: If non-empty, filter to only DesiredLRPs in this domain.
 
 #### Output
-* `[]*models.DesiredLRP`
-  * [See DesiredLRP Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP)
 
+* `[]*models.DesiredLRP`: List of [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 * `error`:  Non-nil if an error occurred.
 
 
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 desiredLRPS, err := client.DesiredLRPs(logger, &models.DesiredLRPFilter{
@@ -195,31 +209,37 @@ if err != nil {
 ```
 
 ## DesiredLRPByProcessGuid
-Returns the DesiredLRP with the given process guid
+
+Returns the DesiredLRP with the given process guid.
 
 ### BBS API Endpoint
-Post a DesiredLRPByProcessGuidRequest to "/v1/desired_lrps/get_by_process_guid.r1"
 
-DEPRECATED: Post a DesiredLRPByProcessGuidRequest to "/v1/desired_lrps/get_by_process_guid"
+POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest)
+to `/v1/desired_lrps/get_by_process_guid.r1`
+and receive a [DesiredLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPResponse) with a V2 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
+
+#### Deprecated Endpoints
+
+* POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest) to `/v1/desired_lrps/get_by_process_guid` and receive an [DesiredLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPResponse) with a V0 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 
 ### Golang Client API
+
 ```go
-func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error)
+DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error)
 ```
 
 #### Inputs
 
-* `processGuid string`
-  * The process Guid
+* `processGuid string`: The GUID for the DesiredLRP.
 
 #### Output
-* `*models.DesiredLRP`
-  * [See DesiredLRP Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP)
 
+* `*models.DesiredLRP`: The requested [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 * `error`:  Non-nil if an error occurred.
 
 
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 desiredLRP, err := client.DesiredLRPByProcessGuid(logger, "some-processs-guid")
@@ -229,30 +249,34 @@ if err != nil {
 ```
 
 ## DesiredLRPSchedulingInfos
-Returns all DesiredLRPSchedulingInfos that match the given DesiredLRPFilter
+
+Returns all DesiredLRPSchedulingInfos that match the given DesiredLRPFilter.
 
 ### BBS API Endpoint
-Post a DesiredLRPsRequest to "/v1/desired_lrp_scheduling_infos/list"
+
+POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest)
+to `/v1/desired_lrp_scheduling_infos/list`
+and receive a [DesiredLRPSchedulingInfosResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPSchedulingInfosResponse).
 
 ### Golang Client API
+
 ```go
-func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
+DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 ```
 
 #### Inputs
 
-* `filter models.DesiredLRPFilter`
-  * `Domain string`
-    * The domain (optional)
+* `filter models.DesiredLRPFilter`: [DesiredLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPFilter) to restrict the DesiredLRPs returned.
+  * `Domain string`: If non-empty, filter to only DesiredLRPs in this domain.
 
 #### Output
-* `[]*models.DesiredLRPSchedulingInfo`
-  * [See DesiredLRPSchedulingInfo Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPSchedulingInfo)
 
+* `[]*models.DesiredLRPSchedulingInfo`: List of [DesiredLRPSchedulingInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPSchedulingInfo) records.
 * `error`:  Non-nil if an error occurred.
 
 
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 info, err := client.DesiredLRPSchedulingInfos(logger, &models.DesiredLRPFilter{
@@ -264,55 +288,62 @@ if err != nil {
 ```
 
 ## DesireLRP
-Creates the given DesiredLRP and its corresponding ActualLRPs
+
+Create a DesiredLRP and its corresponding associated ActualLRPs.
 
 ### BBS API Endpoint
-Post a DesireLRPRequest to "/v1/desired_lrp/desire.r1"
 
-DEPRECATED: Post a DesireLRPRequest to "/v1/desired_lrp/desire"
+POST a [DesireLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesireLRPRequest)
+to `/v1/desired_lrp/desire.r1`
+and receive a [DesiredLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPLifecycleResponse).
+
+#### Deprecated Endpoints
+
+* POST a [DesireLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesireLRPRequest) with a V0 or V1 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) to `/v1/desired_lrp/desire` and receive a [DesiredLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPLifecycleResponse).
+
 
 ### Golang Client API
+
 ```go
-func (c *client) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error
+DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error
 ```
 
 #### Inputs
 
-* `desiredLRP *models.DesiredLRP`
-  * See the [LRP Examples page](lrp-examples.md)
-    for how to create a desired LRP
+* `desiredLRP *models.DesiredLRP`: [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) to create.
 
 #### Output
 
 * `error`:  Non-nil if an error occurred.
 
-
 #### Example
-See the [LRP Examples page](lrp-examples.md)
-for example
+
+See the [LRP Examples page](lrp-examples.md).
+
 
 ## UpdateDesiredLRP
-Updates the DesiredLRP matching the given process guid
+
+Updates the [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) with the given process GUID.
 
 ### BBS API Endpoint
-Post a UpdateDesiredLRPRequest to "/v1/desired_lrp/update"
+
+POST a [UpdateDesiredLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#UpdateDesiredLRPRequest)
+to `/v1/desired_lrp/update`
+and receive a [DesiredLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPLifecycleResponse).
 
 ### Golang Client API
+
 ```go
-func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error
+UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) error
 ```
 
 #### Inputs
 
-* `processGuid string`
-  * The process Guid
-* `update *models.DesiredLRPUpdate`
-  * `Instances *int32`
-    * The number of instances
-  * `Routes *Routes`
-    * Raw route information
-  * `Annotation *string`
-    * A string annotation
+* `processGuid string`: The GUID for the [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) to update.
+* `update *models.DesiredLRPUpdate`: [DesiredLRPUpdate](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPUpdate) struct containing fields to update, if any.
+  * `Instances *int32`: Optional. The number of instances.
+  * `Routes *Routes`: Optional. Map of routing information.
+  * `Annotation *string`: Optional. The annotation string on the DesiredLRP.
 
 #### Output
 
@@ -320,6 +351,7 @@ func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 
 
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 instances := 4
@@ -335,27 +367,31 @@ if err != nil {
 ```
 
 ## RemoveDesiredLRP
-Removes the DesiredLRP matching the given process guid
+
+Removes the [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) with the given process GUID.
 
 ### BBS API Endpoint
-Post a RemoveDesiredLRPRequest to "/v1/desired_lrp/remove"
+
+POST a [RemoveDesiredLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RemoveDesiredLRPRequest)
+to `/v1/desired_lrp/remove`
+and receive a [DesiredLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPLifecycleResponse).
 
 ### Golang Client API
+
 ```go
-func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
+RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 ```
 
 #### Inputs
 
-* `processGuid string`
-  * The process Guid
+* `processGuid string`: The GUID for the [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) to remove.
 
 #### Output
 
 * `error`:  Non-nil if an error occurred.
 
-
 #### Example
+
 ```go
 client := bbs.NewClient(url)
 err := client.RemoveDesiredLRP(logger, "some-process-guid")
