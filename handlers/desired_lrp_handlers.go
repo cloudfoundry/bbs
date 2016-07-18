@@ -253,15 +253,14 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 	createdIndicesChan := make(chan int, count)
 
 	works := make([]func(), count)
-
+	logger = logger.Session("create-unclaimed-actual-lrp")
 	for i, key := range keys {
 		key := key
 		works[i] = func() {
-			logger = logger.Session("create-unclaimed-actual-lrp", lager.Data{"actual_lrp_key": key})
-			logger.Info("starting")
+			logger.Info("starting", lager.Data{"actual_lrp_key": key})
 			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
 			if err != nil {
-				logger.Info("failed", lager.Data{"err_message": err.Error()})
+				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
 			} else {
 				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
 				createdIndicesChan <- int(key.Index)
