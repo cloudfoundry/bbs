@@ -1,5 +1,7 @@
 package models
 
+import "code.cloudfoundry.org/bbs/format"
+
 type CellSet map[string]*CellPresence
 
 func NewCellSet() CellSet {
@@ -67,12 +69,14 @@ func (cap CellCapacity) Validate() error {
 	return nil
 }
 
-func NewCellPresence(cellID, repAddress, zone string, capacity CellCapacity, rootFSProviders, preloadedRootFSes []string) CellPresence {
+func NewCellPresence(cellID, repAddress, zone string, capacity CellCapacity, rootFSProviders, preloadedRootFSes, volumeDrivers []string) CellPresence {
 	return CellPresence{
-		CellId:     cellID,
-		RepAddress: repAddress,
-		Zone:       zone,
-		Capacity:   &capacity,
+		CellId:          cellID,
+		RepAddress:      repAddress,
+		Zone:            zone,
+		Capacity:        &capacity,
+		RootfsProviders: rootFSProviders,
+		VolumeDrivers:   volumeDrivers,
 	}
 }
 
@@ -121,4 +125,21 @@ func (CellDisappearedEvent) EventType() string {
 
 func (e CellDisappearedEvent) CellIDs() []string {
 	return e.IDs
+}
+
+func (c *CellPresence) Copy() *CellPresence {
+	newCellPresense := *c
+	return &newCellPresense
+}
+
+func (c *CellPresence) VersionDownTo(v format.Version) *CellPresence {
+	c = c.Copy()
+	switch v {
+	case format.V1:
+		c.RootfsProviders = nil
+		c.VolumeDrivers = nil
+		return c
+	default:
+		return c
+	}
 }

@@ -16,6 +16,8 @@ message CellPresence {
   optional string rep_address = 2;
   optional string zone = 3;
   optional CellCapacity capacity = 4;
+  repeated string rootfs_providers = 5 [(gogoproto.jsontag) = "rootfs_provider_list"];
+  repeated string volume_drivers = 6 [(gogoproto.jsontag) = "volume_drivers"] ;
 }
 
 message CellsResponse {

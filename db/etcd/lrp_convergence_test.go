@@ -729,6 +729,7 @@ var _ = Describe("LRPConvergence", func() {
 				models.CellCapacity{MemoryMb: 128, DiskMb: 1024, Containers: 3},
 				[]string{},
 				[]string{},
+				[]string{},
 			)
 			cells = models.CellSet{cellId: &cellPresence}
 		})
@@ -889,6 +890,7 @@ var _ = Describe("LRPConvergence", func() {
 				models.CellCapacity{MemoryMb: 128, DiskMb: 1024, Containers: 3},
 				[]string{},
 				[]string{},
+				[]string{},
 			)
 
 			lrpKey0 = models.NewActualLRPKey(processGuid, 0, freshDomain)
@@ -1001,7 +1003,7 @@ var _ = Describe("LRPConvergence", func() {
 
 				BeforeEach(func() {
 					cells = models.CellSet{}
-					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
+					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{}, []string{})
 				})
 
 				JustBeforeEach(func() {
@@ -1079,7 +1081,7 @@ var _ = Describe("LRPConvergence", func() {
 				)
 
 				JustBeforeEach(func() {
-					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{})
+					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 3), []string{}, []string{}, []string{})
 					cells = models.CellSet{}
 					cells["cell-id"] = &cellPresence
 
@@ -1190,7 +1192,7 @@ var _ = Describe("LRPConvergence", func() {
 				)
 
 				JustBeforeEach(func() {
-					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 100), []string{}, []string{})
+					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(128, 1024, 100), []string{}, []string{}, []string{})
 					cells = models.CellSet{}
 					cells["cell-id"] = &cellPresence
 
@@ -1246,7 +1248,7 @@ var _ = Describe("LRPConvergence", func() {
 				)
 
 				JustBeforeEach(func() {
-					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(124, 1024, 6), []string{}, []string{})
+					cellPresence = models.NewCellPresence("cell-id", "cell.example.com", "the-zone", models.NewCellCapacity(124, 1024, 6), []string{}, []string{}, []string{})
 					cells = models.CellSet{}
 					cells["cell-id"] = &cellPresence
 
@@ -1747,7 +1749,7 @@ func newUnstartableCrashedActualLRP(d *models.DesiredLRP, index int32) *models.A
 }
 
 func newCellPresence(cellID string) *models.CellPresence {
-	cellPresence := models.NewCellPresence(cellID, "1.2.3.4", "az-1", models.NewCellCapacity(128, 1024, 3), []string{}, nil)
+	cellPresence := models.NewCellPresence(cellID, "1.2.3.4", "az-1", models.NewCellCapacity(128, 1024, 3), []string{}, nil, []string{})
 	return &cellPresence
 }
 

@@ -111,7 +111,8 @@ func New(
 		bbs.ActualLRPEventStreamRoute:  route(eventsHandler.SubscribeToActualLRPEvents),
 
 		// Cells
-		bbs.CellsRoute: route(emitter.EmitLatency(cellsHandler.Cells)),
+		bbs.CellsRoute:    route(emitter.EmitLatency(cellsHandler.Cells)),
+		bbs.CellsRoute_r1: route(emitter.EmitLatency(cellsHandler.Cells_r1)),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

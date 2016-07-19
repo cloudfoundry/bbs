@@ -16,7 +16,8 @@ var _ = Describe("CellPresence", func() {
 		capacity = models.NewCellCapacity(128, 1024, 3)
 		rootfsProviders := []string{"provider-1"}
 		preloadedRootFSes := []string{"provider-2"}
-		cellPresence = models.NewCellPresence("some-id", "some-address", "some-zone", capacity, rootfsProviders, preloadedRootFSes)
+		volumeDrivers := []string{"volman-2"}
+		cellPresence = models.NewCellPresence("some-id", "some-address", "some-zone", capacity, rootfsProviders, preloadedRootFSes, volumeDrivers)
 	})
 
 	Describe("Validate", func() {

@@ -20,6 +20,8 @@ var _ = Describe("Cell Handlers", func() {
 		handler           *handlers.CellHandler
 		fakeServiceClient *fake_bbs.FakeServiceClient
 		exitCh            chan struct{}
+		cells             []*models.CellPresence
+		cellSet           models.CellSet
 	)
 
 	BeforeEach(func() {
@@ -28,13 +30,41 @@ var _ = Describe("Cell Handlers", func() {
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewCellHandler(logger, fakeServiceClient, exitCh)
+		cells = []*models.CellPresence{
+			{
+				CellId:     "cell-1",
+				RepAddress: "1.1.1.1",
+				Zone:       "z1",
+				Capacity: &models.CellCapacity{
+					MemoryMb:   1000,
+					DiskMb:     1000,
+					Containers: 50,
+				},
+				RootfsProviders: []string{"provider-1", "provider-2"},
+				VolumeDrivers:   []string{"volman-1", "volman-2"},
+			},
+			{
+				CellId:     "cell-2",
+				RepAddress: "2.2.2.2",
+				Zone:       "z2",
+				Capacity: &models.CellCapacity{
+					MemoryMb:   2000,
+					DiskMb:     2000,
+					Containers: 20,
+				},
+				RootfsProviders: []string{"provider-1"},
+				VolumeDrivers:   []string{"volman-1", "volman-2", "volman-3"},
+			},
+		}
+		cellSet = models.NewCellSet()
+		cellSet.Add(cells[0])
+		cellSet.Add(cells[1])
 	})
 
-	Describe("Cells", func() {
-		var cells []*models.CellPresence
-		var cellSet models.CellSet
+	Describe("Cells_r1", func() {
+		var expectedCells []*models.CellPresence
 		BeforeEach(func() {
-			cells = []*models.CellPresence{
+			expectedCells = []*models.CellPresence{
 				{
 					CellId:     "cell-1",
 					RepAddress: "1.1.1.1",
@@ -56,11 +86,76 @@ var _ = Describe("Cell Handlers", func() {
 					},
 				},
 			}
-			cellSet = models.NewCellSet()
-			cellSet.Add(cells[0])
-			cellSet.Add(cells[1])
 		})
 
+		JustBeforeEach(func() {
+			handler.Cells_r1(responseRecorder, newTestRequest(""))
+		})
+
+		Context("when reading cells succeeds", func() {
+			BeforeEach(func() {
+				fakeServiceClient.CellsReturns(cellSet, nil)
+			})
+
+			It("returns a list of cells", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				response := &models.CellsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.Cells).To(ConsistOf(expectedCells))
+			})
+		})
+
+		Context("when the serviceClient returns no cells", func() {
+			BeforeEach(func() {
+				fakeServiceClient.CellsReturns(nil, nil)
+			})
+
+			It("returns an empty list", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				response := &models.CellsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.Cells).To(BeNil())
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeServiceClient.CellsReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when the serviceClient errors out", func() {
+			BeforeEach(func() {
+				fakeServiceClient.CellsReturns(nil, models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				response := &models.CellsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+				Expect(response.Cells).To(BeNil())
+			})
+		})
+	})
+
+	Describe("Cells", func() {
 		JustBeforeEach(func() {
 			handler.Cells(responseRecorder, newTestRequest(""))
 		})

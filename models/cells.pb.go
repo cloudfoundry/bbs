@@ -53,10 +53,12 @@ func (m *CellCapacity) GetContainers() int32 {
 }
 
 type CellPresence struct {
-	CellId     string        `protobuf:"bytes,1,opt,name=cell_id" json:"cell_id"`
-	RepAddress string        `protobuf:"bytes,2,opt,name=rep_address" json:"rep_address"`
-	Zone       string        `protobuf:"bytes,3,opt,name=zone" json:"zone"`
-	Capacity   *CellCapacity `protobuf:"bytes,4,opt,name=capacity" json:"capacity,omitempty"`
+	CellId          string        `protobuf:"bytes,1,opt,name=cell_id" json:"cell_id"`
+	RepAddress      string        `protobuf:"bytes,2,opt,name=rep_address" json:"rep_address"`
+	Zone            string        `protobuf:"bytes,3,opt,name=zone" json:"zone"`
+	Capacity        *CellCapacity `protobuf:"bytes,4,opt,name=capacity" json:"capacity,omitempty"`
+	RootfsProviders []string      `protobuf:"bytes,5,rep,name=rootfs_providers" json:"rootfs_provider_list"`
+	VolumeDrivers   []string      `protobuf:"bytes,6,rep,name=volume_drivers" json:"volume_drivers"`
 }
 
 func (m *CellPresence) Reset()      { *m = CellPresence{} }
@@ -86,6 +88,20 @@ func (m *CellPresence) GetZone() string {
 func (m *CellPresence) GetCapacity() *CellCapacity {
 	if m != nil {
 		return m.Capacity
+	}
+	return nil
+}
+
+func (m *CellPresence) GetRootfsProviders() []string {
+	if m != nil {
+		return m.RootfsProviders
+	}
+	return nil
+}
+
+func (m *CellPresence) GetVolumeDrivers() []string {
+	if m != nil {
+		return m.VolumeDrivers
 	}
 	return nil
 }
@@ -175,6 +191,22 @@ func (this *CellPresence) Equal(that interface{}) bool {
 	if !this.Capacity.Equal(that1.Capacity) {
 		return false
 	}
+	if len(this.RootfsProviders) != len(that1.RootfsProviders) {
+		return false
+	}
+	for i := range this.RootfsProviders {
+		if this.RootfsProviders[i] != that1.RootfsProviders[i] {
+			return false
+		}
+	}
+	if len(this.VolumeDrivers) != len(that1.VolumeDrivers) {
+		return false
+	}
+	for i := range this.VolumeDrivers {
+		if this.VolumeDrivers[i] != that1.VolumeDrivers[i] {
+			return false
+		}
+	}
 	return true
 }
 func (this *CellsResponse) Equal(that interface{}) bool {
@@ -228,7 +260,9 @@ func (this *CellPresence) GoString() string {
 		`CellId:` + fmt.Sprintf("%#v", this.CellId),
 		`RepAddress:` + fmt.Sprintf("%#v", this.RepAddress),
 		`Zone:` + fmt.Sprintf("%#v", this.Zone),
-		`Capacity:` + fmt.Sprintf("%#v", this.Capacity) + `}`}, ", ")
+		`Capacity:` + fmt.Sprintf("%#v", this.Capacity),
+		`RootfsProviders:` + fmt.Sprintf("%#v", this.RootfsProviders),
+		`VolumeDrivers:` + fmt.Sprintf("%#v", this.VolumeDrivers) + `}`}, ", ")
 	return s
 }
 func (this *CellsResponse) GoString() string {
@@ -329,6 +363,36 @@ func (m *CellPresence) MarshalTo(data []byte) (int, error) {
 		}
 		i += n1
 	}
+	if len(m.RootfsProviders) > 0 {
+		for _, s := range m.RootfsProviders {
+			data[i] = 0x2a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			data[i] = uint8(l)
+			i++
+			i += copy(data[i:], s)
+		}
+	}
+	if len(m.VolumeDrivers) > 0 {
+		for _, s := range m.VolumeDrivers {
+			data[i] = 0x32
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			data[i] = uint8(l)
+			i++
+			i += copy(data[i:], s)
+		}
+	}
 	return i, nil
 }
 
@@ -421,6 +485,18 @@ func (m *CellPresence) Size() (n int) {
 		l = m.Capacity.Size()
 		n += 1 + l + sovCells(uint64(l))
 	}
+	if len(m.RootfsProviders) > 0 {
+		for _, s := range m.RootfsProviders {
+			l = len(s)
+			n += 1 + l + sovCells(uint64(l))
+		}
+	}
+	if len(m.VolumeDrivers) > 0 {
+		for _, s := range m.VolumeDrivers {
+			l = len(s)
+			n += 1 + l + sovCells(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -474,6 +550,8 @@ func (this *CellPresence) String() string {
 		`RepAddress:` + fmt.Sprintf("%v", this.RepAddress) + `,`,
 		`Zone:` + fmt.Sprintf("%v", this.Zone) + `,`,
 		`Capacity:` + strings.Replace(fmt.Sprintf("%v", this.Capacity), "CellCapacity", "CellCapacity", 1) + `,`,
+		`RootfsProviders:` + fmt.Sprintf("%v", this.RootfsProviders) + `,`,
+		`VolumeDrivers:` + fmt.Sprintf("%v", this.VolumeDrivers) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -713,6 +791,56 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if err := m.Capacity.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RootfsProviders", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthCells
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RootfsProviders = append(m.RootfsProviders, string(data[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VolumeDrivers", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthCells
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VolumeDrivers = append(m.VolumeDrivers, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

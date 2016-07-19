@@ -116,7 +116,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient)
 		fakeServiceClient.CellByIdReturns(nil, errors.New("hi"))
 
-		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil)
+		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil, nil)
 		cellSet = models.CellSet{"cell-id": &cellPresence}
 		fakeServiceClient.CellsReturns(cellSet, nil)
 
@@ -263,6 +263,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 						"cell1.addr",
 						"the-zone",
 						models.NewCellCapacity(128, 1024, 6),
+						[]string{},
 						[]string{},
 						[]string{},
 					)
