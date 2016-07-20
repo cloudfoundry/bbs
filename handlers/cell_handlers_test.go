@@ -40,8 +40,10 @@ var _ = Describe("Cell Handlers", func() {
 					DiskMb:     1000,
 					Containers: 50,
 				},
-				RootfsProviders: []string{"provider-1", "provider-2"},
-				VolumeDrivers:   []string{"volman-1", "volman-2"},
+				RootfsProviders: []*models.Provider{
+					&models.Provider{"preloaded", []string{"provider-1", "provider-2"}},
+					&models.Provider{"provider-3", nil},
+				},
 			},
 			{
 				CellId:     "cell-2",
@@ -52,8 +54,9 @@ var _ = Describe("Cell Handlers", func() {
 					DiskMb:     2000,
 					Containers: 20,
 				},
-				RootfsProviders: []string{"provider-1"},
-				VolumeDrivers:   []string{"volman-1", "volman-2", "volman-3"},
+				RootfsProviders: []*models.Provider{
+					&models.Provider{"preloaded", []string{"provider-1"}},
+				},
 			},
 		}
 		cellSet = models.NewCellSet()

@@ -640,7 +640,7 @@ var _ = Describe("Task Controller", func() {
 			)
 
 			BeforeEach(func() {
-				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil, nil)
+				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil)
 				cellSet = models.CellSet{"cell-id": &cellPresence}
 				fakeServiceClient.CellsReturns(cellSet, nil)
 			})

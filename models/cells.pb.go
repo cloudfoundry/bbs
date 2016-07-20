@@ -57,8 +57,7 @@ type CellPresence struct {
 	RepAddress      string        `protobuf:"bytes,2,opt,name=rep_address" json:"rep_address"`
 	Zone            string        `protobuf:"bytes,3,opt,name=zone" json:"zone"`
 	Capacity        *CellCapacity `protobuf:"bytes,4,opt,name=capacity" json:"capacity,omitempty"`
-	RootfsProviders []string      `protobuf:"bytes,5,rep,name=rootfs_providers" json:"rootfs_provider_list"`
-	VolumeDrivers   []string      `protobuf:"bytes,6,rep,name=volume_drivers" json:"volume_drivers"`
+	RootfsProviders []*Provider   `protobuf:"bytes,5,rep,name=rootfs_providers" json:"rootfs_provider_list"`
 }
 
 func (m *CellPresence) Reset()      { *m = CellPresence{} }
@@ -92,16 +91,31 @@ func (m *CellPresence) GetCapacity() *CellCapacity {
 	return nil
 }
 
-func (m *CellPresence) GetRootfsProviders() []string {
+func (m *CellPresence) GetRootfsProviders() []*Provider {
 	if m != nil {
 		return m.RootfsProviders
 	}
 	return nil
 }
 
-func (m *CellPresence) GetVolumeDrivers() []string {
+type Provider struct {
+	Name       string   `protobuf:"bytes,1,opt,name=name" json:"name"`
+	Properties []string `protobuf:"bytes,2,rep,name=properties" json:"properties"`
+}
+
+func (m *Provider) Reset()      { *m = Provider{} }
+func (*Provider) ProtoMessage() {}
+
+func (m *Provider) GetName() string {
 	if m != nil {
-		return m.VolumeDrivers
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Provider) GetProperties() []string {
+	if m != nil {
+		return m.Properties
 	}
 	return nil
 }
@@ -195,15 +209,40 @@ func (this *CellPresence) Equal(that interface{}) bool {
 		return false
 	}
 	for i := range this.RootfsProviders {
-		if this.RootfsProviders[i] != that1.RootfsProviders[i] {
+		if !this.RootfsProviders[i].Equal(that1.RootfsProviders[i]) {
 			return false
 		}
 	}
-	if len(this.VolumeDrivers) != len(that1.VolumeDrivers) {
+	return true
+}
+func (this *Provider) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
 		return false
 	}
-	for i := range this.VolumeDrivers {
-		if this.VolumeDrivers[i] != that1.VolumeDrivers[i] {
+
+	that1, ok := that.(*Provider)
+	if !ok {
+		return false
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Name != that1.Name {
+		return false
+	}
+	if len(this.Properties) != len(that1.Properties) {
+		return false
+	}
+	for i := range this.Properties {
+		if this.Properties[i] != that1.Properties[i] {
 			return false
 		}
 	}
@@ -261,8 +300,16 @@ func (this *CellPresence) GoString() string {
 		`RepAddress:` + fmt.Sprintf("%#v", this.RepAddress),
 		`Zone:` + fmt.Sprintf("%#v", this.Zone),
 		`Capacity:` + fmt.Sprintf("%#v", this.Capacity),
-		`RootfsProviders:` + fmt.Sprintf("%#v", this.RootfsProviders),
-		`VolumeDrivers:` + fmt.Sprintf("%#v", this.VolumeDrivers) + `}`}, ", ")
+		`RootfsProviders:` + fmt.Sprintf("%#v", this.RootfsProviders) + `}`}, ", ")
+	return s
+}
+func (this *Provider) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Provider{` +
+		`Name:` + fmt.Sprintf("%#v", this.Name),
+		`Properties:` + fmt.Sprintf("%#v", this.Properties) + `}`}, ", ")
 	return s
 }
 func (this *CellsResponse) GoString() string {
@@ -364,23 +411,42 @@ func (m *CellPresence) MarshalTo(data []byte) (int, error) {
 		i += n1
 	}
 	if len(m.RootfsProviders) > 0 {
-		for _, s := range m.RootfsProviders {
+		for _, msg := range m.RootfsProviders {
 			data[i] = 0x2a
 			i++
-			l = len(s)
-			for l >= 1<<7 {
-				data[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
+			i = encodeVarintCells(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
 			}
-			data[i] = uint8(l)
-			i++
-			i += copy(data[i:], s)
+			i += n
 		}
 	}
-	if len(m.VolumeDrivers) > 0 {
-		for _, s := range m.VolumeDrivers {
-			data[i] = 0x32
+	return i, nil
+}
+
+func (m *Provider) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *Provider) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintCells(data, i, uint64(len(m.Name)))
+	i += copy(data[i:], m.Name)
+	if len(m.Properties) > 0 {
+		for _, s := range m.Properties {
+			data[i] = 0x12
 			i++
 			l = len(s)
 			for l >= 1<<7 {
@@ -486,13 +552,21 @@ func (m *CellPresence) Size() (n int) {
 		n += 1 + l + sovCells(uint64(l))
 	}
 	if len(m.RootfsProviders) > 0 {
-		for _, s := range m.RootfsProviders {
-			l = len(s)
+		for _, e := range m.RootfsProviders {
+			l = e.Size()
 			n += 1 + l + sovCells(uint64(l))
 		}
 	}
-	if len(m.VolumeDrivers) > 0 {
-		for _, s := range m.VolumeDrivers {
+	return n
+}
+
+func (m *Provider) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	n += 1 + l + sovCells(uint64(l))
+	if len(m.Properties) > 0 {
+		for _, s := range m.Properties {
 			l = len(s)
 			n += 1 + l + sovCells(uint64(l))
 		}
@@ -550,8 +624,18 @@ func (this *CellPresence) String() string {
 		`RepAddress:` + fmt.Sprintf("%v", this.RepAddress) + `,`,
 		`Zone:` + fmt.Sprintf("%v", this.Zone) + `,`,
 		`Capacity:` + strings.Replace(fmt.Sprintf("%v", this.Capacity), "CellCapacity", "CellCapacity", 1) + `,`,
-		`RootfsProviders:` + fmt.Sprintf("%v", this.RootfsProviders) + `,`,
-		`VolumeDrivers:` + fmt.Sprintf("%v", this.VolumeDrivers) + `,`,
+		`RootfsProviders:` + strings.Replace(fmt.Sprintf("%v", this.RootfsProviders), "Provider", "Provider", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Provider) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Provider{`,
+		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
+		`Properties:` + fmt.Sprintf("%v", this.Properties) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -796,30 +880,78 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RootfsProviders", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
 				b := data[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
 				return ErrInvalidLengthCells
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RootfsProviders = append(m.RootfsProviders, string(data[iNdEx:postIndex]))
+			m.RootfsProviders = append(m.RootfsProviders, &Provider{})
+			if err := m.RootfsProviders[len(m.RootfsProviders)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
-		case 6:
+		default:
+			var sizeOfWire int
+			for {
+				sizeOfWire++
+				wire >>= 7
+				if wire == 0 {
+					break
+				}
+			}
+			iNdEx -= sizeOfWire
+			skippy, err := skipCells(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCells
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	return nil
+}
+func (m *Provider) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		switch fieldNum {
+		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VolumeDrivers", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -840,7 +972,32 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.VolumeDrivers = append(m.VolumeDrivers, string(data[iNdEx:postIndex]))
+			m.Name = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthCells
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Properties = append(m.Properties, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

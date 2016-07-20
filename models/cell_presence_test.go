@@ -8,22 +8,27 @@ import (
 
 var _ = Describe("CellPresence", func() {
 	var (
-		cellPresence models.CellPresence
-		capacity     models.CellCapacity
+		cellPresence         models.CellPresence
+		capacity             models.CellCapacity
+		expectedProviderList []*models.Provider
 	)
 
 	BeforeEach(func() {
 		capacity = models.NewCellCapacity(128, 1024, 3)
 		rootfsProviders := []string{"provider-1"}
-		preloadedRootFSes := []string{"provider-2"}
-		volumeDrivers := []string{"volman-2"}
-		cellPresence = models.NewCellPresence("some-id", "some-address", "some-zone", capacity, rootfsProviders, preloadedRootFSes, volumeDrivers)
+		preloadedRootFSes := []string{"provider-2", "provider-3"}
+		cellPresence = models.NewCellPresence("some-id", "some-address", "some-zone", capacity, rootfsProviders, preloadedRootFSes)
+		expectedProviderList = []*models.Provider{
+			&models.Provider{"preloaded", []string{"provider-2", "provider-3"}},
+			&models.Provider{"provider-1", []string{}},
+		}
 	})
 
 	Describe("Validate", func() {
 		Context("when cell presence is valid", func() {
 			It("does not return an error", func() {
 				Expect(cellPresence.Validate()).NotTo(HaveOccurred())
+				Expect(cellPresence.GetRootfsProviders()).To(Equal(expectedProviderList))
 			})
 		})
 

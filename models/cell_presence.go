@@ -69,14 +69,24 @@ func (cap CellCapacity) Validate() error {
 	return nil
 }
 
-func NewCellPresence(cellID, repAddress, zone string, capacity CellCapacity, rootFSProviders, preloadedRootFSes, volumeDrivers []string) CellPresence {
+func NewCellPresence(cellID, repAddress, zone string, capacity CellCapacity, rootFSProviders, preloadedRootFSes []string) CellPresence {
+	var providers []*Provider
+	var pProviders []string
+	for _, preProv := range preloadedRootFSes {
+		pProviders = append(pProviders, preProv)
+	}
+	providers = append(providers, &Provider{"preloaded", pProviders})
+
+	for _, prov := range rootFSProviders {
+		providers = append(providers, &Provider{prov, []string{}})
+	}
+
 	return CellPresence{
 		CellId:          cellID,
 		RepAddress:      repAddress,
 		Zone:            zone,
 		Capacity:        &capacity,
-		RootfsProviders: rootFSProviders,
-		VolumeDrivers:   volumeDrivers,
+		RootfsProviders: providers,
 	}
 }
 
@@ -137,7 +147,6 @@ func (c *CellPresence) VersionDownTo(v format.Version) *CellPresence {
 	switch v {
 	case format.V1:
 		c.RootfsProviders = nil
-		c.VolumeDrivers = nil
 		return c
 	default:
 		return c

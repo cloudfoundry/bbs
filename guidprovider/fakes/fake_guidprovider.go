@@ -11,7 +11,7 @@ type FakeGUIDProvider struct {
 	NextGUIDStub        func() (string, error)
 	nextGUIDMutex       sync.RWMutex
 	nextGUIDArgsForCall []struct{}
-	nextGUIDReturns     struct {
+	nextGUIDReturns struct {
 		result1 string
 		result2 error
 	}
