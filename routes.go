@@ -104,12 +104,15 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrps/evacuate_running", Method: "POST", Name: EvacuateRunningActualLRPRoute},
 
 	// Desired LRPs
-	{Path: "/v1/desired_lrps/list.r1", Method: "POST", Name: DesiredLRPsRoute},
-	{Path: "/v1/desired_lrps/get_by_process_guid.r1", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
 	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute},
 
-	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute_r0},                            // Deprecated
-	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r0}, // Deprecated
+	{Path: "/v1/desired_lrps/list.r2:", Method: "POST", Name: DesiredLRPsRoute},
+	{Path: "/v1/desired_lrps/get_by_process_guid.r2", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
+
+	{Path: "/v1/desired_lrps/list.r1", Method: "POST", Name: DesiredLRPsRoute_r1},                            // Deprecated
+	{Path: "/v1/desired_lrps/get_by_process_guid.r1", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r1}, // Deprecated
+	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute_r0},                               // Deprecated
+	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r0},    // Deprecated
 
 	// Desire LPR Lifecycle
 	{Path: "/v1/desired_lrp/desire.r1", Method: "POST", Name: DesireDesiredLRPRoute},
