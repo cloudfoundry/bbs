@@ -1,7 +1,5 @@
 package models
 
-import "code.cloudfoundry.org/bbs/format"
-
 type CellSet map[string]*CellPresence
 
 func NewCellSet() CellSet {
@@ -140,15 +138,4 @@ func (e CellDisappearedEvent) CellIDs() []string {
 func (c *CellPresence) Copy() *CellPresence {
 	newCellPresense := *c
 	return &newCellPresense
-}
-
-func (c *CellPresence) VersionDownTo(v format.Version) *CellPresence {
-	c = c.Copy()
-	switch v {
-	case format.V1:
-		c.RootfsProviders = nil
-		return c
-	default:
-		return c
-	}
 }

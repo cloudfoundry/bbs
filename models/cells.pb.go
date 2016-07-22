@@ -57,7 +57,7 @@ type CellPresence struct {
 	RepAddress      string        `protobuf:"bytes,2,opt,name=rep_address" json:"rep_address"`
 	Zone            string        `protobuf:"bytes,3,opt,name=zone" json:"zone"`
 	Capacity        *CellCapacity `protobuf:"bytes,4,opt,name=capacity" json:"capacity,omitempty"`
-	RootfsProviders []*Provider   `protobuf:"bytes,5,rep,name=rootfs_providers" json:"rootfs_provider_list"`
+	RootfsProviders []*Provider   `protobuf:"bytes,5,rep,name=rootfs_providers" json:"rootfs_provider_list,omitempty"`
 }
 
 func (m *CellPresence) Reset()      { *m = CellPresence{} }
@@ -100,7 +100,7 @@ func (m *CellPresence) GetRootfsProviders() []*Provider {
 
 type Provider struct {
 	Name       string   `protobuf:"bytes,1,opt,name=name" json:"name"`
-	Properties []string `protobuf:"bytes,2,rep,name=properties" json:"properties"`
+	Properties []string `protobuf:"bytes,2,rep,name=properties" json:"properties,omitempty"`
 }
 
 func (m *Provider) Reset()      { *m = Provider{} }

@@ -146,6 +146,6 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrp_events", Method: "GET", Name: ActualLRPEventStreamRoute},   // Experimental
 
 	// Cells
-	{Path: "/v1/cells/list.r2", Method: "POST", Name: CellsRoute},
-	{Path: "/v1/cells/list.r1", Method: "GET", Name: CellsRoute_r1},
+	{Path: "/v1/cells/list", Method: "POST", Name: CellsRoute},
+	{Path: "/v1/cells/list", Method: "GET", Name: CellsRoute_r1},
 }
