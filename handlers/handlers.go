@@ -112,7 +112,7 @@ func New(
 
 		// Cells
 		bbs.CellsRoute:    route(emitter.EmitLatency(cellsHandler.Cells)),
-		bbs.CellsRoute_r1: route(emitter.EmitLatency(cellsHandler.Cells_r1)),
+		bbs.CellsRoute_r1: route(emitter.EmitLatency(cellsHandler.Cells)),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)

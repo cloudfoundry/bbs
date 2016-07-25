@@ -16,12 +16,12 @@ message CellPresence {
   optional string rep_address = 2;
   optional string zone = 3;
   optional CellCapacity capacity = 4;
-  repeated Provider rootfs_providers = 5 [(gogoproto.jsontag) = "rootfs_provider_list"];
+  repeated Provider rootfs_providers = 5 [(gogoproto.jsontag) = "rootfs_provider_list,omitempty"];
 }
 
 message Provider {
   optional string name = 1;
-  repeated string properties = 2 [(gogoproto.jsontag) = "properties"];
+  repeated string properties = 2 [(gogoproto.jsontag) = "properties,omitempty"];
 }
 
 message CellsResponse {

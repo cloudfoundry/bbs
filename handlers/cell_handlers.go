@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/bbs"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -31,21 +30,6 @@ func (h *CellHandler) Cells(w http.ResponseWriter, req *http.Request) {
 	cells := []*models.CellPresence{}
 	for _, cp := range cellSet {
 		cells = append(cells, cp)
-	}
-	response.Cells = cells
-	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
-}
-
-func (h *CellHandler) Cells_r1(w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger := h.logger.Session("cells")
-	response := &models.CellsResponse{}
-	cellSet, err := h.serviceClient.Cells(h.logger)
-	cells := []*models.CellPresence{}
-	for _, cp := range cellSet {
-		cells = append(cells, cp.VersionDownTo(format.V1))
 	}
 	response.Cells = cells
 	response.Error = models.ConvertError(err)
