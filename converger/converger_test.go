@@ -83,7 +83,7 @@ var _ = Describe("ConvergerProcess", func() {
 
 	Describe("converging over time", func() {
 		It("converges tasks, LRPs, and auctions when the lock is periodically reestablished", func() {
-			fakeClock.Increment(convergeRepeatInterval + aBit)
+			fakeClock.WaitForWatcherAndIncrement(convergeRepeatInterval + aBit)
 
 			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(1))
 			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(1))
@@ -93,7 +93,7 @@ var _ = Describe("ConvergerProcess", func() {
 			Expect(actualExpirePendingTaskDuration).To(Equal(expirePendingTaskDuration))
 			Expect(actualExpireCompletedTaskDuration).To(Equal(expireCompletedTaskDuration))
 
-			fakeClock.Increment(convergeRepeatInterval + aBit)
+			fakeClock.WaitForWatcherAndIncrement(convergeRepeatInterval + aBit)
 
 			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(2))
 			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(2))
@@ -133,7 +133,7 @@ var _ = Describe("ConvergerProcess", func() {
 		})
 
 		It("defers convergence to one full interval later", func() {
-			fakeClock.Increment(convergeRepeatInterval - aBit)
+			fakeClock.WaitForWatcherAndIncrement(convergeRepeatInterval - aBit)
 
 			waitEvents <- models.CellDisappearedEvent{
 				IDs: []string{"some-cell-id"},
@@ -142,12 +142,12 @@ var _ = Describe("ConvergerProcess", func() {
 			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(1))
 			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(1))
 
-			fakeClock.Increment(2 * aBit)
+			fakeClock.WaitForWatcherAndIncrement(2 * aBit)
 
 			Consistently(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(1))
 			Consistently(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(1))
 
-			fakeClock.Increment(convergeRepeatInterval + aBit)
+			fakeClock.WaitForWatcherAndIncrement(convergeRepeatInterval + aBit)
 			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(2))
 			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(2))
 		})
