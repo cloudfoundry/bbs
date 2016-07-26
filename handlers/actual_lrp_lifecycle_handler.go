@@ -18,11 +18,9 @@ type ActualLRPLifecycleHandler struct {
 	auctioneerClient auctioneer.Client
 	retirer          controllers.ActualLRPRetirer
 	exitChan         chan<- struct{}
-	logger           lager.Logger
 }
 
 func NewActualLRPLifecycleHandler(
-	logger lager.Logger,
 	db db.ActualLRPDB,
 	desiredLRPDB db.DesiredLRPDB,
 	actualHub events.Hub,
@@ -37,13 +35,12 @@ func NewActualLRPLifecycleHandler(
 		auctioneerClient: auctioneerClient,
 		retirer:          retirer,
 		exitChan:         exitChan,
-		logger:           logger.Session("actual-lrp-handler"),
 	}
 }
 
-func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("claim-actual-lrp")
+	logger = logger.Session("claim-actual-lrp")
 
 	request := &models.ClaimActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -67,10 +64,10 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(w http.ResponseWriter, req *h
 	}
 }
 
-func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 
-	logger := h.logger.Session("start-actual-lrp")
+	logger = logger.Session("start-actual-lrp")
 
 	request := &models.StartActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -97,8 +94,8 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(w http.ResponseWriter, req *h
 	}
 }
 
-func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("crash-actual-lrp")
+func (h *ActualLRPLifecycleHandler) CrashActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("crash-actual-lrp")
 
 	request := &models.CrashActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -145,9 +142,9 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(w http.ResponseWriter, req *h
 	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 }
 
-func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPLifecycleHandler) FailActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("fail-actual-lrp")
+	logger = logger.Session("fail-actual-lrp")
 
 	request := &models.FailActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -170,9 +167,9 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(w http.ResponseWriter, req *ht
 	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 }
 
-func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPLifecycleHandler) RemoveActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("remove-actual-lrp")
+	logger = logger.Session("remove-actual-lrp")
 
 	request := &models.RemoveActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -201,8 +198,8 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(w http.ResponseWriter, req *
 	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
 }
 
-func (h *ActualLRPLifecycleHandler) RetireActualLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("retire-actual-lrp")
+func (h *ActualLRPLifecycleHandler) RetireActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("retire-actual-lrp")
 	request := &models.RetireActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 

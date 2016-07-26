@@ -18,11 +18,9 @@ type EvacuationHandler struct {
 	actualHub        events.Hub
 	auctioneerClient auctioneer.Client
 	exitChan         chan<- struct{}
-	logger           lager.Logger
 }
 
 func NewEvacuationHandler(
-	logger lager.Logger,
 	db db.EvacuationDB,
 	actualLRPDB db.ActualLRPDB,
 	desiredLRPDB db.DesiredLRPDB,
@@ -37,7 +35,6 @@ func NewEvacuationHandler(
 		actualHub:        actualHub,
 		auctioneerClient: auctioneerClient,
 		exitChan:         exitChan,
-		logger:           logger.Session("evacuation-handler"),
 	}
 }
 
@@ -47,9 +44,9 @@ type MessageValidator interface {
 	Unmarshal(data []byte) error
 }
 
-func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req *http.Request) {
+func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("remove-evacuating-actual-lrp")
+	logger = logger.Session("remove-evacuating-actual-lrp")
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -80,8 +77,8 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(w http.ResponseWriter, req
 	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
 }
 
-func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("evacuate-claimed-actual-lrp")
+func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("evacuate-claimed-actual-lrp")
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -118,8 +115,8 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(w http.ResponseWriter, req 
 	}
 }
 
-func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("evacuate-crashed-actual-lrp")
+func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("evacuate-crashed-actual-lrp")
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -155,8 +152,8 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(w http.ResponseWriter, req 
 	}
 }
 
-func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("evacuate-running-actual-lrp")
+func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("evacuate-running-actual-lrp")
 
 	response := &models.EvacuationResponse{}
 	response.KeepContainer = true
@@ -265,8 +262,8 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(w http.ResponseWriter, req 
 	}
 }
 
-func (h *EvacuationHandler) EvacuateStoppedActualLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("evacuate-stopped-actual-lrp")
+func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("evacuate-stopped-actual-lrp")
 
 	request := &models.EvacuateStoppedActualLRPRequest{}
 	response := &models.EvacuationResponse{}

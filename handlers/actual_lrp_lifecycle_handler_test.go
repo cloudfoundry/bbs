@@ -54,7 +54,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		actualHub = &eventfakes.FakeHub{}
 		exitCh = make(chan struct{}, 1)
 		retirer := controllers.NewActualLRPRetirer(fakeActualLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
-		handler = handlers.NewActualLRPLifecycleHandler(logger, fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient, retirer, exitCh)
+		handler = handlers.NewActualLRPLifecycleHandler(fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient, retirer, exitCh)
 	})
 
 	Describe("ClaimActualLRP", func() {
@@ -98,7 +98,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.ClaimActualLRP(responseRecorder, request)
+			handler.ClaimActualLRP(logger, responseRecorder, request)
 		})
 
 		Context("when claiming the actual lrp in the DB succeeds", func() {
@@ -243,7 +243,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.StartActualLRP(responseRecorder, request)
+			handler.StartActualLRP(logger, responseRecorder, request)
 		})
 
 		Context("when starting the actual lrp in the DB succeeds", func() {
@@ -405,7 +405,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.CrashActualLRP(responseRecorder, request)
+			handler.CrashActualLRP(logger, responseRecorder, request)
 		})
 
 		Context("when crashing the actual lrp in the DB succeeds", func() {
@@ -636,7 +636,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
-			handler.RetireActualLRP(responseRecorder, request)
+			handler.RetireActualLRP(logger, responseRecorder, request)
 
 			response = &models.ActualLRPLifecycleResponse{}
 			err := response.Unmarshal(responseRecorder.Body.Bytes())
@@ -940,7 +940,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
-			handler.FailActualLRP(responseRecorder, request)
+			handler.FailActualLRP(logger, responseRecorder, request)
 		})
 
 		Context("when failing the actual lrp in the DB succeeds", func() {
@@ -1059,7 +1059,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.RemoveActualLRP(responseRecorder, request)
+			handler.RemoveActualLRP(logger, responseRecorder, request)
 		})
 
 		Context("when removing the actual lrp in the DB succeeds", func() {

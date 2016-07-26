@@ -29,7 +29,7 @@ var _ = Describe("Cell Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
-		handler = handlers.NewCellHandler(logger, fakeServiceClient, exitCh)
+		handler = handlers.NewCellHandler(fakeServiceClient, exitCh)
 		cells = []*models.CellPresence{
 			{
 				CellId:     "cell-1",
@@ -66,7 +66,7 @@ var _ = Describe("Cell Handlers", func() {
 
 	Describe("Cells", func() {
 		JustBeforeEach(func() {
-			handler.Cells(responseRecorder, newTestRequest(""))
+			handler.Cells(logger, responseRecorder, newTestRequest(""))
 		})
 
 		Context("when reading cells succeeds", func() {

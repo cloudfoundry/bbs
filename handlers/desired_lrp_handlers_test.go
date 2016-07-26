@@ -50,7 +50,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		Expect(err).NotTo(HaveOccurred())
 		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewDesiredLRPHandler(
-			logger,
 			5,
 			fakeDesiredLRPDB,
 			fakeActualLRPDB,
@@ -74,7 +73,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesiredLRPs(responseRecorder, request)
+			handler.DesiredLRPs(logger, responseRecorder, request)
 		})
 
 		Context("when reading desired lrps from DB succeeds", func() {
@@ -174,7 +173,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesiredLRPByProcessGuid(responseRecorder, request)
+			handler.DesiredLRPByProcessGuid(logger, responseRecorder, request)
 		})
 
 		Context("when reading desired lrp from DB succeeds", func() {
@@ -257,7 +256,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesiredLRPSchedulingInfos(responseRecorder, request)
+			handler.DesiredLRPSchedulingInfos(logger, responseRecorder, request)
 		})
 
 		Context("when reading scheduling infos from DB succeeds", func() {
@@ -359,7 +358,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesireDesiredLRP(responseRecorder, request)
+			handler.DesireDesiredLRP(logger, responseRecorder, request)
 		})
 
 		Context("when creating desired lrp in DB succeeds", func() {
@@ -520,7 +519,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.UpdateDesiredLRP(responseRecorder, request)
+			handler.UpdateDesiredLRP(logger, responseRecorder, request)
 		})
 
 		Context("when updating desired lrp in DB succeeds", func() {
@@ -768,7 +767,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.RemoveDesiredLRP(responseRecorder, request)
+			handler.RemoveDesiredLRP(logger, responseRecorder, request)
 		})
 
 		Context("when removing desired lrp in DB succeeds", func() {

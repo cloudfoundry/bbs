@@ -23,11 +23,9 @@ type DesiredLRPHandler struct {
 	serviceClient      bbs.ServiceClient
 	updateWorkersCount int
 	exitChan           chan<- struct{}
-	logger             lager.Logger
 }
 
 func NewDesiredLRPHandler(
-	logger lager.Logger,
 	updateWorkersCount int,
 	desiredLRPDB db.DesiredLRPDB,
 	actualLRPDB db.ActualLRPDB,
@@ -48,13 +46,12 @@ func NewDesiredLRPHandler(
 		serviceClient:      serviceClient,
 		updateWorkersCount: updateWorkersCount,
 		exitChan:           exitChan,
-		logger:             logger.Session("desired-lrp-handler"),
 	}
 }
 
-func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrps")
+	logger = logger.Session("desired-lrps")
 
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
@@ -70,9 +67,9 @@ func (h *DesiredLRPHandler) DesiredLRPs(w http.ResponseWriter, req *http.Request
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrp-by-process-guid")
+	logger = logger.Session("desired-lrp-by-process-guid")
 
 	request := &models.DesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPResponse{}
@@ -87,9 +84,9 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(w http.ResponseWriter, req *
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrp-scheduling-infos")
+	logger = logger.Session("desired-lrp-scheduling-infos")
 
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPSchedulingInfosResponse{}
@@ -105,8 +102,8 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(w http.ResponseWriter, req
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("desire-lrp")
+func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("desire-lrp")
 
 	request := &models.DesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
@@ -137,8 +134,8 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(w http.ResponseWriter, req *http.Re
 	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
 }
 
-func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("update-desired-lrp")
+func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("update-desired-lrp")
 
 	request := &models.UpdateDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
@@ -192,8 +189,8 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(w http.ResponseWriter, req *http.Re
 	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
 }
 
-func (h *DesiredLRPHandler) RemoveDesiredLRP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("remove-desired-lrp")
+func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("remove-desired-lrp")
 
 	request := &models.RemoveDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}

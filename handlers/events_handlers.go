@@ -9,16 +9,14 @@ import (
 )
 
 type EventHandler struct {
-	logger     lager.Logger
 	desiredHub events.Hub
 	actualHub  events.Hub
 }
 
-func NewEventHandler(logger lager.Logger, desiredHub, actualHub events.Hub) *EventHandler {
+func NewEventHandler(desiredHub, actualHub events.Hub) *EventHandler {
 	return &EventHandler{
 		desiredHub: desiredHub,
 		actualHub:  actualHub,
-		logger:     logger.Session("events-handler"),
 	}
 }
 

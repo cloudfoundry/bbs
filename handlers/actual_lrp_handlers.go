@@ -10,21 +10,19 @@ import (
 
 type ActualLRPHandler struct {
 	db       db.ActualLRPDB
-	logger   lager.Logger
 	exitChan chan<- struct{}
 }
 
-func NewActualLRPHandler(logger lager.Logger, db db.ActualLRPDB, exitChan chan<- struct{}) *ActualLRPHandler {
+func NewActualLRPHandler(db db.ActualLRPDB, exitChan chan<- struct{}) *ActualLRPHandler {
 	return &ActualLRPHandler{
 		db:       db,
 		exitChan: exitChan,
-		logger:   logger.Session("actual-lrp-handler"),
 	}
 }
 
-func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("actual-lrp-groups")
+	logger = logger.Session("actual-lrp-groups")
 
 	request := &models.ActualLRPGroupsRequest{}
 	response := &models.ActualLRPGroupsResponse{}
@@ -41,9 +39,9 @@ func (h *ActualLRPHandler) ActualLRPGroups(w http.ResponseWriter, req *http.Requ
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("actual-lrp-groups-by-process-guid")
+	logger = logger.Session("actual-lrp-groups-by-process-guid")
 
 	request := &models.ActualLRPGroupsByProcessGuidRequest{}
 	response := &models.ActualLRPGroupsResponse{}
@@ -59,9 +57,9 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(w http.ResponseWriter, r
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("actual-lrp-group-by-process-guid-and-index")
+	logger = logger.Session("actual-lrp-group-by-process-guid-and-index")
 
 	request := &models.ActualLRPGroupByProcessGuidAndIndexRequest{}
 	response := &models.ActualLRPGroupResponse{}

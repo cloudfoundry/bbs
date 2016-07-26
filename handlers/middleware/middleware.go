@@ -13,7 +13,9 @@ const (
 	requestCount   = metric.Counter("RequestCount")
 )
 
-func LogWrap(logger lager.Logger, handler http.Handler) http.HandlerFunc {
+type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)
+
+func LogWrap(logger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestLog := logger.Session("request", lager.Data{
 			"method":  r.Method,
@@ -21,7 +23,7 @@ func LogWrap(logger lager.Logger, handler http.Handler) http.HandlerFunc {
 		})
 
 		requestLog.Debug("serving")
-		handler.ServeHTTP(w, r)
+		loggableHandlerFunc(requestLog, w, r)
 		requestLog.Debug("done")
 	}
 }
