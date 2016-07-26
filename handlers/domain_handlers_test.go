@@ -28,7 +28,7 @@ var _ = Describe("Domain Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
-		handler = handlers.NewDomainHandler(logger, fakeDomainDB, exitCh)
+		handler = handlers.NewDomainHandler(fakeDomainDB, exitCh)
 	})
 
 	Describe("Upsert", func() {
@@ -49,7 +49,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.Upsert(responseRecorder, request)
+			handler.Upsert(logger, responseRecorder, request)
 		})
 
 		Context("when upserting domain to DB succeeds", func() {
@@ -148,7 +148,7 @@ var _ = Describe("Domain Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.Domains(responseRecorder, newTestRequest(""))
+			handler.Domains(logger, responseRecorder, newTestRequest(""))
 		})
 
 		Context("when reading domains from DB succeeds", func() {

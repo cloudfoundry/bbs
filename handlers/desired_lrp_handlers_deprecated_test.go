@@ -47,7 +47,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		desiredHub = new(eventfakes.FakeHub)
 		actualHub = new(eventfakes.FakeHub)
 		exitCh = make(chan struct{}, 1)
-		handler = handlers.NewDesiredLRPHandler(logger, 5, fakeDesiredLRPDB,
+		handler = handlers.NewDesiredLRPHandler(5, fakeDesiredLRPDB,
 			fakeActualLRPDB,
 			desiredHub,
 			actualHub,
@@ -66,7 +66,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesiredLRPs_r0(responseRecorder, request)
+			handler.DesiredLRPs_r0(logger, responseRecorder, request)
 		})
 
 		Context("when reading desired lrps from DB succeeds", func() {
@@ -193,7 +193,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesiredLRPs_r1(responseRecorder, request)
+			handler.DesiredLRPs_r1(logger, responseRecorder, request)
 		})
 
 		Context("when reading desired lrps from DB succeeds", func() {
@@ -384,7 +384,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesiredLRPByProcessGuid_r0(responseRecorder, request)
+			handler.DesiredLRPByProcessGuid_r0(logger, responseRecorder, request)
 		})
 
 		Context("when reading desired lrp from DB succeeds", func() {
@@ -490,7 +490,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesiredLRPByProcessGuid_r1(responseRecorder, request)
+			handler.DesiredLRPByProcessGuid_r1(logger, responseRecorder, request)
 		})
 
 		Context("when reading desired lrp from DB succeeds", func() {
@@ -708,7 +708,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesireDesiredLRP_r0(responseRecorder, request)
+			handler.DesireDesiredLRP_r0(logger, responseRecorder, request)
 		})
 
 		Context("when creating desired lrp in DB succeeds", func() {

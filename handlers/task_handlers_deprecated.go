@@ -9,9 +9,9 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (h *TaskHandler) commonTasks(w http.ResponseWriter, req *http.Request, version format.Version) {
+func (h *TaskHandler) commonTasks(logger lager.Logger, w http.ResponseWriter, req *http.Request, version format.Version) {
 	var err error
-	logger := h.logger.Session("tasks", lager.Data{"revision": 0})
+	logger = logger.Session("tasks", lager.Data{"revision": 0})
 
 	request := &models.TasksRequest{}
 	response := &models.TasksResponse{}
@@ -42,17 +42,17 @@ func (h *TaskHandler) commonTasks(w http.ResponseWriter, req *http.Request, vers
 	}
 }
 
-func (h *TaskHandler) Tasks_r0(w http.ResponseWriter, req *http.Request) {
-	h.commonTasks(w, req, format.V0)
+func (h *TaskHandler) Tasks_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTasks(logger, w, req, format.V0)
 }
 
-func (h *TaskHandler) Tasks_r1(w http.ResponseWriter, req *http.Request) {
-	h.commonTasks(w, req, format.V1)
+func (h *TaskHandler) Tasks_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTasks(logger, w, req, format.V1)
 }
 
-func (h *TaskHandler) commonTaskByGuid(w http.ResponseWriter, req *http.Request, version format.Version) {
+func (h *TaskHandler) commonTaskByGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request, version format.Version) {
 	var err error
-	logger := h.logger.Session("task-by-guid", lager.Data{"revision": 0})
+	logger = logger.Session("task-by-guid", lager.Data{"revision": 0})
 
 	request := &models.TaskByGuidRequest{}
 	response := &models.TaskResponse{}
@@ -78,17 +78,17 @@ func (h *TaskHandler) commonTaskByGuid(w http.ResponseWriter, req *http.Request,
 	}
 }
 
-func (h *TaskHandler) TaskByGuid_r0(w http.ResponseWriter, req *http.Request) {
-	h.commonTaskByGuid(w, req, format.V0)
+func (h *TaskHandler) TaskByGuid_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTaskByGuid(logger, w, req, format.V0)
 }
 
-func (h *TaskHandler) TaskByGuid_r1(w http.ResponseWriter, req *http.Request) {
-	h.commonTaskByGuid(w, req, format.V1)
+func (h *TaskHandler) TaskByGuid_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTaskByGuid(logger, w, req, format.V1)
 }
 
-func (h *TaskHandler) DesireTask_r0(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) DesireTask_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desire-task")
+	logger = logger.Session("desire-task")
 
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}

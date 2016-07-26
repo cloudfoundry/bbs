@@ -34,7 +34,7 @@ var _ = Describe("Task Handlers", func() {
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
 		controller = &fake_controllers.FakeTaskController{}
-		handler = handlers.NewTaskHandler(logger, controller, exitCh)
+		handler = handlers.NewTaskHandler(controller, exitCh)
 	})
 
 	Describe("Tasks", func() {
@@ -56,7 +56,7 @@ var _ = Describe("Task Handlers", func() {
 				CellId: cellId,
 			}
 			request = newTestRequest(requestBody)
-			handler.Tasks(responseRecorder, request)
+			handler.Tasks(logger, responseRecorder, request)
 		})
 
 		Context("when reading tasks from controller succeeds", func() {
@@ -149,7 +149,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.TaskByGuid(responseRecorder, request)
+			handler.TaskByGuid(logger, responseRecorder, request)
 		})
 
 		Context("when reading a task from the controller succeeds", func() {
@@ -237,7 +237,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.DesireTask(responseRecorder, request)
+			handler.DesireTask(logger, responseRecorder, request)
 		})
 
 		Context("when the desire is successful", func() {
@@ -295,7 +295,7 @@ var _ = Describe("Task Handlers", func() {
 
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
-				handler.StartTask(responseRecorder, request)
+				handler.StartTask(logger, responseRecorder, request)
 			})
 
 			It("calls StartTask", func() {
@@ -382,7 +382,7 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.CancelTask(responseRecorder, request)
+			handler.CancelTask(logger, responseRecorder, request)
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		})
 
@@ -467,7 +467,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
-			handler.FailTask(responseRecorder, request)
+			handler.FailTask(logger, responseRecorder, request)
 		})
 
 		Context("when failing the task succeeds", func() {
@@ -541,7 +541,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.CompleteTask(responseRecorder, request)
+			handler.CompleteTask(logger, responseRecorder, request)
 		})
 
 		Context("when completing the task succeeds", func() {
@@ -600,7 +600,7 @@ var _ = Describe("Task Handlers", func() {
 
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
-				handler.ResolvingTask(responseRecorder, request)
+				handler.ResolvingTask(logger, responseRecorder, request)
 			})
 
 			Context("when resolvinging the task succeeds", func() {
@@ -655,7 +655,7 @@ var _ = Describe("Task Handlers", func() {
 			})
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
-				handler.DeleteTask(responseRecorder, request)
+				handler.DeleteTask(logger, responseRecorder, request)
 			})
 
 			Context("when deleting the task succeeds", func() {

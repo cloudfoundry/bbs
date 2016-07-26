@@ -26,24 +26,21 @@ type TaskController interface {
 type TaskHandler struct {
 	controller TaskController
 	exitChan   chan<- struct{}
-	logger     lager.Logger
 }
 
 func NewTaskHandler(
-	logger lager.Logger,
 	controller TaskController,
 	exitChan chan<- struct{},
 ) *TaskHandler {
 	return &TaskHandler{
-		logger:     logger.Session("task-http-handler"),
 		controller: controller,
 		exitChan:   exitChan,
 	}
 }
 
-func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("tasks")
+	logger = logger.Session("tasks")
 
 	request := &models.TasksRequest{}
 	response := &models.TasksResponse{}
@@ -62,9 +59,9 @@ func (h *TaskHandler) Tasks(w http.ResponseWriter, req *http.Request) {
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("task-by-guid")
+	logger = logger.Session("task-by-guid")
 
 	request := &models.TaskByGuidRequest{}
 	response := &models.TaskResponse{}
@@ -83,9 +80,9 @@ func (h *TaskHandler) TaskByGuid(w http.ResponseWriter, req *http.Request) {
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) DesireTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desire-task")
+	logger = logger.Session("desire-task")
 
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -100,13 +97,13 @@ func (h *TaskHandler) DesireTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = h.controller.DesireTask(h.logger, request.TaskDefinition, request.TaskGuid, request.Domain)
+	err = h.controller.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("start-task")
+	logger = logger.Session("start-task")
 
 	request := &models.StartTaskRequest{}
 	response := &models.StartTaskResponse{}
@@ -125,8 +122,8 @@ func (h *TaskHandler) StartTask(w http.ResponseWriter, req *http.Request) {
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("cancel-task")
+func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("cancel-task")
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -145,9 +142,9 @@ func (h *TaskHandler) CancelTask(w http.ResponseWriter, req *http.Request) {
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("fail-task")
+	logger = logger.Session("fail-task")
 
 	request := &models.FailTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -166,9 +163,9 @@ func (h *TaskHandler) FailTask(w http.ResponseWriter, req *http.Request) {
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) CompleteTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("complete-task")
+	logger = logger.Session("complete-task")
 
 	request := &models.CompleteTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -187,9 +184,9 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, req *http.Request) {
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) ResolvingTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("resolving-task")
+	logger = logger.Session("resolving-task")
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -208,9 +205,9 @@ func (h *TaskHandler) ResolvingTask(w http.ResponseWriter, req *http.Request) {
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) DeleteTask(w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) DeleteTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("delete-task")
+	logger = logger.Session("delete-task")
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}

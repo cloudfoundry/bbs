@@ -10,24 +10,22 @@ import (
 )
 
 type CellHandler struct {
-	logger        lager.Logger
 	serviceClient bbs.ServiceClient
 	exitChan      chan<- struct{}
 }
 
-func NewCellHandler(logger lager.Logger, serviceClient bbs.ServiceClient, exitChan chan<- struct{}) *CellHandler {
+func NewCellHandler(serviceClient bbs.ServiceClient, exitChan chan<- struct{}) *CellHandler {
 	return &CellHandler{
-		logger:        logger.Session("cell-handler"),
 		serviceClient: serviceClient,
 		exitChan:      exitChan,
 	}
 }
 
-func (h *CellHandler) Cells(w http.ResponseWriter, req *http.Request) {
+func (h *CellHandler) Cells(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("cells")
+	logger = logger.Session("cells")
 	response := &models.CellsResponse{}
-	cellSet, err := h.serviceClient.Cells(h.logger)
+	cellSet, err := h.serviceClient.Cells(logger)
 	cells := []*models.CellPresence{}
 	for _, cp := range cellSet {
 		cells = append(cells, cp)
@@ -38,11 +36,11 @@ func (h *CellHandler) Cells(w http.ResponseWriter, req *http.Request) {
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *CellHandler) Cells_r1(w http.ResponseWriter, req *http.Request) {
+func (h *CellHandler) Cells_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("cells")
+	logger = logger.Session("cells")
 	response := &models.CellsResponse{}
-	cellSet, err := h.serviceClient.Cells(h.logger)
+	cellSet, err := h.serviceClient.Cells(logger)
 	cells := []*models.CellPresence{}
 	for _, cp := range cellSet {
 		cells = append(cells, cp.VersionDownTo(format.V1))

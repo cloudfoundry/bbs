@@ -4,10 +4,11 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/lager"
 )
 
-func (h *EventHandler) SubscribeToActualLRPEvents(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("subscribe-desired")
+func (h *EventHandler) SubscribeToActualLRPEvents(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("subscribe-desired")
 
 	source, err := h.actualHub.Subscribe()
 	if err != nil {

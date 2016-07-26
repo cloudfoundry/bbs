@@ -35,7 +35,7 @@ var _ = Describe("Event Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		desiredHub = events.NewHub()
 		actualHub = events.NewHub()
-		handler = handlers.NewEventHandler(logger, desiredHub, actualHub)
+		handler = handlers.NewEventHandler(desiredHub, actualHub)
 
 		eventStreamDone = make(chan struct{})
 	})
@@ -138,7 +138,7 @@ var _ = Describe("Event Handlers", func() {
 	Describe("Subscribe_r0", func() {
 		BeforeEach(func() {
 			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.Subscribe_r0(w, r)
+				handler.Subscribe_r0(logger, w, r)
 				close(eventStreamDone)
 			}))
 		})
@@ -175,7 +175,7 @@ var _ = Describe("Event Handlers", func() {
 	Describe("SubscribeToDesiredLRPEvents", func() {
 		BeforeEach(func() {
 			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.SubscribeToDesiredLRPEvents(w, r)
+				handler.SubscribeToDesiredLRPEvents(logger, w, r)
 				close(eventStreamDone)
 			}))
 		})
@@ -204,7 +204,7 @@ var _ = Describe("Event Handlers", func() {
 	Describe("SubscribeToAcutalLRPEvents", func() {
 		BeforeEach(func() {
 			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.SubscribeToActualLRPEvents(w, r)
+				handler.SubscribeToActualLRPEvents(logger, w, r)
 				close(eventStreamDone)
 			}))
 		})

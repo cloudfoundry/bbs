@@ -31,7 +31,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
-		handler = handlers.NewActualLRPHandler(logger, fakeActualLRPDB, exitCh)
+		handler = handlers.NewActualLRPHandler(fakeActualLRPDB, exitCh)
 	})
 
 	Describe("ActualLRPGroups", func() {
@@ -74,7 +74,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.ActualLRPGroups(responseRecorder, request)
+			handler.ActualLRPGroups(logger, responseRecorder, request)
 		})
 
 		Context("when reading actual lrps from DB succeeds", func() {
@@ -234,7 +234,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.ActualLRPGroupsByProcessGuid(responseRecorder, request)
+			handler.ActualLRPGroupsByProcessGuid(logger, responseRecorder, request)
 		})
 
 		Context("when reading actual lrps from DB succeeds", func() {
@@ -360,7 +360,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.ActualLRPGroupByProcessGuidAndIndex(responseRecorder, request)
+			handler.ActualLRPGroupByProcessGuidAndIndex(logger, responseRecorder, request)
 		})
 
 		Context("when reading actual lrps from DB succeeds", func() {

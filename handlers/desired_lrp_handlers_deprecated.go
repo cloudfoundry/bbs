@@ -9,9 +9,9 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (h *DesiredLRPHandler) DesiredLRPs_r0(w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPs_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrps", lager.Data{"revision": 0})
+	logger = logger.Session("desired-lrps", lager.Data{"revision": 0})
 
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
@@ -36,9 +36,9 @@ func (h *DesiredLRPHandler) DesiredLRPs_r0(w http.ResponseWriter, req *http.Requ
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *DesiredLRPHandler) DesiredLRPs_r1(w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPs_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrps", lager.Data{"revision": 0})
+	logger = logger.Session("desired-lrps", lager.Data{"revision": 0})
 
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
@@ -63,9 +63,9 @@ func (h *DesiredLRPHandler) DesiredLRPs_r1(w http.ResponseWriter, req *http.Requ
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrp-by-process-guid", lager.Data{"revision": 0})
+	logger = logger.Session("desired-lrp-by-process-guid", lager.Data{"revision": 0})
 
 	request := &models.DesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPResponse{}
@@ -86,9 +86,9 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(w http.ResponseWriter, re
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r1(w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger := h.logger.Session("desired-lrp-by-process-guid", lager.Data{"revision": 0})
+	logger = logger.Session("desired-lrp-by-process-guid", lager.Data{"revision": 0})
 
 	request := &models.DesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPResponse{}
@@ -109,8 +109,8 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r1(w http.ResponseWriter, re
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *DesiredLRPHandler) DesireDesiredLRP_r0(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Session("desire-lrp")
+func (h *DesiredLRPHandler) DesireDesiredLRP_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("desire-lrp")
 
 	request := &models.DesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}

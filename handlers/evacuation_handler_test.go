@@ -43,7 +43,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
-		handler = handlers.NewEvacuationHandler(logger, fakeEvacuationDB, fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient, exitCh)
+		handler = handlers.NewEvacuationHandler(fakeEvacuationDB, fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient, exitCh)
 	})
 
 	Describe("RemoveEvacuatingActualLRP", func() {
@@ -74,7 +74,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
-			handler.RemoveEvacuatingActualLRP(responseRecorder, request)
+			handler.RemoveEvacuatingActualLRP(logger, responseRecorder, request)
 		})
 
 		Context("when removeEvacuatinging the actual lrp in the DB succeeds", func() {
@@ -207,7 +207,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.EvacuateClaimedActualLRP(responseRecorder, request)
+			handler.EvacuateClaimedActualLRP(logger, responseRecorder, request)
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		})
 
@@ -409,7 +409,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.EvacuateCrashedActualLRP(responseRecorder, request)
+			handler.EvacuateCrashedActualLRP(logger, responseRecorder, request)
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		})
 
@@ -572,7 +572,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			if request == nil {
 				request = newTestRequest(requestBody)
 			}
-			handler.EvacuateRunningActualLRP(responseRecorder, request)
+			handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		})
 
@@ -1235,7 +1235,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.EvacuateStoppedActualLRP(responseRecorder, request)
+			handler.EvacuateStoppedActualLRP(logger, responseRecorder, request)
 		})
 
 		It("does not error and does not keep the container", func() {
