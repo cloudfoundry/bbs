@@ -2,17 +2,6 @@
 // source: volume_mount.proto
 // DO NOT EDIT!
 
-/*
-	Package models is a generated protocol buffer package.
-
-	It is generated from these files:
-		volume_mount.proto
-
-	It has these top-level messages:
-		SharedDevice
-		VolumeMount
-		VolumePlacement
-*/
 package models
 
 import proto "github.com/gogo/protobuf/proto"
@@ -92,9 +81,9 @@ func (m *SharedDevice) GetMountConfig() string {
 }
 
 type VolumeMount struct {
-	DeprecatedVolumeId string        `protobuf:"bytes,2,opt,name=deprecated_volume_id" json:"volume_id"`
-	DeprecatedMode     BindMountMode `protobuf:"varint,4,opt,name=deprecated_mode,enum=models.BindMountMode" json:"mode"`
-	DeprecatedConfig   []byte        `protobuf:"bytes,5,opt,name=deprecated_config" json:"deprecated_config,omitempty"`
+	DeprecatedVolumeId string        `protobuf:"bytes,2,opt,name=deprecated_volume_id" json:"deprecated_volume_id"`
+	DeprecatedMode     BindMountMode `protobuf:"varint,4,opt,name=deprecated_mode,enum=models.BindMountMode" json:"deprecated_mode"`
+	DeprecatedConfig   []byte        `protobuf:"bytes,5,opt,name=deprecated_config" json:"deprecated_config"`
 	Driver             string        `protobuf:"bytes,1,opt,name=driver" json:"driver"`
 	ContainerDir       string        `protobuf:"bytes,3,opt,name=container_dir" json:"container_dir"`
 	Mode               string        `protobuf:"bytes,6,opt,name=mode" json:"mode"`
@@ -294,7 +283,7 @@ func (this *VolumeMount) GoString() string {
 	s := strings.Join([]string{`&models.VolumeMount{` +
 		`DeprecatedVolumeId:` + fmt.Sprintf("%#v", this.DeprecatedVolumeId),
 		`DeprecatedMode:` + fmt.Sprintf("%#v", this.DeprecatedMode),
-		`DeprecatedConfig:` + valueToGoStringVolumeMount(this.DeprecatedConfig, "byte"),
+		`DeprecatedConfig:` + fmt.Sprintf("%#v", this.DeprecatedConfig),
 		`Driver:` + fmt.Sprintf("%#v", this.Driver),
 		`ContainerDir:` + fmt.Sprintf("%#v", this.ContainerDir),
 		`Mode:` + fmt.Sprintf("%#v", this.Mode),
@@ -551,7 +540,7 @@ func (this *VolumeMount) String() string {
 		`DeprecatedVolumeId:` + fmt.Sprintf("%v", this.DeprecatedVolumeId) + `,`,
 		`ContainerDir:` + fmt.Sprintf("%v", this.ContainerDir) + `,`,
 		`DeprecatedMode:` + fmt.Sprintf("%v", this.DeprecatedMode) + `,`,
-		`DeprecatedConfig:` + valueToStringVolumeMount(this.DeprecatedConfig) + `,`,
+		`DeprecatedConfig:` + fmt.Sprintf("%v", this.DeprecatedConfig) + `,`,
 		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
 		`Shared:` + strings.Replace(fmt.Sprintf("%v", this.Shared), "SharedDevice", "SharedDevice", 1) + `,`,
 		`}`,

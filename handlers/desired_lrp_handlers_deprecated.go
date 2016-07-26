@@ -88,7 +88,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r0(logger lager.Logger, w ht
 
 func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("desired-lrp-by-process-guid", lager.Data{"revision": 0})
+	logger = logger.Session("desired-lrp-by-process-guid", lager.Data{"revision": 1})
 
 	request := &models.DesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPResponse{}
@@ -107,6 +107,63 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r1(logger lager.Logger, w ht
 
 	writeResponse(w, response)
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
+func (h *DesiredLRPHandler) DesireDesiredLRP_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("desire-lrp", lager.Data{"revision": 1})
+
+	request := &models.DesireLRPRequest{}
+	response := &models.DesiredLRPLifecycleResponse{}
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer writeResponse(w, response)
+
+	err := parseRequestForDesireDesiredLRP_r1(logger, req, request)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	err = h.desiredLRPDB.DesireLRP(logger, request.DesiredLrp)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.DesiredLrp.ProcessGuid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
+
+	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
+	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
+}
+
+func parseRequestForDesireDesiredLRP_r1(logger lager.Logger, req *http.Request, request *models.DesireLRPRequest) error {
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logger.Error("failed-to-read-body", err)
+		return models.ErrUnknownError
+	}
+
+	err = request.Unmarshal(data)
+	if err != nil {
+		logger.Error("failed-to-parse-request-body", err)
+		return models.ErrBadRequest
+	}
+
+	for i, mount := range request.DesiredLrp.VolumeMounts {
+		request.DesiredLrp.VolumeMounts[i] = mount.VersionUpToV1()
+	}
+
+	if err := request.Validate(); err != nil {
+		logger.Error("invalid-request", err)
+		return models.NewError(models.Error_InvalidRequest, err.Error())
+	}
+
+	return nil
 }
 
 func (h *DesiredLRPHandler) DesireDesiredLRP_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {

@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -836,6 +837,74 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("does not try to create actual LRPs", func() {
 				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(0))
+			})
+		})
+	})
+
+	Describe("DesireDesiredLRP_r1", func() {
+		var (
+			desiredLRP         *models.DesiredLRP
+			expectedDesiredLRP *models.DesiredLRP
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			desiredLRP = model_helpers.NewValidDesiredLRP("some-guid")
+
+			config, err := json.Marshal(map[string]string{"foo": "bar"})
+			Expect(err).NotTo(HaveOccurred())
+
+			desiredLRP.VolumeMounts = []*models.VolumeMount{{
+				Driver:             "my-driver",
+				ContainerDir:       "/mnt/mypath",
+				DeprecatedMode:     models.BindMountMode_RO,
+				DeprecatedConfig:   config,
+				DeprecatedVolumeId: "my-volume",
+			}}
+
+			expectedDesiredLRP = model_helpers.NewValidDesiredLRP("some-guid")
+
+			requestBody = &models.DesireLRPRequest{
+				DesiredLrp: desiredLRP,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.DesireDesiredLRP_r1(logger, responseRecorder, request)
+		})
+
+		Context("when creating desired lrp in DB succeeds", func() {
+			var createdActualLRPGroups []*models.ActualLRPGroup
+
+			BeforeEach(func() {
+				createdActualLRPGroups = []*models.ActualLRPGroup{}
+				for i := 0; i < 5; i++ {
+					createdActualLRPGroups = append(createdActualLRPGroups, &models.ActualLRPGroup{Instance: model_helpers.NewValidActualLRP("some-guid", int32(i))})
+				}
+				fakeDesiredLRPDB.DesireLRPReturns(nil)
+				fakeActualLRPDB.CreateUnclaimedActualLRPStub = func(_ lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+					if int(key.Index) > len(createdActualLRPGroups)-1 {
+						return nil, errors.New("boom")
+					}
+					return createdActualLRPGroups[int(key.Index)], nil
+				}
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(expectedDesiredLRP, nil)
+			})
+
+			It("creates desired lrp", func() {
+				Expect(fakeDesiredLRPDB.DesireLRPCallCount()).To(Equal(1))
+				_, actualDesiredLRP := fakeDesiredLRPDB.DesireLRPArgsForCall(0)
+				Expect(actualDesiredLRP.VolumeMounts).To(Equal(expectedDesiredLRP.VolumeMounts))
+				Expect(actualDesiredLRP).To(Equal(expectedDesiredLRP))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
 			})
 		})
 	})

@@ -76,19 +76,13 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		TrustedSystemCertificatesPath: "/etc/somepath",
 		VolumeMounts: []*models.VolumeMount{
 			{
-				Driver:             "my-driver",
-				ContainerDir:       "/mnt/mypath",
-				Mode:     "r",
+				Driver:       "my-driver",
+				ContainerDir: "/mnt/mypath",
+				Mode:         "r",
 				Shared: &models.SharedDevice{
-					VolumeId: "my-volume",
+					VolumeId:    "my-volume",
+					MountConfig: `{"foo":"bar"}`,
 				},
-			},
-			// TODO: this second entry tests api v2.9 backward cpmpatibility and should be removed soonish
-			{
-				Driver:             "my-driver",
-				DeprecatedVolumeId: "my-volume",
-				ContainerDir:       "/mnt/mypath",
-				DeprecatedMode:     models.BindMountMode_RO,
 			},
 		},
 	}
@@ -152,10 +146,13 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		TrustedSystemCertificatesPath: "/etc/somepath",
 		VolumeMounts: []*models.VolumeMount{
 			{
-				Driver:             "my-driver",
-				DeprecatedVolumeId: "my-volume",
-				ContainerDir:       "/mnt/mypath",
-				DeprecatedMode:     models.BindMountMode_RO,
+				Driver:       "my-driver",
+				ContainerDir: "/mnt/mypath",
+				Mode:         "r",
+				Shared: &models.SharedDevice{
+					VolumeId:    "my-volume",
+					MountConfig: `{"foo":"bar"}`,
+				},
 			},
 		},
 	}

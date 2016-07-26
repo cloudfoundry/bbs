@@ -87,6 +87,7 @@ func New(
 		bbs.DesiredLRPByProcessGuidRoute_r0: route(emitter.EmitLatency(middleware.LogWrap(logger, desiredLRPHandler.DesiredLRPByProcessGuid_r0))),
 		bbs.DesiredLRPByProcessGuidRoute_r1: route(emitter.EmitLatency(middleware.LogWrap(logger, desiredLRPHandler.DesiredLRPByProcessGuid_r1))),
 		bbs.DesireDesiredLRPRoute_r0:        route(emitter.EmitLatency(middleware.LogWrap(logger, desiredLRPHandler.DesireDesiredLRP_r0))),
+		bbs.DesireDesiredLRPRoute_r1:        route(emitter.EmitLatency(middleware.LogWrap(logger, desiredLRPHandler.DesireDesiredLRP_r1))),
 
 		// Tasks
 		bbs.TasksRoute:         route(emitter.EmitLatency(middleware.LogWrap(logger, taskHandler.Tasks))),
@@ -103,6 +104,7 @@ func New(
 		bbs.TasksRoute_r0:      route(emitter.EmitLatency(middleware.LogWrap(logger, taskHandler.Tasks_r0))),
 		bbs.TaskByGuidRoute_r1: route(emitter.EmitLatency(middleware.LogWrap(logger, taskHandler.TaskByGuid_r1))),
 		bbs.TaskByGuidRoute_r0: route(emitter.EmitLatency(middleware.LogWrap(logger, taskHandler.TaskByGuid_r0))),
+		bbs.DesireTaskRoute_r1: route(emitter.EmitLatency(middleware.LogWrap(logger, taskHandler.DesireTask_r1))),
 		bbs.DesireTaskRoute_r0: route(emitter.EmitLatency(middleware.LogWrap(logger, taskHandler.DesireTask_r0))),
 
 		// Events

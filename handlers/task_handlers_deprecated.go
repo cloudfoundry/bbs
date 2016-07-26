@@ -86,6 +86,32 @@ func (h *TaskHandler) TaskByGuid_r1(logger lager.Logger, w http.ResponseWriter, 
 	h.commonTaskByGuid(logger, w, req, format.V1)
 }
 
+// this should upconvert the deprecated VolumeMounts struct
+func (h *TaskHandler) DesireTask_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
+	logger = logger.Session("desire-task")
+
+	request := &models.DesireTaskRequest{}
+	response := &models.TaskLifecycleResponse{}
+
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { writeResponse(w, response) }()
+
+	err = parseRequest(logger, req, request)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	for i, mount := range request.TaskDefinition.VolumeMounts {
+		request.TaskDefinition.VolumeMounts[i] = mount.VersionUpToV1()
+	}
+
+	err = h.controller.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
+	response.Error = models.ConvertError(err)
+}
+
 func (h *TaskHandler) DesireTask_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("desire-task")

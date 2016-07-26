@@ -1,7 +1,93 @@
 package handlers_test
 
-// . "github.com/onsi/ginkgo"
-// . "github.com/onsi/gomega"
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+
+	"code.cloudfoundry.org/bbs/handlers"
+	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
+	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/lager/lagertest"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("Task Handlers", func() {
+	var (
+		logger     *lagertest.TestLogger
+		controller *fake_controllers.FakeTaskController
+
+		responseRecorder *httptest.ResponseRecorder
+
+		handler *handlers.TaskHandler
+		exitCh  chan struct{}
+
+		requestBody interface{}
+	)
+
+	BeforeEach(func() {
+		logger = lagertest.NewTestLogger("test")
+		responseRecorder = httptest.NewRecorder()
+		exitCh = make(chan struct{}, 1)
+		controller = &fake_controllers.FakeTaskController{}
+		handler = handlers.NewTaskHandler(controller, exitCh)
+	})
+
+	Describe("DesireTask", func() {
+		var (
+			taskGuid   = "task-guid"
+			domain     = "domain"
+			oldTaskDef *models.TaskDefinition
+		)
+
+		BeforeEach(func() {
+			config, err := json.Marshal(map[string]string{"foo": "bar"})
+			Expect(err).NotTo(HaveOccurred())
+
+			oldTaskDef = model_helpers.NewValidTaskDefinition()
+			oldTaskDef.VolumeMounts = []*models.VolumeMount{{
+				Driver:             "my-driver",
+				ContainerDir:       "/mnt/mypath",
+				DeprecatedMode:     models.BindMountMode_RO,
+				DeprecatedConfig:   config,
+				DeprecatedVolumeId: "my-volume",
+			}}
+
+			requestBody = &models.DesireTaskRequest{
+				TaskGuid:       taskGuid,
+				Domain:         domain,
+				TaskDefinition: oldTaskDef,
+			}
+
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.DesireTask_r1(logger, responseRecorder, request)
+		})
+
+		Context("when the desire is successful", func() {
+			It("upconverts the deprecated volume mounts", func() {
+				expectedTaskDef := model_helpers.NewValidTaskDefinition()
+
+				Expect(controller.DesireTaskCallCount()).To(Equal(1))
+				_, actualTaskDef, _, _ := controller.DesireTaskArgsForCall(0)
+				Expect(actualTaskDef.VolumeMounts).To(Equal(expectedTaskDef.VolumeMounts))
+				Expect(actualTaskDef).To(Equal(expectedTaskDef))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.TaskLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+			})
+		})
+	})
+})
 
 // var _ = Describe("Task Handlers", func() {
 // 	var (
