@@ -300,6 +300,10 @@ func (desired DesiredLRP) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
+	for _, mount := range desired.VolumeMounts {
+		validationError = validationError.Check(mount)
+	}
+
 	return validationError.ToError()
 }
 
@@ -488,6 +492,10 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 	err := validateCachedDependencies(runInfo.CachedDependencies, runInfo.LegacyDownloadUser)
 	if err != nil {
 		ve = ve.Append(err)
+	}
+
+	for _, mount := range runInfo.VolumeMounts {
+		ve = ve.Check(mount)
 	}
 
 	return ve.ToError()

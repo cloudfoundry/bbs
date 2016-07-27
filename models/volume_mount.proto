@@ -6,7 +6,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
-enum BindMountMode {
+enum DeprecatedBindMountMode {
   RO = 0;
   RW = 1;
 }
@@ -18,7 +18,7 @@ message SharedDevice {
 
 message VolumeMount {
   optional string deprecated_volume_id = 2 [deprecated=true];
-  optional BindMountMode deprecated_mode = 4 [deprecated=true];
+  optional DeprecatedBindMountMode deprecated_mode = 4 [deprecated=true];
   optional bytes deprecated_config = 5 [deprecated=true];
 
   optional string driver = 1 [(gogoproto.jsontag) = "driver"];

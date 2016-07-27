@@ -51,7 +51,7 @@ var _ = Describe("Task Handlers", func() {
 			oldTaskDef.VolumeMounts = []*models.VolumeMount{{
 				Driver:             "my-driver",
 				ContainerDir:       "/mnt/mypath",
-				DeprecatedMode:     models.BindMountMode_RO,
+				DeprecatedMode:     models.DeprecatedBindMountMode_RO,
 				DeprecatedConfig:   config,
 				DeprecatedVolumeId: "my-volume",
 			}}

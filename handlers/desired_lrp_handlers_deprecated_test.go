@@ -858,7 +858,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			desiredLRP.VolumeMounts = []*models.VolumeMount{{
 				Driver:             "my-driver",
 				ContainerDir:       "/mnt/mypath",
-				DeprecatedMode:     models.BindMountMode_RO,
+				DeprecatedMode:     models.DeprecatedBindMountMode_RO,
 				DeprecatedConfig:   config,
 				DeprecatedVolumeId: "my-volume",
 			}}

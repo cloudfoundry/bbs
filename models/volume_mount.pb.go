@@ -25,36 +25,36 @@ import io "io"
 var _ = proto.Marshal
 var _ = math.Inf
 
-type BindMountMode int32
+type DeprecatedBindMountMode int32
 
 const (
-	BindMountMode_RO BindMountMode = 0
-	BindMountMode_RW BindMountMode = 1
+	DeprecatedBindMountMode_RO DeprecatedBindMountMode = 0
+	DeprecatedBindMountMode_RW DeprecatedBindMountMode = 1
 )
 
-var BindMountMode_name = map[int32]string{
+var DeprecatedBindMountMode_name = map[int32]string{
 	0: "RO",
 	1: "RW",
 }
-var BindMountMode_value = map[string]int32{
+var DeprecatedBindMountMode_value = map[string]int32{
 	"RO": 0,
 	"RW": 1,
 }
 
-func (x BindMountMode) Enum() *BindMountMode {
-	p := new(BindMountMode)
+func (x DeprecatedBindMountMode) Enum() *DeprecatedBindMountMode {
+	p := new(DeprecatedBindMountMode)
 	*p = x
 	return p
 }
-func (x BindMountMode) MarshalJSON() ([]byte, error) {
-	return proto.MarshalJSONEnum(BindMountMode_name, int32(x))
+func (x DeprecatedBindMountMode) MarshalJSON() ([]byte, error) {
+	return proto.MarshalJSONEnum(DeprecatedBindMountMode_name, int32(x))
 }
-func (x *BindMountMode) UnmarshalJSON(data []byte) error {
-	value, err := proto.UnmarshalJSONEnum(BindMountMode_value, data, "BindMountMode")
+func (x *DeprecatedBindMountMode) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(DeprecatedBindMountMode_value, data, "DeprecatedBindMountMode")
 	if err != nil {
 		return err
 	}
-	*x = BindMountMode(value)
+	*x = DeprecatedBindMountMode(value)
 	return nil
 }
 
@@ -81,13 +81,13 @@ func (m *SharedDevice) GetMountConfig() string {
 }
 
 type VolumeMount struct {
-	DeprecatedVolumeId string        `protobuf:"bytes,2,opt,name=deprecated_volume_id" json:"deprecated_volume_id"`
-	DeprecatedMode     BindMountMode `protobuf:"varint,4,opt,name=deprecated_mode,enum=models.BindMountMode" json:"deprecated_mode"`
-	DeprecatedConfig   []byte        `protobuf:"bytes,5,opt,name=deprecated_config" json:"deprecated_config"`
-	Driver             string        `protobuf:"bytes,1,opt,name=driver" json:"driver"`
-	ContainerDir       string        `protobuf:"bytes,3,opt,name=container_dir" json:"container_dir"`
-	Mode               string        `protobuf:"bytes,6,opt,name=mode" json:"mode"`
-	Shared             *SharedDevice `protobuf:"bytes,7,opt,name=shared" json:"shared,omitempty"`
+	DeprecatedVolumeId string                  `protobuf:"bytes,2,opt,name=deprecated_volume_id" json:"deprecated_volume_id"`
+	DeprecatedMode     DeprecatedBindMountMode `protobuf:"varint,4,opt,name=deprecated_mode,enum=models.DeprecatedBindMountMode" json:"deprecated_mode"`
+	DeprecatedConfig   []byte                  `protobuf:"bytes,5,opt,name=deprecated_config" json:"deprecated_config"`
+	Driver             string                  `protobuf:"bytes,1,opt,name=driver" json:"driver"`
+	ContainerDir       string                  `protobuf:"bytes,3,opt,name=container_dir" json:"container_dir"`
+	Mode               string                  `protobuf:"bytes,6,opt,name=mode" json:"mode"`
+	Shared             *SharedDevice           `protobuf:"bytes,7,opt,name=shared" json:"shared,omitempty"`
 }
 
 func (m *VolumeMount) Reset()      { *m = VolumeMount{} }
@@ -100,11 +100,11 @@ func (m *VolumeMount) GetDeprecatedVolumeId() string {
 	return ""
 }
 
-func (m *VolumeMount) GetDeprecatedMode() BindMountMode {
+func (m *VolumeMount) GetDeprecatedMode() DeprecatedBindMountMode {
 	if m != nil {
 		return m.DeprecatedMode
 	}
-	return BindMountMode_RO
+	return DeprecatedBindMountMode_RO
 }
 
 func (m *VolumeMount) GetDeprecatedConfig() []byte {
@@ -157,10 +157,10 @@ func (m *VolumePlacement) GetDriverNames() []string {
 }
 
 func init() {
-	proto.RegisterEnum("models.BindMountMode", BindMountMode_name, BindMountMode_value)
+	proto.RegisterEnum("models.DeprecatedBindMountMode", DeprecatedBindMountMode_name, DeprecatedBindMountMode_value)
 }
-func (x BindMountMode) String() string {
-	s, ok := BindMountMode_name[int32(x)]
+func (x DeprecatedBindMountMode) String() string {
+	s, ok := DeprecatedBindMountMode_name[int32(x)]
 	if ok {
 		return s
 	}
@@ -770,7 +770,7 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 				}
 				b := data[iNdEx]
 				iNdEx++
-				m.DeprecatedMode |= (BindMountMode(b) & 0x7F) << shift
+				m.DeprecatedMode |= (DeprecatedBindMountMode(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
