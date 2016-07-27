@@ -14,7 +14,12 @@ For detailed information on the types referred to below, see the [godoc document
 
 ### BBS API Endpoint
 
-Make a GET request to `/v1/cells/list.r1` and receive a
+POST an empty request to `/v1/cells/list.r1` and receive a
+[CellsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#CellsResponse).
+
+#### Deprecated Endpoints
+
+* Make a GET request to `/v1/cells/list.r1` and receive a
 [CellsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#CellsResponse).
 
 ### Golang Client API

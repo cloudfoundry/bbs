@@ -151,5 +151,5 @@ var Routes = rata.Routes{
 
 	// Cells
 	{Path: "/v1/cells/list.r1", Method: "POST", Name: CellsRoute},
-	{Path: "/v1/cells/list.r1", Method: "GET", Name: CellsRoute_r1},
+	{Path: "/v1/cells/list.r1", Method: "GET", Name: CellsRoute_r1}, // Deprecated
 }
