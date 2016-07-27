@@ -118,7 +118,7 @@ var Routes = rata.Routes{
 
 	// Desire LPR Lifecycle
 	{Path: "/v1/desired_lrp/desire.r2", Method: "POST", Name: DesireDesiredLRPRoute},
-	{Path: "/v1/desired_lrp/desire.r1", Method: "POST", Name: DesireDesiredLRPRoute_r1},
+	{Path: "/v1/desired_lrp/desire.r1", Method: "POST", Name: DesireDesiredLRPRoute_r1}, // Deprecated
 	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute_r0}, // Deprecated
@@ -134,7 +134,7 @@ var Routes = rata.Routes{
 
 	// Task Lifecycle
 	{Path: "/v1/tasks/desire.r2", Method: "POST", Name: DesireTaskRoute},
-	{Path: "/v1/tasks/desire.r1", Method: "POST", Name: DesireTaskRoute_r1},
+	{Path: "/v1/tasks/desire.r1", Method: "POST", Name: DesireTaskRoute_r1}, // Deprecated
 	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
 	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute},
 	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
