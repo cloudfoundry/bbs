@@ -51,6 +51,12 @@ import (
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
+var accessLogPath = flag.String(
+	"accessLogPath",
+	"",
+	"Location of the access log",
+)
+
 var listenAddress = flag.String(
 	"listenAddress",
 	"",
@@ -347,8 +353,20 @@ func main() {
 
 	exitChan := make(chan struct{})
 
+	var accessLogger lager.Logger
+	if *accessLogPath != "" {
+		accessLogger = lager.NewLogger("bbs-access")
+		file, err := os.OpenFile(*accessLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			logger.Error("invalid-access-log-path", err, lager.Data{"access-log-path": *accessLogPath})
+			os.Exit(1)
+		}
+		accessLogger.RegisterSink(lager.NewWriterSink(file, lager.INFO))
+	}
+
 	handler := handlers.New(
 		logger,
+		accessLogger,
 		*updateWorkers,
 		*convergenceWorkers,
 		activeDB,
