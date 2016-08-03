@@ -16,27 +16,35 @@ const (
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)
 
 func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
+	lagerDataFromReq := func(r *http.Request) lager.Data {
+		return lager.Data{
+			"method":  r.Method,
+			"request": r.URL.String(),
+		}
+	}
+
 	if accessLogger != nil {
 		return func(w http.ResponseWriter, r *http.Request) {
-			data := lager.Data{
-				"method":  r.Method,
-				"request": r.URL.String(),
-			}
-			requestLog := logger.Session("request", data)
-			requestAccessLogger := accessLogger.Session("request", data)
+			requestLog := logger.Session("request", lagerDataFromReq(r))
+			requestAccessLogger := accessLogger.Session("request", lagerDataFromReq(r))
 
 			requestAccessLogger.Info("serving")
+			requestLog.Debug("serving")
+
 			loggableHandlerFunc(requestLog, w, r)
+
 			requestAccessLogger.Info("done")
+			requestLog.Debug("done")
 		}
 	} else {
 		return func(w http.ResponseWriter, r *http.Request) {
-			requestLog := logger.Session("request", lager.Data{
-				"method":  r.Method,
-				"request": r.URL.String(),
-			})
+			requestLog := logger.Session("request", lagerDataFromReq(r))
+
+			requestLog.Debug("serving")
 
 			loggableHandlerFunc(requestLog, w, r)
+
+			requestLog.Debug("done")
 		}
 	}
 }
