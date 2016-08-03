@@ -31,6 +31,7 @@ const (
 	desiredLRPsTable = "desired_lrps"
 	actualLRPsTable  = "actual_lrps"
 	domainsTable     = "domains"
+	runInfosTable    = "run_infos"
 )
 
 var (
@@ -51,6 +52,10 @@ var (
 
 	desiredLRPColumns = append(schedulingInfoColumns,
 		desiredLRPsTable+".run_info",
+		desiredLRPsTable+".run_info_tag",
+		desiredLRPsTable+".run_info_guid",
+		desiredLRPsTable+".run_info_guid_1",
+		desiredLRPsTable+".run_info_guid_2",
 	)
 
 	taskColumns = ColumnList{
@@ -82,12 +87,27 @@ var (
 		actualLRPsTable + ".modification_tag_index",
 		actualLRPsTable + ".crash_count",
 		actualLRPsTable + ".crash_reason",
+		actualLRPsTable + ".run_info_guid",
 	}
 
 	domainColumns = ColumnList{
 		domainsTable + ".domain",
 	}
+
+	runInfoColumns = ColumnList{
+		runInfosTable + ".guid",
+		runInfosTable + ".tag",
+		runInfosTable + ".data",
+	}
 )
+
+func GetRunInfosColumns(prefix string) ColumnList {
+	return ColumnList{
+		prefix + ".guid",
+		prefix + ".tag",
+		prefix + ".data",
+	}
+}
 
 func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 	_, err := db.db.Exec(`
@@ -149,6 +169,7 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 
 	return q.Query(query)
 }
+
 func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	query := `
 		SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
@@ -311,7 +332,23 @@ func (db *SQLDB) one(logger lager.Logger, q Queryable, table string,
 	columns ColumnList, lockRow RowLock,
 	wheres string, whereBindings ...interface{},
 ) *sql.Row {
-	query := fmt.Sprintf("SELECT %s FROM %s\n", strings.Join(columns, ", "), table)
+	tables := []string{table}
+	return db.oneMultiTable(logger, q, tables, columns, lockRow, wheres, whereBindings)
+}
+
+// SELECT <columns> FROM <table> WHERE ... LIMIT 1 [FOR UPDATE]
+func (db *SQLDB) oneMultiTable(logger lager.Logger, q Queryable, tables []string,
+	columns ColumnList, lockRow RowLock,
+	wheres string, whereBindings ...interface{},
+) *sql.Row {
+	query := fmt.Sprintf("SELECT %s FROM ", strings.Join(columns, ", "))
+	for i, table := range tables {
+		if i > 1 {
+			query += ", "
+		}
+		query += string(table)
+	}
+	query += "\n"
 
 	if len(wheres) > 0 {
 		query += "WHERE " + wheres
@@ -331,7 +368,23 @@ func (db *SQLDB) all(logger lager.Logger, q Queryable, table string,
 	columns ColumnList, lockRow RowLock,
 	wheres string, whereBindings ...interface{},
 ) (*sql.Rows, error) {
-	query := fmt.Sprintf("SELECT %s FROM %s\n", strings.Join(columns, ", "), table)
+	tables := []string{table}
+	return db.allMultiTable(logger, q, tables, columns, lockRow, wheres, whereBindings)
+}
+
+// SELECT <columns> FROM <table> WHERE ... [FOR UPDATE]
+func (db *SQLDB) allMultiTable(logger lager.Logger, q Queryable, tables []string,
+	columns ColumnList, lockRow RowLock,
+	wheres string, whereBindings ...interface{},
+) (*sql.Rows, error) {
+	query := fmt.Sprintf("SELECT %s FROM ", strings.Join(columns, ", "))
+	for i, table := range tables {
+		if i > 1 {
+			query += ", "
+		}
+		query += string(table)
+	}
+	query += "\n"
 
 	if len(wheres) > 0 {
 		query += "WHERE " + wheres

@@ -532,6 +532,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 		&actualLRP.ModificationTag.Index,
 		&actualLRP.CrashCount,
 		&actualLRP.CrashReason,
+		&actualLRP.RunInfoGuid,
 	)
 	if err != nil {
 		logger.Error("failed-scanning-actual-lrp", err)

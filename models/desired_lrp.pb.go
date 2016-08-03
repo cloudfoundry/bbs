@@ -79,6 +79,7 @@ type DesiredLRPRunInfo struct {
 	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
 	Network                       *Network              `protobuf:"bytes,18,opt,name=network" json:"network,omitempty"`
 	StartTimeoutMs                int64                 `protobuf:"varint,19,opt,name=start_timeout_ms" json:"start_timeout_ms"`
+	RunInfoTag                    string                `protobuf:"bytes,20,opt,name=run_info_tag" json:"run_info_tag"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
@@ -210,6 +211,13 @@ func (m *DesiredLRPRunInfo) GetStartTimeoutMs() int64 {
 	return 0
 }
 
+func (m *DesiredLRPRunInfo) GetRunInfoTag() string {
+	if m != nil {
+		return m.RunInfoTag
+	}
+	return ""
+}
+
 // helper message for marshalling routes
 type ProtoRoutes struct {
 	Routes map[string][]byte `protobuf:"bytes,1,rep,name=routes" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -226,9 +234,10 @@ func (m *ProtoRoutes) GetRoutes() map[string][]byte {
 }
 
 type DesiredLRPUpdate struct {
-	Instances  *int32  `protobuf:"varint,1,opt,name=instances" json:"instances,omitempty"`
-	Routes     *Routes `protobuf:"bytes,2,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
-	Annotation *string `protobuf:"bytes,3,opt,name=annotation" json:"annotation,omitempty"`
+	Instances  *int32      `protobuf:"varint,1,opt,name=instances" json:"instances,omitempty"`
+	Routes     *Routes     `protobuf:"bytes,2,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
+	Annotation *string     `protobuf:"bytes,3,opt,name=annotation" json:"annotation,omitempty"`
+	NewDesired *DesiredLRP `protobuf:"bytes,4,opt,name=newDesired" json:"newDesired,omitempty"`
 }
 
 func (m *DesiredLRPUpdate) Reset()      { *m = DesiredLRPUpdate{} }
@@ -246,6 +255,13 @@ func (m *DesiredLRPUpdate) GetAnnotation() string {
 		return *m.Annotation
 	}
 	return ""
+}
+
+func (m *DesiredLRPUpdate) GetNewDesired() *DesiredLRP {
+	if m != nil {
+		return m.NewDesired
+	}
+	return nil
 }
 
 type DesiredLRPKey struct {
@@ -336,6 +352,9 @@ type DesiredLRP struct {
 	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,25,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
 	Network                       *Network               `protobuf:"bytes,26,opt,name=network" json:"network,omitempty"`
+	RunInfoTag                    *string                `protobuf:"bytes,28,opt,name=run_info_tag" json:"run_info_tag,omitempty"`
+	RunInfo_1                     *DesiredLRPRunInfo     `protobuf:"bytes,29,opt,name=run_info_1" json:"runInfo1,omitempty"`
+	RunInfo_2                     *DesiredLRPRunInfo     `protobuf:"bytes,30,opt,name=run_info_2" json:"runInfo2,omitempty"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
@@ -523,6 +542,27 @@ func (m *DesiredLRP) GetNetwork() *Network {
 	return nil
 }
 
+func (m *DesiredLRP) GetRunInfoTag() string {
+	if m != nil && m.RunInfoTag != nil {
+		return *m.RunInfoTag
+	}
+	return ""
+}
+
+func (m *DesiredLRP) GetRunInfo_1() *DesiredLRPRunInfo {
+	if m != nil {
+		return m.RunInfo_1
+	}
+	return nil
+}
+
+func (m *DesiredLRP) GetRunInfo_2() *DesiredLRPRunInfo {
+	if m != nil {
+		return m.RunInfo_2
+	}
+	return nil
+}
+
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -668,6 +708,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	if this.StartTimeoutMs != that1.StartTimeoutMs {
 		return false
 	}
+	if this.RunInfoTag != that1.RunInfoTag {
+		return false
+	}
 	return true
 }
 func (this *ProtoRoutes) Equal(that interface{}) bool {
@@ -743,6 +786,9 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	} else if this.Annotation != nil {
 		return false
 	} else if that1.Annotation != nil {
+		return false
+	}
+	if !this.NewDesired.Equal(that1.NewDesired) {
 		return false
 	}
 	return true
@@ -939,6 +985,21 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if !this.Network.Equal(that1.Network) {
 		return false
 	}
+	if this.RunInfoTag != nil && that1.RunInfoTag != nil {
+		if *this.RunInfoTag != *that1.RunInfoTag {
+			return false
+		}
+	} else if this.RunInfoTag != nil {
+		return false
+	} else if that1.RunInfoTag != nil {
+		return false
+	}
+	if !this.RunInfo_1.Equal(that1.RunInfo_1) {
+		return false
+	}
+	if !this.RunInfo_2.Equal(that1.RunInfo_2) {
+		return false
+	}
 	return true
 }
 func (this *DesiredLRPSchedulingInfo) GoString() string {
@@ -978,7 +1039,8 @@ func (this *DesiredLRPRunInfo) GoString() string {
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
 		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
 		`Network:` + fmt.Sprintf("%#v", this.Network),
-		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs) + `}`}, ", ")
+		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs),
+		`RunInfoTag:` + fmt.Sprintf("%#v", this.RunInfoTag) + `}`}, ", ")
 	return s
 }
 func (this *ProtoRoutes) GoString() string {
@@ -1006,7 +1068,8 @@ func (this *DesiredLRPUpdate) GoString() string {
 	s := strings.Join([]string{`&models.DesiredLRPUpdate{` +
 		`Instances:` + valueToGoStringDesiredLrp(this.Instances, "int32"),
 		`Routes:` + valueToGoStringDesiredLrp(this.Routes, "Routes"),
-		`Annotation:` + valueToGoStringDesiredLrp(this.Annotation, "string") + `}`}, ", ")
+		`Annotation:` + valueToGoStringDesiredLrp(this.Annotation, "string"),
+		`NewDesired:` + fmt.Sprintf("%#v", this.NewDesired) + `}`}, ", ")
 	return s
 }
 func (this *DesiredLRPKey) GoString() string {
@@ -1060,7 +1123,10 @@ func (this *DesiredLRP) GoString() string {
 		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
 		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Network:` + fmt.Sprintf("%#v", this.Network) + `}`}, ", ")
+		`Network:` + fmt.Sprintf("%#v", this.Network),
+		`RunInfoTag:` + valueToGoStringDesiredLrp(this.RunInfoTag, "string"),
+		`RunInfo_1:` + fmt.Sprintf("%#v", this.RunInfo_1),
+		`RunInfo_2:` + fmt.Sprintf("%#v", this.RunInfo_2) + `}`}, ", ")
 	return s
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
@@ -1317,6 +1383,12 @@ func (m *DesiredLRPRunInfo) MarshalTo(data []byte) (int, error) {
 	data[i] = 0x1
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.StartTimeoutMs))
+	data[i] = 0xa2
+	i++
+	data[i] = 0x1
+	i++
+	i = encodeVarintDesiredLrp(data, i, uint64(len(m.RunInfoTag)))
+	i += copy(data[i:], m.RunInfoTag)
 	return i, nil
 }
 
@@ -1395,6 +1467,16 @@ func (m *DesiredLRPUpdate) MarshalTo(data []byte) (int, error) {
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(len(*m.Annotation)))
 		i += copy(data[i:], *m.Annotation)
+	}
+	if m.NewDesired != nil {
+		data[i] = 0x22
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(m.NewDesired.Size()))
+		n12, err := m.NewDesired.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
 	}
 	return i, nil
 }
@@ -1503,21 +1585,21 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x32
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Setup.Size()))
-		n12, err := m.Setup.MarshalTo(data[i:])
+		n13, err := m.Setup.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n13
 	}
 	if m.Action != nil {
 		data[i] = 0x3a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Action.Size()))
-		n13, err := m.Action.MarshalTo(data[i:])
+		n14, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n14
 	}
 	data[i] = 0x40
 	i++
@@ -1526,11 +1608,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x4a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Monitor.Size()))
-		n14, err := m.Monitor.MarshalTo(data[i:])
+		n15, err := m.Monitor.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n15
 	}
 	data[i] = 0x50
 	i++
@@ -1560,11 +1642,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x7a
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Routes.Size()))
-		n15, err := m.Routes.MarshalTo(data[i:])
+		n16, err := m.Routes.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n15
+		i += n16
 	}
 	data[i] = 0x82
 	i++
@@ -1610,11 +1692,11 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.ModificationTag.Size()))
-		n16, err := m.ModificationTag.MarshalTo(data[i:])
+		n17, err := m.ModificationTag.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n16
+		i += n17
 	}
 	if len(m.CachedDependencies) > 0 {
 		for _, msg := range m.CachedDependencies {
@@ -1662,17 +1744,49 @@ func (m *DesiredLRP) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(data, i, uint64(m.Network.Size()))
-		n17, err := m.Network.MarshalTo(data[i:])
+		n18, err := m.Network.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n17
+		i += n18
 	}
 	data[i] = 0xd8
 	i++
 	data[i] = 0x1
 	i++
 	i = encodeVarintDesiredLrp(data, i, uint64(m.StartTimeoutMs))
+	if m.RunInfoTag != nil {
+		data[i] = 0xe2
+		i++
+		data[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(len(*m.RunInfoTag)))
+		i += copy(data[i:], *m.RunInfoTag)
+	}
+	if m.RunInfo_1 != nil {
+		data[i] = 0xea
+		i++
+		data[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(m.RunInfo_1.Size()))
+		n19, err := m.RunInfo_1.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	if m.RunInfo_2 != nil {
+		data[i] = 0xf2
+		i++
+		data[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(data, i, uint64(m.RunInfo_2.Size()))
+		n20, err := m.RunInfo_2.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n20
+	}
 	return i, nil
 }
 
@@ -1787,6 +1901,8 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
 	n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	l = len(m.RunInfoTag)
+	n += 2 + l + sovDesiredLrp(uint64(l))
 	return n
 }
 
@@ -1816,6 +1932,10 @@ func (m *DesiredLRPUpdate) Size() (n int) {
 	}
 	if m.Annotation != nil {
 		l = len(*m.Annotation)
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.NewDesired != nil {
+		l = m.NewDesired.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
 	return n
@@ -1924,6 +2044,18 @@ func (m *DesiredLRP) Size() (n int) {
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
 	n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	if m.RunInfoTag != nil {
+		l = len(*m.RunInfoTag)
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.RunInfo_1 != nil {
+		l = m.RunInfo_1.Size()
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.RunInfo_2 != nil {
+		l = m.RunInfo_2.Size()
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	return n
 }
 
@@ -1980,6 +2112,7 @@ func (this *DesiredLRPRunInfo) String() string {
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
 		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
+		`RunInfoTag:` + fmt.Sprintf("%v", this.RunInfoTag) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2012,6 +2145,7 @@ func (this *DesiredLRPUpdate) String() string {
 		`Instances:` + valueToStringDesiredLrp(this.Instances) + `,`,
 		`Routes:` + valueToStringDesiredLrp(this.Routes) + `,`,
 		`Annotation:` + valueToStringDesiredLrp(this.Annotation) + `,`,
+		`NewDesired:` + strings.Replace(fmt.Sprintf("%v", this.NewDesired), "DesiredLRP", "DesiredLRP", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2072,6 +2206,9 @@ func (this *DesiredLRP) String() string {
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
 		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
+		`RunInfoTag:` + valueToStringDesiredLrp(this.RunInfoTag) + `,`,
+		`RunInfo_1:` + strings.Replace(fmt.Sprintf("%v", this.RunInfo_1), "DesiredLRPRunInfo", "DesiredLRPRunInfo", 1) + `,`,
+		`RunInfo_2:` + strings.Replace(fmt.Sprintf("%v", this.RunInfo_2), "DesiredLRPRunInfo", "DesiredLRPRunInfo", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2784,6 +2921,31 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
+		case 20:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RunInfoTag", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RunInfoTag = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			var sizeOfWire int
 			for {
@@ -3037,6 +3199,36 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 			}
 			s := string(data[iNdEx:postIndex])
 			m.Annotation = &s
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewDesired", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.NewDesired == nil {
+				m.NewDesired = &DesiredLRP{}
+			}
+			if err := m.NewDesired.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
@@ -3951,6 +4143,92 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
+		case 28:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RunInfoTag", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			s := string(data[iNdEx:postIndex])
+			m.RunInfoTag = &s
+			iNdEx = postIndex
+		case 29:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RunInfo_1", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.RunInfo_1 == nil {
+				m.RunInfo_1 = &DesiredLRPRunInfo{}
+			}
+			if err := m.RunInfo_1.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 30:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RunInfo_2", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + msglen
+			if msglen < 0 {
+				return ErrInvalidLengthDesiredLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.RunInfo_2 == nil {
+				m.RunInfo_2 = &DesiredLRPRunInfo{}
+			}
+			if err := m.RunInfo_2.Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			var sizeOfWire int
 			for {

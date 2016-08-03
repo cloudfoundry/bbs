@@ -49,6 +49,7 @@ message DesiredLRPRunInfo {
   optional Network network = 18 [(gogoproto.jsontag) = "network,omitempty"];
 
   optional int64 start_timeout_ms = 19;
+  optional string run_info_tag = 20;
 }
 
 // helper message for marshalling routes
@@ -60,6 +61,7 @@ message DesiredLRPUpdate {
   optional int32 instances = 1 [(gogoproto.nullable) = true];
   optional bytes routes = 2 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
   optional string annotation = 3 [(gogoproto.nullable) = true];
+  optional DesiredLRP newDesired = 4 [(gogoproto.nullable) = true];
 }
 
 message DesiredLRPKey {
@@ -104,4 +106,7 @@ message DesiredLRP {
   optional string trusted_system_certificates_path = 24 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 25 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 26 [(gogoproto.jsontag) = "network,omitempty"];
+  optional string run_info_tag = 28 [(gogoproto.nullable) = true];
+  optional DesiredLRPRunInfo run_info_1 = 29 [(gogoproto.jsontag) = "runInfo1,omitempty"];
+  optional DesiredLRPRunInfo run_info_2 = 30 [(gogoproto.jsontag) = "runInfo2,omitempty"];
 }

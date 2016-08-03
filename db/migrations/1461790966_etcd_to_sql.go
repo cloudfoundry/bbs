@@ -189,10 +189,10 @@ func dropTables(db *sql.DB) error {
 
 func createTables(logger lager.Logger, db *sql.DB) error {
 	var createTablesSQL = []string{
-		createDomainSQL,
-		createDesiredLRPsSQL,
-		createActualLRPsSQL,
-		createTasksSQL,
+		CreateDomainSQL,
+		CreateDesiredLRPsSQL,
+		CreateActualLRPsSQL,
+		CreateTasksSQL,
 	}
 
 	logger.Info("creating-tables")
@@ -212,10 +212,10 @@ func createTables(logger lager.Logger, db *sql.DB) error {
 func createIndices(logger lager.Logger, db *sql.DB) error {
 	logger.Info("creating-indices")
 	createIndicesSQL := []string{}
-	createIndicesSQL = append(createIndicesSQL, createDomainsIndices...)
-	createIndicesSQL = append(createIndicesSQL, createDesiredLRPsIndices...)
-	createIndicesSQL = append(createIndicesSQL, createActualLRPsIndices...)
-	createIndicesSQL = append(createIndicesSQL, createTasksIndices...)
+	createIndicesSQL = append(createIndicesSQL, CreateDomainsIndices...)
+	createIndicesSQL = append(createIndicesSQL, CreateDesiredLRPsIndices...)
+	createIndicesSQL = append(createIndicesSQL, CreateActualLRPsIndices...)
+	createIndicesSQL = append(createIndicesSQL, CreateTasksIndices...)
 
 	for _, query := range createIndicesSQL {
 		logger.Info("creating the index", lager.Data{"query": query})
@@ -416,12 +416,12 @@ func (e *ETCDToSQL) migrateTasks(logger lager.Logger) error {
 	return nil
 }
 
-const createDomainSQL = `CREATE TABLE domains(
+const CreateDomainSQL = `CREATE TABLE domains(
 	domain VARCHAR(255) PRIMARY KEY,
 	expire_time BIGINT DEFAULT 0
 );`
 
-const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
+const CreateDesiredLRPsSQL = `CREATE TABLE desired_lrps(
 	process_guid VARCHAR(255) PRIMARY KEY,
 	domain VARCHAR(255) NOT NULL,
 	log_guid VARCHAR(255) NOT NULL,
@@ -437,7 +437,7 @@ const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
 	run_info TEXT NOT NULL
 );`
 
-const createActualLRPsSQL = `CREATE TABLE actual_lrps(
+const CreateActualLRPsSQL = `CREATE TABLE actual_lrps(
 	process_guid VARCHAR(255),
 	instance_index INT,
 	evacuating BOOL DEFAULT false,
@@ -457,7 +457,7 @@ const createActualLRPsSQL = `CREATE TABLE actual_lrps(
 	PRIMARY KEY(process_guid, instance_index, evacuating)
 );`
 
-const createTasksSQL = `CREATE TABLE tasks(
+const CreateTasksSQL = `CREATE TABLE tasks(
 	guid VARCHAR(255) PRIMARY KEY,
 	domain VARCHAR(255) NOT NULL,
 	updated_at BIGINT DEFAULT 0,
@@ -471,15 +471,15 @@ const createTasksSQL = `CREATE TABLE tasks(
 	task_definition TEXT NOT NULL
 );`
 
-var createDomainsIndices = []string{
+var CreateDomainsIndices = []string{
 	`CREATE INDEX domains_expire_time_idx ON domains (expire_time)`,
 }
 
-var createDesiredLRPsIndices = []string{
+var CreateDesiredLRPsIndices = []string{
 	`CREATE INDEX desired_lrps_domain_idx ON desired_lrps (domain)`,
 }
 
-var createActualLRPsIndices = []string{
+var CreateActualLRPsIndices = []string{
 	`CREATE INDEX actual_lrps_domain_idx ON actual_lrps (domain)`,
 	`CREATE INDEX actual_lrps_cell_id_idx ON actual_lrps (cell_id)`,
 	`CREATE INDEX actual_lrps_since_idx ON actual_lrps (since)`,
@@ -487,7 +487,7 @@ var createActualLRPsIndices = []string{
 	`CREATE INDEX actual_lrps_expire_time_idx ON actual_lrps (expire_time)`,
 }
 
-var createTasksIndices = []string{
+var CreateTasksIndices = []string{
 	`CREATE INDEX tasks_domain_idx ON tasks (domain)`,
 	`CREATE INDEX tasks_state_idx ON tasks (state)`,
 	`CREATE INDEX tasks_cell_id_idx ON tasks (cell_id)`,

@@ -36,6 +36,20 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 			return err
 		}
 
+		runInfoGuid, err := db.guidProvider.NextGUID()
+		if err != nil {
+			logger.Error("failed-to-generate-guid", err)
+			return models.ErrGUIDGeneration
+		}
+
+		_, err = db.insert(logger, tx, runInfosTable,
+			SQLAttributes{
+				"guid": runInfoGuid,
+				"tag":  desiredLRP.RunInfoTag,
+				"data": runInfoData,
+			},
+		)
+
 		guid, err := db.guidProvider.NextGUID()
 		if err != nil {
 			logger.Error("failed-to-generate-guid", err)
@@ -59,6 +73,8 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 				"modification_tag_index": desiredLRP.ModificationTag.Index,
 				"routes":                 routesData,
 				"run_info":               runInfoData,
+				"run_info_guid":          runInfoGuid,
+				"run_info_tag":           desiredLRP.RunInfoTag,
 			},
 		)
 		if err != nil {
@@ -78,6 +94,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 		desiredLRPColumns, NoLockRow,
 		"process_guid = ?", processGuid,
 	)
+
 	return db.fetchDesiredLRP(logger, row)
 }
 
@@ -94,7 +111,13 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		values = append(values, filter.Domain)
 	}
 
-	rows, err := db.all(logger, db.db, desiredLRPsTable,
+	wheres = append(wheres, "desired_lrps.run_info_guid_1 = ri1.guid")
+	wheres = append(wheres, "desired_lrps.run_info_guid_1 = ri2.guid")
+
+	columns := append(desiredLRPColumns, []string(GetRunInfosColumns("ri1")), GetRunInfosColumns("ri2"))
+
+	tables := []string{desiredLRPsTable, runInfosTable + " as ri1", runInfosTable + " as ri2"}
+	rows, err := db.allMultiTable(logger, db.db, tables,
 		desiredLRPColumns, NoLockRow,
 		strings.Join(wheres, " AND "), values...,
 	)

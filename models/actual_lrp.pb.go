@@ -150,6 +150,7 @@ type ActualLRP struct {
 	PlacementError       string          `protobuf:"bytes,7,opt,name=placement_error" json:"placement_error,omitempty"`
 	Since                int64           `protobuf:"varint,8,opt,name=since" json:"since"`
 	ModificationTag      ModificationTag `protobuf:"bytes,9,opt,name=modification_tag" json:"modification_tag"`
+	RunInfoGuid          *string         `protobuf:"bytes,10,opt,name=run_info_guid" json:"run_info_guid,omitempty"`
 }
 
 func (m *ActualLRP) Reset()      { *m = ActualLRP{} }
@@ -195,6 +196,13 @@ func (m *ActualLRP) GetModificationTag() ModificationTag {
 		return m.ModificationTag
 	}
 	return ModificationTag{}
+}
+
+func (m *ActualLRP) GetRunInfoGuid() string {
+	if m != nil && m.RunInfoGuid != nil {
+		return *m.RunInfoGuid
+	}
+	return ""
 }
 
 func (this *ActualLRPGroup) Equal(that interface{}) bool {
@@ -392,6 +400,15 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	if !this.ModificationTag.Equal(&that1.ModificationTag) {
 		return false
 	}
+	if this.RunInfoGuid != nil && that1.RunInfoGuid != nil {
+		if *this.RunInfoGuid != *that1.RunInfoGuid {
+			return false
+		}
+	} else if this.RunInfoGuid != nil {
+		return false
+	} else if that1.RunInfoGuid != nil {
+		return false
+	}
 	return true
 }
 func (this *ActualLRPGroup) GoString() string {
@@ -453,7 +470,8 @@ func (this *ActualLRP) GoString() string {
 		`State:` + fmt.Sprintf("%#v", this.State),
 		`PlacementError:` + fmt.Sprintf("%#v", this.PlacementError),
 		`Since:` + fmt.Sprintf("%#v", this.Since),
-		`ModificationTag:` + strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1) + `}`}, ", ")
+		`ModificationTag:` + strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1),
+		`RunInfoGuid:` + valueToGoStringActualLrp(this.RunInfoGuid, "string") + `}`}, ", ")
 	return s
 }
 func valueToGoStringActualLrp(v interface{}, typ string) string {
@@ -697,6 +715,12 @@ func (m *ActualLRP) MarshalTo(data []byte) (int, error) {
 		return 0, err
 	}
 	i += n6
+	if m.RunInfoGuid != nil {
+		data[i] = 0x52
+		i++
+		i = encodeVarintActualLrp(data, i, uint64(len(*m.RunInfoGuid)))
+		i += copy(data[i:], *m.RunInfoGuid)
+	}
 	return i, nil
 }
 
@@ -803,6 +827,10 @@ func (m *ActualLRP) Size() (n int) {
 	n += 1 + sovActualLrp(uint64(m.Since))
 	l = m.ModificationTag.Size()
 	n += 1 + l + sovActualLrp(uint64(l))
+	if m.RunInfoGuid != nil {
+		l = len(*m.RunInfoGuid)
+		n += 1 + l + sovActualLrp(uint64(l))
+	}
 	return n
 }
 
@@ -889,6 +917,7 @@ func (this *ActualLRP) String() string {
 		`PlacementError:` + fmt.Sprintf("%v", this.PlacementError) + `,`,
 		`Since:` + fmt.Sprintf("%v", this.Since) + `,`,
 		`ModificationTag:` + strings.Replace(strings.Replace(this.ModificationTag.String(), "ModificationTag", "ModificationTag", 1), `&`, ``, 1) + `,`,
+		`RunInfoGuid:` + valueToStringActualLrp(this.RunInfoGuid) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1620,6 +1649,32 @@ func (m *ActualLRP) Unmarshal(data []byte) error {
 			if err := m.ModificationTag.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RunInfoGuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthActualLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			s := string(data[iNdEx:postIndex])
+			m.RunInfoGuid = &s
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int
