@@ -41,5 +41,5 @@ message ActualLRP {
   optional string placement_error = 7 [(gogoproto.jsontag) = "placement_error,omitempty"];
   optional int64 since = 8;
   optional ModificationTag modification_tag = 9 [(gogoproto.nullable) = false];
-  optional string run_info_guid = 10 [(gogoproto.nullable) = true];
+  optional string run_info_tag = 10 [(gogoproto.nullable) = true];
 }

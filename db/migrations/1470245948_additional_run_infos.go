@@ -54,9 +54,14 @@ func (e *AdditionalRunInfos) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *AdditionalRunInfos) Up(logger lager.Logger) error {
 	logger = logger.Session("additional-run-infos")
-	logger.Info("updating tables")
+	logger.Info("updating-tables")
 
-	err := createRunInfoTable(logger, e.rawSQLDB)
+	var err error
+
+	// Ignore the error as the tables may not exist
+	_ = dropRunInfoTable(logger, e.rawSQLDB)
+
+	err = createRunInfoTable(logger, e.rawSQLDB)
 	if err != nil {
 		return err
 	}
@@ -81,6 +86,21 @@ func (e *AdditionalRunInfos) Up(logger lager.Logger) error {
 
 func (e *AdditionalRunInfos) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
+}
+
+func dropRunInfoTable(logger lager.Logger, db *sql.DB) error {
+	// var value int
+	logger.Info("dropping-tables")
+	// check whether the table exists before truncating
+	// err := db.QueryRow("SELECT 1 FROM run_infos LIMIT 1;").Scan(&value)
+	// if err == sql.ErrNoRows {
+	// 	return nil
+	// }
+	_, err := db.Exec("DROP TABLE run_infos")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func createRunInfoTable(logger lager.Logger, db *sql.DB) error {
@@ -129,9 +149,8 @@ func migrateDesiredLRPRunInfos(logger lager.Logger, db *sql.DB) error {
 
 	_, err := db.Exec(`
 			INSERT INTO run_infos
-				(guid, tag, data)
-			VALUES
-				(select process_guid, 'current', run_info from desired_lrps)
+				(tag, data)
+			SELECT process_guid+'-initial', run_info FROM desired_lrps
 		`)
 	if err != nil {
 		logger.Error("failed-inserting-run_info", err)
@@ -145,7 +164,7 @@ func updateRunInfoReferences(logger lager.Logger, db *sql.DB) error {
 	defer logger.Debug("finished")
 	_, err := db.Exec(`
 			UPDATE actual_lrps
-				SET run_info_guid = process_guid
+				SET run_info_tag = process_guid+"-initial"
 			`)
 	if err != nil {
 		logger.Error("failed-updating-run_info", err)
@@ -155,17 +174,16 @@ func updateRunInfoReferences(logger lager.Logger, db *sql.DB) error {
 }
 
 const createRunInfoSQL = `CREATE TABLE run_infos(
-	guid VARCHAR(255) PRIMARY KEY,
-	tag VARCHAR(255) NOT NULL,
+	tag VARCHAR(255) PRIMARY KEY,
 	data TEXT NOT NULL
 );`
 
 const alterDesiredLRPsSQL = `ALTER TABLE desired_lrps
-	ADD COLUMN run_info_guid VARCHAR(255),
-	ADD COLUMN run_info_guid_1 VARCHAR(255),
-	ADD COLUMN run_info_guid_2 VARCHAR(255)
+	ADD COLUMN run_info_tag VARCHAR(255),
+	ADD COLUMN run_info_tag_1 VARCHAR(255),
+	ADD COLUMN run_info_tag_2 VARCHAR(255)
 ;`
 
 const alterActualLRPsSQL = `ALTER TABLE actual_lrps
-	ADD COLUMN run_info_guid VARCHAR(255)
+	ADD COLUMN run_info_tag VARCHAR(255)
 ;`

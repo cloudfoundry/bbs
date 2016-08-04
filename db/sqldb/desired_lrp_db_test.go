@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -20,12 +21,17 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("saves the lrp in the database", func() {
+			fakeGUIDProvider.NextGUIDReturns("run-info-guid", nil)
 			err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, "the-guid")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
+
+			rows, err := db.Query(`SELECT tag FROM run_infos where tag = '` + *desiredLRP.RunInfoTag + `'`)
+			Expect(err).NotTo(HaveOccurred())
+			defer rows.Close()
 		})
 
 		Context("when the process_guid is already taken", func() {
@@ -270,11 +276,62 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			desiredLRPGuid := "desired-lrp-guid"
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
+			fakeGUIDProvider.NextGUIDReturns("run-info-guid-1", nil)
 			Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
 			instances := int32(1)
 			update = &models.DesiredLRPUpdate{
 				Instances: &instances,
 			}
+		})
+
+		It("updates the run-info if a new desired is given", func() {
+			desiredLRPGuid := "desired-lrp-guid"
+			newRunInfoTag := "new-run-info"
+			updateDesiredLRP := model_helpers.NewValidDesiredLRP(desiredLRPGuid)
+			updateDesiredLRP.Action = models.WrapAction(&models.RunAction{Path: "ls -l", User: "name"})
+			updateDesiredLRP.RunInfoTag = &newRunInfoTag
+
+			update = &models.DesiredLRPUpdate{
+				NewDesired: updateDesiredLRP,
+			}
+
+			fakeGUIDProvider.NextGUIDReturns("run-info-guid-2", nil)
+
+			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			Expect(err).NotTo(HaveOccurred())
+
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, desiredLRPGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			logger.Info("run-info-tag", lager.Data{"run-info-tag": desiredLRP.RunInfoTag})
+
+			// Check NEW RunInfo exists
+			rows, err := db.Query(`SELECT tag FROM run_infos where tag = '` + *desiredLRP.RunInfoTag + `'`)
+			Expect(err).NotTo(HaveOccurred())
+			runInfoTags := []string{}
+			for rows.Next() {
+				var tag string
+				err := rows.Scan(&tag)
+				Expect(err).NotTo(HaveOccurred())
+				runInfoTags = append(runInfoTags, tag)
+			}
+			Expect(runInfoTags).NotTo(ContainElement("invalid"))
+			Expect(len(runInfoTags)).To(Equal(1))
+			defer rows.Close()
+
+			// Check OLD RunInfo still exists
+			rows, err = db.Query(`SELECT tag FROM run_infos where tag = '` + desiredLRP.RunInfo_1.RunInfoTag + `'`)
+			Expect(err).NotTo(HaveOccurred())
+			runInfoTags = []string{}
+			for rows.Next() {
+				var tag string
+				err := rows.Scan(&tag)
+				Expect(err).NotTo(HaveOccurred())
+				runInfoTags = append(runInfoTags, tag)
+			}
+			Expect(runInfoTags).NotTo(ContainElement("invalid"))
+			Expect(len(runInfoTags)).To(Equal(1))
+			defer rows.Close()
 		})
 
 		It("updates the lrp", func() {

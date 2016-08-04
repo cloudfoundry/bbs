@@ -32,6 +32,14 @@ const (
 	actualLRPsTable  = "actual_lrps"
 	domainsTable     = "domains"
 	runInfosTable    = "run_infos"
+	runInfosTable1   = `
+		LEFT OUTER JOIN run_infos as run_infos1
+		ON desired_lrps.run_info_tag_1 = run_infos1.tag
+		`
+	runInfosTable2 = `
+		LEFT OUTER JOIN run_infos as run_infos2
+		ON desired_lrps.run_info_tag_2 = run_infos2.tag
+		`
 )
 
 var (
@@ -50,12 +58,33 @@ var (
 		desiredLRPsTable + ".modification_tag_index",
 	}
 
-	desiredLRPColumns = append(schedulingInfoColumns,
-		desiredLRPsTable+".run_info",
+	runInfoColumns = ColumnList{
+		runInfosTable + ".tag",
+		runInfosTable + ".data",
+	}
+
+	runInfo1Columns = append(schedulingInfoColumns,
+		runInfosTable+"1.tag",
+		runInfosTable+"1.data",
+	)
+
+	runInfo2Columns = append(runInfo1Columns,
+		runInfosTable+"2.tag",
+		runInfosTable+"2.data",
+	)
+
+	desiredLRPAndRunInfoColumns = append(runInfo2Columns,
 		desiredLRPsTable+".run_info_tag",
-		desiredLRPsTable+".run_info_guid",
-		desiredLRPsTable+".run_info_guid_1",
-		desiredLRPsTable+".run_info_guid_2",
+		desiredLRPsTable+".run_info_tag_1",
+		desiredLRPsTable+".run_info_tag_2",
+		desiredLRPsTable+".run_info",
+	)
+
+	desiredLRPColumns = append(schedulingInfoColumns,
+		desiredLRPsTable+".run_info_tag",
+		desiredLRPsTable+".run_info_tag_1",
+		desiredLRPsTable+".run_info_tag_2",
+		desiredLRPsTable+".run_info",
 	)
 
 	taskColumns = ColumnList{
@@ -87,17 +116,11 @@ var (
 		actualLRPsTable + ".modification_tag_index",
 		actualLRPsTable + ".crash_count",
 		actualLRPsTable + ".crash_reason",
-		actualLRPsTable + ".run_info_guid",
+		actualLRPsTable + ".run_info_tag",
 	}
 
 	domainColumns = ColumnList{
 		domainsTable + ".domain",
-	}
-
-	runInfoColumns = ColumnList{
-		runInfosTable + ".guid",
-		runInfosTable + ".tag",
-		runInfosTable + ".data",
 	}
 )
 
@@ -333,7 +356,7 @@ func (db *SQLDB) one(logger lager.Logger, q Queryable, table string,
 	wheres string, whereBindings ...interface{},
 ) *sql.Row {
 	tables := []string{table}
-	return db.oneMultiTable(logger, q, tables, columns, lockRow, wheres, whereBindings)
+	return db.oneMultiTable(logger, q, tables, columns, lockRow, wheres, whereBindings...)
 }
 
 // SELECT <columns> FROM <table> WHERE ... LIMIT 1 [FOR UPDATE]
@@ -343,8 +366,8 @@ func (db *SQLDB) oneMultiTable(logger lager.Logger, q Queryable, tables []string
 ) *sql.Row {
 	query := fmt.Sprintf("SELECT %s FROM ", strings.Join(columns, ", "))
 	for i, table := range tables {
-		if i > 1 {
-			query += ", "
+		if i > 0 {
+			//		query += ", "
 		}
 		query += string(table)
 	}
@@ -360,6 +383,8 @@ func (db *SQLDB) oneMultiTable(logger lager.Logger, q Queryable, tables []string
 		query += "\nFOR UPDATE"
 	}
 
+	logger.Info("one-multi-table", lager.Data{"query": query})
+
 	return q.QueryRow(db.rebind(query), whereBindings...)
 }
 
@@ -369,7 +394,7 @@ func (db *SQLDB) all(logger lager.Logger, q Queryable, table string,
 	wheres string, whereBindings ...interface{},
 ) (*sql.Rows, error) {
 	tables := []string{table}
-	return db.allMultiTable(logger, q, tables, columns, lockRow, wheres, whereBindings)
+	return db.allMultiTable(logger, q, tables, columns, lockRow, wheres, whereBindings...)
 }
 
 // SELECT <columns> FROM <table> WHERE ... [FOR UPDATE]
@@ -379,8 +404,8 @@ func (db *SQLDB) allMultiTable(logger lager.Logger, q Queryable, tables []string
 ) (*sql.Rows, error) {
 	query := fmt.Sprintf("SELECT %s FROM ", strings.Join(columns, ", "))
 	for i, table := range tables {
-		if i > 1 {
-			query += ", "
+		if i > 0 {
+			//		query += ", "
 		}
 		query += string(table)
 	}
@@ -393,6 +418,7 @@ func (db *SQLDB) allMultiTable(logger lager.Logger, q Queryable, tables []string
 	if lockRow {
 		query += "\nFOR UPDATE"
 	}
+	logger.Info("all-multi-table", lager.Data{"query": query, "query-rebind": db.rebind(query)})
 
 	return q.Query(db.rebind(query), whereBindings...)
 }
@@ -534,6 +560,7 @@ func (db *SQLDB) update(logger lager.Logger, q Queryable, table string, updates 
 		bindings = append(bindings, whereBindings...)
 	}
 
+	logger.Debug("update", lager.Data{"query": db.rebind(query), "bindings": bindings})
 	return q.Exec(db.rebind(query), bindings...)
 }
 
