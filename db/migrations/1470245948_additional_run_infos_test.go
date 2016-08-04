@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Additional RunInfos SQL Migration", func() {
+var _ = Describe("Additional RunInfos SQL Migration", func() {
 	if test_helpers.UseSQL() {
 		var (
 			migration    migration.Migration

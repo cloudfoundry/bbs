@@ -19,6 +19,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("CreateUnclaimedActualLRP", func() {
 		var key *models.ActualLRPKey
+		var runInfoTag string
 
 		BeforeEach(func() {
 			key = &models.ActualLRPKey{
@@ -26,14 +27,16 @@ var _ = Describe("ActualLRPDB", func() {
 				Index:       0,
 				Domain:      "the-domain",
 			}
+			runInfoTag = "the-guid-initial"
 		})
 
 		It("persists the actual lrp into the database", func() {
-			actualLRPGroup, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+			actualLRPGroup, err := sqlDB.CreateUnclaimedActualLRP(logger, key, runInfoTag)
 
 			actualLRP := models.NewUnclaimedActualLRP(*key, fakeClock.Now().UnixNano())
 			actualLRP.ModificationTag.Epoch = "my-awesome-guid"
 			actualLRP.ModificationTag.Index = 0
+			actualLRP.RunInfoTag = &runInfoTag
 
 			group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 			Expect(err).NotTo(HaveOccurred())
@@ -50,7 +53,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns the error", func() {
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key, "ignored")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrGUIDGeneration))
 			})
@@ -58,12 +61,12 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual lrp already exists", func() {
 			BeforeEach(func() {
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key, runInfoTag)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns a ResourceExists error", func() {
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key, runInfoTag)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceExists))
 			})
@@ -72,8 +75,10 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
 		var actualLRP *models.ActualLRP
+		var runInfoTag string
 
 		BeforeEach(func() {
+			runInfoTag = "some-guid-initial"
 			actualLRP = &models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey("some-guid", 0, "some-domain"),
 				State:        models.ActualLRPStateUnclaimed,
@@ -81,8 +86,9 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "my-awesome-guid",
 					Index: 0,
 				},
+				RunInfoTag: &runInfoTag,
 			}
-			_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+			_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, runInfoTag)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -125,7 +131,7 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				_, err := db.Exec(queryStr, actualLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, runInfoTag)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -166,7 +172,8 @@ var _ = Describe("ActualLRPDB", func() {
 				CellId:       "cell1",
 			}
 
-			_, err := sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey1)
+			runInfoTag := "guid1-initial"
+			_, err := sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey1, runInfoTag)
 			Expect(err).NotTo(HaveOccurred())
 
 			fakeClock.Increment(time.Hour)
@@ -183,6 +190,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					RunInfoTag: &runInfoTag,
 				},
 			})
 
@@ -196,7 +204,8 @@ var _ = Describe("ActualLRPDB", func() {
 				CellId:       "cell1",
 			}
 
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
+			runInfoTag2 := "guid2-initial"
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2, runInfoTag2)
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(time.Hour)
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, instanceKey2)
@@ -211,6 +220,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					RunInfoTag: &runInfoTag2,
 				},
 			})
 
@@ -223,7 +233,8 @@ var _ = Describe("ActualLRPDB", func() {
 				InstanceGuid: "i-guid3",
 				CellId:       "cell2",
 			}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3)
+			runInfoTag3 := "guid3-initial"
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3, runInfoTag3)
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(time.Hour)
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey3.ProcessGuid, actualLRPKey3.Index, instanceKey3)
@@ -238,6 +249,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					RunInfoTag: &runInfoTag3,
 				},
 			})
 
@@ -246,7 +258,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Index:       1,
 				Domain:      "domain2",
 			}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey4)
+			runInfoTag4 := "guid4-initial"
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey4, runInfoTag4)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
@@ -257,6 +270,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 0,
 					},
+					RunInfoTag: &runInfoTag4,
 				},
 			})
 
@@ -269,7 +283,8 @@ var _ = Describe("ActualLRPDB", func() {
 				InstanceGuid: "i-guid5",
 				CellId:       "cell2",
 			}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey5)
+			runInfoTag5 := "guid5-initial"
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey5, runInfoTag5)
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(time.Hour)
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
@@ -290,9 +305,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					RunInfoTag: &runInfoTag5,
 				},
 			})
 
+			runInfoTag6 := "guid6-initial"
 			actualLRPKey6 := &models.ActualLRPKey{
 				ProcessGuid: "guid6",
 				Index:       1,
@@ -303,7 +320,7 @@ var _ = Describe("ActualLRPDB", func() {
 				CellId:       "cell2",
 			}
 			fakeClock.Increment(time.Hour)
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6, runInfoTag6)
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
 			Expect(err).NotTo(HaveOccurred())
@@ -313,7 +330,7 @@ var _ = Describe("ActualLRPDB", func() {
 			}
 			_, err = db.Exec(queryStr, true, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
 
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6, "guid6-initial")
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
 			Expect(err).NotTo(HaveOccurred())
@@ -329,6 +346,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					RunInfoTag: &runInfoTag6,
 				},
 				Evacuating: &models.ActualLRP{
 					ActualLRPKey:         *actualLRPKey6,
@@ -339,6 +357,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					RunInfoTag: &runInfoTag6,
 				},
 			})
 		})
@@ -351,8 +370,14 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 
 		It("prunes all actual lrps containing invalid data", func() {
+
+			expectedDesiredLRP := model_helpers.NewValidDesiredLRP("invalid")
+			err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*expectedDesiredLRP.RunInfoTag).To(Equal("invalid-initial"))
+
 			actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
-			_, _, err := sqlDB.StartActualLRP(logger, &actualLRPWithInvalidData.ActualLRPKey, &actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo)
+			_, _, err = sqlDB.StartActualLRP(logger, &actualLRPWithInvalidData.ActualLRPKey, &actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo)
 			Expect(err).NotTo(HaveOccurred())
 			queryStr := `UPDATE actual_lrps SET net_info = 'garbage' WHERE process_guid = 'invalid'`
 			if test_helpers.UsePostgres() {
@@ -424,7 +449,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Index:       0,
 				Domain:      "domain1",
 			}
-			_, err := sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey1)
+			runInfoTag := "guid1-initial"
+			_, err := sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey1, runInfoTag)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
@@ -435,6 +461,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 0,
 					},
+					RunInfoTag: &runInfoTag,
 				},
 			})
 
@@ -444,7 +471,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Domain:      "domain1",
 			}
 			fakeClock.Increment(time.Hour)
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2, runInfoTag)
 			Expect(err).NotTo(HaveOccurred())
 			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
 			if test_helpers.UsePostgres() {
@@ -452,7 +479,7 @@ var _ = Describe("ActualLRPDB", func() {
 			}
 			_, err = db.Exec(queryStr, true, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, false)
 
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2, runInfoTag)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(err).NotTo(HaveOccurred())
@@ -465,6 +492,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 0,
 					},
+					RunInfoTag: &runInfoTag,
 				},
 				Evacuating: &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey2,
@@ -474,16 +502,18 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 0,
 					},
+					RunInfoTag: &runInfoTag,
 				},
 			})
 
+			runInfoTag2 := "guid2-initial"
 			actualLRPKey3 := &models.ActualLRPKey{
 				ProcessGuid: "guid2",
 				Index:       0,
 				Domain:      "domain1",
 			}
 			fakeClock.Increment(time.Hour)
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3, runInfoTag2)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
@@ -495,6 +525,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 0,
 					},
+					RunInfoTag: &runInfoTag2,
 				},
 			})
 		})
@@ -533,6 +564,7 @@ var _ = Describe("ActualLRPDB", func() {
 			var lrpCreationTime time.Time
 
 			BeforeEach(func() {
+				runInfoTag := "the-guid-initial"
 				expectedActualLRP = &models.ActualLRP{
 					ActualLRPKey: models.ActualLRPKey{
 						ProcessGuid: "the-guid",
@@ -543,8 +575,9 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 0,
 					},
+					RunInfoTag: &runInfoTag,
 				}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &expectedActualLRP.ActualLRPKey)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &expectedActualLRP.ActualLRPKey, runInfoTag)
 				Expect(err).NotTo(HaveOccurred())
 				lrpCreationTime = fakeClock.Now()
 				fakeClock.Increment(time.Hour)
@@ -790,7 +823,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Index:       1,
 					Domain:      "the-domain",
 				}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &key)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &key, "the-right-guid-initial")
 				Expect(err).NotTo(HaveOccurred())
 
 				key = models.ActualLRPKey{
@@ -798,7 +831,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Index:       0,
 					Domain:      "the-domain",
 				}
-				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &key)
+				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &key, "the-wrong-guid-initial")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -815,6 +848,7 @@ var _ = Describe("ActualLRPDB", func() {
 				instanceKey *models.ActualLRPInstanceKey
 				netInfo     *models.ActualLRPNetInfo
 				actualLRP   *models.ActualLRP
+				runInfoTag  string
 			)
 
 			BeforeEach(func() {
@@ -828,14 +862,16 @@ var _ = Describe("ActualLRPDB", func() {
 					Ports:   []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
 				}
 
+				runInfoTag = "the-guid-initial"
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: models.ActualLRPKey{
 						ProcessGuid: "the-guid",
 						Index:       1,
 						Domain:      "the-domain",
 					},
+					RunInfoTag: &runInfoTag,
 				}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, runInfoTag)
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.Increment(time.Hour)
 			})
@@ -1086,6 +1122,11 @@ var _ = Describe("ActualLRPDB", func() {
 					Ports:   []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
 				}
 
+				expectedDesiredLRP := model_helpers.NewValidDesiredLRP("the-guid")
+				err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(*expectedDesiredLRP.RunInfoTag).To(Equal("the-guid-initial"))
+
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: models.ActualLRPKey{
 						ProcessGuid: "the-guid",
@@ -1096,6 +1137,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 0,
 					},
+					RunInfoTag: expectedDesiredLRP.RunInfoTag,
 				}
 			})
 
@@ -1125,6 +1167,7 @@ var _ = Describe("ActualLRPDB", func() {
 				instanceKey *models.ActualLRPInstanceKey
 				netInfo     *models.ActualLRPNetInfo
 				actualLRP   *models.ActualLRP
+				runInfoTag  string
 			)
 
 			BeforeEach(func() {
@@ -1138,14 +1181,16 @@ var _ = Describe("ActualLRPDB", func() {
 					Ports:   []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
 				}
 
+				runInfoTag = "the-guid-initial"
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: models.ActualLRPKey{
 						ProcessGuid: "the-guid",
 						Index:       1,
 						Domain:      "the-domain",
 					},
+					RunInfoTag: &runInfoTag,
 				}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, runInfoTag)
 				Expect(err).NotTo(HaveOccurred())
 				actualLRP.ModificationTag.Epoch = "my-awesome-guid"
 				fakeClock.Increment(time.Hour)
@@ -1411,12 +1456,15 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actualLRP exists", func() {
 			var actualLRP *models.ActualLRP
+			var runInfoTag string
 
 			BeforeEach(func() {
+				runInfoTag = "the-guid-initial"
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey,
+					RunInfoTag:   &runInfoTag,
 				}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, runInfoTag)
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.Increment(time.Hour)
 			})
@@ -1507,10 +1555,10 @@ var _ = Describe("ActualLRPDB", func() {
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: *actualLRPKey,
 				}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, "the-guid-initial")
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.CreateUnclaimedActualLRP(logger, otherActualLRPKey)
+				_, err = sqlDB.CreateUnclaimedActualLRP(logger, otherActualLRPKey, "other-guid-initial")
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.Increment(time.Hour)
 			})
@@ -1574,9 +1622,10 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("UnclaimActualLRP", func() {
 		var (
-			actualLRP *models.ActualLRP
-			guid      = "the-guid"
-			index     = int32(1)
+			actualLRP  *models.ActualLRP
+			guid       = "the-guid"
+			index      = int32(1)
+			runInfoTag = guid + "-initial"
 
 			actualLRPKey = &models.ActualLRPKey{
 				ProcessGuid: guid,
@@ -1594,7 +1643,7 @@ var _ = Describe("ActualLRPDB", func() {
 						ActualLRPKey: *actualLRPKey,
 					}
 
-					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, runInfoTag)
 					Expect(err).NotTo(HaveOccurred())
 					_, _, err = sqlDB.ClaimActualLRP(logger, guid, index, &actualLRP.ActualLRPInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
@@ -1645,6 +1694,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 1,
 					}
+					expectedActualLRP.RunInfoTag = &runInfoTag
 					Expect(beforeActualLRPGroup).To(BeEquivalentTo(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -1659,7 +1709,7 @@ var _ = Describe("ActualLRPDB", func() {
 						ActualLRPKey: *actualLRPKey,
 					}
 
-					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, runInfoTag)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

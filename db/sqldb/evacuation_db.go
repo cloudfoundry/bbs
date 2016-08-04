@@ -27,10 +27,13 @@ func (db *SQLDB) EvacuateActualLRP(
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
+		// We should really get this from either the other Actual or from the DesiredLRP!!!
+		runInfoTag := processGuid + "-initial"
+
 		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
-			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
+			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx, runInfoTag)
 			return err
 		}
 
@@ -52,6 +55,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = *netInfo
+		actualLRP.RunInfoTag = &runInfoTag
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
@@ -68,6 +72,7 @@ func (db *SQLDB) EvacuateActualLRP(
 				"state":                  actualLRP.State,
 				"since":                  actualLRP.Since,
 				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"run_info_tag":           actualLRP.RunInfoTag,
 			},
 			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			actualLRP.ProcessGuid, actualLRP.Index, true,
@@ -127,6 +132,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
 	tx *sql.Tx,
+	runInfoTag string,
 ) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
@@ -148,6 +154,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		State:                models.ActualLRPStateRunning,
 		Since:                now.UnixNano(),
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
+		RunInfoTag:           &runInfoTag,
 	}
 
 	_, err = db.upsert(logger, tx, "actual_lrps",
@@ -166,6 +173,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 			"modification_tag_index": actualLRP.ModificationTag.Index,
 			"expire_time":            expireTime.UnixNano(),
+			"run_info_tag":           actualLRP.RunInfoTag,
 		},
 	)
 	if err != nil {

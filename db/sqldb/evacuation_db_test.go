@@ -12,14 +12,16 @@ import (
 
 var _ = Describe("Evacuation", func() {
 	var (
-		actualLRP *models.ActualLRP
-		guid      string
-		index     int32
+		actualLRP  *models.ActualLRP
+		guid       string
+		index      int32
+		runInfoTag string
 	)
 
 	BeforeEach(func() {
 		guid = "some-guid"
 		index = int32(1)
+		runInfoTag = guid + "-initial"
 		actualLRP = model_helpers.NewValidActualLRP(guid, index)
 		actualLRP.CrashCount = 0
 		actualLRP.CrashReason = ""
@@ -27,8 +29,9 @@ var _ = Describe("Evacuation", func() {
 		actualLRP.ModificationTag = models.ModificationTag{}
 		actualLRP.ModificationTag.Increment()
 		actualLRP.ModificationTag.Increment()
+		actualLRP.RunInfoTag = &runInfoTag
 
-		_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+		_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey, "some-guid-initial")
 		Expect(err).NotTo(HaveOccurred())
 		_, _, err = sqlDB.ClaimActualLRP(logger, guid, index, &actualLRP.ActualLRPInstanceKey)
 		Expect(err).NotTo(HaveOccurred())

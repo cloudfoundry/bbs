@@ -31,6 +31,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	modTag := models.NewModificationTag("epoch", 0)
+	runInfoTag := guid + "-initial"
 	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          guid,
 		Domain:               "some-domain",
@@ -85,6 +86,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 				},
 			},
 		},
+		RunInfoTag: &runInfoTag,
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())

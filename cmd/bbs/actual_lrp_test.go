@@ -96,42 +96,54 @@ var _ = Describe("ActualLRP API", func() {
 		crashingLRPKey = models.NewActualLRPKey(crashingProcessGuid, crashingIndex, crashingDomain)
 		crashingLRPInstanceKey = models.NewActualLRPInstanceKey(crashingInstanceGuid, otherCellID)
 
+		runInfoTag := baseLRPKey.ProcessGuid + "-initial"
 		baseLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
+			RunInfoTag:           &runInfoTag,
 		}
 
+		runInfoTag2 := evacuatingLRPKey.ProcessGuid + "-initial"
 		evacuatingLRP = &models.ActualLRP{
 			ActualLRPKey:         evacuatingLRPKey,
 			ActualLRPInstanceKey: evacuatingLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
+			RunInfoTag:           &runInfoTag2,
 		}
 
+		runInfoTag3 := evacuatingLRPKey.ProcessGuid + "-initial"
 		evacuatingInstanceLRP = &models.ActualLRP{
 			ActualLRPKey: evacuatingLRPKey,
 			State:        models.ActualLRPStateUnclaimed,
+			RunInfoTag:   &runInfoTag3,
 		}
 
+		runInfoTag4 := otherLRPKey.ProcessGuid + "-initial"
 		otherLRP = &models.ActualLRP{
 			ActualLRPKey:         otherLRPKey,
 			ActualLRPInstanceKey: otherLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
+			RunInfoTag:           &runInfoTag4,
 		}
 
+		runInfoTag5 := unclaimedLRPKey.ProcessGuid + "-initial"
 		unclaimedLRP = &models.ActualLRP{
 			ActualLRPKey: unclaimedLRPKey,
 			State:        models.ActualLRPStateUnclaimed,
+			RunInfoTag:   &runInfoTag5,
 		}
 
+		runInfoTag6 := crashingLRPKey.ProcessGuid + "-initial"
 		crashingLRP = &models.ActualLRP{
 			ActualLRPKey: crashingLRPKey,
 			State:        models.ActualLRPStateCrashed,
 			CrashReason:  "crash",
 			CrashCount:   3,
+			RunInfoTag:   &runInfoTag6,
 		}
 
 		var err error

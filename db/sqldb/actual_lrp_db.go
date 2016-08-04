@@ -105,6 +105,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 			"net_info":               []byte{},
 			"modification_tag_epoch": guid,
 			"modification_tag_index": 0,
+			"run_info_tag":           runInfoTag,
 		},
 	)
 	if err != nil {
@@ -117,6 +118,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 			State:           models.ActualLRPStateUnclaimed,
 			Since:           now,
 			ModificationTag: models.ModificationTag{Epoch: guid, Index: 0},
+			RunInfoTag:      &runInfoTag,
 		},
 	}, nil
 }
@@ -240,9 +242,15 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
+
 		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
 		if err == models.ErrResourceNotFound {
-			actualLRP, err = db.createRunningActualLRP(logger, key, instanceKey, netInfo, tx)
+			desiredLRP, err := db.DesiredLRPByProcessGuid(logger, key.ProcessGuid)
+			if err != nil {
+				return err
+			}
+
+			actualLRP, err = db.createRunningActualLRP(logger, key, instanceKey, netInfo, tx, *desiredLRP.RunInfoTag)
 			return err
 		}
 
@@ -471,7 +479,7 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 	})
 }
 
-func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, tx *sql.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, tx *sql.Tx, runInfoTag string) (*models.ActualLRP, error) {
 	now := db.clock.Now().UnixNano()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -485,6 +493,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 	actualLRP.ActualLRPNetInfo = *netInfo
 	actualLRP.State = models.ActualLRPStateRunning
 	actualLRP.Since = now
+	actualLRP.RunInfoTag = &runInfoTag
 
 	netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
 	if err != nil {
@@ -503,6 +512,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 			"since":                  actualLRP.Since,
 			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 			"modification_tag_index": actualLRP.ModificationTag.Index,
+			"run_info_tag":           runInfoTag,
 		},
 	)
 	if err != nil {

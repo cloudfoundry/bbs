@@ -168,6 +168,7 @@ func RebindForFlavor(query, flavor string) string {
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	var query string
 	columns := schedulingInfoColumns
+	columns = append(columns, desiredLRPsTable+".run_info_tag")
 	columns = append(columns, "COUNT(actual_lrps.instance_index) AS actual_instances")
 
 	switch db.flavor {

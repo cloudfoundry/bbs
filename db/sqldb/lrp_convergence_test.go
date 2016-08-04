@@ -50,9 +50,9 @@ var _ = Describe("LRPConvergence", func() {
 			err = sqlDB.DesireLRP(logger, desiredLRPWithStaleActuals)
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(-models.StaleUnclaimedActualLRPDuration)
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain}, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(models.StaleUnclaimedActualLRPDuration)
 			queryStr := `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
@@ -67,7 +67,7 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRPWithMissingCellActuals.Domain = domain
 			err = sqlDB.DesireLRP(logger, desiredLRPWithMissingCellActuals)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "actual-with-missing-cell" + "-" + domain, CellId: "missing-cell"})
 			Expect(err).NotTo(HaveOccurred())
@@ -84,9 +84,9 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRPWithExtraActuals.Instances = 1
 			err = sqlDB.DesireLRP(logger, desiredLRPWithExtraActuals)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain}, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "not-extra-actual" + "-" + domain, CellId: "existing-cell"})
 			Expect(err).NotTo(HaveOccurred())
@@ -118,9 +118,9 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRPWithMissingSomeActuals.Instances = 4
 			err = sqlDB.DesireLRP(logger, desiredLRPWithMissingSomeActuals)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 2, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 2, Domain: domain}, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
 			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
 			if test_helpers.UsePostgres() {
@@ -136,7 +136,7 @@ var _ = Describe("LRPConvergence", func() {
 			err = sqlDB.DesireLRP(logger, desiredLRPWithRestartableCrashedActuals)
 			Expect(err).NotTo(HaveOccurred())
 			crashedActualLRPKey := &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
 			instanceGuid = "restartable-crashed-actual" + "-" + domain
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"})
@@ -165,7 +165,7 @@ var _ = Describe("LRPConvergence", func() {
 
 			processGuid = "actual-with-no-desired" + "-" + domain
 			actualLRPWithNoDesired := &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPWithNoDesired)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPWithNoDesired, processGuid+"-initial")
 			Expect(err).NotTo(HaveOccurred())
 			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
 			if test_helpers.UsePostgres() {
@@ -193,9 +193,9 @@ var _ = Describe("LRPConvergence", func() {
 		normalDesiredLRP.Instances = 2
 		err = sqlDB.DesireLRP(logger, normalDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}, processGuid+"-initial")
 		Expect(err).NotTo(HaveOccurred())
-		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain})
+		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain}, processGuid+"-initial")
 		Expect(err).NotTo(HaveOccurred())
 		_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "normal-actual-1" + "-" + domain, CellId: "existing-cell"})
 		Expect(err).NotTo(HaveOccurred())
@@ -211,7 +211,7 @@ var _ = Describe("LRPConvergence", func() {
 		normalDesiredLRPWithUnclaimedActuals.Instances = 1
 		err = sqlDB.DesireLRP(logger, normalDesiredLRPWithUnclaimedActuals)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}, processGuid+"-initial")
 		Expect(err).NotTo(HaveOccurred())
 
 		processGuid = "desired-with-non-restartable-crashed-actuals" + "-" + domain
@@ -221,7 +221,7 @@ var _ = Describe("LRPConvergence", func() {
 		err = sqlDB.DesireLRP(logger, desiredLRPWithNonRestartableCrashedActuals)
 		Expect(err).NotTo(HaveOccurred())
 		crashedActualLRPKey := &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}
-		_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey)
+		_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey, processGuid+"-initial")
 		Expect(err).NotTo(HaveOccurred())
 		instanceGuid := "non-restartable-crashed-actual" + "-" + domain
 		_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"})
@@ -242,7 +242,7 @@ var _ = Describe("LRPConvergence", func() {
 		_, err = db.Exec(queryStr, models.DefaultMaxRestarts+1, models.ActualLRPStateCrashed, processGuid, 0, false)
 		Expect(err).NotTo(HaveOccurred())
 		crashedActualLRPKey = &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain}
-		_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey)
+		_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey, processGuid+"-initial")
 		Expect(err).NotTo(HaveOccurred())
 		instanceGuid = "non-restartable-crashed-actual-2" + "-" + domain
 		_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 1, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"})
@@ -264,7 +264,7 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		processGuid = "expired-evacuating-actual-lrp"
-		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+		_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}, processGuid+"-initial")
 		Expect(err).NotTo(HaveOccurred())
 		queryStr = `UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ?`
 		if test_helpers.UsePostgres() {

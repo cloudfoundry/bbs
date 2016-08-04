@@ -215,16 +215,11 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 	for rows.Next() {
 		var existingIndicesStr sql.NullString
 		var actualInstances int
+		var runInfoTag string
 
-		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &actualInstances, &existingIndicesStr)
+		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &runInfoTag, &actualInstances, &existingIndicesStr)
 		if err != nil {
 			continue
-		}
-
-		desiredLRP, err := c.fetchDesiredLRP(logger, rows)
-		if err != nil {
-			logger.Error("failed-fetching-desired-lrp", err)
-			return
 		}
 
 		indices := []int{}
@@ -244,7 +239,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				index := int32(i)
 
 				c.submit(func() {
-					_, err := c.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: schedulingInfo.ProcessGuid, Domain: schedulingInfo.Domain, Index: index}, *desiredLRP.RunInfoTag)
+					_, err := c.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: schedulingInfo.ProcessGuid, Domain: schedulingInfo.Domain, Index: index}, runInfoTag)
 					if err != nil {
 						logger.Error("failed-creating-missing-actual-lrp", err)
 					}
