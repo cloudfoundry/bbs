@@ -93,7 +93,7 @@ func (db *ETCDDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proce
 	return group, err
 }
 
-func (db *ETCDDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+func (db *ETCDDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, runInfoTag string) (*models.ActualLRPGroup, error) {
 	lrp, err := db.newUnclaimedActualLRP(key)
 	if err != nil {
 		return nil, models.ErrActualLRPCannotBeUnclaimed

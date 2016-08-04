@@ -131,7 +131,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
-	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
+	h.startInstanceRange(logger, 0, schedulingInfo.Instances, request.DesiredLrp)
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -175,8 +175,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		logger = logger.WithData(lager.Data{"instances_delta": requestedInstances})
 		if requestedInstances > 0 {
 			logger.Debug("increasing-the-instances")
-			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			h.startInstanceRange(logger, previousInstanceCount, *request.Update.Instances, &schedulingInfo)
+			h.startInstanceRange(logger, previousInstanceCount, *request.Update.Instances, desiredLRP)
 		}
 
 		if requestedInstances < 0 {
@@ -221,10 +220,12 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 	h.stopInstancesFrom(logger, request.ProcessGuid, 0)
 }
 
-func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
+func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, desiredLRP *models.DesiredLRP) {
 	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
 	logger.Info("starting")
 	defer logger.Info("complete")
+
+	schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 	keys := make([]*models.ActualLRPKey, upper-lower)
 	i := 0
@@ -234,8 +235,8 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 		i++
 	}
 
-	createdIndices := h.createUnclaimedActualLRPs(logger, keys)
-	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
+	createdIndices := h.createUnclaimedActualLRPs(logger, keys, *desiredLRP.RunInfoTag)
+	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, createdIndices...)
 
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
 	err := h.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&start})
@@ -245,7 +246,7 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 	}
 }
 
-func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {
+func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey, runInfoTag string) []int {
 	count := len(keys)
 	createdIndicesChan := make(chan int, count)
 
@@ -255,7 +256,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 		key := key
 		works[i] = func() {
 			logger.Info("starting", lager.Data{"actual_lrp_key": key})
-			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
+			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key, runInfoTag)
 			if err != nil {
 				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
 			} else {
