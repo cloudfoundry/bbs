@@ -31,10 +31,11 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 			requestAccessLogger.Info("serving")
 			requestLog.Debug("serving")
 
+			start := time.Now()
 			loggableHandlerFunc(requestLog, w, r)
 
-			requestAccessLogger.Info("done")
-			requestLog.Debug("done")
+			defer requestAccessLogger.Info("done", lager.Data{"duration": time.Since(start)})
+			defer requestLog.Debug("done")
 		}
 	} else {
 		return func(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +45,7 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 
 			loggableHandlerFunc(requestLog, w, r)
 
-			requestLog.Debug("done")
+			defer requestLog.Debug("done")
 		}
 	}
 }
