@@ -29,23 +29,25 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 			requestAccessLogger := accessLogger.Session("request", lagerDataFromReq(r))
 
 			requestAccessLogger.Info("serving")
+
 			requestLog.Debug("serving")
 
 			start := time.Now()
-			loggableHandlerFunc(requestLog, w, r)
-
-			defer requestAccessLogger.Info("done", lager.Data{"duration": time.Since(start)})
 			defer requestLog.Debug("done")
+			defer func() {
+				requestAccessLogger.Info("done", lager.Data{"duration": time.Since(start)})
+			}()
+			loggableHandlerFunc(requestLog, w, r)
 		}
 	} else {
 		return func(w http.ResponseWriter, r *http.Request) {
 			requestLog := logger.Session("request", lagerDataFromReq(r))
 
 			requestLog.Debug("serving")
+			defer requestLog.Debug("done")
 
 			loggableHandlerFunc(requestLog, w, r)
 
-			defer requestLog.Debug("done")
 		}
 	}
 }
