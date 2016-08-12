@@ -1,0 +1,94 @@
+package migrations_test
+
+import (
+	"os"
+	"strings"
+
+	"code.cloudfoundry.org/bbs/db/migrations"
+	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/migration"
+	"code.cloudfoundry.org/bbs/test_helpers"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("ETCD to SQL Migration", func() {
+	if test_helpers.UseSQL() {
+		var (
+			migration    migration.Migration
+			serializer   format.Serializer
+			flavor       string
+			migrationErr error
+		)
+
+		BeforeEach(func() {
+			flavor = os.Getenv("USE_SQL")
+			rawSQLDB.Exec("DROP TABLE domains;")
+			rawSQLDB.Exec("DROP TABLE tasks;")
+			rawSQLDB.Exec("DROP TABLE desired_lrps;")
+			rawSQLDB.Exec("DROP TABLE actual_lrps;")
+
+			migration = migrations.NewIncreaseRunInfoColumnSize()
+			migration.SetRawSQLDB(rawSQLDB)
+			migration.SetDBFlavor(flavor)
+			serializer = format.NewSerializer(cryptor)
+		})
+
+		It("appends itself to the migration list", func() {
+			Expect(migrations.Migrations).To(ContainElement(migration))
+		})
+
+		Describe("Version", func() {
+			It("returns the timestamp from which it was created", func() {
+				Expect(migration.Version()).To(BeEquivalentTo(1471030898))
+			})
+		})
+
+		Describe("Up", func() {
+			JustBeforeEach(func() {
+				migrationErr = migration.Up(logger)
+			})
+
+			BeforeEach(func() {
+				createStatements := []string{
+					`CREATE TABLE actual_lrps(
+	net_info TEXT NOT NULL
+);`,
+					`CREATE TABLE tasks(
+	result TEXT,
+	task_definition TEXT NOT NULL
+);`,
+
+					`CREATE TABLE desired_lrps(
+	annotation TEXT,
+	routes TEXT NOT NULL,
+	volume_placement TEXT NOT NULL,
+	run_info TEXT NOT NULL
+);`,
+				}
+				for _, st := range createStatements {
+					_, err := rawSQLDB.Exec(st)
+					Expect(err).NotTo(HaveOccurred())
+				}
+			})
+
+			It("does not error out", func() {
+				Expect(migrationErr).NotTo(HaveOccurred())
+			})
+
+			It("should change the size of all text columns ", func() {
+				value := strings.Repeat("x", 65536*2)
+				query := sqldb.RebindForFlavor("insert into desired_lrps(annotation, routes, volume_placement, run_info) values('', '', '', ?)", flavor)
+				_, err := rawSQLDB.Exec(query, value)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Describe("Down", func() {
+			It("returns a not implemented error", func() {
+				Expect(migration.Down(logger)).To(HaveOccurred())
+			})
+		})
+	}
+})
