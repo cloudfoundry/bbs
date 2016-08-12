@@ -127,7 +127,7 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 	// Ignore the error as the tables may not exist
 	_ = dropTables(e.rawSQLDB)
 
-	err := createTables(logger, e.rawSQLDB)
+	err := createTables(logger, e.rawSQLDB, e.dbFlavor)
 	if err != nil {
 		return err
 	}
@@ -187,12 +187,12 @@ func dropTables(db *sql.DB) error {
 	return nil
 }
 
-func createTables(logger lager.Logger, db *sql.DB) error {
+func createTables(logger lager.Logger, db *sql.DB, flavor string) error {
 	var createTablesSQL = []string{
-		createDomainSQL,
-		createDesiredLRPsSQL,
-		createActualLRPsSQL,
-		createTasksSQL,
+		sqldb.RebindForFlavor(createDomainSQL, flavor),
+		sqldb.RebindForFlavor(createDesiredLRPsSQL, flavor),
+		sqldb.RebindForFlavor(createActualLRPsSQL, flavor),
+		sqldb.RebindForFlavor(createTasksSQL, flavor),
 	}
 
 	logger.Info("creating-tables")
@@ -425,16 +425,16 @@ const createDesiredLRPsSQL = `CREATE TABLE desired_lrps(
 	process_guid VARCHAR(255) PRIMARY KEY,
 	domain VARCHAR(255) NOT NULL,
 	log_guid VARCHAR(255) NOT NULL,
-	annotation TEXT,
+	annotation MEDIUMTEXT,
 	instances INT NOT NULL,
 	memory_mb INT NOT NULL,
 	disk_mb INT NOT NULL,
 	rootfs VARCHAR(255) NOT NULL,
-	routes TEXT NOT NULL,
-	volume_placement TEXT NOT NULL,
+	routes MEDIUMTEXT NOT NULL,
+	volume_placement MEDIUMTEXT NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
-	run_info TEXT NOT NULL
+	run_info MEDIUMTEXT NOT NULL
 );`
 
 const createActualLRPsSQL = `CREATE TABLE actual_lrps(
@@ -447,7 +447,7 @@ const createActualLRPsSQL = `CREATE TABLE actual_lrps(
 	cell_id VARCHAR(255) NOT NULL DEFAULT '',
 	placement_error VARCHAR(255) NOT NULL DEFAULT '',
 	since BIGINT DEFAULT 0,
-	net_info TEXT NOT NULL,
+	net_info MEDIUMTEXT NOT NULL,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT,
 	crash_count INT NOT NULL DEFAULT 0,
@@ -465,10 +465,10 @@ const createTasksSQL = `CREATE TABLE tasks(
 	first_completed_at BIGINT DEFAULT 0,
 	state INT,
 	cell_id VARCHAR(255) NOT NULL DEFAULT '',
-	result TEXT,
+	result MEDIUMTEXT,
 	failed BOOL DEFAULT false,
 	failure_reason VARCHAR(255) NOT NULL DEFAULT '',
-	task_definition TEXT NOT NULL
+	task_definition MEDIUMTEXT NOT NULL
 );`
 
 var createDomainsIndices = []string{

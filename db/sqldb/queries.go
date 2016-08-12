@@ -105,8 +105,16 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 
 // Takes in a query that uses question marks to represent unbound SQL parameters
 // and converts those to '$1, $2', etc. if the DB flavor is postgres.
+// Takes in a query that uses MEDIUMTEXT to create table columns and converts
+// those to TEXT if the DB flavor is postgres
 // e.g., `SELECT * FROM table_name WHERE col = ? AND col2 = ?` becomes
 //       `SELECT * FROM table_name WHERE col = $1 AND col2 = $2`
+// e.g., `CREATE TABLE desired_lrps(
+//	 annotation MEDIUMTEXT
+// )` becomes
+// `CREATE TABLE desired_lrps(
+//	 annotation TEXT
+// )`
 func RebindForFlavor(query, flavor string) string {
 	if flavor == MySQL {
 		return query
@@ -119,7 +127,7 @@ func RebindForFlavor(query, flavor string) string {
 	for i := 1; i < len(strParts); i++ {
 		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
 	}
-	return strings.Join(strParts, "")
+	return strings.Replace(strings.Join(strParts, ""), "MEDIUMTEXT", "TEXT", -1)
 }
 
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
