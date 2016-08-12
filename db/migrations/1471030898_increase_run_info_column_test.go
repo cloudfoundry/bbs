@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("ETCD to SQL Migration", func() {
+var _ = Describe("Increase Run Info Column Migration", func() {
 	if test_helpers.UseSQL() {
 		var (
 			migration    migration.Migration
@@ -30,8 +30,6 @@ var _ = Describe("ETCD to SQL Migration", func() {
 			rawSQLDB.Exec("DROP TABLE actual_lrps;")
 
 			migration = migrations.NewIncreaseRunInfoColumnSize()
-			migration.SetRawSQLDB(rawSQLDB)
-			migration.SetDBFlavor(flavor)
 			serializer = format.NewSerializer(cryptor)
 		})
 
@@ -46,6 +44,13 @@ var _ = Describe("ETCD to SQL Migration", func() {
 		})
 
 		Describe("Up", func() {
+			BeforeEach(func() {
+				// Can't do this in the Describe BeforeEach
+				// as the test on line 37 will cause ginkgo to panic
+				migration.SetRawSQLDB(rawSQLDB)
+				migration.SetDBFlavor(flavor)
+			})
+
 			JustBeforeEach(func() {
 				migrationErr = migration.Up(logger)
 			})
