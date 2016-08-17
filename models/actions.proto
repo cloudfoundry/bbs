@@ -6,7 +6,6 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "environment_variables.proto";
 
 message Action {
-  option (gogoproto.onlyone) = true;
   oneof action {
     DownloadAction download_action = 1 [(gogoproto.jsontag) = "download,omitempty"];
     UploadAction upload_action = 2 [(gogoproto.jsontag) = "upload,omitempty"];

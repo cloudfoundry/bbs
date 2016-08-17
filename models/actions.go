@@ -359,6 +359,75 @@ func UnwrapAction(action *Action) ActionInterface {
 	return a.(ActionInterface)
 }
 
+func (a *Action) GetValue() ActionInterface {
+	switch a.Action.(type) {
+	case *Action_DownloadAction:
+		return a.GetDownloadAction()
+	case *Action_UploadAction:
+		return a.GetUploadAction()
+	case *Action_RunAction:
+		return a.GetRunAction()
+	case *Action_TimeoutAction:
+		return a.GetTimeoutAction()
+	case *Action_EmitProgressAction:
+		return a.GetEmitProgressAction()
+	case *Action_TryAction:
+		return a.GetTryAction()
+	case *Action_ParallelAction:
+		return a.GetParallelAction()
+	case *Action_SerialAction:
+		return a.GetSerialAction()
+	case *Action_CodependentAction:
+		return a.GetCodependentAction()
+	default:
+		return nil
+	}
+}
+
+func (a *Action) SetValue(action interface{}) bool {
+	switch action.(type) {
+	case *DownloadAction:
+		a.Action = &Action_DownloadAction{
+			DownloadAction: action.(*DownloadAction),
+		}
+	case *UploadAction:
+		a.Action = &Action_UploadAction{
+			UploadAction: action.(*UploadAction),
+		}
+	case *RunAction:
+		a.Action = &Action_RunAction{
+			RunAction: action.(*RunAction),
+		}
+	case *TimeoutAction:
+		a.Action = &Action_TimeoutAction{
+			TimeoutAction: action.(*TimeoutAction),
+		}
+	case *EmitProgressAction:
+		a.Action = &Action_EmitProgressAction{
+			EmitProgressAction: action.(*EmitProgressAction),
+		}
+	case *TryAction:
+		a.Action = &Action_TryAction{
+			TryAction: action.(*TryAction),
+		}
+	case *ParallelAction:
+		a.Action = &Action_ParallelAction{
+			ParallelAction: action.(*ParallelAction),
+		}
+	case *SerialAction:
+		a.Action = &Action_SerialAction{
+			SerialAction: action.(*SerialAction),
+		}
+	case *CodependentAction:
+		a.Action = &Action_CodependentAction{
+			CodependentAction: action.(*CodependentAction),
+		}
+	default:
+		return false
+	}
+	return true
+}
+
 func WrapActions(actions []ActionInterface) []*Action {
 	wrappedActions := make([]*Action, 0, len(actions))
 	for _, action := range actions {

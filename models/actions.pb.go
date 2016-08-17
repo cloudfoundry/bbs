@@ -39,15 +39,98 @@
 		SerialAction
 		CodependentAction
 		ResourceLimits
+		ActualLRPGroup
+		PortMapping
+		ActualLRPKey
+		ActualLRPInstanceKey
+		ActualLRPNetInfo
+		ActualLRP
+		ActualLRPLifecycleResponse
+		ActualLRPGroupsResponse
+		ActualLRPGroupResponse
+		ActualLRPGroupsRequest
+		ActualLRPGroupsByProcessGuidRequest
+		ActualLRPGroupByProcessGuidAndIndexRequest
+		ClaimActualLRPRequest
+		StartActualLRPRequest
+		CrashActualLRPRequest
+		FailActualLRPRequest
+		RetireActualLRPRequest
+		RemoveActualLRPRequest
+		CachedDependency
+		CellCapacity
+		CellPresence
+		Provider
+		CellsResponse
+		DesiredLRPSchedulingInfo
+		DesiredLRPRunInfo
+		ProtoRoutes
+		DesiredLRPUpdate
+		DesiredLRPKey
+		DesiredLRPResource
+		DesiredLRP
+		DesiredLRPLifecycleResponse
+		DesiredLRPsResponse
+		DesiredLRPsRequest
+		DesiredLRPResponse
+		DesiredLRPSchedulingInfosResponse
+		DesiredLRPByProcessGuidRequest
+		DesireLRPRequest
+		UpdateDesiredLRPRequest
+		RemoveDesiredLRPRequest
+		DomainsResponse
+		UpsertDomainResponse
+		UpsertDomainRequest
+		EnvironmentVariable
+		Error
+		EvacuationResponse
+		EvacuateClaimedActualLRPRequest
+		EvacuateRunningActualLRPRequest
+		EvacuateStoppedActualLRPRequest
+		EvacuateCrashedActualLRPRequest
+		RemoveEvacuatingActualLRPRequest
+		RemoveEvacuatingActualLRPResponse
+		ActualLRPCreatedEvent
+		ActualLRPChangedEvent
+		ActualLRPRemovedEvent
+		DesiredLRPCreatedEvent
+		DesiredLRPChangedEvent
+		DesiredLRPRemovedEvent
+		ActualLRPCrashedEvent
+		ConvergeLRPsResponse
+		ModificationTag
+		Network
+		PingResponse
+		PortRange
+		ICMPInfo
+		SecurityGroupRule
+		TaskDefinition
+		Task
+		TaskLifecycleResponse
+		DesireTaskRequest
+		StartTaskRequest
+		StartTaskResponse
+		FailTaskRequest
+		TaskGuidRequest
+		CompleteTaskRequest
+		TaskCallbackResponse
+		ConvergeTasksRequest
+		ConvergeTasksResponse
+		TasksRequest
+		TasksResponse
+		TaskByGuidRequest
+		TaskResponse
+		SharedDevice
+		VolumeMount
+		VolumePlacement
 */
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -58,99 +141,369 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
+
 type Action struct {
-	DownloadAction     *DownloadAction     `protobuf:"bytes,1,opt,name=download_action" json:"download,omitempty"`
-	UploadAction       *UploadAction       `protobuf:"bytes,2,opt,name=upload_action" json:"upload,omitempty"`
-	RunAction          *RunAction          `protobuf:"bytes,3,opt,name=run_action" json:"run,omitempty"`
-	TimeoutAction      *TimeoutAction      `protobuf:"bytes,4,opt,name=timeout_action" json:"timeout,omitempty"`
-	EmitProgressAction *EmitProgressAction `protobuf:"bytes,5,opt,name=emit_progress_action" json:"emit_progress,omitempty"`
-	TryAction          *TryAction          `protobuf:"bytes,6,opt,name=try_action" json:"try,omitempty"`
-	ParallelAction     *ParallelAction     `protobuf:"bytes,7,opt,name=parallel_action" json:"parallel,omitempty"`
-	SerialAction       *SerialAction       `protobuf:"bytes,8,opt,name=serial_action" json:"serial,omitempty"`
-	CodependentAction  *CodependentAction  `protobuf:"bytes,9,opt,name=codependent_action" json:"codependent,omitempty"`
+	// Types that are valid to be assigned to Action:
+	//	*Action_DownloadAction
+	//	*Action_UploadAction
+	//	*Action_RunAction
+	//	*Action_TimeoutAction
+	//	*Action_EmitProgressAction
+	//	*Action_TryAction
+	//	*Action_ParallelAction
+	//	*Action_SerialAction
+	//	*Action_CodependentAction
+	Action isAction_Action `protobuf_oneof:"action"`
 }
 
-func (m *Action) Reset()      { *m = Action{} }
-func (*Action) ProtoMessage() {}
+func (m *Action) Reset()                    { *m = Action{} }
+func (*Action) ProtoMessage()               {}
+func (*Action) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{0} }
+
+type isAction_Action interface {
+	isAction_Action()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Action_DownloadAction struct {
+	DownloadAction *DownloadAction `protobuf:"bytes,1,opt,name=download_action,json=downloadAction,oneof"`
+}
+type Action_UploadAction struct {
+	UploadAction *UploadAction `protobuf:"bytes,2,opt,name=upload_action,json=uploadAction,oneof"`
+}
+type Action_RunAction struct {
+	RunAction *RunAction `protobuf:"bytes,3,opt,name=run_action,json=runAction,oneof"`
+}
+type Action_TimeoutAction struct {
+	TimeoutAction *TimeoutAction `protobuf:"bytes,4,opt,name=timeout_action,json=timeoutAction,oneof"`
+}
+type Action_EmitProgressAction struct {
+	EmitProgressAction *EmitProgressAction `protobuf:"bytes,5,opt,name=emit_progress_action,json=emitProgressAction,oneof"`
+}
+type Action_TryAction struct {
+	TryAction *TryAction `protobuf:"bytes,6,opt,name=try_action,json=tryAction,oneof"`
+}
+type Action_ParallelAction struct {
+	ParallelAction *ParallelAction `protobuf:"bytes,7,opt,name=parallel_action,json=parallelAction,oneof"`
+}
+type Action_SerialAction struct {
+	SerialAction *SerialAction `protobuf:"bytes,8,opt,name=serial_action,json=serialAction,oneof"`
+}
+type Action_CodependentAction struct {
+	CodependentAction *CodependentAction `protobuf:"bytes,9,opt,name=codependent_action,json=codependentAction,oneof"`
+}
+
+func (*Action_DownloadAction) isAction_Action()     {}
+func (*Action_UploadAction) isAction_Action()       {}
+func (*Action_RunAction) isAction_Action()          {}
+func (*Action_TimeoutAction) isAction_Action()      {}
+func (*Action_EmitProgressAction) isAction_Action() {}
+func (*Action_TryAction) isAction_Action()          {}
+func (*Action_ParallelAction) isAction_Action()     {}
+func (*Action_SerialAction) isAction_Action()       {}
+func (*Action_CodependentAction) isAction_Action()  {}
+
+func (m *Action) GetAction() isAction_Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
 
 func (m *Action) GetDownloadAction() *DownloadAction {
-	if m != nil {
-		return m.DownloadAction
+	if x, ok := m.GetAction().(*Action_DownloadAction); ok {
+		return x.DownloadAction
 	}
 	return nil
 }
 
 func (m *Action) GetUploadAction() *UploadAction {
-	if m != nil {
-		return m.UploadAction
+	if x, ok := m.GetAction().(*Action_UploadAction); ok {
+		return x.UploadAction
 	}
 	return nil
 }
 
 func (m *Action) GetRunAction() *RunAction {
-	if m != nil {
-		return m.RunAction
+	if x, ok := m.GetAction().(*Action_RunAction); ok {
+		return x.RunAction
 	}
 	return nil
 }
 
 func (m *Action) GetTimeoutAction() *TimeoutAction {
-	if m != nil {
-		return m.TimeoutAction
+	if x, ok := m.GetAction().(*Action_TimeoutAction); ok {
+		return x.TimeoutAction
 	}
 	return nil
 }
 
 func (m *Action) GetEmitProgressAction() *EmitProgressAction {
-	if m != nil {
-		return m.EmitProgressAction
+	if x, ok := m.GetAction().(*Action_EmitProgressAction); ok {
+		return x.EmitProgressAction
 	}
 	return nil
 }
 
 func (m *Action) GetTryAction() *TryAction {
-	if m != nil {
-		return m.TryAction
+	if x, ok := m.GetAction().(*Action_TryAction); ok {
+		return x.TryAction
 	}
 	return nil
 }
 
 func (m *Action) GetParallelAction() *ParallelAction {
-	if m != nil {
-		return m.ParallelAction
+	if x, ok := m.GetAction().(*Action_ParallelAction); ok {
+		return x.ParallelAction
 	}
 	return nil
 }
 
 func (m *Action) GetSerialAction() *SerialAction {
-	if m != nil {
-		return m.SerialAction
+	if x, ok := m.GetAction().(*Action_SerialAction); ok {
+		return x.SerialAction
 	}
 	return nil
 }
 
 func (m *Action) GetCodependentAction() *CodependentAction {
-	if m != nil {
-		return m.CodependentAction
+	if x, ok := m.GetAction().(*Action_CodependentAction); ok {
+		return x.CodependentAction
 	}
 	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*Action) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Action_OneofMarshaler, _Action_OneofUnmarshaler, _Action_OneofSizer, []interface{}{
+		(*Action_DownloadAction)(nil),
+		(*Action_UploadAction)(nil),
+		(*Action_RunAction)(nil),
+		(*Action_TimeoutAction)(nil),
+		(*Action_EmitProgressAction)(nil),
+		(*Action_TryAction)(nil),
+		(*Action_ParallelAction)(nil),
+		(*Action_SerialAction)(nil),
+		(*Action_CodependentAction)(nil),
+	}
+}
+
+func _Action_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Action)
+	// action
+	switch x := m.Action.(type) {
+	case *Action_DownloadAction:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.DownloadAction); err != nil {
+			return err
+		}
+	case *Action_UploadAction:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.UploadAction); err != nil {
+			return err
+		}
+	case *Action_RunAction:
+		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.RunAction); err != nil {
+			return err
+		}
+	case *Action_TimeoutAction:
+		_ = b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.TimeoutAction); err != nil {
+			return err
+		}
+	case *Action_EmitProgressAction:
+		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EmitProgressAction); err != nil {
+			return err
+		}
+	case *Action_TryAction:
+		_ = b.EncodeVarint(6<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.TryAction); err != nil {
+			return err
+		}
+	case *Action_ParallelAction:
+		_ = b.EncodeVarint(7<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ParallelAction); err != nil {
+			return err
+		}
+	case *Action_SerialAction:
+		_ = b.EncodeVarint(8<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.SerialAction); err != nil {
+			return err
+		}
+	case *Action_CodependentAction:
+		_ = b.EncodeVarint(9<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CodependentAction); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("Action.Action has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _Action_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Action)
+	switch tag {
+	case 1: // action.download_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(DownloadAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_DownloadAction{msg}
+		return true, err
+	case 2: // action.upload_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(UploadAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_UploadAction{msg}
+		return true, err
+	case 3: // action.run_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RunAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_RunAction{msg}
+		return true, err
+	case 4: // action.timeout_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(TimeoutAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_TimeoutAction{msg}
+		return true, err
+	case 5: // action.emit_progress_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(EmitProgressAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_EmitProgressAction{msg}
+		return true, err
+	case 6: // action.try_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(TryAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_TryAction{msg}
+		return true, err
+	case 7: // action.parallel_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ParallelAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_ParallelAction{msg}
+		return true, err
+	case 8: // action.serial_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(SerialAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_SerialAction{msg}
+		return true, err
+	case 9: // action.codependent_action
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(CodependentAction)
+		err := b.DecodeMessage(msg)
+		m.Action = &Action_CodependentAction{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _Action_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Action)
+	// action
+	switch x := m.Action.(type) {
+	case *Action_DownloadAction:
+		s := proto.Size(x.DownloadAction)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_UploadAction:
+		s := proto.Size(x.UploadAction)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_RunAction:
+		s := proto.Size(x.RunAction)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_TimeoutAction:
+		s := proto.Size(x.TimeoutAction)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_EmitProgressAction:
+		s := proto.Size(x.EmitProgressAction)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_TryAction:
+		s := proto.Size(x.TryAction)
+		n += proto.SizeVarint(6<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_ParallelAction:
+		s := proto.Size(x.ParallelAction)
+		n += proto.SizeVarint(7<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_SerialAction:
+		s := proto.Size(x.SerialAction)
+		n += proto.SizeVarint(8<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Action_CodependentAction:
+		s := proto.Size(x.CodependentAction)
+		n += proto.SizeVarint(9<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
 }
 
 type DownloadAction struct {
 	Artifact          string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
 	From              string `protobuf:"bytes,2,opt,name=from" json:"from"`
 	To                string `protobuf:"bytes,3,opt,name=to" json:"to"`
-	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key"`
-	LogSource         string `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
+	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key,json=cacheKey" json:"cache_key"`
+	LogSource         string `protobuf:"bytes,5,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
 	User              string `protobuf:"bytes,6,opt,name=user" json:"user"`
-	ChecksumAlgorithm string `protobuf:"bytes,7,opt,name=checksum_algorithm" json:"checksum_algorithm,omitempty"`
-	ChecksumValue     string `protobuf:"bytes,8,opt,name=checksum_value" json:"checksum_value,omitempty"`
+	ChecksumAlgorithm string `protobuf:"bytes,7,opt,name=checksum_algorithm,json=checksumAlgorithm" json:"checksum_algorithm,omitempty"`
+	ChecksumValue     string `protobuf:"bytes,8,opt,name=checksum_value,json=checksumValue" json:"checksum_value,omitempty"`
 }
 
-func (m *DownloadAction) Reset()      { *m = DownloadAction{} }
-func (*DownloadAction) ProtoMessage() {}
+func (m *DownloadAction) Reset()                    { *m = DownloadAction{} }
+func (*DownloadAction) ProtoMessage()               {}
+func (*DownloadAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{1} }
 
 func (m *DownloadAction) GetArtifact() string {
 	if m != nil {
@@ -212,12 +565,13 @@ type UploadAction struct {
 	Artifact  string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
 	From      string `protobuf:"bytes,2,opt,name=from" json:"from"`
 	To        string `protobuf:"bytes,3,opt,name=to" json:"to"`
-	LogSource string `protobuf:"bytes,4,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string `protobuf:"bytes,4,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
 	User      string `protobuf:"bytes,5,opt,name=user" json:"user"`
 }
 
-func (m *UploadAction) Reset()      { *m = UploadAction{} }
-func (*UploadAction) ProtoMessage() {}
+func (m *UploadAction) Reset()                    { *m = UploadAction{} }
+func (*UploadAction) ProtoMessage()               {}
+func (*UploadAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{2} }
 
 func (m *UploadAction) GetArtifact() string {
 	if m != nil {
@@ -259,14 +613,15 @@ type RunAction struct {
 	Args              []string               `protobuf:"bytes,2,rep,name=args" json:"args,omitempty"`
 	Dir               string                 `protobuf:"bytes,3,opt,name=dir" json:"dir,omitempty"`
 	Env               []*EnvironmentVariable `protobuf:"bytes,4,rep,name=env" json:"env,omitempty"`
-	ResourceLimits    *ResourceLimits        `protobuf:"bytes,5,opt,name=resource_limits" json:"resource_limits,omitempty"`
+	ResourceLimits    *ResourceLimits        `protobuf:"bytes,5,opt,name=resource_limits,json=resourceLimits" json:"resource_limits,omitempty"`
 	User              string                 `protobuf:"bytes,6,opt,name=user" json:"user"`
-	LogSource         string                 `protobuf:"bytes,7,opt,name=log_source" json:"log_source,omitempty"`
-	SuppressLogOutput bool                   `protobuf:"varint,8,opt,name=suppress_log_output" json:"suppress_log_output"`
+	LogSource         string                 `protobuf:"bytes,7,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
+	SuppressLogOutput bool                   `protobuf:"varint,8,opt,name=suppress_log_output,json=suppressLogOutput" json:"suppress_log_output"`
 }
 
-func (m *RunAction) Reset()      { *m = RunAction{} }
-func (*RunAction) ProtoMessage() {}
+func (m *RunAction) Reset()                    { *m = RunAction{} }
+func (*RunAction) ProtoMessage()               {}
+func (*RunAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{3} }
 
 func (m *RunAction) GetPath() string {
 	if m != nil {
@@ -326,13 +681,14 @@ func (m *RunAction) GetSuppressLogOutput() bool {
 
 type TimeoutAction struct {
 	Action              *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	DeprecatedTimeoutNs int64   `protobuf:"varint,2,opt,name=deprecated_timeout_ns" json:"timeout,omitempty"`
-	LogSource           string  `protobuf:"bytes,3,opt,name=log_source" json:"log_source,omitempty"`
-	TimeoutMs           int64   `protobuf:"varint,4,opt,name=timeout_ms" json:"timeout_ms"`
+	DeprecatedTimeoutNs int64   `protobuf:"varint,2,opt,name=deprecated_timeout_ns,json=deprecatedTimeoutNs" json:"timeout,omitempty"`
+	LogSource           string  `protobuf:"bytes,3,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
+	TimeoutMs           int64   `protobuf:"varint,4,opt,name=timeout_ms,json=timeoutMs" json:"timeout_ms"`
 }
 
-func (m *TimeoutAction) Reset()      { *m = TimeoutAction{} }
-func (*TimeoutAction) ProtoMessage() {}
+func (m *TimeoutAction) Reset()                    { *m = TimeoutAction{} }
+func (*TimeoutAction) ProtoMessage()               {}
+func (*TimeoutAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{4} }
 
 func (m *TimeoutAction) GetAction() *Action {
 	if m != nil {
@@ -364,14 +720,15 @@ func (m *TimeoutAction) GetTimeoutMs() int64 {
 
 type EmitProgressAction struct {
 	Action               *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	StartMessage         string  `protobuf:"bytes,2,opt,name=start_message" json:"start_message"`
-	SuccessMessage       string  `protobuf:"bytes,3,opt,name=success_message" json:"success_message"`
-	FailureMessagePrefix string  `protobuf:"bytes,4,opt,name=failure_message_prefix" json:"failure_message_prefix"`
-	LogSource            string  `protobuf:"bytes,5,opt,name=log_source" json:"log_source,omitempty"`
+	StartMessage         string  `protobuf:"bytes,2,opt,name=start_message,json=startMessage" json:"start_message"`
+	SuccessMessage       string  `protobuf:"bytes,3,opt,name=success_message,json=successMessage" json:"success_message"`
+	FailureMessagePrefix string  `protobuf:"bytes,4,opt,name=failure_message_prefix,json=failureMessagePrefix" json:"failure_message_prefix"`
+	LogSource            string  `protobuf:"bytes,5,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
 }
 
-func (m *EmitProgressAction) Reset()      { *m = EmitProgressAction{} }
-func (*EmitProgressAction) ProtoMessage() {}
+func (m *EmitProgressAction) Reset()                    { *m = EmitProgressAction{} }
+func (*EmitProgressAction) ProtoMessage()               {}
+func (*EmitProgressAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{5} }
 
 func (m *EmitProgressAction) GetAction() *Action {
 	if m != nil {
@@ -410,11 +767,12 @@ func (m *EmitProgressAction) GetLogSource() string {
 
 type TryAction struct {
 	Action    *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	LogSource string  `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string  `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
 }
 
-func (m *TryAction) Reset()      { *m = TryAction{} }
-func (*TryAction) ProtoMessage() {}
+func (m *TryAction) Reset()                    { *m = TryAction{} }
+func (*TryAction) ProtoMessage()               {}
+func (*TryAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{6} }
 
 func (m *TryAction) GetAction() *Action {
 	if m != nil {
@@ -432,11 +790,12 @@ func (m *TryAction) GetLogSource() string {
 
 type ParallelAction struct {
 	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
 }
 
-func (m *ParallelAction) Reset()      { *m = ParallelAction{} }
-func (*ParallelAction) ProtoMessage() {}
+func (m *ParallelAction) Reset()                    { *m = ParallelAction{} }
+func (*ParallelAction) ProtoMessage()               {}
+func (*ParallelAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{7} }
 
 func (m *ParallelAction) GetActions() []*Action {
 	if m != nil {
@@ -454,11 +813,12 @@ func (m *ParallelAction) GetLogSource() string {
 
 type SerialAction struct {
 	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
 }
 
-func (m *SerialAction) Reset()      { *m = SerialAction{} }
-func (*SerialAction) ProtoMessage() {}
+func (m *SerialAction) Reset()                    { *m = SerialAction{} }
+func (*SerialAction) ProtoMessage()               {}
+func (*SerialAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{8} }
 
 func (m *SerialAction) GetActions() []*Action {
 	if m != nil {
@@ -476,11 +836,12 @@ func (m *SerialAction) GetLogSource() string {
 
 type CodependentAction struct {
 	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource string    `protobuf:"bytes,2,opt,name=log_source" json:"log_source,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
 }
 
-func (m *CodependentAction) Reset()      { *m = CodependentAction{} }
-func (*CodependentAction) ProtoMessage() {}
+func (m *CodependentAction) Reset()                    { *m = CodependentAction{} }
+func (*CodependentAction) ProtoMessage()               {}
+func (*CodependentAction) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{9} }
 
 func (m *CodependentAction) GetActions() []*Action {
 	if m != nil {
@@ -500,8 +861,9 @@ type ResourceLimits struct {
 	Nofile *uint64 `protobuf:"varint,1,opt,name=nofile" json:"nofile,omitempty"`
 }
 
-func (m *ResourceLimits) Reset()      { *m = ResourceLimits{} }
-func (*ResourceLimits) ProtoMessage() {}
+func (m *ResourceLimits) Reset()                    { *m = ResourceLimits{} }
+func (*ResourceLimits) ProtoMessage()               {}
+func (*ResourceLimits) Descriptor() ([]byte, []int) { return fileDescriptorActions, []int{10} }
 
 func (m *ResourceLimits) GetNofile() uint64 {
 	if m != nil && m.Nofile != nil {
@@ -510,6 +872,19 @@ func (m *ResourceLimits) GetNofile() uint64 {
 	return 0
 }
 
+func init() {
+	proto.RegisterType((*Action)(nil), "models.Action")
+	proto.RegisterType((*DownloadAction)(nil), "models.DownloadAction")
+	proto.RegisterType((*UploadAction)(nil), "models.UploadAction")
+	proto.RegisterType((*RunAction)(nil), "models.RunAction")
+	proto.RegisterType((*TimeoutAction)(nil), "models.TimeoutAction")
+	proto.RegisterType((*EmitProgressAction)(nil), "models.EmitProgressAction")
+	proto.RegisterType((*TryAction)(nil), "models.TryAction")
+	proto.RegisterType((*ParallelAction)(nil), "models.ParallelAction")
+	proto.RegisterType((*SerialAction)(nil), "models.SerialAction")
+	proto.RegisterType((*CodependentAction)(nil), "models.CodependentAction")
+	proto.RegisterType((*ResourceLimits)(nil), "models.ResourceLimits")
+}
 func (this *Action) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -520,7 +895,48 @@ func (this *Action) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Action)
 	if !ok {
+		that2, ok := that.(Action)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
 		return false
+	} else if this == nil {
+		return false
+	}
+	if that1.Action == nil {
+		if this.Action != nil {
+			return false
+		}
+	} else if this.Action == nil {
+		return false
+	} else if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	return true
+}
+func (this *Action_DownloadAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_DownloadAction)
+	if !ok {
+		that2, ok := that.(Action_DownloadAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -533,25 +949,241 @@ func (this *Action) Equal(that interface{}) bool {
 	if !this.DownloadAction.Equal(that1.DownloadAction) {
 		return false
 	}
+	return true
+}
+func (this *Action_UploadAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_UploadAction)
+	if !ok {
+		that2, ok := that.(Action_UploadAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
 	if !this.UploadAction.Equal(that1.UploadAction) {
+		return false
+	}
+	return true
+}
+func (this *Action_RunAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_RunAction)
+	if !ok {
+		that2, ok := that.(Action_RunAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
 		return false
 	}
 	if !this.RunAction.Equal(that1.RunAction) {
 		return false
 	}
+	return true
+}
+func (this *Action_TimeoutAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_TimeoutAction)
+	if !ok {
+		that2, ok := that.(Action_TimeoutAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
 	if !this.TimeoutAction.Equal(that1.TimeoutAction) {
+		return false
+	}
+	return true
+}
+func (this *Action_EmitProgressAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_EmitProgressAction)
+	if !ok {
+		that2, ok := that.(Action_EmitProgressAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
 		return false
 	}
 	if !this.EmitProgressAction.Equal(that1.EmitProgressAction) {
 		return false
 	}
+	return true
+}
+func (this *Action_TryAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_TryAction)
+	if !ok {
+		that2, ok := that.(Action_TryAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
 	if !this.TryAction.Equal(that1.TryAction) {
+		return false
+	}
+	return true
+}
+func (this *Action_ParallelAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_ParallelAction)
+	if !ok {
+		that2, ok := that.(Action_ParallelAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
 		return false
 	}
 	if !this.ParallelAction.Equal(that1.ParallelAction) {
 		return false
 	}
+	return true
+}
+func (this *Action_SerialAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_SerialAction)
+	if !ok {
+		that2, ok := that.(Action_SerialAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
 	if !this.SerialAction.Equal(that1.SerialAction) {
+		return false
+	}
+	return true
+}
+func (this *Action_CodependentAction) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*Action_CodependentAction)
+	if !ok {
+		that2, ok := that.(Action_CodependentAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
 		return false
 	}
 	if !this.CodependentAction.Equal(that1.CodependentAction) {
@@ -569,7 +1201,12 @@ func (this *DownloadAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DownloadAction)
 	if !ok {
-		return false
+		that2, ok := that.(DownloadAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -615,7 +1252,12 @@ func (this *UploadAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*UploadAction)
 	if !ok {
-		return false
+		that2, ok := that.(UploadAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -652,7 +1294,12 @@ func (this *RunAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*RunAction)
 	if !ok {
-		return false
+		that2, ok := that.(RunAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -708,7 +1355,12 @@ func (this *TimeoutAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TimeoutAction)
 	if !ok {
-		return false
+		that2, ok := that.(TimeoutAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -742,7 +1394,12 @@ func (this *EmitProgressAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*EmitProgressAction)
 	if !ok {
-		return false
+		that2, ok := that.(EmitProgressAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -779,7 +1436,12 @@ func (this *TryAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TryAction)
 	if !ok {
-		return false
+		that2, ok := that.(TryAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -807,7 +1469,12 @@ func (this *ParallelAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ParallelAction)
 	if !ok {
-		return false
+		that2, ok := that.(ParallelAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -840,7 +1507,12 @@ func (this *SerialAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*SerialAction)
 	if !ok {
-		return false
+		that2, ok := that.(SerialAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -873,7 +1545,12 @@ func (this *CodependentAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CodependentAction)
 	if !ok {
-		return false
+		that2, ok := that.(CodependentAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -906,7 +1583,12 @@ func (this *ResourceLimits) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ResourceLimits)
 	if !ok {
-		return false
+		that2, ok := that.(ResourceLimits)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -931,15 +1613,83 @@ func (this *Action) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.Action{` +
-		`DownloadAction:` + fmt.Sprintf("%#v", this.DownloadAction),
-		`UploadAction:` + fmt.Sprintf("%#v", this.UploadAction),
-		`RunAction:` + fmt.Sprintf("%#v", this.RunAction),
-		`TimeoutAction:` + fmt.Sprintf("%#v", this.TimeoutAction),
-		`EmitProgressAction:` + fmt.Sprintf("%#v", this.EmitProgressAction),
-		`TryAction:` + fmt.Sprintf("%#v", this.TryAction),
-		`ParallelAction:` + fmt.Sprintf("%#v", this.ParallelAction),
-		`SerialAction:` + fmt.Sprintf("%#v", this.SerialAction),
+	s := make([]string, 0, 13)
+	s = append(s, "&models.Action{")
+	if this.Action != nil {
+		s = append(s, "Action: "+fmt.Sprintf("%#v", this.Action)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *Action_DownloadAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_DownloadAction{` +
+		`DownloadAction:` + fmt.Sprintf("%#v", this.DownloadAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_UploadAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_UploadAction{` +
+		`UploadAction:` + fmt.Sprintf("%#v", this.UploadAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_RunAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_RunAction{` +
+		`RunAction:` + fmt.Sprintf("%#v", this.RunAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_TimeoutAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_TimeoutAction{` +
+		`TimeoutAction:` + fmt.Sprintf("%#v", this.TimeoutAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_EmitProgressAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_EmitProgressAction{` +
+		`EmitProgressAction:` + fmt.Sprintf("%#v", this.EmitProgressAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_TryAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_TryAction{` +
+		`TryAction:` + fmt.Sprintf("%#v", this.TryAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_ParallelAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_ParallelAction{` +
+		`ParallelAction:` + fmt.Sprintf("%#v", this.ParallelAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_SerialAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_SerialAction{` +
+		`SerialAction:` + fmt.Sprintf("%#v", this.SerialAction) + `}`}, ", ")
+	return s
+}
+func (this *Action_CodependentAction) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.Action_CodependentAction{` +
 		`CodependentAction:` + fmt.Sprintf("%#v", this.CodependentAction) + `}`}, ", ")
 	return s
 }
@@ -947,110 +1697,150 @@ func (this *DownloadAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DownloadAction{` +
-		`Artifact:` + fmt.Sprintf("%#v", this.Artifact),
-		`From:` + fmt.Sprintf("%#v", this.From),
-		`To:` + fmt.Sprintf("%#v", this.To),
-		`CacheKey:` + fmt.Sprintf("%#v", this.CacheKey),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`User:` + fmt.Sprintf("%#v", this.User),
-		`ChecksumAlgorithm:` + fmt.Sprintf("%#v", this.ChecksumAlgorithm),
-		`ChecksumValue:` + fmt.Sprintf("%#v", this.ChecksumValue) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 12)
+	s = append(s, "&models.DownloadAction{")
+	s = append(s, "Artifact: "+fmt.Sprintf("%#v", this.Artifact)+",\n")
+	s = append(s, "From: "+fmt.Sprintf("%#v", this.From)+",\n")
+	s = append(s, "To: "+fmt.Sprintf("%#v", this.To)+",\n")
+	s = append(s, "CacheKey: "+fmt.Sprintf("%#v", this.CacheKey)+",\n")
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "User: "+fmt.Sprintf("%#v", this.User)+",\n")
+	s = append(s, "ChecksumAlgorithm: "+fmt.Sprintf("%#v", this.ChecksumAlgorithm)+",\n")
+	s = append(s, "ChecksumValue: "+fmt.Sprintf("%#v", this.ChecksumValue)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *UploadAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.UploadAction{` +
-		`Artifact:` + fmt.Sprintf("%#v", this.Artifact),
-		`From:` + fmt.Sprintf("%#v", this.From),
-		`To:` + fmt.Sprintf("%#v", this.To),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`User:` + fmt.Sprintf("%#v", this.User) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 9)
+	s = append(s, "&models.UploadAction{")
+	s = append(s, "Artifact: "+fmt.Sprintf("%#v", this.Artifact)+",\n")
+	s = append(s, "From: "+fmt.Sprintf("%#v", this.From)+",\n")
+	s = append(s, "To: "+fmt.Sprintf("%#v", this.To)+",\n")
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "User: "+fmt.Sprintf("%#v", this.User)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *RunAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.RunAction{` +
-		`Path:` + fmt.Sprintf("%#v", this.Path),
-		`Args:` + fmt.Sprintf("%#v", this.Args),
-		`Dir:` + fmt.Sprintf("%#v", this.Dir),
-		`Env:` + fmt.Sprintf("%#v", this.Env),
-		`ResourceLimits:` + fmt.Sprintf("%#v", this.ResourceLimits),
-		`User:` + fmt.Sprintf("%#v", this.User),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`SuppressLogOutput:` + fmt.Sprintf("%#v", this.SuppressLogOutput) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 12)
+	s = append(s, "&models.RunAction{")
+	s = append(s, "Path: "+fmt.Sprintf("%#v", this.Path)+",\n")
+	if this.Args != nil {
+		s = append(s, "Args: "+fmt.Sprintf("%#v", this.Args)+",\n")
+	}
+	s = append(s, "Dir: "+fmt.Sprintf("%#v", this.Dir)+",\n")
+	if this.Env != nil {
+		s = append(s, "Env: "+fmt.Sprintf("%#v", this.Env)+",\n")
+	}
+	if this.ResourceLimits != nil {
+		s = append(s, "ResourceLimits: "+fmt.Sprintf("%#v", this.ResourceLimits)+",\n")
+	}
+	s = append(s, "User: "+fmt.Sprintf("%#v", this.User)+",\n")
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "SuppressLogOutput: "+fmt.Sprintf("%#v", this.SuppressLogOutput)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TimeoutAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TimeoutAction{` +
-		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`DeprecatedTimeoutNs:` + fmt.Sprintf("%#v", this.DeprecatedTimeoutNs),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`TimeoutMs:` + fmt.Sprintf("%#v", this.TimeoutMs) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 8)
+	s = append(s, "&models.TimeoutAction{")
+	if this.Action != nil {
+		s = append(s, "Action: "+fmt.Sprintf("%#v", this.Action)+",\n")
+	}
+	s = append(s, "DeprecatedTimeoutNs: "+fmt.Sprintf("%#v", this.DeprecatedTimeoutNs)+",\n")
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "TimeoutMs: "+fmt.Sprintf("%#v", this.TimeoutMs)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *EmitProgressAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.EmitProgressAction{` +
-		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`StartMessage:` + fmt.Sprintf("%#v", this.StartMessage),
-		`SuccessMessage:` + fmt.Sprintf("%#v", this.SuccessMessage),
-		`FailureMessagePrefix:` + fmt.Sprintf("%#v", this.FailureMessagePrefix),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 9)
+	s = append(s, "&models.EmitProgressAction{")
+	if this.Action != nil {
+		s = append(s, "Action: "+fmt.Sprintf("%#v", this.Action)+",\n")
+	}
+	s = append(s, "StartMessage: "+fmt.Sprintf("%#v", this.StartMessage)+",\n")
+	s = append(s, "SuccessMessage: "+fmt.Sprintf("%#v", this.SuccessMessage)+",\n")
+	s = append(s, "FailureMessagePrefix: "+fmt.Sprintf("%#v", this.FailureMessagePrefix)+",\n")
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TryAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TryAction{` +
-		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.TryAction{")
+	if this.Action != nil {
+		s = append(s, "Action: "+fmt.Sprintf("%#v", this.Action)+",\n")
+	}
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ParallelAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ParallelAction{` +
-		`Actions:` + fmt.Sprintf("%#v", this.Actions),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ParallelAction{")
+	if this.Actions != nil {
+		s = append(s, "Actions: "+fmt.Sprintf("%#v", this.Actions)+",\n")
+	}
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *SerialAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.SerialAction{` +
-		`Actions:` + fmt.Sprintf("%#v", this.Actions),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.SerialAction{")
+	if this.Actions != nil {
+		s = append(s, "Actions: "+fmt.Sprintf("%#v", this.Actions)+",\n")
+	}
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *CodependentAction) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.CodependentAction{` +
-		`Actions:` + fmt.Sprintf("%#v", this.Actions),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.CodependentAction{")
+	if this.Actions != nil {
+		s = append(s, "Actions: "+fmt.Sprintf("%#v", this.Actions)+",\n")
+	}
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ResourceLimits) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ResourceLimits{` +
-		`Nofile:` + valueToGoStringActions(this.Nofile, "uint64") + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ResourceLimits{")
+	if this.Nofile != nil {
+		s = append(s, "Nofile: "+valueToGoStringActions(this.Nofile, "uint64")+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringActions(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -1060,11 +1850,12 @@ func valueToGoStringActions(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringActions(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringActions(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -1074,7 +1865,7 @@ func extensionToGoStringActions(e map[int32]github_com_gogo_protobuf_proto.Exten
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *Action) Marshal() (data []byte, err error) {
@@ -1092,91 +1883,121 @@ func (m *Action) MarshalTo(data []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Action != nil {
+		nn1, err := m.Action.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn1
+	}
+	return i, nil
+}
+
+func (m *Action_DownloadAction) MarshalTo(data []byte) (int, error) {
+	i := 0
 	if m.DownloadAction != nil {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActions(data, i, uint64(m.DownloadAction.Size()))
-		n1, err := m.DownloadAction.MarshalTo(data[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
-	if m.UploadAction != nil {
-		data[i] = 0x12
-		i++
-		i = encodeVarintActions(data, i, uint64(m.UploadAction.Size()))
-		n2, err := m.UploadAction.MarshalTo(data[i:])
+		n2, err := m.DownloadAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n2
 	}
-	if m.RunAction != nil {
-		data[i] = 0x1a
+	return i, nil
+}
+func (m *Action_UploadAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.UploadAction != nil {
+		data[i] = 0x12
 		i++
-		i = encodeVarintActions(data, i, uint64(m.RunAction.Size()))
-		n3, err := m.RunAction.MarshalTo(data[i:])
+		i = encodeVarintActions(data, i, uint64(m.UploadAction.Size()))
+		n3, err := m.UploadAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n3
 	}
-	if m.TimeoutAction != nil {
-		data[i] = 0x22
+	return i, nil
+}
+func (m *Action_RunAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.RunAction != nil {
+		data[i] = 0x1a
 		i++
-		i = encodeVarintActions(data, i, uint64(m.TimeoutAction.Size()))
-		n4, err := m.TimeoutAction.MarshalTo(data[i:])
+		i = encodeVarintActions(data, i, uint64(m.RunAction.Size()))
+		n4, err := m.RunAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n4
 	}
-	if m.EmitProgressAction != nil {
-		data[i] = 0x2a
+	return i, nil
+}
+func (m *Action_TimeoutAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.TimeoutAction != nil {
+		data[i] = 0x22
 		i++
-		i = encodeVarintActions(data, i, uint64(m.EmitProgressAction.Size()))
-		n5, err := m.EmitProgressAction.MarshalTo(data[i:])
+		i = encodeVarintActions(data, i, uint64(m.TimeoutAction.Size()))
+		n5, err := m.TimeoutAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n5
 	}
-	if m.TryAction != nil {
-		data[i] = 0x32
+	return i, nil
+}
+func (m *Action_EmitProgressAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.EmitProgressAction != nil {
+		data[i] = 0x2a
 		i++
-		i = encodeVarintActions(data, i, uint64(m.TryAction.Size()))
-		n6, err := m.TryAction.MarshalTo(data[i:])
+		i = encodeVarintActions(data, i, uint64(m.EmitProgressAction.Size()))
+		n6, err := m.EmitProgressAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n6
 	}
-	if m.ParallelAction != nil {
-		data[i] = 0x3a
+	return i, nil
+}
+func (m *Action_TryAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.TryAction != nil {
+		data[i] = 0x32
 		i++
-		i = encodeVarintActions(data, i, uint64(m.ParallelAction.Size()))
-		n7, err := m.ParallelAction.MarshalTo(data[i:])
+		i = encodeVarintActions(data, i, uint64(m.TryAction.Size()))
+		n7, err := m.TryAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n7
 	}
-	if m.SerialAction != nil {
-		data[i] = 0x42
+	return i, nil
+}
+func (m *Action_ParallelAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.ParallelAction != nil {
+		data[i] = 0x3a
 		i++
-		i = encodeVarintActions(data, i, uint64(m.SerialAction.Size()))
-		n8, err := m.SerialAction.MarshalTo(data[i:])
+		i = encodeVarintActions(data, i, uint64(m.ParallelAction.Size()))
+		n8, err := m.ParallelAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n8
 	}
-	if m.CodependentAction != nil {
-		data[i] = 0x4a
+	return i, nil
+}
+func (m *Action_SerialAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.SerialAction != nil {
+		data[i] = 0x42
 		i++
-		i = encodeVarintActions(data, i, uint64(m.CodependentAction.Size()))
-		n9, err := m.CodependentAction.MarshalTo(data[i:])
+		i = encodeVarintActions(data, i, uint64(m.SerialAction.Size()))
+		n9, err := m.SerialAction.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -1184,7 +2005,20 @@ func (m *Action) MarshalTo(data []byte) (int, error) {
 	}
 	return i, nil
 }
-
+func (m *Action_CodependentAction) MarshalTo(data []byte) (int, error) {
+	i := 0
+	if m.CodependentAction != nil {
+		data[i] = 0x4a
+		i++
+		i = encodeVarintActions(data, i, uint64(m.CodependentAction.Size()))
+		n10, err := m.CodependentAction.MarshalTo(data[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	return i, nil
+}
 func (m *DownloadAction) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -1327,11 +2161,11 @@ func (m *RunAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0x2a
 		i++
 		i = encodeVarintActions(data, i, uint64(m.ResourceLimits.Size()))
-		n10, err := m.ResourceLimits.MarshalTo(data[i:])
+		n11, err := m.ResourceLimits.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n11
 	}
 	data[i] = 0x32
 	i++
@@ -1371,11 +2205,11 @@ func (m *TimeoutAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActions(data, i, uint64(m.Action.Size()))
-		n11, err := m.Action.MarshalTo(data[i:])
+		n12, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n12
 	}
 	data[i] = 0x10
 	i++
@@ -1409,11 +2243,11 @@ func (m *EmitProgressAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActions(data, i, uint64(m.Action.Size()))
-		n12, err := m.Action.MarshalTo(data[i:])
+		n13, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n13
 	}
 	data[i] = 0x12
 	i++
@@ -1453,11 +2287,11 @@ func (m *TryAction) MarshalTo(data []byte) (int, error) {
 		data[i] = 0xa
 		i++
 		i = encodeVarintActions(data, i, uint64(m.Action.Size()))
-		n13, err := m.Action.MarshalTo(data[i:])
+		n14, err := m.Action.MarshalTo(data[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n14
 	}
 	data[i] = 0x12
 	i++
@@ -1621,45 +2455,93 @@ func encodeVarintActions(data []byte, offset int, v uint64) int {
 func (m *Action) Size() (n int) {
 	var l int
 	_ = l
+	if m.Action != nil {
+		n += m.Action.Size()
+	}
+	return n
+}
+
+func (m *Action_DownloadAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.DownloadAction != nil {
 		l = m.DownloadAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_UploadAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.UploadAction != nil {
 		l = m.UploadAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_RunAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.RunAction != nil {
 		l = m.RunAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_TimeoutAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.TimeoutAction != nil {
 		l = m.TimeoutAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_EmitProgressAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.EmitProgressAction != nil {
 		l = m.EmitProgressAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_TryAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.TryAction != nil {
 		l = m.TryAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_ParallelAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.ParallelAction != nil {
 		l = m.ParallelAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_SerialAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.SerialAction != nil {
 		l = m.SerialAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
+	return n
+}
+func (m *Action_CodependentAction) Size() (n int) {
+	var l int
+	_ = l
 	if m.CodependentAction != nil {
 		l = m.CodependentAction.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
 	return n
 }
-
 func (m *DownloadAction) Size() (n int) {
 	var l int
 	_ = l
@@ -1842,14 +2724,96 @@ func (this *Action) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&Action{`,
+		`Action:` + fmt.Sprintf("%v", this.Action) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_DownloadAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_DownloadAction{`,
 		`DownloadAction:` + strings.Replace(fmt.Sprintf("%v", this.DownloadAction), "DownloadAction", "DownloadAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_UploadAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_UploadAction{`,
 		`UploadAction:` + strings.Replace(fmt.Sprintf("%v", this.UploadAction), "UploadAction", "UploadAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_RunAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_RunAction{`,
 		`RunAction:` + strings.Replace(fmt.Sprintf("%v", this.RunAction), "RunAction", "RunAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_TimeoutAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_TimeoutAction{`,
 		`TimeoutAction:` + strings.Replace(fmt.Sprintf("%v", this.TimeoutAction), "TimeoutAction", "TimeoutAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_EmitProgressAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_EmitProgressAction{`,
 		`EmitProgressAction:` + strings.Replace(fmt.Sprintf("%v", this.EmitProgressAction), "EmitProgressAction", "EmitProgressAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_TryAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_TryAction{`,
 		`TryAction:` + strings.Replace(fmt.Sprintf("%v", this.TryAction), "TryAction", "TryAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_ParallelAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_ParallelAction{`,
 		`ParallelAction:` + strings.Replace(fmt.Sprintf("%v", this.ParallelAction), "ParallelAction", "ParallelAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_SerialAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_SerialAction{`,
 		`SerialAction:` + strings.Replace(fmt.Sprintf("%v", this.SerialAction), "SerialAction", "SerialAction", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Action_CodependentAction) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Action_CodependentAction{`,
 		`CodependentAction:` + strings.Replace(fmt.Sprintf("%v", this.CodependentAction), "CodependentAction", "CodependentAction", 1) + `,`,
 		`}`,
 	}, "")
@@ -1992,68 +2956,16 @@ func valueToStringActions(v interface{}) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
 }
-func (this *Action) GetValue() interface{} {
-	if this.DownloadAction != nil {
-		return this.DownloadAction
-	}
-	if this.UploadAction != nil {
-		return this.UploadAction
-	}
-	if this.RunAction != nil {
-		return this.RunAction
-	}
-	if this.TimeoutAction != nil {
-		return this.TimeoutAction
-	}
-	if this.EmitProgressAction != nil {
-		return this.EmitProgressAction
-	}
-	if this.TryAction != nil {
-		return this.TryAction
-	}
-	if this.ParallelAction != nil {
-		return this.ParallelAction
-	}
-	if this.SerialAction != nil {
-		return this.SerialAction
-	}
-	if this.CodependentAction != nil {
-		return this.CodependentAction
-	}
-	return nil
-}
-
-func (this *Action) SetValue(value interface{}) bool {
-	switch vt := value.(type) {
-	case *DownloadAction:
-		this.DownloadAction = vt
-	case *UploadAction:
-		this.UploadAction = vt
-	case *RunAction:
-		this.RunAction = vt
-	case *TimeoutAction:
-		this.TimeoutAction = vt
-	case *EmitProgressAction:
-		this.EmitProgressAction = vt
-	case *TryAction:
-		this.TryAction = vt
-	case *ParallelAction:
-		this.ParallelAction = vt
-	case *SerialAction:
-		this.SerialAction = vt
-	case *CodependentAction:
-		this.CodependentAction = vt
-	default:
-		return false
-	}
-	return true
-}
 func (m *Action) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2066,6 +2978,12 @@ func (m *Action) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Action: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Action: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2073,6 +2991,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2083,19 +3004,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.DownloadAction == nil {
-				m.DownloadAction = &DownloadAction{}
-			}
-			if err := m.DownloadAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &DownloadAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_DownloadAction{v}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2103,6 +3023,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2113,19 +3036,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.UploadAction == nil {
-				m.UploadAction = &UploadAction{}
-			}
-			if err := m.UploadAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &UploadAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_UploadAction{v}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2133,6 +3055,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2143,19 +3068,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.RunAction == nil {
-				m.RunAction = &RunAction{}
-			}
-			if err := m.RunAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &RunAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_RunAction{v}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -2163,6 +3087,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2173,19 +3100,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.TimeoutAction == nil {
-				m.TimeoutAction = &TimeoutAction{}
-			}
-			if err := m.TimeoutAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &TimeoutAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_TimeoutAction{v}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -2193,6 +3119,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2203,19 +3132,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.EmitProgressAction == nil {
-				m.EmitProgressAction = &EmitProgressAction{}
-			}
-			if err := m.EmitProgressAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &EmitProgressAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_EmitProgressAction{v}
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
@@ -2223,6 +3151,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2233,19 +3164,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.TryAction == nil {
-				m.TryAction = &TryAction{}
-			}
-			if err := m.TryAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &TryAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_TryAction{v}
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
@@ -2253,6 +3183,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2263,19 +3196,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ParallelAction == nil {
-				m.ParallelAction = &ParallelAction{}
-			}
-			if err := m.ParallelAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &ParallelAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_ParallelAction{v}
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
@@ -2283,6 +3215,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2293,19 +3228,18 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.SerialAction == nil {
-				m.SerialAction = &SerialAction{}
-			}
-			if err := m.SerialAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &SerialAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_SerialAction{v}
 			iNdEx = postIndex
 		case 9:
 			if wireType != 2 {
@@ -2313,6 +3247,9 @@ func (m *Action) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2323,30 +3260,21 @@ func (m *Action) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.CodependentAction == nil {
-				m.CodependentAction = &CodependentAction{}
-			}
-			if err := m.CodependentAction.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			v := &CodependentAction{}
+			if err := v.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Action = &Action_CodependentAction{v}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2361,14 +3289,21 @@ func (m *Action) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DownloadAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2381,6 +3316,12 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DownloadAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DownloadAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2388,6 +3329,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2398,10 +3342,11 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2413,6 +3358,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2423,10 +3371,11 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2438,6 +3387,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2448,10 +3400,11 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2463,6 +3416,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2473,10 +3429,11 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2488,6 +3445,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2498,10 +3458,11 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2513,6 +3474,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2523,10 +3487,11 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2538,6 +3503,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2548,10 +3516,11 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2563,6 +3532,9 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2573,25 +3545,18 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.ChecksumValue = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2606,14 +3571,21 @@ func (m *DownloadAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *UploadAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2626,6 +3598,12 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UploadAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UploadAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2633,6 +3611,9 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2643,10 +3624,11 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2658,6 +3640,9 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2668,10 +3653,11 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2683,6 +3669,9 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2693,10 +3682,11 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2708,6 +3698,9 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2718,10 +3711,11 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2733,6 +3727,9 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2743,25 +3740,18 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.User = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2776,14 +3766,21 @@ func (m *UploadAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *RunAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2796,6 +3793,12 @@ func (m *RunAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RunAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RunAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2803,6 +3806,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2813,10 +3819,11 @@ func (m *RunAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2828,6 +3835,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2838,10 +3848,11 @@ func (m *RunAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2853,6 +3864,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2863,10 +3877,11 @@ func (m *RunAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2878,6 +3893,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2888,10 +3906,10 @@ func (m *RunAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2906,6 +3924,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2916,10 +3937,10 @@ func (m *RunAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2936,6 +3957,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2946,10 +3970,11 @@ func (m *RunAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2961,6 +3986,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2971,10 +3999,11 @@ func (m *RunAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2986,6 +4015,9 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2998,15 +4030,7 @@ func (m *RunAction) Unmarshal(data []byte) error {
 			}
 			m.SuppressLogOutput = bool(v != 0)
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3021,14 +4045,21 @@ func (m *RunAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TimeoutAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3041,6 +4072,12 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TimeoutAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TimeoutAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3048,6 +4085,9 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3058,10 +4098,10 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3078,6 +4118,9 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			}
 			m.DeprecatedTimeoutNs = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3094,6 +4137,9 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3104,10 +4150,11 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3119,6 +4166,9 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 			}
 			m.TimeoutMs = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3130,15 +4180,7 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3153,14 +4195,21 @@ func (m *TimeoutAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *EmitProgressAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3173,6 +4222,12 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EmitProgressAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EmitProgressAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3180,6 +4235,9 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3190,10 +4248,10 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3210,6 +4268,9 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3220,10 +4281,11 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3235,6 +4297,9 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3245,10 +4310,11 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3260,6 +4326,9 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3270,10 +4339,11 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3285,6 +4355,9 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3295,25 +4368,18 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3328,14 +4394,21 @@ func (m *EmitProgressAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TryAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3348,6 +4421,12 @@ func (m *TryAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TryAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TryAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3355,6 +4434,9 @@ func (m *TryAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3365,10 +4447,10 @@ func (m *TryAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3385,6 +4467,9 @@ func (m *TryAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3395,25 +4480,18 @@ func (m *TryAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3428,14 +4506,21 @@ func (m *TryAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ParallelAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3448,6 +4533,12 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ParallelAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ParallelAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3455,6 +4546,9 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3465,10 +4559,10 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3483,6 +4577,9 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3493,25 +4590,18 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3526,14 +4616,21 @@ func (m *ParallelAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *SerialAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3546,6 +4643,12 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SerialAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SerialAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3553,6 +4656,9 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3563,10 +4669,10 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3581,6 +4687,9 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3591,25 +4700,18 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3624,14 +4726,21 @@ func (m *SerialAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *CodependentAction) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3644,6 +4753,12 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CodependentAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CodependentAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3651,6 +4766,9 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3661,10 +4779,10 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3679,6 +4797,9 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3689,25 +4810,18 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthActions
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.LogSource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3722,14 +4836,21 @@ func (m *CodependentAction) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ResourceLimits) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3742,6 +4863,12 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ResourceLimits: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ResourceLimits: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
@@ -3749,6 +4876,9 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 			}
 			var v uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3761,15 +4891,7 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 			}
 			m.Nofile = &v
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipActions(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3784,6 +4906,9 @@ func (m *ResourceLimits) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipActions(data []byte) (n int, err error) {
@@ -3792,6 +4917,9 @@ func skipActions(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowActions
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -3805,7 +4933,10 @@ func skipActions(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -3821,6 +4952,9 @@ func skipActions(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowActions
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -3841,6 +4975,9 @@ func skipActions(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowActions
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -3876,4 +5013,75 @@ func skipActions(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthActions = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowActions   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("actions.proto", fileDescriptorActions) }
+
+var fileDescriptorActions = []byte{
+	// 1022 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xbc, 0x56, 0x41, 0x6f, 0xdc, 0xc4,
+	0x17, 0xcf, 0xae, 0xb7, 0x9b, 0xf5, 0xfb, 0x67, 0x9d, 0xff, 0x4e, 0x77, 0xc3, 0x36, 0xa9, 0xd2,
+	0xb2, 0x20, 0x08, 0x52, 0x9b, 0x22, 0x84, 0x38, 0xc0, 0x01, 0xd5, 0x50, 0x81, 0x44, 0x4b, 0x83,
+	0xd3, 0x56, 0xe2, 0x64, 0x39, 0xde, 0x59, 0xc7, 0x8a, 0xed, 0xb1, 0xc6, 0x76, 0xca, 0x72, 0xe2,
+	0x1b, 0xd0, 0x6f, 0x01, 0x1f, 0xa5, 0x17, 0xa4, 0x1e, 0x39, 0x15, 0x5a, 0x2e, 0xa8, 0x27, 0x3e,
+	0x02, 0xcf, 0xe3, 0x99, 0xdd, 0x99, 0x2e, 0x42, 0x0d, 0x95, 0x72, 0xb0, 0x12, 0xcf, 0xef, 0xf7,
+	0x7e, 0xef, 0xf9, 0xbd, 0x37, 0xef, 0x2d, 0xf4, 0x83, 0xb0, 0x8c, 0x59, 0x56, 0xec, 0xe7, 0x9c,
+	0x95, 0x8c, 0x74, 0x53, 0x36, 0xa5, 0x49, 0xb1, 0x7d, 0x3d, 0x8a, 0xcb, 0xe3, 0xea, 0x68, 0x3f,
+	0x64, 0xe9, 0x8d, 0x88, 0x45, 0xec, 0x86, 0x80, 0x8f, 0xaa, 0x99, 0x78, 0x13, 0x2f, 0xe2, 0xbf,
+	0xc6, 0x6c, 0x7b, 0x87, 0x66, 0xa7, 0x31, 0x67, 0x59, 0x4a, 0xb3, 0xd2, 0x3f, 0x0d, 0x78, 0x1c,
+	0x1c, 0x25, 0x54, 0x6a, 0x4e, 0x7e, 0xea, 0x42, 0xf7, 0xa6, 0xf0, 0x42, 0xbe, 0x85, 0xcd, 0x29,
+	0x7b, 0x98, 0x25, 0x2c, 0x98, 0xfa, 0x8d, 0xe3, 0x71, 0xeb, 0x6a, 0x6b, 0xef, 0x7f, 0x1f, 0x6c,
+	0xed, 0x37, 0x8e, 0xf7, 0x3f, 0x97, 0x70, 0x63, 0xe0, 0x6e, 0xbd, 0x78, 0x7a, 0x85, 0x28, 0x93,
+	0x6b, 0x2c, 0x8d, 0x4b, 0x9a, 0xe6, 0xe5, 0xfc, 0xcb, 0x35, 0xcf, 0x99, 0x1a, 0x4c, 0xf2, 0x0d,
+	0xf4, 0xab, 0x5c, 0x17, 0x6e, 0x0b, 0xe1, 0xa1, 0x12, 0xbe, 0x9f, 0x6b, 0xb2, 0x43, 0x94, 0xfd,
+	0x7f, 0x43, 0x37, 0x44, 0x37, 0x2a, 0x8d, 0x45, 0x6e, 0x01, 0xf0, 0x2a, 0x53, 0x7a, 0x96, 0xd0,
+	0x1b, 0x28, 0x3d, 0xaf, 0xca, 0xa4, 0xd8, 0x00, 0xc5, 0xfa, 0x48, 0x34, 0x94, 0x6c, 0xae, 0x70,
+	0x72, 0x1f, 0x9c, 0x32, 0x4e, 0x29, 0xab, 0x4a, 0x25, 0xd5, 0x11, 0x52, 0x23, 0x25, 0x75, 0xaf,
+	0x41, 0xa5, 0xdc, 0x08, 0xe5, 0x06, 0xd2, 0xc0, 0x90, 0xec, 0x97, 0x3a, 0x8f, 0x9c, 0xc0, 0x90,
+	0x22, 0xea, 0x63, 0x92, 0x23, 0x4e, 0x8b, 0x42, 0x89, 0x5f, 0x10, 0xe2, 0xdb, 0x4a, 0xfc, 0x16,
+	0x72, 0x0e, 0x24, 0x45, 0x7a, 0xd8, 0x41, 0x0f, 0x6f, 0x18, 0xb6, 0x86, 0x1f, 0x42, 0x57, 0x4c,
+	0xea, 0x54, 0x94, 0x7c, 0xae, 0x5c, 0x74, 0xcd, 0x54, 0xdc, 0xe3, 0x73, 0x3d, 0x15, 0x48, 0x34,
+	0x53, 0x51, 0x2a, 0xbc, 0xae, 0x7f, 0x1e, 0xf0, 0x20, 0x49, 0x68, 0xa2, 0xb4, 0xd6, 0xcd, 0xfa,
+	0x1f, 0x48, 0x58, 0xaf, 0xbf, 0x32, 0x31, 0xeb, 0x9f, 0x1b, 0xcc, 0xba, 0xfe, 0x05, 0xc5, 0xc6,
+	0x5b, 0x08, 0xf7, 0xcc, 0xfa, 0x1f, 0x0a, 0x50, 0xaf, 0x7f, 0x43, 0x37, 0xeb, 0x5f, 0x68, 0x2c,
+	0x42, 0x81, 0x84, 0x68, 0x9c, 0xd3, 0x6c, 0x5a, 0xf7, 0xb5, 0xd4, 0xb5, 0x85, 0xee, 0x25, 0xa5,
+	0xfb, 0xd9, 0x92, 0x21, 0xc5, 0x2f, 0xa1, 0xf8, 0x48, 0x33, 0x34, 0x3c, 0x0c, 0xc2, 0x15, 0x7e,
+	0x0f, 0xba, 0x8d, 0xf4, 0xe4, 0x91, 0x05, 0x8e, 0x79, 0x01, 0xc8, 0x47, 0xd0, 0x0b, 0x78, 0x19,
+	0xcf, 0x90, 0x21, 0xae, 0x8a, 0xed, 0x6e, 0x3f, 0x7e, 0x7a, 0x65, 0xad, 0x4e, 0x8b, 0x3a, 0x5f,
+	0xea, 0x7b, 0x0b, 0x2e, 0x19, 0x43, 0x67, 0xc6, 0x59, 0x2a, 0x6e, 0x81, 0xed, 0x76, 0x6a, 0x1b,
+	0x4f, 0x9c, 0x90, 0x21, 0xb4, 0x4b, 0x26, 0xba, 0x59, 0x9d, 0xe3, 0x3b, 0x79, 0x13, 0xec, 0x30,
+	0x08, 0x8f, 0xa9, 0x7f, 0x42, 0xe7, 0xa2, 0x3f, 0x15, 0xd8, 0x13, 0xc7, 0x5f, 0xd1, 0x39, 0xf9,
+	0x04, 0x20, 0x61, 0x91, 0x5f, 0xb0, 0x8a, 0x87, 0x54, 0xb4, 0x99, 0xed, 0x5e, 0x96, 0xc1, 0x0c,
+	0x97, 0x88, 0x16, 0x8e, 0x8d, 0xa7, 0x87, 0xe2, 0xb0, 0x8e, 0xa7, 0xc2, 0xe4, 0x8a, 0xd6, 0x59,
+	0xc4, 0x53, 0x9f, 0x90, 0x43, 0xcc, 0xf2, 0x31, 0x0d, 0x4f, 0x8a, 0x2a, 0xf5, 0x83, 0x24, 0x62,
+	0x1c, 0x27, 0x4f, 0x2a, 0xda, 0xc2, 0x76, 0xdf, 0x96, 0xf2, 0x97, 0x57, 0x19, 0x9a, 0x9b, 0x81,
+	0x42, 0x6f, 0x2a, 0x90, 0x7c, 0x01, 0xce, 0xc2, 0xe4, 0x34, 0x48, 0x2a, 0x2a, 0xda, 0xc1, 0x76,
+	0xaf, 0x4a, 0xc1, 0xb1, 0x89, 0x6a, 0x62, 0x7d, 0x85, 0x3c, 0xa8, 0x81, 0xc9, 0x2f, 0x2d, 0xd8,
+	0xd0, 0x47, 0xc7, 0xb9, 0x15, 0xc4, 0xcc, 0x76, 0xe7, 0xbf, 0x65, 0xfb, 0xc2, 0xcb, 0xd9, 0x9e,
+	0xfc, 0xd6, 0x06, 0x7b, 0x31, 0xba, 0x6a, 0x5e, 0x1e, 0x94, 0xc7, 0xf2, 0x43, 0x24, 0xaf, 0x3e,
+	0x21, 0x04, 0x3a, 0x01, 0x8f, 0x0a, 0x0c, 0xd7, 0xda, 0xb3, 0x3d, 0xf1, 0x3f, 0x79, 0x17, 0xac,
+	0x69, 0xcc, 0x65, 0xa4, 0x23, 0x19, 0x4b, 0x1f, 0x8f, 0xb4, 0x20, 0x6a, 0x06, 0xb9, 0x0e, 0x16,
+	0x2e, 0x04, 0x0c, 0xda, 0xc2, 0x9b, 0xb2, 0xb3, 0x98, 0x44, 0xcb, 0x1d, 0xf1, 0x40, 0xae, 0x08,
+	0xaf, 0xe6, 0x91, 0x4f, 0x61, 0x13, 0x47, 0x8d, 0x88, 0xdc, 0x4f, 0x62, 0x94, 0x2a, 0xe4, 0x10,
+	0x5b, 0x4c, 0x05, 0x4f, 0xc2, 0xb7, 0x05, 0xea, 0x39, 0xdc, 0x78, 0xff, 0x97, 0xe6, 0x32, 0xb3,
+	0xb8, 0x7e, 0xb6, 0x2c, 0x7e, 0x08, 0x17, 0x8b, 0x2a, 0xcf, 0xc5, 0x70, 0xad, 0xb9, 0x38, 0x7b,
+	0xf3, 0xaa, 0x14, 0x9d, 0xd4, 0x93, 0x5e, 0x06, 0x8a, 0x70, 0x9b, 0x45, 0x77, 0x05, 0x3c, 0x79,
+	0xd1, 0x82, 0xbe, 0x31, 0xd1, 0xc9, 0x3b, 0xea, 0x82, 0xcb, 0x65, 0xe7, 0xa8, 0xcf, 0x6a, 0x70,
+	0x4f, 0xa2, 0xe4, 0x2e, 0x8c, 0x70, 0x36, 0x70, 0x1a, 0x06, 0x25, 0x9d, 0xfa, 0x6a, 0x67, 0x64,
+	0x85, 0xe8, 0x19, 0xcb, 0xdd, 0x91, 0x71, 0xaf, 0x2e, 0x87, 0x71, 0xcb, 0xbb, 0xb8, 0xb4, 0x94,
+	0xce, 0xbf, 0x2e, 0x5e, 0xfa, 0x7a, 0xeb, 0x6c, 0x5f, 0xff, 0x16, 0x8e, 0x7c, 0x19, 0x42, 0x5a,
+	0x88, 0x06, 0xb4, 0xe4, 0x47, 0xdb, 0xf2, 0xfc, 0x4e, 0x31, 0xf9, 0xb1, 0x0d, 0x64, 0x75, 0xc3,
+	0xbc, 0xf2, 0x17, 0xbf, 0x87, 0x43, 0xbb, 0xc4, 0x2b, 0xe2, 0xa7, 0x68, 0x1b, 0x44, 0xd4, 0xb8,
+	0x1d, 0x1b, 0x02, 0xba, 0xd3, 0x20, 0xd8, 0x53, 0x9b, 0x45, 0x15, 0x86, 0x75, 0x2d, 0x14, 0x59,
+	0xbf, 0x32, 0x8e, 0x04, 0x15, 0xfd, 0x63, 0xd8, 0x9a, 0x05, 0x71, 0x52, 0x71, 0xaa, 0xe8, 0xb8,
+	0xec, 0xe8, 0x2c, 0xfe, 0xce, 0x18, 0x6e, 0x43, 0xc9, 0x91, 0x56, 0x07, 0x82, 0xf1, 0x5a, 0x83,
+	0x6e, 0x92, 0x83, 0xbd, 0xd8, 0x87, 0xaf, 0x9c, 0x07, 0xd3, 0x63, 0xfb, 0x6c, 0x1e, 0x1f, 0x82,
+	0x63, 0x6e, 0x4d, 0xb2, 0x07, 0xeb, 0xf2, 0x67, 0x1d, 0xfa, 0xb5, 0xfe, 0xc1, 0xaf, 0x82, 0x5f,
+	0xcf, 0x71, 0x05, 0x1b, 0xfa, 0x56, 0x3d, 0x2f, 0xb7, 0xdf, 0xc3, 0x60, 0x65, 0xe9, 0x9e, 0x97,
+	0x6f, 0x17, 0x1c, 0x73, 0x16, 0x91, 0xf7, 0xa1, 0x9b, 0xb1, 0x59, 0x9c, 0x50, 0x51, 0xe2, 0x8e,
+	0x3b, 0x46, 0xa9, 0x56, 0xfd, 0xf3, 0xa2, 0x39, 0xd5, 0x64, 0x24, 0xcf, 0xbd, 0xf6, 0xe4, 0xd9,
+	0xee, 0xda, 0xaf, 0xf8, 0xfc, 0xf5, 0x6c, 0xb7, 0xf5, 0xc3, 0xf3, 0xdd, 0xd6, 0xcf, 0xf8, 0x3c,
+	0xc6, 0xe7, 0x09, 0x3e, 0xbf, 0xe3, 0xf3, 0xe7, 0x73, 0xc4, 0xf0, 0xef, 0xa3, 0x3f, 0x76, 0xd7,
+	0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xef, 0xe7, 0x60, 0x8a, 0xa1, 0x0b, 0x00, 0x00,
+}

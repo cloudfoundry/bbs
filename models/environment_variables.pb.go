@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -20,6 +19,7 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type EnvironmentVariable struct {
@@ -29,6 +29,9 @@ type EnvironmentVariable struct {
 
 func (m *EnvironmentVariable) Reset()      { *m = EnvironmentVariable{} }
 func (*EnvironmentVariable) ProtoMessage() {}
+func (*EnvironmentVariable) Descriptor() ([]byte, []int) {
+	return fileDescriptorEnvironmentVariables, []int{0}
+}
 
 func (m *EnvironmentVariable) GetName() string {
 	if m != nil {
@@ -44,6 +47,9 @@ func (m *EnvironmentVariable) GetValue() string {
 	return ""
 }
 
+func init() {
+	proto.RegisterType((*EnvironmentVariable)(nil), "models.EnvironmentVariable")
+}
 func (this *EnvironmentVariable) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -54,7 +60,12 @@ func (this *EnvironmentVariable) Equal(that interface{}) bool {
 
 	that1, ok := that.(*EnvironmentVariable)
 	if !ok {
-		return false
+		that2, ok := that.(EnvironmentVariable)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -76,10 +87,12 @@ func (this *EnvironmentVariable) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.EnvironmentVariable{` +
-		`Name:` + fmt.Sprintf("%#v", this.Name),
-		`Value:` + fmt.Sprintf("%#v", this.Value) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.EnvironmentVariable{")
+	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
+	s = append(s, "Value: "+fmt.Sprintf("%#v", this.Value)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringEnvironmentVariables(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -89,11 +102,12 @@ func valueToGoStringEnvironmentVariables(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringEnvironmentVariables(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringEnvironmentVariables(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -103,7 +117,7 @@ func extensionToGoStringEnvironmentVariables(e map[int32]github_com_gogo_protobu
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *EnvironmentVariable) Marshal() (data []byte, err error) {
@@ -205,8 +219,12 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEnvironmentVariables
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -219,6 +237,12 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EnvironmentVariable: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EnvironmentVariable: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -226,6 +250,9 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEnvironmentVariables
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -236,10 +263,11 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEnvironmentVariables
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -251,6 +279,9 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEnvironmentVariables
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -261,25 +292,18 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEnvironmentVariables
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.Value = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEnvironmentVariables(data[iNdEx:])
 			if err != nil {
 				return err
@@ -294,6 +318,9 @@ func (m *EnvironmentVariable) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipEnvironmentVariables(data []byte) (n int, err error) {
@@ -302,6 +329,9 @@ func skipEnvironmentVariables(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowEnvironmentVariables
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -315,7 +345,10 @@ func skipEnvironmentVariables(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowEnvironmentVariables
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -331,6 +364,9 @@ func skipEnvironmentVariables(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowEnvironmentVariables
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -351,6 +387,9 @@ func skipEnvironmentVariables(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowEnvironmentVariables
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -386,4 +425,23 @@ func skipEnvironmentVariables(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthEnvironmentVariables = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowEnvironmentVariables   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("environment_variables.proto", fileDescriptorEnvironmentVariables) }
+
+var fileDescriptorEnvironmentVariables = []byte{
+	// 177 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x92, 0x4e, 0xcd, 0x2b, 0xcb,
+	0x2c, 0xca, 0xcf, 0xcb, 0x4d, 0xcd, 0x2b, 0x89, 0x2f, 0x4b, 0x2c, 0xca, 0x4c, 0x4c, 0xca, 0x49,
+	0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcb, 0xcd, 0x4f, 0x49, 0xcd, 0x29, 0x96,
+	0xd2, 0x4d, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xcf, 0x4f, 0xcf,
+	0xd7, 0x07, 0x4b, 0x27, 0x95, 0xa6, 0x81, 0x79, 0x60, 0x0e, 0x98, 0x05, 0xd1, 0xa6, 0xe4, 0xcd,
+	0x25, 0xec, 0x8a, 0x30, 0x35, 0x0c, 0x6a, 0xa8, 0x90, 0x04, 0x17, 0x4b, 0x5e, 0x62, 0x6e, 0xaa,
+	0x04, 0xa3, 0x02, 0xa3, 0x06, 0xa7, 0x13, 0xcb, 0x89, 0x7b, 0xf2, 0x0c, 0x41, 0x60, 0x11, 0x21,
+	0x29, 0x2e, 0xd6, 0xb2, 0xc4, 0x9c, 0xd2, 0x54, 0x09, 0x26, 0x24, 0x29, 0x88, 0x90, 0x93, 0xce,
+	0x85, 0x87, 0x72, 0x0c, 0x37, 0x80, 0xf8, 0xc3, 0x43, 0x39, 0xc6, 0x86, 0x47, 0x72, 0x8c, 0x2b,
+	0x80, 0xf8, 0x04, 0x10, 0x5f, 0x00, 0xe2, 0x07, 0x40, 0xfc, 0xe2, 0x11, 0x50, 0x0e, 0x48, 0x4f,
+	0x78, 0x2c, 0xc7, 0x00, 0x08, 0x00, 0x00, 0xff, 0xff, 0xb9, 0x6a, 0x6f, 0x58, 0xcf, 0x00, 0x00,
+	0x00,
+}

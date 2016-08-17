@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 )
 
-var _ = Describe("Actions", func() {
+var _ = FDescribe("Actions", func() {
 	itSerializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
 		It("Action -> JSON for "+string(action.ActionType()), func() {
@@ -385,10 +385,12 @@ var _ = Describe("Actions", func() {
 				It("is valid", func() {
 					timeoutAction = &models.TimeoutAction{
 						Action: &models.Action{
-							UploadAction: &models.UploadAction{
-								From: "local_location",
-								To:   "web_location",
-								User: "someone",
+							Action: &models.Action_UploadAction{
+								UploadAction: &models.UploadAction{
+									From: "local_location",
+									To:   "web_location",
+									User: "someone",
+								},
 							},
 						},
 						TimeoutMs: int64(time.Second / 1000000),
@@ -410,9 +412,11 @@ var _ = Describe("Actions", func() {
 					"from",
 					&models.TimeoutAction{
 						Action: &models.Action{
-							UploadAction: &models.UploadAction{
-								To:   "web_location",
-								User: "someone",
+							Action: &models.Action_UploadAction{
+								UploadAction: &models.UploadAction{
+									To:   "web_location",
+									User: "someone",
+								},
 							},
 						},
 						TimeoutMs: int64(time.Second / 1000000),
@@ -422,10 +426,12 @@ var _ = Describe("Actions", func() {
 					"timeout_ms",
 					&models.TimeoutAction{
 						Action: &models.Action{
-							UploadAction: &models.UploadAction{
-								From: "local_location",
-								To:   "web_location",
-								User: "someone",
+							Action: &models.Action_UploadAction{
+								UploadAction: &models.UploadAction{
+									From: "local_location",
+									To:   "web_location",
+									User: "someone",
+								},
 							},
 						},
 					},
@@ -462,10 +468,12 @@ var _ = Describe("Actions", func() {
 				It("is valid", func() {
 					tryAction = &models.TryAction{
 						Action: &models.Action{
-							UploadAction: &models.UploadAction{
-								From: "local_location",
-								To:   "web_location",
-								User: "someone",
+							Action: &models.Action_UploadAction{
+								UploadAction: &models.UploadAction{
+									From: "local_location",
+									To:   "web_location",
+									User: "someone",
+								},
 							},
 						},
 					}
@@ -484,8 +492,10 @@ var _ = Describe("Actions", func() {
 					"from",
 					&models.TryAction{
 						Action: &models.Action{
-							UploadAction: &models.UploadAction{
-								To: "web_location",
+							Action: &models.Action_UploadAction{
+								UploadAction: &models.UploadAction{
+									To: "web_location",
+								},
 							},
 						},
 					},
@@ -541,10 +551,12 @@ var _ = Describe("Actions", func() {
 					parallelAction = &models.ParallelAction{
 						Actions: []*models.Action{
 							&models.Action{
-								UploadAction: &models.UploadAction{
-									From: "local_location",
-									To:   "web_location",
-									User: "someone",
+								Action: &models.Action_UploadAction{
+									UploadAction: &models.UploadAction{
+										From: "local_location",
+										To:   "web_location",
+										User: "someone",
+									},
 								},
 							},
 						},
@@ -577,8 +589,10 @@ var _ = Describe("Actions", func() {
 					&models.ParallelAction{
 						Actions: []*models.Action{
 							&models.Action{
-								UploadAction: &models.UploadAction{
-									To: "web_location",
+								Action: &models.Action_UploadAction{
+									UploadAction: &models.UploadAction{
+										To: "web_location",
+									},
 								},
 							},
 						},

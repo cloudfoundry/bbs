@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -20,20 +19,22 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type CachedDependency struct {
 	Name              string `protobuf:"bytes,1,opt,name=name" json:"name"`
 	From              string `protobuf:"bytes,2,opt,name=from" json:"from"`
 	To                string `protobuf:"bytes,3,opt,name=to" json:"to"`
-	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key" json:"cache_key"`
-	LogSource         string `protobuf:"bytes,5,opt,name=log_source" json:"log_source"`
-	ChecksumAlgorithm string `protobuf:"bytes,6,opt,name=checksum_algorithm" json:"checksum_algorithm,omitempty"`
-	ChecksumValue     string `protobuf:"bytes,7,opt,name=checksum_value" json:"checksum_value,omitempty"`
+	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key,json=cacheKey" json:"cache_key"`
+	LogSource         string `protobuf:"bytes,5,opt,name=log_source,json=logSource" json:"log_source"`
+	ChecksumAlgorithm string `protobuf:"bytes,6,opt,name=checksum_algorithm,json=checksumAlgorithm" json:"checksum_algorithm,omitempty"`
+	ChecksumValue     string `protobuf:"bytes,7,opt,name=checksum_value,json=checksumValue" json:"checksum_value,omitempty"`
 }
 
-func (m *CachedDependency) Reset()      { *m = CachedDependency{} }
-func (*CachedDependency) ProtoMessage() {}
+func (m *CachedDependency) Reset()                    { *m = CachedDependency{} }
+func (*CachedDependency) ProtoMessage()               {}
+func (*CachedDependency) Descriptor() ([]byte, []int) { return fileDescriptorCachedDependency, []int{0} }
 
 func (m *CachedDependency) GetName() string {
 	if m != nil {
@@ -84,6 +85,9 @@ func (m *CachedDependency) GetChecksumValue() string {
 	return ""
 }
 
+func init() {
+	proto.RegisterType((*CachedDependency)(nil), "models.CachedDependency")
+}
 func (this *CachedDependency) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -94,7 +98,12 @@ func (this *CachedDependency) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CachedDependency)
 	if !ok {
-		return false
+		that2, ok := that.(CachedDependency)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -131,15 +140,17 @@ func (this *CachedDependency) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.CachedDependency{` +
-		`Name:` + fmt.Sprintf("%#v", this.Name),
-		`From:` + fmt.Sprintf("%#v", this.From),
-		`To:` + fmt.Sprintf("%#v", this.To),
-		`CacheKey:` + fmt.Sprintf("%#v", this.CacheKey),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`ChecksumAlgorithm:` + fmt.Sprintf("%#v", this.ChecksumAlgorithm),
-		`ChecksumValue:` + fmt.Sprintf("%#v", this.ChecksumValue) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 11)
+	s = append(s, "&models.CachedDependency{")
+	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
+	s = append(s, "From: "+fmt.Sprintf("%#v", this.From)+",\n")
+	s = append(s, "To: "+fmt.Sprintf("%#v", this.To)+",\n")
+	s = append(s, "CacheKey: "+fmt.Sprintf("%#v", this.CacheKey)+",\n")
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "ChecksumAlgorithm: "+fmt.Sprintf("%#v", this.ChecksumAlgorithm)+",\n")
+	s = append(s, "ChecksumValue: "+fmt.Sprintf("%#v", this.ChecksumValue)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringCachedDependency(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -149,11 +160,12 @@ func valueToGoStringCachedDependency(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringCachedDependency(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringCachedDependency(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -163,7 +175,7 @@ func extensionToGoStringCachedDependency(e map[int32]github_com_gogo_protobuf_pr
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *CachedDependency) Marshal() (data []byte, err error) {
@@ -300,8 +312,12 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCachedDependency
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -314,6 +330,12 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CachedDependency: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CachedDependency: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -321,6 +343,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -331,10 +356,11 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCachedDependency
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -346,6 +372,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -356,10 +385,11 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCachedDependency
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -371,6 +401,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -381,10 +414,11 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCachedDependency
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -396,6 +430,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -406,10 +443,11 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCachedDependency
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -421,6 +459,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -431,10 +472,11 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCachedDependency
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -446,6 +488,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -456,10 +501,11 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCachedDependency
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -471,6 +517,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -481,25 +530,18 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCachedDependency
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.ChecksumValue = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipCachedDependency(data[iNdEx:])
 			if err != nil {
 				return err
@@ -514,6 +556,9 @@ func (m *CachedDependency) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipCachedDependency(data []byte) (n int, err error) {
@@ -522,6 +567,9 @@ func skipCachedDependency(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowCachedDependency
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -535,7 +583,10 @@ func skipCachedDependency(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -551,6 +602,9 @@ func skipCachedDependency(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowCachedDependency
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -571,6 +625,9 @@ func skipCachedDependency(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowCachedDependency
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -606,4 +663,32 @@ func skipCachedDependency(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthCachedDependency = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowCachedDependency   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("cached_dependency.proto", fileDescriptorCachedDependency) }
+
+var fileDescriptorCachedDependency = []byte{
+	// 326 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x64, 0x90, 0x41, 0x4e, 0xc2, 0x40,
+	0x14, 0x86, 0x29, 0x22, 0xca, 0x44, 0x8d, 0xcc, 0xc6, 0x09, 0x31, 0x85, 0x18, 0x17, 0x2e, 0x10,
+	0xe2, 0x11, 0x44, 0x13, 0x17, 0xee, 0x86, 0xc4, 0x6d, 0x53, 0xa6, 0x43, 0x21, 0x74, 0x78, 0xa4,
+	0xb4, 0x26, 0xdd, 0x79, 0x04, 0x8f, 0xe1, 0x51, 0x58, 0xb2, 0x74, 0x45, 0x04, 0x37, 0xc6, 0x95,
+	0x89, 0x17, 0xf0, 0xf5, 0xd9, 0x22, 0xc4, 0xc5, 0x3f, 0xf3, 0xe6, 0x7d, 0xff, 0xff, 0x27, 0x2d,
+	0x3b, 0x51, 0xae, 0x1a, 0x68, 0xcf, 0xf1, 0xf4, 0x44, 0x8f, 0x3d, 0x3d, 0x56, 0x49, 0x6b, 0x12,
+	0x42, 0x04, 0xbc, 0x6c, 0xc0, 0xd3, 0xc1, 0xb4, 0x76, 0xe9, 0x0f, 0xa3, 0x41, 0xdc, 0x6b, 0x29,
+	0x30, 0x6d, 0x1f, 0x7c, 0x68, 0x13, 0xee, 0xc5, 0x7d, 0x7a, 0xd1, 0x83, 0xa6, 0xdf, 0xd8, 0xd9,
+	0x77, 0x91, 0x1d, 0xdf, 0x50, 0xe5, 0xed, 0xba, 0x91, 0x37, 0x58, 0x69, 0xec, 0x1a, 0x2d, 0xac,
+	0x86, 0x75, 0x51, 0xe9, 0x1c, 0xcc, 0x16, 0xf5, 0xc2, 0xe7, 0xa2, 0x4e, 0x3b, 0x49, 0x67, 0xea,
+	0xe8, 0x87, 0x60, 0x44, 0x71, 0xdb, 0x91, 0xee, 0x24, 0x9d, 0xbc, 0xc6, 0x8a, 0x11, 0x88, 0x1d,
+	0xe2, 0x2c, 0xe3, 0xb8, 0x91, 0x28, 0xde, 0x62, 0x15, 0xfa, 0x0c, 0x67, 0xa4, 0x13, 0x51, 0x22,
+	0x4b, 0x35, 0xb3, 0xfc, 0x01, 0xb9, 0x4f, 0xe3, 0xbd, 0x4e, 0xf8, 0x15, 0x63, 0x01, 0xf8, 0xce,
+	0x14, 0xe2, 0x50, 0x69, 0xb1, 0x4b, 0x01, 0x9e, 0x05, 0x36, 0x88, 0xac, 0xe0, 0xdc, 0xa5, 0x91,
+	0x77, 0x19, 0xc7, 0xb0, 0x1a, 0x4d, 0x63, 0xe3, 0xb8, 0x81, 0x0f, 0x21, 0xfe, 0x15, 0x23, 0xca,
+	0x14, 0x3d, 0xcf, 0xa2, 0xa7, 0xff, 0x1d, 0x4d, 0x30, 0xc3, 0x48, 0x9b, 0x49, 0x94, 0xc8, 0x6a,
+	0x4e, 0xaf, 0x73, 0xc8, 0xef, 0xd8, 0xd1, 0x3a, 0xf2, 0xe8, 0x06, 0xb1, 0x16, 0x7b, 0x54, 0xd8,
+	0xc8, 0x0a, 0xc5, 0x36, 0xdd, 0x28, 0x3b, 0xcc, 0xc9, 0x43, 0x0a, 0x3a, 0xcd, 0xf9, 0xd2, 0xb6,
+	0x5e, 0x97, 0x76, 0xe1, 0x0b, 0xef, 0xa7, 0x95, 0x6d, 0xbd, 0xa0, 0x66, 0xa8, 0x39, 0xea, 0x0d,
+	0xf5, 0xb1, 0x42, 0x86, 0xf7, 0xf3, 0xbb, 0x5d, 0xf8, 0x09, 0x00, 0x00, 0xff, 0xff, 0x39, 0xb4,
+	0xc9, 0x65, 0xf4, 0x01, 0x00, 0x00,
+}

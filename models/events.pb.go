@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -20,14 +19,16 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type ActualLRPCreatedEvent struct {
-	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group" json:"actual_lrp_group,omitempty"`
+	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group,json=actualLrpGroup" json:"actual_lrp_group,omitempty"`
 }
 
-func (m *ActualLRPCreatedEvent) Reset()      { *m = ActualLRPCreatedEvent{} }
-func (*ActualLRPCreatedEvent) ProtoMessage() {}
+func (m *ActualLRPCreatedEvent) Reset()                    { *m = ActualLRPCreatedEvent{} }
+func (*ActualLRPCreatedEvent) ProtoMessage()               {}
+func (*ActualLRPCreatedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{0} }
 
 func (m *ActualLRPCreatedEvent) GetActualLrpGroup() *ActualLRPGroup {
 	if m != nil {
@@ -41,8 +42,9 @@ type ActualLRPChangedEvent struct {
 	After  *ActualLRPGroup `protobuf:"bytes,2,opt,name=after" json:"after,omitempty"`
 }
 
-func (m *ActualLRPChangedEvent) Reset()      { *m = ActualLRPChangedEvent{} }
-func (*ActualLRPChangedEvent) ProtoMessage() {}
+func (m *ActualLRPChangedEvent) Reset()                    { *m = ActualLRPChangedEvent{} }
+func (*ActualLRPChangedEvent) ProtoMessage()               {}
+func (*ActualLRPChangedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{1} }
 
 func (m *ActualLRPChangedEvent) GetBefore() *ActualLRPGroup {
 	if m != nil {
@@ -59,11 +61,12 @@ func (m *ActualLRPChangedEvent) GetAfter() *ActualLRPGroup {
 }
 
 type ActualLRPRemovedEvent struct {
-	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group" json:"actual_lrp_group,omitempty"`
+	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group,json=actualLrpGroup" json:"actual_lrp_group,omitempty"`
 }
 
-func (m *ActualLRPRemovedEvent) Reset()      { *m = ActualLRPRemovedEvent{} }
-func (*ActualLRPRemovedEvent) ProtoMessage() {}
+func (m *ActualLRPRemovedEvent) Reset()                    { *m = ActualLRPRemovedEvent{} }
+func (*ActualLRPRemovedEvent) ProtoMessage()               {}
+func (*ActualLRPRemovedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{2} }
 
 func (m *ActualLRPRemovedEvent) GetActualLrpGroup() *ActualLRPGroup {
 	if m != nil {
@@ -73,11 +76,12 @@ func (m *ActualLRPRemovedEvent) GetActualLrpGroup() *ActualLRPGroup {
 }
 
 type DesiredLRPCreatedEvent struct {
-	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp" json:"desired_lrp,omitempty"`
+	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp,json=desiredLrp" json:"desired_lrp,omitempty"`
 }
 
-func (m *DesiredLRPCreatedEvent) Reset()      { *m = DesiredLRPCreatedEvent{} }
-func (*DesiredLRPCreatedEvent) ProtoMessage() {}
+func (m *DesiredLRPCreatedEvent) Reset()                    { *m = DesiredLRPCreatedEvent{} }
+func (*DesiredLRPCreatedEvent) ProtoMessage()               {}
+func (*DesiredLRPCreatedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{3} }
 
 func (m *DesiredLRPCreatedEvent) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
@@ -91,8 +95,9 @@ type DesiredLRPChangedEvent struct {
 	After  *DesiredLRP `protobuf:"bytes,2,opt,name=after" json:"after,omitempty"`
 }
 
-func (m *DesiredLRPChangedEvent) Reset()      { *m = DesiredLRPChangedEvent{} }
-func (*DesiredLRPChangedEvent) ProtoMessage() {}
+func (m *DesiredLRPChangedEvent) Reset()                    { *m = DesiredLRPChangedEvent{} }
+func (*DesiredLRPChangedEvent) ProtoMessage()               {}
+func (*DesiredLRPChangedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{4} }
 
 func (m *DesiredLRPChangedEvent) GetBefore() *DesiredLRP {
 	if m != nil {
@@ -109,11 +114,12 @@ func (m *DesiredLRPChangedEvent) GetAfter() *DesiredLRP {
 }
 
 type DesiredLRPRemovedEvent struct {
-	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp" json:"desired_lrp,omitempty"`
+	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp,json=desiredLrp" json:"desired_lrp,omitempty"`
 }
 
-func (m *DesiredLRPRemovedEvent) Reset()      { *m = DesiredLRPRemovedEvent{} }
-func (*DesiredLRPRemovedEvent) ProtoMessage() {}
+func (m *DesiredLRPRemovedEvent) Reset()                    { *m = DesiredLRPRemovedEvent{} }
+func (*DesiredLRPRemovedEvent) ProtoMessage()               {}
+func (*DesiredLRPRemovedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{5} }
 
 func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
@@ -123,15 +129,16 @@ func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 }
 
 type ActualLRPCrashedEvent struct {
-	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,embedded=actual_lrp_key" json:""`
-	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,embedded=actual_lrp_instance_key" json:""`
-	CrashCount           int32  `protobuf:"varint,3,opt,name=crash_count" json:"crash_count"`
-	CrashReason          string `protobuf:"bytes,4,opt,name=crash_reason" json:"crash_reason,omitempty"`
+	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,embedded=actual_lrp_key" json:""`
+	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,embedded=actual_lrp_instance_key" json:""`
+	CrashCount           int32  `protobuf:"varint,3,opt,name=crash_count,json=crashCount" json:"crash_count"`
+	CrashReason          string `protobuf:"bytes,4,opt,name=crash_reason,json=crashReason" json:"crash_reason,omitempty"`
 	Since                int64  `protobuf:"varint,5,opt,name=since" json:"since"`
 }
 
-func (m *ActualLRPCrashedEvent) Reset()      { *m = ActualLRPCrashedEvent{} }
-func (*ActualLRPCrashedEvent) ProtoMessage() {}
+func (m *ActualLRPCrashedEvent) Reset()                    { *m = ActualLRPCrashedEvent{} }
+func (*ActualLRPCrashedEvent) ProtoMessage()               {}
+func (*ActualLRPCrashedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{6} }
 
 func (m *ActualLRPCrashedEvent) GetCrashCount() int32 {
 	if m != nil {
@@ -154,6 +161,15 @@ func (m *ActualLRPCrashedEvent) GetSince() int64 {
 	return 0
 }
 
+func init() {
+	proto.RegisterType((*ActualLRPCreatedEvent)(nil), "models.ActualLRPCreatedEvent")
+	proto.RegisterType((*ActualLRPChangedEvent)(nil), "models.ActualLRPChangedEvent")
+	proto.RegisterType((*ActualLRPRemovedEvent)(nil), "models.ActualLRPRemovedEvent")
+	proto.RegisterType((*DesiredLRPCreatedEvent)(nil), "models.DesiredLRPCreatedEvent")
+	proto.RegisterType((*DesiredLRPChangedEvent)(nil), "models.DesiredLRPChangedEvent")
+	proto.RegisterType((*DesiredLRPRemovedEvent)(nil), "models.DesiredLRPRemovedEvent")
+	proto.RegisterType((*ActualLRPCrashedEvent)(nil), "models.ActualLRPCrashedEvent")
+}
 func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -164,7 +180,12 @@ func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPCreatedEvent)
 	if !ok {
-		return false
+		that2, ok := that.(ActualLRPCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -189,7 +210,12 @@ func (this *ActualLRPChangedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPChangedEvent)
 	if !ok {
-		return false
+		that2, ok := that.(ActualLRPChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -217,7 +243,12 @@ func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPRemovedEvent)
 	if !ok {
-		return false
+		that2, ok := that.(ActualLRPRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -242,7 +273,12 @@ func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPCreatedEvent)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -267,7 +303,12 @@ func (this *DesiredLRPChangedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPChangedEvent)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -295,7 +336,12 @@ func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPRemovedEvent)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -320,7 +366,12 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPCrashedEvent)
 	if !ok {
-		return false
+		that2, ok := that.(ActualLRPCrashedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -351,63 +402,93 @@ func (this *ActualLRPCreatedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ActualLRPCreatedEvent{` +
-		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ActualLRPCreatedEvent{")
+	if this.ActualLrpGroup != nil {
+		s = append(s, "ActualLrpGroup: "+fmt.Sprintf("%#v", this.ActualLrpGroup)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ActualLRPChangedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ActualLRPChangedEvent{` +
-		`Before:` + fmt.Sprintf("%#v", this.Before),
-		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ActualLRPChangedEvent{")
+	if this.Before != nil {
+		s = append(s, "Before: "+fmt.Sprintf("%#v", this.Before)+",\n")
+	}
+	if this.After != nil {
+		s = append(s, "After: "+fmt.Sprintf("%#v", this.After)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ActualLRPRemovedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ActualLRPRemovedEvent{` +
-		`ActualLrpGroup:` + fmt.Sprintf("%#v", this.ActualLrpGroup) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ActualLRPRemovedEvent{")
+	if this.ActualLrpGroup != nil {
+		s = append(s, "ActualLrpGroup: "+fmt.Sprintf("%#v", this.ActualLrpGroup)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRPCreatedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPCreatedEvent{` +
-		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.DesiredLRPCreatedEvent{")
+	if this.DesiredLrp != nil {
+		s = append(s, "DesiredLrp: "+fmt.Sprintf("%#v", this.DesiredLrp)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRPChangedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPChangedEvent{` +
-		`Before:` + fmt.Sprintf("%#v", this.Before),
-		`After:` + fmt.Sprintf("%#v", this.After) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.DesiredLRPChangedEvent{")
+	if this.Before != nil {
+		s = append(s, "Before: "+fmt.Sprintf("%#v", this.Before)+",\n")
+	}
+	if this.After != nil {
+		s = append(s, "After: "+fmt.Sprintf("%#v", this.After)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRPRemovedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPRemovedEvent{` +
-		`DesiredLrp:` + fmt.Sprintf("%#v", this.DesiredLrp) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.DesiredLRPRemovedEvent{")
+	if this.DesiredLrp != nil {
+		s = append(s, "DesiredLrp: "+fmt.Sprintf("%#v", this.DesiredLrp)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ActualLRPCrashedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ActualLRPCrashedEvent{` +
-		`ActualLRPKey:` + strings.Replace(this.ActualLRPKey.GoString(), `&`, ``, 1),
-		`ActualLRPInstanceKey:` + strings.Replace(this.ActualLRPInstanceKey.GoString(), `&`, ``, 1),
-		`CrashCount:` + fmt.Sprintf("%#v", this.CrashCount),
-		`CrashReason:` + fmt.Sprintf("%#v", this.CrashReason),
-		`Since:` + fmt.Sprintf("%#v", this.Since) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 9)
+	s = append(s, "&models.ActualLRPCrashedEvent{")
+	s = append(s, "ActualLRPKey: "+strings.Replace(this.ActualLRPKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "ActualLRPInstanceKey: "+strings.Replace(this.ActualLRPInstanceKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "CrashCount: "+fmt.Sprintf("%#v", this.CrashCount)+",\n")
+	s = append(s, "CrashReason: "+fmt.Sprintf("%#v", this.CrashReason)+",\n")
+	s = append(s, "Since: "+fmt.Sprintf("%#v", this.Since)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringEvents(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -417,11 +498,12 @@ func valueToGoStringEvents(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringEvents(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringEvents(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -431,7 +513,7 @@ func extensionToGoStringEvents(e map[int32]github_com_gogo_protobuf_proto.Extens
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *ActualLRPCreatedEvent) Marshal() (data []byte, err error) {
@@ -876,8 +958,12 @@ func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -890,6 +976,12 @@ func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ActualLRPCreatedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ActualLRPCreatedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -897,6 +989,9 @@ func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -907,10 +1002,10 @@ func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -922,15 +1017,7 @@ func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEvents(data[iNdEx:])
 			if err != nil {
 				return err
@@ -945,14 +1032,21 @@ func (m *ActualLRPCreatedEvent) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -965,6 +1059,12 @@ func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ActualLRPChangedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ActualLRPChangedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -972,6 +1072,9 @@ func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -982,10 +1085,10 @@ func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1002,6 +1105,9 @@ func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1012,10 +1118,10 @@ func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1027,15 +1133,7 @@ func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEvents(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1050,14 +1148,21 @@ func (m *ActualLRPChangedEvent) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ActualLRPRemovedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1070,6 +1175,12 @@ func (m *ActualLRPRemovedEvent) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ActualLRPRemovedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ActualLRPRemovedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1077,6 +1188,9 @@ func (m *ActualLRPRemovedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1087,10 +1201,10 @@ func (m *ActualLRPRemovedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1102,15 +1216,7 @@ func (m *ActualLRPRemovedEvent) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEvents(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1125,14 +1231,21 @@ func (m *ActualLRPRemovedEvent) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRPCreatedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1145,6 +1258,12 @@ func (m *DesiredLRPCreatedEvent) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPCreatedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPCreatedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1152,6 +1271,9 @@ func (m *DesiredLRPCreatedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1162,10 +1284,10 @@ func (m *DesiredLRPCreatedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1177,15 +1299,7 @@ func (m *DesiredLRPCreatedEvent) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEvents(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1200,14 +1314,21 @@ func (m *DesiredLRPCreatedEvent) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1220,6 +1341,12 @@ func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPChangedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPChangedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1227,6 +1354,9 @@ func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1237,10 +1367,10 @@ func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1257,6 +1387,9 @@ func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1267,10 +1400,10 @@ func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1282,15 +1415,7 @@ func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEvents(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1305,14 +1430,21 @@ func (m *DesiredLRPChangedEvent) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRPRemovedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1325,6 +1457,12 @@ func (m *DesiredLRPRemovedEvent) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPRemovedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPRemovedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1332,6 +1470,9 @@ func (m *DesiredLRPRemovedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1342,10 +1483,10 @@ func (m *DesiredLRPRemovedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1357,15 +1498,7 @@ func (m *DesiredLRPRemovedEvent) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEvents(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1380,14 +1513,21 @@ func (m *DesiredLRPRemovedEvent) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1400,6 +1540,12 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ActualLRPCrashedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ActualLRPCrashedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1407,6 +1553,9 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1417,10 +1566,10 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1434,6 +1583,9 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1444,10 +1596,10 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1461,6 +1613,9 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 			}
 			m.CrashCount = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1477,6 +1632,9 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1487,10 +1645,11 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1502,6 +1661,9 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 			}
 			m.Since = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1513,15 +1675,7 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipEvents(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1536,6 +1690,9 @@ func (m *ActualLRPCrashedEvent) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipEvents(data []byte) (n int, err error) {
@@ -1544,6 +1701,9 @@ func skipEvents(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowEvents
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -1557,7 +1717,10 @@ func skipEvents(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -1573,6 +1736,9 @@ func skipEvents(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowEvents
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -1593,6 +1759,9 @@ func skipEvents(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowEvents
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -1628,4 +1797,41 @@ func skipEvents(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthEvents = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowEvents   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("events.proto", fileDescriptorEvents) }
+
+var fileDescriptorEvents = []byte{
+	// 465 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xac, 0x92, 0x41, 0x6b, 0x13, 0x41,
+	0x14, 0xc7, 0xb3, 0x6d, 0x53, 0x70, 0xb2, 0x14, 0x1d, 0x6a, 0x5c, 0x82, 0x6c, 0x25, 0x20, 0x14,
+	0x89, 0x5b, 0xd0, 0x2f, 0x60, 0xb7, 0x8a, 0x8a, 0x15, 0x64, 0x6e, 0x9e, 0xc2, 0x64, 0x77, 0xb2,
+	0x59, 0xcc, 0xee, 0x2c, 0xb3, 0xb3, 0x85, 0xdc, 0xfc, 0x08, 0x7e, 0x0c, 0x3f, 0x4a, 0xf1, 0x94,
+	0xa3, 0xa7, 0x62, 0xeb, 0x45, 0x3c, 0xf9, 0x11, 0x7c, 0x3b, 0x33, 0x9b, 0xce, 0x36, 0x41, 0x41,
+	0x3c, 0x3c, 0x26, 0xf3, 0xde, 0xff, 0xfd, 0xe6, 0xbd, 0x7f, 0x16, 0xb9, 0xec, 0x8c, 0xe5, 0xb2,
+	0x0c, 0x0a, 0xc1, 0x25, 0xc7, 0xbb, 0x19, 0x8f, 0xd9, 0xbc, 0x1c, 0x3c, 0x4e, 0x52, 0x39, 0xab,
+	0x26, 0x41, 0xc4, 0xb3, 0xa3, 0x84, 0x27, 0xfc, 0x48, 0x95, 0x27, 0xd5, 0x54, 0xdd, 0xd4, 0x45,
+	0xfd, 0xd2, 0x6d, 0x83, 0xdb, 0x34, 0x92, 0x15, 0x9d, 0x8f, 0xe7, 0xa2, 0x30, 0x99, 0x3b, 0x31,
+	0x2b, 0x53, 0xc1, 0xe2, 0xeb, 0xd4, 0xf0, 0x3d, 0xba, 0x7b, 0xac, 0x64, 0xa7, 0xe4, 0xdd, 0x89,
+	0x60, 0x54, 0xb2, 0xf8, 0x45, 0xfd, 0x36, 0x7e, 0x86, 0xac, 0xfe, 0x71, 0x22, 0x78, 0x55, 0x78,
+	0xce, 0x03, 0xe7, 0xb0, 0xf7, 0xa4, 0x1f, 0xe8, 0x79, 0x82, 0x55, 0xe3, 0xcb, 0xba, 0x4a, 0xf6,
+	0xb4, 0xfe, 0x54, 0x14, 0xea, 0x3e, 0xac, 0x6c, 0xf4, 0x8c, 0xe6, 0x49, 0x83, 0x0e, 0xd0, 0xee,
+	0x84, 0x4d, 0xb9, 0x60, 0x7f, 0x01, 0x1a, 0x15, 0x1e, 0xa1, 0x2e, 0x9d, 0x4a, 0x26, 0xbc, 0xad,
+	0x3f, 0xca, 0xb5, 0xa8, 0xb5, 0x11, 0x61, 0x19, 0x3f, 0xfb, 0x7f, 0x1b, 0xbd, 0x45, 0xfd, 0xe7,
+	0xda, 0xc1, 0x9b, 0x6e, 0x3d, 0x45, 0x3d, 0xcb, 0x5b, 0x83, 0xc5, 0x0d, 0xf6, 0xba, 0x89, 0x20,
+	0x23, 0x03, 0xe6, 0x30, 0x6f, 0xe1, 0x6c, 0x87, 0x1e, 0xdd, 0x70, 0x68, 0x13, 0xa9, 0x71, 0xe7,
+	0xb0, 0xed, 0xce, 0x26, 0xa9, 0x71, 0xa6, 0x35, 0x7e, 0xcb, 0x9a, 0x7f, 0x1a, 0xff, 0xcb, 0x56,
+	0xeb, 0xdb, 0xa1, 0xe5, 0xac, 0xc1, 0xbd, 0x42, 0x7b, 0x96, 0xd3, 0x1f, 0xd8, 0xc2, 0x10, 0xf7,
+	0xd7, 0x7c, 0x7e, 0xc3, 0x16, 0xa1, 0x7b, 0x7e, 0x71, 0xd0, 0x59, 0x5e, 0x1c, 0x38, 0x3f, 0xe1,
+	0x24, 0xee, 0xca, 0x73, 0xa8, 0x61, 0x8a, 0xee, 0x59, 0xa4, 0x34, 0x2f, 0x25, 0xcd, 0x23, 0xa6,
+	0x90, 0x7a, 0xdd, 0xfb, 0x6b, 0xc8, 0xd7, 0x46, 0xb4, 0x8e, 0xde, 0x5f, 0xa1, 0x2d, 0x0d, 0x7e,
+	0x88, 0x7a, 0x51, 0x3d, 0xfc, 0x38, 0xe2, 0x55, 0x2e, 0xbd, 0x6d, 0xc0, 0x76, 0xc3, 0x9d, 0xba,
+	0x91, 0x20, 0x55, 0x38, 0xa9, 0xf3, 0xf8, 0x18, 0xb9, 0x5a, 0x06, 0x7f, 0x7b, 0xc9, 0x73, 0x6f,
+	0x07, 0x74, 0xb7, 0x42, 0xbf, 0xd6, 0x01, 0xbc, 0x6f, 0xd7, 0x46, 0x3c, 0x4b, 0x25, 0xcb, 0x0a,
+	0xb9, 0x20, 0x1a, 0x4d, 0x54, 0x1a, 0x0f, 0x50, 0xb7, 0x4c, 0xe1, 0x55, 0xaf, 0x0b, 0xbd, 0xdb,
+	0xe6, 0x0d, 0x9d, 0x0a, 0x47, 0xcb, 0x4b, 0xbf, 0xf3, 0x15, 0xe2, 0xd7, 0xa5, 0xef, 0x7c, 0xbc,
+	0xf2, 0x9d, 0xcf, 0x10, 0xe7, 0x10, 0x4b, 0x88, 0x6f, 0x10, 0x3f, 0xae, 0xa0, 0x06, 0xe7, 0xa7,
+	0xef, 0x7e, 0xe7, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0xab, 0x2f, 0x45, 0x5d, 0x20, 0x04, 0x00,
+	0x00,
+}

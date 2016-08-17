@@ -5,13 +5,12 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
+import fmt "fmt"
 import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
+import _ "github.com/gogo/protobuf/gogoproto"
 
 import bytes "bytes"
 
-import fmt "fmt"
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -23,20 +22,24 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type DesiredLRPSchedulingInfo struct {
-	DesiredLRPKey      `protobuf:"bytes,1,opt,name=desired_lrp_key,embedded=desired_lrp_key" json:""`
+	DesiredLRPKey      `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,embedded=desired_lrp_key" json:""`
 	Annotation         string `protobuf:"bytes,2,opt,name=annotation" json:"annotation"`
 	Instances          int32  `protobuf:"varint,3,opt,name=instances" json:"instances"`
-	DesiredLRPResource `protobuf:"bytes,4,opt,name=desired_lrp_resource,embedded=desired_lrp_resource" json:""`
+	DesiredLRPResource `protobuf:"bytes,4,opt,name=desired_lrp_resource,json=desiredLrpResource,embedded=desired_lrp_resource" json:""`
 	Routes             Routes `protobuf:"bytes,5,opt,name=routes,customtype=Routes" json:"routes"`
-	ModificationTag    `protobuf:"bytes,6,opt,name=modification_tag,embedded=modification_tag" json:""`
-	VolumePlacement    *VolumePlacement `protobuf:"bytes,7,opt,name=volume_placement" json:"volume_placement,omitempty"`
+	ModificationTag    `protobuf:"bytes,6,opt,name=modification_tag,json=modificationTag,embedded=modification_tag" json:""`
+	VolumePlacement    *VolumePlacement `protobuf:"bytes,7,opt,name=volume_placement,json=volumePlacement" json:"volume_placement,omitempty"`
 }
 
 func (m *DesiredLRPSchedulingInfo) Reset()      { *m = DesiredLRPSchedulingInfo{} }
 func (*DesiredLRPSchedulingInfo) ProtoMessage() {}
+func (*DesiredLRPSchedulingInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptorDesiredLrp, []int{0}
+}
 
 func (m *DesiredLRPSchedulingInfo) GetAnnotation() string {
 	if m != nil {
@@ -60,29 +63,30 @@ func (m *DesiredLRPSchedulingInfo) GetVolumePlacement() *VolumePlacement {
 }
 
 type DesiredLRPRunInfo struct {
-	DesiredLRPKey                 `protobuf:"bytes,1,opt,name=desired_lrp_key,embedded=desired_lrp_key" json:""`
-	EnvironmentVariables          []EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env"`
+	DesiredLRPKey                 `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,embedded=desired_lrp_key" json:""`
+	EnvironmentVariables          []EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables,json=environmentVariables" json:"env"`
 	Setup                         *Action               `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
 	Action                        *Action               `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
 	Monitor                       *Action               `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
-	DeprecatedStartTimeoutS       uint32                `protobuf:"varint,6,opt,name=deprecated_start_timeout_s" json:"start_timeout,omitempty"`
+	DeprecatedStartTimeoutS       uint32                `protobuf:"varint,6,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS" json:"start_timeout,omitempty"`
 	Privileged                    bool                  `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
-	CpuWeight                     uint32                `protobuf:"varint,8,opt,name=cpu_weight" json:"cpu_weight"`
+	CpuWeight                     uint32                `protobuf:"varint,8,opt,name=cpu_weight,json=cpuWeight" json:"cpu_weight"`
 	Ports                         []uint32              `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
-	EgressRules                   []SecurityGroupRule   `protobuf:"bytes,10,rep,name=egress_rules" json:"egress_rules"`
-	LogSource                     string                `protobuf:"bytes,11,opt,name=log_source" json:"log_source"`
-	MetricsGuid                   string                `protobuf:"bytes,12,opt,name=metrics_guid" json:"metrics_guid"`
-	CreatedAt                     int64                 `protobuf:"varint,13,opt,name=created_at" json:"created_at"`
-	CachedDependencies            []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                `protobuf:"bytes,15,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
-	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	EgressRules                   []SecurityGroupRule   `protobuf:"bytes,10,rep,name=egress_rules,json=egressRules" json:"egress_rules"`
+	LogSource                     string                `protobuf:"bytes,11,opt,name=log_source,json=logSource" json:"log_source"`
+	MetricsGuid                   string                `protobuf:"bytes,12,opt,name=metrics_guid,json=metricsGuid" json:"metrics_guid"`
+	CreatedAt                     int64                 `protobuf:"varint,13,opt,name=created_at,json=createdAt" json:"created_at"`
+	CachedDependencies            []*CachedDependency   `protobuf:"bytes,14,rep,name=cached_dependencies,json=cachedDependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                `protobuf:"bytes,15,opt,name=legacy_download_user,json=legacyDownloadUser" json:"legacy_download_user,omitempty"`
+	TrustedSystemCertificatesPath string                `protobuf:"bytes,16,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath" json:"trusted_system_certificates_path,omitempty"`
+	VolumeMounts                  []*VolumeMount        `protobuf:"bytes,17,rep,name=volume_mounts,json=volumeMounts" json:"volume_mounts,omitempty"`
 	Network                       *Network              `protobuf:"bytes,18,opt,name=network" json:"network,omitempty"`
-	StartTimeoutMs                int64                 `protobuf:"varint,19,opt,name=start_timeout_ms" json:"start_timeout_ms"`
+	StartTimeoutMs                int64                 `protobuf:"varint,19,opt,name=start_timeout_ms,json=startTimeoutMs" json:"start_timeout_ms"`
 }
 
-func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
-func (*DesiredLRPRunInfo) ProtoMessage() {}
+func (m *DesiredLRPRunInfo) Reset()                    { *m = DesiredLRPRunInfo{} }
+func (*DesiredLRPRunInfo) ProtoMessage()               {}
+func (*DesiredLRPRunInfo) Descriptor() ([]byte, []int) { return fileDescriptorDesiredLrp, []int{1} }
 
 func (m *DesiredLRPRunInfo) GetEnvironmentVariables() []EnvironmentVariable {
 	if m != nil {
@@ -215,8 +219,9 @@ type ProtoRoutes struct {
 	Routes map[string][]byte `protobuf:"bytes,1,rep,name=routes" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *ProtoRoutes) Reset()      { *m = ProtoRoutes{} }
-func (*ProtoRoutes) ProtoMessage() {}
+func (m *ProtoRoutes) Reset()                    { *m = ProtoRoutes{} }
+func (*ProtoRoutes) ProtoMessage()               {}
+func (*ProtoRoutes) Descriptor() ([]byte, []int) { return fileDescriptorDesiredLrp, []int{2} }
 
 func (m *ProtoRoutes) GetRoutes() map[string][]byte {
 	if m != nil {
@@ -231,8 +236,9 @@ type DesiredLRPUpdate struct {
 	Annotation *string `protobuf:"bytes,3,opt,name=annotation" json:"annotation,omitempty"`
 }
 
-func (m *DesiredLRPUpdate) Reset()      { *m = DesiredLRPUpdate{} }
-func (*DesiredLRPUpdate) ProtoMessage() {}
+func (m *DesiredLRPUpdate) Reset()                    { *m = DesiredLRPUpdate{} }
+func (*DesiredLRPUpdate) ProtoMessage()               {}
+func (*DesiredLRPUpdate) Descriptor() ([]byte, []int) { return fileDescriptorDesiredLrp, []int{3} }
 
 func (m *DesiredLRPUpdate) GetInstances() int32 {
 	if m != nil && m.Instances != nil {
@@ -249,13 +255,14 @@ func (m *DesiredLRPUpdate) GetAnnotation() string {
 }
 
 type DesiredLRPKey struct {
-	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid,json=processGuid" json:"process_guid"`
 	Domain      string `protobuf:"bytes,2,opt,name=domain" json:"domain"`
-	LogGuid     string `protobuf:"bytes,3,opt,name=log_guid" json:"log_guid"`
+	LogGuid     string `protobuf:"bytes,3,opt,name=log_guid,json=logGuid" json:"log_guid"`
 }
 
-func (m *DesiredLRPKey) Reset()      { *m = DesiredLRPKey{} }
-func (*DesiredLRPKey) ProtoMessage() {}
+func (m *DesiredLRPKey) Reset()                    { *m = DesiredLRPKey{} }
+func (*DesiredLRPKey) ProtoMessage()               {}
+func (*DesiredLRPKey) Descriptor() ([]byte, []int) { return fileDescriptorDesiredLrp, []int{4} }
 
 func (m *DesiredLRPKey) GetProcessGuid() string {
 	if m != nil {
@@ -279,13 +286,14 @@ func (m *DesiredLRPKey) GetLogGuid() string {
 }
 
 type DesiredLRPResource struct {
-	MemoryMb int32  `protobuf:"varint,1,opt,name=memory_mb" json:"memory_mb"`
-	DiskMb   int32  `protobuf:"varint,2,opt,name=disk_mb" json:"disk_mb"`
-	RootFs   string `protobuf:"bytes,3,opt,name=root_fs" json:"rootfs"`
+	MemoryMb int32  `protobuf:"varint,1,opt,name=memory_mb,json=memoryMb" json:"memory_mb"`
+	DiskMb   int32  `protobuf:"varint,2,opt,name=disk_mb,json=diskMb" json:"disk_mb"`
+	RootFs   string `protobuf:"bytes,3,opt,name=root_fs,json=rootFs" json:"rootfs"`
 }
 
-func (m *DesiredLRPResource) Reset()      { *m = DesiredLRPResource{} }
-func (*DesiredLRPResource) ProtoMessage() {}
+func (m *DesiredLRPResource) Reset()                    { *m = DesiredLRPResource{} }
+func (*DesiredLRPResource) ProtoMessage()               {}
+func (*DesiredLRPResource) Descriptor() ([]byte, []int) { return fileDescriptorDesiredLrp, []int{5} }
 
 func (m *DesiredLRPResource) GetMemoryMb() int32 {
 	if m != nil {
@@ -309,37 +317,38 @@ func (m *DesiredLRPResource) GetRootFs() string {
 }
 
 type DesiredLRP struct {
-	ProcessGuid                   string                 `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	ProcessGuid                   string                 `protobuf:"bytes,1,opt,name=process_guid,json=processGuid" json:"process_guid"`
 	Domain                        string                 `protobuf:"bytes,2,opt,name=domain" json:"domain"`
-	RootFs                        string                 `protobuf:"bytes,3,opt,name=root_fs" json:"rootfs"`
+	RootFs                        string                 `protobuf:"bytes,3,opt,name=root_fs,json=rootFs" json:"rootfs"`
 	Instances                     int32                  `protobuf:"varint,4,opt,name=instances" json:"instances"`
-	EnvironmentVariables          []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables" json:"env"`
+	EnvironmentVariables          []*EnvironmentVariable `protobuf:"bytes,5,rep,name=environment_variables,json=environmentVariables" json:"env"`
 	Setup                         *Action                `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
 	Action                        *Action                `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
-	StartTimeoutMs                int64                  `protobuf:"varint,27,opt,name=start_timeout_ms" json:"start_timeout_ms"`
-	DeprecatedStartTimeoutS       uint32                 `protobuf:"varint,8,opt,name=deprecated_start_timeout_s" json:"deprecated_timeout_ns,omitempty"`
+	StartTimeoutMs                int64                  `protobuf:"varint,27,opt,name=start_timeout_ms,json=startTimeoutMs" json:"start_timeout_ms"`
+	DeprecatedStartTimeoutS       uint32                 `protobuf:"varint,8,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS" json:"deprecated_timeout_ns,omitempty"`
 	Monitor                       *Action                `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
-	DiskMb                        int32                  `protobuf:"varint,10,opt,name=disk_mb" json:"disk_mb"`
-	MemoryMb                      int32                  `protobuf:"varint,11,opt,name=memory_mb" json:"memory_mb"`
-	CpuWeight                     uint32                 `protobuf:"varint,12,opt,name=cpu_weight" json:"cpu_weight"`
+	DiskMb                        int32                  `protobuf:"varint,10,opt,name=disk_mb,json=diskMb" json:"disk_mb"`
+	MemoryMb                      int32                  `protobuf:"varint,11,opt,name=memory_mb,json=memoryMb" json:"memory_mb"`
+	CpuWeight                     uint32                 `protobuf:"varint,12,opt,name=cpu_weight,json=cpuWeight" json:"cpu_weight"`
 	Privileged                    bool                   `protobuf:"varint,13,opt,name=privileged" json:"privileged"`
 	Ports                         []uint32               `protobuf:"varint,14,rep,name=ports" json:"ports,omitempty"`
 	Routes                        *Routes                `protobuf:"bytes,15,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
-	LogSource                     string                 `protobuf:"bytes,16,opt,name=log_source" json:"log_source"`
-	LogGuid                       string                 `protobuf:"bytes,17,opt,name=log_guid" json:"log_guid"`
-	MetricsGuid                   string                 `protobuf:"bytes,18,opt,name=metrics_guid" json:"metrics_guid"`
+	LogSource                     string                 `protobuf:"bytes,16,opt,name=log_source,json=logSource" json:"log_source"`
+	LogGuid                       string                 `protobuf:"bytes,17,opt,name=log_guid,json=logGuid" json:"log_guid"`
+	MetricsGuid                   string                 `protobuf:"bytes,18,opt,name=metrics_guid,json=metricsGuid" json:"metrics_guid"`
 	Annotation                    string                 `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
-	EgressRules                   []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules" json:"egress_rules,omitempty"`
-	ModificationTag               *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag" json:"modification_tag,omitempty"`
-	CachedDependencies            []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                 `protobuf:"bytes,23,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
-	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,25,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	EgressRules                   []*SecurityGroupRule   `protobuf:"bytes,20,rep,name=egress_rules,json=egressRules" json:"egress_rules,omitempty"`
+	ModificationTag               *ModificationTag       `protobuf:"bytes,21,opt,name=modification_tag,json=modificationTag" json:"modification_tag,omitempty"`
+	CachedDependencies            []*CachedDependency    `protobuf:"bytes,22,rep,name=cached_dependencies,json=cachedDependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                 `protobuf:"bytes,23,opt,name=legacy_download_user,json=legacyDownloadUser" json:"legacy_download_user,omitempty"`
+	TrustedSystemCertificatesPath string                 `protobuf:"bytes,24,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath" json:"trusted_system_certificates_path,omitempty"`
+	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,25,rep,name=volume_mounts,json=volumeMounts" json:"volume_mounts,omitempty"`
 	Network                       *Network               `protobuf:"bytes,26,opt,name=network" json:"network,omitempty"`
 }
 
-func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
-func (*DesiredLRP) ProtoMessage() {}
+func (m *DesiredLRP) Reset()                    { *m = DesiredLRP{} }
+func (*DesiredLRP) ProtoMessage()               {}
+func (*DesiredLRP) Descriptor() ([]byte, []int) { return fileDescriptorDesiredLrp, []int{6} }
 
 func (m *DesiredLRP) GetProcessGuid() string {
 	if m != nil {
@@ -523,6 +532,15 @@ func (m *DesiredLRP) GetNetwork() *Network {
 	return nil
 }
 
+func init() {
+	proto.RegisterType((*DesiredLRPSchedulingInfo)(nil), "models.DesiredLRPSchedulingInfo")
+	proto.RegisterType((*DesiredLRPRunInfo)(nil), "models.DesiredLRPRunInfo")
+	proto.RegisterType((*ProtoRoutes)(nil), "models.proto_routes")
+	proto.RegisterType((*DesiredLRPUpdate)(nil), "models.DesiredLRPUpdate")
+	proto.RegisterType((*DesiredLRPKey)(nil), "models.DesiredLRPKey")
+	proto.RegisterType((*DesiredLRPResource)(nil), "models.DesiredLRPResource")
+	proto.RegisterType((*DesiredLRP)(nil), "models.DesiredLRP")
+}
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -533,7 +551,12 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPSchedulingInfo)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPSchedulingInfo)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -576,7 +599,12 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPRunInfo)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPRunInfo)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -680,7 +708,12 @@ func (this *ProtoRoutes) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ProtoRoutes)
 	if !ok {
-		return false
+		that2, ok := that.(ProtoRoutes)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -710,7 +743,12 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPUpdate)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPUpdate)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -757,7 +795,12 @@ func (this *DesiredLRPKey) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPKey)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPKey)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -788,7 +831,12 @@ func (this *DesiredLRPResource) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPResource)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRPResource)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -819,7 +867,12 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRP)
 	if !ok {
-		return false
+		that2, ok := that.(DesiredLRP)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -945,46 +998,72 @@ func (this *DesiredLRPSchedulingInfo) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPSchedulingInfo{` +
-		`DesiredLRPKey:` + strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1),
-		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
-		`Instances:` + fmt.Sprintf("%#v", this.Instances),
-		`DesiredLRPResource:` + strings.Replace(this.DesiredLRPResource.GoString(), `&`, ``, 1),
-		`Routes:` + fmt.Sprintf("%#v", this.Routes),
-		`ModificationTag:` + strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1),
-		`VolumePlacement:` + fmt.Sprintf("%#v", this.VolumePlacement) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 11)
+	s = append(s, "&models.DesiredLRPSchedulingInfo{")
+	s = append(s, "DesiredLRPKey: "+strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "Annotation: "+fmt.Sprintf("%#v", this.Annotation)+",\n")
+	s = append(s, "Instances: "+fmt.Sprintf("%#v", this.Instances)+",\n")
+	s = append(s, "DesiredLRPResource: "+strings.Replace(this.DesiredLRPResource.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "Routes: "+fmt.Sprintf("%#v", this.Routes)+",\n")
+	s = append(s, "ModificationTag: "+strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1)+",\n")
+	if this.VolumePlacement != nil {
+		s = append(s, "VolumePlacement: "+fmt.Sprintf("%#v", this.VolumePlacement)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRPRunInfo) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPRunInfo{` +
-		`DesiredLRPKey:` + strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1),
-		`EnvironmentVariables:` + strings.Replace(fmt.Sprintf("%#v", this.EnvironmentVariables), `&`, ``, 1),
-		`Setup:` + fmt.Sprintf("%#v", this.Setup),
-		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`Monitor:` + fmt.Sprintf("%#v", this.Monitor),
-		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS),
-		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
-		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
-		`Ports:` + fmt.Sprintf("%#v", this.Ports),
-		`EgressRules:` + strings.Replace(fmt.Sprintf("%#v", this.EgressRules), `&`, ``, 1),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
-		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
-		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
-		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Network:` + fmt.Sprintf("%#v", this.Network),
-		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 23)
+	s = append(s, "&models.DesiredLRPRunInfo{")
+	s = append(s, "DesiredLRPKey: "+strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1)+",\n")
+	if this.EnvironmentVariables != nil {
+		s = append(s, "EnvironmentVariables: "+fmt.Sprintf("%#v", this.EnvironmentVariables)+",\n")
+	}
+	if this.Setup != nil {
+		s = append(s, "Setup: "+fmt.Sprintf("%#v", this.Setup)+",\n")
+	}
+	if this.Action != nil {
+		s = append(s, "Action: "+fmt.Sprintf("%#v", this.Action)+",\n")
+	}
+	if this.Monitor != nil {
+		s = append(s, "Monitor: "+fmt.Sprintf("%#v", this.Monitor)+",\n")
+	}
+	s = append(s, "DeprecatedStartTimeoutS: "+fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS)+",\n")
+	s = append(s, "Privileged: "+fmt.Sprintf("%#v", this.Privileged)+",\n")
+	s = append(s, "CpuWeight: "+fmt.Sprintf("%#v", this.CpuWeight)+",\n")
+	if this.Ports != nil {
+		s = append(s, "Ports: "+fmt.Sprintf("%#v", this.Ports)+",\n")
+	}
+	if this.EgressRules != nil {
+		s = append(s, "EgressRules: "+fmt.Sprintf("%#v", this.EgressRules)+",\n")
+	}
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "MetricsGuid: "+fmt.Sprintf("%#v", this.MetricsGuid)+",\n")
+	s = append(s, "CreatedAt: "+fmt.Sprintf("%#v", this.CreatedAt)+",\n")
+	if this.CachedDependencies != nil {
+		s = append(s, "CachedDependencies: "+fmt.Sprintf("%#v", this.CachedDependencies)+",\n")
+	}
+	s = append(s, "LegacyDownloadUser: "+fmt.Sprintf("%#v", this.LegacyDownloadUser)+",\n")
+	s = append(s, "TrustedSystemCertificatesPath: "+fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath)+",\n")
+	if this.VolumeMounts != nil {
+		s = append(s, "VolumeMounts: "+fmt.Sprintf("%#v", this.VolumeMounts)+",\n")
+	}
+	if this.Network != nil {
+		s = append(s, "Network: "+fmt.Sprintf("%#v", this.Network)+",\n")
+	}
+	s = append(s, "StartTimeoutMs: "+fmt.Sprintf("%#v", this.StartTimeoutMs)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ProtoRoutes) GoString() string {
 	if this == nil {
 		return "nil"
 	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ProtoRoutes{")
 	keysForRoutes := make([]string, 0, len(this.Routes))
 	for k, _ := range this.Routes {
 		keysForRoutes = append(keysForRoutes, k)
@@ -995,73 +1074,111 @@ func (this *ProtoRoutes) GoString() string {
 		mapStringForRoutes += fmt.Sprintf("%#v: %#v,", k, this.Routes[k])
 	}
 	mapStringForRoutes += "}"
-	s := strings.Join([]string{`&models.ProtoRoutes{` +
-		`Routes:` + mapStringForRoutes + `}`}, ", ")
-	return s
+	if this.Routes != nil {
+		s = append(s, "Routes: "+mapStringForRoutes+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRPUpdate) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPUpdate{` +
-		`Instances:` + valueToGoStringDesiredLrp(this.Instances, "int32"),
-		`Routes:` + valueToGoStringDesiredLrp(this.Routes, "Routes"),
-		`Annotation:` + valueToGoStringDesiredLrp(this.Annotation, "string") + `}`}, ", ")
-	return s
+	s := make([]string, 0, 7)
+	s = append(s, "&models.DesiredLRPUpdate{")
+	if this.Instances != nil {
+		s = append(s, "Instances: "+valueToGoStringDesiredLrp(this.Instances, "int32")+",\n")
+	}
+	if this.Routes != nil {
+		s = append(s, "Routes: "+valueToGoStringDesiredLrp(this.Routes, "Routes")+",\n")
+	}
+	if this.Annotation != nil {
+		s = append(s, "Annotation: "+valueToGoStringDesiredLrp(this.Annotation, "string")+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRPKey) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPKey{` +
-		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
-		`Domain:` + fmt.Sprintf("%#v", this.Domain),
-		`LogGuid:` + fmt.Sprintf("%#v", this.LogGuid) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 7)
+	s = append(s, "&models.DesiredLRPKey{")
+	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "LogGuid: "+fmt.Sprintf("%#v", this.LogGuid)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRPResource) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRPResource{` +
-		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
-		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
-		`RootFs:` + fmt.Sprintf("%#v", this.RootFs) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 7)
+	s = append(s, "&models.DesiredLRPResource{")
+	s = append(s, "MemoryMb: "+fmt.Sprintf("%#v", this.MemoryMb)+",\n")
+	s = append(s, "DiskMb: "+fmt.Sprintf("%#v", this.DiskMb)+",\n")
+	s = append(s, "RootFs: "+fmt.Sprintf("%#v", this.RootFs)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesiredLRP) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesiredLRP{` +
-		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
-		`Domain:` + fmt.Sprintf("%#v", this.Domain),
-		`RootFs:` + fmt.Sprintf("%#v", this.RootFs),
-		`Instances:` + fmt.Sprintf("%#v", this.Instances),
-		`EnvironmentVariables:` + fmt.Sprintf("%#v", this.EnvironmentVariables),
-		`Setup:` + fmt.Sprintf("%#v", this.Setup),
-		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`StartTimeoutMs:` + fmt.Sprintf("%#v", this.StartTimeoutMs),
-		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS),
-		`Monitor:` + fmt.Sprintf("%#v", this.Monitor),
-		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
-		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
-		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
-		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
-		`Ports:` + fmt.Sprintf("%#v", this.Ports),
-		`Routes:` + valueToGoStringDesiredLrp(this.Routes, "Routes"),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`LogGuid:` + fmt.Sprintf("%#v", this.LogGuid),
-		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
-		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
-		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
-		`ModificationTag:` + fmt.Sprintf("%#v", this.ModificationTag),
-		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
-		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Network:` + fmt.Sprintf("%#v", this.Network) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 31)
+	s = append(s, "&models.DesiredLRP{")
+	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "RootFs: "+fmt.Sprintf("%#v", this.RootFs)+",\n")
+	s = append(s, "Instances: "+fmt.Sprintf("%#v", this.Instances)+",\n")
+	if this.EnvironmentVariables != nil {
+		s = append(s, "EnvironmentVariables: "+fmt.Sprintf("%#v", this.EnvironmentVariables)+",\n")
+	}
+	if this.Setup != nil {
+		s = append(s, "Setup: "+fmt.Sprintf("%#v", this.Setup)+",\n")
+	}
+	if this.Action != nil {
+		s = append(s, "Action: "+fmt.Sprintf("%#v", this.Action)+",\n")
+	}
+	s = append(s, "StartTimeoutMs: "+fmt.Sprintf("%#v", this.StartTimeoutMs)+",\n")
+	s = append(s, "DeprecatedStartTimeoutS: "+fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS)+",\n")
+	if this.Monitor != nil {
+		s = append(s, "Monitor: "+fmt.Sprintf("%#v", this.Monitor)+",\n")
+	}
+	s = append(s, "DiskMb: "+fmt.Sprintf("%#v", this.DiskMb)+",\n")
+	s = append(s, "MemoryMb: "+fmt.Sprintf("%#v", this.MemoryMb)+",\n")
+	s = append(s, "CpuWeight: "+fmt.Sprintf("%#v", this.CpuWeight)+",\n")
+	s = append(s, "Privileged: "+fmt.Sprintf("%#v", this.Privileged)+",\n")
+	if this.Ports != nil {
+		s = append(s, "Ports: "+fmt.Sprintf("%#v", this.Ports)+",\n")
+	}
+	if this.Routes != nil {
+		s = append(s, "Routes: "+valueToGoStringDesiredLrp(this.Routes, "Routes")+",\n")
+	}
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "LogGuid: "+fmt.Sprintf("%#v", this.LogGuid)+",\n")
+	s = append(s, "MetricsGuid: "+fmt.Sprintf("%#v", this.MetricsGuid)+",\n")
+	s = append(s, "Annotation: "+fmt.Sprintf("%#v", this.Annotation)+",\n")
+	if this.EgressRules != nil {
+		s = append(s, "EgressRules: "+fmt.Sprintf("%#v", this.EgressRules)+",\n")
+	}
+	if this.ModificationTag != nil {
+		s = append(s, "ModificationTag: "+fmt.Sprintf("%#v", this.ModificationTag)+",\n")
+	}
+	if this.CachedDependencies != nil {
+		s = append(s, "CachedDependencies: "+fmt.Sprintf("%#v", this.CachedDependencies)+",\n")
+	}
+	s = append(s, "LegacyDownloadUser: "+fmt.Sprintf("%#v", this.LegacyDownloadUser)+",\n")
+	s = append(s, "TrustedSystemCertificatesPath: "+fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath)+",\n")
+	if this.VolumeMounts != nil {
+		s = append(s, "VolumeMounts: "+fmt.Sprintf("%#v", this.VolumeMounts)+",\n")
+	}
+	if this.Network != nil {
+		s = append(s, "Network: "+fmt.Sprintf("%#v", this.Network)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringDesiredLrp(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -1071,11 +1188,12 @@ func valueToGoStringDesiredLrp(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringDesiredLrp(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringDesiredLrp(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -1085,7 +1203,7 @@ func extensionToGoStringDesiredLrp(e map[int32]github_com_gogo_protobuf_proto.Ex
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *DesiredLRPSchedulingInfo) Marshal() (data []byte, err error) {
@@ -1336,25 +1454,26 @@ func (m *ProtoRoutes) MarshalTo(data []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Routes) > 0 {
-		keysForRoutes := make([]string, 0, len(m.Routes))
 		for k, _ := range m.Routes {
-			keysForRoutes = append(keysForRoutes, k)
-		}
-		github_com_gogo_protobuf_sortkeys.Strings(keysForRoutes)
-		for _, k := range keysForRoutes {
 			data[i] = 0xa
 			i++
 			v := m.Routes[k]
-			mapSize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			byteSize := 0
+			if v != nil {
+				byteSize = 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			}
+			mapSize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + byteSize
 			i = encodeVarintDesiredLrp(data, i, uint64(mapSize))
 			data[i] = 0xa
 			i++
 			i = encodeVarintDesiredLrp(data, i, uint64(len(k)))
 			i += copy(data[i:], k)
-			data[i] = 0x12
-			i++
-			i = encodeVarintDesiredLrp(data, i, uint64(len(v)))
-			i += copy(data[i:], v)
+			if v != nil {
+				data[i] = 0x12
+				i++
+				i = encodeVarintDesiredLrp(data, i, uint64(len(v)))
+				i += copy(data[i:], v)
+			}
 		}
 	}
 	return i, nil
@@ -1797,7 +1916,11 @@ func (m *ProtoRoutes) Size() (n int) {
 		for k, v := range m.Routes {
 			_ = k
 			_ = v
-			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			l = 0
+			if v != nil {
+				l = 1 + len(v) + sovDesiredLrp(uint64(len(v)))
+			}
+			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + l
 			n += mapEntrySize + 1 + sovDesiredLrp(uint64(mapEntrySize))
 		}
 	}
@@ -2088,8 +2211,12 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2102,6 +2229,12 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPSchedulingInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPSchedulingInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2109,6 +2242,9 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2119,10 +2255,10 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2136,6 +2272,9 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2146,10 +2285,11 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2161,6 +2301,9 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			m.Instances = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2177,6 +2320,9 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2187,10 +2333,10 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2204,6 +2350,9 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2231,6 +2380,9 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2241,10 +2393,10 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2258,6 +2410,9 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2268,10 +2423,10 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2283,15 +2438,7 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDesiredLrp(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2306,14 +2453,21 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2326,6 +2480,12 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPRunInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPRunInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2333,6 +2493,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2343,10 +2506,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2360,6 +2523,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2370,10 +2536,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2388,6 +2554,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2398,10 +2567,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2418,6 +2587,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2428,10 +2600,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2448,6 +2620,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2458,10 +2633,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2478,6 +2653,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			m.DeprecatedStartTimeoutS = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2494,6 +2672,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2511,6 +2692,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			m.CpuWeight = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2527,6 +2711,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var v uint32
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2544,6 +2731,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2554,10 +2744,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2572,6 +2762,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2582,10 +2775,11 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2597,6 +2791,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2607,10 +2804,11 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2622,6 +2820,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			m.CreatedAt = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2638,6 +2839,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2648,10 +2852,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2666,6 +2870,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2676,10 +2883,11 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2691,6 +2899,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2701,10 +2912,11 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2716,6 +2928,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2726,10 +2941,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2744,6 +2959,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2754,10 +2972,10 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2774,6 +2992,9 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 			}
 			m.StartTimeoutMs = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2785,15 +3006,7 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDesiredLrp(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2808,14 +3021,21 @@ func (m *DesiredLRPRunInfo) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ProtoRoutes) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2828,6 +3048,12 @@ func (m *ProtoRoutes) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: proto_routes: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: proto_routes: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2835,6 +3061,9 @@ func (m *ProtoRoutes) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2845,15 +3074,18 @@ func (m *ProtoRoutes) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			var keykey uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2866,6 +3098,9 @@ func (m *ProtoRoutes) Unmarshal(data []byte) error {
 			}
 			var stringLenmapkey uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2876,61 +3111,69 @@ func (m *ProtoRoutes) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			if stringLenmapkey < 0 {
+			intStringLenmapkey := int(stringLenmapkey)
+			if intStringLenmapkey < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
-			postStringIndexmapkey := iNdEx + int(stringLenmapkey)
+			postStringIndexmapkey := iNdEx + intStringLenmapkey
 			if postStringIndexmapkey > l {
 				return io.ErrUnexpectedEOF
 			}
 			mapkey := string(data[iNdEx:postStringIndexmapkey])
 			iNdEx = postStringIndexmapkey
-			var valuekey uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				valuekey |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			var mapbyteLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				mapbyteLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			postbytesIndex := iNdEx + int(mapbyteLen)
-			if postbytesIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			mapvalue := make([]byte, mapbyteLen)
-			copy(mapvalue, data[iNdEx:postbytesIndex])
-			iNdEx = postbytesIndex
 			if m.Routes == nil {
 				m.Routes = make(map[string][]byte)
 			}
-			m.Routes[mapkey] = mapvalue
+			if iNdEx < postIndex {
+				var valuekey uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowDesiredLrp
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := data[iNdEx]
+					iNdEx++
+					valuekey |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				var mapbyteLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowDesiredLrp
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := data[iNdEx]
+					iNdEx++
+					mapbyteLen |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intMapbyteLen := int(mapbyteLen)
+				if intMapbyteLen < 0 {
+					return ErrInvalidLengthDesiredLrp
+				}
+				postbytesIndex := iNdEx + intMapbyteLen
+				if postbytesIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				mapvalue := make([]byte, mapbyteLen)
+				copy(mapvalue, data[iNdEx:postbytesIndex])
+				iNdEx = postbytesIndex
+				m.Routes[mapkey] = mapvalue
+			} else {
+				var mapvalue []byte
+				m.Routes[mapkey] = mapvalue
+			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDesiredLrp(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2945,14 +3188,21 @@ func (m *ProtoRoutes) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2965,6 +3215,12 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPUpdate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
@@ -2972,6 +3228,9 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 			}
 			var v int32
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2989,6 +3248,9 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3018,6 +3280,9 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3028,10 +3293,11 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3039,15 +3305,7 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 			m.Annotation = &s
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDesiredLrp(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3062,14 +3320,21 @@ func (m *DesiredLRPUpdate) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3082,6 +3347,12 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3089,6 +3360,9 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3099,10 +3373,11 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3114,6 +3389,9 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3124,10 +3402,11 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3139,6 +3418,9 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3149,25 +3431,18 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.LogGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDesiredLrp(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3182,14 +3457,21 @@ func (m *DesiredLRPKey) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRPResource) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3202,6 +3484,12 @@ func (m *DesiredLRPResource) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRPResource: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRPResource: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
@@ -3209,6 +3497,9 @@ func (m *DesiredLRPResource) Unmarshal(data []byte) error {
 			}
 			m.MemoryMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3225,6 +3516,9 @@ func (m *DesiredLRPResource) Unmarshal(data []byte) error {
 			}
 			m.DiskMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3241,6 +3535,9 @@ func (m *DesiredLRPResource) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3251,25 +3548,18 @@ func (m *DesiredLRPResource) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.RootFs = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDesiredLrp(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3284,14 +3574,21 @@ func (m *DesiredLRPResource) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesiredLRP) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3304,6 +3601,12 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesiredLRP: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesiredLRP: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3311,6 +3614,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3321,10 +3627,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3336,6 +3643,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3346,10 +3656,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3361,6 +3672,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3371,10 +3685,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3386,6 +3701,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.Instances = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3402,6 +3720,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3412,10 +3733,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3430,6 +3751,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3440,10 +3764,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3460,6 +3784,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3470,10 +3797,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3490,6 +3817,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.DeprecatedStartTimeoutS = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3506,6 +3836,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3516,10 +3849,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3536,6 +3869,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.DiskMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3552,6 +3888,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.MemoryMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3568,6 +3907,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.CpuWeight = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3584,6 +3926,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3601,6 +3946,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var v uint32
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3618,6 +3966,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3647,6 +3998,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3657,10 +4011,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3672,6 +4027,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3682,10 +4040,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3697,6 +4056,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3707,10 +4069,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3722,6 +4085,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3732,10 +4098,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3747,6 +4114,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3757,10 +4127,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3775,6 +4145,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3785,10 +4158,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3805,6 +4178,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3815,10 +4191,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3833,6 +4209,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3843,10 +4222,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3858,6 +4238,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3868,10 +4251,11 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3883,6 +4267,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3893,10 +4280,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3911,6 +4298,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3921,10 +4311,10 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDesiredLrp
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3941,6 +4331,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 			}
 			m.StartTimeoutMs = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3952,15 +4345,7 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDesiredLrp(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3975,6 +4360,9 @@ func (m *DesiredLRP) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipDesiredLrp(data []byte) (n int, err error) {
@@ -3983,6 +4371,9 @@ func skipDesiredLrp(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowDesiredLrp
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -3996,7 +4387,10 @@ func skipDesiredLrp(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -4012,6 +4406,9 @@ func skipDesiredLrp(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowDesiredLrp
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -4032,6 +4429,9 @@ func skipDesiredLrp(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowDesiredLrp
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -4067,4 +4467,94 @@ func skipDesiredLrp(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthDesiredLrp = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowDesiredLrp   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("desired_lrp.proto", fileDescriptorDesiredLrp) }
+
+var fileDescriptorDesiredLrp = []byte{
+	// 1316 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xbc, 0x56, 0xcd, 0x6e, 0xdb, 0x46,
+	0x10, 0x36, 0xad, 0x58, 0xb2, 0x56, 0x92, 0x2d, 0xaf, 0xe5, 0x98, 0x91, 0x1b, 0x39, 0x51, 0x8b,
+	0x24, 0x2d, 0x52, 0x05, 0xc8, 0x29, 0x28, 0x7a, 0x68, 0x98, 0xa4, 0x41, 0x91, 0xb8, 0x30, 0xa8,
+	0x24, 0xfd, 0x01, 0x5a, 0x82, 0x22, 0x57, 0x34, 0x11, 0x91, 0x4b, 0xec, 0x2e, 0x65, 0x08, 0x3d,
+	0xb4, 0x87, 0xde, 0xdb, 0xc7, 0xe8, 0x4b, 0xf4, 0x1e, 0xa0, 0x97, 0x1c, 0x8b, 0x1e, 0x82, 0x26,
+	0xbd, 0x14, 0xed, 0xa5, 0x8f, 0xd0, 0xe5, 0x72, 0x29, 0x2e, 0xf5, 0xe3, 0xf8, 0x60, 0xf8, 0x40,
+	0x48, 0x9c, 0xf9, 0x76, 0x66, 0x76, 0xfe, 0x3e, 0x82, 0x2d, 0x17, 0x51, 0x9f, 0x20, 0xd7, 0x1a,
+	0x91, 0xa8, 0x17, 0x11, 0xcc, 0x30, 0x2c, 0x07, 0xd8, 0x45, 0x23, 0xda, 0xfe, 0xd0, 0xf3, 0xd9,
+	0x51, 0x3c, 0xe8, 0x39, 0x38, 0xb8, 0xe5, 0x61, 0x0f, 0xdf, 0x12, 0xea, 0x41, 0x3c, 0x14, 0x6f,
+	0xe2, 0x45, 0xfc, 0x4b, 0x8f, 0xb5, 0x2f, 0xf2, 0x63, 0xfe, 0xd0, 0x77, 0x6c, 0xe6, 0xe3, 0xd0,
+	0x62, 0xb6, 0x27, 0xe5, 0x0d, 0xdb, 0x49, 0x24, 0x54, 0xbe, 0xee, 0x3a, 0xb6, 0x73, 0xc4, 0xfd,
+	0xb9, 0x28, 0x42, 0xa1, 0x8b, 0x42, 0x67, 0x22, 0x15, 0x2d, 0x8a, 0x9c, 0x98, 0xf8, 0x6c, 0x62,
+	0x79, 0x04, 0xc7, 0x32, 0x98, 0xf6, 0x1e, 0x0a, 0xc7, 0x3e, 0xc1, 0x61, 0x80, 0x42, 0x66, 0x8d,
+	0x6d, 0xe2, 0xdb, 0x83, 0x11, 0xca, 0x6c, 0xc1, 0x31, 0x1e, 0xc5, 0x01, 0xb2, 0x02, 0x1c, 0x87,
+	0x2c, 0x73, 0x17, 0x22, 0x76, 0x8c, 0xc9, 0xf3, 0xf4, 0xb5, 0xfb, 0x6f, 0x09, 0xe8, 0xf7, 0xd3,
+	0x2b, 0x3e, 0x36, 0x0f, 0xfb, 0x89, 0xeb, 0x78, 0xe4, 0x87, 0xde, 0x67, 0xe1, 0x10, 0xc3, 0x47,
+	0x60, 0x53, 0xb9, 0xbe, 0xf5, 0x1c, 0x4d, 0x74, 0xed, 0x8a, 0x76, 0xa3, 0x76, 0x7b, 0xa7, 0x97,
+	0xe6, 0xa0, 0x97, 0x1f, 0x7d, 0x84, 0x26, 0x46, 0xfd, 0xc5, 0xab, 0xfd, 0x95, 0x97, 0xaf, 0xf6,
+	0xb5, 0x7f, 0xf8, 0xaf, 0xd9, 0x90, 0x67, 0x1f, 0x93, 0x88, 0x2b, 0xe1, 0x7b, 0x00, 0xd8, 0x61,
+	0x88, 0x99, 0xb8, 0xbf, 0xbe, 0xca, 0xed, 0x54, 0x8d, 0x0b, 0xc9, 0x01, 0x53, 0x91, 0xc3, 0x2e,
+	0xa8, 0xfa, 0x21, 0x65, 0x76, 0xe8, 0x20, 0xaa, 0x97, 0x38, 0x68, 0x4d, 0x82, 0x72, 0x31, 0xfc,
+	0x1a, 0xb4, 0xd4, 0xb0, 0x08, 0xa2, 0x38, 0x26, 0x0e, 0xd2, 0x2f, 0x88, 0xd8, 0xda, 0xf3, 0xb1,
+	0x99, 0x12, 0x31, 0x13, 0x20, 0xcc, 0x03, 0xcc, 0x10, 0xf0, 0x1a, 0x28, 0xf3, 0xec, 0x32, 0xee,
+	0x7c, 0x8d, 0x5b, 0xab, 0x1b, 0x1b, 0xc9, 0x89, 0x3f, 0x5e, 0xed, 0x97, 0x4d, 0x21, 0x35, 0xa5,
+	0x16, 0x1e, 0x82, 0xe6, 0x6c, 0x3d, 0xf5, 0xb2, 0xf0, 0xbf, 0x9b, 0xf9, 0x3f, 0x50, 0xf4, 0x4f,
+	0x6c, 0x6f, 0xc6, 0xf9, 0x66, 0x50, 0x54, 0xc3, 0x01, 0x68, 0xca, 0x72, 0x45, 0x23, 0xdb, 0x41,
+	0x49, 0x41, 0xf5, 0x4a, 0xd1, 0xe2, 0x33, 0xa1, 0x3f, 0xcc, 0xd4, 0x46, 0x87, 0x5b, 0x6a, 0xcf,
+	0x1e, 0xba, 0x89, 0x03, 0x9f, 0xa1, 0x20, 0x62, 0x13, 0x73, 0x73, 0x5c, 0x3c, 0xd0, 0xfd, 0xb5,
+	0x0a, 0xb6, 0x94, 0xb4, 0xc4, 0xe1, 0xd9, 0x97, 0xf9, 0x1b, 0xb0, 0xb3, 0xb0, 0x25, 0x79, 0xc5,
+	0x4b, 0xdc, 0xe4, 0x5e, 0x66, 0xf2, 0x41, 0x0e, 0x7a, 0x26, 0x31, 0x46, 0x2d, 0x31, 0xcc, 0x8d,
+	0x96, 0xb8, 0x05, 0xb3, 0x85, 0xe6, 0x11, 0x94, 0x77, 0xd1, 0x1a, 0x45, 0x2c, 0x8e, 0x44, 0x6f,
+	0xd4, 0x6e, 0x6f, 0x64, 0xe6, 0xee, 0x8a, 0x21, 0x32, 0x53, 0x65, 0x52, 0xc5, 0x74, 0xaa, 0x64,
+	0x4f, 0xcc, 0xc2, 0xa4, 0x16, 0xde, 0x00, 0x95, 0x00, 0x87, 0x3e, 0xc3, 0x44, 0x94, 0x7b, 0x1e,
+	0x98, 0xa9, 0xe1, 0xb7, 0xa0, 0xcd, 0x27, 0x92, 0x20, 0x5e, 0x2f, 0x9e, 0x26, 0xde, 0x89, 0x84,
+	0x59, 0xcc, 0x0f, 0x10, 0xef, 0x06, 0x8b, 0x8a, 0xca, 0x37, 0x8c, 0xab, 0x32, 0xfc, 0xdd, 0x82,
+	0x3a, 0xaf, 0x87, 0xae, 0x99, 0xbb, 0xb9, 0x91, 0x7e, 0x02, 0x7a, 0x92, 0x62, 0xfa, 0xc9, 0x74,
+	0x44, 0xc4, 0x1f, 0xfb, 0x23, 0xe4, 0x21, 0x57, 0xd4, 0x7d, 0x3d, 0x9b, 0x8e, 0x5c, 0x0e, 0xdf,
+	0x05, 0xc0, 0x89, 0x62, 0xeb, 0x18, 0xf9, 0xde, 0x11, 0xd3, 0xd7, 0x85, 0x57, 0x39, 0x1e, 0x5c,
+	0xfe, 0x85, 0x10, 0xc3, 0x16, 0x58, 0x8b, 0x30, 0x61, 0x54, 0xaf, 0xf2, 0x8c, 0x37, 0xcc, 0xf4,
+	0x05, 0x1a, 0xa0, 0x8e, 0x3c, 0x3e, 0x2a, 0xd4, 0x22, 0x71, 0x52, 0x0e, 0x20, 0xca, 0x71, 0x29,
+	0xbb, 0x6f, 0x5f, 0x2e, 0x97, 0x87, 0xc9, 0x6e, 0x31, 0x39, 0x42, 0xda, 0xad, 0xa5, 0x87, 0x12,
+	0x09, 0x4d, 0xdc, 0x8f, 0xb0, 0x67, 0xc9, 0x71, 0xab, 0x29, 0x23, 0x5c, 0xe5, 0xf2, 0x7e, 0x3a,
+	0x41, 0xd7, 0x41, 0x3d, 0x40, 0x8c, 0xf8, 0x0e, 0xb5, 0xbc, 0xd8, 0x77, 0xf5, 0xba, 0x02, 0xab,
+	0x49, 0xcd, 0x43, 0xae, 0x10, 0x97, 0x21, 0x48, 0xe4, 0xd3, 0x66, 0x7a, 0x83, 0xc3, 0x4a, 0xd3,
+	0xcb, 0xa4, 0xf2, 0xbb, 0x0c, 0x8e, 0xc0, 0xf6, 0xec, 0x42, 0xf4, 0x79, 0xf4, 0x1b, 0x22, 0x7a,
+	0x3d, 0x8b, 0xfe, 0x9e, 0x80, 0xdc, 0x9f, 0xae, 0x4c, 0xe3, 0x2a, 0x2f, 0xc3, 0xe5, 0x05, 0x07,
+	0x95, 0xe1, 0x80, 0x4e, 0xf1, 0x10, 0xd7, 0xc2, 0x2f, 0x41, 0x8b, 0x27, 0xda, 0x76, 0x26, 0x96,
+	0x8b, 0x8f, 0xc3, 0x11, 0xb6, 0x5d, 0x2b, 0xa6, 0x88, 0xe8, 0x9b, 0xe2, 0x0e, 0xd7, 0x64, 0x7d,
+	0x3b, 0x8b, 0x30, 0xaa, 0xe5, 0x54, 0x7f, 0x5f, 0xaa, 0x9f, 0x72, 0x2d, 0xfc, 0x0e, 0x5c, 0x61,
+	0x24, 0xa6, 0xa2, 0x79, 0x26, 0xfc, 0x27, 0xb0, 0x1c, 0x44, 0x58, 0xba, 0x00, 0x10, 0xb5, 0x22,
+	0x9b, 0x1d, 0xe9, 0x4d, 0xe1, 0xe5, 0xb6, 0xf4, 0xf2, 0xc1, 0xdb, 0xf0, 0x8a, 0xc7, 0xcb, 0x12,
+	0xdb, 0x17, 0xd0, 0x7b, 0x0a, 0xf2, 0x90, 0x03, 0xe1, 0x53, 0xd0, 0x50, 0x99, 0x80, 0xea, 0x5b,
+	0x22, 0x7d, 0xdb, 0xc5, 0xbd, 0x72, 0x90, 0xe8, 0x8c, 0xbd, 0xa4, 0x81, 0x0b, 0x68, 0xc5, 0x4f,
+	0x7d, 0x9c, 0x23, 0x29, 0xfc, 0x04, 0x54, 0x24, 0x99, 0xe8, 0x50, 0x4c, 0xcf, 0x66, 0x66, 0xf0,
+	0xf3, 0x54, 0x6c, 0xec, 0x70, 0x63, 0x5b, 0x12, 0xa3, 0x98, 0xc9, 0x8e, 0xc1, 0x1e, 0x68, 0x16,
+	0x47, 0x29, 0xa0, 0xfa, 0xb6, 0xd2, 0x08, 0x1b, 0x54, 0x19, 0x92, 0x03, 0xda, 0xfd, 0x49, 0x03,
+	0x75, 0xc1, 0x5b, 0x96, 0x5c, 0xc3, 0x77, 0xa6, 0xeb, 0x5a, 0x13, 0x57, 0xba, 0x92, 0x45, 0xa0,
+	0xa2, 0x7a, 0xe9, 0xee, 0x7e, 0x10, 0x32, 0x32, 0xc9, 0x16, 0x78, 0xfb, 0x01, 0xa8, 0x29, 0x62,
+	0x78, 0x11, 0x94, 0xb2, 0xbd, 0x97, 0x35, 0x6b, 0x22, 0x80, 0x6d, 0xb0, 0x36, 0xb6, 0x47, 0x31,
+	0x12, 0x84, 0x55, 0x97, 0x9a, 0x54, 0xf4, 0xd1, 0xea, 0x1d, 0xad, 0xfb, 0xa3, 0x06, 0x9a, 0xf9,
+	0x76, 0x7c, 0x1a, 0xb9, 0x3c, 0xe9, 0x45, 0x12, 0xd3, 0xa6, 0x24, 0xa6, 0xa9, 0x24, 0x96, 0x13,
+	0xcd, 0xea, 0x94, 0x68, 0xb4, 0x05, 0x44, 0x53, 0xa4, 0xcd, 0xd2, 0x34, 0x3e, 0x4d, 0xa5, 0xcd,
+	0xee, 0x31, 0x68, 0x14, 0x76, 0x74, 0x32, 0x85, 0x3c, 0x05, 0x4e, 0x32, 0xef, 0x62, 0x0a, 0xd5,
+	0x8b, 0xd5, 0xa4, 0x46, 0x4c, 0xe1, 0x3b, 0xa0, 0xec, 0xe2, 0xc0, 0xf6, 0x8b, 0x94, 0x2c, 0x65,
+	0x70, 0x1f, 0xac, 0x27, 0x13, 0x2f, 0x4c, 0x94, 0x14, 0x7d, 0x85, 0x4b, 0x93, 0xe3, 0xdd, 0xef,
+	0x01, 0x9c, 0xe7, 0x59, 0x78, 0x15, 0x54, 0x03, 0x14, 0x60, 0x32, 0xb1, 0x82, 0x81, 0x92, 0x80,
+	0x15, 0x73, 0x3d, 0x15, 0x1f, 0x0c, 0xe0, 0x65, 0x50, 0x71, 0x7d, 0xfa, 0x3c, 0x01, 0xac, 0x2a,
+	0x80, 0x72, 0x22, 0xe4, 0xea, 0xeb, 0xa0, 0x42, 0x30, 0x66, 0xd6, 0x90, 0x4a, 0xbf, 0x1b, 0x72,
+	0x2c, 0xca, 0x89, 0x78, 0x28, 0xf2, 0x83, 0xd9, 0xa7, 0xb4, 0xfb, 0x5b, 0x0d, 0x80, 0x3c, 0x82,
+	0xb3, 0xba, 0xf7, 0x69, 0xdd, 0x17, 0x4b, 0x7d, 0x61, 0xf1, 0xf7, 0xca, 0x57, 0xcb, 0x28, 0x71,
+	0xed, 0xed, 0x94, 0x58, 0x39, 0x25, 0x1d, 0x96, 0x4f, 0x47, 0x87, 0x95, 0x13, 0xe9, 0x70, 0x78,
+	0x22, 0xc9, 0xa5, 0x74, 0xf3, 0xbe, 0x4c, 0xc4, 0xbe, 0x82, 0xcc, 0x30, 0x21, 0x3d, 0x1d, 0xd9,
+	0x29, 0xb4, 0x5b, 0x3d, 0x99, 0x76, 0x95, 0x2e, 0x01, 0x0b, 0xba, 0xa4, 0xd0, 0x67, 0xb5, 0x85,
+	0x7d, 0x56, 0xa4, 0xcc, 0xfa, 0x62, 0xca, 0x2c, 0xb2, 0x6f, 0x63, 0x09, 0xfb, 0x4e, 0x89, 0x75,
+	0x43, 0x25, 0xd6, 0x7c, 0x90, 0x37, 0x4f, 0x1c, 0xe4, 0x22, 0x79, 0x36, 0x17, 0x93, 0xa7, 0x3a,
+	0x6f, 0x5b, 0x0b, 0xe6, 0x6d, 0x8e, 0x5d, 0xe1, 0x32, 0x76, 0x2d, 0xee, 0x8d, 0xed, 0x25, 0x9f,
+	0xdb, 0x1f, 0xcf, 0x7c, 0x15, 0xb4, 0xde, 0xf2, 0x55, 0x50, 0xfc, 0x1e, 0x30, 0x16, 0x7c, 0x04,
+	0xef, 0x9c, 0xf8, 0x11, 0x3c, 0xff, 0xd9, 0xbb, 0x84, 0xe0, 0x2f, 0x9e, 0x2f, 0xc1, 0xef, 0x9e,
+	0x0b, 0xc1, 0xeb, 0xe7, 0x46, 0xf0, 0x97, 0xce, 0x9a, 0xe0, 0xdb, 0x67, 0x47, 0xf0, 0x7b, 0xcb,
+	0x09, 0xde, 0xb8, 0xf9, 0xf2, 0x75, 0x67, 0xe5, 0x77, 0xfe, 0xfc, 0xf7, 0xba, 0xa3, 0xfd, 0xf0,
+	0xa6, 0xa3, 0xfd, 0xc2, 0x9f, 0x17, 0xfc, 0x79, 0xc9, 0x9f, 0x3f, 0xf9, 0xf3, 0xf7, 0x1b, 0xae,
+	0xe3, 0xbf, 0x3f, 0xff, 0xd5, 0x59, 0xf9, 0x3f, 0x00, 0x00, 0xff, 0xff, 0x54, 0x75, 0xd0, 0x8f,
+	0x9d, 0x0f, 0x00, 0x00,
+}
