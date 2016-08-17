@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"encoding/json"
+
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,9 +20,11 @@ var _ = Describe("VolumeMount", func() {
 				Driver:       "my-driver",
 				ContainerDir: "/mnt/mypath",
 				Mode:         "r",
-				Shared: &models.SharedDevice{
-					VolumeId:    "my-volume",
-					MountConfig: `{"foo":"bar"}`,
+				Device: &models.VolumeMount_Shared{
+					Shared: &models.SharedDevice{
+						VolumeId:    "my-volume",
+						MountConfig: `{"foo":"bar"}`,
+					},
 				},
 			}
 		})
@@ -65,7 +69,7 @@ var _ = Describe("VolumeMount", func() {
 
 		Context("given an invalid volumeId", func() {
 			BeforeEach(func() {
-				mount.Shared.VolumeId = ""
+				mount.GetShared().VolumeId = ""
 			})
 
 			It("should return an error", func() {
@@ -82,5 +86,15 @@ var _ = Describe("VolumeMount", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+		Context("marshall JSON", func() {
+			FIt("does not eturn an error on marshal unmarshal", func() {
+				data, err := json.Marshal(mount)
+				Expect(err).NotTo(HaveOccurred())
+				var newMount models.VolumeMount
+				err = json.Unmarshal(data, &newMount)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 	})
+
 })

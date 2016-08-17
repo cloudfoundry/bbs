@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -20,16 +19,18 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type CellCapacity struct {
-	MemoryMb   int32 `protobuf:"varint,1,opt,name=memory_mb" json:"memory_mb"`
-	DiskMb     int32 `protobuf:"varint,2,opt,name=disk_mb" json:"disk_mb"`
+	MemoryMb   int32 `protobuf:"varint,1,opt,name=memory_mb,json=memoryMb" json:"memory_mb"`
+	DiskMb     int32 `protobuf:"varint,2,opt,name=disk_mb,json=diskMb" json:"disk_mb"`
 	Containers int32 `protobuf:"varint,3,opt,name=containers" json:"containers"`
 }
 
-func (m *CellCapacity) Reset()      { *m = CellCapacity{} }
-func (*CellCapacity) ProtoMessage() {}
+func (m *CellCapacity) Reset()                    { *m = CellCapacity{} }
+func (*CellCapacity) ProtoMessage()               {}
+func (*CellCapacity) Descriptor() ([]byte, []int) { return fileDescriptorCells, []int{0} }
 
 func (m *CellCapacity) GetMemoryMb() int32 {
 	if m != nil {
@@ -53,15 +54,16 @@ func (m *CellCapacity) GetContainers() int32 {
 }
 
 type CellPresence struct {
-	CellId          string        `protobuf:"bytes,1,opt,name=cell_id" json:"cell_id"`
-	RepAddress      string        `protobuf:"bytes,2,opt,name=rep_address" json:"rep_address"`
+	CellId          string        `protobuf:"bytes,1,opt,name=cell_id,json=cellId" json:"cell_id"`
+	RepAddress      string        `protobuf:"bytes,2,opt,name=rep_address,json=repAddress" json:"rep_address"`
 	Zone            string        `protobuf:"bytes,3,opt,name=zone" json:"zone"`
 	Capacity        *CellCapacity `protobuf:"bytes,4,opt,name=capacity" json:"capacity,omitempty"`
-	RootfsProviders []*Provider   `protobuf:"bytes,5,rep,name=rootfs_providers" json:"rootfs_provider_list,omitempty"`
+	RootfsProviders []*Provider   `protobuf:"bytes,5,rep,name=rootfs_providers,json=rootfsProviders" json:"rootfs_provider_list,omitempty"`
 }
 
-func (m *CellPresence) Reset()      { *m = CellPresence{} }
-func (*CellPresence) ProtoMessage() {}
+func (m *CellPresence) Reset()                    { *m = CellPresence{} }
+func (*CellPresence) ProtoMessage()               {}
+func (*CellPresence) Descriptor() ([]byte, []int) { return fileDescriptorCells, []int{1} }
 
 func (m *CellPresence) GetCellId() string {
 	if m != nil {
@@ -103,8 +105,9 @@ type Provider struct {
 	Properties []string `protobuf:"bytes,2,rep,name=properties" json:"properties,omitempty"`
 }
 
-func (m *Provider) Reset()      { *m = Provider{} }
-func (*Provider) ProtoMessage() {}
+func (m *Provider) Reset()                    { *m = Provider{} }
+func (*Provider) ProtoMessage()               {}
+func (*Provider) Descriptor() ([]byte, []int) { return fileDescriptorCells, []int{2} }
 
 func (m *Provider) GetName() string {
 	if m != nil {
@@ -125,8 +128,9 @@ type CellsResponse struct {
 	Cells []*CellPresence `protobuf:"bytes,2,rep,name=cells" json:"cells,omitempty"`
 }
 
-func (m *CellsResponse) Reset()      { *m = CellsResponse{} }
-func (*CellsResponse) ProtoMessage() {}
+func (m *CellsResponse) Reset()                    { *m = CellsResponse{} }
+func (*CellsResponse) ProtoMessage()               {}
+func (*CellsResponse) Descriptor() ([]byte, []int) { return fileDescriptorCells, []int{3} }
 
 func (m *CellsResponse) GetError() *Error {
 	if m != nil {
@@ -142,6 +146,12 @@ func (m *CellsResponse) GetCells() []*CellPresence {
 	return nil
 }
 
+func init() {
+	proto.RegisterType((*CellCapacity)(nil), "models.CellCapacity")
+	proto.RegisterType((*CellPresence)(nil), "models.CellPresence")
+	proto.RegisterType((*Provider)(nil), "models.Provider")
+	proto.RegisterType((*CellsResponse)(nil), "models.CellsResponse")
+}
 func (this *CellCapacity) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -152,7 +162,12 @@ func (this *CellCapacity) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CellCapacity)
 	if !ok {
-		return false
+		that2, ok := that.(CellCapacity)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -183,7 +198,12 @@ func (this *CellPresence) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CellPresence)
 	if !ok {
-		return false
+		that2, ok := that.(CellPresence)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -225,7 +245,12 @@ func (this *Provider) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Provider)
 	if !ok {
-		return false
+		that2, ok := that.(Provider)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -258,7 +283,12 @@ func (this *CellsResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CellsResponse)
 	if !ok {
-		return false
+		that2, ok := that.(CellsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -285,41 +315,59 @@ func (this *CellCapacity) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.CellCapacity{` +
-		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
-		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
-		`Containers:` + fmt.Sprintf("%#v", this.Containers) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 7)
+	s = append(s, "&models.CellCapacity{")
+	s = append(s, "MemoryMb: "+fmt.Sprintf("%#v", this.MemoryMb)+",\n")
+	s = append(s, "DiskMb: "+fmt.Sprintf("%#v", this.DiskMb)+",\n")
+	s = append(s, "Containers: "+fmt.Sprintf("%#v", this.Containers)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *CellPresence) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.CellPresence{` +
-		`CellId:` + fmt.Sprintf("%#v", this.CellId),
-		`RepAddress:` + fmt.Sprintf("%#v", this.RepAddress),
-		`Zone:` + fmt.Sprintf("%#v", this.Zone),
-		`Capacity:` + fmt.Sprintf("%#v", this.Capacity),
-		`RootfsProviders:` + fmt.Sprintf("%#v", this.RootfsProviders) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 9)
+	s = append(s, "&models.CellPresence{")
+	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "RepAddress: "+fmt.Sprintf("%#v", this.RepAddress)+",\n")
+	s = append(s, "Zone: "+fmt.Sprintf("%#v", this.Zone)+",\n")
+	if this.Capacity != nil {
+		s = append(s, "Capacity: "+fmt.Sprintf("%#v", this.Capacity)+",\n")
+	}
+	if this.RootfsProviders != nil {
+		s = append(s, "RootfsProviders: "+fmt.Sprintf("%#v", this.RootfsProviders)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *Provider) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.Provider{` +
-		`Name:` + fmt.Sprintf("%#v", this.Name),
-		`Properties:` + fmt.Sprintf("%#v", this.Properties) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.Provider{")
+	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
+	if this.Properties != nil {
+		s = append(s, "Properties: "+fmt.Sprintf("%#v", this.Properties)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *CellsResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.CellsResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error),
-		`Cells:` + fmt.Sprintf("%#v", this.Cells) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.CellsResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.Cells != nil {
+		s = append(s, "Cells: "+fmt.Sprintf("%#v", this.Cells)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringCells(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -329,11 +377,12 @@ func valueToGoStringCells(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringCells(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringCells(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -343,7 +392,7 @@ func extensionToGoStringCells(e map[int32]github_com_gogo_protobuf_proto.Extensi
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *CellCapacity) Marshal() (data []byte, err error) {
@@ -663,8 +712,12 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCells
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -677,6 +730,12 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CellCapacity: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CellCapacity: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
@@ -684,6 +743,9 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 			}
 			m.MemoryMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -700,6 +762,9 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 			}
 			m.DiskMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -716,6 +781,9 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 			}
 			m.Containers = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -727,15 +795,7 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipCells(data[iNdEx:])
 			if err != nil {
 				return err
@@ -750,14 +810,21 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *CellPresence) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCells
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -770,6 +837,12 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CellPresence: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CellPresence: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -777,6 +850,9 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -787,10 +863,11 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -802,6 +879,9 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -812,10 +892,11 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -827,6 +908,9 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -837,10 +921,11 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -852,6 +937,9 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -862,10 +950,10 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -882,6 +970,9 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -892,10 +983,10 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -905,15 +996,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipCells(data[iNdEx:])
 			if err != nil {
 				return err
@@ -928,14 +1011,21 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *Provider) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCells
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -948,6 +1038,12 @@ func (m *Provider) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Provider: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Provider: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -955,6 +1051,9 @@ func (m *Provider) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -965,10 +1064,11 @@ func (m *Provider) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -980,6 +1080,9 @@ func (m *Provider) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -990,25 +1093,18 @@ func (m *Provider) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.Properties = append(m.Properties, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipCells(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1023,14 +1119,21 @@ func (m *Provider) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *CellsResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCells
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1043,6 +1146,12 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CellsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CellsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1050,6 +1159,9 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1060,10 +1172,10 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1080,6 +1192,9 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1090,10 +1205,10 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthCells
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1103,15 +1218,7 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipCells(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1126,6 +1233,9 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipCells(data []byte) (n int, err error) {
@@ -1134,6 +1244,9 @@ func skipCells(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowCells
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -1147,7 +1260,10 @@ func skipCells(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -1163,6 +1279,9 @@ func skipCells(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowCells
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -1183,6 +1302,9 @@ func skipCells(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowCells
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -1218,4 +1340,39 @@ func skipCells(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthCells = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowCells   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("cells.proto", fileDescriptorCells) }
+
+var fileDescriptorCells = []byte{
+	// 434 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x5c, 0x52, 0xbd, 0x6e, 0x13, 0x41,
+	0x10, 0xb6, 0x63, 0x3b, 0x38, 0x73, 0x44, 0x44, 0xab, 0x14, 0xa7, 0x48, 0x5c, 0xc2, 0x01, 0x12,
+	0x42, 0xe1, 0x82, 0x52, 0xd1, 0xe2, 0x88, 0x82, 0x02, 0x29, 0xba, 0x07, 0xe0, 0xb8, 0x9f, 0x89,
+	0x59, 0x71, 0x7b, 0x7b, 0xda, 0xdd, 0x44, 0x0a, 0x15, 0xbc, 0x01, 0x8f, 0xc1, 0xa3, 0xa4, 0x4c,
+	0x49, 0x15, 0x91, 0xd0, 0x20, 0x2a, 0x1e, 0x81, 0xd9, 0xdd, 0x2c, 0x1c, 0x2e, 0x46, 0xf6, 0x7c,
+	0xdf, 0x37, 0xf3, 0xf9, 0x9b, 0x35, 0x44, 0x35, 0xb6, 0xad, 0xce, 0x7a, 0x25, 0x8d, 0x64, 0xeb,
+	0x42, 0x36, 0xd8, 0xea, 0x9d, 0x67, 0x4b, 0x6e, 0xde, 0x9f, 0x56, 0x59, 0x2d, 0xc5, 0xc1, 0x52,
+	0x2e, 0xe5, 0x81, 0xa3, 0xab, 0xd3, 0x13, 0xd7, 0xb9, 0xc6, 0x7d, 0xf3, 0x63, 0x3b, 0x11, 0x2a,
+	0x25, 0x95, 0x6f, 0xd2, 0x33, 0xb8, 0x7b, 0x44, 0x2b, 0x8f, 0xca, 0xbe, 0xac, 0xb9, 0x39, 0x67,
+	0x0f, 0x60, 0x43, 0xa0, 0x90, 0xea, 0xbc, 0x10, 0x55, 0x3c, 0xde, 0x1b, 0x3f, 0x99, 0x2d, 0xa6,
+	0x17, 0x57, 0xbb, 0xa3, 0x7c, 0xee, 0xe1, 0x37, 0x15, 0xbb, 0x0f, 0x77, 0x1a, 0xae, 0x3f, 0x58,
+	0xc1, 0xda, 0x40, 0xb0, 0x6e, 0x41, 0xa2, 0x1f, 0x01, 0xd4, 0xb2, 0x33, 0x25, 0xef, 0x50, 0xe9,
+	0x78, 0x32, 0x50, 0x0c, 0xf0, 0xf4, 0xf3, 0x9a, 0x37, 0x3e, 0x56, 0xa8, 0xb1, 0xab, 0xd1, 0x6e,
+	0xb5, 0xd9, 0x0a, 0xde, 0x38, 0xdb, 0x8d, 0xb0, 0xd5, 0x82, 0xaf, 0x1b, 0xf6, 0x18, 0x22, 0x85,
+	0x7d, 0x51, 0x36, 0x0d, 0x0d, 0x68, 0x67, 0x1c, 0x24, 0x40, 0xc4, 0x4b, 0x8f, 0xb3, 0x18, 0xa6,
+	0x1f, 0x65, 0x87, 0xce, 0x36, 0xf0, 0x0e, 0x61, 0xcf, 0x61, 0x5e, 0xdf, 0x86, 0x8c, 0xa7, 0xc4,
+	0x46, 0x87, 0xdb, 0x99, 0xbf, 0x5f, 0x36, 0x3c, 0x40, 0xfe, 0x57, 0xc5, 0x0a, 0xd8, 0x52, 0x52,
+	0x9a, 0x13, 0x5d, 0xd0, 0xa9, 0xce, 0x78, 0x63, 0xe3, 0xcc, 0xf6, 0x26, 0x34, 0xb9, 0x15, 0x26,
+	0x8f, 0x6f, 0x89, 0x45, 0xfa, 0xeb, 0x6a, 0x37, 0x59, 0x51, 0x17, 0x2d, 0xd7, 0x66, 0x5f, 0x0a,
+	0x6e, 0x50, 0xf4, 0xb4, 0xf9, 0x9e, 0xe7, 0xc3, 0x8c, 0x4e, 0xdf, 0xc2, 0x3c, 0x34, 0xf6, 0x87,
+	0x77, 0xa5, 0xc0, 0xff, 0xb2, 0x3b, 0x84, 0xbd, 0x00, 0xa0, 0x8d, 0x3d, 0x2a, 0xc3, 0xd1, 0x06,
+	0x9f, 0x10, 0x1f, 0x93, 0xdd, 0xf6, 0x3f, 0x74, 0x60, 0x32, 0xd0, 0xa6, 0xef, 0x60, 0xd3, 0x46,
+	0xd3, 0x39, 0xea, 0x5e, 0x76, 0x1a, 0xd9, 0x43, 0x98, 0xb9, 0xb7, 0x77, 0x2e, 0xd1, 0xe1, 0x66,
+	0x88, 0xf1, 0xca, 0x82, 0xb9, 0xe7, 0xd8, 0x53, 0x98, 0xb9, 0x3f, 0x99, 0xb3, 0x5a, 0xb9, 0x52,
+	0x78, 0xad, 0xdc, 0x4b, 0x16, 0xfb, 0x97, 0xd7, 0xc9, 0xe8, 0x1b, 0xd5, 0xef, 0xeb, 0x64, 0xfc,
+	0xe9, 0x26, 0x19, 0x7f, 0xa5, 0xba, 0xa0, 0xba, 0xa4, 0xfa, 0x4e, 0xf5, 0xf3, 0x86, 0x38, 0xfa,
+	0xfc, 0xf2, 0x23, 0x19, 0xfd, 0x09, 0x00, 0x00, 0xff, 0xff, 0xdb, 0x2f, 0xf1, 0xaa, 0xbd, 0x02,
+	0x00, 0x00,
+}

@@ -21,15 +21,20 @@ func (v *VolumeMount) VersionUpToV1() *VolumeMount {
 		mode = "r"
 	}
 
-	return &VolumeMount{
+	vMount := &VolumeMount{
 		Driver:       v.Driver,
 		ContainerDir: v.ContainerDir,
 		Mode:         mode,
+	}
+
+	vMount.Device = &VolumeMount_Shared{
 		Shared: &SharedDevice{
 			VolumeId:    v.DeprecatedVolumeId,
 			MountConfig: string(v.DeprecatedConfig),
 		},
 	}
+
+	return vMount
 }
 
 // while volume mounts are experimental, we should never persist a "old" volume
@@ -49,7 +54,7 @@ func (v *VolumeMount) Validate() error {
 	if !(v.Mode == "r" || v.Mode == "rw") {
 		ve = ve.Append(errors.New("invalid volume_mount mode"))
 	}
-	if v.Shared != nil && v.Shared.VolumeId == "" {
+	if v.GetShared() != nil && v.GetShared().VolumeId == "" {
 		ve = ve.Append(errors.New("invalid volume_mount volume id"))
 	}
 
