@@ -236,20 +236,32 @@ var _ = Describe("Task", func() {
 
 					It("converts a cache dependency into download action", func() {
 						newTask := task.VersionDownTo(format.V0)
-						Expect(newTask.Action.SerialAction.Actions).To(HaveLen(1))
-						Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+						Expect(newTask.Action.GetSerialAction().Actions).To(HaveLen(1))
+						Expect(newTask.Action.GetSerialAction().Actions[0].GetParallelAction().Actions).To(HaveLen(2))
 
-						Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[0].DownloadAction).To(Equal(*downloadAction1))
-						Expect(*newTask.Action.SerialAction.Actions[0].ParallelAction.Actions[1].DownloadAction).To(Equal(*downloadAction2))
+						Expect(*newTask.Action.GetSerialAction().Actions[0].GetParallelAction().Actions[0].GetDownloadAction()).To(Equal(*downloadAction1))
+						Expect(*newTask.Action.GetSerialAction().Actions[0].GetParallelAction().Actions[1].GetDownloadAction()).To(Equal(*downloadAction2))
 
 						Expect(*newTask.Action).To(Equal(models.Action{
-							SerialAction: &models.SerialAction{
-								Actions: []*models.Action{
-									{
-										ParallelAction: &models.ParallelAction{
-											Actions: []*models.Action{
-												&models.Action{DownloadAction: downloadAction1},
-												&models.Action{DownloadAction: downloadAction2},
+							Action: &models.Action_SerialAction{
+								SerialAction: &models.SerialAction{
+									Actions: []*models.Action{
+										{
+											Action: &models.Action_ParallelAction{
+												ParallelAction: &models.ParallelAction{
+													Actions: []*models.Action{
+														&models.Action{
+															Action: &models.Action_DownloadAction{
+																DownloadAction: downloadAction1,
+															},
+														},
+														&models.Action{
+															Action: &models.Action_DownloadAction{
+																DownloadAction: downloadAction2,
+															},
+														},
+													},
+												},
 											},
 										},
 									},
@@ -262,21 +274,32 @@ var _ = Describe("Task", func() {
 				Context("when there is an existing action", func() {
 					It("appends the new converted step action to the front", func() {
 						newTask := task.VersionDownTo(format.V0)
-						Expect(newTask.Action.SerialAction.Actions).To(HaveLen(2))
-						Expect(newTask.Action.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
+						Expect(newTask.Action.GetSerialAction().Actions).To(HaveLen(2))
+						Expect(newTask.Action.GetSerialAction().Actions[0].GetParallelAction().Actions).To(HaveLen(2))
 
 						Expect(*newTask.Action).To(Equal(models.Action{
-							SerialAction: &models.SerialAction{
-								Actions: []*models.Action{
-									{
-										ParallelAction: &models.ParallelAction{
-											Actions: []*models.Action{
-												&models.Action{DownloadAction: downloadAction1},
-												&models.Action{DownloadAction: downloadAction2},
+							Action: &models.Action_SerialAction{
+								SerialAction: &models.SerialAction{
+									Actions: []*models.Action{
+										{
+											Action: &models.Action_ParallelAction{
+												ParallelAction: &models.ParallelAction{
+													Actions: []*models.Action{
+														&models.Action{
+															Action: &models.Action_DownloadAction{
+																DownloadAction: downloadAction1,
+															},
+														},
+														&models.Action{
+															Action: &models.Action_DownloadAction{
+																DownloadAction: downloadAction2,
+															},
+														},
+													},
+												},
 											},
 										},
 									},
-									task.Action,
 								},
 							},
 						}))

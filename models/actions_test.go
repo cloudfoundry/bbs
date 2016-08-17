@@ -14,7 +14,7 @@ import (
 var _ = FDescribe("Actions", func() {
 	itSerializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
-		It("Action -> JSON for "+string(action.ActionType()), func() {
+		FIt("Action -> JSON for "+string(action.ActionType()), func() {
 			marshalledAction := action
 			json, err := json.Marshal(&marshalledAction)
 			Expect(err).NotTo(HaveOccurred())
@@ -24,8 +24,10 @@ var _ = FDescribe("Actions", func() {
 
 	itDeserializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
-		It("JSON -> Action for "+string(action.ActionType()), func() {
+		FIt("JSON -> Action for "+string(action.ActionType()), func() {
 			wrappedJSON := fmt.Sprintf(`{"%s":%s}`, action.ActionType(), actionPayload)
+			fmt.Println("JOACHIM")
+			fmt.Println(wrappedJSON)
 			marshalledAction := new(models.Action)
 			err := json.Unmarshal([]byte(wrappedJSON), marshalledAction)
 			Expect(err).NotTo(HaveOccurred())
@@ -94,7 +96,7 @@ var _ = FDescribe("Actions", func() {
 	Describe("Download", func() {
 		var downloadAction *models.DownloadAction
 
-		Context("with checksum algorithm and value missing", func() {
+		FContext("with checksum algorithm and value missing", func() {
 			itSerializesAndDeserializes(
 				`{
 					"artifact": "mouse",

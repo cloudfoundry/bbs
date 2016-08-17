@@ -529,17 +529,28 @@ var _ = Describe("DesiredLRP", func() {
 					Expect(convertedLRP.Setup.GetSerialAction().Actions[0].GetParallelAction().Actions).To(HaveLen(2))
 
 					Expect(*convertedLRP.Setup).To(Equal(models.Action{
-						SerialAction: &models.SerialAction{
-							Actions: []*models.Action{
-								{
-									ParallelAction: &models.ParallelAction{
-										Actions: []*models.Action{
-											&models.Action{DownloadAction: &downloadAction1},
-											&models.Action{DownloadAction: &downloadAction2},
+						Action: &models.Action_SerialAction{
+							SerialAction: &models.SerialAction{
+								Actions: []*models.Action{
+									{
+										Action: &models.Action_ParallelAction{
+											ParallelAction: &models.ParallelAction{
+												Actions: []*models.Action{
+													&models.Action{
+														Action: &models.Action_DownloadAction{
+															DownloadAction: &downloadAction1,
+														},
+													},
+													&models.Action{
+														Action: &models.Action_DownloadAction{
+															DownloadAction: &downloadAction2,
+														},
+													},
+												},
+											},
 										},
 									},
 								},
-								desiredLRP.Setup,
 							},
 						},
 					}))
@@ -636,8 +647,10 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("requires a valid action", func() {
 			desiredLRP.Action = &models.Action{
-				UploadAction: &models.UploadAction{
-					From: "web_location",
+				Action: &models.Action_UploadAction{
+					&models.UploadAction{
+						From: "web_location",
+					},
 				},
 			}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
@@ -645,8 +658,10 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("requires a valid setup action if specified", func() {
 			desiredLRP.Setup = &models.Action{
-				UploadAction: &models.UploadAction{
-					From: "web_location",
+				Action: &models.Action_UploadAction{
+					&models.UploadAction{
+						From: "web_location",
+					},
 				},
 			}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
@@ -659,8 +674,10 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("requires a valid monitor action if specified", func() {
 			desiredLRP.Monitor = &models.Action{
-				UploadAction: &models.UploadAction{
-					From: "web_location",
+				Action: &models.Action_UploadAction{
+					&models.UploadAction{
+						From: "web_location",
+					},
 				},
 			}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "to")
