@@ -7,17 +7,15 @@ import "environment_variables.proto";
 
 message Action {
   option (gogoproto.onlyone) = true;
-  oneof action {
-    DownloadAction download_action = 1 [(gogoproto.jsontag) = "download,omitempty"];
-    UploadAction upload_action = 2 [(gogoproto.jsontag) = "upload,omitempty"];
-    RunAction run_action = 3 [(gogoproto.jsontag) = "run,omitempty"];
-    TimeoutAction timeout_action = 4 [(gogoproto.jsontag) = "timeout,omitempty"];
-    EmitProgressAction emit_progress_action = 5 [(gogoproto.jsontag) = "emit_progress,omitempty"];
-    TryAction try_action = 6 [(gogoproto.jsontag) = "try,omitempty"];
-    ParallelAction parallel_action = 7 [(gogoproto.jsontag) = "parallel,omitempty"];
-    SerialAction serial_action = 8 [(gogoproto.jsontag) = "serial,omitempty"];
-    CodependentAction codependent_action = 9 [(gogoproto.jsontag) = "codependent,omitempty"];
-  }
+  optional DownloadAction download_action = 1 [(gogoproto.jsontag) = "download,omitempty"];
+  optional UploadAction upload_action = 2 [(gogoproto.jsontag) = "upload,omitempty"];
+  optional RunAction run_action = 3 [(gogoproto.jsontag) = "run,omitempty"];
+  optional TimeoutAction timeout_action = 4 [(gogoproto.jsontag) = "timeout,omitempty"];
+  optional EmitProgressAction emit_progress_action = 5 [(gogoproto.jsontag) = "emit_progress,omitempty"];
+  optional TryAction try_action = 6 [(gogoproto.jsontag) = "try,omitempty"];
+  optional ParallelAction parallel_action = 7 [(gogoproto.jsontag) = "parallel,omitempty"];
+  optional SerialAction serial_action = 8 [(gogoproto.jsontag) = "serial,omitempty"];
+  optional CodependentAction codependent_action = 9 [(gogoproto.jsontag) = "codependent,omitempty"];
 }
 
 message DownloadAction {
@@ -87,4 +85,5 @@ message CodependentAction {
 
 message ResourceLimits {
   optional uint64 nofile = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nofile,omitempty"];
+  optional uint64 nproc = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nproc,omitempty"];
 }
