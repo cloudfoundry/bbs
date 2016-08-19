@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -20,6 +19,7 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type TaskLifecycleResponse struct {
@@ -28,6 +28,9 @@ type TaskLifecycleResponse struct {
 
 func (m *TaskLifecycleResponse) Reset()      { *m = TaskLifecycleResponse{} }
 func (*TaskLifecycleResponse) ProtoMessage() {}
+func (*TaskLifecycleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTaskRequests, []int{0}
+}
 
 func (m *TaskLifecycleResponse) GetError() *Error {
 	if m != nil {
@@ -37,13 +40,14 @@ func (m *TaskLifecycleResponse) GetError() *Error {
 }
 
 type DesireTaskRequest struct {
-	TaskDefinition *TaskDefinition `protobuf:"bytes,1,opt,name=task_definition" json:"task_definition"`
-	TaskGuid       string          `protobuf:"bytes,2,opt,name=task_guid" json:"task_guid"`
+	TaskDefinition *TaskDefinition `protobuf:"bytes,1,opt,name=task_definition,json=taskDefinition" json:"task_definition"`
+	TaskGuid       string          `protobuf:"bytes,2,opt,name=task_guid,json=taskGuid" json:"task_guid"`
 	Domain         string          `protobuf:"bytes,3,opt,name=domain" json:"domain"`
 }
 
-func (m *DesireTaskRequest) Reset()      { *m = DesireTaskRequest{} }
-func (*DesireTaskRequest) ProtoMessage() {}
+func (m *DesireTaskRequest) Reset()                    { *m = DesireTaskRequest{} }
+func (*DesireTaskRequest) ProtoMessage()               {}
+func (*DesireTaskRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{1} }
 
 func (m *DesireTaskRequest) GetTaskDefinition() *TaskDefinition {
 	if m != nil {
@@ -67,12 +71,13 @@ func (m *DesireTaskRequest) GetDomain() string {
 }
 
 type StartTaskRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
-	CellId   string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
+	CellId   string `protobuf:"bytes,2,opt,name=cell_id,json=cellId" json:"cell_id"`
 }
 
-func (m *StartTaskRequest) Reset()      { *m = StartTaskRequest{} }
-func (*StartTaskRequest) ProtoMessage() {}
+func (m *StartTaskRequest) Reset()                    { *m = StartTaskRequest{} }
+func (*StartTaskRequest) ProtoMessage()               {}
+func (*StartTaskRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{2} }
 
 func (m *StartTaskRequest) GetTaskGuid() string {
 	if m != nil {
@@ -90,11 +95,12 @@ func (m *StartTaskRequest) GetCellId() string {
 
 type StartTaskResponse struct {
 	Error       *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
-	ShouldStart bool   `protobuf:"varint,2,opt,name=should_start" json:"should_start"`
+	ShouldStart bool   `protobuf:"varint,2,opt,name=should_start,json=shouldStart" json:"should_start"`
 }
 
-func (m *StartTaskResponse) Reset()      { *m = StartTaskResponse{} }
-func (*StartTaskResponse) ProtoMessage() {}
+func (m *StartTaskResponse) Reset()                    { *m = StartTaskResponse{} }
+func (*StartTaskResponse) ProtoMessage()               {}
+func (*StartTaskResponse) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{3} }
 
 func (m *StartTaskResponse) GetError() *Error {
 	if m != nil {
@@ -111,12 +117,13 @@ func (m *StartTaskResponse) GetShouldStart() bool {
 }
 
 type FailTaskRequest struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
-	FailureReason string `protobuf:"bytes,2,opt,name=failure_reason" json:"failure_reason"`
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
+	FailureReason string `protobuf:"bytes,2,opt,name=failure_reason,json=failureReason" json:"failure_reason"`
 }
 
-func (m *FailTaskRequest) Reset()      { *m = FailTaskRequest{} }
-func (*FailTaskRequest) ProtoMessage() {}
+func (m *FailTaskRequest) Reset()                    { *m = FailTaskRequest{} }
+func (*FailTaskRequest) ProtoMessage()               {}
+func (*FailTaskRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{4} }
 
 func (m *FailTaskRequest) GetTaskGuid() string {
 	if m != nil {
@@ -133,11 +140,12 @@ func (m *FailTaskRequest) GetFailureReason() string {
 }
 
 type TaskGuidRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
 }
 
-func (m *TaskGuidRequest) Reset()      { *m = TaskGuidRequest{} }
-func (*TaskGuidRequest) ProtoMessage() {}
+func (m *TaskGuidRequest) Reset()                    { *m = TaskGuidRequest{} }
+func (*TaskGuidRequest) ProtoMessage()               {}
+func (*TaskGuidRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{5} }
 
 func (m *TaskGuidRequest) GetTaskGuid() string {
 	if m != nil {
@@ -147,15 +155,16 @@ func (m *TaskGuidRequest) GetTaskGuid() string {
 }
 
 type CompleteTaskRequest struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
-	CellId        string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
+	CellId        string `protobuf:"bytes,2,opt,name=cell_id,json=cellId" json:"cell_id"`
 	Failed        bool   `protobuf:"varint,3,opt,name=failed" json:"failed"`
-	FailureReason string `protobuf:"bytes,4,opt,name=failure_reason" json:"failure_reason"`
+	FailureReason string `protobuf:"bytes,4,opt,name=failure_reason,json=failureReason" json:"failure_reason"`
 	Result        string `protobuf:"bytes,5,opt,name=result" json:"result"`
 }
 
-func (m *CompleteTaskRequest) Reset()      { *m = CompleteTaskRequest{} }
-func (*CompleteTaskRequest) ProtoMessage() {}
+func (m *CompleteTaskRequest) Reset()                    { *m = CompleteTaskRequest{} }
+func (*CompleteTaskRequest) ProtoMessage()               {}
+func (*CompleteTaskRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{6} }
 
 func (m *CompleteTaskRequest) GetTaskGuid() string {
 	if m != nil {
@@ -193,16 +202,17 @@ func (m *CompleteTaskRequest) GetResult() string {
 }
 
 type TaskCallbackResponse struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
 	Failed        bool   `protobuf:"varint,2,opt,name=failed" json:"failed"`
-	FailureReason string `protobuf:"bytes,3,opt,name=failure_reason" json:"failure_reason"`
+	FailureReason string `protobuf:"bytes,3,opt,name=failure_reason,json=failureReason" json:"failure_reason"`
 	Result        string `protobuf:"bytes,4,opt,name=result" json:"result"`
 	Annotation    string `protobuf:"bytes,5,opt,name=annotation" json:"annotation,omitempty"`
-	CreatedAt     int64  `protobuf:"varint,6,opt,name=created_at" json:"created_at"`
+	CreatedAt     int64  `protobuf:"varint,6,opt,name=created_at,json=createdAt" json:"created_at"`
 }
 
-func (m *TaskCallbackResponse) Reset()      { *m = TaskCallbackResponse{} }
-func (*TaskCallbackResponse) ProtoMessage() {}
+func (m *TaskCallbackResponse) Reset()                    { *m = TaskCallbackResponse{} }
+func (*TaskCallbackResponse) ProtoMessage()               {}
+func (*TaskCallbackResponse) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{7} }
 
 func (m *TaskCallbackResponse) GetTaskGuid() string {
 	if m != nil {
@@ -247,13 +257,14 @@ func (m *TaskCallbackResponse) GetCreatedAt() int64 {
 }
 
 type ConvergeTasksRequest struct {
-	KickTaskDuration            int64 `protobuf:"varint,1,opt,name=kick_task_duration" json:"kick_task_duration"`
-	ExpirePendingTaskDuration   int64 `protobuf:"varint,2,opt,name=expire_pending_task_duration" json:"expire_pending_task_duration"`
-	ExpireCompletedTaskDuration int64 `protobuf:"varint,3,opt,name=expire_completed_task_duration" json:"expire_completed_task_duration"`
+	KickTaskDuration            int64 `protobuf:"varint,1,opt,name=kick_task_duration,json=kickTaskDuration" json:"kick_task_duration"`
+	ExpirePendingTaskDuration   int64 `protobuf:"varint,2,opt,name=expire_pending_task_duration,json=expirePendingTaskDuration" json:"expire_pending_task_duration"`
+	ExpireCompletedTaskDuration int64 `protobuf:"varint,3,opt,name=expire_completed_task_duration,json=expireCompletedTaskDuration" json:"expire_completed_task_duration"`
 }
 
-func (m *ConvergeTasksRequest) Reset()      { *m = ConvergeTasksRequest{} }
-func (*ConvergeTasksRequest) ProtoMessage() {}
+func (m *ConvergeTasksRequest) Reset()                    { *m = ConvergeTasksRequest{} }
+func (*ConvergeTasksRequest) ProtoMessage()               {}
+func (*ConvergeTasksRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{8} }
 
 func (m *ConvergeTasksRequest) GetKickTaskDuration() int64 {
 	if m != nil {
@@ -282,6 +293,9 @@ type ConvergeTasksResponse struct {
 
 func (m *ConvergeTasksResponse) Reset()      { *m = ConvergeTasksResponse{} }
 func (*ConvergeTasksResponse) ProtoMessage() {}
+func (*ConvergeTasksResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTaskRequests, []int{9}
+}
 
 func (m *ConvergeTasksResponse) GetError() *Error {
 	if m != nil {
@@ -292,11 +306,12 @@ func (m *ConvergeTasksResponse) GetError() *Error {
 
 type TasksRequest struct {
 	Domain string `protobuf:"bytes,1,opt,name=domain" json:"domain"`
-	CellId string `protobuf:"bytes,2,opt,name=cell_id" json:"cell_id"`
+	CellId string `protobuf:"bytes,2,opt,name=cell_id,json=cellId" json:"cell_id"`
 }
 
-func (m *TasksRequest) Reset()      { *m = TasksRequest{} }
-func (*TasksRequest) ProtoMessage() {}
+func (m *TasksRequest) Reset()                    { *m = TasksRequest{} }
+func (*TasksRequest) ProtoMessage()               {}
+func (*TasksRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{10} }
 
 func (m *TasksRequest) GetDomain() string {
 	if m != nil {
@@ -317,8 +332,9 @@ type TasksResponse struct {
 	Tasks []*Task `protobuf:"bytes,2,rep,name=tasks" json:"tasks,omitempty"`
 }
 
-func (m *TasksResponse) Reset()      { *m = TasksResponse{} }
-func (*TasksResponse) ProtoMessage() {}
+func (m *TasksResponse) Reset()                    { *m = TasksResponse{} }
+func (*TasksResponse) ProtoMessage()               {}
+func (*TasksResponse) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{11} }
 
 func (m *TasksResponse) GetError() *Error {
 	if m != nil {
@@ -335,11 +351,12 @@ func (m *TasksResponse) GetTasks() []*Task {
 }
 
 type TaskByGuidRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid" json:"task_guid"`
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
 }
 
-func (m *TaskByGuidRequest) Reset()      { *m = TaskByGuidRequest{} }
-func (*TaskByGuidRequest) ProtoMessage() {}
+func (m *TaskByGuidRequest) Reset()                    { *m = TaskByGuidRequest{} }
+func (*TaskByGuidRequest) ProtoMessage()               {}
+func (*TaskByGuidRequest) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{12} }
 
 func (m *TaskByGuidRequest) GetTaskGuid() string {
 	if m != nil {
@@ -353,8 +370,9 @@ type TaskResponse struct {
 	Task  *Task  `protobuf:"bytes,2,opt,name=task" json:"task,omitempty"`
 }
 
-func (m *TaskResponse) Reset()      { *m = TaskResponse{} }
-func (*TaskResponse) ProtoMessage() {}
+func (m *TaskResponse) Reset()                    { *m = TaskResponse{} }
+func (*TaskResponse) ProtoMessage()               {}
+func (*TaskResponse) Descriptor() ([]byte, []int) { return fileDescriptorTaskRequests, []int{13} }
 
 func (m *TaskResponse) GetError() *Error {
 	if m != nil {
@@ -370,6 +388,22 @@ func (m *TaskResponse) GetTask() *Task {
 	return nil
 }
 
+func init() {
+	proto.RegisterType((*TaskLifecycleResponse)(nil), "models.TaskLifecycleResponse")
+	proto.RegisterType((*DesireTaskRequest)(nil), "models.DesireTaskRequest")
+	proto.RegisterType((*StartTaskRequest)(nil), "models.StartTaskRequest")
+	proto.RegisterType((*StartTaskResponse)(nil), "models.StartTaskResponse")
+	proto.RegisterType((*FailTaskRequest)(nil), "models.FailTaskRequest")
+	proto.RegisterType((*TaskGuidRequest)(nil), "models.TaskGuidRequest")
+	proto.RegisterType((*CompleteTaskRequest)(nil), "models.CompleteTaskRequest")
+	proto.RegisterType((*TaskCallbackResponse)(nil), "models.TaskCallbackResponse")
+	proto.RegisterType((*ConvergeTasksRequest)(nil), "models.ConvergeTasksRequest")
+	proto.RegisterType((*ConvergeTasksResponse)(nil), "models.ConvergeTasksResponse")
+	proto.RegisterType((*TasksRequest)(nil), "models.TasksRequest")
+	proto.RegisterType((*TasksResponse)(nil), "models.TasksResponse")
+	proto.RegisterType((*TaskByGuidRequest)(nil), "models.TaskByGuidRequest")
+	proto.RegisterType((*TaskResponse)(nil), "models.TaskResponse")
+}
 func (this *TaskLifecycleResponse) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -380,7 +414,12 @@ func (this *TaskLifecycleResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskLifecycleResponse)
 	if !ok {
-		return false
+		that2, ok := that.(TaskLifecycleResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -405,7 +444,12 @@ func (this *DesireTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesireTaskRequest)
 	if !ok {
-		return false
+		that2, ok := that.(DesireTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -436,7 +480,12 @@ func (this *StartTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*StartTaskRequest)
 	if !ok {
-		return false
+		that2, ok := that.(StartTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -464,7 +513,12 @@ func (this *StartTaskResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*StartTaskResponse)
 	if !ok {
-		return false
+		that2, ok := that.(StartTaskResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -492,7 +546,12 @@ func (this *FailTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*FailTaskRequest)
 	if !ok {
-		return false
+		that2, ok := that.(FailTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -520,7 +579,12 @@ func (this *TaskGuidRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskGuidRequest)
 	if !ok {
-		return false
+		that2, ok := that.(TaskGuidRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -545,7 +609,12 @@ func (this *CompleteTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CompleteTaskRequest)
 	if !ok {
-		return false
+		that2, ok := that.(CompleteTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -582,7 +651,12 @@ func (this *TaskCallbackResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskCallbackResponse)
 	if !ok {
-		return false
+		that2, ok := that.(TaskCallbackResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -622,7 +696,12 @@ func (this *ConvergeTasksRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ConvergeTasksRequest)
 	if !ok {
-		return false
+		that2, ok := that.(ConvergeTasksRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -653,7 +732,12 @@ func (this *ConvergeTasksResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ConvergeTasksResponse)
 	if !ok {
-		return false
+		that2, ok := that.(ConvergeTasksResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -678,7 +762,12 @@ func (this *TasksRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TasksRequest)
 	if !ok {
-		return false
+		that2, ok := that.(TasksRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -706,7 +795,12 @@ func (this *TasksResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TasksResponse)
 	if !ok {
-		return false
+		that2, ok := that.(TasksResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -739,7 +833,12 @@ func (this *TaskByGuidRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskByGuidRequest)
 	if !ok {
-		return false
+		that2, ok := that.(TaskByGuidRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -764,7 +863,12 @@ func (this *TaskResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskResponse)
 	if !ok {
-		return false
+		that2, ok := that.(TaskResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -786,132 +890,176 @@ func (this *TaskLifecycleResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TaskLifecycleResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.TaskLifecycleResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *DesireTaskRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DesireTaskRequest{` +
-		`TaskDefinition:` + fmt.Sprintf("%#v", this.TaskDefinition),
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
-		`Domain:` + fmt.Sprintf("%#v", this.Domain) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 7)
+	s = append(s, "&models.DesireTaskRequest{")
+	if this.TaskDefinition != nil {
+		s = append(s, "TaskDefinition: "+fmt.Sprintf("%#v", this.TaskDefinition)+",\n")
+	}
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *StartTaskRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.StartTaskRequest{` +
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
-		`CellId:` + fmt.Sprintf("%#v", this.CellId) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.StartTaskRequest{")
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *StartTaskResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.StartTaskResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error),
-		`ShouldStart:` + fmt.Sprintf("%#v", this.ShouldStart) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.StartTaskResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	s = append(s, "ShouldStart: "+fmt.Sprintf("%#v", this.ShouldStart)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *FailTaskRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.FailTaskRequest{` +
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
-		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.FailTaskRequest{")
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "FailureReason: "+fmt.Sprintf("%#v", this.FailureReason)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TaskGuidRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TaskGuidRequest{` +
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.TaskGuidRequest{")
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *CompleteTaskRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.CompleteTaskRequest{` +
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
-		`CellId:` + fmt.Sprintf("%#v", this.CellId),
-		`Failed:` + fmt.Sprintf("%#v", this.Failed),
-		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason),
-		`Result:` + fmt.Sprintf("%#v", this.Result) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 9)
+	s = append(s, "&models.CompleteTaskRequest{")
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "Failed: "+fmt.Sprintf("%#v", this.Failed)+",\n")
+	s = append(s, "FailureReason: "+fmt.Sprintf("%#v", this.FailureReason)+",\n")
+	s = append(s, "Result: "+fmt.Sprintf("%#v", this.Result)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TaskCallbackResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TaskCallbackResponse{` +
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
-		`Failed:` + fmt.Sprintf("%#v", this.Failed),
-		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason),
-		`Result:` + fmt.Sprintf("%#v", this.Result),
-		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
-		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 10)
+	s = append(s, "&models.TaskCallbackResponse{")
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "Failed: "+fmt.Sprintf("%#v", this.Failed)+",\n")
+	s = append(s, "FailureReason: "+fmt.Sprintf("%#v", this.FailureReason)+",\n")
+	s = append(s, "Result: "+fmt.Sprintf("%#v", this.Result)+",\n")
+	s = append(s, "Annotation: "+fmt.Sprintf("%#v", this.Annotation)+",\n")
+	s = append(s, "CreatedAt: "+fmt.Sprintf("%#v", this.CreatedAt)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ConvergeTasksRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ConvergeTasksRequest{` +
-		`KickTaskDuration:` + fmt.Sprintf("%#v", this.KickTaskDuration),
-		`ExpirePendingTaskDuration:` + fmt.Sprintf("%#v", this.ExpirePendingTaskDuration),
-		`ExpireCompletedTaskDuration:` + fmt.Sprintf("%#v", this.ExpireCompletedTaskDuration) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 7)
+	s = append(s, "&models.ConvergeTasksRequest{")
+	s = append(s, "KickTaskDuration: "+fmt.Sprintf("%#v", this.KickTaskDuration)+",\n")
+	s = append(s, "ExpirePendingTaskDuration: "+fmt.Sprintf("%#v", this.ExpirePendingTaskDuration)+",\n")
+	s = append(s, "ExpireCompletedTaskDuration: "+fmt.Sprintf("%#v", this.ExpireCompletedTaskDuration)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *ConvergeTasksResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.ConvergeTasksResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ConvergeTasksResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TasksRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TasksRequest{` +
-		`Domain:` + fmt.Sprintf("%#v", this.Domain),
-		`CellId:` + fmt.Sprintf("%#v", this.CellId) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.TasksRequest{")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TasksResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TasksResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error),
-		`Tasks:` + fmt.Sprintf("%#v", this.Tasks) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.TasksResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.Tasks != nil {
+		s = append(s, "Tasks: "+fmt.Sprintf("%#v", this.Tasks)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TaskByGuidRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TaskByGuidRequest{` +
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.TaskByGuidRequest{")
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *TaskResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TaskResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error),
-		`Task:` + fmt.Sprintf("%#v", this.Task) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.TaskResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.Task != nil {
+		s = append(s, "Task: "+fmt.Sprintf("%#v", this.Task)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringTaskRequests(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -921,11 +1069,12 @@ func valueToGoStringTaskRequests(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringTaskRequests(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringTaskRequests(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -935,7 +1084,7 @@ func extensionToGoStringTaskRequests(e map[int32]github_com_gogo_protobuf_proto.
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *TaskLifecycleResponse) Marshal() (data []byte, err error) {
@@ -1752,8 +1901,12 @@ func (m *TaskLifecycleResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1766,6 +1919,12 @@ func (m *TaskLifecycleResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskLifecycleResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskLifecycleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1773,6 +1932,9 @@ func (m *TaskLifecycleResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1783,10 +1945,10 @@ func (m *TaskLifecycleResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1798,15 +1960,7 @@ func (m *TaskLifecycleResponse) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1821,14 +1975,21 @@ func (m *TaskLifecycleResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1841,6 +2002,12 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DesireTaskRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DesireTaskRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1848,6 +2015,9 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1858,10 +2028,10 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1878,6 +2048,9 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1888,10 +2061,11 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1903,6 +2077,9 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1913,25 +2090,18 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.Domain = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1946,14 +2116,21 @@ func (m *DesireTaskRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *StartTaskRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1966,6 +2143,12 @@ func (m *StartTaskRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StartTaskRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StartTaskRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1973,6 +2156,9 @@ func (m *StartTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1983,10 +2169,11 @@ func (m *StartTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1998,6 +2185,9 @@ func (m *StartTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2008,25 +2198,18 @@ func (m *StartTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.CellId = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2041,14 +2224,21 @@ func (m *StartTaskRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *StartTaskResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2061,6 +2251,12 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StartTaskResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StartTaskResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2068,6 +2264,9 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2078,10 +2277,10 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2098,6 +2297,9 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2110,15 +2312,7 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 			}
 			m.ShouldStart = bool(v != 0)
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2133,14 +2327,21 @@ func (m *StartTaskResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *FailTaskRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2153,6 +2354,12 @@ func (m *FailTaskRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FailTaskRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FailTaskRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2160,6 +2367,9 @@ func (m *FailTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2170,10 +2380,11 @@ func (m *FailTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2185,6 +2396,9 @@ func (m *FailTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2195,25 +2409,18 @@ func (m *FailTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.FailureReason = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2228,14 +2435,21 @@ func (m *FailTaskRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TaskGuidRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2248,6 +2462,12 @@ func (m *TaskGuidRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskGuidRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskGuidRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2255,6 +2475,9 @@ func (m *TaskGuidRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2265,25 +2488,18 @@ func (m *TaskGuidRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.TaskGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2298,14 +2514,21 @@ func (m *TaskGuidRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2318,6 +2541,12 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CompleteTaskRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CompleteTaskRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2325,6 +2554,9 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2335,10 +2567,11 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2350,6 +2583,9 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2360,10 +2596,11 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2375,6 +2612,9 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2392,6 +2632,9 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2402,10 +2645,11 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2417,6 +2661,9 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2427,25 +2674,18 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.Result = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2460,14 +2700,21 @@ func (m *CompleteTaskRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2480,6 +2727,12 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskCallbackResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskCallbackResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2487,6 +2740,9 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2497,10 +2753,11 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2512,6 +2769,9 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2529,6 +2789,9 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2539,10 +2802,11 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2554,6 +2818,9 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2564,10 +2831,11 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2579,6 +2847,9 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2589,10 +2860,11 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2604,6 +2876,9 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 			}
 			m.CreatedAt = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2615,15 +2890,7 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2638,14 +2905,21 @@ func (m *TaskCallbackResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2658,6 +2932,12 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConvergeTasksRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConvergeTasksRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
@@ -2665,6 +2945,9 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 			}
 			m.KickTaskDuration = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2681,6 +2964,9 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 			}
 			m.ExpirePendingTaskDuration = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2697,6 +2983,9 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 			}
 			m.ExpireCompletedTaskDuration = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2708,15 +2997,7 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2731,14 +3012,21 @@ func (m *ConvergeTasksRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *ConvergeTasksResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2751,6 +3039,12 @@ func (m *ConvergeTasksResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConvergeTasksResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConvergeTasksResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2758,6 +3052,9 @@ func (m *ConvergeTasksResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2768,10 +3065,10 @@ func (m *ConvergeTasksResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2783,15 +3080,7 @@ func (m *ConvergeTasksResponse) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2806,14 +3095,21 @@ func (m *ConvergeTasksResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TasksRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2826,6 +3122,12 @@ func (m *TasksRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TasksRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TasksRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2833,6 +3135,9 @@ func (m *TasksRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2843,10 +3148,11 @@ func (m *TasksRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2858,6 +3164,9 @@ func (m *TasksRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2868,25 +3177,18 @@ func (m *TasksRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.CellId = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -2901,14 +3203,21 @@ func (m *TasksRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TasksResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2921,6 +3230,12 @@ func (m *TasksResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TasksResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TasksResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -2928,6 +3243,9 @@ func (m *TasksResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2938,10 +3256,10 @@ func (m *TasksResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2958,6 +3276,9 @@ func (m *TasksResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -2968,10 +3289,10 @@ func (m *TasksResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2981,15 +3302,7 @@ func (m *TasksResponse) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3004,14 +3317,21 @@ func (m *TasksResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TaskByGuidRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3024,6 +3344,12 @@ func (m *TaskByGuidRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskByGuidRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskByGuidRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3031,6 +3357,9 @@ func (m *TaskByGuidRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3041,25 +3370,18 @@ func (m *TaskByGuidRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.TaskGuid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3074,14 +3396,21 @@ func (m *TaskByGuidRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *TaskResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3094,6 +3423,12 @@ func (m *TaskResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -3101,6 +3436,9 @@ func (m *TaskResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3111,10 +3449,10 @@ func (m *TaskResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3131,6 +3469,9 @@ func (m *TaskResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -3141,10 +3482,10 @@ func (m *TaskResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTaskRequests
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3156,15 +3497,7 @@ func (m *TaskResponse) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTaskRequests(data[iNdEx:])
 			if err != nil {
 				return err
@@ -3179,6 +3512,9 @@ func (m *TaskResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipTaskRequests(data []byte) (n int, err error) {
@@ -3187,6 +3523,9 @@ func skipTaskRequests(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowTaskRequests
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -3200,7 +3539,10 @@ func skipTaskRequests(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -3216,6 +3558,9 @@ func skipTaskRequests(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTaskRequests
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -3236,6 +3581,9 @@ func skipTaskRequests(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowTaskRequests
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -3271,4 +3619,53 @@ func skipTaskRequests(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthTaskRequests = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowTaskRequests   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("task_requests.proto", fileDescriptorTaskRequests) }
+
+var fileDescriptorTaskRequests = []byte{
+	// 671 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xac, 0x54, 0x3d, 0x6f, 0xd4, 0x4c,
+	0x10, 0x8e, 0xef, 0x2e, 0xf7, 0x26, 0x93, 0x6f, 0x27, 0x2f, 0x3a, 0x42, 0xb8, 0x04, 0x53, 0x80,
+	0x44, 0xb8, 0x48, 0x11, 0xa2, 0x4a, 0xc3, 0x25, 0x01, 0x45, 0x50, 0x20, 0x73, 0x48, 0x74, 0xa7,
+	0x8d, 0xbd, 0xe7, 0xac, 0x62, 0x7b, 0x8d, 0x77, 0x8d, 0x48, 0x47, 0x43, 0xcf, 0xcf, 0x40, 0xfc,
+	0x0a, 0xca, 0x94, 0x29, 0x29, 0x50, 0x44, 0x42, 0x83, 0xa8, 0xf8, 0x09, 0xec, 0xd7, 0xe5, 0x7c,
+	0x4e, 0x10, 0x67, 0x89, 0x62, 0x65, 0xef, 0x3c, 0x33, 0xcf, 0x3e, 0xb3, 0xb3, 0x33, 0xb0, 0xc8,
+	0x11, 0x3b, 0xec, 0xa6, 0xf8, 0x75, 0x86, 0x19, 0x67, 0xad, 0x24, 0xa5, 0x9c, 0xda, 0xf5, 0x88,
+	0xfa, 0x38, 0x64, 0xcb, 0xf7, 0x03, 0xc2, 0x0f, 0xb2, 0xfd, 0x96, 0x47, 0xa3, 0x8d, 0x80, 0x06,
+	0x74, 0x43, 0xc1, 0xfb, 0x59, 0x4f, 0xed, 0xd4, 0x46, 0xfd, 0xe9, 0xb0, 0x65, 0x90, 0x5c, 0xe6,
+	0x7f, 0x0a, 0xa7, 0x29, 0x4d, 0xf5, 0xc6, 0xd9, 0x82, 0xff, 0x3b, 0x02, 0x7a, 0x46, 0x7a, 0xd8,
+	0x3b, 0xf2, 0x42, 0xec, 0x62, 0x96, 0xd0, 0x98, 0x61, 0xfb, 0x36, 0x8c, 0x2b, 0xbf, 0x86, 0xb5,
+	0x66, 0xdd, 0x9d, 0xda, 0x9c, 0x69, 0xe9, 0x83, 0x5b, 0xbb, 0xd2, 0xe8, 0x6a, 0xcc, 0xf9, 0x64,
+	0xc1, 0xc2, 0x0e, 0x66, 0x24, 0xc5, 0x92, 0xc4, 0xd5, 0x52, 0xed, 0x0e, 0xcc, 0x29, 0xe9, 0x3e,
+	0xee, 0x91, 0x98, 0x70, 0x42, 0x63, 0x43, 0x72, 0xad, 0x4f, 0x22, 0xbd, 0x77, 0x2e, 0xd0, 0xf6,
+	0xe2, 0xcf, 0xd3, 0xd5, 0x62, 0x88, 0x3b, 0xcb, 0x87, 0x9c, 0xec, 0x5b, 0x30, 0xa9, 0x5c, 0x82,
+	0x8c, 0xf8, 0x8d, 0x8a, 0xe0, 0x9b, 0x6c, 0xd7, 0x8e, 0x4f, 0x57, 0xc7, 0xdc, 0x09, 0x69, 0x7e,
+	0x22, 0xac, 0xf6, 0x0a, 0xd4, 0x7d, 0x1a, 0x21, 0x12, 0x37, 0xaa, 0x39, 0xdc, 0xd8, 0x9c, 0x0e,
+	0xcc, 0xbf, 0xe0, 0x28, 0xe5, 0x79, 0xa9, 0x43, 0xa4, 0xd6, 0x95, 0xa4, 0x37, 0xe1, 0x3f, 0x0f,
+	0x87, 0x61, 0xb7, 0x70, 0x6a, 0x5d, 0x1a, 0xf7, 0x7c, 0x07, 0xc1, 0x42, 0x8e, 0xb5, 0xc4, 0xe5,
+	0xd9, 0x77, 0x60, 0x9a, 0x1d, 0xd0, 0x2c, 0xf4, 0xbb, 0x4c, 0x12, 0x28, 0xf6, 0x09, 0xc3, 0x3e,
+	0xa5, 0x11, 0xc5, 0x2c, 0x8e, 0x98, 0x7b, 0x8c, 0x48, 0x58, 0x52, 0xf7, 0x3d, 0x98, 0xed, 0x89,
+	0xa8, 0x2c, 0xc5, 0xe2, 0x0d, 0x21, 0x26, 0x8a, 0x90, 0x97, 0x3f, 0x63, 0x30, 0x57, 0x41, 0xce,
+	0x03, 0x98, 0xeb, 0x98, 0xc0, 0xd1, 0x8f, 0x70, 0x3e, 0x5b, 0xb0, 0xb8, 0x4d, 0xa3, 0x24, 0xc4,
+	0x1c, 0xff, 0xd3, 0x5b, 0x95, 0x95, 0x94, 0x02, 0xb1, 0xaf, 0x2a, 0xd9, 0xbf, 0x15, 0x63, 0xbb,
+	0x22, 0xb5, 0xda, 0x1f, 0x53, 0x93, 0x54, 0x29, 0x66, 0x59, 0xc8, 0x1b, 0xe3, 0xf9, 0x83, 0xb4,
+	0xcd, 0x79, 0x5f, 0x81, 0x25, 0x29, 0x7d, 0x1b, 0x85, 0xe1, 0x3e, 0xf2, 0x06, 0x25, 0x1c, 0x21,
+	0x87, 0x81, 0xc8, 0xca, 0x48, 0x22, 0xab, 0xa3, 0x88, 0xac, 0x5d, 0x16, 0x69, 0x6f, 0x01, 0xa0,
+	0x38, 0xa6, 0x1c, 0xa9, 0x5e, 0xd2, 0x69, 0xac, 0x48, 0x0f, 0xd1, 0x37, 0x4b, 0x03, 0x64, 0x9d,
+	0x46, 0x84, 0xe3, 0x28, 0xe1, 0x47, 0x6e, 0xce, 0x5f, 0x3c, 0x46, 0xf0, 0x84, 0x02, 0x8e, 0xfd,
+	0x2e, 0xe2, 0x8d, 0xba, 0x88, 0xae, 0x1a, 0xfe, 0x49, 0x63, 0x7f, 0xc4, 0x9d, 0xaf, 0x16, 0x2c,
+	0x6d, 0xd3, 0xf8, 0x0d, 0x4e, 0x03, 0x55, 0x4a, 0xd6, 0xaf, 0xe5, 0x26, 0xd8, 0x87, 0xc4, 0x3b,
+	0xec, 0xea, 0xf6, 0xcc, 0x52, 0x74, 0xd1, 0xcf, 0x7d, 0x96, 0x79, 0x89, 0xab, 0x8e, 0x36, 0xa8,
+	0xbd, 0x0b, 0x2b, 0xf8, 0x6d, 0x22, 0xa6, 0x42, 0x37, 0xc1, 0xb1, 0x4f, 0xe2, 0xa0, 0x10, 0x5d,
+	0xc9, 0x45, 0x5f, 0xd7, 0x9e, 0xcf, 0xb5, 0xe3, 0x10, 0xcd, 0x1e, 0x34, 0x0d, 0x8d, 0x67, 0x1e,
+	0x99, 0x5f, 0x20, 0xaa, 0xe6, 0x88, 0x6e, 0x68, 0xdf, 0xfe, 0x7b, 0xf4, 0xf3, 0x54, 0x72, 0xcc,
+	0x15, 0xb2, 0x2b, 0x33, 0xe6, 0x9e, 0xc2, 0xf4, 0xd0, 0x9d, 0x0c, 0xe6, 0x8c, 0x75, 0x79, 0xce,
+	0xfc, 0x6d, 0x60, 0xbc, 0x82, 0x99, 0xf2, 0x12, 0x6c, 0x07, 0xc6, 0x65, 0xea, 0x4c, 0x50, 0x56,
+	0x85, 0xd3, 0x74, 0x7e, 0x92, 0xba, 0x1a, 0x72, 0x1e, 0xc2, 0x82, 0xdc, 0xb6, 0x8f, 0x4a, 0xb6,
+	0xf1, 0x4b, 0x9d, 0x5e, 0x39, 0x41, 0x6b, 0x50, 0x93, 0x04, 0x2a, 0xc5, 0xa2, 0x1e, 0x85, 0xb4,
+	0xd7, 0x4f, 0xce, 0x9a, 0x63, 0x5f, 0xc4, 0xfa, 0x75, 0xd6, 0xb4, 0xde, 0x9d, 0x37, 0xad, 0x8f,
+	0x62, 0x1d, 0x8b, 0x75, 0x22, 0xd6, 0x37, 0xb1, 0x7e, 0x9c, 0x0b, 0x4c, 0x7c, 0x3f, 0x7c, 0x6f,
+	0x8e, 0xfd, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x3a, 0x36, 0x69, 0x2d, 0xee, 0x06, 0x00, 0x00,
+}

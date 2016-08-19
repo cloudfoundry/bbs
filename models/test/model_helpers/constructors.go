@@ -79,9 +79,11 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 				Driver:       "my-driver",
 				ContainerDir: "/mnt/mypath",
 				Mode:         "r",
-				Shared: &models.SharedDevice{
-					VolumeId:    "my-volume",
-					MountConfig: `{"foo":"bar"}`,
+				Device: &models.VolumeMount_Shared{
+					&models.SharedDevice{
+						VolumeId:    "my-volume",
+						MountConfig: `{"foo":"bar"}`,
+					},
 				},
 			},
 		},
@@ -149,9 +151,11 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				Driver:       "my-driver",
 				ContainerDir: "/mnt/mypath",
 				Mode:         "r",
-				Shared: &models.SharedDevice{
-					VolumeId:    "my-volume",
-					MountConfig: `{"foo":"bar"}`,
+				Device: &models.VolumeMount_Shared{
+					&models.SharedDevice{
+						VolumeId:    "my-volume",
+						MountConfig: `{"foo":"bar"}`,
+					},
 				},
 			},
 		},

@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -101,8 +102,8 @@ func IsEnveloped(data []byte) bool {
 	return false
 }
 
-func UnmarshalJSON(logger lager.Logger, marshaledPayload []byte, model Versioner) error {
-	err := json.Unmarshal(marshaledPayload, model)
+func UnmarshalJSON(logger lager.Logger, marshaledPayload []byte, model ProtoVersioner) error {
+	err := jsonpb.Unmarshal(marshaledPayload, model)
 	if err != nil {
 		logger.Error("failed-to-json-unmarshal-payload", err)
 		return err

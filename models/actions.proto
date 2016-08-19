@@ -6,7 +6,6 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "environment_variables.proto";
 
 message Action {
-  option (gogoproto.onlyone) = true;
   oneof action {
     DownloadAction download_action = 1 [(gogoproto.jsontag) = "download,omitempty"];
     UploadAction upload_action = 2 [(gogoproto.jsontag) = "upload,omitempty"];
@@ -29,7 +28,7 @@ message DownloadAction {
   optional string user = 6;
   optional string checksum_algorithm = 7 [(gogoproto.jsontag) = "checksum_algorithm,omitempty"];
   optional string checksum_value = 8 [(gogoproto.jsontag) = "checksum_value,omitempty"];
-} 
+}
 
 message UploadAction {
   optional string artifact = 1 [ (gogoproto.jsontag) = "artifact,omitempty"];
