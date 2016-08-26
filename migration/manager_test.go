@@ -42,14 +42,9 @@ var _ = Describe("Migration Manager", func() {
 		fakeMigration *migrationfakes.FakeMigration
 
 		cryptor encryption.Cryptor
-
-		sender *fake.FakeMetricSender
 	)
 
 	BeforeEach(func() {
-		sender = fake.NewFakeMetricSender()
-		metrics.Initialize(sender, nil)
-
 		migrationsDone = make(chan struct{})
 
 		dbVersion = &models.Version{}
@@ -440,13 +435,22 @@ var _ = Describe("Migration Manager", func() {
 				migrations = []migration.Migration{fakeMigration102, fakeMigration}
 			})
 
-			It("reports the duration that it took to migrate", func() {
-				Eventually(migrationProcess.Ready()).Should(BeClosed())
-				Expect(migrationsDone).To(BeClosed())
+			Describe("reporting", func() {
+				var sender *fake.FakeMetricSender
 
-				reportedDuration := sender.GetValue("MigrationDuration")
-				Expect(reportedDuration.Value).NotTo(BeZero())
-				Expect(reportedDuration.Unit).To(Equal("nanos"))
+				BeforeEach(func() {
+					sender = fake.NewFakeMetricSender()
+					metrics.Initialize(sender, nil)
+				})
+
+				It("reports the duration that it took to migrate", func() {
+					Eventually(migrationProcess.Ready()).Should(BeClosed())
+					Expect(migrationsDone).To(BeClosed())
+
+					reportedDuration := sender.GetValue("MigrationDuration")
+					Expect(reportedDuration.Value).NotTo(BeZero())
+					Expect(reportedDuration.Unit).To(Equal("nanos"))
+				})
 			})
 
 			It("it sorts the migrations and runs them sequentially", func() {
