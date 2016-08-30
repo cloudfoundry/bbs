@@ -39,7 +39,6 @@ should be used instead.
 */
 type InternalClient interface {
 	Client
-	ExperimentalExternalEventClient
 
 	ClaimActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
 	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
@@ -165,18 +164,6 @@ The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
 	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
-}
-
-/*
-** EXPERIMENTAL **
-The ExperimentalExternalEventClient is used to subscribe to groups of Events.
-*/
-type ExperimentalExternalEventClient interface {
-	// Returns an EventSource for watching changes to DesiredLRPs
-	SubscribeToDesiredLRPEvents(logger lager.Logger) (events.EventSource, error)
-
-	// Returns an EventSource for watching changes to ActualLRPs
-	SubscribeToActualLRPEvents(logger lager.Logger) (events.EventSource, error)
 }
 
 func newClient(url string) *client {
@@ -653,14 +640,6 @@ func (c *client) subscribeToEvents(route string) (events.EventSource, error) {
 
 func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(EventStreamRoute_r0)
-}
-
-func (c *client) SubscribeToDesiredLRPEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(DesiredLRPEventStreamRoute)
-}
-
-func (c *client) SubscribeToActualLRPEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(ActualLRPEventStreamRoute)
 }
 
 func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {

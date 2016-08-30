@@ -172,45 +172,4 @@ var _ = Describe("Event Handlers", func() {
 		})
 	})
 
-	Describe("SubscribeToDesiredLRPEvents", func() {
-		BeforeEach(func() {
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.SubscribeToDesiredLRPEvents(logger, w, r)
-				close(eventStreamDone)
-			}))
-		})
-
-		Describe("Subscribe to Desired Events", func() {
-			ItStreamsEventsFromHub(&desiredHub)
-
-			It("does not migrate desired lrps down to v0", func() {
-				response, err := http.Get(server.URL)
-				Expect(err).NotTo(HaveOccurred())
-				reader := sse.NewReadCloser(response.Body)
-
-				desiredLRP := model_helpers.NewValidDesiredLRP("guid")
-				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
-
-				desiredHub.Emit(event)
-
-				expectedEvent, err := events.NewEventFromModelEvent(0, event)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(reader.Next()).To(Equal(expectedEvent))
-			})
-		})
-	})
-
-	Describe("SubscribeToAcutalLRPEvents", func() {
-		BeforeEach(func() {
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.SubscribeToActualLRPEvents(logger, w, r)
-				close(eventStreamDone)
-			}))
-		})
-
-		Describe("Subscribe to Actual Events", func() {
-			ItStreamsEventsFromHub(&actualHub)
-		})
-	})
 })

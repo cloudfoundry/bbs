@@ -108,9 +108,7 @@ func New(
 		bbs.DesireTaskRoute_r0: route(emitter.EmitLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DesireTask_r0))),
 
 		// Events
-		bbs.EventStreamRoute_r0:        route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
-		bbs.DesiredLRPEventStreamRoute: route(middleware.LogWrap(logger, accessLogger, eventsHandler.SubscribeToDesiredLRPEvents)),
-		bbs.ActualLRPEventStreamRoute:  route(middleware.LogWrap(logger, accessLogger, eventsHandler.SubscribeToActualLRPEvents)),
+		bbs.EventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
 
 		// Cells
 		bbs.CellsRoute:    route(emitter.EmitLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells))),

@@ -68,9 +68,7 @@ const (
 	TaskByGuidRoute_r0 = "TaskByGuid"    // Deprecated
 
 	// Event Streaming
-	EventStreamRoute_r0        = "EventStream_r0" // Deprecated
-	DesiredLRPEventStreamRoute = "DesiredLRPEventStreamRoute"
-	ActualLRPEventStreamRoute  = "ActualLRPEventStreamRoute"
+	EventStreamRoute_r0 = "EventStream_r0"
 
 	// Cell Presence
 	CellsRoute    = "Cells_r2"
@@ -146,8 +144,6 @@ var Routes = rata.Routes{
 
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},
-	{Path: "/v1/desired_lrp_events", Method: "GET", Name: DesiredLRPEventStreamRoute}, // Experimental
-	{Path: "/v1/actual_lrp_events", Method: "GET", Name: ActualLRPEventStreamRoute},   // Experimental
 
 	// Cells
 	{Path: "/v1/cells/list.r1", Method: "POST", Name: CellsRoute},
