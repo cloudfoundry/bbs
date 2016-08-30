@@ -44,6 +44,7 @@ var _ = Describe("Cell Handlers", func() {
 					&models.Provider{"preloaded", []string{"provider-1", "provider-2"}},
 					&models.Provider{"provider-3", nil},
 				},
+				PlacementTags: []string{"test1", "test2"},
 			},
 			{
 				CellId:     "cell-2",
@@ -57,6 +58,7 @@ var _ = Describe("Cell Handlers", func() {
 				RootfsProviders: []*models.Provider{
 					&models.Provider{"preloaded", []string{"provider-1"}},
 				},
+				PlacementTags: []string{"test3", "test4"},
 			},
 		}
 		cellSet = models.NewCellSet()

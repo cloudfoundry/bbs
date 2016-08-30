@@ -81,6 +81,7 @@ func newCellPresence(cellID string) *models.CellPresence {
 		models.NewCellCapacity(128, 1024, 6),
 		[]string{},
 		nil,
+		nil,
 	)
 	return &presence
 }

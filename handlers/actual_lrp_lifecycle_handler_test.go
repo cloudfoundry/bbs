@@ -793,6 +793,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 							models.NewCellCapacity(128, 1024, 6),
 							[]string{},
 							[]string{},
+							[]string{},
 						)
 
 						fakeServiceClient.CellByIdReturns(&cellPresence, nil)

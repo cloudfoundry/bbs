@@ -29,6 +29,7 @@ var _ = Describe("Convergence API", func() {
 				models.NewCellCapacity(128, 1024, 6),
 				[]string{},
 				[]string{},
+				[]string{},
 			)
 			consulHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
