@@ -74,6 +74,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		ModificationTag:               &modTag,
 		LegacyDownloadUser:            "legacy-dan",
 		TrustedSystemCertificatesPath: "/etc/somepath",
+		PlacementTags:                 []string{"red-tag", "blue-tag"},
 		VolumeMounts: []*models.VolumeMount{
 			{
 				Driver:       "my-driver",

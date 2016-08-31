@@ -66,6 +66,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		TrustedSystemCertificatesPath: runInfo.TrustedSystemCertificatesPath,
 		VolumeMounts:                  runInfo.VolumeMounts,
 		Network:                       runInfo.Network,
+		PlacementTags:                 schedInfo.PlacementTags,
 	}
 }
 
@@ -163,7 +164,16 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 		volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
 	}
 
-	return NewDesiredLRPSchedulingInfo(d.DesiredLRPKey(), d.Annotation, d.Instances, d.DesiredLRPResource(), routes, modificationTag, &volumePlacement)
+	return NewDesiredLRPSchedulingInfo(
+		d.DesiredLRPKey(),
+		d.Annotation,
+		d.Instances,
+		d.DesiredLRPResource(),
+		routes,
+		modificationTag,
+		&volumePlacement,
+		d.PlacementTags,
+	)
 }
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
@@ -353,7 +363,16 @@ func (key DesiredLRPKey) Validate() error {
 	return validationError.ToError()
 }
 
-func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances int32, resource DesiredLRPResource, routes Routes, modTag ModificationTag, volumePlacement *VolumePlacement) DesiredLRPSchedulingInfo {
+func NewDesiredLRPSchedulingInfo(
+	key DesiredLRPKey,
+	annotation string,
+	instances int32,
+	resource DesiredLRPResource,
+	routes Routes,
+	modTag ModificationTag,
+	volumePlacement *VolumePlacement,
+	placementTags []string,
+) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
 		DesiredLRPKey:      key,
 		Annotation:         annotation,
@@ -362,6 +381,7 @@ func NewDesiredLRPSchedulingInfo(key DesiredLRPKey, annotation string, instances
 		Routes:             routes,
 		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
+		PlacementTags:      placementTags,
 	}
 }
 
