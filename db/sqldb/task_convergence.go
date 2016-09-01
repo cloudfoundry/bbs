@@ -2,6 +2,7 @@ package sqldb
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -106,9 +107,12 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 		"state = ? AND updated_at < ? AND created_at > ?",
 		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration).UnixNano(), db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
 	)
+
 	if err != nil {
 		logger.Error("failed-query", err)
+		return []*auctioneer.TaskStartRequest{}, math.MaxUint64
 	}
+
 	defer rows.Close()
 
 	var failedFetches uint64
@@ -212,9 +216,12 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 		"state = ? AND updated_at < ?",
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
+
 	if err != nil {
 		logger.Error("failed-query", err)
+		return []*models.Task{}, math.MaxUint64
 	}
+
 	defer rows.Close()
 
 	var failedFetches uint64
