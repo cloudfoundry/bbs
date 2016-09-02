@@ -125,7 +125,6 @@ func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Tim
 // Adds CRASHED Actual LRPs that can be restarted to the list of start requests
 // and transitions them to UNCLAIMED.
 func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
-
 	logger = logger.Session("crashed-actual-lrps")
 	restartCalculator := models.NewDefaultRestartCalculator()
 

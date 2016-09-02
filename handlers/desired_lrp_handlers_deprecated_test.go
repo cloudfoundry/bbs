@@ -792,10 +792,13 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Domain:      desiredLRP.Domain,
 						Indices:     []int{0, 1, 2, 3, 4},
 						Resource: rep.Resource{
-							MemoryMB:      desiredLRP.MemoryMb,
-							DiskMB:        desiredLRP.DiskMb,
+							MemoryMB: desiredLRP.MemoryMb,
+							DiskMB:   desiredLRP.DiskMb,
+						},
+						PlacementConstraint: rep.PlacementConstraint{
 							RootFs:        desiredLRP.RootFs,
 							VolumeDrivers: volumeDrivers,
+							PlacementTags: desiredLRP.PlacementTags,
 						},
 					}
 

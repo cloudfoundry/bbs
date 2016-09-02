@@ -42,6 +42,12 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 			return models.ErrGUIDGeneration
 		}
 
+		placementTagData, err := json.Marshal(desiredLRP.PlacementTags)
+		if err != nil {
+			logger.Error("failed-to-serialize-model", err)
+			return err
+		}
+
 		desiredLRP.ModificationTag = &models.ModificationTag{Epoch: guid, Index: 0}
 
 		_, err = db.insert(logger, tx, desiredLRPsTable,
@@ -59,6 +65,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 				"modification_tag_index": desiredLRP.ModificationTag.Index,
 				"routes":                 routesData,
 				"run_info":               runInfoData,
+				"placement_tags":         placementTagData,
 			},
 		)
 		if err != nil {
@@ -237,7 +244,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 // "rows" needs to have the columns defined in the schedulingInfoColumns constant
 func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scanner RowScanner, dest ...interface{}) (*models.DesiredLRPSchedulingInfo, error) {
 	schedulingInfo := &models.DesiredLRPSchedulingInfo{}
-	var routeData, volumePlacementData []byte
+	var routeData, volumePlacementData, placementTagData []byte
 	values := []interface{}{
 		&schedulingInfo.ProcessGuid,
 		&schedulingInfo.Domain,
@@ -251,6 +258,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 		&volumePlacementData,
 		&schedulingInfo.ModificationTag.Epoch,
 		&schedulingInfo.ModificationTag.Index,
+		&placementTagData,
 	}
 	values = append(values, dest...)
 
@@ -275,6 +283,11 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 		return nil, err
 	}
 	schedulingInfo.VolumePlacement = &volumePlacement
+	err = json.Unmarshal(placementTagData, &schedulingInfo.PlacementTags)
+	if err != nil {
+		logger.Error("failed-parsing-placement-tags", err)
+		return nil, err
+	}
 
 	return schedulingInfo, nil
 }

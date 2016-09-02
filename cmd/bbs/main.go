@@ -333,7 +333,8 @@ func main() {
 
 	migrationsDone := make(chan struct{})
 
-	migrationManager := migration.NewManager(logger,
+	migrationManager := migration.NewManager(
+		logger,
 		etcdDB,
 		storeClient,
 		sqlDB,

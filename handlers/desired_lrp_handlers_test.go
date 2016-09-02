@@ -441,10 +441,13 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Domain:      desiredLRP.Domain,
 						Indices:     []int{0, 1, 2, 3, 4},
 						Resource: rep.Resource{
-							MemoryMB:      desiredLRP.MemoryMb,
-							DiskMB:        desiredLRP.DiskMb,
+							MemoryMB: desiredLRP.MemoryMb,
+							DiskMB:   desiredLRP.DiskMb,
+						},
+						PlacementConstraint: rep.PlacementConstraint{
 							RootFs:        desiredLRP.RootFs,
 							VolumeDrivers: volumeDrivers,
+							PlacementTags: desiredLRP.PlacementTags,
 						},
 					}
 
@@ -557,12 +560,13 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					update.Instances = &instances
 
 					desiredLRP := &models.DesiredLRP{
-						ProcessGuid: "some-guid",
-						Domain:      "some-domain",
-						RootFs:      "some-stack",
-						MemoryMb:    128,
-						DiskMb:      512,
-						Instances:   3,
+						ProcessGuid:   "some-guid",
+						Domain:        "some-domain",
+						RootFs:        "some-stack",
+						PlacementTags: []string{"taggggg"},
+						MemoryMb:      128,
+						DiskMb:        512,
+						Instances:     3,
 					}
 
 					fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
@@ -681,7 +685,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						startReq := startRequests[0]
 						Expect(startReq.ProcessGuid).To(Equal("some-guid"))
 						Expect(startReq.Domain).To(Equal("some-domain"))
-						Expect(startReq.Resource).To(Equal(rep.Resource{MemoryMB: 128, DiskMB: 512, RootFs: "some-stack", VolumeDrivers: []string{}}))
+						Expect(startReq.Resource).To(Equal(rep.Resource{MemoryMB: 128, DiskMB: 512}))
+						Expect(startReq.PlacementConstraint).To(Equal(rep.PlacementConstraint{
+							RootFs:        "some-stack",
+							VolumeDrivers: []string{},
+							PlacementTags: []string{"taggggg"},
+						}))
 						Expect(startReq.Indices).To(ContainElement(2))
 						Expect(startReq.Indices).To(ContainElement(1))
 					})

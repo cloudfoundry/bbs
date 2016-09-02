@@ -193,8 +193,10 @@ var _ = Describe("Task Controller", func() {
 						TaskGuid: taskGuid,
 						Domain:   domain,
 						Resource: rep.Resource{
-							MemoryMB:      256,
-							DiskMB:        1024,
+							MemoryMB: 256,
+							DiskMB:   1024,
+						},
+						PlacementConstraint: rep.PlacementConstraint{
 							RootFs:        "docker:///docker.com/docker",
 							VolumeDrivers: volumeMounts,
 						},

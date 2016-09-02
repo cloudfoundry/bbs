@@ -47,6 +47,7 @@ var (
 		desiredLRPsTable + ".volume_placement",
 		desiredLRPsTable + ".modification_tag_epoch",
 		desiredLRPsTable + ".modification_tag_index",
+		desiredLRPsTable + ".placement_tags",
 	}
 
 	desiredLRPColumns = append(schedulingInfoColumns,
