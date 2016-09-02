@@ -666,6 +666,16 @@ var _ = Describe("DesiredLRP", func() {
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "cpu_weight")
 		})
 
+		It("requires a valid MemoryMb", func() {
+			desiredLRP.MemoryMb = -1
+			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "memory_mb")
+		})
+
+		It("requires a valid DiskMb", func() {
+			desiredLRP.DiskMb = -1
+			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "disk_mb")
+		})
+
 		It("limits the annotation length", func() {
 			desiredLRP.Annotation = randStringBytes(50000)
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "annotation")

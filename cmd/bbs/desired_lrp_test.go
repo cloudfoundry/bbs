@@ -160,8 +160,7 @@ var _ = Describe("DesiredLRP API", func() {
 	Describe("DesireLRP", func() {
 		var (
 			desiredLRP *models.DesiredLRP
-
-			desireErr error
+			desireErr  error
 		)
 
 		BeforeEach(func() {

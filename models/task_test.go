@@ -457,6 +457,36 @@ var _ = Describe("Task", func() {
 				},
 			},
 			{
+				"memory_mb",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						MemoryMb: -1,
+					},
+				},
+			},
+			{
+				"disk_mb",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						DiskMb: -1,
+					},
+				},
+			},
+			{
 				"egress_rules",
 				&models.Task{
 					Domain:   "some-domain",

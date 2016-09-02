@@ -282,6 +282,14 @@ func (desired DesiredLRP) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"cpu_weight"})
 	}
 
+	if desired.GetMemoryMb() < 0 {
+		validationError = validationError.Append(ErrInvalidField{"memory_mb"})
+	}
+
+	if desired.GetDiskMb() < 0 {
+		validationError = validationError.Append(ErrInvalidField{"disk_mb"})
+	}
+
 	if len(desired.GetAnnotation()) > maximumAnnotationLength {
 		validationError = validationError.Append(ErrInvalidField{"annotation"})
 	}

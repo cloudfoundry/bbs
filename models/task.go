@@ -158,6 +158,14 @@ func (def *TaskDefinition) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"cpu_weight"})
 	}
 
+	if def.MemoryMb < 0 {
+		validationError = validationError.Append(ErrInvalidField{"memory_mb"})
+	}
+
+	if def.DiskMb < 0 {
+		validationError = validationError.Append(ErrInvalidField{"disk_mb"})
+	}
+
 	if len(def.Annotation) > maximumAnnotationLength {
 		validationError = validationError.Append(ErrInvalidField{"annotation"})
 	}
