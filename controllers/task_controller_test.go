@@ -199,6 +199,7 @@ var _ = Describe("Task Controller", func() {
 						PlacementConstraint: rep.PlacementConstraint{
 							RootFs:        "docker:///docker.com/docker",
 							VolumeDrivers: volumeMounts,
+							PlacementTags: taskDef.PlacementTags,
 						},
 					},
 				}

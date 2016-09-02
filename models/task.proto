@@ -32,6 +32,7 @@ message TaskDefinition {
   optional string trusted_system_certificates_path = 17 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 18 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 19 [(gogoproto.jsontag) = "network,omitempty"];
+  repeated string PlacementTags = 20 [(gogoproto.jsontag) ="placement_tags,omitempty"];
 }
 
 message Task {

@@ -5,13 +5,12 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
+import fmt "fmt"
 import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
+import _ "github.com/gogo/protobuf/gogoproto"
 
 import strconv "strconv"
 
-import fmt "fmt"
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -21,6 +20,7 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type Task_State int32
@@ -64,31 +64,34 @@ func (x *Task_State) UnmarshalJSON(data []byte) error {
 	*x = Task_State(value)
 	return nil
 }
+func (Task_State) EnumDescriptor() ([]byte, []int) { return fileDescriptorTask, []int{1, 0} }
 
 type TaskDefinition struct {
-	RootFs                        string                 `protobuf:"bytes,1,opt,name=root_fs" json:"rootfs"`
-	EnvironmentVariables          []*EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables" json:"env,omitempty"`
+	RootFs                        string                 `protobuf:"bytes,1,opt,name=root_fs,json=rootFs" json:"rootfs"`
+	EnvironmentVariables          []*EnvironmentVariable `protobuf:"bytes,2,rep,name=environment_variables,json=environmentVariables" json:"env,omitempty"`
 	Action                        *Action                `protobuf:"bytes,3,opt,name=action" json:"action,omitempty"`
-	DiskMb                        int32                  `protobuf:"varint,4,opt,name=disk_mb" json:"disk_mb"`
-	MemoryMb                      int32                  `protobuf:"varint,5,opt,name=memory_mb" json:"memory_mb"`
-	CpuWeight                     uint32                 `protobuf:"varint,6,opt,name=cpu_weight" json:"cpu_weight"`
+	DiskMb                        int32                  `protobuf:"varint,4,opt,name=disk_mb,json=diskMb" json:"disk_mb"`
+	MemoryMb                      int32                  `protobuf:"varint,5,opt,name=memory_mb,json=memoryMb" json:"memory_mb"`
+	CpuWeight                     uint32                 `protobuf:"varint,6,opt,name=cpu_weight,json=cpuWeight" json:"cpu_weight"`
 	Privileged                    bool                   `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
-	LogSource                     string                 `protobuf:"bytes,8,opt,name=log_source" json:"log_source"`
-	LogGuid                       string                 `protobuf:"bytes,9,opt,name=log_guid" json:"log_guid"`
-	MetricsGuid                   string                 `protobuf:"bytes,10,opt,name=metrics_guid" json:"metrics_guid"`
-	ResultFile                    string                 `protobuf:"bytes,11,opt,name=result_file" json:"result_file"`
-	CompletionCallbackUrl         string                 `protobuf:"bytes,12,opt,name=completion_callback_url" json:"completion_callback_url,omitempty"`
+	LogSource                     string                 `protobuf:"bytes,8,opt,name=log_source,json=logSource" json:"log_source"`
+	LogGuid                       string                 `protobuf:"bytes,9,opt,name=log_guid,json=logGuid" json:"log_guid"`
+	MetricsGuid                   string                 `protobuf:"bytes,10,opt,name=metrics_guid,json=metricsGuid" json:"metrics_guid"`
+	ResultFile                    string                 `protobuf:"bytes,11,opt,name=result_file,json=resultFile" json:"result_file"`
+	CompletionCallbackUrl         string                 `protobuf:"bytes,12,opt,name=completion_callback_url,json=completionCallbackUrl" json:"completion_callback_url,omitempty"`
 	Annotation                    string                 `protobuf:"bytes,13,opt,name=annotation" json:"annotation,omitempty"`
-	EgressRules                   []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules" json:"egress_rules,omitempty"`
-	CachedDependencies            []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                 `protobuf:"bytes,16,opt,name=legacy_download_user" json:"legacy_download_user,omitempty"`
-	TrustedSystemCertificatesPath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificates_path" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,18,rep,name=volume_mounts" json:"volume_mounts,omitempty"`
+	EgressRules                   []*SecurityGroupRule   `protobuf:"bytes,14,rep,name=egress_rules,json=egressRules" json:"egress_rules,omitempty"`
+	CachedDependencies            []*CachedDependency    `protobuf:"bytes,15,rep,name=cached_dependencies,json=cachedDependencies" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                 `protobuf:"bytes,16,opt,name=legacy_download_user,json=legacyDownloadUser" json:"legacy_download_user,omitempty"`
+	TrustedSystemCertificatesPath string                 `protobuf:"bytes,17,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath" json:"trusted_system_certificates_path,omitempty"`
+	VolumeMounts                  []*VolumeMount         `protobuf:"bytes,18,rep,name=volume_mounts,json=volumeMounts" json:"volume_mounts,omitempty"`
 	Network                       *Network               `protobuf:"bytes,19,opt,name=network" json:"network,omitempty"`
+	PlacementTags                 []string               `protobuf:"bytes,20,rep,name=PlacementTags,json=placementTags" json:"placement_tags,omitempty"`
 }
 
-func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
-func (*TaskDefinition) ProtoMessage() {}
+func (m *TaskDefinition) Reset()                    { *m = TaskDefinition{} }
+func (*TaskDefinition) ProtoMessage()               {}
+func (*TaskDefinition) Descriptor() ([]byte, []int) { return fileDescriptorTask, []int{0} }
 
 func (m *TaskDefinition) GetRootFs() string {
 	if m != nil {
@@ -223,22 +226,30 @@ func (m *TaskDefinition) GetNetwork() *Network {
 	return nil
 }
 
-type Task struct {
-	*TaskDefinition  `protobuf:"bytes,1,opt,name=task_definition,embedded=task_definition" json:""`
-	TaskGuid         string     `protobuf:"bytes,2,opt,name=task_guid" json:"task_guid"`
-	Domain           string     `protobuf:"bytes,3,opt,name=domain" json:"domain"`
-	CreatedAt        int64      `protobuf:"varint,4,opt,name=created_at" json:"created_at"`
-	UpdatedAt        int64      `protobuf:"varint,5,opt,name=updated_at" json:"updated_at"`
-	FirstCompletedAt int64      `protobuf:"varint,6,opt,name=first_completed_at" json:"first_completed_at"`
-	State            Task_State `protobuf:"varint,7,opt,name=state,enum=models.Task_State" json:"state"`
-	CellId           string     `protobuf:"bytes,8,opt,name=cell_id" json:"cell_id"`
-	Result           string     `protobuf:"bytes,9,opt,name=result" json:"result"`
-	Failed           bool       `protobuf:"varint,10,opt,name=failed" json:"failed"`
-	FailureReason    string     `protobuf:"bytes,11,opt,name=failure_reason" json:"failure_reason"`
+func (m *TaskDefinition) GetPlacementTags() []string {
+	if m != nil {
+		return m.PlacementTags
+	}
+	return nil
 }
 
-func (m *Task) Reset()      { *m = Task{} }
-func (*Task) ProtoMessage() {}
+type Task struct {
+	*TaskDefinition  `protobuf:"bytes,1,opt,name=task_definition,json=taskDefinition,embedded=task_definition" json:""`
+	TaskGuid         string     `protobuf:"bytes,2,opt,name=task_guid,json=taskGuid" json:"task_guid"`
+	Domain           string     `protobuf:"bytes,3,opt,name=domain" json:"domain"`
+	CreatedAt        int64      `protobuf:"varint,4,opt,name=created_at,json=createdAt" json:"created_at"`
+	UpdatedAt        int64      `protobuf:"varint,5,opt,name=updated_at,json=updatedAt" json:"updated_at"`
+	FirstCompletedAt int64      `protobuf:"varint,6,opt,name=first_completed_at,json=firstCompletedAt" json:"first_completed_at"`
+	State            Task_State `protobuf:"varint,7,opt,name=state,enum=models.Task_State" json:"state"`
+	CellId           string     `protobuf:"bytes,8,opt,name=cell_id,json=cellId" json:"cell_id"`
+	Result           string     `protobuf:"bytes,9,opt,name=result" json:"result"`
+	Failed           bool       `protobuf:"varint,10,opt,name=failed" json:"failed"`
+	FailureReason    string     `protobuf:"bytes,11,opt,name=failure_reason,json=failureReason" json:"failure_reason"`
+}
+
+func (m *Task) Reset()                    { *m = Task{} }
+func (*Task) ProtoMessage()               {}
+func (*Task) Descriptor() ([]byte, []int) { return fileDescriptorTask, []int{1} }
 
 func (m *Task) GetTaskGuid() string {
 	if m != nil {
@@ -311,6 +322,8 @@ func (m *Task) GetFailureReason() string {
 }
 
 func init() {
+	proto.RegisterType((*TaskDefinition)(nil), "models.TaskDefinition")
+	proto.RegisterType((*Task)(nil), "models.Task")
 	proto.RegisterEnum("models.Task_State", Task_State_name, Task_State_value)
 }
 func (x Task_State) String() string {
@@ -330,7 +343,12 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskDefinition)
 	if !ok {
-		return false
+		that2, ok := that.(TaskDefinition)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -417,6 +435,14 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 	if !this.Network.Equal(that1.Network) {
 		return false
 	}
+	if len(this.PlacementTags) != len(that1.PlacementTags) {
+		return false
+	}
+	for i := range this.PlacementTags {
+		if this.PlacementTags[i] != that1.PlacementTags[i] {
+			return false
+		}
+	}
 	return true
 }
 func (this *Task) Equal(that interface{}) bool {
@@ -429,7 +455,12 @@ func (this *Task) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Task)
 	if !ok {
-		return false
+		that2, ok := that.(Task)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -478,45 +509,66 @@ func (this *TaskDefinition) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.TaskDefinition{` +
-		`RootFs:` + fmt.Sprintf("%#v", this.RootFs),
-		`EnvironmentVariables:` + fmt.Sprintf("%#v", this.EnvironmentVariables),
-		`Action:` + fmt.Sprintf("%#v", this.Action),
-		`DiskMb:` + fmt.Sprintf("%#v", this.DiskMb),
-		`MemoryMb:` + fmt.Sprintf("%#v", this.MemoryMb),
-		`CpuWeight:` + fmt.Sprintf("%#v", this.CpuWeight),
-		`Privileged:` + fmt.Sprintf("%#v", this.Privileged),
-		`LogSource:` + fmt.Sprintf("%#v", this.LogSource),
-		`LogGuid:` + fmt.Sprintf("%#v", this.LogGuid),
-		`MetricsGuid:` + fmt.Sprintf("%#v", this.MetricsGuid),
-		`ResultFile:` + fmt.Sprintf("%#v", this.ResultFile),
-		`CompletionCallbackUrl:` + fmt.Sprintf("%#v", this.CompletionCallbackUrl),
-		`Annotation:` + fmt.Sprintf("%#v", this.Annotation),
-		`EgressRules:` + fmt.Sprintf("%#v", this.EgressRules),
-		`CachedDependencies:` + fmt.Sprintf("%#v", this.CachedDependencies),
-		`LegacyDownloadUser:` + fmt.Sprintf("%#v", this.LegacyDownloadUser),
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath),
-		`VolumeMounts:` + fmt.Sprintf("%#v", this.VolumeMounts),
-		`Network:` + fmt.Sprintf("%#v", this.Network) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 24)
+	s = append(s, "&models.TaskDefinition{")
+	s = append(s, "RootFs: "+fmt.Sprintf("%#v", this.RootFs)+",\n")
+	if this.EnvironmentVariables != nil {
+		s = append(s, "EnvironmentVariables: "+fmt.Sprintf("%#v", this.EnvironmentVariables)+",\n")
+	}
+	if this.Action != nil {
+		s = append(s, "Action: "+fmt.Sprintf("%#v", this.Action)+",\n")
+	}
+	s = append(s, "DiskMb: "+fmt.Sprintf("%#v", this.DiskMb)+",\n")
+	s = append(s, "MemoryMb: "+fmt.Sprintf("%#v", this.MemoryMb)+",\n")
+	s = append(s, "CpuWeight: "+fmt.Sprintf("%#v", this.CpuWeight)+",\n")
+	s = append(s, "Privileged: "+fmt.Sprintf("%#v", this.Privileged)+",\n")
+	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
+	s = append(s, "LogGuid: "+fmt.Sprintf("%#v", this.LogGuid)+",\n")
+	s = append(s, "MetricsGuid: "+fmt.Sprintf("%#v", this.MetricsGuid)+",\n")
+	s = append(s, "ResultFile: "+fmt.Sprintf("%#v", this.ResultFile)+",\n")
+	s = append(s, "CompletionCallbackUrl: "+fmt.Sprintf("%#v", this.CompletionCallbackUrl)+",\n")
+	s = append(s, "Annotation: "+fmt.Sprintf("%#v", this.Annotation)+",\n")
+	if this.EgressRules != nil {
+		s = append(s, "EgressRules: "+fmt.Sprintf("%#v", this.EgressRules)+",\n")
+	}
+	if this.CachedDependencies != nil {
+		s = append(s, "CachedDependencies: "+fmt.Sprintf("%#v", this.CachedDependencies)+",\n")
+	}
+	s = append(s, "LegacyDownloadUser: "+fmt.Sprintf("%#v", this.LegacyDownloadUser)+",\n")
+	s = append(s, "TrustedSystemCertificatesPath: "+fmt.Sprintf("%#v", this.TrustedSystemCertificatesPath)+",\n")
+	if this.VolumeMounts != nil {
+		s = append(s, "VolumeMounts: "+fmt.Sprintf("%#v", this.VolumeMounts)+",\n")
+	}
+	if this.Network != nil {
+		s = append(s, "Network: "+fmt.Sprintf("%#v", this.Network)+",\n")
+	}
+	if this.PlacementTags != nil {
+		s = append(s, "PlacementTags: "+fmt.Sprintf("%#v", this.PlacementTags)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *Task) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.Task{` +
-		`TaskDefinition:` + fmt.Sprintf("%#v", this.TaskDefinition),
-		`TaskGuid:` + fmt.Sprintf("%#v", this.TaskGuid),
-		`Domain:` + fmt.Sprintf("%#v", this.Domain),
-		`CreatedAt:` + fmt.Sprintf("%#v", this.CreatedAt),
-		`UpdatedAt:` + fmt.Sprintf("%#v", this.UpdatedAt),
-		`FirstCompletedAt:` + fmt.Sprintf("%#v", this.FirstCompletedAt),
-		`State:` + fmt.Sprintf("%#v", this.State),
-		`CellId:` + fmt.Sprintf("%#v", this.CellId),
-		`Result:` + fmt.Sprintf("%#v", this.Result),
-		`Failed:` + fmt.Sprintf("%#v", this.Failed),
-		`FailureReason:` + fmt.Sprintf("%#v", this.FailureReason) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 15)
+	s = append(s, "&models.Task{")
+	if this.TaskDefinition != nil {
+		s = append(s, "TaskDefinition: "+fmt.Sprintf("%#v", this.TaskDefinition)+",\n")
+	}
+	s = append(s, "TaskGuid: "+fmt.Sprintf("%#v", this.TaskGuid)+",\n")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "CreatedAt: "+fmt.Sprintf("%#v", this.CreatedAt)+",\n")
+	s = append(s, "UpdatedAt: "+fmt.Sprintf("%#v", this.UpdatedAt)+",\n")
+	s = append(s, "FirstCompletedAt: "+fmt.Sprintf("%#v", this.FirstCompletedAt)+",\n")
+	s = append(s, "State: "+fmt.Sprintf("%#v", this.State)+",\n")
+	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "Result: "+fmt.Sprintf("%#v", this.Result)+",\n")
+	s = append(s, "Failed: "+fmt.Sprintf("%#v", this.Failed)+",\n")
+	s = append(s, "FailureReason: "+fmt.Sprintf("%#v", this.FailureReason)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringTask(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -526,11 +578,12 @@ func valueToGoStringTask(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringTask(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringTask(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -540,7 +593,7 @@ func extensionToGoStringTask(e map[int32]github_com_gogo_protobuf_proto.Extensio
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *TaskDefinition) Marshal() (data []byte, err error) {
@@ -686,6 +739,23 @@ func (m *TaskDefinition) MarshalTo(data []byte) (int, error) {
 			return 0, err
 		}
 		i += n2
+	}
+	if len(m.PlacementTags) > 0 {
+		for _, s := range m.PlacementTags {
+			data[i] = 0xa2
+			i++
+			data[i] = 0x1
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			data[i] = uint8(l)
+			i++
+			i += copy(data[i:], s)
+		}
 	}
 	return i, nil
 }
@@ -842,6 +912,12 @@ func (m *TaskDefinition) Size() (n int) {
 		l = m.Network.Size()
 		n += 2 + l + sovTask(uint64(l))
 	}
+	if len(m.PlacementTags) > 0 {
+		for _, s := range m.PlacementTags {
+			l = len(s)
+			n += 2 + l + sovTask(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -907,6 +983,7 @@ func (this *TaskDefinition) String() string {
 		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
 		`VolumeMounts:` + strings.Replace(fmt.Sprintf("%v", this.VolumeMounts), "VolumeMount", "VolumeMount", 1) + `,`,
 		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
+		`PlacementTags:` + fmt.Sprintf("%v", this.PlacementTags) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -943,8 +1020,12 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTask
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -957,6 +1038,12 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskDefinition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskDefinition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -964,6 +1051,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -974,10 +1064,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -989,6 +1080,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -999,10 +1093,10 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1017,6 +1111,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1027,10 +1124,10 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1047,6 +1144,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			m.DiskMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1063,6 +1163,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			m.MemoryMb = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1079,6 +1182,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			m.CpuWeight = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1095,6 +1201,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1112,6 +1221,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1122,10 +1234,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1137,6 +1250,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1147,10 +1263,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1162,6 +1279,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1172,10 +1292,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1187,6 +1308,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1197,10 +1321,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1212,6 +1337,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1222,10 +1350,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1237,6 +1366,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1247,10 +1379,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1262,6 +1395,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1272,10 +1408,10 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1290,6 +1426,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1300,10 +1439,10 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1318,6 +1457,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1328,10 +1470,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1343,6 +1486,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1353,10 +1499,11 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1368,6 +1515,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1378,10 +1528,10 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1396,6 +1546,9 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1406,10 +1559,10 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1420,16 +1573,37 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
+		case 20:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlacementTags", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
 					break
 				}
 			}
-			iNdEx -= sizeOfWire
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTask
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PlacementTags = append(m.PlacementTags, string(data[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
 			skippy, err := skipTask(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1444,14 +1618,21 @@ func (m *TaskDefinition) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *Task) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTask
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1464,6 +1645,12 @@ func (m *Task) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Task: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Task: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -1471,6 +1658,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1481,10 +1671,10 @@ func (m *Task) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1501,6 +1691,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1511,10 +1704,11 @@ func (m *Task) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1526,6 +1720,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1536,10 +1733,11 @@ func (m *Task) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1551,6 +1749,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			m.CreatedAt = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1567,6 +1768,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			m.UpdatedAt = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1583,6 +1787,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			m.FirstCompletedAt = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1599,6 +1806,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			m.State = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1615,6 +1825,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1625,10 +1838,11 @@ func (m *Task) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1640,6 +1854,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1650,10 +1867,11 @@ func (m *Task) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1665,6 +1883,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1682,6 +1903,9 @@ func (m *Task) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -1692,25 +1916,18 @@ func (m *Task) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTask
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.FailureReason = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipTask(data[iNdEx:])
 			if err != nil {
 				return err
@@ -1725,6 +1942,9 @@ func (m *Task) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipTask(data []byte) (n int, err error) {
@@ -1733,6 +1953,9 @@ func skipTask(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowTask
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -1746,7 +1969,10 @@ func skipTask(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -1762,6 +1988,9 @@ func skipTask(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTask
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -1782,6 +2011,9 @@ func skipTask(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowTask
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -1817,4 +2049,77 @@ func skipTask(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthTask = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowTask   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("task.proto", fileDescriptorTask) }
+
+var fileDescriptorTask = []byte{
+	// 1048 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x84, 0x94, 0x4d, 0x4f, 0x23, 0x37,
+	0x1c, 0xc6, 0x19, 0x5e, 0xf2, 0xe2, 0x90, 0x00, 0x06, 0x96, 0x29, 0x2c, 0x93, 0x40, 0xdb, 0xdd,
+	0xb4, 0xdd, 0x66, 0xa5, 0x9c, 0x7b, 0x28, 0x81, 0xee, 0x0a, 0xa9, 0x54, 0x28, 0x2c, 0xdb, 0xbd,
+	0x8d, 0x9c, 0x19, 0x67, 0xb0, 0xf0, 0x8c, 0x47, 0xb6, 0x27, 0x28, 0xea, 0xa5, 0xa7, 0x9e, 0x7b,
+	0xea, 0x67, 0xe8, 0x47, 0xd9, 0x23, 0xc7, 0x9e, 0xa2, 0x92, 0x5e, 0xaa, 0x9c, 0xf6, 0x23, 0x54,
+	0xf6, 0x78, 0xc0, 0x69, 0xa9, 0xf6, 0x94, 0xf8, 0x79, 0x7e, 0xfe, 0xdb, 0x63, 0xfb, 0xff, 0x00,
+	0x20, 0x91, 0xb8, 0xee, 0xa4, 0x9c, 0x49, 0x06, 0x4b, 0x31, 0x0b, 0x31, 0x15, 0xbb, 0x5f, 0x47,
+	0x44, 0x5e, 0x65, 0x83, 0x4e, 0xc0, 0xe2, 0x97, 0x11, 0x8b, 0xd8, 0x4b, 0x6d, 0x0f, 0xb2, 0xa1,
+	0x1e, 0xe9, 0x81, 0xfe, 0x97, 0x4f, 0xdb, 0xad, 0xa3, 0x40, 0x12, 0x96, 0x08, 0x33, 0xdc, 0xc3,
+	0xc9, 0x88, 0x70, 0x96, 0xc4, 0x38, 0x91, 0xfe, 0x08, 0x71, 0x82, 0x06, 0x14, 0x17, 0xe6, 0x96,
+	0xc0, 0x41, 0xc6, 0x89, 0x1c, 0xfb, 0x11, 0x67, 0x59, 0x6a, 0xd4, 0x9d, 0x00, 0x05, 0x57, 0x38,
+	0xf4, 0x43, 0x9c, 0xe2, 0x24, 0xc4, 0x49, 0x30, 0x36, 0x06, 0x1c, 0x31, 0x9a, 0xc5, 0xd8, 0x8f,
+	0x59, 0x96, 0xc8, 0x62, 0xb9, 0x04, 0xcb, 0x1b, 0xc6, 0xcd, 0xa6, 0x0f, 0x7f, 0x01, 0xa0, 0xf1,
+	0x06, 0x89, 0xeb, 0x13, 0x3c, 0x24, 0x09, 0x51, 0x1b, 0x81, 0xcf, 0x41, 0x99, 0x33, 0x26, 0xfd,
+	0xa1, 0x70, 0x9d, 0x96, 0xd3, 0xae, 0xf6, 0x1a, 0xef, 0x27, 0xcd, 0x85, 0xd9, 0xa4, 0x59, 0x52,
+	0xf2, 0x50, 0xf4, 0xf5, 0xef, 0x2b, 0x01, 0x03, 0xb0, 0xfd, 0xe8, 0x66, 0xdd, 0xc5, 0xd6, 0x52,
+	0xbb, 0xd6, 0xdd, 0xeb, 0xe4, 0x07, 0xd2, 0xf9, 0xee, 0x01, 0x7a, 0x6b, 0x98, 0xde, 0xc6, 0x6c,
+	0xd2, 0xac, 0xe3, 0x64, 0xf4, 0x82, 0xc5, 0x44, 0xe2, 0x38, 0x95, 0xe3, 0xfe, 0x16, 0xfe, 0x2f,
+	0x27, 0xe0, 0x33, 0x50, 0xca, 0x0f, 0xc8, 0x5d, 0x6a, 0x39, 0xed, 0x5a, 0xb7, 0x51, 0x54, 0x3d,
+	0xd2, 0x6a, 0xdf, 0xb8, 0x70, 0x1f, 0x94, 0x43, 0x22, 0xae, 0xfd, 0x78, 0xe0, 0x2e, 0xb7, 0x9c,
+	0xf6, 0x4a, 0x6f, 0x59, 0xed, 0xba, 0x5f, 0x52, 0xe2, 0xd9, 0x00, 0x1e, 0x80, 0x6a, 0x8c, 0x63,
+	0xc6, 0xc7, 0x0a, 0x58, 0xb1, 0x80, 0x4a, 0x2e, 0x9f, 0x0d, 0xe0, 0xa7, 0x00, 0x04, 0x69, 0xe6,
+	0xdf, 0x60, 0x12, 0x5d, 0x49, 0xb7, 0xd4, 0x72, 0xda, 0x75, 0xc3, 0x54, 0x83, 0x34, 0xfb, 0x51,
+	0xcb, 0xf0, 0x33, 0x00, 0x52, 0x4e, 0x46, 0x84, 0xe2, 0x08, 0x87, 0x6e, 0xb9, 0xe5, 0xb4, 0x2b,
+	0x06, 0xb2, 0x74, 0x55, 0x8a, 0xb2, 0xc8, 0x17, 0x2c, 0xe3, 0x01, 0x76, 0x2b, 0xfa, 0x14, 0x4d,
+	0x29, 0xca, 0xa2, 0x0b, 0x2d, 0xc3, 0x26, 0xa8, 0x28, 0x28, 0xca, 0x48, 0xe8, 0x56, 0x2d, 0xa4,
+	0x4c, 0x59, 0xf4, 0x3a, 0x23, 0x21, 0x7c, 0x0e, 0x56, 0x63, 0x2c, 0x39, 0x09, 0x44, 0x0e, 0x01,
+	0x0b, 0xaa, 0x19, 0x47, 0x83, 0x9f, 0x83, 0x1a, 0xc7, 0x22, 0xa3, 0xd2, 0x1f, 0x12, 0x8a, 0xdd,
+	0x9a, 0xc5, 0x81, 0xdc, 0x78, 0x45, 0x28, 0x86, 0x08, 0xec, 0x04, 0x2c, 0x4e, 0x29, 0x56, 0x07,
+	0xe6, 0x07, 0x88, 0xd2, 0x01, 0x0a, 0xae, 0xfd, 0x8c, 0x53, 0x77, 0x55, 0x4f, 0xf9, 0xc2, 0x5c,
+	0xf4, 0xc1, 0xff, 0x60, 0xd6, 0x65, 0x6d, 0x3f, 0x20, 0xc7, 0x86, 0xb8, 0xe4, 0x14, 0x7e, 0x03,
+	0x00, 0x4a, 0x12, 0x26, 0x91, 0xbe, 0xb1, 0xba, 0xae, 0xfa, 0xd4, 0x54, 0xdd, 0x7a, 0x70, 0xac,
+	0x42, 0x16, 0x0f, 0xdf, 0x81, 0x55, 0x1c, 0x71, 0x2c, 0x84, 0xcf, 0x33, 0xf5, 0x8e, 0x1a, 0xfa,
+	0x1d, 0x7d, 0x52, 0xdc, 0xf8, 0x85, 0x79, 0xfc, 0xaf, 0xd5, 0xdb, 0xef, 0x67, 0x14, 0xf7, 0x76,
+	0x67, 0x93, 0xe6, 0x13, 0x7b, 0x8a, 0x55, 0xb8, 0x96, 0xeb, 0x8a, 0x13, 0x90, 0x82, 0xcd, 0x7f,
+	0x37, 0x09, 0xc1, 0xc2, 0x5d, 0xd3, 0x0b, 0xb8, 0xc5, 0x02, 0xc7, 0x1a, 0x39, 0xb9, 0x6f, 0xa3,
+	0xde, 0xc1, 0x6c, 0xd2, 0xdc, 0x7f, 0x64, 0xa2, 0xb5, 0x0c, 0x0c, 0xe6, 0x27, 0x11, 0x2c, 0xe0,
+	0x3b, 0xb0, 0x45, 0x71, 0x84, 0x82, 0xb1, 0x1f, 0xb2, 0x9b, 0x84, 0x32, 0x14, 0xfa, 0x99, 0xc0,
+	0xdc, 0x5d, 0xd7, 0xe7, 0xf1, 0xcc, 0x9c, 0x87, 0xf7, 0x18, 0x63, 0x57, 0xce, 0xfd, 0x13, 0x63,
+	0x5f, 0x0a, 0xcc, 0xe1, 0x4f, 0xa0, 0x25, 0x79, 0x26, 0x24, 0x0e, 0x7d, 0x31, 0x16, 0x12, 0xc7,
+	0x7e, 0x80, 0xb9, 0x24, 0x43, 0x12, 0x20, 0x89, 0x85, 0x9f, 0x22, 0x79, 0xe5, 0x6e, 0xe8, 0x55,
+	0xba, 0x66, 0x95, 0x2f, 0x3f, 0xc6, 0x5b, 0x2b, 0xee, 0x1b, 0xf6, 0x42, 0xa3, 0xc7, 0x16, 0x79,
+	0x8e, 0xe4, 0x15, 0xbc, 0x04, 0x75, 0x3b, 0x50, 0x84, 0x0b, 0xf5, 0xf1, 0x6d, 0x16, 0xc7, 0xf7,
+	0x56, 0x9b, 0x67, 0xca, 0xeb, 0xed, 0xcd, 0x26, 0xcd, 0x9d, 0x39, 0xda, 0x5a, 0x67, 0x75, 0xf4,
+	0x40, 0x0a, 0xf8, 0x2d, 0x28, 0x9b, 0x4c, 0x72, 0x37, 0x75, 0x8b, 0xaf, 0x15, 0x05, 0x7f, 0xc8,
+	0xe5, 0xde, 0xf6, 0x6c, 0xd2, 0xdc, 0x30, 0x8c, 0x55, 0xa6, 0x98, 0x06, 0x7b, 0xa0, 0x7e, 0x4e,
+	0x51, 0x80, 0x55, 0x72, 0xbc, 0x41, 0x91, 0x70, 0xb7, 0x5a, 0x4b, 0xea, 0xe1, 0xcd, 0x26, 0x4d,
+	0x37, 0x2d, 0x0c, 0x5f, 0xa2, 0xc8, 0xde, 0x44, 0x3d, 0xb5, 0xa7, 0x1c, 0xfe, 0xb6, 0x0c, 0x96,
+	0x55, 0x10, 0xc2, 0x53, 0xb0, 0xa6, 0x42, 0xdd, 0x0f, 0xef, 0x13, 0x51, 0xc7, 0x60, 0xad, 0xfb,
+	0xa4, 0xd8, 0xd6, 0x7c, 0x5e, 0xf6, 0x2a, 0xb7, 0x93, 0xa6, 0x33, 0x53, 0xcd, 0xd6, 0x90, 0xf3,
+	0x49, 0x7a, 0x00, 0xaa, 0xba, 0x94, 0xee, 0xde, 0x45, 0xab, 0x2b, 0x2b, 0x4a, 0xd6, 0xad, 0xfb,
+	0x14, 0x94, 0x42, 0x16, 0x23, 0x92, 0xc7, 0x5b, 0xf5, 0x3e, 0xb5, 0xb4, 0xa6, 0x23, 0x89, 0x63,
+	0xa4, 0xae, 0x0f, 0x49, 0x9d, 0x6b, 0x4b, 0xf7, 0x91, 0x94, 0xeb, 0x47, 0x52, 0x41, 0x59, 0x1a,
+	0x16, 0xd0, 0x8a, 0x0d, 0x19, 0xfd, 0x48, 0xc2, 0x2e, 0x80, 0x43, 0xc2, 0x85, 0xf4, 0x4d, 0xdf,
+	0xe6, 0x70, 0xc9, 0x82, 0xd7, 0xb5, 0x7f, 0x5c, 0xd8, 0x47, 0x12, 0x76, 0xc0, 0x8a, 0x90, 0x48,
+	0x62, 0x1d, 0x73, 0x8d, 0x2e, 0xb4, 0xbf, 0xbf, 0x73, 0xa1, 0x1c, 0x33, 0x35, 0xc7, 0x54, 0x04,
+	0x07, 0x98, 0x52, 0x9f, 0x84, 0x73, 0x91, 0x57, 0x52, 0xe2, 0xa9, 0xfe, 0xd4, 0x3c, 0x8c, 0xe6,
+	0xd2, 0xce, 0x68, 0xca, 0x1d, 0x22, 0x42, 0x71, 0x1e, 0x73, 0x45, 0xa8, 0x1a, 0x0d, 0x7e, 0x05,
+	0x1a, 0xea, 0x5f, 0xc6, 0xb1, 0xcf, 0x31, 0x12, 0x2c, 0x99, 0x0b, 0xb9, 0xba, 0xf1, 0xfa, 0xda,
+	0x3a, 0xfc, 0x1e, 0xac, 0xe8, 0xdd, 0xc1, 0x1a, 0x28, 0x9f, 0x26, 0x23, 0x44, 0x49, 0xb8, 0xbe,
+	0xa0, 0x06, 0xe7, 0x38, 0x09, 0x49, 0x12, 0xad, 0x3b, 0x6a, 0xd0, 0xcf, 0x92, 0x44, 0x0d, 0x16,
+	0x61, 0x1d, 0x54, 0xef, 0x3f, 0x7b, 0x7d, 0x49, 0x0d, 0xfb, 0x58, 0x30, 0x3a, 0x52, 0xee, 0x72,
+	0xef, 0xc5, 0xed, 0x9d, 0xe7, 0xfc, 0x71, 0xe7, 0x2d, 0x7c, 0xb8, 0xf3, 0x9c, 0x9f, 0xa7, 0x9e,
+	0xf3, 0xfb, 0xd4, 0x73, 0xde, 0x4f, 0x3d, 0xe7, 0x76, 0xea, 0x39, 0x7f, 0x4e, 0x3d, 0xe7, 0xef,
+	0xa9, 0xb7, 0xf0, 0x61, 0xea, 0x39, 0xbf, 0xfe, 0xe5, 0x2d, 0xfc, 0x13, 0x00, 0x00, 0xff, 0xff,
+	0x2f, 0x57, 0xad, 0x7e, 0x11, 0x08, 0x00, 0x00,
+}

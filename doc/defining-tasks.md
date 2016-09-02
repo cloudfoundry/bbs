@@ -67,6 +67,7 @@ err := client.DesireTask(
         Mode:          models.BindMountMode_RO,
       },
     }
+    PlacementTags: []string{"tag-1", "tag-2"},
   }
 )
 ```
@@ -134,6 +135,16 @@ An absolute path inside the container's filesystem where trusted system certific
 ##### `VolumeMounts` [optional]
 
 See description of [Volume Mounts](common-models#volumemounts-optional)
+
+##### `PlacementTags` [optional]
+
+A set of tags that will be used to schedule the Task on specific cells.
+An Task will only be placed on a cell if the tags in the Task's `PlacementTags`
+are exactly the same as the tags advertised by the given cell.
+
+For example:
+- An Task with the placement tags ["tag-1"] will match only a cell advertising ["tag-1"]. It will not match a cell advertising ["tag-1", "tag-2"] or [].
+- An Task with no placement tags will only match a cell advertising no tags.
 
 #### Container Limits
 

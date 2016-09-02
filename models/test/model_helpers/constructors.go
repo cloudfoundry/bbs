@@ -156,6 +156,7 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				},
 			},
 		},
+		PlacementTags: []string{"red-tag", "blue-tag", "one-tag", "two-tag"},
 	}
 }
 
