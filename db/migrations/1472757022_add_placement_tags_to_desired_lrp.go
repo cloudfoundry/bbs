@@ -65,7 +65,7 @@ func (e *AddPlacementTagsToDesiredLRPs) Up(logger lager.Logger) error {
 }
 
 const alterDesiredLRPAddPlacementTagSQL = `ALTER TABLE desired_lrps
-	ADD COLUMN placement_tags MEDIUMTEXT;`
+	ADD COLUMN placement_tags TEXT;`
 
 func (e *AddPlacementTagsToDesiredLRPs) Down(logger lager.Logger) error {
 	return errors.New("not implemented")
