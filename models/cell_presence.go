@@ -70,7 +70,7 @@ func (cap CellCapacity) Validate() error {
 func NewCellPresence(
 	cellID, repAddress, zone string,
 	capacity CellCapacity,
-	rootFSProviders, preloadedRootFSes, placementTags []string,
+	rootFSProviders, preloadedRootFSes, placementTags, optionalPlacementTags []string,
 ) CellPresence {
 	var providers []*Provider
 	var pProviders []string
@@ -84,12 +84,13 @@ func NewCellPresence(
 	}
 
 	return CellPresence{
-		CellId:          cellID,
-		RepAddress:      repAddress,
-		Zone:            zone,
-		Capacity:        &capacity,
-		RootfsProviders: providers,
-		PlacementTags:   placementTags,
+		CellId:                cellID,
+		RepAddress:            repAddress,
+		Zone:                  zone,
+		Capacity:              &capacity,
+		RootfsProviders:       providers,
+		PlacementTags:         placementTags,
+		OptionalPlacementTags: optionalPlacementTags,
 	}
 }
 

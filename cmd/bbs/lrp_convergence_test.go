@@ -30,6 +30,7 @@ var _ = Describe("Convergence API", func() {
 				[]string{},
 				[]string{},
 				[]string{},
+				[]string{},
 			)
 			consulHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"

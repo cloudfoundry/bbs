@@ -794,6 +794,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 							[]string{},
 							[]string{},
 							[]string{},
+							[]string{},
 						)
 
 						fakeServiceClient.CellByIdReturns(&cellPresence, nil)
