@@ -283,10 +283,12 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 		return nil, err
 	}
 	schedulingInfo.VolumePlacement = &volumePlacement
-	err = json.Unmarshal(placementTagData, &schedulingInfo.PlacementTags)
-	if err != nil {
-		logger.Error("failed-parsing-placement-tags", err)
-		return nil, err
+	if placementTagData != nil {
+		err = json.Unmarshal(placementTagData, &schedulingInfo.PlacementTags)
+		if err != nil {
+			logger.Error("failed-parsing-placement-tags", err)
+			return nil, err
+		}
 	}
 
 	return schedulingInfo, nil
