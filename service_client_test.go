@@ -82,6 +82,7 @@ func newCellPresence(cellID string) *models.CellPresence {
 		[]string{},
 		nil,
 		nil,
+		nil,
 	)
 	return &presence
 }
