@@ -44,6 +44,73 @@ func (a *Action) Validate() error {
 	return nil
 }
 
+func (this *Action) GetValue() ActionInterface {
+	download, ok := this.Action.(*Action_DownloadAction)
+	if ok {
+		return download.DownloadAction
+	}
+	upload, ok := this.Action.(*Action_UploadAction)
+	if ok {
+		return upload.UploadAction
+	}
+	run, ok := this.Action.(*Action_RunAction)
+	if ok {
+		return run.RunAction
+	}
+	timeout, ok := this.Action.(*Action_TimeoutAction)
+	if ok {
+		return timeout.TimeoutAction
+	}
+	emitProgress, ok := this.Action.(*Action_EmitProgressAction)
+	if ok {
+		return emitProgress.EmitProgressAction
+	}
+	try, ok := this.Action.(*Action_TryAction)
+	if ok {
+		return try.TryAction
+	}
+	parallel, ok := this.Action.(*Action_ParallelAction)
+	if ok {
+		return parallel.ParallelAction
+	}
+	serial, ok := this.Action.(*Action_SerialAction)
+	if ok {
+		return serial.SerialAction
+	}
+	codependent, ok := this.Action.(*Action_CodependentAction)
+	if ok {
+		return codependent.CodependentAction
+	}
+
+	return nil
+}
+
+func (this *Action) SetValue(value ActionInterface) bool {
+	switch vt := value.(type) {
+	case *DownloadAction:
+		this.Action = &Action_DownloadAction{vt}
+	case *UploadAction:
+		this.Action = &Action_UploadAction{vt}
+	case *RunAction:
+		this.Action = &Action_RunAction{vt}
+	case *TimeoutAction:
+		this.Action = &Action_TimeoutAction{vt}
+	case *EmitProgressAction:
+		this.Action = &Action_EmitProgressAction{vt}
+	case *TryAction:
+		this.Action = &Action_TryAction{vt}
+	case *ParallelAction:
+		this.Action = &Action_ParallelAction{vt}
+	case *SerialAction:
+		this.Action = &Action_SerialAction{vt}
+	case *CodependentAction:
+		this.Action = &Action_CodependentAction{vt}
+	default:
+		return false
+	}
+	return true
+}
+
 func (a *DownloadAction) ActionType() string {
 	return ActionTypeDownload
 }

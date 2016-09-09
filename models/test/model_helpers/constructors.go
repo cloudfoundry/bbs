@@ -31,6 +31,20 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	modTag := models.NewModificationTag("epoch", 0)
+	setup := &models.Action{}
+	setup.SetValue(&models.RunAction{Path: "ls", User: "name"})
+	action := &models.Action{}
+	action.SetValue(&models.RunAction{Path: "ls", User: "name"})
+	monitor := &models.Action{}
+	monitor.SetValue(models.EmitProgressFor(
+		models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
+			10*time.Second,
+		),
+		"start-message",
+		"success-message",
+		"failure-message",
+	))
+
 	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          guid,
 		Domain:               "some-domain",
@@ -41,25 +55,19 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			{Name: "app bits", From: "blobstore.com/bits/app-bits", To: "/usr/local/app", CacheKey: "cache-key", LogSource: "log-source"},
 			{Name: "app bits with checksum", From: "blobstore.com/bits/app-bits-checksum", To: "/usr/local/app-checksum", CacheKey: "cache-key", LogSource: "log-source", ChecksumAlgorithm: "md5", ChecksumValue: "checksum-value"},
 		},
-		Setup:          models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
-		Action:         models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+		Setup:  setup,
+		Action: action,
+		// models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 		StartTimeoutMs: 15000,
-		Monitor: models.WrapAction(models.EmitProgressFor(
-			models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
-				10*time.Second,
-			),
-			"start-message",
-			"success-message",
-			"failure-message",
-		)),
-		DiskMb:      512,
-		MemoryMb:    1024,
-		CpuWeight:   42,
-		Routes:      &models.Routes{"my-router": &myRouterJSON},
-		LogSource:   "some-log-source",
-		LogGuid:     "some-log-guid",
-		MetricsGuid: "some-metrics-guid",
-		Annotation:  "some-annotation",
+		Monitor:        monitor,
+		DiskMb:         512,
+		MemoryMb:       1024,
+		CpuWeight:      42,
+		Routes:         &models.Routes{"my-router": &myRouterJSON},
+		LogSource:      "some-log-source",
+		LogGuid:        "some-log-guid",
+		MetricsGuid:    "some-metrics-guid",
+		Annotation:     "some-annotation",
 		Network: &models.Network{
 			Properties: map[string]string{
 				"some-key":       "some-value",
@@ -80,9 +88,11 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 				Driver:       "my-driver",
 				ContainerDir: "/mnt/mypath",
 				Mode:         "r",
-				Shared: &models.SharedDevice{
-					VolumeId:    "my-volume",
-					MountConfig: `{"foo":"bar"}`,
+				Device: &models.VolumeMount_Shared{
+					&models.SharedDevice{
+						VolumeId:    "my-volume",
+						MountConfig: `{"foo":"bar"}`,
+					},
 				},
 			},
 		},
@@ -150,9 +160,11 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				Driver:       "my-driver",
 				ContainerDir: "/mnt/mypath",
 				Mode:         "r",
-				Shared: &models.SharedDevice{
-					VolumeId:    "my-volume",
-					MountConfig: `{"foo":"bar"}`,
+				Device: &models.VolumeMount_Shared{
+					&models.SharedDevice{
+						VolumeId:    "my-volume",
+						MountConfig: `{"foo":"bar"}`,
+					},
 				},
 			},
 		},

@@ -180,32 +180,32 @@ var _ = Describe("DesiredLRP API", func() {
 			Expect(persistedDesiredLRP.Annotation).To(Equal(desiredLRP.Annotation))
 			Expect(persistedDesiredLRP.Instances).To(Equal(desiredLRP.Instances))
 			Expect(persistedDesiredLRP.DesiredLRPRunInfo(time.Unix(42, 0))).To(Equal(desiredLRP.DesiredLRPRunInfo(time.Unix(42, 0))))
-			Expect(persistedDesiredLRP.Action.RunAction.SuppressLogOutput).To(BeFalse())
+			Expect(persistedDesiredLRP.Action.GetRunAction().SuppressLogOutput).To(BeFalse())
 		})
 
 		Context("when suppressing log output", func() {
 			BeforeEach(func() {
-				desiredLRP.Action.RunAction.SuppressLogOutput = true
+				desiredLRP.Action.GetRunAction().SuppressLogOutput = true
 			})
 
 			It("has an action with SuppressLogOutput set to true", func() {
 				Expect(desireErr).NotTo(HaveOccurred())
 				persistedDesiredLRP, err := client.DesiredLRPByProcessGuid(logger, "super-lrp")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(persistedDesiredLRP.Action.RunAction.SuppressLogOutput).To(BeTrue())
+				Expect(persistedDesiredLRP.Action.GetRunAction().SuppressLogOutput).To(BeTrue())
 			})
 		})
 
 		Context("when not suppressing log output", func() {
 			BeforeEach(func() {
-				desiredLRP.Action.RunAction.SuppressLogOutput = false
+				desiredLRP.Action.GetRunAction().SuppressLogOutput = false
 			})
 
 			It("has an action with SuppressLogOutput set to false", func() {
 				Expect(desireErr).NotTo(HaveOccurred())
 				persistedDesiredLRP, err := client.DesiredLRPByProcessGuid(logger, "super-lrp")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(persistedDesiredLRP.Action.RunAction.SuppressLogOutput).To(BeFalse())
+				Expect(persistedDesiredLRP.Action.GetRunAction().SuppressLogOutput).To(BeFalse())
 			})
 		})
 	})

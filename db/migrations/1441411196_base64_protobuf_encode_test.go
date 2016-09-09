@@ -155,7 +155,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			}
 		})
 
-		Context("when fetching desired lrps fails", func() {
+		FContext("when fetching desired lrps fails", func() {
 			Context("because the root node does not exist", func() {
 				BeforeEach(func() {
 					_, err := storeClient.Delete(deprecations.DesiredLRPSchemaRoot, true)
