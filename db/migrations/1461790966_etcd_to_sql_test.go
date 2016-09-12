@@ -348,7 +348,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 
 			Describe("Tasks", func() {
 				var (
-					existingTasks []migrations.ETCDToSQLTask
+					existingTasks []*models.Task
 					tasksToCreate int
 				)
 
@@ -363,25 +363,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 						_, err = storeClient.Set(etcddb.TaskSchemaPath(task), taskData, 0)
 						Expect(err).NotTo(HaveOccurred())
 
-						encoder := format.NewEncoder(cryptor)
-						encryptedDefinition, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, task.TaskDefinition)
-						Expect(err).NotTo(HaveOccurred())
-						definitionData, err := encoder.Decode(encryptedDefinition)
-						Expect(err).NotTo(HaveOccurred())
-
-						existingTasks = append(existingTasks, migrations.ETCDToSQLTask{
-							TaskGuid:         task.TaskGuid,
-							Domain:           task.Domain,
-							CellId:           task.CellId,
-							CreatedAt:        task.CreatedAt,
-							UpdatedAt:        task.UpdatedAt,
-							FirstCompletedAt: task.FirstCompletedAt,
-							State:            int32(task.State),
-							Result:           task.Result,
-							Failed:           task.Failed,
-							FailureReason:    task.FailureReason,
-							TaskDefinition:   definitionData,
-						})
+						existingTasks = append(existingTasks, task)
 					}
 				})
 
@@ -397,11 +379,10 @@ var _ = Describe("ETCD to SQL Migration", func() {
 					Expect(err).NotTo(HaveOccurred())
 					defer rows.Close()
 
-					tasks := []migrations.ETCDToSQLTask{}
-					encoder := format.NewEncoder(cryptor)
+					tasks := []*models.Task{}
 
 					for rows.Next() {
-						var taskTest migrations.ETCDToSQLTask
+						var taskTest models.Task
 						var encryptedDefinition []byte
 
 						err := rows.Scan(&taskTest.TaskGuid, &taskTest.Domain,
@@ -410,10 +391,11 @@ var _ = Describe("ETCD to SQL Migration", func() {
 							&taskTest.Failed, &taskTest.FailureReason, &encryptedDefinition)
 						Expect(err).NotTo(HaveOccurred())
 
-						taskTest.TaskDefinition, err = encoder.Decode(encryptedDefinition)
+						taskTest.TaskDefinition = &models.TaskDefinition{}
+						err = serializer.Unmarshal(logger, encryptedDefinition, taskTest.TaskDefinition)
 						Expect(err).NotTo(HaveOccurred())
 
-						tasks = append(tasks, taskTest)
+						tasks = append(tasks, &taskTest)
 					}
 
 					Expect(tasks).To(HaveLen(tasksToCreate))
