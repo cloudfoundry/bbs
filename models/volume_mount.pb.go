@@ -5,15 +5,14 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
+import fmt "fmt"
 import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
+import _ "github.com/gogo/protobuf/gogoproto"
 
 import strconv "strconv"
 
 import bytes "bytes"
 
-import fmt "fmt"
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -23,6 +22,7 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type DeprecatedBindMountMode int32
@@ -57,14 +57,18 @@ func (x *DeprecatedBindMountMode) UnmarshalJSON(data []byte) error {
 	*x = DeprecatedBindMountMode(value)
 	return nil
 }
-
-type SharedDevice struct {
-	VolumeId    string `protobuf:"bytes,1,req,name=volume_id" json:"volume_id"`
-	MountConfig string `protobuf:"bytes,2,opt,name=mount_config" json:"mount_config"`
+func (DeprecatedBindMountMode) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorVolumeMount, []int{0}
 }
 
-func (m *SharedDevice) Reset()      { *m = SharedDevice{} }
-func (*SharedDevice) ProtoMessage() {}
+type SharedDevice struct {
+	VolumeId    string `protobuf:"bytes,1,req,name=volume_id,json=volumeId" json:"volume_id"`
+	MountConfig string `protobuf:"bytes,2,opt,name=mount_config,json=mountConfig" json:"mount_config"`
+}
+
+func (m *SharedDevice) Reset()                    { *m = SharedDevice{} }
+func (*SharedDevice) ProtoMessage()               {}
+func (*SharedDevice) Descriptor() ([]byte, []int) { return fileDescriptorVolumeMount, []int{0} }
 
 func (m *SharedDevice) GetVolumeId() string {
 	if m != nil {
@@ -81,17 +85,19 @@ func (m *SharedDevice) GetMountConfig() string {
 }
 
 type VolumeMount struct {
-	DeprecatedVolumeId string                  `protobuf:"bytes,2,opt,name=deprecated_volume_id" json:"deprecated_volume_id"`
-	DeprecatedMode     DeprecatedBindMountMode `protobuf:"varint,4,opt,name=deprecated_mode,enum=models.DeprecatedBindMountMode" json:"deprecated_mode"`
-	DeprecatedConfig   []byte                  `protobuf:"bytes,5,opt,name=deprecated_config" json:"deprecated_config"`
+	DeprecatedVolumeId string                  `protobuf:"bytes,2,opt,name=deprecated_volume_id,json=deprecatedVolumeId" json:"deprecated_volume_id"`
+	DeprecatedMode     DeprecatedBindMountMode `protobuf:"varint,4,opt,name=deprecated_mode,json=deprecatedMode,enum=models.DeprecatedBindMountMode" json:"deprecated_mode"`
+	DeprecatedConfig   []byte                  `protobuf:"bytes,5,opt,name=deprecated_config,json=deprecatedConfig" json:"deprecated_config"`
 	Driver             string                  `protobuf:"bytes,1,opt,name=driver" json:"driver"`
-	ContainerDir       string                  `protobuf:"bytes,3,opt,name=container_dir" json:"container_dir"`
+	ContainerDir       string                  `protobuf:"bytes,3,opt,name=container_dir,json=containerDir" json:"container_dir"`
 	Mode               string                  `protobuf:"bytes,6,opt,name=mode" json:"mode"`
-	Shared             *SharedDevice           `protobuf:"bytes,7,opt,name=shared" json:"shared,omitempty"`
+	// oneof device {
+	Shared *SharedDevice `protobuf:"bytes,7,opt,name=shared" json:"shared,omitempty"`
 }
 
-func (m *VolumeMount) Reset()      { *m = VolumeMount{} }
-func (*VolumeMount) ProtoMessage() {}
+func (m *VolumeMount) Reset()                    { *m = VolumeMount{} }
+func (*VolumeMount) ProtoMessage()               {}
+func (*VolumeMount) Descriptor() ([]byte, []int) { return fileDescriptorVolumeMount, []int{1} }
 
 func (m *VolumeMount) GetDeprecatedVolumeId() string {
 	if m != nil {
@@ -143,11 +149,12 @@ func (m *VolumeMount) GetShared() *SharedDevice {
 }
 
 type VolumePlacement struct {
-	DriverNames []string `protobuf:"bytes,1,rep,name=driver_names" json:"driver_names"`
+	DriverNames []string `protobuf:"bytes,1,rep,name=driver_names,json=driverNames" json:"driver_names"`
 }
 
-func (m *VolumePlacement) Reset()      { *m = VolumePlacement{} }
-func (*VolumePlacement) ProtoMessage() {}
+func (m *VolumePlacement) Reset()                    { *m = VolumePlacement{} }
+func (*VolumePlacement) ProtoMessage()               {}
+func (*VolumePlacement) Descriptor() ([]byte, []int) { return fileDescriptorVolumeMount, []int{2} }
 
 func (m *VolumePlacement) GetDriverNames() []string {
 	if m != nil {
@@ -157,6 +164,9 @@ func (m *VolumePlacement) GetDriverNames() []string {
 }
 
 func init() {
+	proto.RegisterType((*SharedDevice)(nil), "models.SharedDevice")
+	proto.RegisterType((*VolumeMount)(nil), "models.VolumeMount")
+	proto.RegisterType((*VolumePlacement)(nil), "models.VolumePlacement")
 	proto.RegisterEnum("models.DeprecatedBindMountMode", DeprecatedBindMountMode_name, DeprecatedBindMountMode_value)
 }
 func (x DeprecatedBindMountMode) String() string {
@@ -176,7 +186,12 @@ func (this *SharedDevice) Equal(that interface{}) bool {
 
 	that1, ok := that.(*SharedDevice)
 	if !ok {
-		return false
+		that2, ok := that.(SharedDevice)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -204,7 +219,12 @@ func (this *VolumeMount) Equal(that interface{}) bool {
 
 	that1, ok := that.(*VolumeMount)
 	if !ok {
-		return false
+		that2, ok := that.(VolumeMount)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -247,7 +267,12 @@ func (this *VolumePlacement) Equal(that interface{}) bool {
 
 	that1, ok := that.(*VolumePlacement)
 	if !ok {
-		return false
+		that2, ok := that.(VolumePlacement)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -271,32 +296,42 @@ func (this *SharedDevice) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.SharedDevice{` +
-		`VolumeId:` + fmt.Sprintf("%#v", this.VolumeId),
-		`MountConfig:` + fmt.Sprintf("%#v", this.MountConfig) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.SharedDevice{")
+	s = append(s, "VolumeId: "+fmt.Sprintf("%#v", this.VolumeId)+",\n")
+	s = append(s, "MountConfig: "+fmt.Sprintf("%#v", this.MountConfig)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *VolumeMount) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.VolumeMount{` +
-		`DeprecatedVolumeId:` + fmt.Sprintf("%#v", this.DeprecatedVolumeId),
-		`DeprecatedMode:` + fmt.Sprintf("%#v", this.DeprecatedMode),
-		`DeprecatedConfig:` + fmt.Sprintf("%#v", this.DeprecatedConfig),
-		`Driver:` + fmt.Sprintf("%#v", this.Driver),
-		`ContainerDir:` + fmt.Sprintf("%#v", this.ContainerDir),
-		`Mode:` + fmt.Sprintf("%#v", this.Mode),
-		`Shared:` + fmt.Sprintf("%#v", this.Shared) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 11)
+	s = append(s, "&models.VolumeMount{")
+	s = append(s, "DeprecatedVolumeId: "+fmt.Sprintf("%#v", this.DeprecatedVolumeId)+",\n")
+	s = append(s, "DeprecatedMode: "+fmt.Sprintf("%#v", this.DeprecatedMode)+",\n")
+	s = append(s, "DeprecatedConfig: "+fmt.Sprintf("%#v", this.DeprecatedConfig)+",\n")
+	s = append(s, "Driver: "+fmt.Sprintf("%#v", this.Driver)+",\n")
+	s = append(s, "ContainerDir: "+fmt.Sprintf("%#v", this.ContainerDir)+",\n")
+	s = append(s, "Mode: "+fmt.Sprintf("%#v", this.Mode)+",\n")
+	if this.Shared != nil {
+		s = append(s, "Shared: "+fmt.Sprintf("%#v", this.Shared)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *VolumePlacement) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.VolumePlacement{` +
-		`DriverNames:` + fmt.Sprintf("%#v", this.DriverNames) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.VolumePlacement{")
+	if this.DriverNames != nil {
+		s = append(s, "DriverNames: "+fmt.Sprintf("%#v", this.DriverNames)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringVolumeMount(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -306,11 +341,12 @@ func valueToGoStringVolumeMount(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringVolumeMount(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringVolumeMount(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -320,7 +356,7 @@ func extensionToGoStringVolumeMount(e map[int32]github_com_gogo_protobuf_proto.E
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *SharedDevice) Marshal() (data []byte, err error) {
@@ -570,8 +606,12 @@ func (m *SharedDevice) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVolumeMount
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -584,6 +624,12 @@ func (m *SharedDevice) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SharedDevice: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SharedDevice: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -591,6 +637,9 @@ func (m *SharedDevice) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -601,10 +650,11 @@ func (m *SharedDevice) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -617,6 +667,9 @@ func (m *SharedDevice) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -627,25 +680,18 @@ func (m *SharedDevice) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.MountConfig = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipVolumeMount(data[iNdEx:])
 			if err != nil {
 				return err
@@ -663,14 +709,21 @@ func (m *SharedDevice) Unmarshal(data []byte) error {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("volume_id")
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *VolumeMount) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVolumeMount
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -683,6 +736,12 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VolumeMount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VolumeMount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -690,6 +749,9 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -700,10 +762,11 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -715,6 +778,9 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -725,10 +791,11 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -740,6 +807,9 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -750,10 +820,11 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -765,6 +836,9 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			m.DeprecatedMode = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -781,6 +855,9 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -798,7 +875,10 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DeprecatedConfig = append([]byte{}, data[iNdEx:postIndex]...)
+			m.DeprecatedConfig = append(m.DeprecatedConfig[:0], data[iNdEx:postIndex]...)
+			if m.DeprecatedConfig == nil {
+				m.DeprecatedConfig = []byte{}
+			}
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
@@ -806,6 +886,9 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -816,10 +899,11 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -831,6 +915,9 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -841,10 +928,10 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -856,15 +943,7 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipVolumeMount(data[iNdEx:])
 			if err != nil {
 				return err
@@ -879,14 +958,21 @@ func (m *VolumeMount) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *VolumePlacement) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVolumeMount
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -899,6 +985,12 @@ func (m *VolumePlacement) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VolumePlacement: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VolumePlacement: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -906,6 +998,9 @@ func (m *VolumePlacement) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -916,25 +1011,18 @@ func (m *VolumePlacement) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthVolumeMount
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.DriverNames = append(m.DriverNames, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipVolumeMount(data[iNdEx:])
 			if err != nil {
 				return err
@@ -949,6 +1037,9 @@ func (m *VolumePlacement) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipVolumeMount(data []byte) (n int, err error) {
@@ -957,6 +1048,9 @@ func skipVolumeMount(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowVolumeMount
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -970,7 +1064,10 @@ func skipVolumeMount(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -986,6 +1083,9 @@ func skipVolumeMount(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowVolumeMount
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -1006,6 +1106,9 @@ func skipVolumeMount(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowVolumeMount
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -1041,4 +1144,40 @@ func skipVolumeMount(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthVolumeMount = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowVolumeMount   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("volume_mount.proto", fileDescriptorVolumeMount) }
+
+var fileDescriptorVolumeMount = []byte{
+	// 457 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x74, 0x51, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0xf5, 0x24, 0xc5, 0x90, 0x8d, 0x49, 0xd3, 0x55, 0x10, 0x16, 0x87, 0x8d, 0x95, 0x03, 0x32,
+	0xa8, 0xb8, 0x52, 0x7b, 0x00, 0x71, 0x34, 0x11, 0x12, 0x87, 0x42, 0xb5, 0x48, 0xe5, 0x68, 0xb9,
+	0xde, 0x6d, 0xba, 0x52, 0xec, 0xad, 0x1c, 0x27, 0x5c, 0x11, 0x5f, 0xc0, 0x67, 0xf0, 0x29, 0x3d,
+	0xf6, 0xc8, 0xa9, 0x22, 0xe6, 0x82, 0x38, 0xf5, 0x13, 0x90, 0xc7, 0xdb, 0xd8, 0x39, 0xf4, 0xb2,
+	0xbb, 0x6f, 0x66, 0xde, 0xcc, 0xdb, 0x37, 0x84, 0xae, 0xf4, 0x7c, 0x99, 0xca, 0x28, 0xd5, 0xcb,
+	0xac, 0x08, 0x2e, 0x73, 0x5d, 0x68, 0x6a, 0xa7, 0x5a, 0xc8, 0xf9, 0xe2, 0xd9, 0xab, 0x99, 0x2a,
+	0x2e, 0x96, 0x67, 0x41, 0xa2, 0xd3, 0x83, 0x99, 0x9e, 0xe9, 0x03, 0x4c, 0x9f, 0x2d, 0xcf, 0x11,
+	0x21, 0xc0, 0x57, 0x4d, 0x9b, 0x7c, 0x25, 0xce, 0xe7, 0x8b, 0x38, 0x97, 0x62, 0x2a, 0x57, 0x2a,
+	0x91, 0x34, 0x20, 0x3d, 0xd3, 0x5c, 0x09, 0x17, 0xbc, 0x8e, 0xdf, 0x0b, 0xf7, 0xae, 0x6e, 0xc6,
+	0xd6, 0xbf, 0x9b, 0x71, 0x93, 0xe0, 0x8f, 0xea, 0xe7, 0x07, 0x41, 0x5f, 0x13, 0x07, 0x55, 0x44,
+	0x89, 0xce, 0xce, 0xd5, 0xcc, 0xed, 0x78, 0xe0, 0xf7, 0xc2, 0x91, 0xa1, 0x6c, 0xe5, 0x78, 0x1f,
+	0xd1, 0x3b, 0x04, 0x93, 0xef, 0x5d, 0xd2, 0x3f, 0xc5, 0x2e, 0xc7, 0x55, 0x94, 0x3e, 0x27, 0xb6,
+	0xc8, 0xd5, 0x4a, 0xe6, 0x2e, 0x60, 0x8b, 0x81, 0x69, 0x61, 0xa2, 0xdc, 0xdc, 0xf4, 0x0d, 0x19,
+	0x09, 0x79, 0x99, 0xcb, 0x24, 0x2e, 0xa4, 0x88, 0x1a, 0xad, 0xf5, 0x60, 0xbb, 0x62, 0xb9, 0xc0,
+	0x69, 0x53, 0x73, 0x7a, 0x27, 0xf5, 0x2d, 0x79, 0x9c, 0xe8, 0xac, 0x88, 0x55, 0x26, 0xf3, 0x48,
+	0xa8, 0xdc, 0xed, 0x22, 0xe5, 0x89, 0x19, 0xb4, 0x9d, 0xe4, 0xce, 0x06, 0x4e, 0x55, 0x4e, 0x4f,
+	0xc8, 0x6e, 0x6b, 0x6a, 0x65, 0xb5, 0xbb, 0xe3, 0x81, 0x3f, 0x38, 0x1c, 0x07, 0xb5, 0xef, 0xc1,
+	0x74, 0x93, 0x0e, 0x55, 0x26, 0xf0, 0x4f, 0xc7, 0x5a, 0xc8, 0x8d, 0xa2, 0x41, 0xc3, 0xaf, 0xe2,
+	0xf4, 0x88, 0xec, 0xb5, 0x3a, 0x1a, 0xf7, 0x1e, 0x78, 0xe0, 0x3b, 0x1b, 0xca, 0xb0, 0x29, 0xa8,
+	0x4d, 0xa3, 0x1e, 0xd9, 0xc1, 0xd9, 0x36, 0x2a, 0x77, 0x8c, 0x72, 0x8c, 0x71, 0x3c, 0xe9, 0x3e,
+	0xb1, 0x17, 0xb8, 0x4f, 0xf7, 0xa1, 0x07, 0x7e, 0xff, 0x70, 0x74, 0xa7, 0xaf, 0xbd, 0x65, 0x6e,
+	0x6a, 0x26, 0xef, 0xc9, 0x6e, 0x6d, 0xcf, 0xc9, 0x3c, 0x4e, 0x64, 0x2a, 0xb3, 0x82, 0x1e, 0x11,
+	0xa7, 0x76, 0x3a, 0xca, 0xe2, 0x54, 0x2e, 0x5c, 0xf0, 0xba, 0x7e, 0x2f, 0x1c, 0x56, 0xcb, 0x6c,
+	0xc7, 0x79, 0xbf, 0x46, 0x1f, 0x2b, 0xf0, 0xf2, 0x05, 0x79, 0x7a, 0xcf, 0xff, 0xa9, 0x4d, 0x3a,
+	0xfc, 0xd3, 0xd0, 0xc2, 0xfb, 0xcb, 0x10, 0xc2, 0xfd, 0xeb, 0x35, 0x83, 0x5f, 0x6b, 0x66, 0xdd,
+	0xae, 0x19, 0x7c, 0x2b, 0x19, 0xfc, 0x2c, 0x19, 0x5c, 0x95, 0x0c, 0xae, 0x4b, 0x06, 0xbf, 0x4b,
+	0x06, 0x7f, 0x4b, 0x66, 0xdd, 0x96, 0x0c, 0x7e, 0xfc, 0x61, 0xd6, 0xff, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0xa9, 0x17, 0xbc, 0x1f, 0xea, 0x02, 0x00, 0x00,
+}
