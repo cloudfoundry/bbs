@@ -539,6 +539,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 	}
 
 	if len(netInfoData) > 0 {
+		logger.Debug("unmarshalling-net-info-data", lager.Data{"net_info": string(netInfoData)})
 		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
