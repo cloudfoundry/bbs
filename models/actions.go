@@ -28,6 +28,63 @@ type ActionInterface interface {
 	Validate() error
 }
 
+func (a *Action) GetValue() interface{} {
+	if a.DownloadAction != nil {
+		return a.DownloadAction
+	}
+	if a.UploadAction != nil {
+		return a.UploadAction
+	}
+	if a.RunAction != nil {
+		return a.RunAction
+	}
+	if a.TimeoutAction != nil {
+		return a.TimeoutAction
+	}
+	if a.EmitProgressAction != nil {
+		return a.EmitProgressAction
+	}
+	if a.TryAction != nil {
+		return a.TryAction
+	}
+	if a.ParallelAction != nil {
+		return a.ParallelAction
+	}
+	if a.SerialAction != nil {
+		return a.SerialAction
+	}
+	if a.CodependentAction != nil {
+		return a.CodependentAction
+	}
+	return nil
+}
+
+func (a *Action) SetValue(value interface{}) bool {
+	switch vt := value.(type) {
+	case *DownloadAction:
+		a.DownloadAction = vt
+	case *UploadAction:
+		a.UploadAction = vt
+	case *RunAction:
+		a.RunAction = vt
+	case *TimeoutAction:
+		a.TimeoutAction = vt
+	case *EmitProgressAction:
+		a.EmitProgressAction = vt
+	case *TryAction:
+		a.TryAction = vt
+	case *ParallelAction:
+		a.ParallelAction = vt
+	case *SerialAction:
+		a.SerialAction = vt
+	case *CodependentAction:
+		a.CodependentAction = vt
+	default:
+		return false
+	}
+	return true
+}
+
 func (a *Action) Validate() error {
 	if a == nil {
 		return nil
