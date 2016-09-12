@@ -74,9 +74,6 @@ var _ = Describe("Format", func() {
 
 		Describe("ENCODED_PROTO", func() {
 			It("marshals the data as protobuf with an base64 encoded envelope", func() {
-				protoEncodedTask, err := proto.Marshal(task)
-				Expect(err).NotTo(HaveOccurred())
-
 				encoded, err := serializer.Marshal(logger, format.ENCODED_PROTO, task)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -84,15 +81,16 @@ var _ = Describe("Format", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(unencoded[0]).To(BeEquivalentTo(format.PROTO))
-				Expect(unencoded[2:]).To(Equal(protoEncodedTask))
+				var actualTask models.Task
+				err = proto.Unmarshal(unencoded[2:], &actualTask)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualTask).To(Equal(*task))
 			})
 		})
 
 		Describe("ENCRYPTED_PROTO", func() {
 			It("marshals the data as protobuf with an base64 encoded ciphertext envelope", func() {
-				protoEncodedTask, err := proto.Marshal(task)
-				Expect(err).NotTo(HaveOccurred())
-
 				encoded, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, task)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -100,7 +98,10 @@ var _ = Describe("Format", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(unencoded[0]).To(BeEquivalentTo(format.PROTO))
-				Expect(unencoded[2:]).To(Equal(protoEncodedTask))
+				var actualTask models.Task
+				err = proto.Unmarshal(unencoded[2:], &actualTask)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualTask).To(Equal(*task))
 			})
 		})
 	})
