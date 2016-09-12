@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -20,14 +19,16 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type PingResponse struct {
 	Available bool `protobuf:"varint,1,opt,name=available" json:"available"`
 }
 
-func (m *PingResponse) Reset()      { *m = PingResponse{} }
-func (*PingResponse) ProtoMessage() {}
+func (m *PingResponse) Reset()                    { *m = PingResponse{} }
+func (*PingResponse) ProtoMessage()               {}
+func (*PingResponse) Descriptor() ([]byte, []int) { return fileDescriptorPing, []int{0} }
 
 func (m *PingResponse) GetAvailable() bool {
 	if m != nil {
@@ -36,6 +37,9 @@ func (m *PingResponse) GetAvailable() bool {
 	return false
 }
 
+func init() {
+	proto.RegisterType((*PingResponse)(nil), "models.PingResponse")
+}
 func (this *PingResponse) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -46,7 +50,12 @@ func (this *PingResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*PingResponse)
 	if !ok {
-		return false
+		that2, ok := that.(PingResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -65,9 +74,11 @@ func (this *PingResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.PingResponse{` +
-		`Available:` + fmt.Sprintf("%#v", this.Available) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.PingResponse{")
+	s = append(s, "Available: "+fmt.Sprintf("%#v", this.Available)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringPing(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -77,11 +88,12 @@ func valueToGoStringPing(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringPing(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringPing(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -91,7 +103,7 @@ func extensionToGoStringPing(e map[int32]github_com_gogo_protobuf_proto.Extensio
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *PingResponse) Marshal() (data []byte, err error) {
@@ -189,8 +201,12 @@ func (m *PingResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPing
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -203,6 +219,12 @@ func (m *PingResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PingResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
@@ -210,6 +232,9 @@ func (m *PingResponse) Unmarshal(data []byte) error {
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPing
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -222,15 +247,7 @@ func (m *PingResponse) Unmarshal(data []byte) error {
 			}
 			m.Available = bool(v != 0)
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipPing(data[iNdEx:])
 			if err != nil {
 				return err
@@ -245,6 +262,9 @@ func (m *PingResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipPing(data []byte) (n int, err error) {
@@ -253,6 +273,9 @@ func skipPing(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowPing
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -266,7 +289,10 @@ func skipPing(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowPing
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -282,6 +308,9 @@ func skipPing(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowPing
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -302,6 +331,9 @@ func skipPing(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowPing
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -337,4 +369,22 @@ func skipPing(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthPing = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowPing   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("ping.proto", fileDescriptorPing) }
+
+var fileDescriptorPing = []byte{
+	// 167 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x2a, 0xc8, 0xcc, 0x4b,
+	0xd7, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcb, 0xcd, 0x4f, 0x49, 0xcd, 0x29, 0x96, 0xd2,
+	0x4d, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xcf, 0x4f, 0xcf, 0xd7,
+	0x07, 0x4b, 0x27, 0x95, 0xa6, 0x81, 0x79, 0x60, 0x0e, 0x98, 0x05, 0xd1, 0xa6, 0x64, 0xc4, 0xc5,
+	0x13, 0x90, 0x99, 0x97, 0x1e, 0x94, 0x5a, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0x2a, 0xa4, 0xc4, 0xc5,
+	0x99, 0x58, 0x96, 0x98, 0x99, 0x93, 0x98, 0x94, 0x93, 0x2a, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0xe1,
+	0xc4, 0x72, 0xe2, 0x9e, 0x3c, 0x43, 0x10, 0x42, 0xd8, 0x49, 0xe7, 0xc2, 0x43, 0x39, 0x86, 0x1b,
+	0x0f, 0xe5, 0x18, 0x3e, 0x3c, 0x94, 0x63, 0x6c, 0x78, 0x24, 0xc7, 0xb8, 0xe2, 0x91, 0x1c, 0xe3,
+	0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0xf8, 0xe2, 0x91, 0x1c,
+	0xc3, 0x87, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x00, 0x02, 0x00, 0x00, 0xff, 0xff, 0xc6,
+	0x59, 0x30, 0x9a, 0xa5, 0x00, 0x00, 0x00,
+}

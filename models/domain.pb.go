@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -20,6 +19,7 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type DomainsResponse struct {
@@ -27,8 +27,9 @@ type DomainsResponse struct {
 	Domains []string `protobuf:"bytes,2,rep,name=domains" json:"domains,omitempty"`
 }
 
-func (m *DomainsResponse) Reset()      { *m = DomainsResponse{} }
-func (*DomainsResponse) ProtoMessage() {}
+func (m *DomainsResponse) Reset()                    { *m = DomainsResponse{} }
+func (*DomainsResponse) ProtoMessage()               {}
+func (*DomainsResponse) Descriptor() ([]byte, []int) { return fileDescriptorDomain, []int{0} }
 
 func (m *DomainsResponse) GetError() *Error {
 	if m != nil {
@@ -48,8 +49,9 @@ type UpsertDomainResponse struct {
 	Error *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
 }
 
-func (m *UpsertDomainResponse) Reset()      { *m = UpsertDomainResponse{} }
-func (*UpsertDomainResponse) ProtoMessage() {}
+func (m *UpsertDomainResponse) Reset()                    { *m = UpsertDomainResponse{} }
+func (*UpsertDomainResponse) ProtoMessage()               {}
+func (*UpsertDomainResponse) Descriptor() ([]byte, []int) { return fileDescriptorDomain, []int{1} }
 
 func (m *UpsertDomainResponse) GetError() *Error {
 	if m != nil {
@@ -63,8 +65,9 @@ type UpsertDomainRequest struct {
 	Ttl    uint32 `protobuf:"varint,2,opt,name=ttl" json:"ttl"`
 }
 
-func (m *UpsertDomainRequest) Reset()      { *m = UpsertDomainRequest{} }
-func (*UpsertDomainRequest) ProtoMessage() {}
+func (m *UpsertDomainRequest) Reset()                    { *m = UpsertDomainRequest{} }
+func (*UpsertDomainRequest) ProtoMessage()               {}
+func (*UpsertDomainRequest) Descriptor() ([]byte, []int) { return fileDescriptorDomain, []int{2} }
 
 func (m *UpsertDomainRequest) GetDomain() string {
 	if m != nil {
@@ -80,31 +83,48 @@ func (m *UpsertDomainRequest) GetTtl() uint32 {
 	return 0
 }
 
+func init() {
+	proto.RegisterType((*DomainsResponse)(nil), "models.DomainsResponse")
+	proto.RegisterType((*UpsertDomainResponse)(nil), "models.UpsertDomainResponse")
+	proto.RegisterType((*UpsertDomainRequest)(nil), "models.UpsertDomainRequest")
+}
 func (this *DomainsResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.DomainsResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error),
-		`Domains:` + fmt.Sprintf("%#v", this.Domains) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.DomainsResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.Domains != nil {
+		s = append(s, "Domains: "+fmt.Sprintf("%#v", this.Domains)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *UpsertDomainResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.UpsertDomainResponse{` +
-		`Error:` + fmt.Sprintf("%#v", this.Error) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 5)
+	s = append(s, "&models.UpsertDomainResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func (this *UpsertDomainRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&models.UpsertDomainRequest{` +
-		`Domain:` + fmt.Sprintf("%#v", this.Domain),
-		`Ttl:` + fmt.Sprintf("%#v", this.Ttl) + `}`}, ", ")
-	return s
+	s := make([]string, 0, 6)
+	s = append(s, "&models.UpsertDomainRequest{")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "Ttl: "+fmt.Sprintf("%#v", this.Ttl)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringDomain(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -114,11 +134,12 @@ func valueToGoStringDomain(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringDomain(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringDomain(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -128,7 +149,7 @@ func extensionToGoStringDomain(e map[int32]github_com_gogo_protobuf_proto.Extens
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *DomainsResponse) Marshal() (data []byte, err error) {
@@ -346,8 +367,12 @@ func (m *DomainsResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDomain
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -360,6 +385,12 @@ func (m *DomainsResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DomainsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DomainsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -367,6 +398,9 @@ func (m *DomainsResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDomain
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -377,10 +411,10 @@ func (m *DomainsResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDomain
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -397,6 +431,9 @@ func (m *DomainsResponse) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDomain
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -407,25 +444,18 @@ func (m *DomainsResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDomain
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.Domains = append(m.Domains, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDomain(data[iNdEx:])
 			if err != nil {
 				return err
@@ -440,14 +470,21 @@ func (m *DomainsResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *UpsertDomainResponse) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDomain
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -460,6 +497,12 @@ func (m *UpsertDomainResponse) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpsertDomainResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpsertDomainResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -467,6 +510,9 @@ func (m *UpsertDomainResponse) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDomain
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -477,10 +523,10 @@ func (m *UpsertDomainResponse) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthDomain
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -492,15 +538,7 @@ func (m *UpsertDomainResponse) Unmarshal(data []byte) error {
 			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDomain(data[iNdEx:])
 			if err != nil {
 				return err
@@ -515,14 +553,21 @@ func (m *UpsertDomainResponse) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDomain
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -535,6 +580,12 @@ func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpsertDomainRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpsertDomainRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -542,6 +593,9 @@ func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDomain
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -552,10 +606,11 @@ func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + int(stringLen)
-			if stringLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDomain
 			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -567,6 +622,9 @@ func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
 			}
 			m.Ttl = 0
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDomain
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -578,15 +636,7 @@ func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
 				}
 			}
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipDomain(data[iNdEx:])
 			if err != nil {
 				return err
@@ -601,6 +651,9 @@ func (m *UpsertDomainRequest) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipDomain(data []byte) (n int, err error) {
@@ -609,6 +662,9 @@ func skipDomain(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowDomain
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -622,7 +678,10 @@ func skipDomain(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowDomain
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -638,6 +697,9 @@ func skipDomain(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowDomain
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -658,6 +720,9 @@ func skipDomain(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowDomain
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -693,4 +758,27 @@ func skipDomain(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthDomain = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowDomain   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("domain.proto", fileDescriptorDomain) }
+
+var fileDescriptorDomain = []byte{
+	// 250 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x49, 0xc9, 0xcf, 0x4d,
+	0xcc, 0xcc, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcb, 0xcd, 0x4f, 0x49, 0xcd, 0x29,
+	0x96, 0xd2, 0x4d, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xcf, 0x4f,
+	0xcf, 0xd7, 0x07, 0x4b, 0x27, 0x95, 0xa6, 0x81, 0x79, 0x60, 0x0e, 0x98, 0x05, 0xd1, 0x26, 0xc5,
+	0x9d, 0x5a, 0x54, 0x94, 0x5f, 0x04, 0xe1, 0x28, 0x05, 0x70, 0xf1, 0xbb, 0x80, 0xcd, 0x2c, 0x0e,
+	0x4a, 0x2d, 0x2e, 0xc8, 0xcf, 0x2b, 0x4e, 0x15, 0x52, 0xe6, 0x62, 0x05, 0xab, 0x90, 0x60, 0x54,
+	0x60, 0xd4, 0xe0, 0x36, 0xe2, 0xd5, 0x83, 0x58, 0xa3, 0xe7, 0x0a, 0x12, 0x0c, 0x82, 0xc8, 0x09,
+	0x49, 0x70, 0xb1, 0x43, 0xdc, 0x52, 0x2c, 0xc1, 0xa4, 0xc0, 0xac, 0xc1, 0x19, 0x04, 0xe3, 0x2a,
+	0x59, 0x73, 0x89, 0x84, 0x16, 0x14, 0xa7, 0x16, 0x95, 0x40, 0xcc, 0x25, 0xc9, 0x58, 0x25, 0x6f,
+	0x2e, 0x61, 0x54, 0xcd, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x32, 0x5c, 0x6c, 0x10, 0xe3, 0xc1,
+	0x9a, 0x39, 0x9d, 0x58, 0x4e, 0xdc, 0x93, 0x67, 0x08, 0x82, 0x8a, 0x09, 0x89, 0x71, 0x31, 0x97,
+	0x94, 0xe4, 0x48, 0x30, 0x29, 0x30, 0x6a, 0xf0, 0x42, 0xa5, 0x40, 0x02, 0x4e, 0x3a, 0x17, 0x1e,
+	0xca, 0x31, 0xdc, 0x78, 0x28, 0xc7, 0xf0, 0xe1, 0xa1, 0x1c, 0x63, 0xc3, 0x23, 0x39, 0xc6, 0x15,
+	0x8f, 0xe4, 0x18, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6,
+	0x17, 0x8f, 0xe4, 0x18, 0x3e, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0x01, 0x10, 0x00, 0x00,
+	0xff, 0xff, 0x44, 0xa3, 0xd6, 0xcb, 0x5c, 0x01, 0x00, 0x00,
+}

@@ -5,11 +5,10 @@
 package models
 
 import proto "github.com/gogo/protobuf/proto"
-import math "math"
-
-// discarding unused import gogoproto "github.com/gogo/protobuf/gogoproto"
-
 import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+
 import strings "strings"
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import sort "sort"
@@ -21,14 +20,16 @@ import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 type Network struct {
 	Properties map[string]string `protobuf:"bytes,1,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *Network) Reset()      { *m = Network{} }
-func (*Network) ProtoMessage() {}
+func (m *Network) Reset()                    { *m = Network{} }
+func (*Network) ProtoMessage()               {}
+func (*Network) Descriptor() ([]byte, []int) { return fileDescriptorNetwork, []int{0} }
 
 func (m *Network) GetProperties() map[string]string {
 	if m != nil {
@@ -37,6 +38,9 @@ func (m *Network) GetProperties() map[string]string {
 	return nil
 }
 
+func init() {
+	proto.RegisterType((*Network)(nil), "models.Network")
+}
 func (this *Network) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
@@ -47,7 +51,12 @@ func (this *Network) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Network)
 	if !ok {
-		return false
+		that2, ok := that.(Network)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
 	if that1 == nil {
 		if this == nil {
@@ -71,6 +80,8 @@ func (this *Network) GoString() string {
 	if this == nil {
 		return "nil"
 	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.Network{")
 	keysForProperties := make([]string, 0, len(this.Properties))
 	for k, _ := range this.Properties {
 		keysForProperties = append(keysForProperties, k)
@@ -81,9 +92,11 @@ func (this *Network) GoString() string {
 		mapStringForProperties += fmt.Sprintf("%#v: %#v,", k, this.Properties[k])
 	}
 	mapStringForProperties += "}"
-	s := strings.Join([]string{`&models.Network{` +
-		`Properties:` + mapStringForProperties + `}`}, ", ")
-	return s
+	if this.Properties != nil {
+		s = append(s, "Properties: "+mapStringForProperties+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
 }
 func valueToGoStringNetwork(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -93,11 +106,12 @@ func valueToGoStringNetwork(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringNetwork(e map[int32]github_com_gogo_protobuf_proto.Extension) string {
+func extensionToGoStringNetwork(m github_com_gogo_protobuf_proto.Message) string {
+	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
 	if e == nil {
 		return "nil"
 	}
-	s := "map[int32]proto.Extension{"
+	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
 	keys := make([]int, 0, len(e))
 	for k := range e {
 		keys = append(keys, int(k))
@@ -107,7 +121,7 @@ func extensionToGoStringNetwork(e map[int32]github_com_gogo_protobuf_proto.Exten
 	for _, k := range keys {
 		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
 	}
-	s += strings.Join(ss, ",") + "}"
+	s += strings.Join(ss, ",") + "})"
 	return s
 }
 func (m *Network) Marshal() (data []byte, err error) {
@@ -126,12 +140,7 @@ func (m *Network) MarshalTo(data []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Properties) > 0 {
-		keysForProperties := make([]string, 0, len(m.Properties))
 		for k, _ := range m.Properties {
-			keysForProperties = append(keysForProperties, k)
-		}
-		github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-		for _, k := range keysForProperties {
 			data[i] = 0xa
 			i++
 			v := m.Properties[k]
@@ -236,8 +245,12 @@ func (m *Network) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
 	for iNdEx < l {
+		preIndex := iNdEx
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
@@ -250,6 +263,12 @@ func (m *Network) Unmarshal(data []byte) error {
 		}
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Network: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Network: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
@@ -257,6 +276,9 @@ func (m *Network) Unmarshal(data []byte) error {
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -267,15 +289,18 @@ func (m *Network) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			postIndex := iNdEx + msglen
 			if msglen < 0 {
 				return ErrInvalidLengthNetwork
 			}
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			var keykey uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -288,6 +313,9 @@ func (m *Network) Unmarshal(data []byte) error {
 			}
 			var stringLenmapkey uint64
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
@@ -298,63 +326,68 @@ func (m *Network) Unmarshal(data []byte) error {
 					break
 				}
 			}
-			if stringLenmapkey < 0 {
+			intStringLenmapkey := int(stringLenmapkey)
+			if intStringLenmapkey < 0 {
 				return ErrInvalidLengthNetwork
 			}
-			postStringIndexmapkey := iNdEx + int(stringLenmapkey)
+			postStringIndexmapkey := iNdEx + intStringLenmapkey
 			if postStringIndexmapkey > l {
 				return io.ErrUnexpectedEOF
 			}
 			mapkey := string(data[iNdEx:postStringIndexmapkey])
 			iNdEx = postStringIndexmapkey
-			var valuekey uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				valuekey |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			var stringLenmapvalue uint64
-			for shift := uint(0); ; shift += 7 {
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[iNdEx]
-				iNdEx++
-				stringLenmapvalue |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if stringLenmapvalue < 0 {
-				return ErrInvalidLengthNetwork
-			}
-			postStringIndexmapvalue := iNdEx + int(stringLenmapvalue)
-			if postStringIndexmapvalue > l {
-				return io.ErrUnexpectedEOF
-			}
-			mapvalue := string(data[iNdEx:postStringIndexmapvalue])
-			iNdEx = postStringIndexmapvalue
 			if m.Properties == nil {
 				m.Properties = make(map[string]string)
 			}
-			m.Properties[mapkey] = mapvalue
+			if iNdEx < postIndex {
+				var valuekey uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowNetwork
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := data[iNdEx]
+					iNdEx++
+					valuekey |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				var stringLenmapvalue uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowNetwork
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := data[iNdEx]
+					iNdEx++
+					stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLenmapvalue := int(stringLenmapvalue)
+				if intStringLenmapvalue < 0 {
+					return ErrInvalidLengthNetwork
+				}
+				postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+				if postStringIndexmapvalue > l {
+					return io.ErrUnexpectedEOF
+				}
+				mapvalue := string(data[iNdEx:postStringIndexmapvalue])
+				iNdEx = postStringIndexmapvalue
+				m.Properties[mapkey] = mapvalue
+			} else {
+				var mapvalue string
+				m.Properties[mapkey] = mapvalue
+			}
 			iNdEx = postIndex
 		default:
-			var sizeOfWire int
-			for {
-				sizeOfWire++
-				wire >>= 7
-				if wire == 0 {
-					break
-				}
-			}
-			iNdEx -= sizeOfWire
+			iNdEx = preIndex
 			skippy, err := skipNetwork(data[iNdEx:])
 			if err != nil {
 				return err
@@ -369,6 +402,9 @@ func (m *Network) Unmarshal(data []byte) error {
 		}
 	}
 
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 func skipNetwork(data []byte) (n int, err error) {
@@ -377,6 +413,9 @@ func skipNetwork(data []byte) (n int, err error) {
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowNetwork
+			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
@@ -390,7 +429,10 @@ func skipNetwork(data []byte) (n int, err error) {
 		wireType := int(wire & 0x7)
 		switch wireType {
 		case 0:
-			for {
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowNetwork
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -406,6 +448,9 @@ func skipNetwork(data []byte) (n int, err error) {
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowNetwork
+				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
@@ -426,6 +471,9 @@ func skipNetwork(data []byte) (n int, err error) {
 				var innerWire uint64
 				var start int = iNdEx
 				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return 0, ErrIntOverflowNetwork
+					}
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
@@ -461,4 +509,26 @@ func skipNetwork(data []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthNetwork = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowNetwork   = fmt.Errorf("proto: integer overflow")
 )
+
+func init() { proto.RegisterFile("network.proto", fileDescriptorNetwork) }
+
+var fileDescriptorNetwork = []byte{
+	// 240 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0xcd, 0x4b, 0x2d, 0x29,
+	0xcf, 0x2f, 0xca, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcb, 0xcd, 0x4f, 0x49, 0xcd,
+	0x29, 0x96, 0xd2, 0x4d, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xcf,
+	0x4f, 0xcf, 0xd7, 0x07, 0x4b, 0x27, 0x95, 0xa6, 0x81, 0x79, 0x60, 0x0e, 0x98, 0x05, 0xd1, 0xa6,
+	0xb4, 0x9e, 0x91, 0x8b, 0xdd, 0x0f, 0x62, 0x90, 0x50, 0x24, 0x17, 0x57, 0x41, 0x51, 0x7e, 0x41,
+	0x6a, 0x51, 0x49, 0x66, 0x6a, 0xb1, 0x04, 0xa3, 0x02, 0xb3, 0x06, 0xb7, 0x91, 0xbc, 0x1e, 0xc4,
+	0x5c, 0x3d, 0xa8, 0x22, 0xbd, 0x00, 0xb8, 0x0a, 0xd7, 0xbc, 0x92, 0xa2, 0x4a, 0x27, 0x89, 0x57,
+	0xf7, 0xe4, 0x45, 0x10, 0xda, 0x74, 0xf2, 0x73, 0x33, 0x4b, 0x52, 0x73, 0x0b, 0x4a, 0x2a, 0x83,
+	0x90, 0x0c, 0x93, 0xf2, 0xe4, 0xe2, 0x47, 0xd3, 0x28, 0x24, 0xc6, 0xc5, 0x9c, 0x9d, 0x5a, 0x29,
+	0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0xe9, 0xc4, 0x72, 0xe2, 0x9e, 0x3c, 0x43, 0x10, 0x48, 0x40, 0x48,
+	0x8a, 0x8b, 0xb5, 0x2c, 0x31, 0xa7, 0x34, 0x55, 0x82, 0x09, 0x49, 0x06, 0x22, 0x64, 0xc5, 0x64,
+	0xc1, 0xe8, 0xa4, 0x73, 0xe1, 0xa1, 0x1c, 0xe3, 0x8d, 0x87, 0x72, 0x0c, 0x1f, 0x1e, 0xca, 0x31,
+	0x36, 0x3c, 0x92, 0x63, 0x5c, 0xf1, 0x48, 0x8e, 0xf1, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4,
+	0x18, 0x1f, 0x3c, 0x92, 0x63, 0x7c, 0xf1, 0x48, 0x8e, 0xe1, 0xc3, 0x23, 0x39, 0xc6, 0x09, 0x8f,
+	0xe5, 0x18, 0x00, 0x01, 0x00, 0x00, 0xff, 0xff, 0x9d, 0x60, 0xf7, 0x51, 0x26, 0x01, 0x00, 0x00,
+}
