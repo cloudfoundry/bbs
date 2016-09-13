@@ -337,8 +337,11 @@ func (c *convergence) submit(work func()) {
 
 func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
 	c.poolWg.Wait()
+	c.pool.Stop()
+
 	c.startRequestsMutex.Lock()
 	defer c.startRequestsMutex.Unlock()
+
 	c.keysMutex.Lock()
 	defer c.keysMutex.Unlock()
 
