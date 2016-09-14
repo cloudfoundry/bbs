@@ -164,6 +164,7 @@ The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
 	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
+	SubscribeToEventsForCell(logger lager.Logger, cellID string) (events.EventSource, error)
 }
 
 func newClient(url string) *client {
@@ -638,8 +639,30 @@ func (c *client) subscribeToEvents(route string) (events.EventSource, error) {
 	return events.NewEventSource(eventSource), nil
 }
 
+func (c *client) subscribeToEventsForCell(route, cellID string) (events.EventSource, error) {
+	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
+
+		request, err := c.reqGen.CreateRequest(route, rata.Params{"cell_id": cellID}, nil)
+		if err != nil {
+			panic(err) // totally shouldn't happen
+		}
+
+		return request
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return events.NewEventSource(eventSource), nil
+}
+
 func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(EventStreamRoute_r0)
+}
+
+func (c *client) SubscribeToEventsForCell(logger lager.Logger, cellID string) (events.EventSource, error) {
+	return c.subscribeToEventsForCell(EventStreamForCellRoute, cellID)
 }
 
 func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {

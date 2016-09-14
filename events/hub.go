@@ -20,6 +20,7 @@ var ErrHubAlreadyClosed = errors.New("hub already closed")
 //go:generate counterfeiter -o eventfakes/fake_hub.go . Hub
 type Hub interface {
 	Subscribe() (EventSource, error)
+	SubscribeForCell(cellID string) (EventSource, error)
 	Emit(models.Event)
 	Close() error
 
@@ -66,7 +67,28 @@ func (hub *hub) Subscribe() (EventSource, error) {
 		return nil, ErrSubscribedToClosedHub
 	}
 
-	sub := newSource(MAX_PENDING_SUBSCRIBER_EVENTS, hub.subscriberClosed)
+	sub := newSource(MAX_PENDING_SUBSCRIBER_EVENTS, "", hub.subscriberClosed)
+	hub.subscribers[sub] = struct{}{}
+	cb := hub.cb
+	size := len(hub.subscribers)
+	hub.lock.Unlock()
+
+	if cb != nil {
+		cb(size)
+	}
+	return sub, nil
+}
+
+func (hub *hub) SubscribeForCell(cellID string) (EventSource, error) {
+	hub.lock.Lock()
+
+	if hub.closed {
+		hub.lock.Unlock()
+
+		return nil, ErrSubscribedToClosedHub
+	}
+
+	sub := newSource(MAX_PENDING_SUBSCRIBER_EVENTS, cellID, hub.subscriberClosed)
 	hub.subscribers[sub] = struct{}{}
 	cb := hub.cb
 	size := len(hub.subscribers)
@@ -83,6 +105,32 @@ func (hub *hub) Emit(event models.Event) {
 	size := len(hub.subscribers)
 
 	for sub, _ := range hub.subscribers {
+		switch event := event.(type) {
+		case *models.DesiredLRPCreatedEvent:
+		case *models.DesiredLRPChangedEvent:
+		case *models.DesiredLRPRemovedEvent:
+		case *models.ActualLRPCreatedEvent:
+			actualLRP, _ := event.ActualLrpGroup.Resolve()
+			if sub.cellId != "" && actualLRP.CellId != sub.cellId {
+				continue
+			}
+		case *models.ActualLRPChangedEvent:
+			afterLRP, _ := event.After.Resolve()
+			cellId := afterLRP.CellId
+			if cellId == "" {
+				beforeLRP, _ := event.Before.Resolve()
+				cellId = beforeLRP.CellId
+			}
+			if sub.cellId != "" && cellId != sub.cellId {
+				continue
+			}
+		case *models.ActualLRPRemovedEvent:
+			actualLRP, _ := event.ActualLrpGroup.Resolve()
+			if sub.cellId != "" && actualLRP.CellId != sub.cellId {
+				continue
+			}
+		default:
+		}
 		err := sub.send(event)
 		if err != nil {
 			delete(hub.subscribers, sub)
@@ -141,12 +189,14 @@ type hubSource struct {
 	closeCallback func(*hubSource)
 	closed        bool
 	lock          sync.Mutex
+	cellId        string
 }
 
-func newSource(maxPendingEvents int, closeCallback func(*hubSource)) *hubSource {
+func newSource(maxPendingEvents int, cellId string, closeCallback func(*hubSource)) *hubSource {
 	return &hubSource{
 		events:        make(chan models.Event, maxPendingEvents),
 		closeCallback: closeCallback,
+		cellId:        cellId,
 	}
 }
 

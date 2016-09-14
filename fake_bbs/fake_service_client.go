@@ -80,8 +80,6 @@ type FakeServiceClient struct {
 		result1 string
 		result2 error
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeServiceClient) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
@@ -90,7 +88,6 @@ func (fake *FakeServiceClient) CellById(logger lager.Logger, cellId string) (*mo
 		logger lager.Logger
 		cellId string
 	}{logger, cellId})
-	fake.recordInvocation("CellById", []interface{}{logger, cellId})
 	fake.cellByIdMutex.Unlock()
 	if fake.CellByIdStub != nil {
 		return fake.CellByIdStub(logger, cellId)
@@ -124,7 +121,6 @@ func (fake *FakeServiceClient) Cells(logger lager.Logger) (models.CellSet, error
 	fake.cellsArgsForCall = append(fake.cellsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("Cells", []interface{}{logger})
 	fake.cellsMutex.Unlock()
 	if fake.CellsStub != nil {
 		return fake.CellsStub(logger)
@@ -158,7 +154,6 @@ func (fake *FakeServiceClient) CellEvents(logger lager.Logger) <-chan models.Cel
 	fake.cellEventsArgsForCall = append(fake.cellEventsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("CellEvents", []interface{}{logger})
 	fake.cellEventsMutex.Unlock()
 	if fake.CellEventsStub != nil {
 		return fake.CellEventsStub(logger)
@@ -194,7 +189,6 @@ func (fake *FakeServiceClient) NewCellPresenceRunner(logger lager.Logger, cellPr
 		retryInterval time.Duration
 		lockTTL       time.Duration
 	}{logger, cellPresence, retryInterval, lockTTL})
-	fake.recordInvocation("NewCellPresenceRunner", []interface{}{logger, cellPresence, retryInterval, lockTTL})
 	fake.newCellPresenceRunnerMutex.Unlock()
 	if fake.NewCellPresenceRunnerStub != nil {
 		return fake.NewCellPresenceRunnerStub(logger, cellPresence, retryInterval, lockTTL)
@@ -230,7 +224,6 @@ func (fake *FakeServiceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence
 		retryInterval time.Duration
 		lockTTL       time.Duration
 	}{logger, bbsPresence, retryInterval, lockTTL})
-	fake.recordInvocation("NewBBSLockRunner", []interface{}{logger, bbsPresence, retryInterval, lockTTL})
 	fake.newBBSLockRunnerMutex.Unlock()
 	if fake.NewBBSLockRunnerStub != nil {
 		return fake.NewBBSLockRunnerStub(logger, bbsPresence, retryInterval, lockTTL)
@@ -264,7 +257,6 @@ func (fake *FakeServiceClient) CurrentBBS(logger lager.Logger) (*models.BBSPrese
 	fake.currentBBSArgsForCall = append(fake.currentBBSArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("CurrentBBS", []interface{}{logger})
 	fake.currentBBSMutex.Unlock()
 	if fake.CurrentBBSStub != nil {
 		return fake.CurrentBBSStub(logger)
@@ -298,7 +290,6 @@ func (fake *FakeServiceClient) CurrentBBSURL(logger lager.Logger) (string, error
 	fake.currentBBSURLArgsForCall = append(fake.currentBBSURLArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("CurrentBBSURL", []interface{}{logger})
 	fake.currentBBSURLMutex.Unlock()
 	if fake.CurrentBBSURLStub != nil {
 		return fake.CurrentBBSURLStub(logger)
@@ -325,38 +316,6 @@ func (fake *FakeServiceClient) CurrentBBSURLReturns(result1 string, result2 erro
 		result1 string
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeServiceClient) Invocations() map[string][][]interface{} {
-	fake.invocationsMutex.RLock()
-	defer fake.invocationsMutex.RUnlock()
-	fake.cellByIdMutex.RLock()
-	defer fake.cellByIdMutex.RUnlock()
-	fake.cellsMutex.RLock()
-	defer fake.cellsMutex.RUnlock()
-	fake.cellEventsMutex.RLock()
-	defer fake.cellEventsMutex.RUnlock()
-	fake.newCellPresenceRunnerMutex.RLock()
-	defer fake.newCellPresenceRunnerMutex.RUnlock()
-	fake.newBBSLockRunnerMutex.RLock()
-	defer fake.newBBSLockRunnerMutex.RUnlock()
-	fake.currentBBSMutex.RLock()
-	defer fake.currentBBSMutex.RUnlock()
-	fake.currentBBSURLMutex.RLock()
-	defer fake.currentBBSURLMutex.RUnlock()
-	return fake.invocations
-}
-
-func (fake *FakeServiceClient) recordInvocation(key string, args []interface{}) {
-	fake.invocationsMutex.Lock()
-	defer fake.invocationsMutex.Unlock()
-	if fake.invocations == nil {
-		fake.invocations = map[string][][]interface{}{}
-	}
-	if fake.invocations[key] == nil {
-		fake.invocations[key] = [][]interface{}{}
-	}
-	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ bbs.ServiceClient = new(FakeServiceClient)

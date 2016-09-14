@@ -12,24 +12,21 @@ type FakeRawEventSource struct {
 	NextStub        func() (sse.Event, error)
 	nextMutex       sync.RWMutex
 	nextArgsForCall []struct{}
-	nextReturns     struct {
+	nextReturns struct {
 		result1 sse.Event
 		result2 error
 	}
 	CloseStub        func() error
 	closeMutex       sync.RWMutex
 	closeArgsForCall []struct{}
-	closeReturns     struct {
+	closeReturns struct {
 		result1 error
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeRawEventSource) Next() (sse.Event, error) {
 	fake.nextMutex.Lock()
 	fake.nextArgsForCall = append(fake.nextArgsForCall, struct{}{})
-	fake.recordInvocation("Next", []interface{}{})
 	fake.nextMutex.Unlock()
 	if fake.NextStub != nil {
 		return fake.NextStub()
@@ -55,7 +52,6 @@ func (fake *FakeRawEventSource) NextReturns(result1 sse.Event, result2 error) {
 func (fake *FakeRawEventSource) Close() error {
 	fake.closeMutex.Lock()
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct{}{})
-	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
 	if fake.CloseStub != nil {
 		return fake.CloseStub()
@@ -75,28 +71,6 @@ func (fake *FakeRawEventSource) CloseReturns(result1 error) {
 	fake.closeReturns = struct {
 		result1 error
 	}{result1}
-}
-
-func (fake *FakeRawEventSource) Invocations() map[string][][]interface{} {
-	fake.invocationsMutex.RLock()
-	defer fake.invocationsMutex.RUnlock()
-	fake.nextMutex.RLock()
-	defer fake.nextMutex.RUnlock()
-	fake.closeMutex.RLock()
-	defer fake.closeMutex.RUnlock()
-	return fake.invocations
-}
-
-func (fake *FakeRawEventSource) recordInvocation(key string, args []interface{}) {
-	fake.invocationsMutex.Lock()
-	defer fake.invocationsMutex.Unlock()
-	if fake.invocations == nil {
-		fake.invocations = map[string][][]interface{}{}
-	}
-	if fake.invocations[key] == nil {
-		fake.invocations[key] = [][]interface{}{}
-	}
-	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ events.RawEventSource = new(FakeRawEventSource)

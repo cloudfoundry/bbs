@@ -17,8 +17,6 @@ type FakeLrpConvergenceController struct {
 	convergeLRPsReturns struct {
 		result1 error
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeLrpConvergenceController) ConvergeLRPs(logger lager.Logger) error {
@@ -26,7 +24,6 @@ func (fake *FakeLrpConvergenceController) ConvergeLRPs(logger lager.Logger) erro
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("ConvergeLRPs", []interface{}{logger})
 	fake.convergeLRPsMutex.Unlock()
 	if fake.ConvergeLRPsStub != nil {
 		return fake.ConvergeLRPsStub(logger)
@@ -52,26 +49,6 @@ func (fake *FakeLrpConvergenceController) ConvergeLRPsReturns(result1 error) {
 	fake.convergeLRPsReturns = struct {
 		result1 error
 	}{result1}
-}
-
-func (fake *FakeLrpConvergenceController) Invocations() map[string][][]interface{} {
-	fake.invocationsMutex.RLock()
-	defer fake.invocationsMutex.RUnlock()
-	fake.convergeLRPsMutex.RLock()
-	defer fake.convergeLRPsMutex.RUnlock()
-	return fake.invocations
-}
-
-func (fake *FakeLrpConvergenceController) recordInvocation(key string, args []interface{}) {
-	fake.invocationsMutex.Lock()
-	defer fake.invocationsMutex.Unlock()
-	if fake.invocations == nil {
-		fake.invocations = map[string][][]interface{}{}
-	}
-	if fake.invocations[key] == nil {
-		fake.invocations[key] = [][]interface{}{}
-	}
-	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ converger.LrpConvergenceController = new(FakeLrpConvergenceController)
