@@ -10,7 +10,7 @@ import (
 const VersionID = "version"
 
 func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error {
-	logger = logger.Session("set-version-sqldb", lager.Data{"version": version})
+	logger = logger.Session("set-version", lager.Data{"version": version})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -24,7 +24,7 @@ func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error 
 }
 
 func (db *SQLDB) Version(logger lager.Logger) (*models.Version, error) {
-	logger = logger.Session("version-sqldb")
+	logger = logger.Session("version")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 

@@ -9,7 +9,7 @@ import (
 )
 
 func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
-	logger = logger.Session("domains-sqldb")
+	logger = logger.Session("domains")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -44,7 +44,7 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 }
 
 func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) error {
-	logger = logger.Session("upsert-domain-sqldb", lager.Data{"domain": domain, "ttl": ttl})
+	logger = logger.Session("upsert-domain", lager.Data{"domain": domain, "ttl": ttl})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
