@@ -9,7 +9,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/cloudfoundry/gunk/workpool"
+	"code.cloudfoundry.org/workpool"
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
