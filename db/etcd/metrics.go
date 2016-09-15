@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/cfhttp"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
-	"github.com/cloudfoundry/gunk/urljoiner"
+	"code.cloudfoundry.org/urljoiner"
 )
 
 var errRedirected = errors.New("redirected to leader")
