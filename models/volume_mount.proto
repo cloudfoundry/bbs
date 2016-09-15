@@ -24,8 +24,9 @@ message VolumeMount {
   optional string driver = 1 [(gogoproto.jsontag) = "driver"];
   optional string container_dir = 3 [(gogoproto.jsontag) = "container_dir"];
   optional string mode = 6 [(gogoproto.jsontag) = "mode"];
+
   // oneof device {
-    optional SharedDevice shared = 7;
+    optional SharedDevice shared = 7 [(gogoproto.jsontag) = "shared_device"];
   // }
 }
 
