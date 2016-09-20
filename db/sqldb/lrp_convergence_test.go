@@ -132,36 +132,38 @@ var _ = Describe("LRPConvergence", func() {
 			processGuid = "desired-with-restartable-crashed-actuals" + "-" + domain
 			desiredLRPWithRestartableCrashedActuals := model_helpers.NewValidDesiredLRP(processGuid)
 			desiredLRPWithRestartableCrashedActuals.Domain = domain
-			desiredLRPWithRestartableCrashedActuals.Instances = 1
+			desiredLRPWithRestartableCrashedActuals.Instances = 2
 			err = sqlDB.DesireLRP(logger, desiredLRPWithRestartableCrashedActuals)
 			Expect(err).NotTo(HaveOccurred())
-			crashedActualLRPKey := &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, crashedActualLRPKey)
-			Expect(err).NotTo(HaveOccurred())
-			instanceGuid = "restartable-crashed-actual" + "-" + domain
-			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"})
-			Expect(err).NotTo(HaveOccurred())
-			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", models.NewPortMapping(2222, 4444))
-			_, _, err = sqlDB.StartActualLRP(logger, crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, &actualLRPNetInfo)
-			Expect(err).NotTo(HaveOccurred())
-			_, _, _, err = sqlDB.CrashActualLRP(logger, crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, "because it failed")
-			Expect(err).NotTo(HaveOccurred())
-			queryStr = `
+			for i := int32(0); i < 2; i++ {
+				crashedActualLRPKey := models.NewActualLRPKey(processGuid, i, domain)
+				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &crashedActualLRPKey)
+				Expect(err).NotTo(HaveOccurred())
+				instanceGuid = "restartable-crashed-actual" + "-" + domain
+				_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, i, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"})
+				Expect(err).NotTo(HaveOccurred())
+				actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", models.NewPortMapping(2222, 4444))
+				_, _, err = sqlDB.StartActualLRP(logger, &crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, &actualLRPNetInfo)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, _, err = sqlDB.CrashActualLRP(logger, &crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, "because it failed")
+				Expect(err).NotTo(HaveOccurred())
+				queryStr = `
 				UPDATE actual_lrps
 				SET state = ?
 				WHERE process_guid = ? AND instance_index = ? AND evacuating = ?
 			`
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err = db.Exec(queryStr, models.ActualLRPStateCrashed, processGuid, i, false)
+				Expect(err).NotTo(HaveOccurred())
+				queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err = db.Exec(queryStr, evacuating, processGuid)
+				Expect(err).NotTo(HaveOccurred())
 			}
-			_, err = db.Exec(queryStr, models.ActualLRPStateCrashed, processGuid, 0, false)
-			Expect(err).NotTo(HaveOccurred())
-			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, evacuating, processGuid)
-			Expect(err).NotTo(HaveOccurred())
 
 			processGuid = "actual-with-no-desired" + "-" + domain
 			actualLRPWithNoDesired := &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}
@@ -339,7 +341,7 @@ var _ = Describe("LRPConvergence", func() {
 				sort.Ints(startRequest.Indices)
 			}
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
 		})
 
 		By("expired domain", func() {
@@ -351,7 +353,7 @@ var _ = Describe("LRPConvergence", func() {
 
 			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
 		})
 	})
 
@@ -465,13 +467,14 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
+			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
-
-			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			for i := 0; i < 2; i++ {
+				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, int32(i))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			}
 		})
 
 		By("expired domain", func() {
@@ -479,9 +482,9 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
 
 			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
 			Expect(err).NotTo(HaveOccurred())

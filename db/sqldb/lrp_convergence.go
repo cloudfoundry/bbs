@@ -143,8 +143,7 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 			continue
 		}
 
-		actual.ProcessGuid = schedulingInfo.ProcessGuid
-		actual.Domain = schedulingInfo.Domain
+		actual.ActualLRPKey = models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(index), schedulingInfo.Domain)
 		actual.State = models.ActualLRPStateCrashed
 
 		if actual.ShouldRestartCrash(now, restartCalculator) {
