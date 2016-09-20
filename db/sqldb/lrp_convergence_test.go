@@ -40,6 +40,14 @@ var _ = Describe("LRPConvergence", func() {
 			{CellId: "existing-cell"},
 		})
 
+		// This function will create the following for the given domain:
+		// 1. a desired lrp with 2 instances and 2 stale unclaimed actual lrps
+		// 2. a desired lrp with 1 instance and actual lrp on a missing cell
+		// 3. a desired lrp with 1 instance and two actual lrps
+		// 4. a desired lrp with 1 instance and no actual lrps
+		// 5. a desired lrp with 4 instances and 2 unclaimed actual lrps
+		// 6. a restartable desired lrp with 2 instances and 2 crashed actual lrps
+		// 7. actual lrp with no desired lrp
 		createConvergeableScenarios := func(domain string, evacuating bool) {
 			var processGuid string
 			var instanceGuid string
@@ -187,6 +195,11 @@ var _ = Describe("LRPConvergence", func() {
 		createConvergeableScenarios(expiredDomain, false)
 		createConvergeableScenarios(evacuatingDomain, true)
 
+		// for the fresh domain create the following extra lrps:
+		// 1. a desired lrp with 2 instances and 2 claimed actual lrp
+		// 2. a desired lrp with 1 instance and 1 unclaimed actual lrp
+		// 3. a desired lrp with 2 instances and 2 crashed and non-restartable actual lrps
+
 		domain := freshDomain
 
 		processGuid := "normal-desired-lrp" + "-" + domain
@@ -287,9 +300,9 @@ var _ = Describe("LRPConvergence", func() {
 		It("emits metrics for lrps", func() {
 			convergenceLogger := lagertest.NewTestLogger("convergence")
 			sqlDB.ConvergeLRPs(convergenceLogger, cellSet)
-			Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(35)))
+			Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(38)))
 			Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(7)))
-			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(29))) // 15 fresh + 4 expired + 10 evac
+			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(32))) // 16 fresh + 5 expired + 11 evac
 			Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(1)))
 			Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(2)))
 			Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(1)))
@@ -298,7 +311,7 @@ var _ = Describe("LRPConvergence", func() {
 
 		It("emits missing LRP metrics", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
-			Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(16)))
+			Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(17)))
 		})
 
 		It("emits extra LRP metrics", func() {
@@ -655,7 +668,7 @@ var _ = Describe("LRPConvergence", func() {
 
 		It("reports all actual lrps as missing cells", func() {
 			_, actualsWithMissingCells, _ := sqlDB.ConvergeLRPs(logger, models.CellSet{})
-			Expect(len(actualsWithMissingCells)).To(Equal(21))
+			Expect(len(actualsWithMissingCells)).To(Equal(23))
 		})
 	})
 })
