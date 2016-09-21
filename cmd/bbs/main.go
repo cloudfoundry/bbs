@@ -554,7 +554,11 @@ func initializeAuctioneerClient(logger lager.Logger) auctioneer.Client {
 	if *auctioneerAddress == "" {
 		logger.Fatal("auctioneer-address-validation-failed", errors.New("auctioneerAddress is required"))
 	}
-	return auctioneer.NewClient(*auctioneerAddress)
+	if *certFile == "" {
+		return auctioneer.NewClient(*auctioneerAddress)
+	} else {
+		return auctioneer.NewSecureClient(*auctioneerAddress, *caFile, *certFile, *keyFile, 0, 0)
+	}
 }
 
 func initializeDropsonde(logger lager.Logger) {
