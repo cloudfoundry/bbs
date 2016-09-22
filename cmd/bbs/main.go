@@ -111,6 +111,36 @@ var auctioneerAddress = flag.String(
 	"The address to the auctioneer api server",
 )
 
+var auctioneerCACert = flag.String(
+	"auctioneerCACert",
+	"",
+	"path to certificate authority cert used for mutually authenticated TLS auctioneer communication",
+)
+
+var auctioneerClientCert = flag.String(
+	"auctioneerClientCert",
+	"",
+	"path to client cert used for mutually authenticated TLS auctioneer communication",
+)
+
+var auctioneerClientKey = flag.String(
+	"auctioneerClientKey",
+	"",
+	"path to client key used for mutually authenticated TLS auctioneer communication",
+)
+
+var auctioneerClientSessionCacheSize = flag.Int(
+	"auctioneerClientSessionCacheSize",
+	0,
+	"Capacity of the ClientSessionCache option on the TLS configuration. If zero, golang's default will be used",
+)
+
+var auctioneerMaxIdleConnsPerHost = flag.Int(
+	"auctioneerMaxIdleConnsPerHost",
+	0,
+	"Controls the maximum number of idle (keep-alive) connctions per host. If zero, golang's default will be used",
+)
+
 var sessionName = flag.String(
 	"sessionName",
 	"bbs",
@@ -554,10 +584,17 @@ func initializeAuctioneerClient(logger lager.Logger) auctioneer.Client {
 	if *auctioneerAddress == "" {
 		logger.Fatal("auctioneer-address-validation-failed", errors.New("auctioneerAddress is required"))
 	}
-	if *certFile == "" {
+	if *auctioneerCACert == "" {
 		return auctioneer.NewClient(*auctioneerAddress)
 	} else {
-		return auctioneer.NewSecureClient(*auctioneerAddress, *caFile, *certFile, *keyFile, 0, 0)
+		return auctioneer.NewSecureClient(
+			*auctioneerAddress,
+			*auctioneerCACert,
+			*auctioneerClientCert,
+			*auctioneerClientKey,
+			*auctioneerClientSessionCacheSize,
+			*auctioneerMaxIdleConnsPerHost,
+		)
 	}
 }
 
