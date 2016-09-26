@@ -309,6 +309,14 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
 }
 
+func truncateString(s string, maxLen int) string {
+	l := len(s)
+	if l < maxLen {
+		return s
+	}
+	return s[:maxLen]
+}
+
 func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (*models.ActualLRPGroup, *models.ActualLRPGroup, bool, error) {
 	logger = logger.WithData(lager.Data{"key": key, "instance_key": instanceKey, "crash_reason": crashReason})
 	logger.Info("starting")
@@ -365,9 +373,8 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
 				"modification_tag_index": actualLRP.ModificationTag.Index,
-				"placement_error":        actualLRP.PlacementError,
 				"crash_count":            actualLRP.CrashCount,
-				"crash_reason":           actualLRP.CrashReason,
+				"crash_reason":           truncateString(actualLRP.CrashReason, 1024),
 				"since":                  actualLRP.Since,
 				"net_info":               []byte{},
 			},
@@ -416,7 +423,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		_, err = db.update(logger, tx, actualLRPsTable,
 			SQLAttributes{
 				"modification_tag_index": actualLRP.ModificationTag.Index,
-				"placement_error":        actualLRP.PlacementError,
+				"placement_error":        truncateString(actualLRP.PlacementError, 1024),
 				"since":                  actualLRP.Since,
 			},
 			"process_guid = ? AND instance_index = ? AND evacuating = ?",

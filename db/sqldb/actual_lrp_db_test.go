@@ -2,6 +2,7 @@ package sqldb_test
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
@@ -1176,6 +1177,26 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
 				})
 
+				Context("and the crash reason is larger than 1K", func() {
+					It("truncates the crash reason", func() {
+						crashReason := strings.Repeat("x", 2*1024)
+						_, _, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, crashReason)
+						Expect(err).NotTo(HaveOccurred())
+
+						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						Expect(err).NotTo(HaveOccurred())
+
+						expectedActualLRP := *actualLRP
+						expectedActualLRP.State = models.ActualLRPStateUnclaimed
+						expectedActualLRP.CrashCount = 1
+						expectedActualLRP.CrashReason = crashReason[:1024]
+						expectedActualLRP.ModificationTag.Increment()
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+
+						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+					})
+				})
+
 				Context("and it should be restarted", func() {
 					It("updates the lrp and sets its state to UNCLAIMED", func() {
 						_, _, shouldRestart, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
@@ -1439,6 +1460,28 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 
 					Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+				})
+
+				Context("and the placement error is longer than 1K", func() {
+					It("truncates the placement_error", func() {
+						value := strings.Repeat("x", 2*1024)
+						_, _, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, value)
+						Expect(err).NotTo(HaveOccurred())
+
+						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						Expect(err).NotTo(HaveOccurred())
+
+						expectedActualLRP := *actualLRP
+						expectedActualLRP.State = models.ActualLRPStateUnclaimed
+						expectedActualLRP.PlacementError = value[:1024]
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ModificationTag = models.ModificationTag{
+							Epoch: "my-awesome-guid",
+							Index: 1,
+						}
+
+						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+					})
 				})
 
 				It("returns the previous and current actual lrp", func() {
