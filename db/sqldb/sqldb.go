@@ -23,6 +23,7 @@ type SQLDB struct {
 	guidProvider           guidprovider.GUIDProvider
 	serializer             format.Serializer
 	cryptor                encryption.Cryptor
+	encoder                format.Encoder
 	flavor                 string
 }
 
@@ -61,6 +62,7 @@ func NewSQLDB(
 		guidProvider:           guidProvider,
 		serializer:             format.NewSerializer(cryptor),
 		cryptor:                cryptor,
+		encoder:                format.NewEncoder(cryptor),
 		flavor:                 flavor,
 	}
 }

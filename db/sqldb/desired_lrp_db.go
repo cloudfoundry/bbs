@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -15,7 +16,11 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	defer logger.Info("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		routesData, err := json.Marshal(desiredLRP.Routes)
+		routesData, err := db.encodeRouteData(logger, *desiredLRP.Routes)
+		if err != nil {
+			return err
+		}
+
 		runInfo := desiredLRP.DesiredLRPRunInfo(db.clock.Now())
 
 		runInfoData, err := db.serializeModel(logger, &runInfo)
@@ -199,12 +204,11 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		}
 
 		if update.Routes != nil {
-			routeData, err := json.Marshal(update.Routes)
+			encodedData, err := db.encodeRouteData(logger, *update.Routes)
 			if err != nil {
-				logger.Error("failed-marshalling-routes", err)
-				return models.ErrBadRequest
+				return err
 			}
-			updateAttributes["routes"] = routeData
+			updateAttributes["routes"] = encodedData
 		}
 
 		_, err = db.update(logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
@@ -217,6 +221,20 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	})
 
 	return beforeDesiredLRP, err
+}
+
+func (db *SQLDB) encodeRouteData(logger lager.Logger, routes models.Routes) ([]byte, error) {
+	routeData, err := json.Marshal(routes)
+	if err != nil {
+		logger.Error("failed-marshalling-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	encodedData, err := db.encoder.Encode(format.BASE64_ENCRYPTED, routeData)
+	if err != nil {
+		logger.Error("failed-encrypting-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	return encodedData, nil
 }
 
 func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {
@@ -269,7 +287,12 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	}
 
 	var routes models.Routes
-	err = json.Unmarshal(routeData, &routes)
+	encodedData, err := db.encoder.Decode(routeData)
+	if err != nil {
+		logger.Error("failed-decrypting-routes", err)
+		return nil, err
+	}
+	err = json.Unmarshal(encodedData, &routes)
 	if err != nil {
 		logger.Error("failed-parsing-routes", err)
 		return nil, err
