@@ -16,8 +16,9 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	defer logger.Info("complete")
 
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		routesData, err := db.encodeRouteData(logger, *desiredLRP.Routes)
+		routesData, err := db.encodeRouteData(logger, desiredLRP.Routes)
 		if err != nil {
+			logger.Error("failed-encoding-route-data", err)
 			return err
 		}
 
@@ -204,7 +205,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		}
 
 		if update.Routes != nil {
-			encodedData, err := db.encodeRouteData(logger, *update.Routes)
+			encodedData, err := db.encodeRouteData(logger, update.Routes)
 			if err != nil {
 				return err
 			}
@@ -223,7 +224,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	return beforeDesiredLRP, err
 }
 
-func (db *SQLDB) encodeRouteData(logger lager.Logger, routes models.Routes) ([]byte, error) {
+func (db *SQLDB) encodeRouteData(logger lager.Logger, routes *models.Routes) ([]byte, error) {
 	routeData, err := json.Marshal(routes)
 	if err != nil {
 		logger.Error("failed-marshalling-routes", err)
