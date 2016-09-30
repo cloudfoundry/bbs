@@ -23,10 +23,18 @@ var _ = Describe("Evacuation API", func() {
 		actual.State = models.ActualLRPStateRunning
 		desiredLRP := model_helpers.NewValidDesiredLRP(actual.ProcessGuid)
 		desiredLRP.Instances = 2
-		err := client.DesireLRP(logger, desiredLRP)
+
+		Eventually(func() error {
+			return client.DesireLRP(logger, desiredLRP)
+		}).Should(BeNil())
+
+		err := client.ClaimActualLRP(logger, actual.ProcessGuid, 1, &actual.ActualLRPInstanceKey)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.ClaimActualLRP(logger, actual.ProcessGuid, 1, &actual.ActualLRPInstanceKey)
-		Expect(err).NotTo(HaveOccurred())
+
+		Eventually(func() error {
+			_, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
+			return err
+		}).Should(BeNil())
 	})
 
 	Describe("RemoveEvacuatingActualLRP", func() {
