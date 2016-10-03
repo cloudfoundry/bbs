@@ -60,7 +60,7 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	query := fmt.Sprintf("SELECT process_guid, domain, routes FROM desired_lrps")
+	query := fmt.Sprintf("SELECT process_guid, routes FROM desired_lrps")
 
 	rows, err := e.rawSQLDB.Query(query)
 	if err != nil {
@@ -69,16 +69,15 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 	}
 	defer rows.Close()
 
-	var processGuid, domain string
+	var processGuid string
 	var routeData []byte
 
 	for rows.Next() {
-		err := rows.Scan(&processGuid, &domain, &routeData)
+		err := rows.Scan(&processGuid, &routeData)
 		if err != nil {
 			logger.Error("failed-reading-row", err)
 			continue
 		}
-		logger.Info("AAAAAAAAAAAAAAA", lager.Data{"guid": processGuid, "domain": domain, "routes": routeData})
 		encodedData, err := e.encoder.Encode(format.BASE64_ENCRYPTED, routeData)
 		if err != nil {
 			logger.Error("failed-encrypting-routes", err)
@@ -86,10 +85,9 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 		}
 
 		bindings := make([]interface{}, 0, 3)
-		updateQuery := fmt.Sprintf("UPDATE desired_lrps SET routes = ? WHERE process_guid = ? and domain = ?")
+		updateQuery := fmt.Sprintf("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?")
 		bindings = append(bindings, encodedData)
 		bindings = append(bindings, processGuid)
-		bindings = append(bindings, domain)
 		_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
 		if err != nil {
 			logger.Error("failed-updating-desired-lrp-record", err)
