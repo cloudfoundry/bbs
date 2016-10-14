@@ -190,9 +190,6 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 		"net_info":                netInfo,
 	})
 
-	logger.Info("starting")
-	defer logger.Info("completed")
-
 	lrp, prevIndex, err := db.rawActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
@@ -217,6 +214,9 @@ func (db *ETCDDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, 
 		logger.Error("failed-to-transition-actual-lrp-to-started", nil)
 		return nil, nil, models.ErrActualLRPCannotBeStarted
 	}
+
+	logger.Info("starting")
+	defer logger.Info("completed")
 
 	lrp.ModificationTag.Increment()
 	lrp.State = models.ActualLRPStateRunning
