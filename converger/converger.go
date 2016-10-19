@@ -79,6 +79,10 @@ func (c *Converger) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			return nil
 
 		case event := <-cellEvents:
+			// Stopping the timer in order to avoid a race condition in the tests.
+			// Executing Stop() removes the timer from the list of watchers on the clock
+			// which allows us to use WaitForWatcherAndIncrement on the fake clock.
+			convergeTimer.Stop()
 			switch event.EventType() {
 			case models.EventTypeCellDisappeared:
 				logger.Info("received-cell-disappeared-event", lager.Data{"cell-id": event.CellIDs()})
@@ -86,6 +90,7 @@ func (c *Converger) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 
 		case <-convergeTimer.C():
+			convergeTimer.Stop()
 			c.converge()
 		}
 
