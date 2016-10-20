@@ -219,6 +219,36 @@ var expirePendingTaskDuration = flag.Duration(
 	"unclaimed tasks are marked as failed, after this duration",
 )
 
+var repRequireTLS = flag.Bool(
+	"repRequireTLS",
+	false,
+	"whether tls connection to the rep is required or preferred",
+)
+
+var repCACert = flag.String(
+	"repCACert",
+	"",
+	"path to certificate authority cert used for mutually authenticated TLS REP communication",
+)
+
+var repClientCert = flag.String(
+	"repClientCert",
+	"",
+	"path to client cert used for mutually authenticated TLS REP communication",
+)
+
+var repClientKey = flag.String(
+	"repClientKey",
+	"",
+	"path to client key used for mutually authenticated TLS REP communication",
+)
+
+var repClientSessionCacheSize = flag.Int(
+	"repClientSessionCacheSize",
+	0,
+	"Capacity of the ClientSessionCache option on the TLS configuration. If zero, golang's default will be used",
+)
+
 const (
 	dropsondeOrigin           = "bbs"
 	bbsWatchRetryWaitDuration = 3 * time.Second
@@ -349,7 +379,20 @@ func main() {
 	desiredHub := events.NewHub()
 	actualHub := events.NewHub()
 
-	repClientFactory := rep.NewClientFactory(cfhttp.NewClient(), cfhttp.NewClient())
+	repTLSConfig := &rep.TLSConfig{
+		RequireTLS:      *repRequireTLS,
+		CaCertFile:      *repCACert,
+		CertFile:        *repClientCert,
+		KeyFile:         *repClientKey,
+		ClientCacheSize: *repClientSessionCacheSize,
+	}
+
+	httpClient := cfhttp.NewClient()
+	repClientFactory, err := rep.NewClientFactory(httpClient, httpClient, repTLSConfig)
+	if err != nil {
+		logger.Fatal("new-rep-client-factory-failed", err)
+	}
+
 	auctioneerClient := initializeAuctioneerClient(logger)
 
 	exitChan := make(chan struct{})

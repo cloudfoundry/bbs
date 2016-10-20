@@ -725,6 +725,7 @@ var _ = Describe("LRPConvergence", func() {
 			cellPresence := models.NewCellPresence(
 				cellId,
 				"cell.example.com",
+				"",
 				"the-zone",
 				models.CellCapacity{MemoryMb: 128, DiskMb: 1024, Containers: 3},
 				[]string{},
@@ -887,6 +888,7 @@ var _ = Describe("LRPConvergence", func() {
 			cellPresence := models.NewCellPresence(
 				"cell-id",
 				"cell.example.com",
+				"",
 				"the-zone",
 				models.CellCapacity{MemoryMb: 128, DiskMb: 1024, Containers: 3},
 				[]string{},
@@ -1008,6 +1010,7 @@ var _ = Describe("LRPConvergence", func() {
 					cellPresence = models.NewCellPresence(
 						"cell-id",
 						"cell.example.com",
+						"",
 						"the-zone",
 						models.NewCellCapacity(128, 1024, 3),
 						[]string{},
@@ -1095,6 +1098,7 @@ var _ = Describe("LRPConvergence", func() {
 					cellPresence = models.NewCellPresence(
 						"cell-id",
 						"cell.example.com",
+						"",
 						"the-zone",
 						models.NewCellCapacity(128, 1024, 3),
 						[]string{},
@@ -1215,6 +1219,7 @@ var _ = Describe("LRPConvergence", func() {
 					cellPresence = models.NewCellPresence(
 						"cell-id",
 						"cell.example.com",
+						"",
 						"the-zone",
 						models.NewCellCapacity(128, 1024, 100),
 						[]string{},
@@ -1280,6 +1285,7 @@ var _ = Describe("LRPConvergence", func() {
 					cellPresence = models.NewCellPresence(
 						"cell-id",
 						"cell.example.com",
+						"",
 						"the-zone",
 						models.NewCellCapacity(124, 1024, 6),
 						[]string{},
@@ -1790,6 +1796,7 @@ func newCellPresence(cellID string) *models.CellPresence {
 	cellPresence := models.NewCellPresence(
 		cellID,
 		"1.2.3.4",
+		"",
 		"az-1",
 		models.NewCellCapacity(128, 1024, 3),
 		[]string{},

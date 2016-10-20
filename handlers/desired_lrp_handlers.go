@@ -311,7 +311,11 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 						logger.Error("failed-fetching-cell-presence", err)
 						continue
 					}
-					repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
+					repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+					if err != nil {
+						logger.Error("create-rep-client-failed", err)
+						continue
+					}
 					logger.Debug("stopping-lrp-instance")
 					err = repClient.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
 					if err != nil {

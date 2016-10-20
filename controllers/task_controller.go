@@ -104,7 +104,11 @@ func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error 
 	}
 	logger.Info("finished-check-cell-presence", lager.Data{"cell_id": cellID})
 
-	repClient := h.repClientFactory.CreateClient(cellPresence.RepAddress)
+	repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+	if err != nil {
+		logger.Error("create-rep-client-failed", err)
+		return err
+	}
 	logger.Info("start-rep-cancel-task", lager.Data{"task_guid": taskGuid})
 	repClient.CancelTask(taskGuid)
 	if err != nil {

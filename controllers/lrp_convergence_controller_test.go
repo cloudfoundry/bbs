@@ -110,10 +110,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeServiceClient = new(fake_bbs.FakeServiceClient)
 		fakeRepClientFactory = new(repfakes.FakeClientFactory)
 		fakeRepClient = new(repfakes.FakeClient)
-		fakeRepClientFactory.CreateClientReturns(fakeRepClient)
+		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 		fakeServiceClient.CellByIdReturns(nil, errors.New("hi"))
 
-		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
 		cellSet = models.CellSet{"cell-id": &cellPresence}
 		fakeServiceClient.CellsReturns(cellSet, nil)
 
@@ -258,6 +258,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 					cellPresence = models.NewCellPresence(
 						cellID,
 						"cell1.addr",
+						"",
 						"the-zone",
 						models.NewCellCapacity(128, 1024, 6),
 						[]string{},
@@ -296,6 +297,46 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 					Expect(stoppedKeys).To(ContainElement(retiringActualLRP2.ActualLRPKey))
 					Expect(stoppedInstanceKeys).To(ContainElement(retiringActualLRP2.ActualLRPInstanceKey))
+				})
+
+				Context("when the rep announces a rep url", func() {
+					BeforeEach(func() {
+						cellPresence = models.NewCellPresence(
+							cellID,
+							"cell1.addr",
+							"http://cell1.addr",
+							"the-zone",
+							models.NewCellCapacity(128, 1024, 6),
+							[]string{},
+							[]string{},
+							[]string{},
+							[]string{},
+						)
+
+						fakeServiceClient.CellByIdReturns(&cellPresence, nil)
+					})
+
+					It("passes the url when creating a rep client", func() {
+						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
+						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+						Expect(repAddr).To(Equal(cellPresence.RepAddress))
+						Expect(repURL).To(Equal(cellPresence.RepUrl))
+					})
+
+					Context("when creating a rep client fails", func() {
+						BeforeEach(func() {
+							err := errors.New("BOOM!!!")
+							fakeRepClientFactory.CreateClientReturns(nil, err)
+						})
+
+						It("should log the error", func() {
+							Expect(logger.Buffer()).To(gbytes.Say("BOOM!!!"))
+						})
+
+						It("should not return an error", func() {
+							Expect(err).NotTo(HaveOccurred())
+						})
+					})
 				})
 			})
 

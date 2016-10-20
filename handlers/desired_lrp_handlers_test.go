@@ -570,7 +570,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					}
 
 					fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
-					fakeServiceClient.CellByIdReturns(&models.CellPresence{RepAddress: "some-address"}, nil)
+					fakeServiceClient.CellByIdReturns(&models.CellPresence{
+						RepAddress: "some-address",
+						RepUrl:     "http://some-address",
+					}, nil)
 				})
 
 				Context("when the number of instances decreased", func() {
@@ -594,8 +597,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
 						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal("some-address"))
-						Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal("some-address"))
+						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+						Expect(repAddr).To(Equal("some-address"))
+						Expect(repURL).To(Equal("http://some-address"))
+						repAddr, repURL = fakeRepClientFactory.CreateClientArgsForCall(1)
+						Expect(repAddr).To(Equal("some-address"))
+						Expect(repURL).To(Equal("http://some-address"))
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
@@ -604,6 +611,38 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
 						Expect(key).To(Equal(actualLRPGroups[1].Instance.ActualLRPKey))
 						Expect(instanceKey).To(Equal(actualLRPGroups[1].Instance.ActualLRPInstanceKey))
+					})
+
+					Context("when the rep announces a url", func() {
+						BeforeEach(func() {
+							cellPresence := models.CellPresence{CellId: "cell-id", RepAddress: "some-address", RepUrl: "http://some-address"}
+							fakeServiceClient.CellByIdReturns(&cellPresence, nil)
+						})
+
+						It("creates a rep client using the rep url", func() {
+							repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+							Expect(repAddr).To(Equal("some-address"))
+							Expect(repURL).To(Equal("http://some-address"))
+						})
+
+						Context("when creating a rep client fails", func() {
+							BeforeEach(func() {
+								err := errors.New("BOOM!!!")
+								fakeRepClientFactory.CreateClientReturns(nil, err)
+							})
+
+							It("should log the error", func() {
+								Expect(logger.Buffer()).To(gbytes.Say("BOOM!!!"))
+							})
+
+							It("should return the error", func() {
+								response := models.DesiredLRPLifecycleResponse{}
+								err := response.Unmarshal(responseRecorder.Body.Bytes())
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(response.Error).To(BeNil())
+							})
+						})
 					})
 
 					Context("when fetching cell presence fails", func() {

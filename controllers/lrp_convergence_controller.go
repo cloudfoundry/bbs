@@ -65,7 +65,9 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	works := []func(){}
 	for _, key := range keysToRetire {
 		key := key
-		works = append(works, func() { h.retirer.RetireActualLRP(retireLogger, key.ProcessGuid, key.Index) })
+		works = append(works, func() {
+			h.retirer.RetireActualLRP(retireLogger, key.ProcessGuid, key.Index)
+		})
 	}
 
 	errChan := make(chan *models.Error, 1)

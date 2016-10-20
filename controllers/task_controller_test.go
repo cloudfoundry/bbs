@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Task Controller", func() {
@@ -369,6 +370,34 @@ var _ = Describe("Task Controller", func() {
 					Expect(guid).To(Equal("task-guid"))
 				})
 
+				Context("when the rep announces a url", func() {
+					BeforeEach(func() {
+						cellPresence := models.CellPresence{CellId: "cell-id", RepAddress: "some-address", RepUrl: "http://some-address"}
+						fakeServiceClient.CellByIdReturns(&cellPresence, nil)
+					})
+
+					It("creates a rep client using the rep url", func() {
+						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+						Expect(repAddr).To(Equal("some-address"))
+						Expect(repURL).To(Equal("http://some-address"))
+					})
+
+					Context("when creating a rep client fails", func() {
+						BeforeEach(func() {
+							err := errors.New("BOOM!!!")
+							fakeRepClientFactory.CreateClientReturns(nil, err)
+						})
+
+						It("should log the error", func() {
+							Expect(logger.Buffer()).To(gbytes.Say("BOOM!!!"))
+						})
+
+						It("should return the error", func() {
+							Expect(err).To(MatchError("BOOM!!!"))
+						})
+					})
+				})
+
 				Context("when the task has no cell id", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
@@ -643,7 +672,7 @@ var _ = Describe("Task Controller", func() {
 			)
 
 			BeforeEach(func() {
-				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
 				cellSet = models.CellSet{"cell-id": &cellPresence}
 				fakeServiceClient.CellsReturns(cellSet, nil)
 			})
