@@ -77,6 +77,7 @@ func newCellPresence(cellID string) *models.CellPresence {
 	presence := models.NewCellPresence(
 		cellID,
 		"cell.example.com",
+		"http://cell.example.com",
 		"the-zone",
 		models.NewCellCapacity(128, 1024, 6),
 		[]string{},

@@ -19,6 +19,7 @@ message CellPresence {
   repeated Provider rootfs_providers = 5 [(gogoproto.jsontag) = "rootfs_provider_list,omitempty"];
   repeated string placement_tags = 6 [(gogoproto.jsontag) = "placement_tags,omitempty"];
   repeated string optional_placement_tags = 7 [(gogoproto.jsontag) = "optional_placement_tags,omitempty"];
+  optional string rep_url = 8;
 }
 
 message Provider {

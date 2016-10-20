@@ -49,7 +49,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		fakeServiceClient = new(fake_bbs.FakeServiceClient)
 		fakeRepClientFactory = new(repfakes.FakeClientFactory)
 		fakeRepClient = new(repfakes.FakeClient)
-		fakeRepClientFactory.CreateClientReturns(fakeRepClient)
+		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 
 		actualHub = &eventfakes.FakeHub{}
 		exitCh = make(chan struct{}, 1)
@@ -789,6 +789,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 						cellPresence = models.NewCellPresence(
 							cellID,
 							"cell1.addr",
+							"",
 							"the-zone",
 							models.NewCellCapacity(128, 1024, 6),
 							[]string{},

@@ -70,7 +70,12 @@ func (r *actualLRPRetirer) RetireActualLRP(logger lager.Logger, processGuid stri
 				return err
 			}
 
-			client := r.repClientFactory.CreateClient(cell.RepAddress)
+			var client rep.Client
+			client, err = r.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl)
+			if err != nil {
+				logger.Error("create-rep-client-failed", err)
+				return err
+			}
 			err = client.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
 		}
 

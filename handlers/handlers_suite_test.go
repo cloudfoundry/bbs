@@ -30,7 +30,7 @@ var _ = BeforeEach(func() {
 	fakeServiceClient = new(fake_bbs.FakeServiceClient)
 	fakeRepClientFactory = new(repfakes.FakeClientFactory)
 	fakeRepClient = new(repfakes.FakeClient)
-	fakeRepClientFactory.CreateClientReturns(fakeRepClient)
+	fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 })
 
 func newTestRequest(body interface{}) *http.Request {

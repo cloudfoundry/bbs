@@ -1,5 +1,7 @@
 package models
 
+import "strings"
+
 type CellSet map[string]*CellPresence
 
 func NewCellSet() CellSet {
@@ -68,7 +70,7 @@ func (cap CellCapacity) Validate() error {
 }
 
 func NewCellPresence(
-	cellID, repAddress, zone string,
+	cellID, repAddress, repUrl, zone string,
 	capacity CellCapacity,
 	rootFSProviders, preloadedRootFSes, placementTags, optionalPlacementTags []string,
 ) CellPresence {
@@ -86,6 +88,7 @@ func NewCellPresence(
 	return CellPresence{
 		CellId:                cellID,
 		RepAddress:            repAddress,
+		RepUrl:                repUrl,
 		Zone:                  zone,
 		Capacity:              &capacity,
 		RootfsProviders:       providers,
@@ -103,6 +106,10 @@ func (c CellPresence) Validate() error {
 
 	if c.RepAddress == "" {
 		validationError = validationError.Append(ErrInvalidField{"rep_address"})
+	}
+
+	if c.RepUrl != "" && !strings.HasPrefix(c.RepUrl, "http://") && !strings.HasPrefix(c.RepUrl, "https://") {
+		validationError = validationError.Append(ErrInvalidField{"rep_url"})
 	}
 
 	if err := c.Capacity.Validate(); err != nil {
