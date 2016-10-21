@@ -6,7 +6,6 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
@@ -17,7 +16,6 @@ var _ = Describe("Increase Run Info Column Migration", func() {
 	if test_helpers.UseSQL() {
 		var (
 			migration    migration.Migration
-			serializer   format.Serializer
 			flavor       string
 			migrationErr error
 		)
@@ -30,7 +28,6 @@ var _ = Describe("Increase Run Info Column Migration", func() {
 			rawSQLDB.Exec("DROP TABLE actual_lrps;")
 
 			migration = migrations.NewIncreaseRunInfoColumnSize()
-			serializer = format.NewSerializer(cryptor)
 		})
 
 		It("appends itself to the migration list", func() {

@@ -15,7 +15,7 @@ var _ = Describe("MasterLock", func() {
 	Context("when the bbs cannot obtain the bbs lock", func() {
 		var competingBBSLockProcess ifrit.Process
 		BeforeEach(func() {
-			competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.LockTTL)
+			competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.SessionLockTTL)
 			competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
 
 			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)

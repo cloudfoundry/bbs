@@ -7,7 +7,6 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/clock/fakeclock"
@@ -18,11 +17,10 @@ import (
 var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 	if test_helpers.UseSQL() {
 		var (
-			mig        migration.Migration
-			serializer format.Serializer
-			flavor     string
-			migErr     error
-			fakeClock  *fakeclock.FakeClock
+			mig       migration.Migration
+			flavor    string
+			migErr    error
+			fakeClock *fakeclock.FakeClock
 		)
 
 		BeforeEach(func() {
@@ -34,7 +32,6 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 			rawSQLDB.Exec("DROP TABLE actual_lrps;")
 
 			mig = migrations.NewAddPlacementTagsToDesiredLRPs()
-			serializer = format.NewSerializer(cryptor)
 		})
 
 		It("appends itself to the migration list", func() {

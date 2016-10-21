@@ -2,7 +2,6 @@ package controllers_test
 
 import (
 	"errors"
-	"net/http/httptest"
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
@@ -26,7 +25,6 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		logger               *lagertest.TestLogger
 		fakeLRPDB            *dbfakes.FakeLRPDB
 		actualHub            *eventfakes.FakeHub
-		responseRecorder     *httptest.ResponseRecorder
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 
 		keysToAuction        []*auctioneer.LRPStartRequest
@@ -108,7 +106,6 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysWithMissingCells, keysToRetire)
 
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
-		responseRecorder = httptest.NewRecorder()
 
 		fakeServiceClient = new(fake_bbs.FakeServiceClient)
 		fakeRepClientFactory = new(repfakes.FakeClientFactory)
