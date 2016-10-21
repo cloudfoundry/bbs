@@ -33,11 +33,11 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/cfhttp"
-	"code.cloudfoundry.org/cflager"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/locket"
 	"code.cloudfoundry.org/rep"
 	"github.com/cloudfoundry/dropsonde"
@@ -256,7 +256,7 @@ const (
 
 func main() {
 	debugserver.AddFlags(flag.CommandLine)
-	cflager.AddFlags(flag.CommandLine)
+	lagerflags.AddFlags(flag.CommandLine)
 	etcdFlags := AddETCDFlags(flag.CommandLine)
 	encryptionFlags := encryption.AddEncryptionFlags(flag.CommandLine)
 
@@ -264,7 +264,7 @@ func main() {
 
 	cfhttp.Initialize(*communicationTimeout)
 
-	logger, reconfigurableSink := cflager.New("bbs")
+	logger, reconfigurableSink := lagerflags.New("bbs")
 	logger.Info("starting")
 
 	initializeDropsonde(logger)
