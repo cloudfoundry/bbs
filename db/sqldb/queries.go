@@ -15,6 +15,13 @@ const (
 	Postgres = "postgres"
 )
 
+const (
+	IsolationLevelReadUncommitted = "READ UNCOMMITTED"
+	IsolationLevelReadCommitted   = "READ COMMITTED"
+	IsolationLevelSerializable    = "SERIALIZABLE"
+	IsolationLevelRepeatableRead  = "REPEATABLE READ"
+)
+
 type RowLock bool
 
 const (
@@ -102,6 +109,22 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 	}
 
 	return nil
+}
+
+func (db *SQLDB) SetIsolationLevel(logger lager.Logger, level string) error {
+	logger = logger.Session("set-isolation-level", lager.Data{"level": level})
+	logger.Info("starting")
+	defer logger.Info("done")
+
+	var query string
+	if db.flavor == MySQL {
+		query = fmt.Sprintf("SET SESSION TRANSACTION ISOLATION LEVEL %s", level)
+	} else if db.flavor == Postgres {
+		query = fmt.Sprintf("SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL %s", level)
+	}
+
+	_, err := db.db.Exec(query)
+	return err
 }
 
 // Takes in a query that uses question marks to represent unbound SQL parameters

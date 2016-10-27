@@ -348,6 +348,11 @@ func main() {
 		}
 
 		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, *updateWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock, *databaseDriver)
+		err = sqlDB.SetIsolationLevel(logger, sqldb.IsolationLevelReadCommitted)
+		if err != nil {
+			logger.Fatal("sql-failed-to-set-isolation-level", err)
+		}
+
 		err = sqlDB.CreateConfigurationsTable(logger)
 		if err != nil {
 			logger.Fatal("sql-failed-create-configurations-table", err)
