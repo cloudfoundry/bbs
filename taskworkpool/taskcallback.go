@@ -59,7 +59,7 @@ func (twp *TaskCompletionWorkPool) Run(signals <-chan os.Signal, ready chan<- st
 	defer logger.Info("finished")
 
 	<-signals
-	go twp.callbackWorkPool.Stop()
+	twp.callbackWorkPool.Stop()
 
 	return nil
 }
