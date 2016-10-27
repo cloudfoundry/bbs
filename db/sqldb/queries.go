@@ -160,11 +160,11 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 }
 func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	query := `
-		SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
-			FROM actual_lrps
-			JOIN domains ON actual_lrps.domain = domains.domain
-			WHERE actual_lrps.evacuating = false
-			AND actual_lrps.process_guid NOT IN (SELECT process_guid FROM desired_lrps)
+    SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
+      FROM actual_lrps
+      JOIN domains ON actual_lrps.domain = domains.domain
+      LEFT JOIN desired_lrps ON actual_lrps.process_guid = desired_lrps.process_guid
+      WHERE actual_lrps.evacuating = false AND desired_lrps.process_guid IS NULL
 		`
 
 	return q.Query(query)
