@@ -325,6 +325,11 @@ var _ = Describe("EventSource", func() {
 				_, err := eventSource.Next()
 				Expect(err).To(BeAssignableToTypeOf(events.NewInvalidPayloadError(models.EventTypeDesiredLRPCreated, errors.New("whatever"))))
 			})
+
+			It("includes a useful error message", func() {
+				_, err := eventSource.Next()
+				Expect(err.Error()).To(ContainSubstring("event with no data"))
+			})
 		})
 
 		Context("when the raw event source returns an error", func() {
