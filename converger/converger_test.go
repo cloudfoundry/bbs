@@ -85,8 +85,8 @@ var _ = Describe("ConvergerProcess", func() {
 		It("converges tasks, LRPs, and auctions when the lock is periodically reestablished", func() {
 			fakeClock.WaitForWatcherAndIncrement(convergeRepeatInterval + aBit)
 
-			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(1))
-			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(1))
+			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(1))
+			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(1))
 
 			_, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration := fakeTaskController.ConvergeTasksArgsForCall(0)
 			Expect(actualKickTaskDuration).To(Equal(kickTaskDuration))
@@ -95,8 +95,8 @@ var _ = Describe("ConvergerProcess", func() {
 
 			fakeClock.WaitForWatcherAndIncrement(convergeRepeatInterval + aBit)
 
-			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(2))
-			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(2))
+			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(2))
+			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(2))
 
 			_, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration = fakeTaskController.ConvergeTasksArgsForCall(1)
 			Expect(actualKickTaskDuration).To(Equal(kickTaskDuration))
@@ -114,8 +114,8 @@ var _ = Describe("ConvergerProcess", func() {
 				IDs: []string{"some-cell-id"},
 			}
 
-			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(1))
-			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(1))
+			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(1))
+			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(1))
 
 			_, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration := fakeTaskController.ConvergeTasksArgsForCall(0)
 			Expect(actualKickTaskDuration).To(Equal(kickTaskDuration))
@@ -128,8 +128,8 @@ var _ = Describe("ConvergerProcess", func() {
 				IDs: []string{"some-cell-id"},
 			}
 
-			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(2))
-			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(2))
+			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(2))
+			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(2))
 		})
 
 		It("defers convergence to one full interval later", func() {
@@ -139,17 +139,17 @@ var _ = Describe("ConvergerProcess", func() {
 				IDs: []string{"some-cell-id"},
 			}
 
-			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(1))
-			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(1))
+			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(1))
+			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(1))
 
 			fakeClock.WaitForWatcherAndIncrement(2 * aBit)
 
-			Consistently(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(1))
-			Consistently(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(1))
+			Consistently(fakeTaskController.ConvergeTasksCallCount).Should(Equal(1))
+			Consistently(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(1))
 
 			fakeClock.WaitForWatcherAndIncrement(convergeRepeatInterval + aBit)
-			Eventually(fakeTaskController.ConvergeTasksCallCount, aBit).Should(Equal(2))
-			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount, aBit).Should(Equal(2))
+			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(2))
+			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(2))
 		})
 	})
 })
