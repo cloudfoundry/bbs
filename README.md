@@ -39,6 +39,33 @@ To do so, just use `go generate`.
 go generate ./...
 ```
 
+### Generating ruby models for bbs models
+
+The following documentation assume the following versions:
+
+1. [protoc](https://developers.google.com/protocol-buffers/docs/downloads) `> v3.0.0`
+2. [ruby protobuf gem](https://github.com/ruby-protobuf/protobuf) `> 3.6.12`
+
+Run the following commands from the `models` directory to generate `.pb.rb`
+files for the bbs models:
+
+1. `gem install protobuf`
+2. cp `which protoc-gen-ruby`{,2}
+3. protoc -I$GOPATH/src --proto_path=. --ruby2_out=/path/to/ruby/files *.proto
+
+**Note** Replace `/path/to/ruby/files` with the desired destination of the
+`.pb.rb` files. That directory must exist before running this command.
+
+**Note** The above steps assume that
+`github.com/gogo/protobuf/gogoproto/gogo.proto` is on the `GOPATH`.
+
+**Note** Since protoc v3 now ships with a ruby generator, the built-in
+generator will mask the gem's binary. This requires a small hack in order to be
+able to use the protobuf gem, the hack is simply to rename the protobuf gem's
+binary to be `ruby2` and ask protoc to generate `ruby2` code which will force
+it to use the binary. For more information please
+[read this github issue](https://github.com/ruby-protobuf/protobuf/issues/341)
+
 ## SQL
 
 See the instructions in [Running the Experimental SQL Unit Tests](https://github.com/cloudfoundry/diego-release/blob/develop/CONTRIBUTING.md#running-the-experimental-sql-unit-tests)
