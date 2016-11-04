@@ -24,10 +24,28 @@ loop, for example:
 ``` go
 event, err := eventSource.Next()
 if err != nil {
-    log.Printf("failed to get next event: " + err.Error())
+	switch err {
+	case events.ErrUnrecognizedEventType:
+                //log and skip unrecognized events
+		logger.Error("failed-getting-next-event", err)
+	case events.ErrSourceClosed:
+                //log and try to re-subscribe
+		logger.Error("failed-getting-next-event", err)
+		resubscribeChan <- err
+		return
+        default:
+                //log and handle a nil event for any other error
+		logger.Error("failed-getting-next-event", err)
+		time.Sleep(retryPauseInterval)
+		eventChan <- nil
+	}
 }
 log.Printf("received event: %#v", event)
 ```
+In the case there is an `ErrUnrecognizedEventType` error,  the client should skip
+it and move to the next event. If the error is an `ErrSourceClosed`,  the client
+should try to resubscribe to the event source. The example above uses a channel 
+to handle the re-subscription.
 
 To access the event field values, you must convert the event to the right
 type. You can use the `EventType` method to determine the type of the event,
