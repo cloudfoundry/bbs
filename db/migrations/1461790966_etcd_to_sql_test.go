@@ -109,6 +109,23 @@ var _ = Describe("ETCD to SQL Migration", func() {
 				})
 			})
 
+			Context("when some tables exist", func() {
+				BeforeEach(func() {
+					var err error
+
+					_, err = rawSQLDB.Exec(`CREATE TABLE tasks( guid VARCHAR(255) PRIMARY KEY);`)
+					Expect(err).NotTo(HaveOccurred())
+					_, err = rawSQLDB.Exec(`INSERT INTO tasks VALUES ('test-guid')`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("should drop those tables", func() {
+					var value string
+					err := rawSQLDB.QueryRow(`SELECT guid FROM tasks WHERE guid='test-guid'`).Scan(&value)
+					Expect(err).To(MatchError(sql.ErrNoRows))
+				})
+			})
+
 			Context("when etcd is not configured", func() {
 				BeforeEach(func() {
 					storeClient = nil

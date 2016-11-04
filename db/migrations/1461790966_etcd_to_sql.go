@@ -173,13 +173,7 @@ func dropTables(db *sql.DB) error {
 		"actual_lrps",
 	}
 	for _, tableName := range tableNames {
-		var value int
-		// check whether the table exists before truncating
-		err := db.QueryRow("SELECT 1 FROM ? LIMIT 1;", tableName).Scan(&value)
-		if err == sql.ErrNoRows {
-			continue
-		}
-		_, err = db.Exec("DROP TABLE " + tableName)
+		_, err := db.Exec("DROP TABLE IF EXISTS " + tableName)
 		if err != nil {
 			return err
 		}
