@@ -58,7 +58,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColum
 	if err != nil {
 		return db.convertSQLError(err)
 	}
-	defer rows.Next()
+	defer rows.Close()
 
 	where := fmt.Sprintf("%s = ?", primaryKey)
 	for rows.Next() {
