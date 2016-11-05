@@ -32,7 +32,7 @@ func (t *ConsulHelper) RegisterCell(cell *models.CellPresence) {
 	Expect(err).NotTo(HaveOccurred())
 
 	// Use NewLock instead of NewPresence in order to block on the cell being registered
-	runner := locket.NewLock(t.logger, t.consulClient, bbs.CellSchemaPath(cell.CellId), jsonBytes, clock.NewClock(), locket.RetryInterval, locket.SessionLockTTL)
+	runner := locket.NewLock(t.logger, t.consulClient, bbs.CellSchemaPath(cell.CellId), jsonBytes, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL)
 	ifrit.Invoke(runner)
 
 	Expect(err).NotTo(HaveOccurred())
