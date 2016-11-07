@@ -15,29 +15,24 @@ Components within Diego may use the full [Client interface](https://godoc.org/gi
 
 ## Code Generation
 
-You need the 3.0 version of the `protoc` compiler. If you're a Homebrew user
-on Mac OS X, you get that by running:
+The protobuf models in this repository require version 3 of the `protoc` compiler.
+On Mac OS X with [Homebrew](http://brew.sh/), run the following to install it:
 
 ```
-brew install protobuf --devel
+brew install protobuf
 ```
 
-> If you already have an older version of protobuf installed, you will have to
-> uninstall it first: `brew uninstall protobuf`
+> If you already have an older version of protobuf installed, you must
+> uninstall it first by running `brew uninstall protobuf`
 
-You also need the `gogoproto` compiler in you path:
+Install the `gogoproto` compiler by running:
 
 ```
 go install github.com/gogo/protobuf/protoc-gen-gogoslick
 ```
 
-We generate code from the .proto (protobuf) files. We also generate a set of
-fakes from the interfaces we have.
-To do so, just use `go generate`.
+Run `go generate ./...` from the root directory of this repository to generate code from the `.proto` files as well as to generate fake implementations of certain interfaces for use in test code.
 
-```
-go generate ./...
-```
 
 ### Generating ruby models for bbs models
 
@@ -50,8 +45,8 @@ Run the following commands from the `models` directory to generate `.pb.rb`
 files for the bbs models:
 
 1. `gem install protobuf`
-2. cp `which protoc-gen-ruby`{,2}
-3. protoc -I$GOPATH/src --proto_path=. --ruby2_out=/path/to/ruby/files *.proto
+2. `cp $(which protoc-gen-ruby){,2}`
+3. `protoc -I$GOPATH/src --proto_path=. --ruby2_out=/path/to/ruby/files *.proto`
 
 **Note** Replace `/path/to/ruby/files` with the desired destination of the
 `.pb.rb` files. That directory must exist before running this command.
