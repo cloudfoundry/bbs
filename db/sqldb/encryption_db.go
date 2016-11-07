@@ -29,16 +29,16 @@ func (db *SQLDB) EncryptionKeyLabel(logger lager.Logger) (string, error) {
 func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
 	errCh := make(chan error)
 	go func() {
-		errCh <- db.reEncrypt(logger, tasksTable, "guid", "task_definition")
+		errCh <- db.reEncrypt(logger, tasksTable, "guid", "task_definition", true)
 	}()
 	go func() {
-		errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", "run_info")
+		errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", "run_info", true)
 	}()
 	go func() {
-		errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", "volume_placement")
+		errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", "volume_placement", true)
 	}()
 	go func() {
-		errCh <- db.reEncrypt(logger, actualLRPsTable, "process_guid", "net_info")
+		errCh <- db.reEncrypt(logger, actualLRPsTable, "process_guid", "net_info", false)
 	}()
 
 	for i := 0; i < 4; i++ {
@@ -50,7 +50,7 @@ func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
 	return nil
 }
 
-func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColumn string) error {
+func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColumn string, encryptIfEmpty bool) error {
 	logger = logger.WithData(
 		lager.Data{"table_name": tableName, "primary_key": primaryKey, "blob_column": blobColumn},
 	)
@@ -77,6 +77,12 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey, blobColum
 				logger.Error("failed-to-scan-blob", err)
 				return nil
 			}
+
+			// don't encrypt column if it doesn't contain any data, see #132626553 for more info
+			if !encryptIfEmpty && len(blob) == 0 {
+				return nil
+			}
+
 			encoder := format.NewEncoder(db.cryptor)
 			payload, err := encoder.Decode(blob)
 			if err != nil {

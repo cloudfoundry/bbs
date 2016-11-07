@@ -134,7 +134,6 @@ var _ = Describe("Encryption", func() {
 			value1 := []byte("some text")
 			value2 := []byte("another value")
 			value3 := []byte("more value")
-			value4 := []byte("actual value")
 			taskGuid := "uniquetaskguid"
 			processGuid := "uniqueprocessguid"
 
@@ -148,9 +147,6 @@ var _ = Describe("Encryption", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			encoded3, err := encoder.Encode(format.BASE64_ENCRYPTED, value3)
-			Expect(err).NotTo(HaveOccurred())
-
-			encoded4, err := encoder.Encode(format.BASE64_ENCRYPTED, value4)
 			Expect(err).NotTo(HaveOccurred())
 
 			queryStr := "INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)"
@@ -171,18 +167,6 @@ var _ = Describe("Encryption", func() {
 			_, err = db.Exec(queryStr, processGuid, "fake-domain", "some-log-guid", 1, encoded2, 10, 10,
 				"some-root-fs", []byte("{}"), encoded3, 10)
 			Expect(err).NotTo(HaveOccurred())
-
-			queryStr = `
-				INSERT INTO actual_lrps
-					(process_guid, domain, net_info, instance_index, modification_tag_epoch, state)
-				VALUES (?, ?, ?, ?, ?, ?)`
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr,
-				processGuid, "fake-domain", encoded4, 0, 10, "yo")
-			Expect(err).NotTo(HaveOccurred())
-
 			cryptor = makeCryptor("new", "old")
 
 			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
@@ -218,18 +202,82 @@ var _ = Describe("Encryption", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(decrypted2).To(Equal(value2))
 			Expect(decrypted3).To(Equal(value3))
+		})
 
-			var netInfo []byte
-			queryStr = "SELECT net_info FROM actual_lrps WHERE process_guid = ?"
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			row = db.QueryRow(queryStr, processGuid)
-			err = row.Scan(&netInfo)
-			Expect(err).NotTo(HaveOccurred())
-			decrypted4, err := encoder.Decode(netInfo)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(decrypted4).To(Equal(value4))
+		Context("net_info encryption", func() {
+			var (
+				processGuid = "uniqueprocessguid"
+				netInfo     string
+				cryptor     encryption.Cryptor
+				encoder     format.Encoder
+			)
+
+			BeforeEach(func() {
+				cryptor = makeCryptor("old")
+				encoder = format.NewEncoder(cryptor)
+			})
+
+			JustBeforeEach(func() {
+				queryStr := `
+				INSERT INTO actual_lrps
+					(process_guid, domain, net_info, instance_index, modification_tag_epoch, state)
+				VALUES (?, ?, ?, ?, ?, ?)`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr,
+					processGuid, "fake-domain", netInfo, 0, 10, "yo")
+				Expect(err).NotTo(HaveOccurred())
+
+				cryptor = makeCryptor("new", "old")
+				sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
+				err = sqlDB.PerformEncryption(logger)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when net_info isn't empty", func() {
+				BeforeEach(func() {
+					var err error
+					info, err := encoder.Encode(format.BASE64_ENCRYPTED, []byte("actual value"))
+					Expect(err).NotTo(HaveOccurred())
+					netInfo = string(info)
+				})
+
+				It("get encrypted properly", func() {
+					cryptor := makeCryptor("new")
+					encoder := format.NewEncoder(cryptor)
+
+					var netInfo []byte
+					queryStr := "SELECT net_info FROM actual_lrps WHERE process_guid = ?"
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+					row := db.QueryRow(queryStr, processGuid)
+					err := row.Scan(&netInfo)
+					Expect(err).NotTo(HaveOccurred())
+					decrypted, err := encoder.Decode(netInfo)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(string(decrypted)).To(Equal("actual value"))
+				})
+			})
+
+			Context("when net_info is empty", func() {
+				BeforeEach(func() {
+					netInfo = ""
+				})
+
+				It("is left empty without getting encrypted", func() {
+					var netInfo []byte
+					queryStr := "SELECT net_info FROM actual_lrps WHERE process_guid = ?"
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+					row := db.QueryRow(queryStr, processGuid)
+					err := row.Scan(&netInfo)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(netInfo).To(HaveLen(0))
+				})
+			})
 		})
 
 		It("does not fail encryption if it can't read a record", func() {
