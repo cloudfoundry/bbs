@@ -12,11 +12,11 @@ import (
 	"github.com/vito/go-sse/sse"
 )
 
-var ErrUnrecognizedEventType = errors.New("unrecognized event type")
-
-var ErrSourceClosed = errors.New("source closed")
-
-var ErrNoData = errors.New("event with no data")
+var (
+	ErrUnrecognizedEventType = errors.New("unrecognized event type")
+	ErrSourceClosed          = errors.New("source closed")
+	ErrNoData                = errors.New("event with no data")
+)
 
 type invalidPayloadError struct {
 	payloadType string
