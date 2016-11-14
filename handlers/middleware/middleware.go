@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -53,22 +54,52 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 }
 
 func NewLatencyEmitter(logger lager.Logger) LatencyEmitter {
+	latencyChannel := make(chan time.Duration, 10000)
+	max_latency := time.Duration(0)
+
+	go func() {
+		ticker := time.NewTicker(2 * time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				for {
+					select {
+					case latency := <-latencyChannel:
+						if latency > max_latency {
+							max_latency = latency
+						}
+					default:
+						break
+					}
+				}
+
+				err := requestLatency.Send(max_latency)
+				if err != nil {
+					logger.Error("failed-to-send-request-latency-metric", err)
+				}
+			}
+		}
+	}()
+
 	return LatencyEmitter{
-		logger: logger,
+		logger:         logger,
+		latencyChannel: latencyChannel,
 	}
 }
 
 type LatencyEmitter struct {
-	logger lager.Logger
+	logger         lager.Logger
+	latencyChannel chan time.Duration
 }
 
 func (l LatencyEmitter) EmitLatency(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		f(w, r)
-		err := requestLatency.Send(time.Since(startTime))
-		if err != nil {
-			l.logger.Error("failed-to-send-request-latency-metric", err)
+		select {
+		case l.latencyChannel <- time.Since(startTime):
+		default:
+			l.logger.Error("dropped-latency-metric", errors.New("Channel too full"))
 		}
 	}
 }
