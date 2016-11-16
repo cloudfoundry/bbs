@@ -131,29 +131,33 @@ var _ = Describe("Encryption", func() {
 			var cryptor encryption.Cryptor
 			var encoder format.Encoder
 
-			value1 := []byte("some text")
-			value2 := []byte("another value")
-			value3 := []byte("more value")
+			unencodedTaskDef := []byte("some text")
+			unencodedRunInfo := []byte("another value")
+			unencodedRoutes := []byte("some random routes")
+			unencodedVolumePlacement := []byte("more value")
 			taskGuid := "uniquetaskguid"
 			processGuid := "uniqueprocessguid"
 
 			cryptor = makeCryptor("old")
 			encoder = format.NewEncoder(cryptor)
 
-			encoded1, err := encoder.Encode(format.BASE64_ENCRYPTED, value1)
+			encodedTaskDef, err := encoder.Encode(format.BASE64_ENCRYPTED, unencodedTaskDef)
 			Expect(err).NotTo(HaveOccurred())
 
-			encoded2, err := encoder.Encode(format.BASE64_ENCRYPTED, value2)
+			encodedRunInfo, err := encoder.Encode(format.BASE64_ENCRYPTED, unencodedRunInfo)
 			Expect(err).NotTo(HaveOccurred())
 
-			encoded3, err := encoder.Encode(format.BASE64_ENCRYPTED, value3)
+			encodedRoutes, err := encoder.Encode(format.BASE64_ENCRYPTED, unencodedRoutes)
+			Expect(err).NotTo(HaveOccurred())
+
+			encodedVolumePlacement, err := encoder.Encode(format.BASE64_ENCRYPTED, unencodedVolumePlacement)
 			Expect(err).NotTo(HaveOccurred())
 
 			queryStr := "INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, taskGuid, "fake-domain", encoded1)
+			_, err = db.Exec(queryStr, taskGuid, "fake-domain", encodedTaskDef)
 			Expect(err).NotTo(HaveOccurred())
 
 			queryStr = `
@@ -164,8 +168,8 @@ var _ = Describe("Encryption", func() {
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, processGuid, "fake-domain", "some-log-guid", 1, encoded2, 10, 10,
-				"some-root-fs", []byte("{}"), encoded3, 10)
+			_, err = db.Exec(queryStr, processGuid, "fake-domain", "some-log-guid", 1, encodedRunInfo, 10, 10,
+				"some-root-fs", encodedRoutes, encodedVolumePlacement, 10)
 			Expect(err).NotTo(HaveOccurred())
 			cryptor = makeCryptor("new", "old")
 
@@ -184,24 +188,30 @@ var _ = Describe("Encryption", func() {
 			row := db.QueryRow(queryStr, taskGuid)
 			err = row.Scan(&result)
 			Expect(err).NotTo(HaveOccurred())
-			decrypted1, err := encoder.Decode(result)
+			decryptedTaskDef, err := encoder.Decode(result)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(decrypted1).To(Equal(value1))
+			Expect(decryptedTaskDef).To(Equal(unencodedTaskDef))
 
-			var runInfo, volumePlacement []byte
-			queryStr = "SELECT run_info, volume_placement FROM desired_lrps WHERE process_guid = ?"
+			var runInfo, routes, volumePlacement []byte
+			queryStr = "SELECT run_info, routes, volume_placement FROM desired_lrps WHERE process_guid = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			row = db.QueryRow(queryStr, processGuid)
-			err = row.Scan(&runInfo, &volumePlacement)
+			err = row.Scan(&runInfo, &routes, &volumePlacement)
 			Expect(err).NotTo(HaveOccurred())
-			decrypted2, err := encoder.Decode(runInfo)
+
+			decryptedRunInfo, err := encoder.Decode(runInfo)
+			Expect(decryptedRunInfo).To(Equal(unencodedRunInfo))
 			Expect(err).NotTo(HaveOccurred())
-			decrypted3, err := encoder.Decode(volumePlacement)
+
+			decryptedRoutes, err := encoder.Decode(routes)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(decrypted2).To(Equal(value2))
-			Expect(decrypted3).To(Equal(value3))
+			Expect(decryptedRoutes).To(Equal(unencodedRoutes))
+
+			decryptedVolumePlacement, err := encoder.Decode(volumePlacement)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(decryptedVolumePlacement).To(Equal(unencodedVolumePlacement))
 		})
 
 		Context("net_info encryption", func() {
