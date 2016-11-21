@@ -43,33 +43,41 @@ func New(
 func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger := m.logger.Session("encryptor")
 	logger.Info("starting")
+	defer logger.Info("exited")
 
 	currentEncryptionKey, err := m.db.EncryptionKeyLabel(logger)
 	if err != nil {
 		if models.ConvertError(err) != models.ErrResourceNotFound {
+			logger.Error("failed-to-fetch-encryption-key-label", err)
 			return err
 		}
 	} else {
 		if m.keyManager.DecryptionKey(currentEncryptionKey) == nil {
-			return errors.New("Existing encryption key version (" + currentEncryptionKey + ") is not among the known keys")
+			err := errors.New("Existing encryption key version (" + currentEncryptionKey + ") is not among the known keys")
+			logger.Error("unknown-encryption-key-lable", err)
+			return err
 		}
 	}
 
 	close(ready)
-	logger.Info("started")
-	defer logger.Info("finished")
 
 	if currentEncryptionKey != m.keyManager.EncryptionKey().Label() {
+		logger := logger.WithData(lager.Data{
+			"desired-key-label":  m.keyManager.EncryptionKey().Label(),
+			"existing-key-label": currentEncryptionKey,
+		})
+
 		encryptionStart := m.clock.Now()
-		logger.Debug("encryption-started")
+		logger.Info("encryption-started")
 		err := m.db.PerformEncryption(logger)
 		if err != nil {
 			logger.Error("encryption-failed", err)
 		} else {
 			m.db.SetEncryptionKeyLabel(logger, m.keyManager.EncryptionKey().Label())
 		}
+
 		totalTime := m.clock.Since(encryptionStart)
-		logger.Debug("encryption-finished", lager.Data{"total_time": totalTime})
+		logger.Info("encryption-finished", lager.Data{"total_time": totalTime})
 		err = encryptionDuration.Send(totalTime)
 		if err != nil {
 			logger.Error("failed-to-send-encryption-duration-metrics", err)
