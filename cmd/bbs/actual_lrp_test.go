@@ -435,7 +435,7 @@ var _ = Describe("ActualLRP API", func() {
 				instanceKey = &otherLRPInstanceKey
 			})
 
-			It("removes the actual_lrp", func() {
+			FIt("removes the actual_lrp", func() {
 				Expect(removeErr).NotTo(HaveOccurred())
 
 				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, otherProcessGuid, otherIndex)

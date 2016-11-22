@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"sync"
 	"time"
 
 	"code.cloudfoundry.org/lager"
@@ -52,24 +53,54 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 	}
 }
 
-func NewLatencyEmitter(logger lager.Logger) LatencyEmitter {
-	return LatencyEmitter{
-		logger: logger,
+func NewLatencyEmitter(logger lager.Logger) *LatencyEmitter {
+	l := &LatencyEmitter{
+		logger:            logger,
+		metricLock:        &sync.Mutex{},
+		currentMaxLatency: 0 * time.Second,
 	}
+
+	go l.emitMetrics()
+
+	return l
 }
 
 type LatencyEmitter struct {
-	logger lager.Logger
+	logger            lager.Logger
+	metricLock        *sync.Mutex
+	currentMaxLatency time.Duration
 }
 
-func (l LatencyEmitter) EmitLatency(f http.HandlerFunc) http.HandlerFunc {
+func (l *LatencyEmitter) EmitLatency(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		f(w, r)
-		err := requestLatency.Send(time.Since(startTime))
+		endTime := time.Since(startTime)
+
+		go l.addMetric(endTime)
+	}
+}
+
+func (l *LatencyEmitter) addMetric(duration time.Duration) {
+	l.metricLock.Lock()
+	defer l.metricLock.Unlock()
+
+	if duration > l.currentMaxLatency {
+		l.currentMaxLatency = duration
+	}
+}
+
+func (l *LatencyEmitter) emitMetrics() {
+	for {
+		l.metricLock.Lock()
+		err := requestLatency.Send(l.currentMaxLatency)
 		if err != nil {
 			l.logger.Error("failed-to-send-request-latency-metric", err)
 		}
+		l.currentMaxLatency = 0
+		l.metricLock.Unlock()
+
+		time.Sleep(30 * time.Second)
 	}
 }
 
