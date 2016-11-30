@@ -13,34 +13,39 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	expireTime := db.clock.Now().Round(time.Second).UnixNano()
-	rows, err := db.all(logger, db.db, domainsTable,
-		domainColumns, NoLockRow,
-		"expire_time > ?", expireTime,
-	)
-	if err != nil {
-		logger.Error("failed-query", err)
-		return nil, db.convertSQLError(err)
-	}
-
-	defer rows.Close()
-
-	var domain string
 	var results []string
-	for rows.Next() {
-		err = rows.Scan(&domain)
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		expireTime := db.clock.Now().Round(time.Second).UnixNano()
+		rows, err := db.all(logger, tx, domainsTable,
+			domainColumns, NoLockRow,
+			"expire_time > ?", expireTime,
+		)
 		if err != nil {
-			logger.Error("failed-scan-row", err)
-			return nil, db.convertSQLError(err)
+			logger.Error("failed-query", err)
+			return db.convertSQLError(err)
 		}
-		results = append(results, domain)
-	}
 
-	if rows.Err() != nil {
-		logger.Error("failed-fetching-row", err)
-		return nil, db.convertSQLError(err)
-	}
-	return results, nil
+		defer rows.Close()
+
+		var domain string
+		for rows.Next() {
+			err = rows.Scan(&domain)
+			if err != nil {
+				logger.Error("failed-scan-row", err)
+				return db.convertSQLError(err)
+			}
+			results = append(results, domain)
+		}
+
+		if rows.Err() != nil {
+			logger.Error("failed-fetching-row", err)
+			return db.convertSQLError(err)
+		}
+
+		return nil
+	})
+
+	return results, err
 }
 
 func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) error {

@@ -24,12 +24,15 @@ func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) e
 
 func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string, error) {
 	var value string
-	err := db.one(logger, db.db, "configurations",
-		ColumnList{"value"}, NoLockRow,
-		"id = ?", key,
-	).Scan(&value)
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		return db.one(logger, tx, "configurations",
+			ColumnList{"value"}, NoLockRow,
+			"id = ?", key,
+		).Scan(&value)
+	})
+
 	if err != nil {
-		logger.Error("failed-fetching-config-value", err, lager.Data{"key": key})
+		logger.Error("failed-fetching-configuration-value", err, lager.Data{"key": key})
 		return "", models.ErrResourceNotFound
 	}
 

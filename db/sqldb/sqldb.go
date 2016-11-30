@@ -125,7 +125,7 @@ func (db *SQLDB) convertSQLError(err error) *models.Error {
 		}
 	}
 
-	return models.ErrUnknownError
+	return models.ConvertError(err)
 }
 
 func (db *SQLDB) convertMySQLError(err *mysql.MySQLError) *models.Error {

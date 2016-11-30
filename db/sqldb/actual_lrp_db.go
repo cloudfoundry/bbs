@@ -9,6 +9,26 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRPGroup, error) {
+	var groups []*models.ActualLRPGroup
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		rows, err := db.all(logger, db.db, actualLRPsTable,
+			actualLRPColumns, NoLockRow,
+			wheres, whereBindinngs...,
+		)
+		if err != nil {
+			logger.Error("failed-query", err)
+			return db.convertSQLError(err)
+		}
+		defer rows.Close()
+		groups, err = db.scanAndCleanupActualLRPs(logger, db.db, rows)
+		return err
+	})
+
+	return groups, err
+
+}
+
 func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Debug("starting")
@@ -26,17 +46,7 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 		wheres = append(wheres, "cell_id = ?")
 		values = append(values, filter.CellID)
 	}
-
-	rows, err := db.all(logger, db.db, actualLRPsTable,
-		actualLRPColumns, NoLockRow,
-		strings.Join(wheres, " AND "), values...,
-	)
-	if err != nil {
-		logger.Error("failed-query", err)
-		return nil, db.convertSQLError(err)
-	}
-	defer rows.Close()
-	return db.scanAndCleanupActualLRPs(logger, db.db, rows)
+	return db.getActualLRPS(logger, strings.Join(wheres, " AND "), values...)
 }
 
 func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
@@ -44,16 +54,7 @@ func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	rows, err := db.all(logger, db.db, actualLRPsTable,
-		actualLRPColumns, NoLockRow,
-		"process_guid = ?", processGuid,
-	)
-	if err != nil {
-		logger.Error("failed-select-query", err)
-		return nil, db.convertSQLError(err)
-	}
-	defer rows.Close()
-	return db.scanAndCleanupActualLRPs(logger, db.db, rows)
+	return db.getActualLRPS(logger, "process_guid = ?", processGuid)
 }
 
 func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
@@ -61,16 +62,7 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	rows, err := db.all(logger, db.db, actualLRPsTable,
-		actualLRPColumns, NoLockRow,
-		"process_guid = ? AND instance_index = ?", processGuid, index,
-	)
-	if err != nil {
-		logger.Error("failed-select-query", err)
-		return nil, db.convertSQLError(err)
-	}
-	defer rows.Close()
-	groups, err := db.scanAndCleanupActualLRPs(logger, db.db, rows)
+	groups, err := db.getActualLRPS(logger, "process_guid = ? AND instance_index = ?", processGuid, index)
 	if err != nil {
 		return nil, err
 	}
@@ -95,18 +87,23 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 	}
 
 	now := db.clock.Now().UnixNano()
-	_, err = db.insert(logger, db.db, actualLRPsTable,
-		SQLAttributes{
-			"process_guid":           key.ProcessGuid,
-			"instance_index":         key.Index,
-			"domain":                 key.Domain,
-			"state":                  models.ActualLRPStateUnclaimed,
-			"since":                  now,
-			"net_info":               []byte{},
-			"modification_tag_epoch": guid,
-			"modification_tag_index": 0,
-		},
-	)
+	err = db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		_, err := db.insert(logger, db.db, actualLRPsTable,
+			SQLAttributes{
+				"process_guid":           key.ProcessGuid,
+				"instance_index":         key.Index,
+				"domain":                 key.Domain,
+				"state":                  models.ActualLRPStateUnclaimed,
+				"since":                  now,
+				"net_info":               []byte{},
+				"modification_tag_epoch": guid,
+				"modification_tag_index": 0,
+			},
+		)
+
+		return err
+	})
+
 	if err != nil {
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
 		return nil, db.convertSQLError(err)

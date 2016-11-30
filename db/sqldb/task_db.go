@@ -19,25 +19,27 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 		return err
 	}
 
-	now := db.clock.Now().UnixNano()
+	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		now := db.clock.Now().UnixNano()
 
-	_, err = db.insert(logger, db.db, tasksTable,
-		SQLAttributes{
-			"guid":               taskGuid,
-			"domain":             domain,
-			"created_at":         now,
-			"updated_at":         now,
-			"first_completed_at": 0,
-			"state":              models.Task_Pending,
-			"task_definition":    taskDefData,
-		},
-	)
-	if err != nil {
-		logger.Error("failed-inserting-task", err)
-		return db.convertSQLError(err)
-	}
+		_, err = db.insert(logger, tx, tasksTable,
+			SQLAttributes{
+				"guid":               taskGuid,
+				"domain":             domain,
+				"created_at":         now,
+				"updated_at":         now,
+				"first_completed_at": 0,
+				"state":              models.Task_Pending,
+				"task_definition":    taskDefData,
+			},
+		)
+		if err != nil {
+			logger.Error("failed-inserting-task", err)
+			return db.convertSQLError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
@@ -58,32 +60,37 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 		values = append(values, filter.CellID)
 	}
 
-	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, NoLockRow,
-		strings.Join(wheres, " AND "), values...,
-	)
-	if err != nil {
-		logger.Error("failed-query", err)
-		return nil, db.convertSQLError(err)
-	}
-	defer rows.Close()
-
 	results := []*models.Task{}
-	for rows.Next() {
-		task, err := db.fetchTask(logger, rows, db.db)
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		rows, err := db.all(logger, tx, tasksTable,
+			taskColumns, NoLockRow,
+			strings.Join(wheres, " AND "), values...,
+		)
 		if err != nil {
-			logger.Error("failed-fetch", err)
-			return nil, err
+			logger.Error("failed-query", err)
+			return db.convertSQLError(err)
 		}
-		results = append(results, task)
-	}
+		defer rows.Close()
 
-	if rows.Err() != nil {
-		logger.Error("failed-getting-next-row", rows.Err())
-		return nil, db.convertSQLError(rows.Err())
-	}
+		for rows.Next() {
+			task, err := db.fetchTask(logger, rows, db.db)
+			if err != nil {
+				logger.Error("failed-fetch", err)
+				return err
+			}
+			results = append(results, task)
+		}
 
-	return results, nil
+		if rows.Err() != nil {
+			logger.Error("failed-getting-next-row", rows.Err())
+			return db.convertSQLError(rows.Err())
+		}
+
+		return nil
+	})
+
+	return results, err
 }
 
 func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
@@ -91,11 +98,20 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.one(logger, db.db, tasksTable,
-		taskColumns, NoLockRow,
-		"guid = ?", taskGuid,
-	)
-	return db.fetchTask(logger, row, db.db)
+	var task *models.Task
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		row := db.one(logger, tx, tasksTable,
+			taskColumns, NoLockRow,
+			"guid = ?", taskGuid,
+		)
+		task, err = db.fetchTask(logger, row, db.db)
+
+		return err
+	})
+
+	return task, err
 }
 
 func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, error) {
@@ -354,9 +370,14 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 		&failureReason,
 		&taskDefData,
 	)
+
+	if err == sql.ErrNoRows {
+		return nil, models.ErrResourceNotFound
+	}
+
 	if err != nil {
 		logger.Error("failed-scanning-row", err)
-		return nil, models.ErrResourceNotFound
+		return nil, err
 	}
 
 	var taskDef models.TaskDefinition

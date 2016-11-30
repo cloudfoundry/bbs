@@ -87,11 +87,20 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	row := db.one(logger, db.db, desiredLRPsTable,
-		desiredLRPColumns, NoLockRow,
-		"process_guid = ?", processGuid,
-	)
-	return db.fetchDesiredLRP(logger, row)
+	var desiredLRP *models.DesiredLRP
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		row := db.one(logger, tx, desiredLRPsTable,
+			desiredLRPColumns, NoLockRow,
+			"process_guid = ?", processGuid,
+		)
+
+		desiredLRP, err = db.fetchDesiredLRP(logger, row)
+		return err
+	})
+
+	return desiredLRP, err
 }
 
 func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
@@ -107,32 +116,37 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		values = append(values, filter.Domain)
 	}
 
-	rows, err := db.all(logger, db.db, desiredLRPsTable,
-		desiredLRPColumns, NoLockRow,
-		strings.Join(wheres, " AND "), values...,
-	)
-	if err != nil {
-		logger.Error("failed-query", err)
-		return nil, db.convertSQLError(err)
-	}
-	defer rows.Close()
-
 	results := []*models.DesiredLRP{}
-	for rows.Next() {
-		desiredLRP, err := db.fetchDesiredLRP(logger, rows)
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		rows, err := db.all(logger, tx, desiredLRPsTable,
+			desiredLRPColumns, NoLockRow,
+			strings.Join(wheres, " AND "), values...,
+		)
 		if err != nil {
-			logger.Error("failed-reading-row", err)
-			continue
+			logger.Error("failed-query", err)
+			return db.convertSQLError(err)
 		}
-		results = append(results, desiredLRP)
-	}
+		defer rows.Close()
 
-	if rows.Err() != nil {
-		logger.Error("failed-fetching-row", rows.Err())
-		return nil, db.convertSQLError(rows.Err())
-	}
+		for rows.Next() {
+			desiredLRP, err := db.fetchDesiredLRP(logger, rows)
+			if err != nil {
+				logger.Error("failed-reading-row", err)
+				continue
+			}
+			results = append(results, desiredLRP)
+		}
 
-	return results, nil
+		if rows.Err() != nil {
+			logger.Error("failed-fetching-row", rows.Err())
+			return db.convertSQLError(rows.Err())
+		}
+
+		return nil
+	})
+
+	return results, err
 }
 
 func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
@@ -148,32 +162,37 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 		values = append(values, filter.Domain)
 	}
 
-	rows, err := db.all(logger, db.db, desiredLRPsTable,
-		schedulingInfoColumns, NoLockRow,
-		strings.Join(wheres, " AND "), values...,
-	)
-	if err != nil {
-		logger.Error("failed-query", err)
-		return nil, db.convertSQLError(err)
-	}
-	defer rows.Close()
-
 	results := []*models.DesiredLRPSchedulingInfo{}
-	for rows.Next() {
-		desiredLRPSchedulingInfo, err := db.fetchDesiredLRPSchedulingInfo(logger, rows)
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		rows, err := db.all(logger, tx, desiredLRPsTable,
+			schedulingInfoColumns, NoLockRow,
+			strings.Join(wheres, " AND "), values...,
+		)
 		if err != nil {
-			logger.Error("failed-reading-row", err)
-			continue
+			logger.Error("failed-query", err)
+			return db.convertSQLError(err)
 		}
-		results = append(results, desiredLRPSchedulingInfo)
-	}
+		defer rows.Close()
 
-	if rows.Err() != nil {
-		logger.Error("failed-fetching-row", rows.Err())
-		return nil, db.convertSQLError(rows.Err())
-	}
+		for rows.Next() {
+			desiredLRPSchedulingInfo, err := db.fetchDesiredLRPSchedulingInfo(logger, rows)
+			if err != nil {
+				logger.Error("failed-reading-row", err)
+				continue
+			}
+			results = append(results, desiredLRPSchedulingInfo)
+		}
 
-	return results, nil
+		if rows.Err() != nil {
+			logger.Error("failed-fetching-row", rows.Err())
+			return db.convertSQLError(rows.Err())
+		}
+
+		return nil
+	})
+
+	return results, err
 }
 
 func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
@@ -282,7 +301,9 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	values = append(values, dest...)
 
 	err := scanner.Scan(values...)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return nil, models.ErrResourceNotFound
+	} else if err != nil {
 		logger.Error("failed-scanning", err)
 		return nil, err
 	}
@@ -338,7 +359,7 @@ func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*mode
 	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData)
 	if err != nil {
 		logger.Error("failed-fetching-run-info", err)
-		return nil, models.ErrResourceNotFound
+		return nil, err
 	}
 
 	var runInfo models.DesiredLRPRunInfo
