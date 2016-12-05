@@ -81,11 +81,9 @@ var _ = SynchronizedBeforeSuite(
 		etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
 		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
 
-		if test_helpers.UseSQL() {
-			dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
-			sqlRunner = test_helpers.NewSQLRunner(dbName)
-			sqlProcess = ginkgomon.Invoke(sqlRunner)
-		}
+		dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
+		sqlRunner = test_helpers.NewSQLRunner(dbName)
+		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
 		consulRunner = consulrunner.NewClusterRunner(
 			9001+config.GinkgoConfig.ParallelNode*consulrunner.PortOffsetLength,
@@ -158,22 +156,20 @@ var _ = BeforeEach(func() {
 	client = bbs.NewClient(bbsURL.String())
 
 	bbsArgs = testrunner.Args{
-		Address:               bbsAddress,
-		AdvertiseURL:          bbsURL.String(),
-		AuctioneerAddress:     auctioneerServer.URL(),
-		ConsulCluster:         consulRunner.ConsulCluster(),
-		DropsondePort:         port,
-		EtcdCluster:           etcdUrl,
-		MetricsReportInterval: 10 * time.Millisecond,
-		HealthAddress:         bbsHealthAddress,
+		Address:                  bbsAddress,
+		AdvertiseURL:             bbsURL.String(),
+		AuctioneerAddress:        auctioneerServer.URL(),
+		ConsulCluster:            consulRunner.ConsulCluster(),
+		DropsondePort:            port,
+		EtcdCluster:              etcdUrl, // etcd is still being used to test version migration in migration_version_test.go
+		DatabaseDriver:           sqlRunner.DriverName(),
+		DatabaseConnectionString: sqlRunner.ConnectionString(),
+		MetricsReportInterval:    10 * time.Millisecond,
+		HealthAddress:            bbsHealthAddress,
 
 		EncryptionKeys:         []string{"label:key"},
 		ActiveKeyLabel:         "label",
 		ConvergeRepeatInterval: time.Hour,
-	}
-	if test_helpers.UseSQL() {
-		bbsArgs.DatabaseDriver = sqlRunner.DriverName()
-		bbsArgs.DatabaseConnectionString = sqlRunner.ConnectionString()
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
@@ -198,7 +194,5 @@ var _ = AfterEach(func() {
 	testMetricsListener.Close()
 	Eventually(testMetricsChan).Should(BeClosed())
 
-	if test_helpers.UseSQL() {
-		sqlRunner.Reset()
-	}
+	sqlRunner.Reset()
 })

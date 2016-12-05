@@ -46,10 +46,6 @@ func TestSql(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	if !test_helpers.UseSQL() {
-		return
-	}
-
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
 	fakeGUIDProvider = &guidproviderfakes.FakeGUIDProvider{}
@@ -130,19 +126,17 @@ var _ = AfterEach(func() {
 })
 
 var _ = AfterSuite(func() {
-	if test_helpers.UseSQL() {
-		if migrationProcess != nil {
-			migrationProcess.Signal(os.Kill)
-		}
-
-		Expect(db.Close()).NotTo(HaveOccurred())
-		db, err := sql.Open(dbDriverName, dbBaseConnectionString)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(db.Ping()).NotTo(HaveOccurred())
-		_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
-		Expect(err).NotTo(HaveOccurred())
-		Expect(db.Close()).NotTo(HaveOccurred())
+	if migrationProcess != nil {
+		migrationProcess.Signal(os.Kill)
 	}
+
+	Expect(db.Close()).NotTo(HaveOccurred())
+	db, err := sql.Open(dbDriverName, dbBaseConnectionString)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(db.Ping()).NotTo(HaveOccurred())
+	_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	Expect(err).NotTo(HaveOccurred())
+	Expect(db.Close()).NotTo(HaveOccurred())
 })
 
 func truncateTables(db *sql.DB) {

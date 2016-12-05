@@ -85,7 +85,7 @@ var _ = Describe("Evacuation", func() {
 					actualLRP.ActualLRPInstanceKey.InstanceGuid = "i am different here me roar"
 				})
 
-				It("persists the evacuating lrp in etcd", func() {
+				It("persists the evacuating lrp", func() {
 					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -103,7 +103,7 @@ var _ = Describe("Evacuation", func() {
 					}
 				})
 
-				It("persists the evacuating lrp in etcd", func() {
+				It("persists the evacuating lrp", func() {
 					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
 					Expect(err).NotTo(HaveOccurred())
 
