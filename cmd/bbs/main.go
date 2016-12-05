@@ -429,12 +429,7 @@ func main() {
 		exitChan,
 	)
 
-	metricsNotifier := metrics.NewPeriodicMetronNotifier(
-		logger,
-		*reportInterval,
-		etcdOptions,
-		clock,
-	)
+	metricsNotifier := metrics.NewPeriodicMetronNotifier(logger)
 
 	retirer := controllers.NewActualLRPRetirer(activeDB, actualHub, repClientFactory, serviceClient)
 	lrpConvergenceController := controllers.NewLRPConvergenceController(logger, activeDB, actualHub, auctioneerClient, serviceClient, retirer, *convergenceWorkers)
