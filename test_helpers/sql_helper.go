@@ -12,12 +12,16 @@ func UseSQL() bool {
 	return UseMySQL() || UsePostgres()
 }
 
+func driver() string {
+	return os.Getenv("SQL_FLAVOR")
+}
+
 func UseMySQL() bool {
-	return os.Getenv("USE_SQL") == "mysql"
+	return driver() == "mysql"
 }
 
 func UsePostgres() bool {
-	return os.Getenv("USE_SQL") == "postgres"
+	return driver() == "postgres"
 }
 
 func NewSQLRunner(dbName string) sqlrunner.SQLRunner {
@@ -28,7 +32,7 @@ func NewSQLRunner(dbName string) sqlrunner.SQLRunner {
 	} else if UsePostgres() {
 		sqlRunner = sqlrunner.NewPostgresRunner(dbName)
 	} else {
-		panic("driver not supported")
+		panic(fmt.Sprintf("driver '%s' is not supported", driver()))
 	}
 
 	return sqlRunner

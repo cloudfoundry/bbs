@@ -25,7 +25,7 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 
 		BeforeEach(func() {
 			fakeClock = fakeclock.NewFakeClock(time.Now())
-			flavor = os.Getenv("USE_SQL")
+			flavor = os.Getenv("SQL_FLAVOR")
 			rawSQLDB.Exec("DROP TABLE domains;")
 			rawSQLDB.Exec("DROP TABLE tasks;")
 			rawSQLDB.Exec("DROP TABLE desired_lrps;")

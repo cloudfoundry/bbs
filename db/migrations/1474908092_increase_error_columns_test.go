@@ -22,7 +22,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 		)
 
 		BeforeEach(func() {
-			flavor = os.Getenv("USE_SQL")
+			flavor = os.Getenv("SQL_FLAVOR")
 			rawSQLDB.Exec("DROP TABLE domains;")
 			rawSQLDB.Exec("DROP TABLE tasks;")
 			rawSQLDB.Exec("DROP TABLE desired_lrps;")

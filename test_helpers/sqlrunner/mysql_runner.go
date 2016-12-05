@@ -48,6 +48,7 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	_, err = m.db.Exec(fmt.Sprintf("DROP DATABASE %s", m.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Close()).To(Succeed())
+	m.db = nil
 
 	return nil
 }
