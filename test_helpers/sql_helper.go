@@ -8,20 +8,29 @@ import (
 	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
 )
 
+const (
+	mysql_flavor    = "mysql"
+	postgres_flavor = "postgres"
+)
+
 func UseSQL() bool {
-	return UseMySQL() || UsePostgres()
+	return true
 }
 
 func driver() string {
-	return os.Getenv("SQL_FLAVOR")
+	flavor := os.Getenv("SQL_FLAVOR")
+	if flavor == "" {
+		flavor = postgres_flavor
+	}
+	return flavor
 }
 
 func UseMySQL() bool {
-	return driver() == "mysql"
+	return driver() == mysql_flavor
 }
 
 func UsePostgres() bool {
-	return driver() == "postgres"
+	return driver() == postgres_flavor
 }
 
 func NewSQLRunner(dbName string) sqlrunner.SQLRunner {
