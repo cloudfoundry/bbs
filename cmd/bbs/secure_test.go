@@ -6,6 +6,7 @@ import (
 
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -25,13 +26,13 @@ var _ = Describe("Secure", func() {
 		bbsURL.Scheme = "https"
 	})
 
-	JustBeforeEach(func() {
-		client = bbs.NewClient(bbsURL.String())
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
-		bbsProcess = ginkgomon.Invoke(bbsRunner)
-	})
+	Context("when configuring the BBS server for mutual SSL", func() {
+		JustBeforeEach(func() {
+			client = bbs.NewClient(bbsURL.String())
+			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsProcess = ginkgomon.Invoke(bbsRunner)
+		})
 
-	Context("when configuring mutual SSL", func() {
 		BeforeEach(func() {
 			bbsArgs.RequireSSL = true
 			bbsArgs.CAFile = path.Join(basePath, "green-certs", "server-ca.crt")
@@ -78,6 +79,12 @@ var _ = Describe("Secure", func() {
 	})
 
 	Context("when configuring a client without mutual SSL (skipping verification)", func() {
+		JustBeforeEach(func() {
+			client = bbs.NewClient(bbsURL.String())
+			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsProcess = ginkgomon.Invoke(bbsRunner)
+		})
+
 		BeforeEach(func() {
 			bbsArgs.RequireSSL = true
 			bbsArgs.CertFile = path.Join(basePath, "green-certs", "server.crt")
@@ -97,6 +104,35 @@ var _ = Describe("Secure", func() {
 			client, err = bbs.NewSecureSkipVerifyClient(bbsURL.String(), certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(client.Ping(logger)).To(BeFalse())
+		})
+	})
+
+	Context("when configuring the auctioneer client with mutual SSL", func() {
+		BeforeEach(func() {
+			bbsArgs.AuctioneerCACert = path.Join(basePath, "green-certs", "server-ca.crt")
+			bbsArgs.AuctioneerClientCert = path.Join(basePath, "green-certs", "client.crt")
+			bbsArgs.AuctioneerClientKey = path.Join(basePath, "green-certs", "client.key")
+		})
+
+		JustBeforeEach(func() {
+			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsProcess = ifrit.Background(bbsRunner)
+		})
+
+		It("works", func() {
+			Eventually(bbsProcess.Ready()).Should(BeClosed())
+			Consistently(bbsProcess.Wait()).ShouldNot(Receive())
+		})
+
+		Context("when the auctioneer client is configured incorrectly", func() {
+			BeforeEach(func() {
+				bbsArgs.AuctioneerClientCert = ""
+			})
+
+			It("exits with an error", func() {
+				Eventually(bbsProcess.Wait()).Should(Receive())
+				Consistently(bbsProcess.Ready()).ShouldNot(BeClosed())
+			})
 		})
 	})
 })

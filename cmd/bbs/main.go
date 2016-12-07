@@ -54,13 +54,13 @@ import (
 var accessLogPath = flag.String(
 	"accessLogPath",
 	"",
-	"Location of the access log",
+	"location of the access log",
 )
 
 var listenAddress = flag.String(
 	"listenAddress",
 	"",
-	"The host:port that the server is bound to.",
+	"the host:port that the server is bound to",
 )
 
 var requireSSL = flag.Bool(
@@ -90,25 +90,43 @@ var keyFile = flag.String(
 var healthAddress = flag.String(
 	"healthAddress",
 	"",
-	"The host:port that the healthcheck server is bound to.",
+	"the host:port that the healthcheck server is bound to",
 )
 
 var advertiseURL = flag.String(
 	"advertiseURL",
 	"",
-	"The URL to advertise to clients",
+	"the URL to advertise to clients",
 )
 
 var communicationTimeout = flag.Duration(
 	"communicationTimeout",
 	10*time.Second,
-	"Timeout applied to all HTTP requests.",
+	"timeout applied to all HTTP requests",
 )
 
 var auctioneerAddress = flag.String(
 	"auctioneerAddress",
 	"",
-	"The address to the auctioneer api server",
+	"the address to the auctioneer api server",
+)
+
+var auctioneerCACert = flag.String(
+	"auctioneerCACert",
+	"",
+	"the path to the ca certificate used for mutual auth TLS with the auctioneer",
+)
+
+var auctioneerClientCert = flag.String(
+	"auctioneerClientCert",
+	"",
+	"the path to the client certificate used for mutual auth TLS with the auctioneer",
+)
+
+var auctioneerClientKey = flag.String(
+	"auctioneerClientKey",
+	"",
+	"the path to the client key used for mutual auth TLS with the auctioneer",
 )
 
 var sessionName = flag.String(
@@ -150,25 +168,25 @@ var dropsondePort = flag.Int(
 var convergenceWorkers = flag.Int(
 	"convergenceWorkers",
 	20,
-	"Max concurrency for convergence",
+	"max concurrency for convergence",
 )
 
 var updateWorkers = flag.Int(
 	"updateWorkers",
 	1000,
-	"Max concurrency for etcd updates in a single request",
+	"max concurrency for etcd updates in a single request",
 )
 
 var taskCallBackWorkers = flag.Int(
 	"taskCallBackWorkers",
 	1000,
-	"Max concurrency for task callback requests",
+	"max concurrency for task callback requests",
 )
 
 var desiredLRPCreationTimeout = flag.Duration(
 	"desiredLRPCreationTimeout",
 	1*time.Minute,
-	"Expected maximum time to create all components of a desired LRP",
+	"expected maximum time to create all components of a desired LRP",
 )
 
 var databaseConnectionString = flag.String(
@@ -180,7 +198,7 @@ var databaseConnectionString = flag.String(
 var maxDatabaseConnections = flag.Int(
 	"maxDatabaseConnections",
 	200,
-	"Max numbers of SQL database connections",
+	"max numbers of SQL database connections",
 )
 
 var databaseDriver = flag.String(
@@ -597,6 +615,15 @@ func initializeAuctioneerClient(logger lager.Logger) auctioneer.Client {
 	if *auctioneerAddress == "" {
 		logger.Fatal("auctioneer-address-validation-failed", errors.New("auctioneerAddress is required"))
 	}
+
+	if *auctioneerCACert != "" || *auctioneerClientCert != "" || *auctioneerClientKey != "" {
+		client, err := auctioneer.NewSecureClient(*auctioneerAddress, *auctioneerCACert, *auctioneerClientCert, *auctioneerClientKey)
+		if err != nil {
+			logger.Fatal("failed-to-construct-auctioneer-client", err)
+		}
+		return client
+	}
+
 	return auctioneer.NewClient(*auctioneerAddress)
 }
 

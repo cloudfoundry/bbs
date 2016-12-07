@@ -40,12 +40,19 @@ type Args struct {
 	KickTaskDuration            time.Duration
 	ExpireCompletedTaskDuration time.Duration
 	ExpirePendingTaskDuration   time.Duration
+
+	AuctioneerCACert     string
+	AuctioneerClientCert string
+	AuctioneerClientKey  string
 }
 
 func (args Args) ArgSlice() []string {
 	arguments := []string{
 		"-advertiseURL", args.AdvertiseURL,
 		"-auctioneerAddress", args.AuctioneerAddress,
+		"-auctioneerCACert", args.AuctioneerCACert,
+		"-auctioneerClientCert", args.AuctioneerClientCert,
+		"-auctioneerClientKey", args.AuctioneerClientKey,
 		"-consulCluster", args.ConsulCluster,
 		"-dropsondePort", strconv.Itoa(args.DropsondePort),
 		"-etcdCaFile", args.EtcdCACert,
