@@ -31,6 +31,8 @@ var (
 	etcdClient  *etcdclient.Client
 	storeClient etcd.StoreClient
 
+	flavor string
+
 	rawSQLDB   *sql.DB
 	sqlProcess ifrit.Process
 	sqlRunner  sqlrunner.SQLRunner
@@ -54,19 +56,18 @@ var _ = BeforeSuite(func() {
 
 	etcdRunner.Start()
 
-	if test_helpers.UseSQL() {
-		dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
-		sqlRunner = test_helpers.NewSQLRunner(dbName)
-		sqlProcess = ginkgomon.Invoke(sqlRunner)
+	dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
+	sqlRunner = test_helpers.NewSQLRunner(dbName)
+	sqlProcess = ginkgomon.Invoke(sqlRunner)
 
-		// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
-		// in diego-release.
-		var err error
+	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
+	// in diego-release.
+	var err error
+	rawSQLDB, err = sql.Open(sqlRunner.DriverName(), sqlRunner.ConnectionString())
+	Expect(err).NotTo(HaveOccurred())
+	Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 
-		rawSQLDB, err = sql.Open(sqlRunner.DriverName(), sqlRunner.ConnectionString())
-		Expect(err).NotTo(HaveOccurred())
-		Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
-	}
+	flavor = sqlRunner.DriverName()
 
 	encryptionKey, err := encryption.NewKey("label", "passphrase")
 	Expect(err).NotTo(HaveOccurred())

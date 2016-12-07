@@ -2,7 +2,6 @@ package migrations_test
 
 import (
 	"crypto/rand"
-	"os"
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
@@ -19,14 +18,12 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 	if test_helpers.UseSQL() {
 		var (
 			mig       migration.Migration
-			flavor    string
 			migErr    error
 			fakeClock *fakeclock.FakeClock
 		)
 
 		BeforeEach(func() {
 			fakeClock = fakeclock.NewFakeClock(time.Now())
-			flavor = os.Getenv("SQL_FLAVOR")
 			rawSQLDB.Exec("DROP TABLE domains;")
 			rawSQLDB.Exec("DROP TABLE tasks;")
 			rawSQLDB.Exec("DROP TABLE desired_lrps;")

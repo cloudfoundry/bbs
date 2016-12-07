@@ -1,7 +1,6 @@
 package migrations_test
 
 import (
-	"os"
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
@@ -16,12 +15,10 @@ var _ = Describe("Increase Run Info Column Migration", func() {
 	if test_helpers.UseSQL() {
 		var (
 			migration    migration.Migration
-			flavor       string
 			migrationErr error
 		)
 
 		BeforeEach(func() {
-			flavor = os.Getenv("SQL_FLAVOR")
 			rawSQLDB.Exec("DROP TABLE domains;")
 			rawSQLDB.Exec("DROP TABLE tasks;")
 			rawSQLDB.Exec("DROP TABLE desired_lrps;")

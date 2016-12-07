@@ -51,7 +51,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 				migration.SetRawSQLDB(rawSQLDB)
 				migration.SetCryptor(cryptor)
 				migration.SetClock(fakeClock)
-				migration.SetDBFlavor(sqlRunner.DriverName())
+				migration.SetDBFlavor(flavor)
 				migrationErr = migration.Up(logger)
 			})
 
