@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	mysql_flavor    = "mysql"
-	postgres_flavor = "postgres"
+	mysqlFlavor    = "mysql"
+	postgresFlavor = "postgres"
 )
 
 func UseSQL() bool {
@@ -20,17 +20,17 @@ func UseSQL() bool {
 func driver() string {
 	flavor := os.Getenv("SQL_FLAVOR")
 	if flavor == "" {
-		flavor = postgres_flavor
+		flavor = postgresFlavor
 	}
 	return flavor
 }
 
 func UseMySQL() bool {
-	return driver() == mysql_flavor
+	return driver() == mysqlFlavor
 }
 
 func UsePostgres() bool {
-	return driver() == postgres_flavor
+	return driver() == postgresFlavor
 }
 
 func NewSQLRunner(dbName string) sqlrunner.SQLRunner {
