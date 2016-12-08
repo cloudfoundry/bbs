@@ -62,7 +62,7 @@ func (h *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.
 
 	logger.Debug("start-task-auction-request")
 	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDefinition)
-	err = h.auctioneerClient.RequestTaskAuctions([]*auctioneer.TaskStartRequest{&taskStartRequest})
+	err = h.auctioneerClient.RequestTaskAuctions(logger, []*auctioneer.TaskStartRequest{&taskStartRequest})
 	if err != nil {
 		logger.Error("failed-requesting-task-auction", err)
 		// The creation succeeded, the auction request error can be dropped
@@ -203,7 +203,7 @@ func (h *TaskController) ConvergeTasks(
 
 	if len(tasksToAuction) > 0 {
 		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
-		err = h.auctioneerClient.RequestTaskAuctions(tasksToAuction)
+		err = h.auctioneerClient.RequestTaskAuctions(logger, tasksToAuction)
 		if err != nil {
 			taskGuids := make([]string, len(tasksToAuction))
 			for i, task := range tasksToAuction {

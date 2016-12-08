@@ -128,7 +128,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(logger lager.Logger, w http.R
 		schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
 		startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedInfo, int(actualLRPKey.Index))
 		logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
-		err = h.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&startRequest})
+		err = h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&startRequest})
 		logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
 		if err != nil {
 			logger.Error("failed-requesting-auction", err)

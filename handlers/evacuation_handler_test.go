@@ -258,7 +258,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actual.Index))
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-			startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
 		})
 
@@ -924,7 +924,7 @@ var _ = Describe("Evacuation Handlers", func() {
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
 					})
 
@@ -1012,7 +1012,7 @@ var _ = Describe("Evacuation Handlers", func() {
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
 					})
 

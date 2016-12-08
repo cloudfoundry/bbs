@@ -481,7 +481,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 						Expect(processGuid).To(Equal("process-guid"))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 						Expect(startRequests).To(HaveLen(1))
 						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, 1)

@@ -129,6 +129,12 @@ var auctioneerClientKey = flag.String(
 	"the path to the client key used for mutual auth TLS with the auctioneer",
 )
 
+var auctioneerRequireTLS = flag.Bool(
+	"auctioneerRequireTLS",
+	false,
+	"whether or not to require tls when communicating with the auctioneer",
+)
+
 var sessionName = flag.String(
 	"sessionName",
 	"bbs",
@@ -617,7 +623,7 @@ func initializeAuctioneerClient(logger lager.Logger) auctioneer.Client {
 	}
 
 	if *auctioneerCACert != "" || *auctioneerClientCert != "" || *auctioneerClientKey != "" {
-		client, err := auctioneer.NewSecureClient(*auctioneerAddress, *auctioneerCACert, *auctioneerClientCert, *auctioneerClientKey)
+		client, err := auctioneer.NewSecureClient(*auctioneerAddress, *auctioneerCACert, *auctioneerClientCert, *auctioneerClientKey, *auctioneerRequireTLS)
 		if err != nil {
 			logger.Fatal("failed-to-construct-auctioneer-client", err)
 		}

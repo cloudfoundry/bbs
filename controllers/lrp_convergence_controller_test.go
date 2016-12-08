@@ -173,7 +173,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		expectedStartRequests := append(keysToAuction, &unclaimedStartRequest1)
 		expectedStartRequests = append(expectedStartRequests, &unclaimedStartRequest2)
 
-		startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+		_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 		Expect(startAuctions).To(HaveLen(4))
 		Expect(startAuctions).To(ConsistOf(expectedStartRequests))
 	})
@@ -236,7 +236,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("auctions off the returned keys", func() {
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-			startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(2))
 			Expect(startAuctions).To(ConsistOf(keysToAuction))
 		})
