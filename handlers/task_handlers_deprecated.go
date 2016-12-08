@@ -16,7 +16,7 @@ func (h *TaskHandler) commonTasks(logger lager.Logger, w http.ResponseWriter, re
 	request := &models.TasksRequest{}
 	response := &models.TasksResponse{}
 
-	defer exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -57,7 +57,7 @@ func (h *TaskHandler) commonTaskByGuid(logger lager.Logger, w http.ResponseWrite
 	request := &models.TaskByGuidRequest{}
 	response := &models.TaskResponse{}
 
-	defer exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequest(logger, req, request)
@@ -119,7 +119,7 @@ func (h *TaskHandler) DesireTask_r0(logger lager.Logger, w http.ResponseWriter, 
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
-	defer exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	err = parseRequestForDesireTask_r0(logger, req, request)
