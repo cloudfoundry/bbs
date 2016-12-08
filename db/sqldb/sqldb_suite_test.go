@@ -94,10 +94,6 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = BeforeEach(func() {
-	if !test_helpers.UseSQL() {
-		Skip("SQL Backend not available")
-	}
-
 	migrationsDone := make(chan struct{})
 
 	migrationManager := migration.NewManager(logger,
@@ -119,10 +115,8 @@ var _ = BeforeEach(func() {
 })
 
 var _ = AfterEach(func() {
-	if test_helpers.UseSQL() {
-		fakeGUIDProvider.NextGUIDReturns("", nil)
-		truncateTables(db)
-	}
+	fakeGUIDProvider.NextGUIDReturns("", nil)
+	truncateTables(db)
 })
 
 var _ = AfterSuite(func() {

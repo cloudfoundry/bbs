@@ -81,10 +81,8 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	etcdRunner.Stop()
 
-	if test_helpers.UseSQL() {
-		Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
-		ginkgomon.Kill(sqlProcess, 5*time.Second)
-	}
+	Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
+	ginkgomon.Kill(sqlProcess, 5*time.Second)
 })
 
 var _ = BeforeEach(func() {
@@ -95,7 +93,5 @@ var _ = BeforeEach(func() {
 
 	storeClient = etcd.NewStoreClient(etcdClient)
 
-	if test_helpers.UseSQL() {
-		sqlRunner.Reset()
-	}
+	sqlRunner.Reset()
 })
