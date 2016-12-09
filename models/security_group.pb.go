@@ -10,9 +10,6 @@ import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import strings "strings"
-import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
-import sort "sort"
-import strconv "strconv"
 import reflect "reflect"
 
 import io "io"
@@ -302,169 +299,151 @@ func valueToGoStringSecurityGroup(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringSecurityGroup(m github_com_gogo_protobuf_proto.Message) string {
-	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
-	if e == nil {
-		return "nil"
-	}
-	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
-	keys := make([]int, 0, len(e))
-	for k := range e {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	ss := []string{}
-	for _, k := range keys {
-		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
-	}
-	s += strings.Join(ss, ",") + "})"
-	return s
-}
-func (m *PortRange) Marshal() (data []byte, err error) {
+func (m *PortRange) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
 	if err != nil {
 		return nil, err
 	}
-	return data[:n], nil
+	return dAtA[:n], nil
 }
 
-func (m *PortRange) MarshalTo(data []byte) (int, error) {
+func (m *PortRange) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0x8
+	dAtA[i] = 0x8
 	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.Start))
-	data[i] = 0x10
+	i = encodeVarintSecurityGroup(dAtA, i, uint64(m.Start))
+	dAtA[i] = 0x10
 	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.End))
+	i = encodeVarintSecurityGroup(dAtA, i, uint64(m.End))
 	return i, nil
 }
 
-func (m *ICMPInfo) Marshal() (data []byte, err error) {
+func (m *ICMPInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
 	if err != nil {
 		return nil, err
 	}
-	return data[:n], nil
+	return dAtA[:n], nil
 }
 
-func (m *ICMPInfo) MarshalTo(data []byte) (int, error) {
+func (m *ICMPInfo) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0x8
+	dAtA[i] = 0x8
 	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.Type))
-	data[i] = 0x10
+	i = encodeVarintSecurityGroup(dAtA, i, uint64(m.Type))
+	dAtA[i] = 0x10
 	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(m.Code))
+	i = encodeVarintSecurityGroup(dAtA, i, uint64(m.Code))
 	return i, nil
 }
 
-func (m *SecurityGroupRule) Marshal() (data []byte, err error) {
+func (m *SecurityGroupRule) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
 	if err != nil {
 		return nil, err
 	}
-	return data[:n], nil
+	return dAtA[:n], nil
 }
 
-func (m *SecurityGroupRule) MarshalTo(data []byte) (int, error) {
+func (m *SecurityGroupRule) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0xa
+	dAtA[i] = 0xa
 	i++
-	i = encodeVarintSecurityGroup(data, i, uint64(len(m.Protocol)))
-	i += copy(data[i:], m.Protocol)
+	i = encodeVarintSecurityGroup(dAtA, i, uint64(len(m.Protocol)))
+	i += copy(dAtA[i:], m.Protocol)
 	if len(m.Destinations) > 0 {
 		for _, s := range m.Destinations {
-			data[i] = 0x12
+			dAtA[i] = 0x12
 			i++
 			l = len(s)
 			for l >= 1<<7 {
-				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
 				l >>= 7
 				i++
 			}
-			data[i] = uint8(l)
+			dAtA[i] = uint8(l)
 			i++
-			i += copy(data[i:], s)
+			i += copy(dAtA[i:], s)
 		}
 	}
 	if len(m.Ports) > 0 {
 		for _, num := range m.Ports {
-			data[i] = 0x18
+			dAtA[i] = 0x18
 			i++
-			i = encodeVarintSecurityGroup(data, i, uint64(num))
+			i = encodeVarintSecurityGroup(dAtA, i, uint64(num))
 		}
 	}
 	if m.PortRange != nil {
-		data[i] = 0x22
+		dAtA[i] = 0x22
 		i++
-		i = encodeVarintSecurityGroup(data, i, uint64(m.PortRange.Size()))
-		n1, err := m.PortRange.MarshalTo(data[i:])
+		i = encodeVarintSecurityGroup(dAtA, i, uint64(m.PortRange.Size()))
+		n1, err := m.PortRange.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n1
 	}
 	if m.IcmpInfo != nil {
-		data[i] = 0x2a
+		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintSecurityGroup(data, i, uint64(m.IcmpInfo.Size()))
-		n2, err := m.IcmpInfo.MarshalTo(data[i:])
+		i = encodeVarintSecurityGroup(dAtA, i, uint64(m.IcmpInfo.Size()))
+		n2, err := m.IcmpInfo.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n2
 	}
-	data[i] = 0x30
+	dAtA[i] = 0x30
 	i++
 	if m.Log {
-		data[i] = 1
+		dAtA[i] = 1
 	} else {
-		data[i] = 0
+		dAtA[i] = 0
 	}
 	i++
 	return i, nil
 }
 
-func encodeFixed64SecurityGroup(data []byte, offset int, v uint64) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	data[offset+4] = uint8(v >> 32)
-	data[offset+5] = uint8(v >> 40)
-	data[offset+6] = uint8(v >> 48)
-	data[offset+7] = uint8(v >> 56)
+func encodeFixed64SecurityGroup(dAtA []byte, offset int, v uint64) int {
+	dAtA[offset] = uint8(v)
+	dAtA[offset+1] = uint8(v >> 8)
+	dAtA[offset+2] = uint8(v >> 16)
+	dAtA[offset+3] = uint8(v >> 24)
+	dAtA[offset+4] = uint8(v >> 32)
+	dAtA[offset+5] = uint8(v >> 40)
+	dAtA[offset+6] = uint8(v >> 48)
+	dAtA[offset+7] = uint8(v >> 56)
 	return offset + 8
 }
-func encodeFixed32SecurityGroup(data []byte, offset int, v uint32) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
+func encodeFixed32SecurityGroup(dAtA []byte, offset int, v uint32) int {
+	dAtA[offset] = uint8(v)
+	dAtA[offset+1] = uint8(v >> 8)
+	dAtA[offset+2] = uint8(v >> 16)
+	dAtA[offset+3] = uint8(v >> 24)
 	return offset + 4
 }
-func encodeVarintSecurityGroup(data []byte, offset int, v uint64) int {
+func encodeVarintSecurityGroup(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
-		data[offset] = uint8(v&0x7f | 0x80)
+		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
-	data[offset] = uint8(v)
+	dAtA[offset] = uint8(v)
 	return offset + 1
 }
 func (m *PortRange) Size() (n int) {
@@ -569,8 +548,8 @@ func valueToStringSecurityGroup(v interface{}) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
 }
-func (m *PortRange) Unmarshal(data []byte) error {
-	l := len(data)
+func (m *PortRange) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		preIndex := iNdEx
@@ -582,7 +561,7 @@ func (m *PortRange) Unmarshal(data []byte) error {
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -610,7 +589,7 @@ func (m *PortRange) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				m.Start |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -629,7 +608,7 @@ func (m *PortRange) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				m.End |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -638,7 +617,7 @@ func (m *PortRange) Unmarshal(data []byte) error {
 			}
 		default:
 			iNdEx = preIndex
-			skippy, err := skipSecurityGroup(data[iNdEx:])
+			skippy, err := skipSecurityGroup(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
@@ -657,8 +636,8 @@ func (m *PortRange) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func (m *ICMPInfo) Unmarshal(data []byte) error {
-	l := len(data)
+func (m *ICMPInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		preIndex := iNdEx
@@ -670,7 +649,7 @@ func (m *ICMPInfo) Unmarshal(data []byte) error {
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -698,7 +677,7 @@ func (m *ICMPInfo) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				m.Type |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -717,7 +696,7 @@ func (m *ICMPInfo) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				m.Code |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -726,7 +705,7 @@ func (m *ICMPInfo) Unmarshal(data []byte) error {
 			}
 		default:
 			iNdEx = preIndex
-			skippy, err := skipSecurityGroup(data[iNdEx:])
+			skippy, err := skipSecurityGroup(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
@@ -745,8 +724,8 @@ func (m *ICMPInfo) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func (m *SecurityGroupRule) Unmarshal(data []byte) error {
-	l := len(data)
+func (m *SecurityGroupRule) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		preIndex := iNdEx
@@ -758,7 +737,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -786,7 +765,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -801,7 +780,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Protocol = string(data[iNdEx:postIndex])
+			m.Protocol = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -815,7 +794,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -830,28 +809,70 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Destinations = append(m.Destinations, string(data[iNdEx:postIndex]))
+			m.Destinations = append(m.Destinations, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
-			}
-			var v uint32
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSecurityGroup
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowSecurityGroup
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.Ports = append(m.Ports, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowSecurityGroup
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthSecurityGroup
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
-				iNdEx++
-				v |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSecurityGroup
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Ports = append(m.Ports, v)
 				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
 			}
-			m.Ports = append(m.Ports, v)
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PortRange", wireType)
@@ -864,7 +885,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -881,7 +902,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 			if m.PortRange == nil {
 				m.PortRange = &PortRange{}
 			}
-			if err := m.PortRange.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			if err := m.PortRange.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -897,7 +918,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -914,7 +935,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 			if m.IcmpInfo == nil {
 				m.IcmpInfo = &ICMPInfo{}
 			}
-			if err := m.IcmpInfo.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			if err := m.IcmpInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -930,7 +951,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				v |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -940,7 +961,7 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 			m.Log = bool(v != 0)
 		default:
 			iNdEx = preIndex
-			skippy, err := skipSecurityGroup(data[iNdEx:])
+			skippy, err := skipSecurityGroup(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
@@ -959,8 +980,8 @@ func (m *SecurityGroupRule) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func skipSecurityGroup(data []byte) (n int, err error) {
-	l := len(data)
+func skipSecurityGroup(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		var wire uint64
@@ -971,7 +992,7 @@ func skipSecurityGroup(data []byte) (n int, err error) {
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -989,7 +1010,7 @@ func skipSecurityGroup(data []byte) (n int, err error) {
 					return 0, io.ErrUnexpectedEOF
 				}
 				iNdEx++
-				if data[iNdEx-1] < 0x80 {
+				if dAtA[iNdEx-1] < 0x80 {
 					break
 				}
 			}
@@ -1006,7 +1027,7 @@ func skipSecurityGroup(data []byte) (n int, err error) {
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				length |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1029,7 +1050,7 @@ func skipSecurityGroup(data []byte) (n int, err error) {
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
-					b := data[iNdEx]
+					b := dAtA[iNdEx]
 					iNdEx++
 					innerWire |= (uint64(b) & 0x7F) << shift
 					if b < 0x80 {
@@ -1040,7 +1061,7 @@ func skipSecurityGroup(data []byte) (n int, err error) {
 				if innerWireType == 4 {
 					break
 				}
-				next, err := skipSecurityGroup(data[start:])
+				next, err := skipSecurityGroup(dAtA[start:])
 				if err != nil {
 					return 0, err
 				}
