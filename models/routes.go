@@ -65,6 +65,14 @@ func (r *Routes) Equal(other Routes) bool {
 	return true
 }
 
+func (r *Routes) GoString() string {
+	return ""
+}
+
+func (r *Routes) String() string {
+	return ""
+}
+
 func (r Routes) Validate() error {
 	totalRoutesLength := 0
 	if r != nil {

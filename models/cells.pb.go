@@ -10,9 +10,6 @@ import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import strings "strings"
-import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
-import sort "sort"
-import strconv "strconv"
 import reflect "reflect"
 
 import io "io"
@@ -427,83 +424,65 @@ func valueToGoStringCells(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func extensionToGoStringCells(m github_com_gogo_protobuf_proto.Message) string {
-	e := github_com_gogo_protobuf_proto.GetUnsafeExtensionsMap(m)
-	if e == nil {
-		return "nil"
-	}
-	s := "proto.NewUnsafeXXX_InternalExtensions(map[int32]proto.Extension{"
-	keys := make([]int, 0, len(e))
-	for k := range e {
-		keys = append(keys, int(k))
-	}
-	sort.Ints(keys)
-	ss := []string{}
-	for _, k := range keys {
-		ss = append(ss, strconv.Itoa(k)+": "+e[int32(k)].GoString())
-	}
-	s += strings.Join(ss, ",") + "})"
-	return s
-}
-func (m *CellCapacity) Marshal() (data []byte, err error) {
+func (m *CellCapacity) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
 	if err != nil {
 		return nil, err
 	}
-	return data[:n], nil
+	return dAtA[:n], nil
 }
 
-func (m *CellCapacity) MarshalTo(data []byte) (int, error) {
+func (m *CellCapacity) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0x8
+	dAtA[i] = 0x8
 	i++
-	i = encodeVarintCells(data, i, uint64(m.MemoryMb))
-	data[i] = 0x10
+	i = encodeVarintCells(dAtA, i, uint64(m.MemoryMb))
+	dAtA[i] = 0x10
 	i++
-	i = encodeVarintCells(data, i, uint64(m.DiskMb))
-	data[i] = 0x18
+	i = encodeVarintCells(dAtA, i, uint64(m.DiskMb))
+	dAtA[i] = 0x18
 	i++
-	i = encodeVarintCells(data, i, uint64(m.Containers))
+	i = encodeVarintCells(dAtA, i, uint64(m.Containers))
 	return i, nil
 }
 
-func (m *CellPresence) Marshal() (data []byte, err error) {
+func (m *CellPresence) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
 	if err != nil {
 		return nil, err
 	}
-	return data[:n], nil
+	return dAtA[:n], nil
 }
 
-func (m *CellPresence) MarshalTo(data []byte) (int, error) {
+func (m *CellPresence) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0xa
+	dAtA[i] = 0xa
 	i++
-	i = encodeVarintCells(data, i, uint64(len(m.CellId)))
-	i += copy(data[i:], m.CellId)
-	data[i] = 0x12
+	i = encodeVarintCells(dAtA, i, uint64(len(m.CellId)))
+	i += copy(dAtA[i:], m.CellId)
+	dAtA[i] = 0x12
 	i++
-	i = encodeVarintCells(data, i, uint64(len(m.RepAddress)))
-	i += copy(data[i:], m.RepAddress)
-	data[i] = 0x1a
+	i = encodeVarintCells(dAtA, i, uint64(len(m.RepAddress)))
+	i += copy(dAtA[i:], m.RepAddress)
+	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintCells(data, i, uint64(len(m.Zone)))
-	i += copy(data[i:], m.Zone)
+	i = encodeVarintCells(dAtA, i, uint64(len(m.Zone)))
+	i += copy(dAtA[i:], m.Zone)
 	if m.Capacity != nil {
-		data[i] = 0x22
+		dAtA[i] = 0x22
 		i++
-		i = encodeVarintCells(data, i, uint64(m.Capacity.Size()))
-		n1, err := m.Capacity.MarshalTo(data[i:])
+		i = encodeVarintCells(dAtA, i, uint64(m.Capacity.Size()))
+		n1, err := m.Capacity.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -511,10 +490,10 @@ func (m *CellPresence) MarshalTo(data []byte) (int, error) {
 	}
 	if len(m.RootfsProviders) > 0 {
 		for _, msg := range m.RootfsProviders {
-			data[i] = 0x2a
+			dAtA[i] = 0x2a
 			i++
-			i = encodeVarintCells(data, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(data[i:])
+			i = encodeVarintCells(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
 			if err != nil {
 				return 0, err
 			}
@@ -523,98 +502,98 @@ func (m *CellPresence) MarshalTo(data []byte) (int, error) {
 	}
 	if len(m.PlacementTags) > 0 {
 		for _, s := range m.PlacementTags {
-			data[i] = 0x32
+			dAtA[i] = 0x32
 			i++
 			l = len(s)
 			for l >= 1<<7 {
-				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
 				l >>= 7
 				i++
 			}
-			data[i] = uint8(l)
+			dAtA[i] = uint8(l)
 			i++
-			i += copy(data[i:], s)
+			i += copy(dAtA[i:], s)
 		}
 	}
 	if len(m.OptionalPlacementTags) > 0 {
 		for _, s := range m.OptionalPlacementTags {
-			data[i] = 0x3a
+			dAtA[i] = 0x3a
 			i++
 			l = len(s)
 			for l >= 1<<7 {
-				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
 				l >>= 7
 				i++
 			}
-			data[i] = uint8(l)
+			dAtA[i] = uint8(l)
 			i++
-			i += copy(data[i:], s)
+			i += copy(dAtA[i:], s)
 		}
 	}
-	data[i] = 0x42
+	dAtA[i] = 0x42
 	i++
-	i = encodeVarintCells(data, i, uint64(len(m.RepUrl)))
-	i += copy(data[i:], m.RepUrl)
+	i = encodeVarintCells(dAtA, i, uint64(len(m.RepUrl)))
+	i += copy(dAtA[i:], m.RepUrl)
 	return i, nil
 }
 
-func (m *Provider) Marshal() (data []byte, err error) {
+func (m *Provider) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
 	if err != nil {
 		return nil, err
 	}
-	return data[:n], nil
+	return dAtA[:n], nil
 }
 
-func (m *Provider) MarshalTo(data []byte) (int, error) {
+func (m *Provider) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	data[i] = 0xa
+	dAtA[i] = 0xa
 	i++
-	i = encodeVarintCells(data, i, uint64(len(m.Name)))
-	i += copy(data[i:], m.Name)
+	i = encodeVarintCells(dAtA, i, uint64(len(m.Name)))
+	i += copy(dAtA[i:], m.Name)
 	if len(m.Properties) > 0 {
 		for _, s := range m.Properties {
-			data[i] = 0x12
+			dAtA[i] = 0x12
 			i++
 			l = len(s)
 			for l >= 1<<7 {
-				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
 				l >>= 7
 				i++
 			}
-			data[i] = uint8(l)
+			dAtA[i] = uint8(l)
 			i++
-			i += copy(data[i:], s)
+			i += copy(dAtA[i:], s)
 		}
 	}
 	return i, nil
 }
 
-func (m *CellsResponse) Marshal() (data []byte, err error) {
+func (m *CellsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
-	data = make([]byte, size)
-	n, err := m.MarshalTo(data)
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
 	if err != nil {
 		return nil, err
 	}
-	return data[:n], nil
+	return dAtA[:n], nil
 }
 
-func (m *CellsResponse) MarshalTo(data []byte) (int, error) {
+func (m *CellsResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
 	if m.Error != nil {
-		data[i] = 0xa
+		dAtA[i] = 0xa
 		i++
-		i = encodeVarintCells(data, i, uint64(m.Error.Size()))
-		n2, err := m.Error.MarshalTo(data[i:])
+		i = encodeVarintCells(dAtA, i, uint64(m.Error.Size()))
+		n2, err := m.Error.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -622,10 +601,10 @@ func (m *CellsResponse) MarshalTo(data []byte) (int, error) {
 	}
 	if len(m.Cells) > 0 {
 		for _, msg := range m.Cells {
-			data[i] = 0x12
+			dAtA[i] = 0x12
 			i++
-			i = encodeVarintCells(data, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(data[i:])
+			i = encodeVarintCells(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
 			if err != nil {
 				return 0, err
 			}
@@ -635,31 +614,31 @@ func (m *CellsResponse) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Cells(data []byte, offset int, v uint64) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
-	data[offset+4] = uint8(v >> 32)
-	data[offset+5] = uint8(v >> 40)
-	data[offset+6] = uint8(v >> 48)
-	data[offset+7] = uint8(v >> 56)
+func encodeFixed64Cells(dAtA []byte, offset int, v uint64) int {
+	dAtA[offset] = uint8(v)
+	dAtA[offset+1] = uint8(v >> 8)
+	dAtA[offset+2] = uint8(v >> 16)
+	dAtA[offset+3] = uint8(v >> 24)
+	dAtA[offset+4] = uint8(v >> 32)
+	dAtA[offset+5] = uint8(v >> 40)
+	dAtA[offset+6] = uint8(v >> 48)
+	dAtA[offset+7] = uint8(v >> 56)
 	return offset + 8
 }
-func encodeFixed32Cells(data []byte, offset int, v uint32) int {
-	data[offset] = uint8(v)
-	data[offset+1] = uint8(v >> 8)
-	data[offset+2] = uint8(v >> 16)
-	data[offset+3] = uint8(v >> 24)
+func encodeFixed32Cells(dAtA []byte, offset int, v uint32) int {
+	dAtA[offset] = uint8(v)
+	dAtA[offset+1] = uint8(v >> 8)
+	dAtA[offset+2] = uint8(v >> 16)
+	dAtA[offset+3] = uint8(v >> 24)
 	return offset + 4
 }
-func encodeVarintCells(data []byte, offset int, v uint64) int {
+func encodeVarintCells(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
-		data[offset] = uint8(v&0x7f | 0x80)
+		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
-	data[offset] = uint8(v)
+	dAtA[offset] = uint8(v)
 	return offset + 1
 }
 func (m *CellCapacity) Size() (n int) {
@@ -809,8 +788,8 @@ func valueToStringCells(v interface{}) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
 }
-func (m *CellCapacity) Unmarshal(data []byte) error {
-	l := len(data)
+func (m *CellCapacity) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		preIndex := iNdEx
@@ -822,7 +801,7 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -850,7 +829,7 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				m.MemoryMb |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -869,7 +848,7 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				m.DiskMb |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -888,7 +867,7 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				m.Containers |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -897,7 +876,7 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 			}
 		default:
 			iNdEx = preIndex
-			skippy, err := skipCells(data[iNdEx:])
+			skippy, err := skipCells(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
@@ -916,8 +895,8 @@ func (m *CellCapacity) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func (m *CellPresence) Unmarshal(data []byte) error {
-	l := len(data)
+func (m *CellPresence) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		preIndex := iNdEx
@@ -929,7 +908,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -957,7 +936,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -972,7 +951,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CellId = string(data[iNdEx:postIndex])
+			m.CellId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -986,7 +965,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1001,7 +980,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RepAddress = string(data[iNdEx:postIndex])
+			m.RepAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1015,7 +994,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1030,7 +1009,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Zone = string(data[iNdEx:postIndex])
+			m.Zone = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1044,7 +1023,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1061,7 +1040,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if m.Capacity == nil {
 				m.Capacity = &CellCapacity{}
 			}
-			if err := m.Capacity.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			if err := m.Capacity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1077,7 +1056,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1092,7 +1071,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.RootfsProviders = append(m.RootfsProviders, &Provider{})
-			if err := m.RootfsProviders[len(m.RootfsProviders)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+			if err := m.RootfsProviders[len(m.RootfsProviders)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1108,7 +1087,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1123,7 +1102,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PlacementTags = append(m.PlacementTags, string(data[iNdEx:postIndex]))
+			m.PlacementTags = append(m.PlacementTags, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
@@ -1137,7 +1116,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1152,7 +1131,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OptionalPlacementTags = append(m.OptionalPlacementTags, string(data[iNdEx:postIndex]))
+			m.OptionalPlacementTags = append(m.OptionalPlacementTags, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
@@ -1166,7 +1145,7 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1181,11 +1160,11 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RepUrl = string(data[iNdEx:postIndex])
+			m.RepUrl = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipCells(data[iNdEx:])
+			skippy, err := skipCells(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
@@ -1204,8 +1183,8 @@ func (m *CellPresence) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func (m *Provider) Unmarshal(data []byte) error {
-	l := len(data)
+func (m *Provider) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		preIndex := iNdEx
@@ -1217,7 +1196,7 @@ func (m *Provider) Unmarshal(data []byte) error {
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -1245,7 +1224,7 @@ func (m *Provider) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1260,7 +1239,7 @@ func (m *Provider) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Name = string(data[iNdEx:postIndex])
+			m.Name = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1274,7 +1253,7 @@ func (m *Provider) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1289,11 +1268,11 @@ func (m *Provider) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Properties = append(m.Properties, string(data[iNdEx:postIndex]))
+			m.Properties = append(m.Properties, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipCells(data[iNdEx:])
+			skippy, err := skipCells(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
@@ -1312,8 +1291,8 @@ func (m *Provider) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func (m *CellsResponse) Unmarshal(data []byte) error {
-	l := len(data)
+func (m *CellsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		preIndex := iNdEx
@@ -1325,7 +1304,7 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -1353,7 +1332,7 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1370,7 +1349,7 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 			if m.Error == nil {
 				m.Error = &Error{}
 			}
-			if err := m.Error.Unmarshal(data[iNdEx:postIndex]); err != nil {
+			if err := m.Error.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1386,7 +1365,7 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1401,13 +1380,13 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Cells = append(m.Cells, &CellPresence{})
-			if err := m.Cells[len(m.Cells)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+			if err := m.Cells[len(m.Cells)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipCells(data[iNdEx:])
+			skippy, err := skipCells(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
@@ -1426,8 +1405,8 @@ func (m *CellsResponse) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func skipCells(data []byte) (n int, err error) {
-	l := len(data)
+func skipCells(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
 		var wire uint64
@@ -1438,7 +1417,7 @@ func skipCells(data []byte) (n int, err error) {
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
 			}
-			b := data[iNdEx]
+			b := dAtA[iNdEx]
 			iNdEx++
 			wire |= (uint64(b) & 0x7F) << shift
 			if b < 0x80 {
@@ -1456,7 +1435,7 @@ func skipCells(data []byte) (n int, err error) {
 					return 0, io.ErrUnexpectedEOF
 				}
 				iNdEx++
-				if data[iNdEx-1] < 0x80 {
+				if dAtA[iNdEx-1] < 0x80 {
 					break
 				}
 			}
@@ -1473,7 +1452,7 @@ func skipCells(data []byte) (n int, err error) {
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
 				}
-				b := data[iNdEx]
+				b := dAtA[iNdEx]
 				iNdEx++
 				length |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
@@ -1496,7 +1475,7 @@ func skipCells(data []byte) (n int, err error) {
 					if iNdEx >= l {
 						return 0, io.ErrUnexpectedEOF
 					}
-					b := data[iNdEx]
+					b := dAtA[iNdEx]
 					iNdEx++
 					innerWire |= (uint64(b) & 0x7F) << shift
 					if b < 0x80 {
@@ -1507,7 +1486,7 @@ func skipCells(data []byte) (n int, err error) {
 				if innerWireType == 4 {
 					break
 				}
-				next, err := skipCells(data[start:])
+				next, err := skipCells(dAtA[start:])
 				if err != nil {
 					return 0, err
 				}

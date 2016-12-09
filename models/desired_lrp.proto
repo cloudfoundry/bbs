@@ -19,7 +19,7 @@ message DesiredLRPSchedulingInfo {
 
   optional DesiredLRPResource desired_lrp_resource = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
 
-  optional bytes routes = 5 [(gogoproto.customtype) = "Routes"];
+  optional ProtoRoutes routes = 5 [(gogoproto.nullable) = false, (gogoproto.customtype) = "Routes"];
   optional ModificationTag modification_tag = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   optional VolumePlacement volume_placement = 7 [(gogoproto.jsontag) = "volume_placement,omitempty"];
   repeated string PlacementTags = 8 [(gogoproto.jsontag) ="placement_tags,omitempty"];
@@ -53,13 +53,13 @@ message DesiredLRPRunInfo {
 }
 
 // helper message for marshalling routes
-message proto_routes {
+message ProtoRoutes {
   map<string, bytes> routes = 1;
 }
 
 message DesiredLRPUpdate {
   optional int32 instances = 1 [(gogoproto.nullable) = true];
-  optional bytes routes = 2 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+  optional ProtoRoutes routes = 2 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
   optional string annotation = 3 [(gogoproto.nullable) = true];
 }
 
@@ -94,7 +94,7 @@ message DesiredLRP {
   optional uint32 cpu_weight = 12;
   optional bool privileged = 13;
   repeated uint32 ports = 14;
-  optional bytes routes = 15 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+  optional ProtoRoutes routes = 15 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
   optional string log_source = 16;
   optional string log_guid = 17;
   optional string metrics_guid = 18;
