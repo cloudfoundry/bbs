@@ -45,6 +45,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		LogGuid:                       schedInfo.LogGuid,
 		MemoryMb:                      schedInfo.MemoryMb,
 		DiskMb:                        schedInfo.DiskMb,
+		MaxPids:                       schedInfo.MaxPids,
 		RootFs:                        schedInfo.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
@@ -145,7 +146,7 @@ func (d *DesiredLRP) DesiredLRPKey() DesiredLRPKey {
 }
 
 func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
-	return NewDesiredLRPResource(d.MemoryMb, d.DiskMb, d.RootFs)
+	return NewDesiredLRPResource(d.MemoryMb, d.DiskMb, d.MaxPids, d.RootFs)
 }
 
 func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
@@ -294,6 +295,10 @@ func (desired DesiredLRP) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"annotation"})
 	}
 
+	if desired.GetMaxPids() < 0 {
+		validationError = validationError.Append(ErrInvalidField{"max_pids"})
+	}
+
 	totalRoutesLength := 0
 	if desired.Routes != nil {
 		for _, value := range *desired.Routes {
@@ -426,10 +431,11 @@ func (s DesiredLRPSchedulingInfo) Validate() error {
 	return ve.ToError()
 }
 
-func NewDesiredLRPResource(memoryMb, diskMb int32, rootFs string) DesiredLRPResource {
+func NewDesiredLRPResource(memoryMb, diskMb, maxPids int32, rootFs string) DesiredLRPResource {
 	return DesiredLRPResource{
 		MemoryMb: memoryMb,
 		DiskMb:   diskMb,
+		MaxPids:  maxPids,
 		RootFs:   rootFs,
 	}
 }
@@ -448,6 +454,10 @@ func (resource DesiredLRPResource) Validate() error {
 
 	if resource.GetDiskMb() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"disk_mb"})
+	}
+
+	if resource.GetMaxPids() < 0 {
+		validationError = validationError.Append(ErrInvalidField{"max_pids"})
 	}
 
 	return validationError.ToError()

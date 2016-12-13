@@ -111,7 +111,7 @@ var _ = Describe("DesiredLRP", func() {
                 },
                 {
                   "name": "CF_STACK",
-                  "value": "cflinuxfs2"
+									"value": "cflinuxfs2"
                 },
                 {
                   "name": "PORT",
@@ -253,7 +253,8 @@ var _ = Describe("DesiredLRP", func() {
 				"key": "value",
 				"another_key": "another_value"
 			}
-		}
+		},
+		"max_pids": 256
   }`
 
 	BeforeEach(func() {
@@ -676,6 +677,11 @@ var _ = Describe("DesiredLRP", func() {
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "disk_mb")
 		})
 
+		It("requires a valid MaxPids", func() {
+			desiredLRP.MaxPids = -1
+			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "max_pids")
+		})
+
 		It("limits the annotation length", func() {
 			desiredLRP.Annotation = randStringBytes(50000)
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "annotation")
@@ -847,6 +853,7 @@ var _ = Describe("DesiredLRPResource", func() {
 	const rootFs = "preloaded://linux64"
 	const memoryMb = 256
 	const diskMb = 256
+	const maxPids = 256
 
 	DescribeTable("Validation",
 		func(key models.DesiredLRPResource, expectedErr string) {
@@ -858,10 +865,11 @@ var _ = Describe("DesiredLRPResource", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid resource", models.NewDesiredLRPResource(memoryMb, diskMb, rootFs), ""),
-		Entry("invalid rootFs", models.NewDesiredLRPResource(memoryMb, diskMb, "BAD URL"), "rootfs"),
-		Entry("invalid memoryMb", models.NewDesiredLRPResource(-1, diskMb, rootFs), "memory_mb"),
-		Entry("invalid diskMb", models.NewDesiredLRPResource(memoryMb, -1, rootFs), "disk_mb"),
+		Entry("valid resource", models.NewDesiredLRPResource(memoryMb, diskMb, maxPids, rootFs), ""),
+		Entry("invalid rootFs", models.NewDesiredLRPResource(memoryMb, diskMb, maxPids, "BAD URL"), "rootfs"),
+		Entry("invalid memoryMb", models.NewDesiredLRPResource(-1, diskMb, maxPids, rootFs), "memory_mb"),
+		Entry("invalid diskMb", models.NewDesiredLRPResource(memoryMb, -1, maxPids, rootFs), "disk_mb"),
+		Entry("invalid maxPids", models.NewDesiredLRPResource(memoryMb, diskMb, -1, rootFs), "max_pids"),
 	)
 })
 
@@ -941,5 +949,5 @@ func newValidLRPKey() models.DesiredLRPKey {
 }
 
 func newValidResource() models.DesiredLRPResource {
-	return models.NewDesiredLRPResource(256, 256, "preloaded://linux64")
+	return models.NewDesiredLRPResource(256, 256, 256, "preloaded://linux64")
 }

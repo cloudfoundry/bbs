@@ -77,7 +77,8 @@ var _ = Describe("Task", func() {
 				"log": false
 			}
 		],
-		"completion_callback_url":"http://user:password@a.b.c/d/e/f"
+		"completion_callback_url":"http://user:password@a.b.c/d/e/f",
+		"max_pids": 256
 	}`
 
 		task = models.Task{
@@ -99,6 +100,7 @@ var _ = Describe("Task", func() {
 				}),
 				MemoryMb:    256,
 				DiskMb:      1024,
+				MaxPids:     256,
 				CpuWeight:   42,
 				Privileged:  true,
 				LogGuid:     "123",
@@ -483,6 +485,21 @@ var _ = Describe("Task", func() {
 							User: "me",
 						}),
 						DiskMb: -1,
+					},
+				},
+			},
+			{
+				"max_pids",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						MaxPids: -1,
 					},
 				},
 			},

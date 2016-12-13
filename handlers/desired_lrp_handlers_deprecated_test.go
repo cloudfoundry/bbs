@@ -794,6 +794,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Resource: rep.Resource{
 							MemoryMB: desiredLRP.MemoryMb,
 							DiskMB:   desiredLRP.DiskMb,
+							MaxPids:  desiredLRP.MaxPids,
 						},
 						PlacementConstraint: rep.PlacementConstraint{
 							RootFs:        desiredLRP.RootFs,

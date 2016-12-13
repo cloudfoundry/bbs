@@ -196,6 +196,7 @@ var _ = Describe("Task Controller", func() {
 						Resource: rep.Resource{
 							MemoryMB: 256,
 							DiskMB:   1024,
+							MaxPids:  1024,
 						},
 						PlacementConstraint: rep.PlacementConstraint{
 							RootFs:        "docker:///docker.com/docker",

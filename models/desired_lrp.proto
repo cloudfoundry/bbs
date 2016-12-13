@@ -73,6 +73,7 @@ message DesiredLRPResource {
   optional int32 memory_mb = 1;
   optional int32 disk_mb = 2;
   optional string root_fs = 3 [(gogoproto.jsontag) = "rootfs"];
+  optional int32 max_pids = 4;
 }
 
 message DesiredLRP {
@@ -106,4 +107,5 @@ message DesiredLRP {
   repeated VolumeMount volume_mounts = 25 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 26 [(gogoproto.jsontag) = "network,omitempty"];
   repeated string PlacementTags = 28 [(gogoproto.jsontag) ="placement_tags,omitempty"];
+  optional int32 max_pids = 29;
 }

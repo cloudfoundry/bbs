@@ -418,6 +418,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 					RootFs:      "some-stack",
 					MemoryMb:    128,
 					DiskMb:      512,
+					MaxPids:     100,
 				}
 
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)

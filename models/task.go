@@ -166,6 +166,10 @@ func (def *TaskDefinition) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"disk_mb"})
 	}
 
+	if def.MaxPids < 0 {
+		validationError = validationError.Append(ErrInvalidField{"max_pids"})
+	}
+
 	if len(def.Annotation) > maximumAnnotationLength {
 		validationError = validationError.Append(ErrInvalidField{"annotation"})
 	}
