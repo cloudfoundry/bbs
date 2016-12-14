@@ -324,7 +324,12 @@ func main() {
 
 	registrationRunner := initializeRegistrationRunner(logger, consulClient, portNum, clock)
 
-	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
+	tlsConfig, err := cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
+	if err != nil {
+		logger.Fatal("tls-configuration-failed", err)
+	}
+
+	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
 
 	var activeDB db.DB
 	var sqlDB *sqldb.SQLDB
@@ -472,10 +477,6 @@ func main() {
 
 	var server ifrit.Runner
 	if *requireSSL {
-		tlsConfig, err := cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
-		if err != nil {
-			logger.Fatal("tls-configuration-failed", err)
-		}
 		server = http_server.NewTLSServer(*listenAddress, handler, tlsConfig)
 	} else {
 		server = http_server.New(*listenAddress, handler)
