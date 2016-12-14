@@ -2,6 +2,7 @@ package taskworkpool
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -32,15 +33,23 @@ type TaskCompletionWorkPool struct {
 	httpClient       *http.Client
 }
 
-func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler) *TaskCompletionWorkPool {
+func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler, tlsConfig *tls.Config) *TaskCompletionWorkPool {
 	if cbHandler == nil {
 		panic("callbackHandler cannot be nil")
 	}
+
+	httpClient := cfhttp.NewClient()
+	if tr, ok := httpClient.Transport.(*http.Transport); ok {
+		tr.TLSClientConfig = tlsConfig
+	} else {
+		panic("invalid transport")
+	}
+
 	return &TaskCompletionWorkPool{
 		logger:          logger.Session("task-completion-workpool"),
 		maxWorkers:      maxWorkers,
 		callbackHandler: cbHandler,
-		httpClient:      cfhttp.NewClient(),
+		httpClient:      httpClient,
 	}
 }
 

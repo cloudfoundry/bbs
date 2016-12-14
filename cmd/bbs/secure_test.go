@@ -1,16 +1,20 @@
 package main_test
 
 import (
+	"net/http"
 	"os"
 	"path"
 
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/cfhttp"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/ghttp"
 )
 
 var _ = Describe("Secure", func() {
@@ -75,6 +79,75 @@ var _ = Describe("Secure", func() {
 		It("fails to create the client if certs are not valid", func() {
 			client, err = bbs.NewSecureClient(bbsURL.String(), "", "", "", 0, 0)
 			Expect(err).To(HaveOccurred())
+		})
+
+		Context("task callbacks", func() {
+			var (
+				caFile, certFile, keyFile string
+				tlsServer, insecureServer *ghttp.Server
+				doneChan                  chan struct{}
+			)
+
+			BeforeEach(func() {
+				doneChan = make(chan struct{})
+				caFile = path.Join(basePath, "green-certs", "server-ca.crt")
+				certFile = path.Join(basePath, "green-certs", "client.crt")
+				keyFile = path.Join(basePath, "green-certs", "client.key")
+
+				tlsServer = ghttp.NewUnstartedServer()
+				insecureServer = ghttp.NewUnstartedServer()
+
+				tlsConfig, err := cfhttp.NewTLSConfig(certFile, keyFile, caFile)
+				Expect(err).NotTo(HaveOccurred())
+
+				tlsServer.HTTPTestServer.TLS = tlsConfig
+
+				handlers := []http.HandlerFunc{
+					ghttp.VerifyRequest("POST", "/test"),
+					ghttp.RespondWith(200, nil),
+					func(w http.ResponseWriter, request *http.Request) {
+						close(doneChan)
+					},
+				}
+
+				tlsServer.RouteToHandler("POST", "/test", ghttp.CombineHandlers(handlers...))
+				insecureServer.RouteToHandler("POST", "/test", ghttp.CombineHandlers(handlers...))
+
+				insecureServer.Start()
+				tlsServer.HTTPTestServer.StartTLS()
+			})
+
+			It("uses the tls configuration for task callbacks with https", func() {
+				client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile, 0, 0)
+				Expect(err).NotTo(HaveOccurred())
+
+				taskDef := model_helpers.NewValidTaskDefinition()
+				taskDef.CompletionCallbackUrl = tlsServer.URL() + "/test"
+
+				err := client.DesireTask(logger, "task-guid", "domain", taskDef)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.CancelTask(logger, "task-guid")
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(doneChan).Should(BeClosed())
+			})
+
+			It("also works with http endpoints", func() {
+				client, err = bbs.NewSecureClient(bbsURL.String(), caFile, certFile, keyFile, 0, 0)
+				Expect(err).NotTo(HaveOccurred())
+
+				taskDef := model_helpers.NewValidTaskDefinition()
+				taskDef.CompletionCallbackUrl = insecureServer.URL() + "/test"
+
+				err := client.DesireTask(logger, "task-guid", "domain", taskDef)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.CancelTask(logger, "task-guid")
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(doneChan).Should(BeClosed())
+			})
 		})
 	})
 

@@ -324,8 +324,6 @@ func main() {
 
 	registrationRunner := initializeRegistrationRunner(logger, consulClient, portNum, clock)
 
-	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask)
-
 	var activeDB db.DB
 	var sqlDB *sqldb.SQLDB
 	var sqlConn *sql.DB
@@ -349,7 +347,7 @@ func main() {
 
 	if etcdOptions.IsConfigured {
 		storeClient = initializeEtcdStoreClient(logger, etcdOptions)
-		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, cbWorkPool, serviceClient, *desiredLRPCreationTimeout)
+		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, serviceClient, *desiredLRPCreationTimeout)
 		activeDB = etcdDB
 	}
 
@@ -437,6 +435,16 @@ func main() {
 		accessLogger.RegisterSink(lager.NewWriterSink(file, lager.INFO))
 	}
 
+	var tlsConfig *tls.Config
+	if *requireSSL {
+		tlsConfig, err = cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
+		if err != nil {
+			logger.Fatal("tls-configuration-failed", err)
+		}
+	}
+
+	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
+
 	handler := handlers.New(
 		logger,
 		accessLogger,
@@ -471,11 +479,7 @@ func main() {
 		*expireCompletedTaskDuration)
 
 	var server ifrit.Runner
-	if *requireSSL {
-		tlsConfig, err := cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
-		if err != nil {
-			logger.Fatal("tls-configuration-failed", err)
-		}
+	if tlsConfig != nil {
 		server = http_server.NewTLSServer(*listenAddress, handler, tlsConfig)
 	} else {
 		server = http_server.New(*listenAddress, handler)
@@ -645,7 +649,6 @@ func initializeEtcdDB(
 	logger lager.Logger,
 	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
-	cbClient taskworkpool.TaskCompletionClient,
 	serviceClient bbs.ServiceClient,
 	desiredLRPCreationMaxTime time.Duration,
 ) *etcddb.ETCDDB {
