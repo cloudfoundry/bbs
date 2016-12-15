@@ -45,6 +45,7 @@ err = client.DesireLRP(logger, &models.DesiredLRP{
     )),
     DiskMb:      512,
     MemoryMb:    1024,
+    MaxPids:     1024,
     Privileged:  true,
     CpuWeight:   42,
     Ports:       []uint32{8080, 9090},

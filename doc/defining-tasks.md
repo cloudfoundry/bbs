@@ -34,6 +34,7 @@ err := client.DesireTask(
     }),
     MemoryMb:    256,
     DiskMb:      1024,
+    MaxPids:     1024,
     CpuWeight:   42,
     Privileged:  true,
     LogGuid:     "123",
@@ -163,6 +164,12 @@ A disk quota in mebibytes applied to the container. Data written on top of the c
 - The `DiskMb` value must be an integer greater than or equal to 0.
 - If set to 0, no disk quota is applied to the container.
 
+##### `MaxPids` [optional]
+
+A maximum process limit is applied to the container. If the number of processes running on the container reach the limit, new processes spawned will fail.
+
+- The `MaxPids` value must be an integer greater than or equal to 0.
+- If set to 0, no process limit is applied to the container.
 
 ##### `MemoryMb` [optional]
 

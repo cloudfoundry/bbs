@@ -44,6 +44,7 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 		"failure-message",
 	)),
 	DiskMb:      512,
+	MaxPids:     1024,
 	MemoryMb:    1024,
 	Privileged:  true,
 	CpuWeight:   42,
@@ -198,6 +199,13 @@ Processes that attempt to exceed this limit will not be allowed to write to disk
 - `DiskMb` must be an integer >= 0
 - If set to 0 no disk constraints are applied to the container
 - The units are megabytes
+
+##### `MaxPids` [optional]
+
+A maximum process limit is applied to the container. If the number of processes running on the container reach the limit, new processes spawned will fail.
+
+- The `MaxPids` value must be an integer greater than or equal to 0.
+- If set to 0, no process limit is applied to the container.
 
 ##### `MemoryMb` [optional]
 

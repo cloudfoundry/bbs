@@ -9,6 +9,10 @@ err = client.DesireTask(
   "some-domain",
   &models.TaskDefinition{
     RootFs: "docker:///busybox",
+    DiskMb:   1024,
+    MemoryMb: 1024,
+    MaxPids:  1024,
+    CpuWeight: 42,
     Action: models.WrapAction(&models.RunAction{
       User:           "root",
       Path:           "sh",
