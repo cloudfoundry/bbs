@@ -77,3 +77,11 @@ func (r Routes) Validate() error {
 	}
 	return nil
 }
+
+func (r Routes) GoString() string {
+	return ""
+}
+
+func (r Routes) String() string {
+	return ""
+}
