@@ -27,7 +27,7 @@ var _ = Describe("DesiredLRP API", func() {
 	)
 
 	BeforeEach(func() {
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 		filter = models.DesiredLRPFilter{}
 		expectedDesiredLRPs = []*models.DesiredLRP{}

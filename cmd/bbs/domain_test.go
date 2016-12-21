@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("Domain API", func() {
 	BeforeEach(func() {
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 

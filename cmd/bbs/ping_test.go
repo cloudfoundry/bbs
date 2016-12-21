@@ -25,7 +25,7 @@ var _ = Describe("Ping API", func() {
 				competingBBSLockProcess := ifrit.Invoke(competingBBSLock)
 				defer ginkgomon.Kill(competingBBSLockProcess)
 
-				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 				bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
@@ -64,7 +64,7 @@ var _ = Describe("Ping API", func() {
 				competingBBSLockProcess := ifrit.Invoke(competingBBSLock)
 				defer ginkgomon.Kill(competingBBSLockProcess)
 
-				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 				bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 

@@ -36,16 +36,16 @@ var _ = Describe("Migration Version", func() {
 		err = migrationFile.Close()
 		Expect(err).NotTo(HaveOccurred())
 
-		bbsConfig, err := gexec.Build("code.cloudfoundry.org/bbs/cmd/bbs", "-race")
+		bbsPath, err := gexec.Build("code.cloudfoundry.org/bbs/cmd/bbs", "-race")
 		Expect(err).NotTo(HaveOccurred())
-		bbsBinPath = string(bbsConfig)
+		bbsBinPath = string(bbsPath)
 
 		value, err := json.Marshal(models.Version{CurrentVersion: 100, TargetVersion: 100})
 		// write initial version
 		_, err = storeClient.Set(etcd.VersionKey, value, etcd.NO_TTL)
 		Expect(err).NotTo(HaveOccurred())
 
-		bbsRunner = testrunner.WaitForMigration(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.WaitForMigration(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 

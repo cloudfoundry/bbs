@@ -15,7 +15,7 @@ var _ = Describe("Task API", func() {
 	var expectedTasks []*models.Task
 
 	BeforeEach(func() {
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
 		expectedTasks[1].Domain = "b-domain"

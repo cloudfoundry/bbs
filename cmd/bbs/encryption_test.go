@@ -19,7 +19,7 @@ var _ = Describe("Encryption", func() {
 	})
 
 	JustBeforeEach(func() {
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
@@ -31,8 +31,8 @@ var _ = Describe("Encryption", func() {
 
 		Context("when provided a single encryption key", func() {
 			BeforeEach(func() {
-				bbsArgs.ActiveKeyLabel = "label"
-				bbsArgs.EncryptionKeys = []string{"label:some phrase"}
+				bbsConfig.ActiveKeyLabel = "label"
+				bbsConfig.EncryptionKeys = map[string]string{"label": "some phrase"}
 			})
 
 			It("can write/read to the database", func() {
@@ -48,9 +48,9 @@ var _ = Describe("Encryption", func() {
 			BeforeEach(func() {
 				oldTask = model_helpers.NewValidTask("old-task")
 
-				bbsArgs.ActiveKeyLabel = "oldkey"
-				bbsArgs.EncryptionKeys = []string{"oldkey:old phrase"}
-				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+				bbsConfig.ActiveKeyLabel = "oldkey"
+				bbsConfig.EncryptionKeys = map[string]string{"oldkey": "old phrase"}
+				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
 				err := client.DesireTask(logger, oldTask.TaskGuid, oldTask.Domain, oldTask.TaskDefinition)
@@ -58,10 +58,10 @@ var _ = Describe("Encryption", func() {
 
 				ginkgomon.Interrupt(bbsProcess)
 
-				bbsArgs.ActiveKeyLabel = "newkey"
-				bbsArgs.EncryptionKeys = []string{
-					"newkey:new phrase",
-					"oldkey:old phrase",
+				bbsConfig.ActiveKeyLabel = "newkey"
+				bbsConfig.EncryptionKeys = map[string]string{
+					"newkey": "new phrase",
+					"oldkey": "old phrase",
 				}
 			})
 
@@ -75,10 +75,10 @@ var _ = Describe("Encryption", func() {
 			It("doesn't need the oldkey after migrating", func() {
 				ginkgomon.Interrupt(bbsProcess)
 
-				bbsArgs.ActiveKeyLabel = "newkey"
-				bbsArgs.EncryptionKeys = []string{"newkey:new phrase"}
+				bbsConfig.ActiveKeyLabel = "newkey"
+				bbsConfig.EncryptionKeys = map[string]string{"newkey": "new phrase"}
 
-				bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
 				tasks, err := client.Tasks(logger)

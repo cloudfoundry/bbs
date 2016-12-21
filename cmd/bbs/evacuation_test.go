@@ -14,7 +14,7 @@ var _ = Describe("Evacuation API", func() {
 	var actual *models.ActualLRP
 
 	BeforeEach(func() {
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 
 		actual = model_helpers.NewValidActualLRP("some-process-guid", 1)

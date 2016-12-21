@@ -16,6 +16,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/converger"
 	"code.cloudfoundry.org/bbs/db"
@@ -51,226 +52,10 @@ import (
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
-var accessLogPath = flag.String(
-	"accessLogPath",
+var configFilePath = flag.String(
+	"config",
 	"",
-	"location of the access log",
-)
-
-var listenAddress = flag.String(
-	"listenAddress",
-	"",
-	"the host:port that the server is bound to",
-)
-
-var requireSSL = flag.Bool(
-	"requireSSL",
-	false,
-	"whether the bbs server should require ssl-secured communication",
-)
-
-var caFile = flag.String(
-	"caFile",
-	"",
-	"the certificate authority public key file to use with ssl authentication",
-)
-
-var certFile = flag.String(
-	"certFile",
-	"",
-	"the public key file to use with ssl authentication",
-)
-
-var keyFile = flag.String(
-	"keyFile",
-	"",
-	"the private key file to use with ssl authentication",
-)
-
-var healthAddress = flag.String(
-	"healthAddress",
-	"",
-	"the host:port that the healthcheck server is bound to",
-)
-
-var advertiseURL = flag.String(
-	"advertiseURL",
-	"",
-	"the URL to advertise to clients",
-)
-
-var communicationTimeout = flag.Duration(
-	"communicationTimeout",
-	10*time.Second,
-	"timeout applied to all HTTP requests",
-)
-
-var auctioneerAddress = flag.String(
-	"auctioneerAddress",
-	"",
-	"the address to the auctioneer api server",
-)
-
-var auctioneerCACert = flag.String(
-	"auctioneerCACert",
-	"",
-	"the path to the ca certificate used for mutual auth TLS with the auctioneer",
-)
-
-var auctioneerClientCert = flag.String(
-	"auctioneerClientCert",
-	"",
-	"the path to the client certificate used for mutual auth TLS with the auctioneer",
-)
-
-var auctioneerClientKey = flag.String(
-	"auctioneerClientKey",
-	"",
-	"the path to the client key used for mutual auth TLS with the auctioneer",
-)
-
-var auctioneerRequireTLS = flag.Bool(
-	"auctioneerRequireTLS",
-	false,
-	"whether or not to require tls when communicating with the auctioneer",
-)
-
-var sessionName = flag.String(
-	"sessionName",
-	"bbs",
-	"consul session name",
-)
-
-var consulCluster = flag.String(
-	"consulCluster",
-	"",
-	"comma-separated list of consul server URLs (scheme://ip:port)",
-)
-
-var lockTTL = flag.Duration(
-	"lockTTL",
-	locket.DefaultSessionTTL,
-	"TTL for service lock",
-)
-
-var lockRetryInterval = flag.Duration(
-	"lockRetryInterval",
-	locket.RetryInterval,
-	"interval to wait before retrying a failed lock acquisition",
-)
-
-var reportInterval = flag.Duration(
-	"metricsReportInterval",
-	time.Minute,
-	"interval on which to report metrics",
-)
-
-var dropsondePort = flag.Int(
-	"dropsondePort",
-	3457,
-	"port the local metron agent is listening on",
-)
-
-var convergenceWorkers = flag.Int(
-	"convergenceWorkers",
-	20,
-	"max concurrency for convergence",
-)
-
-var updateWorkers = flag.Int(
-	"updateWorkers",
-	1000,
-	"max concurrency for etcd updates in a single request",
-)
-
-var taskCallBackWorkers = flag.Int(
-	"taskCallBackWorkers",
-	1000,
-	"max concurrency for task callback requests",
-)
-
-var desiredLRPCreationTimeout = flag.Duration(
-	"desiredLRPCreationTimeout",
-	1*time.Minute,
-	"expected maximum time to create all components of a desired LRP",
-)
-
-var databaseConnectionString = flag.String(
-	"databaseConnectionString",
-	"",
-	"SQL database connection string",
-)
-
-var maxDatabaseConnections = flag.Int(
-	"maxDatabaseConnections",
-	200,
-	"max numbers of SQL database connections",
-)
-
-var databaseDriver = flag.String(
-	"databaseDriver",
-	"mysql",
-	"SQL database driver name",
-)
-
-var sqlCACertFile = flag.String(
-	"sqlCACertFile",
-	"",
-	"SQL database client cert, if supplied, require TLS to SQL",
-)
-
-var convergeRepeatInterval = flag.Duration(
-	"convergeRepeatInterval",
-	30*time.Second,
-	"the interval between runs of the converger",
-)
-
-var kickTaskDuration = flag.Duration(
-	"kickTaskDuration",
-	30*time.Second,
-	"the interval, in seconds, between kicks to tasks",
-)
-
-var expireCompletedTaskDuration = flag.Duration(
-	"expireCompletedTaskDuration",
-	120*time.Second,
-	"completed, unresolved tasks are deleted after this duration",
-)
-
-var expirePendingTaskDuration = flag.Duration(
-	"expirePendingTaskDuration",
-	30*time.Minute,
-	"unclaimed tasks are marked as failed, after this duration",
-)
-
-var repRequireTLS = flag.Bool(
-	"repRequireTLS",
-	false,
-	"whether tls connection to the rep is required or preferred",
-)
-
-var repCACert = flag.String(
-	"repCACert",
-	"",
-	"path to certificate authority cert used for mutually authenticated TLS REP communication",
-)
-
-var repClientCert = flag.String(
-	"repClientCert",
-	"",
-	"path to client cert used for mutually authenticated TLS REP communication",
-)
-
-var repClientKey = flag.String(
-	"repClientKey",
-	"",
-	"path to client key used for mutually authenticated TLS REP communication",
-)
-
-var repClientSessionCacheSize = flag.Int(
-	"repClientSessionCacheSize",
-	0,
-	"Capacity of the ClientSessionCache option on the TLS configuration. If zero, golang's default will be used",
+	"The path to the JSON configuration file.",
 )
 
 const (
@@ -279,32 +64,32 @@ const (
 )
 
 func main() {
-	debugserver.AddFlags(flag.CommandLine)
-	lagerflags.AddFlags(flag.CommandLine)
-	etcdFlags := AddETCDFlags(flag.CommandLine)
-	encryptionFlags := encryption.AddEncryptionFlags(flag.CommandLine)
-
 	flag.Parse()
 
-	cfhttp.Initialize(*communicationTimeout)
+	bbsConfig, err := config.NewBBSConfig(*configFilePath)
+	if err != nil {
+		panic(err.Error())
+	}
 
-	logger, reconfigurableSink := lagerflags.New("bbs")
+	cfhttp.Initialize(time.Duration(bbsConfig.CommunicationTimeout))
+
+	logger, reconfigurableSink := lagerflags.NewFromConfig(bbsConfig.SessionName, bbsConfig.LagerConfig)
 	logger.Info("starting")
 
-	initializeDropsonde(logger)
+	initializeDropsonde(logger, &bbsConfig)
 
 	clock := clock.NewClock()
 
-	consulClient, err := consuladapter.NewClientFromUrl(*consulCluster)
+	consulClient, err := consuladapter.NewClientFromUrl(bbsConfig.ConsulCluster)
 	if err != nil {
 		logger.Fatal("new-consul-client-failed", err)
 	}
 
 	serviceClient := bbs.NewServiceClient(consulClient, clock)
 
-	maintainer := initializeLockMaintainer(logger, serviceClient)
+	maintainer := initializeLockMaintainer(logger, serviceClient, &bbsConfig)
 
-	_, portString, err := net.SplitHostPort(*listenAddress)
+	_, portString, err := net.SplitHostPort(bbsConfig.ListenAddress)
 	if err != nil {
 		logger.Fatal("failed-invalid-listen-address", err)
 	}
@@ -313,7 +98,7 @@ func main() {
 		logger.Fatal("failed-invalid-listen-port", err)
 	}
 
-	_, portString, err = net.SplitHostPort(*healthAddress)
+	_, portString, err = net.SplitHostPort(bbsConfig.HealthAddress)
 	if err != nil {
 		logger.Fatal("failed-invalid-health-address", err)
 	}
@@ -330,7 +115,7 @@ func main() {
 	var storeClient etcddb.StoreClient
 	var etcdDB *etcddb.ETCDDB
 
-	key, keys, err := encryptionFlags.Parse()
+	key, keys, err := bbsConfig.EncryptionConfig.Parse()
 	if err != nil {
 		logger.Fatal("cannot-setup-encryption", err)
 	}
@@ -340,36 +125,48 @@ func main() {
 	}
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
-	etcdOptions, err := etcdFlags.Validate()
+	etcdOptions, err := bbsConfig.ETCDConfig.Validate()
 	if err != nil {
 		logger.Fatal("etcd-validation-failed", err)
 	}
 
 	if etcdOptions.IsConfigured {
 		storeClient = initializeEtcdStoreClient(logger, etcdOptions)
-		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, serviceClient, *desiredLRPCreationTimeout)
+		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, serviceClient, &bbsConfig)
 		activeDB = etcdDB
 	}
 
 	// If SQL database info is passed in, use SQL instead of ETCD
-	if *databaseDriver != "" && *databaseConnectionString != "" {
+	if bbsConfig.DatabaseDriver != "" && bbsConfig.DatabaseConnectionString != "" {
 		var err error
-		connectionString := appendSSLConnectionStringParam(logger, *databaseDriver, *databaseConnectionString, *sqlCACertFile)
+		connectionString := appendSSLConnectionStringParam(logger,
+			bbsConfig.DatabaseDriver,
+			bbsConfig.DatabaseConnectionString,
+			bbsConfig.SQLCACertFile,
+		)
 
-		sqlConn, err = sql.Open(*databaseDriver, connectionString)
+		sqlConn, err = sql.Open(bbsConfig.DatabaseDriver, connectionString)
 		if err != nil {
 			logger.Fatal("failed-to-open-sql", err)
 		}
 		defer sqlConn.Close()
-		sqlConn.SetMaxOpenConns(*maxDatabaseConnections)
-		sqlConn.SetMaxIdleConns(*maxDatabaseConnections)
+		sqlConn.SetMaxOpenConns(bbsConfig.MaxDatabaseConnections)
+		sqlConn.SetMaxIdleConns(bbsConfig.MaxDatabaseConnections)
 
 		err = sqlConn.Ping()
 		if err != nil {
 			logger.Fatal("sql-failed-to-connect", err)
 		}
 
-		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, *updateWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock, *databaseDriver)
+		sqlDB = sqldb.NewSQLDB(sqlConn,
+			bbsConfig.ConvergenceWorkers,
+			bbsConfig.UpdateWorkers,
+			format.ENCRYPTED_PROTO,
+			cryptor,
+			guidprovider.DefaultGuidProvider,
+			clock,
+			bbsConfig.DatabaseDriver,
+		)
 		err = sqlDB.SetIsolationLevel(logger, sqldb.IsolationLevelReadCommitted)
 		if err != nil {
 			logger.Fatal("sql-failed-to-set-isolation-level", err)
@@ -400,18 +197,18 @@ func main() {
 		migrations.Migrations,
 		migrationsDone,
 		clock,
-		*databaseDriver,
+		bbsConfig.DatabaseDriver,
 	)
 
 	desiredHub := events.NewHub()
 	actualHub := events.NewHub()
 
 	repTLSConfig := &rep.TLSConfig{
-		RequireTLS:      *repRequireTLS,
-		CaCertFile:      *repCACert,
-		CertFile:        *repClientCert,
-		KeyFile:         *repClientKey,
-		ClientCacheSize: *repClientSessionCacheSize,
+		RequireTLS:      bbsConfig.RepRequireTLS,
+		CaCertFile:      bbsConfig.RepCACert,
+		CertFile:        bbsConfig.RepClientCert,
+		KeyFile:         bbsConfig.RepClientKey,
+		ClientCacheSize: bbsConfig.RepClientSessionCacheSize,
 	}
 
 	httpClient := cfhttp.NewClient()
@@ -420,36 +217,36 @@ func main() {
 		logger.Fatal("new-rep-client-factory-failed", err)
 	}
 
-	auctioneerClient := initializeAuctioneerClient(logger)
+	auctioneerClient := initializeAuctioneerClient(logger, &bbsConfig)
 
 	exitChan := make(chan struct{})
 
 	var accessLogger lager.Logger
-	if *accessLogPath != "" {
+	if bbsConfig.AccessLogPath != "" {
 		accessLogger = lager.NewLogger("bbs-access")
-		file, err := os.OpenFile(*accessLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		file, err := os.OpenFile(bbsConfig.AccessLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			logger.Error("invalid-access-log-path", err, lager.Data{"access-log-path": *accessLogPath})
+			logger.Error("invalid-access-log-path", err, lager.Data{"access-log-path": bbsConfig.AccessLogPath})
 			os.Exit(1)
 		}
 		accessLogger.RegisterSink(lager.NewWriterSink(file, lager.INFO))
 	}
 
 	var tlsConfig *tls.Config
-	if *requireSSL {
-		tlsConfig, err = cfhttp.NewTLSConfig(*certFile, *keyFile, *caFile)
+	if bbsConfig.RequireSSL {
+		tlsConfig, err = cfhttp.NewTLSConfig(bbsConfig.CertFile, bbsConfig.KeyFile, bbsConfig.CaFile)
 		if err != nil {
 			logger.Fatal("tls-configuration-failed", err)
 		}
 	}
 
-	cbWorkPool := taskworkpool.New(logger, *taskCallBackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
+	cbWorkPool := taskworkpool.New(logger, bbsConfig.TaskCallbackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
 
 	handler := handlers.New(
 		logger,
 		accessLogger,
-		*updateWorkers,
-		*convergenceWorkers,
+		bbsConfig.UpdateWorkers,
+		bbsConfig.ConvergenceWorkers,
 		activeDB,
 		desiredHub,
 		actualHub,
@@ -464,7 +261,14 @@ func main() {
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(logger)
 
 	retirer := controllers.NewActualLRPRetirer(activeDB, actualHub, repClientFactory, serviceClient)
-	lrpConvergenceController := controllers.NewLRPConvergenceController(logger, activeDB, actualHub, auctioneerClient, serviceClient, retirer, *convergenceWorkers)
+	lrpConvergenceController := controllers.NewLRPConvergenceController(logger,
+		activeDB,
+		actualHub,
+		auctioneerClient,
+		serviceClient,
+		retirer,
+		bbsConfig.ConvergenceWorkers,
+	)
 	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory)
 
 	convergerProcess := converger.New(
@@ -473,19 +277,20 @@ func main() {
 		lrpConvergenceController,
 		taskController,
 		serviceClient,
-		*convergeRepeatInterval,
-		*kickTaskDuration,
-		*expirePendingTaskDuration,
-		*expireCompletedTaskDuration)
+		time.Duration(bbsConfig.ConvergeRepeatInterval),
+		time.Duration(bbsConfig.KickTaskDuration),
+		time.Duration(bbsConfig.ExpirePendingTaskDuration),
+		time.Duration(bbsConfig.ExpireCompletedTaskDuration),
+	)
 
 	var server ifrit.Runner
 	if tlsConfig != nil {
-		server = http_server.NewTLSServer(*listenAddress, handler, tlsConfig)
+		server = http_server.NewTLSServer(bbsConfig.ListenAddress, handler, tlsConfig)
 	} else {
-		server = http_server.New(*listenAddress, handler)
+		server = http_server.New(bbsConfig.ListenAddress, handler)
 	}
 
-	healthcheckServer := http_server.New(*healthAddress, http.HandlerFunc(healthCheckHandler))
+	healthcheckServer := http_server.New(bbsConfig.HealthAddress, http.HandlerFunc(healthCheckHandler))
 
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
@@ -602,18 +407,22 @@ func initializeRegistrationRunner(
 	return locket.NewRegistrationRunner(logger, registration, consulClient, locket.RetryInterval, clock)
 }
 
-func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClient) ifrit.Runner {
+func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClient, bbsConfig *config.BBSConfig) ifrit.Runner {
 	uuid, err := uuid.NewV4()
 	if err != nil {
 		logger.Fatal("Couldn't generate uuid", err)
 	}
 
-	if *advertiseURL == "" {
+	if bbsConfig.AdvertiseURL == "" {
 		logger.Fatal("Advertise URL must be specified", nil)
 	}
 
-	bbsPresence := models.NewBBSPresence(uuid.String(), *advertiseURL)
-	lockMaintainer, err := serviceClient.NewBBSLockRunner(logger, &bbsPresence, *lockRetryInterval, *lockTTL)
+	bbsPresence := models.NewBBSPresence(uuid.String(), bbsConfig.AdvertiseURL)
+	lockMaintainer, err := serviceClient.NewBBSLockRunner(logger,
+		&bbsPresence,
+		time.Duration(bbsConfig.LockRetryInterval),
+		time.Duration(bbsConfig.LockTTL),
+	)
 	if err != nil {
 		logger.Fatal("Couldn't create lock maintainer", err)
 	}
@@ -621,24 +430,29 @@ func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClie
 	return lockMaintainer
 }
 
-func initializeAuctioneerClient(logger lager.Logger) auctioneer.Client {
-	if *auctioneerAddress == "" {
+func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig) auctioneer.Client {
+	if bbsConfig.AuctioneerAddress == "" {
 		logger.Fatal("auctioneer-address-validation-failed", errors.New("auctioneerAddress is required"))
 	}
 
-	if *auctioneerCACert != "" || *auctioneerClientCert != "" || *auctioneerClientKey != "" {
-		client, err := auctioneer.NewSecureClient(*auctioneerAddress, *auctioneerCACert, *auctioneerClientCert, *auctioneerClientKey, *auctioneerRequireTLS)
+	if bbsConfig.AuctioneerCACert != "" || bbsConfig.AuctioneerClientCert != "" || bbsConfig.AuctioneerClientKey != "" {
+		client, err := auctioneer.NewSecureClient(bbsConfig.AuctioneerAddress,
+			bbsConfig.AuctioneerCACert,
+			bbsConfig.AuctioneerClientCert,
+			bbsConfig.AuctioneerClientKey,
+			bbsConfig.AuctioneerRequireTLS,
+		)
 		if err != nil {
 			logger.Fatal("failed-to-construct-auctioneer-client", err)
 		}
 		return client
 	}
 
-	return auctioneer.NewClient(*auctioneerAddress)
+	return auctioneer.NewClient(bbsConfig.AuctioneerAddress)
 }
 
-func initializeDropsonde(logger lager.Logger) {
-	dropsondeDestination := fmt.Sprint("localhost:", *dropsondePort)
+func initializeDropsonde(logger lager.Logger, bbsConfig *config.BBSConfig) {
+	dropsondeDestination := fmt.Sprint("localhost:", bbsConfig.DropsondePort)
 	err := dropsonde.Initialize(dropsondeDestination, dropsondeOrigin)
 	if err != nil {
 		logger.Error("failed-to-initialize-dropsonde", err)
@@ -650,13 +464,13 @@ func initializeEtcdDB(
 	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
 	serviceClient bbs.ServiceClient,
-	desiredLRPCreationMaxTime time.Duration,
+	bbsConfig *config.BBSConfig,
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(
 		format.ENCRYPTED_PROTO,
-		*convergenceWorkers,
-		*updateWorkers,
-		desiredLRPCreationMaxTime,
+		bbsConfig.ConvergenceWorkers,
+		bbsConfig.UpdateWorkers,
+		time.Duration(bbsConfig.DesiredLRPCreationTimeout),
 		cryptor,
 		storeClient,
 		clock.NewClock(),

@@ -28,7 +28,7 @@ var _ = Describe("Events API", func() {
 	)
 
 	BeforeEach(func() {
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 

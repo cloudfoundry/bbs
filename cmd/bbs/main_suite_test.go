@@ -9,8 +9,9 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs"
-	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	bbsconfig "code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
 	"code.cloudfoundry.org/consuladapter"
@@ -48,7 +49,7 @@ var (
 	bbsHealthAddress    string
 	bbsPort             int
 	bbsURL              *url.URL
-	bbsArgs             testrunner.Args
+	bbsConfig           bbsconfig.BBSConfig
 	bbsRunner           *ginkgomon.Runner
 	bbsProcess          ifrit.Process
 	consulRunner        *consulrunner.ClusterRunner
@@ -155,21 +156,25 @@ var _ = BeforeEach(func() {
 
 	client = bbs.NewClient(bbsURL.String())
 
-	bbsArgs = testrunner.Args{
-		Address:                  bbsAddress,
-		AdvertiseURL:             bbsURL.String(),
-		AuctioneerAddress:        auctioneerServer.URL(),
-		ConsulCluster:            consulRunner.ConsulCluster(),
-		DropsondePort:            port,
-		EtcdCluster:              etcdUrl, // etcd is still being used to test version migration in migration_version_test.go
+	bbsConfig = bbsconfig.BBSConfig{
+		ListenAddress:     bbsAddress,
+		AdvertiseURL:      bbsURL.String(),
+		AuctioneerAddress: auctioneerServer.URL(),
+		ConsulCluster:     consulRunner.ConsulCluster(),
+		DropsondePort:     port,
+		ETCDConfig: bbsconfig.ETCDConfig{
+			ClusterUrls: []string{etcdUrl}, // etcd is still being used to test version migration in migration_version_test.go
+		},
 		DatabaseDriver:           sqlRunner.DriverName(),
 		DatabaseConnectionString: sqlRunner.ConnectionString(),
-		MetricsReportInterval:    10 * time.Millisecond,
+		ReportInterval:           bbsconfig.Duration(10 * time.Millisecond),
 		HealthAddress:            bbsHealthAddress,
 
-		EncryptionKeys:         []string{"label:key"},
-		ActiveKeyLabel:         "label",
-		ConvergeRepeatInterval: time.Hour,
+		EncryptionConfig: encryption.EncryptionConfig{
+			EncryptionKeys: map[string]string{"label": "key"},
+			ActiveKeyLabel: "label",
+		},
+		ConvergeRepeatInterval: bbsconfig.Duration(time.Hour),
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)

@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/encryption"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -17,26 +19,29 @@ var _ = Describe("BBS With Only SQL", func() {
 		port, err := strconv.Atoi(strings.TrimPrefix(testMetricsListener.LocalAddr().String(), "127.0.0.1:"))
 		Expect(err).NotTo(HaveOccurred())
 
-		bbsArgs = testrunner.Args{
-			Address:               bbsAddress,
-			HealthAddress:         bbsHealthAddress,
-			AdvertiseURL:          bbsURL.String(),
-			AuctioneerAddress:     auctioneerServer.URL(),
-			ConsulCluster:         consulRunner.ConsulCluster(),
-			DropsondePort:         port,
-			MetricsReportInterval: 10 * time.Millisecond,
-			EncryptionKeys:        []string{"label:key"},
-			ActiveKeyLabel:        "label",
+		bbsConfig = config.BBSConfig{
+			ListenAddress:     bbsAddress,
+			HealthAddress:     bbsHealthAddress,
+			AdvertiseURL:      bbsURL.String(),
+			AuctioneerAddress: auctioneerServer.URL(),
+			ConsulCluster:     consulRunner.ConsulCluster(),
+			DropsondePort:     port,
+			ReportInterval:    config.Duration(10 * time.Millisecond),
+			EncryptionConfig: encryption.EncryptionConfig{
+				EncryptionKeys: map[string]string{"label": "key"},
+				ActiveKeyLabel: "label",
+			},
+			ETCDConfig: config.ETCDConfig{},
 		}
 	})
 
 	JustBeforeEach(func() {
-		bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 	})
 
 	Context("when etcd is partially configured", func() {
 		BeforeEach(func() {
-			bbsArgs.EtcdCACert = "I am a ca cert"
+			bbsConfig.ETCDConfig.CaFile = "I am a ca cert"
 		})
 
 		It("returns a validation error", func() {
@@ -48,8 +53,8 @@ var _ = Describe("BBS With Only SQL", func() {
 	Context("when etcd is not configured at all", func() {
 		Context("and sql is configured", func() {
 			BeforeEach(func() {
-				bbsArgs.DatabaseDriver = sqlRunner.DriverName()
-				bbsArgs.DatabaseConnectionString = sqlRunner.ConnectionString()
+				bbsConfig.DatabaseDriver = sqlRunner.DriverName()
+				bbsConfig.DatabaseConnectionString = sqlRunner.ConnectionString()
 			})
 
 			It("the bbs eventually responds to ping", func() {

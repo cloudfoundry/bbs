@@ -12,7 +12,7 @@ import (
 var _ = Describe("ServiceRegistration", func() {
 	Context("when the bbs service starts", func() {
 		BeforeEach(func() {
-			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 		})
 

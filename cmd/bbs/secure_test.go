@@ -33,15 +33,15 @@ var _ = Describe("Secure", func() {
 	Context("when configuring the BBS server for mutual SSL", func() {
 		JustBeforeEach(func() {
 			client = bbs.NewClient(bbsURL.String())
-			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 		})
 
 		BeforeEach(func() {
-			bbsArgs.RequireSSL = true
-			bbsArgs.CAFile = path.Join(basePath, "green-certs", "server-ca.crt")
-			bbsArgs.CertFile = path.Join(basePath, "green-certs", "server.crt")
-			bbsArgs.KeyFile = path.Join(basePath, "green-certs", "server.key")
+			bbsConfig.RequireSSL = true
+			bbsConfig.CaFile = path.Join(basePath, "green-certs", "server-ca.crt")
+			bbsConfig.CertFile = path.Join(basePath, "green-certs", "server.crt")
+			bbsConfig.KeyFile = path.Join(basePath, "green-certs", "server.key")
 		})
 
 		It("succeeds for a client configured with the right certificate", func() {
@@ -154,14 +154,14 @@ var _ = Describe("Secure", func() {
 	Context("when configuring a client without mutual SSL (skipping verification)", func() {
 		JustBeforeEach(func() {
 			client = bbs.NewClient(bbsURL.String())
-			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 		})
 
 		BeforeEach(func() {
-			bbsArgs.RequireSSL = true
-			bbsArgs.CertFile = path.Join(basePath, "green-certs", "server.crt")
-			bbsArgs.KeyFile = path.Join(basePath, "green-certs", "server.key")
+			bbsConfig.RequireSSL = true
+			bbsConfig.CertFile = path.Join(basePath, "green-certs", "server.crt")
+			bbsConfig.KeyFile = path.Join(basePath, "green-certs", "server.key")
 		})
 
 		It("succeeds for a client configured with the right certificate", func() {
@@ -182,13 +182,13 @@ var _ = Describe("Secure", func() {
 
 	Context("when configuring the auctioneer client with mutual SSL", func() {
 		BeforeEach(func() {
-			bbsArgs.AuctioneerCACert = path.Join(basePath, "green-certs", "server-ca.crt")
-			bbsArgs.AuctioneerClientCert = path.Join(basePath, "green-certs", "client.crt")
-			bbsArgs.AuctioneerClientKey = path.Join(basePath, "green-certs", "client.key")
+			bbsConfig.AuctioneerCACert = path.Join(basePath, "green-certs", "server-ca.crt")
+			bbsConfig.AuctioneerClientCert = path.Join(basePath, "green-certs", "client.crt")
+			bbsConfig.AuctioneerClientKey = path.Join(basePath, "green-certs", "client.key")
 		})
 
 		JustBeforeEach(func() {
-			bbsRunner = testrunner.New(bbsBinPath, bbsArgs)
+			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ifrit.Background(bbsRunner)
 		})
 
@@ -199,7 +199,7 @@ var _ = Describe("Secure", func() {
 
 		Context("when the auctioneer client is configured incorrectly", func() {
 			BeforeEach(func() {
-				bbsArgs.AuctioneerClientCert = ""
+				bbsConfig.AuctioneerClientCert = ""
 			})
 
 			It("exits with an error", func() {
