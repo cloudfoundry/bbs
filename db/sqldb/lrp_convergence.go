@@ -134,6 +134,13 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 		return
 	}
 
+	type crashedActualLRP struct {
+		lrpKey         models.ActualLRPKey
+		schedulingInfo *models.DesiredLRPSchedulingInfo
+		index          int
+	}
+	lrps := []crashedActualLRP{}
+
 	for rows.Next() {
 		var index int
 		actual := &models.ActualLRP{}
@@ -147,16 +154,27 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 		actual.State = models.ActualLRPStateCrashed
 
 		if actual.ShouldRestartCrash(now, restartCalculator) {
-			c.submit(func() {
-				_, _, err = c.UnclaimActualLRP(logger, &actual.ActualLRPKey)
-				if err != nil {
-					logger.Error("failed-unclaiming-actual-lrp", err)
-					return
-				}
-
-				c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, index)
+			lrps = append(lrps, crashedActualLRP{
+				lrpKey:         actual.ActualLRPKey,
+				schedulingInfo: schedulingInfo,
+				index:          index,
 			})
 		}
+	}
+
+	for _, lrp := range lrps {
+		key := lrp.lrpKey
+		schedulingInfo := lrp.schedulingInfo
+		index := lrp.index
+		c.submit(func() {
+			_, _, err := c.UnclaimActualLRP(logger, &key)
+			if err != nil {
+				logger.Error("failed-unclaiming-actual-lrp", err)
+				return
+			}
+
+			c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, index)
+		})
 	}
 
 	if rows.Err() != nil {
@@ -209,6 +227,8 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		return
 	}
 
+	keys := []models.ActualLRPKey{}
+
 	missingLRPCount := 0
 	for rows.Next() {
 		var existingIndicesStr sql.NullString
@@ -234,13 +254,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				missingLRPCount++
 				indices = append(indices, i)
 				index := int32(i)
-
-				c.submit(func() {
-					_, err := c.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: schedulingInfo.ProcessGuid, Domain: schedulingInfo.Domain, Index: index})
-					if err != nil {
-						logger.Error("failed-creating-missing-actual-lrp", err)
-					}
-				})
+				keys = append(keys, models.ActualLRPKey{ProcessGuid: schedulingInfo.ProcessGuid, Domain: schedulingInfo.Domain, Index: index})
 			}
 		}
 
@@ -257,6 +271,16 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				}
 			}
 		}
+	}
+
+	for _, key := range keys {
+		lrpKey := key
+		c.submit(func() {
+			_, err := c.CreateUnclaimedActualLRP(logger, &lrpKey)
+			if err != nil {
+				logger.Error("failed-creating-missing-actual-lrp", err)
+			}
+		})
 	}
 
 	if rows.Err() != nil {

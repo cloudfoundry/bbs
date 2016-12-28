@@ -126,6 +126,7 @@ var _ = Describe("DomainDB", func() {
 				err = rowsCount.Scan(&domainCount)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domainCount).To(Equal(1))
+				Expect(rowsCount.Close()).To(Succeed())
 
 				rows, err := db.Query("SELECT * FROM domains;")
 				Expect(err).NotTo(HaveOccurred())

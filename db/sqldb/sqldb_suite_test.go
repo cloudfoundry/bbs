@@ -112,6 +112,11 @@ var _ = BeforeEach(func() {
 
 	Consistently(migrationProcess.Wait()).ShouldNot(Receive())
 	Eventually(migrationsDone).Should(BeClosed())
+
+	// ensure that all sqldb functions being tested only require one connection
+	// to operate, otherwise a deadlock can be caused in bbs. For more
+	// information see https://www.pivotaltracker.com/story/show/136754083
+	db.SetMaxOpenConns(1)
 })
 
 var _ = AfterEach(func() {

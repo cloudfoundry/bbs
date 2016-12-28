@@ -12,7 +12,7 @@ import (
 func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRPGroup, error) {
 	var groups []*models.ActualLRPGroup
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		rows, err := db.all(logger, db.db, actualLRPsTable,
+		rows, err := db.all(logger, tx, actualLRPsTable,
 			actualLRPColumns, NoLockRow,
 			wheres, whereBindinngs...,
 		)
@@ -21,7 +21,7 @@ func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinng
 			return db.convertSQLError(err)
 		}
 		defer rows.Close()
-		groups, err = db.scanAndCleanupActualLRPs(logger, db.db, rows)
+		groups, err = db.scanAndCleanupActualLRPs(logger, tx, rows)
 		return err
 	})
 
@@ -87,7 +87,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 
 	now := db.clock.Now().UnixNano()
 	err = db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		_, err := db.insert(logger, db.db, actualLRPsTable,
+		_, err := db.insert(logger, tx, actualLRPsTable,
 			SQLAttributes{
 				"process_guid":           key.ProcessGuid,
 				"instance_index":         key.Index,

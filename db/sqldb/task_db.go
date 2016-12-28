@@ -73,18 +73,10 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 		}
 		defer rows.Close()
 
-		for rows.Next() {
-			task, err := db.fetchTask(logger, rows, db.db)
-			if err != nil {
-				logger.Error("failed-fetch", err)
-				return err
-			}
-			results = append(results, task)
-		}
-
-		if rows.Err() != nil {
-			logger.Error("failed-getting-next-row", rows.Err())
-			return db.convertSQLError(rows.Err())
+		results, _, err = db.fetchTasks(logger, rows, tx, true)
+		if err != nil {
+			logger.Error("failed-fetch", err)
+			return db.convertSQLError(err)
 		}
 
 		return nil
@@ -106,8 +98,8 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 			taskColumns, NoLockRow,
 			"guid = ?", taskGuid,
 		)
-		task, err = db.fetchTask(logger, row, db.db)
 
+		task, err = db.fetchTask(logger, row, tx)
 		return err
 	})
 
@@ -341,15 +333,55 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	return nil
 }
 
-func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, tx *sql.Tx) (*models.Task, error) {
-	row := db.one(logger, tx, tasksTable,
+func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, queryable Queryable) (*models.Task, error) {
+	row := db.one(logger, queryable, tasksTable,
 		taskColumns, LockRow,
 		"guid = ?", taskGuid,
 	)
-	return db.fetchTask(logger, row, tx)
+	return db.fetchTask(logger, row, queryable)
 }
 
-func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable) (*models.Task, error) {
+func (db *SQLDB) fetchTasks(logger lager.Logger, rows *sql.Rows, queryable Queryable, abortOnError bool) ([]*models.Task, int, error) {
+	tasks := []*models.Task{}
+	invalidGuids := []string{}
+	var err error
+	for rows.Next() {
+		var task *models.Task
+		var guid string
+
+		task, guid, err = db.fetchTaskInternal(logger, rows)
+		if err == models.ErrDeserialize {
+			invalidGuids = append(invalidGuids, guid)
+			if abortOnError {
+				break
+			}
+			continue
+		}
+		tasks = append(tasks, task)
+	}
+
+	if err == nil {
+		err = rows.Err()
+	}
+
+	rows.Close()
+
+	if len(invalidGuids) > 0 {
+		db.deleteInvalidTasks(logger, queryable, invalidGuids...)
+	}
+
+	return tasks, len(invalidGuids), err
+}
+
+func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, queryable Queryable) (*models.Task, error) {
+	task, guid, err := db.fetchTaskInternal(logger, scanner)
+	if err == models.ErrDeserialize {
+		db.deleteInvalidTasks(logger, queryable, guid)
+	}
+	return task, err
+}
+
+func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner RowScanner) (*models.Task, string, error) {
 	var guid, domain, cellID, failureReason string
 	var result sql.NullString
 	var createdAt, updatedAt, firstCompletedAt int64
@@ -372,24 +404,18 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 	)
 
 	if err == sql.ErrNoRows {
-		return nil, models.ErrResourceNotFound
+		return nil, "", models.ErrResourceNotFound
 	}
 
 	if err != nil {
 		logger.Error("failed-scanning-row", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	var taskDef models.TaskDefinition
 	err = db.deserializeModel(logger, taskDefData, &taskDef)
 	if err != nil {
-		logger.Info("deleting-malformed-task-from-db", lager.Data{"guid": guid})
-		_, err = db.delete(logger, tx, tasksTable, "guid = ?", guid)
-		if err != nil {
-			logger.Error("failed-deleting-task", err)
-			return nil, db.convertSQLError(err)
-		}
-		return nil, models.ErrDeserialize
+		return nil, guid, models.ErrDeserialize
 	}
 
 	task := &models.Task{
@@ -405,5 +431,17 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner RowScanner, tx Queryable
 		FailureReason:    failureReason,
 		TaskDefinition:   &taskDef,
 	}
-	return task, nil
+	return task, guid, nil
+}
+
+func (db *SQLDB) deleteInvalidTasks(logger lager.Logger, queryable Queryable, guids ...string) error {
+	for _, guid := range guids {
+		logger.Info("deleting-invalid-task-from-db", lager.Data{"guid": guid})
+		_, err := db.delete(logger, queryable, tasksTable, "guid = ?", guid)
+		if err != nil {
+			logger.Error("failed-deleting-task", err)
+			return db.convertSQLError(err)
+		}
+	}
+	return nil
 }

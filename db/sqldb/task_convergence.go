@@ -115,26 +115,18 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 
 	defer rows.Close()
 
-	var failedFetches uint64
 	tasksToAuction := []*auctioneer.TaskStartRequest{}
-	for rows.Next() {
-		task, err := db.fetchTask(logger, rows, db.db)
-		if err != nil {
-			logger.Error("failed-fetch", err)
-			if err == models.ErrDeserialize {
-				failedFetches++
-			}
-		} else {
-			taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
-			tasksToAuction = append(tasksToAuction, &taskStartRequest)
-		}
+	tasks, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	for _, task := range tasks {
+		taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
+		tasksToAuction = append(tasksToAuction, &taskStartRequest)
 	}
 
-	if rows.Err() != nil {
-		logger.Error("failed-getting-next-row", rows.Err())
+	if err != nil {
+		logger.Error("failed-fetching-some-tasks", err)
 	}
 
-	return tasksToAuction, failedFetches
+	return tasksToAuction, uint64(invalidTasksCount)
 }
 
 func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet models.CellSet) int64 {
@@ -224,25 +216,13 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 
 	defer rows.Close()
 
-	var failedFetches uint64
-	tasksToComplete := []*models.Task{}
-	for rows.Next() {
-		task, err := db.fetchTask(logger, rows, db.db)
-		if err != nil {
-			logger.Error("failed-fetch", err)
-			if err == models.ErrDeserialize {
-				failedFetches++
-			}
-		} else {
-			tasksToComplete = append(tasksToComplete, task)
-		}
+	tasksToComplete, failedFetches, err := db.fetchTasks(logger, rows, db.db, false)
+
+	if err != nil {
+		logger.Error("failed-fetching-some-tasks", err)
 	}
 
-	if rows.Err() != nil {
-		logger.Error("failed-getting-next-row", rows.Err())
-	}
-
-	return tasksToComplete, failedFetches
+	return tasksToComplete, uint64(failedFetches)
 }
 
 func sendTaskMetrics(logger lager.Logger, pendingCount, runningCount, completedCount, resolvingCount int) {

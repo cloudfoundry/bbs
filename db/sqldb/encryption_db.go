@@ -64,7 +64,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 	}
 	defer rows.Close()
 
-	where := fmt.Sprintf("%s = ?", primaryKey)
+	guids := []string{}
 	for rows.Next() {
 		var guid string
 		err := rows.Scan(&guid)
@@ -72,7 +72,11 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 			logger.Error("failed-to-scan-primary-key", err)
 			continue
 		}
+		guids = append(guids, guid)
+	}
 
+	where := fmt.Sprintf("%s = ?", primaryKey)
+	for _, guid := range guids {
 		err = db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 			blobs := make([]interface{}, len(blobColumns))
 

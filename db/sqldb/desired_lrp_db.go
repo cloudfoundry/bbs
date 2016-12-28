@@ -97,7 +97,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 			"process_guid = ?", processGuid,
 		)
 
-		desiredLRP, err = db.fetchDesiredLRP(logger, row)
+		desiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
 		return err
 	})
 
@@ -130,16 +130,8 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		}
 		defer rows.Close()
 
-		for rows.Next() {
-			desiredLRP, err := db.fetchDesiredLRP(logger, rows)
-			if err != nil {
-				logger.Error("failed-reading-row", err)
-				continue
-			}
-			results = append(results, desiredLRP)
-		}
-
-		if rows.Err() != nil {
+		results, err = db.fetchDesiredLRPs(logger, rows, tx)
+		if err != nil {
 			logger.Error("failed-fetching-row", rows.Err())
 			return db.convertSQLError(rows.Err())
 		}
@@ -208,7 +200,8 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			desiredLRPColumns, LockRow,
 			"process_guid = ?", processGuid,
 		)
-		beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row)
+		beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
+
 		if err != nil {
 			logger.Error("failed-lock-desired", err)
 			return err
@@ -356,25 +349,67 @@ func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid 
 	return nil
 }
 
-func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner) (*models.DesiredLRP, error) {
+func (db *SQLDB) fetchDesiredLRPs(logger lager.Logger, rows *sql.Rows, queryable Queryable) ([]*models.DesiredLRP, error) {
+	guids := []string{}
+	lrps := []*models.DesiredLRP{}
+	for rows.Next() {
+		lrp, guid, err := db.fetchDesiredLRPInternal(logger, rows)
+		if err == models.ErrDeserialize {
+			guids = append(guids, guid)
+		}
+		if err != nil {
+			logger.Error("failed-reading-row", err)
+			continue
+		}
+		lrps = append(lrps, lrp)
+	}
+
+	if len(guids) > 0 {
+		db.deleteInvalidLRPs(logger, queryable, guids...)
+	}
+
+	if err := rows.Err(); err != nil {
+		return lrps, err
+	}
+
+	return lrps, nil
+}
+
+func (db *SQLDB) fetchDesiredLRP(logger lager.Logger, scanner RowScanner, queryable Queryable) (*models.DesiredLRP, error) {
+	lrp, guid, err := db.fetchDesiredLRPInternal(logger, scanner)
+	if err == models.ErrDeserialize {
+		db.deleteInvalidLRPs(logger, queryable, guid)
+	}
+	return lrp, err
+}
+
+func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner RowScanner) (*models.DesiredLRP, string, error) {
 	var runInfoData []byte
 	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData)
 	if err != nil {
 		logger.Error("failed-fetching-run-info", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	var runInfo models.DesiredLRPRunInfo
 	err = db.deserializeModel(logger, runInfoData, &runInfo)
 	if err != nil {
-		_, err := db.delete(logger, db.db, desiredLRPsTable, "process_guid = ?", schedulingInfo.ProcessGuid)
-		if err != nil {
-			logger.Error("failed-deleting-invalid-row", err)
-		}
-		return nil, models.ErrDeserialize
+		return nil, schedulingInfo.ProcessGuid, models.ErrDeserialize
 	}
 	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo)
-	return &desiredLRP, nil
+	return &desiredLRP, "", nil
+}
+
+func (db *SQLDB) deleteInvalidLRPs(logger lager.Logger, queryable Queryable, guids ...string) error {
+	for _, guid := range guids {
+		logger.Info("deleting-invalid-desired-lrp-from-db", lager.Data{"guid": guid})
+		_, err := db.delete(logger, queryable, desiredLRPsTable, "process_guid = ?", guid)
+		if err != nil {
+			logger.Error("failed-deleting-invalid-row", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func (db *SQLDB) fetchDesiredLRPSchedulingInfo(logger lager.Logger, scanner RowScanner) (*models.DesiredLRPSchedulingInfo, error) {
