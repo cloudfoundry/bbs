@@ -12,13 +12,18 @@ import (
 	"code.cloudfoundry.org/workpool"
 )
 
+//go:generate counterfeiter -o fakes/fake_retirer.go . Retirer
+type Retirer interface {
+	RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
+}
+
 type LRPConvergenceController struct {
 	logger                 lager.Logger
 	db                     db.LRPDB
 	actualHub              events.Hub
 	auctioneerClient       auctioneer.Client
 	serviceClient          bbs.ServiceClient
-	retirer                ActualLRPRetirer
+	retirer                Retirer
 	convergenceWorkersSize int
 }
 
@@ -28,7 +33,7 @@ func NewLRPConvergenceController(
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	serviceClient bbs.ServiceClient,
-	retirer ActualLRPRetirer,
+	retirer Retirer,
 	convergenceWorkersSize int,
 ) *LRPConvergenceController {
 	return &LRPConvergenceController{
@@ -66,7 +71,10 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range keysToRetire {
 		key := key
 		works = append(works, func() {
-			h.retirer.RetireActualLRP(retireLogger, key.ProcessGuid, key.Index)
+			err := h.retirer.RetireActualLRP(retireLogger, key)
+			if err != nil {
+				logger.Error("retiring-lrp-failed", err)
+			}
 		})
 	}
 

@@ -6,6 +6,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
+	"code.cloudfoundry.org/bbs/controllers/fakes"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/fake_bbs"
@@ -25,6 +26,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		logger               *lagertest.TestLogger
 		fakeLRPDB            *dbfakes.FakeLRPDB
 		actualHub            *eventfakes.FakeHub
+		retirer              *fakes.FakeRetirer
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 
 		keysToAuction        []*auctioneer.LRPStartRequest
@@ -118,7 +120,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeServiceClient.CellsReturns(cellSet, nil)
 
 		actualHub = &eventfakes.FakeHub{}
-		retirer := controllers.NewActualLRPRetirer(fakeLRPDB, actualHub, fakeRepClientFactory, fakeServiceClient)
+		retirer = &fakes.FakeRetirer{}
 		controller = controllers.NewLRPConvergenceController(logger, fakeLRPDB, actualHub, fakeAuctioneerClient, fakeServiceClient, retirer, 2)
 	})
 
@@ -271,71 +273,30 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				})
 
 				It("stops the LRPs", func() {
-					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal(cellPresence.RepAddress))
+					Eventually(retirer.RetireActualLRPCallCount()).Should(Equal(2))
 
-					Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
-					_, fetchedCellID := fakeServiceClient.CellByIdArgsForCall(0)
-					Expect(fetchedCellID).To(Equal(cellID))
-					_, fetchedCellID = fakeServiceClient.CellByIdArgsForCall(1)
-					Expect(fetchedCellID).To(Equal(cellID))
-
-					Expect(fakeRepClient.StopLRPInstanceCallCount()).Should(Equal(2))
-
-					stoppedKeys := make([]models.ActualLRPKey, 2)
-					stoppedInstanceKeys := make([]models.ActualLRPInstanceKey, 2)
+					stoppedKeys := make([]*models.ActualLRPKey, 2)
 
 					for i := 0; i < 2; i++ {
-						stoppedKey, stoppedInstanceKey := fakeRepClient.StopLRPInstanceArgsForCall(i)
-						stoppedKeys[i] = stoppedKey
-						stoppedInstanceKeys[i] = stoppedInstanceKey
+						_, key := retirer.RetireActualLRPArgsForCall(i)
+						stoppedKeys[i] = key
 					}
 
-					Expect(stoppedKeys).To(ContainElement(retiringActualLRP1.ActualLRPKey))
-					Expect(stoppedInstanceKeys).To(ContainElement(retiringActualLRP1.ActualLRPInstanceKey))
-
-					Expect(stoppedKeys).To(ContainElement(retiringActualLRP2.ActualLRPKey))
-					Expect(stoppedInstanceKeys).To(ContainElement(retiringActualLRP2.ActualLRPInstanceKey))
+					Expect(stoppedKeys).To(ContainElement(&retiringActualLRP1.ActualLRPKey))
+					Expect(stoppedKeys).To(ContainElement(&retiringActualLRP2.ActualLRPKey))
 				})
 
-				Context("when the rep announces a rep url", func() {
+				Context("when the retirer returns an error", func() {
 					BeforeEach(func() {
-						cellPresence = models.NewCellPresence(
-							cellID,
-							"cell1.addr",
-							"http://cell1.addr",
-							"the-zone",
-							models.NewCellCapacity(128, 1024, 6),
-							[]string{},
-							[]string{},
-							[]string{},
-							[]string{},
-						)
-
-						fakeServiceClient.CellByIdReturns(&cellPresence, nil)
+						retirer.RetireActualLRPReturns(errors.New("BOOM!!!"))
 					})
 
-					It("passes the url when creating a rep client", func() {
-						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
-						Expect(repAddr).To(Equal(cellPresence.RepAddress))
-						Expect(repURL).To(Equal(cellPresence.RepUrl))
+					It("should log the error", func() {
+						Expect(logger.Buffer()).To(gbytes.Say("BOOM!!!"))
 					})
 
-					Context("when creating a rep client fails", func() {
-						BeforeEach(func() {
-							err := errors.New("BOOM!!!")
-							fakeRepClientFactory.CreateClientReturns(nil, err)
-						})
-
-						It("should log the error", func() {
-							Expect(logger.Buffer()).To(gbytes.Say("BOOM!!!"))
-						})
-
-						It("should not return an error", func() {
-							Expect(err).NotTo(HaveOccurred())
-						})
+					It("should return the error", func() {
+						Expect(err).NotTo(HaveOccurred())
 					})
 				})
 			})
@@ -351,21 +312,17 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 				Context("removing the actualLRP succeeds", func() {
 					It("removes the LRPs", func() {
-						Expect(fakeLRPDB.RemoveActualLRPCallCount()).To(Equal(2))
-						deletedLRPGuids := make([]string, 2)
-						deletedLRPIndicies := make([]int32, 2)
+						Eventually(retirer.RetireActualLRPCallCount()).Should(Equal(2))
+
+						deletedKeys := make([]*models.ActualLRPKey, 2)
 
 						for i := 0; i < 2; i++ {
-							_, deletedLRPGuid, deletedLRPIndex, _ := fakeLRPDB.RemoveActualLRPArgsForCall(i)
-							deletedLRPGuids[i] = deletedLRPGuid
-							deletedLRPIndicies[i] = deletedLRPIndex
+							_, key := retirer.RetireActualLRPArgsForCall(i)
+							deletedKeys[i] = key
 						}
 
-						Expect(deletedLRPGuids).To(ContainElement(retiringActualLRP1.ProcessGuid))
-						Expect(deletedLRPIndicies).To(ContainElement(retiringActualLRP1.Index))
-
-						Expect(deletedLRPGuids).To(ContainElement(retiringActualLRP2.ProcessGuid))
-						Expect(deletedLRPIndicies).To(ContainElement(retiringActualLRP2.Index))
+						Expect(deletedKeys).To(ContainElement(&retiringActualLRP1.ActualLRPKey))
+						Expect(deletedKeys).To(ContainElement(&retiringActualLRP2.ActualLRPKey))
 					})
 				})
 			})
