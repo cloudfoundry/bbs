@@ -305,9 +305,9 @@ func main() {
 		{"registration-runner", registrationRunner},
 	}
 
-	if dbgAddr := debugserver.DebugAddress(flag.CommandLine); dbgAddr != "" {
+	if bbsConfig.DebugAddress != "" {
 		members = append(grouper.Members{
-			{"debug-server", debugserver.Runner(dbgAddr, reconfigurableSink)},
+			{"debug-server", debugserver.Runner(bbsConfig.DebugAddress, reconfigurableSink)},
 		}, members...)
 	}
 
