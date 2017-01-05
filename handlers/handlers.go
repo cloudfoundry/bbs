@@ -32,11 +32,11 @@ func New(
 	migrationsDone <-chan struct{},
 	exitChan chan struct{},
 ) http.Handler {
-	retirer := controllers.NewActualLRPRetirer(db, actualHub, repClientFactory, serviceClient)
 	pingHandler := NewPingHandler()
 	domainHandler := NewDomainHandler(db, exitChan)
 	actualLRPHandler := NewActualLRPHandler(db, exitChan)
-	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(db, db, actualHub, auctioneerClient, retirer, exitChan)
+	actualLRPController := controllers.NewActualLRPLifecycleController(db, db, db, auctioneerClient, serviceClient, repClientFactory, actualHub)
+	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(db, db, db, actualHub, auctioneerClient, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
 	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)

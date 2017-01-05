@@ -260,13 +260,13 @@ func main() {
 
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(logger)
 
-	retirer := controllers.NewActualLRPRetirer(activeDB, actualHub, repClientFactory, serviceClient)
+	actualLRPController := controllers.NewActualLRPLifecycleController(activeDB, activeDB, activeDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
 	lrpConvergenceController := controllers.NewLRPConvergenceController(logger,
 		activeDB,
 		actualHub,
 		auctioneerClient,
 		serviceClient,
-		retirer,
+		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 	)
 	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory)
