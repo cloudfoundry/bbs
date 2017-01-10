@@ -117,6 +117,14 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		values = append(values, filter.Domain)
 	}
 
+	if len(filter.ProcessGuids) > 0 {
+		wheres = append(wheres, whereClauseForProcessGuids(filter.ProcessGuids))
+
+		for _, guid := range filter.ProcessGuids {
+			values = append(values, guid)
+		}
+	}
+
 	results := []*models.DesiredLRP{}
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
@@ -153,6 +161,14 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	if filter.Domain != "" {
 		wheres = append(wheres, "domain = ?")
 		values = append(values, filter.Domain)
+	}
+
+	if len(filter.ProcessGuids) > 0 {
+		wheres = append(wheres, whereClauseForProcessGuids(filter.ProcessGuids))
+
+		for _, guid := range filter.ProcessGuids {
+			values = append(values, guid)
+		}
 	}
 
 	results := []*models.DesiredLRPSchedulingInfo{}
@@ -414,4 +430,16 @@ func (db *SQLDB) deleteInvalidLRPs(logger lager.Logger, queryable Queryable, gui
 
 func (db *SQLDB) fetchDesiredLRPSchedulingInfo(logger lager.Logger, scanner RowScanner) (*models.DesiredLRPSchedulingInfo, error) {
 	return db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner)
+}
+
+func whereClauseForProcessGuids(filter []string) string {
+	var questionMarks []string
+
+	where := "process_guid IN ("
+	for range filter {
+		questionMarks = append(questionMarks, "?")
+	}
+
+	where += strings.Join(questionMarks, ", ")
+	return where + ")"
 }

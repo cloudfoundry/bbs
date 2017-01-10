@@ -113,6 +113,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
+
+			Context("and filtering by process guids", func() {
+				BeforeEach(func() {
+					requestBody = &models.DesiredLRPsRequest{ProcessGuids: []string{"g1", "g2"}}
+				})
+
+				It("call the DB with the process guid filter to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
+					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					Expect(filter.ProcessGuids).To(Equal([]string{"g1", "g2"}))
+				})
+			})
 		})
 
 		Context("when the DB returns no desired lrp groups", func() {
@@ -294,6 +306,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
 					_, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
 					Expect(filter.Domain).To(Equal("domain-1"))
+				})
+			})
+
+			Context("and filtering by process guids", func() {
+				BeforeEach(func() {
+					requestBody = &models.DesiredLRPsRequest{ProcessGuids: []string{"guid-1", "guid-2"}}
+				})
+
+				It("call the DB with the process guids filter to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
+					_, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					Expect(filter.ProcessGuids).To(Equal([]string{"guid-1", "guid-2"}))
 				})
 			})
 		})

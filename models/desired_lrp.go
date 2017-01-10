@@ -18,7 +18,8 @@ type DesiredLRPChange struct {
 }
 
 type DesiredLRPFilter struct {
-	Domain string
+	Domain       string
+	ProcessGuids []string
 }
 
 func PreloadedRootFS(stack string) string {
