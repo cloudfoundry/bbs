@@ -413,15 +413,15 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			It("converts TimeoutMs to Timeout in Nanoseconds", func() {
-				desiredLRP.VersionDownTo(format.V1)
-				Expect(desiredLRP.GetSetup().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(10 * time.Millisecond))
-				Expect(desiredLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
-				Expect(desiredLRP.GetMonitor().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(30 * time.Millisecond))
+				convertedLRP := desiredLRP.VersionDownTo(format.V1)
+				Expect(convertedLRP.GetSetup().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(10 * time.Millisecond))
+				Expect(convertedLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
+				Expect(convertedLRP.GetMonitor().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(30 * time.Millisecond))
 			})
 
 			It("converts StartTimeoutMs to StartTimeout in seconds", func() {
-				desiredLRP.VersionDownTo(format.V1)
-				Expect(desiredLRP.GetDeprecatedStartTimeoutS()).To(BeEquivalentTo(10))
+				convertedLRP := desiredLRP.VersionDownTo(format.V1)
+				Expect(convertedLRP.GetDeprecatedStartTimeoutS()).To(BeEquivalentTo(10))
 			})
 		})
 
@@ -503,14 +503,14 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			It("converts TimeoutMs to Timeout in Nanoseconds", func() {
-				desiredLRP.VersionDownTo(format.V1)
-				Expect(desiredLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
-				Expect(desiredLRP.GetMonitor().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(30 * time.Millisecond))
+				convertedLRP := desiredLRP.VersionDownTo(format.V1)
+				Expect(convertedLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
+				Expect(convertedLRP.GetMonitor().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(30 * time.Millisecond))
 			})
 
 			It("converts StartTimeoutMs to StartTimeout in seconds", func() {
-				desiredLRP.VersionDownTo(format.V1)
-				Expect(desiredLRP.GetDeprecatedStartTimeoutS()).To(BeEquivalentTo(10))
+				convertedLRP := desiredLRP.VersionDownTo(format.V1)
+				Expect(convertedLRP.GetDeprecatedStartTimeoutS()).To(BeEquivalentTo(10))
 			})
 
 			Context("when there is an existing setup action", func() {

@@ -122,22 +122,25 @@ func (*DesiredLRP) Version() format.Version {
 }
 
 func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
+
+	versionedLRP := d.Copy()
+
 	switch v {
 
 	case format.V1:
-		d.Action.SetDeprecatedTimeoutNs()
-		d.Setup.SetDeprecatedTimeoutNs()
-		d.Monitor.SetDeprecatedTimeoutNs()
-		d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
-		return d
+		versionedLRP.Action.SetDeprecatedTimeoutNs()
+		versionedLRP.Setup.SetDeprecatedTimeoutNs()
+		versionedLRP.Monitor.SetDeprecatedTimeoutNs()
+		versionedLRP.DeprecatedStartTimeoutS = uint32(versionedLRP.StartTimeoutMs) / 1000
+		return versionedLRP
 	case format.V0:
-		d.Action.SetDeprecatedTimeoutNs()
-		d.Setup.SetDeprecatedTimeoutNs()
-		d.Monitor.SetDeprecatedTimeoutNs()
-		d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
-		return newDesiredLRPWithCachedDependenciesAsSetupActions(d)
+		versionedLRP.Action.SetDeprecatedTimeoutNs()
+		versionedLRP.Setup.SetDeprecatedTimeoutNs()
+		versionedLRP.Monitor.SetDeprecatedTimeoutNs()
+		versionedLRP.DeprecatedStartTimeoutS = uint32(versionedLRP.StartTimeoutMs) / 1000
+		return newDesiredLRPWithCachedDependenciesAsSetupActions(versionedLRP)
 	default:
-		return d.Copy()
+		return versionedLRP
 	}
 }
 
