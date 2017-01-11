@@ -83,6 +83,27 @@ var _ = Describe("DesiredLRP API", func() {
 				Expect(actualDesiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 			})
 		})
+
+		Context("when filtering by process guids", func() {
+			BeforeEach(func() {
+				guids := []string{
+					"guid-1-for-domain-1",
+					"guid-2-for-domain-2",
+				}
+
+				filter = models.DesiredLRPFilter{ProcessGuids: guids}
+			})
+
+			It("returns only the scheduling infos in the requested process guids", func() {
+				Expect(actualDesiredLRPs).To(HaveLen(2))
+
+				expectedDesiredLRPs := []*models.DesiredLRP{
+					desiredLRPs["domain-1"][1],
+					desiredLRPs["domain-2"][2],
+				}
+				Expect(actualDesiredLRPs).To(ConsistOf(expectedDesiredLRPs))
+			})
+		})
 	})
 
 	Describe("DesiredLRPByProcessGuid", func() {
@@ -151,6 +172,29 @@ var _ = Describe("DesiredLRP API", func() {
 				for _, lrp := range desiredLRPs[domain] {
 					schedulingInfo := lrp.DesiredLRPSchedulingInfo()
 					expectedSchedulingInfos = append(expectedSchedulingInfos, &schedulingInfo)
+				}
+				Expect(schedulingInfos).To(ConsistOf(expectedSchedulingInfos))
+			})
+		})
+
+		Context("when filtering by process guids", func() {
+			BeforeEach(func() {
+				guids := []string{
+					"guid-1-for-domain-1",
+					"guid-2-for-domain-2",
+				}
+
+				filter = models.DesiredLRPFilter{ProcessGuids: guids}
+			})
+
+			It("returns only the scheduling infos in the requested process guids", func() {
+				Expect(schedulingInfos).To(HaveLen(2))
+
+				desiredLRP1 := desiredLRPs["domain-1"][1].DesiredLRPSchedulingInfo()
+				desiredLRP2 := desiredLRPs["domain-2"][2].DesiredLRPSchedulingInfo()
+				expectedSchedulingInfos := []*models.DesiredLRPSchedulingInfo{
+					&desiredLRP1,
+					&desiredLRP2,
 				}
 				Expect(schedulingInfos).To(ConsistOf(expectedSchedulingInfos))
 			})

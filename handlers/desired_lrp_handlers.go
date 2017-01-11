@@ -58,7 +58,7 @@ func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWrit
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		filter := models.DesiredLRPFilter{Domain: request.Domain}
+		filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids}
 		response.DesiredLrps, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
 	}
 
@@ -93,7 +93,10 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		filter := models.DesiredLRPFilter{Domain: request.Domain}
+		filter := models.DesiredLRPFilter{
+			Domain:       request.Domain,
+			ProcessGuids: request.ProcessGuids,
+		}
 		response.DesiredLrpSchedulingInfos, err = h.desiredLRPDB.DesiredLRPSchedulingInfos(logger, filter)
 	}
 

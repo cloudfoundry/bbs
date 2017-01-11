@@ -426,7 +426,8 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.Actu
 
 func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	request := models.DesiredLRPsRequest{
-		Domain: filter.Domain,
+		Domain:       filter.Domain,
+		ProcessGuids: filter.ProcessGuids,
 	}
 	response := models.DesiredLRPsResponse{}
 	err := c.doRequest(logger, DesiredLRPsRoute, nil, nil, &request, &response)
@@ -452,7 +453,8 @@ func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
 	request := models.DesiredLRPsRequest{
-		Domain: filter.Domain,
+		Domain:       filter.Domain,
+		ProcessGuids: filter.ProcessGuids,
 	}
 	response := models.DesiredLRPSchedulingInfosResponse{}
 	err := c.doRequest(logger, DesiredLRPSchedulingInfosRoute, nil, nil, &request, &response)

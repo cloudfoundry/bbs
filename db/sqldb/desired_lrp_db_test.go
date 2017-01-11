@@ -113,6 +113,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			expectedDesiredLRPs = []*models.DesiredLRP{}
 			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-1"))
 			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-2"))
+			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-3"))
 			for i, expectedDesiredLRP := range expectedDesiredLRPs {
 				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
 				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
@@ -122,7 +123,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		It("returns all desired lrps", func() {
 			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(desiredLRPs).To(HaveLen(2))
+			Expect(desiredLRPs).To(HaveLen(3))
 			Expect(desiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 		})
 
@@ -139,7 +140,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(desiredLRPs).To(HaveLen(2))
+			Expect(desiredLRPs).To(HaveLen(3))
 
 			rows, err := db.Query(`SELECT process_guid FROM desired_lrps`)
 			Expect(err).NotTo(HaveOccurred())
@@ -165,6 +166,17 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 		})
 
+		Context("when filtering by process guids", func() {
+			It("returns the filtered desired lrps", func() {
+				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(desiredLRPs).To(HaveLen(2))
+				Expect(desiredLRPs).To(ContainElement(expectedDesiredLRPs[0]))
+				Expect(desiredLRPs).To(ContainElement(expectedDesiredLRPs[2]))
+			})
+		})
+
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
 				queryStr := "UPDATE desired_lrps SET run_info = ? WHERE process_guid = ?"
@@ -181,7 +193,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			It("excludes the invalid desired LRP from the response", func() {
 				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(desiredLRPs).To(HaveLen(1))
+				Expect(desiredLRPs).To(HaveLen(2))
 			})
 		})
 
@@ -201,7 +213,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			It("excludes the invalid desired LRP from the response", func() {
 				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(desiredLRPs).To(HaveLen(1))
+				Expect(desiredLRPs).To(HaveLen(2))
 			})
 		})
 	})
@@ -215,9 +227,11 @@ var _ = Describe("DesiredLRPDB", func() {
 			expectedDesiredLRPSchedulingInfos = []*models.DesiredLRPSchedulingInfo{}
 			desiredLRP1 := model_helpers.NewValidDesiredLRP("d-1")
 			desiredLRP2 := model_helpers.NewValidDesiredLRP("d-2")
+			desiredLRP3 := model_helpers.NewValidDesiredLRP("d-3")
 
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP1)
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP2)
+			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP3)
 			for i, expectedDesiredLRP := range expectedDesiredLRPs {
 				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
 				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
@@ -229,7 +243,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		It("returns all desired lrps scheduling infos", func() {
 			desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(desiredLRPSchedulingInfos).To(HaveLen(2))
+			Expect(desiredLRPSchedulingInfos).To(HaveLen(3))
 			Expect(desiredLRPSchedulingInfos).To(ConsistOf(expectedDesiredLRPSchedulingInfos))
 		})
 
@@ -239,6 +253,17 @@ var _ = Describe("DesiredLRPDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPSchedulingInfos).To(HaveLen(1))
 				Expect(desiredLRPSchedulingInfos[0]).To(BeEquivalentTo(expectedDesiredLRPSchedulingInfos[0]))
+			})
+		})
+
+		Context("when filtering by process guids", func() {
+			It("returns the filtered schedulig infos", func() {
+				filter := models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}}
+				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRPSchedulingInfos).To(HaveLen(2))
+				Expect(desiredLRPSchedulingInfos).To(ContainElement(expectedDesiredLRPSchedulingInfos[0]))
+				Expect(desiredLRPSchedulingInfos).To(ContainElement(expectedDesiredLRPSchedulingInfos[2]))
 			})
 		})
 
@@ -258,7 +283,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			It("excludes the invalid desired LRP from the response", func() {
 				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(desiredLRPSchedulingInfos).To(HaveLen(1))
+				Expect(desiredLRPSchedulingInfos).To(HaveLen(2))
 			})
 		})
 	})

@@ -17,6 +17,7 @@ message DesiredLRPsResponse {
 
 message DesiredLRPsRequest {
   optional string domain = 1;
+  repeated string process_guids = 2;
 }
 
 message DesiredLRPResponse {
