@@ -1131,6 +1131,20 @@ var _ = Describe("Evacuation Handlers", func() {
 							})
 						})
 					})
+
+					Context("and there is no evacuating lrp", func() {
+						BeforeEach(func() {
+							actualLRPGroup.Evacuating = nil
+						})
+
+						It("responds with KeepContainer set to false", func() {
+							response := models.EvacuationResponse{}
+							err := response.Unmarshal(responseRecorder.Body.Bytes())
+							Expect(err).NotTo(HaveOccurred())
+							Expect(response.KeepContainer).To(BeFalse())
+							Expect(response.Error).To(BeNil())
+						})
+					})
 				})
 			})
 
