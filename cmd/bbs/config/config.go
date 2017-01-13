@@ -38,7 +38,8 @@ type BBSConfig struct {
 	DropsondePort               int                   `json:"dropsonde_port,omitempty"`
 	DatabaseConnectionString    string                `json:"database_connection_string"`
 	DatabaseDriver              string                `json:"database_driver,omitempty"`
-	MaxDatabaseConnections      int                   `json:"max_database_connections,omitempty"`
+	MaxOpenDatabaseConnections  int                   `json:"max_open_database_connections,omitempty"`
+	MaxIdleDatabaseConnections  int                   `json:"max_idle_database_connections,omitempty"`
 	SQLCACertFile               string                `json:"sql_ca_cert_file,omitempty"`
 	AuctioneerAddress           string                `json:"auctioneer_address,omitempty"`
 	AuctioneerCACert            string                `json:"auctioneer_ca_cert,omitempty"`
@@ -74,7 +75,8 @@ func DefaultConfig() BBSConfig {
 		TaskCallbackWorkers:         1000,
 		DropsondePort:               3457,
 		DatabaseDriver:              "mysql",
-		MaxDatabaseConnections:      200,
+		MaxOpenDatabaseConnections:  200,
+		MaxIdleDatabaseConnections:  50,
 		AuctioneerRequireTLS:        false,
 		RepClientSessionCacheSize:   0,
 		RepRequireTLS:               false,

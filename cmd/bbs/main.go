@@ -151,8 +151,8 @@ func main() {
 			logger.Fatal("failed-to-open-sql", err)
 		}
 		defer sqlConn.Close()
-		sqlConn.SetMaxOpenConns(bbsConfig.MaxDatabaseConnections)
-		sqlConn.SetMaxIdleConns(bbsConfig.MaxDatabaseConnections)
+		sqlConn.SetMaxOpenConns(bbsConfig.MaxOpenDatabaseConnections)
+		sqlConn.SetMaxIdleConns(bbsConfig.MaxIdleDatabaseConnections)
 
 		err = sqlConn.Ping()
 		if err != nil {
