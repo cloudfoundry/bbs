@@ -188,6 +188,7 @@ DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.Desi
 
 * `filter models.DesiredLRPFilter`: [DesiredLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPFilter) to restrict the DesiredLRPs returned.
   * `Domain string`: If non-empty, filter to only DesiredLRPs in this domain.
+  * `ProcessGuids []string`: If non-empty, filter to only DesiredLRPs with ProcessGuid in the given slice.
 
 #### Output
 
@@ -266,6 +267,7 @@ DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) (
 
 * `filter models.DesiredLRPFilter`: [DesiredLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPFilter) to restrict the DesiredLRPs returned.
   * `Domain string`: If non-empty, filter to only DesiredLRPs in this domain.
+  * `ProcessGuids []string`: If non-empty, filter to only DesiredLRPs with ProcessGuid in the given slice.
 
 #### Output
 
