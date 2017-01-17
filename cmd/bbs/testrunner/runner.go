@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
+	"code.cloudfoundry.org/durationjson"
 
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -15,7 +16,7 @@ import (
 
 func New(binPath string, bbsConfig config.BBSConfig) *ginkgomon.Runner {
 	if bbsConfig.ReportInterval == 0 {
-		bbsConfig.ReportInterval = config.Duration(time.Minute)
+		bbsConfig.ReportInterval = durationjson.Duration(time.Minute)
 	}
 
 	f, err := ioutil.TempFile("", "bbs.config")

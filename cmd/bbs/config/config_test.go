@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/debugserver"
+	"code.cloudfoundry.org/durationjson"
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/locket"
 
@@ -105,15 +106,15 @@ var _ = Describe("BBSConfig", func() {
 			ListenAddress:               "0.0.0.0:8889",
 			HealthAddress:               "127.0.0.1:8890",
 			AdvertiseURL:                "bbs.service.cf.internal",
-			CommunicationTimeout:        config.Duration(20 * time.Second),
-			DesiredLRPCreationTimeout:   config.Duration(1 * time.Minute),
-			ExpireCompletedTaskDuration: config.Duration(2 * time.Minute),
-			ExpirePendingTaskDuration:   config.Duration(30 * time.Minute),
-			ConvergeRepeatInterval:      config.Duration(30 * time.Second),
-			KickTaskDuration:            config.Duration(30 * time.Second),
-			LockTTL:                     config.Duration(locket.DefaultSessionTTL),
-			LockRetryInterval:           config.Duration(locket.RetryInterval),
-			ReportInterval:              config.Duration(1 * time.Minute),
+			CommunicationTimeout:        durationjson.Duration(20 * time.Second),
+			DesiredLRPCreationTimeout:   durationjson.Duration(1 * time.Minute),
+			ExpireCompletedTaskDuration: durationjson.Duration(2 * time.Minute),
+			ExpirePendingTaskDuration:   durationjson.Duration(30 * time.Minute),
+			ConvergeRepeatInterval:      durationjson.Duration(30 * time.Second),
+			KickTaskDuration:            durationjson.Duration(30 * time.Second),
+			LockTTL:                     durationjson.Duration(locket.DefaultSessionTTL),
+			LockRetryInterval:           durationjson.Duration(locket.RetryInterval),
+			ReportInterval:              durationjson.Duration(1 * time.Minute),
 			ConvergenceWorkers:          20,
 			UpdateWorkers:               1000,
 			TaskCallbackWorkers:         1000,

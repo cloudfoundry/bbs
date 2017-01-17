@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/durationjson"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -26,7 +27,7 @@ var _ = Describe("BBS With Only SQL", func() {
 			AuctioneerAddress: auctioneerServer.URL(),
 			ConsulCluster:     consulRunner.ConsulCluster(),
 			DropsondePort:     port,
-			ReportInterval:    config.Duration(10 * time.Millisecond),
+			ReportInterval:    durationjson.Duration(10 * time.Millisecond),
 			EncryptionConfig: encryption.EncryptionConfig{
 				EncryptionKeys: map[string]string{"label": "key"},
 				ActiveKeyLabel: "label",

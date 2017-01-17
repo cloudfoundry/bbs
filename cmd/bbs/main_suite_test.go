@@ -16,6 +16,7 @@ import (
 	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/consuladapter/consulrunner"
+	"code.cloudfoundry.org/durationjson"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -169,14 +170,14 @@ var _ = BeforeEach(func() {
 		},
 		DatabaseDriver:           sqlRunner.DriverName(),
 		DatabaseConnectionString: sqlRunner.ConnectionString(),
-		ReportInterval:           bbsconfig.Duration(10 * time.Millisecond),
+		ReportInterval:           durationjson.Duration(10 * time.Millisecond),
 		HealthAddress:            bbsHealthAddress,
 
 		EncryptionConfig: encryption.EncryptionConfig{
 			EncryptionKeys: map[string]string{"label": "key"},
 			ActiveKeyLabel: "label",
 		},
-		ConvergeRepeatInterval: bbsconfig.Duration(time.Hour),
+		ConvergeRepeatInterval: durationjson.Duration(time.Hour),
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
