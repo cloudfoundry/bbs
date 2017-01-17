@@ -376,7 +376,7 @@ func appendExtraConnectionStringParam(logger lager.Logger, driverName, databaseC
 		if sqlCACertFile == "" {
 			databaseConnectionString = databaseConnectionString + " sslmode=disable"
 		} else {
-			databaseConnectionString = fmt.Sprintf("%s sslmode=verify-full sslrootcert=%s", databaseConnectionString, sqlCACertFile)
+			databaseConnectionString = fmt.Sprintf("%s sslmode=verify-ca sslrootcert=%s", databaseConnectionString, sqlCACertFile)
 		}
 	}
 
