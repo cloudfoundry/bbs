@@ -45,6 +45,7 @@ import (
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
+	"github.com/lib/pq"
 	"github.com/nu7hatch/gouuid"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -139,7 +140,7 @@ func main() {
 	// If SQL database info is passed in, use SQL instead of ETCD
 	if bbsConfig.DatabaseDriver != "" && bbsConfig.DatabaseConnectionString != "" {
 		var err error
-		connectionString := appendSSLConnectionStringParam(logger,
+		connectionString := appendExtraConnectionStringParam(logger,
 			bbsConfig.DatabaseDriver,
 			bbsConfig.DatabaseConnectionString,
 			bbsConfig.SQLCACertFile,
@@ -335,9 +336,14 @@ func main() {
 	logger.Info("exited")
 }
 
-func appendSSLConnectionStringParam(logger lager.Logger, driverName, databaseConnectionString, sqlCACertFile string) string {
+func appendExtraConnectionStringParam(logger lager.Logger, driverName, databaseConnectionString, sqlCACertFile string) string {
 	switch driverName {
 	case "mysql":
+		cfg, err := mysql.ParseDSN(databaseConnectionString)
+		if err != nil {
+			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
+		}
+
 		if sqlCACertFile != "" {
 			certBytes, err := ioutil.ReadFile(sqlCACertFile)
 			if err != nil {
@@ -355,13 +361,22 @@ func appendSSLConnectionStringParam(logger lager.Logger, driverName, databaseCon
 			}
 
 			mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
-			databaseConnectionString = fmt.Sprintf("%s?tls=bbs-tls", databaseConnectionString)
+			cfg.TLSConfig = "bbs-tls"
+			cfg.Timeout = 10 * time.Minute
+			cfg.ReadTimeout = 10 * time.Minute
+			cfg.WriteTimeout = 10 * time.Minute
+			databaseConnectionString = cfg.FormatDSN()
 		}
 	case "postgres":
+		var err error
+		databaseConnectionString, err = pq.ParseURL(databaseConnectionString)
+		if err != nil {
+			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
+		}
 		if sqlCACertFile == "" {
-			databaseConnectionString = fmt.Sprintf("%s?sslmode=disable", databaseConnectionString)
+			databaseConnectionString = databaseConnectionString + " sslmode=disable"
 		} else {
-			databaseConnectionString = fmt.Sprintf("%s?sslmode=verify-ca&sslrootcert=%s", databaseConnectionString, sqlCACertFile)
+			databaseConnectionString = fmt.Sprintf("%s sslmode=verify-full sslrootcert=%s", databaseConnectionString, sqlCACertFile)
 		}
 	}
 
