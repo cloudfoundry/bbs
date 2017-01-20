@@ -23,6 +23,7 @@
 		network.proto
 		ping.proto
 		security_group.proto
+		server.proto
 		task.proto
 		task_requests.proto
 		volume_mount.proto
@@ -61,6 +62,7 @@
 		CellCapacity
 		CellPresence
 		Provider
+		CellsRequest
 		CellsResponse
 		DesiredLRPSchedulingInfo
 		DesiredLRPRunInfo
@@ -78,6 +80,7 @@
 		DesireLRPRequest
 		UpdateDesiredLRPRequest
 		RemoveDesiredLRPRequest
+		DomainRequest
 		DomainsResponse
 		UpsertDomainResponse
 		UpsertDomainRequest
@@ -90,6 +93,8 @@
 		EvacuateCrashedActualLRPRequest
 		RemoveEvacuatingActualLRPRequest
 		RemoveEvacuatingActualLRPResponse
+		SubscribeToEventsRequest
+		EventHolder
 		ActualLRPCreatedEvent
 		ActualLRPChangedEvent
 		ActualLRPRemovedEvent
@@ -100,6 +105,7 @@
 		ConvergeLRPsResponse
 		ModificationTag
 		Network
+		PingRequest
 		PingResponse
 		PortRange
 		ICMPInfo

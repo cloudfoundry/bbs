@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"net/http"
-
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"golang.org/x/net/context"
 )
 
 type ActualLRPHandler struct {
@@ -20,57 +18,46 @@ func NewActualLRPHandler(db db.ActualLRPDB, exitChan chan<- struct{}) *ActualLRP
 	}
 }
 
-func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) ActualLRPGroups(
+	context context.Context,
+	req *models.ActualLRPGroupsRequest,
+) (*models.ActualLRPGroupsResponse, error) {
 	var err error
-	logger = logger.Session("actual-lrp-groups")
+	logger := h.logger.Session("actual-lrp-groups")
 
-	request := &models.ActualLRPGroupsRequest{}
 	response := &models.ActualLRPGroupsResponse{}
 
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId}
-		response.ActualLrpGroups, err = h.db.ActualLRPGroups(logger, filter)
-	}
-
+	filter := models.ActualLRPFilter{Domain: req.Domain, CellID: req.CellId}
+	response.ActualLrpGroups, err = h.db.ActualLRPGroups(logger, filter)
 	response.Error = models.ConvertError(err)
-
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	return response, nil
 }
 
-func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) ActualLRPGroupsByProcessGuid(
+	context context.Context,
+	req *models.ActualLRPGroupsByProcessGuidRequest,
+) (*models.ActualLRPGroupsResponse, error) {
 	var err error
-	logger = logger.Session("actual-lrp-groups-by-process-guid")
+	logger := h.logger.Session("actual-lrp-groups-by-process-guid")
 
-	request := &models.ActualLRPGroupsByProcessGuidRequest{}
 	response := &models.ActualLRPGroupsResponse{}
 
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		response.ActualLrpGroups, err = h.db.ActualLRPGroupsByProcessGuid(logger, request.ProcessGuid)
-	}
-
+	response.ActualLrpGroups, err = h.db.ActualLRPGroupsByProcessGuid(logger, req.ProcessGuid)
 	response.Error = models.ConvertError(err)
-
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	return response, nil
 }
 
-func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger = logger.Session("actual-lrp-group-by-process-guid-and-index")
+func (h *bbsServer) ActualLRPGroupByProcessGuidAndIndex(
+	context context.Context,
+	req *models.ActualLRPGroupByProcessGuidAndIndexRequest,
+) (*models.ActualLRPGroupResponse, error) {
+	logger := h.logger.Session("actual-lrp-group-by-process-guid-and-index")
 
-	request := &models.ActualLRPGroupByProcessGuidAndIndexRequest{}
+	actualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, req.ProcessGuid, req.Index)
+
 	response := &models.ActualLRPGroupResponse{}
-
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		response.ActualLrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
-	}
-
 	response.Error = models.ConvertError(err)
+	response.ActualLrpGroup = actualLRPGroup
 
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	return response, nil
 }

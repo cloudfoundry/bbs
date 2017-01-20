@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"net/http"
-
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"golang.org/x/net/context"
 )
 
 type CellHandler struct {
@@ -20,9 +18,8 @@ func NewCellHandler(serviceClient bbs.ServiceClient, exitChan chan<- struct{}) *
 	}
 }
 
-func (h *CellHandler) Cells(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger = logger.Session("cells")
+func (h *bbsServer) Cells(context context.Context, req *models.CellsRequest) (*models.CellsResponse, error) {
+	logger := h.logger.Session("cells")
 	response := &models.CellsResponse{}
 	cellSet, err := h.serviceClient.Cells(logger)
 	cells := []*models.CellPresence{}
@@ -31,6 +28,5 @@ func (h *CellHandler) Cells(logger lager.Logger, w http.ResponseWriter, req *htt
 	}
 	response.Cells = cells
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	return response, nil
 }

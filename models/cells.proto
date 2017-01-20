@@ -27,6 +27,8 @@ message Provider {
   repeated string properties = 2 [(gogoproto.jsontag) = "properties,omitempty"];
 }
 
+message CellsRequest {}
+
 message CellsResponse {
   optional Error error = 1;
   repeated CellPresence cells = 2;

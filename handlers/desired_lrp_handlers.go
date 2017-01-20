@@ -11,6 +11,8 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/workpool"
+
+	"golang.org/x/net/context"
 )
 
 type DesiredLRPHandler struct {
@@ -49,92 +51,58 @@ func NewDesiredLRPHandler(
 	}
 }
 
-func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) DesiredLRPs(ctx context.Context, request *models.DesiredLRPsRequest) (*models.DesiredLRPsResponse, error) {
 	var err error
-	logger = logger.Session("desired-lrps")
-
-	request := &models.DesiredLRPsRequest{}
+	logger := h.logger.Session("desired-lrps")
 	response := &models.DesiredLRPsResponse{}
-
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids}
-		response.DesiredLrps, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
-	}
-
+	filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids}
+	response.DesiredLrps, err = h.db.DesiredLRPs(logger, filter)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	return response, nil
 }
 
-func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) DesiredLRPByProcessGuid(ctx context.Context, request *models.DesiredLRPByProcessGuidRequest) (*models.DesiredLRPResponse, error) {
 	var err error
-	logger = logger.Session("desired-lrp-by-process-guid")
-
-	request := &models.DesiredLRPByProcessGuidRequest{}
+	logger := h.logger.Session("desired-lrp-by-process-guid")
 	response := &models.DesiredLRPResponse{}
-
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		response.DesiredLrp, err = h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
-	}
-
+	response.DesiredLrp, err = h.db.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	return response, nil
 }
 
-func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) DesiredLRPSchedulingInfos(ctx context.Context, request *models.DesiredLRPsRequest) (*models.DesiredLRPSchedulingInfosResponse, error) {
 	var err error
-	logger = logger.Session("desired-lrp-scheduling-infos")
-
-	request := &models.DesiredLRPsRequest{}
+	logger := h.logger.Session("desired-lrp-scheduling-infos")
 	response := &models.DesiredLRPSchedulingInfosResponse{}
-
-	err = parseRequest(logger, req, request)
-	if err == nil {
-		filter := models.DesiredLRPFilter{
-			Domain:       request.Domain,
-			ProcessGuids: request.ProcessGuids,
-		}
-		response.DesiredLrpSchedulingInfos, err = h.desiredLRPDB.DesiredLRPSchedulingInfos(logger, filter)
+	filter := models.DesiredLRPFilter{
+		Domain:       request.Domain,
+		ProcessGuids: request.ProcessGuids,
 	}
-
+	response.DesiredLrpSchedulingInfos, err = h.db.DesiredLRPSchedulingInfos(logger, filter)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
-	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+	return response, nil
 }
 
-func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("desire-lrp")
-
-	request := &models.DesireLRPRequest{}
+func (h *bbsServer) DesireDesiredLRP(ctx context.Context, request *models.DesireLRPRequest) (*models.DesiredLRPLifecycleResponse, error) {
+	logger := h.logger.Session("desire-lrp")
 	response := &models.DesiredLRPLifecycleResponse{}
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
-
-	err := parseRequest(logger, req, request)
+	err := h.db.DesireLRP(logger, request.DesiredLrp)
 	if err != nil {
 		response.Error = models.ConvertError(err)
-		return
+		return response, nil
 	}
 
-	err = h.desiredLRPDB.DesireLRP(logger, request.DesiredLrp)
+	desiredLRP, err := h.db.DesiredLRPByProcessGuid(logger, request.DesiredLrp.ProcessGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
-		return
-	}
-
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.DesiredLrp.ProcessGuid)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
+		return response, nil
 	}
 
 	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
 	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
+	return response, nil
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -224,6 +192,30 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 	h.stopInstancesFrom(logger, request.ProcessGuid, 0)
 }
 
+func (h *bbsServer) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
+	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	keys := make([]*models.ActualLRPKey, upper-lower)
+	i := 0
+	for actualIndex := lower; actualIndex < upper; actualIndex++ {
+		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
+		keys[i] = &key
+		i++
+	}
+
+	createdIndices := h.createUnclaimedActualLRPs(logger, keys)
+	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
+
+	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
+	err := h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&start})
+	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
+	if err != nil {
+		logger.Error("failed-to-request-auction", err)
+	}
+}
+
 func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
 	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
 	logger.Info("starting")
@@ -246,6 +238,46 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
 	}
+}
+
+func (h *bbsServer) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {
+	count := len(keys)
+	createdIndicesChan := make(chan int, count)
+
+	works := make([]func(), count)
+	logger = logger.Session("create-unclaimed-actual-lrp")
+	for i, key := range keys {
+		key := key
+		works[i] = func() {
+			logger.Info("starting", lager.Data{"actual_lrp_key": key})
+			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
+			if err != nil {
+				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
+			} else {
+				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
+				createdIndicesChan <- int(key.Index)
+			}
+		}
+	}
+
+	throttlerSize := h.updateWorkersCount
+	throttler, err := workpool.NewThrottler(throttlerSize, works)
+	if err != nil {
+		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": throttlerSize, "num_works": len(works)})
+		return []int{}
+	}
+
+	go func() {
+		throttler.Work()
+		close(createdIndicesChan)
+	}()
+
+	createdIndices := make([]int, 0, count)
+	for createdIndex := range createdIndicesChan {
+		createdIndices = append(createdIndices, createdIndex)
+	}
+
+	return createdIndices
 }
 
 func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {

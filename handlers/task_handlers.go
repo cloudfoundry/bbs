@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"net/http"
 	"time"
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
+	"golang.org/x/net/context"
 )
 
 //go:generate counterfeiter -o fake_controllers/fake_task_controller.go . TaskController
@@ -38,190 +38,79 @@ func NewTaskHandler(
 	}
 }
 
-func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) Tasks(ctx context.Context, request *models.TasksRequest) (*models.TasksResponse, error) {
 	var err error
-	logger = logger.Session("tasks")
-
-	request := &models.TasksRequest{}
+	logger := h.logger.Session("tasks")
 	response := &models.TasksResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	response.Tasks, err = h.controller.Tasks(logger, request.Domain, request.CellId)
+	response.Tasks, err = h.taskController.Tasks(logger, request.Domain, request.CellId)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }
 
-func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) TaskByGuid(ctx context.Context, request *models.TaskByGuidRequest) (*models.TaskResponse, error) {
 	var err error
-	logger = logger.Session("task-by-guid")
-
-	request := &models.TaskByGuidRequest{}
+	logger := h.logger.Session("task-by-guid")
 	response := &models.TaskResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	response.Task, err = h.controller.TaskByGuid(logger, request.TaskGuid)
+	response.Task, err = h.taskController.TaskByGuid(logger, request.TaskGuid)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }
 
-func (h *TaskHandler) DesireTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger = logger.Session("desire-task")
-
-	request := &models.DesireTaskRequest{}
+func (h *bbsServer) DesireTask(ctx context.Context, request *models.DesireTaskRequest) (*models.TaskLifecycleResponse, error) {
+	logger := h.logger.Session("desire-task")
 	response := &models.TaskLifecycleResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	err = h.controller.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
+	err := h.taskController.DesireTask(logger, request.TaskDefinition, request.TaskGuid, request.Domain)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }
 
-func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *bbsServer) StartTask(ctx context.Context, request *models.StartTaskRequest) (*models.StartTaskResponse, error) {
 	var err error
-	logger = logger.Session("start-task")
-
-	request := &models.StartTaskRequest{}
+	logger := h.logger.Session("start-task")
 	response := &models.StartTaskResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	response.ShouldStart, err = h.controller.StartTask(logger, request.TaskGuid, request.CellId)
+	response.ShouldStart, err = h.taskController.StartTask(logger, request.TaskGuid, request.CellId)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }
 
-func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("cancel-task")
+func (h *bbsServer) CancelTask(context context.Context, req *models.TaskGuidRequest) (*models.TaskLifecycleResponse, error) {
+	logger := h.logger.Session("cancel-task")
 
-	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err := parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	err = h.controller.CancelTask(logger, request.TaskGuid)
+	err := h.taskController.CancelTask(logger, req.TaskGuid)
 	response.Error = models.ConvertError(err)
+
+	return response, nil
 }
 
-func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger = logger.Session("fail-task")
-
-	request := &models.FailTaskRequest{}
+func (h *bbsServer) FailTask(ctx context.Context, request *models.FailTaskRequest) (*models.TaskLifecycleResponse, error) {
+	logger := h.logger.Session("fail-task")
 	response := &models.TaskLifecycleResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	err = h.controller.FailTask(logger, request.TaskGuid, request.FailureReason)
+	err := h.taskController.FailTask(logger, request.TaskGuid, request.FailureReason)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }
 
-func (h *TaskHandler) CompleteTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger = logger.Session("complete-task")
-
-	request := &models.CompleteTaskRequest{}
+func (h *bbsServer) CompleteTask(ctx context.Context, request *models.CompleteTaskRequest) (*models.TaskLifecycleResponse, error) {
+	logger := h.logger.Session("complete-task")
 	response := &models.TaskLifecycleResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		logger.Error("failed-parsing-request", err)
-		return
-	}
-
-	err = h.controller.CompleteTask(logger, request.TaskGuid, request.CellId, request.Failed, request.FailureReason, request.Result)
+	err := h.taskController.CompleteTask(logger, request.TaskGuid, request.CellId, request.Failed, request.FailureReason, request.Result)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }
 
-func (h *TaskHandler) ResolvingTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger = logger.Session("resolving-task")
-
-	request := &models.TaskGuidRequest{}
+func (h *bbsServer) ResolvingTask(ctx context.Context, request *models.TaskGuidRequest) (*models.TaskLifecycleResponse, error) {
+	logger := h.logger.Session("resolving-task")
 	response := &models.TaskLifecycleResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	err = h.controller.ResolvingTask(logger, request.TaskGuid)
+	err := h.taskController.ResolvingTask(logger, request.TaskGuid)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }
 
-func (h *TaskHandler) DeleteTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-	logger = logger.Session("delete-task")
-
-	request := &models.TaskGuidRequest{}
+func (h *bbsServer) DeleteTask(ctx context.Context, request *models.TaskGuidRequest) (*models.TaskLifecycleResponse, error) {
+	logger := h.logger.Session("delete-task")
 	response := &models.TaskLifecycleResponse{}
-
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
-
-	err = parseRequest(logger, req, request)
-	if err != nil {
-		logger.Error("failed-parsing-request", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	err = h.controller.DeleteTask(logger, request.TaskGuid)
+	err := h.taskController.DeleteTask(logger, request.TaskGuid)
 	response.Error = models.ConvertError(err)
+	return response, nil
 }

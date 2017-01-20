@@ -16,6 +16,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
+	"code.cloudfoundry.org/bbs/bbsgrpc"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/converger"
@@ -243,22 +244,6 @@ func main() {
 
 	cbWorkPool := taskworkpool.New(logger, bbsConfig.TaskCallbackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
 
-	handler := handlers.New(
-		logger,
-		accessLogger,
-		bbsConfig.UpdateWorkers,
-		bbsConfig.ConvergenceWorkers,
-		activeDB,
-		desiredHub,
-		actualHub,
-		cbWorkPool,
-		serviceClient,
-		auctioneerClient,
-		repClientFactory,
-		migrationsDone,
-		exitChan,
-	)
-
 	metricsNotifier := metrics.NewPeriodicMetronNotifier(logger)
 
 	actualLRPController := controllers.NewActualLRPLifecycleController(activeDB, activeDB, activeDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
@@ -284,12 +269,24 @@ func main() {
 		time.Duration(bbsConfig.ExpireCompletedTaskDuration),
 	)
 
-	var server ifrit.Runner
-	if tlsConfig != nil {
-		server = http_server.NewTLSServer(bbsConfig.ListenAddress, handler, tlsConfig)
-	} else {
-		server = http_server.New(bbsConfig.ListenAddress, handler)
-	}
+	handler := handlers.New(
+		logger,
+		accessLogger,
+		bbsConfig.UpdateWorkers,
+		bbsConfig.ConvergenceWorkers,
+		activeDB,
+		desiredHub,
+		actualHub,
+		cbWorkPool,
+		serviceClient,
+		auctioneerClient,
+		repClientFactory,
+		migrationsDone,
+		exitChan,
+	)
+
+	var grpcServer ifrit.Runner
+	grpcServer = bbsgrpc.NewTLSServer(bbsConfig.ListenAddress, handler, tlsConfig)
 
 	healthcheckServer := http_server.New(bbsConfig.HealthAddress, http.HandlerFunc(healthCheckHandler))
 
@@ -297,7 +294,7 @@ func main() {
 		{"healthcheck", healthcheckServer},
 		{"lock-maintainer", maintainer},
 		{"workpool", cbWorkPool},
-		{"server", server},
+		{"grpc-server", grpcServer},
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},

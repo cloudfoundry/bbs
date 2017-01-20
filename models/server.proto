@@ -1,0 +1,60 @@
+syntax = "proto2";
+
+package models;
+
+import "ping.proto";
+import "events.proto";
+import "desired_lrp_requests.proto";
+import "actual_lrp_requests.proto";
+import "cells.proto";
+import "evacuation.proto";
+import "domain.proto";
+import "task_requests.proto";
+
+service BBS {
+  rpc Ping (PingRequest) returns (PingResponse) {}
+  rpc Cells (CellsRequest) returns (CellsResponse) {}
+
+  rpc DesireTask (DesireTaskRequest) returns (TaskResponse) {}
+  rpc Tasks (TasksRequest) returns (TasksResponse) {}
+  rpc TaskByGuid (TaskByGuidRequest) returns (TaskResponse) {}
+  rpc CancelTask (TaskGuidRequest) returns (TaskLifecycleResponse) {}
+  rpc ResolvingTask (TaskGuidRequest) returns (TaskLifecycleResponse) {}
+  rpc DeleteTask (TaskGuidRequest) returns (TaskLifecycleResponse) {}
+
+  // internal
+  rpc StartTask (StartTaskRequest) returns (TaskLifecycleResponse) {}
+  rpc FailTask (FailTaskRequest) returns (TaskLifecycleResponse) {}
+  rpc CompleteTask (CompleteTaskRequest) returns (TaskLifecycleResponse) {}
+
+  rpc Domains (DomainRequest) returns (DomainsResponse) {}
+  rpc UpsertDomain (UpsertDomainRequest) returns (UpsertDomainResponse) {}
+
+  rpc ActualLRPGroups (ActualLRPGroupsRequest) returns (ActualLRPGroupsResponse) {}
+  rpc ActualLRPGroupsByProcessGuid (ActualLRPGroupsByProcessGuidRequest) returns (ActualLRPGroupsResponse) {}
+  rpc ActualLRPGroupByProcessGuidAndIndex (ActualLRPGroupByProcessGuidAndIndexRequest) returns (ActualLRPGroupResponse) {}
+  rpc RetireActualLRP (RetireActualLRPRequest) returns (ActualLRPLifecycleResponse) {}
+
+  // internal
+  rpc ClaimActualLRP (ClaimActualLRPRequest) returns (ActualLRPLifecycleResponse) {}
+  rpc StartActualLRP (StartActualLRPRequest) returns (ActualLRPLifecycleResponse) {}
+  rpc CrashActualLRP (CrashActualLRPRequest) returns (ActualLRPLifecycleResponse) {}
+  rpc FailActualLRP (FailActualLRPRequest) returns (ActualLRPLifecycleResponse) {}
+  rpc RemoveActualLRP (RemoveActualLRPRequest) returns (ActualLRPLifecycleResponse) {}
+
+  //internal
+  rpc EvacuateClaimedActualLRP (EvacuateClaimedActualLRPRequest) returns (EvacuationResponse) {}
+  rpc EvacuateRunningActualLRP (EvacuateRunningActualLRPRequest) returns (EvacuationResponse) {}
+  rpc EvacuateCrashedActualLRP (EvacuateCrashedActualLRPRequest) returns (EvacuationResponse) {}
+  rpc EvacuateStoppedActualLRP (EvacuateStoppedActualLRPRequest) returns (EvacuationResponse) {}
+  rpc RemoveEvacuatingActualLRP (RemoveEvacuatingActualLRPRequest) returns (EvacuationResponse) {}
+
+  rpc DesiredLRPs (DesiredLRPsRequest) returns (DesiredLRPsResponse) {}
+  rpc DesiredLRPByProcessGuid (DesiredLRPByProcessGuidRequest) returns (DesiredLRPResponse) {}
+  rpc DesiredLRPSchedulingInfos (DesiredLRPsRequest) returns (DesiredLRPSchedulingInfosResponse) {}
+  rpc DesireLRP (DesireLRPRequest) returns (DesiredLRPLifecycleResponse) {}
+  rpc UpdateDesireLRP (UpdateDesiredLRPRequest) returns (DesiredLRPLifecycleResponse) {}
+  rpc RemoveDesireLRP (RemoveDesiredLRPRequest) returns (DesiredLRPLifecycleResponse) {}
+
+  rpc SubscribeToEvents (SubscribeToEventsRequest) returns (stream EventHolder) {}
+}

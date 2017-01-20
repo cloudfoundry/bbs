@@ -4,6 +4,8 @@ package models;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+message PingRequest {}
+
 message PingResponse {
   optional bool available = 1;
 }

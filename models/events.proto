@@ -6,6 +6,11 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actual_lrp.proto";
 import "desired_lrp.proto";
 
+message SubscribeToEventsRequest {}
+message EventHolder {
+  // wut do
+}
+
 message ActualLRPCreatedEvent  {
   optional ActualLRPGroup actual_lrp_group = 1;
 }

@@ -19,13 +19,20 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+type PingRequest struct {
+}
+
+func (m *PingRequest) Reset()                    { *m = PingRequest{} }
+func (*PingRequest) ProtoMessage()               {}
+func (*PingRequest) Descriptor() ([]byte, []int) { return fileDescriptorPing, []int{0} }
+
 type PingResponse struct {
 	Available bool `protobuf:"varint,1,opt,name=available" json:"available"`
 }
 
 func (m *PingResponse) Reset()                    { *m = PingResponse{} }
 func (*PingResponse) ProtoMessage()               {}
-func (*PingResponse) Descriptor() ([]byte, []int) { return fileDescriptorPing, []int{0} }
+func (*PingResponse) Descriptor() ([]byte, []int) { return fileDescriptorPing, []int{1} }
 
 func (m *PingResponse) GetAvailable() bool {
 	if m != nil {
@@ -35,7 +42,35 @@ func (m *PingResponse) GetAvailable() bool {
 }
 
 func init() {
+	proto.RegisterType((*PingRequest)(nil), "models.PingRequest")
 	proto.RegisterType((*PingResponse)(nil), "models.PingResponse")
+}
+func (this *PingRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*PingRequest)
+	if !ok {
+		that2, ok := that.(PingRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	return true
 }
 func (this *PingResponse) Equal(that interface{}) bool {
 	if that == nil {
@@ -67,6 +102,15 @@ func (this *PingResponse) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *PingRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 4)
+	s = append(s, "&models.PingRequest{")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
 func (this *PingResponse) GoString() string {
 	if this == nil {
 		return "nil"
@@ -85,6 +129,24 @@ func valueToGoStringPing(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
+func (m *PingRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PingRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
 func (m *PingResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -138,6 +200,12 @@ func encodeVarintPing(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *PingRequest) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
 func (m *PingResponse) Size() (n int) {
 	var l int
 	_ = l
@@ -158,6 +226,15 @@ func sovPing(x uint64) (n int) {
 func sozPing(x uint64) (n int) {
 	return sovPing(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
+func (this *PingRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&PingRequest{`,
+		`}`,
+	}, "")
+	return s
+}
 func (this *PingResponse) String() string {
 	if this == nil {
 		return "nil"
@@ -175,6 +252,56 @@ func valueToStringPing(v interface{}) string {
 	}
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
+}
+func (m *PingRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPing
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PingRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PingRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPing(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthPing
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *PingResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -354,16 +481,17 @@ var (
 func init() { proto.RegisterFile("ping.proto", fileDescriptorPing) }
 
 var fileDescriptorPing = []byte{
-	// 167 bytes of a gzipped FileDescriptorProto
+	// 178 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x2a, 0xc8, 0xcc, 0x4b,
 	0xd7, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcb, 0xcd, 0x4f, 0x49, 0xcd, 0x29, 0x96, 0xd2,
 	0x4d, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xcf, 0x4f, 0xcf, 0xd7,
-	0x07, 0x4b, 0x27, 0x95, 0xa6, 0x81, 0x79, 0x60, 0x0e, 0x98, 0x05, 0xd1, 0xa6, 0x64, 0xc4, 0xc5,
-	0x13, 0x90, 0x99, 0x97, 0x1e, 0x94, 0x5a, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0x2a, 0xa4, 0xc4, 0xc5,
-	0x99, 0x58, 0x96, 0x98, 0x99, 0x93, 0x98, 0x94, 0x93, 0x2a, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0xe1,
-	0xc4, 0x72, 0xe2, 0x9e, 0x3c, 0x43, 0x10, 0x42, 0xd8, 0x49, 0xe7, 0xc2, 0x43, 0x39, 0x86, 0x1b,
-	0x0f, 0xe5, 0x18, 0x3e, 0x3c, 0x94, 0x63, 0x6c, 0x78, 0x24, 0xc7, 0xb8, 0xe2, 0x91, 0x1c, 0xe3,
-	0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0xf8, 0xe2, 0x91, 0x1c,
-	0xc3, 0x87, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x00, 0x02, 0x00, 0x00, 0xff, 0xff, 0xc6,
-	0x59, 0x30, 0x9a, 0xa5, 0x00, 0x00, 0x00,
+	0x07, 0x4b, 0x27, 0x95, 0xa6, 0x81, 0x79, 0x60, 0x0e, 0x98, 0x05, 0xd1, 0xa6, 0xc4, 0xcb, 0xc5,
+	0x1d, 0x90, 0x99, 0x97, 0x1e, 0x94, 0x5a, 0x58, 0x9a, 0x5a, 0x5c, 0xa2, 0x64, 0xc4, 0xc5, 0x03,
+	0xe1, 0x16, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x0a, 0x29, 0x71, 0x71, 0x26, 0x96, 0x25, 0x66, 0xe6,
+	0x24, 0x26, 0xe5, 0xa4, 0x4a, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x38, 0xb1, 0x9c, 0xb8, 0x27, 0xcf,
+	0x10, 0x84, 0x10, 0x76, 0xd2, 0xb9, 0xf0, 0x50, 0x8e, 0xe1, 0xc6, 0x43, 0x39, 0x86, 0x0f, 0x0f,
+	0xe5, 0x18, 0x1b, 0x1e, 0xc9, 0x31, 0xae, 0x78, 0x24, 0xc7, 0x78, 0xe2, 0x91, 0x1c, 0xe3, 0x85,
+	0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0xbe, 0x78, 0x24, 0xc7, 0xf0, 0xe1, 0x91, 0x1c, 0xe3,
+	0x84, 0xc7, 0x72, 0x0c, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x79, 0x46, 0x14, 0xd1, 0xb4, 0x00,
+	0x00, 0x00,
 }

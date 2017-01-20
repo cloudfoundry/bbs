@@ -7,6 +7,8 @@ import "error.proto";
 
 option (gogoproto.equal_all) = false;
 
+message DomainRequest {}
+
 message DomainsResponse {
   optional Error error = 1;
   repeated string domains = 2;
