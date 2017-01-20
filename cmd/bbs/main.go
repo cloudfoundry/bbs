@@ -362,11 +362,11 @@ func appendExtraConnectionStringParam(logger lager.Logger, driverName, databaseC
 
 			mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
 			cfg.TLSConfig = "bbs-tls"
-			cfg.Timeout = 10 * time.Minute
-			cfg.ReadTimeout = 10 * time.Minute
-			cfg.WriteTimeout = 10 * time.Minute
-			databaseConnectionString = cfg.FormatDSN()
 		}
+		cfg.Timeout = 10 * time.Minute
+		cfg.ReadTimeout = 10 * time.Minute
+		cfg.WriteTimeout = 10 * time.Minute
+		databaseConnectionString = cfg.FormatDSN()
 	case "postgres":
 		var err error
 		databaseConnectionString, err = pq.ParseURL(databaseConnectionString)
