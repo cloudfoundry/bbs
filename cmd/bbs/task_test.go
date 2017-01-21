@@ -63,6 +63,29 @@ var _ = Describe("Task API", func() {
 		})
 	})
 
+	Describe("TaskWithFilter", func() {
+		It("returns the task with filters on domain", func() {
+			tasks, err := client.TasksWithFilter(logger, models.TaskFilter{Domain: "b-domain"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(tasks)).To(Equal(1))
+			Expect(tasks[0]).To(MatchTask(expectedTasks[1]))
+		})
+
+		It("returns the task with filters on cell-id", func() {
+			tasks, err := client.TasksWithFilter(logger, models.TaskFilter{CellID: "b-cell"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(tasks)).To(Equal(1))
+			Expect(tasks[0]).To(MatchTask(expectedTasks[1]))
+		})
+
+		It("returns the task with filters on domain and cell-id", func() {
+			tasks, err := client.TasksWithFilter(logger, models.TaskFilter{Domain: "b-domain", CellID: "b-cell"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(tasks)).To(Equal(1))
+			Expect(tasks[0]).To(MatchTask(expectedTasks[1]))
+		})
+	})
+
 	Describe("DesireTask", func() {
 		It("adds the desired task", func() {
 			expectedTask := model_helpers.NewValidTask("task-1")

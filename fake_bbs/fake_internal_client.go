@@ -32,6 +32,16 @@ type FakeInternalClient struct {
 		result1 []*models.Task
 		result2 error
 	}
+	TasksWithFilterStub        func(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
+	tasksWithFilterMutex       sync.RWMutex
+	tasksWithFilterArgsForCall []struct {
+		logger lager.Logger
+		filter models.TaskFilter
+	}
+	tasksWithFilterReturns struct {
+		result1 []*models.Task
+		result2 error
+	}
 	TasksByDomainStub        func(logger lager.Logger, domain string) ([]*models.Task, error)
 	tasksByDomainMutex       sync.RWMutex
 	tasksByDomainArgsForCall []struct {
@@ -446,6 +456,41 @@ func (fake *FakeInternalClient) TasksArgsForCall(i int) lager.Logger {
 func (fake *FakeInternalClient) TasksReturns(result1 []*models.Task, result2 error) {
 	fake.TasksStub = nil
 	fake.tasksReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeInternalClient) TasksWithFilter(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
+	fake.tasksWithFilterMutex.Lock()
+	fake.tasksWithFilterArgsForCall = append(fake.tasksWithFilterArgsForCall, struct {
+		logger lager.Logger
+		filter models.TaskFilter
+	}{logger, filter})
+	fake.recordInvocation("TasksWithFilter", []interface{}{logger, filter})
+	fake.tasksWithFilterMutex.Unlock()
+	if fake.TasksWithFilterStub != nil {
+		return fake.TasksWithFilterStub(logger, filter)
+	} else {
+		return fake.tasksWithFilterReturns.result1, fake.tasksWithFilterReturns.result2
+	}
+}
+
+func (fake *FakeInternalClient) TasksWithFilterCallCount() int {
+	fake.tasksWithFilterMutex.RLock()
+	defer fake.tasksWithFilterMutex.RUnlock()
+	return len(fake.tasksWithFilterArgsForCall)
+}
+
+func (fake *FakeInternalClient) TasksWithFilterArgsForCall(i int) (lager.Logger, models.TaskFilter) {
+	fake.tasksWithFilterMutex.RLock()
+	defer fake.tasksWithFilterMutex.RUnlock()
+	return fake.tasksWithFilterArgsForCall[i].logger, fake.tasksWithFilterArgsForCall[i].filter
+}
+
+func (fake *FakeInternalClient) TasksWithFilterReturns(result1 []*models.Task, result2 error) {
+	fake.TasksWithFilterStub = nil
+	fake.tasksWithFilterReturns = struct {
 		result1 []*models.Task
 		result2 error
 	}{result1, result2}
@@ -1653,6 +1698,8 @@ func (fake *FakeInternalClient) Invocations() map[string][][]interface{} {
 	defer fake.desireTaskMutex.RUnlock()
 	fake.tasksMutex.RLock()
 	defer fake.tasksMutex.RUnlock()
+	fake.tasksWithFilterMutex.RLock()
+	defer fake.tasksWithFilterMutex.RUnlock()
 	fake.tasksByDomainMutex.RLock()
 	defer fake.tasksByDomainMutex.RUnlock()
 	fake.tasksByCellIDMutex.RLock()

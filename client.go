@@ -89,6 +89,9 @@ type ExternalTaskClient interface {
 	// Lists all Tasks
 	Tasks(logger lager.Logger) ([]*models.Task, error)
 
+	// List all Tasks that match filter
+	TasksWithFilter(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
+
 	// Lists all Tasks of the given domain
 	TasksByDomain(logger lager.Logger, domain string) ([]*models.Task, error)
 
@@ -504,6 +507,19 @@ func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error) {
 		return nil, err
 	}
 
+	return response.Tasks, response.Error.ToError()
+}
+
+func (c *client) TasksWithFilter(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
+	request := models.TasksRequest{
+		Domain: filter.Domain,
+		CellId: filter.CellID,
+	}
+	response := models.TasksResponse{}
+	err := c.doRequest(logger, TasksRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
 	return response.Tasks, response.Error.ToError()
 }
 
