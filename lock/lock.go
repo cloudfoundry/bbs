@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
 )
@@ -11,29 +12,29 @@ import (
 type lockRunner struct {
 	logger lager.Logger
 
-	lock          Lock
-	key           string
+	locker        Locker
+	lock          models.Lock
 	clock         clock.Clock
 	retryInterval time.Duration
 }
 
-//go:generate counterfeiter . Lock
-type Lock interface {
-	Lock(logger lager.Logger, key string) error
-	Release(logger lager.Logger, key string) error
+//go:generate counterfeiter . Locker
+type Locker interface {
+	Lock(logger lager.Logger, lock models.Lock) error
+	Release(logger lager.Logger, lock models.Lock) error
 }
 
 func NewLockRunner(
 	logger lager.Logger,
-	lock Lock,
-	key string,
+	locker Locker,
+	lock models.Lock,
 	clock clock.Clock,
 	retryInterval time.Duration,
 ) *lockRunner {
 	return &lockRunner{
 		logger:        logger,
+		locker:        locker,
 		lock:          lock,
-		key:           key,
 		clock:         clock,
 		retryInterval: retryInterval,
 	}
@@ -49,7 +50,7 @@ func (l *lockRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error 
 
 	retry := l.clock.NewTimer(l.retryInterval)
 
-	err := l.lock.Lock(logger, l.key)
+	err := l.locker.Lock(logger, l.lock)
 	if err != nil {
 		logger.Error("failed-to-acquire-lock", err)
 		retry.Reset(l.retryInterval)
@@ -63,7 +64,7 @@ func (l *lockRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error 
 		case sig := <-signals:
 			logger.Info("signalled", lager.Data{"signal": sig})
 
-			err := l.lock.Release(logger, l.key)
+			err := l.locker.Release(logger, l.lock)
 			if err != nil {
 				logger.Error("failed-to-release-lock", err)
 			} else {
@@ -73,7 +74,7 @@ func (l *lockRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error 
 			return nil
 
 		case <-retry.C():
-			err = l.lock.Lock(logger, l.key)
+			err = l.locker.Lock(logger, l.lock)
 			if err != nil {
 				logger.Error("failed-to-acquire-lock", err)
 				retry.Reset(l.retryInterval)

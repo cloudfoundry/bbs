@@ -18,6 +18,7 @@
 		error.proto
 		evacuation.proto
 		events.proto
+		lock.proto
 		lrp_convergence_request.proto
 		modification_tag.proto
 		network.proto
@@ -97,6 +98,7 @@
 		DesiredLRPChangedEvent
 		DesiredLRPRemovedEvent
 		ActualLRPCrashedEvent
+		Lock
 		ConvergeLRPsResponse
 		ModificationTag
 		Network

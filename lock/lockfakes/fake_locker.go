@@ -5,24 +5,25 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/bbs/lock"
+	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
 
-type FakeLock struct {
-	LockStub        func(logger lager.Logger, key string) error
+type FakeLocker struct {
+	LockStub        func(logger lager.Logger, lock models.Lock) error
 	lockMutex       sync.RWMutex
 	lockArgsForCall []struct {
 		logger lager.Logger
-		key    string
+		lock   models.Lock
 	}
 	lockReturns struct {
 		result1 error
 	}
-	ReleaseStub        func(logger lager.Logger, key string) error
+	ReleaseStub        func(logger lager.Logger, lock models.Lock) error
 	releaseMutex       sync.RWMutex
 	releaseArgsForCall []struct {
 		logger lager.Logger
-		key    string
+		lock   models.Lock
 	}
 	releaseReturns struct {
 		result1 error
@@ -31,75 +32,75 @@ type FakeLock struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeLock) Lock(logger lager.Logger, key string) error {
+func (fake *FakeLocker) Lock(logger lager.Logger, lock models.Lock) error {
 	fake.lockMutex.Lock()
 	fake.lockArgsForCall = append(fake.lockArgsForCall, struct {
 		logger lager.Logger
-		key    string
-	}{logger, key})
-	fake.recordInvocation("Lock", []interface{}{logger, key})
+		lock   models.Lock
+	}{logger, lock})
+	fake.recordInvocation("Lock", []interface{}{logger, lock})
 	fake.lockMutex.Unlock()
 	if fake.LockStub != nil {
-		return fake.LockStub(logger, key)
+		return fake.LockStub(logger, lock)
 	} else {
 		return fake.lockReturns.result1
 	}
 }
 
-func (fake *FakeLock) LockCallCount() int {
+func (fake *FakeLocker) LockCallCount() int {
 	fake.lockMutex.RLock()
 	defer fake.lockMutex.RUnlock()
 	return len(fake.lockArgsForCall)
 }
 
-func (fake *FakeLock) LockArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeLocker) LockArgsForCall(i int) (lager.Logger, models.Lock) {
 	fake.lockMutex.RLock()
 	defer fake.lockMutex.RUnlock()
-	return fake.lockArgsForCall[i].logger, fake.lockArgsForCall[i].key
+	return fake.lockArgsForCall[i].logger, fake.lockArgsForCall[i].lock
 }
 
-func (fake *FakeLock) LockReturns(result1 error) {
+func (fake *FakeLocker) LockReturns(result1 error) {
 	fake.LockStub = nil
 	fake.lockReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeLock) Release(logger lager.Logger, key string) error {
+func (fake *FakeLocker) Release(logger lager.Logger, lock models.Lock) error {
 	fake.releaseMutex.Lock()
 	fake.releaseArgsForCall = append(fake.releaseArgsForCall, struct {
 		logger lager.Logger
-		key    string
-	}{logger, key})
-	fake.recordInvocation("Release", []interface{}{logger, key})
+		lock   models.Lock
+	}{logger, lock})
+	fake.recordInvocation("Release", []interface{}{logger, lock})
 	fake.releaseMutex.Unlock()
 	if fake.ReleaseStub != nil {
-		return fake.ReleaseStub(logger, key)
+		return fake.ReleaseStub(logger, lock)
 	} else {
 		return fake.releaseReturns.result1
 	}
 }
 
-func (fake *FakeLock) ReleaseCallCount() int {
+func (fake *FakeLocker) ReleaseCallCount() int {
 	fake.releaseMutex.RLock()
 	defer fake.releaseMutex.RUnlock()
 	return len(fake.releaseArgsForCall)
 }
 
-func (fake *FakeLock) ReleaseArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeLocker) ReleaseArgsForCall(i int) (lager.Logger, models.Lock) {
 	fake.releaseMutex.RLock()
 	defer fake.releaseMutex.RUnlock()
-	return fake.releaseArgsForCall[i].logger, fake.releaseArgsForCall[i].key
+	return fake.releaseArgsForCall[i].logger, fake.releaseArgsForCall[i].lock
 }
 
-func (fake *FakeLock) ReleaseReturns(result1 error) {
+func (fake *FakeLocker) ReleaseReturns(result1 error) {
 	fake.ReleaseStub = nil
 	fake.releaseReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeLock) Invocations() map[string][][]interface{} {
+func (fake *FakeLocker) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.lockMutex.RLock()
@@ -109,7 +110,7 @@ func (fake *FakeLock) Invocations() map[string][][]interface{} {
 	return fake.invocations
 }
 
-func (fake *FakeLock) recordInvocation(key string, args []interface{}) {
+func (fake *FakeLocker) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -121,4 +122,4 @@ func (fake *FakeLock) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ lock.Lock = new(FakeLock)
+var _ lock.Locker = new(FakeLocker)

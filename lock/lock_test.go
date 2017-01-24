@@ -6,6 +6,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/lock"
 	"code.cloudfoundry.org/bbs/lock/lockfakes"
+	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/locket"
@@ -19,10 +20,10 @@ var _ = Describe("Lock", func() {
 	var (
 		logger *lagertest.TestLogger
 
-		fakeLock  *lockfakes.FakeLock
-		fakeClock *fakeclock.FakeClock
+		fakeLocker *lockfakes.FakeLocker
+		fakeClock  *fakeclock.FakeClock
 
-		lockKey           string
+		expectedLock      models.Lock
 		lockRetryInterval time.Duration
 
 		lockRunner  ifrit.Runner
@@ -32,16 +33,16 @@ var _ = Describe("Lock", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("lock")
 
-		fakeLock = &lockfakes.FakeLock{}
+		fakeLocker = &lockfakes.FakeLocker{}
 		fakeClock = fakeclock.NewFakeClock(time.Now())
 
 		lockRetryInterval = locket.RetryInterval
-		lockKey = "test"
+		expectedLock = models.Lock{Key: "test", Owner: "jim", Value: "is pretty sweet."}
 
 		lockRunner = lock.NewLockRunner(
 			logger,
-			fakeLock,
-			lockKey,
+			fakeLocker,
+			expectedLock,
 			fakeClock,
 			lockRetryInterval,
 		)
@@ -56,66 +57,66 @@ var _ = Describe("Lock", func() {
 	})
 
 	It("locks the key", func() {
-		Eventually(fakeLock.LockCallCount).Should(Equal(1))
-		_, key := fakeLock.LockArgsForCall(0)
-		Expect(key).To(Equal(lockKey))
+		Eventually(fakeLocker.LockCallCount).Should(Equal(1))
+		_, lock := fakeLocker.LockArgsForCall(0)
+		Expect(lock).To(Equal(expectedLock))
 	})
 
 	Context("when the lock cannot be acquired", func() {
 		BeforeEach(func() {
-			fakeLock.LockReturns(errors.New("no-lock-for-you"))
+			fakeLocker.LockReturns(errors.New("no-lock-for-you"))
 		})
 
 		It("retries locking after the lock retry interval", func() {
-			Eventually(fakeLock.LockCallCount).Should(Equal(1))
-			_, key := fakeLock.LockArgsForCall(0)
-			Expect(key).To(Equal(lockKey))
+			Eventually(fakeLocker.LockCallCount).Should(Equal(1))
+			_, lock := fakeLocker.LockArgsForCall(0)
+			Expect(lock).To(Equal(expectedLock))
 
 			fakeClock.WaitForWatcherAndIncrement(lockRetryInterval)
 
-			Eventually(fakeLock.LockCallCount).Should(Equal(2))
-			_, key = fakeLock.LockArgsForCall(1)
-			Expect(key).To(Equal(lockKey))
+			Eventually(fakeLocker.LockCallCount).Should(Equal(2))
+			_, lock = fakeLocker.LockArgsForCall(1)
+			Expect(lock).To(Equal(expectedLock))
 		})
 
 		Context("and the lock becomes available", func() {
 			It("stops retrying to grab the lock", func() {
-				Eventually(fakeLock.LockCallCount).Should(Equal(1))
-				_, key := fakeLock.LockArgsForCall(0)
-				Expect(key).To(Equal(lockKey))
+				Eventually(fakeLocker.LockCallCount).Should(Equal(1))
+				_, lock := fakeLocker.LockArgsForCall(0)
+				Expect(lock).To(Equal(expectedLock))
 
-				fakeLock.LockReturns(nil)
+				fakeLocker.LockReturns(nil)
 				fakeClock.WaitForWatcherAndIncrement(lockRetryInterval)
 
-				Eventually(fakeLock.LockCallCount).Should(Equal(2))
-				_, key = fakeLock.LockArgsForCall(1)
-				Expect(key).To(Equal(lockKey))
+				Eventually(fakeLocker.LockCallCount).Should(Equal(2))
+				_, lock = fakeLocker.LockArgsForCall(1)
+				Expect(lock).To(Equal(expectedLock))
 
 				Consistently(fakeClock.WatcherCount()).Should(Equal(0))
 				fakeClock.Increment(lockRetryInterval)
-				Consistently(fakeLock.LockCallCount).Should(Equal(2))
+				Consistently(fakeLocker.LockCallCount).Should(Equal(2))
 			})
 		})
 	})
 
 	Context("when the lock can be acquired", func() {
 		It("grabs the lock and then stops trying to grab it", func() {
-			Eventually(fakeLock.LockCallCount).Should(Equal(1))
-			_, key := fakeLock.LockArgsForCall(0)
-			Expect(key).To(Equal(lockKey))
+			Eventually(fakeLocker.LockCallCount).Should(Equal(1))
+			_, lock := fakeLocker.LockArgsForCall(0)
+			Expect(lock).To(Equal(expectedLock))
 
 			Consistently(fakeClock.WatcherCount()).Should(Equal(0))
 			fakeClock.Increment(lockRetryInterval)
-			Consistently(fakeLock.LockCallCount).Should(Equal(1))
+			Consistently(fakeLocker.LockCallCount).Should(Equal(1))
 		})
 	})
 
 	Context("when the lock process receives a signal", func() {
 		It("releases the lock", func() {
 			ginkgomon.Interrupt(lockProcess)
-			Eventually(fakeLock.ReleaseCallCount).Should(Equal(1))
-			_, key := fakeLock.ReleaseArgsForCall(0)
-			Expect(key).To(Equal(lockKey))
+			Eventually(fakeLocker.ReleaseCallCount).Should(Equal(1))
+			_, lock := fakeLocker.ReleaseArgsForCall(0)
+			Expect(lock).To(Equal(expectedLock))
 		})
 	})
 })
