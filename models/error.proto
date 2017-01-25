@@ -49,6 +49,8 @@ message Error {
 
     Deadlock = 28;
     Unrecoverable = 29;
+
+    LockCollision = 30;
   }
 
   optional Type type = 1 [(gogoproto.nullable) = false];

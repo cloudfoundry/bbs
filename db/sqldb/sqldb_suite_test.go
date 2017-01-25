@@ -151,10 +151,11 @@ func truncateTables(db *sql.DB) {
 
 var truncateTablesSQL = []string{
 	"TRUNCATE TABLE domains",
-	"TRUNCATE TABLE configurations",
 	"TRUNCATE TABLE tasks",
 	"TRUNCATE TABLE desired_lrps",
 	"TRUNCATE TABLE actual_lrps",
+	"TRUNCATE TABLE configurations",
+	"TRUNCATE TABLE locks",
 }
 
 func randStr(strSize int) string {

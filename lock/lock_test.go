@@ -114,8 +114,8 @@ var _ = Describe("Lock", func() {
 	Context("when the lock process receives a signal", func() {
 		It("releases the lock", func() {
 			ginkgomon.Interrupt(lockProcess)
-			Eventually(fakeLocker.ReleaseCallCount).Should(Equal(1))
-			_, lock := fakeLocker.ReleaseArgsForCall(0)
+			Eventually(fakeLocker.ReleaseLockCallCount).Should(Equal(1))
+			_, lock := fakeLocker.ReleaseLockArgsForCall(0)
 			Expect(lock).To(Equal(expectedLock))
 		})
 	})

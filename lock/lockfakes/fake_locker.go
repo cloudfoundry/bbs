@@ -19,13 +19,13 @@ type FakeLocker struct {
 	lockReturns struct {
 		result1 error
 	}
-	ReleaseStub        func(logger lager.Logger, lock models.Lock) error
-	releaseMutex       sync.RWMutex
-	releaseArgsForCall []struct {
+	ReleaseLockStub        func(logger lager.Logger, lock models.Lock) error
+	releaseLockMutex       sync.RWMutex
+	releaseLockArgsForCall []struct {
 		logger lager.Logger
 		lock   models.Lock
 	}
-	releaseReturns struct {
+	releaseLockReturns struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -66,36 +66,36 @@ func (fake *FakeLocker) LockReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeLocker) Release(logger lager.Logger, lock models.Lock) error {
-	fake.releaseMutex.Lock()
-	fake.releaseArgsForCall = append(fake.releaseArgsForCall, struct {
+func (fake *FakeLocker) ReleaseLock(logger lager.Logger, lock models.Lock) error {
+	fake.releaseLockMutex.Lock()
+	fake.releaseLockArgsForCall = append(fake.releaseLockArgsForCall, struct {
 		logger lager.Logger
 		lock   models.Lock
 	}{logger, lock})
-	fake.recordInvocation("Release", []interface{}{logger, lock})
-	fake.releaseMutex.Unlock()
-	if fake.ReleaseStub != nil {
-		return fake.ReleaseStub(logger, lock)
+	fake.recordInvocation("ReleaseLock", []interface{}{logger, lock})
+	fake.releaseLockMutex.Unlock()
+	if fake.ReleaseLockStub != nil {
+		return fake.ReleaseLockStub(logger, lock)
 	} else {
-		return fake.releaseReturns.result1
+		return fake.releaseLockReturns.result1
 	}
 }
 
-func (fake *FakeLocker) ReleaseCallCount() int {
-	fake.releaseMutex.RLock()
-	defer fake.releaseMutex.RUnlock()
-	return len(fake.releaseArgsForCall)
+func (fake *FakeLocker) ReleaseLockCallCount() int {
+	fake.releaseLockMutex.RLock()
+	defer fake.releaseLockMutex.RUnlock()
+	return len(fake.releaseLockArgsForCall)
 }
 
-func (fake *FakeLocker) ReleaseArgsForCall(i int) (lager.Logger, models.Lock) {
-	fake.releaseMutex.RLock()
-	defer fake.releaseMutex.RUnlock()
-	return fake.releaseArgsForCall[i].logger, fake.releaseArgsForCall[i].lock
+func (fake *FakeLocker) ReleaseLockArgsForCall(i int) (lager.Logger, models.Lock) {
+	fake.releaseLockMutex.RLock()
+	defer fake.releaseLockMutex.RUnlock()
+	return fake.releaseLockArgsForCall[i].logger, fake.releaseLockArgsForCall[i].lock
 }
 
-func (fake *FakeLocker) ReleaseReturns(result1 error) {
-	fake.ReleaseStub = nil
-	fake.releaseReturns = struct {
+func (fake *FakeLocker) ReleaseLockReturns(result1 error) {
+	fake.ReleaseLockStub = nil
+	fake.releaseLockReturns = struct {
 		result1 error
 	}{result1}
 }
@@ -105,8 +105,8 @@ func (fake *FakeLocker) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.lockMutex.RLock()
 	defer fake.lockMutex.RUnlock()
-	fake.releaseMutex.RLock()
-	defer fake.releaseMutex.RUnlock()
+	fake.releaseLockMutex.RLock()
+	defer fake.releaseLockMutex.RUnlock()
 	return fake.invocations
 }
 

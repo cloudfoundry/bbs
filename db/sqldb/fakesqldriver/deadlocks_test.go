@@ -285,4 +285,20 @@ var _ = Describe("Deadlocks", func() {
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
 	})
+
+	Context("Lock", func() {
+		It("retries on deadlocks", func() {
+			err := sqlDB.Lock(logger, models.Lock{})
+			Expect(err).To(HaveOccurred())
+			Expect(fakeConn.BeginCallCount()).To(Equal(3))
+		})
+	})
+
+	Context("Release", func() {
+		It("retries on deadlocks", func() {
+			err := sqlDB.ReleaseLock(logger, models.Lock{})
+			Expect(err).To(HaveOccurred())
+			Expect(fakeConn.BeginCallCount()).To(Equal(3))
+		})
+	})
 })

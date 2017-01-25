@@ -21,7 +21,7 @@ type lockRunner struct {
 //go:generate counterfeiter . Locker
 type Locker interface {
 	Lock(logger lager.Logger, lock models.Lock) error
-	Release(logger lager.Logger, lock models.Lock) error
+	ReleaseLock(logger lager.Logger, lock models.Lock) error
 }
 
 func NewLockRunner(
@@ -64,7 +64,7 @@ func (l *lockRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error 
 		case sig := <-signals:
 			logger.Info("signalled", lager.Data{"signal": sig})
 
-			err := l.locker.Release(logger, l.lock)
+			err := l.locker.ReleaseLock(logger, l.lock)
 			if err != nil {
 				logger.Error("failed-to-release-lock", err)
 			} else {
