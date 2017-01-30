@@ -76,7 +76,7 @@ func DefaultConfig() BBSConfig {
 		DropsondePort:               3457,
 		DatabaseDriver:              "mysql",
 		MaxOpenDatabaseConnections:  200,
-		MaxIdleDatabaseConnections:  50,
+		MaxIdleDatabaseConnections:  200,
 		AuctioneerRequireTLS:        false,
 		RepClientSessionCacheSize:   0,
 		RepRequireTLS:               false,
