@@ -69,6 +69,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
+	// Ensure that if another test failed to clean up we can still proceed
+	db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+
 	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
