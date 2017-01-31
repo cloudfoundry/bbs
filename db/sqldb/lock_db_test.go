@@ -1,7 +1,7 @@
 package sqldb_test
 
 import (
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,7 +20,7 @@ var _ = Describe("Lock", func() {
 				err := sqlDB.Lock(logger, newLock)
 				Expect(err).NotTo(HaveOccurred())
 
-				lockQuery := sqldb.RebindForFlavor(
+				lockQuery := helpers.RebindForFlavor(
 					"SELECT * FROM Locks WHERE key = ?",
 					dbFlavor,
 				)
@@ -70,7 +70,7 @@ var _ = Describe("Lock", func() {
 
 		Context("when the lock exists", func() {
 			BeforeEach(func() {
-				query := sqldb.RebindForFlavor(
+				query := helpers.RebindForFlavor(
 					`INSERT INTO locks (key, owner, value) VALUES (?, ?, ?);`,
 					dbFlavor,
 				)

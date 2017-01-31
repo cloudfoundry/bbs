@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
@@ -77,7 +78,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	now := db.clock.Now()
 
 	result, err := db.update(logger, db.db, tasksTable,
-		SQLAttributes{
+		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     "not started within time limit",
 			"result":             "",
@@ -103,7 +104,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
 	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, NoLockRow,
+		taskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ? AND created_at > ?",
 		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration).UnixNano(), db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
 	)
@@ -141,12 +142,12 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 
 	wheres := "state = ?"
 	if len(cellSet) != 0 {
-		wheres += fmt.Sprintf(" AND cell_id NOT IN (%s)", questionMarks(len(cellSet)))
+		wheres += fmt.Sprintf(" AND cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet)))
 	}
 	now := db.clock.Now().UnixNano()
 
 	result, err := db.update(logger, db.db, tasksTable,
-		SQLAttributes{
+		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     "cell disappeared before completion",
 			"result":             "",
@@ -173,7 +174,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDuration time.Duration) {
 	logger = logger.Session("demote-kickable-resolving-tasks")
 	_, err := db.update(logger, db.db, tasksTable,
-		SQLAttributes{"state": models.Task_Completed},
+		helpers.SQLAttributes{"state": models.Task_Completed},
 		"state = ? AND updated_at < ?",
 		models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
@@ -204,7 +205,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 	logger = logger.Session("get-kickable-complete-tasks-for-completion")
 
 	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, NoLockRow,
+		taskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ?",
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)

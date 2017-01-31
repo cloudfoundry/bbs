@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/lager"
 )
@@ -80,7 +81,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 		err = db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 			blobs := make([]interface{}, len(blobColumns))
 
-			row := db.one(logger, tx, tableName, blobColumns, LockRow, where, guid)
+			row := db.one(logger, tx, tableName, blobColumns, helpers.LockRow, where, guid)
 			for i := range blobColumns {
 				var blob []byte
 				blobs[i] = &blob

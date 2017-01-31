@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -88,7 +88,7 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 		updateQuery := fmt.Sprintf("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?")
 		bindings = append(bindings, encodedData)
 		bindings = append(bindings, processGuid)
-		_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
+		_, err = e.rawSQLDB.Exec(helpers.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
 		if err != nil {
 			logger.Error("failed-updating-desired-lrp-record", err)
 			return models.ErrBadRequest

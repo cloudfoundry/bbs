@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -13,7 +14,7 @@ func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinng
 	var groups []*models.ActualLRPGroup
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		rows, err := db.all(logger, tx, actualLRPsTable,
-			actualLRPColumns, NoLockRow,
+			actualLRPColumns, helpers.NoLockRow,
 			wheres, whereBindinngs...,
 		)
 		if err != nil {
@@ -88,7 +89,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 	now := db.clock.Now().UnixNano()
 	err = db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		_, err := db.insert(logger, tx, actualLRPsTable,
-			SQLAttributes{
+			helpers.SQLAttributes{
 				"process_guid":           key.ProcessGuid,
 				"instance_index":         key.Index,
 				"domain":                 key.Domain,
@@ -150,7 +151,7 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 
 		_, err = db.update(logger, tx, actualLRPsTable,
-			SQLAttributes{
+			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -205,7 +206,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		actualLRP.Since = db.clock.Now().UnixNano()
 
 		_, err = db.update(logger, tx, actualLRPsTable,
-			SQLAttributes{
+			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -282,7 +283,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		}
 
 		_, err = db.update(logger, tx, actualLRPsTable,
-			SQLAttributes{
+			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -364,7 +365,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		actualLRP.Since = now
 
 		_, err = db.update(logger, tx, actualLRPsTable,
-			SQLAttributes{
+			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -417,7 +418,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		evacuating := false
 
 		_, err = db.update(logger, tx, actualLRPsTable,
-			SQLAttributes{
+			helpers.SQLAttributes{
 				"modification_tag_index": actualLRP.ModificationTag.Index,
 				"placement_error":        truncateString(actualLRP.PlacementError, 1024),
 				"since":                  actualLRP.Since,
@@ -495,7 +496,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 	}
 
 	_, err = db.insert(logger, tx, actualLRPsTable,
-		SQLAttributes{
+		helpers.SQLAttributes{
 			"process_guid":           actualLRP.ActualLRPKey.ProcessGuid,
 			"instance_index":         actualLRP.ActualLRPKey.Index,
 			"domain":                 actualLRP.ActualLRPKey.Domain,
@@ -568,7 +569,7 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 	}
 
 	rows, err := db.all(logger, tx, actualLRPsTable,
-		actualLRPColumns, LockRow, wheres, bindings...)
+		actualLRPColumns, helpers.LockRow, wheres, bindings...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, db.convertSQLError(err)

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
@@ -25,6 +26,7 @@ type SQLDB struct {
 	cryptor                encryption.Cryptor
 	encoder                format.Encoder
 	flavor                 string
+	helper                 helpers.SQLHelper
 }
 
 type RowScanner interface {
@@ -53,6 +55,7 @@ func NewSQLDB(
 	clock clock.Clock,
 	flavor string,
 ) *SQLDB {
+	helper := helpers.NewSQLHelper(flavor)
 	return &SQLDB{
 		db: db,
 		convergenceWorkersSize: convergenceWorkersSize,
@@ -64,6 +67,7 @@ func NewSQLDB(
 		cryptor:                cryptor,
 		encoder:                format.NewEncoder(cryptor),
 		flavor:                 flavor,
+		helper:                 helper,
 	}
 }
 

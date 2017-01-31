@@ -2,7 +2,7 @@ package migrations_test
 
 import (
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/migration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -46,7 +46,7 @@ var _ = Describe("Add Lock Table", func() {
 		})
 
 		It("creates a locks table", func() {
-			query := sqldb.RebindForFlavor(`SELECT table_name FROM information_schema.tables WHERE table_name = ?`, flavor)
+			query := helpers.RebindForFlavor(`SELECT table_name FROM information_schema.tables WHERE table_name = ?`, flavor)
 			row := rawSQLDB.QueryRow(query, "locks")
 
 			var tableName string

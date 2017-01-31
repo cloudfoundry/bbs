@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
@@ -57,7 +58,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 		desiredLRP.ModificationTag = &models.ModificationTag{Epoch: guid, Index: 0}
 
 		_, err = db.insert(logger, tx, desiredLRPsTable,
-			SQLAttributes{
+			helpers.SQLAttributes{
 				"process_guid":           desiredLRP.ProcessGuid,
 				"domain":                 desiredLRP.Domain,
 				"log_guid":               desiredLRP.LogGuid,
@@ -93,7 +94,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
 		row := db.one(logger, tx, desiredLRPsTable,
-			desiredLRPColumns, NoLockRow,
+			desiredLRPColumns, helpers.NoLockRow,
 			"process_guid = ?", processGuid,
 		)
 
@@ -129,7 +130,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		rows, err := db.all(logger, tx, desiredLRPsTable,
-			desiredLRPColumns, NoLockRow,
+			desiredLRPColumns, helpers.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
 		if err != nil {
@@ -175,7 +176,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		rows, err := db.all(logger, tx, desiredLRPsTable,
-			schedulingInfoColumns, NoLockRow,
+			schedulingInfoColumns, helpers.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
 		if err != nil {
@@ -213,7 +214,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
 		row := db.one(logger, tx, desiredLRPsTable,
-			desiredLRPColumns, LockRow,
+			desiredLRPColumns, helpers.LockRow,
 			"process_guid = ?", processGuid,
 		)
 		beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
@@ -223,7 +224,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			return err
 		}
 
-		updateAttributes := SQLAttributes{"modification_tag_index": beforeDesiredLRP.ModificationTag.Index + 1}
+		updateAttributes := helpers.SQLAttributes{"modification_tag_index": beforeDesiredLRP.ModificationTag.Index + 1}
 
 		if update.Annotation != nil {
 			updateAttributes["annotation"] = *update.Annotation
@@ -352,7 +353,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 
 func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid string, tx *sql.Tx) error {
 	row := db.one(logger, tx, desiredLRPsTable,
-		ColumnList{"1"}, LockRow,
+		helpers.ColumnList{"1"}, helpers.LockRow,
 		"process_guid = ?", processGuid,
 	)
 	var count int

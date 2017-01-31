@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/clock/fakeclock"
 	. "github.com/onsi/ginkgo"
@@ -77,7 +77,7 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = rawSQLDB.Exec(
-				sqldb.RebindForFlavor(
+				helpers.RebindForFlavor(
 					`INSERT INTO desired_lrps
 						  (process_guid, domain, placement_tags, log_guid, instances, memory_mb,
 							  disk_mb, rootfs, routes, volume_placement, modification_tag_epoch, run_info)
@@ -91,7 +91,7 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var fetchedJSONData string
-			query := sqldb.RebindForFlavor("select placement_tags from desired_lrps limit 1", flavor)
+			query := helpers.RebindForFlavor("select placement_tags from desired_lrps limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&fetchedJSONData)).NotTo(HaveOccurred())
 			Expect(fetchedJSONData).To(BeEquivalentTo(jsonData))
