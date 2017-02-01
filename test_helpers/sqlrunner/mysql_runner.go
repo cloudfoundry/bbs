@@ -65,15 +65,8 @@ func (m *MySQLRunner) DB() *sql.DB {
 	return m.db
 }
 
-func (m *MySQLRunner) Reset() {
-	var truncateTablesSQL = []string{
-		"TRUNCATE TABLE domains",
-		"TRUNCATE TABLE configurations",
-		"TRUNCATE TABLE tasks",
-		"TRUNCATE TABLE desired_lrps",
-		"TRUNCATE TABLE actual_lrps",
-	}
-	for _, query := range truncateTablesSQL {
+func (m *MySQLRunner) ResetTables(tables []string) {
+	for _, query := range tables {
 		result, err := m.db.Exec(query)
 		switch err := err.(type) {
 		case *mysql.MySQLError:
@@ -86,4 +79,15 @@ func (m *MySQLRunner) Reset() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
 	}
+}
+
+func (m *MySQLRunner) Reset() {
+	var truncateTablesSQL = []string{
+		"TRUNCATE TABLE domains",
+		"TRUNCATE TABLE configurations",
+		"TRUNCATE TABLE tasks",
+		"TRUNCATE TABLE desired_lrps",
+		"TRUNCATE TABLE actual_lrps",
+	}
+	m.ResetTables(truncateTablesSQL)
 }
