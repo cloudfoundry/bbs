@@ -23,7 +23,7 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		defer rows.Close()
@@ -33,14 +33,14 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 			err = rows.Scan(&domain)
 			if err != nil {
 				logger.Error("failed-scan-row", err)
-				return db.convertSQLError(err)
+				return err
 			}
 			results = append(results, domain)
 		}
 
 		if rows.Err() != nil {
 			logger.Error("failed-fetching-row", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -66,7 +66,7 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 		)
 		if err != nil {
 			logger.Error("failed-upsert-domain", err)
-			return db.convertSQLError(err)
+			return err
 		}
 		return nil
 	})

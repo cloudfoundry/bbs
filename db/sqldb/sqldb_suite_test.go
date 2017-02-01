@@ -156,7 +156,6 @@ var truncateTablesSQL = []string{
 	"TRUNCATE TABLE desired_lrps",
 	"TRUNCATE TABLE actual_lrps",
 	"TRUNCATE TABLE configurations",
-	"TRUNCATE TABLE locks",
 }
 
 func randStr(strSize int) string {

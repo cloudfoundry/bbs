@@ -75,7 +75,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		)
 		if err != nil {
 			logger.Error("failed-update-evacuating-lrp", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -171,7 +171,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	)
 	if err != nil {
 		logger.Error("failed-insert-evacuating-lrp", err)
-		return nil, db.convertSQLError(err)
+		return nil, err
 	}
 
 	return actualLRP, nil

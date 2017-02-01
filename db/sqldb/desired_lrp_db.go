@@ -78,7 +78,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 		)
 		if err != nil {
 			logger.Error("failed-inserting-desired", err)
-			return db.convertSQLError(err)
+			return err
 		}
 		return nil
 	})
@@ -135,7 +135,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
-			return db.convertSQLError(err)
+			return err
 		}
 		defer rows.Close()
 
@@ -181,7 +181,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
-			return db.convertSQLError(err)
+			return err
 		}
 		defer rows.Close()
 
@@ -245,7 +245,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		_, err = db.update(logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
 		if err != nil {
 			logger.Error("failed-executing-query", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -283,7 +283,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 		_, err = db.delete(logger, tx, desiredLRPsTable, "process_guid = ?", processGuid)
 		if err != nil {
 			logger.Error("failed-deleting-from-db", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -361,7 +361,7 @@ func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid 
 	if err == sql.ErrNoRows {
 		return models.ErrResourceNotFound
 	} else if err != nil {
-		return db.convertSQLError(err)
+		return err
 	}
 	return nil
 }

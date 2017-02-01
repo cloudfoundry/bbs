@@ -19,7 +19,7 @@ func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinng
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
-			return db.convertSQLError(err)
+			return err
 		}
 		defer rows.Close()
 		groups, err = db.scanAndCleanupActualLRPs(logger, tx, rows)
@@ -106,7 +106,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 
 	if err != nil {
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
-		return nil, db.convertSQLError(err)
+		return nil, err
 	}
 	return &models.ActualLRPGroup{
 		Instance: &models.ActualLRP{
@@ -164,7 +164,7 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		)
 		if err != nil {
 			logger.Error("failed-to-unclaim-actual-lrp", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -220,7 +220,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		)
 		if err != nil {
 			logger.Error("failed-claiming-actual-lrp", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -297,7 +297,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		)
 		if err != nil {
 			logger.Error("failed-starting-actual-lrp", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -380,7 +380,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		)
 		if err != nil {
 			logger.Error("failed-to-crash-actual-lrp", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -428,7 +428,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		)
 		if err != nil {
 			logger.Error("failed-failing-actual-lrp", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -458,7 +458,7 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 		}
 		if err != nil {
 			logger.Error("failed-removing-actual-lrp", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		numRows, err := result.RowsAffected()
@@ -511,7 +511,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 	)
 	if err != nil {
 		logger.Error("failed-creating-running-actual-lrp", err)
-		return nil, db.convertSQLError(err)
+		return nil, err
 	}
 	return actualLRP, nil
 }
@@ -539,7 +539,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row RowScanner) (*models.A
 	)
 	if err != nil {
 		logger.Error("failed-scanning-actual-lrp", err)
-		return nil, false, db.convertSQLError(err)
+		return nil, false, err
 	}
 
 	if len(netInfoData) > 0 {
@@ -572,11 +572,11 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 		actualLRPColumns, helpers.LockRow, wheres, bindings...)
 	if err != nil {
 		logger.Error("failed-query", err)
-		return nil, db.convertSQLError(err)
+		return nil, err
 	}
 	groups, err := db.scanAndCleanupActualLRPs(logger, tx, rows)
 	if err != nil {
-		return nil, db.convertSQLError(err)
+		return nil, err
 	}
 
 	if len(groups) == 0 {

@@ -61,7 +61,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 	)
 	rows, err := db.db.Query(fmt.Sprintf("SELECT %s FROM %s", primaryKey, tableName))
 	if err != nil {
-		return db.convertSQLError(err)
+		return err
 	}
 	defer rows.Close()
 
@@ -126,7 +126,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 			)
 			if err != nil {
 				logger.Error("failed-to-update-blob", err)
-				return db.convertSQLError(err)
+				return err
 			}
 			return nil
 		})

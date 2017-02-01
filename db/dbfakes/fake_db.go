@@ -80,24 +80,6 @@ type FakeDB struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
-	LockStub        func(logger lager.Logger, lock models.Lock) error
-	lockMutex       sync.RWMutex
-	lockArgsForCall []struct {
-		logger lager.Logger
-		lock   models.Lock
-	}
-	lockReturns struct {
-		result1 error
-	}
-	ReleaseLockStub        func(logger lager.Logger, lock models.Lock) error
-	releaseLockMutex       sync.RWMutex
-	releaseLockArgsForCall []struct {
-		logger lager.Logger
-		lock   models.Lock
-	}
-	releaseLockReturns struct {
-		result1 error
-	}
 	ActualLRPGroupsStub        func(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 	actualLRPGroupsMutex       sync.RWMutex
 	actualLRPGroupsArgsForCall []struct {
@@ -665,74 +647,6 @@ func (fake *FakeDB) EvacuateActualLRPReturns(result1 *models.ActualLRPGroup, res
 		result1 *models.ActualLRPGroup
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeDB) Lock(logger lager.Logger, lock models.Lock) error {
-	fake.lockMutex.Lock()
-	fake.lockArgsForCall = append(fake.lockArgsForCall, struct {
-		logger lager.Logger
-		lock   models.Lock
-	}{logger, lock})
-	fake.recordInvocation("Lock", []interface{}{logger, lock})
-	fake.lockMutex.Unlock()
-	if fake.LockStub != nil {
-		return fake.LockStub(logger, lock)
-	} else {
-		return fake.lockReturns.result1
-	}
-}
-
-func (fake *FakeDB) LockCallCount() int {
-	fake.lockMutex.RLock()
-	defer fake.lockMutex.RUnlock()
-	return len(fake.lockArgsForCall)
-}
-
-func (fake *FakeDB) LockArgsForCall(i int) (lager.Logger, models.Lock) {
-	fake.lockMutex.RLock()
-	defer fake.lockMutex.RUnlock()
-	return fake.lockArgsForCall[i].logger, fake.lockArgsForCall[i].lock
-}
-
-func (fake *FakeDB) LockReturns(result1 error) {
-	fake.LockStub = nil
-	fake.lockReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeDB) ReleaseLock(logger lager.Logger, lock models.Lock) error {
-	fake.releaseLockMutex.Lock()
-	fake.releaseLockArgsForCall = append(fake.releaseLockArgsForCall, struct {
-		logger lager.Logger
-		lock   models.Lock
-	}{logger, lock})
-	fake.recordInvocation("ReleaseLock", []interface{}{logger, lock})
-	fake.releaseLockMutex.Unlock()
-	if fake.ReleaseLockStub != nil {
-		return fake.ReleaseLockStub(logger, lock)
-	} else {
-		return fake.releaseLockReturns.result1
-	}
-}
-
-func (fake *FakeDB) ReleaseLockCallCount() int {
-	fake.releaseLockMutex.RLock()
-	defer fake.releaseLockMutex.RUnlock()
-	return len(fake.releaseLockArgsForCall)
-}
-
-func (fake *FakeDB) ReleaseLockArgsForCall(i int) (lager.Logger, models.Lock) {
-	fake.releaseLockMutex.RLock()
-	defer fake.releaseLockMutex.RUnlock()
-	return fake.releaseLockArgsForCall[i].logger, fake.releaseLockArgsForCall[i].lock
-}
-
-func (fake *FakeDB) ReleaseLockReturns(result1 error) {
-	fake.ReleaseLockStub = nil
-	fake.releaseLockReturns = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *FakeDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
@@ -1824,10 +1738,6 @@ func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
 	fake.evacuateActualLRPMutex.RLock()
 	defer fake.evacuateActualLRPMutex.RUnlock()
-	fake.lockMutex.RLock()
-	defer fake.lockMutex.RUnlock()
-	fake.releaseLockMutex.RLock()
-	defer fake.releaseLockMutex.RUnlock()
 	fake.actualLRPGroupsMutex.RLock()
 	defer fake.actualLRPGroupsMutex.RUnlock()
 	fake.actualLRPGroupsByProcessGuidMutex.RLock()

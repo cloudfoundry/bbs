@@ -36,7 +36,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 		)
 		if err != nil {
 			logger.Error("failed-inserting-task", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -70,14 +70,14 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
-			return db.convertSQLError(err)
+			return err
 		}
 		defer rows.Close()
 
 		results, _, err = db.fetchTasks(logger, rows, tx, true)
 		if err != nil {
 			logger.Error("failed-fetch", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -141,7 +141,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (bool, 
 			"guid = ?", taskGuid,
 		)
 		if err != nil {
-			return db.convertSQLError(err)
+			return err
 		}
 
 		started = true
@@ -269,7 +269,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 		)
 		if err != nil {
 			logger.Error("failed-updating-tasks", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -297,7 +297,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 		_, err = db.delete(logger, tx, tasksTable, "guid = ?", taskGuid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
@@ -320,7 +320,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	)
 	if err != nil {
 		logger.Error("failed-updating-tasks", err)
-		return db.convertSQLError(err)
+		return err
 	}
 
 	task.State = models.Task_Completed
@@ -441,7 +441,7 @@ func (db *SQLDB) deleteInvalidTasks(logger lager.Logger, queryable Queryable, gu
 		_, err := db.delete(logger, queryable, tasksTable, "guid = ?", guid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
-			return db.convertSQLError(err)
+			return err
 		}
 	}
 	return nil

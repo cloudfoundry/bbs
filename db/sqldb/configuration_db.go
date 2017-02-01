@@ -16,7 +16,7 @@ func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) e
 		)
 		if err != nil {
 			logger.Error("failed-setting-config-value", err, lager.Data{"key": key})
-			return db.convertSQLError(err)
+			return err
 		}
 
 		return nil
