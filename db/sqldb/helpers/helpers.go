@@ -17,6 +17,8 @@ const (
 )
 
 type SQLHelper interface {
+	SetIsolationLevel(logger lager.Logger, db *sql.DB, level string) error
+
 	Transact(logger lager.Logger, db *sql.DB, f func(logger lager.Logger, tx *sql.Tx) error) error
 	One(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) *sql.Row
 	All(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) (*sql.Rows, error)

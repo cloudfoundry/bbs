@@ -12,11 +12,6 @@ import (
 )
 
 const (
-	IsolationLevelReadUncommitted = "READ UNCOMMITTED"
-	IsolationLevelReadCommitted   = "READ COMMITTED"
-	IsolationLevelSerializable    = "SERIALIZABLE"
-	IsolationLevelRepeatableRead  = "REPEATABLE READ"
-
 	tasksTable       = "tasks"
 	desiredLRPsTable = "desired_lrps"
 	actualLRPsTable  = "actual_lrps"
@@ -96,19 +91,7 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 }
 
 func (db *SQLDB) SetIsolationLevel(logger lager.Logger, level string) error {
-	logger = logger.Session("set-isolation-level", lager.Data{"level": level})
-	logger.Info("starting")
-	defer logger.Info("done")
-
-	var query string
-	if db.flavor == helpers.MySQL {
-		query = fmt.Sprintf("SET SESSION TRANSACTION ISOLATION LEVEL %s", level)
-	} else if db.flavor == helpers.Postgres {
-		query = fmt.Sprintf("SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL %s", level)
-	}
-
-	_, err := db.db.Exec(query)
-	return err
+	return db.helper.SetIsolationLevel(logger, db.db, level)
 }
 
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
