@@ -6,32 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
-
-const (
-	MySQL    = "mysql"
-	Postgres = "postgres"
-)
-
-const (
-	IsolationLevelReadUncommitted = "READ UNCOMMITTED"
-	IsolationLevelReadCommitted   = "READ COMMITTED"
-	IsolationLevelSerializable    = "SERIALIZABLE"
-	IsolationLevelRepeatableRead  = "REPEATABLE READ"
-)
-
-type RowLock bool
-
-const (
-	LockRow   RowLock = true
-	NoLockRow RowLock = false
-)
-
-type SQLAttributes map[string]interface{}
-
-type ColumnList []string
 
 const (
 	tasksTable       = "tasks"
@@ -41,7 +19,7 @@ const (
 )
 
 var (
-	schedulingInfoColumns = ColumnList{
+	schedulingInfoColumns = helpers.ColumnList{
 		desiredLRPsTable + ".process_guid",
 		desiredLRPsTable + ".domain",
 		desiredLRPsTable + ".log_guid",
@@ -62,7 +40,7 @@ var (
 		desiredLRPsTable+".run_info",
 	)
 
-	taskColumns = ColumnList{
+	taskColumns = helpers.ColumnList{
 		tasksTable + ".guid",
 		tasksTable + ".domain",
 		tasksTable + ".updated_at",
@@ -76,7 +54,7 @@ var (
 		tasksTable + ".task_definition",
 	}
 
-	actualLRPColumns = ColumnList{
+	actualLRPColumns = helpers.ColumnList{
 		actualLRPsTable + ".process_guid",
 		actualLRPsTable + ".instance_index",
 		actualLRPsTable + ".evacuating",
@@ -93,7 +71,7 @@ var (
 		actualLRPsTable + ".crash_reason",
 	}
 
-	domainColumns = ColumnList{
+	domainColumns = helpers.ColumnList{
 		domainsTable + ".domain",
 	}
 )
@@ -113,46 +91,7 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 }
 
 func (db *SQLDB) SetIsolationLevel(logger lager.Logger, level string) error {
-	logger = logger.Session("set-isolation-level", lager.Data{"level": level})
-	logger.Info("starting")
-	defer logger.Info("done")
-
-	var query string
-	if db.flavor == MySQL {
-		query = fmt.Sprintf("SET SESSION TRANSACTION ISOLATION LEVEL %s", level)
-	} else if db.flavor == Postgres {
-		query = fmt.Sprintf("SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL %s", level)
-	}
-
-	_, err := db.db.Exec(query)
-	return err
-}
-
-// Takes in a query that uses question marks to represent unbound SQL parameters
-// and converts those to '$1, $2', etc. if the DB flavor is postgres.
-// Takes in a query that uses MEDIUMTEXT to create table columns and converts
-// those to TEXT if the DB flavor is postgres
-// e.g., `SELECT * FROM table_name WHERE col = ? AND col2 = ?` becomes
-//       `SELECT * FROM table_name WHERE col = $1 AND col2 = $2`
-// e.g., `CREATE TABLE desired_lrps(
-//	 annotation MEDIUMTEXT
-// )` becomes
-// `CREATE TABLE desired_lrps(
-//	 annotation TEXT
-// )`
-func RebindForFlavor(query, flavor string) string {
-	if flavor == MySQL {
-		return query
-	}
-	if flavor != Postgres {
-		panic(fmt.Sprintf("Unrecognized DB flavor '%s'", flavor))
-	}
-
-	strParts := strings.Split(query, "?")
-	for i := 1; i < len(strParts); i++ {
-		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
-	}
-	return strings.Replace(strings.Join(strParts, ""), "MEDIUMTEXT", "TEXT", -1)
+	return db.helper.SetIsolationLevel(logger, db.db, level)
 }
 
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
@@ -161,9 +100,9 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 	columns = append(columns, "COUNT(actual_lrps.instance_index) AS actual_instances")
 
 	switch db.flavor {
-	case Postgres:
+	case helpers.Postgres:
 		columns = append(columns, "STRING_AGG(actual_lrps.instance_index::text, ',') AS existing_indices")
-	case MySQL:
+	case helpers.MySQL:
 		columns = append(columns, "GROUP_CONCAT(actual_lrps.instance_index) AS existing_indices")
 	default:
 		// totally shouldn't happen
@@ -182,6 +121,7 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 
 	return q.Query(query)
 }
+
 func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	query := `
     SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
@@ -199,7 +139,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 	bindings := make([]interface{}, 0, len(cellSet))
 
 	if len(cellSet) > 0 {
-		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", questionMarks(len(cellSet))))
+		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet))))
 		wheres = append(wheres, "actual_lrps.cell_id <> ''")
 		for cellID := range cellSet {
 			bindings = append(bindings, cellID)
@@ -216,7 +156,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 		strings.Join(wheres, " AND "),
 	)
 
-	return q.Query(db.rebind(query), bindings...)
+	return q.Query(db.helper.Rebind(query), bindings...)
 }
 
 func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
@@ -232,7 +172,7 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows,
 		),
 	)
 
-	return q.Query(db.rebind(query), models.ActualLRPStateCrashed, false)
+	return q.Query(db.helper.Rebind(query), models.ActualLRPStateCrashed, false)
 }
 
 func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now time.Time) (*sql.Rows, error) {
@@ -245,7 +185,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now 
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
 	)
 
-	return q.Query(db.rebind(query),
+	return q.Query(db.helper.Rebind(query),
 		models.ActualLRPStateUnclaimed,
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
 		false,
@@ -259,7 +199,7 @@ func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 	`
 
 	var desiredInstances int
-	row := q.QueryRow(db.rebind(query))
+	row := q.QueryRow(db.helper.Rebind(query))
 	err := row.Scan(&desiredInstances)
 	if err != nil {
 		logger.Error("failed-desired-instances-query", err)
@@ -270,7 +210,7 @@ func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q Queryable) (claimedCount, unclaimedCount, runningCount, crashedCount, crashingDesiredCount int) {
 	var query string
 	switch db.flavor {
-	case Postgres:
+	case helpers.Postgres:
 		query = `
 			SELECT
 				COUNT(*) FILTER (WHERE actual_lrps.state = $1) AS claimed_instances,
@@ -281,7 +221,7 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q Queryable) (claim
 			FROM actual_lrps
 			WHERE evacuating = $6
 		`
-	case MySQL:
+	case helpers.MySQL:
 		query = `
 			SELECT
 				COUNT(IF(actual_lrps.state = ?, 1, NULL)) AS claimed_instances,
@@ -308,7 +248,7 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q Queryable) (claim
 func (db *SQLDB) countTasksByState(logger lager.Logger, q Queryable) (pendingCount, runningCount, completedCount, resolvingCount int) {
 	var query string
 	switch db.flavor {
-	case Postgres:
+	case helpers.Postgres:
 		query = `
 			SELECT
 				COUNT(*) FILTER (WHERE state = $1) AS pending_tasks,
@@ -317,7 +257,7 @@ func (db *SQLDB) countTasksByState(logger lager.Logger, q Queryable) (pendingCou
 				COUNT(*) FILTER (WHERE state = $4) AS resolving_tasks
 			FROM tasks
 		`
-	case MySQL:
+	case helpers.MySQL:
 		query = `
 			SELECT
 				COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,
@@ -339,202 +279,32 @@ func (db *SQLDB) countTasksByState(logger lager.Logger, q Queryable) (pendingCou
 	return
 }
 
-// SELECT <columns> FROM <table> WHERE ... LIMIT 1 [FOR UPDATE]
-func (db *SQLDB) one(logger lager.Logger, q Queryable, table string,
-	columns ColumnList, lockRow RowLock,
+func (db *SQLDB) one(logger lager.Logger, q helpers.Queryable, table string,
+	columns helpers.ColumnList, lockRow helpers.RowLock,
 	wheres string, whereBindings ...interface{},
 ) *sql.Row {
-	query := fmt.Sprintf("SELECT %s FROM %s\n", strings.Join(columns, ", "), table)
-
-	if len(wheres) > 0 {
-		query += "WHERE " + wheres
-	}
-
-	query += "\nLIMIT 1"
-
-	if lockRow {
-		query += "\nFOR UPDATE"
-	}
-
-	return q.QueryRow(db.rebind(query), whereBindings...)
+	return db.helper.One(logger, q, table, columns, lockRow, wheres, whereBindings...)
 }
 
-// SELECT <columns> FROM <table> WHERE ... [FOR UPDATE]
-func (db *SQLDB) all(logger lager.Logger, q Queryable, table string,
-	columns ColumnList, lockRow RowLock,
+func (db *SQLDB) all(logger lager.Logger, q helpers.Queryable, table string,
+	columns helpers.ColumnList, lockRow helpers.RowLock,
 	wheres string, whereBindings ...interface{},
 ) (*sql.Rows, error) {
-	query := fmt.Sprintf("SELECT %s FROM %s\n", strings.Join(columns, ", "), table)
-
-	if len(wheres) > 0 {
-		query += "WHERE " + wheres
-	}
-
-	if lockRow {
-		query += "\nFOR UPDATE"
-	}
-
-	return q.Query(db.rebind(query), whereBindings...)
+	return db.helper.All(logger, q, table, columns, lockRow, wheres, whereBindings...)
 }
 
-func (db *SQLDB) upsert(logger lager.Logger, q Queryable, table string, keyAttributes, updateAttributes SQLAttributes) (sql.Result, error) {
-	columns := make([]string, 0, len(keyAttributes)+len(updateAttributes))
-	keyNames := make([]string, 0, len(keyAttributes))
-	updateBindings := make([]string, 0, len(updateAttributes))
-	bindingValues := make([]interface{}, 0, len(keyAttributes)+2*len(updateAttributes))
-
-	keyBindingValues := make([]interface{}, 0, len(keyAttributes))
-	nonKeyBindingValues := make([]interface{}, 0, len(updateAttributes))
-
-	for column, value := range keyAttributes {
-		columns = append(columns, column)
-		keyNames = append(keyNames, column)
-		keyBindingValues = append(keyBindingValues, value)
-	}
-
-	for column, value := range updateAttributes {
-		columns = append(columns, column)
-		updateBindings = append(updateBindings, fmt.Sprintf("%s = ?", column))
-		nonKeyBindingValues = append(nonKeyBindingValues, value)
-	}
-
-	insertBindings := questionMarks(len(keyAttributes) + len(updateAttributes))
-
-	var query string
-	switch db.flavor {
-	case Postgres:
-		bindingValues = append(bindingValues, nonKeyBindingValues...)
-		bindingValues = append(bindingValues, keyBindingValues...)
-		bindingValues = append(bindingValues, keyBindingValues...)
-		bindingValues = append(bindingValues, nonKeyBindingValues...)
-
-		insert := fmt.Sprintf(`
-				INSERT INTO %s
-					(%s)
-				SELECT %s`,
-			table,
-			strings.Join(columns, ", "),
-			insertBindings)
-
-		// TODO: Add where clause with key values.
-		// Alternatively upgrade to postgres 9.5 :D
-		whereClause := []string{}
-		for _, key := range keyNames {
-			whereClause = append(whereClause, fmt.Sprintf("%s = ?", key))
-		}
-
-		upsert := fmt.Sprintf(`
-				UPDATE %s SET
-					%s
-				WHERE %s
-				`,
-			table,
-			strings.Join(updateBindings, ", "),
-			strings.Join(whereClause, " AND "),
-		)
-
-		query = fmt.Sprintf(`
-				WITH upsert AS (%s RETURNING *)
-				%s WHERE NOT EXISTS
-				(SELECT * FROM upsert)
-				`,
-			upsert,
-			insert)
-
-		result, err := q.Exec(fmt.Sprintf("LOCK TABLE %s IN SHARE ROW EXCLUSIVE MODE", table))
-		if err != nil {
-			return result, err
-		}
-
-	case MySQL:
-		bindingValues = append(bindingValues, keyBindingValues...)
-		bindingValues = append(bindingValues, nonKeyBindingValues...)
-		bindingValues = append(bindingValues, nonKeyBindingValues...)
-
-		query = fmt.Sprintf(`
-				INSERT INTO %s
-					(%s)
-				VALUES (%s)
-				ON DUPLICATE KEY UPDATE
-					%s
-			`,
-			table,
-			strings.Join(columns, ", "),
-			insertBindings,
-			strings.Join(updateBindings, ", "),
-		)
-	default:
-		// totally shouldn't happen
-		panic("database flavor not implemented: " + db.flavor)
-	}
-	return q.Exec(db.rebind(query), bindingValues...)
+func (db *SQLDB) upsert(logger lager.Logger, q helpers.Queryable, table string, keyAttributes, updateAttributes helpers.SQLAttributes) (sql.Result, error) {
+	return db.helper.Upsert(logger, q, table, keyAttributes, updateAttributes)
 }
 
-// INSERT INTO <table> (...) VALUES ...
-func (db *SQLDB) insert(logger lager.Logger, q Queryable, table string, attributes SQLAttributes) (sql.Result, error) {
-	attributeCount := len(attributes)
-	if attributeCount == 0 {
-		return nil, nil
-	}
-
-	query := fmt.Sprintf("INSERT INTO %s\n", table)
-	attributeNames := make([]string, 0, attributeCount)
-	attributeBindings := make([]string, 0, attributeCount)
-	bindings := make([]interface{}, 0, attributeCount)
-
-	for column, value := range attributes {
-		attributeNames = append(attributeNames, column)
-		attributeBindings = append(attributeBindings, "?")
-		bindings = append(bindings, value)
-	}
-	query += fmt.Sprintf("(%s)", strings.Join(attributeNames, ", "))
-	query += fmt.Sprintf("VALUES (%s)", strings.Join(attributeBindings, ", "))
-
-	return q.Exec(db.rebind(query), bindings...)
+func (db *SQLDB) insert(logger lager.Logger, q helpers.Queryable, table string, attributes helpers.SQLAttributes) (sql.Result, error) {
+	return db.helper.Insert(logger, q, table, attributes)
 }
 
-// UPDATE <table> SET ... WHERE ...
-func (db *SQLDB) update(logger lager.Logger, q Queryable, table string, updates SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error) {
-	updateCount := len(updates)
-	if updateCount == 0 {
-		return nil, nil
-	}
-
-	query := fmt.Sprintf("UPDATE %s SET\n", table)
-	updateQueries := make([]string, 0, updateCount)
-	bindings := make([]interface{}, 0, updateCount+len(whereBindings))
-
-	for column, value := range updates {
-		updateQueries = append(updateQueries, fmt.Sprintf("%s = ?", column))
-		bindings = append(bindings, value)
-	}
-	query += strings.Join(updateQueries, ", ") + "\n"
-	if len(wheres) > 0 {
-		query += "WHERE " + wheres
-		bindings = append(bindings, whereBindings...)
-	}
-
-	return q.Exec(db.rebind(query), bindings...)
+func (db *SQLDB) update(logger lager.Logger, q helpers.Queryable, table string, updates helpers.SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error) {
+	return db.helper.Update(logger, q, table, updates, wheres, whereBindings...)
 }
 
-// DELETE FROM <table> WHERE ...
-func (db *SQLDB) delete(logger lager.Logger, q Queryable, table string, wheres string, whereBindings ...interface{}) (sql.Result, error) {
-	query := fmt.Sprintf("DELETE FROM %s\n", table)
-
-	if len(wheres) > 0 {
-		query += "WHERE " + wheres
-	}
-
-	return q.Exec(db.rebind(query), whereBindings...)
-}
-
-func (db *SQLDB) rebind(query string) string {
-	return RebindForFlavor(query, db.flavor)
-}
-
-func questionMarks(count int) string {
-	if count == 0 {
-		return ""
-	}
-	return strings.Repeat("?, ", count-1) + "?"
+func (db *SQLDB) delete(logger lager.Logger, q helpers.Queryable, table string, wheres string, whereBindings ...interface{}) (sql.Result, error) {
+	return db.helper.Delete(logger, q, table, wheres, whereBindings...)
 }

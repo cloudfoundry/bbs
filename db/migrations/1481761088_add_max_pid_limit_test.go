@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/clock/fakeclock"
 	. "github.com/onsi/ginkgo"
@@ -71,7 +71,7 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 
 		It("should add a max_pids column to desired lrps", func() {
 			_, err := rawSQLDB.Exec(
-				sqldb.RebindForFlavor(
+				helpers.RebindForFlavor(
 					`INSERT INTO desired_lrps
 						  (process_guid, domain, log_guid, instances, memory_mb,
 							  disk_mb, max_pids, rootfs, routes, volume_placement, modification_tag_epoch, run_info)
@@ -84,14 +84,15 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var maxPids int
-			query := sqldb.RebindForFlavor("select max_pids from desired_lrps limit 1", flavor)
+			query := helpers.RebindForFlavor("select max_pids from desired_lrps limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&maxPids)).NotTo(HaveOccurred())
 			Expect(maxPids).To(Equal(1))
 		})
+
 		It("should add max pids column to desired lrps and default to 0", func() {
 			_, err := rawSQLDB.Exec(
-				sqldb.RebindForFlavor(
+				helpers.RebindForFlavor(
 					`INSERT INTO desired_lrps
 						  (process_guid, domain, log_guid, instances, memory_mb,
 							  disk_mb, rootfs, routes, volume_placement, modification_tag_epoch, run_info)
@@ -104,7 +105,7 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var maxPids int
-			query := sqldb.RebindForFlavor("select max_pids from desired_lrps limit 1", flavor)
+			query := helpers.RebindForFlavor("select max_pids from desired_lrps limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&maxPids)).NotTo(HaveOccurred())
 			Expect(maxPids).To(Equal(0))

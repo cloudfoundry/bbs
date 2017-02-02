@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
@@ -48,7 +49,7 @@ var _ = Describe("Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				queryStr := "UPDATE configurations SET value = ? WHERE id = ?"
-				_, err = db.Exec(sqldb.RebindForFlavor(queryStr, dbDriverName), versionJSON, sqldb.VersionID)
+				_, err = db.Exec(helpers.RebindForFlavor(queryStr, dbDriverName), versionJSON, sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -111,7 +112,7 @@ var _ = Describe("Version", func() {
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserialize", func() {
 				queryStr := "UPDATE configurations SET value = '{{' WHERE id = ?"
-				_, err := db.Exec(sqldb.RebindForFlavor(queryStr, dbDriverName), sqldb.VersionID)
+				_, err := db.Exec(helpers.RebindForFlavor(queryStr, dbDriverName), sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(logger)

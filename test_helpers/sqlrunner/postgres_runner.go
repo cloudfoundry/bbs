@@ -69,15 +69,8 @@ func (p *PostgresRunner) DB() *sql.DB {
 	return p.db
 }
 
-func (p *PostgresRunner) Reset() {
-	var truncateTablesSQL = []string{
-		"TRUNCATE TABLE domains",
-		"TRUNCATE TABLE configurations",
-		"TRUNCATE TABLE tasks",
-		"TRUNCATE TABLE desired_lrps",
-		"TRUNCATE TABLE actual_lrps",
-	}
-	for _, query := range truncateTablesSQL {
+func (p *PostgresRunner) ResetTables(tables []string) {
+	for _, query := range tables {
 		result, err := p.db.Exec(query)
 
 		switch err := err.(type) {
@@ -91,4 +84,15 @@ func (p *PostgresRunner) Reset() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
 	}
+}
+
+func (p *PostgresRunner) Reset() {
+	var truncateTablesSQL = []string{
+		"TRUNCATE TABLE domains",
+		"TRUNCATE TABLE configurations",
+		"TRUNCATE TABLE tasks",
+		"TRUNCATE TABLE desired_lrps",
+		"TRUNCATE TABLE actual_lrps",
+	}
+	p.ResetTables(truncateTablesSQL)
 }

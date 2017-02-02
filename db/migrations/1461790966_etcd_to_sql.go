@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -183,10 +183,10 @@ func dropTables(db *sql.DB) error {
 
 func createTables(logger lager.Logger, db *sql.DB, flavor string) error {
 	var createTablesSQL = []string{
-		sqldb.RebindForFlavor(createDomainSQL, flavor),
-		sqldb.RebindForFlavor(createDesiredLRPsSQL, flavor),
-		sqldb.RebindForFlavor(createActualLRPsSQL, flavor),
-		sqldb.RebindForFlavor(createTasksSQL, flavor),
+		helpers.RebindForFlavor(createDomainSQL, flavor),
+		helpers.RebindForFlavor(createDesiredLRPsSQL, flavor),
+		helpers.RebindForFlavor(createActualLRPsSQL, flavor),
+		helpers.RebindForFlavor(createTasksSQL, flavor),
 	}
 
 	logger.Info("creating-tables")
@@ -239,7 +239,7 @@ func (e *ETCDToSQL) migrateDomains(logger lager.Logger) error {
 			domain := path.Base(node.Key)
 			expireTime := e.clock.Now().UnixNano() + int64(time.Second)*node.TTL
 
-			_, err := e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
+			_, err := e.rawSQLDB.Exec(helpers.RebindForFlavor(`
 				INSERT INTO domains
 				(domain, expire_time)
 				VALUES (?, ?)
@@ -301,7 +301,7 @@ func (e *ETCDToSQL) migrateDesiredLRPs(logger lager.Logger) error {
 				logger.Error("failed-marshalling-volume-placements", err)
 			}
 
-			_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
+			_, err = e.rawSQLDB.Exec(helpers.RebindForFlavor(`
 				INSERT INTO desired_lrps
 					(process_guid, domain, log_guid, annotation, instances, memory_mb,
 					disk_mb, rootfs, volume_placement, routes, modification_tag_epoch,
@@ -347,7 +347,7 @@ func (e *ETCDToSQL) migrateActualLRPs(logger lager.Logger) error {
 							logger.Error("failed-to-marshal-net-info", err)
 						}
 
-						_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
+						_, err = e.rawSQLDB.Exec(helpers.RebindForFlavor(`
 							INSERT INTO actual_lrps
 								(process_guid, instance_index, domain, instance_guid, cell_id,
 								net_info, crash_count, crash_reason, state, placement_error, since,
@@ -390,7 +390,7 @@ func (e *ETCDToSQL) migrateTasks(logger lager.Logger) error {
 
 			definitionData, err := e.serializer.Marshal(logger, format.ENCRYPTED_PROTO, task.TaskDefinition)
 
-			_, err = e.rawSQLDB.Exec(sqldb.RebindForFlavor(`
+			_, err = e.rawSQLDB.Exec(helpers.RebindForFlavor(`
 							INSERT INTO tasks
 								(guid, domain, updated_at, created_at, first_completed_at,
 								state, cell_id, result, failed, failure_reason,

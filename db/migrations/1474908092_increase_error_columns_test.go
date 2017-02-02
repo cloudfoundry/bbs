@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/migration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -63,7 +63,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 			It(title, func() {
 				value := strings.Repeat("x", 1024)
 				insertQuery := fmt.Sprintf("insert into %s(%s) values(?)", table, column)
-				query := sqldb.RebindForFlavor(insertQuery, flavor)
+				query := helpers.RebindForFlavor(insertQuery, flavor)
 				_, err := rawSQLDB.Exec(query, value)
 				Expect(err).NotTo(HaveOccurred())
 				selectQuery := fmt.Sprintf("select %s from %s", column, table)
@@ -79,7 +79,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 		testTableAndColumn("actual_lrps", "placement_error")
 
 		It("does not change the default", func() {
-			query := sqldb.RebindForFlavor("insert into actual_lrps(crash_reason) values(?)", flavor)
+			query := helpers.RebindForFlavor("insert into actual_lrps(crash_reason) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, "crash_reason")
 			Expect(err).NotTo(HaveOccurred())
 			row := rawSQLDB.QueryRow("select placement_error from actual_lrps")
@@ -90,7 +90,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 		})
 
 		It("does not remove non null constraint", func() {
-			query := sqldb.RebindForFlavor("insert into actual_lrps(crash_reason) values(?)", flavor)
+			query := helpers.RebindForFlavor("insert into actual_lrps(crash_reason) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, nil)
 			Expect(err).To(MatchError(ContainSubstring("null")))
 		})

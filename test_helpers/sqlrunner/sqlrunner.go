@@ -10,6 +10,7 @@ type SQLRunner interface {
 	ifrit.Runner
 	ConnectionString() string
 	Reset()
+	ResetTables(tables []string)
 	DriverName() string
 	DB() *sql.DB
 }

@@ -10,6 +10,7 @@ import (
 	thepackagedb "code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
@@ -54,11 +55,11 @@ var _ = BeforeSuite(func() {
 	if test_helpers.UsePostgres() {
 		dbDriverName = "postgres"
 		dbBaseConnectionString = "postgres://diego:diego_pw@localhost/"
-		dbFlavor = sqldb.Postgres
+		dbFlavor = helpers.Postgres
 	} else if test_helpers.UseMySQL() {
 		dbDriverName = "mysql"
 		dbBaseConnectionString = "diego:diego_password@/"
-		dbFlavor = sqldb.MySQL
+		dbFlavor = helpers.MySQL
 	} else {
 		panic("Unsupported driver")
 	}
@@ -151,10 +152,10 @@ func truncateTables(db *sql.DB) {
 
 var truncateTablesSQL = []string{
 	"TRUNCATE TABLE domains",
-	"TRUNCATE TABLE configurations",
 	"TRUNCATE TABLE tasks",
 	"TRUNCATE TABLE desired_lrps",
 	"TRUNCATE TABLE actual_lrps",
+	"TRUNCATE TABLE configurations",
 }
 
 func randStr(strSize int) string {

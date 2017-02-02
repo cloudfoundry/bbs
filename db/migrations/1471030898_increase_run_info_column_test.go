@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/migration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -76,7 +76,7 @@ var _ = Describe("Increase Run Info Column Migration", func() {
 
 		It("should change the size of all text columns ", func() {
 			value := strings.Repeat("x", 65536*2)
-			query := sqldb.RebindForFlavor("insert into desired_lrps(annotation, routes, volume_placement, run_info) values('', '', '', ?)", flavor)
+			query := helpers.RebindForFlavor("insert into desired_lrps(annotation, routes, volume_placement, run_info) values('', '', '', ?)", flavor)
 			_, err := rawSQLDB.Exec(query, value)
 			Expect(err).NotTo(HaveOccurred())
 		})

@@ -2,16 +2,14 @@ package sqldb
 
 import (
 	"database/sql"
-	"time"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
-	"github.com/go-sql-driver/mysql"
-	"github.com/lib/pq"
 )
 
 type SQLDB struct {
@@ -25,6 +23,7 @@ type SQLDB struct {
 	cryptor                encryption.Cryptor
 	encoder                format.Encoder
 	flavor                 string
+	helper                 helpers.SQLHelper
 }
 
 type RowScanner interface {
@@ -38,11 +37,6 @@ type Queryable interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
-const (
-	NoLock = iota
-	LockForUpdate
-)
-
 func NewSQLDB(
 	db *sql.DB,
 	convergenceWorkersSize int,
@@ -53,6 +47,7 @@ func NewSQLDB(
 	clock clock.Clock,
 	flavor string,
 ) *SQLDB {
+	helper := helpers.NewSQLHelper(flavor)
 	return &SQLDB{
 		db: db,
 		convergenceWorkersSize: convergenceWorkersSize,
@@ -64,37 +59,16 @@ func NewSQLDB(
 		cryptor:                cryptor,
 		encoder:                format.NewEncoder(cryptor),
 		flavor:                 flavor,
+		helper:                 helper,
 	}
 }
 
 func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx *sql.Tx) error) error {
-	var err error
-
-	for attempts := 0; attempts < 3; attempts++ {
-		err = func() error {
-			tx, err := db.db.Begin()
-			if err != nil {
-				return err
-			}
-			defer tx.Rollback()
-
-			err = f(logger, tx)
-			if err != nil {
-				return err
-			}
-
-			return tx.Commit()
-		}()
-
-		if attempts >= 2 || db.convertSQLError(err) != models.ErrDeadlock {
-			break
-		} else {
-			logger.Error("deadlock-transaction", err, lager.Data{"attempts": attempts})
-			time.Sleep(500 * time.Millisecond)
-		}
+	err := db.helper.Transact(logger, db.db, f)
+	if err != nil {
+		return db.convertSQLError(err)
 	}
-
-	return err
+	return nil
 }
 
 func (db *SQLDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
@@ -116,44 +90,19 @@ func (db *SQLDB) deserializeModel(logger lager.Logger, data []byte, model format
 }
 
 func (db *SQLDB) convertSQLError(err error) *models.Error {
-	if err != nil {
-		switch err.(type) {
-		case *mysql.MySQLError:
-			return db.convertMySQLError(err.(*mysql.MySQLError))
-		case *pq.Error:
-			return db.convertPostgresError(err.(*pq.Error))
-		}
-	}
-
-	return models.ConvertError(err)
-}
-
-func (db *SQLDB) convertMySQLError(err *mysql.MySQLError) *models.Error {
-	switch err.Number {
-	case 1062:
+	converted := db.helper.ConvertSQLError(err)
+	switch converted {
+	case helpers.ErrResourceExists:
 		return models.ErrResourceExists
-	case 1213:
+	case helpers.ErrDeadlock:
 		return models.ErrDeadlock
-	case 1406:
+	case helpers.ErrBadRequest:
 		return models.ErrBadRequest
-	case 1146:
+	case helpers.ErrUnrecoverableError:
 		return models.NewUnrecoverableError(err)
-	default:
+	case helpers.ErrUnknownError:
 		return models.ErrUnknownError
-	}
-
-	return nil
-}
-
-func (db *SQLDB) convertPostgresError(err *pq.Error) *models.Error {
-	switch err.Code {
-	case "22001":
-		return models.ErrBadRequest
-	case "23505":
-		return models.ErrResourceExists
-	case "42P01":
-		return models.NewUnrecoverableError(err)
 	default:
-		return models.ErrUnknownError
+		return models.ConvertError(err)
 	}
 }

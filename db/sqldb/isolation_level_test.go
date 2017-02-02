@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
@@ -29,10 +30,10 @@ var _ = Describe("Isolation Level", func() {
 
 	It("sets the transaction isolation level", func() {
 		levels := []string{
-			sqldb.IsolationLevelReadUncommitted,
-			sqldb.IsolationLevelReadCommitted,
-			sqldb.IsolationLevelSerializable,
-			sqldb.IsolationLevelRepeatableRead,
+			helpers.IsolationLevelReadUncommitted,
+			helpers.IsolationLevelReadCommitted,
+			helpers.IsolationLevelSerializable,
+			helpers.IsolationLevelRepeatableRead,
 		}
 
 		for _, level := range levels {

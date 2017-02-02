@@ -135,6 +135,11 @@ var (
 		Type:    Error_GUIDGeneration,
 		Message: "cannot generate random guid",
 	}
+
+	ErrLockCollision = &Error{
+		Type:    Error_LockCollision,
+		Message: "lock already exists",
+	}
 )
 
 type ErrInvalidField struct {
