@@ -1,9 +1,0 @@
-syntax = "proto2";
-
-package models;
-
-message Lock {
-  optional string key = 1;
-  optional string owner = 2;
-  optional string value = 3;
-}
