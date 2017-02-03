@@ -743,64 +743,18 @@ var _ = Describe("Evacuation Handlers", func() {
 						actual.PlacementError = "jim kinda likes cats, but loves kittens"
 					})
 
-					It("removes the evacuating LRP", func() {
+					It("does not remove the evacuating LRP", func() {
 						response := models.EvacuationResponse{}
 						err := response.Unmarshal(responseRecorder.Body.Bytes())
 						Expect(err).NotTo(HaveOccurred())
-						Expect(response.KeepContainer).To(BeFalse())
+						Expect(response.KeepContainer).To(BeTrue())
 						Expect(response.Error).To(BeNil())
 
-						Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-						_, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
+						Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(0))
 					})
 
-					It("emits events to the hub", func() {
-						Eventually(actualHub.EmitCallCount).Should(Equal(1))
-						event := actualHub.EmitArgsForCall(0)
-						removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
-						Expect(ok).To(BeTrue())
-						Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
-					})
-
-					Context("when removing the evacuating LRP fails", func() {
-						BeforeEach(func() {
-							fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("oh nooo!!!"))
-						})
-
-						It("returns an error and does keep the container", func() {
-							response := models.EvacuationResponse{}
-							err := response.Unmarshal(responseRecorder.Body.Bytes())
-							Expect(err).NotTo(HaveOccurred())
-							Expect(response.KeepContainer).To(BeTrue())
-							Expect(response.Error).NotTo(BeNil())
-							Expect(response.Error.Error()).To(Equal("oh nooo!!!"))
-
-							Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-						})
-
-						It("does not emit any events", func() {
-							Consistently(actualHub.EmitCallCount).Should(Equal(0))
-						})
-
-						Context("when the error is a ErrActualLRPCannotBeRemoved", func() {
-							BeforeEach(func() {
-								fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
-							})
-
-							It("does not return an error or keep the container", func() {
-								response := models.EvacuationResponse{}
-								err := response.Unmarshal(responseRecorder.Body.Bytes())
-								Expect(err).NotTo(HaveOccurred())
-								Expect(response.KeepContainer).To(BeFalse())
-								Expect(response.Error).To(BeNil())
-							})
-
-							It("does not emit any events", func() {
-								Consistently(actualHub.EmitCallCount).Should(Equal(0))
-							})
-						})
+					It("does not emit events to the hub", func() {
+						Consistently(actualHub.EmitCallCount).Should(Equal(0))
 					})
 				})
 			})

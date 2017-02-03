@@ -231,8 +231,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	if (instance.State == models.ActualLRPStateUnclaimed && instance.PlacementError != "") ||
-		(instance.State == models.ActualLRPStateRunning && !instance.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) ||
+	if (instance.State == models.ActualLRPStateRunning && !instance.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) ||
 		instance.State == models.ActualLRPStateCrashed {
 		response.KeepContainer = false
 
