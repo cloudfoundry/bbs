@@ -73,6 +73,7 @@ var _ = Describe("BBSConfig", func() {
     "label": "key"
   },
 	"locket_address": "127.0.0.1:18018",
+  "skip_consul_lock": true,
   "debug_address": "127.0.0.1:17017",
   "log_level": "debug"
 }`
@@ -155,7 +156,8 @@ var _ = Describe("BBSConfig", func() {
 			LagerConfig: lagerflags.LagerConfig{
 				LogLevel: "debug",
 			},
-			LocketAddress: "127.0.0.1:18018",
+			LocketAddress:  "127.0.0.1:18018",
+			SkipConsulLock: true,
 		}
 
 		Expect(bbsConfig).To(Equal(config))

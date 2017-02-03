@@ -43,12 +43,12 @@ var _ = Describe("SqlLock", func() {
 		locketProcess = ginkgomon.Invoke(locketRunner)
 
 		bbsConfig.LocketAddress = locketAddress
-		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-		// Give the BBS enough time to start
-		bbsRunner.StartCheckTimeout = 4 * locket.RetryInterval
 	})
 
 	JustBeforeEach(func() {
+		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
+		// Give the BBS enough time to start
+		bbsRunner.StartCheckTimeout = 4 * locket.RetryInterval
 		bbsProcess = ifrit.Background(bbsRunner)
 		Eventually(func() error {
 			conn, err := net.Dial("tcp", bbsHealthAddress)
@@ -69,6 +69,26 @@ var _ = Describe("SqlLock", func() {
 		Eventually(func() bool {
 			return client.Ping(logger)
 		}).Should(BeTrue())
+	})
+
+	Context("when consul lock isn't acquired", func() {
+		var competingBBSLockProcess ifrit.Process
+
+		BeforeEach(func() {
+			bbsConfig.SkipConsulLock = true
+			competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL)
+			competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
+		})
+
+		AfterEach(func() {
+			ginkgomon.Kill(competingBBSLockProcess)
+		})
+
+		It("does not acquire the consul lock", func() {
+			Eventually(func() bool {
+				return client.Ping(logger)
+			}).Should(BeTrue())
+		})
 	})
 
 	Context("when the lock is not available", func() {

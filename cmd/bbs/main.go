@@ -94,8 +94,6 @@ func main() {
 
 	serviceClient := bbs.NewServiceClient(consulClient, clock)
 
-	maintainer := initializeLockMaintainer(logger, serviceClient, &bbsConfig)
-
 	_, portString, err := net.SplitHostPort(bbsConfig.ListenAddress)
 	if err != nil {
 		logger.Fatal("failed-invalid-listen-address", err)
@@ -301,7 +299,6 @@ func main() {
 
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
-		{"lock-maintainer", maintainer},
 		{"workpool", cbWorkPool},
 		{"server", server},
 		{"migration-manager", migrationManager},
@@ -316,6 +313,13 @@ func main() {
 		members = append(grouper.Members{
 			{"debug-server", debugserver.Runner(bbsConfig.DebugAddress, reconfigurableSink)},
 		}, members...)
+	}
+
+	locks := []grouper.Member{}
+
+	if !bbsConfig.SkipConsulLock {
+		maintainer := initializeLockMaintainer(logger, serviceClient, &bbsConfig)
+		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
 	}
 
 	if bbsConfig.LocketAddress != "" {
@@ -336,12 +340,14 @@ func main() {
 			Owner: guid.String(),
 		}
 
-		members = insertToMembersAfter(
-			members,
-			grouper.Member{"sql-lock", lock.NewLockRunner(logger, locketClient, lockIdentifier, clock, locket.RetryInterval)},
-			"lock-maintainer",
-		)
+		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(logger, locketClient, lockIdentifier, clock, locket.RetryInterval)})
 	}
+
+	members = insertToMembersAfter(
+		members,
+		"healthcheck",
+		locks...,
+	)
 
 	group := grouper.NewOrdered(os.Interrupt, members)
 
@@ -563,12 +569,12 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 	return etcddb.NewStoreClient(etcdClient)
 }
 
-func insertToMembersAfter(members grouper.Members, member grouper.Member, name string) grouper.Members {
+func insertToMembersAfter(members grouper.Members, name string, extraMembers ...grouper.Member) grouper.Members {
 	for i, m := range members {
 		if m.Name == name {
 			beforeMembers := members[:i+1]
 			afterMembers := members[i+1:]
-			return append(beforeMembers, append(grouper.Members{member}, afterMembers...)...)
+			return append(beforeMembers, append(extraMembers, afterMembers...)...)
 		}
 	}
 	panic("member-does-not-exist")
