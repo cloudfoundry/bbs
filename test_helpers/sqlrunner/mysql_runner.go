@@ -33,7 +33,9 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).NotTo(HaveOccurred())
 
-	m.db.Exec(fmt.Sprintf("DROP DATABASE %s", m.sqlDBName))
+	_, err = m.db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", m.sqlDBName))
+	Expect(err).NotTo(HaveOccurred())
+
 	_, err = m.db.Exec(fmt.Sprintf("CREATE DATABASE %s", m.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 
@@ -66,7 +68,8 @@ func (m *MySQLRunner) DB() *sql.DB {
 }
 
 func (m *MySQLRunner) ResetTables(tables []string) {
-	for _, query := range tables {
+	for _, name := range tables {
+		query := fmt.Sprintf("TRUNCATE TABLE %s", name)
 		result, err := m.db.Exec(query)
 		switch err := err.(type) {
 		case *mysql.MySQLError:
@@ -82,12 +85,5 @@ func (m *MySQLRunner) ResetTables(tables []string) {
 }
 
 func (m *MySQLRunner) Reset() {
-	var truncateTablesSQL = []string{
-		"TRUNCATE TABLE domains",
-		"TRUNCATE TABLE configurations",
-		"TRUNCATE TABLE tasks",
-		"TRUNCATE TABLE desired_lrps",
-		"TRUNCATE TABLE actual_lrps",
-	}
-	m.ResetTables(truncateTablesSQL)
+	m.ResetTables([]string{"domains", "configurations", "tasks", "desired_lrps", "actual_lrps", "locks"})
 }

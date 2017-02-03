@@ -14,6 +14,8 @@ import (
 	"os"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
@@ -41,6 +43,8 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/locket"
+	"code.cloudfoundry.org/locket/lock"
+	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -63,6 +67,7 @@ var configFilePath = flag.String(
 const (
 	dropsondeOrigin           = "bbs"
 	bbsWatchRetryWaitDuration = 3 * time.Second
+	bbsLockKey                = "bbs"
 )
 
 func main() {
@@ -313,6 +318,31 @@ func main() {
 		}, members...)
 	}
 
+	if bbsConfig.LocketAddress != "" {
+		conn, err := grpc.Dial(bbsConfig.LocketAddress, grpc.WithInsecure())
+		if err != nil {
+			// TODO test me?
+			logger.Fatal("failed-to-connect-to-locket", err)
+		}
+		locketClient := locketmodels.NewLocketClient(conn)
+
+		guid, err := uuid.NewV4()
+		if err != nil {
+			logger.Fatal("failed-to-generate-guid", err)
+		}
+
+		lockIdentifier := &locketmodels.Resource{
+			Key:   bbsLockKey,
+			Owner: guid.String(),
+		}
+
+		members = insertToMembersAfter(
+			members,
+			grouper.Member{"sql-lock", lock.NewLockRunner(logger, locketClient, lockIdentifier, clock, locket.RetryInterval)},
+			"lock-maintainer",
+		)
+	}
+
 	group := grouper.NewOrdered(os.Interrupt, members)
 
 	monitor := ifrit.Invoke(sigmon.New(group))
@@ -531,4 +561,15 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	return etcddb.NewStoreClient(etcdClient)
+}
+
+func insertToMembersAfter(members grouper.Members, member grouper.Member, name string) grouper.Members {
+	for i, m := range members {
+		if m.Name == name {
+			beforeMembers := members[:i+1]
+			afterMembers := members[i+1:]
+			return append(beforeMembers, append(grouper.Members{member}, afterMembers...)...)
+		}
+	}
+	panic("member-does-not-exist")
 }

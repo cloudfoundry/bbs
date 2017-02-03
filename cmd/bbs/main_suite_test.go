@@ -59,6 +59,7 @@ var (
 	auctioneerServer    *ghttp.Server
 	testMetricsListener net.PacketConn
 	testMetricsChan     chan *events.Envelope
+	locketBinPath       string
 
 	sqlProcess ifrit.Process
 	sqlRunner  sqlrunner.SQLRunner
@@ -71,12 +72,19 @@ func TestBBS(t *testing.T) {
 
 var _ = SynchronizedBeforeSuite(
 	func() []byte {
-		bbsConfig, err := gexec.Build("code.cloudfoundry.org/bbs/cmd/bbs", "-race")
+		bbsPath, err := gexec.Build("code.cloudfoundry.org/bbs/cmd/bbs", "-race")
 		Expect(err).NotTo(HaveOccurred())
-		return []byte(bbsConfig)
+
+		locketPath, err := gexec.Build("code.cloudfoundry.org/locket/cmd/locket", "-race")
+		Expect(err).NotTo(HaveOccurred())
+
+		return []byte(strings.Join([]string{bbsPath, locketPath}, ","))
 	},
-	func(bbsConfig []byte) {
-		bbsBinPath = string(bbsConfig)
+	func(binPaths []byte) {
+		path := string(binPaths)
+		bbsBinPath = strings.Split(path, ",")[0]
+		locketBinPath = strings.Split(path, ",")[1]
+
 		SetDefaultEventuallyTimeout(15 * time.Second)
 
 		etcdPort = 4001 + GinkgoParallelNode()

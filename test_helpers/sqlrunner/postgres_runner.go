@@ -33,7 +33,9 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	Expect(err).NotTo(HaveOccurred())
 	Expect(p.db.Ping()).NotTo(HaveOccurred())
 
-	p.db.Exec(fmt.Sprintf("DROP DATABASE %s", p.sqlDBName))
+	_, err = p.db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", p.sqlDBName))
+	Expect(err).NotTo(HaveOccurred())
+
 	_, err = p.db.Exec(fmt.Sprintf("CREATE DATABASE %s", p.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 
@@ -70,7 +72,8 @@ func (p *PostgresRunner) DB() *sql.DB {
 }
 
 func (p *PostgresRunner) ResetTables(tables []string) {
-	for _, query := range tables {
+	for _, name := range tables {
+		query := fmt.Sprintf("TRUNCATE TABLE %s", name)
 		result, err := p.db.Exec(query)
 
 		switch err := err.(type) {
@@ -87,12 +90,5 @@ func (p *PostgresRunner) ResetTables(tables []string) {
 }
 
 func (p *PostgresRunner) Reset() {
-	var truncateTablesSQL = []string{
-		"TRUNCATE TABLE domains",
-		"TRUNCATE TABLE configurations",
-		"TRUNCATE TABLE tasks",
-		"TRUNCATE TABLE desired_lrps",
-		"TRUNCATE TABLE actual_lrps",
-	}
-	p.ResetTables(truncateTablesSQL)
+	p.ResetTables([]string{"domains", "configurations", "tasks", "desired_lrps", "actual_lrps", "locks"})
 }
