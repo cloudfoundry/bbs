@@ -51,7 +51,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
 	"github.com/lib/pq"
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -325,7 +325,6 @@ func main() {
 	if bbsConfig.LocketAddress != "" {
 		conn, err := grpc.Dial(bbsConfig.LocketAddress, grpc.WithInsecure())
 		if err != nil {
-			// TODO test me?
 			logger.Fatal("failed-to-connect-to-locket", err)
 		}
 		locketClient := locketmodels.NewLocketClient(conn)
