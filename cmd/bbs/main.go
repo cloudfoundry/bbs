@@ -342,6 +342,10 @@ func main() {
 		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(logger, locketClient, lockIdentifier, clock, locket.RetryInterval)})
 	}
 
+	if len(locks) < 1 {
+		logger.Fatal("no-locks-configured", errors.New("Lock configuration must be provided"))
+	}
+
 	members = insertToMembersAfter(
 		members,
 		"healthcheck",
