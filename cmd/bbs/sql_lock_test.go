@@ -124,7 +124,7 @@ var _ = Describe("SqlLock", func() {
 				}
 
 				clock := clock.NewClock()
-				competingRunner := lock.NewLockRunner(logger, locketClient, lockIdentifier, clock, locket.RetryInterval)
+				competingRunner := lock.NewLockRunner(logger, locketClient, lockIdentifier, 5, clock, locket.RetryInterval)
 				competingProcess = ginkgomon.Invoke(competingRunner)
 			})
 

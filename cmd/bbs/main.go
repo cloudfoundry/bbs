@@ -339,7 +339,14 @@ func main() {
 			Owner: guid.String(),
 		}
 
-		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(logger, locketClient, lockIdentifier, clock, locket.RetryInterval)})
+		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
+			logger,
+			locketClient,
+			lockIdentifier,
+			locket.DefaultSessionTTLInSeconds,
+			clock,
+			locket.RetryInterval,
+		)})
 	}
 
 	if len(locks) < 1 {

@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/go-sql-driver/mysql"
@@ -13,6 +14,7 @@ var (
 	ErrBadRequest         = errors.New("sql-bad-request")
 	ErrUnrecoverableError = errors.New("sql-unrecoverable")
 	ErrUnknownError       = errors.New("sql-unknown")
+	ErrResourceNotFound   = errors.New("sql-resource-not-found")
 )
 
 func (h *sqlHelper) ConvertSQLError(err error) error {
@@ -22,6 +24,10 @@ func (h *sqlHelper) ConvertSQLError(err error) error {
 			return h.convertMySQLError(err.(*mysql.MySQLError))
 		case *pq.Error:
 			return h.convertPostgresError(err.(*pq.Error))
+		}
+
+		if err == sql.ErrNoRows {
+			return ErrResourceNotFound
 		}
 	}
 
