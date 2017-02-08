@@ -88,6 +88,20 @@ var _ = Describe("SqlLock", func() {
 			}).Should(BeTrue())
 		})
 
+		Context("and the locking server becomes unreachable after grabbing the lock", func() {
+			JustBeforeEach(func() {
+				Eventually(func() bool {
+					return client.Ping(logger)
+				}).Should(BeTrue())
+
+				ginkgomon.Interrupt(locketProcess)
+			})
+
+			It("exits", func() {
+				Eventually(bbsProcess.Wait()).Should(Receive())
+			})
+		})
+
 		Context("when consul lock isn't required", func() {
 			var competingBBSLockProcess ifrit.Process
 
@@ -106,7 +120,6 @@ var _ = Describe("SqlLock", func() {
 					return client.Ping(logger)
 				}).Should(BeTrue())
 			})
-
 		})
 
 		Context("when the lock is not available", func() {
