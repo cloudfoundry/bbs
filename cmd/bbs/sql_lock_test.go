@@ -13,7 +13,6 @@ import (
 	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
 	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	"code.cloudfoundry.org/locket/lock"
-	"code.cloudfoundry.org/locket/models"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -128,7 +127,7 @@ var _ = Describe("SqlLock", func() {
 			BeforeEach(func() {
 				conn, err := grpc.Dial(locketAddress, grpc.WithInsecure())
 				Expect(err).NotTo(HaveOccurred())
-				locketClient := models.NewLocketClient(conn)
+				locketClient := locketmodels.NewLocketClient(conn)
 
 				lockIdentifier := &locketmodels.Resource{
 					Key:   "bbs",
