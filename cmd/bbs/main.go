@@ -345,7 +345,7 @@ func main() {
 			lockIdentifier,
 			locket.DefaultSessionTTLInSeconds,
 			clock,
-			locket.RetryInterval,
+			locket.SQLRetryInterval,
 		)})
 	}
 
