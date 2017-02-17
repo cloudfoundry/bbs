@@ -706,20 +706,24 @@ func (c *client) doRequest(logger lager.Logger, requestName string, params rata.
 	var request *http.Request
 
 	for attempts := 0; attempts < 3; attempts++ {
-		logger.Debug("creating-request", lager.Data{"attempt": attempts + 1})
+		logger.Debug("creating-request", lager.Data{"attempt": attempts + 1, "request_name": requestName})
 		request, err = c.createRequest(requestName, params, queryParams, requestBody)
 		if err != nil {
 			logger.Error("failed-creating-request", err)
 			return err
 		}
 
-		logger.Debug("doing-request", lager.Data{"attempt": attempts + 1})
+		logger.Debug("doing-request", lager.Data{"attempt": attempts + 1, "request_path": request.URL.Path})
+
+		start := time.Now().UnixNano()
 		err = c.do(request, responseBody)
+		finish := time.Now().UnixNano()
+
 		if err != nil {
 			logger.Error("failed-doing-request", err)
 			time.Sleep(500 * time.Millisecond)
 		} else {
-			logger.Debug("complete")
+			logger.Debug("complete", lager.Data{"request_path": request.URL.Path, "duration_in_ns": finish - start})
 			break
 		}
 	}
