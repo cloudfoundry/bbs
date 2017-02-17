@@ -3,13 +3,14 @@ syntax = "proto2";
 package models;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "modification_tag.proto";
 import "actions.proto";
 import "cached_dependency.proto";
-import "security_group.proto";
+import "certificate_properties.proto";
 import "environment_variables.proto";
-import "volume_mount.proto";
+import "modification_tag.proto";
 import "network.proto";
+import "security_group.proto";
+import "volume_mount.proto";
 
 message DesiredLRPSchedulingInfo {
   optional DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
@@ -50,6 +51,8 @@ message DesiredLRPRunInfo {
   optional Network network = 18 [(gogoproto.jsontag) = "network,omitempty"];
 
   optional int64 start_timeout_ms = 19;
+
+  optional CertificateProperties certificate_properties = 20 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
 }
 
 // helper message for marshalling routes
@@ -108,4 +111,6 @@ message DesiredLRP {
   optional Network network = 26 [(gogoproto.jsontag) = "network,omitempty"];
   repeated string PlacementTags = 28 [(gogoproto.jsontag) ="placement_tags,omitempty"];
   optional int32 max_pids = 29;
+
+  optional CertificateProperties certificate_properties = 30 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
 }

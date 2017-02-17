@@ -225,6 +225,9 @@ var _ = Describe("DesiredLRP API", func() {
 			Expect(persistedDesiredLRP.Instances).To(Equal(desiredLRP.Instances))
 			Expect(persistedDesiredLRP.DesiredLRPRunInfo(time.Unix(42, 0))).To(Equal(desiredLRP.DesiredLRPRunInfo(time.Unix(42, 0))))
 			Expect(persistedDesiredLRP.Action.RunAction.SuppressLogOutput).To(BeFalse())
+			Expect(persistedDesiredLRP.CertificateProperties).NotTo(BeNil())
+			Expect(persistedDesiredLRP.CertificateProperties.OrganizationalUnits).NotTo(BeEmpty())
+			Expect(persistedDesiredLRP.CertificateProperties.OrganizationalUnits).To(Equal(desiredLRP.CertificateProperties.OrganizationalUnits))
 		})
 
 		Context("when suppressing log output", func() {

@@ -69,6 +69,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		VolumeMounts:                  runInfo.VolumeMounts,
 		Network:                       runInfo.Network,
 		PlacementTags:                 schedInfo.PlacementTags,
+		CertificateProperties:         runInfo.CertificateProperties,
 	}
 }
 
@@ -210,6 +211,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.TrustedSystemCertificatesPath,
 		d.VolumeMounts,
 		d.Network,
+		d.CertificateProperties,
 	)
 }
 
@@ -486,6 +488,7 @@ func NewDesiredLRPRunInfo(
 	trustedSystemCertificatesPath string,
 	volumeMounts []*VolumeMount,
 	network *Network,
+	certificateProperties *CertificateProperties,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -506,6 +509,7 @@ func NewDesiredLRPRunInfo(
 		TrustedSystemCertificatesPath: trustedSystemCertificatesPath,
 		VolumeMounts:                  volumeMounts,
 		Network:                       network,
+		CertificateProperties:         certificateProperties,
 	}
 }
 
@@ -545,4 +549,12 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 func (*DesiredLRPRunInfo) Version() format.Version {
 	return format.V0
+}
+
+func (*CertificateProperties) Version() format.Version {
+	return format.V0
+}
+
+func (CertificateProperties) Validate() error {
+	return nil
 }

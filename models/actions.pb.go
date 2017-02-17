@@ -11,6 +11,7 @@
 		actual_lrp_requests.proto
 		cached_dependency.proto
 		cells.proto
+		certificate_properties.proto
 		desired_lrp.proto
 		desired_lrp_requests.proto
 		domain.proto
@@ -18,7 +19,6 @@
 		error.proto
 		evacuation.proto
 		events.proto
-		lock.proto
 		lrp_convergence_request.proto
 		modification_tag.proto
 		network.proto
@@ -63,6 +63,7 @@
 		CellPresence
 		Provider
 		CellsResponse
+		CertificateProperties
 		DesiredLRPSchedulingInfo
 		DesiredLRPRunInfo
 		ProtoRoutes
@@ -98,7 +99,6 @@
 		DesiredLRPChangedEvent
 		DesiredLRPRemovedEvent
 		ActualLRPCrashedEvent
-		Lock
 		ConvergeLRPsResponse
 		ModificationTag
 		Network
