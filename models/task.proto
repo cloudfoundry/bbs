@@ -9,6 +9,7 @@ import "security_group.proto";
 import "cached_dependency.proto";
 import "volume_mount.proto";
 import "network.proto";
+import "certificate_properties.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
@@ -34,6 +35,7 @@ message TaskDefinition {
   optional Network network = 19 [(gogoproto.jsontag) = "network,omitempty"];
   repeated string PlacementTags = 20 [(gogoproto.jsontag) ="placement_tags,omitempty"];
   optional int32 max_pids = 21;
+  optional CertificateProperties certificate_properties = 22 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
 }
 
 message Task {

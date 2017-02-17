@@ -254,7 +254,10 @@ var _ = Describe("DesiredLRP", func() {
 				"another_key": "another_value"
 			}
 		},
-		"max_pids": 256
+		"max_pids": 256,
+		"certificate_properties": {
+			"organizational_unit": ["stuff"]
+		}
   }`
 
 	BeforeEach(func() {

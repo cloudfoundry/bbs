@@ -78,7 +78,10 @@ var _ = Describe("Task", func() {
 			}
 		],
 		"completion_callback_url":"http://user:password@a.b.c/d/e/f",
-		"max_pids": 256
+		"max_pids": 256,
+		"certificate_properties": {
+			"organizational_unit": ["stuff"]
+		}
 	}`
 
 		task = models.Task{
@@ -133,6 +136,9 @@ var _ = Describe("Task", func() {
 					},
 				},
 				CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
+				CertificateProperties: &models.CertificateProperties{
+					OrganizationalUnit: []string{"stuff"},
+				},
 			},
 			TaskGuid:         "some-guid",
 			Domain:           "some-domain",

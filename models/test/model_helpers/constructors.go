@@ -88,7 +88,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			},
 		},
 		CertificateProperties: &models.CertificateProperties{
-			OrganizationalUnits: []string{"iamthelizardking", "iamthelizardqueen"},
+			OrganizationalUnit: []string{"iamthelizardking", "iamthelizardqueen"},
 		},
 	}
 	err := desiredLRP.Validate()
@@ -162,6 +162,9 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 			},
 		},
 		PlacementTags: []string{"red-tag", "blue-tag", "one-tag", "two-tag"},
+		CertificateProperties: &models.CertificateProperties{
+			OrganizationalUnit: []string{"iamthelizardking", "iamthelizardqueen"},
+		},
 	}
 }
 
