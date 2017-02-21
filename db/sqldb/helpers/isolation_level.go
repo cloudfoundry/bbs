@@ -26,6 +26,10 @@ func (h *sqlHelper) SetIsolationLevel(logger lager.Logger, db *sql.DB, level str
 		query = fmt.Sprintf("SET SESSION TRANSACTION ISOLATION LEVEL %s", level)
 	} else if h.flavor == Postgres {
 		query = fmt.Sprintf("SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL %s", level)
+	} else if h.flavor == MSSQL {
+		query = fmt.Sprintf("SET TRANSACTION ISOLATION LEVEL %s", level)
+	} else {
+		panic("database flavor not implemented: " + h.flavor)
 	}
 
 	_, err := db.Exec(query)

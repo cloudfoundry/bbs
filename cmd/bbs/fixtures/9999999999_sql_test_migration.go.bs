@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/clock"
@@ -17,6 +18,7 @@ func init() {
 type SQLTestMigration struct {
 	version  int64
 	rawSQLDB *sql.DB
+	dbFlavor string
 }
 
 func NewSQLTestMigration(version int64) migration.Migration {
@@ -34,17 +36,30 @@ func (t *SQLTestMigration) SetRawSQLDB(rawSQLDB *sql.DB) {
 }
 
 func (*SQLTestMigration) SetClock(clock.Clock) {}
-func (*SQLTestMigration) SetDBFlavor(string)   {}
+func (t *SQLTestMigration) SetDBFlavor(flavor string)   {
+	t.dbFlavor = flavor
+}
 
 func (*SQLTestMigration) RequiresSQL() bool {
 	return true
 }
 
 func (t *SQLTestMigration) Up(logger lager.Logger) error {
-	_, err := t.rawSQLDB.Exec(`CREATE TABLE IF NOT EXISTS sweet_table (
-		something VARCHAR(255) PRIMARY KEY,
-		something_else INT DEFAULT 0
-	);`)
+	var query string
+	if t.dbFlavor == helpers.MSSQL {
+		query = `IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='sweet_table' AND xtype='U')
+			CREATE TABLE sweet_table (
+			something VARCHAR(255) PRIMARY KEY,
+			something_else INT DEFAULT 0
+		);`
+	} else {
+		query = `CREATE TABLE IF NOT EXISTS sweet_table (
+			something VARCHAR(255) PRIMARY KEY,
+			something_else INT DEFAULT 0
+		);`
+	}
+
+	_, err := t.rawSQLDB.Exec(query)
 
 	return err
 }

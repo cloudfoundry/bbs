@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
+	"github.com/denisenkom/go-mssqldb"
 )
 
 var (
@@ -24,6 +25,8 @@ func (h *sqlHelper) ConvertSQLError(err error) error {
 			return h.convertMySQLError(err.(*mysql.MySQLError))
 		case *pq.Error:
 			return h.convertPostgresError(err.(*pq.Error))
+		case mssql.Error:
+			return h.convertMSSQLError(err.(mssql.Error))
 		}
 
 		if err == sql.ErrNoRows {
@@ -59,6 +62,21 @@ func (h *sqlHelper) convertPostgresError(err *pq.Error) error {
 		return ErrResourceExists
 	case "42P01":
 		return ErrUnrecoverableError
+	default:
+		return ErrUnknownError
+	}
+}
+
+func (h *sqlHelper) convertMSSQLError(err mssql.Error) error {
+	switch err.Number {
+	case 1205:
+		return ErrDeadlock
+	case 2627:
+		return ErrResourceExists
+	case 2706:
+		return ErrUnrecoverableError
+	case 8152:
+		return ErrBadRequest
 	default:
 		return ErrUnknownError
 	}

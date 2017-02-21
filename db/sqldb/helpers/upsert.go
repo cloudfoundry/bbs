@@ -100,6 +100,42 @@ func (h *sqlHelper) Upsert(
 			insertBindings,
 			strings.Join(updateBindings, ", "),
 		)
+	case MSSQL:
+		bindingValues = append(bindingValues, nonKeyBindingValues...)
+		bindingValues = append(bindingValues, keyBindingValues...)
+		bindingValues = append(bindingValues, keyBindingValues...)
+		bindingValues = append(bindingValues, nonKeyBindingValues...)
+
+		insert := fmt.Sprintf(`
+				INSERT INTO %s
+					(%s)
+				VALUES(%s)`,
+			table,
+			strings.Join(columns, ", "),
+			insertBindings)
+
+		whereClause := []string{}
+		for _, key := range keyNames {
+			whereClause = append(whereClause, fmt.Sprintf("%s = ?", key))
+		}
+
+		upsert := fmt.Sprintf(`
+				UPDATE %s SET
+					%s
+				WHERE %s
+				`,
+			table,
+			strings.Join(updateBindings, ", "),
+			strings.Join(whereClause, " AND "),
+		)
+
+		query = fmt.Sprintf(`
+				%s
+				if @@ROWCOUNT = 0
+				  %s
+				`,
+			upsert,
+			insert)
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + h.flavor)

@@ -31,7 +31,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 				"updated_at":         now,
 				"first_completed_at": 0,
 				"state":              models.Task_Pending,
-				"task_definition":    taskDefData,
+				"task_definition":    string(taskDefData),
 			},
 		)
 		if err != nil {

@@ -120,11 +120,11 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there are both instance and evacuating LRPs", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE actual_lrps SET evacuating = true WHERE process_guid = ?"
+				queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, actualLRP.ProcessGuid)
+				_, err := db.Exec(queryStr, true, actualLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
@@ -688,7 +688,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					_, err = db.Exec(queryStr,
 						models.ActualLRPStateRunning,
-						netInfoData,
+						string(netInfoData),
 						instanceKey.CellId,
 						instanceKey.InstanceGuid,
 						expectedActualLRP.ProcessGuid,

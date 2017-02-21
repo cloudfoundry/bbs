@@ -69,13 +69,17 @@ func (e *IncreaseErrorColumnsSize) alterTables(logger lager.Logger, db *sql.DB, 
 
 	if e.dbFlavor == "mysql" {
 		alterActualLRPsSQL = `ALTER TABLE actual_lrps
-	MODIFY crash_reason VARCHAR(1024) NOT NULL DEFAULT '',
-	MODIFY placement_error VARCHAR(1024) NOT NULL DEFAULT ''`
-
+			MODIFY crash_reason VARCHAR(1024) NOT NULL DEFAULT '',
+			MODIFY placement_error VARCHAR(1024) NOT NULL DEFAULT ''`
+	} else if e.dbFlavor == "mssql" {
+		alterActualLRPsSQL = `ALTER TABLE actual_lrps
+			ALTER COLUMN crash_reason VARCHAR(1024) NOT NULL;
+			ALTER TABLE actual_lrps
+			ALTER COLUMN placement_error VARCHAR(1024) NOT NULL;`
 	} else {
 		alterActualLRPsSQL = `ALTER TABLE actual_lrps
-	ALTER crash_reason TYPE VARCHAR(1024),
-	ALTER placement_error TYPE VARCHAR(1024)`
+			ALTER crash_reason TYPE VARCHAR(1024),
+			ALTER placement_error TYPE VARCHAR(1024)`
 	}
 
 	logger.Info("altering-tables")
