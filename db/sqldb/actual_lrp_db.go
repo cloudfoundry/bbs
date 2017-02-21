@@ -231,11 +231,14 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 
 func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
+	logger.Info("starting")
+	defer logger.Info("completed")
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
 		if err == models.ErrResourceNotFound {
@@ -262,9 +265,6 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			logger.Error("failed-to-transition-actual-lrp-to-started", nil)
 			return models.ErrActualLRPCannotBeStarted
 		}
-
-		logger.Info("starting")
-		defer logger.Info("completed")
 
 		now := db.clock.Now().UnixNano()
 		evacuating := false
