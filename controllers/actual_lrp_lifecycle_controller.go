@@ -57,14 +57,14 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
-	if err != nil {
-		return err
-	}
+	// lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if lrpGroup.Evacuating != nil {
-		h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrpGroup.Evacuating.ActualLRPKey, &lrpGroup.Evacuating.ActualLRPInstanceKey)
-	}
+	// if lrpGroup.Evacuating != nil {
+	// 	h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrpGroup.Evacuating.ActualLRPKey, &lrpGroup.Evacuating.ActualLRPInstanceKey)
+	// }
 
 	go func() {
 		if before == nil {
@@ -72,9 +72,9 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		} else if !before.Equal(after) {
 			h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 		}
-		if lrpGroup.Evacuating != nil {
-			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: lrpGroup.Evacuating}))
-		}
+		// if lrpGroup.Evacuating != nil {
+		// 	h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: lrpGroup.Evacuating}))
+		// }
 	}()
 	return nil
 }

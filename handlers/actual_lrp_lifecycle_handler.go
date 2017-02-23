@@ -64,6 +64,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 	var err error
 
 	logger = logger.Session("start-actual-lrp")
+	logger.Info("start-request")
 
 	request := &models.StartActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -79,6 +80,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 	logger.Info("parsed-request", lager.Data{"process-guid": request.ActualLrpKey.ProcessGuid})
 
 	err = h.controller.StartActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
+	logger.Info("finished-request", lager.Data{"process-guid": request.ActualLrpKey.ProcessGuid})
 	response.Error = models.ConvertError(err)
 }
 
