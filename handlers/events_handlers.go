@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
@@ -33,8 +34,12 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 	eventID := 0
 	closeNotifier := w.(http.CloseNotifier).CloseNotify()
 
+	t := time.NewTicker(time.Second)
+
 	for {
 		select {
+		case <-t.C:
+			flusher.Flush()
 		case event = <-eventChan:
 		case err := <-errorChan:
 			logger.Error("failed-to-get-next-event", err)
@@ -53,8 +58,6 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 		if err != nil {
 			return
 		}
-
-		flusher.Flush()
 
 		eventID++
 	}
