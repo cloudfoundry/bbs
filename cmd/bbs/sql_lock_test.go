@@ -36,6 +36,7 @@ var _ = Describe("SqlLock", func() {
 			ListenAddress:            locketAddress,
 			DatabaseDriver:           sqlRunner.DriverName(),
 			DatabaseConnectionString: sqlRunner.ConnectionString(),
+			ConsulCluster:            consulRunner.ConsulCluster(),
 		}
 
 		locketRunner = locketrunner.NewLocketRunner(locketBinPath, locketConfig)

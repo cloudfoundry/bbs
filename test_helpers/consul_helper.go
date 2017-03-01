@@ -3,12 +3,12 @@ package test_helpers
 import (
 	"encoding/json"
 
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/locket"
+	"code.cloudfoundry.org/rep/maintain"
 	"github.com/tedsuo/ifrit"
 
 	. "github.com/onsi/gomega"
@@ -32,7 +32,7 @@ func (t *ConsulHelper) RegisterCell(cell *models.CellPresence) {
 	Expect(err).NotTo(HaveOccurred())
 
 	// Use NewLock instead of NewPresence in order to block on the cell being registered
-	runner := locket.NewLock(t.logger, t.consulClient, bbs.CellSchemaPath(cell.CellId), jsonBytes, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL)
+	runner := locket.NewLock(t.logger, t.consulClient, maintain.CellSchemaPath(cell.CellId), jsonBytes, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL)
 	ifrit.Invoke(runner)
 
 	Expect(err).NotTo(HaveOccurred())

@@ -3,12 +3,10 @@ package fake_bbs
 
 import (
 	"sync"
-	"time"
 
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
-	"github.com/tedsuo/ifrit"
 )
 
 type FakeServiceClient struct {
@@ -38,47 +36,6 @@ type FakeServiceClient struct {
 	}
 	cellEventsReturns struct {
 		result1 <-chan models.CellEvent
-	}
-	NewCellPresenceRunnerStub        func(logger lager.Logger, cellPresence *models.CellPresence, retryInterval, lockTTL time.Duration) ifrit.Runner
-	newCellPresenceRunnerMutex       sync.RWMutex
-	newCellPresenceRunnerArgsForCall []struct {
-		logger        lager.Logger
-		cellPresence  *models.CellPresence
-		retryInterval time.Duration
-		lockTTL       time.Duration
-	}
-	newCellPresenceRunnerReturns struct {
-		result1 ifrit.Runner
-	}
-	NewBBSLockRunnerStub        func(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval, lockTTL time.Duration) (ifrit.Runner, error)
-	newBBSLockRunnerMutex       sync.RWMutex
-	newBBSLockRunnerArgsForCall []struct {
-		logger        lager.Logger
-		bbsPresence   *models.BBSPresence
-		retryInterval time.Duration
-		lockTTL       time.Duration
-	}
-	newBBSLockRunnerReturns struct {
-		result1 ifrit.Runner
-		result2 error
-	}
-	CurrentBBSStub        func(logger lager.Logger) (*models.BBSPresence, error)
-	currentBBSMutex       sync.RWMutex
-	currentBBSArgsForCall []struct {
-		logger lager.Logger
-	}
-	currentBBSReturns struct {
-		result1 *models.BBSPresence
-		result2 error
-	}
-	CurrentBBSURLStub        func(logger lager.Logger) (string, error)
-	currentBBSURLMutex       sync.RWMutex
-	currentBBSURLArgsForCall []struct {
-		logger lager.Logger
-	}
-	currentBBSURLReturns struct {
-		result1 string
-		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -186,147 +143,6 @@ func (fake *FakeServiceClient) CellEventsReturns(result1 <-chan models.CellEvent
 	}{result1}
 }
 
-func (fake *FakeServiceClient) NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration, lockTTL time.Duration) ifrit.Runner {
-	fake.newCellPresenceRunnerMutex.Lock()
-	fake.newCellPresenceRunnerArgsForCall = append(fake.newCellPresenceRunnerArgsForCall, struct {
-		logger        lager.Logger
-		cellPresence  *models.CellPresence
-		retryInterval time.Duration
-		lockTTL       time.Duration
-	}{logger, cellPresence, retryInterval, lockTTL})
-	fake.recordInvocation("NewCellPresenceRunner", []interface{}{logger, cellPresence, retryInterval, lockTTL})
-	fake.newCellPresenceRunnerMutex.Unlock()
-	if fake.NewCellPresenceRunnerStub != nil {
-		return fake.NewCellPresenceRunnerStub(logger, cellPresence, retryInterval, lockTTL)
-	} else {
-		return fake.newCellPresenceRunnerReturns.result1
-	}
-}
-
-func (fake *FakeServiceClient) NewCellPresenceRunnerCallCount() int {
-	fake.newCellPresenceRunnerMutex.RLock()
-	defer fake.newCellPresenceRunnerMutex.RUnlock()
-	return len(fake.newCellPresenceRunnerArgsForCall)
-}
-
-func (fake *FakeServiceClient) NewCellPresenceRunnerArgsForCall(i int) (lager.Logger, *models.CellPresence, time.Duration, time.Duration) {
-	fake.newCellPresenceRunnerMutex.RLock()
-	defer fake.newCellPresenceRunnerMutex.RUnlock()
-	return fake.newCellPresenceRunnerArgsForCall[i].logger, fake.newCellPresenceRunnerArgsForCall[i].cellPresence, fake.newCellPresenceRunnerArgsForCall[i].retryInterval, fake.newCellPresenceRunnerArgsForCall[i].lockTTL
-}
-
-func (fake *FakeServiceClient) NewCellPresenceRunnerReturns(result1 ifrit.Runner) {
-	fake.NewCellPresenceRunnerStub = nil
-	fake.newCellPresenceRunnerReturns = struct {
-		result1 ifrit.Runner
-	}{result1}
-}
-
-func (fake *FakeServiceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval time.Duration, lockTTL time.Duration) (ifrit.Runner, error) {
-	fake.newBBSLockRunnerMutex.Lock()
-	fake.newBBSLockRunnerArgsForCall = append(fake.newBBSLockRunnerArgsForCall, struct {
-		logger        lager.Logger
-		bbsPresence   *models.BBSPresence
-		retryInterval time.Duration
-		lockTTL       time.Duration
-	}{logger, bbsPresence, retryInterval, lockTTL})
-	fake.recordInvocation("NewBBSLockRunner", []interface{}{logger, bbsPresence, retryInterval, lockTTL})
-	fake.newBBSLockRunnerMutex.Unlock()
-	if fake.NewBBSLockRunnerStub != nil {
-		return fake.NewBBSLockRunnerStub(logger, bbsPresence, retryInterval, lockTTL)
-	} else {
-		return fake.newBBSLockRunnerReturns.result1, fake.newBBSLockRunnerReturns.result2
-	}
-}
-
-func (fake *FakeServiceClient) NewBBSLockRunnerCallCount() int {
-	fake.newBBSLockRunnerMutex.RLock()
-	defer fake.newBBSLockRunnerMutex.RUnlock()
-	return len(fake.newBBSLockRunnerArgsForCall)
-}
-
-func (fake *FakeServiceClient) NewBBSLockRunnerArgsForCall(i int) (lager.Logger, *models.BBSPresence, time.Duration, time.Duration) {
-	fake.newBBSLockRunnerMutex.RLock()
-	defer fake.newBBSLockRunnerMutex.RUnlock()
-	return fake.newBBSLockRunnerArgsForCall[i].logger, fake.newBBSLockRunnerArgsForCall[i].bbsPresence, fake.newBBSLockRunnerArgsForCall[i].retryInterval, fake.newBBSLockRunnerArgsForCall[i].lockTTL
-}
-
-func (fake *FakeServiceClient) NewBBSLockRunnerReturns(result1 ifrit.Runner, result2 error) {
-	fake.NewBBSLockRunnerStub = nil
-	fake.newBBSLockRunnerReturns = struct {
-		result1 ifrit.Runner
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServiceClient) CurrentBBS(logger lager.Logger) (*models.BBSPresence, error) {
-	fake.currentBBSMutex.Lock()
-	fake.currentBBSArgsForCall = append(fake.currentBBSArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("CurrentBBS", []interface{}{logger})
-	fake.currentBBSMutex.Unlock()
-	if fake.CurrentBBSStub != nil {
-		return fake.CurrentBBSStub(logger)
-	} else {
-		return fake.currentBBSReturns.result1, fake.currentBBSReturns.result2
-	}
-}
-
-func (fake *FakeServiceClient) CurrentBBSCallCount() int {
-	fake.currentBBSMutex.RLock()
-	defer fake.currentBBSMutex.RUnlock()
-	return len(fake.currentBBSArgsForCall)
-}
-
-func (fake *FakeServiceClient) CurrentBBSArgsForCall(i int) lager.Logger {
-	fake.currentBBSMutex.RLock()
-	defer fake.currentBBSMutex.RUnlock()
-	return fake.currentBBSArgsForCall[i].logger
-}
-
-func (fake *FakeServiceClient) CurrentBBSReturns(result1 *models.BBSPresence, result2 error) {
-	fake.CurrentBBSStub = nil
-	fake.currentBBSReturns = struct {
-		result1 *models.BBSPresence
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServiceClient) CurrentBBSURL(logger lager.Logger) (string, error) {
-	fake.currentBBSURLMutex.Lock()
-	fake.currentBBSURLArgsForCall = append(fake.currentBBSURLArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("CurrentBBSURL", []interface{}{logger})
-	fake.currentBBSURLMutex.Unlock()
-	if fake.CurrentBBSURLStub != nil {
-		return fake.CurrentBBSURLStub(logger)
-	} else {
-		return fake.currentBBSURLReturns.result1, fake.currentBBSURLReturns.result2
-	}
-}
-
-func (fake *FakeServiceClient) CurrentBBSURLCallCount() int {
-	fake.currentBBSURLMutex.RLock()
-	defer fake.currentBBSURLMutex.RUnlock()
-	return len(fake.currentBBSURLArgsForCall)
-}
-
-func (fake *FakeServiceClient) CurrentBBSURLArgsForCall(i int) lager.Logger {
-	fake.currentBBSURLMutex.RLock()
-	defer fake.currentBBSURLMutex.RUnlock()
-	return fake.currentBBSURLArgsForCall[i].logger
-}
-
-func (fake *FakeServiceClient) CurrentBBSURLReturns(result1 string, result2 error) {
-	fake.CurrentBBSURLStub = nil
-	fake.currentBBSURLReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeServiceClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -336,14 +152,6 @@ func (fake *FakeServiceClient) Invocations() map[string][][]interface{} {
 	defer fake.cellsMutex.RUnlock()
 	fake.cellEventsMutex.RLock()
 	defer fake.cellEventsMutex.RUnlock()
-	fake.newCellPresenceRunnerMutex.RLock()
-	defer fake.newCellPresenceRunnerMutex.RUnlock()
-	fake.newBBSLockRunnerMutex.RLock()
-	defer fake.newBBSLockRunnerMutex.RUnlock()
-	fake.currentBBSMutex.RLock()
-	defer fake.currentBBSMutex.RUnlock()
-	fake.currentBBSURLMutex.RLock()
-	defer fake.currentBBSURLMutex.RUnlock()
 	return fake.invocations
 }
 

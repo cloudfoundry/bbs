@@ -318,7 +318,7 @@ func main() {
 	locks := []grouper.Member{}
 
 	if !bbsConfig.SkipConsulLock {
-		maintainer := initializeLockMaintainer(logger, serviceClient, &bbsConfig)
+		maintainer := initializeLockMaintainer(logger, consulClient, clock, &bbsConfig)
 		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
 	}
 
@@ -469,7 +469,12 @@ func initializeRegistrationRunner(
 	return locket.NewRegistrationRunner(logger, registration, consulClient, locket.RetryInterval, clock)
 }
 
-func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClient, bbsConfig *config.BBSConfig) ifrit.Runner {
+func initializeLockMaintainer(
+	logger lager.Logger,
+	consulClient consuladapter.Client,
+	clock clock.Clock,
+	bbsConfig *config.BBSConfig,
+) ifrit.Runner {
 	uuid, err := uuid.NewV4()
 	if err != nil {
 		logger.Fatal("Couldn't generate uuid", err)
@@ -480,16 +485,20 @@ func initializeLockMaintainer(logger lager.Logger, serviceClient bbs.ServiceClie
 	}
 
 	bbsPresence := models.NewBBSPresence(uuid.String(), bbsConfig.AdvertiseURL)
-	lockMaintainer, err := serviceClient.NewBBSLockRunner(logger,
-		&bbsPresence,
+	bbsPresenceJSON, err := models.ToJSON(bbsPresence)
+	if err != nil {
+		logger.Fatal("Failed to serialize bbs presence to json", err)
+	}
+
+	return locket.NewLock(
+		logger,
+		consulClient,
+		locket.LockSchemaPath("bbs_lock"),
+		bbsPresenceJSON,
+		clock,
 		time.Duration(bbsConfig.LockRetryInterval),
 		time.Duration(bbsConfig.LockTTL),
 	)
-	if err != nil {
-		logger.Fatal("Couldn't create lock maintainer", err)
-	}
-
-	return lockMaintainer
 }
 
 func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig) auctioneer.Client {

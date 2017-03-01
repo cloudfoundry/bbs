@@ -3,27 +3,20 @@ package bbs
 import (
 	"os"
 	"path"
-	"time"
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/locket"
+	"code.cloudfoundry.org/rep/maintain"
 	"github.com/tedsuo/ifrit"
 )
 
-const (
-	CellSchemaKey    = "cell"
-	BBSLockSchemaKey = "bbs_lock"
-)
+const BBSLockSchemaKey = "bbs_lock"
 
 func CellSchemaRoot() string {
-	return locket.LockSchemaPath(CellSchemaKey)
-}
-
-func CellSchemaPath(cellID string) string {
-	return locket.LockSchemaPath(CellSchemaKey, cellID)
+	return locket.LockSchemaPath(maintain.CellSchemaKey)
 }
 
 func BBSLockSchemaPath() string {
@@ -36,10 +29,6 @@ type ServiceClient interface {
 	CellById(logger lager.Logger, cellId string) (*models.CellPresence, error)
 	Cells(logger lager.Logger) (models.CellSet, error)
 	CellEvents(logger lager.Logger) <-chan models.CellEvent
-	NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval, lockTTL time.Duration) ifrit.Runner
-	NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval, lockTTL time.Duration) (ifrit.Runner, error)
-	CurrentBBS(logger lager.Logger) (*models.BBSPresence, error)
-	CurrentBBSURL(logger lager.Logger) (string, error)
 }
 
 type serviceClient struct {
@@ -52,15 +41,6 @@ func NewServiceClient(client consuladapter.Client, clock clock.Clock) ServiceCli
 		consulClient: client,
 		clock:        clock,
 	}
-}
-
-func (db *serviceClient) NewCellPresenceRunner(logger lager.Logger, cellPresence *models.CellPresence, retryInterval time.Duration, lockTTL time.Duration) ifrit.Runner {
-	payload, err := models.ToJSON(cellPresence)
-	if err != nil {
-		panic(err)
-	}
-
-	return locket.NewPresence(logger, db.consulClient, CellSchemaPath(cellPresence.CellId), payload, db.clock, retryInterval, lockTTL)
 }
 
 func (db *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
@@ -100,7 +80,7 @@ func (db *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 }
 
 func (db *serviceClient) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
-	value, err := db.getAcquiredValue(CellSchemaPath(cellId))
+	value, err := db.getAcquiredValue(maintain.CellSchemaPath(cellId))
 	if err != nil {
 		return nil, convertConsulError(err)
 	}
@@ -141,38 +121,6 @@ func (db *serviceClient) CellEvents(logger lager.Logger) <-chan models.CellEvent
 	}()
 
 	return events
-}
-
-func (db *serviceClient) NewBBSLockRunner(logger lager.Logger, bbsPresence *models.BBSPresence, retryInterval, lockTTL time.Duration) (ifrit.Runner, error) {
-	bbsPresenceJSON, err := models.ToJSON(bbsPresence)
-	if err != nil {
-		return nil, err
-	}
-	return locket.NewLock(logger, db.consulClient, locket.LockSchemaPath("bbs_lock"), bbsPresenceJSON, db.clock, retryInterval, lockTTL), nil
-}
-
-func (db *serviceClient) CurrentBBS(logger lager.Logger) (*models.BBSPresence, error) {
-	value, err := db.getAcquiredValue(BBSLockSchemaPath())
-	if err != nil {
-		return nil, convertConsulError(err)
-	}
-
-	presence := new(models.BBSPresence)
-	err = models.FromJSON(value, presence)
-	if err != nil {
-		return nil, err
-	}
-
-	return presence, nil
-}
-
-func (db *serviceClient) CurrentBBSURL(logger lager.Logger) (string, error) {
-	presence, err := db.CurrentBBS(logger)
-	if err != nil {
-		return "", err
-	}
-
-	return presence.URL, nil
 }
 
 func convertConsulError(err error) error {
