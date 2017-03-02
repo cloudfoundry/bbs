@@ -53,6 +53,9 @@ message DesiredLRPRunInfo {
   optional int64 start_timeout_ms = 19;
 
   optional CertificateProperties certificate_properties = 20 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
+
+  optional string image_username = 21 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_username,omitempty"];
+  optional string image_password = 22 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_password,omitempty"];
 }
 
 // helper message for marshalling routes
@@ -113,4 +116,7 @@ message DesiredLRP {
   optional int32 max_pids = 29;
 
   optional CertificateProperties certificate_properties = 30 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
+
+  optional string image_username = 31 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_username,omitempty"];
+  optional string image_password = 32 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_password,omitempty"];
 }

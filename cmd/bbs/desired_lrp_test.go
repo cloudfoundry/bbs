@@ -228,6 +228,8 @@ var _ = Describe("DesiredLRP API", func() {
 			Expect(persistedDesiredLRP.CertificateProperties).NotTo(BeNil())
 			Expect(persistedDesiredLRP.CertificateProperties.OrganizationalUnit).NotTo(BeEmpty())
 			Expect(persistedDesiredLRP.CertificateProperties.OrganizationalUnit).To(Equal(desiredLRP.CertificateProperties.OrganizationalUnit))
+			Expect(persistedDesiredLRP.ImageUsername).To(Equal(desiredLRP.ImageUsername))
+			Expect(persistedDesiredLRP.ImagePassword).To(Equal(desiredLRP.ImagePassword))
 		})
 
 		Context("when suppressing log output", func() {

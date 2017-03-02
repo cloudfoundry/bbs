@@ -149,6 +149,19 @@ To pull the image from a different registry than the default (Docker Hub), speci
 
 > [Lattice](https://github.com/cloudfoundry-incubator/lattice) does not ship with any preloaded root filesystems. You must specify a Docker image when using Lattice. You can mount the filesystem provided by diego-release by specifying `"rootfs": "docker:///cloudfoundry/cflinuxfs2"`.
 
+##### `ImageUsername` [optional]
+
+The `ImageUsername` field specifies the username to be used when fetching the
+container image defined by the `RootFs` field from the image repository.
+
+Setting `ImageUsername` requires the `ImagePassword` to also be set.
+
+##### `ImagePassword` [optional]
+
+The `ImagePassword` field specifies the password to be used when fetching the
+container image defined by the `RootFs` field from the image repository.
+
+Setting `ImagePassword` requires the `ImageUsername` to also be set.
 
 ##### `EnvironmentVariables` [optional]
 

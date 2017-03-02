@@ -90,6 +90,8 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		CertificateProperties: &models.CertificateProperties{
 			OrganizationalUnit: []string{"iamthelizardking", "iamthelizardqueen"},
 		},
+		ImageUsername: "image-username",
+		ImagePassword: "image-password",
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
