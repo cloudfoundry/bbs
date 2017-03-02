@@ -16,11 +16,21 @@ Components within Diego may use the full [Client interface](https://godoc.org/gi
 ## Code Generation
 
 The protobuf models in this repository require version 3 of the `protoc` compiler.
+
+
+### OSX
+
 On Mac OS X with [Homebrew](http://brew.sh/), run the following to install it:
 
 ```
 brew install protobuf
 ```
+
+### Linux
+
+1. Download a zip archive of the latest protobuf release from [here](https://github.com/google/protobuf/releases).
+1. Unzip the archive in `/usr/local`.
+1. `chmod a+x /usr/local/bin/protoc` to make sure you can use the binary.
 
 > If you already have an older version of protobuf installed, you must
 > uninstall it first by running `brew uninstall protobuf`
@@ -34,7 +44,7 @@ go install github.com/gogo/protobuf/protoc-gen-gogoslick
 Run `go generate ./...` from the root directory of this repository to generate code from the `.proto` files as well as to generate fake implementations of certain interfaces for use in test code.
 
 
-### Generating ruby models for bbs models
+### Generating ruby models for BBS models
 
 The following documentation assume the following versions:
 
@@ -42,7 +52,7 @@ The following documentation assume the following versions:
 2. [ruby protobuf gem](https://github.com/ruby-protobuf/protobuf) `> 3.6.12`
 
 Run the following commands from the `models` directory to generate `.pb.rb`
-files for the bbs models:
+files for the BBS models:
 
 1. `gem install protobuf`
 2. `cp $(which protoc-gen-ruby){,2}`
