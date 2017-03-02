@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
 )
@@ -15,7 +15,7 @@ type ActualLRPLifecycleController struct {
 	evacuationDB     db.EvacuationDB
 	desiredLRPDB     db.DesiredLRPDB
 	auctioneerClient auctioneer.Client
-	serviceClient    bbs.ServiceClient
+	serviceClient    serviceclient.ServiceClient
 	repClientFactory rep.ClientFactory
 	actualHub        events.Hub
 }
@@ -25,7 +25,7 @@ func NewActualLRPLifecycleController(
 	evacuationDB db.EvacuationDB,
 	desiredLRPDB db.DesiredLRPDB,
 	auctioneerClient auctioneer.Client,
-	serviceClient bbs.ServiceClient,
+	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
 	actualHub events.Hub,
 ) *ActualLRPLifecycleController {

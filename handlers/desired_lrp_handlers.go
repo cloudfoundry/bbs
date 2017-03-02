@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/workpool"
@@ -20,7 +20,7 @@ type DesiredLRPHandler struct {
 	actualHub          events.Hub
 	auctioneerClient   auctioneer.Client
 	repClientFactory   rep.ClientFactory
-	serviceClient      bbs.ServiceClient
+	serviceClient      serviceclient.ServiceClient
 	updateWorkersCount int
 	exitChan           chan<- struct{}
 }
@@ -33,7 +33,7 @@ func NewDesiredLRPHandler(
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	repClientFactory rep.ClientFactory,
-	serviceClient bbs.ServiceClient,
+	serviceClient serviceclient.ServiceClient,
 	exitChan chan<- struct{},
 ) *DesiredLRPHandler {
 	return &DesiredLRPHandler{

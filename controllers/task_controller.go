@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
@@ -16,7 +16,7 @@ type TaskController struct {
 	db                   db.TaskDB
 	taskCompletionClient taskworkpool.TaskCompletionClient
 	auctioneerClient     auctioneer.Client
-	serviceClient        bbs.ServiceClient
+	serviceClient        serviceclient.ServiceClient
 	repClientFactory     rep.ClientFactory
 }
 
@@ -24,7 +24,7 @@ func NewTaskController(
 	db db.TaskDB,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
 	auctioneerClient auctioneer.Client,
-	serviceClient bbs.ServiceClient,
+	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
 ) *TaskController {
 	return &TaskController{

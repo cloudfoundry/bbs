@@ -8,8 +8,8 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
-	"code.cloudfoundry.org/bbs/fake_bbs"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/clock/fakeclock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,7 +24,7 @@ var _ = Describe("ConvergerProcess", func() {
 	var (
 		fakeLrpConvergenceController *fake_controllers.FakeLrpConvergenceController
 		fakeTaskController           *fake_controllers.FakeTaskController
-		fakeBBSServiceClient         *fake_bbs.FakeServiceClient
+		fakeBBSServiceClient         *serviceclientfakes.FakeServiceClient
 		logger                       *lagertest.TestLogger
 		fakeClock                    *fakeclock.FakeClock
 		convergeRepeatInterval       time.Duration
@@ -41,7 +41,7 @@ var _ = Describe("ConvergerProcess", func() {
 	BeforeEach(func() {
 		fakeLrpConvergenceController = new(fake_controllers.FakeLrpConvergenceController)
 		fakeTaskController = new(fake_controllers.FakeTaskController)
-		fakeBBSServiceClient = new(fake_bbs.FakeServiceClient)
+		fakeBBSServiceClient = new(serviceclientfakes.FakeServiceClient)
 		logger = lagertest.NewTestLogger("test")
 		fakeClock = fakeclock.NewFakeClock(time.Now())
 

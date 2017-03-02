@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc"
 
 	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/converger"
@@ -35,6 +34,7 @@ import (
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/cfhttp"
 	"code.cloudfoundry.org/clock"
@@ -46,6 +46,7 @@ import (
 	"code.cloudfoundry.org/locket/lock"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/rep/maintain"
 	"github.com/cloudfoundry/dropsonde"
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/go-sql-driver/mysql"
@@ -92,8 +93,6 @@ func main() {
 		logger.Fatal("new-consul-client-failed", err)
 	}
 
-	serviceClient := bbs.NewServiceClient(consulClient, clock)
-
 	_, portString, err := net.SplitHostPort(bbsConfig.ListenAddress)
 	if err != nil {
 		logger.Fatal("failed-invalid-listen-address", err)
@@ -137,7 +136,7 @@ func main() {
 
 	if etcdOptions.IsConfigured {
 		storeClient = initializeEtcdStoreClient(logger, etcdOptions)
-		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, serviceClient, &bbsConfig)
+		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, &bbsConfig)
 		activeDB = etcdDB
 	}
 
@@ -247,6 +246,49 @@ func main() {
 
 	cbWorkPool := taskworkpool.New(logger, bbsConfig.TaskCallbackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
 
+	locks := []grouper.Member{}
+
+	if !bbsConfig.SkipConsulLock {
+		maintainer := initializeLockMaintainer(logger, consulClient, clock, &bbsConfig)
+		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
+	}
+
+	var locketClient locketmodels.LocketClient
+	locketClient = serviceclient.NewNoopLocketClient()
+	if bbsConfig.LocketAddress != "" {
+		conn, err := grpc.Dial(bbsConfig.LocketAddress, grpc.WithInsecure())
+		if err != nil {
+			logger.Fatal("failed-to-connect-to-locket", err)
+		}
+		locketClient := locketmodels.NewLocketClient(conn)
+
+		guid, err := uuid.NewV4()
+		if err != nil {
+			logger.Fatal("failed-to-generate-guid", err)
+		}
+
+		lockIdentifier := &locketmodels.Resource{
+			Key:   bbsLockKey,
+			Owner: guid.String(),
+		}
+
+		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
+			logger,
+			locketClient,
+			lockIdentifier,
+			locket.DefaultSessionTTLInSeconds,
+			clock,
+			locket.SQLRetryInterval,
+		)})
+	}
+
+	if len(locks) < 1 {
+		logger.Fatal("no-locks-configured", errors.New("Lock configuration must be provided"))
+	}
+
+	cellPresenceClient := maintain.NewCellPresenceClient(consulClient, clock)
+	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
+
 	handler := handlers.New(
 		logger,
 		accessLogger,
@@ -313,44 +355,6 @@ func main() {
 		members = append(grouper.Members{
 			{"debug-server", debugserver.Runner(bbsConfig.DebugAddress, reconfigurableSink)},
 		}, members...)
-	}
-
-	locks := []grouper.Member{}
-
-	if !bbsConfig.SkipConsulLock {
-		maintainer := initializeLockMaintainer(logger, consulClient, clock, &bbsConfig)
-		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
-	}
-
-	if bbsConfig.LocketAddress != "" {
-		conn, err := grpc.Dial(bbsConfig.LocketAddress, grpc.WithInsecure())
-		if err != nil {
-			logger.Fatal("failed-to-connect-to-locket", err)
-		}
-		locketClient := locketmodels.NewLocketClient(conn)
-
-		guid, err := uuid.NewV4()
-		if err != nil {
-			logger.Fatal("failed-to-generate-guid", err)
-		}
-
-		lockIdentifier := &locketmodels.Resource{
-			Key:   bbsLockKey,
-			Owner: guid.String(),
-		}
-
-		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
-			logger,
-			locketClient,
-			lockIdentifier,
-			locket.DefaultSessionTTLInSeconds,
-			clock,
-			locket.SQLRetryInterval,
-		)})
-	}
-
-	if len(locks) < 1 {
-		logger.Fatal("no-locks-configured", errors.New("Lock configuration must be provided"))
 	}
 
 	members = insertToMembersAfter(
@@ -534,7 +538,6 @@ func initializeEtcdDB(
 	logger lager.Logger,
 	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
-	serviceClient bbs.ServiceClient,
 	bbsConfig *config.BBSConfig,
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(

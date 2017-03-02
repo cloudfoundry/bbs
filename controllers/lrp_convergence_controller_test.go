@@ -9,9 +9,9 @@ import (
 	"code.cloudfoundry.org/bbs/controllers/fakes"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
-	"code.cloudfoundry.org/bbs/fake_bbs"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
@@ -109,7 +109,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
-		fakeServiceClient = new(fake_bbs.FakeServiceClient)
+		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
 		fakeRepClientFactory = new(repfakes.FakeClientFactory)
 		fakeRepClient = new(repfakes.FakeClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)

@@ -3,17 +3,17 @@ package handlers
 import (
 	"net/http"
 
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
 )
 
 type CellHandler struct {
-	serviceClient bbs.ServiceClient
+	serviceClient serviceclient.ServiceClient
 	exitChan      chan<- struct{}
 }
 
-func NewCellHandler(serviceClient bbs.ServiceClient, exitChan chan<- struct{}) *CellHandler {
+func NewCellHandler(serviceClient serviceclient.ServiceClient, exitChan chan<- struct{}) *CellHandler {
 	return &CellHandler{
 		serviceClient: serviceClient,
 		exitChan:      exitChan,

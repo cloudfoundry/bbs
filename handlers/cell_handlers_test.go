@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"code.cloudfoundry.org/bbs/fake_bbs"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,14 +18,14 @@ var _ = Describe("Cell Handlers", func() {
 		logger            *lagertest.TestLogger
 		responseRecorder  *httptest.ResponseRecorder
 		handler           *handlers.CellHandler
-		fakeServiceClient *fake_bbs.FakeServiceClient
+		fakeServiceClient *serviceclientfakes.FakeServiceClient
 		exitCh            chan struct{}
 		cells             []*models.CellPresence
 		cellSet           models.CellSet
 	)
 
 	BeforeEach(func() {
-		fakeServiceClient = new(fake_bbs.FakeServiceClient)
+		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)

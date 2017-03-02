@@ -1,7 +1,7 @@
 package controllers_test
 
 import (
-	"code.cloudfoundry.org/bbs/fake_bbs"
+	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
@@ -17,7 +17,7 @@ func TestControllers(t *testing.T) {
 }
 
 var (
-	fakeServiceClient    *fake_bbs.FakeServiceClient
+	fakeServiceClient    *serviceclientfakes.FakeServiceClient
 	fakeRepClient        *repfakes.FakeClient
 	fakeRepClientFactory *repfakes.FakeClientFactory
 	logger               lager.Logger
@@ -25,7 +25,7 @@ var (
 
 var _ = BeforeEach(func() {
 	logger = lagertest.NewTestLogger("test")
-	fakeServiceClient = new(fake_bbs.FakeServiceClient)
+	fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
 	fakeRepClientFactory = new(repfakes.FakeClientFactory)
 	fakeRepClient = new(repfakes.FakeClient)
 	fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)

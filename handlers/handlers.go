@@ -12,6 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/handlers/middleware"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
@@ -26,7 +27,7 @@ func New(
 	db db.DB,
 	desiredHub, actualHub events.Hub,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
-	serviceClient bbs.ServiceClient,
+	serviceClient serviceclient.ServiceClient,
 	auctioneerClient auctioneer.Client,
 	repClientFactory rep.ClientFactory,
 	migrationsDone <-chan struct{},

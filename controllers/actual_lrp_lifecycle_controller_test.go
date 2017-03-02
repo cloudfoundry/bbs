@@ -8,8 +8,8 @@ import (
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
-	"code.cloudfoundry.org/bbs/fake_bbs"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo"
@@ -38,7 +38,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lagertest.NewTestLogger("test")
 
-		fakeServiceClient = new(fake_bbs.FakeServiceClient)
+		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
 		fakeRepClientFactory = new(repfakes.FakeClientFactory)
 		fakeRepClient = new(repfakes.FakeClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)

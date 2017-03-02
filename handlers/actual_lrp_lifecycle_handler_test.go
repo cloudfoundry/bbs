@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"code.cloudfoundry.org/bbs/fake_bbs"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo"
@@ -29,7 +29,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 
-		fakeServiceClient = new(fake_bbs.FakeServiceClient)
+		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
 		fakeRepClientFactory = new(repfakes.FakeClientFactory)
 		fakeRepClient = new(repfakes.FakeClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)

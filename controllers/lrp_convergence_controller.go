@@ -4,10 +4,10 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/workpool"
 )
@@ -22,7 +22,7 @@ type LRPConvergenceController struct {
 	db                     db.LRPDB
 	actualHub              events.Hub
 	auctioneerClient       auctioneer.Client
-	serviceClient          bbs.ServiceClient
+	serviceClient          serviceclient.ServiceClient
 	retirer                Retirer
 	convergenceWorkersSize int
 }
@@ -32,7 +32,7 @@ func NewLRPConvergenceController(
 	db db.LRPDB,
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
-	serviceClient bbs.ServiceClient,
+	serviceClient serviceclient.ServiceClient,
 	retirer Retirer,
 	convergenceWorkersSize int,
 ) *LRPConvergenceController {

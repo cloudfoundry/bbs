@@ -8,14 +8,24 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/nu7hatch/gouuid"
 
-	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/clock"
 )
 
+//go:generate counterfeiter -o fake_controllers/fake_lrp_convergence_controller.go . LrpConvergenceController
+type LrpConvergenceController interface {
+	ConvergeLRPs(logger lager.Logger) error
+}
+
+//go:generate counterfeiter -o fake_controllers/fake_task_controller.go . TaskController
+type TaskController interface {
+	ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+}
+
 type Converger struct {
 	id                          string
-	serviceClient               bbs.ServiceClient
+	serviceClient               serviceclient.ServiceClient
 	lrpConvergenceController    LrpConvergenceController
 	taskController              TaskController
 	logger                      lager.Logger
@@ -32,7 +42,7 @@ func New(
 	clock clock.Clock,
 	lrpConvergenceController LrpConvergenceController,
 	taskController TaskController,
-	serviceClient bbs.ServiceClient,
+	serviceClient serviceclient.ServiceClient,
 	convergeRepeatInterval,
 	kickTaskDuration,
 	expirePendingTaskDuration,
