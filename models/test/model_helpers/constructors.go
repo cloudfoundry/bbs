@@ -167,6 +167,8 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		CertificateProperties: &models.CertificateProperties{
 			OrganizationalUnit: []string{"iamthelizardking", "iamthelizardqueen"},
 		},
+		ImageUsername: "image-username",
+		ImagePassword: "image-password",
 	}
 }
 
