@@ -339,8 +339,11 @@ func main() {
 
 	healthcheckServer := http_server.New(bbsConfig.HealthAddress, http.HandlerFunc(healthCheckHandler))
 
-	members := grouper.Members{
+	members := append(grouper.Members{
 		{"healthcheck", healthcheckServer},
+	}, locks...)
+
+	members = append(members, grouper.Members{
 		{"workpool", cbWorkPool},
 		{"server", server},
 		{"migration-manager", migrationManager},
@@ -349,19 +352,13 @@ func main() {
 		{"metrics", *metricsNotifier},
 		{"converger", convergerProcess},
 		{"registration-runner", registrationRunner},
-	}
+	}...)
 
 	if bbsConfig.DebugAddress != "" {
 		members = append(grouper.Members{
 			{"debug-server", debugserver.Runner(bbsConfig.DebugAddress, reconfigurableSink)},
 		}, members...)
 	}
-
-	members = insertToMembersAfter(
-		members,
-		"healthcheck",
-		locks...,
-	)
 
 	group := grouper.NewOrdered(os.Interrupt, members)
 
@@ -589,15 +586,4 @@ func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOpti
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	return etcddb.NewStoreClient(etcdClient)
-}
-
-func insertToMembersAfter(members grouper.Members, name string, extraMembers ...grouper.Member) grouper.Members {
-	for i, m := range members {
-		if m.Name == name {
-			beforeMembers := members[:i+1]
-			afterMembers := members[i+1:]
-			return append(beforeMembers, append(extraMembers, afterMembers...)...)
-		}
-	}
-	panic("member-does-not-exist")
 }
