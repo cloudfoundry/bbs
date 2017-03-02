@@ -270,6 +270,7 @@ func main() {
 		lockIdentifier := &locketmodels.Resource{
 			Key:   bbsLockKey,
 			Owner: guid.String(),
+			Type:  locketmodels.LockType,
 		}
 
 		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
