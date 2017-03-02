@@ -121,6 +121,20 @@ To pull the image from a different registry than Docker Hub, specify it as the h
 RootFs: "docker://index.myregistry.gov/docker-org/docker-image#docker-tag"
 ```
 
+##### `ImageUsername` [optional]
+
+The `ImageUsername` field specifies the username to be used when fetching the
+container image defined by the `RootFs` field from the image repository.
+
+Setting `ImageUsername` requires the `ImagePassword` to also be set.
+
+##### `ImagePassword` [optional]
+
+The `ImagePassword` field specifies the password to be used when fetching the
+container image defined by the `RootFs` field from the image repository.
+
+Setting `ImagePassword` requires the `ImageUsername` to also be set.
+
 ##### `EnvironmentVariables` [optional]
 
 See description of [Environment Variables](common-models#environmentvariables-optional)

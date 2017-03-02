@@ -81,7 +81,9 @@ var _ = Describe("Task", func() {
 		"max_pids": 256,
 		"certificate_properties": {
 			"organizational_unit": ["stuff"]
-		}
+		},
+		"image_username": "jake",
+		"image_password": "thedog"
 	}`
 
 		task = models.Task{
@@ -139,6 +141,8 @@ var _ = Describe("Task", func() {
 				CertificateProperties: &models.CertificateProperties{
 					OrganizationalUnit: []string{"stuff"},
 				},
+				ImageUsername: "jake",
+				ImagePassword: "thedog",
 			},
 			TaskGuid:         "some-guid",
 			Domain:           "some-domain",
@@ -572,6 +576,38 @@ var _ = Describe("Task", func() {
 								ChecksumValue:     "some value",
 							},
 						},
+					},
+				},
+			},
+			{
+				"image_username",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						ImageUsername: "",
+						ImagePassword: "thedog",
+					},
+				},
+			},
+			{
+				"image_password",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						ImageUsername: "jake",
+						ImagePassword: "",
 					},
 				},
 			},

@@ -181,6 +181,14 @@ func (def *TaskDefinition) Validate() error {
 		}
 	}
 
+	if def.ImageUsername == "" && def.ImagePassword != "" {
+		validationError = validationError.Append(ErrInvalidField{"image_username"})
+	}
+
+	if def.ImageUsername != "" && def.ImagePassword == "" {
+		validationError = validationError.Append(ErrInvalidField{"image_password"})
+	}
+
 	err := validateCachedDependencies(def.CachedDependencies, def.LegacyDownloadUser)
 	if err != nil {
 		validationError = validationError.Append(err)

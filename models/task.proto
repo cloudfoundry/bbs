@@ -36,6 +36,8 @@ message TaskDefinition {
   repeated string PlacementTags = 20 [(gogoproto.jsontag) ="placement_tags,omitempty"];
   optional int32 max_pids = 21;
   optional CertificateProperties certificate_properties = 22 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
+  optional string image_username = 23;
+  optional string image_password = 24;
 }
 
 message Task {
