@@ -184,13 +184,13 @@ var _ = Describe("ServiceClient", func() {
 
 		Context("when the cell presence does not exist in either locket or consul", func() {
 			BeforeEach(func() {
-				locketClient.FetchReturns(nil, errors.New("boom!"))
-				cellPresenceClient.CellByIdReturns(nil, errors.New("boom2!"))
+				locketClient.FetchReturns(nil, locketmodels.ErrResourceNotFound)
+				cellPresenceClient.CellByIdReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("returns an error", func() {
 				_, err := serviceClient.CellById(logger, "cell-1")
-				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
 

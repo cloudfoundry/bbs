@@ -63,15 +63,18 @@ func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.Ce
 
 	presence, consulErr := s.cellPresenceClient.CellById(logger, cellId)
 	if consulErr != nil {
-		logger.Error("failed-to-fetch-presence-from-consul", consulErr)
+		logger.Debug("failed-to-fetch-presence-from-consul", lager.Data{"error": consulErr})
 	}
 
 	resp, locketErr := s.locketClient.Fetch(context.Background(), &locketmodels.FetchRequest{
 		Key: cellId,
 	})
 	if locketErr != nil {
-		logger.Error("failed-to-fetch-presence-from-locket", locketErr)
 		if consulErr != nil {
+			logger.Error("failed-to-fetch-presence-from-locket", locketErr)
+			if locketErr == locketmodels.ErrResourceNotFound {
+				return nil, models.ErrResourceNotFound
+			}
 			return nil, locketErr
 		}
 		return presence, nil

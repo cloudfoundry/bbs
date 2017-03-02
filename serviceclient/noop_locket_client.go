@@ -1,8 +1,6 @@
 package serviceclient
 
 import (
-	"errors"
-
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -19,7 +17,7 @@ func (*noopLocketClient) Lock(ctx context.Context, in *locketmodels.LockRequest,
 }
 
 func (*noopLocketClient) Fetch(ctx context.Context, in *locketmodels.FetchRequest, opts ...grpc.CallOption) (*locketmodels.FetchResponse, error) {
-	return nil, errors.New("no-lock-found")
+	return nil, locketmodels.ErrResourceNotFound
 }
 
 func (*noopLocketClient) Release(ctx context.Context, in *locketmodels.ReleaseRequest, opts ...grpc.CallOption) (*locketmodels.ReleaseResponse, error) {
