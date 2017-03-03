@@ -260,7 +260,7 @@ func main() {
 		if err != nil {
 			logger.Fatal("failed-to-connect-to-locket", err)
 		}
-		locketClient := locketmodels.NewLocketClient(conn)
+		locketClient = locketmodels.NewLocketClient(conn)
 
 		guid, err := uuid.NewV4()
 		if err != nil {
