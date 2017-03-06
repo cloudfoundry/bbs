@@ -2,9 +2,11 @@ package main_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 
-	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
@@ -32,16 +34,15 @@ var _ = Describe("SqlLock", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		locketAddress = fmt.Sprintf("localhost:%d", locketPort)
-		locketConfig := locketconfig.LocketConfig{
-			ListenAddress:            locketAddress,
-			DatabaseDriver:           sqlRunner.DriverName(),
-			DatabaseConnectionString: sqlRunner.ConnectionString(),
-			ConsulCluster:            consulRunner.ConsulCluster(),
-		}
-
-		locketRunner = locketrunner.NewLocketRunner(locketBinPath, locketConfig)
+		locketRunner = locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
+			cfg.ConsulCluster = consulRunner.ConsulCluster()
+			cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
+			cfg.DatabaseDriver = sqlRunner.DriverName()
+			cfg.ListenAddress = locketAddress
+		})
 		locketProcess = ginkgomon.Invoke(locketRunner)
 
+		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
 		bbsConfig.LocketAddress = locketAddress
 	})
 
@@ -126,9 +127,9 @@ var _ = Describe("SqlLock", func() {
 			var competingProcess ifrit.Process
 
 			BeforeEach(func() {
-				conn, err := grpc.Dial(locketAddress, grpc.WithInsecure())
+				locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 				Expect(err).NotTo(HaveOccurred())
-				locketClient := locketmodels.NewLocketClient(conn)
+				grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
 
 				lockIdentifier := &locketmodels.Resource{
 					Key:   "bbs",

@@ -14,8 +14,6 @@ import (
 	"os"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
@@ -256,12 +254,10 @@ func main() {
 	var locketClient locketmodels.LocketClient
 	locketClient = serviceclient.NewNoopLocketClient()
 	if bbsConfig.LocketAddress != "" {
-		conn, err := grpc.Dial(bbsConfig.LocketAddress, grpc.WithInsecure())
+		locketClient, err = locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 		if err != nil {
-			logger.Fatal("failed-to-connect-to-locket", err)
+			logger.Fatal("failed-to-create-locket-client", err)
 		}
-		locketClient = locketmodels.NewLocketClient(conn)
-
 		guid, err := uuid.NewV4()
 		if err != nil {
 			logger.Fatal("failed-to-generate-guid", err)

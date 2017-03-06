@@ -3,8 +3,10 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 
-	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
@@ -34,16 +36,17 @@ var _ = Describe("CellPresence", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		locketAddress = fmt.Sprintf("localhost:%d", locketPort)
-		locketConfig := locketconfig.LocketConfig{
-			ListenAddress:            locketAddress,
-			DatabaseDriver:           sqlRunner.DriverName(),
-			DatabaseConnectionString: sqlRunner.ConnectionString(),
-			ConsulCluster:            consulRunner.ConsulCluster(),
-		}
 
-		locketRunner = locketrunner.NewLocketRunner(locketBinPath, locketConfig)
+		locketRunner = locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
+			cfg.ConsulCluster = consulRunner.ConsulCluster()
+			cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
+			cfg.DatabaseDriver = sqlRunner.DriverName()
+			cfg.ListenAddress = locketAddress
+		})
+
 		locketProcess = ginkgomon.Invoke(locketRunner)
 
+		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
 		bbsConfig.LocketAddress = locketAddress
 	})
 
@@ -83,9 +86,9 @@ var _ = Describe("CellPresence", func() {
 				locket.DefaultSessionTTL,
 			))
 
-			conn, err := grpc.Dial(locketAddress, grpc.WithInsecure())
+			locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 			Expect(err).NotTo(HaveOccurred())
-			locketClient := locketmodels.NewLocketClient(conn)
+			grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
 
 			presenceLocket = &models.CellPresence{
 				CellId:     "cell-locket",
@@ -105,7 +108,7 @@ var _ = Describe("CellPresence", func() {
 				Type:  locketmodels.PresenceType,
 			}
 
-			cellPresenceLocket = ifrit.Invoke(
+			cellPresenceLocket = ginkgomon.Invoke(
 				lock.NewLockRunner(
 					logger,
 					locketClient,
