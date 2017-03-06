@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
@@ -256,7 +257,12 @@ func main() {
 	var locketClient locketmodels.LocketClient
 	locketClient = serviceclient.NewNoopLocketClient()
 	if bbsConfig.LocketAddress != "" {
-		conn, err := grpc.Dial(bbsConfig.LocketAddress, grpc.WithInsecure())
+		locketTLSConfig, err := cfhttp.NewTLSConfig(bbsConfig.LocketClientCert, bbsConfig.LocketClientKey, bbsConfig.LocketCACert)
+		if err != nil {
+			logger.Fatal("tls-configuration-failed", err)
+		}
+
+		conn, err := grpc.Dial(bbsConfig.LocketAddress, grpc.WithTransportCredentials(credentials.NewTLS(locketTLSConfig)))
 		if err != nil {
 			logger.Fatal("failed-to-connect-to-locket", err)
 		}

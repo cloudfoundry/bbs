@@ -1,12 +1,15 @@
 package main_test
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/cfhttp"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/localip"
 	"code.cloudfoundry.org/locket"
@@ -22,27 +25,41 @@ import (
 
 var _ = Describe("SqlLock", func() {
 	var (
-		locketRunner  ifrit.Runner
-		locketProcess ifrit.Process
-		locketAddress string
+		locketRunner    ifrit.Runner
+		locketProcess   ifrit.Process
+		locketAddress   string
+		locketTLSConfig *tls.Config
 	)
 
 	BeforeEach(func() {
 		locketPort, err := localip.LocalPort()
 		Expect(err).NotTo(HaveOccurred())
 
+		caFile := "fixtures/locket-certs/ca.crt"
+		certFile := "fixtures/locket-certs/cert.crt"
+		keyFile := "fixtures/locket-certs/key.key"
+
 		locketAddress = fmt.Sprintf("localhost:%d", locketPort)
 		locketConfig := locketconfig.LocketConfig{
-			ListenAddress:            locketAddress,
-			DatabaseDriver:           sqlRunner.DriverName(),
-			DatabaseConnectionString: sqlRunner.ConnectionString(),
+			CaFile:                   caFile,
+			CertFile:                 certFile,
 			ConsulCluster:            consulRunner.ConsulCluster(),
+			DatabaseConnectionString: sqlRunner.ConnectionString(),
+			DatabaseDriver:           sqlRunner.DriverName(),
+			KeyFile:                  keyFile,
+			ListenAddress:            locketAddress,
 		}
 
 		locketRunner = locketrunner.NewLocketRunner(locketBinPath, locketConfig)
 		locketProcess = ginkgomon.Invoke(locketRunner)
 
 		bbsConfig.LocketAddress = locketAddress
+		bbsConfig.LocketCACert = caFile
+		bbsConfig.LocketClientCert = certFile
+		bbsConfig.LocketClientKey = keyFile
+
+		locketTLSConfig, err = cfhttp.NewTLSConfig(certFile, keyFile, caFile)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	JustBeforeEach(func() {
@@ -126,7 +143,7 @@ var _ = Describe("SqlLock", func() {
 			var competingProcess ifrit.Process
 
 			BeforeEach(func() {
-				conn, err := grpc.Dial(locketAddress, grpc.WithInsecure())
+				conn, err := grpc.Dial(locketAddress, grpc.WithTransportCredentials(credentials.NewTLS(locketTLSConfig)))
 				Expect(err).NotTo(HaveOccurred())
 				locketClient := locketmodels.NewLocketClient(conn)
 

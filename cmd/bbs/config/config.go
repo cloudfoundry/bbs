@@ -13,49 +13,52 @@ import (
 )
 
 type BBSConfig struct {
-	SessionName                 string                `json:"session_name,omitempty"`
-	AccessLogPath               string                `json:"access_log_path,omitempty"`
-	RequireSSL                  bool                  `json:"require_ssl,omitempty"`
-	CaFile                      string                `json:"ca_file,omitempty"`
-	CertFile                    string                `json:"cert_file,omitempty"`
-	KeyFile                     string                `json:"key_file,omitempty"`
-	ListenAddress               string                `json:"listen_address,omitempty"`
-	HealthAddress               string                `json:"health_address,omitempty"`
-	AdvertiseURL                string                `json:"advertise_url,omitempty"`
-	CommunicationTimeout        durationjson.Duration `json:"communication_timeout,omitempty"`
-	DesiredLRPCreationTimeout   durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
+	AccessLogPath             string                `json:"access_log_path,omitempty"`
+	AdvertiseURL              string                `json:"advertise_url,omitempty"`
+	AuctioneerAddress         string                `json:"auctioneer_address,omitempty"`
+	AuctioneerCACert          string                `json:"auctioneer_ca_cert,omitempty"`
+	AuctioneerClientCert      string                `json:"auctioneer_client_cert,omitempty"`
+	AuctioneerClientKey       string                `json:"auctioneer_client_key,omitempty"`
+	AuctioneerRequireTLS      bool                  `json:"auctioneer_require_tls,omitempty"`
+	CaFile                    string                `json:"ca_file,omitempty"`
+	CertFile                  string                `json:"cert_file,omitempty"`
+	CommunicationTimeout      durationjson.Duration `json:"communication_timeout,omitempty"`
+	ConsulCluster             string                `json:"consul_cluster,omitempty"`
+	ConvergeRepeatInterval    durationjson.Duration `json:"converge_repeat_interval,omitempty"`
+	ConvergenceWorkers        int                   `json:"convergence_workers,omitempty"`
+	DatabaseConnectionString  string                `json:"database_connection_string"`
+	DatabaseDriver            string                `json:"database_driver,omitempty"`
+	DesiredLRPCreationTimeout durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
+	DropsondePort             int                   `json:"dropsonde_port,omitempty"`
+	ETCDConfig
 	ExpireCompletedTaskDuration durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration   durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
-	ConvergeRepeatInterval      durationjson.Duration `json:"converge_repeat_interval,omitempty"`
+	HealthAddress               string                `json:"health_address,omitempty"`
+	KeyFile                     string                `json:"key_file,omitempty"`
 	KickTaskDuration            durationjson.Duration `json:"kick_task_duration,omitempty"`
+	ListenAddress               string                `json:"listen_address,omitempty"`
 	LockRetryInterval           durationjson.Duration `json:"lock_retry_interval,omitempty"`
 	LockTTL                     durationjson.Duration `json:"lock_ttl,omitempty"`
-	ReportInterval              durationjson.Duration `json:"report_interval,omitempty"`
-	ConvergenceWorkers          int                   `json:"convergence_workers,omitempty"`
-	UpdateWorkers               int                   `json:"update_workers,omitempty"`
-	TaskCallbackWorkers         int                   `json:"task_callback_workers,omitempty"`
-	ConsulCluster               string                `json:"consul_cluster,omitempty"`
-	DropsondePort               int                   `json:"dropsonde_port,omitempty"`
-	DatabaseConnectionString    string                `json:"database_connection_string"`
-	DatabaseDriver              string                `json:"database_driver,omitempty"`
-	MaxOpenDatabaseConnections  int                   `json:"max_open_database_connections,omitempty"`
+	LocketAddress               string                `json:"locket_address,omitempty"`
+	LocketCACert                string                `json:"locket_ca_cert,omitempty"`
+	LocketClientCert            string                `json:"locket_client_cert,omitempty"`
+	LocketClientKey             string                `json:"locket_client_key,omitempty"`
 	MaxIdleDatabaseConnections  int                   `json:"max_idle_database_connections,omitempty"`
-	SQLCACertFile               string                `json:"sql_ca_cert_file,omitempty"`
-	AuctioneerAddress           string                `json:"auctioneer_address,omitempty"`
-	AuctioneerCACert            string                `json:"auctioneer_ca_cert,omitempty"`
-	AuctioneerClientCert        string                `json:"auctioneer_client_cert,omitempty"`
-	AuctioneerClientKey         string                `json:"auctioneer_client_key,omitempty"`
-	AuctioneerRequireTLS        bool                  `json:"auctioneer_require_tls,omitempty"`
+	MaxOpenDatabaseConnections  int                   `json:"max_open_database_connections,omitempty"`
 	RepCACert                   string                `json:"rep_ca_cert,omitempty"`
 	RepClientCert               string                `json:"rep_client_cert,omitempty"`
 	RepClientKey                string                `json:"rep_client_key,omitempty"`
 	RepClientSessionCacheSize   int                   `json:"rep_client_session_cache_size,omitempty"`
 	RepRequireTLS               bool                  `json:"rep_require_tls,omitempty"`
-	LocketAddress               string                `json:"locket_address,omitempty"`
+	ReportInterval              durationjson.Duration `json:"report_interval,omitempty"`
+	RequireSSL                  bool                  `json:"require_ssl,omitempty"`
+	SQLCACertFile               string                `json:"sql_ca_cert_file,omitempty"`
+	SessionName                 string                `json:"session_name,omitempty"`
 	SkipConsulLock              bool                  `json:"skip_consul_lock,omitempty"`
-	ETCDConfig
-	encryption.EncryptionConfig
+	TaskCallbackWorkers         int                   `json:"task_callback_workers,omitempty"`
+	UpdateWorkers               int                   `json:"update_workers,omitempty"`
 	debugserver.DebugServerConfig
+	encryption.EncryptionConfig
 	lagerflags.LagerConfig
 }
 
