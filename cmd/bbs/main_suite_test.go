@@ -2,11 +2,15 @@ package main_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"google.golang.org/grpc/grpclog"
 
 	"code.cloudfoundry.org/bbs"
 	bbsconfig "code.cloudfoundry.org/bbs/cmd/bbs/config"
@@ -81,6 +85,8 @@ var _ = SynchronizedBeforeSuite(
 		return []byte(strings.Join([]string{bbsPath, locketPath}, ","))
 	},
 	func(binPaths []byte) {
+		grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
+
 		path := string(binPaths)
 		bbsBinPath = strings.Split(path, ",")[0]
 		locketBinPath = strings.Split(path, ",")[1]

@@ -2,11 +2,7 @@ package main_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net"
-
-	"google.golang.org/grpc/grpclog"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
@@ -129,7 +125,6 @@ var _ = Describe("SqlLock", func() {
 			BeforeEach(func() {
 				locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 				Expect(err).NotTo(HaveOccurred())
-				grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
 
 				lockIdentifier := &locketmodels.Resource{
 					Key:   "bbs",

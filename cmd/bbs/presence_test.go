@@ -3,10 +3,6 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-
-	"google.golang.org/grpc/grpclog"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
@@ -88,7 +84,6 @@ var _ = Describe("CellPresence", func() {
 
 			locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 			Expect(err).NotTo(HaveOccurred())
-			grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
 
 			presenceLocket = &models.CellPresence{
 				CellId:     "cell-locket",
