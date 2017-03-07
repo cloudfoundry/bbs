@@ -442,8 +442,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			key          models.ActualLRPKey
 			errorMessage string
-
-			requestBody interface{}
 		)
 
 		BeforeEach(func() {
@@ -453,10 +451,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				"domain-0",
 			)
 			errorMessage = "something went wrong"
-			requestBody = &models.FailActualLRPRequest{
-				ActualLrpKey: &key,
-				ErrorMessage: errorMessage,
-			}
 
 			actualLRP = models.ActualLRP{
 				ActualLRPKey: key,
