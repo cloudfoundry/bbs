@@ -11,6 +11,7 @@ import (
 const (
 	mysqlFlavor    = "mysql"
 	postgresFlavor = "postgres"
+	mssqlFlavor    = "mssql"
 )
 
 func UseSQL() bool {
@@ -33,6 +34,10 @@ func UsePostgres() bool {
 	return driver() == postgresFlavor
 }
 
+func UseMSSQL() bool {
+	return driver() == mssqlFlavor
+}
+
 func NewSQLRunner(dbName string) sqlrunner.SQLRunner {
 	var sqlRunner sqlrunner.SQLRunner
 
@@ -40,6 +45,8 @@ func NewSQLRunner(dbName string) sqlrunner.SQLRunner {
 		sqlRunner = sqlrunner.NewMySQLRunner(dbName)
 	} else if UsePostgres() {
 		sqlRunner = sqlrunner.NewPostgresRunner(dbName)
+	} else if UseMSSQL () {
+		sqlRunner = sqlrunner.NewMSSQLRunner(dbName)
 	} else {
 		panic(fmt.Sprintf("driver '%s' is not supported", driver()))
 	}

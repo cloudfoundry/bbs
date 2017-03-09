@@ -85,13 +85,16 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 					flavor,
 				),
 				"guid", "domain",
-				jsonData,
+				string(jsonData),
 				"log guid", 2, 1, 1, "rootfs", "routes", "volumes yo", 1, "run info",
 			)
 			Expect(err).NotTo(HaveOccurred())
 
 			var fetchedJSONData string
 			query := helpers.RebindForFlavor("select placement_tags from desired_lrps limit 1", flavor)
+			if flavor == helpers.MSSQL {
+				query = "select top 1 placement_tags from desired_lrps"
+			}
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&fetchedJSONData)).NotTo(HaveOccurred())
 			Expect(fetchedJSONData).To(BeEquivalentTo(jsonData))

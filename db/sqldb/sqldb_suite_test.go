@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"net"
 
 	thepackagedb "code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/migrations"
@@ -16,6 +17,7 @@ import (
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/bbs/test_helpers/tool_helpers"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -60,25 +62,41 @@ var _ = BeforeSuite(func() {
 		dbDriverName = "mysql"
 		dbBaseConnectionString = "diego:diego_password@/"
 		dbFlavor = helpers.MySQL
+	} else if test_helpers.UseMSSQL() {
+		dbDriverName = "mssql"
+		dbBaseConnectionString = os.Getenv("MSSQL_BASE_CONNECTION_STRING")
+		dbFlavor = helpers.MSSQL
 	} else {
 		panic("Unsupported driver")
 	}
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
+	// mssql should be set up on Azure or localhost
 	db, err = sql.Open(dbDriverName, dbBaseConnectionString)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
 	// Ensure that if another test failed to clean up we can still proceed
 	db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	if dbFlavor == helpers.MSSQL {
+		_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 
-	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
-	Expect(err).NotTo(HaveOccurred())
+		err = tool_helpers.Retry(5, func() error {
+			var err error
+			db, err = sql.Open(dbDriverName, fmt.Sprintf("%s;database=diego_%d", dbBaseConnectionString, GinkgoParallelNode()))
+			err = db.Ping()
+			return err
+		})
+		Expect(err).NotTo(HaveOccurred())
+	} else {
+		_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
+		Expect(err).NotTo(HaveOccurred())
 
-	db, err = sql.Open(dbDriverName, fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelNode()))
-	Expect(err).NotTo(HaveOccurred())
-	Expect(db.Ping()).NotTo(HaveOccurred())
+		db, err = sql.Open(dbDriverName, fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelNode()))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(db.Ping()).NotTo(HaveOccurred())
+	}
 
 	encryptionKey, err := encryption.NewKey("label", "passphrase")
 	Expect(err).NotTo(HaveOccurred())
@@ -138,7 +156,17 @@ var _ = AfterSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 	_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
-	Expect(err).NotTo(HaveOccurred())
+	if dbFlavor == helpers.MSSQL {
+		switch err.(type) {
+		case *net.OpError:
+			// On Azure, it may return a "i/o timeout" error when the database is dropped.
+			// do nothing here
+		default:
+			Expect(err).NotTo(HaveOccurred())
+		}
+	} else {
+		Expect(err).NotTo(HaveOccurred())
+	}
 	Expect(db.Close()).NotTo(HaveOccurred())
 })
 

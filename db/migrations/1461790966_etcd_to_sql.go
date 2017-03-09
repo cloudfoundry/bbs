@@ -308,8 +308,8 @@ func (e *ETCDToSQL) migrateDesiredLRPs(logger lager.Logger) error {
 					modification_tag_index, run_info)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`, e.dbFlavor), schedInfo.ProcessGuid, schedInfo.Domain, schedInfo.LogGuid, schedInfo.Annotation,
-				schedInfo.Instances, schedInfo.MemoryMb, schedInfo.DiskMb, schedInfo.RootFs, volumePlacementData,
-				routeData, schedInfo.ModificationTag.Epoch, schedInfo.ModificationTag.Index, []byte(node.Value))
+				schedInfo.Instances, schedInfo.MemoryMb, schedInfo.DiskMb, schedInfo.RootFs, string(volumePlacementData),
+				string(routeData), schedInfo.ModificationTag.Epoch, schedInfo.ModificationTag.Index, string(node.Value))
 			if err != nil {
 				logger.Error("failed-inserting-desired-lrp", err)
 				continue
@@ -354,7 +354,7 @@ func (e *ETCDToSQL) migrateActualLRPs(logger lager.Logger) error {
 								modification_tag_epoch, modification_tag_index)
 							VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 						`, e.dbFlavor), actualLRP.ProcessGuid, actualLRP.Index, actualLRP.Domain, actualLRP.InstanceGuid,
-							actualLRP.CellId, netInfoData, actualLRP.CrashCount, actualLRP.CrashReason,
+							actualLRP.CellId, string(netInfoData), actualLRP.CrashCount, actualLRP.CrashReason,
 							actualLRP.State, actualLRP.PlacementError, actualLRP.Since,
 							actualLRP.ModificationTag.Epoch, actualLRP.ModificationTag.Index)
 						if err != nil {
@@ -399,7 +399,7 @@ func (e *ETCDToSQL) migrateTasks(logger lager.Logger) error {
 						`, e.dbFlavor),
 				task.TaskGuid, task.Domain, task.UpdatedAt, task.CreatedAt,
 				task.FirstCompletedAt, task.State, task.CellId, task.Result,
-				task.Failed, task.FailureReason, definitionData)
+				task.Failed, task.FailureReason, string(definitionData))
 			if err != nil {
 				logger.Error("failed-inserting-task", err)
 				continue

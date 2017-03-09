@@ -47,6 +47,19 @@ var _ = Describe("Isolation Level", func() {
 				err := row.Scan(&isolationLevel)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(isolationLevel).To(Equal(expectedLevel))
+			} else if test_helpers.UseMSSQL() {
+				row := dbSession.QueryRow(`SELECT CASE transaction_isolation_level
+								WHEN 0 THEN 'Unspecified'
+								WHEN 1 THEN 'READ UNCOMMITTED'
+								WHEN 2 THEN 'READ COMMITTED'
+								WHEN 3 THEN 'REPEATABLE READ'
+								WHEN 4 THEN 'SERIALIZABLE'
+								WHEN 5 THEN 'SNAPSHOT' END AS TRANSACTION_ISOLATION_LEVEL
+							FROM sys.dm_exec_sessions
+							where session_id = @@SPID`)
+				err := row.Scan(&isolationLevel)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(isolationLevel).To(Equal(level))
 			} else {
 				expectedLevel := strings.Replace(level, " ", "-", -1)
 				row := dbSession.QueryRow("SHOW VARIABLES LIKE '%isolation%'")

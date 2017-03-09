@@ -77,12 +77,24 @@ var (
 )
 
 func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
-	_, err := db.db.Exec(`
-		CREATE TABLE IF NOT EXISTS configurations(
+	var query string
+	if db.flavor == helpers.MSSQL {
+		query = `
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='configurations' AND xtype='U')
+			CREATE TABLE configurations(
 			id VARCHAR(255) PRIMARY KEY,
 			value VARCHAR(255)
-		)
-	`)
+			)
+		`
+	} else {
+		query = `
+			CREATE TABLE IF NOT EXISTS configurations(
+			id VARCHAR(255) PRIMARY KEY,
+			value VARCHAR(255)
+			)
+		`
+	}
+	_, err := db.db.Exec(query)
 	if err != nil {
 		return err
 	}
@@ -97,27 +109,60 @@ func (db *SQLDB) SetIsolationLevel(logger lager.Logger, level string) error {
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	var query string
 	columns := schedulingInfoColumns
-	columns = append(columns, "COUNT(actual_lrps.instance_index) AS actual_instances")
 
 	switch db.flavor {
 	case helpers.Postgres:
+		columns = append(columns, "COUNT(actual_lrps.instance_index) AS actual_instances")
 		columns = append(columns, "STRING_AGG(actual_lrps.instance_index::text, ',') AS existing_indices")
+		query = fmt.Sprintf(`
+			SELECT %s
+				FROM desired_lrps
+				LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = false
+				GROUP BY desired_lrps.process_guid
+				HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
+			`,
+			strings.Join(columns, ", "),
+		)
+
 	case helpers.MySQL:
+		columns = append(columns, "COUNT(actual_lrps.instance_index) AS actual_instances")
 		columns = append(columns, "GROUP_CONCAT(actual_lrps.instance_index) AS existing_indices")
+		query = fmt.Sprintf(`
+			SELECT %s
+				FROM desired_lrps
+				LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = false
+				GROUP BY desired_lrps.process_guid
+				HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
+			`,
+			strings.Join(columns, ", "),
+		)
+	case helpers.MSSQL:
+		query = fmt.Sprintf(`
+			SELECT %s,
+				T1.actual_instances,
+				T1.existing_indices
+			FROM
+				(SELECT desired_lrps.process_guid,
+					desired_lrps.instances,
+					COUNT(actual_lrps.instance_index) AS actual_instances,
+					STUFF ((SELECT ',' + CAST(al.instance_index AS VARCHAR)
+							FROM actual_lrps al
+							WHERE al.process_guid = desired_lrps.process_guid
+							FOR XML PATH('')
+							), 1, 1, '') AS existing_indices
+				FROM desired_lrps
+				LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = 0
+				GROUP BY desired_lrps.process_guid, desired_lrps.instances
+				HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
+				) T1
+			LEFT JOIN desired_lrps T2 ON T2.process_guid = T1.process_guid AND T2.instances = T1.instances
+			`,
+			strings.Replace(strings.Join(columns, ", "), desiredLRPsTable, "T2", -1),
+		)
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + db.flavor)
 	}
-
-	query = fmt.Sprintf(`
-		SELECT %s
-			FROM desired_lrps
-			LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = false
-			GROUP BY desired_lrps.process_guid
-			HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
-		`,
-		strings.Join(columns, ", "),
-	)
 
 	return q.Query(query)
 }
@@ -128,15 +173,16 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sq
       FROM actual_lrps
       JOIN domains ON actual_lrps.domain = domains.domain
       LEFT JOIN desired_lrps ON actual_lrps.process_guid = desired_lrps.process_guid
-      WHERE actual_lrps.evacuating = false AND desired_lrps.process_guid IS NULL
+      WHERE actual_lrps.evacuating = ? AND desired_lrps.process_guid IS NULL
 		`
 
-	return q.Query(query)
+	return q.Query(db.helper.Rebind(query), false)
 }
 
 func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, cellSet models.CellSet) (*sql.Rows, error) {
-	wheres := []string{"actual_lrps.evacuating = false"}
 	bindings := make([]interface{}, 0, len(cellSet))
+	wheres := []string{"actual_lrps.evacuating = ?"}
+	bindings = append(bindings, false)
 
 	if len(cellSet) > 0 {
 		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet))))
@@ -232,6 +278,17 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q Queryable) (claim
 			FROM actual_lrps
 			WHERE evacuating = ?
 		`
+	case helpers.MSSQL:
+		query = `
+			SELECT
+				COUNT(CASE WHEN actual_lrps.state = ? THEN 1 ELSE NULL END) AS claimed_instances,
+				COUNT(CASE WHEN actual_lrps.state = ? THEN 1 ELSE NULL END) AS unclaimed_instances,
+				COUNT(CASE WHEN actual_lrps.state = ? THEN 1 ELSE NULL END) AS running_instances,
+				COUNT(CASE WHEN actual_lrps.state = ? THEN 1 ELSE NULL END) AS crashed_instances,
+				COUNT(DISTINCT CASE WHEN state = ? THEN process_guid ELSE NULL END) AS crashing_desireds
+			FROM actual_lrps
+			WHERE evacuating = ?
+		`
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + db.flavor)
@@ -264,6 +321,15 @@ func (db *SQLDB) countTasksByState(logger lager.Logger, q Queryable) (pendingCou
 				COUNT(IF(state = ?, 1, NULL)) AS running_tasks,
 				COUNT(IF(state = ?, 1, NULL)) AS completed_tasks,
 				COUNT(IF(state = ?, 1, NULL)) AS resolving_tasks
+			FROM tasks
+		`
+	case helpers.MSSQL:
+		query = `
+			SELECT
+				COUNT(CASE WHEN state = ? THEN 1 ELSE NULL END) AS pending_tasks,
+				COUNT(CASE WHEN state = ? THEN 1 ELSE NULL END) AS running_tasks,
+				COUNT(CASE WHEN state = ? THEN 1 ELSE NULL END) AS completed_tasks,
+				COUNT(CASE WHEN state = ? THEN 1 ELSE NULL END) AS resolving_tasks
 			FROM tasks
 		`
 	default:

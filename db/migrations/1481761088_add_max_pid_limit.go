@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -53,13 +54,14 @@ func (e *AddMaxPidsToDesiredLRPs) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddMaxPidsToDesiredLRPs) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *AddMaxPidsToDesiredLRPs) Up(logger lager.Logger) error {
-	logger.Info("altering the table", lager.Data{"query": alterDesiredLRPAddMaxPidsSQL})
-	_, err := e.rawSQLDB.Exec(alterDesiredLRPAddMaxPidsSQL)
+	query := helpers.RebindForFlavor(alterDesiredLRPAddMaxPidsSQL, e.dbFlavor)
+	logger.Info("altering the table", lager.Data{"query": query})
+	_, err := e.rawSQLDB.Exec(query)
 	if err != nil {
 		logger.Error("failed-altering-tables", err)
 		return err
 	}
-	logger.Info("altered the table", lager.Data{"query": alterDesiredLRPAddMaxPidsSQL})
+	logger.Info("altered the table", lager.Data{"query": query})
 
 	return nil
 }

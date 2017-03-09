@@ -11,6 +11,7 @@ import (
 const (
 	MySQL    = "mysql"
 	Postgres = "postgres"
+	MSSQL    = "mssql"
 
 	LockRow   RowLock = true
 	NoLockRow RowLock = false
@@ -55,18 +56,26 @@ func (h *sqlHelper) Rebind(query string) string {
 }
 
 func RebindForFlavor(query, flavor string) string {
-	if flavor == MySQL {
+	switch flavor {
+	case MySQL:
 		return query
+	case Postgres:
+		strParts := strings.Split(query, "?")
+		for i := 1; i < len(strParts); i++ {
+			strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
+		}
+		return strings.Replace(strings.Join(strParts, ""), "MEDIUMTEXT", "TEXT", -1)
+	case MSSQL:
+		query = strings.Replace(query, "MEDIUMTEXT", "NVARCHAR(MAX)", -1)
+		query = strings.Replace(query, "TEXT", "NVARCHAR(MAX)", -1)
+		query = strings.Replace(query, "BOOL DEFAULT false", "TINYINT DEFAULT 0", -1)
+		query = strings.Replace(query, "BOOL DEFAULT true", "TINYINT DEFAULT 1", -1)
+		query = strings.Replace(query, "BOOL", "TINYINT", -1)
+		query = strings.Replace(query, "ADD COLUMN", "ADD", -1)
+		return query
+	default:
+		panic("database flavor not implemented: " + flavor)
 	}
-	if flavor != Postgres {
-		panic(fmt.Sprintf("Unrecognized DB flavor '%s'", flavor))
-	}
-
-	strParts := strings.Split(query, "?")
-	for i := 1; i < len(strParts); i++ {
-		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
-	}
-	return strings.Replace(strings.Join(strParts, ""), "MEDIUMTEXT", "TEXT", -1)
 }
 
 func QuestionMarks(count int) string {

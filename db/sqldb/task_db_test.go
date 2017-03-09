@@ -1044,7 +1044,7 @@ func insertTask(db *sql.DB, serializer format.Serializer, task *models.Task, mal
 		task.Result,
 		task.Failed,
 		task.FailureReason,
-		taskDefData,
+		string(taskDefData),
 	)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(result.RowsAffected()).NotTo(Equal(1))
