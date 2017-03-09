@@ -12,5 +12,9 @@ type SQLRunner interface {
 	Reset()
 	ResetTables(tables []string)
 	DriverName() string
+	Port() int
+	DBName() string
+	Username() string
+	Password() string
 	DB() *sql.DB
 }
