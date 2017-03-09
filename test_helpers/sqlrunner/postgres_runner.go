@@ -63,8 +63,24 @@ func (p *PostgresRunner) ConnectionString() string {
 	return fmt.Sprintf("postgres://diego:diego_pw@localhost/%s", p.sqlDBName)
 }
 
+func (p *PostgresRunner) Port() int {
+	return 5432
+}
+
+func (p *PostgresRunner) DBName() string {
+	return p.sqlDBName
+}
+
 func (p *PostgresRunner) DriverName() string {
 	return "postgres"
+}
+
+func (p *PostgresRunner) Password() string {
+	return "diego_pw"
+}
+
+func (p *PostgresRunner) Username() string {
+	return "diego"
 }
 
 func (p *PostgresRunner) DB() *sql.DB {

@@ -59,6 +59,22 @@ func (m *MySQLRunner) ConnectionString() string {
 	return fmt.Sprintf("diego:diego_password@/%s", m.sqlDBName)
 }
 
+func (p *MySQLRunner) Port() int {
+	return 3306
+}
+
+func (p *MySQLRunner) DBName() string {
+	return p.sqlDBName
+}
+
+func (p *MySQLRunner) Password() string {
+	return "diego_password"
+}
+
+func (p *MySQLRunner) Username() string {
+	return "diego"
+}
+
 func (m *MySQLRunner) DriverName() string {
 	return "mysql"
 }
