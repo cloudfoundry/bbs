@@ -22,7 +22,6 @@ import (
 	etcddb "code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryptor"
 	"code.cloudfoundry.org/bbs/events"
@@ -169,11 +168,6 @@ func main() {
 			clock,
 			bbsConfig.DatabaseDriver,
 		)
-		err = sqlDB.SetIsolationLevel(logger, helpers.IsolationLevelReadCommitted)
-		if err != nil {
-			logger.Fatal("sql-failed-to-set-isolation-level", err)
-		}
-
 		err = sqlDB.CreateConfigurationsTable(logger)
 		if err != nil {
 			logger.Fatal("sql-failed-create-configurations-table", err)

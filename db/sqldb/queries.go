@@ -90,10 +90,6 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 	return nil
 }
 
-func (db *SQLDB) SetIsolationLevel(logger lager.Logger, level string) error {
-	return db.helper.SetIsolationLevel(logger, db.db, level)
-}
-
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	var query string
 	columns := schedulingInfoColumns
