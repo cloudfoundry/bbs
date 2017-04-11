@@ -24,6 +24,7 @@ type SQLHelper interface {
 	Insert(logger lager.Logger, q Queryable, table string, attributes SQLAttributes) (sql.Result, error)
 	Update(logger lager.Logger, q Queryable, table string, updates SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error)
 	Delete(logger lager.Logger, q Queryable, table string, wheres string, whereBindings ...interface{}) (sql.Result, error)
+	Count(logger lager.Logger, q Queryable, table string, wheres string, whereBindings ...interface{}) (int, error)
 
 	ConvertSQLError(err error) error
 	Rebind(query string) string
