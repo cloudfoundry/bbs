@@ -94,6 +94,9 @@ func NewBBSConfig(configPath string) (BBSConfig, error) {
 	if err != nil {
 		return BBSConfig{}, err
 	}
+
+	defer configFile.Close()
+
 	decoder := json.NewDecoder(configFile)
 
 	err = decoder.Decode(&bbsConfig)
