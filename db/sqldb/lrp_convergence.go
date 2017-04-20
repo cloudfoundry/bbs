@@ -240,35 +240,50 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		}
 
 		indices := []int{}
-		existingIndices := strings.Split(existingIndicesStr.String, ",")
+		existingIndices := make(map[int]struct{})
+		if existingIndicesStr.String != "" {
+			for _, indexStr := range strings.Split(existingIndicesStr.String, ",") {
+				index, err := strconv.Atoi(indexStr)
+				if err != nil {
+					logger.Error("cannot-parse-index", err, lager.Data{
+						"index":                indexStr,
+						"existing-indeces-str": existingIndicesStr,
+					})
+					return
+				}
+				existingIndices[index] = struct{}{}
+			}
+		}
 
 		for i := 0; i < int(schedulingInfo.Instances); i++ {
-			found := false
-			for _, indexStr := range existingIndices {
-				if indexStr == strconv.Itoa(i) {
-					found = true
-					break
-				}
+			_, found := existingIndices[i]
+			if found {
+				continue
 			}
-			if !found {
-				missingLRPCount++
-				indices = append(indices, i)
-				index := int32(i)
-				keys = append(keys, models.ActualLRPKey{ProcessGuid: schedulingInfo.ProcessGuid, Domain: schedulingInfo.Domain, Index: index})
-			}
+
+			missingLRPCount++
+			indices = append(indices, i)
+			index := int32(i)
+			keys = append(keys, models.ActualLRPKey{
+				ProcessGuid: schedulingInfo.ProcessGuid,
+				Domain:      schedulingInfo.Domain,
+				Index:       index,
+			})
 		}
 
 		c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, indices...)
 
-		if actualInstances > int(schedulingInfo.Instances) {
-			for i := int(schedulingInfo.Instances); i < actualInstances; i++ {
-				if _, ok := domainSet[schedulingInfo.Domain]; ok {
-					c.addKeyToRetire(logger, &models.ActualLRPKey{
-						ProcessGuid: schedulingInfo.ProcessGuid,
-						Index:       int32(i),
-						Domain:      schedulingInfo.Domain,
-					})
-				}
+		for index := range existingIndices {
+			if index < int(schedulingInfo.Instances) {
+				continue
+			}
+
+			if _, ok := domainSet[schedulingInfo.Domain]; ok {
+				c.addKeyToRetire(logger, &models.ActualLRPKey{
+					ProcessGuid: schedulingInfo.ProcessGuid,
+					Index:       int32(index),
+					Domain:      schedulingInfo.Domain,
+				})
 			}
 		}
 	}

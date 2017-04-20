@@ -94,11 +94,11 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 4, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "not-extra-actual" + "-" + domain, CellId: "existing-cell"})
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 1, &models.ActualLRPInstanceKey{InstanceGuid: "extra-actual" + "-" + domain, CellId: "existing-cell"})
+			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 4, &models.ActualLRPInstanceKey{InstanceGuid: "extra-actual" + "-" + domain, CellId: "existing-cell"})
 			Expect(err).NotTo(HaveOccurred())
 			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
 			if test_helpers.UsePostgres() {
@@ -510,7 +510,7 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(keysToRetire).NotTo(BeEmpty())
 
 		processGuid := "desired-with-extra-actuals" + "-" + freshDomain
-		actualLRPKey := models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: freshDomain}
+		actualLRPKey := models.ActualLRPKey{ProcessGuid: processGuid, Index: 4, Domain: freshDomain}
 		Expect(keysToRetire).To(ContainElement(&actualLRPKey))
 
 		processGuid = "actual-with-no-desired" + "-" + freshDomain
