@@ -227,7 +227,7 @@ var _ = Describe("EventSource", func() {
 				var expectedEvent *models.ActualLRPCrashedEvent
 
 				BeforeEach(func() {
-					expectedEvent = models.NewActualLRPCrashedEvent(actualLRP)
+					expectedEvent = models.NewActualLRPCrashedEvent(actualLRP, actualLRP)
 					payload, err := proto.Marshal(expectedEvent)
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))

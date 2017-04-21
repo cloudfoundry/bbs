@@ -103,13 +103,13 @@ func (event *ActualLRPChangedEvent) Key() string {
 	return actualLRP.GetInstanceGuid()
 }
 
-func NewActualLRPCrashedEvent(actualLRP *ActualLRP) *ActualLRPCrashedEvent {
+func NewActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
 	return &ActualLRPCrashedEvent{
-		ActualLRPKey:         actualLRP.ActualLRPKey,
-		ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
-		CrashCount:           actualLRP.CrashCount,
-		CrashReason:          actualLRP.CrashReason,
-		Since:                actualLRP.Since,
+		ActualLRPKey:         after.ActualLRPKey,
+		ActualLRPInstanceKey: before.ActualLRPInstanceKey,
+		CrashCount:           after.CrashCount,
+		CrashReason:          after.CrashReason,
+		Since:                after.Since,
 	}
 }
 

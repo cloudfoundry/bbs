@@ -294,8 +294,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					1,
 					"domain-0",
 				),
-				State: models.ActualLRPStateUnclaimed,
-				Since: 1138,
+				ActualLRPInstanceKey: instanceKey,
+				State:                models.ActualLRPStateUnclaimed,
+				Since:                1138,
 			}
 			afterActualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
@@ -358,6 +359,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(crashEvent.Since).To(Equal(int64(1138)))
 				Expect(crashEvent.CrashCount).To(Equal(int32(1)))
 				Expect(crashEvent.CrashReason).To(Equal(errorMessage))
+				Expect(crashEvent.InstanceGuid).To(Equal(instanceGuid))
+				Expect(crashEvent.CellId).To(Equal(cellId))
 
 				changedEvent, ok := event1.(*models.ActualLRPChangedEvent)
 				if !ok {
