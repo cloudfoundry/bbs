@@ -31,6 +31,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		It("persists the actual lrp into the database", func() {
 			actualLRPGroup, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+			Expect(err).NotTo(HaveOccurred())
 
 			actualLRP := models.NewUnclaimedActualLRP(*key, fakeClock.Now().UnixNano())
 			actualLRP.ModificationTag.Epoch = "my-awesome-guid"
