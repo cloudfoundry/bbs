@@ -18,6 +18,8 @@ var (
 	ErrNoData                = errors.New("event with no data")
 )
 
+var ErrNoData = errors.New("event with no data")
+
 type invalidPayloadError struct {
 	payloadType string
 	protoErr    error
