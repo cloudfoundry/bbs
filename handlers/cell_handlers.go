@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
+	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
@@ -21,6 +23,16 @@ func NewCellHandler(serviceClient serviceclient.ServiceClient, exitChan chan<- s
 }
 
 func (h *CellHandler) Cells(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	s := time.Now()
+	defer func() {
+		d := time.Since(s)
+		metrics.MetricCh <- metrics.MetricSample{
+			Name:  "cell-handler",
+			Value: float64(d),
+			Unit:  "nanos",
+		}
+	}()
+
 	var err error
 	logger = logger.Session("cells")
 	response := &models.CellsResponse{}

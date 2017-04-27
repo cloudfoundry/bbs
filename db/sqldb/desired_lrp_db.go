@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -152,6 +154,22 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 }
 
 func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+	s := time.Now()
+	defer func() {
+		d := time.Since(s)
+
+		name := "scheduling-info-db-no-filter"
+		if filter.ProcessGuids != nil {
+			name = "scheduling-info-db-with-filter"
+		}
+
+		metrics.MetricCh <- metrics.MetricSample{
+			Name:  name,
+			Value: float64(d),
+			Unit:  "nanos",
+		}
+	}()
+
 	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Debug("start")
 	defer logger.Debug("complete")

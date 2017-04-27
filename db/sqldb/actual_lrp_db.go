@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -33,6 +34,16 @@ func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 	logger = logger.WithData(lager.Data{"filter": filter})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
+
+	s := time.Now()
+	defer func() {
+		d := time.Since(s)
+		metrics.MetricCh <- metrics.MetricSample{
+			Name:  "actual-lrp-groups-db",
+			Value: float64(d),
+			Unit:  "nanos",
+		}
+	}()
 
 	var wheres []string
 	var values []interface{}
@@ -188,6 +199,16 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 	logger.Info("starting")
 	defer logger.Info("complete")
 
+	s := time.Now()
+	defer func() {
+		d := time.Since(s)
+		metrics.MetricCh <- metrics.MetricSample{
+			Name:  "claim-actual-lrp-db",
+			Value: float64(d),
+			Unit:  "nanos",
+		}
+	}()
+
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
@@ -246,6 +267,16 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 
 func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
+
+	s := time.Now()
+	defer func() {
+		d := time.Since(s)
+		metrics.MetricCh <- metrics.MetricSample{
+			Name:  "start-actual-lrp-db",
+			Value: float64(d),
+			Unit:  "nanos",
+		}
+	}()
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP

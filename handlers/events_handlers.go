@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"flag"
 	"net/http"
+	"time"
 
 	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -20,6 +23,10 @@ func NewEventHandler(desiredHub, actualHub events.Hub) *EventHandler {
 	}
 }
 
+var (
+	flushEverySecond = flag.Bool("flush-every-second", false, "whatever")
+)
+
 func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventChan <-chan models.Event, errorChan <-chan error) {
 	w.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
 	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -33,6 +40,13 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 	eventID := 0
 	closeNotifier := w.(http.CloseNotifier).CloseNotify()
 
+	var ticker *time.Ticker
+	if *flushEverySecond {
+		ticker = time.NewTicker(time.Second)
+	} else {
+		ticker = time.NewTicker(time.Hour)
+	}
+
 	for {
 		select {
 		case event = <-eventChan:
@@ -41,6 +55,14 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 			return
 		case <-closeNotifier:
 			return
+		case <-ticker.C:
+			flusher.Flush()
+			metrics.MetricCh <- metrics.MetricSample{
+				Name:    "event-flush",
+				Value:   1,
+				Counter: true,
+			}
+			continue
 		}
 
 		sseEvent, err := events.NewEventFromModelEvent(eventID, event)
@@ -54,7 +76,20 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 			return
 		}
 
-		flusher.Flush()
+		metrics.MetricCh <- metrics.MetricSample{
+			Name:    "event-write",
+			Value:   1,
+			Counter: true,
+		}
+
+		if !*flushEverySecond {
+			flusher.Flush()
+			metrics.MetricCh <- metrics.MetricSample{
+				Name:    "event-flush",
+				Value:   1,
+				Counter: true,
+			}
+		}
 
 		eventID++
 	}
