@@ -59,9 +59,6 @@ var _ = Describe("Hub", func() {
 
 					err := eventSource.Close()
 					Expect(err).NotTo(HaveOccurred())
-
-					// emit event so hub sees closed source and drops subscription
-					hub.Emit(eventfakes.FakeEvent{})
 				})
 
 				It("calls the callback with a zero count", func() {
