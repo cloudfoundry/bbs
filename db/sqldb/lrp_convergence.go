@@ -308,7 +308,6 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
 // convergence) and add them to the list of start requests.
 func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
-	// time.Sleep(1000 * time.Second)
 	logger = logger.Session("actual-lrps-with-missing-cells")
 
 	keysWithMissingCells := make([]*models.ActualLRPKeyWithSchedulingInfo, 0)
