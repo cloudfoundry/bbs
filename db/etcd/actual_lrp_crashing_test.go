@@ -300,7 +300,7 @@ func lrpForState(state string, timeInState time.Duration) models.ActualLRP {
 		lrp.ActualLRPInstanceKey = instanceKey
 	case models.ActualLRPStateRunning:
 		lrp.ActualLRPInstanceKey = instanceKey
-		lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4", &models.PortMapping{ContainerPort: 1234, HostPort: 5678})
+		lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", &models.PortMapping{ContainerPort: 1234, HostPort: 5678})
 	}
 
 	return lrp

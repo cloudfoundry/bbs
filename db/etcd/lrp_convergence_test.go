@@ -755,7 +755,7 @@ var _ = Describe("LRPConvergence", func() {
 				actualLRP := &models.ActualLRP{
 					ActualLRPKey:         models.NewActualLRPKey(desiredLRP.ProcessGuid, 0, desiredLRP.Domain),
 					ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-instance-guid", cellId),
-					ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", &models.PortMapping{ContainerPort: 1234, HostPort: 5678}),
+					ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", &models.PortMapping{ContainerPort: 1234, HostPort: 5678}),
 					State:                models.ActualLRPStateRunning,
 					Since:                clock.Now().Add(-time.Minute).UnixNano(),
 				}
@@ -1113,7 +1113,7 @@ var _ = Describe("LRPConvergence", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
-					netInfo := models.NewActualLRPNetInfo("host", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
+					netInfo := models.NewActualLRPNetInfo("host", "container", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
 					_, _, err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ProcessGuid,
@@ -1301,7 +1301,7 @@ var _ = Describe("LRPConvergence", func() {
 					higherIndexActualLRP := &models.ActualLRP{
 						ActualLRPKey:         models.NewActualLRPKey(desiredLRP.ProcessGuid, index, desiredLRP.Domain),
 						ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", "cell-id"),
-						ActualLRPNetInfo:     models.NewActualLRPNetInfo("127.0.0.1", &models.PortMapping{ContainerPort: 8080, HostPort: 80}),
+						ActualLRPNetInfo:     models.NewActualLRPNetInfo("127.0.0.1", "2.2.2.2", &models.PortMapping{ContainerPort: 8080, HostPort: 80}),
 						State:                models.ActualLRPStateRunning,
 						Since:                clock.Now().UnixNano(),
 					}
@@ -1312,7 +1312,7 @@ var _ = Describe("LRPConvergence", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
-					netInfo := models.NewActualLRPNetInfo("host", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
+					netInfo := models.NewActualLRPNetInfo("host", "2.2.2.2", &models.PortMapping{HostPort: 1234, ContainerPort: 5678})
 					_, _, err = etcdDB.ClaimActualLRP(
 						logger,
 						actualLRPGroup.Instance.ActualLRPKey.ProcessGuid,
@@ -1758,7 +1758,7 @@ func newStableRunningActualLRP(lrp *models.DesiredLRP, cellID string, index int3
 	return &models.ActualLRP{
 		ActualLRPKey:         *actualLRPKey(lrp, index),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", cellID),
-		ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", &models.PortMapping{}),
+		ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", &models.PortMapping{}),
 		State:                models.ActualLRPStateRunning,
 		Since:                1138 - (30 * time.Minute).Nanoseconds(),
 	}
@@ -1768,7 +1768,7 @@ func newRunningActualLRP(d *models.DesiredLRP, cellID string, index int32) *mode
 	return &models.ActualLRP{
 		ActualLRPKey:         models.NewActualLRPKey(d.ProcessGuid, index, d.Domain),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", cellID),
-		ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", &models.PortMapping{}),
+		ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", &models.PortMapping{}),
 		State:                models.ActualLRPStateRunning,
 		Since:                1138,
 	}

@@ -43,12 +43,12 @@ func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstan
 	return ActualLRPInstanceKey{instanceGuid, cellId}
 }
 
-func NewActualLRPNetInfo(address string, ports ...*PortMapping) ActualLRPNetInfo {
-	return ActualLRPNetInfo{address, ports}
+func NewActualLRPNetInfo(address string, instanceAddress string, ports ...*PortMapping) ActualLRPNetInfo {
+	return ActualLRPNetInfo{address, ports, instanceAddress}
 }
 
 func EmptyActualLRPNetInfo() ActualLRPNetInfo {
-	return NewActualLRPNetInfo("")
+	return NewActualLRPNetInfo("", "")
 }
 
 func (info ActualLRPNetInfo) Empty() bool {

@@ -147,7 +147,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				"instance-guid-0",
 				"cell-id-0",
 			)
-			netInfo = models.NewActualLRPNetInfo("1.1.1.1", models.NewPortMapping(10, 20))
+			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.NewPortMapping(10, 20))
 
 			actualLRP = models.ActualLRP{
 				ActualLRPKey: key,

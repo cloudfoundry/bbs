@@ -53,7 +53,7 @@ var _ = Describe("ActualLRPDB", func() {
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
-		netInfo = models.NewActualLRPNetInfo("127.0.0.1", models.NewPortMapping(8080, 80))
+		netInfo = models.NewActualLRPNetInfo("127.0.0.1", "2.2.2.2", models.NewPortMapping(8080, 80))
 
 		baseLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
@@ -812,16 +812,17 @@ var _ = Describe("ActualLRPDB", func() {
 			BeforeEach(func() {
 				lrpKey = models.NewActualLRPKey("process-guid", 1, "domain")
 				instanceKey = models.NewActualLRPInstanceKey("instance-guid", cellID)
-				netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+				netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 			})
 
 			It("logs the net info", func() {
 				Eventually(logger).Should(Say(
 					fmt.Sprintf(
-						`"net_info":\{"address":"%s","ports":\[\{"container_port":%d,"host_port":%d\}\]\}`,
+						`"net_info":\{"address":"%s","ports":\[\{"container_port":%d,"host_port":%d\}\],"instance_address":"%s"\}`,
 						netInfo.Address,
 						netInfo.Ports[0].ContainerPort,
 						netInfo.Ports[0].HostPort,
+						netInfo.InstanceAddress,
 					),
 				))
 			})
@@ -851,7 +852,7 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					lrpKey = actualLRP.ActualLRPKey
 					instanceKey = models.NewActualLRPInstanceKey("some-guid", cellID)
-					netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+					netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 				})
 
 				It("does not error", func() {
@@ -893,7 +894,7 @@ var _ = Describe("ActualLRPDB", func() {
 					lrpKey = actualLRP.ActualLRPKey
 					lrpKey.Domain = "some-other-domain"
 					instanceKey = models.NewActualLRPInstanceKey("some-guid", cellID)
-					netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+					netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 				})
 
 				It("returns an error", func() {
@@ -926,7 +927,7 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						lrpKey = actualLRP.ActualLRPKey
 						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
-						netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+						netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 					})
 
 					It("promotes the persisted LRP to RUNNING", func() {
@@ -951,7 +952,7 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						lrpKey = actualLRP.ActualLRPKey
 						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, "another-cell-id")
-						netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+						netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 					})
 
 					It("does not return an error", func() {
@@ -970,7 +971,7 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						lrpKey = actualLRP.ActualLRPKey
 						instanceKey = models.NewActualLRPInstanceKey("another-instance-guid", cellID)
-						netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+						netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 					})
 
 					It("does not return an error", func() {
@@ -993,7 +994,7 @@ var _ = Describe("ActualLRPDB", func() {
 					instanceGuid = "some-instance-guid"
 
 					existingInstanceKey := models.NewActualLRPInstanceKey(instanceGuid, cellID)
-					existingNetInfo := models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+					existingNetInfo := models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 
 					_, _, err := etcdDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, &existingInstanceKey, &existingNetInfo)
 					Expect(err).NotTo(HaveOccurred())
@@ -1007,7 +1008,7 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						lrpKey = actualLRP.ActualLRPKey
 						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellID)
-						netInfo = models.NewActualLRPNetInfo("5.6.7.8", models.NewPortMapping(4321, 4567))
+						netInfo = models.NewActualLRPNetInfo("5.6.7.8", "2.2.2.2", models.NewPortMapping(4321, 4567))
 					})
 
 					It("does not return an error", func() {
@@ -1039,7 +1040,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Context("and the same net info", func() {
 						var previousTime int64
 						BeforeEach(func() {
-							netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+							netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 
 							previousTime = clock.Now().UnixNano()
 							clock.IncrementBySeconds(1)
@@ -1066,7 +1067,7 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						lrpKey = actualLRP.ActualLRPKey
 						instanceKey = models.NewActualLRPInstanceKey(instanceGuid, "another-cell-id")
-						netInfo = models.NewActualLRPNetInfo("5.6.7.8", models.NewPortMapping(4321, 4567))
+						netInfo = models.NewActualLRPNetInfo("5.6.7.8", "2.2.2.2", models.NewPortMapping(4321, 4567))
 					})
 
 					It("returns an error", func() {
@@ -1085,7 +1086,7 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						lrpKey = actualLRP.ActualLRPKey
 						instanceKey = models.NewActualLRPInstanceKey("another-instance-guid", cellID)
-						netInfo = models.NewActualLRPNetInfo("5.6.7.8", models.NewPortMapping(4321, 4567))
+						netInfo = models.NewActualLRPNetInfo("5.6.7.8", "2.2.2.3", models.NewPortMapping(4321, 4567))
 					})
 
 					It("returns an error", func() {
@@ -1106,7 +1107,7 @@ var _ = Describe("ActualLRPDB", func() {
 			BeforeEach(func() {
 				lrpKey = models.NewActualLRPKey("process-guid", 1, "domain")
 				instanceKey = models.NewActualLRPInstanceKey("instance-guid", cellID)
-				netInfo = models.NewActualLRPNetInfo("1.2.3.4", models.NewPortMapping(5678, 1234))
+				netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 			})
 
 			It("starts the LRP", func() {
