@@ -96,6 +96,7 @@ err := client.StartActualLRP(logger, &models.ActualLRPKey{
 	&models.ActualLRPNetInfo{
 	    Address: "1.2.3.4",
 	    models.NewPortMapping(10,20),
+	    InstanceAddress: "2.2.2.2",
 	},
 )
 if err != nil {

@@ -674,8 +674,9 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("and the actual lrp is RUNNING", func() {
 				BeforeEach(func() {
 					netInfo := models.ActualLRPNetInfo{
-						Address: "0.0.0.0",
-						Ports:   []*models.PortMapping{},
+						Address:         "0.0.0.0",
+						Ports:           []*models.PortMapping{},
+						InstanceAddress: "1.1.1.1",
 					}
 
 					netInfoData, err := serializer.Marshal(logger, format.ENCODED_PROTO, &netInfo)
@@ -826,8 +827,9 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 
 				netInfo = &models.ActualLRPNetInfo{
-					Address: "1.2.1.2",
-					Ports:   []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
+					Address:         "1.2.1.2",
+					Ports:           []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
+					InstanceAddress: "2.2.2.2",
 				}
 
 				actualLRP = &models.ActualLRP{
@@ -1136,8 +1138,9 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 
 				netInfo = &models.ActualLRPNetInfo{
-					Address: "1.2.1.2",
-					Ports:   []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
+					Address:         "1.2.1.2",
+					Ports:           []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
+					InstanceAddress: "2.2.2.2",
 				}
 
 				actualLRP = &models.ActualLRP{

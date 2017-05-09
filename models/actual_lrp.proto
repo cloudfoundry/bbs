@@ -29,6 +29,7 @@ message ActualLRPInstanceKey {
 message ActualLRPNetInfo {
   optional string address = 1;
   repeated PortMapping ports = 2 [(gogoproto.jsontag) = "ports"];
+  optional string instance_address = 3 [(gogoproto.jsontag) = "instance_address,omitempty"];
 }
 
 message ActualLRP {
