@@ -31,9 +31,6 @@ func (rule SecurityGroupRule) Validate() error {
 		if rule.IcmpInfo != nil {
 			validationError = validationError.Append(ErrInvalidField{"icmp_info"})
 		}
-		if rule.GetLog() == true {
-			validationError = validationError.Append(ErrInvalidField{"log"})
-		}
 	case ICMPProtocol:
 		if rule.PortRange != nil {
 			validationError = validationError.Append(ErrInvalidField{"port_range"})
@@ -43,9 +40,6 @@ func (rule SecurityGroupRule) Validate() error {
 		}
 		if rule.IcmpInfo == nil {
 			validationError = validationError.Append(ErrInvalidField{"icmp_info"})
-		}
-		if rule.GetLog() == true {
-			validationError = validationError.Append(ErrInvalidField{"log"})
 		}
 	case AllProtocol:
 		if rule.PortRange != nil {

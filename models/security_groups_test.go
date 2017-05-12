@@ -214,18 +214,6 @@ var _ = Describe("SecurityGroupRule", func() {
 			})
 		}
 
-		itDisallowsLogging := func() {
-			Context("when log is true", func() {
-				BeforeEach(func() {
-					log = true
-				})
-
-				It("fails", func() {
-					Expect(validationErr).To(MatchError(ContainSubstring("log")))
-				})
-			})
-		}
-
 		Describe("destination", func() {
 			BeforeEach(func() {
 				ports = []uint32{1}
@@ -304,7 +292,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				itFailsWithICMPInfo()
 				itAllowsPorts()
 				itExpectsADestination()
-				itDisallowsLogging()
+				itAllowsLogging()
 			})
 
 			Context("when the protocol is icmp", func() {
@@ -315,7 +303,7 @@ var _ = Describe("SecurityGroupRule", func() {
 
 				itExpectsADestination()
 				itFailsWithPorts()
-				itDisallowsLogging()
+				itAllowsLogging()
 
 				Context("when no ICMPInfo is provided", func() {
 					BeforeEach(func() {
