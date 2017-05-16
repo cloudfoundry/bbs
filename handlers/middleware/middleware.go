@@ -47,7 +47,6 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 			defer requestLog.Debug("done")
 
 			loggableHandlerFunc(requestLog, w, r)
-
 		}
 	}
 }

@@ -8,7 +8,15 @@ import (
 )
 
 func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var cellId string
 	logger = logger.Session("subscribe-r0")
+
+	request := &models.ActualLRPGroupsRequest{}
+
+	err := parseRequest(logger, req, request)
+	if err == nil {
+		cellId = request.CellId
+	}
 
 	desiredSource, err := h.desiredHub.Subscribe()
 	if err != nil {
@@ -40,8 +48,46 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 		return event, err
 	}
 
+	actualEventsFetcher := func() (models.Event, error) {
+		for {
+			event, err := actualSource.Next()
+			if err != nil || cellId == "" {
+				return event, err
+			}
+
+			switch event := event.(type) {
+			case *models.ActualLRPCreatedEvent:
+				lrp, _ := event.ActualLrpGroup.Resolve()
+				if lrp.CellId == cellId {
+					return event, nil
+				}
+			case *models.ActualLRPChangedEvent:
+				lrp, _ := event.Before.Resolve()
+				if lrp.CellId == cellId {
+					return event, nil
+				}
+
+				lrp, _ = event.After.Resolve()
+				if lrp.CellId == cellId {
+					return event, nil
+				}
+			case *models.ActualLRPRemovedEvent:
+				lrp, _ := event.ActualLrpGroup.Resolve()
+				if lrp.CellId == cellId {
+					return event, nil
+				}
+			case *models.ActualLRPCrashedEvent:
+				if event.CellId == cellId {
+					return event, nil
+				}
+			default:
+				return event, nil
+			}
+		}
+	}
+
 	go streamSource(eventChan, errorChan, closeChan, desiredEventsFetcher)
-	go streamSource(eventChan, errorChan, closeChan, actualSource.Next)
+	go streamSource(eventChan, errorChan, closeChan, actualEventsFetcher)
 
 	streamEventsToResponse(logger, w, eventChan, errorChan)
 }
