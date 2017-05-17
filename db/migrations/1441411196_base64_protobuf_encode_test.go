@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db/deprecations"
 	"code.cloudfoundry.org/bbs/db/etcd"
@@ -12,7 +13,6 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/lager/lagertest"
 	goetcd "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
@@ -50,6 +50,141 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 		})
 	})
 
+	var newValidDesiredLRP = func(guid string) *models.DesiredLRP {
+		myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
+		desiredLRP := &models.DesiredLRP{
+			ProcessGuid:             guid,
+			Domain:                  "some-domain",
+			RootFs:                  "some:rootfs",
+			Instances:               1,
+			EnvironmentVariables:    []*models.EnvironmentVariable{{Name: "FOO", Value: "bar"}},
+			Setup:                   models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+			Action:                  models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
+			DeprecatedStartTimeoutS: 15,
+			Monitor: models.WrapAction(models.EmitProgressFor(
+				models.Timeout(models.Try(models.Parallel(models.Serial(&models.RunAction{Path: "ls", User: "name"}))),
+					10*time.Second,
+				),
+				"start-message",
+				"success-message",
+				"failure-message",
+			)),
+			DiskMb:      512,
+			MemoryMb:    1024,
+			CpuWeight:   42,
+			Routes:      &models.Routes{"my-router": &myRouterJSON},
+			LogSource:   "some-log-source",
+			LogGuid:     "some-log-guid",
+			MetricsGuid: "some-metrics-guid",
+			Annotation:  "some-annotation",
+			EgressRules: []*models.SecurityGroupRule{{
+				Protocol:     models.TCPProtocol,
+				Destinations: []string{"1.1.1.1/32", "2.2.2.2/32"},
+				PortRange:    &models.PortRange{Start: 10, End: 16000},
+			}},
+		}
+		err := desiredLRP.Validate()
+		Expect(err).NotTo(HaveOccurred())
+
+		return desiredLRP
+	}
+
+	var newValidActualLRP = func(guid string, index int32) *models.ActualLRP {
+		ports := []*models.PortMapping{
+			&models.PortMapping{2222, 4444},
+		}
+
+		actualLRP := &models.ActualLRP{
+			ActualLRPKey:         models.ActualLRPKey{guid, index, "some-domain"},
+			ActualLRPInstanceKey: models.ActualLRPInstanceKey{"some-guid", "some-cell"},
+			ActualLRPNetInfo: models.ActualLRPNetInfo{
+				Address: "some-address",
+				Ports:   ports,
+			},
+			CrashCount:  33,
+			CrashReason: "badness",
+			State:       models.ActualLRPStateRunning,
+			Since:       1138,
+			ModificationTag: models.ModificationTag{
+				Epoch: "some-epoch",
+				Index: 999,
+			},
+		}
+		err := actualLRP.Validate()
+		Expect(err).NotTo(HaveOccurred())
+
+		return actualLRP
+	}
+
+	var newTaskDefinition = func() *models.TaskDefinition {
+		return &models.TaskDefinition{
+			RootFs: "docker:///docker.com/docker",
+			EnvironmentVariables: []*models.EnvironmentVariable{
+				{
+					Name:  "FOO",
+					Value: "BAR",
+				},
+			},
+			Action: models.WrapAction(&models.RunAction{
+				User:           "user",
+				Path:           "echo",
+				Args:           []string{"hello world"},
+				ResourceLimits: &models.ResourceLimits{},
+			}),
+			MemoryMb:    256,
+			DiskMb:      1024,
+			CpuWeight:   42,
+			Privileged:  true,
+			LogGuid:     "123",
+			LogSource:   "APP",
+			MetricsGuid: "456",
+			ResultFile:  "some-file.txt",
+			EgressRules: []*models.SecurityGroupRule{
+				{
+					Protocol:     "tcp",
+					Destinations: []string{"0.0.0.0/0"},
+					PortRange: &models.PortRange{
+						Start: 1,
+						End:   1024,
+					},
+					Log: true,
+				},
+				{
+					Protocol:     "udp",
+					Destinations: []string{"8.8.0.0/16"},
+					Ports:        []uint32{53},
+				},
+			},
+
+			Annotation: `[{"anything": "you want!"}]... dude`,
+		}
+	}
+
+	var newValidTask = func(guid string) *models.Task {
+
+		task := &models.Task{
+			TaskGuid:       guid,
+			Domain:         "some-domain",
+			TaskDefinition: newTaskDefinition(),
+
+			CreatedAt:        time.Date(2014, time.February, 25, 23, 46, 11, 00, time.UTC).UnixNano(),
+			UpdatedAt:        time.Date(2014, time.February, 25, 23, 46, 11, 10, time.UTC).UnixNano(),
+			FirstCompletedAt: time.Date(2014, time.February, 25, 23, 46, 11, 30, time.UTC).UnixNano(),
+
+			CellId:        "cell",
+			State:         models.Task_Pending,
+			Result:        "turboencabulated",
+			Failed:        true,
+			FailureReason: "because i said so",
+		}
+
+		err := task.Validate()
+		if err != nil {
+			panic(err)
+		}
+		return task
+	}
+
 	Describe("Up", func() {
 		var (
 			expectedDesiredLRP                             *models.DesiredLRP
@@ -60,21 +195,21 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 
 		BeforeEach(func() {
 			// DesiredLRP
-			expectedDesiredLRP = model_helpers.NewValidDesiredLRP("process-guid")
+			expectedDesiredLRP = newValidDesiredLRP("process-guid")
 			jsonValue, err := json.Marshal(expectedDesiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			_, err = storeClient.Set(deprecations.DesiredLRPSchemaPath(expectedDesiredLRP), jsonValue, 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			// ActualLRP
-			expectedActualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
+			expectedActualLRP = newValidActualLRP("process-guid", 1)
 			jsonValue, err = json.Marshal(expectedActualLRP)
 			Expect(err).NotTo(HaveOccurred())
 			_, err = storeClient.Set(etcd.ActualLRPSchemaPath(expectedActualLRP.ProcessGuid, 1), jsonValue, 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Evacuating ActualLRP
-			expectedEvacuatingActualLRP = model_helpers.NewValidActualLRP("process-guid", 4)
+			expectedEvacuatingActualLRP = newValidActualLRP("process-guid", 4)
 			jsonValue, err = json.Marshal(expectedEvacuatingActualLRP)
 			Expect(err).NotTo(HaveOccurred())
 			_, err = storeClient.Set(
@@ -85,7 +220,7 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Tasks
-			expectedTask = model_helpers.NewValidTask("task-guid")
+			expectedTask = newValidTask("task-guid")
 			jsonValue, err = json.Marshal(expectedTask)
 			Expect(err).NotTo(HaveOccurred())
 			_, err = storeClient.Set(etcd.TaskSchemaPath(expectedTask), jsonValue, 0)
