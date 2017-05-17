@@ -911,8 +911,9 @@ var _ = Describe("DesiredLRPSchedulingInfo", func() {
 		routes      = models.Routes{
 			"router": &rawMessage,
 		}
-		largeRoute  = json.RawMessage([]byte(largeString))
-		largeRoutes = models.Routes{
+		largeRoutingString = randStringBytes(129 * 1024)
+		largeRoute         = json.RawMessage([]byte(largeRoutingString))
+		largeRoutes        = models.Routes{
 			"router": &largeRoute,
 		}
 		tag = models.ModificationTag{}
