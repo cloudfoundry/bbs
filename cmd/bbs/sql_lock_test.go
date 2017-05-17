@@ -119,7 +119,7 @@ var _ = Describe("SqlLock", func() {
 			})
 		})
 
-		Context("when the lock is not available", func() {
+		Context("when the sql lock is not available", func() {
 			var competingProcess ifrit.Process
 
 			BeforeEach(func() {
@@ -133,7 +133,14 @@ var _ = Describe("SqlLock", func() {
 				}
 
 				clock := clock.NewClock()
-				competingRunner := lock.NewLockRunner(logger, locketClient, lockIdentifier, 5, clock, locket.RetryInterval)
+				competingRunner := lock.NewLockRunner(
+					logger,
+					locketClient,
+					lockIdentifier,
+					locket.DefaultSessionTTLInSeconds,
+					clock,
+					locket.RetryInterval,
+				)
 				competingProcess = ginkgomon.Invoke(competingRunner)
 			})
 
@@ -145,6 +152,12 @@ var _ = Describe("SqlLock", func() {
 				Consistently(func() bool {
 					return client.Ping(logger)
 				}).Should(BeFalse())
+			})
+
+			Context("and continues to be unavailable", func() {
+				It("exits", func() {
+					Eventually(bbsProcess.Wait(), locket.DefaultSessionTTL*2).Should(Receive())
+				})
 			})
 
 			Context("and the lock becomes available", func() {

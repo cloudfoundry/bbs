@@ -40,6 +40,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/locket"
+	"code.cloudfoundry.org/locket/jointlock"
 	"code.cloudfoundry.org/locket/lock"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
@@ -273,8 +274,14 @@ func main() {
 		)})
 	}
 
-	if len(locks) < 1 {
+	var lock ifrit.Runner
+	switch len(locks) {
+	case 0:
 		logger.Fatal("no-locks-configured", errors.New("Lock configuration must be provided"))
+	case 1:
+		lock = locks[0]
+	default:
+		lock = jointlock.NewJointLock(clock, locket.DefaultSessionTTL, locks...)
 	}
 
 	cellPresenceClient := maintain.NewCellPresenceClient(consulClient, clock)
@@ -330,11 +337,9 @@ func main() {
 
 	healthcheckServer := http_server.New(bbsConfig.HealthAddress, http.HandlerFunc(healthCheckHandler))
 
-	members := append(grouper.Members{
+	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
-	}, locks...)
-
-	members = append(members, grouper.Members{
+		{"lock", lock},
 		{"workpool", cbWorkPool},
 		{"server", server},
 		{"migration-manager", migrationManager},
@@ -343,7 +348,7 @@ func main() {
 		{"metrics", *metricsNotifier},
 		{"converger", convergerProcess},
 		{"registration-runner", registrationRunner},
-	}...)
+	}
 
 	if bbsConfig.DebugAddress != "" {
 		members = append(grouper.Members{

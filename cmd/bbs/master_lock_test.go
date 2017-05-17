@@ -20,7 +20,7 @@ var _ = Describe("MasterLock", func() {
 			competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
 
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-			bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
+			bbsRunner.StartCheck = "bbs.consul-lock.acquiring-lock"
 
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 		})

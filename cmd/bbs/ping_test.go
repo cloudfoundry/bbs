@@ -26,7 +26,7 @@ var _ = Describe("Ping API", func() {
 				defer ginkgomon.Kill(competingBBSLockProcess)
 
 				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-				bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
+				bbsRunner.StartCheck = "bbs.consul-lock.acquiring-lock"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
 				Expect(client.Ping(logger)).To(BeFalse())
@@ -65,7 +65,7 @@ var _ = Describe("Ping API", func() {
 				defer ginkgomon.Kill(competingBBSLockProcess)
 
 				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-				bbsRunner.StartCheck = "bbs.lock.acquiring-lock"
+				bbsRunner.StartCheck = "bbs.consul-lock.acquiring-lock"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
 				Eventually(ping).Should(BeTrue())
