@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -34,7 +33,7 @@ func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string,
 
 	if err != nil {
 		logger.Error("failed-fetching-configuration-value", err, lager.Data{"key": key})
-		return "", models.ErrResourceNotFound
+		return "", err
 	}
 
 	return value, nil

@@ -405,7 +405,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner RowScanner) (*mo
 	)
 
 	if err == sql.ErrNoRows {
-		return nil, "", models.ErrResourceNotFound
+		return nil, "", err
 	}
 
 	if err != nil {

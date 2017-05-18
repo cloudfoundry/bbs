@@ -314,8 +314,10 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 
 	err := scanner.Scan(values...)
 	if err == sql.ErrNoRows {
-		return nil, models.ErrResourceNotFound
-	} else if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
 		logger.Error("failed-scanning", err)
 		return nil, err
 	}
@@ -358,9 +360,7 @@ func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid 
 	)
 	var count int
 	err := row.Scan(&count)
-	if err == sql.ErrNoRows {
-		return models.ErrResourceNotFound
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 	return nil

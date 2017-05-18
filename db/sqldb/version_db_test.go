@@ -1,10 +1,13 @@
 package sqldb_test
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
@@ -93,6 +96,23 @@ var _ = Describe("Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(*version).To(Equal(*expectedVersion))
+			})
+		})
+
+		Context("when the database is down", func() {
+			var (
+				sqlDB *sqldb.SQLDB
+			)
+
+			BeforeEach(func() {
+				db, err := sql.Open(dbDriverName, fmt.Sprintf("%sinvalid-db", dbBaseConnectionString))
+				Expect(err).NotTo(HaveOccurred())
+				sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
+			})
+
+			It("does not return an ErrResourceNotFound", func() {
+				_, err := sqlDB.Version(logger)
+				Expect(err).NotTo(MatchError(models.ErrResourceNotFound))
 			})
 		})
 
