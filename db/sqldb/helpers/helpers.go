@@ -20,7 +20,7 @@ type SQLHelper interface {
 	Transact(logger lager.Logger, db *sql.DB, f func(logger lager.Logger, tx *sql.Tx) error) error
 	One(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) *sql.Row
 	All(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) (*sql.Rows, error)
-	Upsert(logger lager.Logger, q Queryable, table string, keyAttributes, updateAttributes SQLAttributes) (sql.Result, error)
+	Upsert(logger lager.Logger, q Queryable, table string, attributes SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error)
 	Insert(logger lager.Logger, q Queryable, table string, attributes SQLAttributes) (sql.Result, error)
 	Update(logger lager.Logger, q Queryable, table string, updates SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error)
 	Delete(logger lager.Logger, q Queryable, table string, wheres string, whereBindings ...interface{}) (sql.Result, error)

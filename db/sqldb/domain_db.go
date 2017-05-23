@@ -61,13 +61,12 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 		}
 
 		_, err := db.upsert(logger, tx, domainsTable,
-			helpers.SQLAttributes{"domain": domain},
-			helpers.SQLAttributes{"expire_time": expireTime},
+			helpers.SQLAttributes{"domain": domain, "expire_time": expireTime},
+			"domain = ?", domain,
 		)
 		if err != nil {
-			logger.Error("failed-upsert-domain", err)
-			return err
+			logger.Error("failed-inserting-domain", err)
 		}
-		return nil
+		return err
 	})
 }

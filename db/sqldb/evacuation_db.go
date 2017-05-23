@@ -151,26 +151,28 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
 	}
 
+	sqlAttributes := helpers.SQLAttributes{
+		"process_guid":           actualLRP.ProcessGuid,
+		"instance_index":         actualLRP.Index,
+		"evacuating":             true,
+		"domain":                 actualLRP.Domain,
+		"instance_guid":          actualLRP.InstanceGuid,
+		"cell_id":                actualLRP.CellId,
+		"state":                  actualLRP.State,
+		"net_info":               netInfoData,
+		"since":                  actualLRP.Since,
+		"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
+		"modification_tag_index": actualLRP.ModificationTag.Index,
+		"expire_time":            expireTime.UnixNano(),
+	}
+
 	_, err = db.upsert(logger, tx, "actual_lrps",
-		helpers.SQLAttributes{
-			"process_guid":   actualLRP.ProcessGuid,
-			"instance_index": actualLRP.Index,
-			"evacuating":     true,
-		},
-		helpers.SQLAttributes{
-			"domain":                 actualLRP.Domain,
-			"instance_guid":          actualLRP.InstanceGuid,
-			"cell_id":                actualLRP.CellId,
-			"state":                  actualLRP.State,
-			"net_info":               netInfoData,
-			"since":                  actualLRP.Since,
-			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
-			"modification_tag_index": actualLRP.ModificationTag.Index,
-			"expire_time":            expireTime.UnixNano(),
-		},
+		sqlAttributes,
+		"process_guid = ? AND instance_index = ? AND evacuating = ?",
+		actualLRP.ProcessGuid, actualLRP.Index, true,
 	)
 	if err != nil {
-		logger.Error("failed-insert-evacuating-lrp", err)
+		logger.Error("failed-inserting-evacuating-lrp", err)
 		return nil, err
 	}
 

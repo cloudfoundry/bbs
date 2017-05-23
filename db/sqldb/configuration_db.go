@@ -7,11 +7,16 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+const configurationsTable = "configurations"
+
 func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
 	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		_, err := db.upsert(logger, tx, "configurations",
-			helpers.SQLAttributes{"id": key},
-			helpers.SQLAttributes{"value": value},
+		_, err := db.upsert(
+			logger,
+			tx,
+			configurationsTable,
+			helpers.SQLAttributes{"value": value, "id": key},
+			"id = ?", key,
 		)
 		if err != nil {
 			logger.Error("failed-setting-config-value", err, lager.Data{"key": key})

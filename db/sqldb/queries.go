@@ -289,8 +289,8 @@ func (db *SQLDB) all(logger lager.Logger, q helpers.Queryable, table string,
 	return db.helper.All(logger, q, table, columns, lockRow, wheres, whereBindings...)
 }
 
-func (db *SQLDB) upsert(logger lager.Logger, q helpers.Queryable, table string, keyAttributes, updateAttributes helpers.SQLAttributes) (sql.Result, error) {
-	return db.helper.Upsert(logger, q, table, keyAttributes, updateAttributes)
+func (db *SQLDB) upsert(logger lager.Logger, q helpers.Queryable, table string, attributes helpers.SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error) {
+	return db.helper.Upsert(logger, q, table, attributes, wheres, whereBindings...)
 }
 
 func (db *SQLDB) insert(logger lager.Logger, q helpers.Queryable, table string, attributes helpers.SQLAttributes) (sql.Result, error) {
