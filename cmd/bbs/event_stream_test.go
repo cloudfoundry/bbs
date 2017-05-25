@@ -325,11 +325,12 @@ var _ = Describe("Events API", func() {
 		})
 	})
 
-	It("cleans up exiting connections when killing the BBS", func(done Done) {
+	It("cleans up exiting connections when killing the BBS", func() {
 		var err error
 		eventSource, err = client.SubscribeToEvents(logger)
 		Expect(err).NotTo(HaveOccurred())
 
+		done := make(chan struct{})
 		go func() {
 			_, err := eventSource.Next()
 			Expect(err).To(HaveOccurred())
@@ -337,6 +338,7 @@ var _ = Describe("Events API", func() {
 		}()
 
 		ginkgomon.Interrupt(bbsProcess)
+		Eventually(done).Should(BeClosed())
 	})
 })
 

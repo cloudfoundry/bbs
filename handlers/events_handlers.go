@@ -24,11 +24,19 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 	w.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
 	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Add("Connection", "keep-alive")
+	w.Header().Set("Transfer-Encoding", "identity")
 
 	w.WriteHeader(http.StatusOK)
 
-	flusher := w.(http.Flusher)
-	flusher.Flush()
+	conn, rw, err := w.(http.Hijacker).Hijack()
+	if err != nil {
+		return
+	}
+
+	if err := rw.Flush(); err != nil {
+		return
+	}
+
 	var event models.Event
 	eventID := 0
 	closeNotifier := w.(http.CloseNotifier).CloseNotify()
@@ -49,12 +57,10 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 			return
 		}
 
-		err = sseEvent.Write(w)
+		err = sseEvent.Write(conn)
 		if err != nil {
 			return
 		}
-
-		flusher.Flush()
 
 		eventID++
 	}
