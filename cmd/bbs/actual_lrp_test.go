@@ -1,10 +1,17 @@
 package main_test
 
 import (
+	"fmt"
+
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/localip"
+	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
+
+	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
+	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -73,11 +80,10 @@ var _ = Describe("ActualLRP API", func() {
 		getErr error
 	)
 
-	BeforeEach(func() {
+	JustBeforeEach(func() {
 		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-		filter = models.ActualLRPFilter{}
 		expectedActualLRPGroups = []*models.ActualLRPGroup{}
 		actualActualLRPGroups = []*models.ActualLRPGroup{}
 
@@ -403,6 +409,55 @@ var _ = Describe("ActualLRP API", func() {
 
 			_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).To(Equal(models.ErrResourceNotFound))
+		})
+
+		Context("when using locket cell presences", func() {
+			var (
+				locketProcess ifrit.Process
+			)
+
+			BeforeEach(func() {
+				locketPort, err := localip.LocalPort()
+				Expect(err).NotTo(HaveOccurred())
+
+				locketAddress := fmt.Sprintf("localhost:%d", locketPort)
+
+				locketRunner := locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
+					cfg.ConsulCluster = consulRunner.ConsulCluster()
+					cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
+					cfg.DatabaseDriver = sqlRunner.DriverName()
+					cfg.ListenAddress = locketAddress
+				})
+
+				locketProcess = ginkgomon.Invoke(locketRunner)
+				bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
+				bbsConfig.LocketAddress = locketAddress
+
+				cellPresence := models.NewCellPresence(
+					"some-cell",
+					"cell.example.com",
+					"http://cell.example.com",
+					"the-zone",
+					models.NewCellCapacity(128, 1024, 6),
+					[]string{},
+					[]string{},
+					[]string{},
+					[]string{},
+				)
+				consulHelper.RegisterCell(&cellPresence)
+			})
+
+			AfterEach(func() {
+				ginkgomon.Interrupt(locketProcess)
+			})
+
+			It("retires an actual LRP when not found in locket", func() {
+				retireErr = client.RetireActualLRP(logger, &baseLRPKey)
+				Expect(retireErr).NotTo(HaveOccurred())
+
+				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
 		})
 	})
 
