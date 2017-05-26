@@ -167,6 +167,7 @@ The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
 	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
+	SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
 }
 
 func newClient(url string) *client {
@@ -639,9 +640,16 @@ func (c *client) CompleteTask(logger lager.Logger, taskGuid, cellId string, fail
 	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
-func (c *client) subscribeToEvents(route string) (events.EventSource, error) {
+func (c *client) subscribeToEvents(route string, cellId string) (events.EventSource, error) {
+	request := models.EventsByCellId{
+		CellId: cellId,
+	}
+	messageBody, err := proto.Marshal(&request)
+	if err != nil {
+		return nil, err
+	}
 	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
-		request, err := c.reqGen.CreateRequest(route, nil, nil)
+		request, err := c.reqGen.CreateRequest(route, nil, bytes.NewReader(messageBody))
 		if err != nil {
 			panic(err) // totally shouldn't happen
 		}
@@ -657,7 +665,11 @@ func (c *client) subscribeToEvents(route string) (events.EventSource, error) {
 }
 
 func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(EventStreamRoute_r0)
+	return c.subscribeToEvents(EventStreamRoute_r0, "")
+}
+
+func (c *client) SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
+	return c.subscribeToEvents(EventStreamRoute_r0, cellId)
 }
 
 func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {
@@ -768,7 +780,7 @@ func handleProtoResponse(response *http.Response, responseObject proto.Message) 
 
 	err = proto.Unmarshal(buf, responseObject)
 	if err != nil {
-		return models.NewError(models.Error_InvalidProtobufMessage, fmt.Sprintf("failed to unmarshal proto", err.Error()))
+		return models.NewError(models.Error_InvalidProtobufMessage, fmt.Sprint("failed to unmarshal proto: ", err.Error()))
 	}
 
 	return nil

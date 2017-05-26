@@ -39,3 +39,7 @@ message ActualLRPCrashedEvent {
   optional string crash_reason = 4 [(gogoproto.jsontag) = "crash_reason,omitempty"];
   optional int64 since = 5;
 }
+
+message EventsByCellId {
+   optional string cell_id  = 1;
+}

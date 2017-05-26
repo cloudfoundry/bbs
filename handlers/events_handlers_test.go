@@ -136,14 +136,15 @@ var _ = Describe("Event Handlers", func() {
 	}
 
 	Describe("Subscribe_r0", func() {
-		BeforeEach(func() {
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.Subscribe_r0(logger, w, r)
-				close(eventStreamDone)
-			}))
-		})
 
 		Describe("Subscribe to Desired Events", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handler.Subscribe_r0(logger, w, r)
+					close(eventStreamDone)
+				}))
+			})
+
 			ItStreamsEventsFromHub(&desiredHub)
 
 			It("migrates desired lrps down to v0", func() {
@@ -168,7 +169,113 @@ var _ = Describe("Event Handlers", func() {
 		})
 
 		Describe("Subscribe to Actual Events", func() {
-			ItStreamsEventsFromHub(&actualHub)
+			Context("when cell id not specified", func() {
+				BeforeEach(func() {
+					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						handler.Subscribe_r0(logger, w, r)
+						close(eventStreamDone)
+					}))
+				})
+
+				ItStreamsEventsFromHub(&actualHub)
+			})
+
+			FContext("when cell id is specified", func() {
+				var (
+					reader                       *sse.ReadCloser
+					requestBody                  interface{}
+					cellId                       string = "cell-id"
+					expectedActualLRPBeforeEvent *models.ActualLRPChangedEvent
+					expectedActualLRPAfterEvent  *models.ActualLRPChangedEvent
+					eventSource                  events.EventSource
+					eventsCh                     chan models.Event
+				)
+
+				BeforeEach(func() {
+					requestBody = nil
+				})
+
+				JustBeforeEach(func() {
+					By("creating server")
+					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						request := newTestRequest(requestBody)
+						handler.Subscribe_r0(logger, w, request)
+						close(eventStreamDone)
+					}))
+
+					By("starting server")
+					response, err := http.Get(server.URL)
+					Expect(err).NotTo(HaveOccurred())
+					reader = sse.NewReadCloser(response.Body)
+
+					eventSource = events.NewEventSource(reader)
+
+					By("sending actual lrp changed event")
+					actualLRP := models.NewUnclaimedActualLRP(models.NewActualLRPKey("guid", 0, "some-domain"), 1)
+					actualLRPGroupBefore := models.NewRunningActualLRPGroup(actualLRP)
+
+					actualLRP = models.NewClaimedActualLRP(
+						models.NewActualLRPKey("some-guid", 0, "some-domain"),
+						models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
+						1,
+					)
+					actualLRPGroupAfter := models.NewRunningActualLRPGroup(actualLRP)
+					expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
+
+					actualHub.Emit(expectedActualLRPBeforeEvent)
+
+					actualLRP = models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
+					unclaimedActualLRPGroupAgain := models.NewRunningActualLRPGroup(actualLRP)
+					expectedActualLRPAfterEvent = models.NewActualLRPChangedEvent(actualLRPGroupAfter, unclaimedActualLRPGroupAgain)
+
+					actualHub.Emit(expectedActualLRPAfterEvent)
+
+					eventsCh = make(chan models.Event)
+					go func() {
+						defer close(eventsCh)
+
+						for {
+							ev, err := eventSource.Next()
+							if err != nil {
+								return
+							}
+							eventsCh <- ev
+						}
+					}()
+				})
+
+				Context("subscriber with the right filter", func() {
+					BeforeEach(func() {
+						requestBody = &models.EventsByCellId{
+							CellId: cellId,
+						}
+					})
+
+					It("receives events from the filtered cell", func() {
+						Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
+					})
+
+					It("receives events from the filtered cell", func() {
+						Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPAfterEvent)))
+					})
+				})
+
+				Context("subscriber with the wrong filter", func() {
+					BeforeEach(func() {
+						requestBody = &models.EventsByCellId{
+							CellId: "another-cell-id",
+						}
+					})
+
+					It("does not receive events from the unfiltered cell", func() {
+						Consistently(eventsCh).ShouldNot(Receive(Equal(expectedActualLRPBeforeEvent)))
+					})
+
+					It("receives events from the filtered cell", func() {
+						Eventually(eventsCh).ShouldNot(Receive(Equal(expectedActualLRPAfterEvent)))
+					})
+				})
+			})
 		})
 	})
 

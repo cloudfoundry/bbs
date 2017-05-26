@@ -20,24 +20,32 @@ var _ = Describe("Events API", func() {
 		eventChannel chan models.Event
 
 		eventSource    events.EventSource
+		err            error
 		desiredLRP     *models.DesiredLRP
 		key            models.ActualLRPKey
 		instanceKey    models.ActualLRPInstanceKey
 		newInstanceKey models.ActualLRPInstanceKey
 		netInfo        models.ActualLRPNetInfo
+		cellID         string
 	)
 
 	BeforeEach(func() {
+		cellID = ""
 		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 	})
 
+	JustBeforeEach(func() {
+		if cellID == "" {
+			eventSource, err = client.SubscribeToEvents(logger)
+		} else {
+			eventSource, err = client.SubscribeToEventsByCellID(logger, cellID)
+		}
+		Expect(err).NotTo(HaveOccurred())
+	})
+
 	Describe("Legacy Events", func() {
 		JustBeforeEach(func() {
-			var err error
-			eventSource, err = client.SubscribeToEvents(logger)
-			Expect(err).NotTo(HaveOccurred())
-
 			eventChannel = streamEvents(eventSource)
 
 			primerLRP := model_helpers.NewValidDesiredLRP("primer-guid")
@@ -142,136 +150,217 @@ var _ = Describe("Events API", func() {
 				}
 			})
 
-			It("receives events", func() {
-				By("creating a ActualLRP")
-				err := client.DesireLRP(logger, desiredLRP)
-				Expect(err).NotTo(HaveOccurred())
+			Context("Without cell-id filtering", func() {
+				It("receives events", func() {
+					By("creating a ActualLRP")
+					err := client.DesireLRP(logger, desiredLRP)
+					Expect(err).NotTo(HaveOccurred())
 
-				actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-				Expect(err).NotTo(HaveOccurred())
+					actualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+					Expect(err).NotTo(HaveOccurred())
 
-				var event models.Event
-				Eventually(func() models.Event {
+					var event models.Event
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+
+					actualLRPCreatedEvent := event.(*models.ActualLRPCreatedEvent)
+					Expect(actualLRPCreatedEvent.ActualLrpGroup).To(Equal(actualLRPGroup))
+
+					By("updating the existing ActualLRP")
+					err = client.ClaimActualLRP(logger, processGuid, int(key.Index), &instanceKey)
+					Expect(err).NotTo(HaveOccurred())
+
+					before := actualLRPGroup
+					actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+					Expect(err).NotTo(HaveOccurred())
+
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+
+					actualLRPChangedEvent := event.(*models.ActualLRPChangedEvent)
+					Expect(actualLRPChangedEvent.Before).To(Equal(before))
+					Expect(actualLRPChangedEvent.After).To(Equal(actualLRPGroup))
+
+					By("evacuating the ActualLRP")
+					initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
+					_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, 0)
+					Expect(err).NotTo(HaveOccurred())
+					auctioneerRequests := auctioneerServer.ReceivedRequests()
+					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
+					request := auctioneerRequests[len(auctioneerRequests)-1]
+					Expect(request.Method).To(Equal("POST"))
+					Expect(request.RequestURI).To(Equal("/v1/lrps"))
+
+					evacuatingLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+					Expect(err).NotTo(HaveOccurred())
+					evacuatingLRP := *evacuatingLRPGroup.GetEvacuating()
+
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+
+					actualLRPCreatedEvent = event.(*models.ActualLRPCreatedEvent)
+					response := actualLRPCreatedEvent.ActualLrpGroup.GetEvacuating()
+					Expect(*response).To(Equal(evacuatingLRP))
+
+					// discard instance -> UNCLAIMED
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+
+					By("starting and then evacuating the ActualLRP on another cell")
+					err = client.StartActualLRP(logger, &key, &newInstanceKey, &netInfo)
+					Expect(err).NotTo(HaveOccurred())
+
+					// discard instance -> RUNNING
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+
+					initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
+					_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, 0)
+					Expect(err).NotTo(HaveOccurred())
+					auctioneerRequests = auctioneerServer.ReceivedRequests()
+					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
+					request = auctioneerRequests[len(auctioneerRequests)-1]
+					Expect(request.Method).To(Equal("POST"))
+					Expect(request.RequestURI).To(Equal("/v1/lrps"))
+
+					evacuatingLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, desiredLRP.ProcessGuid, 0)
+					Expect(err).NotTo(HaveOccurred())
+					evacuatingLRP = *evacuatingLRPGroup.GetEvacuating()
+
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+
+					actualLRPCreatedEvent = event.(*models.ActualLRPCreatedEvent)
+					response = actualLRPCreatedEvent.ActualLrpGroup.GetEvacuating()
+					Expect(*response).To(Equal(evacuatingLRP))
+
+					// discard instance -> UNCLAIMED
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+
+					By("removing the instance ActualLRP")
+					actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, desiredLRP.ProcessGuid, 0)
+					Expect(err).NotTo(HaveOccurred())
+					actualLRP := *actualLRPGroup.GetInstance()
+
+					err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), nil)
+					Expect(err).NotTo(HaveOccurred())
+
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+
+					actualLRPRemovedEvent := event.(*models.ActualLRPRemovedEvent)
+					response = actualLRPRemovedEvent.ActualLrpGroup.GetInstance()
+					Expect(*response).To(Equal(actualLRP))
+
+					By("removing the evacuating ActualLRP")
+					err = client.RemoveEvacuatingActualLRP(logger, &key, &newInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
+
+					Eventually(func() models.Event {
+						Eventually(eventChannel).Should(Receive(&event))
+						return event
+					}).Should(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+
+					actualLRPRemovedEvent = event.(*models.ActualLRPRemovedEvent)
+					response = actualLRPRemovedEvent.ActualLrpGroup.GetEvacuating()
+					Expect(*response).To(Equal(evacuatingLRP))
+				})
+			})
+
+			Context("With cell-id filtering", func() {
+				var (
+					actualLRPGroup *models.ActualLRPGroup
+					err            error
+					event          models.Event
+				)
+
+				BeforeEach(func() {
+					cellID = "cell-id"
+				})
+
+				JustBeforeEach(func() {
+					err = client.DesireLRP(logger, desiredLRP)
+					Expect(err).NotTo(HaveOccurred())
+
+					desiredLRP, err := client.DesiredLRPByProcessGuid(logger, desiredLRP.ProcessGuid)
+					Expect(err).NotTo(HaveOccurred())
+
 					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
 
-				actualLRPCreatedEvent := event.(*models.ActualLRPCreatedEvent)
-				Expect(actualLRPCreatedEvent.ActualLrpGroup).To(Equal(actualLRPGroup))
+					desiredLRPCreatedEvent, ok := event.(*models.DesiredLRPCreatedEvent)
+					Expect(ok).To(BeTrue())
 
-				By("updating the existing ActualLRP")
-				err = client.ClaimActualLRP(logger, processGuid, int(key.Index), &instanceKey)
-				Expect(err).NotTo(HaveOccurred())
+					Expect(desiredLRPCreatedEvent.DesiredLrp).To(Equal(desiredLRP))
 
-				before := actualLRPGroup
-				actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-				Expect(err).NotTo(HaveOccurred())
+					actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(eventChannel).ShouldNot(Receive())
+				})
 
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+				Context("when subscribed to events for a spcific cell", func() {
+					It("receives only events from the filtered cell", func() {
+						By("updating the existing ActualLRP")
+						err = client.ClaimActualLRP(logger, processGuid, int(key.Index), &instanceKey)
+						Expect(err).NotTo(HaveOccurred())
 
-				actualLRPChangedEvent := event.(*models.ActualLRPChangedEvent)
-				Expect(actualLRPChangedEvent.Before).To(Equal(before))
-				Expect(actualLRPChangedEvent.After).To(Equal(actualLRPGroup))
+						before := actualLRPGroup
+						actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+						Expect(err).NotTo(HaveOccurred())
 
-				By("evacuating the ActualLRP")
-				initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
-				_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, 0)
-				Expect(err).NotTo(HaveOccurred())
-				auctioneerRequests := auctioneerServer.ReceivedRequests()
-				Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
-				request := auctioneerRequests[len(auctioneerRequests)-1]
-				Expect(request.Method).To(Equal("POST"))
-				Expect(request.RequestURI).To(Equal("/v1/lrps"))
+						Eventually(func() models.Event {
+							Eventually(eventChannel).Should(Receive(&event))
+							return event
+						}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
-				evacuatingLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-				Expect(err).NotTo(HaveOccurred())
-				evacuatingLRP := *evacuatingLRPGroup.GetEvacuating()
+						actualLRPChangedEvent := event.(*models.ActualLRPChangedEvent)
+						Expect(actualLRPChangedEvent.Before).To(Equal(before))
+						Expect(actualLRPChangedEvent.After).To(Equal(actualLRPGroup))
+						Expect(actualLRPGroup.GetInstance().GetCellId()).To(Equal(cellID))
 
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						By("removing the instance ActualLRP")
+						err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), &instanceKey)
+						Expect(err).NotTo(HaveOccurred())
 
-				actualLRPCreatedEvent = event.(*models.ActualLRPCreatedEvent)
-				response := actualLRPCreatedEvent.ActualLrpGroup.GetEvacuating()
-				Expect(*response).To(Equal(evacuatingLRP))
+						Eventually(func() models.Event {
+							Eventually(eventChannel).Should(Receive(&event))
+							return event
+						}).Should(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
 
-				// discard instance -> UNCLAIMED
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+						actualLRPRemovedEvent := event.(*models.ActualLRPRemovedEvent)
+						response := actualLRPRemovedEvent.ActualLrpGroup.GetInstance()
+						Expect(response).To(Equal(actualLRPGroup.GetInstance()))
+						Expect(actualLRPGroup.GetInstance().GetCellId()).To(Equal(cellID))
+					})
 
-				By("starting and then evacuating the ActualLRP on another cell")
-				err = client.StartActualLRP(logger, &key, &newInstanceKey, &netInfo)
-				Expect(err).NotTo(HaveOccurred())
+					It("does not receive events from the other cells", func() {
+						By("updating the existing ActualLRP")
+						err = client.ClaimActualLRP(logger, processGuid, int(key.Index), &newInstanceKey)
+						Expect(err).NotTo(HaveOccurred())
 
-				// discard instance -> RUNNING
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+						Consistently(eventChannel).ShouldNot(Receive())
 
-				initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
-				_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, 0)
-				Expect(err).NotTo(HaveOccurred())
-				auctioneerRequests = auctioneerServer.ReceivedRequests()
-				Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
-				request = auctioneerRequests[len(auctioneerRequests)-1]
-				Expect(request.Method).To(Equal("POST"))
-				Expect(request.RequestURI).To(Equal("/v1/lrps"))
-
-				evacuatingLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, desiredLRP.ProcessGuid, 0)
-				Expect(err).NotTo(HaveOccurred())
-				evacuatingLRP = *evacuatingLRPGroup.GetEvacuating()
-
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
-
-				actualLRPCreatedEvent = event.(*models.ActualLRPCreatedEvent)
-				response = actualLRPCreatedEvent.ActualLrpGroup.GetEvacuating()
-				Expect(*response).To(Equal(evacuatingLRP))
-
-				// discard instance -> UNCLAIMED
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
-
-				By("removing the instance ActualLRP")
-				actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, desiredLRP.ProcessGuid, 0)
-				Expect(err).NotTo(HaveOccurred())
-				actualLRP := *actualLRPGroup.GetInstance()
-
-				err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), nil)
-				Expect(err).NotTo(HaveOccurred())
-
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
-
-				actualLRPRemovedEvent := event.(*models.ActualLRPRemovedEvent)
-				response = actualLRPRemovedEvent.ActualLrpGroup.GetInstance()
-				Expect(*response).To(Equal(actualLRP))
-
-				By("removing the evacuating ActualLRP")
-				err = client.RemoveEvacuatingActualLRP(logger, &key, &newInstanceKey)
-				Expect(err).NotTo(HaveOccurred())
-
-				Eventually(func() models.Event {
-					Eventually(eventChannel).Should(Receive(&event))
-					return event
-				}).Should(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
-
-				actualLRPRemovedEvent = event.(*models.ActualLRPRemovedEvent)
-				response = actualLRPRemovedEvent.ActualLrpGroup.GetEvacuating()
-				Expect(*response).To(Equal(evacuatingLRP))
+						err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), &newInstanceKey)
+						Expect(err).NotTo(HaveOccurred())
+						Consistently(eventChannel).ShouldNot(Receive())
+					})
+				})
 			})
 		})
 

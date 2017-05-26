@@ -99,6 +99,7 @@
 		DesiredLRPChangedEvent
 		DesiredLRPRemovedEvent
 		ActualLRPCrashedEvent
+		EventsByCellId
 		ConvergeLRPsResponse
 		ModificationTag
 		Network

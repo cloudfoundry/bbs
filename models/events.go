@@ -150,3 +150,7 @@ func (event *ActualLRPCreatedEvent) Key() string {
 	actualLRP, _ := event.ActualLrpGroup.Resolve()
 	return actualLRP.GetInstanceGuid()
 }
+
+func (request *EventsByCellId) Validate() error {
+	return nil
+}
