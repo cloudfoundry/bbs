@@ -180,7 +180,7 @@ var _ = Describe("Event Handlers", func() {
 				ItStreamsEventsFromHub(&actualHub)
 			})
 
-			FContext("when cell id is specified", func() {
+			Context("when cell id is specified", func() {
 				var (
 					reader                       *sse.ReadCloser
 					requestBody                  interface{}
@@ -230,18 +230,7 @@ var _ = Describe("Event Handlers", func() {
 
 					actualHub.Emit(expectedActualLRPAfterEvent)
 
-					eventsCh = make(chan models.Event)
-					go func() {
-						defer close(eventsCh)
-
-						for {
-							ev, err := eventSource.Next()
-							if err != nil {
-								return
-							}
-							eventsCh <- ev
-						}
-					}()
+					eventsCh = streamEvents(eventSource)
 				})
 
 				Context("subscriber with the right filter", func() {
@@ -280,3 +269,20 @@ var _ = Describe("Event Handlers", func() {
 	})
 
 })
+
+func streamEvents(eventSource events.EventSource) chan models.Event {
+	eventChannel := make(chan models.Event)
+
+	go func() {
+		for {
+			event, err := eventSource.Next()
+			if err != nil {
+				close(eventChannel)
+				return
+			}
+			eventChannel <- event
+		}
+	}()
+
+	return eventChannel
+}
