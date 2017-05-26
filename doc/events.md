@@ -7,7 +7,7 @@ to those events as well as the type of events supported by the BBS.
 ## Subscribing to events
 
 You can use the `SubscribeToEvents(logger lager.Logger) (events.EventSource,
-error)` client method to subscribe to events. For example:
+error)` client method to subscribe to all events. For example:
 
 ``` go
 client := bbs.NewClient(url)
@@ -17,7 +17,27 @@ if err != nil {
 }
 ```
 
-You can then loop through the events by calling
+Alternatively you can use the `SubscribeToEventsByCellID` client method to subscribe to events that are relevant to the given cell. For example:
+
+``` go
+client := bbs.NewClient(url)
+eventSource, err := client.SubscribeToEventsByCellID(logger, "some-cell-id")
+if err != nil {
+    log.Printf("failed to subscribe to events: " + err.Error())
+}
+```
+
+Events relevant to the cell are defined as:
+
+1. `ActualLRPCreatedEvent` that is running on that cell
+2. `ActualLRPRemovedEvent` that used to run on that cell
+3. `ActualLRPChangedEvent` that used to/started running on that cell
+4. `ActualLRPCrashedEvent` that used to run on that cell
+
+
+### Using the event source
+
+Once an `EventSource` is created, you can then loop through the events by calling
 [Next](https://godoc.org/code.cloudfoundry.org/bbs/events#EventSource) in a
 loop, for example:
 
