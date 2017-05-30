@@ -80,6 +80,10 @@ var _ = Describe("ActualLRP API", func() {
 		getErr error
 	)
 
+	BeforeEach(func() {
+		filter = models.ActualLRPFilter{}
+	})
+
 	JustBeforeEach(func() {
 		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
