@@ -73,17 +73,21 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 func filterByCellID(cellID string, bbsEvent models.Event, err error) bool {
 	switch x := bbsEvent.(type) {
 	case *models.ActualLRPCreatedEvent:
-		if x.ActualLrpGroup.Instance.ActualLRPInstanceKey.CellId != cellID {
+		lrp, _ := x.ActualLrpGroup.Resolve()
+		if lrp.CellId != cellID {
 			return false
 		}
 
 	case *models.ActualLRPChangedEvent:
-		if x.After.Instance.ActualLRPInstanceKey.CellId != cellID && x.Before.Instance.ActualLRPInstanceKey.CellId != cellID {
+		beforeLRP, _ := x.Before.Resolve()
+		afterLRP, _ := x.After.Resolve()
+		if afterLRP.CellId != cellID && beforeLRP.CellId != cellID {
 			return false
 		}
 
 	case *models.ActualLRPRemovedEvent:
-		if x.ActualLrpGroup.Instance.ActualLRPInstanceKey.CellId != cellID {
+		lrp, _ := x.ActualLrpGroup.Resolve()
+		if lrp.CellId != cellID {
 			return false
 		}
 

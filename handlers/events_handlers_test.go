@@ -217,8 +217,7 @@ var _ = Describe("Event Handlers", func() {
 						expectedActualLRPAfterEvent  *models.ActualLRPChangedEvent
 					)
 
-					JustBeforeEach(func() {
-						By("sending actual lrp changed event")
+					BeforeEach(func() {
 						actualLRP := models.NewUnclaimedActualLRP(models.NewActualLRPKey("guid", 0, "some-domain"), 1)
 						actualLRPGroupBefore := models.NewRunningActualLRPGroup(actualLRP)
 
@@ -230,12 +229,14 @@ var _ = Describe("Event Handlers", func() {
 						actualLRPGroupAfter := models.NewRunningActualLRPGroup(actualLRP)
 						expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
 
-						actualHub.Emit(expectedActualLRPBeforeEvent)
-
 						actualLRP = models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
 						unclaimedActualLRPGroupAgain := models.NewRunningActualLRPGroup(actualLRP)
 						expectedActualLRPAfterEvent = models.NewActualLRPChangedEvent(actualLRPGroupAfter, unclaimedActualLRPGroupAgain)
+					})
 
+					JustBeforeEach(func() {
+						By("sending actual lrp changed event")
+						actualHub.Emit(expectedActualLRPBeforeEvent)
 						actualHub.Emit(expectedActualLRPAfterEvent)
 					})
 
@@ -244,6 +245,53 @@ var _ = Describe("Event Handlers", func() {
 							requestBody = &models.EventsByCellId{
 								CellId: cellId,
 							}
+						})
+
+						Context("and an LRP transitions to evacuating", func() {
+							BeforeEach(func() {
+								actualLRP := models.NewClaimedActualLRP(
+									models.NewActualLRPKey("some-guid", 0, "some-domain"),
+									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
+									1,
+								)
+								actualLRPGroupBefore := models.NewRunningActualLRPGroup(actualLRP)
+
+								actualLRP = models.NewClaimedActualLRP(
+									models.NewActualLRPKey("some-guid", 0, "some-domain"),
+									models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
+									1,
+								)
+								actualLRPGroupAfter := models.NewEvacuatingActualLRPGroup(actualLRP)
+
+								expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
+							})
+
+							It("receives changed events if the lrp is running on the cell", func() {
+								Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
+							})
+						})
+
+						Context("and an evacuating LRP leaves the cell", func() {
+							BeforeEach(func() {
+								actualLRP := models.NewClaimedActualLRP(
+									models.NewActualLRPKey("some-guid", 0, "some-domain"),
+									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
+									1,
+								)
+								actualLRPGroupBefore := models.NewEvacuatingActualLRPGroup(actualLRP)
+
+								actualLRP = models.NewClaimedActualLRP(
+									models.NewActualLRPKey("some-guid", 0, "some-domain"),
+									models.NewActualLRPInstanceKey("instance-guid-1", "another-cell-id"),
+									1,
+								)
+								actualLRPGroupAfter := models.NewRunningActualLRPGroup(actualLRP)
+								expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
+							})
+
+							It("receives changed events if the lrp used to run on the cell", func() {
+								Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
+							})
 						})
 
 						It("receives changed events if the lrp used to run on the cell", func() {
@@ -277,13 +325,16 @@ var _ = Describe("Event Handlers", func() {
 						expectedEvent *models.ActualLRPCreatedEvent
 					)
 
-					JustBeforeEach(func() {
+					BeforeEach(func() {
 						actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
 							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
 							1,
 						)
 						actualLRPGroup := models.NewRunningActualLRPGroup(actualLRP)
 						expectedEvent = models.NewActualLRPCreatedEvent(actualLRPGroup)
+					})
+
+					JustBeforeEach(func() {
 						actualHub.Emit(expectedEvent)
 					})
 
@@ -292,6 +343,21 @@ var _ = Describe("Event Handlers", func() {
 							requestBody = &models.EventsByCellId{
 								CellId: cellId,
 							}
+						})
+
+						Context("and the LRP is in an evacuating state", func() {
+							BeforeEach(func() {
+								actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
+									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
+									1,
+								)
+								actualLRPGroup := models.NewEvacuatingActualLRPGroup(actualLRP)
+								expectedEvent = models.NewActualLRPCreatedEvent(actualLRPGroup)
+							})
+
+							It("receives events from the filtered cell", func() {
+								Eventually(eventsCh).Should(Receive(Equal(expectedEvent)))
+							})
 						})
 
 						It("receives events from the filtered cell", func() {
@@ -317,13 +383,16 @@ var _ = Describe("Event Handlers", func() {
 						expectedEvent *models.ActualLRPRemovedEvent
 					)
 
-					JustBeforeEach(func() {
+					BeforeEach(func() {
 						actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
 							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
 							1,
 						)
 						actualLRPGroup := models.NewRunningActualLRPGroup(actualLRP)
 						expectedEvent = models.NewActualLRPRemovedEvent(actualLRPGroup)
+					})
+
+					JustBeforeEach(func() {
 						actualHub.Emit(expectedEvent)
 					})
 
@@ -332,6 +401,21 @@ var _ = Describe("Event Handlers", func() {
 							requestBody = &models.EventsByCellId{
 								CellId: cellId,
 							}
+						})
+
+						Context("and the LRP is in an evacuating state", func() {
+							BeforeEach(func() {
+								actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
+									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
+									1,
+								)
+								actualLRPGroup := models.NewEvacuatingActualLRPGroup(actualLRP)
+								expectedEvent = models.NewActualLRPRemovedEvent(actualLRPGroup)
+							})
+
+							It("receives events from the filtered cell", func() {
+								Eventually(eventsCh).Should(Receive(Equal(expectedEvent)))
+							})
 						})
 
 						It("receives events from the filtered cell", func() {

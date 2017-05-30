@@ -145,6 +145,12 @@ func NewRunningActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
 	}
 }
 
+func NewEvacuatingActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
+	return &ActualLRPGroup{
+		Evacuating: actualLRP,
+	}
+}
+
 func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
 	switch {
 	case group.Instance == nil && group.Evacuating == nil:
