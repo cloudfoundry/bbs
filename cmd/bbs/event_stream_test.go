@@ -337,10 +337,17 @@ var _ = Describe("Events API", func() {
 						claimLRP()
 
 						By("crashing the instance ActualLRP")
+						var event1, event2 models.Event
 						err = client.CrashActualLRP(logger, &key, &instanceKey, "booom!!")
 						Expect(err).NotTo(HaveOccurred())
-						Eventually(eventChannel).Should(Receive(BeAssignableToTypeOf(&models.ActualLRPCrashedEvent{})))
-						Eventually(eventChannel).Should(Receive(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{})))
+
+						Eventually(eventChannel).Should(Receive(&event1))
+						Eventually(eventChannel).Should(Receive(&event2))
+
+						Expect([]models.Event{event1, event2}).To(ConsistOf(
+							BeAssignableToTypeOf(&models.ActualLRPCrashedEvent{}),
+							BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}),
+						))
 
 						claimLRP()
 
