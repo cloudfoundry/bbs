@@ -22,43 +22,39 @@ import (
 
 var _ = Describe("Event Handlers", func() {
 	var (
-		logger     lager.Logger
-		desiredHub events.Hub
-		actualHub  events.Hub
-
-		handler         *handlers.EventHandler
-		eventStreamDone chan struct{}
-		server          *httptest.Server
+		logger lager.Logger
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		desiredHub = events.NewHub()
-		actualHub = events.NewHub()
-		handler = handlers.NewEventHandler(desiredHub, actualHub)
-
-		eventStreamDone = make(chan struct{})
 	})
 
-	AfterEach(func() {
-		desiredHub.Close()
-		actualHub.Close()
-		server.Close()
-	})
-
-	var ItStreamsEventsFromHub = func(hubRef *events.Hub) {
+	var ItStreamsEventsFromHub = func(hubRef *events.Hub, handlerRef **handlers.EventHandler) {
 		Describe("Streaming Events", func() {
-			var hub events.Hub
-			var response *http.Response
+			var (
+				hub      events.Hub
+				response *http.Response
+				server   *httptest.Server
+				handler  *handlers.EventHandler
+			)
 
 			BeforeEach(func() {
 				hub = *hubRef
+				handler = *handlerRef
+
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handler.Subscribe_r0(logger, w, r)
+				}))
 			})
 
 			JustBeforeEach(func() {
 				var err error
 				response, err = http.Get(server.URL)
 				Expect(err).NotTo(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				server.Close()
 			})
 
 			Context("when failing to subscribe to the event hub", func() {
@@ -97,7 +93,6 @@ var _ = Describe("Event Handlers", func() {
 				It("returns Content-Type as text/event-stream", func() {
 					Expect(response.Header.Get("Content-Type")).To(Equal("text/event-stream; charset=utf-8"))
 					Expect(response.Header.Get("Cache-Control")).To(Equal("no-cache, no-store, must-revalidate"))
-					Expect(response.Header.Get("Connection")).To(Equal("keep-alive"))
 				})
 
 				Context("when the source provides an unmarshalable event", func() {
@@ -123,6 +118,17 @@ var _ = Describe("Event Handlers", func() {
 				})
 
 				Context("when the client closes the response body", func() {
+					var eventStreamDone chan struct{}
+
+					BeforeEach(func() {
+						eventStreamDone = make(chan struct{})
+
+						server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+							handler.Subscribe_r0(logger, w, r)
+							close(eventStreamDone)
+						}))
+					})
+
 					It("returns early", func() {
 						reader := sse.NewReadCloser(response.Body)
 						hub.Emit(eventfakes.FakeEvent{Token: "A"})
@@ -136,18 +142,32 @@ var _ = Describe("Event Handlers", func() {
 	}
 
 	Describe("Subscribe_r0", func() {
+		var (
+			handler    *handlers.EventHandler
+			desiredHub events.Hub
+			actualHub  events.Hub
+		)
+
+		BeforeEach(func() {
+			desiredHub = events.NewHub()
+			actualHub = events.NewHub()
+			handler = handlers.NewEventHandler(desiredHub, actualHub)
+		})
+
+		AfterEach(func() {
+			desiredHub.Close()
+			actualHub.Close()
+		})
 
 		Describe("Subscribe to Desired Events", func() {
-			BeforeEach(func() {
-				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					handler.Subscribe_r0(logger, w, r)
-					close(eventStreamDone)
-				}))
-			})
 
-			ItStreamsEventsFromHub(&desiredHub)
+			ItStreamsEventsFromHub(&desiredHub, &handler)
 
 			It("migrates desired lrps down to v0", func() {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handler.Subscribe_r0(logger, w, r)
+				}))
+
 				response, err := http.Get(server.URL)
 				Expect(err).NotTo(HaveOccurred())
 				reader := sse.NewReadCloser(response.Body)
@@ -165,19 +185,14 @@ var _ = Describe("Event Handlers", func() {
 				actualEvent, err := events.Next()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualEvent).To(Equal(migratedEvent))
+
+				server.Close()
 			})
 		})
 
 		Describe("Subscribe to Actual Events", func() {
 			Context("when cell id not specified", func() {
-				BeforeEach(func() {
-					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						handler.Subscribe_r0(logger, w, r)
-						close(eventStreamDone)
-					}))
-				})
-
-				ItStreamsEventsFromHub(&actualHub)
+				ItStreamsEventsFromHub(&actualHub, &handler)
 			})
 
 			Context("when cell id is specified", func() {
@@ -187,10 +202,15 @@ var _ = Describe("Event Handlers", func() {
 					cellId      = "cell-id"
 					eventSource events.EventSource
 					eventsCh    chan models.Event
+					server      *httptest.Server
 				)
 
 				BeforeEach(func() {
 					requestBody = nil
+				})
+
+				AfterEach(func() {
+					server.Close()
 				})
 
 				JustBeforeEach(func() {
@@ -198,7 +218,6 @@ var _ = Describe("Event Handlers", func() {
 					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						request := newTestRequest(requestBody)
 						handler.Subscribe_r0(logger, w, request)
-						close(eventStreamDone)
 					}))
 
 					By("starting server")
