@@ -41,6 +41,7 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 	}()
 
 	if err := rw.Flush(); err != nil {
+		logger.Error("failed-to-flush", err)
 		return
 	}
 
@@ -55,6 +56,7 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 			logger.Error("failed-to-get-next-event", err)
 			return
 		case <-closeNotifier:
+			logger.Debug("received-close-notify")
 			return
 		}
 
@@ -66,6 +68,7 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 
 		err = sseEvent.Write(conn)
 		if err != nil {
+			logger.Error("failed-to-write-event", err)
 			return
 		}
 

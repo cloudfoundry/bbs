@@ -29,26 +29,64 @@ var _ = Describe("Event Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 	})
 
+	var ItRecoversFromLostConnections = func(hubRef *events.Hub, handlerRef **handlers.EventHandler) {
+		Describe("When the client connection is lost", func() {
+			var (
+				hub             events.Hub
+				response        *http.Response
+				server          *httptest.Server
+				err             error
+				eventStreamDone chan struct{}
+			)
+
+			BeforeEach(func() {
+				eventStreamDone = make(chan struct{})
+				hub = *hubRef
+				handler := *handlerRef
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handler.Subscribe_r0(logger, w, r)
+					close(eventStreamDone)
+				}))
+				response, err = http.Get(server.URL)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				server.Close()
+			})
+
+			It("returns early", func() {
+				reader := sse.NewReadCloser(response.Body)
+				err := reader.Close()
+				Expect(err).NotTo(HaveOccurred())
+				go func() {
+					for {
+						hub.Emit(eventfakes.FakeEvent{Token: "A"})
+					}
+				}()
+				Eventually(eventStreamDone, 10).Should(BeClosed())
+			})
+		})
+	}
+
 	var ItStreamsEventsFromHub = func(hubRef *events.Hub, handlerRef **handlers.EventHandler) {
 		Describe("Streaming Events", func() {
 			var (
 				hub      events.Hub
 				response *http.Response
 				server   *httptest.Server
-				handler  *handlers.EventHandler
+				err      error
 			)
 
 			BeforeEach(func() {
 				hub = *hubRef
-				handler = *handlerRef
-
-				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					handler.Subscribe_r0(logger, w, r)
-				}))
 			})
 
 			JustBeforeEach(func() {
-				var err error
+				handler := *handlerRef
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handler.Subscribe_r0(logger, w, r)
+				}))
 				response, err = http.Get(server.URL)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -106,7 +144,7 @@ var _ = Describe("Event Handlers", func() {
 				})
 
 				Context("when the event source returns an error", func() {
-					BeforeEach(func() {
+					JustBeforeEach(func() {
 						hub.Close()
 					})
 
@@ -116,42 +154,25 @@ var _ = Describe("Event Handlers", func() {
 						Expect(err).To(Equal(io.EOF))
 					})
 				})
-
-				Context("when the client closes the response body", func() {
-					var eventStreamDone chan struct{}
-
-					BeforeEach(func() {
-						eventStreamDone = make(chan struct{})
-
-						server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-							handler.Subscribe_r0(logger, w, r)
-							close(eventStreamDone)
-						}))
-					})
-
-					It("returns early", func() {
-						reader := sse.NewReadCloser(response.Body)
-						hub.Emit(eventfakes.FakeEvent{Token: "A"})
-						err := reader.Close()
-						Expect(err).NotTo(HaveOccurred())
-						Eventually(eventStreamDone, 10).Should(BeClosed())
-					})
-				})
 			})
 		})
 	}
 
 	Describe("Subscribe_r0", func() {
 		var (
-			handler    *handlers.EventHandler
-			desiredHub events.Hub
-			actualHub  events.Hub
+			handler         *handlers.EventHandler
+			desiredHub      events.Hub
+			actualHub       events.Hub
+			eventStreamDone chan struct{}
 		)
 
 		BeforeEach(func() {
 			desiredHub = events.NewHub()
 			actualHub = events.NewHub()
 			handler = handlers.NewEventHandler(desiredHub, actualHub)
+
+			eventStreamDone = make(chan struct{})
+
 		})
 
 		AfterEach(func() {
@@ -162,6 +183,7 @@ var _ = Describe("Event Handlers", func() {
 		Describe("Subscribe to Desired Events", func() {
 
 			ItStreamsEventsFromHub(&desiredHub, &handler)
+			ItRecoversFromLostConnections(&desiredHub, &handler)
 
 			It("migrates desired lrps down to v0", func() {
 				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -193,6 +215,7 @@ var _ = Describe("Event Handlers", func() {
 		Describe("Subscribe to Actual Events", func() {
 			Context("when cell id not specified", func() {
 				ItStreamsEventsFromHub(&actualHub, &handler)
+				ItRecoversFromLostConnections(&actualHub, &handler)
 			})
 
 			Context("when cell id is specified", func() {
