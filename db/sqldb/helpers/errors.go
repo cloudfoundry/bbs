@@ -47,8 +47,6 @@ func (h *sqlHelper) convertMySQLError(err *mysql.MySQLError) error {
 	default:
 		return ErrUnknownError
 	}
-
-	return nil
 }
 
 func (h *sqlHelper) convertPostgresError(err *pq.Error) error {
