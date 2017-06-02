@@ -53,7 +53,7 @@ var _ = Describe("Domain API", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			timeout := time.After(50 * time.Millisecond)
-			var delta uint64
+			var total uint64
 		OUTER_LOOP:
 			for {
 				select {
@@ -61,8 +61,7 @@ var _ = Describe("Domain API", func() {
 					if envelope.GetEventType() == events.Envelope_CounterEvent {
 						counter := envelope.CounterEvent
 						if *counter.Name == "RequestCount" {
-							delta = *counter.Delta
-							break OUTER_LOOP
+							total += *counter.Delta
 						}
 					}
 				case <-timeout:
@@ -70,7 +69,7 @@ var _ = Describe("Domain API", func() {
 				}
 			}
 
-			Expect(delta).To(BeEquivalentTo(1))
+			Expect(total).To(BeEquivalentTo(2))
 		})
 
 		It("updates the TTL when updating an existing domain", func() {

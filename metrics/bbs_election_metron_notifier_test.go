@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/metrics"
-	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
@@ -15,15 +14,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// a bit of grace time for eventuallys
-const aBit = 50 * time.Millisecond
-
-var _ = Describe("PeriodicMetronNotifier", func() {
+var _ = Describe("BBSElectionMetronNotifier", func() {
 	var (
 		sender *fake.FakeMetricSender
 
 		reportInterval time.Duration
-		fakeClock      *fakeclock.FakeClock
 
 		pmn ifrit.Process
 	)
@@ -31,14 +26,12 @@ var _ = Describe("PeriodicMetronNotifier", func() {
 	BeforeEach(func() {
 		reportInterval = 100 * time.Millisecond
 
-		fakeClock = fakeclock.NewFakeClock(time.Unix(123, 456))
-
 		sender = fake.NewFakeMetricSender()
 		dropsonde_metrics.Initialize(sender, nil)
 	})
 
 	JustBeforeEach(func() {
-		pmn = ifrit.Invoke(metrics.NewPeriodicMetronNotifier(lagertest.NewTestLogger("test")))
+		pmn = ifrit.Invoke(metrics.NewBBSElectionMetronNotifier(lagertest.NewTestLogger("test")))
 	})
 
 	AfterEach(func() {

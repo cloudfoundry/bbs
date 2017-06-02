@@ -287,11 +287,15 @@ func main() {
 	cellPresenceClient := maintain.NewCellPresenceClient(consulClient, clock)
 	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
 
+	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
+	requestCountMetronNotifier := metrics.NewRequestCountMetronNotifier(logger, metricsTicker)
+
 	handler := handlers.New(
 		logger,
 		accessLogger,
 		bbsConfig.UpdateWorkers,
 		bbsConfig.ConvergenceWorkers,
+		requestCountMetronNotifier,
 		activeDB,
 		desiredHub,
 		actualHub,
@@ -303,7 +307,7 @@ func main() {
 		exitChan,
 	)
 
-	metricsNotifier := metrics.NewPeriodicMetronNotifier(logger)
+	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger)
 
 	actualLRPController := controllers.NewActualLRPLifecycleController(activeDB, activeDB, activeDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
 	lrpConvergenceController := controllers.NewLRPConvergenceController(logger,
@@ -345,7 +349,8 @@ func main() {
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
-		{"metrics", *metricsNotifier},
+		{"bbs-election-metrics", bbsElectionMetronNotifier},
+		{"periodic-metrics", requestCountMetronNotifier},
 		{"converger", convergerProcess},
 		{"registration-runner", registrationRunner},
 	}

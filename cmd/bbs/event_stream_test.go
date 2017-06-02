@@ -406,7 +406,7 @@ var _ = Describe("Events API", func() {
 			eventSource.Close()
 
 			timeout := time.After(50 * time.Millisecond)
-			var delta uint64
+			var total uint64
 		OUTER_LOOP:
 			for {
 				select {
@@ -414,8 +414,7 @@ var _ = Describe("Events API", func() {
 					if envelope.GetEventType() == sonde_events.Envelope_CounterEvent {
 						counter := envelope.CounterEvent
 						if *counter.Name == "RequestCount" {
-							delta = *counter.Delta
-							break OUTER_LOOP
+							total += *counter.Delta
 						}
 					}
 				case <-timeout:
@@ -423,7 +422,7 @@ var _ = Describe("Events API", func() {
 				}
 			}
 
-			Expect(delta).To(BeEquivalentTo(1))
+			Expect(total).To(BeEquivalentTo(3))
 		})
 	})
 

@@ -24,6 +24,7 @@ func New(
 	logger, accessLogger lager.Logger,
 	updateWorkers int,
 	convergenceWorkersSize int,
+	countEmitter middleware.Emitter,
 	db db.DB,
 	desiredHub, actualHub events.Hub,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
@@ -121,10 +122,11 @@ func New(
 		panic("unable to create router: " + err.Error())
 	}
 
-	return middleware.RequestCountWrap(
+	return middleware.RequestCountWrapWithCustomEmitter(
 		UnavailableWrap(handler,
 			migrationsDone,
 		),
+		countEmitter,
 	)
 }
 

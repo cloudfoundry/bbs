@@ -73,9 +73,25 @@ func (l LatencyEmitter) EmitLatency(f http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+//go:generate counterfeiter -o fakes/fake_emitter.go . Emitter
+type Emitter interface {
+	IncrementCounter(delta int)
+}
+
+type defaultEmitter struct {
+}
+
+func (e *defaultEmitter) IncrementCounter(delta int) {
+	requestCount.Increment()
+}
+
 func RequestCountWrap(handler http.Handler) http.HandlerFunc {
+	return RequestCountWrapWithCustomEmitter(handler, &defaultEmitter{})
+}
+
+func RequestCountWrapWithCustomEmitter(handler http.Handler, emitter Emitter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		requestCount.Increment()
+		emitter.IncrementCounter(1)
 		handler.ServeHTTP(w, r)
 	}
 }
