@@ -39,6 +39,8 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	_, err = m.db.Exec(fmt.Sprintf("CREATE DATABASE %s", m.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 
+	Expect(m.db.Close()).To(Succeed())
+
 	m.db, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/%s", m.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).NotTo(HaveOccurred())

@@ -39,6 +39,8 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	_, err = p.db.Exec(fmt.Sprintf("CREATE DATABASE %s", p.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 
+	Expect(p.db.Close()).To(Succeed())
+
 	p.db, err = sql.Open("postgres", fmt.Sprintf("postgres://diego:diego_pw@localhost/%s", p.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(p.db.Ping()).NotTo(HaveOccurred())
