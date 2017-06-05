@@ -31,7 +31,7 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	var err error
 	m.db, err = sql.Open("mysql", "diego:diego_password@/")
 	Expect(err).NotTo(HaveOccurred())
-	Expect(m.db.Ping()).NotTo(HaveOccurred())
+	Expect(m.db.Ping()).To(Succeed())
 
 	_, err = m.db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", m.sqlDBName))
 	Expect(err).NotTo(HaveOccurred())
