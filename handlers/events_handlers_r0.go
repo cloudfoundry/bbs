@@ -18,6 +18,8 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 		return
 	}
 
+	logger.Info("subscribed-to-event-stream", lager.Data{"cell_id": request.CellId})
+
 	desiredSource, err := h.desiredHub.Subscribe()
 	if err != nil {
 		logger.Error("failed-to-subscribe-to-desired-event-hub", err)
