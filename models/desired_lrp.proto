@@ -11,6 +11,7 @@ import "modification_tag.proto";
 import "network.proto";
 import "security_group.proto";
 import "volume_mount.proto";
+import "check_definition.proto";
 
 message DesiredLRPSchedulingInfo {
   optional DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
@@ -56,6 +57,8 @@ message DesiredLRPRunInfo {
 
   optional string image_username = 21 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_username,omitempty"];
   optional string image_password = 22 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_password,omitempty"];
+
+  optional CheckDefinition check_definition = 23 [(gogoproto.jsontag) = "check_definition,omitempty"];
 }
 
 // helper message for marshalling routes
@@ -119,4 +122,6 @@ message DesiredLRP {
 
   optional string image_username = 31 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_username,omitempty"];
   optional string image_password = 32 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_password,omitempty"];
+
+  optional CheckDefinition check_definition = 33 [(gogoproto.jsontag) = "check_definition,omitempty"];
 }

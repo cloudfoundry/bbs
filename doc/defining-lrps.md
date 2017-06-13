@@ -77,6 +77,17 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 		},
 	},
 	PlacementTags: []string{"example-tag", "example-tag-2"},
+	CheckDefinition: &models.CheckDefinition{
+		Checks: []*models.Check{
+			{
+				HttpCheck: &models.HTTPCheck{
+					Port:             12345,
+					RequestTimeoutMs: 100,
+					Path:             "/some/path",
+				},
+			},
+		},
+	}
 })
 ```
 
@@ -252,6 +263,40 @@ For more details on the available actions see [actions](actions.md).
 After completing any `Setup` action, Diego will launch the `Action` action.
 This `Action` is intended to launch any long-running processes.
 For more details on the available actions see [actions](actions.md).
+
+##### `CheckDefinition` [optional] [experiemental]
+
+If provided, Diego will use the given checks to monitor the health of the long-running process. **note** this is still an experimental feature
+
+###### `Checks` [repeated]
+
+A list of health checks. Each healthcheck can be either a `TCPCheck` or `HTTPCheck`. It is an error to have both set.
+
+###### `HTTPCheck`
+
+Defines an http health check.
+
+- The `Port` must be a nonzero value and no greater than 65535.
+- `RequestTimeoutMs` is the timeout in ms for the entire http request (includes tcp connection establish time, sending request and receiving the response).
+- `Path` is the http request path used to in the http request.
+
+`HTTPCheck` can fail for the following reaosons:
+
+1. a connection cannot be established to the given port
+2. a timeout error is encountered before the response body is received
+3. a non-200 status code is received
+
+###### `TCPCheck`
+
+A TCP health check.
+
+- The `Port` must be a nonzero value and no greater than 65535.
+- `ConnectTimeoutMs` is the timeout in ms for establishing the TCP connection.
+
+`TCPCheck` can fail for the following reaosons:
+
+1. a connection cannot be established to the given port
+2. a timeout error is encountered while establishing the tcp connection
 
 ##### `Monitor` [optional]
 

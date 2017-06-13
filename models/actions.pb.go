@@ -12,6 +12,7 @@
 		cached_dependency.proto
 		cells.proto
 		certificate_properties.proto
+		check_definition.proto
 		desired_lrp.proto
 		desired_lrp_requests.proto
 		domain.proto
@@ -64,6 +65,10 @@
 		Provider
 		CellsResponse
 		CertificateProperties
+		CheckDefinition
+		Check
+		TCPCheck
+		HTTPCheck
 		DesiredLRPSchedulingInfo
 		DesiredLRPRunInfo
 		ProtoRoutes
