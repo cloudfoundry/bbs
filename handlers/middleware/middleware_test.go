@@ -17,30 +17,6 @@ import (
 )
 
 var _ = Describe("Middleware", func() {
-	Describe("EmitLatency", func() {
-		var (
-			sender  *fake.FakeMetricSender
-			handler http.HandlerFunc
-		)
-
-		BeforeEach(func() {
-			sender = fake.NewFakeMetricSender()
-			dropsonde_metrics.Initialize(sender, nil)
-			logger := lager.NewLogger("test-session")
-
-			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
-			handler = middleware.NewLatencyEmitter(logger).EmitLatency(handler)
-		})
-
-		It("reports latency", func() {
-			handler.ServeHTTP(nil, nil)
-
-			latency := sender.GetValue("RequestLatency")
-			Expect(latency.Value).NotTo(BeZero())
-			Expect(latency.Unit).To(Equal("nanos"))
-		})
-	})
-
 	Describe("RequestCountWrapWithCustomEmitter", func() {
 		var (
 			handler http.HandlerFunc

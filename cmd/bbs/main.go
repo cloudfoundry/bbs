@@ -288,7 +288,7 @@ func main() {
 	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
 
 	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
-	requestCountMetronNotifier := metrics.NewRequestCountMetronNotifier(logger, metricsTicker)
+	requestCountMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker)
 
 	handler := handlers.New(
 		logger,

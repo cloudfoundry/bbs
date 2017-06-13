@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	requestLatency = metric.Duration("RequestLatency")
-	requestCount   = metric.Counter("RequestCount")
+	RequestLatency = metric.Duration("RequestLatency")
+	RequestCount   = metric.Counter("RequestCount")
 )
 
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)
@@ -52,37 +52,36 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 	}
 }
 
-func NewLatencyEmitter(logger lager.Logger) LatencyEmitter {
-	return LatencyEmitter{
-		logger: logger,
-	}
+func NewLatencyEmitterWrapper(emitter Emitter) LatencyEmitterWrapper {
+	return LatencyEmitterWrapper{emitter: emitter}
 }
 
-type LatencyEmitter struct {
-	logger lager.Logger
+type LatencyEmitterWrapper struct {
+	emitter Emitter
 }
 
-func (l LatencyEmitter) EmitLatency(f http.HandlerFunc) http.HandlerFunc {
+func (l LatencyEmitterWrapper) RecordLatency(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		f(w, r)
-		err := requestLatency.Send(time.Since(startTime))
-		if err != nil {
-			l.logger.Error("failed-to-send-request-latency-metric", err)
-		}
+		l.emitter.UpdateLatency(time.Since(startTime))
 	}
 }
 
 //go:generate counterfeiter -o fakes/fake_emitter.go . Emitter
 type Emitter interface {
 	IncrementCounter(delta int)
+	UpdateLatency(latency time.Duration)
 }
 
 type defaultEmitter struct {
 }
 
 func (e *defaultEmitter) IncrementCounter(delta int) {
-	requestCount.Increment()
+	RequestCount.Increment()
+}
+
+func (e *defaultEmitter) UpdateLatency(latency time.Duration) {
 }
 
 func RequestCountWrap(handler http.Handler) http.HandlerFunc {

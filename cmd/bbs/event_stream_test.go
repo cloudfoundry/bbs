@@ -216,6 +216,7 @@ var _ = Describe("Events API", func() {
 
 					By("starting and then evacuating the ActualLRP on another cell")
 					err = client.StartActualLRP(logger, &key, &newInstanceKey, &netInfo)
+
 					Expect(err).NotTo(HaveOccurred())
 
 					// discard instance -> RUNNING

@@ -160,19 +160,15 @@ var _ = Describe("Event Handlers", func() {
 
 	Describe("Subscribe_r0", func() {
 		var (
-			handler         *handlers.EventHandler
-			desiredHub      events.Hub
-			actualHub       events.Hub
-			eventStreamDone chan struct{}
+			handler    *handlers.EventHandler
+			desiredHub events.Hub
+			actualHub  events.Hub
 		)
 
 		BeforeEach(func() {
 			desiredHub = events.NewHub()
 			actualHub = events.NewHub()
 			handler = handlers.NewEventHandler(desiredHub, actualHub)
-
-			eventStreamDone = make(chan struct{})
-
 		})
 
 		AfterEach(func() {
