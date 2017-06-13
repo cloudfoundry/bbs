@@ -288,14 +288,14 @@ func main() {
 	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
 
 	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
-	requestCountMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker)
+	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker)
 
 	handler := handlers.New(
 		logger,
 		accessLogger,
 		bbsConfig.UpdateWorkers,
 		bbsConfig.ConvergenceWorkers,
-		requestCountMetronNotifier,
+		requestStatMetronNotifier,
 		activeDB,
 		desiredHub,
 		actualHub,
@@ -350,7 +350,7 @@ func main() {
 		{"encryptor", encryptor},
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
-		{"periodic-metrics", requestCountMetronNotifier},
+		{"periodic-metrics", requestStatMetronNotifier},
 		{"converger", convergerProcess},
 		{"registration-runner", registrationRunner},
 	}
