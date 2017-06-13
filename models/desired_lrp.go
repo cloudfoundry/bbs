@@ -72,6 +72,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		CertificateProperties:         runInfo.CertificateProperties,
 		ImageUsername:                 runInfo.ImageUsername,
 		ImagePassword:                 runInfo.ImagePassword,
+		CheckDefinition:               runInfo.CheckDefinition,
 	}
 }
 
@@ -102,6 +103,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.TrustedSystemCertificatesPath = runInfo.TrustedSystemCertificatesPath
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
 	desiredLRP.Network = runInfo.Network
+	desiredLRP.CheckDefinition = runInfo.CheckDefinition
 }
 
 func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLRP {
@@ -194,6 +196,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	for i := range d.EgressRules {
 		egressRules[i] = *d.EgressRules[i]
 	}
+
 	return NewDesiredLRPRunInfo(
 		d.DesiredLRPKey(),
 		createdAt,
@@ -216,6 +219,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.CertificateProperties,
 		d.ImageUsername,
 		d.ImagePassword,
+		d.CheckDefinition,
 	)
 }
 
@@ -453,6 +457,7 @@ func NewDesiredLRPRunInfo(
 	network *Network,
 	certificateProperties *CertificateProperties,
 	imageUsername, imagePassword string,
+	checkDefinition *CheckDefinition,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -476,6 +481,7 @@ func NewDesiredLRPRunInfo(
 		CertificateProperties:         certificateProperties,
 		ImageUsername:                 imageUsername,
 		ImagePassword:                 imagePassword,
+		CheckDefinition:               checkDefinition,
 	}
 }
 
@@ -536,6 +542,13 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 	if runInfo.ImageUsername != "" && runInfo.ImagePassword == "" {
 		validationError = validationError.Append(ErrInvalidField{"image_password"})
+	}
+
+	if runInfo.CheckDefinition != nil {
+		if err := runInfo.CheckDefinition.Validate(); err != nil {
+			validationError = validationError.Append(ErrInvalidField{"check_definition"})
+			validationError = validationError.Append(err)
+		}
 	}
 
 	return validationError.ToError()

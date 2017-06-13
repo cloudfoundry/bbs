@@ -77,6 +77,17 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 		},
 	},
 	PlacementTags: []string{"example-tag", "example-tag-2"},
+	CheckDefinition: &models.CheckDefinition{
+		Checks: []*models.Check{
+			{
+				HttpCheck: &models.HTTPCheck{
+					Port:             12345,
+					RequestTimeoutMs: 100,
+					Endpoint:         "some-endpoint",
+				},
+			},
+		},
+	}
 })
 ```
 
@@ -252,6 +263,25 @@ For more details on the available actions see [actions](actions.md).
 After completing any `Setup` action, Diego will launch the `Action` action.
 This `Action` is intended to launch any long-running processes.
 For more details on the available actions see [actions](actions.md).
+
+##### `CheckDefinition` [optional] [experiemental]
+
+If provided, Diego will use the given checks to monitor the health of the long-running process.
+
+###### `HTTPCheck`
+
+An HTTP health check.
+
+- The `Port` must be a nonzero value and no greater than 65535.
+- `RequestTimeoutMs` is the timeout in ms for the http request.
+- `Endpoint` is the path to the health check.
+
+###### `TCPCheck`
+
+A TCP health check.
+
+- The `Port` must be a nonzero value and no greater than 65535.
+- `ConnectTimeoutMs` is the timeout in ms for the TCP connection.
 
 ##### `Monitor` [optional]
 

@@ -218,3 +218,23 @@ func NewValidTask(guid string) *models.Task {
 func NewValidAction() *models.Action {
 	return models.WrapAction(&models.RunAction{Path: "ls", User: "name"})
 }
+
+func NewValidHTTPCheckDefinition() *models.CheckDefinition {
+	checkDefinition := &models.CheckDefinition{
+		Checks: []*models.Check{
+			{
+				HttpCheck: &models.HTTPCheck{
+					Port:             12345,
+					RequestTimeoutMs: 100,
+					Endpoint:         "some-endpoint",
+				},
+			},
+		},
+	}
+
+	err := checkDefinition.Validate()
+	if err != nil {
+		panic(err)
+	}
+	return checkDefinition
+}
