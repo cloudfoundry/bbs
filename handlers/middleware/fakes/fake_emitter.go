@@ -3,6 +3,7 @@ package fakes
 
 import (
 	"sync"
+	"time"
 
 	"code.cloudfoundry.org/bbs/handlers/middleware"
 )
@@ -12,6 +13,11 @@ type FakeEmitter struct {
 	incrementCounterMutex       sync.RWMutex
 	incrementCounterArgsForCall []struct {
 		delta int
+	}
+	UpdateLatencyStub        func(latency time.Duration)
+	updateLatencyMutex       sync.RWMutex
+	updateLatencyArgsForCall []struct {
+		latency time.Duration
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -41,11 +47,37 @@ func (fake *FakeEmitter) IncrementCounterArgsForCall(i int) int {
 	return fake.incrementCounterArgsForCall[i].delta
 }
 
+func (fake *FakeEmitter) UpdateLatency(latency time.Duration) {
+	fake.updateLatencyMutex.Lock()
+	fake.updateLatencyArgsForCall = append(fake.updateLatencyArgsForCall, struct {
+		latency time.Duration
+	}{latency})
+	fake.recordInvocation("UpdateLatency", []interface{}{latency})
+	fake.updateLatencyMutex.Unlock()
+	if fake.UpdateLatencyStub != nil {
+		fake.UpdateLatencyStub(latency)
+	}
+}
+
+func (fake *FakeEmitter) UpdateLatencyCallCount() int {
+	fake.updateLatencyMutex.RLock()
+	defer fake.updateLatencyMutex.RUnlock()
+	return len(fake.updateLatencyArgsForCall)
+}
+
+func (fake *FakeEmitter) UpdateLatencyArgsForCall(i int) time.Duration {
+	fake.updateLatencyMutex.RLock()
+	defer fake.updateLatencyMutex.RUnlock()
+	return fake.updateLatencyArgsForCall[i].latency
+}
+
 func (fake *FakeEmitter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.incrementCounterMutex.RLock()
 	defer fake.incrementCounterMutex.RUnlock()
+	fake.updateLatencyMutex.RLock()
+	defer fake.updateLatencyMutex.RUnlock()
 	return fake.invocations
 }
 
