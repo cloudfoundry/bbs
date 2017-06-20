@@ -177,7 +177,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 			if err != nil {
 				return err
 			}
-			err = client.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
+			err = client.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
 		}
 
 		if err == nil {

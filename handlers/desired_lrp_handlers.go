@@ -320,7 +320,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 						continue
 					}
 					logger.Debug("stopping-lrp-instance")
-					err = repClient.StopLRPInstance(lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
+					err = repClient.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
 					if err != nil {
 						logger.Error("failed-stopping-lrp-instance", err)
 					}

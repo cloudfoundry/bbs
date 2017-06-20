@@ -630,10 +630,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Expect(repURL).To(Equal("http://some-address"))
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
-						key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+						_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
 						Expect(key).To(Equal(actualLRPGroups[0].Instance.ActualLRPKey))
 						Expect(instanceKey).To(Equal(actualLRPGroups[0].Instance.ActualLRPInstanceKey))
-						key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
+						_, key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
 						Expect(key).To(Equal(actualLRPGroups[1].Instance.ActualLRPKey))
 						Expect(instanceKey).To(Equal(actualLRPGroups[1].Instance.ActualLRPInstanceKey))
 					})
@@ -689,7 +689,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					Context("when stopping the lrp fails", func() {
 						BeforeEach(func() {
-							fakeRepClient.StopLRPInstanceStub = func(models.ActualLRPKey, models.ActualLRPInstanceKey) error {
+							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, models.ActualLRPKey, models.ActualLRPInstanceKey) error {
 								if fakeRepClient.StopLRPInstanceCallCount() == 1 {
 									return errors.New("ohhhhh nooooo, mr billlll")
 								} else {
@@ -929,10 +929,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal("some-address"))
 
 					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
-					key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+					_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
 					Expect(key).To(Equal(runningActualLRPGroup.Instance.ActualLRPKey))
 					Expect(instanceKey).To(Equal(runningActualLRPGroup.Instance.ActualLRPInstanceKey))
-					key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
+					_, key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
 					Expect(key).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.ActualLRPKey))
 					Expect(instanceKey).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.ActualLRPInstanceKey))
 				})

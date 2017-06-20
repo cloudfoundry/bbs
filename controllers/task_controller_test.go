@@ -367,7 +367,7 @@ var _ = Describe("Task Controller", func() {
 					Expect(actualCellID).To(Equal(cellID))
 
 					Expect(fakeRepClient.CancelTaskCallCount()).To(Equal(1))
-					guid := fakeRepClient.CancelTaskArgsForCall(0)
+					_, guid := fakeRepClient.CancelTaskArgsForCall(0)
 					Expect(guid).To(Equal("task-guid"))
 				})
 

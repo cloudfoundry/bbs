@@ -797,7 +797,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						Expect(fetchedCellID).To(Equal(cellID))
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).Should(Equal(1))
-						stoppedKey, stoppedInstanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+						_, stoppedKey, stoppedInstanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
 						Expect(stoppedKey).To(Equal(key))
 						Expect(stoppedInstanceKey).To(Equal(instanceKey))
 					})
