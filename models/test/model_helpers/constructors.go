@@ -52,6 +52,17 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			"success-message",
 			"failure-message",
 		)),
+		CheckDefinition: &models.CheckDefinition{
+			Checks: []*models.Check{
+				&models.Check{
+					HttpCheck: &models.HTTPCheck{
+						Port:             8080,
+						RequestTimeoutMs: 100,
+						Path:             "",
+					},
+				},
+			},
+		},
 		DiskMb:      512,
 		MemoryMb:    1024,
 		CpuWeight:   42,
