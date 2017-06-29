@@ -403,7 +403,7 @@ type FakeDB struct {
 		result1 *models.Task
 		result2 error
 	}
-	DesireTaskStub        func(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error
+	DesireTaskStub        func(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) (*models.Task, error)
 	desireTaskMutex       sync.RWMutex
 	desireTaskArgsForCall []struct {
 		logger         lager.Logger
@@ -412,12 +412,14 @@ type FakeDB struct {
 		domain         string
 	}
 	desireTaskReturns struct {
-		result1 error
+		result1 *models.Task
+		result2 error
 	}
 	desireTaskReturnsOnCall map[int]struct {
-		result1 error
+		result1 *models.Task
+		result2 error
 	}
-	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (bool, error)
+	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (before *models.Task, after *models.Task, eshouldStart bool, rr error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
 		logger   lager.Logger
@@ -425,14 +427,18 @@ type FakeDB struct {
 		cellId   string
 	}
 	startTaskReturns struct {
-		result1 bool
-		result2 error
+		result1 *models.Task
+		result2 *models.Task
+		result3 bool
+		result4 error
 	}
 	startTaskReturnsOnCall map[int]struct {
-		result1 bool
-		result2 error
+		result1 *models.Task
+		result2 *models.Task
+		result3 bool
+		result4 error
 	}
-	CancelTaskStub        func(logger lager.Logger, taskGuid string) (task *models.Task, cellID string, err error)
+	CancelTaskStub        func(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, cellID string, err error)
 	cancelTaskMutex       sync.RWMutex
 	cancelTaskArgsForCall []struct {
 		logger   lager.Logger
@@ -440,15 +446,17 @@ type FakeDB struct {
 	}
 	cancelTaskReturns struct {
 		result1 *models.Task
-		result2 string
-		result3 error
+		result2 *models.Task
+		result3 string
+		result4 error
 	}
 	cancelTaskReturnsOnCall map[int]struct {
 		result1 *models.Task
-		result2 string
-		result3 error
+		result2 *models.Task
+		result3 string
+		result4 error
 	}
-	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) (task *models.Task, err error)
+	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) (before *models.Task, after *models.Task, err error)
 	failTaskMutex       sync.RWMutex
 	failTaskArgsForCall []struct {
 		logger        lager.Logger
@@ -457,13 +465,15 @@ type FakeDB struct {
 	}
 	failTaskReturns struct {
 		result1 *models.Task
-		result2 error
+		result2 *models.Task
+		result3 error
 	}
 	failTaskReturnsOnCall map[int]struct {
 		result1 *models.Task
-		result2 error
+		result2 *models.Task
+		result3 error
 	}
-	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) (task *models.Task, err error)
+	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) (before *models.Task, after *models.Task, err error)
 	completeTaskMutex       sync.RWMutex
 	completeTaskArgsForCall []struct {
 		logger        lager.Logger
@@ -475,35 +485,43 @@ type FakeDB struct {
 	}
 	completeTaskReturns struct {
 		result1 *models.Task
-		result2 error
+		result2 *models.Task
+		result3 error
 	}
 	completeTaskReturnsOnCall map[int]struct {
 		result1 *models.Task
-		result2 error
+		result2 *models.Task
+		result3 error
 	}
-	ResolvingTaskStub        func(logger lager.Logger, taskGuid string) error
+	ResolvingTaskStub        func(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error)
 	resolvingTaskMutex       sync.RWMutex
 	resolvingTaskArgsForCall []struct {
 		logger   lager.Logger
 		taskGuid string
 	}
 	resolvingTaskReturns struct {
-		result1 error
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
 	}
 	resolvingTaskReturnsOnCall map[int]struct {
-		result1 error
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
 	}
-	DeleteTaskStub        func(logger lager.Logger, taskGuid string) error
+	DeleteTaskStub        func(logger lager.Logger, taskGuid string) (task *models.Task, err error)
 	deleteTaskMutex       sync.RWMutex
 	deleteTaskArgsForCall []struct {
 		logger   lager.Logger
 		taskGuid string
 	}
 	deleteTaskReturns struct {
-		result1 error
+		result1 *models.Task
+		result2 error
 	}
 	deleteTaskReturnsOnCall map[int]struct {
-		result1 error
+		result1 *models.Task
+		result2 error
 	}
 	ConvergeTasksStub        func(logger lager.Logger, cellSet models.CellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task)
 	convergeTasksMutex       sync.RWMutex
@@ -1968,7 +1986,7 @@ func (fake *FakeDB) TaskByGuidReturnsOnCall(i int, result1 *models.Task, result2
 	}{result1, result2}
 }
 
-func (fake *FakeDB) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid string, domain string) error {
+func (fake *FakeDB) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid string, domain string) (*models.Task, error) {
 	fake.desireTaskMutex.Lock()
 	ret, specificReturn := fake.desireTaskReturnsOnCall[len(fake.desireTaskArgsForCall)]
 	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
@@ -1983,9 +2001,9 @@ func (fake *FakeDB) DesireTask(logger lager.Logger, taskDefinition *models.TaskD
 		return fake.DesireTaskStub(logger, taskDefinition, taskGuid, domain)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.desireTaskReturns.result1
+	return fake.desireTaskReturns.result1, fake.desireTaskReturns.result2
 }
 
 func (fake *FakeDB) DesireTaskCallCount() int {
@@ -2000,26 +2018,29 @@ func (fake *FakeDB) DesireTaskArgsForCall(i int) (lager.Logger, *models.TaskDefi
 	return fake.desireTaskArgsForCall[i].logger, fake.desireTaskArgsForCall[i].taskDefinition, fake.desireTaskArgsForCall[i].taskGuid, fake.desireTaskArgsForCall[i].domain
 }
 
-func (fake *FakeDB) DesireTaskReturns(result1 error) {
+func (fake *FakeDB) DesireTaskReturns(result1 *models.Task, result2 error) {
 	fake.DesireTaskStub = nil
 	fake.desireTaskReturns = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeDB) DesireTaskReturnsOnCall(i int, result1 error) {
+func (fake *FakeDB) DesireTaskReturnsOnCall(i int, result1 *models.Task, result2 error) {
 	fake.DesireTaskStub = nil
 	if fake.desireTaskReturnsOnCall == nil {
 		fake.desireTaskReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 *models.Task
+			result2 error
 		})
 	}
 	fake.desireTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeDB) StartTask(logger lager.Logger, taskGuid string, cellId string) (bool, error) {
+func (fake *FakeDB) StartTask(logger lager.Logger, taskGuid string, cellId string) (before *models.Task, after *models.Task, eshouldStart bool, rr error) {
 	fake.startTaskMutex.Lock()
 	ret, specificReturn := fake.startTaskReturnsOnCall[len(fake.startTaskArgsForCall)]
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
@@ -2033,9 +2054,9 @@ func (fake *FakeDB) StartTask(logger lager.Logger, taskGuid string, cellId strin
 		return fake.StartTaskStub(logger, taskGuid, cellId)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3, ret.result4
 	}
-	return fake.startTaskReturns.result1, fake.startTaskReturns.result2
+	return fake.startTaskReturns.result1, fake.startTaskReturns.result2, fake.startTaskReturns.result3, fake.startTaskReturns.result4
 }
 
 func (fake *FakeDB) StartTaskCallCount() int {
@@ -2050,29 +2071,35 @@ func (fake *FakeDB) StartTaskArgsForCall(i int) (lager.Logger, string, string) {
 	return fake.startTaskArgsForCall[i].logger, fake.startTaskArgsForCall[i].taskGuid, fake.startTaskArgsForCall[i].cellId
 }
 
-func (fake *FakeDB) StartTaskReturns(result1 bool, result2 error) {
+func (fake *FakeDB) StartTaskReturns(result1 *models.Task, result2 *models.Task, result3 bool, result4 error) {
 	fake.StartTaskStub = nil
 	fake.startTaskReturns = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
+		result1 *models.Task
+		result2 *models.Task
+		result3 bool
+		result4 error
+	}{result1, result2, result3, result4}
 }
 
-func (fake *FakeDB) StartTaskReturnsOnCall(i int, result1 bool, result2 error) {
+func (fake *FakeDB) StartTaskReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 bool, result4 error) {
 	fake.StartTaskStub = nil
 	if fake.startTaskReturnsOnCall == nil {
 		fake.startTaskReturnsOnCall = make(map[int]struct {
-			result1 bool
-			result2 error
+			result1 *models.Task
+			result2 *models.Task
+			result3 bool
+			result4 error
 		})
 	}
 	fake.startTaskReturnsOnCall[i] = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
+		result1 *models.Task
+		result2 *models.Task
+		result3 bool
+		result4 error
+	}{result1, result2, result3, result4}
 }
 
-func (fake *FakeDB) CancelTask(logger lager.Logger, taskGuid string) (task *models.Task, cellID string, err error) {
+func (fake *FakeDB) CancelTask(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, cellID string, err error) {
 	fake.cancelTaskMutex.Lock()
 	ret, specificReturn := fake.cancelTaskReturnsOnCall[len(fake.cancelTaskArgsForCall)]
 	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
@@ -2085,9 +2112,9 @@ func (fake *FakeDB) CancelTask(logger lager.Logger, taskGuid string) (task *mode
 		return fake.CancelTaskStub(logger, taskGuid)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2, ret.result3
+		return ret.result1, ret.result2, ret.result3, ret.result4
 	}
-	return fake.cancelTaskReturns.result1, fake.cancelTaskReturns.result2, fake.cancelTaskReturns.result3
+	return fake.cancelTaskReturns.result1, fake.cancelTaskReturns.result2, fake.cancelTaskReturns.result3, fake.cancelTaskReturns.result4
 }
 
 func (fake *FakeDB) CancelTaskCallCount() int {
@@ -2102,32 +2129,35 @@ func (fake *FakeDB) CancelTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.cancelTaskArgsForCall[i].logger, fake.cancelTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeDB) CancelTaskReturns(result1 *models.Task, result2 string, result3 error) {
+func (fake *FakeDB) CancelTaskReturns(result1 *models.Task, result2 *models.Task, result3 string, result4 error) {
 	fake.CancelTaskStub = nil
 	fake.cancelTaskReturns = struct {
 		result1 *models.Task
-		result2 string
-		result3 error
-	}{result1, result2, result3}
+		result2 *models.Task
+		result3 string
+		result4 error
+	}{result1, result2, result3, result4}
 }
 
-func (fake *FakeDB) CancelTaskReturnsOnCall(i int, result1 *models.Task, result2 string, result3 error) {
+func (fake *FakeDB) CancelTaskReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 string, result4 error) {
 	fake.CancelTaskStub = nil
 	if fake.cancelTaskReturnsOnCall == nil {
 		fake.cancelTaskReturnsOnCall = make(map[int]struct {
 			result1 *models.Task
-			result2 string
-			result3 error
+			result2 *models.Task
+			result3 string
+			result4 error
 		})
 	}
 	fake.cancelTaskReturnsOnCall[i] = struct {
 		result1 *models.Task
-		result2 string
-		result3 error
-	}{result1, result2, result3}
+		result2 *models.Task
+		result3 string
+		result4 error
+	}{result1, result2, result3, result4}
 }
 
-func (fake *FakeDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) (task *models.Task, err error) {
+func (fake *FakeDB) FailTask(logger lager.Logger, taskGuid string, failureReason string) (before *models.Task, after *models.Task, err error) {
 	fake.failTaskMutex.Lock()
 	ret, specificReturn := fake.failTaskReturnsOnCall[len(fake.failTaskArgsForCall)]
 	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
@@ -2141,9 +2171,9 @@ func (fake *FakeDB) FailTask(logger lager.Logger, taskGuid string, failureReason
 		return fake.FailTaskStub(logger, taskGuid, failureReason)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.failTaskReturns.result1, fake.failTaskReturns.result2
+	return fake.failTaskReturns.result1, fake.failTaskReturns.result2, fake.failTaskReturns.result3
 }
 
 func (fake *FakeDB) FailTaskCallCount() int {
@@ -2158,29 +2188,32 @@ func (fake *FakeDB) FailTaskArgsForCall(i int) (lager.Logger, string, string) {
 	return fake.failTaskArgsForCall[i].logger, fake.failTaskArgsForCall[i].taskGuid, fake.failTaskArgsForCall[i].failureReason
 }
 
-func (fake *FakeDB) FailTaskReturns(result1 *models.Task, result2 error) {
+func (fake *FakeDB) FailTaskReturns(result1 *models.Task, result2 *models.Task, result3 error) {
 	fake.FailTaskStub = nil
 	fake.failTaskReturns = struct {
 		result1 *models.Task
-		result2 error
-	}{result1, result2}
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) FailTaskReturnsOnCall(i int, result1 *models.Task, result2 error) {
+func (fake *FakeDB) FailTaskReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 error) {
 	fake.FailTaskStub = nil
 	if fake.failTaskReturnsOnCall == nil {
 		fake.failTaskReturnsOnCall = make(map[int]struct {
 			result1 *models.Task
-			result2 error
+			result2 *models.Task
+			result3 error
 		})
 	}
 	fake.failTaskReturnsOnCall[i] = struct {
 		result1 *models.Task
-		result2 error
-	}{result1, result2}
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) (task *models.Task, err error) {
+func (fake *FakeDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) (before *models.Task, after *models.Task, err error) {
 	fake.completeTaskMutex.Lock()
 	ret, specificReturn := fake.completeTaskReturnsOnCall[len(fake.completeTaskArgsForCall)]
 	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
@@ -2197,9 +2230,9 @@ func (fake *FakeDB) CompleteTask(logger lager.Logger, taskGuid string, cellId st
 		return fake.CompleteTaskStub(logger, taskGuid, cellId, failed, failureReason, result)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.completeTaskReturns.result1, fake.completeTaskReturns.result2
+	return fake.completeTaskReturns.result1, fake.completeTaskReturns.result2, fake.completeTaskReturns.result3
 }
 
 func (fake *FakeDB) CompleteTaskCallCount() int {
@@ -2214,29 +2247,32 @@ func (fake *FakeDB) CompleteTaskArgsForCall(i int) (lager.Logger, string, string
 	return fake.completeTaskArgsForCall[i].logger, fake.completeTaskArgsForCall[i].taskGuid, fake.completeTaskArgsForCall[i].cellId, fake.completeTaskArgsForCall[i].failed, fake.completeTaskArgsForCall[i].failureReason, fake.completeTaskArgsForCall[i].result
 }
 
-func (fake *FakeDB) CompleteTaskReturns(result1 *models.Task, result2 error) {
+func (fake *FakeDB) CompleteTaskReturns(result1 *models.Task, result2 *models.Task, result3 error) {
 	fake.CompleteTaskStub = nil
 	fake.completeTaskReturns = struct {
 		result1 *models.Task
-		result2 error
-	}{result1, result2}
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) CompleteTaskReturnsOnCall(i int, result1 *models.Task, result2 error) {
+func (fake *FakeDB) CompleteTaskReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 error) {
 	fake.CompleteTaskStub = nil
 	if fake.completeTaskReturnsOnCall == nil {
 		fake.completeTaskReturnsOnCall = make(map[int]struct {
 			result1 *models.Task
-			result2 error
+			result2 *models.Task
+			result3 error
 		})
 	}
 	fake.completeTaskReturnsOnCall[i] = struct {
 		result1 *models.Task
-		result2 error
-	}{result1, result2}
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
+func (fake *FakeDB) ResolvingTask(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error) {
 	fake.resolvingTaskMutex.Lock()
 	ret, specificReturn := fake.resolvingTaskReturnsOnCall[len(fake.resolvingTaskArgsForCall)]
 	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
@@ -2249,9 +2285,9 @@ func (fake *FakeDB) ResolvingTask(logger lager.Logger, taskGuid string) error {
 		return fake.ResolvingTaskStub(logger, taskGuid)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.resolvingTaskReturns.result1
+	return fake.resolvingTaskReturns.result1, fake.resolvingTaskReturns.result2, fake.resolvingTaskReturns.result3
 }
 
 func (fake *FakeDB) ResolvingTaskCallCount() int {
@@ -2266,26 +2302,32 @@ func (fake *FakeDB) ResolvingTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.resolvingTaskArgsForCall[i].logger, fake.resolvingTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeDB) ResolvingTaskReturns(result1 error) {
+func (fake *FakeDB) ResolvingTaskReturns(result1 *models.Task, result2 *models.Task, result3 error) {
 	fake.ResolvingTaskStub = nil
 	fake.resolvingTaskReturns = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) ResolvingTaskReturnsOnCall(i int, result1 error) {
+func (fake *FakeDB) ResolvingTaskReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 error) {
 	fake.ResolvingTaskStub = nil
 	if fake.resolvingTaskReturnsOnCall == nil {
 		fake.resolvingTaskReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 *models.Task
+			result2 *models.Task
+			result3 error
 		})
 	}
 	fake.resolvingTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) DeleteTask(logger lager.Logger, taskGuid string) error {
+func (fake *FakeDB) DeleteTask(logger lager.Logger, taskGuid string) (task *models.Task, err error) {
 	fake.deleteTaskMutex.Lock()
 	ret, specificReturn := fake.deleteTaskReturnsOnCall[len(fake.deleteTaskArgsForCall)]
 	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
@@ -2298,9 +2340,9 @@ func (fake *FakeDB) DeleteTask(logger lager.Logger, taskGuid string) error {
 		return fake.DeleteTaskStub(logger, taskGuid)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.deleteTaskReturns.result1
+	return fake.deleteTaskReturns.result1, fake.deleteTaskReturns.result2
 }
 
 func (fake *FakeDB) DeleteTaskCallCount() int {
@@ -2315,23 +2357,26 @@ func (fake *FakeDB) DeleteTaskArgsForCall(i int) (lager.Logger, string) {
 	return fake.deleteTaskArgsForCall[i].logger, fake.deleteTaskArgsForCall[i].taskGuid
 }
 
-func (fake *FakeDB) DeleteTaskReturns(result1 error) {
+func (fake *FakeDB) DeleteTaskReturns(result1 *models.Task, result2 error) {
 	fake.DeleteTaskStub = nil
 	fake.deleteTaskReturns = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeDB) DeleteTaskReturnsOnCall(i int, result1 error) {
+func (fake *FakeDB) DeleteTaskReturnsOnCall(i int, result1 *models.Task, result2 error) {
 	fake.DeleteTaskStub = nil
 	if fake.deleteTaskReturnsOnCall == nil {
 		fake.deleteTaskReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 *models.Task
+			result2 error
 		})
 	}
 	fake.deleteTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task) {

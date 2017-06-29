@@ -64,7 +64,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DesireTask", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.DesireTask(logger, &models.TaskDefinition{}, "", "")
+			_, err := sqlDB.DesireTask(logger, &models.TaskDefinition{}, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -96,7 +96,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("CancelTask", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.CancelTask(logger, "")
+			_, _, _, err := sqlDB.CancelTask(logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -112,7 +112,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("CompleteTask", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.CompleteTask(logger, "", "", true, "", "")
+			_, _, err := sqlDB.CompleteTask(logger, "", "", true, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -136,7 +136,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DeleteTask", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.DeleteTask(logger, "")
+			_, err := sqlDB.DeleteTask(logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -192,7 +192,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("FailTask", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.FailTask(logger, "", "")
+			_, _, err := sqlDB.FailTask(logger, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -216,7 +216,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("ResolvingTask", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.ResolvingTask(logger, "")
+			_, _, err := sqlDB.ResolvingTask(logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -240,7 +240,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("StartTask", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.StartTask(logger, "", "")
+			_, _, _, err := sqlDB.StartTask(logger, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
