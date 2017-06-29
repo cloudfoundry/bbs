@@ -5,6 +5,7 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actual_lrp.proto";
 import "desired_lrp.proto";
+import "task.proto";
 
 message ActualLRPCreatedEvent  {
   optional ActualLRPGroup actual_lrp_group = 1;
@@ -42,4 +43,17 @@ message ActualLRPCrashedEvent {
 
 message EventsByCellId {
    optional string cell_id  = 1;
+}
+
+message TaskCreatedEvent {
+  optional Task task = 1;
+}
+
+message TaskChangedEvent {
+  optional Task before = 1;
+  optional Task after = 2;
+}
+
+message TaskRemovedEvent {
+  optional Task task = 1;
 }
