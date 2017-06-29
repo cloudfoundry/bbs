@@ -7,6 +7,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message CheckDefinition {
   repeated Check checks = 1;
+  optional string log_source = 2;
 }
 
 message Check {
