@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
+	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool/taskworkpoolfakes"
@@ -24,6 +25,7 @@ var _ = Describe("Task Controller", func() {
 		fakeTaskDB               *dbfakes.FakeTaskDB
 		fakeAuctioneerClient     *auctioneerfakes.FakeClient
 		fakeTaskCompletionClient *taskworkpoolfakes.FakeTaskCompletionClient
+		taskHub                  *eventfakes.FakeHub
 
 		controller *controllers.TaskController
 	)
@@ -34,7 +36,16 @@ var _ = Describe("Task Controller", func() {
 		fakeTaskCompletionClient = new(taskworkpoolfakes.FakeTaskCompletionClient)
 
 		logger = lagertest.NewTestLogger("test")
-		controller = controllers.NewTaskController(fakeTaskDB, fakeTaskCompletionClient, fakeAuctioneerClient, fakeServiceClient, fakeRepClientFactory)
+
+		taskHub = &eventfakes.FakeHub{}
+		controller = controllers.NewTaskController(
+			fakeTaskDB,
+			fakeTaskCompletionClient,
+			fakeAuctioneerClient,
+			fakeServiceClient,
+			fakeRepClientFactory,
+			taskHub,
+		)
 	})
 
 	Describe("Tasks", func() {
@@ -171,6 +182,9 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		Context("when the desire is successful", func() {
+			BeforeEach(func() {
+				fakeTaskDB.DesireTaskReturns(&models.Task{TaskGuid: taskGuid}, err)
+			})
 			It("desires the task with the requested definitions", func() {
 				Expect(err).NotTo(HaveOccurred())
 
@@ -211,6 +225,14 @@ var _ = Describe("Task Controller", func() {
 				Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
 			})
 
+			It("emits a TaskCreateEvent to the hub", func() {
+				Eventually(taskHub.EmitCallCount).Should(Equal(1))
+				event := taskHub.EmitArgsForCall(0)
+				create, ok := event.(*models.TaskCreatedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(create.Key()).To(Equal(taskGuid))
+			})
+
 			Context("when requesting a task auction succeeds", func() {
 				BeforeEach(func() {
 					fakeAuctioneerClient.RequestTaskAuctionsReturns(nil)
@@ -218,6 +240,11 @@ var _ = Describe("Task Controller", func() {
 
 				It("does not return an error", func() {
 					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("does not emit a TaskChangedEvent", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(1))
+					Consistently(taskHub.EmitCallCount).Should(Equal(1))
 				})
 			})
 
@@ -233,16 +260,35 @@ var _ = Describe("Task Controller", func() {
 				It("does not request a second auction", func() {
 					Consistently(fakeAuctioneerClient.RequestTaskAuctionsCallCount).Should(Equal(1))
 				})
+
+				It("does not emit a TaskChangedEvent", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(1))
+					Consistently(taskHub.EmitCallCount).Should(Equal(1))
+				})
 			})
 		})
 
 		Context("when desiring the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.DesireTaskReturns(errors.New("kaboom"))
+				fakeTaskDB.DesireTaskReturns(nil, errors.New("kaboom"))
 			})
 
 			It("responds with an error", func() {
 				Expect(err).To(MatchError("kaboom"))
+			})
+
+			It("does not emit a TaskChangedEvent", func() {
+				Consistently(taskHub.EmitCallCount).Should(Equal(0))
+			})
+		})
+
+		Context("when the desired task already exists", func() {
+			BeforeEach(func() {
+
+			})
+
+			It("does not emits a change to the hub", func() {
+				Consistently(taskHub.EmitCallCount).Should(Equal(0))
 			})
 		})
 	})
@@ -281,6 +327,15 @@ var _ = Describe("Task Controller", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(shouldStart).To(BeTrue())
 				})
+
+				It("emits a change to the hub", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(1))
+					event := taskHub.EmitArgsForCall(0)
+					changedEvent, ok := event.(*models.TaskChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(changedEvent.Before.State).To(BeEmpty())
+					Expect(changedEvent.After.State).To(Equal(models.Task_Running))
+				})
 			})
 
 			Context("when the task should not start", func() {
@@ -292,6 +347,10 @@ var _ = Describe("Task Controller", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(shouldStart).To(BeFalse())
 				})
+
+				It("does not emits a change to the hub", func() {
+					Consistently(taskHub.EmitCallCount).Should(Equal(0))
+				})
 			})
 
 			Context("when the DB fails", func() {
@@ -301,6 +360,10 @@ var _ = Describe("Task Controller", func() {
 
 				It("bubbles up the underlying model error", func() {
 					Expect(err).To(MatchError("kaboom"))
+				})
+
+				It("does not emits a change to the hub", func() {
+					Consistently(taskHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})

@@ -5,6 +5,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
@@ -18,6 +19,7 @@ type TaskController struct {
 	auctioneerClient     auctioneer.Client
 	serviceClient        serviceclient.ServiceClient
 	repClientFactory     rep.ClientFactory
+	taskHub              events.Hub
 }
 
 func NewTaskController(
@@ -26,6 +28,7 @@ func NewTaskController(
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
+	taskHub events.Hub,
 ) *TaskController {
 	return &TaskController{
 		db:                   db,
@@ -33,6 +36,7 @@ func NewTaskController(
 		auctioneerClient:     auctioneerClient,
 		serviceClient:        serviceClient,
 		repClientFactory:     repClientFactory,
+		taskHub:              taskHub,
 	}
 }
 
@@ -51,14 +55,16 @@ func (h *TaskController) TaskByGuid(logger lager.Logger, taskGuid string) (*mode
 
 func (h *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error {
 	var err error
+	var task *models.Task
 	logger = logger.Session("desire-task")
 
 	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 
-	err = h.db.DesireTask(logger, taskDefinition, taskGuid, domain)
+	task, err = h.db.DesireTask(logger, taskDefinition, taskGuid, domain)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskCreatedEvent(task))
 
 	logger.Debug("start-task-auction-request")
 	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDefinition)
