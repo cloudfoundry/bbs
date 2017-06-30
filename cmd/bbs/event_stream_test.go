@@ -427,6 +427,56 @@ var _ = Describe("Events API", func() {
 		})
 	})
 
+	Describe("Tasks", func() {
+		var (
+			taskDef *models.TaskDefinition
+		)
+
+		BeforeEach(func() {
+			taskDef = model_helpers.NewValidTaskDefinition()
+			eventSource, err = client.SubscribeToTaskEvents(logger)
+			Expect(err).NotTo(HaveOccurred())
+			eventChannel = streamEvents(eventSource)
+		})
+
+		It("receives events", func() {
+			err := client.DesireTask(logger, "completed-task", "some-domain", taskDef)
+			Expect(err).NotTo(HaveOccurred())
+
+			var event models.Event
+			Eventually(eventChannel).Should(Receive(&event))
+			taskCreatedEvent, ok := event.(*models.TaskCreatedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(taskCreatedEvent.Task.TaskDefinition).To(Equal(taskDef))
+
+			err = client.CancelTask(logger, "completed-task")
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+			taskChangedEvent, ok := event.(*models.TaskChangedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(taskChangedEvent.Before.State).To(Equal(models.Task_Pending))
+			Expect(taskChangedEvent.After.State).To(Equal(models.Task_Completed))
+
+			err = client.ResolvingTask(logger, "completed-task")
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+			taskChangedEvent, ok = event.(*models.TaskChangedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(taskChangedEvent.Before.State).To(Equal(models.Task_Completed))
+			Expect(taskChangedEvent.After.State).To(Equal(models.Task_Resolving))
+
+			err = client.DeleteTask(logger, "completed-task")
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(eventChannel).Should(Receive(&event))
+			taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(taskRemovedEvent.Task.TaskDefinition).To(Equal(taskDef))
+		})
+	})
+
 	It("cleans up exiting connections when killing the BBS", func() {
 		var err error
 		eventSource, err = client.SubscribeToEvents(logger)
@@ -439,8 +489,19 @@ var _ = Describe("Events API", func() {
 			close(done)
 		}()
 
+		taskEventSource, err := client.SubscribeToTaskEvents(logger)
+		Expect(err).ToNot(HaveOccurred())
+
+		taskDone := make(chan struct{})
+		go func() {
+			_, err := taskEventSource.Next()
+			Expect(err).To(HaveOccurred())
+			close(taskDone)
+		}()
+
 		ginkgomon.Interrupt(bbsProcess)
 		Eventually(done).Should(BeClosed())
+		Eventually(taskDone).Should(BeClosed())
 	})
 })
 

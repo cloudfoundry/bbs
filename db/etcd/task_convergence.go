@@ -32,7 +32,7 @@ func (db *ETCDDB) ConvergeTasks(
 	logger lager.Logger,
 	cellSet models.CellSet,
 	kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-) ([]*auctioneer.TaskStartRequest, []*models.Task) {
+) ([]*auctioneer.TaskStartRequest, []*models.Task, []models.Event) {
 	logger.Info("starting-convergence")
 	defer logger.Info("finished-convergence")
 
@@ -52,7 +52,7 @@ func (db *ETCDDB) ConvergeTasks(
 	if modelErr != nil {
 		logger.Debug("failed-listing-task")
 		sendTaskMetrics(logger, -1, -1, -1, -1)
-		return nil, nil
+		return nil, nil, []models.Event{}
 	}
 	logger.Debug("succeeded-listing-task")
 
@@ -168,7 +168,7 @@ func (db *ETCDDB) ConvergeTasks(
 	logger.Debug("compare-and-swapping-tasks", lager.Data{"num_tasks_to_cas": len(tasksToCAS)})
 	err := db.batchCompareAndSwapTasks(tasksToCAS, logger)
 	if err != nil {
-		return nil, nil
+		return nil, nil, []models.Event{}
 	}
 	logger.Debug("done-compare-and-swapping-tasks", lager.Data{"num_tasks_to_cas": len(tasksToCAS)})
 
@@ -177,7 +177,7 @@ func (db *ETCDDB) ConvergeTasks(
 	db.batchDeleteTasks(keysToDelete, logger)
 	logger.Debug("done-deleting-keys", lager.Data{"num_keys_to_delete": len(keysToDelete)})
 
-	return tasksToAuction, tasksToComplete
+	return tasksToAuction, tasksToComplete, []models.Event{}
 }
 
 func (db *ETCDDB) durationSinceTaskCreated(task *models.Task) time.Duration {

@@ -52,7 +52,7 @@ var _ = Describe("Convergence of Tasks", func() {
 		})
 
 		JustBeforeEach(func() {
-			tasksToAuction, tasksToComplete = etcdDB.ConvergeTasks(logger, cells, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+			tasksToAuction, tasksToComplete, _ = etcdDB.ConvergeTasks(logger, cells, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
 		It("bumps the convergence counter", func() {

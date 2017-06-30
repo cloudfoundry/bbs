@@ -99,7 +99,7 @@ func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error 
 
 	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, after)
+		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
 	}
 
 	if cellID == "" {
@@ -143,7 +143,7 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 
 	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, after)
+		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func (h *TaskController) CompleteTask(
 
 	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, after)
+		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
 	}
 
 	return nil
@@ -218,13 +218,18 @@ func (h *TaskController) ConvergeTasks(
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	tasksToAuction, tasksToComplete := h.db.ConvergeTasks(
+	tasksToAuction, tasksToComplete, eventsToEmit := h.db.ConvergeTasks(
 		logger,
 		cellSet,
 		kickTaskDuration,
 		expirePendingTaskDuration,
 		expireCompletedTaskDuration,
 	)
+
+	logger.Debug("emitting events from convergence", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+	for _, event := range eventsToEmit {
+		go h.taskHub.Emit(event)
+	}
 
 	if len(tasksToAuction) > 0 {
 		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
@@ -242,8 +247,9 @@ func (h *TaskController) ConvergeTasks(
 
 	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
 	for _, task := range tasksToComplete {
-		h.taskCompletionClient.Submit(h.db, task)
+		h.taskCompletionClient.Submit(h.db, h.taskHub, task)
 	}
 	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+
 	return nil
 }

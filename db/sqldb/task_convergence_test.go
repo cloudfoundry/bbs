@@ -38,9 +38,12 @@ var _ = Describe("Convergence of Tasks", func() {
 			domain          string
 			tasksToAuction  []*auctioneer.TaskStartRequest
 			tasksToComplete []*models.Task
+			taskEvents      []models.Event
 			cellSet         models.CellSet
 
 			taskDef *models.TaskDefinition
+
+			pendingTask, anotherPendingTask, runningTask, runningTaskNoCell, resolvingKickableTask, expiredCompletedTask *models.Task
 		)
 
 		BeforeEach(func() {
@@ -52,7 +55,13 @@ var _ = Describe("Convergence of Tasks", func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
 
 			fakeClock.IncrementBySeconds(-expirePendingTaskDurationInSeconds)
-			_, err = sqlDB.DesireTask(logger, taskDef, "pending-expired-task", domain)
+			pendingTask, err = sqlDB.DesireTask(logger, taskDef, "pending-expired-task", domain)
+			Expect(err).NotTo(HaveOccurred())
+			anotherPendingTask, err = sqlDB.DesireTask(logger, taskDef, "another-pending-expired-task", domain)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = sqlDB.DesireTask(logger, taskDef, "pending-invalid-task", domain)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'pending-invalid-task'")
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.IncrementBySeconds(expirePendingTaskDurationInSeconds)
 
@@ -73,12 +82,19 @@ var _ = Describe("Convergence of Tasks", func() {
 
 			_, err = sqlDB.DesireTask(logger, taskDef, "running-task-no-cell", domain)
 			Expect(err).NotTo(HaveOccurred())
-			_, _, _, err = sqlDB.StartTask(logger, "running-task-no-cell", "non-existant-cell")
+			_, runningTaskNoCell, _, err = sqlDB.StartTask(logger, "running-task-no-cell", "non-existant-cell")
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = sqlDB.DesireTask(logger, taskDef, "invalid-running-task-no-cell", domain)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, _, err = sqlDB.StartTask(logger, "invalid-running-task-no-cell", "non-existant-cell")
+			Expect(err).NotTo(HaveOccurred())
+			_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-running-task-no-cell'")
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = sqlDB.DesireTask(logger, taskDef, "running-task", domain)
 			Expect(err).NotTo(HaveOccurred())
-			_, _, _, err = sqlDB.StartTask(logger, "running-task", "existing-cell")
+			_, runningTask, _, err = sqlDB.StartTask(logger, "running-task", "existing-cell")
 			Expect(err).NotTo(HaveOccurred())
 
 			fakeClock.Increment(-expireCompletedTaskDuration)
@@ -86,7 +102,16 @@ var _ = Describe("Convergence of Tasks", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, _, err = sqlDB.StartTask(logger, "completed-expired-task", "existing-cell")
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.CompleteTask(logger, "completed-expired-task", "existing-cell", false, "", "")
+			_, expiredCompletedTask, err = sqlDB.CompleteTask(logger, "completed-expired-task", "existing-cell", false, "", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = sqlDB.DesireTask(logger, taskDef, "invalid-completed-expired-task", domain)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, _, err = sqlDB.StartTask(logger, "invalid-completed-expired-task", "existing-cell")
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.CompleteTask(logger, "invalid-completed-expired-task", "existing-cell", false, "", "")
+			Expect(err).NotTo(HaveOccurred())
+			_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-completed-expired-task'")
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.Increment(expireCompletedTaskDuration)
 
@@ -135,7 +160,18 @@ var _ = Describe("Convergence of Tasks", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.CompleteTask(logger, "resolving-kickable-task", "existing-cell", false, "", "")
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ResolvingTask(logger, "resolving-kickable-task")
+			_, resolvingKickableTask, err = sqlDB.ResolvingTask(logger, "resolving-kickable-task")
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = sqlDB.DesireTask(logger, taskDef, "invalid-resolving-kickable-task", domain)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, _, err = sqlDB.StartTask(logger, "invalid-resolving-kickable-task", "existing-cell")
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.CompleteTask(logger, "invalid-resolving-kickable-task", "existing-cell", false, "", "")
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ResolvingTask(logger, "invalid-resolving-kickable-task")
+			Expect(err).NotTo(HaveOccurred())
+			_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-resolving-kickable-task'")
 			Expect(err).NotTo(HaveOccurred())
 			fakeClock.IncrementBySeconds(kickTasksDurationInSeconds)
 
@@ -152,7 +188,7 @@ var _ = Describe("Convergence of Tasks", func() {
 		})
 
 		JustBeforeEach(func() {
-			tasksToAuction, tasksToComplete = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+			tasksToAuction, tasksToComplete, taskEvents = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
 		It("bumps the convergence counter", func() {
@@ -168,11 +204,11 @@ var _ = Describe("Convergence of Tasks", func() {
 		It("emits task status count metrics", func() {
 			Expect(sender.GetValue("TasksPending").Value).To(Equal(float64(2)))
 			Expect(sender.GetValue("TasksRunning").Value).To(Equal(float64(1)))
-			Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(5)))
+			Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(6)))
 			Expect(sender.GetValue("TasksResolving").Value).To(Equal(float64(1)))
 
-			Expect(sender.GetCounter("ConvergenceTasksPruned")).To(Equal(uint64(4)))
-			Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(5)))
+			Expect(sender.GetCounter("ConvergenceTasksPruned")).To(Equal(uint64(8)))
+			Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(6)))
 		})
 
 		Context("pending tasks", func() {
@@ -190,8 +226,17 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(tasksToAuction).NotTo(ContainElement(&taskRequest))
 			})
 
-			It("emits a TaskChangedEvent", func() {
-				//TODO
+			It("returns TaskChangedEvents for all failed pending tasks", func() {
+				afterPending, err := sqlDB.TaskByGuid(logger, "pending-expired-task")
+				Expect(err).NotTo(HaveOccurred())
+				afterAnotherPending, err := sqlDB.TaskByGuid(logger, "another-pending-expired-task")
+				Expect(err).NotTo(HaveOccurred())
+
+				event1 := models.NewTaskChangedEvent(pendingTask, afterPending)
+				event2 := models.NewTaskChangedEvent(anotherPendingTask, afterAnotherPending)
+
+				Expect(taskEvents).To(ContainElement(event1))
+				Expect(taskEvents).To(ContainElement(event2))
 			})
 
 			It("returns tasks that should be kicked for auctioning", func() {
@@ -266,6 +311,11 @@ var _ = Describe("Convergence of Tasks", func() {
 				_, err := sqlDB.TaskByGuid(logger, "completed-kickable-invalid-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
+
+			It("returns TaskRemovedEvents for all deleted tasks", func() {
+				event1 := models.NewTaskRemovedEvent(expiredCompletedTask)
+				Expect(taskEvents).To(ContainElement(event1))
+			})
 		})
 
 		Context("resolving tasks", func() {
@@ -292,6 +342,15 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(task.State).To(Equal(models.Task_Resolving))
 				Expect(tasksToComplete).NotTo(ContainElement(task))
 			})
+
+			It("returns TaskChangedEvents for all kicked resolved tasks", func() {
+				after, err := sqlDB.TaskByGuid(logger, "resolving-kickable-task")
+				Expect(err).NotTo(HaveOccurred())
+
+				event1 := models.NewTaskChangedEvent(resolvingKickableTask, after)
+
+				Expect(taskEvents).To(ContainElement(event1))
+			})
 		})
 
 		Context("when the cell state list is empty", func() {
@@ -305,6 +364,18 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(task.Failed).To(BeTrue())
 				Expect(task.FailureReason).To(Equal("cell disappeared before completion"))
 				Expect(task.Result).To(Equal(""))
+			})
+
+			It("returns TaskChangedEvents for all failed tasks", func() {
+				after1, err := sqlDB.TaskByGuid(logger, "running-task")
+				Expect(err).NotTo(HaveOccurred())
+				after2, err := sqlDB.TaskByGuid(logger, "running-task-no-cell")
+				Expect(err).NotTo(HaveOccurred())
+
+				event1 := models.NewTaskChangedEvent(runningTask, after1)
+				event2 := models.NewTaskChangedEvent(runningTaskNoCell, after2)
+				Expect(taskEvents).To(ContainElement(event1))
+				Expect(taskEvents).To(ContainElement(event2))
 			})
 		})
 	})

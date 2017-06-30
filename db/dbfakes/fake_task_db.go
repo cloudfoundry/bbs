@@ -56,7 +56,7 @@ type FakeTaskDB struct {
 		result1 *models.Task
 		result2 error
 	}
-	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (before *models.Task, after *models.Task, eshouldStart bool, rr error)
+	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (before *models.Task, after *models.Task, shouldStart bool, rr error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
 		logger   lager.Logger
@@ -160,7 +160,7 @@ type FakeTaskDB struct {
 		result1 *models.Task
 		result2 error
 	}
-	ConvergeTasksStub        func(logger lager.Logger, cellSet models.CellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task)
+	ConvergeTasksStub        func(logger lager.Logger, cellSet models.CellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task, taskEvents []models.Event)
 	convergeTasksMutex       sync.RWMutex
 	convergeTasksArgsForCall []struct {
 		logger                      lager.Logger
@@ -172,10 +172,12 @@ type FakeTaskDB struct {
 	convergeTasksReturns struct {
 		result1 []*auctioneer.TaskStartRequest
 		result2 []*models.Task
+		result3 []models.Event
 	}
 	convergeTasksReturnsOnCall map[int]struct {
 		result1 []*auctioneer.TaskStartRequest
 		result2 []*models.Task
+		result3 []models.Event
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -339,7 +341,7 @@ func (fake *FakeTaskDB) DesireTaskReturnsOnCall(i int, result1 *models.Task, res
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) StartTask(logger lager.Logger, taskGuid string, cellId string) (before *models.Task, after *models.Task, eshouldStart bool, rr error) {
+func (fake *FakeTaskDB) StartTask(logger lager.Logger, taskGuid string, cellId string) (before *models.Task, after *models.Task, shouldStart bool, rr error) {
 	fake.startTaskMutex.Lock()
 	ret, specificReturn := fake.startTaskReturnsOnCall[len(fake.startTaskArgsForCall)]
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
@@ -678,7 +680,7 @@ func (fake *FakeTaskDB) DeleteTaskReturnsOnCall(i int, result1 *models.Task, res
 	}{result1, result2}
 }
 
-func (fake *FakeTaskDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task) {
+func (fake *FakeTaskDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task, taskEvents []models.Event) {
 	fake.convergeTasksMutex.Lock()
 	ret, specificReturn := fake.convergeTasksReturnsOnCall[len(fake.convergeTasksArgsForCall)]
 	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
@@ -694,9 +696,9 @@ func (fake *FakeTaskDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSe
 		return fake.ConvergeTasksStub(logger, cellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.convergeTasksReturns.result1, fake.convergeTasksReturns.result2
+	return fake.convergeTasksReturns.result1, fake.convergeTasksReturns.result2, fake.convergeTasksReturns.result3
 }
 
 func (fake *FakeTaskDB) ConvergeTasksCallCount() int {
@@ -711,26 +713,29 @@ func (fake *FakeTaskDB) ConvergeTasksArgsForCall(i int) (lager.Logger, models.Ce
 	return fake.convergeTasksArgsForCall[i].logger, fake.convergeTasksArgsForCall[i].cellSet, fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
 }
 
-func (fake *FakeTaskDB) ConvergeTasksReturns(result1 []*auctioneer.TaskStartRequest, result2 []*models.Task) {
+func (fake *FakeTaskDB) ConvergeTasksReturns(result1 []*auctioneer.TaskStartRequest, result2 []*models.Task, result3 []models.Event) {
 	fake.ConvergeTasksStub = nil
 	fake.convergeTasksReturns = struct {
 		result1 []*auctioneer.TaskStartRequest
 		result2 []*models.Task
-	}{result1, result2}
+		result3 []models.Event
+	}{result1, result2, result3}
 }
 
-func (fake *FakeTaskDB) ConvergeTasksReturnsOnCall(i int, result1 []*auctioneer.TaskStartRequest, result2 []*models.Task) {
+func (fake *FakeTaskDB) ConvergeTasksReturnsOnCall(i int, result1 []*auctioneer.TaskStartRequest, result2 []*models.Task, result3 []models.Event) {
 	fake.ConvergeTasksStub = nil
 	if fake.convergeTasksReturnsOnCall == nil {
 		fake.convergeTasksReturnsOnCall = make(map[int]struct {
 			result1 []*auctioneer.TaskStartRequest
 			result2 []*models.Task
+			result3 []models.Event
 		})
 	}
 	fake.convergeTasksReturnsOnCall[i] = struct {
 		result1 []*auctioneer.TaskStartRequest
 		result2 []*models.Task
-	}{result1, result2}
+		result3 []models.Event
+	}{result1, result2, result3}
 }
 
 func (fake *FakeTaskDB) Invocations() map[string][][]interface{} {

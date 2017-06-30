@@ -185,6 +185,7 @@ var _ = Describe("Task Controller", func() {
 			BeforeEach(func() {
 				fakeTaskDB.DesireTaskReturns(&models.Task{TaskGuid: taskGuid}, err)
 			})
+
 			It("desires the task with the requested definitions", func() {
 				Expect(err).NotTo(HaveOccurred())
 
@@ -858,21 +859,21 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					task1 := model_helpers.NewValidTask(taskGuid1)
 					task2 := model_helpers.NewValidTask(taskGuid2)
-					fakeTaskDB.ConvergeTasksReturns(nil, []*models.Task{task1, task2})
+					fakeTaskDB.ConvergeTasksReturns(nil, []*models.Task{task1, task2}, []models.Event{})
 				})
 
 				It("submits the tasks to the workpool", func() {
 					expectedCallCount := 2
 					Expect(fakeTaskCompletionClient.SubmitCallCount()).To(Equal(expectedCallCount))
 
-					_, submittedTask1 := fakeTaskCompletionClient.SubmitArgsForCall(0)
-					_, submittedTask2 := fakeTaskCompletionClient.SubmitArgsForCall(1)
+					_, _, submittedTask1 := fakeTaskCompletionClient.SubmitArgsForCall(0)
+					_, _, submittedTask2 := fakeTaskCompletionClient.SubmitArgsForCall(1)
 					Expect([]string{submittedTask1.TaskGuid, submittedTask2.TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
 
 					task1Completions := 0
 					task2Completions := 0
 					for i := 0; i < expectedCallCount; i++ {
-						db, task := fakeTaskCompletionClient.SubmitArgsForCall(i)
+						db, _, task := fakeTaskCompletionClient.SubmitArgsForCall(i)
 						Expect(db).To(Equal(fakeTaskDB))
 						if task.TaskGuid == taskGuid1 {
 							task1Completions++
@@ -893,7 +894,7 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					taskStartRequest1 := auctioneer.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
 					taskStartRequest2 := auctioneer.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
-					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2}, nil)
+					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2}, nil, []models.Event{})
 				})
 
 				It("requests an auction", func() {
@@ -912,6 +913,25 @@ var _ = Describe("Task Controller", func() {
 					It("logs an error", func() {
 						Expect(logger.TestSink.LogMessages()).To(ContainElement("test.converge-tasks.failed-to-request-auctions-for-pending-tasks"))
 					})
+				})
+			})
+
+			Context("when there are events to emit", func() {
+				var event1, event2 models.Event
+
+				BeforeEach(func() {
+					event1 = models.NewTaskRemovedEvent(&models.Task{TaskGuid: "removed-task-1"})
+					event2 = models.NewTaskRemovedEvent(&models.Task{TaskGuid: "removed-task-2"})
+					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{}, nil, []models.Event{event1, event2})
+				})
+
+				It("emits a TaskCreateEvent to the hub", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(2))
+					event := taskHub.EmitArgsForCall(0)
+					Expect(event).To(BeEquivalentTo(event1))
+
+					event = taskHub.EmitArgsForCall(1)
+					Expect(event).To(BeEquivalentTo(event2))
 				})
 			})
 		})
