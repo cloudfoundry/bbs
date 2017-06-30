@@ -281,16 +281,6 @@ var _ = Describe("Task Controller", func() {
 				Consistently(taskHub.EmitCallCount).Should(Equal(0))
 			})
 		})
-
-		Context("when the desired task already exists", func() {
-			BeforeEach(func() {
-
-			})
-
-			It("does not emits a change to the hub", func() {
-				Consistently(taskHub.EmitCallCount).Should(Equal(0))
-			})
-		})
 	})
 
 	Describe("StartTask", func() {
@@ -319,8 +309,12 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			Context("when the task should start", func() {
+				var before, after *models.Task
 				BeforeEach(func() {
-					fakeTaskDB.StartTaskReturns(true, nil)
+
+					before = &models.Task{State: models.Task_Pending}
+					after = &models.Task{State: models.Task_Running}
+					fakeTaskDB.StartTaskReturns(before, after, true, nil)
 				})
 
 				It("responds with true", func() {
@@ -333,14 +327,14 @@ var _ = Describe("Task Controller", func() {
 					event := taskHub.EmitArgsForCall(0)
 					changedEvent, ok := event.(*models.TaskChangedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(changedEvent.Before.State).To(BeEmpty())
-					Expect(changedEvent.After.State).To(Equal(models.Task_Running))
+					Expect(changedEvent.Before).To(Equal(before))
+					Expect(changedEvent.After).To(Equal(after))
 				})
 			})
 
 			Context("when the task should not start", func() {
 				BeforeEach(func() {
-					fakeTaskDB.StartTaskReturns(false, nil)
+					fakeTaskDB.StartTaskReturns(nil, nil, false, nil)
 				})
 
 				It("responds with false", func() {
@@ -348,21 +342,21 @@ var _ = Describe("Task Controller", func() {
 					Expect(shouldStart).To(BeFalse())
 				})
 
-				It("does not emits a change to the hub", func() {
+				It("does not emit a change to the hub", func() {
 					Consistently(taskHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 
 			Context("when the DB fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.StartTaskReturns(false, errors.New("kaboom"))
+					fakeTaskDB.StartTaskReturns(nil, nil, false, errors.New("kaboom"))
 				})
 
 				It("bubbles up the underlying model error", func() {
 					Expect(err).To(MatchError("kaboom"))
 				})
 
-				It("does not emits a change to the hub", func() {
+				It("does not emit a change to the hub", func() {
 					Consistently(taskHub.EmitCallCount).Should(Equal(0))
 				})
 			})
@@ -373,13 +367,14 @@ var _ = Describe("Task Controller", func() {
 		var (
 			taskGuid, cellID string
 			err              error
+			before, after    *models.Task
 		)
 
 		BeforeEach(func() {
 			taskGuid = "task-guid"
 			cellID = "the-cell"
-			task := model_helpers.NewValidTask("hi-bob")
-			fakeTaskDB.CancelTaskReturns(task, cellID, nil)
+			after = model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.CancelTaskReturns(before, after, cellID, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -401,22 +396,32 @@ var _ = Describe("Task Controller", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
+				It("emits a change to the hub", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(1))
+					event := taskHub.EmitArgsForCall(0)
+					changedEvent, ok := event.(*models.TaskChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(changedEvent.Before).To(Equal(before))
+					Expect(changedEvent.After).To(Equal(after))
+				})
+
 				Context("and the task has a complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
 						task.CompletionCallbackUrl = "bogus"
-						fakeTaskDB.CancelTaskReturns(task, cellID, nil)
+						fakeTaskDB.CancelTaskReturns(nil, task, cellID, nil)
 					})
 
 					It("causes the workpool to complete its callback work", func() {
 						Eventually(fakeTaskCompletionClient.SubmitCallCount).Should(Equal(1))
 					})
+
 				})
 
 				Context("but the task has no complete URL", func() {
 					BeforeEach(func() {
-						task := model_helpers.NewValidTask("hi-bob")
-						fakeTaskDB.CancelTaskReturns(task, cellID, nil)
+						after = model_helpers.NewValidTask("hi-bob")
+						fakeTaskDB.CancelTaskReturns(nil, after, cellID, nil)
 					})
 
 					It("does not complete the task callback", func() {
@@ -465,7 +470,7 @@ var _ = Describe("Task Controller", func() {
 				Context("when the task has no cell id", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						fakeTaskDB.CancelTaskReturns(task, "", nil)
+						fakeTaskDB.CancelTaskReturns(nil, task, "", nil)
 					})
 
 					It("does not return an error", func() {
@@ -508,11 +513,15 @@ var _ = Describe("Task Controller", func() {
 
 			Context("when cancelling the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.CancelTaskReturns(nil, "", errors.New("kaboom"))
+					fakeTaskDB.CancelTaskReturns(nil, nil, "", errors.New("kaboom"))
 				})
 
 				It("responds with an error", func() {
 					Expect(err).To(MatchError("kaboom"))
+				})
+
+				It("does not emit a change to the hub", func() {
+					Consistently(taskHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})
@@ -523,13 +532,15 @@ var _ = Describe("Task Controller", func() {
 			taskGuid      string
 			failureReason string
 			err           error
+			before, after *models.Task
 		)
 
 		BeforeEach(func() {
 			taskGuid = "task-guid"
 			failureReason = "just cuz ;)"
-			task := model_helpers.NewValidTask("hi-bob")
-			fakeTaskDB.FailTaskReturns(task, nil)
+			before = &models.Task{}
+			after = model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.FailTaskReturns(before, after, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -544,11 +555,20 @@ var _ = Describe("Task Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
+			It("emits a change to the hub", func() {
+				Eventually(taskHub.EmitCallCount).Should(Equal(1))
+				event := taskHub.EmitArgsForCall(0)
+				changedEvent, ok := event.(*models.TaskChangedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(changedEvent.Before).To(Equal(before))
+				Expect(changedEvent.After).To(Equal(after))
+			})
+
 			Context("and the task has a complete URL", func() {
 				BeforeEach(func() {
 					task := model_helpers.NewValidTask("hi-bob")
 					task.CompletionCallbackUrl = "bogus"
-					fakeTaskDB.FailTaskReturns(task, nil)
+					fakeTaskDB.FailTaskReturns(nil, task, nil)
 				})
 
 				It("causes the workpool to complete its callback work", func() {
@@ -559,7 +579,7 @@ var _ = Describe("Task Controller", func() {
 			Context("but the task has no complete URL", func() {
 				BeforeEach(func() {
 					task := model_helpers.NewValidTask("hi-bob")
-					fakeTaskDB.FailTaskReturns(task, nil)
+					fakeTaskDB.FailTaskReturns(nil, task, nil)
 				})
 
 				It("does not complete the task callback", func() {
@@ -570,11 +590,15 @@ var _ = Describe("Task Controller", func() {
 
 		Context("when failing the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.FailTaskReturns(nil, errors.New("kaboom"))
+				fakeTaskDB.FailTaskReturns(nil, nil, errors.New("kaboom"))
 			})
 
 			It("responds with an error", func() {
 				Expect(err).To(MatchError("kaboom"))
+			})
+
+			It("does not emit a change to the hub", func() {
+				Consistently(taskHub.EmitCallCount).Should(Equal(0))
 			})
 		})
 	})
@@ -587,6 +611,7 @@ var _ = Describe("Task Controller", func() {
 			failureReason string
 			result        string
 			err           error
+			before, after *models.Task
 		)
 
 		BeforeEach(func() {
@@ -596,8 +621,9 @@ var _ = Describe("Task Controller", func() {
 			failureReason = "some-error"
 			result = "yeah"
 
-			task := model_helpers.NewValidTask("hi-bob")
-			fakeTaskDB.CompleteTaskReturns(task, nil)
+			before = &models.Task{}
+			after = model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.CompleteTaskReturns(before, after, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -616,12 +642,21 @@ var _ = Describe("Task Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
+			It("emits a change to the hub", func() {
+				Eventually(taskHub.EmitCallCount).Should(Equal(1))
+				event := taskHub.EmitArgsForCall(0)
+				changedEvent, ok := event.(*models.TaskChangedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(changedEvent.Before).To(Equal(before))
+				Expect(changedEvent.After).To(Equal(after))
+			})
+
 			Context("and completing succeeds", func() {
 				Context("and the task has a complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
 						task.CompletionCallbackUrl = "bogus"
-						fakeTaskDB.CompleteTaskReturns(task, nil)
+						fakeTaskDB.CompleteTaskReturns(nil, task, nil)
 					})
 
 					It("causes the workpool to complete its callback work", func() {
@@ -632,7 +667,7 @@ var _ = Describe("Task Controller", func() {
 				Context("but the task has no complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						fakeTaskDB.CompleteTaskReturns(task, nil)
+						fakeTaskDB.CompleteTaskReturns(nil, task, nil)
 					})
 
 					It("does not complete the task callback", func() {
@@ -644,11 +679,15 @@ var _ = Describe("Task Controller", func() {
 
 		Context("when completing the task fails", func() {
 			BeforeEach(func() {
-				fakeTaskDB.CompleteTaskReturns(nil, errors.New("kaboom"))
+				fakeTaskDB.CompleteTaskReturns(nil, nil, errors.New("kaboom"))
 			})
 
 			It("responds with an error", func() {
 				Expect(err).To(MatchError("kaboom"))
+			})
+
+			It("does not emit a change to the hub", func() {
+				Consistently(taskHub.EmitCallCount).Should(Equal(0))
 			})
 		})
 	})
@@ -656,12 +695,16 @@ var _ = Describe("Task Controller", func() {
 	Describe("ResolvingTask", func() {
 		Context("when the resolving request is normal", func() {
 			var (
-				taskGuid string
-				err      error
+				taskGuid      string
+				err           error
+				before, after *models.Task
 			)
 
 			BeforeEach(func() {
 				taskGuid = "task-guid"
+				before = &models.Task{}
+				after = &models.Task{State: models.Task_Resolving}
+				fakeTaskDB.ResolvingTaskReturns(before, after, nil)
 			})
 
 			JustBeforeEach(func() {
@@ -675,15 +718,28 @@ var _ = Describe("Task Controller", func() {
 					Expect(taskGuid).To(Equal("task-guid"))
 					Expect(err).NotTo(HaveOccurred())
 				})
+
+				It("emits a change to the hub", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(1))
+					event := taskHub.EmitArgsForCall(0)
+					changedEvent, ok := event.(*models.TaskChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(changedEvent.Before).To(Equal(before))
+					Expect(changedEvent.After).To(Equal(after))
+				})
 			})
 
 			Context("when desiring the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.ResolvingTaskReturns(errors.New("kaboom"))
+					fakeTaskDB.ResolvingTaskReturns(nil, nil, errors.New("kaboom"))
 				})
 
 				It("responds with an error", func() {
 					Expect(err).To(MatchError("kaboom"))
+				})
+
+				It("does not emit a change to the hub", func() {
+					Consistently(taskHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})
@@ -694,10 +750,13 @@ var _ = Describe("Task Controller", func() {
 			var (
 				taskGuid string
 				err      error
+				task     *models.Task
 			)
 
 			BeforeEach(func() {
 				taskGuid = "task-guid"
+				task = &models.Task{TaskGuid: "guid"}
+				fakeTaskDB.DeleteTaskReturns(task, nil)
 			})
 
 			JustBeforeEach(func() {
@@ -711,15 +770,27 @@ var _ = Describe("Task Controller", func() {
 					Expect(taskGuid).To(Equal("task-guid"))
 					Expect(err).NotTo(HaveOccurred())
 				})
+
+				It("emits a change to the hub", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(1))
+					event := taskHub.EmitArgsForCall(0)
+					removedEvent, ok := event.(*models.TaskRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(removedEvent.Task).To(Equal(task))
+				})
 			})
 
 			Context("when desiring the task fails", func() {
 				BeforeEach(func() {
-					fakeTaskDB.DeleteTaskReturns(errors.New("kaboom"))
+					fakeTaskDB.DeleteTaskReturns(nil, errors.New("kaboom"))
 				})
 
 				It("responds with an error", func() {
 					Expect(err).To(MatchError("kaboom"))
+				})
+
+				It("does not emit a change to the hub", func() {
+					Consistently(taskHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})

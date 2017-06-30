@@ -87,7 +87,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 	logger = logger.Session("handle-completed-task", lager.Data{"task_guid": task.TaskGuid})
 
 	if task.CompletionCallbackUrl != "" {
-		modelErr := taskDB.ResolvingTask(logger, task.TaskGuid)
+		_, _, modelErr := taskDB.ResolvingTask(logger, task.TaskGuid)
 		if modelErr != nil {
 			logger.Error("marking-task-as-resolving-failed", modelErr)
 			return
@@ -131,7 +131,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 
 			statusCode = response.StatusCode
 			if shouldResolve(statusCode) {
-				modelErr := taskDB.DeleteTask(logger, task.TaskGuid)
+				_, modelErr := taskDB.DeleteTask(logger, task.TaskGuid)
 				if modelErr != nil {
 					logger.Error("delete-task-failed", modelErr)
 				}

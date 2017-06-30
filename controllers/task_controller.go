@@ -81,20 +81,25 @@ func (h *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.
 
 func (h *TaskController) StartTask(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error) {
 	logger = logger.Session("start-task", lager.Data{"task_guid": taskGuid, "cell_id": cellId})
-	return h.db.StartTask(logger, taskGuid, cellId)
+	before, after, shouldStart, err := h.db.StartTask(logger, taskGuid, cellId)
+	if err == nil && shouldStart {
+		go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+	}
+	return shouldStart, err
 }
 
 func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("cancel-task")
 
-	task, cellID, err := h.db.CancelTask(logger, taskGuid)
+	before, after, cellID, err := h.db.CancelTask(logger, taskGuid)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if task.CompletionCallbackUrl != "" {
+	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, after)
 	}
 
 	if cellID == "" {
@@ -130,14 +135,15 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 	var err error
 	logger = logger.Session("fail-task")
 
-	task, err := h.db.FailTask(logger, taskGuid, failureReason)
+	before, after, err := h.db.FailTask(logger, taskGuid, failureReason)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if task.CompletionCallbackUrl != "" {
+	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, after)
 	}
 
 	return nil
@@ -154,14 +160,15 @@ func (h *TaskController) CompleteTask(
 	var err error
 	logger = logger.Session("complete-task")
 
-	task, err := h.db.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
+	before, after, err := h.db.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if task.CompletionCallbackUrl != "" {
+	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, after)
 	}
 
 	return nil
@@ -170,13 +177,25 @@ func (h *TaskController) CompleteTask(
 func (h *TaskController) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("resolving-task")
 
-	return h.db.ResolvingTask(logger, taskGuid)
+	before, after, err := h.db.ResolvingTask(logger, taskGuid)
+	if err != nil {
+		return err
+	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+
+	return nil
 }
 
 func (h *TaskController) DeleteTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("delete-task")
 
-	return h.db.DeleteTask(logger, taskGuid)
+	task, err := h.db.DeleteTask(logger, taskGuid)
+	if err != nil {
+		return err
+	}
+	go h.taskHub.Emit(models.NewTaskRemovedEvent(task))
+
+	return nil
 }
 
 func (h *TaskController) ConvergeTasks(

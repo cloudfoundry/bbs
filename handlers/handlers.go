@@ -27,7 +27,7 @@ func New(
 	convergenceWorkersSize int,
 	statsEmitter middleware.Emitter,
 	db db.DB,
-	desiredHub, actualHub events.Hub,
+	desiredHub, actualHub, taskHub events.Hub,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
 	serviceClient serviceclient.ServiceClient,
 	auctioneerClient auctioneer.Client,
@@ -42,9 +42,10 @@ func New(
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(db, db, db, actualHub, auctioneerClient, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
-	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory)
+	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub)
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	eventsHandler := NewEventHandler(desiredHub, actualHub)
+	taskEventsHandler := NewTaskEventHandler(taskHub)
 	cellsHandler := NewCellHandler(serviceClient, exitChan)
 
 	emitter := middleware.NewLatencyEmitterWrapper(statsEmitter)
@@ -111,7 +112,8 @@ func New(
 		bbs.DesireTaskRoute_r0: route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DesireTask_r0))),
 
 		// Events
-		bbs.EventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
+		bbs.EventStreamRoute_r0:     route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
+		bbs.TaskEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
 
 		// Cells
 		bbs.CellsRoute:    route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells))),

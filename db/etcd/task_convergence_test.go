@@ -169,10 +169,10 @@ var _ = Describe("Convergence of Tasks", func() {
 
 		Context("when a Task is running", func() {
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, model_helpers.NewValidTaskDefinition(), taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, model_helpers.NewValidTaskDefinition(), taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, "cell-id")
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, "cell-id")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -225,22 +225,22 @@ var _ = Describe("Convergence of Tasks", func() {
 					taskDef := model_helpers.NewValidTaskDefinition()
 					taskDef.CompletionCallbackUrl = "blah"
 
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+					_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+					_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
+					_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.TaskGuid).To(Equal(taskGuid))
 
-					err = etcdDB.DesireTask(logger, taskDef, taskGuid2, domain)
+					_, err = etcdDB.DesireTask(logger, taskDef, taskGuid2, domain)
 
-					_, err = etcdDB.StartTask(logger, taskGuid2, cellId)
+					_, _, _, err = etcdDB.StartTask(logger, taskGuid2, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					task, err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
+					_, task, err = etcdDB.CompleteTask(logger, taskGuid2, cellId, true, "'cause I said so", "a magical result")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.TaskGuid).To(Equal(taskGuid2))
 				})
@@ -298,17 +298,17 @@ var _ = Describe("Convergence of Tasks", func() {
 				taskDef := model_helpers.NewValidTaskDefinition()
 				taskDef.CompletionCallbackUrl = "blah"
 
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "'cause I said so", "a magical result")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.TaskGuid).To(Equal(taskGuid))
 
-				err = etcdDB.ResolvingTask(logger, taskGuid)
+				_, _, err = etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 			})
 

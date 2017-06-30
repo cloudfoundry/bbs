@@ -190,6 +190,10 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(tasksToAuction).NotTo(ContainElement(&taskRequest))
 			})
 
+			It("emits a TaskChangedEvent", func() {
+				//TODO
+			})
+
 			It("returns tasks that should be kicked for auctioning", func() {
 				task, err := sqlDB.TaskByGuid(logger, "pending-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
