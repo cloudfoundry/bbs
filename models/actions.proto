@@ -55,6 +55,7 @@ message RunAction {
   optional string user = 6;
   optional string log_source = 7 [(gogoproto.jsontag) = "log_source,omitempty"];
   optional bool suppress_log_output = 8;
+  optional bool suppress_healthcheck_exit_code = 9;
 }
 
 message TimeoutAction {

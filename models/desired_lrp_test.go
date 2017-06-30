@@ -83,7 +83,8 @@ var _ = Describe("DesiredLRP", func() {
               },
               "user": "vcap",
               "log_source": "APP",
-			  "suppress_log_output": false
+							"suppress_log_output": false,
+							"suppress_healthcheck_exit_code": false
             }
           },
           {
@@ -122,7 +123,8 @@ var _ = Describe("DesiredLRP", func() {
                 "nofile": 16384
               },
               "user": "vcap",
-			  "suppress_log_output": false
+							"suppress_log_output": false,
+							"suppress_healthcheck_exit_code": false
             }
           }
         ]
@@ -141,7 +143,8 @@ var _ = Describe("DesiredLRP", func() {
             },
             "user": "vcap",
             "log_source": "HEALTH",
-			"suppress_log_output": true
+						"suppress_log_output": true,
+						"suppress_healthcheck_exit_code": false
           }
         },
         "timeout_ms": 30000000

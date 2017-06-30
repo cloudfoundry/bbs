@@ -302,7 +302,8 @@ var _ = Describe("Actions", func() {
 						{"name":"BAR", "value":"2"}
 					],
 					"resource_limits":{"nofile": 10},
-					"suppress_log_output": false
+					"suppress_log_output": false,
+					"suppress_healthcheck_exit_code": false
 			}`,
 			models.WrapAction(&models.RunAction{
 				User: "me",
@@ -362,7 +363,8 @@ var _ = Describe("Actions", func() {
 						"resource_limits":{
 							"nofile": 10
 						},
-						"suppress_log_output": false
+						"suppress_log_output": false,
+						"suppress_healthcheck_exit_code": false
 					}
 				},
 				"timeout_ms": 10
@@ -444,7 +446,8 @@ var _ = Describe("Actions", func() {
 							"path": "echo",
 							"resource_limits":{},
 							"user": "me",
-							"suppress_log_output": false
+							"suppress_log_output": false,
+							"suppress_healthcheck_exit_code": false
 						}
 					}
 			}`,
@@ -513,7 +516,8 @@ var _ = Describe("Actions", func() {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false
+								"suppress_log_output": false,
+								"suppress_healthcheck_exit_code": false
 							}
 						}
 					]
@@ -607,7 +611,8 @@ var _ = Describe("Actions", func() {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false
+								"suppress_log_output": false,
+								"suppress_healthcheck_exit_code": false
 							}
 						}
 					]
@@ -686,7 +691,8 @@ var _ = Describe("Actions", func() {
 							"path": "echo",
 							"resource_limits":{},
 							"user": "me",
-							"suppress_log_output": false
+							"suppress_log_output": false,
+							"suppress_healthcheck_exit_code": false
 						}
 					}
 			}`,
@@ -756,7 +762,8 @@ var _ = Describe("Actions", func() {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false
+								"suppress_log_output": false,
+								"suppress_healthcheck_exit_code": false
 							}
 						}
 					]
