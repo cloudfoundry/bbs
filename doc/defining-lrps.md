@@ -87,6 +87,7 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 				},
 			},
 		},
+		LogSource: "health-check",
 	}
 })
 ```
@@ -268,11 +269,16 @@ For more details on the available actions see [actions](actions.md).
 
 `CheckDefinition` provides a more structured way to declare healthchecks. It is up to the `Rep` whether to use the `Monitor` action or the `CheckDefinition`. See `enable_declarative_healthcheck` property in the [Rep job spec](https://github.com/cloudfoundry/diego-release/blob/develop/jobs/rep/spec)
 
-**note** this is still an experimental feature
+**NOTE**: The `CheckDefinition` is still an experimental feature.
 
 ###### `Checks` [repeated]
 
 A list of health checks. Each healthcheck can be either a `TCPCheck` or `HTTPCheck`. It is an error to have both set.
+
+###### `LogSource` [optional]
+
+If provided, logs emitted by this process will be tagged with the value of the
+`LogSource` string.  Otherwise, a default tag of `HEALTH` is used.
 
 ###### `HTTPCheck`
 
