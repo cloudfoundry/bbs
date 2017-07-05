@@ -1,19 +1,19 @@
 # Events
 
-The BBS emits events when a DesiredLRP or ActualLRP is created,
+The BBS emits events when a DesiredLRP, ActualLRP or Task is created,
 updated, or deleted. The following sections provide details on how to subscribe
 to those events as well as the type of events supported by the BBS.
 
-## Subscribing to events
+## Subscribing to LRP Events
 
 You can use the `SubscribeToEvents(logger lager.Logger) (events.EventSource,
-error)` client method to subscribe to all events. For example:
+error)` client method to subscribe to lrp events. For example:
 
 ``` go
 client := bbs.NewClient(url)
 eventSource, err := client.SubscribeToEvents(logger)
 if err != nil {
-    log.Printf("failed to subscribe to events: " + err.Error())
+    log.Printf("failed to subscribe to lrp events: " + err.Error())
 }
 ```
 
@@ -23,7 +23,7 @@ Alternatively you can use the `SubscribeToEventsByCellID` client method to subsc
 client := bbs.NewClient(url)
 eventSource, err := client.SubscribeToEventsByCellID(logger, "some-cell-id")
 if err != nil {
-    log.Printf("failed to subscribe to events: " + err.Error())
+    log.Printf("failed to subscribe to lrp events: " + err.Error())
 }
 ```
 
@@ -36,7 +36,22 @@ Events relevant to the cell are defined as:
 
 **Note** Passing an empty string `cellID` argument to `SubscribeToEventsByCellID` is equivalent to calling `SubscribeToEvents`
 
-### Using the event source
+**Note** `SubscribeToEventsByCellID` and `SubscribeToEvents` do not have events related to Tasks.
+
+## Subscribing to Task Events
+
+You can use the `SubscribeToTaskEvents(logger lager.Logger) (events.EventSource,
+error)` client method to subscribe to task events. For example:
+
+``` go
+client := bbs.NewClient(url)
+eventSource, err := client.SubscribeToTaskEvents(logger)
+if err != nil {
+    log.Printf("failed to subscribe to task events: " + err.Error())
+}
+```
+
+## Using the event source
 
 Once an `EventSource` is created, you can then loop through the events by calling
 [Next](https://godoc.org/code.cloudfoundry.org/bbs/events#EventSource) in a
@@ -139,3 +154,26 @@ is emitted. The event will have the following field values:
 1. `CrashCount`: The number of times the ActualLRP has crashed, including this latest crash.
 1. `CrashReason`: The last error that caused the ActualLRP to crash.
 1. `Since`: The timestamp when the ActualLRP last crashed, in nanoseconds in the Unix epoch.
+
+## Task events
+
+### `TaskCreatedEvent`
+
+When a new Task is created, a
+[TaskCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskCreatedEvent)
+is emitted. The value of the `Task` field contains information about the
+Task that was just created.
+
+### `TaskChangedEvent`
+
+When a Task changes, a
+[TaskChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskChangedEvent)
+is emitted. The value of the `Before` and `After` fields have information about the
+Task before and after the change.
+
+### `TaskRemovedEvent`
+
+When a Task is deleted, a
+[TaskRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskRemovedEvent)
+is emitted. The field value of `Task` will have information about the
+Task that was just removed.

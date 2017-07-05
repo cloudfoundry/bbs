@@ -304,6 +304,19 @@ type FakeClient struct {
 		result1 events.EventSource
 		result2 error
 	}
+	SubscribeToTaskEventsStub        func(logger lager.Logger) (events.EventSource, error)
+	subscribeToTaskEventsMutex       sync.RWMutex
+	subscribeToTaskEventsArgsForCall []struct {
+		logger lager.Logger
+	}
+	subscribeToTaskEventsReturns struct {
+		result1 events.EventSource
+		result2 error
+	}
+	subscribeToTaskEventsReturnsOnCall map[int]struct {
+		result1 events.EventSource
+		result2 error
+	}
 	SubscribeToEventsByCellIDStub        func(logger lager.Logger, cellId string) (events.EventSource, error)
 	subscribeToEventsByCellIDMutex       sync.RWMutex
 	subscribeToEventsByCellIDArgsForCall []struct {
@@ -1465,6 +1478,57 @@ func (fake *FakeClient) SubscribeToEventsReturnsOnCall(i int, result1 events.Eve
 	}{result1, result2}
 }
 
+func (fake *FakeClient) SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error) {
+	fake.subscribeToTaskEventsMutex.Lock()
+	ret, specificReturn := fake.subscribeToTaskEventsReturnsOnCall[len(fake.subscribeToTaskEventsArgsForCall)]
+	fake.subscribeToTaskEventsArgsForCall = append(fake.subscribeToTaskEventsArgsForCall, struct {
+		logger lager.Logger
+	}{logger})
+	fake.recordInvocation("SubscribeToTaskEvents", []interface{}{logger})
+	fake.subscribeToTaskEventsMutex.Unlock()
+	if fake.SubscribeToTaskEventsStub != nil {
+		return fake.SubscribeToTaskEventsStub(logger)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.subscribeToTaskEventsReturns.result1, fake.subscribeToTaskEventsReturns.result2
+}
+
+func (fake *FakeClient) SubscribeToTaskEventsCallCount() int {
+	fake.subscribeToTaskEventsMutex.RLock()
+	defer fake.subscribeToTaskEventsMutex.RUnlock()
+	return len(fake.subscribeToTaskEventsArgsForCall)
+}
+
+func (fake *FakeClient) SubscribeToTaskEventsArgsForCall(i int) lager.Logger {
+	fake.subscribeToTaskEventsMutex.RLock()
+	defer fake.subscribeToTaskEventsMutex.RUnlock()
+	return fake.subscribeToTaskEventsArgsForCall[i].logger
+}
+
+func (fake *FakeClient) SubscribeToTaskEventsReturns(result1 events.EventSource, result2 error) {
+	fake.SubscribeToTaskEventsStub = nil
+	fake.subscribeToTaskEventsReturns = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) SubscribeToTaskEventsReturnsOnCall(i int, result1 events.EventSource, result2 error) {
+	fake.SubscribeToTaskEventsStub = nil
+	if fake.subscribeToTaskEventsReturnsOnCall == nil {
+		fake.subscribeToTaskEventsReturnsOnCall = make(map[int]struct {
+			result1 events.EventSource
+			result2 error
+		})
+	}
+	fake.subscribeToTaskEventsReturnsOnCall[i] = struct {
+		result1 events.EventSource
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeClient) SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
 	fake.subscribeToEventsByCellIDMutex.Lock()
 	ret, specificReturn := fake.subscribeToEventsByCellIDReturnsOnCall[len(fake.subscribeToEventsByCellIDArgsForCall)]
@@ -1663,6 +1727,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.removeDesiredLRPMutex.RUnlock()
 	fake.subscribeToEventsMutex.RLock()
 	defer fake.subscribeToEventsMutex.RUnlock()
+	fake.subscribeToTaskEventsMutex.RLock()
+	defer fake.subscribeToTaskEventsMutex.RUnlock()
 	fake.subscribeToEventsByCellIDMutex.RLock()
 	defer fake.subscribeToEventsByCellIDMutex.RUnlock()
 	fake.pingMutex.RLock()

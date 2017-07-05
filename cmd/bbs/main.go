@@ -199,6 +199,7 @@ func main() {
 
 	desiredHub := events.NewHub()
 	actualHub := events.NewHub()
+	taskHub := events.NewHub()
 
 	repTLSConfig := &rep.TLSConfig{
 		RequireTLS:      bbsConfig.RepRequireTLS,
@@ -299,6 +300,7 @@ func main() {
 		activeDB,
 		desiredHub,
 		actualHub,
+		taskHub,
 		cbWorkPool,
 		serviceClient,
 		auctioneerClient,
@@ -318,7 +320,7 @@ func main() {
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 	)
-	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory)
+	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub)
 
 	convergerProcess := converger.New(
 		logger,
@@ -348,7 +350,7 @@ func main() {
 		{"server", server},
 		{"migration-manager", migrationManager},
 		{"encryptor", encryptor},
-		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub)},
+		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub, taskHub)},
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
 		{"periodic-metrics", requestStatMetronNotifier},
 		{"converger", convergerProcess},
@@ -436,7 +438,7 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func hubMaintainer(logger lager.Logger, desiredHub, actualHub events.Hub) ifrit.RunFunc {
+func hubMaintainer(logger lager.Logger, desiredHub, actualHub, taskHub events.Hub) ifrit.RunFunc {
 	return func(signals <-chan os.Signal, ready chan<- struct{}) error {
 		logger := logger.Session("hub-maintainer")
 		close(ready)
@@ -449,6 +451,10 @@ func hubMaintainer(logger lager.Logger, desiredHub, actualHub events.Hub) ifrit.
 			logger.Error("error-closing-desired-hub", err)
 		}
 		err = actualHub.Close()
+		if err != nil {
+			logger.Error("error-closing-actual-hub", err)
+		}
+		err = taskHub.Close()
 		if err != nil {
 			logger.Error("error-closing-actual-hub", err)
 		}

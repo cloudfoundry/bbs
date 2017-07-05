@@ -8,15 +8,29 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+type EventController interface {
+	Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request)
+}
+
 type EventHandler struct {
 	desiredHub events.Hub
 	actualHub  events.Hub
+}
+
+type TaskEventHandler struct {
+	taskHub events.Hub
 }
 
 func NewEventHandler(desiredHub, actualHub events.Hub) *EventHandler {
 	return &EventHandler{
 		desiredHub: desiredHub,
 		actualHub:  actualHub,
+	}
+}
+
+func NewTaskEventHandler(taskHub events.Hub) *TaskEventHandler {
+	return &TaskEventHandler{
+		taskHub: taskHub,
 	}
 }
 

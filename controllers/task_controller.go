@@ -5,6 +5,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
@@ -18,6 +19,7 @@ type TaskController struct {
 	auctioneerClient     auctioneer.Client
 	serviceClient        serviceclient.ServiceClient
 	repClientFactory     rep.ClientFactory
+	taskHub              events.Hub
 }
 
 func NewTaskController(
@@ -26,6 +28,7 @@ func NewTaskController(
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
+	taskHub events.Hub,
 ) *TaskController {
 	return &TaskController{
 		db:                   db,
@@ -33,6 +36,7 @@ func NewTaskController(
 		auctioneerClient:     auctioneerClient,
 		serviceClient:        serviceClient,
 		repClientFactory:     repClientFactory,
+		taskHub:              taskHub,
 	}
 }
 
@@ -51,14 +55,16 @@ func (h *TaskController) TaskByGuid(logger lager.Logger, taskGuid string) (*mode
 
 func (h *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error {
 	var err error
+	var task *models.Task
 	logger = logger.Session("desire-task")
 
 	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 
-	err = h.db.DesireTask(logger, taskDefinition, taskGuid, domain)
+	task, err = h.db.DesireTask(logger, taskDefinition, taskGuid, domain)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskCreatedEvent(task))
 
 	logger.Debug("start-task-auction-request")
 	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDefinition)
@@ -75,20 +81,25 @@ func (h *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.
 
 func (h *TaskController) StartTask(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error) {
 	logger = logger.Session("start-task", lager.Data{"task_guid": taskGuid, "cell_id": cellId})
-	return h.db.StartTask(logger, taskGuid, cellId)
+	before, after, shouldStart, err := h.db.StartTask(logger, taskGuid, cellId)
+	if err == nil && shouldStart {
+		go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+	}
+	return shouldStart, err
 }
 
 func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("cancel-task")
 
-	task, cellID, err := h.db.CancelTask(logger, taskGuid)
+	before, after, cellID, err := h.db.CancelTask(logger, taskGuid)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if task.CompletionCallbackUrl != "" {
+	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
 	}
 
 	if cellID == "" {
@@ -124,14 +135,15 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 	var err error
 	logger = logger.Session("fail-task")
 
-	task, err := h.db.FailTask(logger, taskGuid, failureReason)
+	before, after, err := h.db.FailTask(logger, taskGuid, failureReason)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if task.CompletionCallbackUrl != "" {
+	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
 	}
 
 	return nil
@@ -148,14 +160,15 @@ func (h *TaskController) CompleteTask(
 	var err error
 	logger = logger.Session("complete-task")
 
-	task, err := h.db.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
+	before, after, err := h.db.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
 	if err != nil {
 		return err
 	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if task.CompletionCallbackUrl != "" {
+	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, task)
+		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
 	}
 
 	return nil
@@ -164,13 +177,25 @@ func (h *TaskController) CompleteTask(
 func (h *TaskController) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("resolving-task")
 
-	return h.db.ResolvingTask(logger, taskGuid)
+	before, after, err := h.db.ResolvingTask(logger, taskGuid)
+	if err != nil {
+		return err
+	}
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+
+	return nil
 }
 
 func (h *TaskController) DeleteTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("delete-task")
 
-	return h.db.DeleteTask(logger, taskGuid)
+	task, err := h.db.DeleteTask(logger, taskGuid)
+	if err != nil {
+		return err
+	}
+	go h.taskHub.Emit(models.NewTaskRemovedEvent(task))
+
+	return nil
 }
 
 func (h *TaskController) ConvergeTasks(
@@ -193,13 +218,18 @@ func (h *TaskController) ConvergeTasks(
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	tasksToAuction, tasksToComplete := h.db.ConvergeTasks(
+	tasksToAuction, tasksToComplete, eventsToEmit := h.db.ConvergeTasks(
 		logger,
 		cellSet,
 		kickTaskDuration,
 		expirePendingTaskDuration,
 		expireCompletedTaskDuration,
 	)
+
+	logger.Debug("emitting events from convergence", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+	for _, event := range eventsToEmit {
+		go h.taskHub.Emit(event)
+	}
 
 	if len(tasksToAuction) > 0 {
 		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
@@ -217,8 +247,9 @@ func (h *TaskController) ConvergeTasks(
 
 	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
 	for _, task := range tasksToComplete {
-		h.taskCompletionClient.Submit(h.db, task)
+		h.taskCompletionClient.Submit(h.db, h.taskHub, task)
 	}
 	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+
 	return nil
 }

@@ -173,6 +173,59 @@ func (m *EventsByCellId) GetCellId() string {
 	return ""
 }
 
+type TaskCreatedEvent struct {
+	Task *Task `protobuf:"bytes,1,opt,name=task" json:"task,omitempty"`
+}
+
+func (m *TaskCreatedEvent) Reset()                    { *m = TaskCreatedEvent{} }
+func (*TaskCreatedEvent) ProtoMessage()               {}
+func (*TaskCreatedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{8} }
+
+func (m *TaskCreatedEvent) GetTask() *Task {
+	if m != nil {
+		return m.Task
+	}
+	return nil
+}
+
+type TaskChangedEvent struct {
+	Before *Task `protobuf:"bytes,1,opt,name=before" json:"before,omitempty"`
+	After  *Task `protobuf:"bytes,2,opt,name=after" json:"after,omitempty"`
+}
+
+func (m *TaskChangedEvent) Reset()                    { *m = TaskChangedEvent{} }
+func (*TaskChangedEvent) ProtoMessage()               {}
+func (*TaskChangedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{9} }
+
+func (m *TaskChangedEvent) GetBefore() *Task {
+	if m != nil {
+		return m.Before
+	}
+	return nil
+}
+
+func (m *TaskChangedEvent) GetAfter() *Task {
+	if m != nil {
+		return m.After
+	}
+	return nil
+}
+
+type TaskRemovedEvent struct {
+	Task *Task `protobuf:"bytes,1,opt,name=task" json:"task,omitempty"`
+}
+
+func (m *TaskRemovedEvent) Reset()                    { *m = TaskRemovedEvent{} }
+func (*TaskRemovedEvent) ProtoMessage()               {}
+func (*TaskRemovedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{10} }
+
+func (m *TaskRemovedEvent) GetTask() *Task {
+	if m != nil {
+		return m.Task
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ActualLRPCreatedEvent)(nil), "models.ActualLRPCreatedEvent")
 	proto.RegisterType((*ActualLRPChangedEvent)(nil), "models.ActualLRPChangedEvent")
@@ -182,6 +235,9 @@ func init() {
 	proto.RegisterType((*DesiredLRPRemovedEvent)(nil), "models.DesiredLRPRemovedEvent")
 	proto.RegisterType((*ActualLRPCrashedEvent)(nil), "models.ActualLRPCrashedEvent")
 	proto.RegisterType((*EventsByCellId)(nil), "models.EventsByCellId")
+	proto.RegisterType((*TaskCreatedEvent)(nil), "models.TaskCreatedEvent")
+	proto.RegisterType((*TaskChangedEvent)(nil), "models.TaskChangedEvent")
+	proto.RegisterType((*TaskRemovedEvent)(nil), "models.TaskRemovedEvent")
 }
 func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 	if that == nil {
@@ -441,6 +497,99 @@ func (this *EventsByCellId) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *TaskCreatedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*TaskCreatedEvent)
+	if !ok {
+		that2, ok := that.(TaskCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Task.Equal(that1.Task) {
+		return false
+	}
+	return true
+}
+func (this *TaskChangedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*TaskChangedEvent)
+	if !ok {
+		that2, ok := that.(TaskChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	return true
+}
+func (this *TaskRemovedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*TaskRemovedEvent)
+	if !ok {
+		that2, ok := that.(TaskRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Task.Equal(that1.Task) {
+		return false
+	}
+	return true
+}
 func (this *ActualLRPCreatedEvent) GoString() string {
 	if this == nil {
 		return "nil"
@@ -540,6 +689,45 @@ func (this *EventsByCellId) GoString() string {
 	s := make([]string, 0, 5)
 	s = append(s, "&models.EventsByCellId{")
 	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *TaskCreatedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.TaskCreatedEvent{")
+	if this.Task != nil {
+		s = append(s, "Task: "+fmt.Sprintf("%#v", this.Task)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *TaskChangedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.TaskChangedEvent{")
+	if this.Before != nil {
+		s = append(s, "Before: "+fmt.Sprintf("%#v", this.Before)+",\n")
+	}
+	if this.After != nil {
+		s = append(s, "After: "+fmt.Sprintf("%#v", this.After)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *TaskRemovedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.TaskRemovedEvent{")
+	if this.Task != nil {
+		s = append(s, "Task: "+fmt.Sprintf("%#v", this.Task)+",\n")
+	}
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -805,6 +993,100 @@ func (m *EventsByCellId) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *TaskCreatedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TaskCreatedEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Task != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.Task.Size()))
+		n11, err := m.Task.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+
+func (m *TaskChangedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TaskChangedEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Before != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.Before.Size()))
+		n12, err := m.Before.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	if m.After != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.After.Size()))
+		n13, err := m.After.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
+	return i, nil
+}
+
+func (m *TaskRemovedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TaskRemovedEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Task != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.Task.Size()))
+		n14, err := m.Task.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	return i, nil
+}
+
 func encodeFixed64Events(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -922,6 +1204,40 @@ func (m *EventsByCellId) Size() (n int) {
 	return n
 }
 
+func (m *TaskCreatedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Task != nil {
+		l = m.Task.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *TaskChangedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Before != nil {
+		l = m.Before.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.After != nil {
+		l = m.After.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *TaskRemovedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Task != nil {
+		l = m.Task.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
 func sovEvents(x uint64) (n int) {
 	for {
 		n++
@@ -1017,6 +1333,37 @@ func (this *EventsByCellId) String() string {
 	}
 	s := strings.Join([]string{`&EventsByCellId{`,
 		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TaskCreatedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TaskCreatedEvent{`,
+		`Task:` + strings.Replace(fmt.Sprintf("%v", this.Task), "Task", "Task", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TaskChangedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TaskChangedEvent{`,
+		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "Task", "Task", 1) + `,`,
+		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "Task", "Task", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TaskRemovedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TaskRemovedEvent{`,
+		`Task:` + strings.Replace(fmt.Sprintf("%v", this.Task), "Task", "Task", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1849,6 +2196,288 @@ func (m *EventsByCellId) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *TaskCreatedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskCreatedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskCreatedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Task", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Task == nil {
+				m.Task = &Task{}
+			}
+			if err := m.Task.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TaskChangedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskChangedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskChangedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Before", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Before == nil {
+				m.Before = &Task{}
+			}
+			if err := m.Before.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field After", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.After == nil {
+				m.After = &Task{}
+			}
+			if err := m.After.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TaskRemovedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaskRemovedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaskRemovedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Task", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Task == nil {
+				m.Task = &Task{}
+			}
+			if err := m.Task.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipEvents(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1957,37 +2586,40 @@ var (
 func init() { proto.RegisterFile("events.proto", fileDescriptorEvents) }
 
 var fileDescriptorEvents = []byte{
-	// 501 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xc1, 0x8a, 0xd3, 0x40,
-	0x18, 0xc7, 0x33, 0xbb, 0xdb, 0xca, 0x4e, 0x4b, 0xd1, 0xb0, 0xd6, 0x50, 0x74, 0x5a, 0x0a, 0x42,
-	0x90, 0x9a, 0x82, 0xbe, 0x80, 0x9b, 0x2a, 0xba, 0x6c, 0x05, 0xc9, 0xcd, 0x53, 0x49, 0x93, 0xaf,
-	0x69, 0x30, 0xc9, 0x84, 0xc9, 0x64, 0x21, 0x37, 0x1f, 0xc1, 0xc7, 0xf0, 0x51, 0x16, 0x4f, 0x3d,
-	0x7a, 0x2a, 0x36, 0x5e, 0x64, 0x4f, 0xfb, 0x08, 0x92, 0xc9, 0xb4, 0x9b, 0x6c, 0x17, 0x05, 0xf1,
-	0x96, 0xf9, 0xbe, 0xff, 0xf7, 0x9b, 0x6f, 0x7e, 0x04, 0xb7, 0xe1, 0x02, 0x22, 0x9e, 0x18, 0x31,
-	0xa3, 0x9c, 0xaa, 0xcd, 0x90, 0xba, 0x10, 0x24, 0xbd, 0xe7, 0x9e, 0xcf, 0x97, 0xe9, 0xdc, 0x70,
-	0x68, 0x38, 0xf6, 0xa8, 0x47, 0xc7, 0xa2, 0x3d, 0x4f, 0x17, 0xe2, 0x24, 0x0e, 0xe2, 0xab, 0x1c,
-	0xeb, 0xdd, 0xb7, 0x1d, 0x9e, 0xda, 0xc1, 0x2c, 0x60, 0xb1, 0xac, 0x3c, 0x70, 0x21, 0xf1, 0x19,
-	0xb8, 0x37, 0xa5, 0xe1, 0x47, 0xfc, 0xf0, 0x54, 0xc4, 0xa6, 0xd6, 0x87, 0x09, 0x03, 0x9b, 0x83,
-	0xfb, 0xa6, 0xb8, 0x5b, 0x7d, 0x85, 0x2b, 0xf3, 0x33, 0x8f, 0xd1, 0x34, 0xd6, 0xd0, 0x00, 0xe9,
-	0xad, 0x17, 0x5d, 0xa3, 0xdc, 0xc7, 0xd8, 0x0d, 0xbe, 0x2d, 0xba, 0x56, 0xa7, 0xcc, 0x4f, 0x59,
-	0x2c, 0xce, 0xc3, 0xb4, 0x8a, 0x5e, 0xda, 0x91, 0xb7, 0x45, 0x1b, 0xb8, 0x39, 0x87, 0x05, 0x65,
-	0xf0, 0x17, 0xa0, 0x4c, 0xa9, 0x23, 0xdc, 0xb0, 0x17, 0x1c, 0x98, 0x76, 0xf0, 0xc7, 0x78, 0x19,
-	0xaa, 0xbd, 0xc8, 0x82, 0x90, 0x5e, 0xfc, 0xbf, 0x17, 0xbd, 0xc7, 0xdd, 0xd7, 0xa5, 0xc1, 0xdb,
-	0xb6, 0x5e, 0xe2, 0x56, 0xc5, 0xad, 0xc4, 0xaa, 0x5b, 0xec, 0xcd, 0x90, 0x85, 0x65, 0x6c, 0xca,
-	0xe2, 0x61, 0x54, 0xc3, 0x55, 0x0d, 0x3d, 0xbb, 0x65, 0xe8, 0x2e, 0xd2, 0xd6, 0x8e, 0x5e, 0xb7,
-	0x73, 0x57, 0x54, 0x9a, 0xa9, 0xad, 0x5f, 0x53, 0xf3, 0x4f, 0xeb, 0x7f, 0x3b, 0xa8, 0xfd, 0x3b,
-	0x76, 0xb2, 0xdc, 0xe2, 0xde, 0xe1, 0x4e, 0xc5, 0xf4, 0x27, 0xc8, 0x24, 0xf1, 0x64, 0xcf, 0xf3,
-	0x39, 0x64, 0x66, 0xfb, 0x72, 0xdd, 0x57, 0x56, 0xeb, 0x3e, 0xba, 0x5a, 0xf7, 0x15, 0xab, 0xbd,
-	0x73, 0x7e, 0x0e, 0x99, 0x6a, 0xe3, 0x47, 0x15, 0x92, 0x1f, 0x25, 0xdc, 0x8e, 0x1c, 0x10, 0xc8,
-	0xf2, 0xb9, 0x8f, 0xf7, 0x90, 0x67, 0x32, 0xb4, 0x8f, 0x3e, 0xd9, 0xa1, 0x2b, 0x19, 0xf5, 0x29,
-	0x6e, 0x39, 0xc5, 0xf2, 0x33, 0x87, 0xa6, 0x11, 0xd7, 0x0e, 0x07, 0x48, 0x6f, 0x98, 0x47, 0xc5,
-	0xa0, 0x85, 0x45, 0x63, 0x52, 0xd4, 0xd5, 0x53, 0xdc, 0x2e, 0x63, 0x0c, 0xec, 0x84, 0x46, 0xda,
-	0xd1, 0x00, 0xe9, 0xc7, 0x26, 0x29, 0x72, 0x57, 0xeb, 0x7e, 0xb7, 0xda, 0x1b, 0xd1, 0xd0, 0xe7,
-	0x10, 0xc6, 0x3c, 0xb3, 0x4a, 0xb4, 0x25, 0xca, 0x6a, 0x0f, 0x37, 0x12, 0x3f, 0x72, 0x40, 0x6b,
-	0x0c, 0x90, 0x7e, 0x28, 0xef, 0x28, 0x4b, 0xc3, 0x31, 0xee, 0x08, 0x77, 0x89, 0x99, 0x4d, 0x20,
-	0x08, 0xce, 0x5c, 0xf5, 0x09, 0xbe, 0xe7, 0x40, 0x10, 0xcc, 0x7c, 0x57, 0xd8, 0x3b, 0x96, 0xf9,
-	0xa6, 0x23, 0xda, 0xe6, 0x68, 0xb5, 0x21, 0xca, 0xf7, 0x0d, 0x51, 0xae, 0x37, 0x04, 0x7d, 0xce,
-	0x09, 0xfa, 0x9a, 0x13, 0x74, 0x99, 0x13, 0xb4, 0xca, 0x09, 0xfa, 0x91, 0x13, 0xf4, 0x2b, 0x27,
-	0xca, 0x75, 0x4e, 0xd0, 0x97, 0x9f, 0x44, 0xf9, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x99, 0x47, 0x95,
-	0x3b, 0x51, 0x04, 0x00, 0x00,
+	// 560 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xd1, 0x8a, 0xd3, 0x40,
+	0x14, 0x86, 0x33, 0xbb, 0x6d, 0x65, 0xa7, 0xa5, 0xac, 0x61, 0xad, 0xa5, 0xe8, 0xb4, 0x04, 0x85,
+	0x22, 0xb5, 0x05, 0xf5, 0x01, 0xdc, 0x56, 0xd1, 0x65, 0x2b, 0x48, 0xf0, 0x46, 0x10, 0xca, 0x34,
+	0x39, 0x6d, 0x43, 0xd3, 0x4c, 0x48, 0x26, 0x0b, 0xbd, 0xf3, 0x11, 0x7c, 0x0c, 0x1f, 0x65, 0xf1,
+	0xaa, 0x97, 0x5e, 0x15, 0x1b, 0x6f, 0x64, 0xaf, 0xf6, 0x11, 0x24, 0x93, 0x49, 0xcd, 0xb4, 0x8b,
+	0x0b, 0xe2, 0xdd, 0xcc, 0x39, 0xff, 0xf9, 0x73, 0xe6, 0xe3, 0x0f, 0xae, 0xc0, 0x05, 0x78, 0x3c,
+	0xec, 0xfa, 0x01, 0xe3, 0x4c, 0x2f, 0x2d, 0x98, 0x0d, 0x6e, 0xd8, 0x78, 0x3a, 0x75, 0xf8, 0x2c,
+	0x1a, 0x77, 0x2d, 0xb6, 0xe8, 0x4d, 0xd9, 0x94, 0xf5, 0x44, 0x7b, 0x1c, 0x4d, 0xc4, 0x4d, 0x5c,
+	0xc4, 0x29, 0x1d, 0x6b, 0x1c, 0x53, 0x8b, 0x47, 0xd4, 0x1d, 0xb9, 0x81, 0x2f, 0x2b, 0x77, 0x6d,
+	0x08, 0x9d, 0x00, 0xec, 0x5c, 0x09, 0x73, 0x1a, 0xce, 0xd3, 0xb3, 0xf1, 0x11, 0xdf, 0x3b, 0x15,
+	0x23, 0x43, 0xf3, 0xfd, 0x20, 0x00, 0xca, 0xc1, 0x7e, 0x9d, 0xec, 0xa1, 0xbf, 0xc4, 0x39, 0xaf,
+	0xd1, 0x34, 0x60, 0x91, 0x5f, 0x47, 0x2d, 0xd4, 0x2e, 0x3f, 0xab, 0x75, 0xd3, 0xdd, 0xba, 0xdb,
+	0xc1, 0x37, 0x49, 0xd7, 0xac, 0xa6, 0xfa, 0x61, 0xe0, 0x8b, 0xbb, 0x11, 0xe5, 0xad, 0x67, 0xd4,
+	0x9b, 0x66, 0xd6, 0x5d, 0x5c, 0x1a, 0xc3, 0x84, 0x05, 0x70, 0x8b, 0xa1, 0x54, 0xe9, 0x1d, 0x5c,
+	0xa4, 0x13, 0x0e, 0x41, 0xfd, 0xe0, 0xaf, 0xf2, 0x54, 0xa4, 0xbc, 0xc8, 0x84, 0x05, 0xbb, 0xf8,
+	0x7f, 0x2f, 0x7a, 0x87, 0x6b, 0xaf, 0x52, 0x9a, 0xbb, 0xb4, 0x9e, 0xe3, 0x72, 0x8e, 0xb3, 0xb4,
+	0xd5, 0x33, 0xdb, 0x3f, 0x43, 0x26, 0x96, 0xb2, 0x61, 0xe0, 0x1b, 0x9e, 0x62, 0x97, 0x27, 0xf4,
+	0x64, 0x87, 0xd0, 0x4d, 0x4e, 0x19, 0x9d, 0xb6, 0x4a, 0xe7, 0x26, 0xa9, 0x24, 0xa3, 0xac, 0xaf,
+	0xa0, 0xf9, 0xa7, 0xf5, 0xbf, 0x1d, 0x28, 0xd9, 0xa1, 0xe1, 0x2c, 0xb3, 0x7b, 0x8b, 0xab, 0x39,
+	0xd2, 0x73, 0x58, 0x4a, 0xc7, 0x93, 0x3d, 0xce, 0xe7, 0xb0, 0xec, 0x57, 0x2e, 0xd7, 0x4d, 0x6d,
+	0xb5, 0x6e, 0xa2, 0xab, 0x75, 0x53, 0x33, 0x2b, 0x5b, 0xe6, 0xe7, 0xb0, 0xd4, 0x29, 0xbe, 0x9f,
+	0x73, 0x72, 0xbc, 0x90, 0x53, 0xcf, 0x02, 0x61, 0x99, 0x3e, 0xf7, 0xc1, 0x9e, 0xe5, 0x99, 0x14,
+	0xed, 0x5b, 0x9f, 0x6c, 0xad, 0x73, 0x1a, 0xfd, 0x31, 0x2e, 0x5b, 0xc9, 0xf2, 0x23, 0x8b, 0x45,
+	0x1e, 0xaf, 0x1f, 0xb6, 0x50, 0xbb, 0xd8, 0x2f, 0x24, 0x83, 0x26, 0x16, 0x8d, 0x41, 0x52, 0xd7,
+	0x4f, 0x71, 0x25, 0x95, 0x05, 0x40, 0x43, 0xe6, 0xd5, 0x0b, 0x2d, 0xd4, 0x3e, 0xea, 0x93, 0x44,
+	0x77, 0xb5, 0x6e, 0xd6, 0xf2, 0xbd, 0x0e, 0x5b, 0x38, 0x1c, 0x16, 0x3e, 0x5f, 0x9a, 0xa9, 0xb5,
+	0x29, 0xca, 0x7a, 0x03, 0x17, 0x43, 0xc7, 0xb3, 0xa0, 0x5e, 0x6c, 0xa1, 0xf6, 0xa1, 0xfc, 0x46,
+	0x5a, 0x32, 0x7a, 0xb8, 0x2a, 0xd8, 0x85, 0xfd, 0xe5, 0x00, 0x5c, 0xf7, 0xcc, 0xd6, 0x1f, 0xe2,
+	0x3b, 0x16, 0xb8, 0xee, 0xc8, 0xb1, 0x05, 0xbd, 0x23, 0xa9, 0x2f, 0x59, 0xa2, 0x6d, 0xbc, 0xc0,
+	0xc7, 0x1f, 0x68, 0x38, 0x57, 0x52, 0xd8, 0xc2, 0x85, 0xe4, 0xd7, 0x96, 0xb4, 0x2b, 0x19, 0x9a,
+	0x44, 0x67, 0x8a, 0x8e, 0xf1, 0x49, 0x4e, 0xe5, 0xc3, 0xf6, 0x68, 0x27, 0x6c, 0xea, 0x5c, 0x16,
+	0x33, 0x43, 0x8d, 0x99, 0x2a, 0x92, 0x01, 0x93, 0x3b, 0x29, 0xd1, 0xba, 0x75, 0xa7, 0x7e, 0x67,
+	0xb5, 0x21, 0xda, 0xf7, 0x0d, 0xd1, 0xae, 0x37, 0x04, 0x7d, 0x8e, 0x09, 0xfa, 0x1a, 0x13, 0x74,
+	0x19, 0x13, 0xb4, 0x8a, 0x09, 0xfa, 0x11, 0x13, 0xf4, 0x2b, 0x26, 0xda, 0x75, 0x4c, 0xd0, 0x97,
+	0x9f, 0x44, 0xfb, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x35, 0x9e, 0x86, 0xb0, 0x27, 0x05, 0x00, 0x00,
 }
