@@ -5,31 +5,34 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 )
 
 type FakeTaskCompletionClient struct {
-	SubmitStub        func(taskDB db.TaskDB, task *models.Task)
+	SubmitStub        func(taskDB db.TaskDB, taskHub events.Hub, task *models.Task)
 	submitMutex       sync.RWMutex
 	submitArgsForCall []struct {
-		taskDB db.TaskDB
-		task   *models.Task
+		taskDB  db.TaskDB
+		taskHub events.Hub
+		task    *models.Task
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeTaskCompletionClient) Submit(taskDB db.TaskDB, task *models.Task) {
+func (fake *FakeTaskCompletionClient) Submit(taskDB db.TaskDB, taskHub events.Hub, task *models.Task) {
 	fake.submitMutex.Lock()
 	fake.submitArgsForCall = append(fake.submitArgsForCall, struct {
-		taskDB db.TaskDB
-		task   *models.Task
-	}{taskDB, task})
-	fake.recordInvocation("Submit", []interface{}{taskDB, task})
+		taskDB  db.TaskDB
+		taskHub events.Hub
+		task    *models.Task
+	}{taskDB, taskHub, task})
+	fake.recordInvocation("Submit", []interface{}{taskDB, taskHub, task})
 	fake.submitMutex.Unlock()
 	if fake.SubmitStub != nil {
-		fake.SubmitStub(taskDB, task)
+		fake.SubmitStub(taskDB, taskHub, task)
 	}
 }
 
@@ -39,10 +42,10 @@ func (fake *FakeTaskCompletionClient) SubmitCallCount() int {
 	return len(fake.submitArgsForCall)
 }
 
-func (fake *FakeTaskCompletionClient) SubmitArgsForCall(i int) (db.TaskDB, *models.Task) {
+func (fake *FakeTaskCompletionClient) SubmitArgsForCall(i int) (db.TaskDB, events.Hub, *models.Task) {
 	fake.submitMutex.RLock()
 	defer fake.submitMutex.RUnlock()
-	return fake.submitArgsForCall[i].taskDB, fake.submitArgsForCall[i].task
+	return fake.submitArgsForCall[i].taskDB, fake.submitArgsForCall[i].taskHub, fake.submitArgsForCall[i].task
 }
 
 func (fake *FakeTaskCompletionClient) Invocations() map[string][][]interface{} {

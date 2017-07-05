@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	"code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/cfhttp"
 	"code.cloudfoundry.org/lager"
@@ -19,10 +20,10 @@ const MAX_CB_RETRIES = 3
 
 //go:generate counterfeiter . TaskCompletionClient
 
-type CompletedTaskHandler func(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, task *models.Task)
+type CompletedTaskHandler func(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, taskHub events.Hub, task *models.Task)
 
 type TaskCompletionClient interface {
-	Submit(taskDB db.TaskDB, task *models.Task)
+	Submit(taskDB db.TaskDB, taskHub events.Hub, task *models.Task)
 }
 
 type TaskCompletionWorkPool struct {
@@ -73,25 +74,26 @@ func (twp *TaskCompletionWorkPool) Run(signals <-chan os.Signal, ready chan<- st
 	return nil
 }
 
-func (twp *TaskCompletionWorkPool) Submit(taskDB db.TaskDB, task *models.Task) {
+func (twp *TaskCompletionWorkPool) Submit(taskDB db.TaskDB, taskHub events.Hub, task *models.Task) {
 	if twp.callbackWorkPool == nil {
 		panic("called submit before workpool was started")
 	}
 	logger := twp.logger
 	twp.callbackWorkPool.Submit(func() {
-		twp.callbackHandler(logger, twp.httpClient, taskDB, task)
+		twp.callbackHandler(logger, twp.httpClient, taskDB, taskHub, task)
 	})
 }
 
-func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, task *models.Task) {
+func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, taskHub events.Hub, task *models.Task) {
 	logger = logger.Session("handle-completed-task", lager.Data{"task_guid": task.TaskGuid})
 
 	if task.CompletionCallbackUrl != "" {
-		modelErr := taskDB.ResolvingTask(logger, task.TaskGuid)
+		before, after, modelErr := taskDB.ResolvingTask(logger, task.TaskGuid)
 		if modelErr != nil {
 			logger.Error("marking-task-as-resolving-failed", modelErr)
 			return
 		}
+		go taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 		logger = logger.WithData(lager.Data{"callback_url": task.CompletionCallbackUrl})
 
@@ -131,10 +133,11 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 
 			statusCode = response.StatusCode
 			if shouldResolve(statusCode) {
-				modelErr := taskDB.DeleteTask(logger, task.TaskGuid)
+				deletedTask, modelErr := taskDB.DeleteTask(logger, task.TaskGuid)
 				if modelErr != nil {
 					logger.Error("delete-task-failed", modelErr)
 				}
+				go taskHub.Emit(models.NewTaskRemovedEvent(deletedTask))
 				return
 			}
 		}

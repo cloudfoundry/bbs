@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/dbfakes"
+	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool"
@@ -44,10 +45,12 @@ var _ = Describe("TaskWorker", func() {
 
 	Describe("HandleCompletedTask", func() {
 		var (
-			callbackURL string
-			taskDB      *dbfakes.FakeTaskDB
-			statusCodes chan int
-			task        *models.Task
+			callbackURL   string
+			taskDB        *dbfakes.FakeTaskDB
+			statusCodes   chan int
+			task          *models.Task
+			before, after models.Task
+			taskHub       *eventfakes.FakeHub
 
 			httpClient *http.Client
 		)
@@ -55,6 +58,7 @@ var _ = Describe("TaskWorker", func() {
 		BeforeEach(func() {
 			httpClient = cfhttp.NewClient()
 			statusCodes = make(chan int)
+			taskHub = &eventfakes.FakeHub{}
 
 			fakeServer.RouteToHandler("POST", "/the-callback/url", func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(<-statusCodes)
@@ -62,15 +66,23 @@ var _ = Describe("TaskWorker", func() {
 
 			callbackURL = fakeServer.URL() + "/the-callback/url"
 			taskDB = new(dbfakes.FakeTaskDB)
-			taskDB.ResolvingTaskReturns(nil)
-			taskDB.DeleteTaskReturns(nil)
+			taskDB.ResolvingTaskStub = func(_ lager.Logger, taskGuidTaskGuid string) (*models.Task, *models.Task, error) {
+				before = *task
+				after = *task
+				after.State = models.Task_Resolving
+				return &before, &after, nil
+			}
+
+			taskDB.DeleteTaskStub = func(_ lager.Logger, taskGuid string) (*models.Task, error) {
+				return task, nil
+			}
 		})
 
 		simulateTaskCompleting := func(signals <-chan os.Signal, ready chan<- struct{}) error {
 			close(ready)
 			task = model_helpers.NewValidTask("the-task-guid")
 			task.CompletionCallbackUrl = callbackURL
-			taskworkpool.HandleCompletedTask(logger, httpClient, taskDB, task)
+			taskworkpool.HandleCompletedTask(logger, httpClient, taskDB, taskHub, task)
 			return nil
 		}
 
@@ -96,9 +108,20 @@ var _ = Describe("TaskWorker", func() {
 				Expect(actualGuid).To(Equal("the-task-guid"))
 			})
 
+			It("emits a TaskChangedEvent to the hub", func() {
+				statusCodes <- 200
+
+				Eventually(taskHub.EmitCallCount).Should(Equal(1))
+				event := taskHub.EmitArgsForCall(0)
+				changed, ok := event.(*models.TaskChangedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(changed.Before).To(BeEquivalentTo(&before))
+				Expect(changed.After).To(BeEquivalentTo(&after))
+			})
+
 			Context("when marking the task as resolving fails", func() {
 				BeforeEach(func() {
-					taskDB.ResolvingTaskReturns(models.NewError(models.Error_UnknownError, "failed to resolve task"))
+					taskDB.ResolvingTaskReturns(nil, nil, models.NewError(models.Error_UnknownError, "failed to resolve task"))
 				})
 
 				It("does not make a request to the task's callback URL", func() {
@@ -136,6 +159,16 @@ var _ = Describe("TaskWorker", func() {
 						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
+
+					It("emits a TaskRemovedEvent to the hub", func() {
+						statusCodes <- 200
+
+						Eventually(taskHub.EmitCallCount).Should(Equal(2))
+						event := taskHub.EmitArgsForCall(1)
+						removed, ok := event.(*models.TaskRemovedEvent)
+						Expect(ok).To(BeTrue())
+						Expect(removed.Task).To(BeEquivalentTo(task))
+					})
 				})
 
 				Context("when the request fails with a 4xx response code", func() {
@@ -146,6 +179,16 @@ var _ = Describe("TaskWorker", func() {
 						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
+
+					It("emits a TaskRemovedEvent to the hub", func() {
+						statusCodes <- 403
+
+						Eventually(taskHub.EmitCallCount).Should(Equal(2))
+						event := taskHub.EmitArgsForCall(1)
+						removed, ok := event.(*models.TaskRemovedEvent)
+						Expect(ok).To(BeTrue())
+						Expect(removed.Task).To(BeEquivalentTo(task))
+					})
 				})
 
 				Context("when the request fails with a 500 response code", func() {
@@ -155,6 +198,16 @@ var _ = Describe("TaskWorker", func() {
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
 						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
+					})
+
+					It("emits a TaskRemovedEvent to the hub", func() {
+						statusCodes <- 500
+
+						Eventually(taskHub.EmitCallCount).Should(Equal(2))
+						event := taskHub.EmitArgsForCall(1)
+						removed, ok := event.(*models.TaskRemovedEvent)
+						Expect(ok).To(BeTrue())
+						Expect(removed.Task).To(BeEquivalentTo(task))
 					})
 				})
 
@@ -203,7 +256,7 @@ var _ = Describe("TaskWorker", func() {
 
 				Context("when DeleteTask fails", func() {
 					BeforeEach(func() {
-						taskDB.DeleteTaskReturns(&models.Error{})
+						taskDB.DeleteTaskReturns(nil, &models.Error{})
 					})
 
 					It("logs an error and returns", func() {

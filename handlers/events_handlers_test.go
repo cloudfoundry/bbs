@@ -22,14 +22,15 @@ import (
 
 var _ = Describe("Event Handlers", func() {
 	var (
-		logger lager.Logger
+		logger  lager.Logger
+		handler handlers.EventController
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 	})
 
-	var ItRecoversFromLostConnections = func(hubRef *events.Hub, handlerRef **handlers.EventHandler) {
+	var ItRecoversFromLostConnections = func(hubRef *events.Hub) {
 		Describe("When the client connection is lost", func() {
 			var (
 				hub             events.Hub
@@ -42,7 +43,6 @@ var _ = Describe("Event Handlers", func() {
 			BeforeEach(func() {
 				eventStreamDone = make(chan struct{})
 				hub = *hubRef
-				handler := *handlerRef
 				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					handler.Subscribe_r0(logger, w, r)
 					close(eventStreamDone)
@@ -69,7 +69,7 @@ var _ = Describe("Event Handlers", func() {
 		})
 	}
 
-	var ItStreamsEventsFromHub = func(hubRef *events.Hub, handlerRef **handlers.EventHandler) {
+	var ItStreamsEventsFromHub = func(hubRef *events.Hub) {
 		Describe("Streaming Events", func() {
 			var (
 				hub      events.Hub
@@ -83,7 +83,6 @@ var _ = Describe("Event Handlers", func() {
 			})
 
 			JustBeforeEach(func() {
-				handler := *handlerRef
 				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					handler.Subscribe_r0(logger, w, r)
 				}))
@@ -160,7 +159,6 @@ var _ = Describe("Event Handlers", func() {
 
 	Describe("Subscribe_r0", func() {
 		var (
-			handler    *handlers.EventHandler
 			desiredHub events.Hub
 			actualHub  events.Hub
 		)
@@ -178,8 +176,8 @@ var _ = Describe("Event Handlers", func() {
 
 		Describe("Subscribe to Desired Events", func() {
 
-			ItStreamsEventsFromHub(&desiredHub, &handler)
-			ItRecoversFromLostConnections(&desiredHub, &handler)
+			ItStreamsEventsFromHub(&desiredHub)
+			ItRecoversFromLostConnections(&desiredHub)
 
 			It("migrates desired lrps down to v0", func() {
 				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -210,8 +208,8 @@ var _ = Describe("Event Handlers", func() {
 
 		Describe("Subscribe to Actual Events", func() {
 			Context("when cell id not specified", func() {
-				ItStreamsEventsFromHub(&actualHub, &handler)
-				ItRecoversFromLostConnections(&actualHub, &handler)
+				ItStreamsEventsFromHub(&actualHub)
+				ItRecoversFromLostConnections(&actualHub)
 			})
 
 			Context("when cell id is specified", func() {
@@ -518,6 +516,28 @@ var _ = Describe("Event Handlers", func() {
 				})
 			})
 		})
+	})
+
+	Describe("Tasks Subscribe_r0", func() {
+		var (
+			taskHub events.Hub
+		)
+
+		BeforeEach(func() {
+			taskHub = events.NewHub()
+			handler = handlers.NewTaskEventHandler(taskHub)
+		})
+
+		AfterEach(func() {
+			taskHub.Close()
+		})
+
+		Describe("Subscribe to Task Events", func() {
+
+			ItStreamsEventsFromHub(&taskHub)
+			ItRecoversFromLostConnections(&taskHub)
+		})
+
 	})
 
 })

@@ -72,6 +72,28 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 	streamEventsToResponse(logger, w, eventChan, errorChan)
 }
 
+func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("tasks-subscribe-r0")
+	logger.Info("subscribed-to-tasks-event-stream")
+
+	taskSource, err := h.taskHub.Subscribe()
+	if err != nil {
+		logger.Error("failed-to-subscribe-to-task-event-hub", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer taskSource.Close()
+
+	eventChan := make(chan models.Event)
+	errorChan := make(chan error)
+	closeChan := make(chan struct{})
+	defer close(closeChan)
+
+	go streamSource(eventChan, errorChan, closeChan, taskSource.Next)
+
+	streamEventsToResponse(logger, w, eventChan, errorChan)
+}
+
 func filterByCellID(cellID string, bbsEvent models.Event, err error) bool {
 	switch x := bbsEvent.(type) {
 	case *models.ActualLRPCreatedEvent:

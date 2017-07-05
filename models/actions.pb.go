@@ -105,6 +105,9 @@
 		DesiredLRPRemovedEvent
 		ActualLRPCrashedEvent
 		EventsByCellId
+		TaskCreatedEvent
+		TaskChangedEvent
+		TaskRemovedEvent
 		ConvergeLRPsResponse
 		ModificationTag
 		Network

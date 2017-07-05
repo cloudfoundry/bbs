@@ -162,7 +162,7 @@ var _ = Describe("TaskDB", func() {
 		var task *models.Task
 
 		JustBeforeEach(func() {
-			errDesire = etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+			_, errDesire = etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 		})
 
 		BeforeEach(func() {
@@ -200,7 +200,7 @@ var _ = Describe("TaskDB", func() {
 			const initialDomain = "other-domain"
 
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, initialDomain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, initialDomain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -224,12 +224,12 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when starting a pending Task", func() {
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns shouldStart as true", func() {
-				started, err := etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, started, err := etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(started).To(BeTrue())
 			})
@@ -237,7 +237,7 @@ var _ = Describe("TaskDB", func() {
 			It("correctly updates the task record", func() {
 				clock.IncrementBySeconds(1)
 
-				_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err := etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
 				task, err := etcdDB.TaskByGuid(logger, taskGuid)
@@ -252,16 +252,16 @@ var _ = Describe("TaskDB", func() {
 
 		Context("When starting a Task that is already started", func() {
 			BeforeEach(func() {
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, "domain")
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, "domain")
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("on the same cell", func() {
 				It("returns shouldStart as false", func() {
-					changed, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					_, _, changed, err := etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(changed).To(BeFalse())
 				})
@@ -270,7 +270,7 @@ var _ = Describe("TaskDB", func() {
 					previousTime := clock.Now().UnixNano()
 					clock.IncrementBySeconds(1)
 
-					_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					_, _, _, err := etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
 					task, err := etcdDB.TaskByGuid(logger, taskGuid)
@@ -282,7 +282,7 @@ var _ = Describe("TaskDB", func() {
 
 			Context("on another cell", func() {
 				It("returns an error", func() {
-					_, err := etcdDB.StartTask(logger, taskGuid, "some-other-cell")
+					_, _, _, err := etcdDB.StartTask(logger, taskGuid, "some-other-cell")
 					modelErr := models.ConvertError(err)
 					Expect(modelErr).NotTo(BeNil())
 					Expect(modelErr.Type).To(Equal(models.Error_InvalidStateTransition))
@@ -292,7 +292,7 @@ var _ = Describe("TaskDB", func() {
 					previousTime := clock.Now().UnixNano()
 					clock.IncrementBySeconds(1)
 
-					_, err := etcdDB.StartTask(logger, taskGuid, cellId)
+					_, _, _, err := etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
 					task, err := etcdDB.TaskByGuid(logger, taskGuid)
@@ -313,7 +313,7 @@ var _ = Describe("TaskDB", func() {
 		)
 
 		JustBeforeEach(func() {
-			taskReturned, cellIDReturned, cancelError = etcdDB.CancelTask(logger, taskGuid)
+			_, taskReturned, cellIDReturned, cancelError = etcdDB.CancelTask(logger, taskGuid)
 			taskAfterCancel, _ = etcdDB.TaskByGuid(logger, taskGuid)
 		})
 
@@ -346,7 +346,7 @@ var _ = Describe("TaskDB", func() {
 		Context("when the task is in pending state", func() {
 			BeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -360,10 +360,10 @@ var _ = Describe("TaskDB", func() {
 		Context("when the task is in running state", func() {
 			BeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -377,13 +377,13 @@ var _ = Describe("TaskDB", func() {
 		Context("when the task is in completed state", func() {
 			BeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.TaskGuid).To(Equal(taskGuid))
 			})
@@ -397,17 +397,17 @@ var _ = Describe("TaskDB", func() {
 		Context("when the task is in resolving state", func() {
 			BeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.TaskGuid).To(Equal(taskGuid))
 
-				err = etcdDB.ResolvingTask(logger, taskGuid)
+				_, _, err = etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -444,12 +444,12 @@ var _ = Describe("TaskDB", func() {
 		Context("when completing a pending Task", func() {
 			JustBeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns an error", func() {
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "another failure reason", "")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "another failure reason", "")
 				Expect(err).To(HaveOccurred())
 				Expect(task).To(BeNil())
 			})
@@ -461,16 +461,16 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			JustBeforeEach(func() {
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("when the cell id is not the same", func() {
 				It("returns an error", func() {
-					task, err := etcdDB.CompleteTask(logger, taskGuid, "another-cell", true, "another failure reason", "")
+					_, task, err := etcdDB.CompleteTask(logger, taskGuid, "another-cell", true, "another failure reason", "")
 					Expect(err).To(Equal(models.NewRunningOnDifferentCellError("another-cell", cellId)))
 					Expect(task).To(BeNil())
 				})
@@ -480,7 +480,7 @@ var _ = Describe("TaskDB", func() {
 				It("sets the Task in the completed state", func() {
 					clock.IncrementBySeconds(1)
 
-					returnedTask, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
+					_, returnedTask, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(returnedTask.TaskGuid).To(Equal(taskGuid))
 
@@ -499,19 +499,19 @@ var _ = Describe("TaskDB", func() {
 		Context("When completing a Task that is already completed", func() {
 			BeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "some failure reason", "")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "some failure reason", "")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.TaskGuid).To(Equal(taskGuid))
 			})
 
 			It("returns an error", func() {
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "another failure reason", "")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "another failure reason", "")
 				Expect(err).To(HaveOccurred())
 				Expect(task).To(BeNil())
 			})
@@ -520,22 +520,22 @@ var _ = Describe("TaskDB", func() {
 		Context("When completing a Task that is resolving", func() {
 			BeforeEach(func() {
 				taskDef = model_helpers.NewValidTaskDefinition()
-				err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+				_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+				_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.TaskGuid).To(Equal(taskGuid))
 
-				err = etcdDB.ResolvingTask(logger, taskGuid)
+				_, _, err = etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns an error", func() {
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, false, "", "")
 				Expect(err).To(HaveOccurred())
 				Expect(task).To(BeNil())
 			})
@@ -550,14 +550,14 @@ var _ = Describe("TaskDB", func() {
 		Context("when failing a Task", func() {
 			Context("when the task is pending", func() {
 				JustBeforeEach(func() {
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+					_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("sets the Task in the completed state", func() {
 					clock.IncrementBySeconds(1)
 
-					returnedTask, err := etcdDB.FailTask(logger, taskGuid, "because i said so")
+					_, returnedTask, err := etcdDB.FailTask(logger, taskGuid, "because i said so")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(returnedTask.TaskGuid).To(Equal(taskGuid))
 
@@ -575,19 +575,19 @@ var _ = Describe("TaskDB", func() {
 			Context("when the task is completed", func() {
 				JustBeforeEach(func() {
 					taskDef = model_helpers.NewValidTaskDefinition()
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+					_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+					_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "some failure reason", "")
+					_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "some failure reason", "")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.TaskGuid).To(Equal(taskGuid))
 				})
 
 				It("fails", func() {
-					task, err := etcdDB.FailTask(logger,
+					_, task, err := etcdDB.FailTask(logger,
 						taskGuid,
 						"because i said so",
 					)
@@ -599,22 +599,22 @@ var _ = Describe("TaskDB", func() {
 			Context("when the task is resolving", func() {
 				JustBeforeEach(func() {
 					taskDef = model_helpers.NewValidTaskDefinition()
-					err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+					_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+					_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 					Expect(err).NotTo(HaveOccurred())
 
-					task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "some failure reason", "")
+					_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "some failure reason", "")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.TaskGuid).To(Equal(taskGuid))
 
-					err = etcdDB.ResolvingTask(logger, taskGuid)
+					_, _, err = etcdDB.ResolvingTask(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("fails", func() {
-					task, err := etcdDB.FailTask(logger,
+					_, task, err := etcdDB.FailTask(logger,
 						taskGuid,
 						"because i said so",
 					)
@@ -628,22 +628,22 @@ var _ = Describe("TaskDB", func() {
 	Describe("ResolvingTask", func() {
 		BeforeEach(func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
-			err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+			_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+			_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when the task is complete", func() {
 			BeforeEach(func() {
-				task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
+				_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.TaskGuid).To(Equal(taskGuid))
 			})
 
 			It("swaps /task/<guid>'s state to resolving", func() {
-				err := etcdDB.ResolvingTask(logger, taskGuid)
+				_, _, err := etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				tasks := filterByState(models.Task_Resolving)
@@ -654,7 +654,7 @@ var _ = Describe("TaskDB", func() {
 			It("bumps UpdatedAt", func() {
 				clock.IncrementBySeconds(1)
 
-				err := etcdDB.ResolvingTask(logger, taskGuid)
+				_, _, err := etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				tasks := filterByState(models.Task_Resolving)
@@ -663,12 +663,12 @@ var _ = Describe("TaskDB", func() {
 
 			Context("when the Task is already resolving", func() {
 				BeforeEach(func() {
-					err := etcdDB.ResolvingTask(logger, taskGuid)
+					_, _, err := etcdDB.ResolvingTask(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("fails", func() {
-					err := etcdDB.ResolvingTask(logger, taskGuid)
+					_, _, err := etcdDB.ResolvingTask(logger, taskGuid)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -676,7 +676,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when the task is not complete", func() {
 			It("should fail", func() {
-				err := etcdDB.ResolvingTask(logger, taskGuid)
+				_, _, err := etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).To(Equal(models.NewTaskTransitionError(models.Task_Running, models.Task_Resolving)))
 			})
 		})
@@ -685,25 +685,25 @@ var _ = Describe("TaskDB", func() {
 	Describe("DeleteTask", func() {
 		BeforeEach(func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
-			err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
+			_, err := etcdDB.DesireTask(logger, taskDef, taskGuid, domain)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = etcdDB.StartTask(logger, taskGuid, cellId)
+			_, _, _, err = etcdDB.StartTask(logger, taskGuid, cellId)
 			Expect(err).NotTo(HaveOccurred())
 
-			task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
+			_, task, err := etcdDB.CompleteTask(logger, taskGuid, cellId, true, "because i said so", "a result")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(task.TaskGuid).To(Equal(taskGuid))
 		})
 
 		Context("when the task is resolving", func() {
 			BeforeEach(func() {
-				err := etcdDB.ResolvingTask(logger, taskGuid)
+				_, _, err := etcdDB.ResolvingTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("should remove /task/<guid>", func() {
-				err := etcdDB.DeleteTask(logger, taskGuid)
+				_, err := etcdDB.DeleteTask(logger, taskGuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				tasks, err := etcdDB.Tasks(logger, models.TaskFilter{})
@@ -714,7 +714,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when the task is not resolving", func() {
 			It("should fail", func() {
-				err := etcdDB.DeleteTask(logger, taskGuid)
+				_, err := etcdDB.DeleteTask(logger, taskGuid)
 				Expect(err).To(HaveOccurred())
 			})
 		})
