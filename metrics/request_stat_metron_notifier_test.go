@@ -2,13 +2,13 @@ package metrics_test
 
 import (
 	"os"
+	"sync"
 	"time"
 
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/clock/fakeclock"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
-	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
 	"github.com/tedsuo/ifrit"
 
 	. "github.com/onsi/ginkgo"
@@ -17,7 +17,10 @@ import (
 
 var _ = Describe("PeriodicMetronCountNotifier", func() {
 	var (
-		sender *fake.FakeMetricSender
+		fakeMetronClient *mfakes.FakeIngressClient
+		counterMap       map[string]uint64
+		durationMap      map[string]time.Duration
+		metricsLock      sync.Mutex
 
 		reportInterval time.Duration
 		fakeClock      *fakeclock.FakeClock
@@ -27,17 +30,31 @@ var _ = Describe("PeriodicMetronCountNotifier", func() {
 	)
 
 	BeforeEach(func() {
+		counterMap = make(map[string]uint64)
+		durationMap = make(map[string]time.Duration)
+		fakeMetronClient = new(mfakes.FakeIngressClient)
+		fakeMetronClient.IncrementCounterWithDeltaStub = func(name string, delta uint64) error {
+			metricsLock.Lock()
+			defer metricsLock.Unlock()
+			counterMap[name] += delta
+			return nil
+		}
+
+		fakeMetronClient.SendDurationStub = func(name string, value time.Duration) error {
+			metricsLock.Lock()
+			defer metricsLock.Unlock()
+			durationMap[name] = value
+			return nil
+		}
+
 		reportInterval = 100 * time.Millisecond
 
 		fakeClock = fakeclock.NewFakeClock(time.Unix(123, 456))
-
-		sender = fake.NewFakeMetricSender()
-		dropsonde_metrics.Initialize(sender, nil)
 	})
 
 	JustBeforeEach(func() {
 		ticker := fakeClock.NewTicker(reportInterval)
-		mn = metrics.NewRequestStatMetronNotifier(lagertest.NewTestLogger("test"), ticker)
+		mn = metrics.NewRequestStatMetronNotifier(lagertest.NewTestLogger("test"), ticker, fakeMetronClient)
 		mnp = ifrit.Invoke(mn)
 	})
 
@@ -52,12 +69,16 @@ var _ = Describe("PeriodicMetronCountNotifier", func() {
 		fakeClock.WaitForWatcherAndIncrement(reportInterval)
 
 		Eventually(func() uint64 {
-			return sender.GetCounter("RequestCount")
+			metricsLock.Lock()
+			defer metricsLock.Unlock()
+			return counterMap["RequestCount"]
 		}).Should(Equal(uint64(1)))
 
-		Eventually(func() fake.Metric {
-			return sender.GetValue("RequestLatency")
-		}).Should(Equal(fake.Metric{Value: float64(1 * time.Second), Unit: "nanos"}))
+		Eventually(func() time.Duration {
+			metricsLock.Lock()
+			defer metricsLock.Unlock()
+			return durationMap["RequestLatency"]
+		}).Should(Equal(1 * time.Second))
 
 		mn.IncrementCounter(1)
 		mn.UpdateLatency(3 * time.Second)
@@ -67,11 +88,15 @@ var _ = Describe("PeriodicMetronCountNotifier", func() {
 		fakeClock.WaitForWatcherAndIncrement(reportInterval)
 
 		Eventually(func() uint64 {
-			return sender.GetCounter("RequestCount")
+			metricsLock.Lock()
+			defer metricsLock.Unlock()
+			return counterMap["RequestCount"]
 		}).Should(Equal(uint64(3)))
 
-		Eventually(func() fake.Metric {
-			return sender.GetValue("RequestLatency")
-		}).Should(Equal(fake.Metric{Value: float64(3 * time.Second), Unit: "nanos"}))
+		Eventually(func() time.Duration {
+			metricsLock.Lock()
+			defer metricsLock.Unlock()
+			return durationMap["RequestLatency"]
+		}).Should(Equal(3 * time.Second))
 	})
 })

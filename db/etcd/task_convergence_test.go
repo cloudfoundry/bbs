@@ -6,8 +6,6 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
-	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -16,16 +14,11 @@ const TTL = 0
 
 var _ = Describe("Convergence of Tasks", func() {
 	var (
-		sender *fake.FakeMetricSender
-
 		kickTasksDurationInSeconds, expirePendingTaskDurationInSeconds            uint64
 		kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration
 	)
 
 	BeforeEach(func() {
-		sender = fake.NewFakeMetricSender()
-		metrics.Initialize(sender, nil)
-
 		kickTasksDurationInSeconds = 10
 		kickTasksDuration = time.Duration(kickTasksDurationInSeconds) * time.Second
 		expirePendingTaskDurationInSeconds = 30
@@ -56,20 +49,35 @@ var _ = Describe("Convergence of Tasks", func() {
 		})
 
 		It("bumps the convergence counter", func() {
-			Expect(sender.GetCounter("ConvergenceTaskRuns")).To(Equal(uint64(1)))
+			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(1))
+			name := fakeMetronClient.IncrementCounterArgsForCall(0)
+			Expect(name).To(Equal("ConvergenceTaskRuns"))
 		})
 
 		It("reports the duration that it took to converge", func() {
-			reportedDuration := sender.GetValue("ConvergenceTaskDuration")
-			Expect(reportedDuration.Unit).To(Equal("nanos"))
-			Expect(reportedDuration.Value).NotTo(BeZero())
+			Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
+			name, value := fakeMetronClient.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("ConvergenceTaskDuration"))
+			Expect(value).NotTo(BeZero())
 		})
 
 		It("emits -1 metrics", func() {
-			Expect(sender.GetValue("TasksPending").Value).To(Equal(float64(-1)))
-			Expect(sender.GetValue("TasksRunning").Value).To(Equal(float64(-1)))
-			Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(-1)))
-			Expect(sender.GetValue("TasksResolving").Value).To(Equal(float64(-1)))
+			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(4))
+			name, value := fakeMetronClient.SendMetricArgsForCall(0)
+			Expect(name).To(Equal("TasksPending"))
+			Expect(value).To(Equal(-1))
+
+			name, value = fakeMetronClient.SendMetricArgsForCall(1)
+			Expect(name).To(Equal("TasksRunning"))
+			Expect(value).To(Equal(-1))
+
+			name, value = fakeMetronClient.SendMetricArgsForCall(2)
+			Expect(name).To(Equal("TasksCompleted"))
+			Expect(value).To(Equal(-1))
+
+			name, value = fakeMetronClient.SendMetricArgsForCall(3)
+			Expect(name).To(Equal("TasksResolving"))
+			Expect(value).To(Equal(-1))
 		})
 
 		Context("when a Task is malformed", func() {
@@ -83,7 +91,11 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("bumps the pruned counter", func() {
-				Expect(sender.GetCounter("ConvergenceTasksPruned")).To(Equal(uint64(1)))
+				Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
+				name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(1)
+
+				Expect(name).To(Equal("ConvergenceTasksPruned"))
+				Expect(value).To(Equal(uint64(1)))
 			})
 		})
 
@@ -100,7 +112,11 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("bumps the pruned counter", func() {
-				Expect(sender.GetCounter("ConvergenceTasksPruned")).To(Equal(uint64(1)))
+				Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
+				name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(1)
+
+				Expect(name).To(Equal("ConvergenceTasksPruned"))
+				Expect(value).To(Equal(uint64(1)))
 			})
 		})
 
@@ -119,7 +135,10 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("emits a pending metric", func() {
-				Expect(sender.GetValue("TasksPending").Value).To(Equal(float64(2)))
+				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(4))
+				name, value := fakeMetronClient.SendMetricArgsForCall(0)
+				Expect(name).To(Equal("TasksPending"))
+				Expect(value).To(Equal(2))
 			})
 
 			Context("when the Task has NOT been pending for too long", func() {
@@ -138,7 +157,11 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("bumps the compare-and-swap counter", func() {
-					Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(2)))
+					Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
+					name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
+
+					Expect(name).To(Equal("ConvergenceTasksKicked"))
+					Expect(value).To(Equal(uint64(2)))
 				})
 
 				It("returns the tasks to be auctioned", func() {
@@ -162,7 +185,11 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("bumps the compare-and-swap counter", func() {
-					Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(2)))
+					Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
+					name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
+
+					Expect(name).To(Equal("ConvergenceTasksKicked"))
+					Expect(value).To(Equal(uint64(2)))
 				})
 			})
 		})
@@ -177,7 +204,10 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("emits a running metric", func() {
-				Expect(sender.GetValue("TasksRunning").Value).To(Equal(float64(1)))
+				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(4))
+				name, value := fakeMetronClient.SendMetricArgsForCall(1)
+				Expect(name).To(Equal("TasksRunning"))
+				Expect(value).To(Equal(1))
 			})
 
 			Context("when the associated cell is present", func() {
@@ -214,7 +244,11 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("bumps the compare-and-swap counter", func() {
-					Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(1)))
+					Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
+					name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
+
+					Expect(name).To(Equal("ConvergenceTasksKicked"))
+					Expect(value).To(Equal(uint64(1)))
 				})
 			})
 		})
@@ -246,7 +280,9 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("emits a completed metric", func() {
-					Expect(sender.GetValue("TasksCompleted").Value).To(Equal(float64(2)))
+					name, value := fakeMetronClient.SendMetricArgsForCall(2)
+					Expect(name).To(Equal("TasksCompleted"))
+					Expect(value).To(Equal(2))
 				})
 
 				Context("for longer than the convergence interval", func() {
@@ -259,8 +295,12 @@ var _ = Describe("Convergence of Tasks", func() {
 						Expect([]string{tasksToComplete[0].TaskGuid, tasksToComplete[1].TaskGuid}).To(ConsistOf(taskGuid, taskGuid2))
 					})
 
-					It("bumps the convergence tasks kicked counter", func() {
-						Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(2)))
+					It("bumps the compare-and-swap counter", func() {
+						Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
+						name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
+
+						Expect(name).To(Equal("ConvergenceTasksKicked"))
+						Expect(value).To(Equal(uint64(2)))
 					})
 				})
 
@@ -313,7 +353,10 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("emits a resolving metric", func() {
-				Expect(sender.GetValue("TasksResolving").Value).To(Equal(float64(1)))
+				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(4))
+				name, value := fakeMetronClient.SendMetricArgsForCall(3)
+				Expect(name).To(Equal("TasksResolving"))
+				Expect(value).To(Equal(1))
 			})
 
 			Context("when the task is in resolving state for less than the convergence interval", func() {
@@ -344,7 +387,11 @@ var _ = Describe("Convergence of Tasks", func() {
 				})
 
 				It("bumps the compare-and-swap counter", func() {
-					Expect(sender.GetCounter("ConvergenceTasksKicked")).To(Equal(uint64(1)))
+					Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
+					name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
+
+					Expect(name).To(Equal("ConvergenceTasksKicked"))
+					Expect(value).To(Equal(uint64(1)))
 				})
 			})
 

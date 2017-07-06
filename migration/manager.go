@@ -13,12 +13,12 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
 )
 
 const (
-	migrationDuration = metric.Duration("MigrationDuration")
+	migrationDuration = "MigrationDuration"
 )
 
 type Manager struct {
@@ -32,6 +32,7 @@ type Manager struct {
 	migrationsDone chan<- struct{}
 	clock          clock.Clock
 	databaseDriver string
+	metronClient   loggregator_v2.IngressClient
 }
 
 func NewManager(
@@ -45,6 +46,7 @@ func NewManager(
 	migrationsDone chan<- struct{},
 	clock clock.Clock,
 	databaseDriver string,
+	metronClient loggregator_v2.IngressClient,
 ) Manager {
 	sort.Sort(migrations)
 
@@ -59,6 +61,7 @@ func NewManager(
 		migrationsDone: migrationsDone,
 		clock:          clock,
 		databaseDriver: databaseDriver,
+		metronClient:   metronClient,
 	}
 }
 
@@ -219,7 +222,8 @@ func (m *Manager) performMigration(
 	}
 
 	logger.Debug("migrations-finished")
-	err := migrationDuration.Send(time.Since(migrateStart))
+
+	err := m.metronClient.SendDuration(migrationDuration, time.Since(migrateStart))
 	if err != nil {
 		logger.Error("failed-to-send-migration-duration-metric", err)
 	}

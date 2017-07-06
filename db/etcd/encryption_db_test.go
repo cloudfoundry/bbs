@@ -8,11 +8,15 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Encryption", func() {
+	BeforeEach(func() {
+		fakeMetronClient = new(mfakes.FakeIngressClient)
+	})
 	Describe("SetEncryptionKeyLabel", func() {
 		It("sets the encryption key label into the database", func() {
 			err := etcdDB.SetEncryptionKeyLabel(logger, "expected-key")
@@ -90,7 +94,7 @@ var _ = Describe("Encryption", func() {
 
 			cryptor = makeCryptor("new", "old")
 
-			etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, clock)
+			etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, clock, fakeMetronClient)
 			err = etcdDB.PerformEncryption(logger)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -127,7 +131,7 @@ var _ = Describe("Encryption", func() {
 
 			cryptor = makeCryptor("new", "old")
 
-			etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, clock)
+			etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, clock, fakeMetronClient)
 			err = etcdDB.PerformEncryption(logger)
 			Expect(err).NotTo(HaveOccurred())
 		})

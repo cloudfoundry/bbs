@@ -13,39 +13,36 @@ import (
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
 )
 
 const (
-	convergeLRPRunsCounter = metric.Counter("ConvergenceLRPRuns")
-	convergeLRPDuration    = metric.Duration("ConvergenceLRPDuration")
+	convergeLRPRunsCounter = "ConvergenceLRPRuns"
+	convergeLRPDuration    = "ConvergenceLRPDuration"
 
-	malformedSchedulingInfosMetric = metric.Counter("ConvergenceLRPPreProcessingMalformedSchedulingInfos")
-	malformedRunInfosMetric        = metric.Counter("ConvergenceLRPPreProcessingMalformedRunInfos")
-	actualLRPsDeleted              = metric.Counter("ConvergenceLRPPreProcessingActualLRPsDeleted")
-	orphanedRunInfosMetric         = metric.Counter("ConvergenceLRPPreProcessingOrphanedRunInfos")
+	malformedSchedulingInfosMetric = "ConvergenceLRPPreProcessingMalformedSchedulingInfos"
+	malformedRunInfosMetric        = "ConvergenceLRPPreProcessingMalformedRunInfos"
+	actualLRPsDeleted              = "ConvergenceLRPPreProcessingActualLRPsDeleted"
+	orphanedRunInfosMetric         = "ConvergenceLRPPreProcessingOrphanedRunInfos"
 
-	desiredLRPs   = metric.Metric("LRPsDesired")
-	claimedLRPs   = metric.Metric("LRPsClaimed")
-	unclaimedLRPs = metric.Metric("LRPsUnclaimed")
-	runningLRPs   = metric.Metric("LRPsRunning")
-
-	missingLRPs = metric.Metric("LRPsMissing")
-	extraLRPs   = metric.Metric("LRPsExtra")
-
-	crashedActualLRPs   = metric.Metric("CrashedActualLRPs")
-	crashingDesiredLRPs = metric.Metric("CrashingDesiredLRPs")
+	claimedLRPs         = "LRPsClaimed"
+	desiredLRPs         = "LRPsDesired"
+	extraLRPs           = "LRPsExtra"
+	missingLRPs         = "LRPsMissing"
+	runningLRPs         = "LRPsRunning"
+	unclaimedLRPs       = "LRPsUnclaimed"
+	crashedActualLRPs   = "CrashedActualLRPs"
+	crashingDesiredLRPs = "CrashingDesiredLRPs"
 )
 
 func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
 	convergeStart := db.clock.Now()
-	convergeLRPRunsCounter.Increment()
+	db.metronClient.IncrementCounter(convergeLRPRunsCounter)
 	logger = logger.Session("etcd")
 	logger.Info("starting-convergence")
 	defer logger.Info("finished-convergence")
 
 	defer func() {
-		err := convergeLRPDuration.Send(time.Since(convergeStart))
+		err := db.metronClient.SendDuration(convergeLRPDuration, time.Since(convergeStart))
 		if err != nil {
 			logger.Error("failed-sending-converge-lrp-duration-metric", err)
 		}
@@ -59,7 +56,7 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*
 	}
 	logger.Debug("succeeded-gathering-convergence-input")
 
-	changes := CalculateConvergence(logger, db.clock, models.NewDefaultRestartCalculator(), input)
+	changes := CalculateConvergence(logger, db, db.clock, models.NewDefaultRestartCalculator(), input)
 
 	return db.ResolveConvergence(logger, input.DesiredLRPs, changes)
 }
@@ -73,33 +70,33 @@ type LRPMetricCounter struct {
 	desiredLRPs         int32
 }
 
-func (lmc LRPMetricCounter) Send(logger lager.Logger) {
-	err := unclaimedLRPs.Send(int(lmc.unclaimedLRPs))
+func (lmc LRPMetricCounter) Send(logger lager.Logger, db *ETCDDB) {
+	err := db.metronClient.SendMetric(unclaimedLRPs, int(lmc.unclaimedLRPs))
 	if err != nil {
 		logger.Error("failed-sending-unclaimed-lrps-metric", err)
 	}
 
-	err = claimedLRPs.Send(int(lmc.claimedLRPs))
+	err = db.metronClient.SendMetric(claimedLRPs, int(lmc.claimedLRPs))
 	if err != nil {
 		logger.Error("failed-sending-claimed-lrps-metric", err)
 	}
 
-	err = runningLRPs.Send(int(lmc.runningLRPs))
+	err = db.metronClient.SendMetric(runningLRPs, int(lmc.runningLRPs))
 	if err != nil {
 		logger.Error("failed-sending-running-lrps-metric", err)
 	}
 
-	err = crashedActualLRPs.Send(int(lmc.crashedActualLRPs))
+	err = db.metronClient.SendMetric(crashedActualLRPs, int(lmc.crashedActualLRPs))
 	if err != nil {
 		logger.Error("failed-sending-crashed-actual-lrps-metric", err)
 	}
 
-	err = crashingDesiredLRPs.Send(int(lmc.crashingDesiredLRPs))
+	err = db.metronClient.SendMetric(crashingDesiredLRPs, int(lmc.crashingDesiredLRPs))
 	if err != nil {
 		logger.Error("failed-sending-crashing-desired-lrps-metric", err)
 	}
 
-	err = desiredLRPs.Send(int(lmc.desiredLRPs))
+	err = db.metronClient.SendMetric(desiredLRPs, int(lmc.desiredLRPs))
 	if err != nil {
 		logger.Error("failed-sending-desired-lrps-metric", err)
 	}
@@ -122,7 +119,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 		lrpMetricCounter.crashingDesiredLRPs = -1
 		lrpMetricCounter.desiredLRPs = -1
 
-		lrpMetricCounter.Send(logger)
+		lrpMetricCounter.Send(logger, db)
 
 		return &models.ConvergenceInput{}, err
 	}
@@ -135,13 +132,13 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 		logger.Error("failed-gathering-and-pruning-desired-lrps", err)
 
 		lrpMetricCounter.desiredLRPs = -1
-		lrpMetricCounter.Send(logger)
+		lrpMetricCounter.Send(logger, db)
 
 		return &models.ConvergenceInput{}, err
 	}
 	logger.Debug("succeeded-gathering-and-pruning-desired-lrps")
 
-	lrpMetricCounter.Send(logger)
+	lrpMetricCounter.Send(logger, db)
 
 	logger.Debug("listing-domains")
 	domains, err := db.Domains(logger)
@@ -150,7 +147,10 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 	}
 	logger.Debug("succeeded-listing-domains")
 	for _, domain := range domains {
-		metric.Metric("Domain." + domain).Send(1)
+		err = db.metronClient.SendMetric(fmt.Sprintf("Domain.%s", domain), 1)
+		if err != nil {
+			logger.Error("failed-sending-domain-metric", err)
+		}
 	}
 
 	return &models.ConvergenceInput{
@@ -277,7 +277,7 @@ func (db *ETCDDB) gatherAndOptionallyPruneActualLRPs(logger lager.Logger, guids 
 	if doPrune {
 		logger.Info("deleting-invalid-actual-lrps", lager.Data{"num_lrps": len(actualsToDelete)})
 		db.batchDeleteNodes(actualsToDelete, logger)
-		actualLRPsDeleted.Add(uint64(len(actualsToDelete)))
+		db.metronClient.IncrementCounterWithDelta(actualLRPsDeleted, uint64(len(actualsToDelete)))
 
 		logger.Info("deleting-empty-actual-indices", lager.Data{"num_indices": len(indexKeysToDelete)})
 		err = db.deleteLeaves(logger, indexKeysToDelete)
@@ -405,8 +405,8 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 	db.batchDeleteNodes(malformedSchedulingInfos, logger)
 	db.batchDeleteNodes(malformedRunInfos, logger)
 
-	malformedSchedulingInfosMetric.Add(uint64(len(malformedSchedulingInfos)))
-	malformedRunInfosMetric.Add(uint64(len(malformedRunInfos)))
+	db.metronClient.IncrementCounterWithDelta(malformedSchedulingInfosMetric, uint64(len(malformedSchedulingInfos)))
+	db.metronClient.IncrementCounterWithDelta(malformedRunInfosMetric, uint64(len(malformedRunInfos)))
 
 	logger.Debug("done-walking-desired-lrp-tree")
 
@@ -434,7 +434,7 @@ func (db *ETCDDB) GatherAndPruneDesiredLRPs(logger lager.Logger, guids map[strin
 			// and delete it.
 			_, ok := schedulingInfos[guid]
 			if !ok && db.clock.Since(time.Unix(0, runInfo.CreatedAt)) > db.desiredLRPCreationTimeout {
-				orphanedRunInfosMetric.Add(1)
+				db.metronClient.IncrementCounter(orphanedRunInfosMetric)
 				runInfosToDelete = append(runInfosToDelete, DesiredLRPRunInfoSchemaPath(guid))
 			}
 		}
@@ -476,6 +476,7 @@ func (db *ETCDDB) batchDeleteNodes(keys []string, logger lager.Logger) {
 
 func CalculateConvergence(
 	logger lager.Logger,
+	db *ETCDDB,
 	clock clock.Clock,
 	restartCalculator models.RestartCalculator,
 	input *models.ConvergenceInput,
@@ -553,9 +554,8 @@ func CalculateConvergence(
 		}
 	}
 
-	missingLRPs.Send(missingLRPCount)
-	extraLRPs.Send(extraLRPCount)
-
+	db.metronClient.SendMetric(missingLRPs, missingLRPCount)
+	db.metronClient.SendMetric(extraLRPs, extraLRPCount)
 	return changes
 }
 

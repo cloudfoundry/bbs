@@ -12,10 +12,9 @@ import (
 	"code.cloudfoundry.org/bbs/migration/migrationfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
-	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -42,10 +41,14 @@ var _ = Describe("Migration Manager", func() {
 		fakeMigration *migrationfakes.FakeMigration
 
 		cryptor encryption.Cryptor
+
+		fakeMetronClient *mfakes.FakeIngressClient
 	)
 
 	BeforeEach(func() {
 		migrationsDone = make(chan struct{})
+
+		fakeMetronClient = new(mfakes.FakeIngressClient)
 
 		dbVersion = &models.Version{}
 
@@ -63,7 +66,7 @@ var _ = Describe("Migration Manager", func() {
 	})
 
 	JustBeforeEach(func() {
-		manager = migration.NewManager(logger, fakeETCDDB, etcdStoreClient, fakeSQLDB, rawSQLDB, cryptor, migrations, migrationsDone, clock.NewClock(), "db-driver")
+		manager = migration.NewManager(logger, fakeETCDDB, etcdStoreClient, fakeSQLDB, rawSQLDB, cryptor, migrations, migrationsDone, clock.NewClock(), "db-driver", fakeMetronClient)
 		migrationProcess = ifrit.Background(manager)
 	})
 
@@ -436,20 +439,14 @@ var _ = Describe("Migration Manager", func() {
 			})
 
 			Describe("reporting", func() {
-				var sender *fake.FakeMetricSender
-
-				BeforeEach(func() {
-					sender = fake.NewFakeMetricSender()
-					metrics.Initialize(sender, nil)
-				})
-
 				It("reports the duration that it took to migrate", func() {
 					Eventually(migrationProcess.Ready()).Should(BeClosed())
 					Expect(migrationsDone).To(BeClosed())
 
-					reportedDuration := sender.GetValue("MigrationDuration")
-					Expect(reportedDuration.Value).NotTo(BeZero())
-					Expect(reportedDuration.Unit).To(Equal("nanos"))
+					Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
+					name, value := fakeMetronClient.SendDurationArgsForCall(0)
+					Expect(name).To(Equal("MigrationDuration"))
+					Expect(value).NotTo(BeZero())
 				})
 			})
 

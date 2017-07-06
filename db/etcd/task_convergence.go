@@ -6,21 +6,20 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
 	"code.cloudfoundry.org/workpool"
 )
 
 const (
-	convergeTaskRunsCounter = metric.Counter("ConvergenceTaskRuns")
-	convergeTaskDuration    = metric.Duration("ConvergenceTaskDuration")
+	convergeTaskRunsCounter = "ConvergenceTaskRuns"
+	convergeTaskDuration    = "ConvergenceTaskDuration"
 
-	tasksKickedCounter = metric.Counter("ConvergenceTasksKicked")
-	tasksPrunedCounter = metric.Counter("ConvergenceTasksPruned")
+	tasksKickedCounter = "ConvergenceTasksKicked"
+	tasksPrunedCounter = "ConvergenceTasksPruned"
 
-	pendingTasks   = metric.Metric("TasksPending")
-	runningTasks   = metric.Metric("TasksRunning")
-	completedTasks = metric.Metric("TasksCompleted")
-	resolvingTasks = metric.Metric("TasksResolving")
+	pendingTasks   = "TasksPending"
+	runningTasks   = "TasksRunning"
+	completedTasks = "TasksCompleted"
+	resolvingTasks = "TasksResolving"
 )
 
 type compareAndSwappableTask struct {
@@ -36,12 +35,12 @@ func (db *ETCDDB) ConvergeTasks(
 	logger.Info("starting-convergence")
 	defer logger.Info("finished-convergence")
 
-	convergeTaskRunsCounter.Increment()
+	db.metronClient.IncrementCounter(convergeTaskRunsCounter)
 
 	convergeStart := db.clock.Now()
 
 	defer func() {
-		err := convergeTaskDuration.Send(time.Since(convergeStart))
+		err := db.metronClient.SendDuration(convergeTaskDuration, time.Since(convergeStart))
 		if err != nil {
 			logger.Error("failed-to-send-converge-task-duration-metric", err)
 		}
@@ -51,7 +50,7 @@ func (db *ETCDDB) ConvergeTasks(
 	taskState, modelErr := db.fetchRecursiveRaw(logger, TaskSchemaRoot)
 	if modelErr != nil {
 		logger.Debug("failed-listing-task")
-		sendTaskMetrics(logger, -1, -1, -1, -1)
+		sendTaskMetrics(logger, db, -1, -1, -1, -1)
 		return nil, nil
 	}
 	logger.Debug("succeeded-listing-task")
@@ -162,9 +161,9 @@ func (db *ETCDDB) ConvergeTasks(
 		"num_keys_to_delete":    len(keysToDelete),
 	})
 
-	sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
+	sendTaskMetrics(logger, db, pendingCount, runningCount, completedCount, resolvingCount)
 
-	tasksKickedCounter.Add(tasksKicked)
+	db.metronClient.IncrementCounterWithDelta(tasksKickedCounter, tasksKicked)
 	logger.Debug("compare-and-swapping-tasks", lager.Data{"num_tasks_to_cas": len(tasksToCAS)})
 	err := db.batchCompareAndSwapTasks(tasksToCAS, logger)
 	if err != nil {
@@ -172,7 +171,7 @@ func (db *ETCDDB) ConvergeTasks(
 	}
 	logger.Debug("done-compare-and-swapping-tasks", lager.Data{"num_tasks_to_cas": len(tasksToCAS)})
 
-	tasksPrunedCounter.Add(uint64(len(keysToDelete)))
+	db.metronClient.IncrementCounterWithDelta(tasksPrunedCounter, uint64(len(keysToDelete)))
 	logger.Debug("deleting-keys", lager.Data{"num_keys_to_delete": len(keysToDelete)})
 	db.batchDeleteTasks(keysToDelete, logger)
 	logger.Debug("done-deleting-keys", lager.Data{"num_keys_to_delete": len(keysToDelete)})
@@ -270,23 +269,23 @@ func (db *ETCDDB) batchDeleteTasks(taskGuids []string, logger lager.Logger) {
 	return
 }
 
-func sendTaskMetrics(logger lager.Logger, pendingCount, runningCount, completedCount, resolvingCount int) {
-	err := pendingTasks.Send(pendingCount)
+func sendTaskMetrics(logger lager.Logger, db *ETCDDB, pendingCount, runningCount, completedCount, resolvingCount int) {
+	err := db.metronClient.SendMetric(pendingTasks, pendingCount)
 	if err != nil {
 		logger.Error("failed-to-send-pending-tasks-metric", err)
 	}
 
-	err = runningTasks.Send(runningCount)
+	err = db.metronClient.SendMetric(runningTasks, runningCount)
 	if err != nil {
 		logger.Error("failed-to-send-running-tasks-metric", err)
 	}
 
-	err = completedTasks.Send(completedCount)
+	err = db.metronClient.SendMetric(completedTasks, completedCount)
 	if err != nil {
 		logger.Error("failed-to-send-completed-tasks-metric", err)
 	}
 
-	err = resolvingTasks.Send(resolvingCount)
+	err = db.metronClient.SendMetric(resolvingTasks, resolvingCount)
 	if err != nil {
 		logger.Error("failed-to-send-resolving-tasks-metric", err)
 	}

@@ -12,6 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,7 +38,9 @@ var _ = Describe("Change Timeouts to Milliseconds Migration", func() {
 		cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 		serializer = format.NewSerializer(cryptor)
 		migration = migrations.NewTimeoutMilliseconds()
-		db = etcddb.NewETCD(format.ENCRYPTED_PROTO, 1, 1, 1*time.Minute, cryptor, storeClient, fakeClock)
+
+		fakeMetronClient := new(mfakes.FakeIngressClient)
+		db = etcddb.NewETCD(format.ENCRYPTED_PROTO, 1, 1, 1*time.Minute, cryptor, storeClient, fakeClock, fakeMetronClient)
 	})
 
 	It("appends itself to the migration list", func() {

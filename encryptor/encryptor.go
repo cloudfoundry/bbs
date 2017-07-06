@@ -8,20 +8,21 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
 )
 
 const (
-	encryptionDuration = metric.Duration("EncryptionDuration")
+	encryptionDuration = "EncryptionDuration"
 )
 
 type Encryptor struct {
-	logger     lager.Logger
-	db         db.EncryptionDB
-	keyManager encryption.KeyManager
-	cryptor    encryption.Cryptor
-	clock      clock.Clock
+	logger       lager.Logger
+	db           db.EncryptionDB
+	keyManager   encryption.KeyManager
+	cryptor      encryption.Cryptor
+	clock        clock.Clock
+	metronClient loggregator_v2.IngressClient
 }
 
 func New(
@@ -30,13 +31,15 @@ func New(
 	keyManager encryption.KeyManager,
 	cryptor encryption.Cryptor,
 	clock clock.Clock,
+	metronClient loggregator_v2.IngressClient,
 ) Encryptor {
 	return Encryptor{
-		logger:     logger,
-		db:         db,
-		keyManager: keyManager,
-		cryptor:    cryptor,
-		clock:      clock,
+		logger:       logger,
+		db:           db,
+		keyManager:   keyManager,
+		cryptor:      cryptor,
+		clock:        clock,
+		metronClient: metronClient,
 	}
 }
 
@@ -78,7 +81,7 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 		totalTime := m.clock.Since(encryptionStart)
 		logger.Info("encryption-finished", lager.Data{"total_time": totalTime})
-		err = encryptionDuration.Send(totalTime)
+		err = m.metronClient.SendDuration(encryptionDuration, totalTime)
 		if err != nil {
 			logger.Error("failed-to-send-encryption-duration-metrics", err)
 		}

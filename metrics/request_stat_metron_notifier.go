@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/clock"
+	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
 )
 
 const (
-	requestCounter = metric.Counter("RequestCount")
-	requestLatency = metric.Duration("RequestLatency")
+	requestCounter = "RequestCount"
+	requestLatency = "RequestLatency"
 )
 
 type RequestStatMetronNotifier struct {
@@ -22,12 +22,14 @@ type RequestStatMetronNotifier struct {
 	requestCount      uint64
 	maxRequestLatency time.Duration
 	lock              sync.Mutex
+	metronClient      loggregator_v2.IngressClient
 }
 
-func NewRequestStatMetronNotifier(logger lager.Logger, ticker clock.Ticker) *RequestStatMetronNotifier {
+func NewRequestStatMetronNotifier(logger lager.Logger, ticker clock.Ticker, metronClient loggregator_v2.IngressClient) *RequestStatMetronNotifier {
 	return &RequestStatMetronNotifier{
-		logger: logger,
-		ticker: ticker,
+		logger:       logger,
+		ticker:       ticker,
+		metronClient: metronClient,
 	}
 }
 
@@ -65,12 +67,12 @@ func (notifier *RequestStatMetronNotifier) Run(signals <-chan os.Signal, ready c
 		case <-notifier.ticker.C():
 			add := atomic.SwapUint64(&notifier.requestCount, 0)
 			logger.Info("adding-counter", lager.Data{"add": add})
-			requestCounter.Add(add)
+			notifier.metronClient.IncrementCounterWithDelta(requestCounter, add)
 
 			latency := notifier.ReadAndResetLatency()
 			if latency != 0 {
 				logger.Info("sending-latency", lager.Data{"latency": latency})
-				requestLatency.Send(latency)
+				notifier.metronClient.SendDuration(requestLatency, latency)
 			}
 		case <-signals:
 			return nil

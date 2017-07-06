@@ -78,7 +78,7 @@ type defaultEmitter struct {
 }
 
 func (e *defaultEmitter) IncrementCounter(delta int) {
-	RequestCount.Increment()
+	RequestCount.Add(uint64(delta))
 }
 
 func (e *defaultEmitter) UpdateLatency(latency time.Duration) {

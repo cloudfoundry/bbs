@@ -9,31 +9,30 @@ import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
 )
 
 const (
-	convergeTaskRunsCounter = metric.Counter("ConvergenceTaskRuns")
-	convergeTaskDuration    = metric.Duration("ConvergenceTaskDuration")
+	convergeTaskRunsCounter = "ConvergenceTaskRuns"
+	convergeTaskDuration    = "ConvergenceTaskDuration"
 
-	tasksKickedCounter = metric.Counter("ConvergenceTasksKicked")
-	tasksPrunedCounter = metric.Counter("ConvergenceTasksPruned")
+	tasksKickedCounter = "ConvergenceTasksKicked"
+	tasksPrunedCounter = "ConvergenceTasksPruned"
 
-	pendingTasks   = metric.Metric("TasksPending")
-	runningTasks   = metric.Metric("TasksRunning")
-	completedTasks = metric.Metric("TasksCompleted")
-	resolvingTasks = metric.Metric("TasksResolving")
+	pendingTasks   = "TasksPending"
+	runningTasks   = "TasksRunning"
+	completedTasks = "TasksCompleted"
+	resolvingTasks = "TasksResolving"
 )
 
 func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, []*models.Task) {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	convergeTaskRunsCounter.Increment()
+	db.metronClient.IncrementCounter(convergeTaskRunsCounter)
 	convergeStart := db.clock.Now()
 
 	defer func() {
-		err := convergeTaskDuration.Send(time.Since(convergeStart))
+		err := db.metronClient.SendDuration(convergeTaskDuration, time.Since(convergeStart))
 		if err != nil {
 			logger.Error("failed-to-send-converge-task-duration-metric", err)
 		}
@@ -64,10 +63,10 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 
 	pendingCount, runningCount, completedCount, resolvingCount := db.countTasksByState(logger.Session("count-tasks"), db.db)
 
-	sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
+	db.sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
 
-	tasksKickedCounter.Add(tasksKicked)
-	tasksPrunedCounter.Add(tasksPruned)
+	db.metronClient.IncrementCounterWithDelta(tasksKickedCounter, uint64(tasksKicked))
+	db.metronClient.IncrementCounterWithDelta(tasksPrunedCounter, uint64(tasksPruned))
 
 	return tasksToAuction, tasksToComplete
 }
@@ -226,23 +225,23 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 	return tasksToComplete, uint64(failedFetches)
 }
 
-func sendTaskMetrics(logger lager.Logger, pendingCount, runningCount, completedCount, resolvingCount int) {
-	err := pendingTasks.Send(pendingCount)
+func (db *SQLDB) sendTaskMetrics(logger lager.Logger, pendingCount, runningCount, completedCount, resolvingCount int) {
+	err := db.metronClient.SendMetric(pendingTasks, pendingCount)
 	if err != nil {
 		logger.Error("failed-to-send-pending-tasks-metric", err)
 	}
 
-	err = runningTasks.Send(runningCount)
+	err = db.metronClient.SendMetric(runningTasks, runningCount)
 	if err != nil {
 		logger.Error("failed-to-send-running-tasks-metric", err)
 	}
 
-	err = completedTasks.Send(completedCount)
+	err = db.metronClient.SendMetric(completedTasks, completedCount)
 	if err != nil {
 		logger.Error("failed-to-send-completed-tasks-metric", err)
 	}
 
-	err = resolvingTasks.Send(resolvingCount)
+	err = db.metronClient.SendMetric(resolvingTasks, resolvingCount)
 	if err != nil {
 		logger.Error("failed-to-send-resolving-tasks-metric", err)
 	}
