@@ -7,7 +7,7 @@ to those events as well as the type of events supported by the BBS.
 ## Subscribing to LRP Events
 
 You can use the `SubscribeToEvents(logger lager.Logger) (events.EventSource,
-error)` client method to subscribe to all events. For example:
+error)` client method to subscribe to lrp events. For example:
 
 ``` go
 client := bbs.NewClient(url)
@@ -35,12 +35,13 @@ Events relevant to the cell are defined as:
 4. `ActualLRPCrashedEvent` that used to run on that cell
 
 **Note** Passing an empty string `cellID` argument to `SubscribeToEventsByCellID` is equivalent to calling `SubscribeToEvents`
+
 **Note** `SubscribeToEventsByCellID` and `SubscribeToEvents` do not have events related to Tasks.
 
 ## Subscribing to Task Events
 
 You can use the `SubscribeToTaskEvents(logger lager.Logger) (events.EventSource,
-error)` client method to subscribe to all events. For example:
+error)` client method to subscribe to task events. For example:
 
 ``` go
 client := bbs.NewClient(url)
