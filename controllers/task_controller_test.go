@@ -62,6 +62,7 @@ var _ = Describe("Task Controller", func() {
 			task2 = models.Task{CellId: "cell-id"}
 			domain = ""
 			cellId = ""
+			err = nil
 		})
 
 		JustBeforeEach(func() {
@@ -197,7 +198,7 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			It("requests an auction", func() {
-				Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
+				Eventually(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).Should(Equal(1))
 
 				var volumeMounts []string
 				for _, volMount := range taskDef.VolumeMounts {
