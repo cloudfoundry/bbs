@@ -925,13 +925,19 @@ var _ = Describe("Task Controller", func() {
 					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{}, nil, []models.Event{event1, event2})
 				})
 
-				It("emits a TaskCreateEvent to the hub", func() {
+				It("emits a Task event to the hub", func() {
 					Eventually(taskHub.EmitCallCount).Should(Equal(2))
-					event := taskHub.EmitArgsForCall(0)
-					Expect(event).To(BeEquivalentTo(event1))
 
-					event = taskHub.EmitArgsForCall(1)
-					Expect(event).To(BeEquivalentTo(event2))
+					e1 := taskHub.EmitArgsForCall(0)
+					e2 := taskHub.EmitArgsForCall(1)
+
+					events := []*models.TaskRemovedEvent{
+						e1.(*models.TaskRemovedEvent),
+						e2.(*models.TaskRemovedEvent),
+					}
+
+					Expect(events).To(ContainElement(event1))
+					Expect(events).To(ContainElement(event2))
 				})
 			})
 		})
