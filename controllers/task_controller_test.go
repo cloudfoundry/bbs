@@ -28,6 +28,7 @@ var _ = Describe("Task Controller", func() {
 		taskHub                  *eventfakes.FakeHub
 
 		controller *controllers.TaskController
+		err        error
 	)
 
 	BeforeEach(func() {
@@ -36,6 +37,7 @@ var _ = Describe("Task Controller", func() {
 		fakeTaskCompletionClient = new(taskworkpoolfakes.FakeTaskCompletionClient)
 
 		logger = lagertest.NewTestLogger("test")
+		err = nil
 
 		taskHub = &eventfakes.FakeHub{}
 		controller = controllers.NewTaskController(
@@ -54,7 +56,6 @@ var _ = Describe("Task Controller", func() {
 			task1          models.Task
 			task2          models.Task
 			actualTasks    []*models.Task
-			err            error
 		)
 
 		BeforeEach(func() {
@@ -62,7 +63,6 @@ var _ = Describe("Task Controller", func() {
 			task2 = models.Task{CellId: "cell-id"}
 			domain = ""
 			cellId = ""
-			err = nil
 		})
 
 		JustBeforeEach(func() {
@@ -128,7 +128,6 @@ var _ = Describe("Task Controller", func() {
 		var (
 			taskGuid   = "task-guid"
 			actualTask *models.Task
-			err        error
 		)
 
 		JustBeforeEach(func() {
@@ -171,7 +170,6 @@ var _ = Describe("Task Controller", func() {
 			taskGuid = "task-guid"
 			domain   = "domain"
 			taskDef  *models.TaskDefinition
-			err      error
 		)
 
 		BeforeEach(func() {
@@ -290,7 +288,6 @@ var _ = Describe("Task Controller", func() {
 			var (
 				taskGuid, cellId string
 				shouldStart      bool
-				err              error
 			)
 
 			BeforeEach(func() {
@@ -368,7 +365,6 @@ var _ = Describe("Task Controller", func() {
 	Describe("CancelTask", func() {
 		var (
 			taskGuid, cellID string
-			err              error
 			before, after    *models.Task
 		)
 
@@ -533,7 +529,6 @@ var _ = Describe("Task Controller", func() {
 		var (
 			taskGuid      string
 			failureReason string
-			err           error
 			before, after *models.Task
 		)
 
@@ -612,7 +607,6 @@ var _ = Describe("Task Controller", func() {
 			failed        bool
 			failureReason string
 			result        string
-			err           error
 			before, after *models.Task
 		)
 
@@ -698,7 +692,6 @@ var _ = Describe("Task Controller", func() {
 		Context("when the resolving request is normal", func() {
 			var (
 				taskGuid      string
-				err           error
 				before, after *models.Task
 			)
 
@@ -751,7 +744,6 @@ var _ = Describe("Task Controller", func() {
 		Context("when the delete request is normal", func() {
 			var (
 				taskGuid string
-				err      error
 				task     *models.Task
 			)
 
@@ -805,7 +797,6 @@ var _ = Describe("Task Controller", func() {
 				expirePendingTaskDuration   = 10 * time.Second
 				expireCompletedTaskDuration = 10 * time.Second
 				cellSet                     models.CellSet
-				err                         error
 			)
 
 			BeforeEach(func() {
