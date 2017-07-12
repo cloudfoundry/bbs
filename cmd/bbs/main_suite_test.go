@@ -192,6 +192,7 @@ var _ = BeforeEach(func() {
 			ActiveKeyLabel: "label",
 		},
 		ConvergeRepeatInterval: durationjson.Duration(time.Hour),
+		UUID: "bbs-bosh-boshy-bosh-bosh",
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)

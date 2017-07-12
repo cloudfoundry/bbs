@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"context"
 	"fmt"
 	"net"
 
@@ -65,6 +66,16 @@ var _ = Describe("SqlLock", func() {
 				Eventually(bbsProcess.Wait()).Should(Receive())
 			})
 		})
+
+		Context("and the UUID is missing", func() {
+			BeforeEach(func() {
+				bbsConfig.UUID = ""
+			})
+
+			It("exits with an error", func() {
+				Eventually(bbsProcess.Wait()).Should(Receive())
+			})
+		})
 	})
 
 	Context("with valid configuration", func() {
@@ -83,6 +94,17 @@ var _ = Describe("SqlLock", func() {
 			Eventually(func() bool {
 				return client.Ping(logger)
 			}).Should(BeTrue())
+		})
+
+		It("has the configured UUID as the owner", func() {
+			locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+			Expect(err).NotTo(HaveOccurred())
+
+			lock, err := locketClient.Fetch(context.Background(), &locketmodels.FetchRequest{
+				Key: "bbs",
+			})
+
+			Expect(lock.Resource.Owner).To(Equal(bbsConfig.UUID))
 		})
 
 		Context("and the locking server becomes unreachable after grabbing the lock", func() {

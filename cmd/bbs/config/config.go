@@ -20,6 +20,7 @@ type BBSConfig struct {
 	AuctioneerClientCert      string                `json:"auctioneer_client_cert,omitempty"`
 	AuctioneerClientKey       string                `json:"auctioneer_client_key,omitempty"`
 	AuctioneerRequireTLS      bool                  `json:"auctioneer_require_tls,omitempty"`
+	UUID                      string                `json:"uuid,omitempty"`
 	CaFile                    string                `json:"ca_file,omitempty"`
 	CertFile                  string                `json:"cert_file,omitempty"`
 	CommunicationTimeout      durationjson.Duration `json:"communication_timeout,omitempty"`

@@ -30,6 +30,7 @@ var _ = Describe("BBSConfig", func() {
 			"auctioneer_client_cert": "/var/vcap/jobs/bbs/config/auctioneer.crt",
 			"auctioneer_client_key": "/var/vcap/jobs/bbs/config/auctioneer.key",
 			"auctioneer_require_tls": true,
+			"uuid": "bosh-boshy-bosh-bosh",
 			"ca_file": "/var/vcap/jobs/bbs/config/ca.crt",
 			"cert_file": "/var/vcap/jobs/bbs/config/bbs.crt",
 			"communication_timeout": "20s",
@@ -106,6 +107,7 @@ var _ = Describe("BBSConfig", func() {
 			AuctioneerClientCert: "/var/vcap/jobs/bbs/config/auctioneer.crt",
 			AuctioneerClientKey:  "/var/vcap/jobs/bbs/config/auctioneer.key",
 			AuctioneerRequireTLS: true,
+			UUID:                 "bosh-boshy-bosh-bosh",
 			CaFile:               "/var/vcap/jobs/bbs/config/ca.crt",
 			CertFile:             "/var/vcap/jobs/bbs/config/bbs.crt",
 			ClientLocketConfig: locket.ClientLocketConfig{

@@ -64,9 +64,8 @@ var configFilePath = flag.String(
 )
 
 const (
-	dropsondeOrigin           = "bbs"
-	bbsWatchRetryWaitDuration = 3 * time.Second
-	bbsLockKey                = "bbs"
+	dropsondeOrigin = "bbs"
+	bbsLockKey      = "bbs"
 )
 
 func main() {
@@ -254,14 +253,14 @@ func main() {
 		if err != nil {
 			logger.Fatal("failed-to-create-locket-client", err)
 		}
-		guid, err := uuid.NewV4()
-		if err != nil {
-			logger.Fatal("failed-to-generate-guid", err)
+
+		if bbsConfig.UUID == "" {
+			logger.Fatal("invalid-uuid", errors.New("invalid-uuid-from-config"))
 		}
 
 		lockIdentifier := &locketmodels.Resource{
 			Key:   bbsLockKey,
-			Owner: guid.String(),
+			Owner: bbsConfig.UUID,
 			Type:  locketmodels.LockType,
 		}
 
