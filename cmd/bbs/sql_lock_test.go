@@ -100,10 +100,15 @@ var _ = Describe("SqlLock", func() {
 			locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 			Expect(err).NotTo(HaveOccurred())
 
+			Eventually(func() bool {
+				return client.Ping(logger)
+			}).Should(BeTrue())
+
 			lock, err := locketClient.Fetch(context.Background(), &locketmodels.FetchRequest{
 				Key: "bbs",
 			})
 
+			Expect(err).NotTo(HaveOccurred())
 			Expect(lock.Resource.Owner).To(Equal(bbsConfig.UUID))
 		})
 
