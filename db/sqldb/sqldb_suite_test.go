@@ -17,6 +17,7 @@ import (
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/clock/fakeclock"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -38,6 +39,7 @@ var (
 	migrationProcess                     ifrit.Process
 	dbDriverName, dbBaseConnectionString string
 	dbFlavor                             string
+	fakeMetronClient                     *mfakes.FakeIngressClient
 )
 
 func TestSql(t *testing.T) {
@@ -50,6 +52,7 @@ var _ = BeforeSuite(func() {
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
 	fakeGUIDProvider = &guidproviderfakes.FakeGUIDProvider{}
+	fakeMetronClient = new(mfakes.FakeIngressClient)
 	logger = lagertest.NewTestLogger("sql-db")
 
 	if test_helpers.UsePostgres() {
@@ -87,7 +90,7 @@ var _ = BeforeSuite(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor)
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 	err = sqlDB.CreateConfigurationsTable(logger)
 	if err != nil {
 		logger.Fatal("sql-failed-create-configurations-table", err)
@@ -98,6 +101,10 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = BeforeEach(func() {
+	fakeMetronClient = new(mfakes.FakeIngressClient)
+	migrationMetronClient := new(mfakes.FakeIngressClient)
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+
 	migrationsDone := make(chan struct{})
 
 	migrationManager := migration.NewManager(logger,
@@ -110,6 +117,7 @@ var _ = BeforeEach(func() {
 		migrationsDone,
 		fakeClock,
 		dbDriverName,
+		migrationMetronClient,
 	)
 
 	migrationProcess = ifrit.Invoke(migrationManager)

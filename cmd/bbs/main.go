@@ -37,6 +37,8 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/debugserver"
+	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	"code.cloudfoundry.org/go-loggregator/runtimeemitter"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/locket"
@@ -81,7 +83,11 @@ func main() {
 	logger, reconfigurableSink := lagerflags.NewFromConfig(bbsConfig.SessionName, bbsConfig.LagerConfig)
 	logger.Info("starting")
 
-	initializeDropsonde(logger, &bbsConfig)
+	metronClient, err := initializeMetron(logger, bbsConfig)
+	if err != nil {
+		logger.Error("failed-to-initialize-metron-client", err)
+		os.Exit(1)
+	}
 
 	clock := clock.NewClock()
 
@@ -133,7 +139,7 @@ func main() {
 
 	if etcdOptions.IsConfigured {
 		storeClient = initializeEtcdStoreClient(logger, etcdOptions)
-		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, &bbsConfig)
+		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, &bbsConfig, metronClient)
 		activeDB = etcdDB
 	}
 
@@ -167,6 +173,7 @@ func main() {
 			guidprovider.DefaultGuidProvider,
 			clock,
 			bbsConfig.DatabaseDriver,
+			metronClient,
 		)
 		err = sqlDB.CreateConfigurationsTable(logger)
 		if err != nil {
@@ -179,7 +186,7 @@ func main() {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
-	encryptor := encryptor.New(logger, activeDB, keyManager, cryptor, clock)
+	encryptor := encryptor.New(logger, activeDB, keyManager, cryptor, clock, metronClient)
 
 	migrationsDone := make(chan struct{})
 
@@ -194,6 +201,7 @@ func main() {
 		migrationsDone,
 		clock,
 		bbsConfig.DatabaseDriver,
+		metronClient,
 	)
 
 	desiredHub := events.NewHub()
@@ -288,7 +296,7 @@ func main() {
 	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
 
 	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
-	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker)
+	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker, metronClient)
 
 	handler := handlers.New(
 		logger,
@@ -308,7 +316,7 @@ func main() {
 		exitChan,
 	)
 
-	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger)
+	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger, metronClient)
 
 	actualLRPController := controllers.NewActualLRPLifecycleController(activeDB, activeDB, activeDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
 	lrpConvergenceController := controllers.NewLRPConvergenceController(logger,
@@ -529,8 +537,24 @@ func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig
 	return auctioneer.NewClient(bbsConfig.AuctioneerAddress)
 }
 
-func initializeDropsonde(logger lager.Logger, bbsConfig *config.BBSConfig) {
-	dropsondeDestination := fmt.Sprint("localhost:", bbsConfig.DropsondePort)
+func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggregator_v2.IngressClient, error) {
+	client, err := loggregator_v2.NewIngressClient(bbsConfig.LoggregatorConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if bbsConfig.LoggregatorConfig.UseV2API {
+		emitter := runtimeemitter.NewV1(client)
+		go emitter.Run()
+	} else {
+		initializeDropsonde(logger, bbsConfig.DropsondePort)
+	}
+
+	return client, nil
+}
+
+func initializeDropsonde(logger lager.Logger, dropsondePort int) {
+	dropsondeDestination := fmt.Sprint("localhost:", dropsondePort)
 	err := dropsonde.Initialize(dropsondeDestination, dropsondeOrigin)
 	if err != nil {
 		logger.Error("failed-to-initialize-dropsonde", err)
@@ -542,6 +566,7 @@ func initializeEtcdDB(
 	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
 	bbsConfig *config.BBSConfig,
+	metronClient loggregator_v2.IngressClient,
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(
 		format.ENCRYPTED_PROTO,
@@ -551,6 +576,7 @@ func initializeEtcdDB(
 		cryptor,
 		storeClient,
 		clock.NewClock(),
+		metronClient,
 	)
 }
 

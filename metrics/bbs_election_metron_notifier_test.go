@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/metrics"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
-	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
 	"github.com/tedsuo/ifrit"
 
 	. "github.com/onsi/ginkgo"
@@ -16,22 +15,18 @@ import (
 
 var _ = Describe("BBSElectionMetronNotifier", func() {
 	var (
-		sender *fake.FakeMetricSender
-
-		reportInterval time.Duration
-
-		pmn ifrit.Process
+		reportInterval   time.Duration
+		pmn              ifrit.Process
+		fakeMetronClient *mfakes.FakeIngressClient
 	)
 
 	BeforeEach(func() {
 		reportInterval = 100 * time.Millisecond
-
-		sender = fake.NewFakeMetricSender()
-		dropsonde_metrics.Initialize(sender, nil)
+		fakeMetronClient = new(mfakes.FakeIngressClient)
 	})
 
 	JustBeforeEach(func() {
-		pmn = ifrit.Invoke(metrics.NewBBSElectionMetronNotifier(lagertest.NewTestLogger("test")))
+		pmn = ifrit.Invoke(metrics.NewBBSElectionMetronNotifier(lagertest.NewTestLogger("test"), fakeMetronClient))
 	})
 
 	AfterEach(func() {
@@ -41,9 +36,9 @@ var _ = Describe("BBSElectionMetronNotifier", func() {
 
 	Context("when the metron notifier starts up", func() {
 		It("should emit an event that BBS has started", func() {
-			Eventually(func() uint64 {
-				return sender.GetCounter("BBSMasterElected")
-			}).Should(Equal(uint64(1)))
+			name, value := fakeMetronClient.SendMetricArgsForCall(0)
+			Expect(name).To(Equal("BBSMasterElected"))
+			Expect(value).To(Equal(1))
 		})
 	})
 })

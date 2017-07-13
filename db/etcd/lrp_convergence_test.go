@@ -11,8 +11,7 @@ import (
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/lagertest"
 
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
-	"github.com/cloudfoundry/dropsonde/metrics"
+	etcddb "code.cloudfoundry.org/bbs/db/etcd"
 
 	etcderror "github.com/coreos/etcd/error"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -24,14 +23,8 @@ import (
 
 var _ = Describe("LRPConvergence", func() {
 	var (
-		sender   *fake.FakeMetricSender
 		testData *testDataForConvergenceGatherer
 	)
-
-	BeforeEach(func() {
-		sender = fake.NewFakeMetricSender()
-		metrics.Initialize(sender, nil)
-	})
 
 	Describe("Convergence Fetching and Pruning", func() {
 		BeforeEach(func() {
@@ -43,19 +36,39 @@ var _ = Describe("LRPConvergence", func() {
 				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
-				Expect(sender.GetValue("Domain.test-domain").Value).To(Equal(float64(1)))
+				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(7))
+				name, value := fakeMetronClient.SendMetricArgsForCall(6)
+				Expect(name).To(Equal("Domain.test-domain"))
+				Expect(value).To(Equal(1))
 			})
 
 			It("emits metrics for lrps", func() {
 				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
-				Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(6)))
-				Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(0)))
-				Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(0)))
-				Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(15)))
-				Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(0)))
-				Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(0)))
+				name, value := fakeMetronClient.SendMetricArgsForCall(0)
+				Expect(name).To(Equal("LRPsUnclaimed"))
+				Expect(value).To(Equal(0))
+
+				name, value = fakeMetronClient.SendMetricArgsForCall(1)
+				Expect(name).To(Equal("LRPsClaimed"))
+				Expect(value).To(Equal(0))
+
+				name, value = fakeMetronClient.SendMetricArgsForCall(2)
+				Expect(name).To(Equal("LRPsRunning"))
+				Expect(value).To(Equal(15))
+
+				name, value = fakeMetronClient.SendMetricArgsForCall(3)
+				Expect(name).To(Equal("CrashedActualLRPs"))
+				Expect(value).To(Equal(0))
+
+				name, value = fakeMetronClient.SendMetricArgsForCall(4)
+				Expect(name).To(Equal("CrashingDesiredLRPs"))
+				Expect(value).To(Equal(0))
+
+				name, value = fakeMetronClient.SendMetricArgsForCall(5)
+				Expect(name).To(Equal("LRPsDesired"))
+				Expect(value).To(Equal(6))
 			})
 		})
 
@@ -99,7 +112,12 @@ var _ = Describe("LRPConvergence", func() {
 					len(testData.unknownDesiredGuidsWithSomeValidActuals) +
 					len(testData.unknownDesiredGuidsWithNoActuals) +
 					len(testData.unknownDesiredGuidsWithOnlyInvalidActuals)
-				Expect(sender.GetCounter("ConvergenceLRPPreProcessingMalformedSchedulingInfos")).To(BeNumerically("==", expectedMetric))
+
+				Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(3))
+				name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(1)
+
+				Expect(name).To(Equal("ConvergenceLRPPreProcessingMalformedSchedulingInfos"))
+				Expect(value).To(BeNumerically("==", expectedMetric))
 			})
 
 			It("emits a metric for the number of malformed RunInfos", func() {
@@ -112,7 +130,12 @@ var _ = Describe("LRPConvergence", func() {
 					len(testData.unknownDesiredGuidsWithSomeValidActuals) +
 					len(testData.unknownDesiredGuidsWithNoActuals) +
 					len(testData.unknownDesiredGuidsWithOnlyInvalidActuals)
-				Expect(sender.GetCounter("ConvergenceLRPPreProcessingMalformedRunInfos")).To(BeNumerically("==", expectedMetric))
+
+				Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(3))
+				name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(2)
+
+				Expect(name).To(Equal("ConvergenceLRPPreProcessingMalformedRunInfos"))
+				Expect(value).To(BeNumerically("==", expectedMetric))
 			})
 
 			It("emits a metric for the number of orphaned RunInfos", func() {
@@ -120,7 +143,10 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				expectedMetric := len(testData.oldOrphanedRunInfoGuids)
-				Expect(sender.GetCounter("ConvergenceLRPPreProcessingOrphanedRunInfos")).To(BeNumerically("==", expectedMetric))
+				Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(expectedMetric))
+				name := fakeMetronClient.IncrementCounterArgsForCall(0)
+
+				Expect(name).To(Equal("ConvergenceLRPPreProcessingOrphanedRunInfos"))
 			})
 
 			Context("when there is a RunInfo without a matching SchedulingInfo", func() {
@@ -187,7 +213,11 @@ var _ = Describe("LRPConvergence", func() {
 
 				expectedMetric := len(testData.instanceKeysToPrune) +
 					len(testData.evacuatingKeysToPrune)
-				Expect(sender.GetCounter("ConvergenceLRPPreProcessingActualLRPsDeleted")).To(BeNumerically("==", expectedMetric))
+
+				Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(3))
+				name, value := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
+				Expect(name).To(Equal("ConvergenceLRPPreProcessingActualLRPsDeleted"))
+				Expect(value).To(BeNumerically("==", expectedMetric))
 			})
 
 			It("provides the correct actualLRPs", func() {
@@ -440,7 +470,9 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		JustBeforeEach(func() {
-			changes = etcd.CalculateConvergence(logger, fakeClock, models.NewDefaultRestartCalculator(), input)
+			v, ok := etcdDB.(*etcddb.ETCDDB)
+			Expect(ok).To(BeTrue())
+			changes = etcd.CalculateConvergence(logger, v, fakeClock, models.NewDefaultRestartCalculator(), input)
 		})
 
 		Context("actual LRPs with a desired LRP", func() {
@@ -493,7 +525,9 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("emits missing LRP metrics", func() {
-					Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(2)))
+					name, value := fakeMetronClient.SendMetricArgsForCall(0)
+					Expect(name).To(Equal("LRPsMissing"))
+					Expect(value).To(Equal(2))
 				})
 			})
 
@@ -523,7 +557,10 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("emits extra LRP metrics", func() {
-					Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(1)))
+					Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(2))
+					name, value := fakeMetronClient.SendMetricArgsForCall(1)
+					Expect(name).To(Equal("LRPsExtra"))
+					Expect(value).To(Equal(1))
 				})
 			})
 
@@ -631,7 +668,11 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("emits extra LRP metrics", func() {
-				Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(2)))
+				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(2))
+
+				name, value := fakeMetronClient.SendMetricArgsForCall(1)
+				Expect(name).To(Equal("LRPsExtra"))
+				Expect(value).To(Equal(2))
 			})
 
 			Context("with missing cells", func() {
@@ -681,27 +722,37 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("emits no missing or extra lrps", func() {
-				Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(0)))
-				Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(0)))
+				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(2))
+				name, value := fakeMetronClient.SendMetricArgsForCall(0)
+				Expect(name).To(Equal("LRPsMissing"))
+				Expect(value).To(Equal(0))
+
+				name, value = fakeMetronClient.SendMetricArgsForCall(1)
+				Expect(name).To(Equal("LRPsExtra"))
+				Expect(value).To(Equal(0))
 			})
 		})
 	})
 
 	Describe("convergence counters", func() {
 		It("bumps the convergence counter", func() {
-			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(0)))
+			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(0))
 			etcdDB.ConvergeLRPs(logger, models.CellSet{})
-			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(1)))
+			name := fakeMetronClient.IncrementCounterArgsForCall(0)
+			Expect(name).To(Equal("ConvergenceLRPRuns"))
+			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(1))
 			etcdDB.ConvergeLRPs(logger, models.CellSet{})
-			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(2)))
+			name = fakeMetronClient.IncrementCounterArgsForCall(1)
+			Expect(name).To(Equal("ConvergenceLRPRuns"))
+			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(2))
 		})
 
 		It("reports the duration that it took to converge", func() {
 			etcdDB.ConvergeLRPs(logger, models.CellSet{})
-
-			reportedDuration := sender.GetValue("ConvergenceLRPDuration")
-			Expect(reportedDuration.Unit).To(Equal("nanos"))
-			Expect(reportedDuration.Value).NotTo(BeZero())
+			Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
+			name, value := fakeMetronClient.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("ConvergenceLRPDuration"))
+			Expect(value).NotTo(BeZero())
 		})
 	})
 

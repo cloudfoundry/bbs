@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
-	"github.com/cloudfoundry/dropsonde/metrics"
 
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -24,14 +25,15 @@ var _ = Describe("LRPConvergence", func() {
 		expiredDomain    string
 		evacuatingDomain string
 		cellSet          models.CellSet
+		sqlDB            *sqldb.SQLDB
 
-		sender *fake.FakeMetricSender
+		fakeMetronClient *mfakes.FakeIngressClient
 	)
 
 	BeforeEach(func() {
-		sender = fake.NewFakeMetricSender()
-		metrics.Initialize(sender, nil)
+		fakeMetronClient = new(mfakes.FakeIngressClient)
 
+		sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 		var err error
 		freshDomain = "fresh-domain"
 		expiredDomain = "expired-domain"
@@ -294,47 +296,80 @@ var _ = Describe("LRPConvergence", func() {
 	Describe("general metrics", func() {
 		It("emits a metric for domains", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
-			Expect(sender.GetValue("Domain." + freshDomain).Value).To(Equal(float64(1)))
+
+			domainMap := map[string]int{}
+			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
+			name, value := fakeMetronClient.SendMetricArgsForCall(0)
+			domainMap[name] = value
+
+			name, value = fakeMetronClient.SendMetricArgsForCall(1)
+			domainMap[name] = value
+
+			Expect(domainMap["Domain."+freshDomain]).To(BeNumerically("==", 1))
+			Expect(domainMap["Domain."+evacuatingDomain]).To(BeNumerically("==", 1))
+		})
+
+		It("emits missing LRP metrics", func() {
+			sqlDB.ConvergeLRPs(logger, cellSet)
+
+			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
+			name, value := fakeMetronClient.SendMetricArgsForCall(2)
+			Expect(name).To(Equal("LRPsMissing"))
+			Expect(value).To(BeNumerically("==", 17))
+		})
+
+		It("emits extra LRP metrics", func() {
+			sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
+			name, value := fakeMetronClient.SendMetricArgsForCall(3)
+			Expect(name).To(Equal("LRPsExtra"))
+			Expect(value).To(BeNumerically("==", 2))
 		})
 
 		It("emits metrics for lrps", func() {
 			convergenceLogger := lagertest.NewTestLogger("convergence")
 			sqlDB.ConvergeLRPs(convergenceLogger, cellSet)
-			Expect(sender.GetValue("LRPsDesired").Value).To(Equal(float64(38)))
-			Expect(sender.GetValue("LRPsClaimed").Value).To(Equal(float64(7)))
-			Expect(sender.GetValue("LRPsUnclaimed").Value).To(Equal(float64(32))) // 16 fresh + 5 expired + 11 evac
-			Expect(sender.GetValue("LRPsRunning").Value).To(Equal(float64(1)))
-			Expect(sender.GetValue("CrashedActualLRPs").Value).To(Equal(float64(2)))
-			Expect(sender.GetValue("CrashingDesiredLRPs").Value).To(Equal(float64(1)))
+			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
+			name, value := fakeMetronClient.SendMetricArgsForCall(4)
+			Expect(name).To(Equal("LRPsUnclaimed"))
+			Expect(value).To(Equal(32)) // 16 fresh + 5 expired + 11 evac
+			name, value = fakeMetronClient.SendMetricArgsForCall(5)
+			Expect(name).To(Equal("LRPsClaimed"))
+			Expect(value).To(Equal(7))
+			name, value = fakeMetronClient.SendMetricArgsForCall(6)
+			Expect(name).To(Equal("LRPsRunning"))
+			Expect(value).To(Equal(1))
+			name, value = fakeMetronClient.SendMetricArgsForCall(7)
+			Expect(name).To(Equal("CrashedActualLRPs"))
+			Expect(value).To(Equal(2))
+			name, value = fakeMetronClient.SendMetricArgsForCall(8)
+			Expect(name).To(Equal("CrashingDesiredLRPs"))
+			Expect(value).To(Equal(1))
+			name, value = fakeMetronClient.SendMetricArgsForCall(9)
+			Expect(name).To(Equal("LRPsDesired"))
+			Expect(value).To(Equal(38))
 			Consistently(convergenceLogger).ShouldNot(gbytes.Say("failed-.*"))
-		})
-
-		It("emits missing LRP metrics", func() {
-			sqlDB.ConvergeLRPs(logger, cellSet)
-			Expect(sender.GetValue("LRPsMissing").Value).To(Equal(float64(17)))
-		})
-
-		It("emits extra LRP metrics", func() {
-			sqlDB.ConvergeLRPs(logger, cellSet)
-			Expect(sender.GetValue("LRPsExtra").Value).To(Equal(float64(2)))
 		})
 	})
 
 	Describe("convergence counters", func() {
 		It("bumps the convergence counter", func() {
-			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(0)))
+			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(0))
 			sqlDB.ConvergeLRPs(logger, models.CellSet{})
-			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(1)))
+			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetronClient.IncrementCounterArgsForCall(0)).To(Equal("ConvergenceLRPRuns"))
 			sqlDB.ConvergeLRPs(logger, models.CellSet{})
-			Expect(sender.GetCounter("ConvergenceLRPRuns")).To(Equal(uint64(2)))
+			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(2))
+			Expect(fakeMetronClient.IncrementCounterArgsForCall(1)).To(Equal("ConvergenceLRPRuns"))
 		})
 
 		It("reports the duration that it took to converge", func() {
 			sqlDB.ConvergeLRPs(logger, models.CellSet{})
 
-			reportedDuration := sender.GetValue("ConvergenceLRPDuration")
-			Expect(reportedDuration.Unit).To(Equal("nanos"))
-			Expect(reportedDuration.Value).NotTo(BeZero())
+			Eventually(fakeMetronClient.SendDurationCallCount).Should(Equal(1))
+			name, value := fakeMetronClient.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("ConvergenceLRPDuration"))
+			Expect(value).NotTo(BeZero())
 		})
 	})
 

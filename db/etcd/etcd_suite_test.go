@@ -12,6 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/clock/fakeclock"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -23,21 +24,24 @@ import (
 
 const DesiredLRPCreationTimeout = time.Minute
 
-var etcdPort int
-var etcdUrl string
-var etcdRunner *etcdstorerunner.ETCDClusterRunner
-var storeClient etcd.StoreClient
-var fakeStoreClient *fakes.FakeStoreClient
+var (
+	etcdPort         int
+	etcdUrl          string
+	etcdRunner       *etcdstorerunner.ETCDClusterRunner
+	storeClient      etcd.StoreClient
+	fakeStoreClient  *fakes.FakeStoreClient
+	fakeMetronClient *mfakes.FakeIngressClient
 
-var logger *lagertest.TestLogger
-var clock *fakeclock.FakeClock
-var etcdHelper *etcd_helpers.ETCDHelper
+	logger     *lagertest.TestLogger
+	clock      *fakeclock.FakeClock
+	etcdHelper *etcd_helpers.ETCDHelper
 
-var etcdDB db.DB
-var etcdDBWithFakeStore db.DB
-var workPoolCreateError error
+	etcdDB              db.DB
+	etcdDBWithFakeStore db.DB
+	workPoolCreateError error
 
-var cryptor encryption.Cryptor
+	cryptor encryption.Cryptor
+)
 
 func TestDB(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -70,12 +74,13 @@ var _ = BeforeEach(func() {
 	logger = lagertest.NewTestLogger("test")
 
 	etcdRunner.Reset()
+	fakeMetronClient = new(mfakes.FakeIngressClient)
 
 	etcdClient := etcdRunner.Client()
 	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 	storeClient = etcd.NewStoreClient(etcdClient)
 	fakeStoreClient = &fakes.FakeStoreClient{}
 	etcdHelper = etcd_helpers.NewETCDHelper(format.ENCRYPTED_PROTO, cryptor, storeClient, clock)
-	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, clock)
-	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, fakeStoreClient, clock)
+	etcdDB = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, storeClient, clock, fakeMetronClient)
+	etcdDBWithFakeStore = etcd.NewETCD(format.ENCRYPTED_PROTO, 100, 100, DesiredLRPCreationTimeout, cryptor, fakeStoreClient, clock, fakeMetronClient)
 })

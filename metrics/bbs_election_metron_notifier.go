@@ -5,6 +5,7 @@ import (
 
 	"github.com/tedsuo/ifrit"
 
+	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
 )
@@ -14,12 +15,14 @@ const (
 )
 
 type BBSElectionMetronNotifier struct {
-	Logger lager.Logger
+	Logger       lager.Logger
+	metronClient loggregator_v2.IngressClient
 }
 
-func NewBBSElectionMetronNotifier(logger lager.Logger) ifrit.Runner {
+func NewBBSElectionMetronNotifier(logger lager.Logger, metronClient loggregator_v2.IngressClient) ifrit.Runner {
 	return &BBSElectionMetronNotifier{
-		Logger: logger,
+		Logger:       logger,
+		metronClient: metronClient,
 	}
 }
 
@@ -32,7 +35,7 @@ func (notifier BBSElectionMetronNotifier) Run(signals <-chan os.Signal, ready ch
 	logger.Info("started")
 	defer logger.Info("finished")
 
-	bbsMasterElected.Increment()
+	notifier.metronClient.SendMetric("BBSMasterElected", 1)
 
 	<-signals
 	return nil

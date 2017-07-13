@@ -9,9 +9,8 @@ import (
 	"code.cloudfoundry.org/bbs/encryptor"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
-	"github.com/cloudfoundry/dropsonde/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -29,13 +28,11 @@ var _ = Describe("Encryptor", func() {
 
 		fakeDB *dbfakes.FakeEncryptionDB
 
-		sender *fake.FakeMetricSender
+		fakeMetronClient *mfakes.FakeIngressClient
 	)
 
 	BeforeEach(func() {
-		sender = fake.NewFakeMetricSender()
-		metrics.Initialize(sender, nil)
-
+		fakeMetronClient = new(mfakes.FakeIngressClient)
 		fakeDB = new(dbfakes.FakeEncryptionDB)
 
 		logger = lagertest.NewTestLogger("test")
@@ -51,7 +48,7 @@ var _ = Describe("Encryptor", func() {
 	})
 
 	JustBeforeEach(func() {
-		runner = encryptor.New(logger, fakeDB, keyManager, cryptor, clock.NewClock())
+		runner = encryptor.New(logger, fakeDB, keyManager, cryptor, clock.NewClock(), fakeMetronClient)
 		encryptorProcess = ifrit.Background(runner)
 	})
 
@@ -63,9 +60,10 @@ var _ = Describe("Encryptor", func() {
 		Eventually(encryptorProcess.Ready()).Should(BeClosed())
 		Eventually(logger.LogMessages).Should(ContainElement("test.encryptor.encryption-finished"))
 
-		reportedDuration := sender.GetValue("EncryptionDuration")
-		Expect(reportedDuration.Value).NotTo(BeZero())
-		Expect(reportedDuration.Unit).To(Equal("nanos"))
+		Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
+		name, duration := fakeMetronClient.SendDurationArgsForCall(0)
+		Expect(name).To(Equal("EncryptionDuration"))
+		Expect(duration).NotTo(BeZero())
 	})
 
 	Context("when there is no current encryption key", func() {

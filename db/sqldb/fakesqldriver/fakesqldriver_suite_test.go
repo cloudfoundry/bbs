@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
 	"code.cloudfoundry.org/clock/fakeclock"
+	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
@@ -32,6 +33,7 @@ var (
 	fakeDriver       *fakesqldriverfakes.FakeDriver
 	fakeClock        *fakeclock.FakeClock
 	fakeGUIDProvider *guidproviderfakes.FakeGUIDProvider
+	fakeMetronClient *mfakes.FakeIngressClient
 	logger           *lagertest.TestLogger
 
 	db         *sql.DB
@@ -45,6 +47,7 @@ var _ = BeforeEach(func() {
 	var err error
 	fakeClock = fakeclock.NewFakeClock(time.Now())
 	fakeGUIDProvider = &guidproviderfakes.FakeGUIDProvider{}
+	fakeMetronClient = new(mfakes.FakeIngressClient)
 	logger = lagertest.NewTestLogger("sql-db")
 
 	fakeDriver = &fakesqldriverfakes.FakeDriver{}
@@ -73,5 +76,5 @@ var _ = BeforeEach(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, helpers.MySQL)
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, helpers.MySQL, fakeMetronClient)
 })

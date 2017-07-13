@@ -8,9 +8,9 @@ import (
 	"code.cloudfoundry.org/bbs/handlers/middleware/fakes"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
 
+	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
