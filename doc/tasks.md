@@ -20,12 +20,12 @@ At this point it is up to the Diego client to detect and resolve the completed T
 
 To prevent two Task clients from operating on the same completed Task at once, the BBS provides the `RESOLVING` state on the Task. Any client intending to delete the Task must first successfully move it from the `COMPLETED` state to the `RESOLVING` state. For example, when Diego itself calls the completion callback URL on the Task, it first must transition the Task into the `RESOLVING` state. External clients should adhere to the same convention.
 
-Diego will automatically delete completed Tasks that remain unresolved after 2 minutes. 
+Diego will automatically delete completed Tasks that remain unresolved after 2 minutes.
 
 
 ## Defining Tasks
 
-When submitting a task, a valid `guid`, `domain`, and `TaskDefinition` should be provided to [a Client's DesireTask method](https://code.cloudfoundry.org/bbs/blob/master/client.go#L121). See [Defining Tasks](defining-tasks.md) for more detail on the `TaskDefinition` fields.
+When submitting a task, a valid `guid`, `domain`, and `TaskDefinition` should be provided to [a Client's DesireTask method](https://github.com/cloudfoundry/bbs/blob/master/client.go#L87). See [Defining Tasks](defining-tasks.md) for more detail on the `TaskDefinition` fields.
 
 
 ## Retreiving Tasks

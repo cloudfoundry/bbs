@@ -137,11 +137,11 @@ Setting `ImagePassword` requires the `ImageUsername` to also be set.
 
 ##### `EnvironmentVariables` [optional]
 
-See description of [Environment Variables](common-models#environmentvariables-optional)
+See description of [Environment Variables](common-models.md#environmentvariables-optional)
 
 ##### `CachedDependencies` [optional]
 
-See description of [Cached Dependencies](common-models#cacheddependencies-optional)
+See description of [Cached Dependencies](common-models.md#cacheddependencies-optional)
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -149,7 +149,7 @@ An absolute path inside the container's filesystem where trusted system certific
 
 ##### `VolumeMounts` [optional]
 
-See description of [Volume Mounts](common-models#volumemounts-optional)
+See description of [Volume Mounts](common-models.md#volumemounts-optional)
 
 ##### `PlacementTags` [optional]
 
@@ -165,7 +165,7 @@ For example:
 
 ##### `CpuWeight` [optional]
 
-To control the CPU shares provided to a container, set `CpuWeight`. This must be a positive number in the range `1-100`. The `CpuWeight` enforces a relative fair share of the CPU among containers per unit time. To explain, suppose that conatainer A and container B each runs a busy process that attempts to consume as much CPU as possible.
+To control the CPU shares provided to a container, set `CpuWeight`. This must be a positive number in the range `1-100`. The `CpuWeight` enforces a relative fair share of the CPU among containers per unit time. To explain, suppose that container A and container B each runs a busy process that attempts to consume as much CPU as possible.
 
 - If A and B each has `CpuWeight: 100`, their processes will receive approximately equal amounts of CPU time.
 - If A has `CpuWeight: 25` and B has `CpuWeight: 75`, A's process will receive about one quarter of the CPU time, and B's process will receive about three quarters of it.
@@ -212,7 +212,7 @@ When the `Action` on a Task finishes, the Task is marked as `COMPLETED`.
 
 ##### `ResultFile` [optional]
 
-If specified on a Task, Diego retrieves the contents of this file from the container when the Task completes successfully. The retrieved contents are made available in the `Result` field of the `TaskResponse` (see [below](#retrieving-tasks)).
+If specified on a TaskDefinition, Diego retrieves the contents of this file from the container when the Task completes successfully. The retrieved contents are made available in the `Result` field of the [Task](https://godoc.org/code.cloudfoundry.org/bbs/models#Task) returned in a  [TaskResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskResponse).
 
 - Diego only returns the first 10 kilobytes of the `ResultFile`.  If you need to communicate back larger datasets, consider using an `UploadAction` to upload the result file to another service.
 
@@ -221,7 +221,7 @@ If specified on a Task, Diego retrieves the contents of this file from the conta
 
 Diego clients have several ways to learn that a Task has `COMPLETED`: they can poll the Task, subscribe to the Task event stream, or register a callback.
 
-If a `CompletionCallbackUrl` is provided, Diego will send a `POST` request to the provided URL when the Task completes.  The body of the `POST` will include the `TaskResponse` (see [below](#retrieving-tasks)).
+If a `CompletionCallbackUrl` is provided, Diego will send a `POST` request to the provided URL when the Task completes.  The body of the `POST` will include the [TaskResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskResponse).
 
 - Almost any response from the callback will resolve the Task, thereby removing it from the BBS.
 - If the callback responds with status code '503 Service Unavailable' or '504 Gateway Timeout', however, Diego will immediately retry the callback up to 3 times.
@@ -236,7 +236,7 @@ By default network access for any container is limited but some tasks may need s
 
 ##### `EgressRules` [optional]
 
-See description of [EgressRules](common-models#egressrules-optional)
+See description of [EgressRules](common-models.md#egressrules-optional)
 
 ---
 

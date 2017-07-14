@@ -80,7 +80,7 @@ log.Printf("received event: %#v", event)
 ```
 In the case there is an `ErrUnrecognizedEventType` error,  the client should skip
 it and move to the next event. If the error is an `ErrSourceClosed`,  the client
-should try to resubscribe to the event source. The example above uses a channel 
+should try to resubscribe to the event source. The example above uses a channel
 to handle the re-subscription.
 
 To access the event field values, you must convert the event to the right
@@ -177,3 +177,5 @@ When a Task is deleted, a
 [TaskRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskRemovedEvent)
 is emitted. The field value of `Task` will have information about the
 Task that was just removed.
+
+[back](README.md)

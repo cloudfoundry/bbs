@@ -7,8 +7,8 @@
     - [`DownloadAction`](#downloadaction): Fetches an archive (`.tar`, `.tgz`, or `.zip`) and extracts it into the container.
     - [`UploadAction`](#uploadaction): Uploads a single file in the container to a URL via POST.
 - Combining Actions:
-    - [`ParallelAction`](#parallelaction): Runs several actions in parallel.
     - [`SerialAction`](#serialaction): Runs several actions sequentially.
+    - [`ParallelAction`](#parallelaction): Runs several actions in parallel.
     - [`CodependentAction`](#codependentaction): Runs sevenal actions in parallel, cancelling all other actions if one exits.
 - Wrapping Actions:
     - [`EmitProgressAction`](#emitprogressaction): Wraps another action, logging messages when the wrapped action starts and finishes.

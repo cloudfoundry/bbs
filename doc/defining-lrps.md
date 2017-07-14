@@ -175,11 +175,11 @@ Setting `ImagePassword` requires the `ImageUsername` to also be set.
 
 ##### `EnvironmentVariables` [optional]
 
-See description of [Environment Variables](common-models#environmentvariables-optional)
+See description of [Environment Variables](common-models.md#environmentvariables-optional)
 
 ##### `CachedDependencies` [optional]
 
-See description of [Cached Dependencies](common-models#cacheddependencies-optional)
+See description of [Cached Dependencies](common-models.md#cacheddependencies-optional)
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -187,7 +187,7 @@ An absolute path inside the container's filesystem where trusted system certific
 
 ##### `VolumeMounts` [optional]
 
-See description of [Volume Mounts](common-models#volumemounts-optional)
+See description of [Volume Mounts](common-models.md#volumemounts-optional)
 
 ##### `PlacementTags` [optional]
 
@@ -349,7 +349,7 @@ The total length of the routing information must not exceed 4096 bytes.
 
 ##### `EgressRules` [optional]
 
-See description of [EgressRules](common-models#egressrules-optional)
+See description of [EgressRules](common-models.md#egressrules-optional)
 
 #### Logging
 
