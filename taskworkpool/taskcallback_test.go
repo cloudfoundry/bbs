@@ -109,7 +109,10 @@ var _ = Describe("TaskWorker", func() {
 			})
 
 			It("emits a TaskChangedEvent to the hub", func() {
-				statusCodes <- 200
+				// Do not emit TaskRemovedEvent in callback handler
+				for i := 0; i < taskworkpool.MAX_CB_RETRIES; i++ {
+					statusCodes <- http.StatusServiceUnavailable
+				}
 
 				Eventually(taskHub.EmitCallCount).Should(Equal(1))
 				event := taskHub.EmitArgsForCall(0)
