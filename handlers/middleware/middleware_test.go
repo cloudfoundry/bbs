@@ -8,16 +8,14 @@ import (
 	"code.cloudfoundry.org/bbs/handlers/middleware/fakes"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	dropsonde_metrics "github.com/cloudfoundry/dropsonde/metrics"
 
-	"github.com/cloudfoundry/dropsonde/metric_sender/fake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Middleware", func() {
-	Describe("RequestCountWrapWithCustomEmitter", func() {
+	Describe("RecordRequestCount", func() {
 		var (
 			handler http.HandlerFunc
 			emitter *fakes.FakeEmitter
@@ -26,7 +24,7 @@ var _ = Describe("Middleware", func() {
 		BeforeEach(func() {
 			emitter = &fakes.FakeEmitter{}
 			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
-			handler = middleware.RequestCountWrapWithCustomEmitter(handler, emitter)
+			handler = middleware.RecordRequestCount(handler, emitter)
 		})
 
 		It("reports call count", func() {
@@ -35,28 +33,6 @@ var _ = Describe("Middleware", func() {
 			handler.ServeHTTP(nil, nil)
 
 			Expect(emitter.IncrementCounterCallCount()).To(Equal(3))
-		})
-	})
-
-	Describe("RequestCountWrap", func() {
-		var (
-			handler http.HandlerFunc
-			sender  *fake.FakeMetricSender
-		)
-
-		BeforeEach(func() {
-			sender = fake.NewFakeMetricSender()
-			dropsonde_metrics.Initialize(sender, nil)
-			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
-			handler = middleware.RequestCountWrap(handler)
-		})
-
-		It("reports call count", func() {
-			handler.ServeHTTP(nil, nil)
-			handler.ServeHTTP(nil, nil)
-			handler.ServeHTTP(nil, nil)
-
-			Expect(sender.GetCounter("RequestCount")).To(Equal(uint64(3)))
 		})
 	})
 

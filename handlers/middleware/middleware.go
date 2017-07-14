@@ -5,15 +5,20 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
 )
 
 const (
-	RequestLatency = metric.Duration("RequestLatency")
-	RequestCount   = metric.Counter("RequestCount")
+	RequestLatency = "RequestLatency"
+	RequestCount   = "RequestCount"
 )
 
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)
+
+//go:generate counterfeiter -o fakes/fake_emitter.go . Emitter
+type Emitter interface {
+	IncrementCounter(delta int)
+	UpdateLatency(latency time.Duration)
+}
 
 func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
 	lagerDataFromReq := func(r *http.Request) lager.Data {
@@ -52,43 +57,15 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 	}
 }
 
-func NewLatencyEmitterWrapper(emitter Emitter) LatencyEmitterWrapper {
-	return LatencyEmitterWrapper{emitter: emitter}
-}
-
-type LatencyEmitterWrapper struct {
-	emitter Emitter
-}
-
-func (l LatencyEmitterWrapper) RecordLatency(f http.HandlerFunc) http.HandlerFunc {
+func RecordLatency(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		f(w, r)
-		l.emitter.UpdateLatency(time.Since(startTime))
+		emitter.UpdateLatency(time.Since(startTime))
 	}
 }
 
-//go:generate counterfeiter -o fakes/fake_emitter.go . Emitter
-type Emitter interface {
-	IncrementCounter(delta int)
-	UpdateLatency(latency time.Duration)
-}
-
-type defaultEmitter struct {
-}
-
-func (e *defaultEmitter) IncrementCounter(delta int) {
-	RequestCount.Add(uint64(delta))
-}
-
-func (e *defaultEmitter) UpdateLatency(latency time.Duration) {
-}
-
-func RequestCountWrap(handler http.Handler) http.HandlerFunc {
-	return RequestCountWrapWithCustomEmitter(handler, &defaultEmitter{})
-}
-
-func RequestCountWrapWithCustomEmitter(handler http.Handler, emitter Emitter) http.HandlerFunc {
+func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		emitter.IncrementCounter(1)
 		handler.ServeHTTP(w, r)
