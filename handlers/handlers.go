@@ -42,6 +42,7 @@ func New(
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(db, db, db, actualHub, auctioneerClient, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
+	lrpDeploymentHandler := NewLRPDeploymentHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
 	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub)
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	eventsHandler := NewEventHandler(desiredHub, actualHub)
@@ -90,6 +91,12 @@ func New(
 		bbs.DesiredLRPByProcessGuidRoute_r1: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid_r1), emitter)),
 		bbs.DesireDesiredLRPRoute_r0:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP_r0), emitter)),
 		bbs.DesireDesiredLRPRoute_r1:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP_r1), emitter)),
+
+		// LRP deployment ??
+		bbs.CreateLRPDeploymentRoute:             route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.CreateLRPDeployment), emitter)),
+		bbs.UpdateLRPDeploymentRoute:             route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.UpdateLRPDeployment), emitter)),
+		bbs.DeleteLRPDeploymentRoute:             route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.DeleteLRPDeployment), emitter)),
+		bbs.ActivateLRPDeploymentDefinitionRoute: route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.ActivateLRPDeploymentDefinition), emitter)),
 
 		// Tasks
 		bbs.TasksRoute:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),

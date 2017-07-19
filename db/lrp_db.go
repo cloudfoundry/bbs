@@ -11,6 +11,7 @@ import (
 type LRPDB interface {
 	ActualLRPDB
 	DesiredLRPDB
+	LRPDeploymentDB
 
 	ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey)
 

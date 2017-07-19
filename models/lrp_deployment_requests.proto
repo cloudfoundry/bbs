@@ -1,0 +1,29 @@
+syntax = "proto2";
+
+package models;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "lrp_deployment.proto";
+import "error.proto";
+
+message LRPDeploymentLifecycleResponse {
+  optional Error error = 1;
+}
+
+message CreateLRPDeploymentRequest {
+  optional LRPDeploymentDefinition definition = 1;
+}
+
+message UpdateLRPDeploymentRequest {
+  optional string id = 1;
+  optional LRPDeploymentUpdate update = 2;
+}
+
+message RemoveLRPDeploymentRequest {
+  optional string id = 1;
+}
+
+message ActivateLRPDeploymentDefinitionRequest {
+  optional string id = 1;
+  optional string definition_id = 2;
+}

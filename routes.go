@@ -45,6 +45,12 @@ const (
 	UpdateDesiredLRPRoute = "UpdateDesireLRP"
 	RemoveDesiredLRPRoute = "RemoveDesiredLRP"
 
+	// lrp deployment
+	CreateLRPDeploymentRoute             = "CreateLRPDeployment"
+	UpdateLRPDeploymentRoute             = "UpdateLRPDeployment"
+	DeleteLRPDeploymentRoute             = "DeleteLRPDeployment"
+	ActivateLRPDeploymentDefinitionRoute = "ActivateLRPDeploymentDefinition"
+
 	DesireDesiredLRPRoute_r1 = "DesireDesiredLRP_r1"
 	DesireDesiredLRPRoute_r0 = "DesireDesiredLRP"
 

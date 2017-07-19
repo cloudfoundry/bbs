@@ -22,6 +22,7 @@
 		events.proto
 		lrp_convergence_request.proto
 		lrp_deployment.proto
+		lrp_deployment_requests.proto
 		modification_tag.proto
 		network.proto
 		ping.proto
@@ -114,6 +115,11 @@
 		LRPDeploymentDefinition
 		LRPDeploymentUpdate
 		LRPDefinition
+		LRPDeploymentLifecycleResponse
+		CreateLRPDeploymentRequest
+		UpdateLRPDeploymentRequest
+		RemoveLRPDeploymentRequest
+		ActivateLRPDeploymentDefinitionRequest
 		ModificationTag
 		Network
 		PingResponse
