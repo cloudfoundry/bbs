@@ -1,0 +1,84 @@
+syntax = "proto2";
+
+package models;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "actions.proto";
+import "cached_dependency.proto";
+import "certificate_properties.proto";
+import "environment_variables.proto";
+import "modification_tag.proto";
+import "network.proto";
+import "security_group.proto";
+import "volume_mount.proto";
+import "check_definition.proto";
+import "desired_lrp.proto";
+
+message LRPDeployment {
+  optional string process_guid = 1;
+  optional string domain = 2;
+  optional int32 instances = 3;
+  optional string annotation = 4;
+  optional ProtoRoutes routes = 5 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+
+  map<string, LRPDefinition> definitions = 6;
+  optional string active_definition_id = 7;
+  optional string healthy_definition_id = 8;
+}
+
+message LRPDeploymentDefinition {
+  optional string process_guid = 1;
+  optional string domain = 2;
+  optional int32 instances = 3;
+  optional string annotation = 4;
+  optional ProtoRoutes routes = 5 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+
+  optional string definition_id = 7;
+  optional LRPDefinition definition = 8;
+}
+
+message LRPDeploymentUpdate {
+  optional int32 instances = 3;
+  optional string annotation = 4;
+  optional ProtoRoutes routes = 5 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+
+  optional string definition_id = 7;
+  optional LRPDefinition definition = 8;
+}
+
+message LRPDefinition {
+  optional string root_fs = 1 [(gogoproto.jsontag) = "rootfs"];
+  repeated EnvironmentVariable environment_variables = 2 [(gogoproto.jsontag) = "env"];
+  optional Action setup = 3;
+  optional Action action = 4;
+
+  optional int64 start_timeout_ms = 5;
+  optional uint32 deprecated_start_timeout_s = 6 [(gogoproto.jsontag) = "deprecated_timeout_ns,omitempty", deprecated=true];
+
+  optional Action monitor = 7;
+  optional int32 disk_mb = 8;
+  optional int32 memory_mb = 9;
+  optional uint32 cpu_weight = 10;
+  optional bool privileged = 11;
+  repeated uint32 ports = 12;
+  optional string log_source = 13;
+  optional string log_guid = 14;
+  optional string metrics_guid = 15;
+  repeated SecurityGroupRule egress_rules = 16;
+  optional ModificationTag modification_tag = 17;
+  repeated CachedDependency cached_dependencies = 18 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
+  optional string legacy_download_user = 19 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
+  optional string trusted_system_certificates_path = 20 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
+  repeated VolumeMount volume_mounts = 21 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
+  optional Network network = 22 [(gogoproto.jsontag) = "network,omitempty"];
+  repeated string PlacementTags = 23 [(gogoproto.jsontag) ="placement_tags,omitempty"];
+  optional int32 max_pids = 24;
+
+  optional CertificateProperties certificate_properties = 25 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
+
+  optional string image_username = 26 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_username,omitempty"];
+  optional string image_password = 27 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_password,omitempty"];
+
+  optional CheckDefinition check_definition = 28 [(gogoproto.jsontag) = "check_definition,omitempty"];
+
+}

@@ -21,6 +21,7 @@
 		evacuation.proto
 		events.proto
 		lrp_convergence_request.proto
+		lrp_deployment.proto
 		modification_tag.proto
 		network.proto
 		ping.proto
@@ -109,6 +110,10 @@
 		TaskChangedEvent
 		TaskRemovedEvent
 		ConvergeLRPsResponse
+		LRPDeployment
+		LRPDeploymentDefinition
+		LRPDeploymentUpdate
+		LRPDefinition
 		ModificationTag
 		Network
 		PingResponse
