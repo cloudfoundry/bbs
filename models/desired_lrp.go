@@ -9,6 +9,7 @@ import (
 )
 
 const PreloadedRootFSScheme = "preloaded"
+const PreloadedOCIRootFSScheme = "preloaded+layer"
 
 var processGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
