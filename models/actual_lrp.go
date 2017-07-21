@@ -36,6 +36,10 @@ type ActualLRPFilter struct {
 }
 
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
+	return NewActualLRPKeyWithDefinition(processGuid, "", index, domain)
+}
+
+func NewActualLRPKeyWithDefinition(processGuid, definitionID string, index int32, domain string) ActualLRPKey {
 	return ActualLRPKey{processGuid, index, domain}
 }
 

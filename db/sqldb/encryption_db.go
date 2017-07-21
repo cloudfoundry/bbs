@@ -35,7 +35,7 @@ func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
 			errCh <- db.reEncrypt(logger, tasksTable, "guid", true, "task_definition")
 		},
 		func() {
-			errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", true, "run_info", "volume_placement", "routes")
+			errCh <- db.reEncrypt(logger, lrpDeploymentDefinitionsTable, "process_guid", true, "run_info", "volume_placement", "routes")
 		},
 		func() {
 			errCh <- db.reEncrypt(logger, actualLRPsTable, "process_guid", false, "net_info")

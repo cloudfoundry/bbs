@@ -14,9 +14,8 @@ import (
 
 type LRPDeploymentHandler struct {
 	lrpDeploymentDB    db.LRPDeploymentDB
-	actualLRPDB        db.ActualLRPDB
-	desiredHub         events.Hub
-	actualHub          events.Hub
+	desiredLRPDB       db.DesiredLRPDB
+	desiredLRPHandler  *DesiredLRPHandler
 	auctioneerClient   auctioneer.Client
 	repClientFactory   rep.ClientFactory
 	serviceClient      serviceclient.ServiceClient
@@ -27,7 +26,8 @@ type LRPDeploymentHandler struct {
 func NewLRPDeploymentHandler(
 	updateWorkersCount int,
 	lrpDeploymentDB db.LRPDeploymentDB,
-	actualLRPDB db.ActualLRPDB,
+	desiredLRPDB db.DesiredLRPDB,
+	desiredLRPHandler *DesiredLRPHandler,
 	desiredHub events.Hub,
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
@@ -37,9 +37,8 @@ func NewLRPDeploymentHandler(
 ) *LRPDeploymentHandler {
 	return &LRPDeploymentHandler{
 		lrpDeploymentDB:    lrpDeploymentDB,
-		actualLRPDB:        actualLRPDB,
-		desiredHub:         desiredHub,
-		actualHub:          actualHub,
+		desiredLRPDB:       desiredLRPDB,
+		desiredLRPHandler:  desiredLRPHandler,
 		auctioneerClient:   auctioneerClient,
 		repClientFactory:   repClientFactory,
 		serviceClient:      serviceClient,
@@ -62,23 +61,22 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	err = h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Definition)
+	guid, err := h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Definition)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	// desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.DesiredLrp.ProcessGuid)
-	// if err != nil {
-	// 	response.Error = models.ConvertError(err)
-	// 	return
-	// }
+	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.Definition.ProcessGuid+"-"+guid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
 
 	// go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
 
-	// schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
-	// TODO: fix this
-	// h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
+	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
 }
 
 func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -182,109 +180,3 @@ func (h *LRPDeploymentHandler) ActivateLRPDeploymentDefinition(logger lager.Logg
 
 	// TODO: what should we do here ?
 }
-
-// func (h *LRPDeploymentHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
-// 	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
-// 	logger.Info("starting")
-// 	defer logger.Info("complete")
-
-// 	keys := make([]*models.ActualLRPKey, upper-lower)
-// 	i := 0
-// 	for actualIndex := lower; actualIndex < upper; actualIndex++ {
-// 		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
-// 		keys[i] = &key
-// 		i++
-// 	}
-
-// 	createdIndices := h.createUnclaimedActualLRPs(logger, keys)
-// 	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
-
-// 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
-// 	err := h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&start})
-// 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
-// 	if err != nil {
-// 		logger.Error("failed-to-request-auction", err)
-// 	}
-// }
-
-// func (h *LRPDeploymentHandler) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {
-// 	count := len(keys)
-// 	createdIndicesChan := make(chan int, count)
-
-// 	works := make([]func(), count)
-// 	logger = logger.Session("create-unclaimed-actual-lrp")
-// 	for i, key := range keys {
-// 		key := key
-// 		works[i] = func() {
-// 			logger.Info("starting", lager.Data{"actual_lrp_key": key})
-// 			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
-// 			if err != nil {
-// 				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
-// 			} else {
-// 				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
-// 				createdIndicesChan <- int(key.Index)
-// 			}
-// 		}
-// 	}
-
-// 	throttlerSize := h.updateWorkersCount
-// 	throttler, err := workpool.NewThrottler(throttlerSize, works)
-// 	if err != nil {
-// 		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": throttlerSize, "num_works": len(works)})
-// 		return []int{}
-// 	}
-
-// 	go func() {
-// 		throttler.Work()
-// 		close(createdIndicesChan)
-// 	}()
-
-// 	createdIndices := make([]int, 0, count)
-// 	for createdIndex := range createdIndicesChan {
-// 		createdIndices = append(createdIndices, createdIndex)
-// 	}
-
-// 	return createdIndices
-// }
-
-// func (h *LRPDeploymentHandler) stopInstancesFrom(logger lager.Logger, processGuid string, index int) {
-// 	logger = logger.Session("stop-instances-from", lager.Data{"process_guid": processGuid, "index": index})
-// 	actualLRPGroups, err := h.actualLRPDB.ActualLRPGroupsByProcessGuid(logger.Session("fetch-actuals"), processGuid)
-// 	if err != nil {
-// 		logger.Error("failed-fetching-actual-lrps", err)
-// 		return
-// 	}
-
-// 	for i := 0; i < len(actualLRPGroups); i++ {
-// 		group := actualLRPGroups[i]
-
-// 		if group.Instance != nil {
-// 			lrp := group.Instance
-// 			if lrp.Index >= int32(index) {
-// 				switch lrp.State {
-// 				case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-// 					err = h.actualLRPDB.RemoveActualLRP(logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, nil)
-// 					if err != nil {
-// 						logger.Error("failed-removing-lrp-instance", err)
-// 					}
-// 				default:
-// 					cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
-// 					if err != nil {
-// 						logger.Error("failed-fetching-cell-presence", err)
-// 						continue
-// 					}
-// 					repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
-// 					if err != nil {
-// 						logger.Error("create-rep-client-failed", err)
-// 						continue
-// 					}
-// 					logger.Debug("stopping-lrp-instance")
-// 					err = repClient.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
-// 					if err != nil {
-// 						logger.Error("failed-stopping-lrp-instance", err)
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// }

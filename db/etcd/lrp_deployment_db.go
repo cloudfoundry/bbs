@@ -5,12 +5,12 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *ETCDDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentDefinition) error {
-	return nil
+func (db *ETCDDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentDefinition) (string, error) {
+	return "", nil
 }
 
-func (db *ETCDDB) UpdateLRPDeployment(logger lager.Logger, id string, update *models.LRPDeploymentUpdate) (*models.LRPDeploymentDefinition, error) {
-	return nil, nil
+func (db *ETCDDB) UpdateLRPDeployment(logger lager.Logger, id string, update *models.LRPDeploymentUpdate) (string, error) {
+	return "", nil
 }
 
 func (db *ETCDDB) DeleteLRPDeployment(logger lager.Logger, id string) error {

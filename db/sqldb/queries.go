@@ -12,32 +12,33 @@ import (
 )
 
 const (
-	tasksTable       = "tasks"
-	desiredLRPsTable = "desired_lrps"
-	actualLRPsTable  = "actual_lrps"
-	domainsTable     = "domains"
+	tasksTable                    = "tasks"
+	lrpDeploymentsTable           = "lrp_deployments"
+	lrpDeploymentDefinitionsTable = "lrp_deployment_definitions"
+	actualLRPsTable               = "actual_lrps"
+	domainsTable                  = "domains"
 )
 
 var (
 	schedulingInfoColumns = helpers.ColumnList{
-		desiredLRPsTable + ".process_guid",
-		desiredLRPsTable + ".domain",
-		desiredLRPsTable + ".log_guid",
-		desiredLRPsTable + ".annotation",
-		desiredLRPsTable + ".instances",
-		desiredLRPsTable + ".memory_mb",
-		desiredLRPsTable + ".disk_mb",
-		desiredLRPsTable + ".max_pids",
-		desiredLRPsTable + ".rootfs",
-		desiredLRPsTable + ".routes",
-		desiredLRPsTable + ".volume_placement",
-		desiredLRPsTable + ".modification_tag_epoch",
-		desiredLRPsTable + ".modification_tag_index",
-		desiredLRPsTable + ".placement_tags",
+		lrpDeploymentsTable + ".process_guid",
+		lrpDeploymentsTable + ".domain",
+		lrpDeploymentsTable + ".instances",
+		lrpDeploymentsTable + ".annotation",
+		lrpDeploymentsTable + ".routes",
+		lrpDeploymentsTable + ".modification_tag_epoch",
+		lrpDeploymentsTable + ".modification_tag_index",
+		lrpDeploymentDefinitionsTable + ".log_guid",
+		lrpDeploymentDefinitionsTable + ".memory_mb",
+		lrpDeploymentDefinitionsTable + ".disk_mb",
+		lrpDeploymentDefinitionsTable + ".max_pids",
+		lrpDeploymentDefinitionsTable + ".rootfs",
+		lrpDeploymentDefinitionsTable + ".volume_placement",
+		lrpDeploymentDefinitionsTable + ".placement_tags",
 	}
 
 	desiredLRPColumns = append(schedulingInfoColumns,
-		desiredLRPsTable+".run_info",
+		lrpDeploymentDefinitionsTable+".run_info",
 	)
 
 	taskColumns = helpers.ColumnList{

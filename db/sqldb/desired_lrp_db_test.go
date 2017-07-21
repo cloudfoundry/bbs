@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("DesiredLRPDB", func() {
+var _ = FDescribe("DesiredLRPDB", func() {
 	Describe("DesireLRP", func() {
 		var expectedDesiredLRP *models.DesiredLRP
 
@@ -120,7 +120,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			}
 		})
 
-		It("returns all desired lrps", func() {
+		FIt("returns all desired lrps", func() {
 			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPs).To(HaveLen(3))
