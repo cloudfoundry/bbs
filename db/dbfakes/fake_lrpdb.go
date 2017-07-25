@@ -252,21 +252,21 @@ type FakeLRPDB struct {
 	removeDesiredLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateLRPDeploymentStub        func(logger lager.Logger, lrp *models.LRPDeploymentDefinition) (*models.LRPDeployment, error)
+	CreateLRPDeploymentStub        func(logger lager.Logger, lrp *models.LRPDeploymentDefinition) (string, error)
 	createLRPDeploymentMutex       sync.RWMutex
 	createLRPDeploymentArgsForCall []struct {
 		logger lager.Logger
 		lrp    *models.LRPDeploymentDefinition
 	}
 	createLRPDeploymentReturns struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}
 	createLRPDeploymentReturnsOnCall map[int]struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}
-	UpdateLRPDeploymentStub        func(logger lager.Logger, id string, definition *models.LRPDeploymentUpdate) (*models.LRPDeployment, error)
+	UpdateLRPDeploymentStub        func(logger lager.Logger, id string, definition *models.LRPDeploymentUpdate) (string, error)
 	updateLRPDeploymentMutex       sync.RWMutex
 	updateLRPDeploymentArgsForCall []struct {
 		logger     lager.Logger
@@ -274,11 +274,11 @@ type FakeLRPDB struct {
 		definition *models.LRPDeploymentUpdate
 	}
 	updateLRPDeploymentReturns struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}
 	updateLRPDeploymentReturnsOnCall map[int]struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}
 	DeleteLRPDeploymentStub        func(logger lager.Logger, id string) error
@@ -1192,7 +1192,7 @@ func (fake *FakeLRPDB) RemoveDesiredLRPReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeLRPDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentDefinition) (*models.LRPDeployment, error) {
+func (fake *FakeLRPDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentDefinition) (string, error) {
 	fake.createLRPDeploymentMutex.Lock()
 	ret, specificReturn := fake.createLRPDeploymentReturnsOnCall[len(fake.createLRPDeploymentArgsForCall)]
 	fake.createLRPDeploymentArgsForCall = append(fake.createLRPDeploymentArgsForCall, struct {
@@ -1222,29 +1222,29 @@ func (fake *FakeLRPDB) CreateLRPDeploymentArgsForCall(i int) (lager.Logger, *mod
 	return fake.createLRPDeploymentArgsForCall[i].logger, fake.createLRPDeploymentArgsForCall[i].lrp
 }
 
-func (fake *FakeLRPDB) CreateLRPDeploymentReturns(result1 *models.LRPDeployment, result2 error) {
+func (fake *FakeLRPDB) CreateLRPDeploymentReturns(result1 string, result2 error) {
 	fake.CreateLRPDeploymentStub = nil
 	fake.createLRPDeploymentReturns = struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeLRPDB) CreateLRPDeploymentReturnsOnCall(i int, result1 *models.LRPDeployment, result2 error) {
+func (fake *FakeLRPDB) CreateLRPDeploymentReturnsOnCall(i int, result1 string, result2 error) {
 	fake.CreateLRPDeploymentStub = nil
 	if fake.createLRPDeploymentReturnsOnCall == nil {
 		fake.createLRPDeploymentReturnsOnCall = make(map[int]struct {
-			result1 *models.LRPDeployment
+			result1 string
 			result2 error
 		})
 	}
 	fake.createLRPDeploymentReturnsOnCall[i] = struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeLRPDB) UpdateLRPDeployment(logger lager.Logger, id string, definition *models.LRPDeploymentUpdate) (*models.LRPDeployment, error) {
+func (fake *FakeLRPDB) UpdateLRPDeployment(logger lager.Logger, id string, definition *models.LRPDeploymentUpdate) (string, error) {
 	fake.updateLRPDeploymentMutex.Lock()
 	ret, specificReturn := fake.updateLRPDeploymentReturnsOnCall[len(fake.updateLRPDeploymentArgsForCall)]
 	fake.updateLRPDeploymentArgsForCall = append(fake.updateLRPDeploymentArgsForCall, struct {
@@ -1275,24 +1275,24 @@ func (fake *FakeLRPDB) UpdateLRPDeploymentArgsForCall(i int) (lager.Logger, stri
 	return fake.updateLRPDeploymentArgsForCall[i].logger, fake.updateLRPDeploymentArgsForCall[i].id, fake.updateLRPDeploymentArgsForCall[i].definition
 }
 
-func (fake *FakeLRPDB) UpdateLRPDeploymentReturns(result1 *models.LRPDeployment, result2 error) {
+func (fake *FakeLRPDB) UpdateLRPDeploymentReturns(result1 string, result2 error) {
 	fake.UpdateLRPDeploymentStub = nil
 	fake.updateLRPDeploymentReturns = struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeLRPDB) UpdateLRPDeploymentReturnsOnCall(i int, result1 *models.LRPDeployment, result2 error) {
+func (fake *FakeLRPDB) UpdateLRPDeploymentReturnsOnCall(i int, result1 string, result2 error) {
 	fake.UpdateLRPDeploymentStub = nil
 	if fake.updateLRPDeploymentReturnsOnCall == nil {
 		fake.updateLRPDeploymentReturnsOnCall = make(map[int]struct {
-			result1 *models.LRPDeployment
+			result1 string
 			result2 error
 		})
 	}
 	fake.updateLRPDeploymentReturnsOnCall[i] = struct {
-		result1 *models.LRPDeployment
+		result1 string
 		result2 error
 	}{result1, result2}
 }

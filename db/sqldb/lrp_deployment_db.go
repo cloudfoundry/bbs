@@ -74,7 +74,7 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 			return err
 		}
 
-		_, err = db.insert(logger, tx, lrpDeploymentDefinitionsTable, helpers.SQLAttributes{
+		_, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
 			"process_guid":     lrp.ProcessGuid,
 			"definition_name":  lrp.DefinitionId,
 			"definition_guid":  lrp.ProcessGuid,

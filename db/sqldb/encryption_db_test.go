@@ -161,16 +161,27 @@ var _ = Describe("Encryption", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			queryStr = `
-				INSERT INTO desired_lrps
-					(process_guid, domain, log_guid, instances, run_info, memory_mb,
-					disk_mb, rootfs, routes, volume_placement, modification_tag_epoch)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				INSERT INTO lrp_deployments
+				 (process_guid, domain, instances, routes, active_definition_id, healthy_definition_id, modification_tag_epoch)
+				VALUES (?, ?, ?, ?, ?, ?, ?)`
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, processGuid, "fake-domain", "some-log-guid", 1, encodedRunInfo, 10, 10,
-				"some-root-fs", encodedRoutes, encodedVolumePlacement, 10)
+			_, err = db.Exec(queryStr, processGuid, "fake-domain", 1, encodedRoutes, "some-definition-id", "some-definition-id", 10)
 			Expect(err).NotTo(HaveOccurred())
+
+			queryStr = `
+				INSERT INTO lrp_definitions
+					(process_guid, definition_guid, log_guid, run_info, memory_mb,
+					disk_mb, rootfs, volume_placement)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, processGuid, "some-definition-id", "some-log-guid", encodedRunInfo, 10, 10,
+				"some-root-fs", encodedVolumePlacement)
+			Expect(err).NotTo(HaveOccurred())
+
 			cryptor = makeCryptor("new", "old")
 
 			sqlDB := sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
@@ -193,7 +204,11 @@ var _ = Describe("Encryption", func() {
 			Expect(decryptedTaskDef).To(Equal(unencodedTaskDef))
 
 			var runInfo, routes, volumePlacement []byte
-			queryStr = "SELECT run_info, routes, volume_placement FROM desired_lrps WHERE process_guid = ?"
+			queryStr = `SELECT lrp_definitions.run_info, lrp_deployments.routes, lrp_definitions.volume_placement
+			            FROM lrp_deployments
+									INNER JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid
+									WHERE lrp_deployments.process_guid = ?`
+
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}

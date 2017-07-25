@@ -52,7 +52,7 @@ func (e *LRPDeployment) Up(logger lager.Logger) error {
 func (e *LRPDeployment) createTables(logger lager.Logger, db *sql.DB, flavor string) error {
 	var createTablesSQL = []string{
 		helpers.RebindForFlavor(createLRPDeploymentsSQL, flavor),
-		helpers.RebindForFlavor(createLRPDeploymentDefinitionsSQL, flavor),
+		helpers.RebindForFlavor(createLRPDefinitionsSQL, flavor),
 		helpers.RebindForFlavor(dropDesiredLRPSQL, flavor),
 	}
 
@@ -101,7 +101,7 @@ func (e *LRPDeployment) Version() int64 {
 func (e *LRPDeployment) dropTables(db *sql.DB) error {
 	tableNames := []string{
 		"lrp_deployments",
-		"lrp_deployment_definitions",
+		"lrp_definitions",
 	}
 	for _, tableName := range tableNames {
 		_, err := db.Exec("DROP TABLE IF EXISTS " + tableName)
@@ -126,7 +126,7 @@ const createLRPDeploymentsSQL = `CREATE TABLE lrp_deployments(
 	modification_tag_index INT
 );`
 
-const createLRPDeploymentDefinitionsSQL = `CREATE TABLE lrp_deployment_definitions(
+const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
 	process_guid VARCHAR(255),
 	definition_guid VARCHAR(255),
 	definition_name VARCHAR(255),

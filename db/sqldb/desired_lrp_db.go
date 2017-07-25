@@ -133,7 +133,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := " WHERE lrp_deployment_definitions.definition_guid = ?"
+		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
 		values := []interface{}{processGuid}
 		//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
 		row := db.oneLRPDeploymentWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
@@ -260,7 +260,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		definitionRow := db.one(logger, tx, lrpDeploymentDefinitionsTable,
+		definitionRow := db.one(logger, tx, lrpDefinitionsTable,
 			[]string{"process_guid"}, helpers.NoLockRow,
 			"definition_guid = ?", processGuid,
 		)
@@ -277,7 +277,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		// )
 		// beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
 
-		wheresClause := " WHERE lrp_deployment_definitions.definition_guid = ?"
+		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
 		values := []interface{}{processGuid}
 		lrpRow, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
 
@@ -351,7 +351,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 			return err
 		}
 
-		_, err = db.delete(logger, tx, lrpDeploymentDefinitionsTable, "definition_guid = ?", processGuid)
+		_, err = db.delete(logger, tx, lrpDefinitionsTable, "definition_guid = ?", processGuid)
 		if err != nil {
 			logger.Error("failed-deleting-from-db", err)
 			return err
@@ -425,7 +425,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 }
 
 func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid string, tx *sql.Tx) error {
-	row := db.one(logger, tx, lrpDeploymentDefinitionsTable,
+	row := db.one(logger, tx, lrpDefinitionsTable,
 		helpers.ColumnList{"1"}, helpers.LockRow,
 		"definition_guid = ?", processGuid,
 	)
@@ -490,7 +490,7 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner RowScanner
 func (db *SQLDB) deleteInvalidLRPs(logger lager.Logger, queryable Queryable, guids ...string) error {
 	for _, guid := range guids {
 		logger.Info("deleting-invalid-desired-lrp-from-db", lager.Data{"guid": guid})
-		_, err := db.delete(logger, queryable, lrpDeploymentDefinitionsTable, "process_guid = ?", guid)
+		_, err := db.delete(logger, queryable, lrpDefinitionsTable, "process_guid = ?", guid)
 		if err != nil {
 			logger.Error("failed-deleting-invalid-row", err)
 			return err

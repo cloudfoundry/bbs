@@ -162,7 +162,7 @@ var truncateTablesSQL = []string{
 	"TRUNCATE TABLE domains",
 	"TRUNCATE TABLE tasks",
 	"TRUNCATE TABLE lrp_deployments",
-	"TRUNCATE TABLE lrp_deployment_definitions",
+	"TRUNCATE TABLE lrp_definitions",
 	"TRUNCATE TABLE actual_lrps",
 	"TRUNCATE TABLE configurations",
 }
