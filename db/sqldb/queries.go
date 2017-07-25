@@ -37,6 +37,16 @@ var (
 		lrpDeploymentDefinitionsTable + ".placement_tags",
 	}
 
+	lrpDeploymentDefinitionsColumns = helpers.ColumnList{
+		lrpDeploymentDefinitionsTable + ".log_guid",
+		lrpDeploymentDefinitionsTable + ".memory_mb",
+		lrpDeploymentDefinitionsTable + ".disk_mb",
+		lrpDeploymentDefinitionsTable + ".max_pids",
+		lrpDeploymentDefinitionsTable + ".rootfs",
+		lrpDeploymentDefinitionsTable + ".volume_placement",
+		lrpDeploymentDefinitionsTable + ".placement_tags",
+	}
+
 	desiredLRPColumns = append(schedulingInfoColumns,
 		lrpDeploymentDefinitionsTable+".run_info",
 	)
@@ -108,12 +118,14 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 
 	query = fmt.Sprintf(`
 		SELECT %s
-			FROM desired_lrps
-			LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = false
-			GROUP BY desired_lrps.process_guid
-			HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
+			FROM lrp_deployments
+			LEFT OUTER JOIN actual_lrps ON lrp_deployments.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = false
+			INNER JOIN lrp_deployment_definitions ON lrp_deployments.process_guid = lrp_deployment_definitions.process_guid
+			GROUP BY lrp_deployments.process_guid, %s 
+			HAVING COUNT(actual_lrps.instance_index) <> lrp_deployments.instances
 		`,
 		strings.Join(columns, ", "),
+		strings.Join(lrpDeploymentDefinitionsColumns, ","),
 	)
 
 	return q.Query(query)
@@ -124,8 +136,8 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sq
     SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
       FROM actual_lrps
       JOIN domains ON actual_lrps.domain = domains.domain
-      LEFT JOIN desired_lrps ON actual_lrps.process_guid = desired_lrps.process_guid
-      WHERE actual_lrps.evacuating = false AND desired_lrps.process_guid IS NULL
+      LEFT JOIN lrp_deployments ON actual_lrps.process_guid = lrp_deployments.process_guid
+      WHERE actual_lrps.evacuating = false AND lrp_deployments.process_guid IS NULL
 		`
 
 	return q.Query(query)
@@ -145,8 +157,9 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 
 	query := fmt.Sprintf(`
 		SELECT %s
-			FROM desired_lrps
-			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
+			FROM lrp_deployments
+			JOIN actual_lrps ON lrp_deployments.process_guid = actual_lrps.process_guid
+			INNER JOIN lrp_deployment_definitions ON lrp_deployments.process_guid = lrp_deployment_definitions.process_guid
 			WHERE %s
 		`,
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
@@ -159,8 +172,9 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	query := fmt.Sprintf(`
 		SELECT %s
-			FROM desired_lrps
-			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
+			FROM lrp_deployments
+			JOIN actual_lrps ON lrp_deployments.process_guid = actual_lrps.process_guid
+			INNER JOIN lrp_deployment_definitions ON lrp_deployments.process_guid = lrp_deployment_definitions.process_guid
 			WHERE actual_lrps.state = ? AND actual_lrps.evacuating = ?
 		`,
 		strings.Join(
@@ -173,10 +187,12 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows,
 }
 
 func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now time.Time) (*sql.Rows, error) {
+
 	query := fmt.Sprintf(`
 		SELECT %s
-			FROM desired_lrps
-			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
+			FROM lrp_deployments
+			JOIN actual_lrps ON lrp_deployments.process_guid = actual_lrps.process_guid
+			INNER JOIN lrp_deployment_definitions ON lrp_deployments.process_guid = lrp_deployment_definitions.process_guid
 			WHERE actual_lrps.state = ? AND actual_lrps.since < ? AND actual_lrps.evacuating = ?
 		`,
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
@@ -200,8 +216,8 @@ func (db *SQLDB) selectLRPDeploymentsWithDefinitions(logger lager.Logger, q Quer
 
 func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 	query := `
-		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances
-			FROM desired_lrps
+		SELECT COALESCE(SUM(lrp_deployments.instances), 0) AS desired_instances
+			FROM lrp_deployments
 	`
 
 	var desiredInstances int
