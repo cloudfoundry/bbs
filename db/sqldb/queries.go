@@ -189,6 +189,15 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now 
 	)
 }
 
+func (db *SQLDB) oneLRPDeploymentWithDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) *sql.Row {
+	query := fmt.Sprintf("select %s from lrp_deployments INNER JOIN lrp_deployment_definitions ON lrp_deployments.process_guid = lrp_deployment_definitions.process_guid %s LIMIT 1", strings.Join(columns, ","), wheresClause)
+	return q.QueryRow(db.helper.Rebind(query), values...)
+}
+func (db *SQLDB) selectLRPDeploymentsWithDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) (*sql.Rows, error) {
+	query := fmt.Sprintf("select %s from lrp_deployments INNER JOIN lrp_deployment_definitions ON lrp_deployments.process_guid = lrp_deployment_definitions.process_guid %s", strings.Join(columns, ","), wheresClause)
+	return q.Query(db.helper.Rebind(query), values...)
+}
+
 func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 	query := `
 		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances

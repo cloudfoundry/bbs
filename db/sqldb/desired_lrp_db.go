@@ -3,7 +3,6 @@ package sqldb
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -134,10 +133,17 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
+		wheresClause := " WHERE lrp_deployment_definitions.definition_guid = ?"
+		values := []interface{}{processGuid}
+		//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
+		row := db.oneLRPDeploymentWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
 
-		query := fmt.Sprintf("select %s from lrp_deployments INNER JOIN lrp_deployment_definitions ON process_guid where definition_guid = ?", strings.Join(desiredLRPColumns, ","))
-		row := tx.QueryRow(query, processGuid)
-		desiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
+		if row != nil {
+			desiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
+		} else {
+			return helpers.ErrResourceNotFound
+		}
+
 		return err
 	})
 
@@ -151,7 +157,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 
 	var wheres []string
 	var values []interface{}
-
+	var wheresClause string
 	if filter.Domain != "" {
 		wheres = append(wheres, "domain = ?")
 		values = append(values, filter.Domain)
@@ -167,10 +173,12 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 
 	results := []*models.DesiredLRP{}
 
-	wheresClause := strings.Join(wheres, " AND ")
+	if len(wheres) != 0 {
+		wheresClause = " WHERE "
+		wheresClause = wheresClause + strings.Join(wheres, " AND ")
+	}
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		query := fmt.Sprintf("select %s from lrp_deployments INNER JOIN lrp_deployment_definitions using(process_guid) %s", strings.Join(desiredLRPColumns, ","), wheresClause)
-		rows, err := tx.Query(query, values...)
+		rows, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
 		if err != nil {
 			logger.Error("failed-query", err)
 			return err
@@ -196,6 +204,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 
 	var wheres []string
 	var values []interface{}
+	var wheresClause string
 
 	if filter.Domain != "" {
 		wheres = append(wheres, "domain = ?")
@@ -210,12 +219,13 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 		}
 	}
 
+	if len(wheres) != 0 {
+		wheresClause = " WHERE "
+		wheresClause = wheresClause + strings.Join(wheres, " AND ")
+	}
 	results := []*models.DesiredLRPSchedulingInfo{}
-
-	wheresClause := strings.Join(wheres, " AND ")
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		query := fmt.Sprintf("select %s from lrp_deployments INNER JOIN lrp_deployment_definitions ON process_guid %s", strings.Join(schedulingInfoColumns, ","), wheresClause)
-		rows, err := tx.Query(query, values...)
+		rows, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, schedulingInfoColumns, wheresClause, values)
 		if err != nil {
 			logger.Error("failed-query", err)
 			return err
@@ -250,28 +260,41 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		row := db.one(logger, tx, lrpDeploymentDefinitionsTable,
+		definitionRow := db.one(logger, tx, lrpDeploymentDefinitionsTable,
 			[]string{"process_guid"}, helpers.NoLockRow,
 			"definition_guid = ?", processGuid,
 		)
+
 		var desiredLRPGuid string
-		err = row.Scan(&desiredLRPGuid)
+		err = definitionRow.Scan(&desiredLRPGuid)
 		if err != nil {
-			logger.Error("failed-lock-desired", err)
+			logger.Error("failed-lock-desired1", err)
+			return err
+		}
+		// row = db.one(logger, tx, lrpDeploymentsTable,
+		// 	desiredLRPColumns, helpers.LockRow,
+		// 	"process_guid = ?", desiredLRPGuid,
+		// )
+		// beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
+
+		wheresClause := " WHERE lrp_deployment_definitions.definition_guid = ?"
+		values := []interface{}{processGuid}
+		lrpRow, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
+
+		if err != nil {
+			logger.Error("failed-query", err)
 			return err
 		}
 
-		row = db.one(logger, tx, lrpDeploymentsTable,
-			desiredLRPColumns, helpers.LockRow,
-			"process_guid = ?", desiredLRPGuid,
-		)
-		beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
-
+		if lrpRow.Next() {
+			beforeDesiredLRP, err = db.fetchDesiredLRP(logger, lrpRow, tx)
+		}
 		if err != nil {
-			logger.Error("failed-lock-desired", err)
+			logger.Error("failed-lock-desired2", err)
 			return err
 		}
 
+		lrpRow.Close()
 		updateAttributes := helpers.SQLAttributes{"modification_tag_index": beforeDesiredLRP.ModificationTag.Index + 1}
 
 		if update.Annotation != nil {
@@ -290,7 +313,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			updateAttributes["routes"] = encodedData
 		}
 
-		_, err = db.update(logger, tx, lrpDeploymentDefinitionsTable, updateAttributes, `process_guid = ?`, desiredLRPGuid)
+		_, err = db.update(logger, tx, lrpDeploymentsTable, updateAttributes, `process_guid = ?`, desiredLRPGuid)
 		if err != nil {
 			logger.Error("failed-executing-query", err)
 			return err
@@ -428,7 +451,6 @@ func (db *SQLDB) fetchDesiredLRPs(logger lager.Logger, rows *sql.Rows, queryable
 		}
 		lrps = append(lrps, lrp)
 	}
-
 	if len(guids) > 0 {
 		db.deleteInvalidLRPs(logger, queryable, guids...)
 	}
@@ -487,6 +509,7 @@ func whereClauseForProcessGuids(filter []string) string {
 	where := "definition_guid IN ("
 	for range filter {
 		questionMarks = append(questionMarks, "?")
+
 	}
 
 	where += strings.Join(questionMarks, ", ")

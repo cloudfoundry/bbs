@@ -67,7 +67,7 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.Definition.ProcessGuid+"-"+guid)
+	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, guid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return

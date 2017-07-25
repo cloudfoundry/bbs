@@ -11,7 +11,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("DesiredLRPDB", func() {
+var _ = Describe("DesiredLRPDB", func() {
+	BeforeEach(func() {
+		fakeGUIDProvider.NextGUIDReturns("epoch", nil)
+	})
 	Describe("DesireLRP", func() {
 		var expectedDesiredLRP *models.DesiredLRP
 
@@ -67,7 +70,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
 
-				queryStr := `UPDATE desired_lrps SET run_info = ? WHERE process_guid = ?`
+				queryStr := `UPDATE lrp_deployment_definitions SET run_info = ? WHERE process_guid = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -87,7 +90,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				queryStr := `UPDATE desired_lrps SET routes = ? WHERE process_guid = ?`
+				queryStr := `UPDATE lrp_deployments SET routes = ? WHERE process_guid = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -120,7 +123,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 			}
 		})
 
-		FIt("returns all desired lrps", func() {
+		It("returns all desired lrps", func() {
 			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPs).To(HaveLen(3))
@@ -131,7 +134,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 			desiredLRPWithInvalidRunInfo := model_helpers.NewValidDesiredLRP("invalid")
 			Expect(sqlDB.DesireLRP(logger, desiredLRPWithInvalidRunInfo)).To(Succeed())
 
-			queryStr := `UPDATE desired_lrps SET run_info = 'garbage' WHERE process_guid = 'invalid'`
+			queryStr := `UPDATE lrp_deployment_definitions SET run_info = 'garbage' WHERE process_guid = 'invalid'`
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
@@ -142,10 +145,9 @@ var _ = FDescribe("DesiredLRPDB", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPs).To(HaveLen(3))
 
-			rows, err := db.Query(`SELECT process_guid FROM desired_lrps`)
+			rows, err := db.Query(`SELECT process_guid FROM lrp_deployment_definitions`)
 			Expect(err).NotTo(HaveOccurred())
 			defer rows.Close()
-
 			processGuids := []string{}
 			for rows.Next() {
 				var processGuid string
@@ -179,7 +181,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE desired_lrps SET run_info = ? WHERE process_guid = ?"
+				queryStr := "UPDATE lrp_deployment_definitions SET run_info = ? WHERE process_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -199,7 +201,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE desired_lrps SET routes = ? WHERE process_guid = ?"
+				queryStr := "UPDATE lrp_deployments SET routes = ? WHERE process_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -248,7 +250,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 		})
 
 		Context("when filtering by domain", func() {
-			It("returns the filtered schedulig infos", func() {
+			It("returns the filtered scheduling infos", func() {
 				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{Domain: "domain-1"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPSchedulingInfos).To(HaveLen(1))
@@ -257,7 +259,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 		})
 
 		Context("when filtering by process guids", func() {
-			It("returns the filtered schedulig infos", func() {
+			It("returns the filtered scheduling infos", func() {
 				filter := models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}}
 				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
@@ -269,7 +271,7 @@ var _ = FDescribe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE desired_lrps SET routes = ? WHERE process_guid = ?"
+				queryStr := "UPDATE lrp_deployments SET routes = ? WHERE process_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
