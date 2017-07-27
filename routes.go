@@ -128,6 +128,10 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute_r0}, // Deprecated
 
+	// LPR Deployment Lifecycle
+	{Path: "/v1/lrp_deployment/create", Method: "POST", Name: CreateLRPDeploymentRoute},
+	{Path: "/v1/lrp_deployment/update", Method: "POST", Name: UpdateLRPDeploymentRoute},
+
 	// Tasks
 	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},
 	{Path: "/v1/tasks/get_by_task_guid.r2", Method: "POST", Name: TaskByGuidRoute},

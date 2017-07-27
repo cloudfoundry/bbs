@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -107,7 +108,7 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 
 func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("desire-lrp")
-
+	logger.Info(fmt.Sprintf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nDesireDesiredLRP request\n%#v", req))
 	request := &models.DesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
@@ -140,6 +141,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("update-desired-lrp")
 
+	logger.Info(fmt.Sprintf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nUpdateDesiredLRP request\n%#v", req))
 	request := &models.UpdateDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()

@@ -143,6 +143,10 @@ type ExternalActualLRPClient interface {
 The ExternalDesiredLRPClient is used to access and manipulate Disired LRPs.
 */
 type ExternalDesiredLRPClient interface {
+	// Creates the given DesiredLRP and its corresponding ActualLRPs
+	CreateLRPDeployment(lager.Logger, *models.LRPDeploymentDefinition) error
+	// Updates the given LRPDeployment and creates a new LRP Definition
+	UpdateLRPDeployment(logger lager.Logger, processGuid string, deploymentUpdate *models.LRPDeploymentUpdate) error
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
 	DesiredLRPs(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 
@@ -429,6 +433,20 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.Actu
 	return response.Error.ToError()
 }
 
+func (c *client) CreateLRPDeployment(logger lager.Logger, lrpDeploymentDefinition *models.LRPDeploymentDefinition) error {
+	request := models.CreateLRPDeploymentRequest{
+		Definition: lrpDeploymentDefinition,
+	}
+	return c.doLRPDeploymentLifecycleRequest(logger, CreateLRPDeploymentRoute, &request)
+}
+func (c *client) UpdateLRPDeployment(logger lager.Logger, processGuid string, lrpDeploymentUpdate *models.LRPDeploymentUpdate) error {
+	request := models.UpdateLRPDeploymentRequest{
+		Id:     processGuid,
+		Update: lrpDeploymentUpdate,
+	}
+	return c.doLRPDeploymentLifecycleRequest(logger, UpdateLRPDeploymentRoute, &request)
+}
+
 func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	request := models.DesiredLRPsRequest{
 		Domain:       filter.Domain,
@@ -472,6 +490,15 @@ func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 
 func (c *client) doDesiredLRPLifecycleRequest(logger lager.Logger, route string, request proto.Message) error {
 	response := models.DesiredLRPLifecycleResponse{}
+	err := c.doRequest(logger, route, nil, nil, request, &response)
+	if err != nil {
+		return err
+	}
+	return response.Error.ToError()
+}
+
+func (c *client) doLRPDeploymentLifecycleRequest(logger lager.Logger, route string, request proto.Message) error {
+	response := models.LRPDeploymentLifecycleResponse{}
 	err := c.doRequest(logger, route, nil, nil, request, &response)
 	if err != nil {
 		return err

@@ -95,7 +95,7 @@ func (e *LRPDeployment) SetRawSQLDB(db *sql.DB) {
 }
 
 func (e *LRPDeployment) Version() int64 {
-	return 1500558085
+	return 1500558086
 }
 
 func (e *LRPDeployment) dropTables(db *sql.DB) error {

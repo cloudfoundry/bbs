@@ -1,8 +1,6 @@
 package models
 
-import (
-	"time"
-)
+import "time"
 
 func (d *LRPDeploymentDefinition) DesiredLRPKey() DesiredLRPKey {
 	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.Definition.LogGuid)
@@ -10,6 +8,10 @@ func (d *LRPDeploymentDefinition) DesiredLRPKey() DesiredLRPKey {
 
 func (lrp *LRPDeploymentDefinition) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	d := lrp.Definition
+	return d.DesiredLRPRunInfo(lrp.DesiredLRPKey(), createdAt)
+}
+
+func (d *LRPDefinition) DesiredLRPRunInfo(desiredLRPKey DesiredLRPKey, createdAt time.Time) DesiredLRPRunInfo {
 	environmentVariables := make([]EnvironmentVariable, len(d.EnvironmentVariables))
 	for i := range d.EnvironmentVariables {
 		environmentVariables[i] = *d.EnvironmentVariables[i]
@@ -21,7 +23,7 @@ func (lrp *LRPDeploymentDefinition) DesiredLRPRunInfo(createdAt time.Time) Desir
 	}
 
 	return NewDesiredLRPRunInfo(
-		lrp.DesiredLRPKey(),
+		desiredLRPKey,
 		createdAt,
 		environmentVariables,
 		d.CachedDependencies,

@@ -96,7 +96,7 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 
 	logger = logger.WithData(lager.Data{"guid": request.Id})
 
-	_, err = h.lrpDeploymentDB.UpdateLRPDeployment(logger, request.Id, request.Update)
+	guid, err := h.lrpDeploymentDB.UpdateLRPDeployment(logger, request.Id, request.Update)
 	if err != nil {
 		logger.Debug("failed-updating-desired-lrp")
 		response.Error = models.ConvertError(err)
@@ -108,27 +108,14 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 
 	// TODO: scale up or down
 
-	// if request.Update.Instances != nil {
-	// 	logger.Debug("updating-lrp-instances")
-	// 	previousInstanceCount := beforeDesiredLRP.Instances
+	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, guid)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
 
-	// 	requestedInstances := *request.Update.Instances - previousInstanceCount
-
-	// 	logger = logger.WithData(lager.Data{"instances_delta": requestedInstances})
-	// 	if requestedInstances > 0 {
-	// 		logger.Debug("increasing-the-instances")
-	// 		schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-	// 		h.startInstanceRange(logger, previousInstanceCount, *request.Update.Instances, &schedulingInfo)
-	// 	}
-
-	// 	if requestedInstances < 0 {
-	// 		logger.Debug("decreasing-the-instances")
-	// 		numExtraActualLRP := previousInstanceCount + requestedInstances
-	// 		h.stopInstancesFrom(logger, request.ProcessGuid, int(numExtraActualLRP))
-	// 	}
-	// }
-
-	// go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
+	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
 }
 
 func (h *LRPDeploymentHandler) DeleteLRPDeployment(logger lager.Logger, w http.ResponseWriter, req *http.Request) {

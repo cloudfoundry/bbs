@@ -14,6 +14,7 @@ type ActualLRPLifecycleController struct {
 	db               db.ActualLRPDB
 	evacuationDB     db.EvacuationDB
 	desiredLRPDB     db.DesiredLRPDB
+	lrpDeploymentDB  db.LRPDeploymentDB
 	auctioneerClient auctioneer.Client
 	serviceClient    serviceclient.ServiceClient
 	repClientFactory rep.ClientFactory
@@ -24,6 +25,7 @@ func NewActualLRPLifecycleController(
 	db db.ActualLRPDB,
 	evacuationDB db.EvacuationDB,
 	desiredLRPDB db.DesiredLRPDB,
+	lrpDeploymentDB db.LRPDeploymentDB,
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
@@ -33,6 +35,7 @@ func NewActualLRPLifecycleController(
 		db:               db,
 		evacuationDB:     evacuationDB,
 		desiredLRPDB:     desiredLRPDB,
+		lrpDeploymentDB:  lrpDeploymentDB,
 		auctioneerClient: auctioneerClient,
 		serviceClient:    serviceClient,
 		repClientFactory: repClientFactory,
@@ -76,6 +79,10 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: lrpGroup.Evacuating}))
 		}
 	}()
+
+	//TODO: Remove the actual lrp of the previous definition
+	//Set the healthy definition id of lrp deployment if its the first instance
+
 	return nil
 }
 

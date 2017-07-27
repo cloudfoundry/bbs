@@ -133,7 +133,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
+		wheresClause := " WHERE lrp_deployments.process_guid = ?"
 		values := []interface{}{processGuid}
 		//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
 		row := db.oneLRPDeploymentWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
@@ -334,6 +334,20 @@ func (db *SQLDB) encodeRouteData(logger lager.Logger, routes *models.Routes) ([]
 	encodedData, err := db.encoder.Encode(format.BASE64_ENCRYPTED, routeData)
 	if err != nil {
 		logger.Error("failed-encrypting-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	return encodedData, nil
+}
+
+func (db *SQLDB) encodeDefinitionData(logger lager.Logger, definitions map[string]*models.LRPDefinition) ([]byte, error) {
+	definitionsData, err := json.Marshal(definitions)
+	if err != nil {
+		logger.Error("failed-marshalling-definitions", err)
+		return nil, models.ErrBadRequest
+	}
+	encodedData, err := db.encoder.Encode(format.BASE64_ENCRYPTED, definitionsData)
+	if err != nil {
+		logger.Error("failed-encrypting-definitions", err)
 		return nil, models.ErrBadRequest
 	}
 	return encodedData, nil

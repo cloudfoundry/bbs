@@ -22,6 +22,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeEvacuationDB     *dbfakes.FakeEvacuationDB
+		fakeLRPDeploymentDB  *dbfakes.FakeLRPDeploymentDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		actualHub            *eventfakes.FakeHub
 
@@ -35,6 +36,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeEvacuationDB = new(dbfakes.FakeEvacuationDB)
+		fakeLRPDeploymentDB = new(dbfakes.FakeLRPDeploymentDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lagertest.NewTestLogger("test")
 
@@ -48,6 +50,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			fakeActualLRPDB,
 			fakeEvacuationDB,
 			fakeDesiredLRPDB,
+			fakeLRPDeploymentDB,
 			fakeAuctioneerClient,
 			fakeServiceClient,
 			fakeRepClientFactory,

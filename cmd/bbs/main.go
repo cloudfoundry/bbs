@@ -318,7 +318,7 @@ func main() {
 
 	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger, metronClient)
 
-	actualLRPController := controllers.NewActualLRPLifecycleController(activeDB, activeDB, activeDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
+	actualLRPController := controllers.NewActualLRPLifecycleController(activeDB, activeDB, activeDB, activeDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
 	lrpConvergenceController := controllers.NewLRPConvergenceController(logger,
 		activeDB,
 		actualHub,

@@ -5,7 +5,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter . DesiredLRPDB
+//go:generate counterfeiter . LRPDeploymentDB
 
 type LRPDeploymentDB interface {
 	CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentDefinition) (string, error)
