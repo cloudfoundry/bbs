@@ -112,7 +112,7 @@
 		TaskRemovedEvent
 		ConvergeLRPsResponse
 		LRPDeployment
-		LRPDeploymentDefinition
+		LRPDeploymentCreation
 		LRPDeploymentUpdate
 		LRPDefinition
 		LRPDeploymentLifecycleResponse

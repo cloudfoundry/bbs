@@ -29,6 +29,7 @@ func (h *sqlHelper) One(
 	if lockRow {
 		query += "\nFOR UPDATE"
 	}
+	logger.Info("QUERY STRING", lager.Data{"query": query})
 
 	return q.QueryRow(h.Rebind(query), whereBindings...)
 }

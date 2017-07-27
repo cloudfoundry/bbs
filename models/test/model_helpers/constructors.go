@@ -28,6 +28,92 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	return actualLRP
 }
 
+func NewValidLRPDeploymentCreation(guid string, definitionId string) *models.LRPDeploymentCreation {
+	desiredLRP := NewValidDesiredLRP(definitionId)
+	lrp := &models.LRPDeploymentCreation{
+		ProcessGuid:  guid,
+		Domain:       desiredLRP.Domain,
+		Instances:    desiredLRP.Instances,
+		Annotation:   desiredLRP.Annotation,
+		Routes:       desiredLRP.Routes,
+		DefinitionId: definitionId,
+		Definition: &models.LRPDefinition{
+			DefinitionId:                  definitionId,
+			RootFs:                        desiredLRP.RootFs,
+			EnvironmentVariables:          desiredLRP.EnvironmentVariables,
+			Setup:                         desiredLRP.Setup,
+			Action:                        desiredLRP.Action,
+			StartTimeoutMs:                desiredLRP.StartTimeoutMs,
+			DeprecatedStartTimeoutS:       desiredLRP.DeprecatedStartTimeoutS,
+			Monitor:                       desiredLRP.Monitor,
+			DiskMb:                        desiredLRP.DiskMb,
+			MemoryMb:                      desiredLRP.MemoryMb,
+			CpuWeight:                     desiredLRP.CpuWeight,
+			Privileged:                    desiredLRP.Privileged,
+			Ports:                         desiredLRP.Ports,
+			LogSource:                     desiredLRP.LogSource,
+			LogGuid:                       desiredLRP.LogGuid,
+			MetricsGuid:                   desiredLRP.MetricsGuid,
+			EgressRules:                   desiredLRP.EgressRules,
+			CachedDependencies:            desiredLRP.CachedDependencies,
+			LegacyDownloadUser:            desiredLRP.LegacyDownloadUser,
+			TrustedSystemCertificatesPath: desiredLRP.TrustedSystemCertificatesPath,
+			VolumeMounts:                  desiredLRP.VolumeMounts,
+			Network:                       desiredLRP.Network,
+			PlacementTags:                 desiredLRP.PlacementTags,
+			MaxPids:                       desiredLRP.MaxPids,
+			CertificateProperties:         desiredLRP.CertificateProperties,
+			ImageUsername:                 desiredLRP.ImageUsername,
+			ImagePassword:                 desiredLRP.ImagePassword,
+			CheckDefinition:               desiredLRP.CheckDefinition,
+		},
+	}
+
+	return lrp
+}
+
+func NewValidLRPDeploymentUpdate(definitionId string) *models.LRPDeploymentUpdate {
+	desiredLRP := NewValidDesiredLRP(definitionId)
+	lrp := &models.LRPDeploymentUpdate{
+		Instances:    desiredLRP.Instances,
+		Annotation:   desiredLRP.Annotation,
+		Routes:       desiredLRP.Routes,
+		DefinitionId: definitionId,
+		Definition: &models.LRPDefinition{
+			DefinitionId:                  definitionId,
+			RootFs:                        desiredLRP.RootFs,
+			EnvironmentVariables:          desiredLRP.EnvironmentVariables,
+			Setup:                         desiredLRP.Setup,
+			Action:                        desiredLRP.Action,
+			StartTimeoutMs:                desiredLRP.StartTimeoutMs,
+			DeprecatedStartTimeoutS:       desiredLRP.DeprecatedStartTimeoutS,
+			Monitor:                       desiredLRP.Monitor,
+			DiskMb:                        desiredLRP.DiskMb,
+			MemoryMb:                      desiredLRP.MemoryMb,
+			CpuWeight:                     desiredLRP.CpuWeight,
+			Privileged:                    desiredLRP.Privileged,
+			Ports:                         desiredLRP.Ports,
+			LogSource:                     desiredLRP.LogSource,
+			LogGuid:                       desiredLRP.LogGuid,
+			MetricsGuid:                   desiredLRP.MetricsGuid,
+			EgressRules:                   desiredLRP.EgressRules,
+			CachedDependencies:            desiredLRP.CachedDependencies,
+			LegacyDownloadUser:            desiredLRP.LegacyDownloadUser,
+			TrustedSystemCertificatesPath: desiredLRP.TrustedSystemCertificatesPath,
+			VolumeMounts:                  desiredLRP.VolumeMounts,
+			Network:                       desiredLRP.Network,
+			PlacementTags:                 desiredLRP.PlacementTags,
+			MaxPids:                       desiredLRP.MaxPids,
+			CertificateProperties:         desiredLRP.CertificateProperties,
+			ImageUsername:                 desiredLRP.ImageUsername,
+			ImagePassword:                 desiredLRP.ImagePassword,
+			CheckDefinition:               desiredLRP.CheckDefinition,
+		},
+	}
+
+	return lrp
+}
+
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	modTag := models.NewModificationTag("epoch", 0)

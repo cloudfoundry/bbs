@@ -22,6 +22,7 @@ const (
 var (
 	schedulingInfoColumns = helpers.ColumnList{
 		lrpDeploymentsTable + ".process_guid",
+		lrpDefinitionsTable + ".definition_guid",
 		lrpDeploymentsTable + ".domain",
 		lrpDeploymentsTable + ".instances",
 		lrpDeploymentsTable + ".annotation",
@@ -37,7 +38,22 @@ var (
 		lrpDefinitionsTable + ".placement_tags",
 	}
 
+	lrpDeploymentColumns = helpers.ColumnList{
+		lrpDeploymentsTable + ".process_guid",
+		lrpDeploymentsTable + ".domain",
+		lrpDeploymentsTable + ".instances",
+		lrpDeploymentsTable + ".annotation",
+		lrpDeploymentsTable + ".routes",
+		lrpDeploymentsTable + ".active_definition_id",
+		// lrpDeploymentsTable + ".healthy_definition_id",
+		lrpDeploymentsTable + ".modification_tag_epoch",
+		lrpDeploymentsTable + ".modification_tag_index",
+	}
+
 	lrpDefinitionsColumns = helpers.ColumnList{
+		// lrpDefinitionsTable + ".process_guid",
+		// lrpDefinitionsTable + ".definition_name",
+		lrpDefinitionsTable + ".definition_guid",
 		lrpDefinitionsTable + ".log_guid",
 		lrpDefinitionsTable + ".memory_mb",
 		lrpDefinitionsTable + ".disk_mb",
@@ -45,6 +61,7 @@ var (
 		lrpDefinitionsTable + ".rootfs",
 		lrpDefinitionsTable + ".volume_placement",
 		lrpDefinitionsTable + ".placement_tags",
+		lrpDefinitionsTable + ".run_info",
 	}
 
 	desiredLRPColumns = append(schedulingInfoColumns,
@@ -209,6 +226,12 @@ func (db *SQLDB) oneLRPDeploymentWithDefinitions(logger lager.Logger, q Queryabl
 	query := fmt.Sprintf("select %s from lrp_deployments INNER JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid %s LIMIT 1", strings.Join(columns, ","), wheresClause)
 	return q.QueryRow(db.helper.Rebind(query), values...)
 }
+
+func (db *SQLDB) selectDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) (*sql.Rows, error) {
+	query := fmt.Sprintf("select %s from lrp_definitions %s", strings.Join(columns, ","), wheresClause)
+	return q.Query(db.helper.Rebind(query), values...)
+}
+
 func (db *SQLDB) selectLRPDeploymentsWithDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) (*sql.Rows, error) {
 	query := fmt.Sprintf("select %s from lrp_deployments INNER JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid %s", strings.Join(columns, ","), wheresClause)
 	return q.Query(db.helper.Rebind(query), values...)

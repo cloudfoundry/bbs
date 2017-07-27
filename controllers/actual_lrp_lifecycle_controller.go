@@ -82,6 +82,42 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 
 	//TODO: Remove the actual lrp of the previous definition
 	//Set the healthy definition id of lrp deployment if its the first instance
+	// 1. Find if the healthy_definition_id for this lrpdeployment is different from the one that is running
+	// 2. Update  the healthy_definition_id with the  definition id of the update
+	// 3. Remove actual lrps for the old definition id in the healthy_definition_id
+	// 4. Maybe we need to do this only for index==0 because that indicates the first instance coming up?
+
+	lrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByDefinitionGuid(logger, actualLRPKey.ProcessGuid)
+	if err != nil {
+		logger.Error("failed-retrieving-lrpdeployment", err)
+		return err
+	}
+
+	if lrpDeployment.ActiveDefinitionId == actualLRPKey.ProcessGuid {
+		for defID, _ := range lrpDeployment.Definitions {
+			if defID != actualLRPKey.ProcessGuid {
+
+				beforeActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, defID, actualLRPKey.Index)
+				if err == models.ErrResourceNotFound {
+					continue
+				}
+				if err != nil {
+					return err
+				}
+
+				oldActualLRP, _ := beforeActualLRPGroup.Resolve()
+				h.RetireActualLRP(logger, &oldActualLRP.ActualLRPKey)
+			}
+		}
+		if lrpDeployment.HealthyDefinitionId != actualLRPKey.ProcessGuid {
+			lrpDeployment.HealthyDefinitionId = actualLRPKey.ProcessGuid
+			err := h.lrpDeploymentDB.SaveLRPDeployment(logger, lrpDeployment)
+			if err != nil {
+				logger.Error("failed-to-save-lrp-deployment", err)
+				return err
+			}
+		}
+	}
 
 	return nil
 }

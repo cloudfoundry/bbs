@@ -5,7 +5,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *ETCDDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentDefinition) (string, error) {
+func (db *ETCDDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentCreation) (string, error) {
 	return "", nil
 }
 

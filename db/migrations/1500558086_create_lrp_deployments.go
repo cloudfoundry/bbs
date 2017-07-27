@@ -128,7 +128,7 @@ const createLRPDeploymentsSQL = `CREATE TABLE lrp_deployments(
 
 const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
 	process_guid VARCHAR(255),
-	definition_guid VARCHAR(255),
+	definition_guid VARCHAR(255) PRIMARY KEY,
 	definition_name VARCHAR(255),
 	log_guid VARCHAR(255) NOT NULL,
 	memory_mb INT NOT NULL,
@@ -140,4 +140,6 @@ const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
 	run_info MEDIUMTEXT NOT NULL
 );`
 
-// todo: add primary key on lrp deployment definition = (defintiion_guid + process_guid)
+// TODO: add primary key on lrp deployment definition = (defintiion_guid + process_guid)
+// process guid should have a foreign key constraint against LRP deployment
+// Should we just rely on the client's providing a globally unqiue definition_guid?

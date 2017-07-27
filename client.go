@@ -144,7 +144,7 @@ The ExternalDesiredLRPClient is used to access and manipulate Disired LRPs.
 */
 type ExternalDesiredLRPClient interface {
 	// Creates the given DesiredLRP and its corresponding ActualLRPs
-	CreateLRPDeployment(lager.Logger, *models.LRPDeploymentDefinition) error
+	CreateLRPDeployment(lager.Logger, *models.LRPDeploymentCreation) error
 	// Updates the given LRPDeployment and creates a new LRP Definition
 	UpdateLRPDeployment(logger lager.Logger, processGuid string, deploymentUpdate *models.LRPDeploymentUpdate) error
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
@@ -433,9 +433,9 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.Actu
 	return response.Error.ToError()
 }
 
-func (c *client) CreateLRPDeployment(logger lager.Logger, lrpDeploymentDefinition *models.LRPDeploymentDefinition) error {
+func (c *client) CreateLRPDeployment(logger lager.Logger, lrpDeploymentCreation *models.LRPDeploymentCreation) error {
 	request := models.CreateLRPDeploymentRequest{
-		Definition: lrpDeploymentDefinition,
+		Creation: lrpDeploymentCreation,
 	}
 	return c.doLRPDeploymentLifecycleRequest(logger, CreateLRPDeploymentRoute, &request)
 }

@@ -2,11 +2,11 @@ package models
 
 import "time"
 
-func (d *LRPDeploymentDefinition) DesiredLRPKey() DesiredLRPKey {
+func (d *LRPDeploymentCreation) DesiredLRPKey() DesiredLRPKey {
 	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.Definition.LogGuid)
 }
 
-func (lrp *LRPDeploymentDefinition) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
+func (lrp *LRPDeploymentCreation) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	d := lrp.Definition
 	return d.DesiredLRPRunInfo(lrp.DesiredLRPKey(), createdAt)
 }

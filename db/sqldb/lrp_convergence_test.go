@@ -19,7 +19,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("LRPConvergence", func() {
+var _ = XDescribe("LRPConvergence", func() {
 	var (
 		freshDomain      string
 		expiredDomain    string
@@ -633,7 +633,7 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(fetchActuals()).NotTo(ContainElement("expired-evacuating-actual-lrp"))
 	})
 
-	It("ignores LRPs that don't need convergence", func() {
+	FIt("ignores LRPs that don't need convergence", func() {
 		processGuids := []string{
 			"normal-desired-lrp" + "-" + freshDomain,
 			"normal-desired-lrp-with-unclaimed-actuals" + "-" + freshDomain,

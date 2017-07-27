@@ -212,11 +212,11 @@ type FakeClient struct {
 	retireActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateLRPDeploymentStub        func(lager.Logger, *models.LRPDeploymentDefinition) error
+	CreateLRPDeploymentStub        func(lager.Logger, *models.LRPDeploymentCreation) error
 	createLRPDeploymentMutex       sync.RWMutex
 	createLRPDeploymentArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.LRPDeploymentDefinition
+		arg2 *models.LRPDeploymentCreation
 	}
 	createLRPDeploymentReturns struct {
 		result1 error
@@ -1148,12 +1148,12 @@ func (fake *FakeClient) RetireActualLRPReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) CreateLRPDeployment(arg1 lager.Logger, arg2 *models.LRPDeploymentDefinition) error {
+func (fake *FakeClient) CreateLRPDeployment(arg1 lager.Logger, arg2 *models.LRPDeploymentCreation) error {
 	fake.createLRPDeploymentMutex.Lock()
 	ret, specificReturn := fake.createLRPDeploymentReturnsOnCall[len(fake.createLRPDeploymentArgsForCall)]
 	fake.createLRPDeploymentArgsForCall = append(fake.createLRPDeploymentArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.LRPDeploymentDefinition
+		arg2 *models.LRPDeploymentCreation
 	}{arg1, arg2})
 	fake.recordInvocation("CreateLRPDeployment", []interface{}{arg1, arg2})
 	fake.createLRPDeploymentMutex.Unlock()
@@ -1172,7 +1172,7 @@ func (fake *FakeClient) CreateLRPDeploymentCallCount() int {
 	return len(fake.createLRPDeploymentArgsForCall)
 }
 
-func (fake *FakeClient) CreateLRPDeploymentArgsForCall(i int) (lager.Logger, *models.LRPDeploymentDefinition) {
+func (fake *FakeClient) CreateLRPDeploymentArgsForCall(i int) (lager.Logger, *models.LRPDeploymentCreation) {
 	fake.createLRPDeploymentMutex.RLock()
 	defer fake.createLRPDeploymentMutex.RUnlock()
 	return fake.createLRPDeploymentArgsForCall[i].arg1, fake.createLRPDeploymentArgsForCall[i].arg2

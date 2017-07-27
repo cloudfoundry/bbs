@@ -43,11 +43,11 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	// 		return err
 	// 	}
 
-	// 	guid, err := db.guidProvider.NextGUID()
-	// 	if err != nil {
-	// 		logger.Error("failed-to-generate-guid", err)
-	// 		return models.ErrGUIDGeneration
-	// 	}
+	guid, err := db.guidProvider.NextGUID()
+	if err != nil {
+		logger.Error("failed-to-generate-guid", err)
+		return models.ErrGUIDGeneration
+	}
 
 	// 	placementTagData, err := json.Marshal(desiredLRP.PlacementTags)
 	// 	if err != nil {
@@ -83,14 +83,15 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	// 	return nil
 	// })
 
-	lrp := &models.LRPDeploymentDefinition{
-		ProcessGuid:  desiredLRP.ProcessGuid,
+	lrp := &models.LRPDeploymentCreation{
+		ProcessGuid:  guid,
 		Domain:       desiredLRP.Domain,
 		Instances:    desiredLRP.Instances,
 		Annotation:   desiredLRP.Annotation,
 		Routes:       desiredLRP.Routes,
 		DefinitionId: desiredLRP.ProcessGuid,
 		Definition: &models.LRPDefinition{
+			DefinitionId:                  desiredLRP.ProcessGuid,
 			RootFs:                        desiredLRP.RootFs,
 			EnvironmentVariables:          desiredLRP.EnvironmentVariables,
 			Setup:                         desiredLRP.Setup,
@@ -120,7 +121,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 			CheckDefinition:               desiredLRP.CheckDefinition,
 		},
 	}
-	_, err := db.CreateLRPDeployment(logger, lrp)
+	_, err = db.CreateLRPDeployment(logger, lrp)
 	return err
 }
 
@@ -133,7 +134,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := " WHERE lrp_deployments.process_guid = ?"
+		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
 		values := []interface{}{processGuid}
 		//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
 		row := db.oneLRPDeploymentWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)

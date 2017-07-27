@@ -61,7 +61,7 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	guid, err := h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Definition)
+	guid, err := h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Creation)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
