@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("LRPDeployment", func() {
+var _ = Describe("LRPDeployment", func() {
 	var (
 		logger lager.Logger
 	)

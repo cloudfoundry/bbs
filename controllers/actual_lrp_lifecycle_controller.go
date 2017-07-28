@@ -93,6 +93,8 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
+	logger.Info("lrp-deployment-found", lager.Data{"deployment": lrpDeployment})
+
 	if lrpDeployment.ActiveDefinitionId == actualLRPKey.ProcessGuid {
 		for defID, _ := range lrpDeployment.Definitions {
 			if defID != actualLRPKey.ProcessGuid {

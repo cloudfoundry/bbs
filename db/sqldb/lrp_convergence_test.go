@@ -633,7 +633,7 @@ var _ = XDescribe("LRPConvergence", func() {
 		Expect(fetchActuals()).NotTo(ContainElement("expired-evacuating-actual-lrp"))
 	})
 
-	FIt("ignores LRPs that don't need convergence", func() {
+	It("ignores LRPs that don't need convergence", func() {
 		processGuids := []string{
 			"normal-desired-lrp" + "-" + freshDomain,
 			"normal-desired-lrp-with-unclaimed-actuals" + "-" + freshDomain,

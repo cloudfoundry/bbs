@@ -165,6 +165,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				State:                models.ActualLRPStateRunning,
 				Since:                1139,
 			}
+
+			fakeLRPDeploymentDB.LRPDeploymentByDefinitionGuidReturns(&models.LRPDeployment{}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -204,6 +206,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					)
 
 					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&afterActualLRP, &evacuatingLRP), nil)
+
 				})
 
 				It("removes the evacuating lrp", func() {
