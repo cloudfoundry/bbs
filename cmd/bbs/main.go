@@ -267,9 +267,9 @@ func main() {
 		}
 
 		lockIdentifier := &locketmodels.Resource{
-			Key:   bbsLockKey,
-			Owner: bbsConfig.UUID,
-			Type:  locketmodels.LockType,
+			Key:      bbsLockKey,
+			Owner:    bbsConfig.UUID,
+			TypeCode: locketmodels.LOCK,
 		}
 
 		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(

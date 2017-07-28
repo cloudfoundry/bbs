@@ -97,10 +97,10 @@ var _ = Describe("CellPresence", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			lockIdentifier := &locketmodels.Resource{
-				Key:   "cell-locket",
-				Owner: "anything",
-				Value: string(data),
-				Type:  locketmodels.PresenceType,
+				Key:      "cell-locket",
+				Owner:    "anything",
+				Value:    string(data),
+				TypeCode: locketmodels.PRESENCE,
 			}
 
 			cellPresenceLocket = ginkgomon.Invoke(
