@@ -443,7 +443,7 @@ func (db *SQLDB) LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*mo
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := "lrp_deployment.process_guid = ?"
+		wheresClause := "process_guid = ?"
 		values := []interface{}{id}
 		row := db.one(logger, tx, lrpDeploymentsTable, lrpDeploymentColumns, false, wheresClause, id)
 		if row != nil {
