@@ -147,6 +147,10 @@ type ExternalDesiredLRPClient interface {
 	CreateLRPDeployment(lager.Logger, *models.LRPDeploymentCreation) error
 	// Updates the given LRPDeployment and creates a new LRP Definition
 	UpdateLRPDeployment(logger lager.Logger, processGuid string, deploymentUpdate *models.LRPDeploymentUpdate) error
+	// Removes the given LRPDeployment
+	DeleteLRPDeployment(logger lager.Logger, processGuid string) error
+	// Activate the given LRPDefinition
+	ActivateLRPDefinition(logger lager.Logger, processGuid, definitionID string) error
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
 	DesiredLRPs(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 
@@ -445,6 +449,21 @@ func (c *client) UpdateLRPDeployment(logger lager.Logger, processGuid string, lr
 		Update: lrpDeploymentUpdate,
 	}
 	return c.doLRPDeploymentLifecycleRequest(logger, UpdateLRPDeploymentRoute, &request)
+}
+
+func (c *client) DeleteLRPDeployment(logger lager.Logger, processGuid string) error {
+	request := models.RemoveLRPDeploymentRequest{
+		Id: processGuid,
+	}
+	return c.doLRPDeploymentLifecycleRequest(logger, DeleteLRPDeploymentRoute, &request)
+}
+
+func (c *client) ActivateLRPDefinition(logger lager.Logger, processGuid, definitionID string) error {
+	request := models.ActivateLRPDeploymentDefinitionRequest{
+		Id:           processGuid,
+		DefinitionId: definitionID,
+	}
+	return c.doLRPDeploymentLifecycleRequest(logger, ActivateLRPDeploymentDefinitionRoute, &request)
 }
 
 func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

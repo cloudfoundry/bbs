@@ -28,3 +28,7 @@ func (db *ETCDDB) DeleteLRPDeployment(logger lager.Logger, id string) error {
 func (db *ETCDDB) ActivateLRPDeploymentDefinition(logger lager.Logger, id, definitionId string) error {
 	return nil
 }
+
+func (db *ETCDDB) LRPDeploymentByProcessGuid(logger lager.Logger, guid string) (*models.LRPDeployment, error) {
+	return nil, nil
+}

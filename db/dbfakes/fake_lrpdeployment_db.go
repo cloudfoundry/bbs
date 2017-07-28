@@ -90,6 +90,20 @@ type FakeLRPDeploymentDB struct {
 		result1 *models.LRPDeployment
 		result2 error
 	}
+	LRPDeploymentByProcessGuidStub        func(logger lager.Logger, id string) (*models.LRPDeployment, error)
+	lRPDeploymentByProcessGuidMutex       sync.RWMutex
+	lRPDeploymentByProcessGuidArgsForCall []struct {
+		logger lager.Logger
+		id     string
+	}
+	lRPDeploymentByProcessGuidReturns struct {
+		result1 *models.LRPDeployment
+		result2 error
+	}
+	lRPDeploymentByProcessGuidReturnsOnCall map[int]struct {
+		result1 *models.LRPDeployment
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -399,6 +413,58 @@ func (fake *FakeLRPDeploymentDB) LRPDeploymentByDefinitionGuidReturnsOnCall(i in
 	}{result1, result2}
 }
 
+func (fake *FakeLRPDeploymentDB) LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*models.LRPDeployment, error) {
+	fake.lRPDeploymentByProcessGuidMutex.Lock()
+	ret, specificReturn := fake.lRPDeploymentByProcessGuidReturnsOnCall[len(fake.lRPDeploymentByProcessGuidArgsForCall)]
+	fake.lRPDeploymentByProcessGuidArgsForCall = append(fake.lRPDeploymentByProcessGuidArgsForCall, struct {
+		logger lager.Logger
+		id     string
+	}{logger, id})
+	fake.recordInvocation("LRPDeploymentByProcessGuid", []interface{}{logger, id})
+	fake.lRPDeploymentByProcessGuidMutex.Unlock()
+	if fake.LRPDeploymentByProcessGuidStub != nil {
+		return fake.LRPDeploymentByProcessGuidStub(logger, id)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lRPDeploymentByProcessGuidReturns.result1, fake.lRPDeploymentByProcessGuidReturns.result2
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentByProcessGuidCallCount() int {
+	fake.lRPDeploymentByProcessGuidMutex.RLock()
+	defer fake.lRPDeploymentByProcessGuidMutex.RUnlock()
+	return len(fake.lRPDeploymentByProcessGuidArgsForCall)
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentByProcessGuidArgsForCall(i int) (lager.Logger, string) {
+	fake.lRPDeploymentByProcessGuidMutex.RLock()
+	defer fake.lRPDeploymentByProcessGuidMutex.RUnlock()
+	return fake.lRPDeploymentByProcessGuidArgsForCall[i].logger, fake.lRPDeploymentByProcessGuidArgsForCall[i].id
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentByProcessGuidReturns(result1 *models.LRPDeployment, result2 error) {
+	fake.LRPDeploymentByProcessGuidStub = nil
+	fake.lRPDeploymentByProcessGuidReturns = struct {
+		result1 *models.LRPDeployment
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentByProcessGuidReturnsOnCall(i int, result1 *models.LRPDeployment, result2 error) {
+	fake.LRPDeploymentByProcessGuidStub = nil
+	if fake.lRPDeploymentByProcessGuidReturnsOnCall == nil {
+		fake.lRPDeploymentByProcessGuidReturnsOnCall = make(map[int]struct {
+			result1 *models.LRPDeployment
+			result2 error
+		})
+	}
+	fake.lRPDeploymentByProcessGuidReturnsOnCall[i] = struct {
+		result1 *models.LRPDeployment
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeLRPDeploymentDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -414,6 +480,8 @@ func (fake *FakeLRPDeploymentDB) Invocations() map[string][][]interface{} {
 	defer fake.activateLRPDeploymentDefinitionMutex.RUnlock()
 	fake.lRPDeploymentByDefinitionGuidMutex.RLock()
 	defer fake.lRPDeploymentByDefinitionGuidMutex.RUnlock()
+	fake.lRPDeploymentByProcessGuidMutex.RLock()
+	defer fake.lRPDeploymentByProcessGuidMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

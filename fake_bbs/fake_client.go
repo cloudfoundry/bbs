@@ -237,6 +237,31 @@ type FakeClient struct {
 	updateLRPDeploymentReturnsOnCall map[int]struct {
 		result1 error
 	}
+	DeleteLRPDeploymentStub        func(logger lager.Logger, processGuid string) error
+	deleteLRPDeploymentMutex       sync.RWMutex
+	deleteLRPDeploymentArgsForCall []struct {
+		logger      lager.Logger
+		processGuid string
+	}
+	deleteLRPDeploymentReturns struct {
+		result1 error
+	}
+	deleteLRPDeploymentReturnsOnCall map[int]struct {
+		result1 error
+	}
+	ActivateLRPDefinitionStub        func(logger lager.Logger, processGuid, definitionID string) error
+	activateLRPDefinitionMutex       sync.RWMutex
+	activateLRPDefinitionArgsForCall []struct {
+		logger       lager.Logger
+		processGuid  string
+		definitionID string
+	}
+	activateLRPDefinitionReturns struct {
+		result1 error
+	}
+	activateLRPDefinitionReturnsOnCall map[int]struct {
+		result1 error
+	}
 	DesiredLRPsStub        func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
@@ -1247,6 +1272,105 @@ func (fake *FakeClient) UpdateLRPDeploymentReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeClient) DeleteLRPDeployment(logger lager.Logger, processGuid string) error {
+	fake.deleteLRPDeploymentMutex.Lock()
+	ret, specificReturn := fake.deleteLRPDeploymentReturnsOnCall[len(fake.deleteLRPDeploymentArgsForCall)]
+	fake.deleteLRPDeploymentArgsForCall = append(fake.deleteLRPDeploymentArgsForCall, struct {
+		logger      lager.Logger
+		processGuid string
+	}{logger, processGuid})
+	fake.recordInvocation("DeleteLRPDeployment", []interface{}{logger, processGuid})
+	fake.deleteLRPDeploymentMutex.Unlock()
+	if fake.DeleteLRPDeploymentStub != nil {
+		return fake.DeleteLRPDeploymentStub(logger, processGuid)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteLRPDeploymentReturns.result1
+}
+
+func (fake *FakeClient) DeleteLRPDeploymentCallCount() int {
+	fake.deleteLRPDeploymentMutex.RLock()
+	defer fake.deleteLRPDeploymentMutex.RUnlock()
+	return len(fake.deleteLRPDeploymentArgsForCall)
+}
+
+func (fake *FakeClient) DeleteLRPDeploymentArgsForCall(i int) (lager.Logger, string) {
+	fake.deleteLRPDeploymentMutex.RLock()
+	defer fake.deleteLRPDeploymentMutex.RUnlock()
+	return fake.deleteLRPDeploymentArgsForCall[i].logger, fake.deleteLRPDeploymentArgsForCall[i].processGuid
+}
+
+func (fake *FakeClient) DeleteLRPDeploymentReturns(result1 error) {
+	fake.DeleteLRPDeploymentStub = nil
+	fake.deleteLRPDeploymentReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) DeleteLRPDeploymentReturnsOnCall(i int, result1 error) {
+	fake.DeleteLRPDeploymentStub = nil
+	if fake.deleteLRPDeploymentReturnsOnCall == nil {
+		fake.deleteLRPDeploymentReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteLRPDeploymentReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ActivateLRPDefinition(logger lager.Logger, processGuid string, definitionID string) error {
+	fake.activateLRPDefinitionMutex.Lock()
+	ret, specificReturn := fake.activateLRPDefinitionReturnsOnCall[len(fake.activateLRPDefinitionArgsForCall)]
+	fake.activateLRPDefinitionArgsForCall = append(fake.activateLRPDefinitionArgsForCall, struct {
+		logger       lager.Logger
+		processGuid  string
+		definitionID string
+	}{logger, processGuid, definitionID})
+	fake.recordInvocation("ActivateLRPDefinition", []interface{}{logger, processGuid, definitionID})
+	fake.activateLRPDefinitionMutex.Unlock()
+	if fake.ActivateLRPDefinitionStub != nil {
+		return fake.ActivateLRPDefinitionStub(logger, processGuid, definitionID)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.activateLRPDefinitionReturns.result1
+}
+
+func (fake *FakeClient) ActivateLRPDefinitionCallCount() int {
+	fake.activateLRPDefinitionMutex.RLock()
+	defer fake.activateLRPDefinitionMutex.RUnlock()
+	return len(fake.activateLRPDefinitionArgsForCall)
+}
+
+func (fake *FakeClient) ActivateLRPDefinitionArgsForCall(i int) (lager.Logger, string, string) {
+	fake.activateLRPDefinitionMutex.RLock()
+	defer fake.activateLRPDefinitionMutex.RUnlock()
+	return fake.activateLRPDefinitionArgsForCall[i].logger, fake.activateLRPDefinitionArgsForCall[i].processGuid, fake.activateLRPDefinitionArgsForCall[i].definitionID
+}
+
+func (fake *FakeClient) ActivateLRPDefinitionReturns(result1 error) {
+	fake.ActivateLRPDefinitionStub = nil
+	fake.activateLRPDefinitionReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ActivateLRPDefinitionReturnsOnCall(i int, result1 error) {
+	fake.ActivateLRPDefinitionStub = nil
+	if fake.activateLRPDefinitionReturnsOnCall == nil {
+		fake.activateLRPDefinitionReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.activateLRPDefinitionReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeClient) DesiredLRPs(arg1 lager.Logger, arg2 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	fake.desiredLRPsMutex.Lock()
 	ret, specificReturn := fake.desiredLRPsReturnsOnCall[len(fake.desiredLRPsArgsForCall)]
@@ -1841,6 +1965,10 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.createLRPDeploymentMutex.RUnlock()
 	fake.updateLRPDeploymentMutex.RLock()
 	defer fake.updateLRPDeploymentMutex.RUnlock()
+	fake.deleteLRPDeploymentMutex.RLock()
+	defer fake.deleteLRPDeploymentMutex.RUnlock()
+	fake.activateLRPDefinitionMutex.RLock()
+	defer fake.activateLRPDefinitionMutex.RUnlock()
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
 	fake.desiredLRPByProcessGuidMutex.RLock()

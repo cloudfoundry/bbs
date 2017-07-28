@@ -131,6 +131,8 @@ var Routes = rata.Routes{
 	// LPR Deployment Lifecycle
 	{Path: "/v1/lrp_deployment/create", Method: "POST", Name: CreateLRPDeploymentRoute},
 	{Path: "/v1/lrp_deployment/update", Method: "POST", Name: UpdateLRPDeploymentRoute},
+	{Path: "/v1/lrp_deployment/delete", Method: "POST", Name: DeleteLRPDeploymentRoute},
+	{Path: "/v1/lrp_deployment/activate", Method: "POST", Name: ActivateLRPDeploymentDefinitionRoute},
 
 	// Tasks
 	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},

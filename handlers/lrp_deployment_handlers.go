@@ -61,13 +61,13 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	guid, err := h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Creation)
+	_, err = h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Creation)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, guid)
+	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.Creation.DefinitionId)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -96,7 +96,7 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 
 	logger = logger.WithData(lager.Data{"guid": request.Id})
 
-	guid, err := h.lrpDeploymentDB.UpdateLRPDeployment(logger, request.Id, request.Update)
+	_, err = h.lrpDeploymentDB.UpdateLRPDeployment(logger, request.Id, request.Update)
 	if err != nil {
 		logger.Debug("failed-updating-desired-lrp")
 		response.Error = models.ConvertError(err)
@@ -108,7 +108,7 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 
 	// TODO: scale up or down
 
-	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, guid)
+	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.Update.DefinitionId)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -133,13 +133,21 @@ func (h *LRPDeploymentHandler) DeleteLRPDeployment(logger lager.Logger, w http.R
 	}
 	logger = logger.WithData(lager.Data{"process_guid": request.Id})
 
+	lrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByProcessGuid(logger, request.Id)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
 	err = h.lrpDeploymentDB.DeleteLRPDeployment(logger.Session("remove-desired"), request.Id)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	// h.stopInstancesFrom(logger, request.ProcessGuid, 0)
+	for defID, _ := range lrpDeployment.Definitions {
+		h.desiredLRPHandler.stopInstancesFrom(logger, defID, 0)
+	}
 }
 
 func (h *LRPDeploymentHandler) ActivateLRPDeploymentDefinition(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -163,6 +171,13 @@ func (h *LRPDeploymentHandler) ActivateLRPDeploymentDefinition(logger lager.Logg
 		return
 	}
 
+	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.DefinitionId)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
 	// go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP))
 
 	// TODO: what should we do here ?

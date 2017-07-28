@@ -329,7 +329,7 @@ func main() {
 	)
 	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub)
 
-	convergerProcess := converger.New(
+	converger.New(
 		logger,
 		clock,
 		lrpConvergenceController,
@@ -360,7 +360,7 @@ func main() {
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub, taskHub)},
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
 		{"periodic-metrics", requestStatMetronNotifier},
-		{"converger", convergerProcess},
+		// {"converger", convergerProcess},
 		{"registration-runner", registrationRunner},
 	}
 

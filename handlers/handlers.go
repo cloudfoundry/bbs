@@ -93,10 +93,10 @@ func New(
 		bbs.DesireDesiredLRPRoute_r1:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP_r1), emitter)),
 
 		// LRP deployment ??
-		bbs.CreateLRPDeploymentRoute:             route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.CreateLRPDeployment), emitter)),
-		bbs.UpdateLRPDeploymentRoute:             route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.UpdateLRPDeployment), emitter)),
-		bbs.DeleteLRPDeploymentRoute:             route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.DeleteLRPDeployment), emitter)),
-		bbs.ActivateLRPDeploymentDefinitionRoute: route(emitter.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.ActivateLRPDeploymentDefinition), emitter)),
+		bbs.CreateLRPDeploymentRoute:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.CreateLRPDeployment), emitter)),
+		bbs.UpdateLRPDeploymentRoute:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.UpdateLRPDeployment), emitter)),
+		bbs.DeleteLRPDeploymentRoute:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.DeleteLRPDeployment), emitter)),
+		bbs.ActivateLRPDeploymentDefinitionRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.ActivateLRPDeploymentDefinition), emitter)),
 
 		// Tasks
 		bbs.TasksRoute:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),

@@ -54,6 +54,7 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 	}
 	return nil
 }
+
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
 	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
@@ -94,11 +95,10 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	}
 
 	logger.Info("lrp-deployment-found", lager.Data{"deployment": lrpDeployment})
-
 	if lrpDeployment.ActiveDefinitionId == actualLRPKey.ProcessGuid {
 		for defID, _ := range lrpDeployment.Definitions {
 			if defID != actualLRPKey.ProcessGuid {
-
+				// Is there a better way of finding the old definition Actual LRP and retiring it?
 				beforeActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, defID, actualLRPKey.Index)
 				if err == models.ErrResourceNotFound {
 					continue
