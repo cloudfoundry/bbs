@@ -23,33 +23,36 @@ type Emitter interface {
 func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
 	lagerDataFromReq := func(r *http.Request) lager.Data {
 		return lager.Data{
-			"method":  r.Method,
-			"request": r.URL.String(),
+			"method":      r.Method,
+			"remote_addr": r.RemoteAddr,
+			"request":     r.URL.String(),
 		}
 	}
 
 	if accessLogger != nil {
 		return func(w http.ResponseWriter, r *http.Request) {
-			requestLog := logger.Session("request", lagerDataFromReq(r))
-			requestAccessLogger := accessLogger.Session("request", lagerDataFromReq(r))
+			requestLog := logger.Session("request")
+			requestAccessLogger := accessLogger.Session("request")
 
-			requestAccessLogger.Info("serving")
-
-			requestLog.Debug("serving")
+			requestAccessLogger.Info("serving", lagerDataFromReq(r))
+			requestLog.Debug("serving", lagerDataFromReq(r))
 
 			start := time.Now()
-			defer requestLog.Debug("done")
+			defer requestLog.Debug("done", lagerDataFromReq(r))
 			defer func() {
-				requestAccessLogger.Info("done", lager.Data{"duration": time.Since(start)})
+				requestTime := time.Since(start)
+				lagerData := lagerDataFromReq(r)
+				lagerData["duration"] = requestTime
+				requestAccessLogger.Info("done", lagerData)
 			}()
 			loggableHandlerFunc(requestLog, w, r)
 		}
 	} else {
 		return func(w http.ResponseWriter, r *http.Request) {
-			requestLog := logger.Session("request", lagerDataFromReq(r))
+			requestLog := logger.Session("request")
 
-			requestLog.Debug("serving")
-			defer requestLog.Debug("done")
+			requestLog.Debug("serving", lagerDataFromReq(r))
+			defer requestLog.Debug("done", lagerDataFromReq(r))
 
 			loggableHandlerFunc(requestLog, w, r)
 

@@ -70,23 +70,51 @@ var _ = Describe("Middleware", func() {
 			BeforeEach(func() {
 				accessLogger = lagertest.NewTestLogger("test-access-session")
 				accessLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
-			})
 
-			It("creates \"request\" session and passes it to LoggableHandlerFunc", func() {
 				handler := middleware.LogWrap(logger, accessLogger, loggableHandlerFunc)
 				req, err := http.NewRequest("GET", "http://example.com", nil)
 				Expect(err).NotTo(HaveOccurred())
+				req.RemoteAddr = "127.0.0.1:8080"
+
 				handler.ServeHTTP(nil, req)
+			})
+
+			It("creates \"request\" session and passes it to LoggableHandlerFunc", func() {
 				Expect(logger.Buffer()).To(gbytes.Say("test-session.request.serving"))
 				Expect(logger.Buffer()).To(gbytes.Say("\"session\":\"1\""))
 				Expect(accessLogger.Buffer()).To(gbytes.Say("test-access-session.request.serving"))
 				Expect(accessLogger.Buffer()).To(gbytes.Say("\"session\":\"1\""))
+
 				Expect(logger.Buffer()).To(gbytes.Say("test-session.request.logger-group.written-in-loggable-handler"))
 				Expect(logger.Buffer()).To(gbytes.Say("\"session\":\"1.1\""))
+
 				Expect(accessLogger.Buffer()).To(gbytes.Say("test-access-session.request.done"))
 				Expect(accessLogger.Buffer()).To(gbytes.Say("\"session\":\"1\""))
 				Expect(logger.Buffer()).To(gbytes.Say("test-session.request.done"))
 				Expect(logger.Buffer()).To(gbytes.Say("\"session\":\"1\""))
+			})
+
+			It("logs method, reqeust, ip, and port to serving and done logs", func() {
+				Expect(logger.Buffer()).To(gbytes.Say("test-session.request.serving"))
+				Expect(logger.Buffer()).To(gbytes.Say("method\":\"GET\""))
+				Expect(logger.Buffer()).To(gbytes.Say("remote_addr\":\"127.0.0.1:8080\""))
+				Expect(logger.Buffer()).To(gbytes.Say("request\":\"http://example.com\""))
+
+				Expect(accessLogger.Buffer()).To(gbytes.Say("test-access-session.request.serving"))
+				Expect(accessLogger.Buffer()).To(gbytes.Say("method\":\"GET\""))
+				Expect(accessLogger.Buffer()).To(gbytes.Say("remote_addr\":\"127.0.0.1:8080\""))
+				Expect(accessLogger.Buffer()).To(gbytes.Say("request\":\"http://example.com\""))
+
+				Expect(logger.Buffer()).To(gbytes.Say("test-session.request.done"))
+				Expect(logger.Buffer()).To(gbytes.Say("method\":\"GET\""))
+				Expect(logger.Buffer()).To(gbytes.Say("remote_addr\":\"127.0.0.1:8080\""))
+				Expect(logger.Buffer()).To(gbytes.Say("request\":\"http://example.com\""))
+
+				Expect(accessLogger.Buffer()).To(gbytes.Say("test-access-session.request.done"))
+				Expect(accessLogger.Buffer()).To(gbytes.Say("method\":\"GET\""))
+				Expect(accessLogger.Buffer()).To(gbytes.Say("remote_addr\":\"127.0.0.1:8080\""))
+				Expect(accessLogger.Buffer()).To(gbytes.Say("request\":\"http://example.com\""))
+
 			})
 		})
 	})
