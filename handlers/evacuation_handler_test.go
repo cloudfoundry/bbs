@@ -65,6 +65,9 @@ var _ = Describe("Evacuation Handlers", func() {
 				"domain-0",
 			)
 			instanceKey = models.NewActualLRPInstanceKey("instance-guid", "cell-id")
+			actual = &models.ActualLRP{
+				ActualLRPInstanceKey: instanceKey,
+			}
 			requestBody = &models.RemoveEvacuatingActualLRPRequest{
 				ActualLrpKey:         &key,
 				ActualLrpInstanceKey: &instanceKey,
@@ -97,6 +100,23 @@ var _ = Describe("Evacuation Handlers", func() {
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+			})
+
+			Context("when the lrp has a running instance", func() {
+				BeforeEach(func() {
+					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
+						Evacuating: actual,
+						Instance:   actual,
+					}, nil)
+				})
+
+				It("emits event with the evacuating instance only", func() {
+					Eventually(actualHub.EmitCallCount).Should(Equal(1))
+					event := actualHub.EmitArgsForCall(0)
+					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+				})
 			})
 		})
 

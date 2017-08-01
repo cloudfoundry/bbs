@@ -74,7 +74,11 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
+	actualLRPGroup := &models.ActualLRPGroup{
+		Evacuating: beforeActualLRPGroup.Evacuating,
+	}
+
+	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(actualLRPGroup))
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
