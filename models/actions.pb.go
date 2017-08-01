@@ -119,6 +119,8 @@
 		CreateLRPDeploymentRequest
 		UpdateLRPDeploymentRequest
 		RemoveLRPDeploymentRequest
+		LRPDeploymentsRequest
+		LRPDeploymentsResponse
 		ActivateLRPDeploymentDefinitionRequest
 		ModificationTag
 		Network

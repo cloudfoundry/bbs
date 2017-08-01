@@ -12,6 +12,10 @@ func (request *UpdateLRPDeploymentRequest) Validate() error {
 	return nil
 }
 
+func (request *LRPDeploymentsRequest) Validate() error {
+	return nil
+}
+
 func (request *RemoveLRPDeploymentRequest) Validate() error {
 	return nil
 }

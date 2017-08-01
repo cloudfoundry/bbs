@@ -120,8 +120,8 @@ const createLRPDeploymentsSQL = `CREATE TABLE lrp_deployments(
 	instances INT NOT NULL,
 	annotation MEDIUMTEXT,
 	routes MEDIUMTEXT NOT NULL,
-	active_definition_id VARCHAR(255),
-	healthy_definition_id VARCHAR(255),
+	active_definition_id VARCHAR(255) DEFAULT '',
+	healthy_definition_id VARCHAR(255) DEFAULT '',
 	modification_tag_epoch VARCHAR(255) NOT NULL,
 	modification_tag_index INT
 );`
@@ -129,7 +129,6 @@ const createLRPDeploymentsSQL = `CREATE TABLE lrp_deployments(
 const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
 	process_guid VARCHAR(255),
 	definition_guid VARCHAR(255) PRIMARY KEY,
-	definition_name VARCHAR(255),
 	log_guid VARCHAR(255) NOT NULL,
 	memory_mb INT NOT NULL,
 	disk_mb INT NOT NULL,

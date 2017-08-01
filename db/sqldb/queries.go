@@ -44,14 +44,13 @@ var (
 		lrpDeploymentsTable + ".annotation",
 		lrpDeploymentsTable + ".routes",
 		lrpDeploymentsTable + ".active_definition_id",
-		// lrpDeploymentsTable + ".healthy_definition_id",
+		lrpDeploymentsTable + ".healthy_definition_id",
 		lrpDeploymentsTable + ".modification_tag_epoch",
 		lrpDeploymentsTable + ".modification_tag_index",
 	}
 
 	lrpDefinitionsColumns = helpers.ColumnList{
 		// lrpDefinitionsTable + ".process_guid",
-		// lrpDefinitionsTable + ".definition_name",
 		lrpDefinitionsTable + ".definition_guid",
 		lrpDefinitionsTable + ".log_guid",
 		lrpDefinitionsTable + ".memory_mb",

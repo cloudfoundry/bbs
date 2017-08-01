@@ -23,6 +23,15 @@ message RemoveLRPDeploymentRequest {
   optional string id = 1;
 }
 
+message LRPDeploymentsRequest {
+  repeated string ids = 1;
+}
+
+message LRPDeploymentsResponse {
+  optional Error error = 1;
+  repeated LRPDeployment deployments = 2;
+}
+
 message ActivateLRPDeploymentDefinitionRequest {
   optional string id = 1;
   optional string definition_id = 2;

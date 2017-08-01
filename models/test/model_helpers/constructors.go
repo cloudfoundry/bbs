@@ -75,10 +75,10 @@ func NewValidLRPDeploymentCreation(guid string, definitionId string) *models.LRP
 func NewValidLRPDeploymentUpdate(definitionId string) *models.LRPDeploymentUpdate {
 	desiredLRP := NewValidDesiredLRP(definitionId)
 	lrp := &models.LRPDeploymentUpdate{
-		Instances:    desiredLRP.Instances,
-		Annotation:   desiredLRP.Annotation,
+		Instances:    &desiredLRP.Instances,
+		Annotation:   &desiredLRP.Annotation,
 		Routes:       desiredLRP.Routes,
-		DefinitionId: definitionId,
+		DefinitionId: &definitionId,
 		Definition: &models.LRPDefinition{
 			DefinitionId:                  definitionId,
 			RootFs:                        desiredLRP.RootFs,

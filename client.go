@@ -152,6 +152,9 @@ type ExternalDesiredLRPClient interface {
 	// Activate the given LRPDefinition
 	ActivateLRPDefinition(logger lager.Logger, processGuid, definitionID string) error
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
+	LRPDeployments(lager.Logger, []string) ([]*models.LRPDeployment, error)
+
+	// Lists all DesiredLRPs that match the given DesiredLRPFilter
 	DesiredLRPs(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 
 	// Returns the DesiredLRP with the given process guid
@@ -464,6 +467,19 @@ func (c *client) ActivateLRPDefinition(logger lager.Logger, processGuid, definit
 		DefinitionId: definitionID,
 	}
 	return c.doLRPDeploymentLifecycleRequest(logger, ActivateLRPDeploymentDefinitionRoute, &request)
+}
+
+func (c *client) LRPDeployments(logger lager.Logger, deploymentIds []string) ([]*models.LRPDeployment, error) {
+	request := models.LRPDeploymentsRequest{
+		Ids: deploymentIds,
+	}
+	response := models.LRPDeploymentsResponse{}
+	err := c.doRequest(logger, LRPDeploymentsRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Deployments, response.Error.ToError()
 }
 
 func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

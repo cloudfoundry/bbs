@@ -79,6 +79,34 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
 }
 
+func (h *LRPDeploymentHandler) LRPDeployments(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("lrp-deployments")
+
+	request := &models.LRPDeploymentsRequest{}
+	response := &models.LRPDeploymentsResponse{}
+
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer writeResponse(w, response)
+
+	err := parseRequest(logger, req, request)
+
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	lrpDerps, err := h.lrpDeploymentDB.LRPDeployments(logger, request.Ids)
+
+	if err != nil {
+		logger.Error("failed-to-retrieve-deployments", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	response.Deployments = lrpDerps
+}
+
 func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("update-lrp-deployment")
 
@@ -96,6 +124,13 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 
 	logger = logger.WithData(lager.Data{"guid": request.Id})
 
+	beforeLrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByProcessGuid(logger, request.Id)
+	if err != nil {
+		logger.Error("failed-retrieving-lrp-deployment", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
 	_, err = h.lrpDeploymentDB.UpdateLRPDeployment(logger, request.Id, request.Update)
 	if err != nil {
 		logger.Debug("failed-updating-desired-lrp")
@@ -104,18 +139,49 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 	}
 	logger.Debug("completed-updating-desired-lrp")
 
-	// TODO: what should we do here ?
-
-	// TODO: scale up or down
-
-	lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.Update.DefinitionId)
+	afterLrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByProcessGuid(logger, request.Id)
 	if err != nil {
+		logger.Error("failed-retrieving-lrp-deployment", err)
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
-	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
+	if request.Update.Definition != nil && request.Update.DefinitionId != nil {
+		lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, *request.Update.DefinitionId)
+		if err != nil {
+			response.Error = models.ConvertError(err)
+			return
+		}
+
+		schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+		h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
+	}
+
+	if request.Update.Instances != nil {
+		logger.Debug("updating-lrp-instances")
+		lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, afterLrpDeployment.ActiveDefinitionId)
+		if err != nil {
+			response.Error = models.ConvertError(err)
+			return
+		}
+
+		previousInstanceCount := beforeLrpDeployment.Instances
+
+		requestedInstances := *request.Update.Instances - previousInstanceCount
+
+		logger = logger.WithData(lager.Data{"instances_delta": requestedInstances})
+		if requestedInstances > 0 {
+			logger.Debug("increasing-the-instances")
+			schedulingInfo := lrp.DesiredLRPSchedulingInfo()
+			h.desiredLRPHandler.startInstanceRange(logger, previousInstanceCount, *request.Update.Instances, &schedulingInfo)
+		}
+
+		if requestedInstances < 0 {
+			logger.Debug("decreasing-the-instances")
+			numExtraActualLRP := previousInstanceCount + requestedInstances
+			h.desiredLRPHandler.stopInstancesFrom(logger, lrp.ProcessGuid, int(numExtraActualLRP))
+		}
+	}
 }
 
 func (h *LRPDeploymentHandler) DeleteLRPDeployment(logger lager.Logger, w http.ResponseWriter, req *http.Request) {

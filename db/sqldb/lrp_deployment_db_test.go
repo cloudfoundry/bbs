@@ -41,7 +41,7 @@ var _ = Describe("LRPDeployment", func() {
 
 			Expect(lrpDeployment.Definitions).To(HaveLen(2))
 			Expect(lrpDeployment.Definitions[lrpCreate.DefinitionId]).To(Equal(lrpCreate.Definition))
-			Expect(lrpDeployment.Definitions[lrpUpdate.DefinitionId]).To(Equal(lrpUpdate.Definition))
+			Expect(lrpDeployment.Definitions[*lrpUpdate.DefinitionId]).To(Equal(lrpUpdate.Definition))
 			Expect(lrpDeployment.ProcessGuid).To(Equal(processGuid))
 		})
 	})

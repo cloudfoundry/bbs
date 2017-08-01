@@ -3,6 +3,7 @@ package sqldb
 import (
 	"database/sql"
 	"encoding/json"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
@@ -59,7 +60,6 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 
 		_, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
 			"process_guid":     lrp.ProcessGuid,
-			"definition_name":  lrp.ProcessGuid,
 			"definition_guid":  lrp.DefinitionId,
 			"log_guid":         definition.LogGuid,
 			"memory_mb":        definition.MemoryMb,
@@ -115,26 +115,34 @@ func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mod
 	definition := update.Definition
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		routesData, err := db.encodeRouteData(logger, update.Routes)
-		if err != nil {
-			logger.Error("failed-encoding-route-data", err)
-			return err
-		}
-
 		wheresClause := "lrp_deployments.process_guid = ?"
 		row := db.one(logger, tx, lrpDeploymentsTable, lrpDeploymentColumns, false, wheresClause, id)
 		desiredLRPDeployment, err := db.fetchLRPDeployment(logger, row)
 		if err != nil {
-			logger.Error("failed-to-get-desired-lrp", err)
+			logger.Error("failed-to-get-lrp-deployment", err)
 			return err
 		}
 
 		desiredLRPDeployment.ModificationTag.Increment()
 		lrpDeploymentAttrs := helpers.SQLAttributes{
-			"annotation":             update.Annotation,
-			"instances":              update.Instances,
 			"modification_tag_index": desiredLRPDeployment.ModificationTag.Index,
-			"routes":                 routesData,
+		}
+
+		if update.Routes != nil {
+			routesData, err := db.encodeRouteData(logger, update.Routes)
+			if err != nil {
+				logger.Error("failed-encoding-route-data", err)
+				return err
+			}
+			lrpDeploymentAttrs["routes"] = routesData
+		}
+
+		if update.Instances != nil {
+			lrpDeploymentAttrs["instances"] = *update.Instances
+		}
+
+		if update.Annotation != nil {
+			lrpDeploymentAttrs["annotation"] = *update.Annotation
 		}
 
 		if definition != nil {
@@ -167,7 +175,6 @@ func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mod
 
 			_, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
 				"process_guid":     id,
-				"definition_name":  update.DefinitionId,
 				"definition_guid":  update.DefinitionId,
 				"log_guid":         definition.LogGuid,
 				"memory_mb":        definition.MemoryMb,
@@ -251,7 +258,7 @@ func (db *SQLDB) ActivateLRPDeploymentDefinition(logger lager.Logger, id, defini
 	return nil
 }
 
-func (db *SQLDB) fetchLRPDeployment(logger lager.Logger, row *sql.Row) (*models.LRPDeployment, error) {
+func (db *SQLDB) fetchLRPDeployment(logger lager.Logger, row RowScanner) (*models.LRPDeployment, error) {
 	lrpDeployment := &models.LRPDeployment{
 		ModificationTag: &models.ModificationTag{},
 	}
@@ -262,8 +269,8 @@ func (db *SQLDB) fetchLRPDeployment(logger lager.Logger, row *sql.Row) (*models.
 		&lrpDeployment.Instances,
 		&lrpDeployment.Annotation,
 		&routeData,
-		// &lrpDeployment.HealthyDefinitionId,
 		&lrpDeployment.ActiveDefinitionId,
+		&lrpDeployment.HealthyDefinitionId,
 		&lrpDeployment.ModificationTag.Epoch,
 		&lrpDeployment.ModificationTag.Index,
 	}
@@ -391,6 +398,82 @@ func (db *SQLDB) fetchLRPDefinitions(logger lager.Logger, rows *sql.Rows) (map[s
 	}
 
 	return definitions, nil
+}
+
+func (db *SQLDB) LRPDeployments(logger lager.Logger, deploymentIds []string) ([]*models.LRPDeployment, error) {
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	var deployments []*models.LRPDeployment
+
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		var wheresClause string
+		values := []interface{}{}
+
+		whereClauseForIds := func(filter []string) string {
+			var questionMarks []string
+
+			where := "process_guid IN ("
+			for range filter {
+				questionMarks = append(questionMarks, "?")
+
+			}
+
+			where += strings.Join(questionMarks, ", ")
+			return where + ")"
+		}
+
+		if len(deploymentIds) > 0 {
+			wheresClause = whereClauseForIds(deploymentIds)
+			for _, guid := range deploymentIds {
+				values = append(values, guid)
+			}
+		}
+
+		rows, err := db.all(logger, tx, lrpDeploymentsTable, lrpDeploymentColumns, helpers.NoLockRow, wheresClause, values...)
+		if err != nil {
+			logger.Error("failed-to-fetch-deployments", err)
+			return err
+		}
+
+		if rows != nil {
+			for rows.Next() {
+				lrpDeployment, err := db.fetchLRPDeployment(logger, rows)
+				if err != nil {
+					logger.Error("failed-to-fetch-deployment", err)
+					return err
+				}
+
+				if lrpDeployment != nil {
+					deployments = append(deployments, lrpDeployment)
+				}
+			}
+		} else {
+			return nil
+		}
+
+		for _, dep := range deployments {
+			wheresClause := " WHERE process_guid = ?"
+			values = []interface{}{dep.ProcessGuid}
+			definitionRows, err := db.selectDefinitions(logger, tx, lrpDefinitionsColumns, wheresClause, values)
+			if err != nil {
+				logger.Error("failed-selecting-lrp-definitions", err)
+				return err
+			}
+
+			definitions, err := db.fetchLRPDefinitions(logger, definitionRows)
+			if err != nil {
+				logger.Error("failed-fetching-lrp-definitions", err)
+				return err
+			}
+			dep.Definitions = definitions
+		}
+
+		return err
+	})
+
+	return deployments, err
 }
 
 func (db *SQLDB) LRPDeploymentByDefinitionGuid(logger lager.Logger, id string) (*models.LRPDeployment, error) {

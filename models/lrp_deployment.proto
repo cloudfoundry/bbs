@@ -38,12 +38,12 @@ message LRPDeploymentCreation {
 }
 
 message LRPDeploymentUpdate {
-  optional int32 instances = 3;
-  optional string annotation = 4;
-  optional ProtoRoutes routes = 5 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+  optional int32 instances = 1 [(gogoproto.nullable) = true];
+  optional string annotation = 2 [(gogoproto.nullable) = true];
+  optional ProtoRoutes routes = 3 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
 
-  optional string definition_id = 7;
-  optional LRPDefinition definition = 8;
+  optional string definition_id = 4 [(gogoproto.nullable) = true];
+  optional LRPDefinition definition = 5 [(gogoproto.nullable) = true];
 }
 
 message LRPDefinition {

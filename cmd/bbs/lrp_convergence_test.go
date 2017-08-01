@@ -13,7 +13,7 @@ import (
 	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
-var _ = Describe("Convergence API", func() {
+var _ = XDescribe("Convergence API", func() {
 	Describe("ConvergeLRPs", func() {
 		var processGuid string
 
