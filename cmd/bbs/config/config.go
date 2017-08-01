@@ -14,24 +14,25 @@ import (
 )
 
 type BBSConfig struct {
-	AccessLogPath             string                `json:"access_log_path,omitempty"`
-	AdvertiseURL              string                `json:"advertise_url,omitempty"`
-	AuctioneerAddress         string                `json:"auctioneer_address,omitempty"`
-	AuctioneerCACert          string                `json:"auctioneer_ca_cert,omitempty"`
-	AuctioneerClientCert      string                `json:"auctioneer_client_cert,omitempty"`
-	AuctioneerClientKey       string                `json:"auctioneer_client_key,omitempty"`
-	AuctioneerRequireTLS      bool                  `json:"auctioneer_require_tls,omitempty"`
-	UUID                      string                `json:"uuid,omitempty"`
-	CaFile                    string                `json:"ca_file,omitempty"`
-	CertFile                  string                `json:"cert_file,omitempty"`
-	CommunicationTimeout      durationjson.Duration `json:"communication_timeout,omitempty"`
-	ConsulCluster             string                `json:"consul_cluster,omitempty"`
-	ConvergeRepeatInterval    durationjson.Duration `json:"converge_repeat_interval,omitempty"`
-	ConvergenceWorkers        int                   `json:"convergence_workers,omitempty"`
-	DatabaseConnectionString  string                `json:"database_connection_string"`
-	DatabaseDriver            string                `json:"database_driver,omitempty"`
-	DesiredLRPCreationTimeout durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
-	DropsondePort             int                   `json:"dropsonde_port,omitempty"`
+	AccessLogPath                 string                `json:"access_log_path,omitempty"`
+	AdvertiseURL                  string                `json:"advertise_url,omitempty"`
+	AuctioneerAddress             string                `json:"auctioneer_address,omitempty"`
+	AuctioneerCACert              string                `json:"auctioneer_ca_cert,omitempty"`
+	AuctioneerClientCert          string                `json:"auctioneer_client_cert,omitempty"`
+	AuctioneerClientKey           string                `json:"auctioneer_client_key,omitempty"`
+	AuctioneerRequireTLS          bool                  `json:"auctioneer_require_tls,omitempty"`
+	UUID                          string                `json:"uuid,omitempty"`
+	CaFile                        string                `json:"ca_file,omitempty"`
+	CertFile                      string                `json:"cert_file,omitempty"`
+	CommunicationTimeout          durationjson.Duration `json:"communication_timeout,omitempty"`
+	ConsulCluster                 string                `json:"consul_cluster,omitempty"`
+	ConvergeRepeatInterval        durationjson.Duration `json:"converge_repeat_interval,omitempty"`
+	ConvergenceWorkers            int                   `json:"convergence_workers,omitempty"`
+	DatabaseConnectionString      string                `json:"database_connection_string"`
+	DatabaseDriver                string                `json:"database_driver,omitempty"`
+	DesiredLRPCreationTimeout     durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
+	DetectConsulCellRegistrations bool                  `json:"detect_consul_cell_registrations,omitempty"`
+	DropsondePort                 int                   `json:"dropsonde_port,omitempty"`
 	ETCDConfig
 	ExpireCompletedTaskDuration durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration   durationjson.Duration `json:"expire_pending_task_duration,omitempty"`

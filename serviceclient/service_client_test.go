@@ -140,6 +140,25 @@ var _ = Describe("ServiceClient", func() {
 				Expect(set["cell-3"]).To(Equal(cellPresence3))
 			})
 		})
+
+		Context("when the cell presence client is nil", func() {
+			BeforeEach(func() {
+				serviceClient = serviceclient.NewServiceClient(nil, locketClient)
+			})
+
+			It("only fetches the cells from the locket client", func() {
+				set, err := serviceClient.Cells(logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(set).To(HaveLen(2))
+
+				Expect(set["cell-2"]).To(Equal(cellPresence2))
+				Expect(set["cell-3"]).To(Equal(cellPresence3))
+
+				Expect(locketClient.FetchAllCallCount()).To(Equal(1))
+				_, request, _ := locketClient.FetchAllArgsForCall(0)
+				Expect(request).To(Equal(&locketmodels.FetchAllRequest{TypeCode: locketmodels.PRESENCE}))
+			})
+		})
 	})
 
 	Context("CellById", func() {
@@ -209,6 +228,22 @@ var _ = Describe("ServiceClient", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
+		Context("when the cell presence client is nil", func() {
+			BeforeEach(func() {
+				serviceClient = serviceclient.NewServiceClient(nil, locketClient)
+			})
+
+			It("fetches the cell presence from ", func() {
+				presence, err := serviceClient.CellById(logger, "cell-1")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(presence).To(Equal(cellPresence2))
+
+				Expect(locketClient.FetchCallCount()).To(Equal(1))
+				_, request, _ := locketClient.FetchArgsForCall(0)
+				Expect(request).To(Equal(&locketmodels.FetchRequest{Key: "cell-1"}))
+			})
+		})
 	})
 
 	Context("CellEvents", func() {
@@ -229,6 +264,17 @@ var _ = Describe("ServiceClient", func() {
 			var eventReceived models.CellEvent
 			Eventually(events).Should(Receive(&eventReceived))
 			Expect(eventReceived).To(Equal(event))
+		})
+
+		Context("when the cell presence client is nil", func() {
+			BeforeEach(func() {
+				serviceClient = serviceclient.NewServiceClient(nil, locketClient)
+			})
+
+			It("returns nil", func() {
+				events := serviceClient.CellEvents(logger)
+				Expect(events).To(BeNil())
+			})
 		})
 	})
 })

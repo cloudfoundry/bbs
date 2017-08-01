@@ -292,7 +292,10 @@ func main() {
 		lock = jointlock.NewJointLock(clock, locket.DefaultSessionTTL, locks...)
 	}
 
-	cellPresenceClient := maintain.NewCellPresenceClient(consulClient, clock)
+	var cellPresenceClient maintain.CellPresenceClient
+	if bbsConfig.DetectConsulCellRegistrations {
+		cellPresenceClient = maintain.NewCellPresenceClient(consulClient, clock)
+	}
 	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
 
 	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))

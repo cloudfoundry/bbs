@@ -125,5 +125,17 @@ var _ = Describe("CellPresence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(presences).To(ConsistOf(presenceLocket, presenceConsul))
 		})
+
+		Context("when detect consul cell registrations is false", func() {
+			BeforeEach(func() {
+				bbsConfig.DetectConsulCellRegistrations = false
+			})
+
+			It("only returns cell presences from locket", func() {
+				presences, err := client.Cells(logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(presences).To(ConsistOf(presenceLocket))
+			})
+		})
 	})
 })

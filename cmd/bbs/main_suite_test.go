@@ -182,10 +182,11 @@ var _ = BeforeEach(func() {
 		ETCDConfig: bbsconfig.ETCDConfig{
 			ClusterUrls: []string{etcdUrl}, // etcd is still being used to test version migration in migration_version_test.go
 		},
-		DatabaseDriver:           sqlRunner.DriverName(),
-		DatabaseConnectionString: sqlRunner.ConnectionString(),
-		ReportInterval:           durationjson.Duration(10 * time.Millisecond),
-		HealthAddress:            bbsHealthAddress,
+		DatabaseDriver:                sqlRunner.DriverName(),
+		DatabaseConnectionString:      sqlRunner.ConnectionString(),
+		DetectConsulCellRegistrations: true,
+		ReportInterval:                durationjson.Duration(10 * time.Millisecond),
+		HealthAddress:                 bbsHealthAddress,
 
 		EncryptionConfig: encryption.EncryptionConfig{
 			EncryptionKeys: map[string]string{"label": "key"},

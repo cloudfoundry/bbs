@@ -42,6 +42,7 @@ var _ = Describe("BBSConfig", func() {
 			"database_driver": "postgres",
 			"debug_address": "127.0.0.1:17017",
 			"desired_lrp_creation_timeout": "1m0s",
+			"detect_consul_cell_registrations": true,
 			"dropsonde_port": 3457,
 			"encryption_keys": {"label": "key"},
 			"etcd_ca_file": "/var/vcap/jobs/bbs/config/etcd.ca",
@@ -136,8 +137,9 @@ var _ = Describe("BBSConfig", func() {
 			DebugServerConfig: debugserver.DebugServerConfig{
 				DebugAddress: "127.0.0.1:17017",
 			},
-			DesiredLRPCreationTimeout: durationjson.Duration(1 * time.Minute),
-			DropsondePort:             3457,
+			DesiredLRPCreationTimeout:     durationjson.Duration(1 * time.Minute),
+			DetectConsulCellRegistrations: true,
+			DropsondePort:                 3457,
 			EncryptionConfig: encryption.EncryptionConfig{
 				ActiveKeyLabel: "label",
 				EncryptionKeys: map[string]string{

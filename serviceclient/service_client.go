@@ -37,10 +37,16 @@ func NewServiceClient(cellPresenceClient maintain.CellPresenceClient, locketClie
 
 func (s *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 	logger = logger.Session("cells")
-	cellSet, err := s.cellPresenceClient.Cells(logger)
-	if err != nil {
-		logger.Error("failed-to-fetch-cells-from-consul", err)
-		return nil, err
+
+	var cellSet = models.CellSet{}
+
+	if s.cellPresenceClient != nil {
+		var err error
+		cellSet, err = s.cellPresenceClient.Cells(logger)
+		if err != nil {
+			logger.Error("failed-to-fetch-cells-from-consul", err)
+			return nil, err
+		}
 	}
 
 	resp, err := s.locketClient.FetchAll(context.Background(), &locketmodels.FetchAllRequest{TypeCode: locketmodels.PRESENCE})
@@ -63,17 +69,21 @@ func (s *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 
 func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 	logger = logger.Session("cell-by-id", lager.Data{"cell-id": cellId})
+	var presence *models.CellPresence
+	var consulErr error
 
-	presence, consulErr := s.cellPresenceClient.CellById(logger, cellId)
-	if consulErr != nil {
-		logger.Debug("failed-to-fetch-presence-from-consul", lager.Data{"error": consulErr})
+	if s.cellPresenceClient != nil {
+		presence, consulErr = s.cellPresenceClient.CellById(logger, cellId)
+		if consulErr != nil {
+			logger.Debug("failed-to-fetch-presence-from-consul", lager.Data{"error": consulErr})
+		}
 	}
 
 	resp, locketErr := s.locketClient.Fetch(context.Background(), &locketmodels.FetchRequest{
 		Key: cellId,
 	})
 	if locketErr != nil {
-		if consulErr != nil {
+		if s.cellPresenceClient != nil && consulErr != nil {
 			logger.Error("failed-to-fetch-presence-from-locket", locketErr)
 			if grpc.Code(locketErr) == codes.NotFound {
 				return nil, models.ErrResourceNotFound
@@ -94,7 +104,10 @@ func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.Ce
 }
 
 func (s *serviceClient) CellEvents(logger lager.Logger) <-chan models.CellEvent {
-	return s.cellPresenceClient.CellEvents(logger)
+	if s.cellPresenceClient != nil {
+		return s.cellPresenceClient.CellEvents(logger)
+	}
+	return nil
 }
 
 func presenceFromResource(resource *locketmodels.Resource) (*models.CellPresence, error) {
