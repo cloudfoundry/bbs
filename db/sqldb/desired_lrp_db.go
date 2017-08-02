@@ -280,22 +280,17 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 
 		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
 		values := []interface{}{processGuid}
-		lrpRow, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
-
-		if err != nil {
-			logger.Error("failed-query", err)
-			return err
+		row := db.oneLRPDeploymentWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
+		if row != nil {
+			beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
+			if err != nil {
+				logger.Error("failed-to-fetch-desired-lrp", err)
+				return err
+			}
+		} else {
+			return helpers.ErrResourceNotFound
 		}
 
-		if lrpRow.Next() {
-			beforeDesiredLRP, err = db.fetchDesiredLRP(logger, lrpRow, tx)
-		}
-		if err != nil {
-			logger.Error("failed-lock-desired2", err)
-			return err
-		}
-
-		lrpRow.Close()
 		updateAttributes := helpers.SQLAttributes{"modification_tag_index": beforeDesiredLRP.ModificationTag.Index + 1}
 
 		if update.Annotation != nil {
