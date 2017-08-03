@@ -10,14 +10,21 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentCreation) (string, error) {
+func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploymentCreation) (*models.LRPDeployment, error) {
 	logger = logger.WithData(lager.Data{"process_guid": lrp.ProcessGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	definition := lrp.Definition
+	guid, err := db.guidProvider.NextGUID()
+	if err != nil {
+		logger.Error("failed-to-generate-guid", err)
+		return nil, models.ErrGUIDGeneration
+	}
+	modificationTag := &models.ModificationTag{Epoch: guid, Index: 0}
+	lrpDeployment := lrp.LRPDeployment(modificationTag)
 
-	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	definition := lrp.Definition
+	err = db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		routesData, err := db.encodeRouteData(logger, lrp.Routes)
 		if err != nil {
 			logger.Error("failed-encoding-route-data", err)
@@ -42,12 +49,6 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
 			return err
-		}
-
-		guid, err := db.guidProvider.NextGUID()
-		if err != nil {
-			logger.Error("failed-to-generate-guid", err)
-			return models.ErrGUIDGeneration
 		}
 
 		placementTagData, err := json.Marshal(definition.PlacementTags)
@@ -75,8 +76,6 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 			return err
 		}
 
-		modificationTag := &models.ModificationTag{Epoch: guid, Index: 0}
-
 		_, err = db.insert(logger, tx, lrpDeploymentsTable,
 			helpers.SQLAttributes{
 				"process_guid":           lrp.ProcessGuid,
@@ -97,10 +96,14 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 		return nil
 	})
 
-	return lrp.ProcessGuid, err
+	if err != nil {
+		return nil, err
+	}
+
+	return lrpDeployment, nil
 }
 
-func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *models.LRPDeploymentUpdate) (string, error) {
+func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *models.LRPDeploymentUpdate) (*models.LRPDeployment, error) {
 
 	// Write a new lrp definition to the DB based on the definition in the updateLRPDeploymentUpdate
 	//Update lrp deployment with the new instances, routes, and annotation. Update the modification epoch tag
@@ -112,7 +115,7 @@ func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mod
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	definition := update.Definition
+	var updatedLRPDeployment *models.LRPDeployment
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		wheresClause := "lrp_deployments.process_guid = ?"
@@ -124,75 +127,8 @@ func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mod
 		}
 
 		desiredLRPDeployment.ModificationTag.Increment()
-		lrpDeploymentAttrs := helpers.SQLAttributes{
-			"modification_tag_index": desiredLRPDeployment.ModificationTag.Index,
-		}
-
-		if update.Routes != nil {
-			routesData, err := db.encodeRouteData(logger, update.Routes)
-			if err != nil {
-				logger.Error("failed-encoding-route-data", err)
-				return err
-			}
-			lrpDeploymentAttrs["routes"] = routesData
-		}
-
-		if update.Instances != nil {
-			lrpDeploymentAttrs["instances"] = *update.Instances
-		}
-
-		if update.Annotation != nil {
-			lrpDeploymentAttrs["annotation"] = *update.Annotation
-		}
-
-		if definition != nil {
-			lrpKey := models.NewDesiredLRPKey(id, desiredLRPDeployment.Domain, definition.LogGuid)
-			runInfo := definition.DesiredLRPRunInfo(lrpKey, db.clock.Now())
-
-			runInfoData, err := db.serializeModel(logger, &runInfo)
-			if err != nil {
-				logger.Error("failed-to-serialize-model", err)
-				return err
-			}
-
-			volumePlacement := &models.VolumePlacement{}
-			volumePlacement.DriverNames = []string{}
-			for _, mount := range definition.VolumeMounts {
-				volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
-			}
-
-			volumePlacementData, err := db.serializeModel(logger, volumePlacement)
-			if err != nil {
-				logger.Error("failed-to-serialize-model", err)
-				return err
-			}
-
-			placementTagData, err := json.Marshal(definition.PlacementTags)
-			if err != nil {
-				logger.Error("failed-to-serialize-model", err)
-				return err
-			}
-
-			_, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
-				"process_guid":     id,
-				"definition_guid":  update.DefinitionId,
-				"log_guid":         definition.LogGuid,
-				"memory_mb":        definition.MemoryMb,
-				"disk_mb":          definition.DiskMb,
-				"rootfs":           definition.RootFs,
-				"volume_placement": volumePlacementData,
-				"placement_tags":   placementTagData,
-				"max_pids":         definition.MaxPids,
-				"run_info":         runInfoData,
-			})
-			if err != nil {
-				logger.Error("failed-inserting-lrp-definition", err)
-				return err
-			}
-
-			// Save new active_definition_id
-			lrpDeploymentAttrs["active_definition_id"] = update.DefinitionId
-		}
+		var lrpDeploymentAttrs helpers.SQLAttributes
+		updatedLRPDeployment, lrpDeploymentAttrs, err = db.constructUpdatableDeploymentAndInsertDefinition(logger, tx, id, desiredLRPDeployment, update)
 
 		_, err = db.update(logger, tx, lrpDeploymentsTable,
 			lrpDeploymentAttrs, wheresClause, id,
@@ -205,32 +141,133 @@ func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mod
 		return nil
 	})
 
-	return id, err
+	return updatedLRPDeployment, err
 }
 
-func (db *SQLDB) SaveLRPDeployment(logger lager.Logger, lrpDeployment *models.LRPDeployment) error {
+func (db *SQLDB) constructUpdatableDeploymentAndInsertDefinition(
+	logger lager.Logger,
+	tx *sql.Tx,
+	processGuid string,
+	desiredLRPDeployment *models.LRPDeployment,
+	update *models.LRPDeploymentUpdate,
+) (*models.LRPDeployment, helpers.SQLAttributes, error) {
+
+	updatedLRPDeployment := *desiredLRPDeployment
+	definition := update.Definition
+	lrpDeploymentAttrs := helpers.SQLAttributes{
+		"modification_tag_index": desiredLRPDeployment.ModificationTag.Index,
+	}
+
+	if update.Routes != nil {
+		routesData, err := db.encodeRouteData(logger, update.Routes)
+		if err != nil {
+			logger.Error("failed-encoding-route-data", err)
+			return nil, nil, err
+		}
+		lrpDeploymentAttrs["routes"] = routesData
+		updatedLRPDeployment.Routes = update.Routes
+	}
+
+	if update.Instances != nil {
+		lrpDeploymentAttrs["instances"] = *update.Instances
+		updatedLRPDeployment.Instances = *update.Instances
+	}
+
+	if update.Annotation != nil {
+		lrpDeploymentAttrs["annotation"] = *update.Annotation
+		updatedLRPDeployment.Annotation = *update.Annotation
+	}
+
+	if definition != nil {
+		lrpKey := models.NewDesiredLRPKey(processGuid, desiredLRPDeployment.Domain, definition.LogGuid)
+		runInfo := definition.DesiredLRPRunInfo(lrpKey, db.clock.Now())
+
+		runInfoData, err := db.serializeModel(logger, &runInfo)
+		if err != nil {
+			logger.Error("failed-to-serialize-model", err)
+			return nil, nil, err
+		}
+
+		volumePlacement := &models.VolumePlacement{}
+		volumePlacement.DriverNames = []string{}
+		for _, mount := range definition.VolumeMounts {
+			volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
+		}
+
+		volumePlacementData, err := db.serializeModel(logger, volumePlacement)
+		if err != nil {
+			logger.Error("failed-to-serialize-model", err)
+			return nil, nil, err
+		}
+
+		placementTagData, err := json.Marshal(definition.PlacementTags)
+		if err != nil {
+			logger.Error("failed-to-serialize-model", err)
+			return nil, nil, err
+		}
+
+		_, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
+			"process_guid":     processGuid,
+			"definition_guid":  update.DefinitionId,
+			"log_guid":         definition.LogGuid,
+			"memory_mb":        definition.MemoryMb,
+			"disk_mb":          definition.DiskMb,
+			"rootfs":           definition.RootFs,
+			"volume_placement": volumePlacementData,
+			"placement_tags":   placementTagData,
+			"max_pids":         definition.MaxPids,
+			"run_info":         runInfoData,
+		})
+		if err != nil {
+			logger.Error("failed-inserting-lrp-definition", err)
+			return nil, nil, err
+		}
+
+		// Save new active_definition_id
+		lrpDeploymentAttrs["active_definition_id"] = *update.DefinitionId
+		updatedLRPDeployment.ActiveDefinitionId = *update.DefinitionId
+	}
+
+	wheresClause := " WHERE process_guid = ?"
+	values := []interface{}{desiredLRPDeployment.ProcessGuid}
+	definitionRows, err := db.selectDefinitions(logger, tx, lrpDefinitionsColumns, wheresClause, values)
+	if err != nil {
+		logger.Error("failed-selecting-lrp-definitions", err)
+		return nil, nil, err
+	}
+
+	definitions, err := db.fetchLRPDefinitions(logger, definitionRows)
+	if err != nil {
+		logger.Error("failed-fetching-lrp-definitions", err)
+		return nil, nil, err
+	}
+
+	updatedLRPDeployment.Definitions = definitions
+	return &updatedLRPDeployment, lrpDeploymentAttrs, nil
+}
+
+func (db *SQLDB) SaveLRPDeployment(logger lager.Logger, lrpDeployment *models.LRPDeployment) (*models.LRPDeployment, error) {
 	wheresClause := "lrp_deployments.process_guid = ?"
 	_, err := db.update(logger, db.db, lrpDeploymentsTable,
 		helpers.SQLAttributes{
 			"healthy_definition_id": lrpDeployment.HealthyDefinitionId,
 		}, wheresClause, lrpDeployment.ProcessGuid,
 	)
-	return err
+	return lrpDeployment, err
 }
 
-func (db *SQLDB) DeleteLRPDeployment(logger lager.Logger, id string) error {
+func (db *SQLDB) DeleteLRPDeployment(logger lager.Logger, id string) (*models.LRPDeployment, error) {
 	logger = logger.WithData(lager.Data{"process_guid": id})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		// err := db.lockDesiredLRPByGuidForUpdate(logger, processGuid, tx)
-		// if err != nil {
-		// 	logger.Error("failed-lock-desired", err)
-		// 	return err
-		// }
+	var lrpDeployment *models.LRPDeployment
 
-		_, err := db.delete(logger, tx, lrpDefinitionsTable, "process_guid = ?", id)
+	return lrpDeployment, db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		lrpDeployment, err = db.findLRPDeployment(logger, tx, id)
+
+		_, err = db.delete(logger, tx, lrpDefinitionsTable, "process_guid = ?", id)
 		if err != nil {
 			logger.Error("failed-deleting-lrp-definitions-from-db", err)
 			return err
@@ -245,17 +282,23 @@ func (db *SQLDB) DeleteLRPDeployment(logger lager.Logger, id string) error {
 	})
 }
 
-func (db *SQLDB) ActivateLRPDeploymentDefinition(logger lager.Logger, id, definitionId string) error {
-	_, err := db.update(logger, db.db, lrpDeploymentsTable,
-		helpers.SQLAttributes{
-			"active_definition_id": definitionId,
-		}, "lrp_deployments.process_guid = ?", id,
-	)
-	if err != nil {
-		logger.Error("failed-activating-definition-id", err)
-		return err
-	}
-	return nil
+func (db *SQLDB) ActivateLRPDeploymentDefinition(logger lager.Logger, id, definitionId string) (*models.LRPDeployment, error) {
+	var lrpDeployment *models.LRPDeployment
+	return lrpDeployment, db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		var err error
+		lrpDeployment, err = db.findLRPDeployment(logger, tx, id)
+		_, err = db.update(logger, db.db, lrpDeploymentsTable,
+			helpers.SQLAttributes{
+				"active_definition_id": definitionId,
+			}, "lrp_deployments.process_guid = ?", id,
+		)
+		if err != nil {
+			logger.Error("failed-activating-definition-id", err)
+			return err
+		}
+		lrpDeployment.ActiveDefinitionId = definitionId
+		return nil
+	})
 }
 
 func (db *SQLDB) fetchLRPDeployment(logger lager.Logger, row RowScanner) (*models.LRPDeployment, error) {
@@ -324,13 +367,14 @@ func (db *SQLDB) fetchLRPDefinitionsInternal(logger lager.Logger, scanner RowSca
 		return nil, "", err
 	}
 
-	// var volumePlacement models.VolumePlacement
-	// err = db.deserializeModel(logger, volumeData, &volumePlacement)
-	// if err != nil {
-	// 	logger.Error("failed-parsing-volume-placement", err)
-	// 	return nil, "", err
-	// }
-	// definition.VolumeMounts = &volumePlacement
+	var volumePlacement models.VolumePlacement
+	err = db.deserializeModel(logger, volumeData, &volumePlacement)
+	if err != nil {
+		logger.Error("failed-parsing-volume-placement", err)
+		return nil, "", err
+	}
+	definition.VolumePlacement = &volumePlacement
+
 	if placementData != nil {
 		err = json.Unmarshal(placementData, &definition.PlacementTags)
 		if err != nil {
@@ -526,33 +570,45 @@ func (db *SQLDB) LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*mo
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := "process_guid = ?"
-		values := []interface{}{id}
-		row := db.one(logger, tx, lrpDeploymentsTable, lrpDeploymentColumns, false, wheresClause, id)
-		if row != nil {
-			lrpDeployment, err = db.fetchLRPDeployment(logger, row)
-		} else {
-			return helpers.ErrResourceNotFound
-		}
 
-		wheresClause = " WHERE process_guid = ?"
-		values = []interface{}{lrpDeployment.ProcessGuid}
-		definitionRows, err := db.selectDefinitions(logger, tx, lrpDefinitionsColumns, wheresClause, values)
-		if err != nil {
-			logger.Error("failed-selecting-lrp-definitions", err)
-			return err
-		}
-
-		definitions, err := db.fetchLRPDefinitions(logger, definitionRows)
-		if err != nil {
-			logger.Error("failed-fetching-lrp-definitions", err)
-			return err
-		}
-
-		lrpDeployment.Definitions = definitions
-
+		lrpDeployment, err = db.findLRPDeployment(logger, tx, id)
 		return err
 	})
 
 	return lrpDeployment, err
+}
+
+func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, id string) (*models.LRPDeployment, error) {
+	var lrpDeployment *models.LRPDeployment
+	var err error
+
+	wheresClause := "process_guid = ?"
+	values := []interface{}{id}
+	row := db.one(logger, q, lrpDeploymentsTable, lrpDeploymentColumns, false, wheresClause, id)
+	if row != nil {
+		lrpDeployment, err = db.fetchLRPDeployment(logger, row)
+		if err != nil {
+			logger.Error("failed-fetching-lrp-deployment", err)
+			return nil, err
+		}
+	} else {
+		return nil, helpers.ErrResourceNotFound
+	}
+
+	wheresClause = " WHERE process_guid = ?"
+	values = []interface{}{lrpDeployment.ProcessGuid}
+	definitionRows, err := db.selectDefinitions(logger, q, lrpDefinitionsColumns, wheresClause, values)
+	if err != nil {
+		logger.Error("failed-selecting-lrp-definitions", err)
+		return nil, err
+	}
+
+	definitions, err := db.fetchLRPDefinitions(logger, definitionRows)
+	if err != nil {
+		logger.Error("failed-fetching-lrp-definitions", err)
+		return nil, err
+	}
+
+	lrpDeployment.Definitions = definitions
+	return lrpDeployment, nil
 }

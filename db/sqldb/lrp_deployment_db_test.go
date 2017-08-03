@@ -27,11 +27,12 @@ var _ = Describe("LRPDeployment", func() {
 		BeforeEach(func() {
 			var err error
 			lrpCreate = model_helpers.NewValidLRPDeploymentCreation("process-guid", "definition_guid")
-			processGuid, err = sqlDB.CreateLRPDeployment(logger, lrpCreate)
+			lerpDerp, err := sqlDB.CreateLRPDeployment(logger, lrpCreate)
 			Expect(err).ToNot(HaveOccurred())
+			processGuid = lerpDerp.ProcessGuid
 
 			lrpUpdate = model_helpers.NewValidLRPDeploymentUpdate("update")
-			processGuid, err = sqlDB.UpdateLRPDeployment(logger, processGuid, lrpUpdate)
+			_, err = sqlDB.UpdateLRPDeployment(logger, lerpDerp.ProcessGuid, lrpUpdate)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -42,7 +43,7 @@ var _ = Describe("LRPDeployment", func() {
 			Expect(lrpDeployment.Definitions).To(HaveLen(2))
 			Expect(lrpDeployment.Definitions[lrpCreate.DefinitionId]).To(Equal(lrpCreate.Definition))
 			Expect(lrpDeployment.Definitions[*lrpUpdate.DefinitionId]).To(Equal(lrpUpdate.Definition))
-			Expect(lrpDeployment.ProcessGuid).To(Equal(processGuid))
+			Expect(processGuid).To(Equal(lrpDeployment.ProcessGuid))
 		})
 	})
 })

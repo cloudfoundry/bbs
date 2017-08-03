@@ -69,15 +69,16 @@ message LRPDefinition {
   repeated CachedDependency cached_dependencies = 18 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 19 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
   optional string trusted_system_certificates_path = 20 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
-  repeated VolumeMount volume_mounts = 21 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
-  optional Network network = 22 [(gogoproto.jsontag) = "network,omitempty"];
-  repeated string placement_tags = 23 [(gogoproto.jsontag) ="placement_tags,omitempty"];
-  optional int32 max_pids = 24;
+  optional VolumePlacement volume_placement = 21 [(gogoproto.jsontag) = "volume_placement,omitempty"];
+  repeated VolumeMount volume_mounts = 22 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
+  optional Network network = 23 [(gogoproto.jsontag) = "network,omitempty"];
+  repeated string placement_tags = 24 [(gogoproto.jsontag) ="placement_tags,omitempty"];
+  optional int32 max_pids = 25;
 
-  optional CertificateProperties certificate_properties = 25 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
+  optional CertificateProperties certificate_properties = 26 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
 
-  optional string image_username = 26 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_username,omitempty"];
-  optional string image_password = 27 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_password,omitempty"];
+  optional string image_username = 27 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_username,omitempty"];
+  optional string image_password = 28 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "image_password,omitempty"];
 
-  optional CheckDefinition check_definition = 28 [(gogoproto.jsontag) = "check_definition,omitempty"];
+  optional CheckDefinition check_definition = 29 [(gogoproto.jsontag) = "check_definition,omitempty"];
 }

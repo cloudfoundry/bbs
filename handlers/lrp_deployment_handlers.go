@@ -16,6 +16,7 @@ type LRPDeploymentHandler struct {
 	lrpDeploymentDB    db.LRPDeploymentDB
 	desiredLRPDB       db.DesiredLRPDB
 	desiredLRPHandler  *DesiredLRPHandler
+	desiredHub         events.Hub
 	auctioneerClient   auctioneer.Client
 	repClientFactory   rep.ClientFactory
 	serviceClient      serviceclient.ServiceClient
@@ -39,6 +40,7 @@ func NewLRPDeploymentHandler(
 		lrpDeploymentDB:    lrpDeploymentDB,
 		desiredLRPDB:       desiredLRPDB,
 		desiredLRPHandler:  desiredLRPHandler,
+		desiredHub:         desiredHub,
 		auctioneerClient:   auctioneerClient,
 		repClientFactory:   repClientFactory,
 		serviceClient:      serviceClient,
@@ -73,7 +75,7 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	// go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
+	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
 
 	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
 	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
@@ -131,20 +133,13 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	_, err = h.lrpDeploymentDB.UpdateLRPDeployment(logger, request.Id, request.Update)
+	afterLrpDeployment, err := h.lrpDeploymentDB.UpdateLRPDeployment(logger, request.Id, request.Update)
 	if err != nil {
 		logger.Debug("failed-updating-desired-lrp")
 		response.Error = models.ConvertError(err)
 		return
 	}
 	logger.Debug("completed-updating-desired-lrp")
-
-	afterLrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByProcessGuid(logger, request.Id)
-	if err != nil {
-		logger.Error("failed-retrieving-lrp-deployment", err)
-		response.Error = models.ConvertError(err)
-		return
-	}
 
 	if request.Update.Definition != nil && request.Update.DefinitionId != nil {
 		lrp, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, *request.Update.DefinitionId)
@@ -153,8 +148,21 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 			return
 		}
 
+		go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
 		schedulingInfo := lrp.DesiredLRPSchedulingInfo()
 		h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
+	} else {
+		before, err := beforeLrpDeployment.DesiredLRP(beforeLrpDeployment.ActiveDefinitionId)
+		if err != nil {
+			response.Error = models.ConvertError(err)
+			return
+		}
+		after, err := beforeLrpDeployment.DesiredLRP(afterLrpDeployment.ActiveDefinitionId)
+		if err != nil {
+			response.Error = models.ConvertError(err)
+			return
+		}
+		go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(&before, &after))
 	}
 
 	if request.Update.Instances != nil {
@@ -205,13 +213,19 @@ func (h *LRPDeploymentHandler) DeleteLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	err = h.lrpDeploymentDB.DeleteLRPDeployment(logger.Session("remove-desired"), request.Id)
+	_, err = h.lrpDeploymentDB.DeleteLRPDeployment(logger.Session("remove-desired"), request.Id)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
 	for defID, _ := range lrpDeployment.Definitions {
+		lrp, err := lrpDeployment.DesiredLRP(defID)
+		if err != nil {
+			logger.Error("failed-to-convert-to-desired-lrp", err)
+			continue
+		}
+		go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(&lrp))
 		h.desiredLRPHandler.stopInstancesFrom(logger, defID, 0)
 	}
 }
@@ -231,7 +245,7 @@ func (h *LRPDeploymentHandler) ActivateLRPDeploymentDefinition(logger lager.Logg
 	}
 	logger = logger.WithData(lager.Data{"process_guid": request.Id})
 
-	err = h.lrpDeploymentDB.ActivateLRPDeploymentDefinition(logger, request.Id, request.DefinitionId)
+	_, err = h.lrpDeploymentDB.ActivateLRPDeploymentDefinition(logger, request.Id, request.DefinitionId)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -244,7 +258,6 @@ func (h *LRPDeploymentHandler) ActivateLRPDeploymentDefinition(logger lager.Logg
 	}
 	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
 	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
-	// go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP))
 
 	// TODO: what should we do here ?
 }

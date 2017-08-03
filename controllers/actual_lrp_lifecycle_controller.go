@@ -114,7 +114,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		if lrpDeployment.HealthyDefinitionId != actualLRPKey.ProcessGuid {
 			logger.Info("setting-new-healthy-definition", lager.Data{"definition-id": actualLRPKey.ProcessGuid})
 			lrpDeployment.HealthyDefinitionId = actualLRPKey.ProcessGuid
-			err := h.lrpDeploymentDB.SaveLRPDeployment(logger, lrpDeployment)
+			_, err := h.lrpDeploymentDB.SaveLRPDeployment(logger, lrpDeployment)
 			if err != nil {
 				logger.Error("failed-to-save-lrp-deployment", err)
 				return err

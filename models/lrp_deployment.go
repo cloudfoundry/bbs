@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 func (d *LRPDeploymentCreation) DesiredLRPKey() DesiredLRPKey {
 	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.Definition.LogGuid)
@@ -9,6 +12,39 @@ func (d *LRPDeploymentCreation) DesiredLRPKey() DesiredLRPKey {
 func (lrp *LRPDeploymentCreation) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	d := lrp.Definition
 	return d.DesiredLRPRunInfo(lrp.DesiredLRPKey(), createdAt)
+}
+
+func (lrp *LRPDeploymentCreation) LRPDeployment(modTag *ModificationTag) *LRPDeployment {
+	return &LRPDeployment{
+		ProcessGuid: lrp.ProcessGuid,
+		Domain:      lrp.Domain,
+		Instances:   lrp.Instances,
+		Annotation:  lrp.Annotation,
+		Routes:      lrp.Routes,
+		Definitions: map[string]*LRPDefinition{
+			lrp.DefinitionId: lrp.Definition,
+		},
+		ActiveDefinitionId: lrp.DefinitionId,
+		ModificationTag:    modTag,
+	}
+}
+
+func (d *LRPDeployment) DesiredLRP(definitionId string) (DesiredLRP, error) {
+	definition, ok := d.Definitions[definitionId]
+	if !ok {
+		return DesiredLRP{}, errors.New("invalid-definition-id")
+	}
+
+	lrpKey := NewDesiredLRPKey(d.ProcessGuid, d.Domain, definition.LogGuid)
+	runInfo := definition.DesiredLRPRunInfo(lrpKey, time.Now())
+	schedInfo := NewDesiredLRPSchedulingInfo(
+		lrpKey, d.Annotation, d.Instances, definition.DesiredLRPResource(),
+		*d.Routes, *d.ModificationTag, definition.VolumePlacement, definition.PlacementTags)
+	return NewDesiredLRP(schedInfo, runInfo), nil
+}
+
+func (d *LRPDefinition) DesiredLRPResource() DesiredLRPResource {
+	return NewDesiredLRPResource(d.MemoryMb, d.DiskMb, d.MaxPids, d.RootFs)
 }
 
 func (d *LRPDefinition) DesiredLRPRunInfo(desiredLRPKey DesiredLRPKey, createdAt time.Time) DesiredLRPRunInfo {
