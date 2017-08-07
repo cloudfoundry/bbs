@@ -32,7 +32,7 @@ const (
 	crashingDesiredLRPs = "CrashingDesiredLRPs"
 )
 
-func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
 	convergeStart := db.clock.Now()
 	db.metronClient.IncrementCounter(convergeLRPRunsCounter)
 	logger.Info("starting")
@@ -48,11 +48,10 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	now := db.clock.Now()
 
 	db.pruneDomains(logger, now)
-	db.pruneEvacuatingActualLRPs(logger, now)
-
+	events := db.pruneEvacuatingActualLRPs(logger, now)
 	domainSet, err := db.domainSet(logger)
 	if err != nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
 	db.emitDomainMetrics(logger, domainSet)
@@ -64,7 +63,7 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	converge.orphanedActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
-	return converge.result(logger)
+	return converge.result(logger), converge.keysWithMissingCells, converge.keysToRetire, events
 }
 
 type convergence struct {
@@ -371,7 +370,7 @@ func (c *convergence) submit(work func()) {
 	})
 }
 
-func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (c *convergence) result(logger lager.Logger) []*auctioneer.LRPStartRequest {
 	c.poolWg.Wait()
 	c.pool.Stop()
 
@@ -389,7 +388,7 @@ func (c *convergence) result(logger lager.Logger) ([]*auctioneer.LRPStartRequest
 	c.metronClient.SendMetric(extraLRPs, len(c.keysToRetire))
 	c.emitLRPMetrics(logger)
 
-	return startRequests, c.keysWithMissingCells, c.keysToRetire
+	return startRequests
 }
 
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
@@ -401,13 +400,23 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	}
 }
 
-func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) {
+func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, now time.Time) []models.Event {
 	logger = logger.Session("prune-evacuating-actual-lrps")
+	lrpsToDelete, err := db.getActualLRPS(logger, "evacuating = ? AND expire_time <= ?", true, now.UnixNano())
+	if err != nil {
+		logger.Error("failed-fetching-expired-evacuating-lrps", err)
+	}
 
-	_, err := db.delete(logger, db.db, actualLRPsTable, "evacuating = ? AND expire_time <= ?", true, now.UnixNano())
+	_, err = db.delete(logger, db.db, actualLRPsTable, "evacuating = ? AND expire_time <= ?", true, now.UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
+
+	events := []models.Event{}
+	for _, lrp := range lrpsToDelete {
+		events = append(events, models.NewActualLRPRemovedEvent(lrp))
+	}
+	return events
 }
 
 func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {

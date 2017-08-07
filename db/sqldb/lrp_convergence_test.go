@@ -374,7 +374,7 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("returns start requests for stale unclaimed actual LRPs", func() {
-		startRequests, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 
 		By("fresh domain", func() {
 			Expect(startRequests).NotTo(BeEmpty())
@@ -406,7 +406,7 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("returns the start requests and actual lrp keys for actuals with missing cells", func() {
-		_, keysWithMissingCells, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		_, keysWithMissingCells, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 
 		By("fresh domain", func() {
 			processGuid := "desired-with-missing-cell-actuals" + "-" + freshDomain
@@ -438,7 +438,7 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("creates actual LRPs with missing indices, and returns it to be started", func() {
-		startRequests, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(startRequests).NotTo(BeEmpty())
 
 		By("missing all actuals, fresh domain", func() {
@@ -507,7 +507,7 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("unclaims actual LRPs that are crashed and restartable, and returns it to be started", func() {
-		startRequests, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(startRequests).NotTo(BeEmpty())
 
 		By("fresh domain", func() {
@@ -541,7 +541,7 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("returns extra actual LRPs to be retired", func() {
-		_, _, keysToRetire := sqlDB.ConvergeLRPs(logger, cellSet)
+		_, _, keysToRetire, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(keysToRetire).NotTo(BeEmpty())
 
 		processGuid := "desired-with-extra-actuals" + "-" + freshDomain
@@ -554,7 +554,7 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("creates unclaimed for evacuating instances that are missing the running record", func() {
-		startRequests, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(startRequests).NotTo(BeEmpty())
 
 		processGuids := []string{
@@ -610,7 +610,7 @@ var _ = Describe("LRPConvergence", func() {
 		Expect(fetchDomains()).NotTo(ContainElement(expiredDomain))
 	})
 
-	It("clears out expired evacuating actual lrps", func() {
+	Context("with expired evacuating actual lrps", func() {
 		fetchActuals := func() []string {
 			rows, err := db.Query("SELECT process_guid FROM actual_lrps")
 			Expect(err).NotTo(HaveOccurred())
@@ -626,11 +626,27 @@ var _ = Describe("LRPConvergence", func() {
 			return results
 		}
 
-		Expect(fetchActuals()).To(ContainElement("expired-evacuating-actual-lrp"))
+		BeforeEach(func() {
+			Expect(fetchActuals()).To(ContainElement("expired-evacuating-actual-lrp"))
+		})
 
-		sqlDB.ConvergeLRPs(logger, cellSet)
+		It("returns an ActualLRPRemovedEvent", func() {
+			lrps, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "expired-evacuating-actual-lrp")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(lrps)).To(Equal(1))
 
-		Expect(fetchActuals()).NotTo(ContainElement("expired-evacuating-actual-lrp"))
+			_, _, _, events := sqlDB.ConvergeLRPs(logger, cellSet)
+
+			Expect(len(events)).NotTo(BeZero())
+			event := models.NewActualLRPRemovedEvent(lrps[0])
+			Expect(events).To(ContainElement(event))
+		})
+
+		It("clears out expired evacuating actual lrps", func() {
+			sqlDB.ConvergeLRPs(logger, cellSet)
+
+			Expect(fetchActuals()).NotTo(ContainElement("expired-evacuating-actual-lrp"))
+		})
 	})
 
 	It("ignores LRPs that don't need convergence", func() {
@@ -657,7 +673,7 @@ var _ = Describe("LRPConvergence", func() {
 			beforeActuals = append(beforeActuals, actuals)
 		}
 
-		startRequests, keysWithMissingCells, keysToRetire := sqlDB.ConvergeLRPs(logger, cellSet)
+		startRequests, keysWithMissingCells, keysToRetire, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 
 		startGuids := make([]string, 0, len(startRequests))
 		for _, startRequest := range startRequests {
@@ -702,7 +718,7 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		It("reports all actual lrps as missing cells", func() {
-			_, actualsWithMissingCells, _ := sqlDB.ConvergeLRPs(logger, models.CellSet{})
+			_, actualsWithMissingCells, _, _ := sqlDB.ConvergeLRPs(logger, models.CellSet{})
 			Expect(len(actualsWithMissingCells)).To(Equal(23))
 		})
 	})
