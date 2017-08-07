@@ -105,6 +105,9 @@
 		DesiredLRPCreatedEvent
 		DesiredLRPChangedEvent
 		DesiredLRPRemovedEvent
+		LRPDeploymentCreatedEvent
+		LRPDeploymentChangedEvent
+		LRPDeploymentRemovedEvent
 		ActualLRPCrashedEvent
 		EventsByCellId
 		TaskCreatedEvent
@@ -115,6 +118,8 @@
 		LRPDeploymentCreation
 		LRPDeploymentUpdate
 		LRPDefinition
+		LRPDeploymentSchedulingInfo
+		LRPDefinitionSchedulingInfo
 		LRPDeploymentLifecycleResponse
 		CreateLRPDeploymentRequest
 		UpdateLRPDeploymentRequest
@@ -122,6 +127,7 @@
 		LRPDeploymentsRequest
 		LRPDeploymentsResponse
 		ActivateLRPDeploymentDefinitionRequest
+		LRPDeploymentsSchedulingInfoResponse
 		ModificationTag
 		Network
 		PingResponse

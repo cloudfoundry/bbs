@@ -153,6 +153,8 @@ type ExternalDesiredLRPClient interface {
 	ActivateLRPDefinition(logger lager.Logger, processGuid, definitionID string) error
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
 	LRPDeployments(lager.Logger, []string) ([]*models.LRPDeployment, error)
+	// List all LRPDeploymentSchedulingInfo that match the given LRPDeploymentFilter
+	LRPDeploymentSchedulingInfo(lager.Logger, models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error)
 
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
 	DesiredLRPs(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
@@ -480,6 +482,19 @@ func (c *client) LRPDeployments(logger lager.Logger, deploymentIds []string) ([]
 	}
 
 	return response.Deployments, response.Error.ToError()
+}
+
+func (c *client) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error) {
+	request := models.LRPDeploymentsRequest{
+		Ids: filter.Ids,
+	}
+	response := models.LRPDeploymentsSchedulingInfoResponse{}
+	err := c.doRequest(logger, LRPDeploymentSchedulingInfoRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.LrpDeploymentSchedulingInfo, response.Error.ToError()
 }
 
 func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

@@ -366,6 +366,20 @@ type FakeLRPDB struct {
 		result1 []*models.LRPDeployment
 		result2 error
 	}
+	LRPDeploymentSchedulingInfoStub        func(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error)
+	lRPDeploymentSchedulingInfoMutex       sync.RWMutex
+	lRPDeploymentSchedulingInfoArgsForCall []struct {
+		logger lager.Logger
+		filter models.LRPDeploymentFilter
+	}
+	lRPDeploymentSchedulingInfoReturns struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}
+	lRPDeploymentSchedulingInfoReturnsOnCall map[int]struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}
 	ConvergeLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
@@ -1675,6 +1689,58 @@ func (fake *FakeLRPDB) LRPDeploymentsReturnsOnCall(i int, result1 []*models.LRPD
 	}{result1, result2}
 }
 
+func (fake *FakeLRPDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error) {
+	fake.lRPDeploymentSchedulingInfoMutex.Lock()
+	ret, specificReturn := fake.lRPDeploymentSchedulingInfoReturnsOnCall[len(fake.lRPDeploymentSchedulingInfoArgsForCall)]
+	fake.lRPDeploymentSchedulingInfoArgsForCall = append(fake.lRPDeploymentSchedulingInfoArgsForCall, struct {
+		logger lager.Logger
+		filter models.LRPDeploymentFilter
+	}{logger, filter})
+	fake.recordInvocation("LRPDeploymentSchedulingInfo", []interface{}{logger, filter})
+	fake.lRPDeploymentSchedulingInfoMutex.Unlock()
+	if fake.LRPDeploymentSchedulingInfoStub != nil {
+		return fake.LRPDeploymentSchedulingInfoStub(logger, filter)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lRPDeploymentSchedulingInfoReturns.result1, fake.lRPDeploymentSchedulingInfoReturns.result2
+}
+
+func (fake *FakeLRPDB) LRPDeploymentSchedulingInfoCallCount() int {
+	fake.lRPDeploymentSchedulingInfoMutex.RLock()
+	defer fake.lRPDeploymentSchedulingInfoMutex.RUnlock()
+	return len(fake.lRPDeploymentSchedulingInfoArgsForCall)
+}
+
+func (fake *FakeLRPDB) LRPDeploymentSchedulingInfoArgsForCall(i int) (lager.Logger, models.LRPDeploymentFilter) {
+	fake.lRPDeploymentSchedulingInfoMutex.RLock()
+	defer fake.lRPDeploymentSchedulingInfoMutex.RUnlock()
+	return fake.lRPDeploymentSchedulingInfoArgsForCall[i].logger, fake.lRPDeploymentSchedulingInfoArgsForCall[i].filter
+}
+
+func (fake *FakeLRPDB) LRPDeploymentSchedulingInfoReturns(result1 []*models.LRPDeploymentSchedulingInfo, result2 error) {
+	fake.LRPDeploymentSchedulingInfoStub = nil
+	fake.lRPDeploymentSchedulingInfoReturns = struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeLRPDB) LRPDeploymentSchedulingInfoReturnsOnCall(i int, result1 []*models.LRPDeploymentSchedulingInfo, result2 error) {
+	fake.LRPDeploymentSchedulingInfoStub = nil
+	if fake.lRPDeploymentSchedulingInfoReturnsOnCall == nil {
+		fake.lRPDeploymentSchedulingInfoReturnsOnCall = make(map[int]struct {
+			result1 []*models.LRPDeploymentSchedulingInfo
+			result2 error
+		})
+	}
+	fake.lRPDeploymentSchedulingInfoReturnsOnCall[i] = struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeLRPDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey) {
 	fake.convergeLRPsMutex.Lock()
 	ret, specificReturn := fake.convergeLRPsReturnsOnCall[len(fake.convergeLRPsArgsForCall)]
@@ -1833,6 +1899,8 @@ func (fake *FakeLRPDB) Invocations() map[string][][]interface{} {
 	defer fake.lRPDeploymentByProcessGuidMutex.RUnlock()
 	fake.lRPDeploymentsMutex.RLock()
 	defer fake.lRPDeploymentsMutex.RUnlock()
+	fake.lRPDeploymentSchedulingInfoMutex.RLock()
+	defer fake.lRPDeploymentSchedulingInfoMutex.RUnlock()
 	fake.convergeLRPsMutex.RLock()
 	defer fake.convergeLRPsMutex.RUnlock()
 	fake.gatherAndPruneLRPsMutex.RLock()

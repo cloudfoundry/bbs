@@ -82,3 +82,25 @@ message LRPDefinition {
 
   optional CheckDefinition check_definition = 29 [(gogoproto.jsontag) = "check_definition,omitempty"];
 }
+
+message LRPDeploymentSchedulingInfo {
+  optional string process_guid = 1;
+  optional string domain = 2;
+  optional int32 instances = 3;
+  optional string annotation = 4;
+  optional ModificationTag modification_tag = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional ProtoRoutes routes = 6 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
+  map<string, LRPDefinitionSchedulingInfo> definitions = 7;
+}
+
+message LRPDefinitionSchedulingInfo {
+  optional string definition_id = 1;
+  optional string log_guid = 2;
+  optional int32 memory_mb = 3;
+  optional int32 disk_mb = 4;
+  optional string root_fs = 5 [(gogoproto.jsontag) = "rootfs"];
+  optional int32 max_pids = 6;
+  repeated uint32 ports = 7;
+  optional VolumePlacement volume_placement = 8 [(gogoproto.jsontag) = "volume_placement,omitempty"];
+  repeated string PlacementTags = 9 [(gogoproto.jsontag) ="placement_tags,omitempty"];
+}

@@ -98,6 +98,7 @@ func New(
 		bbs.DeleteLRPDeploymentRoute:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.DeleteLRPDeployment), emitter)),
 		bbs.ActivateLRPDeploymentDefinitionRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.ActivateLRPDeploymentDefinition), emitter)),
 		bbs.LRPDeploymentsRoute:                  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.LRPDeployments), emitter)),
+		bbs.LRPDeploymentSchedulingInfoRoute:     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, lrpDeploymentHandler.LRPDeploymentSchedulingInfo), emitter)),
 
 		// Tasks
 		bbs.TasksRoute:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),

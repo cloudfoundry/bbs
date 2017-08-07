@@ -124,6 +124,20 @@ type FakeLRPDeploymentDB struct {
 		result1 []*models.LRPDeployment
 		result2 error
 	}
+	LRPDeploymentSchedulingInfoStub        func(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error)
+	lRPDeploymentSchedulingInfoMutex       sync.RWMutex
+	lRPDeploymentSchedulingInfoArgsForCall []struct {
+		logger lager.Logger
+		filter models.LRPDeploymentFilter
+	}
+	lRPDeploymentSchedulingInfoReturns struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}
+	lRPDeploymentSchedulingInfoReturnsOnCall map[int]struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -551,6 +565,58 @@ func (fake *FakeLRPDeploymentDB) LRPDeploymentsReturnsOnCall(i int, result1 []*m
 	}{result1, result2}
 }
 
+func (fake *FakeLRPDeploymentDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error) {
+	fake.lRPDeploymentSchedulingInfoMutex.Lock()
+	ret, specificReturn := fake.lRPDeploymentSchedulingInfoReturnsOnCall[len(fake.lRPDeploymentSchedulingInfoArgsForCall)]
+	fake.lRPDeploymentSchedulingInfoArgsForCall = append(fake.lRPDeploymentSchedulingInfoArgsForCall, struct {
+		logger lager.Logger
+		filter models.LRPDeploymentFilter
+	}{logger, filter})
+	fake.recordInvocation("LRPDeploymentSchedulingInfo", []interface{}{logger, filter})
+	fake.lRPDeploymentSchedulingInfoMutex.Unlock()
+	if fake.LRPDeploymentSchedulingInfoStub != nil {
+		return fake.LRPDeploymentSchedulingInfoStub(logger, filter)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lRPDeploymentSchedulingInfoReturns.result1, fake.lRPDeploymentSchedulingInfoReturns.result2
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentSchedulingInfoCallCount() int {
+	fake.lRPDeploymentSchedulingInfoMutex.RLock()
+	defer fake.lRPDeploymentSchedulingInfoMutex.RUnlock()
+	return len(fake.lRPDeploymentSchedulingInfoArgsForCall)
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentSchedulingInfoArgsForCall(i int) (lager.Logger, models.LRPDeploymentFilter) {
+	fake.lRPDeploymentSchedulingInfoMutex.RLock()
+	defer fake.lRPDeploymentSchedulingInfoMutex.RUnlock()
+	return fake.lRPDeploymentSchedulingInfoArgsForCall[i].logger, fake.lRPDeploymentSchedulingInfoArgsForCall[i].filter
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentSchedulingInfoReturns(result1 []*models.LRPDeploymentSchedulingInfo, result2 error) {
+	fake.LRPDeploymentSchedulingInfoStub = nil
+	fake.lRPDeploymentSchedulingInfoReturns = struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeLRPDeploymentDB) LRPDeploymentSchedulingInfoReturnsOnCall(i int, result1 []*models.LRPDeploymentSchedulingInfo, result2 error) {
+	fake.LRPDeploymentSchedulingInfoStub = nil
+	if fake.lRPDeploymentSchedulingInfoReturnsOnCall == nil {
+		fake.lRPDeploymentSchedulingInfoReturnsOnCall = make(map[int]struct {
+			result1 []*models.LRPDeploymentSchedulingInfo
+			result2 error
+		})
+	}
+	fake.lRPDeploymentSchedulingInfoReturnsOnCall[i] = struct {
+		result1 []*models.LRPDeploymentSchedulingInfo
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeLRPDeploymentDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -570,6 +636,8 @@ func (fake *FakeLRPDeploymentDB) Invocations() map[string][][]interface{} {
 	defer fake.lRPDeploymentByProcessGuidMutex.RUnlock()
 	fake.lRPDeploymentsMutex.RLock()
 	defer fake.lRPDeploymentsMutex.RUnlock()
+	fake.lRPDeploymentSchedulingInfoMutex.RLock()
+	defer fake.lRPDeploymentSchedulingInfoMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

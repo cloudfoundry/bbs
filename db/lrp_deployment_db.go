@@ -16,4 +16,5 @@ type LRPDeploymentDB interface {
 	LRPDeploymentByDefinitionGuid(logger lager.Logger, id string) (*models.LRPDeployment, error)
 	LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*models.LRPDeployment, error)
 	LRPDeployments(logger lager.Logger, deploymentIds []string) ([]*models.LRPDeployment, error)
+	LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error)
 }

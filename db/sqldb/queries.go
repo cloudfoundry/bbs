@@ -21,6 +21,7 @@ const (
 
 var (
 	schedulingInfoColumns = helpers.ColumnList{
+		lrpDeploymentsTable + ".process_guid",
 		lrpDefinitionsTable + ".definition_guid",
 		lrpDeploymentsTable + ".domain",
 		lrpDeploymentsTable + ".instances",

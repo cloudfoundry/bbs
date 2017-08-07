@@ -5,6 +5,7 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actual_lrp.proto";
 import "desired_lrp.proto";
+import "lrp_deployment.proto";
 import "task.proto";
 
 message ActualLRPCreatedEvent  {
@@ -31,6 +32,19 @@ message DesiredLRPChangedEvent {
 
 message DesiredLRPRemovedEvent {
   optional DesiredLRP desired_lrp = 1;
+}
+
+message LRPDeploymentCreatedEvent {
+  optional LRPDeployment lrp = 1;
+}
+
+message LRPDeploymentChangedEvent {
+  optional LRPDeployment before = 1;
+  optional LRPDeployment after = 2;
+}
+
+message LRPDeploymentRemovedEvent {
+  optional LRPDeployment lrp = 1;
 }
 
 message ActualLRPCrashedEvent {

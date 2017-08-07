@@ -125,6 +125,59 @@ func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 	return nil
 }
 
+type LRPDeploymentCreatedEvent struct {
+	Lrp *LRPDeployment `protobuf:"bytes,1,opt,name=lrp" json:"lrp,omitempty"`
+}
+
+func (m *LRPDeploymentCreatedEvent) Reset()                    { *m = LRPDeploymentCreatedEvent{} }
+func (*LRPDeploymentCreatedEvent) ProtoMessage()               {}
+func (*LRPDeploymentCreatedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{6} }
+
+func (m *LRPDeploymentCreatedEvent) GetLrp() *LRPDeployment {
+	if m != nil {
+		return m.Lrp
+	}
+	return nil
+}
+
+type LRPDeploymentChangedEvent struct {
+	Before *LRPDeployment `protobuf:"bytes,1,opt,name=before" json:"before,omitempty"`
+	After  *LRPDeployment `protobuf:"bytes,2,opt,name=after" json:"after,omitempty"`
+}
+
+func (m *LRPDeploymentChangedEvent) Reset()                    { *m = LRPDeploymentChangedEvent{} }
+func (*LRPDeploymentChangedEvent) ProtoMessage()               {}
+func (*LRPDeploymentChangedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{7} }
+
+func (m *LRPDeploymentChangedEvent) GetBefore() *LRPDeployment {
+	if m != nil {
+		return m.Before
+	}
+	return nil
+}
+
+func (m *LRPDeploymentChangedEvent) GetAfter() *LRPDeployment {
+	if m != nil {
+		return m.After
+	}
+	return nil
+}
+
+type LRPDeploymentRemovedEvent struct {
+	Lrp *LRPDeployment `protobuf:"bytes,1,opt,name=lrp" json:"lrp,omitempty"`
+}
+
+func (m *LRPDeploymentRemovedEvent) Reset()                    { *m = LRPDeploymentRemovedEvent{} }
+func (*LRPDeploymentRemovedEvent) ProtoMessage()               {}
+func (*LRPDeploymentRemovedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{8} }
+
+func (m *LRPDeploymentRemovedEvent) GetLrp() *LRPDeployment {
+	if m != nil {
+		return m.Lrp
+	}
+	return nil
+}
+
 type ActualLRPCrashedEvent struct {
 	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,embedded=actual_lrp_key" json:""`
 	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,embedded=actual_lrp_instance_key" json:""`
@@ -135,7 +188,7 @@ type ActualLRPCrashedEvent struct {
 
 func (m *ActualLRPCrashedEvent) Reset()                    { *m = ActualLRPCrashedEvent{} }
 func (*ActualLRPCrashedEvent) ProtoMessage()               {}
-func (*ActualLRPCrashedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{6} }
+func (*ActualLRPCrashedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{9} }
 
 func (m *ActualLRPCrashedEvent) GetCrashCount() int32 {
 	if m != nil {
@@ -164,7 +217,7 @@ type EventsByCellId struct {
 
 func (m *EventsByCellId) Reset()                    { *m = EventsByCellId{} }
 func (*EventsByCellId) ProtoMessage()               {}
-func (*EventsByCellId) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{7} }
+func (*EventsByCellId) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{10} }
 
 func (m *EventsByCellId) GetCellId() string {
 	if m != nil {
@@ -179,7 +232,7 @@ type TaskCreatedEvent struct {
 
 func (m *TaskCreatedEvent) Reset()                    { *m = TaskCreatedEvent{} }
 func (*TaskCreatedEvent) ProtoMessage()               {}
-func (*TaskCreatedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{8} }
+func (*TaskCreatedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{11} }
 
 func (m *TaskCreatedEvent) GetTask() *Task {
 	if m != nil {
@@ -195,7 +248,7 @@ type TaskChangedEvent struct {
 
 func (m *TaskChangedEvent) Reset()                    { *m = TaskChangedEvent{} }
 func (*TaskChangedEvent) ProtoMessage()               {}
-func (*TaskChangedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{9} }
+func (*TaskChangedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{12} }
 
 func (m *TaskChangedEvent) GetBefore() *Task {
 	if m != nil {
@@ -217,7 +270,7 @@ type TaskRemovedEvent struct {
 
 func (m *TaskRemovedEvent) Reset()                    { *m = TaskRemovedEvent{} }
 func (*TaskRemovedEvent) ProtoMessage()               {}
-func (*TaskRemovedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{10} }
+func (*TaskRemovedEvent) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{13} }
 
 func (m *TaskRemovedEvent) GetTask() *Task {
 	if m != nil {
@@ -233,6 +286,9 @@ func init() {
 	proto.RegisterType((*DesiredLRPCreatedEvent)(nil), "models.DesiredLRPCreatedEvent")
 	proto.RegisterType((*DesiredLRPChangedEvent)(nil), "models.DesiredLRPChangedEvent")
 	proto.RegisterType((*DesiredLRPRemovedEvent)(nil), "models.DesiredLRPRemovedEvent")
+	proto.RegisterType((*LRPDeploymentCreatedEvent)(nil), "models.LRPDeploymentCreatedEvent")
+	proto.RegisterType((*LRPDeploymentChangedEvent)(nil), "models.LRPDeploymentChangedEvent")
+	proto.RegisterType((*LRPDeploymentRemovedEvent)(nil), "models.LRPDeploymentRemovedEvent")
 	proto.RegisterType((*ActualLRPCrashedEvent)(nil), "models.ActualLRPCrashedEvent")
 	proto.RegisterType((*EventsByCellId)(nil), "models.EventsByCellId")
 	proto.RegisterType((*TaskCreatedEvent)(nil), "models.TaskCreatedEvent")
@@ -421,6 +477,99 @@ func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+		return false
+	}
+	return true
+}
+func (this *LRPDeploymentCreatedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*LRPDeploymentCreatedEvent)
+	if !ok {
+		that2, ok := that.(LRPDeploymentCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Lrp.Equal(that1.Lrp) {
+		return false
+	}
+	return true
+}
+func (this *LRPDeploymentChangedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*LRPDeploymentChangedEvent)
+	if !ok {
+		that2, ok := that.(LRPDeploymentChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	return true
+}
+func (this *LRPDeploymentRemovedEvent) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*LRPDeploymentRemovedEvent)
+	if !ok {
+		that2, ok := that.(LRPDeploymentRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if !this.Lrp.Equal(that1.Lrp) {
 		return false
 	}
 	return true
@@ -664,6 +813,45 @@ func (this *DesiredLRPRemovedEvent) GoString() string {
 	s = append(s, "&models.DesiredLRPRemovedEvent{")
 	if this.DesiredLrp != nil {
 		s = append(s, "DesiredLrp: "+fmt.Sprintf("%#v", this.DesiredLrp)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *LRPDeploymentCreatedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.LRPDeploymentCreatedEvent{")
+	if this.Lrp != nil {
+		s = append(s, "Lrp: "+fmt.Sprintf("%#v", this.Lrp)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *LRPDeploymentChangedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.LRPDeploymentChangedEvent{")
+	if this.Before != nil {
+		s = append(s, "Before: "+fmt.Sprintf("%#v", this.Before)+",\n")
+	}
+	if this.After != nil {
+		s = append(s, "After: "+fmt.Sprintf("%#v", this.After)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *LRPDeploymentRemovedEvent) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.LRPDeploymentRemovedEvent{")
+	if this.Lrp != nil {
+		s = append(s, "Lrp: "+fmt.Sprintf("%#v", this.Lrp)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
@@ -927,6 +1115,100 @@ func (m *DesiredLRPRemovedEvent) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *LRPDeploymentCreatedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LRPDeploymentCreatedEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Lrp != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.Lrp.Size()))
+		n9, err := m.Lrp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	return i, nil
+}
+
+func (m *LRPDeploymentChangedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LRPDeploymentChangedEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Before != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.Before.Size()))
+		n10, err := m.Before.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	if m.After != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.After.Size()))
+		n11, err := m.After.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+
+func (m *LRPDeploymentRemovedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LRPDeploymentRemovedEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Lrp != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintEvents(dAtA, i, uint64(m.Lrp.Size()))
+		n12, err := m.Lrp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	return i, nil
+}
+
 func (m *ActualLRPCrashedEvent) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -945,19 +1227,19 @@ func (m *ActualLRPCrashedEvent) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintEvents(dAtA, i, uint64(m.ActualLRPKey.Size()))
-	n9, err := m.ActualLRPKey.MarshalTo(dAtA[i:])
+	n13, err := m.ActualLRPKey.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n9
+	i += n13
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintEvents(dAtA, i, uint64(m.ActualLRPInstanceKey.Size()))
-	n10, err := m.ActualLRPInstanceKey.MarshalTo(dAtA[i:])
+	n14, err := m.ActualLRPInstanceKey.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n10
+	i += n14
 	dAtA[i] = 0x18
 	i++
 	i = encodeVarintEvents(dAtA, i, uint64(m.CrashCount))
@@ -1012,11 +1294,11 @@ func (m *TaskCreatedEvent) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(m.Task.Size()))
-		n11, err := m.Task.MarshalTo(dAtA[i:])
+		n15, err := m.Task.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n15
 	}
 	return i, nil
 }
@@ -1040,21 +1322,21 @@ func (m *TaskChangedEvent) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(m.Before.Size()))
-		n12, err := m.Before.MarshalTo(dAtA[i:])
+		n16, err := m.Before.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n16
 	}
 	if m.After != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(m.After.Size()))
-		n13, err := m.After.MarshalTo(dAtA[i:])
+		n17, err := m.After.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n17
 	}
 	return i, nil
 }
@@ -1078,11 +1360,11 @@ func (m *TaskRemovedEvent) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(m.Task.Size()))
-		n14, err := m.Task.MarshalTo(dAtA[i:])
+		n18, err := m.Task.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n18
 	}
 	return i, nil
 }
@@ -1177,6 +1459,40 @@ func (m *DesiredLRPRemovedEvent) Size() (n int) {
 	_ = l
 	if m.DesiredLrp != nil {
 		l = m.DesiredLrp.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *LRPDeploymentCreatedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Lrp != nil {
+		l = m.Lrp.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *LRPDeploymentChangedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Before != nil {
+		l = m.Before.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.After != nil {
+		l = m.After.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *LRPDeploymentRemovedEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Lrp != nil {
+		l = m.Lrp.Size()
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -1309,6 +1625,37 @@ func (this *DesiredLRPRemovedEvent) String() string {
 	}
 	s := strings.Join([]string{`&DesiredLRPRemovedEvent{`,
 		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *LRPDeploymentCreatedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&LRPDeploymentCreatedEvent{`,
+		`Lrp:` + strings.Replace(fmt.Sprintf("%v", this.Lrp), "LRPDeployment", "LRPDeployment", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *LRPDeploymentChangedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&LRPDeploymentChangedEvent{`,
+		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "LRPDeployment", "LRPDeployment", 1) + `,`,
+		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "LRPDeployment", "LRPDeployment", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *LRPDeploymentRemovedEvent) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&LRPDeploymentRemovedEvent{`,
+		`Lrp:` + strings.Replace(fmt.Sprintf("%v", this.Lrp), "LRPDeployment", "LRPDeployment", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1916,6 +2263,288 @@ func (m *DesiredLRPRemovedEvent) Unmarshal(dAtA []byte) error {
 				m.DesiredLrp = &DesiredLRP{}
 			}
 			if err := m.DesiredLrp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LRPDeploymentCreatedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LRPDeploymentCreatedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LRPDeploymentCreatedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Lrp", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Lrp == nil {
+				m.Lrp = &LRPDeployment{}
+			}
+			if err := m.Lrp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LRPDeploymentChangedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LRPDeploymentChangedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LRPDeploymentChangedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Before", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Before == nil {
+				m.Before = &LRPDeployment{}
+			}
+			if err := m.Before.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field After", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.After == nil {
+				m.After = &LRPDeployment{}
+			}
+			if err := m.After.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LRPDeploymentRemovedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LRPDeploymentRemovedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LRPDeploymentRemovedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Lrp", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Lrp == nil {
+				m.Lrp = &LRPDeployment{}
+			}
+			if err := m.Lrp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2586,40 +3215,45 @@ var (
 func init() { proto.RegisterFile("events.proto", fileDescriptorEvents) }
 
 var fileDescriptorEvents = []byte{
-	// 560 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xd1, 0x8a, 0xd3, 0x40,
-	0x14, 0x86, 0x33, 0xbb, 0x6d, 0x65, 0xa7, 0xa5, 0xac, 0x61, 0xad, 0xa5, 0xe8, 0xb4, 0x04, 0x85,
-	0x22, 0xb5, 0x05, 0xf5, 0x01, 0xdc, 0x56, 0xd1, 0x65, 0x2b, 0x48, 0xf0, 0x46, 0x10, 0xca, 0x34,
-	0x39, 0x6d, 0x43, 0xd3, 0x4c, 0x48, 0x26, 0x0b, 0xbd, 0xf3, 0x11, 0x7c, 0x0c, 0x1f, 0x65, 0xf1,
-	0xaa, 0x97, 0x5e, 0x15, 0x1b, 0x6f, 0x64, 0xaf, 0xf6, 0x11, 0x24, 0x93, 0x49, 0xcd, 0xb4, 0x8b,
-	0x0b, 0xe2, 0xdd, 0xcc, 0x39, 0xff, 0xf9, 0x73, 0xe6, 0xe3, 0x0f, 0xae, 0xc0, 0x05, 0x78, 0x3c,
-	0xec, 0xfa, 0x01, 0xe3, 0x4c, 0x2f, 0x2d, 0x98, 0x0d, 0x6e, 0xd8, 0x78, 0x3a, 0x75, 0xf8, 0x2c,
-	0x1a, 0x77, 0x2d, 0xb6, 0xe8, 0x4d, 0xd9, 0x94, 0xf5, 0x44, 0x7b, 0x1c, 0x4d, 0xc4, 0x4d, 0x5c,
-	0xc4, 0x29, 0x1d, 0x6b, 0x1c, 0x53, 0x8b, 0x47, 0xd4, 0x1d, 0xb9, 0x81, 0x2f, 0x2b, 0x77, 0x6d,
-	0x08, 0x9d, 0x00, 0xec, 0x5c, 0x09, 0x73, 0x1a, 0xce, 0xd3, 0xb3, 0xf1, 0x11, 0xdf, 0x3b, 0x15,
-	0x23, 0x43, 0xf3, 0xfd, 0x20, 0x00, 0xca, 0xc1, 0x7e, 0x9d, 0xec, 0xa1, 0xbf, 0xc4, 0x39, 0xaf,
-	0xd1, 0x34, 0x60, 0x91, 0x5f, 0x47, 0x2d, 0xd4, 0x2e, 0x3f, 0xab, 0x75, 0xd3, 0xdd, 0xba, 0xdb,
-	0xc1, 0x37, 0x49, 0xd7, 0xac, 0xa6, 0xfa, 0x61, 0xe0, 0x8b, 0xbb, 0x11, 0xe5, 0xad, 0x67, 0xd4,
-	0x9b, 0x66, 0xd6, 0x5d, 0x5c, 0x1a, 0xc3, 0x84, 0x05, 0x70, 0x8b, 0xa1, 0x54, 0xe9, 0x1d, 0x5c,
-	0xa4, 0x13, 0x0e, 0x41, 0xfd, 0xe0, 0xaf, 0xf2, 0x54, 0xa4, 0xbc, 0xc8, 0x84, 0x05, 0xbb, 0xf8,
-	0x7f, 0x2f, 0x7a, 0x87, 0x6b, 0xaf, 0x52, 0x9a, 0xbb, 0xb4, 0x9e, 0xe3, 0x72, 0x8e, 0xb3, 0xb4,
-	0xd5, 0x33, 0xdb, 0x3f, 0x43, 0x26, 0x96, 0xb2, 0x61, 0xe0, 0x1b, 0x9e, 0x62, 0x97, 0x27, 0xf4,
-	0x64, 0x87, 0xd0, 0x4d, 0x4e, 0x19, 0x9d, 0xb6, 0x4a, 0xe7, 0x26, 0xa9, 0x24, 0xa3, 0xac, 0xaf,
-	0xa0, 0xf9, 0xa7, 0xf5, 0xbf, 0x1d, 0x28, 0xd9, 0xa1, 0xe1, 0x2c, 0xb3, 0x7b, 0x8b, 0xab, 0x39,
-	0xd2, 0x73, 0x58, 0x4a, 0xc7, 0x93, 0x3d, 0xce, 0xe7, 0xb0, 0xec, 0x57, 0x2e, 0xd7, 0x4d, 0x6d,
-	0xb5, 0x6e, 0xa2, 0xab, 0x75, 0x53, 0x33, 0x2b, 0x5b, 0xe6, 0xe7, 0xb0, 0xd4, 0x29, 0xbe, 0x9f,
-	0x73, 0x72, 0xbc, 0x90, 0x53, 0xcf, 0x02, 0x61, 0x99, 0x3e, 0xf7, 0xc1, 0x9e, 0xe5, 0x99, 0x14,
-	0xed, 0x5b, 0x9f, 0x6c, 0xad, 0x73, 0x1a, 0xfd, 0x31, 0x2e, 0x5b, 0xc9, 0xf2, 0x23, 0x8b, 0x45,
-	0x1e, 0xaf, 0x1f, 0xb6, 0x50, 0xbb, 0xd8, 0x2f, 0x24, 0x83, 0x26, 0x16, 0x8d, 0x41, 0x52, 0xd7,
-	0x4f, 0x71, 0x25, 0x95, 0x05, 0x40, 0x43, 0xe6, 0xd5, 0x0b, 0x2d, 0xd4, 0x3e, 0xea, 0x93, 0x44,
-	0x77, 0xb5, 0x6e, 0xd6, 0xf2, 0xbd, 0x0e, 0x5b, 0x38, 0x1c, 0x16, 0x3e, 0x5f, 0x9a, 0xa9, 0xb5,
-	0x29, 0xca, 0x7a, 0x03, 0x17, 0x43, 0xc7, 0xb3, 0xa0, 0x5e, 0x6c, 0xa1, 0xf6, 0xa1, 0xfc, 0x46,
-	0x5a, 0x32, 0x7a, 0xb8, 0x2a, 0xd8, 0x85, 0xfd, 0xe5, 0x00, 0x5c, 0xf7, 0xcc, 0xd6, 0x1f, 0xe2,
-	0x3b, 0x16, 0xb8, 0xee, 0xc8, 0xb1, 0x05, 0xbd, 0x23, 0xa9, 0x2f, 0x59, 0xa2, 0x6d, 0xbc, 0xc0,
-	0xc7, 0x1f, 0x68, 0x38, 0x57, 0x52, 0xd8, 0xc2, 0x85, 0xe4, 0xd7, 0x96, 0xb4, 0x2b, 0x19, 0x9a,
-	0x44, 0x67, 0x8a, 0x8e, 0xf1, 0x49, 0x4e, 0xe5, 0xc3, 0xf6, 0x68, 0x27, 0x6c, 0xea, 0x5c, 0x16,
-	0x33, 0x43, 0x8d, 0x99, 0x2a, 0x92, 0x01, 0x93, 0x3b, 0x29, 0xd1, 0xba, 0x75, 0xa7, 0x7e, 0x67,
-	0xb5, 0x21, 0xda, 0xf7, 0x0d, 0xd1, 0xae, 0x37, 0x04, 0x7d, 0x8e, 0x09, 0xfa, 0x1a, 0x13, 0x74,
-	0x19, 0x13, 0xb4, 0x8a, 0x09, 0xfa, 0x11, 0x13, 0xf4, 0x2b, 0x26, 0xda, 0x75, 0x4c, 0xd0, 0x97,
-	0x9f, 0x44, 0xfb, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x35, 0x9e, 0x86, 0xb0, 0x27, 0x05, 0x00, 0x00,
+	// 626 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x41, 0x6e, 0xd3, 0x40,
+	0x14, 0x86, 0x3d, 0x6d, 0x53, 0xd4, 0x49, 0x14, 0x15, 0x2b, 0x0d, 0x21, 0x82, 0x49, 0x64, 0x81,
+	0x88, 0x20, 0x4d, 0x24, 0xe0, 0x00, 0x34, 0x09, 0x82, 0xaa, 0x41, 0xaa, 0x2c, 0x36, 0x48, 0x48,
+	0x91, 0x63, 0x4f, 0x12, 0x2b, 0xb6, 0xc7, 0xb2, 0xc7, 0x45, 0xde, 0x71, 0x04, 0x8e, 0xc1, 0x51,
+	0x2a, 0x56, 0x59, 0xb2, 0x8a, 0x88, 0xd9, 0xa0, 0xae, 0x7a, 0x04, 0xe4, 0xf1, 0x38, 0xf5, 0x38,
+	0x2d, 0x45, 0x88, 0x9d, 0xe7, 0xbd, 0xff, 0xfd, 0xf3, 0xe6, 0xd3, 0x9f, 0xc0, 0x12, 0x3e, 0xc3,
+	0x0e, 0xf5, 0x3b, 0xae, 0x47, 0x28, 0x91, 0x77, 0x6d, 0x62, 0x60, 0xcb, 0xaf, 0x1f, 0x4e, 0x4d,
+	0x3a, 0x0b, 0xc6, 0x1d, 0x9d, 0xd8, 0xdd, 0x29, 0x99, 0x92, 0x2e, 0x6b, 0x8f, 0x83, 0x09, 0x3b,
+	0xb1, 0x03, 0xfb, 0x4a, 0xc6, 0xea, 0xfb, 0x9a, 0x4e, 0x03, 0xcd, 0x1a, 0x59, 0x9e, 0xcb, 0x2b,
+	0x77, 0x0d, 0xec, 0x9b, 0x1e, 0x36, 0x32, 0xa5, 0x8a, 0xe5, 0xb9, 0x23, 0x03, 0xbb, 0x16, 0x09,
+	0x6d, 0xec, 0x50, 0x5e, 0x85, 0x54, 0xf3, 0xe7, 0xc9, 0xb7, 0xf2, 0x01, 0x1e, 0x1c, 0x31, 0xa3,
+	0xa1, 0x7a, 0xda, 0xf7, 0xb0, 0x46, 0xb1, 0xf1, 0x3a, 0xde, 0x4e, 0x7e, 0x05, 0x33, 0x37, 0x8c,
+	0xa6, 0x1e, 0x09, 0xdc, 0x1a, 0x68, 0x82, 0x56, 0xf1, 0x79, 0xb5, 0x93, 0x6c, 0xdc, 0x59, 0x0f,
+	0xbe, 0x89, 0xbb, 0x6a, 0x39, 0xd1, 0x0f, 0x3d, 0x97, 0x9d, 0x95, 0x20, 0x6b, 0x3d, 0xd3, 0x9c,
+	0x69, 0x6a, 0xdd, 0x81, 0xbb, 0x63, 0x3c, 0x21, 0x1e, 0xbe, 0xc5, 0x90, 0xab, 0xe4, 0x36, 0x2c,
+	0x68, 0x13, 0x8a, 0xbd, 0xda, 0xd6, 0x1f, 0xe5, 0x89, 0x48, 0x78, 0x91, 0x8a, 0x6d, 0x72, 0xf6,
+	0xff, 0x5e, 0xf4, 0x0e, 0x56, 0x07, 0x09, 0xe3, 0x3c, 0xad, 0x17, 0xb0, 0x98, 0xa1, 0xcf, 0x6d,
+	0xe5, 0xd4, 0xf6, 0x6a, 0x48, 0x85, 0x5c, 0x36, 0xf4, 0x5c, 0xc5, 0x11, 0xec, 0xb2, 0x84, 0x9e,
+	0xe6, 0x08, 0x5d, 0xe7, 0x94, 0xd2, 0x69, 0x89, 0x74, 0xae, 0x93, 0x72, 0x32, 0xc2, 0xfa, 0x02,
+	0x9a, 0x7f, 0x5a, 0x7f, 0x00, 0xef, 0x0f, 0xd5, 0xd3, 0xc1, 0x3a, 0x5d, 0x02, 0x90, 0x27, 0x70,
+	0xfb, 0xca, 0xe9, 0x20, 0x75, 0x12, 0xf4, 0x6a, 0xac, 0x50, 0x3e, 0xe5, 0x5d, 0xb2, 0x1c, 0x0e,
+	0x73, 0x1c, 0x6e, 0x30, 0x4a, 0x51, 0x3c, 0x13, 0x51, 0xdc, 0xa0, 0xe6, 0x34, 0xf2, 0xeb, 0x0b,
+	0x40, 0xfe, 0x7a, 0xfd, 0x6f, 0x5b, 0xc2, 0x0f, 0x48, 0xf3, 0x67, 0xa9, 0xc5, 0x5b, 0x58, 0xce,
+	0xc4, 0x6d, 0x8e, 0x43, 0xee, 0x56, 0xd9, 0x08, 0xdb, 0x09, 0x0e, 0x7b, 0xa5, 0xf3, 0x65, 0x43,
+	0x5a, 0x2c, 0x1b, 0xe0, 0x62, 0xd9, 0x90, 0xd4, 0xd2, 0x3a, 0x78, 0x27, 0x38, 0x94, 0x35, 0x78,
+	0x2f, 0xe3, 0x64, 0x3a, 0x3e, 0xd5, 0x1c, 0x1d, 0x33, 0xcb, 0xe4, 0xa1, 0x0f, 0x36, 0x2c, 0x8f,
+	0xb9, 0x68, 0xd3, 0xba, 0xb2, 0xb6, 0xce, 0x68, 0xe4, 0xc7, 0xb0, 0xa8, 0xc7, 0xcb, 0x8f, 0x74,
+	0x12, 0x38, 0xb4, 0xb6, 0xdd, 0x04, 0xad, 0x42, 0x6f, 0x27, 0x1e, 0x54, 0x21, 0x6b, 0xf4, 0xe3,
+	0xba, 0x7c, 0x04, 0x4b, 0x89, 0xcc, 0xc3, 0x9a, 0x4f, 0x9c, 0xda, 0x4e, 0x13, 0xb4, 0xf6, 0x7a,
+	0x28, 0xd6, 0x5d, 0x2c, 0x1b, 0xd5, 0x6c, 0xaf, 0x4d, 0x6c, 0x93, 0x62, 0xdb, 0xa5, 0xa1, 0x9a,
+	0x58, 0xab, 0xac, 0x2c, 0xd7, 0x61, 0xc1, 0x37, 0x1d, 0x1d, 0xd7, 0x0a, 0x4d, 0xd0, 0xda, 0xe6,
+	0x77, 0x24, 0x25, 0xa5, 0x0b, 0xcb, 0x8c, 0x9d, 0xdf, 0x0b, 0xfb, 0xd8, 0xb2, 0x8e, 0x0d, 0xf9,
+	0x21, 0xbc, 0xa3, 0x63, 0xcb, 0x1a, 0x99, 0x06, 0xa3, 0xb7, 0xc7, 0xf5, 0xbb, 0x3a, 0x6b, 0x2b,
+	0x2f, 0xe1, 0xfe, 0x7b, 0xcd, 0x9f, 0x0b, 0xc9, 0x6b, 0xc2, 0x9d, 0xf8, 0xff, 0x8d, 0xd3, 0x2e,
+	0xa5, 0x68, 0x62, 0x9d, 0xca, 0x3a, 0xca, 0x47, 0x3e, 0x95, 0x4d, 0xda, 0xa3, 0x5c, 0xd2, 0xc4,
+	0xb9, 0x34, 0x60, 0x8a, 0x18, 0x30, 0x51, 0xc4, 0x73, 0xc5, 0x77, 0x12, 0xe2, 0x74, 0xeb, 0x4e,
+	0xbd, 0xf6, 0x62, 0x85, 0xa4, 0xef, 0x2b, 0x24, 0x5d, 0xae, 0x10, 0xf8, 0x1c, 0x21, 0xf0, 0x35,
+	0x42, 0xe0, 0x3c, 0x42, 0x60, 0x11, 0x21, 0xf0, 0x23, 0x42, 0xe0, 0x57, 0x84, 0xa4, 0xcb, 0x08,
+	0x81, 0x2f, 0x3f, 0x91, 0xf4, 0x3b, 0x00, 0x00, 0xff, 0xff, 0xc9, 0x7e, 0x5e, 0x92, 0x42, 0x06,
+	0x00, 0x00,
 }

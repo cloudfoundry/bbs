@@ -36,3 +36,8 @@ message ActivateLRPDeploymentDefinitionRequest {
   optional string id = 1;
   optional string definition_id = 2;
 }
+
+message LRPDeploymentsSchedulingInfoResponse {
+  optional Error error = 1;
+  repeated LRPDeploymentSchedulingInfo lrp_deployment_scheduling_info = 2;
+}

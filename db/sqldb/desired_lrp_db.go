@@ -375,7 +375,9 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scanner RowScanner, dest ...interface{}) (*models.DesiredLRPSchedulingInfo, error) {
 	schedulingInfo := &models.DesiredLRPSchedulingInfo{}
 	var routeData, volumePlacementData, placementTagData []byte
+	var deploymentProcessGuid string
 	values := []interface{}{
+		&deploymentProcessGuid,
 		&schedulingInfo.ProcessGuid,
 		&schedulingInfo.Domain,
 		&schedulingInfo.Instances,

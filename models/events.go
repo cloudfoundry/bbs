@@ -18,6 +18,10 @@ const (
 	EventTypeDesiredLRPChanged = "desired_lrp_changed"
 	EventTypeDesiredLRPRemoved = "desired_lrp_removed"
 
+	EventTypeLRPDeploymentCreated = "lrp_deployment_created"
+	EventTypeLRPDeploymentChanged = "lrp_deployment_changed"
+	EventTypeLRPDeploymentRemoved = "lrp_deployment_removed"
+
 	EventTypeActualLRPCreated = "actual_lrp_created"
 	EventTypeActualLRPChanged = "actual_lrp_changed"
 	EventTypeActualLRPRemoved = "actual_lrp_removed"
@@ -86,6 +90,52 @@ func (event *DesiredLRPRemovedEvent) EventType() string {
 func (event DesiredLRPRemovedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
 }
+
+//////
+func NewLRPDeploymentCreatedEvent(lrp *LRPDeployment) *LRPDeploymentCreatedEvent {
+	return &LRPDeploymentCreatedEvent{
+		Lrp: lrp,
+	}
+}
+
+func (event *LRPDeploymentCreatedEvent) EventType() string {
+	return EventTypeLRPDeploymentCreated
+}
+
+func (event *LRPDeploymentCreatedEvent) Key() string {
+	return event.Lrp.GetProcessGuid()
+}
+
+func NewLRPDeploymentChangedEvent(before, after *LRPDeployment) *LRPDeploymentChangedEvent {
+	return &LRPDeploymentChangedEvent{
+		Before: before,
+		After:  after,
+	}
+}
+
+func (event *LRPDeploymentChangedEvent) EventType() string {
+	return EventTypeLRPDeploymentChanged
+}
+
+func (event *LRPDeploymentChangedEvent) Key() string {
+	return event.Before.GetProcessGuid()
+}
+
+func NewLRPDeploymentRemovedEvent(lrp *LRPDeployment) *LRPDeploymentRemovedEvent {
+	return &LRPDeploymentRemovedEvent{
+		Lrp: lrp,
+	}
+}
+
+func (event *LRPDeploymentRemovedEvent) EventType() string {
+	return EventTypeLRPDeploymentRemoved
+}
+
+func (event LRPDeploymentRemovedEvent) Key() string {
+	return event.Lrp.GetProcessGuid()
+}
+
+//////
 
 func NewActualLRPChangedEvent(before, after *ActualLRPGroup) *ActualLRPChangedEvent {
 	return &ActualLRPChangedEvent{

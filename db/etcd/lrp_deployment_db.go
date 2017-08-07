@@ -36,3 +36,7 @@ func (db *ETCDDB) LRPDeploymentByProcessGuid(logger lager.Logger, guid string) (
 func (db *ETCDDB) LRPDeployments(logger lager.Logger, ids []string) ([]*models.LRPDeployment, error) {
 	return nil, nil
 }
+
+func (db *ETCDDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error) {
+	return nil, nil
+}

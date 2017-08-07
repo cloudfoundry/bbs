@@ -179,7 +179,7 @@ func (db *SQLDB) constructUpdatableDeploymentAndInsertDefinition(
 	}
 
 	if definition != nil {
-		lrpKey := models.NewDesiredLRPKey(processGuid, desiredLRPDeployment.Domain, definition.LogGuid)
+		lrpKey := models.NewDesiredLRPKey(definition.DefinitionId, desiredLRPDeployment.Domain, definition.LogGuid)
 		runInfo := definition.DesiredLRPRunInfo(lrpKey, db.clock.Now())
 
 		runInfoData, err := db.serializeModel(logger, &runInfo)
@@ -578,6 +578,68 @@ func (db *SQLDB) LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*mo
 	return lrpDeployment, err
 }
 
+func (db *SQLDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error) {
+	logger = logger.WithData(lager.Data{"filter": filter})
+	logger.Debug("start")
+	defer logger.Debug("complete")
+
+	var wheres []string
+	var values []interface{}
+	var wheresClause string
+
+	if len(filter.Ids) > 0 {
+		wheres = append(wheres, whereClauseForLRPDeploymentProcessGuids(filter.Ids))
+
+		for _, guid := range filter.Ids {
+			values = append(values, guid)
+		}
+	}
+
+	if len(wheres) != 0 {
+		wheresClause = " WHERE "
+		wheresClause = wheresClause + strings.Join(wheres, " AND ")
+	}
+	results := map[string]*models.LRPDeploymentSchedulingInfo{}
+	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+		rows, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, schedulingInfoColumns, wheresClause, values)
+		if err != nil {
+			logger.Error("failed-query", err)
+			return err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			deployment, definition, err := db.fetchSchedulingInfo(logger, rows)
+			if err != nil {
+				logger.Error("failed-reading-row", err)
+				continue
+			}
+			if deployment, ok := results[deployment.ProcessGuid]; ok {
+				deployment.Definitions[definition.DefinitionId] = definition
+			} else {
+				deployment.Definitions = map[string]*models.LRPDefinitionSchedulingInfo{
+					definition.DefinitionId: definition,
+				}
+				results[deployment.ProcessGuid] = deployment
+			}
+		}
+
+		if rows.Err() != nil {
+			logger.Error("failed-fetching-row", rows.Err())
+			return db.convertSQLError(rows.Err())
+		}
+
+		return nil
+	})
+
+	deploymentsSchedulingInfo := []*models.LRPDeploymentSchedulingInfo{}
+	for _, deploymentSchedulingInfo := range results {
+		deploymentsSchedulingInfo = append(deploymentsSchedulingInfo, deploymentSchedulingInfo)
+	}
+
+	return deploymentsSchedulingInfo, err
+}
+
 func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, id string) (*models.LRPDeployment, error) {
 	var lrpDeployment *models.LRPDeployment
 	var err error
@@ -611,4 +673,82 @@ func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, id string) 
 
 	lrpDeployment.Definitions = definitions
 	return lrpDeployment, nil
+}
+
+func whereClauseForLRPDeploymentProcessGuids(filter []string) string {
+	var questionMarks []string
+
+	where := "process_guid IN ("
+	for range filter {
+		questionMarks = append(questionMarks, "?")
+
+	}
+
+	where += strings.Join(questionMarks, ", ")
+	return where + ")"
+}
+
+func (db *SQLDB) fetchSchedulingInfo(logger lager.Logger, scanner RowScanner, dest ...interface{}) (*models.LRPDeploymentSchedulingInfo, *models.LRPDefinitionSchedulingInfo, error) {
+	deployment := &models.LRPDeploymentSchedulingInfo{}
+	definition := &models.LRPDefinitionSchedulingInfo{}
+	var routeData, volumePlacementData, placementTagData []byte
+	values := []interface{}{
+		&deployment.ProcessGuid,
+		&definition.DefinitionId,
+		&deployment.Domain,
+		&deployment.Instances,
+		&deployment.Annotation,
+		&routeData,
+		&deployment.ModificationTag.Epoch,
+		&deployment.ModificationTag.Index,
+		&definition.LogGuid,
+		&definition.MemoryMb,
+		&definition.DiskMb,
+		&definition.MaxPids,
+		&definition.Ports,
+		&definition.RootFs,
+		&volumePlacementData,
+		&placementTagData,
+	}
+	values = append(values, dest...)
+
+	err := scanner.Scan(values...)
+	if err == sql.ErrNoRows {
+		return nil, nil, err
+	}
+
+	if err != nil {
+		logger.Error("failed-scanning", err)
+		return nil, nil, err
+	}
+
+	var routes models.Routes
+	encodedData, err := db.encoder.Decode(routeData)
+	if err != nil {
+		logger.Error("failed-decrypting-routes", err)
+		return nil, nil, err
+	}
+	err = json.Unmarshal(encodedData, &routes)
+	if err != nil {
+		logger.Error("failed-parsing-routes", err)
+		return nil, nil, err
+	}
+	deployment.Routes = &routes
+
+	var volumePlacement models.VolumePlacement
+	err = db.deserializeModel(logger, volumePlacementData, &volumePlacement)
+	if err != nil {
+		logger.Error("failed-parsing-volume-placement", err)
+		return nil, nil, err
+	}
+	definition.VolumePlacement = &volumePlacement
+	if placementTagData != nil {
+		err = json.Unmarshal(placementTagData, &definition.PlacementTags)
+		if err != nil {
+			logger.Error("failed-parsing-placement-tags", err)
+			return nil, nil, err
+		}
+	}
+
+	return deployment, definition, nil
 }

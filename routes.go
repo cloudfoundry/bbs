@@ -51,6 +51,7 @@ const (
 	DeleteLRPDeploymentRoute             = "DeleteLRPDeployment"
 	ActivateLRPDeploymentDefinitionRoute = "ActivateLRPDeploymentDefinition"
 	LRPDeploymentsRoute                  = "LRPDeployments"
+	LRPDeploymentSchedulingInfoRoute     = "LRPDeploymentSchedulingInfo"
 
 	DesireDesiredLRPRoute_r1 = "DesireDesiredLRP_r1"
 	DesireDesiredLRPRoute_r0 = "DesireDesiredLRP"
@@ -135,6 +136,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/lrp_deployment/delete", Method: "POST", Name: DeleteLRPDeploymentRoute},
 	{Path: "/v1/lrp_deployment/activate", Method: "POST", Name: ActivateLRPDeploymentDefinitionRoute},
 	{Path: "/v1/lrp_deployment/list", Method: "POST", Name: LRPDeploymentsRoute},
+	{Path: "/v1/lrp_deployment_scheduling_infos/list", Method: "POST", Name: LRPDeploymentSchedulingInfoRoute},
 
 	// Tasks
 	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},

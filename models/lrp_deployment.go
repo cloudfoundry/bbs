@@ -5,8 +5,12 @@ import (
 	"time"
 )
 
+type LRPDeploymentFilter struct {
+	Ids []string
+}
+
 func (d *LRPDeploymentCreation) DesiredLRPKey() DesiredLRPKey {
-	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.Definition.LogGuid)
+	return NewDesiredLRPKey(d.Definition.DefinitionId, d.Domain, d.Definition.LogGuid)
 }
 
 func (lrp *LRPDeploymentCreation) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
@@ -29,13 +33,84 @@ func (lrp *LRPDeploymentCreation) LRPDeployment(modTag *ModificationTag) *LRPDep
 	}
 }
 
+func NewLRPDefinitionSchedulingInfo(
+	definitionId string,
+	logGuid string,
+	memoryMb int32,
+	diskMb int32,
+	rootFs string,
+	maxPids int32,
+	volumePlacement *VolumePlacement,
+	placementTags []string,
+) *LRPDefinitionSchedulingInfo {
+	return &LRPDefinitionSchedulingInfo{
+		DefinitionId:    definitionId,
+		LogGuid:         logGuid,
+		MemoryMb:        memoryMb,
+		DiskMb:          diskMb,
+		RootFs:          rootFs,
+		MaxPids:         maxPids,
+		VolumePlacement: volumePlacement,
+		PlacementTags:   placementTags,
+	}
+}
+
+func NewLRPDeploymentSchedulingInfo(
+	processGuid string,
+	domain string,
+	instances int32,
+	annotation string,
+	modTag ModificationTag,
+	routes *Routes,
+	definitions map[string]*LRPDefinitionSchedulingInfo,
+) LRPDeploymentSchedulingInfo {
+	return LRPDeploymentSchedulingInfo{
+		ProcessGuid:     processGuid,
+		Domain:          domain,
+		Instances:       instances,
+		Annotation:      annotation,
+		ModificationTag: modTag,
+		Routes:          routes,
+		Definitions:     definitions,
+	}
+}
+
+func (d *LRPDefinition) LRPDefinitionSchedulingInfo() *LRPDefinitionSchedulingInfo {
+	return &LRPDefinitionSchedulingInfo{
+		DefinitionId:    d.DefinitionId,
+		LogGuid:         d.LogGuid,
+		MemoryMb:        d.MemoryMb,
+		DiskMb:          d.DiskMb,
+		RootFs:          d.RootFs,
+		MaxPids:         d.MaxPids,
+		VolumePlacement: d.VolumePlacement,
+		PlacementTags:   d.PlacementTags,
+	}
+}
+
+func (d *LRPDeployment) LRPDeploymentSchedulingInfo() *LRPDeploymentSchedulingInfo {
+	definitions := make(map[string]*LRPDefinitionSchedulingInfo)
+	for defId, definition := range d.Definitions {
+		definitions[defId] = definition.LRPDefinitionSchedulingInfo()
+	}
+	return &LRPDeploymentSchedulingInfo{
+		ProcessGuid:     d.ProcessGuid,
+		Domain:          d.Domain,
+		Instances:       d.Instances,
+		Annotation:      d.Annotation,
+		ModificationTag: *d.ModificationTag,
+		Routes:          d.Routes,
+		Definitions:     definitions,
+	}
+}
+
 func (d *LRPDeployment) DesiredLRP(definitionId string) (DesiredLRP, error) {
 	definition, ok := d.Definitions[definitionId]
 	if !ok {
 		return DesiredLRP{}, errors.New("invalid-definition-id")
 	}
 
-	lrpKey := NewDesiredLRPKey(d.ProcessGuid, d.Domain, definition.LogGuid)
+	lrpKey := NewDesiredLRPKey(definition.DefinitionId, d.Domain, definition.LogGuid)
 	runInfo := definition.DesiredLRPRunInfo(lrpKey, time.Now())
 	schedInfo := NewDesiredLRPSchedulingInfo(
 		lrpKey, d.Annotation, d.Instances, definition.DesiredLRPResource(),

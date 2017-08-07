@@ -49,6 +49,37 @@ func NewLRPDeploymentHandler(
 	}
 }
 
+func (h *LRPDeploymentHandler) LRPDeploymentSchedulingInfo(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("lrp-deployments-schedulingInfo")
+
+	request := &models.LRPDeploymentsRequest{}
+	response := &models.LRPDeploymentsSchedulingInfoResponse{}
+
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer writeResponse(w, response)
+
+	err := parseRequest(logger, req, request)
+
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	filter := models.LRPDeploymentFilter{
+		Ids: request.Ids,
+	}
+	schedulingInfo, err := h.lrpDeploymentDB.LRPDeploymentSchedulingInfo(logger, filter)
+
+	if err != nil {
+		logger.Error("failed-retrieving-lrp-deployment-scheduling-info", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	response.LrpDeploymentSchedulingInfo = schedulingInfo
+}
+
 func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("create-lrp-deployment")
 
@@ -63,7 +94,7 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	_, err = h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Creation)
+	lrpDeployment, err := h.lrpDeploymentDB.CreateLRPDeployment(logger, request.Creation)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -76,6 +107,7 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 	}
 
 	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
+	go h.desiredHub.Emit(models.NewLRPDeploymentCreatedEvent(lrpDeployment))
 
 	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
 	h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
@@ -149,6 +181,8 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 		}
 
 		go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
+		go h.desiredHub.Emit(models.NewLRPDeploymentCreatedEvent(afterLrpDeployment))
+
 		schedulingInfo := lrp.DesiredLRPSchedulingInfo()
 		h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
 	} else {
@@ -157,12 +191,13 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 			response.Error = models.ConvertError(err)
 			return
 		}
-		after, err := beforeLrpDeployment.DesiredLRP(afterLrpDeployment.ActiveDefinitionId)
+		after, err := afterLrpDeployment.DesiredLRP(afterLrpDeployment.ActiveDefinitionId)
 		if err != nil {
 			response.Error = models.ConvertError(err)
 			return
 		}
 		go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(&before, &after))
+		go h.desiredHub.Emit(models.NewLRPDeploymentChangedEvent(beforeLrpDeployment, afterLrpDeployment))
 	}
 
 	if request.Update.Instances != nil {
@@ -226,6 +261,7 @@ func (h *LRPDeploymentHandler) DeleteLRPDeployment(logger lager.Logger, w http.R
 			continue
 		}
 		go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(&lrp))
+		go h.desiredHub.Emit(models.NewLRPDeploymentRemovedEvent(lrpDeployment))
 		h.desiredLRPHandler.stopInstancesFrom(logger, defID, 0)
 	}
 }
