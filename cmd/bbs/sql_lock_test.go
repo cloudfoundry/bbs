@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
@@ -122,7 +123,9 @@ var _ = Describe("SqlLock", func() {
 			})
 
 			It("exits", func() {
-				Eventually(bbsProcess.Wait()).Should(Receive())
+				// locket lock could take upto about 15 seconds to realize that the
+				// lock is lost. add extra 2 seconds to give bbs a chance to exit
+				Eventually(bbsProcess.Wait(), 17*time.Second).Should(Receive())
 			})
 		})
 
