@@ -3,6 +3,7 @@ package sqldb
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -105,8 +106,6 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 
 func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *models.LRPDeploymentUpdate) (*models.LRPDeployment, error) {
 
-	// Write a new lrp definition to the DB based on the definition in the updateLRPDeploymentUpdate
-	//Update lrp deployment with the new instances, routes, and annotation. Update the modification epoch tag
 	// - update the list of definition ids to include the new one we wrote
 	// - update the deployment with new active definition id
 	// Currrently always operating on the assumption there is a new defintion, therefore always inserting into the definitions table
@@ -522,8 +521,8 @@ func (db *SQLDB) LRPDeployments(logger lager.Logger, deploymentIds []string) ([]
 
 func (db *SQLDB) LRPDeploymentByDefinitionGuid(logger lager.Logger, id string) (*models.LRPDeployment, error) {
 	logger = logger.WithData(lager.Data{"definition_guid": id})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var lrpDeployment *models.LRPDeployment
 
@@ -535,6 +534,9 @@ func (db *SQLDB) LRPDeploymentByDefinitionGuid(logger lager.Logger, id string) (
 		row := db.oneLRPDeploymentWithDefinitions(logger, tx, lrpDeploymentColumns, wheresClause, values)
 		if row != nil {
 			lrpDeployment, err = db.fetchLRPDeployment(logger, row)
+			if err != nil {
+				return err
+			}
 		} else {
 			return helpers.ErrResourceNotFound
 		}
@@ -580,17 +582,17 @@ func (db *SQLDB) LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*mo
 
 func (db *SQLDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error) {
 	logger = logger.WithData(lager.Data{"filter": filter})
-	logger.Debug("start")
-	defer logger.Debug("complete")
+	logger.Info("start")
+	defer logger.Info("complete")
 
 	var wheres []string
 	var values []interface{}
 	var wheresClause string
 
-	if len(filter.Ids) > 0 {
-		wheres = append(wheres, whereClauseForLRPDeploymentProcessGuids(filter.Ids))
+	if len(filter.DefinitionIds) > 0 {
+		wheres = append(wheres, whereClauseForDefinitionGuids(filter.DefinitionIds))
 
-		for _, guid := range filter.Ids {
+		for _, guid := range filter.DefinitionIds {
 			values = append(values, guid)
 		}
 	}
@@ -609,13 +611,15 @@ func (db *SQLDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.
 		defer rows.Close()
 
 		for rows.Next() {
+			col, _ := rows.Columns()
+			fmt.Printf(">>>>>>>>>>%#v", col)
 			deployment, definition, err := db.fetchSchedulingInfo(logger, rows)
 			if err != nil {
 				logger.Error("failed-reading-row", err)
 				continue
 			}
-			if deployment, ok := results[deployment.ProcessGuid]; ok {
-				deployment.Definitions[definition.DefinitionId] = definition
+			if foundDeployment, ok := results[deployment.ProcessGuid]; ok {
+				foundDeployment.Definitions[definition.DefinitionId] = definition
 			} else {
 				deployment.Definitions = map[string]*models.LRPDefinitionSchedulingInfo{
 					definition.DefinitionId: definition,
@@ -675,10 +679,10 @@ func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, id string) 
 	return lrpDeployment, nil
 }
 
-func whereClauseForLRPDeploymentProcessGuids(filter []string) string {
+func whereClauseForDefinitionGuids(filter []string) string {
 	var questionMarks []string
 
-	where := "process_guid IN ("
+	where := "lrp_definitions.definition_guid IN ("
 	for range filter {
 		questionMarks = append(questionMarks, "?")
 
@@ -705,7 +709,6 @@ func (db *SQLDB) fetchSchedulingInfo(logger lager.Logger, scanner RowScanner, de
 		&definition.MemoryMb,
 		&definition.DiskMb,
 		&definition.MaxPids,
-		&definition.Ports,
 		&definition.RootFs,
 		&volumePlacementData,
 		&placementTagData,

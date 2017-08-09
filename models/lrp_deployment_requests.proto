@@ -25,6 +25,7 @@ message RemoveLRPDeploymentRequest {
 
 message LRPDeploymentsRequest {
   repeated string ids = 1;
+  repeated string definition_ids = 2;
 }
 
 message LRPDeploymentsResponse {

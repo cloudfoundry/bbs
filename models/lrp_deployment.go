@@ -6,7 +6,7 @@ import (
 )
 
 type LRPDeploymentFilter struct {
-	Ids []string
+	DefinitionIds []string
 }
 
 func (d *LRPDeploymentCreation) DesiredLRPKey() DesiredLRPKey {
@@ -19,6 +19,7 @@ func (lrp *LRPDeploymentCreation) DesiredLRPRunInfo(createdAt time.Time) Desired
 }
 
 func (lrp *LRPDeploymentCreation) LRPDeployment(modTag *ModificationTag) *LRPDeployment {
+	lrp.Definition.DefinitionId = lrp.DefinitionId
 	return &LRPDeployment{
 		ProcessGuid: lrp.ProcessGuid,
 		Domain:      lrp.Domain,

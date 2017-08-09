@@ -67,7 +67,7 @@ func (h *LRPDeploymentHandler) LRPDeploymentSchedulingInfo(logger lager.Logger, 
 	}
 
 	filter := models.LRPDeploymentFilter{
-		Ids: request.Ids,
+		DefinitionIds: request.DefinitionIds,
 	}
 	schedulingInfo, err := h.lrpDeploymentDB.LRPDeploymentSchedulingInfo(logger, filter)
 
@@ -106,7 +106,7 @@ func (h *LRPDeploymentHandler) CreateLRPDeployment(logger lager.Logger, w http.R
 		return
 	}
 
-	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
+	// go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
 	go h.desiredHub.Emit(models.NewLRPDeploymentCreatedEvent(lrpDeployment))
 
 	schedulingInfo := lrp.DesiredLRPSchedulingInfo()
@@ -180,23 +180,23 @@ func (h *LRPDeploymentHandler) UpdateLRPDeployment(logger lager.Logger, w http.R
 			return
 		}
 
-		go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
+		// go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(lrp))
 		go h.desiredHub.Emit(models.NewLRPDeploymentCreatedEvent(afterLrpDeployment))
 
 		schedulingInfo := lrp.DesiredLRPSchedulingInfo()
 		h.desiredLRPHandler.startInstanceRange(logger, 0, lrp.Instances, &schedulingInfo)
 	} else {
-		before, err := beforeLrpDeployment.DesiredLRP(beforeLrpDeployment.ActiveDefinitionId)
-		if err != nil {
-			response.Error = models.ConvertError(err)
-			return
-		}
-		after, err := afterLrpDeployment.DesiredLRP(afterLrpDeployment.ActiveDefinitionId)
-		if err != nil {
-			response.Error = models.ConvertError(err)
-			return
-		}
-		go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(&before, &after))
+		// before, err := beforeLrpDeployment.DesiredLRP(beforeLrpDeployment.ActiveDefinitionId)
+		// if err != nil {
+		// 	response.Error = models.ConvertError(err)
+		// 	return
+		// }
+		// after, err := afterLrpDeployment.DesiredLRP(afterLrpDeployment.ActiveDefinitionId)
+		// if err != nil {
+		// 	response.Error = models.ConvertError(err)
+		// 	return
+		// }
+		// go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(&before, &after))
 		go h.desiredHub.Emit(models.NewLRPDeploymentChangedEvent(beforeLrpDeployment, afterLrpDeployment))
 	}
 
@@ -255,12 +255,12 @@ func (h *LRPDeploymentHandler) DeleteLRPDeployment(logger lager.Logger, w http.R
 	}
 
 	for defID, _ := range lrpDeployment.Definitions {
-		lrp, err := lrpDeployment.DesiredLRP(defID)
-		if err != nil {
-			logger.Error("failed-to-convert-to-desired-lrp", err)
-			continue
-		}
-		go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(&lrp))
+		// lrp, err := lrpDeployment.DesiredLRP(defID)
+		// if err != nil {
+		// 	logger.Error("failed-to-convert-to-desired-lrp", err)
+		// 	continue
+		// }
+		// go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(&lrp))
 		go h.desiredHub.Emit(models.NewLRPDeploymentRemovedEvent(lrpDeployment))
 		h.desiredLRPHandler.stopInstancesFrom(logger, defID, 0)
 	}

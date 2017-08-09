@@ -143,7 +143,7 @@ type ExternalActualLRPClient interface {
 The ExternalDesiredLRPClient is used to access and manipulate Disired LRPs.
 */
 type ExternalDesiredLRPClient interface {
-	// Creates the given DesiredLRP and its corresponding ActualLRPs
+	// Creates the given LRPDeployment and its corresponding ActualLRPs
 	CreateLRPDeployment(lager.Logger, *models.LRPDeploymentCreation) error
 	// Updates the given LRPDeployment and creates a new LRP Definition
 	UpdateLRPDeployment(logger lager.Logger, processGuid string, deploymentUpdate *models.LRPDeploymentUpdate) error
@@ -486,7 +486,7 @@ func (c *client) LRPDeployments(logger lager.Logger, deploymentIds []string) ([]
 
 func (c *client) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.LRPDeploymentFilter) ([]*models.LRPDeploymentSchedulingInfo, error) {
 	request := models.LRPDeploymentsRequest{
-		Ids: filter.Ids,
+		DefinitionIds: filter.DefinitionIds,
 	}
 	response := models.LRPDeploymentsSchedulingInfoResponse{}
 	err := c.doRequest(logger, LRPDeploymentSchedulingInfoRoute, nil, nil, &request, &response)
