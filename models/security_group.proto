@@ -21,4 +21,5 @@ message SecurityGroupRule {
   optional PortRange port_range = 4;
   optional ICMPInfo icmp_info = 5;
   optional bool log = 6;
+  repeated string annotations = 7 [(gogoproto.jsontag) = "annotations,omitempty"];
 }
