@@ -1,7 +1,10 @@
 package models_test
 
 import (
+	"encoding/json"
+
 	"code.cloudfoundry.org/bbs/models"
+	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -348,6 +351,64 @@ var _ = Describe("SecurityGroupRule", func() {
 			It("aggregates validation errors", func() {
 				Expect(validationErr).To(MatchError(ContainSubstring("port_range")))
 				Expect(validationErr).To(MatchError(ContainSubstring("destination")))
+			})
+		})
+	})
+
+	Describe("serialization", func() {
+		var securityGroupJson string
+		var securityGroup models.SecurityGroupRule
+
+		BeforeEach(func() {
+			securityGroupJson = `{
+        "protocol": "all",
+        "destinations": [
+          "0.0.0.0-9.255.255.255"
+        ],
+        "log": false,
+				"annotations":["quack"]
+      }`
+
+			securityGroup = models.SecurityGroupRule{
+				Protocol:     "all",
+				Destinations: []string{"0.0.0.0-9.255.255.255"},
+				Log:          false,
+				Annotations:  []string{"quack"},
+			}
+		})
+
+		It("successfully round trips through json and protobuf", func() {
+			jsonSerialization, err := json.Marshal(securityGroup)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
+
+			protoSerialization, err := proto.Marshal(&securityGroup)
+			Expect(err).NotTo(HaveOccurred())
+
+			var protoDeserialization models.SecurityGroupRule
+			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(protoDeserialization).To(Equal(securityGroup))
+		})
+
+		Context("when annotations are empty", func() {
+			BeforeEach(func() {
+				securityGroupJson = `{
+					"protocol": "all",
+					"destinations": [
+						"0.0.0.0-9.255.255.255"
+					],
+					"log": false
+				}`
+
+				securityGroup.Annotations = []string{}
+			})
+
+			It("successfully json serializes empty arrays to nil", func() {
+				jsonSerialization, err := json.Marshal(securityGroup)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 			})
 		})
 	})
