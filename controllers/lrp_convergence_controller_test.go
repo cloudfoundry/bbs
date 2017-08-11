@@ -105,7 +105,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			return nil, nil, models.ErrResourceNotFound
 		}
 
-		fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysWithMissingCells, keysToRetire, nil)
+		fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysWithMissingCells, keysToRetire)
 
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
@@ -182,7 +182,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 	Context("when no lrps to auction", func() {
 		BeforeEach(func() {
-			fakeLRPDB.ConvergeLRPsReturns(nil, nil, nil, nil)
+			fakeLRPDB.ConvergeLRPsReturns(nil, nil, nil)
 		})
 
 		It("doesn't start the auctions", func() {
@@ -326,25 +326,6 @@ var _ = Describe("LRP Convergence Controllers", func() {
 					})
 				})
 			})
-		})
-	})
-
-	Context("when the db returns events", func() {
-		var expectedRemovedEvent *models.ActualLRPRemovedEvent
-		BeforeEach(func() {
-			group1 := &models.ActualLRPGroup{Instance: model_helpers.NewValidActualLRP("evacuating-lrp", 0)}
-			expectedRemovedEvent = models.NewActualLRPRemovedEvent(group1)
-			events := []models.Event{expectedRemovedEvent}
-			fakeLRPDB.ConvergeLRPsReturns([]*auctioneer.LRPStartRequest{}, []*models.ActualLRPKeyWithSchedulingInfo{}, []*models.ActualLRPKey{}, events)
-		})
-
-		It("emits those events", func() {
-
-			Eventually(actualHub.EmitCallCount).Should(Equal(1))
-			event := actualHub.EmitArgsForCall(0)
-			removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
-			Expect(ok).To(BeTrue())
-			Expect(removedEvent).To(Equal(expectedRemovedEvent))
 		})
 	})
 })

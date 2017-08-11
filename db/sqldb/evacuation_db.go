@@ -3,7 +3,6 @@ package sqldb
 import (
 	"database/sql"
 	"reflect"
-	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
@@ -141,7 +140,6 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		return nil, models.ErrGUIDGeneration
 	}
 
-	expireTime := now.Add(time.Duration(ttl) * time.Second)
 	actualLRP := &models.ActualLRP{
 		ActualLRPKey:         *lrpKey,
 		ActualLRPInstanceKey: *instanceKey,
@@ -163,7 +161,6 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		"since":                  actualLRP.Since,
 		"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 		"modification_tag_index": actualLRP.ModificationTag.Index,
-		"expire_time":            expireTime.UnixNano(),
 	}
 
 	_, err = db.upsert(logger, tx, "actual_lrps",

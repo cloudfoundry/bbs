@@ -12,7 +12,7 @@ type LRPDB interface {
 	ActualLRPDB
 	DesiredLRPDB
 
-	ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey, events []models.Event)
+	ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey)
 
 	// Exposed For Test
 	GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error)

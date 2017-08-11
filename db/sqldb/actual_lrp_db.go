@@ -580,13 +580,8 @@ type actualToDelete struct {
 }
 
 func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx *sql.Tx) (*models.ActualLRP, error) {
-	expireTime := db.clock.Now().Round(time.Second).UnixNano()
 	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
 	bindings := []interface{}{processGuid, index, evacuating}
-	if evacuating {
-		wheres += " AND expire_time > ?"
-		bindings = append(bindings, expireTime)
-	}
 
 	rows, err := db.all(logger, tx, actualLRPsTable,
 		actualLRPColumns, helpers.LockRow, wheres, bindings...)

@@ -64,11 +64,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	startRequests, keysWithMissingCells, keysToRetire, events := h.db.ConvergeLRPs(logger, cellSet)
+	startRequests, keysWithMissingCells, keysToRetire := h.db.ConvergeLRPs(logger, cellSet)
 
-	for _, e := range events {
-		go h.actualHub.Emit(e)
-	}
 	retireLogger := logger.WithData(lager.Data{"retiring_lrp_count": len(keysToRetire)})
 	works := []func(){}
 	for _, key := range keysToRetire {

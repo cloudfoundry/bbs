@@ -42,14 +42,12 @@ var _ = Describe("Evacuation", func() {
 		BeforeEach(func() {
 			ttl = 60
 
-			expireTime := fakeClock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
-			queryStr := "UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err := db.Exec(queryStr,
 				true,
-				expireTime,
 				actualLRP.ProcessGuid,
 				actualLRP.Index,
 				false,
@@ -154,21 +152,6 @@ var _ = Describe("Evacuation", func() {
 					actualLRP.CrashReason = ""
 					actualLRP.Since = fakeClock.Now().UnixNano()
 				})
-
-				It("updates the expired evacuating actual lrp", func() {
-					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-					Expect(err).NotTo(HaveOccurred())
-
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(group).To(BeEquivalentTo(actualLRPGroup))
-
-					Expect(actualLRPGroup.Evacuating.ModificationTag.Epoch).NotTo(BeNil())
-					Expect(actualLRPGroup.Evacuating.ModificationTag.Index).To(BeEquivalentTo((0)))
-
-					actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
-					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
-				})
 			})
 		})
 
@@ -214,12 +197,11 @@ var _ = Describe("Evacuation", func() {
 	Describe("RemoveEvacuatingActualLRP", func() {
 		Context("when there is an evacuating actualLRP", func() {
 			BeforeEach(func() {
-				expireTime := fakeClock.Now().Add(5 * time.Second).UnixNano()
-				queryStr := "UPDATE actual_lrps SET evacuating = ?, expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+				queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true, expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
+				_, err := db.Exec(queryStr, true, actualLRP.ProcessGuid, actualLRP.Index, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -244,16 +226,6 @@ var _ = Describe("Evacuation", func() {
 			})
 
 			Context("when the actualLRP is expired", func() {
-				BeforeEach(func() {
-					expireTime := fakeClock.Now().UnixNano()
-					queryStr := "UPDATE actual_lrps SET expire_time = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
-					if test_helpers.UsePostgres() {
-						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-					}
-					_, err := db.Exec(queryStr, expireTime, actualLRP.ProcessGuid, actualLRP.Index, false)
-					Expect(err).NotTo(HaveOccurred())
-				})
-
 				It("does not return an error", func() {
 					err := sqlDB.RemoveEvacuatingActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
