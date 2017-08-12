@@ -76,6 +76,7 @@ EgressRules: []*models.SecurityGroupRule{
     Protocol:     "udp",
     Destinations: []string{"8.8.0.0/16"},
     Ports:        []uint32{53},
+    Annotations:  []string{"sec-group-banana", "sec-group-avocado"},
   },
 }
 ```
@@ -120,9 +121,13 @@ rule := &SecurityGroupRule{
 
 If true, the system will log new outgoing connections that match the rule.
 
-- `Log` is optional for `tcp` and `all`.
-- It is an error to set `Log` to true when the protocol is `udp` or `icmp`.
+- `Log` is optional for all protocol types (`tcp`, `udp`, `icmp`, and `all`.
 - To ensure that they apply first, put all rules with `Log` set to true at the **end** of the rule list.
+
+###### `Annotations` [optional]
+
+Array of client-specified annotations or comments to store on the rule.
+
 
 ##### Examples of Egress rules
 
@@ -135,6 +140,7 @@ all := &SecurityGroupRule{
     Protocol: "all",
     Destinations: []string{"1.2.3.4"},
     Log: true,
+    Annotations:  []string{"sg-1234"},
 }
 ```
 
