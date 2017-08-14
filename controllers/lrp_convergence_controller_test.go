@@ -215,6 +215,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		Expect(changeEvents).To(ContainElement(models.NewActualLRPChangedEvent(group2, group2)))
 	})
 
+	It("logs the reason for starting actual lrps with missing cells", func() {
+		Eventually(logger).Should(gbytes.Say("creating-start-request.*reason\":\"missing-cell"))
+	})
+
 	Context("when the DB returns an unrecoverable error", func() {
 		BeforeEach(func() {
 			fakeLRPDB.UnclaimActualLRPReturns(nil, nil, models.NewUnrecoverableError(nil))

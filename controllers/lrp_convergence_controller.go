@@ -94,6 +94,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 				startRequestLock.Lock()
 				startRequests = append(startRequests, &startRequest)
 				startRequestLock.Unlock()
+				logger.Info("creating-start-request",
+					lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
 			} else {
 				bbsErr := models.ConvertError(err)
 				if bbsErr.GetType() != models.Error_Unrecoverable {

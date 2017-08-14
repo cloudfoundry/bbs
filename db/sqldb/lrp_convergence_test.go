@@ -411,6 +411,7 @@ var _ = Describe("LRPConvergence", func() {
 
 	It("returns start requests for stale unclaimed actual LRPs", func() {
 		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		Expect(logger).To(gbytes.Say("creating-start-request.*reason\":\"stale-unclaimed-lrp"))
 
 		By("fresh domain", func() {
 			Expect(startRequests).NotTo(BeEmpty())
@@ -473,9 +474,16 @@ var _ = Describe("LRPConvergence", func() {
 		})
 	})
 
+	It("logs the missing cells", func() {
+		sqlDB.ConvergeLRPs(logger, cellSet)
+		Expect(logger).To(gbytes.Say("detected-missing-cells.*cell_ids\":\\[\"missing-cell\"\\]"))
+	})
+
 	It("creates actual LRPs with missing indices, and returns it to be started", func() {
 		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(startRequests).NotTo(BeEmpty())
+
+		Expect(logger).To(gbytes.Say("creating-start-request.*reason\":\"missing-instance"))
 
 		By("missing all actuals, fresh domain", func() {
 			processGuid := "desired-with-missing-all-actuals" + "-" + freshDomain
@@ -545,6 +553,8 @@ var _ = Describe("LRPConvergence", func() {
 	It("unclaims actual LRPs that are crashed and restartable, and returns it to be started", func() {
 		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
 		Expect(startRequests).NotTo(BeEmpty())
+
+		Expect(logger).To(gbytes.Say("creating-start-request.*reason\":\"crashed-instance"))
 
 		By("fresh domain", func() {
 			processGuid := "desired-with-restartable-crashed-actuals" + "-" + freshDomain

@@ -111,6 +111,8 @@ func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Tim
 		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index)
 		if err == nil {
 			c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, index)
+			logger.Info("creating-start-request",
+				lager.Data{"reason": "stale-unclaimed-lrp", "process_guid": schedulingInfo.ProcessGuid, "index": index})
 		}
 	}
 
@@ -158,6 +160,8 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 				schedulingInfo: schedulingInfo,
 				index:          index,
 			})
+			logger.Info("creating-start-request",
+				lager.Data{"reason": "crashed-instance", "process_guid": actual.ProcessGuid, "index": index})
 		}
 	}
 
@@ -268,6 +272,8 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				Domain:      schedulingInfo.Domain,
 				Index:       index,
 			})
+			logger.Info("creating-start-request",
+				lager.Data{"reason": "missing-instance", "process_guid": schedulingInfo.ProcessGuid, "index": index})
 		}
 
 		c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, indices...)
@@ -317,9 +323,11 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		return
 	}
 
+	missingCellSet := make(map[string]struct{})
 	for rows.Next() {
 		var index int32
-		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index)
+		var cellID string
+		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &cellID)
 		if err == nil {
 			keysWithMissingCells = append(keysWithMissingCells, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
@@ -330,11 +338,19 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 				SchedulingInfo: schedulingInfo,
 			})
 		}
+		missingCellSet[cellID] = struct{}{}
 	}
 
 	if rows.Err() != nil {
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
+
+	cellIDs := []string{}
+	for key, _ := range missingCellSet {
+		cellIDs = append(cellIDs, key)
+	}
+
+	logger.Info("detected-missing-cells", lager.Data{"cell_ids": cellIDs})
 
 	c.keysWithMissingCells = keysWithMissingCells
 }

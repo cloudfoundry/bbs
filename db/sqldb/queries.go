@@ -148,7 +148,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
 			WHERE %s
 		`,
-		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
+		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index", "actual_lrps.cell_id"), ", "),
 		strings.Join(wheres, " AND "),
 	)
 
