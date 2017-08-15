@@ -67,6 +67,11 @@ var _ = Describe("Increase rootfs Column Migration", func() {
 			_, err := rawSQLDB.Exec(query, value)
 			Expect(err).NotTo(HaveOccurred())
 		})
+
+		It("is idempotent", func() {
+			err := migration.Up(logger)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 
 	Describe("Down", func() {
