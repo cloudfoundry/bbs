@@ -1,8 +1,6 @@
 package sqldb_test
 
 import (
-	"time"
-
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
@@ -141,16 +139,6 @@ var _ = Describe("Evacuation", func() {
 
 					actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
 					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
-				})
-			})
-
-			Context("because the record has expired", func() {
-				BeforeEach(func() {
-					fakeClock.Increment(61 * time.Second)
-
-					actualLRP.CrashCount = 0
-					actualLRP.CrashReason = ""
-					actualLRP.Since = fakeClock.Now().UnixNano()
 				})
 			})
 		})

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/workpool"
@@ -32,7 +33,7 @@ const (
 	crashingDesiredLRPs = "CrashingDesiredLRPs"
 )
 
-func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
 	convergeStart := db.clock.Now()
 	db.metronClient.IncrementCounter(convergeLRPRunsCounter)
 	logger.Info("starting")
@@ -48,9 +49,10 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	now := db.clock.Now()
 
 	db.pruneDomains(logger, now)
+	events := db.pruneEvacuatingActualLRPs(logger, cellSet)
 	domainSet, err := db.domainSet(logger)
 	if err != nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
 	db.emitDomainMetrics(logger, domainSet)
@@ -62,7 +64,7 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	converge.orphanedActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
-	return converge.result(logger), converge.keysWithMissingCells, converge.keysToRetire
+	return converge.result(logger), converge.keysWithMissingCells, converge.keysToRetire, events
 }
 
 type convergence struct {
@@ -397,6 +399,37 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
+}
+
+func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.CellSet) []models.Event {
+	logger = logger.Session("prune-evacuating-actual-lrps")
+
+	wheres := []string{"evacuating = ?"}
+	bindings := []interface{}{true}
+
+	if len(cellSet) > 0 {
+		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet))))
+
+		for cellID := range cellSet {
+			bindings = append(bindings, cellID)
+		}
+	}
+
+	lrpsToDelete, err := db.getActualLRPS(logger, strings.Join(wheres, " AND "), bindings...)
+	if err != nil {
+		logger.Error("failed-fetching-evacuating-lrps-with-missing-cells", err)
+	}
+
+	_, err = db.delete(logger, db.db, actualLRPsTable, strings.Join(wheres, " AND "), bindings...)
+	if err != nil {
+		logger.Error("failed-query", err)
+	}
+
+	events := []models.Event{}
+	for _, lrp := range lrpsToDelete {
+		events = append(events, models.NewActualLRPRemovedEvent(lrp))
+	}
+	return events
 }
 
 func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {

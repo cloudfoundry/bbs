@@ -34,7 +34,7 @@ const (
 	crashingDesiredLRPs = "CrashingDesiredLRPs"
 )
 
-func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
 	convergeStart := db.clock.Now()
 	db.metronClient.IncrementCounter(convergeLRPRunsCounter)
 	logger = logger.Session("etcd")
@@ -52,7 +52,7 @@ func (db *ETCDDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*
 	input, err := db.GatherAndPruneLRPs(logger, cellSet)
 	if err != nil {
 		logger.Error("failed-gathering-convergence-input", err)
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 	logger.Debug("succeeded-gathering-convergence-input")
 
@@ -559,7 +559,7 @@ func CalculateConvergence(
 	return changes
 }
 
-func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string]*models.DesiredLRP, changes *models.ConvergenceChanges) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey) {
+func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string]*models.DesiredLRP, changes *models.ConvergenceChanges) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
 	startRequests := newStartRequests(desiredLRPs)
 	for _, actual := range changes.StaleUnclaimedActualLRPs {
 		startRequests.Add(logger, &actual.ActualLRPKey)
@@ -601,14 +601,14 @@ func (db *ETCDDB) ResolveConvergence(logger lager.Logger, desiredLRPs map[string
 	throttler, err := workpool.NewThrottler(db.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": db.convergenceWorkersSize, "num_works": len(works)})
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
 	logger.Debug("waiting-for-lrp-convergence-work")
 	throttler.Work()
 	logger.Debug("done-waiting-for-lrp-convergence-work")
 
-	return startRequests.Slice(), keysWithMissingCells, keysToRetire
+	return startRequests.Slice(), keysWithMissingCells, keysToRetire, nil
 }
 
 func (db *ETCDDB) resolveActualsWithMissingIndices(logger lager.Logger, desired *models.DesiredLRP, actualKey *models.ActualLRPKey, starts *startRequests) func() {
