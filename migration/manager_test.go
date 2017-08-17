@@ -115,20 +115,26 @@ var _ = Describe("Migration Manager", func() {
 				It("sorts all the migrations and runs them", func() {
 					Eventually(migrationProcess.Ready()).Should(BeClosed())
 					Expect(migrationsDone).To(BeClosed())
-					Expect(fakeETCDDB.SetVersionCallCount()).To(Equal(2))
+					Expect(fakeETCDDB.SetVersionCallCount()).To(Equal(3))
 
 					_, version := fakeETCDDB.SetVersionArgsForCall(0)
 					Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
 
 					_, version = fakeETCDDB.SetVersionArgsForCall(1)
+					Expect(version).To(Equal(&models.Version{CurrentVersion: 100, TargetVersion: 102}))
+
+					_, version = fakeETCDDB.SetVersionArgsForCall(2)
 					// Current Version set to last ETCD migration plus 1
 					Expect(version).To(Equal(&models.Version{CurrentVersion: 101, TargetVersion: 102}))
 
-					Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(2))
+					Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(3))
 					_, version = fakeSQLDB.SetVersionArgsForCall(0)
 					Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
 
 					_, version = fakeSQLDB.SetVersionArgsForCall(1)
+					Expect(version).To(Equal(&models.Version{CurrentVersion: 100, TargetVersion: 102}))
+
+					_, version = fakeSQLDB.SetVersionArgsForCall(2)
 					Expect(version).To(Equal(&models.Version{CurrentVersion: 102, TargetVersion: 102}))
 
 					Expect(fakeMigration.UpCallCount()).To(Equal(1))
@@ -277,7 +283,7 @@ var _ = Describe("Migration Manager", func() {
 			})
 
 			It("creates a version table and seeds it with the lowest sql-requiring version", func() {
-				Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(2))
+				Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(3))
 				Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(0))
 
 				_, version := fakeSQLDB.SetVersionArgsForCall(0)
@@ -285,6 +291,10 @@ var _ = Describe("Migration Manager", func() {
 				Expect(version.TargetVersion).To(BeEquivalentTo(101))
 
 				_, version = fakeSQLDB.SetVersionArgsForCall(1)
+				Expect(version.CurrentVersion).To(BeEquivalentTo(100))
+				Expect(version.TargetVersion).To(BeEquivalentTo(101))
+
+				_, version = fakeSQLDB.SetVersionArgsForCall(2)
 				Expect(version.CurrentVersion).To(BeEquivalentTo(101))
 				Expect(version.TargetVersion).To(BeEquivalentTo(101))
 
@@ -311,6 +321,45 @@ var _ = Describe("Migration Manager", func() {
 				Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(2))
 				Expect(fakeMigration.UpCallCount()).To(Equal(1))
 				Expect(fakeMigration.SetRawSQLDBCallCount()).To(Equal(1))
+			})
+
+			Context("and there are more than one migrations", func() {
+				var fakeMigration2 *migrationfakes.FakeMigration
+
+				BeforeEach(func() {
+					fakeMigration2 = &migrationfakes.FakeMigration{}
+					migrations = append(migrations, fakeMigration2)
+
+					fakeMigration2.VersionReturns(101)
+					fakeMigration2.RequiresSQLReturns(true)
+				})
+
+				It("runs migrations", func() {
+					Eventually(migrationProcess.Ready()).Should(BeClosed())
+					Expect(migrationsDone).To(BeClosed())
+
+					Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(3))
+					_, v1 := fakeSQLDB.SetVersionArgsForCall(0)
+					_, v2 := fakeSQLDB.SetVersionArgsForCall(1)
+					_, v3 := fakeSQLDB.SetVersionArgsForCall(2)
+					Expect(v1).To(Equal(&models.Version{
+						CurrentVersion: 99,
+						TargetVersion:  101,
+					}))
+					Expect(v2).To(Equal(&models.Version{
+						CurrentVersion: 100,
+						TargetVersion:  101,
+					}))
+					Expect(v3).To(Equal(&models.Version{
+						CurrentVersion: 101,
+						TargetVersion:  101,
+					}))
+
+					Expect(fakeMigration.UpCallCount()).To(Equal(1))
+					Expect(fakeMigration2.UpCallCount()).To(Equal(1))
+					Expect(fakeMigration.SetRawSQLDBCallCount()).To(Equal(1))
+					Expect(fakeMigration2.SetRawSQLDBCallCount()).To(Equal(1))
+				})
 			})
 		})
 	})
@@ -453,12 +502,15 @@ var _ = Describe("Migration Manager", func() {
 			It("it sorts the migrations and runs them sequentially", func() {
 				Eventually(migrationProcess.Ready()).Should(BeClosed())
 				Expect(migrationsDone).To(BeClosed())
-				Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(2))
+				Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(3))
 
 				_, version := fakeETCDDB.SetVersionArgsForCall(0)
 				Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
 
 				_, version = fakeETCDDB.SetVersionArgsForCall(1)
+				Expect(version).To(Equal(&models.Version{CurrentVersion: 100, TargetVersion: 102}))
+
+				_, version = fakeETCDDB.SetVersionArgsForCall(2)
 				Expect(version).To(Equal(&models.Version{CurrentVersion: 102, TargetVersion: 102}))
 
 				Expect(fakeMigration.UpCallCount()).To(Equal(1))
@@ -566,12 +618,15 @@ var _ = Describe("Migration Manager", func() {
 				It("runs the migrations up to the maximum known migration version", func() {
 					Eventually(migrationProcess.Ready()).Should(BeClosed())
 					Expect(migrationsDone).To(BeClosed())
-					Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(2))
+					Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(3))
 
 					_, version := fakeETCDDB.SetVersionArgsForCall(0)
 					Expect(version).To(Equal(&models.Version{CurrentVersion: 99, TargetVersion: 102}))
 
 					_, version = fakeETCDDB.SetVersionArgsForCall(1)
+					Expect(version).To(Equal(&models.Version{CurrentVersion: 100, TargetVersion: 102}))
+
+					_, version = fakeETCDDB.SetVersionArgsForCall(2)
 					Expect(version).To(Equal(&models.Version{CurrentVersion: 102, TargetVersion: 102}))
 
 					Expect(fakeMigration.UpCallCount()).To(Equal(1))

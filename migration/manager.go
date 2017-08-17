@@ -187,12 +187,11 @@ func (m *Manager) performMigration(
 						currentMigration.Version(),
 					)
 				}
-				nextVersion = currentMigration.Version()
 
+				nextVersion = currentMigration.Version()
 				logger.Info("running-migration", lager.Data{
 					"current_version":   lastVersion,
-					"next_version":      nextVersion,
-					"migration_version": currentMigration.Version(),
+					"migration_version": nextVersion,
 				})
 
 				currentMigration.SetCryptor(m.cryptor)
@@ -209,15 +208,17 @@ func (m *Manager) performMigration(
 					return
 				}
 
-				lastVersion = currentMigration.Version()
-				logger.Debug("completed-migration")
+				lastVersion = nextVersion
+				err = m.writeVersion(lastVersion, maxMigrationVersion, lastETCDMigrationVersion)
+				if err != nil {
+					errorChan <- err
+					return
+				}
+				logger.Info("completed-migration", lager.Data{
+					"current_version": lastVersion,
+					"target_version":  maxMigrationVersion,
+				})
 			}
-		}
-
-		err := m.writeVersion(lastVersion, nextVersion, lastETCDMigrationVersion)
-		if err != nil {
-			errorChan <- err
-			return
 		}
 	}
 
