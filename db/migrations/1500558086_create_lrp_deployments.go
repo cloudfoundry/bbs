@@ -52,6 +52,7 @@ func (e *LRPDeployment) Up(logger lager.Logger) error {
 func (e *LRPDeployment) createTables(logger lager.Logger, db *sql.DB, flavor string) error {
 	var createTablesSQL = []string{
 		helpers.RebindForFlavor(createLRPDeploymentsSQL, flavor),
+		helpers.RebindForFlavor(createLRPDefinitionsIndexSQL, flavor),
 		helpers.RebindForFlavor(createLRPDefinitionsSQL, flavor),
 		helpers.RebindForFlavor(dropDesiredLRPSQL, flavor),
 	}
@@ -138,6 +139,8 @@ const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
 	max_pids INTEGER DEFAULT 0,
 	run_info MEDIUMTEXT NOT NULL
 );`
+
+const createLRPDefinitionsIndexSQL = `create unique index lrp_definitions_process_guid on lrp_definitions(process_guid, definition_guid);`
 
 // TODO: add primary key on lrp deployment definition = (defintiion_guid + process_guid)
 // process guid should have a foreign key constraint against LRP deployment

@@ -318,7 +318,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		return nil
 	})
 
-	logger.Info("start-lrp", lager.Data{"before": beforeActualLRP, "after": actualLRP})
+	logger.Info("start-lrp", lager.Data{"before": beforeActualLRP, "after": actualLRP, "error": err})
 	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
 }
 
