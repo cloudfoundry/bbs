@@ -58,11 +58,11 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	db.emitDomainMetrics(logger, domainSet)
 
 	converge := newConvergence(db)
-	converge.staleUnclaimedActualLRPs(logger, now)
-	converge.actualLRPsWithMissingCells(logger, cellSet)
+	// converge.staleUnclaimedActualLRPs(logger, now)
+	// converge.actualLRPsWithMissingCells(logger, cellSet)
 	converge.lrpInstanceCounts(logger, domainSet)
-	converge.orphanedActualLRPs(logger)
-	converge.crashedActualLRPs(logger, now)
+	// converge.orphanedActualLRPs(logger)
+	// converge.crashedActualLRPs(logger, now)
 
 	return converge.result(logger)
 }

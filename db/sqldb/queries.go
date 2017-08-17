@@ -119,8 +119,10 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 
 func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
 	var query string
-	columns := schedulingInfoColumns
-	columns = append(columns, "COUNT(actual_lrps.instance_index) AS actual_instances")
+	columns := helpers.ColumnList{
+		lrpDeploymentsTable + ".process_guid",
+		lrpDeploymentsTable + ".instances",
+	}
 
 	switch db.flavor {
 	case helpers.Postgres:
