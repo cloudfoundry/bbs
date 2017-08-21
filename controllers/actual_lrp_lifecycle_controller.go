@@ -88,39 +88,39 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	// 3. Remove actual lrps for the old definition id in the healthy_definition_id
 	// 4. Maybe we need to do this only for index==0 because that indicates the first instance coming up?
 
-	// lrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByDefinitionGuid(logger, actualLRPKey.ProcessGuid)
-	// if err != nil {
-	// 	logger.Error("failed-retrieving-lrpdeployment", err)
-	// 	return err
-	// }
+	lrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByProcessGuid(logger, actualLRPKey.LrpDeploymentGuid)
+	if err != nil {
+		logger.Error("failed-retrieving-lrpdeployment", err)
+		return err
+	}
 
-	// logger.Info("lrp-deployment-found", lager.Data{"deployment": lrpDeployment})
-	// if lrpDeployment.ActiveDefinitionId == actualLRPKey.ProcessGuid {
-	// 	for defID, _ := range lrpDeployment.Definitions {
-	// 		if defID != actualLRPKey.ProcessGuid {
-	// 			// Is there a better way of finding the old definition Actual LRP and retiring it?
-	// 			beforeActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, defID, actualLRPKey.Index)
-	// 			if err == models.ErrResourceNotFound {
-	// 				continue
-	// 			}
-	// 			if err != nil {
-	// 				return err
-	// 			}
+	logger.Info("lrp-deployment-found", lager.Data{"deployment": lrpDeployment})
+	if lrpDeployment.ActiveDefinitionId == actualLRPKey.ProcessGuid {
+		for defID, _ := range lrpDeployment.Definitions {
+			if defID != actualLRPKey.ProcessGuid {
+				// Is there a better way of finding the old definition Actual LRP and retiring it?
+				beforeActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, defID, actualLRPKey.Index)
+				if err == models.ErrResourceNotFound {
+					continue
+				}
+				if err != nil {
+					return err
+				}
 
-	// 			oldActualLRP, _ := beforeActualLRPGroup.Resolve()
-	// 			h.RetireActualLRP(logger, &oldActualLRP.ActualLRPKey)
-	// 		}
-	// 	}
-	// 	if lrpDeployment.HealthyDefinitionId != actualLRPKey.ProcessGuid {
-	// 		logger.Info("setting-new-healthy-definition", lager.Data{"definition-id": actualLRPKey.ProcessGuid})
-	// 		lrpDeployment.HealthyDefinitionId = actualLRPKey.ProcessGuid
-	// 		_, err := h.lrpDeploymentDB.SaveLRPDeployment(logger, lrpDeployment)
-	// 		if err != nil {
-	// 			logger.Error("failed-to-save-lrp-deployment", err)
-	// 			return err
-	// 		}
-	// 	}
-	// }
+				oldActualLRP, _ := beforeActualLRPGroup.Resolve()
+				h.RetireActualLRP(logger, &oldActualLRP.ActualLRPKey)
+			}
+		}
+		if lrpDeployment.HealthyDefinitionId != actualLRPKey.ProcessGuid {
+			logger.Info("setting-new-healthy-definition", lager.Data{"definition-id": actualLRPKey.ProcessGuid})
+			lrpDeployment.HealthyDefinitionId = actualLRPKey.ProcessGuid
+			_, err := h.lrpDeploymentDB.SaveLRPDeployment(logger, lrpDeployment)
+			if err != nil {
+				logger.Error("failed-to-save-lrp-deployment", err)
+				return err
+			}
+		}
+	}
 
 	return nil
 }
