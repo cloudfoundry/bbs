@@ -12,7 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/migration/migrationfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
-	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"

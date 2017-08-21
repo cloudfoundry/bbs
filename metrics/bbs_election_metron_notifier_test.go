@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/metrics"
-	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 
@@ -15,13 +15,11 @@ import (
 
 var _ = Describe("BBSElectionMetronNotifier", func() {
 	var (
-		reportInterval   time.Duration
 		pmn              ifrit.Process
 		fakeMetronClient *mfakes.FakeIngressClient
 	)
 
 	BeforeEach(func() {
-		reportInterval = 100 * time.Millisecond
 		fakeMetronClient = new(mfakes.FakeIngressClient)
 	})
 

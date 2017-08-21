@@ -9,8 +9,8 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/debugserver"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/durationjson"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/locket"
 
@@ -162,7 +162,7 @@ var _ = Describe("BBSConfig", func() {
 			LagerConfig: lagerflags.LagerConfig{
 				LogLevel: "debug",
 			},
-			LoggregatorConfig: loggregator_v2.Config{
+			LoggregatorConfig: loggingclient.Config{
 				UseV2API:      true,
 				APIPort:       1234,
 				CACertPath:    "ca-path",

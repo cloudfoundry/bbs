@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -22,7 +22,7 @@ type Encryptor struct {
 	keyManager   encryption.KeyManager
 	cryptor      encryption.Cryptor
 	clock        clock.Clock
-	metronClient loggregator_v2.IngressClient
+	metronClient loggingclient.IngressClient
 }
 
 func New(
@@ -31,7 +31,7 @@ func New(
 	keyManager encryption.KeyManager,
 	cryptor encryption.Cryptor,
 	clock clock.Clock,
-	metronClient loggregator_v2.IngressClient,
+	metronClient loggingclient.IngressClient,
 ) Encryptor {
 	return Encryptor{
 		logger:       logger,

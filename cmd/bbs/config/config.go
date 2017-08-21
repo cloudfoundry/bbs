@@ -7,8 +7,8 @@ import (
 
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/debugserver"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/durationjson"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/locket"
 )
@@ -56,7 +56,7 @@ type BBSConfig struct {
 	SkipConsulLock              bool                  `json:"skip_consul_lock,omitempty"`
 	TaskCallbackWorkers         int                   `json:"task_callback_workers,omitempty"`
 	UpdateWorkers               int                   `json:"update_workers,omitempty"`
-	LoggregatorConfig           loggregator_v2.Config `json:"loggregator"`
+	LoggregatorConfig           loggingclient.Config  `json:"loggregator"`
 	debugserver.DebugServerConfig
 	encryption.EncryptionConfig
 	lagerflags.LagerConfig

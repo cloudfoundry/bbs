@@ -13,7 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -32,7 +32,7 @@ type Manager struct {
 	migrationsDone chan<- struct{}
 	clock          clock.Clock
 	databaseDriver string
-	metronClient   loggregator_v2.IngressClient
+	metronClient   loggingclient.IngressClient
 }
 
 func NewManager(
@@ -46,7 +46,7 @@ func NewManager(
 	migrationsDone chan<- struct{},
 	clock clock.Clock,
 	databaseDriver string,
-	metronClient loggregator_v2.IngressClient,
+	metronClient loggingclient.IngressClient,
 ) Manager {
 	sort.Sort(migrations)
 

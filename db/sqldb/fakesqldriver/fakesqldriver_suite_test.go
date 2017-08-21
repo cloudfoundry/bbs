@@ -13,7 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
 	"code.cloudfoundry.org/clock/fakeclock"
-	mfakes "code.cloudfoundry.org/go-loggregator/testhelpers/fakes/v1"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"

@@ -37,7 +37,7 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/debugserver"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/go-loggregator/runtimeemitter"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
@@ -541,8 +541,8 @@ func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig
 	return auctioneer.NewClient(bbsConfig.AuctioneerAddress)
 }
 
-func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggregator_v2.IngressClient, error) {
-	client, err := loggregator_v2.NewIngressClient(bbsConfig.LoggregatorConfig)
+func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggingclient.IngressClient, error) {
+	client, err := loggingclient.NewIngressClient(bbsConfig.LoggregatorConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -570,7 +570,7 @@ func initializeEtcdDB(
 	cryptor encryption.Cryptor,
 	storeClient etcddb.StoreClient,
 	bbsConfig *config.BBSConfig,
-	metronClient loggregator_v2.IngressClient,
+	metronClient loggingclient.IngressClient,
 ) *etcddb.ETCDDB {
 	return etcddb.NewETCD(
 		format.ENCRYPTED_PROTO,
