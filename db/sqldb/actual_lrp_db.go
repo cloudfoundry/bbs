@@ -75,7 +75,7 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 	return groups[0], nil
 }
 
-func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, lrpDeploymentGUID string) (*models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"key": key})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -103,6 +103,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 				"net_info":               netInfoData,
 				"modification_tag_epoch": guid,
 				"modification_tag_index": 0,
+				"lrp_deployment_guid":    lrpDeploymentGUID,
 			},
 		)
 

@@ -10,7 +10,7 @@ import (
 
 func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := &models.ActualLRP{
-		ActualLRPKey:         models.NewActualLRPKey(guid, index, "some-domain"),
+		ActualLRPKey:         models.NewActualLRPKey(guid, "some-deployment-guid", index, "some-domain"),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-guid", "some-cell"),
 		ActualLRPNetInfo:     models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444)),
 		CrashCount:           33,

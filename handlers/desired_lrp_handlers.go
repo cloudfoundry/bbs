@@ -120,7 +120,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	err = h.desiredLRPDB.DesireLRP(logger, request.DesiredLrp)
+	lrpDeploymentGuid, err := h.desiredLRPDB.DesireLRP(logger, request.DesiredLrp)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -135,7 +135,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
-	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
+	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo, lrpDeploymentGuid)
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -226,7 +226,7 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 	h.stopInstancesFrom(logger, request.ProcessGuid, 0)
 }
 
-func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
+func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo, lrpDeploymentGuid string) {
 	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -234,7 +234,7 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 	keys := make([]*models.ActualLRPKey, upper-lower)
 	i := 0
 	for actualIndex := lower; actualIndex < upper; actualIndex++ {
-		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
+		key := models.NewActualLRPKey(lrpDeploymentGuid, schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
 		keys[i] = &key
 		i++
 	}

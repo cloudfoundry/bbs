@@ -144,12 +144,12 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 		var index int
 		actual := &models.ActualLRP{}
 
-		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &actual.Since, &actual.CrashCount)
+		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &actual.Since, &actual.CrashCount, &actual.LrpDeploymentGuid)
 		if err != nil {
 			continue
 		}
 
-		actual.ActualLRPKey = models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(index), schedulingInfo.Domain)
+		actual.ActualLRPKey = models.NewActualLRPKey(actual.LrpDeploymentGuid, schedulingInfo.ProcessGuid, int32(index), schedulingInfo.Domain)
 		actual.State = models.ActualLRPStateCrashed
 
 		if actual.ShouldRestartCrash(now, restartCalculator) {
@@ -232,8 +232,9 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 	for rows.Next() {
 		var existingIndicesStr sql.NullString
 		var actualInstances int
+		var lrpDeploymentGuid string
 
-		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &actualInstances, &existingIndicesStr)
+		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &actualInstances, &existingIndicesStr, &lrpDeploymentGuid)
 		if err != nil {
 			continue
 		}
@@ -264,9 +265,10 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 			indices = append(indices, i)
 			index := int32(i)
 			keys = append(keys, models.ActualLRPKey{
-				ProcessGuid: schedulingInfo.ProcessGuid,
-				Domain:      schedulingInfo.Domain,
-				Index:       index,
+				ProcessGuid:       schedulingInfo.ProcessGuid,
+				Domain:            schedulingInfo.Domain,
+				Index:             index,
+				LrpDeploymentGuid: lrpDeploymentGuid,
 			})
 		}
 
@@ -290,7 +292,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 	for _, key := range keys {
 		lrpKey := key
 		c.submit(func() {
-			_, err := c.CreateUnclaimedActualLRP(logger, &lrpKey)
+			_, err := c.CreateUnclaimedActualLRP(logger, &lrpKey, key.LrpDeploymentGuid)
 			if err != nil {
 				logger.Error("failed-creating-missing-actual-lrp", err)
 			}

@@ -19,6 +19,7 @@ message ActualLRPKey {
   optional string process_guid = 1;
   optional int32 index = 2;
   optional string domain = 3;
+  optional string lrp_deployment_guid = 4;
 }
 
 message ActualLRPInstanceKey {

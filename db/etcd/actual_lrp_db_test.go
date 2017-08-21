@@ -49,7 +49,7 @@ var _ = Describe("ActualLRPDB", func() {
 	)
 
 	BeforeEach(func() {
-		baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
+		baseLRPKey = models.NewActualLRPKey("", baseProcessGuid, baseIndex, baseDomain)
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
@@ -72,14 +72,14 @@ var _ = Describe("ActualLRPDB", func() {
 		}
 
 		otherIndexLRP = &models.ActualLRP{
-			ActualLRPKey:         models.NewActualLRPKey(baseProcessGuid, otherIndex, baseDomain),
+			ActualLRPKey:         models.NewActualLRPKey("", baseProcessGuid, otherIndex, baseDomain),
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			State:                models.ActualLRPStateClaimed,
 			Since:                clock.Now().UnixNano(),
 		}
 
 		otherDomainLRP = &models.ActualLRP{
-			ActualLRPKey:         models.NewActualLRPKey(otherDomainProcessGuid, baseIndex, otherDomain),
+			ActualLRPKey:         models.NewActualLRPKey("", otherDomainProcessGuid, baseIndex, otherDomain),
 			ActualLRPInstanceKey: baseLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
@@ -87,7 +87,7 @@ var _ = Describe("ActualLRPDB", func() {
 		}
 
 		otherCellIdLRP = &models.ActualLRP{
-			ActualLRPKey:         models.NewActualLRPKey(otherDomainProcessGuid, otherIndex, otherDomain),
+			ActualLRPKey:         models.NewActualLRPKey("", otherDomainProcessGuid, otherIndex, otherDomain),
 			ActualLRPInstanceKey: otherLRPInstanceKey,
 			ActualLRPNetInfo:     netInfo,
 			State:                models.ActualLRPStateRunning,
@@ -339,7 +339,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP does not exist", func() {
 			It("creates a new unclaimed actual LRP", func() {
-				actualLRPGroup, err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
+				actualLRPGroup, err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey, "")
 				Expect(err).NotTo(HaveOccurred())
 
 				group, err := etcdDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -368,7 +368,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("errors", func() {
-					_, err := etcdDBWithFakeStore.CreateUnclaimedActualLRP(logger, lrpKey)
+					_, err := etcdDBWithFakeStore.CreateUnclaimedActualLRP(logger, lrpKey, "")
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -382,7 +382,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns a ResourceExists error", func() {
-				_, err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey)
+				_, err := etcdDB.CreateUnclaimedActualLRP(logger, lrpKey, "")
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -536,7 +536,7 @@ var _ = Describe("ActualLRPDB", func() {
 				index = 1
 				domain = "some-domain"
 
-				lrpKey = models.NewActualLRPKey(processGuid, index, domain)
+				lrpKey = models.NewActualLRPKey("some-deploymet-guid", processGuid, index, domain)
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: lrpKey,
 					State:        models.ActualLRPStateUnclaimed,
@@ -810,7 +810,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the logging session is created and the starting message is logged", func() {
 			BeforeEach(func() {
-				lrpKey = models.NewActualLRPKey("process-guid", 1, "domain")
+				lrpKey = models.NewActualLRPKey("some-deployment-guid", "process-guid", 1, "domain")
 				instanceKey = models.NewActualLRPInstanceKey("instance-guid", cellID)
 				netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 			})
@@ -838,7 +838,7 @@ var _ = Describe("ActualLRPDB", func() {
 			BeforeEach(func() {
 				index = 1
 				processGuid = "some-process-guid"
-				key := models.NewActualLRPKey(processGuid, index, "domain")
+				key := models.NewActualLRPKey("some-deployment-guid", processGuid, index, "domain")
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: key,
 					State:        models.ActualLRPStateUnclaimed,
@@ -1105,7 +1105,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP does not exist", func() {
 			BeforeEach(func() {
-				lrpKey = models.NewActualLRPKey("process-guid", 1, "domain")
+				lrpKey = models.NewActualLRPKey("some-deployment-guid", "process-guid", 1, "domain")
 				instanceKey = models.NewActualLRPInstanceKey("instance-guid", cellID)
 				netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.NewPortMapping(5678, 1234))
 			})
@@ -1172,7 +1172,7 @@ var _ = Describe("ActualLRPDB", func() {
 				domain = "some-domain"
 				errorMessage = "some-error"
 
-				lrpKey = models.NewActualLRPKey(processGuid, index, domain)
+				lrpKey = models.NewActualLRPKey("some-lrp-deployment", processGuid, index, domain)
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: lrpKey,
 					State:        models.ActualLRPStateUnclaimed,
@@ -1266,7 +1266,7 @@ var _ = Describe("ActualLRPDB", func() {
 				index = 1
 				domain = "some-domain"
 
-				lrpKey = models.NewActualLRPKey(processGuid, index, domain)
+				lrpKey = models.NewActualLRPKey("some-deployment-guid", processGuid, index, domain)
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: lrpKey,
 					State:        models.ActualLRPStateUnclaimed,

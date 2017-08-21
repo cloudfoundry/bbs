@@ -71,6 +71,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				"cell-id-0",
 			)
 			actualLRPKey := models.NewActualLRPKey(
+				"some-deployment-guid",
 				processGuid,
 				1,
 				"domain-0",
@@ -82,6 +83,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			}
 			afterActualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
+					"some-deployment-guid",
 					processGuid,
 					1,
 					"domain-0",
@@ -142,6 +144,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		BeforeEach(func() {
 			key = models.NewActualLRPKey(
+				"some-deployment-guid",
 				processGuid,
 				index,
 				"domain-0",
@@ -288,6 +291,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		BeforeEach(func() {
 			key = models.NewActualLRPKey(
+				"some-deployment-guid",
 				processGuid,
 				index,
 				"domain-0",
@@ -296,6 +300,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			errorMessage = "something went wrong"
 			actualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
+					"some-deployment-guid",
 					processGuid,
 					1,
 					"domain-0",
@@ -306,6 +311,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			}
 			afterActualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
+					"some-deployment-guid",
 					processGuid,
 					1,
 					"domain-0",
@@ -455,6 +461,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		BeforeEach(func() {
 			key = models.NewActualLRPKey(
+				"some-deployment-guid",
 				processGuid,
 				index,
 				"domain-0",
@@ -469,6 +476,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			actualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
+					"some-deployment-guid",
 					processGuid,
 					1,
 					"domain-0",
@@ -478,6 +486,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			}
 			afterActualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
+					"some-deployment-guid",
 					processGuid,
 					1,
 					"domain-0",
@@ -545,6 +554,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			)
 			actualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
+					"some-deployment-guid",
 					processGuid,
 					1,
 					"domain-0",
@@ -632,6 +642,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		BeforeEach(func() {
 			key = models.NewActualLRPKey(
+				"some-deployment-guid",
 				processGuid,
 				index,
 				"domain-0",

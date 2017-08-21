@@ -506,7 +506,7 @@ func CalculateConvergence(
 				if _, hasIndex := actualsByIndex[i]; !hasIndex {
 					pLog.Info("missing", lager.Data{"index": i})
 					missingLRPCount++
-					lrpKey := models.NewActualLRPKey(desired.ProcessGuid, i, desired.Domain)
+					lrpKey := models.NewActualLRPKey("", desired.ProcessGuid, i, desired.Domain)
 					changes.ActualLRPKeysForMissingIndices = append(
 						changes.ActualLRPKeysForMissingIndices,
 						&lrpKey,

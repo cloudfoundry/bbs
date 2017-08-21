@@ -13,7 +13,7 @@ type DesiredLRPDB interface {
 
 	DesiredLRPSchedulingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 
-	DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error
+	DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) (string, error)
 	UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (beforeDesiredLRP *models.DesiredLRP, err error)
 	RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 }

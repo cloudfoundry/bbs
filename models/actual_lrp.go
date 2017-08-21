@@ -35,12 +35,17 @@ type ActualLRPFilter struct {
 	CellID string
 }
 
-func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
-	return NewActualLRPKeyWithDefinition(processGuid, "", index, domain)
+func NewActualLRPKey(processGuid, definitionID string, index int32, domain string) ActualLRPKey {
+	return NewActualLRPKeyWithDefinition(processGuid, definitionID, index, domain)
 }
 
 func NewActualLRPKeyWithDefinition(processGuid, definitionID string, index int32, domain string) ActualLRPKey {
-	return ActualLRPKey{processGuid, index, domain}
+	return ActualLRPKey{
+		ProcessGuid:       definitionID,
+		Index:             index,
+		Domain:            domain,
+		LrpDeploymentGuid: processGuid,
+	}
 }
 
 func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstanceKey {
