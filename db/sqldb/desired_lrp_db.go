@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) (string, err) {
+func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	// logger = logger.WithData(lager.Data{"process_guid": desiredLRP.ProcessGuid})
 	// logger.Info("starting")
 	// defer logger.Info("complete")
@@ -46,7 +46,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) (
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
 		logger.Error("failed-to-generate-guid", err)
-		return "", models.ErrGUIDGeneration
+		return models.ErrGUIDGeneration
 	}
 
 	// 	placementTagData, err := json.Marshal(desiredLRP.PlacementTags)
@@ -121,8 +121,8 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) (
 			CheckDefinition:               desiredLRP.CheckDefinition,
 		},
 	}
-	lrpDeployment, err := db.CreateLRPDeployment(logger, lrp)
-	return lrpDeployment.ProcessGuid, err
+	_, err = db.CreateLRPDeployment(logger, lrp)
+	return err
 }
 
 func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string) (*models.DesiredLRP, error) {

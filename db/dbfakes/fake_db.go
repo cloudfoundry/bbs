@@ -147,12 +147,11 @@ type FakeDB struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
-	CreateUnclaimedActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey, lrpDeploymentGUID string) (after *models.ActualLRPGroup, err error)
+	CreateUnclaimedActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) (after *models.ActualLRPGroup, err error)
 	createUnclaimedActualLRPMutex       sync.RWMutex
 	createUnclaimedActualLRPArgsForCall []struct {
-		logger            lager.Logger
-		key               *models.ActualLRPKey
-		lrpDeploymentGUID string
+		logger lager.Logger
+		key    *models.ActualLRPKey
 	}
 	createUnclaimedActualLRPReturns struct {
 		result1 *models.ActualLRPGroup
@@ -307,19 +306,17 @@ type FakeDB struct {
 		result1 []*models.DesiredLRPSchedulingInfo
 		result2 error
 	}
-	DesireLRPStub        func(logger lager.Logger, desiredLRP *models.DesiredLRP) (string, error)
+	DesireLRPStub        func(logger lager.Logger, desiredLRP *models.DesiredLRP) error
 	desireLRPMutex       sync.RWMutex
 	desireLRPArgsForCall []struct {
 		logger     lager.Logger
 		desiredLRP *models.DesiredLRP
 	}
 	desireLRPReturns struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	desireLRPReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	UpdateDesiredLRPStub        func(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (beforeDesiredLRP *models.DesiredLRP, err error)
 	updateDesiredLRPMutex       sync.RWMutex
@@ -1213,18 +1210,17 @@ func (fake *FakeDB) ActualLRPGroupByProcessGuidAndIndexReturnsOnCall(i int, resu
 	}{result1, result2}
 }
 
-func (fake *FakeDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, lrpDeploymentGUID string) (after *models.ActualLRPGroup, err error) {
+func (fake *FakeDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (after *models.ActualLRPGroup, err error) {
 	fake.createUnclaimedActualLRPMutex.Lock()
 	ret, specificReturn := fake.createUnclaimedActualLRPReturnsOnCall[len(fake.createUnclaimedActualLRPArgsForCall)]
 	fake.createUnclaimedActualLRPArgsForCall = append(fake.createUnclaimedActualLRPArgsForCall, struct {
-		logger            lager.Logger
-		key               *models.ActualLRPKey
-		lrpDeploymentGUID string
-	}{logger, key, lrpDeploymentGUID})
-	fake.recordInvocation("CreateUnclaimedActualLRP", []interface{}{logger, key, lrpDeploymentGUID})
+		logger lager.Logger
+		key    *models.ActualLRPKey
+	}{logger, key})
+	fake.recordInvocation("CreateUnclaimedActualLRP", []interface{}{logger, key})
 	fake.createUnclaimedActualLRPMutex.Unlock()
 	if fake.CreateUnclaimedActualLRPStub != nil {
-		return fake.CreateUnclaimedActualLRPStub(logger, key, lrpDeploymentGUID)
+		return fake.CreateUnclaimedActualLRPStub(logger, key)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1238,10 +1234,10 @@ func (fake *FakeDB) CreateUnclaimedActualLRPCallCount() int {
 	return len(fake.createUnclaimedActualLRPArgsForCall)
 }
 
-func (fake *FakeDB) CreateUnclaimedActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, string) {
+func (fake *FakeDB) CreateUnclaimedActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
 	fake.createUnclaimedActualLRPMutex.RLock()
 	defer fake.createUnclaimedActualLRPMutex.RUnlock()
-	return fake.createUnclaimedActualLRPArgsForCall[i].logger, fake.createUnclaimedActualLRPArgsForCall[i].key, fake.createUnclaimedActualLRPArgsForCall[i].lrpDeploymentGUID
+	return fake.createUnclaimedActualLRPArgsForCall[i].logger, fake.createUnclaimedActualLRPArgsForCall[i].key
 }
 
 func (fake *FakeDB) CreateUnclaimedActualLRPReturns(result1 *models.ActualLRPGroup, result2 error) {
@@ -1758,7 +1754,7 @@ func (fake *FakeDB) DesiredLRPSchedulingInfosReturnsOnCall(i int, result1 []*mod
 	}{result1, result2}
 }
 
-func (fake *FakeDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) (string, error) {
+func (fake *FakeDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	fake.desireLRPMutex.Lock()
 	ret, specificReturn := fake.desireLRPReturnsOnCall[len(fake.desireLRPArgsForCall)]
 	fake.desireLRPArgsForCall = append(fake.desireLRPArgsForCall, struct {
@@ -1771,9 +1767,9 @@ func (fake *FakeDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP
 		return fake.DesireLRPStub(logger, desiredLRP)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.desireLRPReturns.result1, fake.desireLRPReturns.result2
+	return fake.desireLRPReturns.result1
 }
 
 func (fake *FakeDB) DesireLRPCallCount() int {
@@ -1788,26 +1784,23 @@ func (fake *FakeDB) DesireLRPArgsForCall(i int) (lager.Logger, *models.DesiredLR
 	return fake.desireLRPArgsForCall[i].logger, fake.desireLRPArgsForCall[i].desiredLRP
 }
 
-func (fake *FakeDB) DesireLRPReturns(result1 string, result2 error) {
+func (fake *FakeDB) DesireLRPReturns(result1 error) {
 	fake.DesireLRPStub = nil
 	fake.desireLRPReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeDB) DesireLRPReturnsOnCall(i int, result1 string, result2 error) {
+func (fake *FakeDB) DesireLRPReturnsOnCall(i int, result1 error) {
 	fake.DesireLRPStub = nil
 	if fake.desireLRPReturnsOnCall == nil {
 		fake.desireLRPReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
+			result1 error
 		})
 	}
 	fake.desireLRPReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (beforeDesiredLRP *models.DesiredLRP, err error) {

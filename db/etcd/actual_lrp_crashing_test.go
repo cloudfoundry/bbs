@@ -283,7 +283,7 @@ func (t crashTest) Test() {
 }
 
 func lrpForState(state string, timeInState time.Duration) models.ActualLRP {
-	var actualLRPKey = models.NewActualLRPKey("some-lrp-deployment-guid", "some-process-guid", 1, "tests")
+	var actualLRPKey = models.NewActualLRPKey("some-process-guid", 1, "tests")
 	var instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", "some-cell")
 
 	lrp := models.ActualLRP{

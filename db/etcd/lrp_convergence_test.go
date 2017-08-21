@@ -804,7 +804,7 @@ var _ = Describe("LRPConvergence", func() {
 		Context("when there are fewer actuals for desired LRP", func() {
 			BeforeEach(func() {
 				actualLRP := &models.ActualLRP{
-					ActualLRPKey:         models.NewActualLRPKey("some-deployment-guid", desiredLRP.ProcessGuid, 0, desiredLRP.Domain),
+					ActualLRPKey:         models.NewActualLRPKey(desiredLRP.ProcessGuid, 0, desiredLRP.Domain),
 					ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-instance-guid", cellId),
 					ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", &models.PortMapping{ContainerPort: 1234, HostPort: 5678}),
 					State:                models.ActualLRPStateRunning,
@@ -830,14 +830,14 @@ var _ = Describe("LRPConvergence", func() {
 				twentyMinutesAgo := clock.Now().Add(-20 * time.Minute).UnixNano()
 
 				crashedRecently := &models.ActualLRP{
-					ActualLRPKey: models.NewActualLRPKey("some-deployment-guid", desiredLRP.ProcessGuid, 0, desiredLRP.Domain),
+					ActualLRPKey: models.NewActualLRPKey(desiredLRP.ProcessGuid, 0, desiredLRP.Domain),
 					CrashCount:   5,
 					State:        models.ActualLRPStateCrashed,
 					Since:        now,
 				}
 
 				crashedLongAgo := &models.ActualLRP{
-					ActualLRPKey: models.NewActualLRPKey("some-deployment-guid", desiredLRP.ProcessGuid, 1, desiredLRP.Domain),
+					ActualLRPKey: models.NewActualLRPKey(desiredLRP.ProcessGuid, 1, desiredLRP.Domain),
 					CrashCount:   5,
 					State:        models.ActualLRPStateCrashed,
 					Since:        twentyMinutesAgo,
@@ -948,10 +948,10 @@ var _ = Describe("LRPConvergence", func() {
 				[]string{},
 			)
 
-			lrpKey0 = models.NewActualLRPKey("some-deployment-guid", processGuid, 0, freshDomain)
+			lrpKey0 = models.NewActualLRPKey(processGuid, 0, freshDomain)
 			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrpKey0, 1))
 
-			lrpKey1 = models.NewActualLRPKey("some-deployment-guid", processGuid, 1, freshDomain)
+			lrpKey1 = models.NewActualLRPKey(processGuid, 1, freshDomain)
 			etcdHelper.SetRawActualLRP(models.NewUnclaimedActualLRP(lrpKey1, 1))
 
 			instanceKey := models.NewActualLRPInstanceKey("instance-guid", cellPresence.CellId)
@@ -1015,7 +1015,7 @@ var _ = Describe("LRPConvergence", func() {
 		Context("when the actual LRP has no corresponding desired LRP", func() {
 			JustBeforeEach(func() {
 				actualUnclaimedLRP := &models.ActualLRP{
-					ActualLRPKey: models.NewActualLRPKey("some-deployment-guid", processGuid, index, domain),
+					ActualLRPKey: models.NewActualLRPKey(processGuid, index, domain),
 					State:        models.ActualLRPStateUnclaimed,
 					Since:        clock.Now().UnixNano(),
 				}
@@ -1231,7 +1231,7 @@ var _ = Describe("LRPConvergence", func() {
 					index = numInstances
 
 					higherIndexActualLRP := &models.ActualLRP{
-						ActualLRPKey: models.NewActualLRPKey("some-deployment-guid", desiredLRP.ProcessGuid, index, desiredLRP.Domain),
+						ActualLRPKey: models.NewActualLRPKey(desiredLRP.ProcessGuid, index, desiredLRP.Domain),
 						State:        models.ActualLRPStateUnclaimed,
 						Since:        clock.Now().UnixNano(),
 					}
@@ -1284,7 +1284,7 @@ var _ = Describe("LRPConvergence", func() {
 					index = numInstances
 
 					higherIndexActualLRP := &models.ActualLRP{
-						ActualLRPKey:         models.NewActualLRPKey("some-deployment-guid", desiredLRP.ProcessGuid, index, desiredLRP.Domain),
+						ActualLRPKey:         models.NewActualLRPKey(desiredLRP.ProcessGuid, index, desiredLRP.Domain),
 						ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", "cell-id"),
 						State:                models.ActualLRPStateClaimed,
 						Since:                clock.Now().UnixNano(),
@@ -1350,7 +1350,7 @@ var _ = Describe("LRPConvergence", func() {
 					index = numInstances
 
 					higherIndexActualLRP := &models.ActualLRP{
-						ActualLRPKey:         models.NewActualLRPKey("some-deployment-guid", desiredLRP.ProcessGuid, index, desiredLRP.Domain),
+						ActualLRPKey:         models.NewActualLRPKey(desiredLRP.ProcessGuid, index, desiredLRP.Domain),
 						ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", "cell-id"),
 						ActualLRPNetInfo:     models.NewActualLRPNetInfo("127.0.0.1", "2.2.2.2", &models.PortMapping{ContainerPort: 8080, HostPort: 80}),
 						State:                models.ActualLRPStateRunning,
@@ -1767,7 +1767,7 @@ func actualLRPs(lrps ...*models.ActualLRP) map[string]map[int32]*models.ActualLR
 }
 
 func actualLRPKey(lrp *models.DesiredLRP, index int32) *models.ActualLRPKey {
-	lrpKey := models.NewActualLRPKey("some-deployment-guid", lrp.ProcessGuid, index, lrp.Domain)
+	lrpKey := models.NewActualLRPKey(lrp.ProcessGuid, index, lrp.Domain)
 	return &lrpKey
 }
 
@@ -1817,7 +1817,7 @@ func newStableRunningActualLRP(lrp *models.DesiredLRP, cellID string, index int3
 
 func newRunningActualLRP(d *models.DesiredLRP, cellID string, index int32) *models.ActualLRP {
 	return &models.ActualLRP{
-		ActualLRPKey:         models.NewActualLRPKey("some-deployment-guid", d.ProcessGuid, index, d.Domain),
+		ActualLRPKey:         models.NewActualLRPKey(d.ProcessGuid, index, d.Domain),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid", cellID),
 		ActualLRPNetInfo:     models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", &models.PortMapping{}),
 		State:                models.ActualLRPStateRunning,
@@ -1827,7 +1827,7 @@ func newRunningActualLRP(d *models.DesiredLRP, cellID string, index int32) *mode
 
 func newStartableCrashedActualLRP(d *models.DesiredLRP, index int32) *models.ActualLRP {
 	return &models.ActualLRP{
-		ActualLRPKey: models.NewActualLRPKey("some-deployment-guid", d.ProcessGuid, index, d.Domain),
+		ActualLRPKey: models.NewActualLRPKey(d.ProcessGuid, index, d.Domain),
 		CrashCount:   1,
 		State:        models.ActualLRPStateCrashed,
 		Since:        1138,
@@ -1836,7 +1836,7 @@ func newStartableCrashedActualLRP(d *models.DesiredLRP, index int32) *models.Act
 
 func newUnstartableCrashedActualLRP(d *models.DesiredLRP, index int32) *models.ActualLRP {
 	return &models.ActualLRP{
-		ActualLRPKey: models.NewActualLRPKey("some-deployment-guid", d.ProcessGuid, index, d.Domain),
+		ActualLRPKey: models.NewActualLRPKey(d.ProcessGuid, index, d.Domain),
 		CrashCount:   201,
 		State:        models.ActualLRPStateCrashed,
 		Since:        1138,

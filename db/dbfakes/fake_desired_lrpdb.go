@@ -52,19 +52,17 @@ type FakeDesiredLRPDB struct {
 		result1 []*models.DesiredLRPSchedulingInfo
 		result2 error
 	}
-	DesireLRPStub        func(logger lager.Logger, desiredLRP *models.DesiredLRP) (string, error)
+	DesireLRPStub        func(logger lager.Logger, desiredLRP *models.DesiredLRP) error
 	desireLRPMutex       sync.RWMutex
 	desireLRPArgsForCall []struct {
 		logger     lager.Logger
 		desiredLRP *models.DesiredLRP
 	}
 	desireLRPReturns struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	desireLRPReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	UpdateDesiredLRPStub        func(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (beforeDesiredLRP *models.DesiredLRP, err error)
 	updateDesiredLRPMutex       sync.RWMutex
@@ -253,7 +251,7 @@ func (fake *FakeDesiredLRPDB) DesiredLRPSchedulingInfosReturnsOnCall(i int, resu
 	}{result1, result2}
 }
 
-func (fake *FakeDesiredLRPDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) (string, error) {
+func (fake *FakeDesiredLRPDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error {
 	fake.desireLRPMutex.Lock()
 	ret, specificReturn := fake.desireLRPReturnsOnCall[len(fake.desireLRPArgsForCall)]
 	fake.desireLRPArgsForCall = append(fake.desireLRPArgsForCall, struct {
@@ -266,9 +264,9 @@ func (fake *FakeDesiredLRPDB) DesireLRP(logger lager.Logger, desiredLRP *models.
 		return fake.DesireLRPStub(logger, desiredLRP)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.desireLRPReturns.result1, fake.desireLRPReturns.result2
+	return fake.desireLRPReturns.result1
 }
 
 func (fake *FakeDesiredLRPDB) DesireLRPCallCount() int {
@@ -283,26 +281,23 @@ func (fake *FakeDesiredLRPDB) DesireLRPArgsForCall(i int) (lager.Logger, *models
 	return fake.desireLRPArgsForCall[i].logger, fake.desireLRPArgsForCall[i].desiredLRP
 }
 
-func (fake *FakeDesiredLRPDB) DesireLRPReturns(result1 string, result2 error) {
+func (fake *FakeDesiredLRPDB) DesireLRPReturns(result1 error) {
 	fake.DesireLRPStub = nil
 	fake.desireLRPReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeDesiredLRPDB) DesireLRPReturnsOnCall(i int, result1 string, result2 error) {
+func (fake *FakeDesiredLRPDB) DesireLRPReturnsOnCall(i int, result1 error) {
 	fake.DesireLRPStub = nil
 	if fake.desireLRPReturnsOnCall == nil {
 		fake.desireLRPReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
+			result1 error
 		})
 	}
 	fake.desireLRPReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (beforeDesiredLRP *models.DesiredLRP, err error) {
