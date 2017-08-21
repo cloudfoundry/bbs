@@ -5,7 +5,7 @@ import (
 
 	"github.com/tedsuo/ifrit"
 
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/runtimeschema/metric"
 )
@@ -16,10 +16,10 @@ const (
 
 type BBSElectionMetronNotifier struct {
 	Logger       lager.Logger
-	metronClient loggregator_v2.IngressClient
+	metronClient loggingclient.IngressClient
 }
 
-func NewBBSElectionMetronNotifier(logger lager.Logger, metronClient loggregator_v2.IngressClient) ifrit.Runner {
+func NewBBSElectionMetronNotifier(logger lager.Logger, metronClient loggingclient.IngressClient) ifrit.Runner {
 	return &BBSElectionMetronNotifier{
 		Logger:       logger,
 		metronClient: metronClient,

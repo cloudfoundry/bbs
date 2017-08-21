@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
 	"github.com/coreos/go-etcd/etcd"
 	etcdclient "github.com/coreos/go-etcd/etcd"
@@ -90,7 +90,7 @@ type ETCDDB struct {
 	clock                     clock.Clock
 	inflightWatches           map[chan bool]bool
 	inflightWatchLock         *sync.Mutex
-	metronClient              loggregator_v2.IngressClient
+	metronClient              loggingclient.IngressClient
 }
 
 func NewETCD(
@@ -101,7 +101,7 @@ func NewETCD(
 	cryptor encryption.Cryptor,
 	storeClient StoreClient,
 	clock clock.Clock,
-	metronClient loggregator_v2.IngressClient,
+	metronClient loggingclient.IngressClient,
 ) *ETCDDB {
 	return &ETCDDB{
 		format:                    serializationFormat,

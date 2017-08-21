@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/clock"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -22,10 +22,10 @@ type RequestStatMetronNotifier struct {
 	requestCount      uint64
 	maxRequestLatency time.Duration
 	lock              sync.Mutex
-	metronClient      loggregator_v2.IngressClient
+	metronClient      loggingclient.IngressClient
 }
 
-func NewRequestStatMetronNotifier(logger lager.Logger, ticker clock.Ticker, metronClient loggregator_v2.IngressClient) *RequestStatMetronNotifier {
+func NewRequestStatMetronNotifier(logger lager.Logger, ticker clock.Ticker, metronClient loggingclient.IngressClient) *RequestStatMetronNotifier {
 	return &RequestStatMetronNotifier{
 		logger:       logger,
 		ticker:       ticker,

@@ -9,7 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
-	loggregator_v2 "code.cloudfoundry.org/go-loggregator/compatibility"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -25,7 +25,7 @@ type SQLDB struct {
 	encoder                format.Encoder
 	flavor                 string
 	helper                 helpers.SQLHelper
-	metronClient           loggregator_v2.IngressClient
+	metronClient           loggingclient.IngressClient
 }
 
 type RowScanner interface {
@@ -48,7 +48,7 @@ func NewSQLDB(
 	guidProvider guidprovider.GUIDProvider,
 	clock clock.Clock,
 	flavor string,
-	metronClient loggregator_v2.IngressClient,
+	metronClient loggingclient.IngressClient,
 ) *SQLDB {
 	helper := helpers.NewSQLHelper(flavor)
 	return &SQLDB{
