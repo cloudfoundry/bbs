@@ -14,7 +14,7 @@ import (
 const (
 	tasksTable          = "tasks"
 	lrpDeploymentsTable = "lrp_deployments"
-	lrpDefinitionsTable = "lrp_definitions"
+	lrpDefinitionsTable = "lrp_deployments"
 	actualLRPsTable     = "actual_lrps"
 	domainsTable        = "domains"
 )
@@ -22,21 +22,39 @@ const (
 var (
 	schedulingInfoColumns = helpers.ColumnList{
 		lrpDeploymentsTable + ".process_guid",
-		lrpDefinitionsTable + ".definition_guid",
+		lrpDeploymentsTable + ".definition_guid",
 		lrpDeploymentsTable + ".domain",
 		lrpDeploymentsTable + ".instances",
 		lrpDeploymentsTable + ".annotation",
 		lrpDeploymentsTable + ".routes",
 		lrpDeploymentsTable + ".modification_tag_epoch",
 		lrpDeploymentsTable + ".modification_tag_index",
-		lrpDefinitionsTable + ".log_guid",
-		lrpDefinitionsTable + ".memory_mb",
-		lrpDefinitionsTable + ".disk_mb",
-		lrpDefinitionsTable + ".max_pids",
-		lrpDefinitionsTable + ".rootfs",
-		lrpDefinitionsTable + ".volume_placement",
-		lrpDefinitionsTable + ".placement_tags",
+		lrpDeploymentsTable + ".log_guid",
+		lrpDeploymentsTable + ".memory_mb",
+		lrpDeploymentsTable + ".disk_mb",
+		lrpDeploymentsTable + ".max_pids",
+		lrpDeploymentsTable + ".rootfs",
+		lrpDeploymentsTable + ".volume_placement",
+		lrpDeploymentsTable + ".placement_tags",
 	}
+
+	// lrpDeploymentColumns = helpers.ColumnList{
+	// 	lrpDeploymentsTable + ".process_guid",
+	// 	lrpDefinitionsTable + ".definition_guid",
+	// 	lrpDeploymentsTable + ".domain",
+	// 	lrpDeploymentsTable + ".instances",
+	// 	lrpDeploymentsTable + ".annotation",
+	// 	lrpDeploymentsTable + ".routes",
+	// 	lrpDeploymentsTable + ".modification_tag_epoch",
+	// 	lrpDeploymentsTable + ".modification_tag_index",
+	// 	lrpDefinitionsTable + ".log_guid",
+	// 	lrpDefinitionsTable + ".memory_mb",
+	// 	lrpDefinitionsTable + ".disk_mb",
+	// 	lrpDefinitionsTable + ".max_pids",
+	// 	lrpDefinitionsTable + ".rootfs",
+	// 	lrpDefinitionsTable + ".volume_placement",
+	// 	lrpDefinitionsTable + ".placement_tags",
+	// }
 
 	lrpDeploymentColumns = helpers.ColumnList{
 		lrpDeploymentsTable + ".process_guid",
@@ -44,27 +62,28 @@ var (
 		lrpDeploymentsTable + ".instances",
 		lrpDeploymentsTable + ".annotation",
 		lrpDeploymentsTable + ".routes",
-		lrpDeploymentsTable + ".active_definition_id",
-		lrpDeploymentsTable + ".healthy_definition_id",
+		lrpDeploymentsTable + ".definition_guid",
+		lrpDeploymentsTable + ".active",
+		lrpDeploymentsTable + ".healthy",
 		lrpDeploymentsTable + ".modification_tag_epoch",
 		lrpDeploymentsTable + ".modification_tag_index",
 	}
 
 	lrpDefinitionsColumns = helpers.ColumnList{
 		// lrpDefinitionsTable + ".process_guid",
-		lrpDefinitionsTable + ".definition_guid",
-		lrpDefinitionsTable + ".log_guid",
-		lrpDefinitionsTable + ".memory_mb",
-		lrpDefinitionsTable + ".disk_mb",
-		lrpDefinitionsTable + ".max_pids",
-		lrpDefinitionsTable + ".rootfs",
-		lrpDefinitionsTable + ".volume_placement",
-		lrpDefinitionsTable + ".placement_tags",
-		lrpDefinitionsTable + ".run_info",
+		lrpDeploymentsTable + ".definition_guid",
+		lrpDeploymentsTable + ".log_guid",
+		lrpDeploymentsTable + ".memory_mb",
+		lrpDeploymentsTable + ".disk_mb",
+		lrpDeploymentsTable + ".max_pids",
+		lrpDeploymentsTable + ".rootfs",
+		lrpDeploymentsTable + ".volume_placement",
+		lrpDeploymentsTable + ".placement_tags",
+		lrpDeploymentsTable + ".run_info",
 	}
 
 	desiredLRPColumns = append(schedulingInfoColumns,
-		lrpDefinitionsTable+".run_info",
+		lrpDeploymentsTable+".run_info",
 	)
 
 	taskColumns = helpers.ColumnList{
@@ -224,19 +243,19 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now 
 }
 
 func (db *SQLDB) oneLRPDeploymentWithDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) *sql.Row {
-	query := fmt.Sprintf("select %s from lrp_deployments JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid %s LIMIT 1", strings.Join(columns, ","), wheresClause)
+	query := fmt.Sprintf("select %s from lrp_deployments %s LIMIT 1", strings.Join(columns, ","), wheresClause)
 	return q.QueryRow(db.helper.Rebind(query), values...)
 }
 
 func (db *SQLDB) selectDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) (*sql.Rows, error) {
-	query := fmt.Sprintf("select %s from lrp_definitions %s", strings.Join(columns, ","), wheresClause)
+	query := fmt.Sprintf("select %s from lrp_deployments %s", strings.Join(columns, ","), wheresClause)
 	return q.Query(db.helper.Rebind(query), values...)
 }
 
-func (db *SQLDB) selectLRPDeploymentsWithDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) (*sql.Rows, error) {
-	query := fmt.Sprintf("select %s from lrp_deployments JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid %s", strings.Join(columns, ","), wheresClause)
-	return q.Query(db.helper.Rebind(query), values...)
-}
+// func (db *SQLDB) selectLRPDeploymentsWithDefinitions(logger lager.Logger, q Queryable, columns helpers.ColumnList, wheresClause string, values []interface{}) (*sql.Rows, error) {
+// 	query := fmt.Sprintf("select %s from lrp_deployments JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid %s", strings.Join(columns, ","), wheresClause)
+// 	return q.Query(db.helper.Rebind(query), values...)
+// }
 
 func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 	query := `

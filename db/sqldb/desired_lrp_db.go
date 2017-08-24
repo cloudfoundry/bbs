@@ -134,7 +134,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
+		wheresClause := " WHERE lrp_deployments.definition_guid = ?"
 		values := []interface{}{processGuid}
 		//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
 		row := db.oneLRPDeploymentWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
@@ -179,7 +179,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		wheresClause = wheresClause + strings.Join(wheres, " AND ")
 	}
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		rows, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
+		rows, err := db.selectDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
 		if err != nil {
 			logger.Error("failed-query", err)
 			return err
@@ -226,7 +226,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	}
 	results := []*models.DesiredLRPSchedulingInfo{}
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		rows, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, schedulingInfoColumns, wheresClause, values)
+		rows, err := db.selectDefinitions(logger, tx, schedulingInfoColumns, wheresClause, values)
 		if err != nil {
 			logger.Error("failed-query", err)
 			return err
@@ -261,7 +261,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		definitionRow := db.one(logger, tx, lrpDefinitionsTable,
+		definitionRow := db.one(logger, tx, lrpDeploymentsTable,
 			[]string{"process_guid"}, helpers.NoLockRow,
 			"definition_guid = ?", processGuid,
 		)
@@ -278,7 +278,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		// )
 		// beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
 
-		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
+		wheresClause := " WHERE lrp_deployments.definition_guid = ?"
 		values := []interface{}{processGuid}
 		row := db.oneLRPDeploymentWithDefinitions(logger, tx, desiredLRPColumns, wheresClause, values)
 		if row != nil {

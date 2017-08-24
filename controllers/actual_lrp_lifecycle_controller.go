@@ -88,7 +88,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	// 3. Remove actual lrps for the old definition id in the healthy_definition_id
 	// 4. Maybe we need to do this only for index==0 because that indicates the first instance coming up?
 
-	lrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByProcessGuid(logger, actualLRPKey.LrpDeploymentGuid)
+	lrpDeployment, err := h.lrpDeploymentDB.LRPDeploymentByProcessGuid(logger, actualLRPKey.ProcessGuid)
 	if err != nil {
 		logger.Error("failed-retrieving-lrpdeployment", err)
 		return err

@@ -53,7 +53,7 @@ func (e *LRPDeployment) createTables(logger lager.Logger, db *sql.DB, flavor str
 	var createTablesSQL = []string{
 		helpers.RebindForFlavor(createLRPDeploymentsSQL, flavor),
 		helpers.RebindForFlavor(createLRPDefinitionsIndexSQL, flavor),
-		helpers.RebindForFlavor(createLRPDefinitionsSQL, flavor),
+		// helpers.RebindForFlavor(createLRPDefinitionsSQL, flavor),
 		helpers.RebindForFlavor(dropDesiredLRPSQL, flavor),
 	}
 
@@ -116,19 +116,15 @@ func (e *LRPDeployment) dropTables(db *sql.DB) error {
 const dropDesiredLRPSQL = `DROP TABLE desired_lrps`
 
 const createLRPDeploymentsSQL = `CREATE TABLE lrp_deployments(
-	process_guid VARCHAR(255) PRIMARY KEY,
+	process_guid VARCHAR(255),
 	domain VARCHAR(255) NOT NULL,
 	instances INT NOT NULL,
 	annotation MEDIUMTEXT,
 	routes MEDIUMTEXT NOT NULL,
-	active_definition_id VARCHAR(255) DEFAULT '',
-	healthy_definition_id VARCHAR(255) DEFAULT '',
+	active BOOL DEFAULT false,
+	healthy BOOL DEFAULT false,
 	modification_tag_epoch VARCHAR(255) NOT NULL,
-	modification_tag_index INT
-);`
-
-const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
-	process_guid VARCHAR(255),
+	modification_tag_index INT,
 	definition_guid VARCHAR(255) PRIMARY KEY,
 	log_guid VARCHAR(255) NOT NULL,
 	memory_mb INT NOT NULL,
@@ -139,8 +135,23 @@ const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
 	max_pids INTEGER DEFAULT 0,
 	run_info MEDIUMTEXT NOT NULL
 );`
+const createLRPDeploymentDefinitionIndex = `create unique index lrp_deployments_process_guid on lrp_deployments(process_guid, definition_guid);`
+const createLRPDefinitionsIndexSQL = `create unique index lrp_deployments_definition_guid on lrp_deployments(definition_guid);`
 
-const createLRPDefinitionsIndexSQL = `create unique index lrp_definitions_process_guid on lrp_definitions(process_guid, definition_guid);`
+// const createLRPDefinitionsSQL = `CREATE TABLE lrp_definitions(
+// 	process_guid VARCHAR(255),
+// 	definition_guid VARCHAR(255) PRIMARY KEY,
+// 	log_guid VARCHAR(255) NOT NULL,
+// 	memory_mb INT NOT NULL,
+// 	disk_mb INT NOT NULL,
+// 	rootfs VARCHAR(255) NOT NULL,
+// 	volume_placement MEDIUMTEXT NOT NULL,
+// 	placement_tags TEXT,
+// 	max_pids INTEGER DEFAULT 0,
+// 	run_info MEDIUMTEXT NOT NULL
+// );`
+
+// const createLRPDefinitionsIndexSQL = `create unique index lrp_definitions_process_guid on lrp_definitions(process_guid, definition_guid);`
 
 // TODO: add primary key on lrp deployment definition = (defintiion_guid + process_guid)
 // process guid should have a foreign key constraint against LRP deployment

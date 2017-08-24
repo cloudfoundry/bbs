@@ -79,7 +79,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
 
-				queryStr := `UPDATE lrp_definitions SET run_info = ? WHERE definition_guid = ?`
+				queryStr := `UPDATE lrp_deployments SET run_info = ? WHERE definition_guid = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -99,7 +99,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				queryStr := `UPDATE lrp_deployments SET routes = ? FROM lrp_definitions WHERE lrp_deployments.process_guid = lrp_definitions.process_guid AND lrp_definitions.definition_guid = ?`
+				queryStr := `UPDATE lrp_deployments SET routes = ? WHERE definition_guid = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -143,7 +143,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			desiredLRPWithInvalidRunInfo := model_helpers.NewValidDesiredLRP("invalid")
 			Expect(sqlDB.DesireLRP(logger, desiredLRPWithInvalidRunInfo)).To(Succeed())
 
-			queryStr := `UPDATE lrp_definitions SET run_info = 'garbage' WHERE definition_guid = 'invalid'`
+			queryStr := `UPDATE lrp_deployments SET run_info = 'garbage' WHERE definition_guid = 'invalid'`
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
@@ -154,7 +154,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPs).To(HaveLen(3))
 
-			rows, err := db.Query(`SELECT process_guid FROM lrp_definitions`)
+			rows, err := db.Query(`SELECT process_guid FROM lrp_deployments`)
 			Expect(err).NotTo(HaveOccurred())
 			defer rows.Close()
 			processGuids := []string{}
@@ -190,7 +190,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the run info is invalid", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE lrp_definitions SET run_info = ? WHERE definition_guid = ?"
+				queryStr := "UPDATE lrp_deployments SET run_info = ? WHERE definition_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -210,7 +210,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE lrp_deployments SET routes = ? FROM lrp_definitions WHERE lrp_deployments.process_guid = lrp_definitions.process_guid AND lrp_definitions.definition_guid = ?"
+				queryStr := "UPDATE lrp_deployments SET routes = ? WHERE definition_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -280,7 +280,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the routes are invalid", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE lrp_deployments SET routes = ? FROM lrp_definitions WHERE lrp_definitions.process_guid = lrp_deployments.process_guid AND lrp_definitions.definition_guid = ?"
+				queryStr := "UPDATE lrp_deployments SET routes = ? WHERE definition_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}

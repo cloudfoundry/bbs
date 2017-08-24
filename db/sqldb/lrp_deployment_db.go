@@ -60,22 +60,22 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 
 		logger.Info("================going-to-save-run-info", lager.Data{"ProcessGuid": lrp.ProcessGuid, "definition-id": lrp.DefinitionId, "rootfs": definition.RootFs, "run-info": runInfoData})
 
-		_, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
-			"process_guid":     lrp.ProcessGuid,
-			"definition_guid":  lrp.DefinitionId,
-			"log_guid":         definition.LogGuid,
-			"memory_mb":        definition.MemoryMb,
-			"disk_mb":          definition.DiskMb,
-			"rootfs":           definition.RootFs,
-			"volume_placement": volumePlacementData,
-			"placement_tags":   placementTagData,
-			"max_pids":         definition.MaxPids,
-			"run_info":         runInfoData,
-		})
-		if err != nil {
-			logger.Error("failed-inserting-lrp-definition", err)
-			return err
-		}
+		// _, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
+		// 	"process_guid":     lrp.ProcessGuid,
+		// 	"definition_guid":  lrp.DefinitionId,
+		// 	"log_guid":         definition.LogGuid,
+		// 	"memory_mb":        definition.MemoryMb,
+		// 	"disk_mb":          definition.DiskMb,
+		// 	"rootfs":           definition.RootFs,
+		// 	"volume_placement": volumePlacementData,
+		// 	"placement_tags":   placementTagData,
+		// 	"max_pids":         definition.MaxPids,
+		// 	"run_info":         runInfoData,
+		// })
+		// if err != nil {
+		// 	logger.Error("failed-inserting-lrp-definition", err)
+		// 	return err
+		// }
 
 		_, err = db.insert(logger, tx, lrpDeploymentsTable,
 			helpers.SQLAttributes{
@@ -86,7 +86,16 @@ func (db *SQLDB) CreateLRPDeployment(logger lager.Logger, lrp *models.LRPDeploym
 				"modification_tag_epoch": modificationTag.Epoch,
 				"modification_tag_index": modificationTag.Index,
 				"routes":                 routesData,
-				"active_definition_id":   lrp.DefinitionId,
+				"active":                 true,
+				"definition_guid":        lrp.DefinitionId,
+				"log_guid":               definition.LogGuid,
+				"memory_mb":              definition.MemoryMb,
+				"disk_mb":                definition.DiskMb,
+				"rootfs":                 definition.RootFs,
+				"volume_placement":       volumePlacementData,
+				"placement_tags":         placementTagData,
+				"max_pids":               definition.MaxPids,
+				"run_info":               runInfoData,
 			},
 		)
 		if err != nil {
@@ -117,8 +126,9 @@ func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mod
 	var updatedLRPDeployment *models.LRPDeployment
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		wheresClause := "lrp_deployments.process_guid = ?"
-		row := db.one(logger, tx, lrpDeploymentsTable, lrpDeploymentColumns, false, wheresClause, id)
+		//TODO: what happens if the lrp_deployment row that is active is not the healthy one
+		wheresClause := "lrp_deployments.process_guid = ? AND lrp_deployments.active = ?"
+		row := db.one(logger, tx, lrpDeploymentsTable, lrpDeploymentColumns, false, wheresClause, id, true)
 		desiredLRPDeployment, err := db.fetchLRPDeployment(logger, row)
 		if err != nil {
 			logger.Error("failed-to-get-lrp-deployment", err)
@@ -126,30 +136,21 @@ func (db *SQLDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mod
 		}
 
 		desiredLRPDeployment.ModificationTag.Increment()
-		var lrpDeploymentAttrs helpers.SQLAttributes
-		updatedLRPDeployment, lrpDeploymentAttrs, err = db.constructUpdatableDeploymentAndInsertDefinition(logger, tx, id, desiredLRPDeployment, update)
+		updatedLRPDeployment, err = db.updateDeploymentAndInsertDefinition(logger, tx, id, desiredLRPDeployment, update)
 
-		_, err = db.update(logger, tx, lrpDeploymentsTable,
-			lrpDeploymentAttrs, wheresClause, id,
-		)
-		if err != nil {
-			logger.Error("failed-updating-lrp-deployment", err)
-			return err
-		}
-
-		return nil
+		return err
 	})
 
 	return updatedLRPDeployment, err
 }
 
-func (db *SQLDB) constructUpdatableDeploymentAndInsertDefinition(
+func (db *SQLDB) updateDeploymentAndInsertDefinition(
 	logger lager.Logger,
 	tx *sql.Tx,
 	processGuid string,
 	desiredLRPDeployment *models.LRPDeployment,
 	update *models.LRPDeploymentUpdate,
-) (*models.LRPDeployment, helpers.SQLAttributes, error) {
+) (*models.LRPDeployment, error) {
 
 	updatedLRPDeployment := *desiredLRPDeployment
 	definition := update.Definition
@@ -157,15 +158,19 @@ func (db *SQLDB) constructUpdatableDeploymentAndInsertDefinition(
 		"modification_tag_index": desiredLRPDeployment.ModificationTag.Index,
 	}
 
+	var routesToEncode *models.Routes
 	if update.Routes != nil {
-		routesData, err := db.encodeRouteData(logger, update.Routes)
-		if err != nil {
-			logger.Error("failed-encoding-route-data", err)
-			return nil, nil, err
-		}
-		lrpDeploymentAttrs["routes"] = routesData
-		updatedLRPDeployment.Routes = update.Routes
+		routesToEncode = update.Routes
+	} else {
+		routesToEncode = desiredLRPDeployment.Routes
 	}
+	routesData, err := db.encodeRouteData(logger, routesToEncode)
+	if err != nil {
+		logger.Error("failed-encoding-route-data", err)
+		return nil, err
+	}
+	lrpDeploymentAttrs["routes"] = routesData
+	updatedLRPDeployment.Routes = update.Routes
 
 	if update.Instances != nil {
 		lrpDeploymentAttrs["instances"] = *update.Instances
@@ -184,7 +189,7 @@ func (db *SQLDB) constructUpdatableDeploymentAndInsertDefinition(
 		runInfoData, err := db.serializeModel(logger, &runInfo)
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
-			return nil, nil, err
+			return nil, err
 		}
 
 		volumePlacement := &models.VolumePlacement{}
@@ -196,35 +201,60 @@ func (db *SQLDB) constructUpdatableDeploymentAndInsertDefinition(
 		volumePlacementData, err := db.serializeModel(logger, volumePlacement)
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
-			return nil, nil, err
+			return nil, err
 		}
 
 		placementTagData, err := json.Marshal(definition.PlacementTags)
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
-			return nil, nil, err
+			return nil, err
 		}
 
-		_, err = db.insert(logger, tx, lrpDefinitionsTable, helpers.SQLAttributes{
-			"process_guid":     processGuid,
-			"definition_guid":  update.DefinitionId,
-			"log_guid":         definition.LogGuid,
-			"memory_mb":        definition.MemoryMb,
-			"disk_mb":          definition.DiskMb,
-			"rootfs":           definition.RootFs,
-			"volume_placement": volumePlacementData,
-			"placement_tags":   placementTagData,
-			"max_pids":         definition.MaxPids,
-			"run_info":         runInfoData,
+		_, err = db.insert(logger, tx, lrpDeploymentsTable, helpers.SQLAttributes{
+			"process_guid":           processGuid,
+			"definition_guid":        update.DefinitionId,
+			"log_guid":               definition.LogGuid,
+			"memory_mb":              definition.MemoryMb,
+			"disk_mb":                definition.DiskMb,
+			"rootfs":                 definition.RootFs,
+			"volume_placement":       volumePlacementData,
+			"placement_tags":         placementTagData,
+			"max_pids":               definition.MaxPids,
+			"run_info":               runInfoData,
+			"domain":                 updatedLRPDeployment.Domain,
+			"annotation":             updatedLRPDeployment.Annotation,
+			"instances":              updatedLRPDeployment.Instances,
+			"modification_tag_epoch": updatedLRPDeployment.ModificationTag.Epoch,
+			"modification_tag_index": updatedLRPDeployment.ModificationTag.Index,
+			"routes":                 routesData,
+			"active":                 true,
 		})
 		if err != nil {
 			logger.Error("failed-inserting-lrp-definition", err)
-			return nil, nil, err
+			return nil, err
 		}
 
-		// Save new active_definition_id
-		lrpDeploymentAttrs["active_definition_id"] = *update.DefinitionId
-		updatedLRPDeployment.ActiveDefinitionId = *update.DefinitionId
+		_, err = db.update(logger, tx, lrpDeploymentsTable, helpers.SQLAttributes{"active": false},
+			"lrp_deployments.definition_guid = ?", desiredLRPDeployment.ActiveDefinitionId)
+
+		if err != nil {
+			logger.Error("failed-updating-lrp-deployment", err)
+			return nil, err
+		}
+
+		// // Save new active_definition_id
+		// lrpDeploymentAttrs["active_definition_id"] = *update.DefinitionId
+		// updatedLRPDeployment.ActiveDefinitionId = *update.DefinitionId
+	} else {
+
+		wheresClause := " WHERE process_guid = ? AND active = ?"
+		_, err = db.update(logger, tx, lrpDeploymentsTable,
+			lrpDeploymentAttrs, wheresClause, updatedLRPDeployment.ProcessGuid, true,
+		)
+		if err != nil {
+			logger.Error("failed-updating-lrp-deployments", err)
+			return nil, err
+		}
 	}
 
 	wheresClause := " WHERE process_guid = ?"
@@ -232,17 +262,18 @@ func (db *SQLDB) constructUpdatableDeploymentAndInsertDefinition(
 	definitionRows, err := db.selectDefinitions(logger, tx, lrpDefinitionsColumns, wheresClause, values)
 	if err != nil {
 		logger.Error("failed-selecting-lrp-definitions", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	definitions, err := db.fetchLRPDefinitions(logger, definitionRows)
 	if err != nil {
 		logger.Error("failed-fetching-lrp-definitions", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	updatedLRPDeployment.Definitions = definitions
-	return &updatedLRPDeployment, lrpDeploymentAttrs, nil
+
+	return &updatedLRPDeployment, nil
 }
 
 func (db *SQLDB) SaveLRPDeployment(logger lager.Logger, lrpDeployment *models.LRPDeployment) (*models.LRPDeployment, error) {
@@ -305,14 +336,17 @@ func (db *SQLDB) fetchLRPDeployment(logger lager.Logger, row RowScanner) (*model
 		ModificationTag: &models.ModificationTag{},
 	}
 	var routeData []byte
+	var active, healthy bool
+	var defID string
 	values := []interface{}{
 		&lrpDeployment.ProcessGuid,
 		&lrpDeployment.Domain,
 		&lrpDeployment.Instances,
 		&lrpDeployment.Annotation,
 		&routeData,
-		&lrpDeployment.ActiveDefinitionId,
-		&lrpDeployment.HealthyDefinitionId,
+		&defID,
+		&active,
+		&healthy,
 		&lrpDeployment.ModificationTag.Epoch,
 		&lrpDeployment.ModificationTag.Index,
 	}
@@ -337,8 +371,15 @@ func (db *SQLDB) fetchLRPDeployment(logger lager.Logger, row RowScanner) (*model
 		logger.Error("failed-parsing-routes", err)
 		return nil, err
 	}
-
 	lrpDeployment.Routes = &routes
+
+	if active {
+		lrpDeployment.ActiveDefinitionId = defID
+	}
+
+	if healthy {
+		lrpDeployment.HealthyDefinitionId = defID
+	}
 	return lrpDeployment, nil
 }
 
@@ -528,7 +569,7 @@ func (db *SQLDB) LRPDeploymentByDefinitionGuid(logger lager.Logger, id string) (
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := " WHERE lrp_definitions.definition_guid = ?"
+		wheresClause := " WHERE lrp_deployments.definition_guid = ?"
 		values := []interface{}{id}
 		//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
 		row := db.oneLRPDeploymentWithDefinitions(logger, tx, lrpDeploymentColumns, wheresClause, values)
@@ -603,7 +644,7 @@ func (db *SQLDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.
 	}
 	results := map[string]*models.LRPDeploymentSchedulingInfo{}
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
-		rows, err := db.selectLRPDeploymentsWithDefinitions(logger, tx, schedulingInfoColumns, wheresClause, values)
+		rows, err := db.selectDefinitions(logger, tx, schedulingInfoColumns, wheresClause, values)
 		if err != nil {
 			logger.Error("failed-query", err)
 			return err
@@ -682,7 +723,7 @@ func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, id string) 
 func whereClauseForDefinitionGuids(filter []string) string {
 	var questionMarks []string
 
-	where := "lrp_definitions.definition_guid IN ("
+	where := "lrp_deployments.definition_guid IN ("
 	for range filter {
 		questionMarks = append(questionMarks, "?")
 
