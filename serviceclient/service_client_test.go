@@ -243,6 +243,18 @@ var _ = Describe("ServiceClient", func() {
 				_, request, _ := locketClient.FetchArgsForCall(0)
 				Expect(request).To(Equal(&locketmodels.FetchRequest{Key: "cell-1"}))
 			})
+
+			Context("and cell is not found in locket", func() {
+				BeforeEach(func() {
+					locketClient.FetchReturns(nil, locketmodels.ErrResourceNotFound)
+				})
+
+				It("returns a ResourceNotFound error", func() {
+					_, err := serviceClient.CellById(logger, "cell-1")
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrResourceNotFound))
+				})
+			})
 		})
 	})
 

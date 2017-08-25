@@ -83,7 +83,7 @@ func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.Ce
 		Key: cellId,
 	})
 	if locketErr != nil {
-		if s.cellPresenceClient != nil && consulErr != nil {
+		if (s.cellPresenceClient != nil && consulErr != nil) || s.cellPresenceClient == nil {
 			logger.Error("failed-to-fetch-presence-from-locket", locketErr)
 			if grpc.Code(locketErr) == codes.NotFound {
 				return nil, models.ErrResourceNotFound
