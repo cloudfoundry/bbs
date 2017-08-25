@@ -77,6 +77,12 @@ func NewLRPDeploymentSchedulingInfo(
 }
 
 func (d *LRPDefinition) LRPDefinitionSchedulingInfo() *LRPDefinitionSchedulingInfo {
+	var volumePlacement VolumePlacement
+	volumePlacement.DriverNames = []string{}
+	for _, mount := range d.VolumeMounts {
+		volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
+	}
+
 	return &LRPDefinitionSchedulingInfo{
 		DefinitionId:    d.DefinitionId,
 		LogGuid:         d.LogGuid,
@@ -84,7 +90,7 @@ func (d *LRPDefinition) LRPDefinitionSchedulingInfo() *LRPDefinitionSchedulingIn
 		DiskMb:          d.DiskMb,
 		RootFs:          d.RootFs,
 		MaxPids:         d.MaxPids,
-		VolumePlacement: d.VolumePlacement,
+		VolumePlacement: &volumePlacement,
 		PlacementTags:   d.PlacementTags,
 	}
 }
@@ -111,11 +117,17 @@ func (d *LRPDeployment) DesiredLRP(definitionId string) (DesiredLRP, error) {
 		return DesiredLRP{}, errors.New("invalid-definition-id")
 	}
 
+	var volumePlacement VolumePlacement
+	volumePlacement.DriverNames = []string{}
+	for _, mount := range definition.VolumeMounts {
+		volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
+	}
+
 	lrpKey := NewDesiredLRPKey(definition.DefinitionId, d.Domain, definition.LogGuid)
 	runInfo := definition.DesiredLRPRunInfo(lrpKey, time.Now())
 	schedInfo := NewDesiredLRPSchedulingInfo(
 		lrpKey, d.Annotation, d.Instances, definition.DesiredLRPResource(),
-		*d.Routes, *d.ModificationTag, definition.VolumePlacement, definition.PlacementTags)
+		*d.Routes, *d.ModificationTag, &volumePlacement, definition.PlacementTags)
 	return NewDesiredLRP(schedInfo, runInfo), nil
 }
 

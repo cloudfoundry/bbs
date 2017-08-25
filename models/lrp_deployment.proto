@@ -69,7 +69,6 @@ message LRPDefinition {
   repeated CachedDependency cached_dependencies = 18 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 19 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
   optional string trusted_system_certificates_path = 20 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
-  optional VolumePlacement volume_placement = 21 [(gogoproto.jsontag) = "volume_placement,omitempty"];
   repeated VolumeMount volume_mounts = 22 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 23 [(gogoproto.jsontag) = "network,omitempty"];
   repeated string placement_tags = 24 [(gogoproto.jsontag) ="placement_tags,omitempty"];

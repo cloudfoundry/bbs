@@ -77,7 +77,7 @@ var (
 		lrpDeploymentsTable + ".disk_mb",
 		lrpDeploymentsTable + ".max_pids",
 		lrpDeploymentsTable + ".rootfs",
-		lrpDeploymentsTable + ".volume_placement",
+		// lrpDeploymentsTable + ".volume_placement",
 		lrpDeploymentsTable + ".placement_tags",
 		lrpDeploymentsTable + ".run_info",
 	}

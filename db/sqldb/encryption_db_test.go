@@ -127,7 +127,7 @@ var _ = Describe("Encryption", func() {
 	}
 
 	Describe("PerformEncryption", func() {
-		It("recursively re-encrypts all existing records", func() {
+		FIt("recursively re-encrypts all existing records", func() {
 			var cryptor encryption.Cryptor
 			var encoder format.Encoder
 
@@ -162,12 +162,12 @@ var _ = Describe("Encryption", func() {
 
 			queryStr = `
 				INSERT INTO lrp_deployments
-				 (process_guid, domain, instances, routes, active_definition_id, healthy_definition_id, modification_tag_epoch)
-				VALUES (?, ?, ?, ?, ?, ?, ?)`
+				 (process_guid, definition_guid, log_guid, domain, instances, routes, active, healthy, modification_tag_epoch)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, processGuid, "fake-domain", 1, encodedRoutes, "some-definition-id", "some-definition-id", 10)
+			_, err = db.Exec(queryStr, processGuid, "some-definition-id", "some-log-guid", "fake-domain", 1, encodedRoutes, true, true, 10)
 			Expect(err).NotTo(HaveOccurred())
 
 			queryStr = `

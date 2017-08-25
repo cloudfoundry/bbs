@@ -36,7 +36,7 @@ var _ = Describe("LRPDeployment", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		FIt("fetches the LRP deployment associated with a LRPDefinition's definition guid", func() {
+		It("fetches the LRP deployment associated with a LRPDefinition's definition guid", func() {
 			lrpDeployment, err := sqlDB.LRPDeploymentByDefinitionGuid(logger, lrpCreate.DefinitionId)
 			Expect(err).ToNot(HaveOccurred())
 

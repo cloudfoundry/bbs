@@ -295,7 +295,7 @@ func (db *SQLDB) DeleteLRPDeployment(logger lager.Logger, id string) (*models.LR
 
 	return lrpDeployment, db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		lrpDeployment, err = db.findLRPDeployment(logger, tx, id)
+		lrpDeployment, err = db.findLRPDeployment(logger, tx, "process_guid = ?", id)
 
 		_, err = db.delete(logger, tx, lrpDefinitionsTable, "process_guid = ?", id)
 		if err != nil {
@@ -316,7 +316,7 @@ func (db *SQLDB) ActivateLRPDeploymentDefinition(logger lager.Logger, id, defini
 	var lrpDeployment *models.LRPDeployment
 	return lrpDeployment, db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		lrpDeployment, err = db.findLRPDeployment(logger, tx, id)
+		lrpDeployment, err = db.findLRPDeployment(logger, tx, "process_guid = ?", id)
 		_, err = db.update(logger, db.db, lrpDeploymentsTable,
 			helpers.SQLAttributes{
 				"active_definition_id": definitionId,
@@ -385,7 +385,7 @@ func (db *SQLDB) fetchLRPDeployment(logger lager.Logger, row RowScanner) (*model
 
 func (db *SQLDB) fetchLRPDefinitionsInternal(logger lager.Logger, scanner RowScanner) (*models.LRPDefinition, string, error) {
 	definition := &models.LRPDefinition{}
-	var volumeData, placementData, runInfoData []byte
+	var placementData, runInfoData []byte
 	values := []interface{}{
 		&definition.DefinitionId,
 		&definition.LogGuid,
@@ -393,7 +393,6 @@ func (db *SQLDB) fetchLRPDefinitionsInternal(logger lager.Logger, scanner RowSca
 		&definition.DiskMb,
 		&definition.MaxPids,
 		&definition.RootFs,
-		&volumeData,
 		&placementData,
 		&runInfoData,
 	}
@@ -406,14 +405,6 @@ func (db *SQLDB) fetchLRPDefinitionsInternal(logger lager.Logger, scanner RowSca
 		logger.Error("failed-scanning", err)
 		return nil, "", err
 	}
-
-	var volumePlacement models.VolumePlacement
-	err = db.deserializeModel(logger, volumeData, &volumePlacement)
-	if err != nil {
-		logger.Error("failed-parsing-volume-placement", err)
-		return nil, "", err
-	}
-	definition.VolumePlacement = &volumePlacement
 
 	if placementData != nil {
 		err = json.Unmarshal(placementData, &definition.PlacementTags)
@@ -569,39 +560,47 @@ func (db *SQLDB) LRPDeploymentByDefinitionGuid(logger lager.Logger, id string) (
 
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
-		wheresClause := " WHERE lrp_deployments.definition_guid = ?"
-		values := []interface{}{id}
-		//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
-		row := db.oneLRPDeploymentWithDefinitions(logger, tx, lrpDeploymentColumns, wheresClause, values)
-		if row != nil {
-			lrpDeployment, err = db.fetchLRPDeployment(logger, row)
-			if err != nil {
-				return err
-			}
-		} else {
-			return helpers.ErrResourceNotFound
-		}
 
-		wheresClause = " WHERE process_guid = ?"
-		values = []interface{}{lrpDeployment.ProcessGuid}
-		definitionRows, err := db.selectDefinitions(logger, tx, lrpDefinitionsColumns, wheresClause, values)
-		if err != nil {
-			logger.Error("failed-selecting-lrp-definitions", err)
-			return err
-		}
-
-		definitions, err := db.fetchLRPDefinitions(logger, definitionRows)
-		if err != nil {
-			logger.Error("failed-fetching-lrp-definitions", err)
-			return err
-		}
-
-		lrpDeployment.Definitions = definitions
-
+		lrpDeployment, err = db.findLRPDeployment(logger, tx, "definition_guid = ?", id)
 		return err
 	})
 
 	return lrpDeployment, err
+	// err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	// 	var err error
+	// 	wheresClause := " WHERE lrp_deployments.definition_guid = ?"
+	// 	values := []interface{}{id}
+	// 	//TODO: now using QueryRow which doesn't return an error. How do we check for errors?
+	// 	row := db.oneLRPDeploymentWithDefinitions(logger, tx, lrpDeploymentColumns, wheresClause, values)
+	// 	if row != nil {
+	// 		lrpDeployment, err = db.fetchLRPDeployment(logger, row)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	} else {
+	// 		return helpers.ErrResourceNotFound
+	// 	}
+
+	// 	wheresClause = " WHERE process_guid = ?"
+	// 	values = []interface{}{lrpDeployment.ProcessGuid}
+	// 	definitionRows, err := db.selectDefinitions(logger, tx, lrpDefinitionsColumns, wheresClause, values)
+	// 	if err != nil {
+	// 		logger.Error("failed-selecting-lrp-definitions", err)
+	// 		return err
+	// 	}
+
+	// 	definitions, err := db.fetchLRPDefinitions(logger, definitionRows)
+	// 	if err != nil {
+	// 		logger.Error("failed-fetching-lrp-definitions", err)
+	// 		return err
+	// 	}
+
+	// 	lrpDeployment.Definitions = definitions
+
+	// 	return err
+	// })
+
+	// return lrpDeployment, err
 }
 
 func (db *SQLDB) LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*models.LRPDeployment, error) {
@@ -614,7 +613,7 @@ func (db *SQLDB) LRPDeploymentByProcessGuid(logger lager.Logger, id string) (*mo
 	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
 		var err error
 
-		lrpDeployment, err = db.findLRPDeployment(logger, tx, id)
+		lrpDeployment, err = db.findLRPDeployment(logger, tx, "process_guid = ?", id)
 		return err
 	})
 
@@ -685,13 +684,12 @@ func (db *SQLDB) LRPDeploymentSchedulingInfo(logger lager.Logger, filter models.
 	return deploymentsSchedulingInfo, err
 }
 
-func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, id string) (*models.LRPDeployment, error) {
+func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, where, id string) (*models.LRPDeployment, error) {
 	var lrpDeployment *models.LRPDeployment
 	var err error
 
-	wheresClause := "process_guid = ?"
 	values := []interface{}{id}
-	row := db.one(logger, q, lrpDeploymentsTable, lrpDeploymentColumns, false, wheresClause, id)
+	row := db.one(logger, q, lrpDeploymentsTable, lrpDeploymentColumns, false, where, id)
 	if row != nil {
 		lrpDeployment, err = db.fetchLRPDeployment(logger, row)
 		if err != nil {
@@ -702,7 +700,7 @@ func (db *SQLDB) findLRPDeployment(logger lager.Logger, q Queryable, id string) 
 		return nil, helpers.ErrResourceNotFound
 	}
 
-	wheresClause = " WHERE process_guid = ?"
+	wheresClause := " WHERE process_guid = ?"
 	values = []interface{}{lrpDeployment.ProcessGuid}
 	definitionRows, err := db.selectDefinitions(logger, q, lrpDefinitionsColumns, wheresClause, values)
 	if err != nil {
