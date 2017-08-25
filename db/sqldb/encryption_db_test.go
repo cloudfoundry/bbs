@@ -127,7 +127,7 @@ var _ = Describe("Encryption", func() {
 	}
 
 	Describe("PerformEncryption", func() {
-		FIt("recursively re-encrypts all existing records", func() {
+		It("recursively re-encrypts all existing records", func() {
 			var cryptor encryption.Cryptor
 			var encoder format.Encoder
 
@@ -162,25 +162,26 @@ var _ = Describe("Encryption", func() {
 
 			queryStr = `
 				INSERT INTO lrp_deployments
-				 (process_guid, definition_guid, log_guid, domain, instances, routes, active, healthy, modification_tag_epoch)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				 (process_guid, domain, instances, routes, active, healthy, modification_tag_epoch,
+				 definition_guid, log_guid, memory_mb, disk_mb, rootfs, volume_placement, run_info)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, processGuid, "some-definition-id", "some-log-guid", "fake-domain", 1, encodedRoutes, true, true, 10)
+			_, err = db.Exec(queryStr, processGuid, "fake-domain", 1, encodedRoutes, true, true, 10,
+				"some-definition-id", "some-log-guid", 10, 10, "some-root-fs", encodedVolumePlacement, encodedRunInfo)
 			Expect(err).NotTo(HaveOccurred())
 
-			queryStr = `
-				INSERT INTO lrp_definitions
-					(process_guid, definition_guid, log_guid, run_info, memory_mb,
-					disk_mb, rootfs, volume_placement)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, processGuid, "some-definition-id", "some-log-guid", encodedRunInfo, 10, 10,
-				"some-root-fs", encodedVolumePlacement)
-			Expect(err).NotTo(HaveOccurred())
+			// queryStr = `
+			// 	INSERT INTO lrp_definitions
+			// 		(process_guid, definition_guid, log_guid, run_info, memory_mb, disk_mb, rootfs, volume_placement)
+			// 	VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+			// if test_helpers.UsePostgres() {
+			// 	queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			// }
+			// _, err = db.Exec(queryStr, processGuid, "some-definition-id", "some-log-guid",
+			// 	encodedRunInfo, 10, 10, "some-root-fs", encodedVolumePlacement)
+			// Expect(err).NotTo(HaveOccurred())
 
 			cryptor = makeCryptor("new", "old")
 
@@ -204,9 +205,8 @@ var _ = Describe("Encryption", func() {
 			Expect(decryptedTaskDef).To(Equal(unencodedTaskDef))
 
 			var runInfo, routes, volumePlacement []byte
-			queryStr = `SELECT lrp_definitions.run_info, lrp_deployments.routes, lrp_definitions.volume_placement
-			            FROM lrp_deployments
-									INNER JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid
+			queryStr = `SELECT lrp_deployments.run_info, lrp_deployments.routes, lrp_deployments.volume_placement
+									FROM lrp_deployments
 									WHERE lrp_deployments.process_guid = ?`
 
 			if test_helpers.UsePostgres() {
