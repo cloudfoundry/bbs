@@ -3,6 +3,7 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
@@ -104,11 +105,11 @@ var _ = Describe("CellPresence", func() {
 			}
 
 			cellPresenceLocket = ginkgomon.Invoke(
-				lock.NewLockRunner(
+				lock.NewPresenceRunner(
 					logger,
 					locketClient,
 					lockIdentifier,
-					5,
+					int64(locket.DefaultSessionTTL/time.Second),
 					clock,
 					locket.RetryInterval,
 				),
