@@ -327,7 +327,7 @@ func (db *SQLDB) DeleteLRPDeployment(logger lager.Logger, id string) (*models.LR
 		var err error
 		lrpDeployment, err = db.findLRPDeployment(logger, tx, "process_guid = ?", id)
 		if err != nil {
-			logger.Error("failed-finding-lrp-deployment", err)
+			logger.Error("failed-deleting-lrp-definitions-from-db", err)
 			return err
 		}
 		_, err = db.delete(logger, tx, lrpDeploymentsTable, "process_guid = ?", id)
