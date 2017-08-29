@@ -13,11 +13,7 @@ func (db *ETCDDB) UpdateLRPDeployment(logger lager.Logger, id string, update *mo
 	return nil, nil
 }
 
-func (db *ETCDDB) SaveLRPDeployment(logger lager.Logger, lrp *models.LRPDeployment) (*models.LRPDeployment, error) {
-	return nil, nil
-}
-
-func (db *ETCDDB) LRPDeploymentByDefinitionGuid(logger lager.Logger, guid string) (*models.LRPDeployment, error) {
+func (db *ETCDDB) SaveLRPDeployment(logger lager.Logger, lrp *models.LRPDeployment, updatedGuid string) (*models.LRPDeployment, error) {
 	return nil, nil
 }
 

@@ -62,11 +62,18 @@ var (
 		lrpDeploymentsTable + ".instances",
 		lrpDeploymentsTable + ".annotation",
 		lrpDeploymentsTable + ".routes",
-		lrpDeploymentsTable + ".definition_guid",
 		lrpDeploymentsTable + ".active",
 		lrpDeploymentsTable + ".healthy",
 		lrpDeploymentsTable + ".modification_tag_epoch",
 		lrpDeploymentsTable + ".modification_tag_index",
+		lrpDeploymentsTable + ".definition_guid",
+		lrpDeploymentsTable + ".log_guid",
+		lrpDeploymentsTable + ".memory_mb",
+		lrpDeploymentsTable + ".disk_mb",
+		lrpDeploymentsTable + ".rootfs",
+		lrpDeploymentsTable + ".max_pids",
+		lrpDeploymentsTable + ".placement_tags",
+		lrpDeploymentsTable + ".run_info",
 	}
 
 	lrpDefinitionsColumns = helpers.ColumnList{

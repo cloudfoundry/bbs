@@ -138,6 +138,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			instanceKey models.ActualLRPInstanceKey
 			netInfo     models.ActualLRPNetInfo
 			err         error
+			desiredLRP  *models.DesiredLRP
 		)
 
 		BeforeEach(func() {
@@ -166,7 +167,20 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Since:                1139,
 			}
 
-			fakeLRPDeploymentDB.LRPDeploymentByDefinitionGuidReturns(&models.LRPDeployment{}, nil)
+			// lrpCreate := model_helpers.NewValidLRPDeploymentCreation(processGuid, "definition_guid")
+			// lerpDerp, err := sqlDB.CreateLRPDeployment(logger, lrpCreate)
+			// Expect(err).ToNot(HaveOccurred())
+
+			desiredLRP = &models.DesiredLRP{
+				ProcessGuid: processGuid,
+				Domain:      "some-domain",
+				RootFs:      "some-stack",
+				MemoryMb:    128,
+				DiskMb:      512,
+				MaxPids:     100,
+			}
+
+			fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -209,7 +223,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				})
 
-				It("removes the evacuating lrp", func() {
+				FIt("removes the evacuating lrp", func() {
 					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 				})
 

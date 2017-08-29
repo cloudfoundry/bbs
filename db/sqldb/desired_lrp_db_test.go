@@ -13,14 +13,14 @@ import (
 
 var _ = Describe("DesiredLRPDB", func() {
 	BeforeEach(func() {
-		counter := 0
+		// counter := -1
 		fakeGUIDProvider.NextGUIDStub = func() (string, error) {
-			counter++
-			if counter%2 == 0 {
-				return "epoch", nil
-			} else {
-				return fmt.Sprintf("guid-%d", counter), nil
-			}
+			// counter++
+			// if counter%2 == 0 {
+			return "epoch", nil
+			// } else {
+			// 	return fmt.Sprintf("guid-%d", counter), nil
+			// }
 		}
 	})
 
@@ -37,6 +37,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, "the-guid")
 			Expect(err).NotTo(HaveOccurred())
+			Expect(desiredLRP.ModificationTag).To(Equal(expectedDesiredLRP.ModificationTag))
 			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
 		})
 

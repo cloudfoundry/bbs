@@ -281,11 +281,12 @@ type FakeLRPDB struct {
 		result1 *models.LRPDeployment
 		result2 error
 	}
-	SaveLRPDeploymentStub        func(logger lager.Logger, lrpDeployment *models.LRPDeployment) (*models.LRPDeployment, error)
+	SaveLRPDeploymentStub        func(logger lager.Logger, lrpDeployment *models.LRPDeployment, oldHealthyDefinitionId string) (*models.LRPDeployment, error)
 	saveLRPDeploymentMutex       sync.RWMutex
 	saveLRPDeploymentArgsForCall []struct {
-		logger        lager.Logger
-		lrpDeployment *models.LRPDeployment
+		logger                 lager.Logger
+		lrpDeployment          *models.LRPDeployment
+		oldHealthyDefinitionId string
 	}
 	saveLRPDeploymentReturns struct {
 		result1 *models.LRPDeployment
@@ -321,20 +322,6 @@ type FakeLRPDB struct {
 		result2 error
 	}
 	activateLRPDeploymentDefinitionReturnsOnCall map[int]struct {
-		result1 *models.LRPDeployment
-		result2 error
-	}
-	LRPDeploymentByDefinitionGuidStub        func(logger lager.Logger, id string) (*models.LRPDeployment, error)
-	lRPDeploymentByDefinitionGuidMutex       sync.RWMutex
-	lRPDeploymentByDefinitionGuidArgsForCall []struct {
-		logger lager.Logger
-		id     string
-	}
-	lRPDeploymentByDefinitionGuidReturns struct {
-		result1 *models.LRPDeployment
-		result2 error
-	}
-	lRPDeploymentByDefinitionGuidReturnsOnCall map[int]struct {
 		result1 *models.LRPDeployment
 		result2 error
 	}
@@ -1371,17 +1358,18 @@ func (fake *FakeLRPDB) UpdateLRPDeploymentReturnsOnCall(i int, result1 *models.L
 	}{result1, result2}
 }
 
-func (fake *FakeLRPDB) SaveLRPDeployment(logger lager.Logger, lrpDeployment *models.LRPDeployment) (*models.LRPDeployment, error) {
+func (fake *FakeLRPDB) SaveLRPDeployment(logger lager.Logger, lrpDeployment *models.LRPDeployment, oldHealthyDefinitionId string) (*models.LRPDeployment, error) {
 	fake.saveLRPDeploymentMutex.Lock()
 	ret, specificReturn := fake.saveLRPDeploymentReturnsOnCall[len(fake.saveLRPDeploymentArgsForCall)]
 	fake.saveLRPDeploymentArgsForCall = append(fake.saveLRPDeploymentArgsForCall, struct {
-		logger        lager.Logger
-		lrpDeployment *models.LRPDeployment
-	}{logger, lrpDeployment})
-	fake.recordInvocation("SaveLRPDeployment", []interface{}{logger, lrpDeployment})
+		logger                 lager.Logger
+		lrpDeployment          *models.LRPDeployment
+		oldHealthyDefinitionId string
+	}{logger, lrpDeployment, oldHealthyDefinitionId})
+	fake.recordInvocation("SaveLRPDeployment", []interface{}{logger, lrpDeployment, oldHealthyDefinitionId})
 	fake.saveLRPDeploymentMutex.Unlock()
 	if fake.SaveLRPDeploymentStub != nil {
-		return fake.SaveLRPDeploymentStub(logger, lrpDeployment)
+		return fake.SaveLRPDeploymentStub(logger, lrpDeployment, oldHealthyDefinitionId)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1395,10 +1383,10 @@ func (fake *FakeLRPDB) SaveLRPDeploymentCallCount() int {
 	return len(fake.saveLRPDeploymentArgsForCall)
 }
 
-func (fake *FakeLRPDB) SaveLRPDeploymentArgsForCall(i int) (lager.Logger, *models.LRPDeployment) {
+func (fake *FakeLRPDB) SaveLRPDeploymentArgsForCall(i int) (lager.Logger, *models.LRPDeployment, string) {
 	fake.saveLRPDeploymentMutex.RLock()
 	defer fake.saveLRPDeploymentMutex.RUnlock()
-	return fake.saveLRPDeploymentArgsForCall[i].logger, fake.saveLRPDeploymentArgsForCall[i].lrpDeployment
+	return fake.saveLRPDeploymentArgsForCall[i].logger, fake.saveLRPDeploymentArgsForCall[i].lrpDeployment, fake.saveLRPDeploymentArgsForCall[i].oldHealthyDefinitionId
 }
 
 func (fake *FakeLRPDB) SaveLRPDeploymentReturns(result1 *models.LRPDeployment, result2 error) {
@@ -1523,58 +1511,6 @@ func (fake *FakeLRPDB) ActivateLRPDeploymentDefinitionReturnsOnCall(i int, resul
 		})
 	}
 	fake.activateLRPDeploymentDefinitionReturnsOnCall[i] = struct {
-		result1 *models.LRPDeployment
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeLRPDB) LRPDeploymentByDefinitionGuid(logger lager.Logger, id string) (*models.LRPDeployment, error) {
-	fake.lRPDeploymentByDefinitionGuidMutex.Lock()
-	ret, specificReturn := fake.lRPDeploymentByDefinitionGuidReturnsOnCall[len(fake.lRPDeploymentByDefinitionGuidArgsForCall)]
-	fake.lRPDeploymentByDefinitionGuidArgsForCall = append(fake.lRPDeploymentByDefinitionGuidArgsForCall, struct {
-		logger lager.Logger
-		id     string
-	}{logger, id})
-	fake.recordInvocation("LRPDeploymentByDefinitionGuid", []interface{}{logger, id})
-	fake.lRPDeploymentByDefinitionGuidMutex.Unlock()
-	if fake.LRPDeploymentByDefinitionGuidStub != nil {
-		return fake.LRPDeploymentByDefinitionGuidStub(logger, id)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.lRPDeploymentByDefinitionGuidReturns.result1, fake.lRPDeploymentByDefinitionGuidReturns.result2
-}
-
-func (fake *FakeLRPDB) LRPDeploymentByDefinitionGuidCallCount() int {
-	fake.lRPDeploymentByDefinitionGuidMutex.RLock()
-	defer fake.lRPDeploymentByDefinitionGuidMutex.RUnlock()
-	return len(fake.lRPDeploymentByDefinitionGuidArgsForCall)
-}
-
-func (fake *FakeLRPDB) LRPDeploymentByDefinitionGuidArgsForCall(i int) (lager.Logger, string) {
-	fake.lRPDeploymentByDefinitionGuidMutex.RLock()
-	defer fake.lRPDeploymentByDefinitionGuidMutex.RUnlock()
-	return fake.lRPDeploymentByDefinitionGuidArgsForCall[i].logger, fake.lRPDeploymentByDefinitionGuidArgsForCall[i].id
-}
-
-func (fake *FakeLRPDB) LRPDeploymentByDefinitionGuidReturns(result1 *models.LRPDeployment, result2 error) {
-	fake.LRPDeploymentByDefinitionGuidStub = nil
-	fake.lRPDeploymentByDefinitionGuidReturns = struct {
-		result1 *models.LRPDeployment
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeLRPDB) LRPDeploymentByDefinitionGuidReturnsOnCall(i int, result1 *models.LRPDeployment, result2 error) {
-	fake.LRPDeploymentByDefinitionGuidStub = nil
-	if fake.lRPDeploymentByDefinitionGuidReturnsOnCall == nil {
-		fake.lRPDeploymentByDefinitionGuidReturnsOnCall = make(map[int]struct {
-			result1 *models.LRPDeployment
-			result2 error
-		})
-	}
-	fake.lRPDeploymentByDefinitionGuidReturnsOnCall[i] = struct {
 		result1 *models.LRPDeployment
 		result2 error
 	}{result1, result2}
@@ -1893,8 +1829,6 @@ func (fake *FakeLRPDB) Invocations() map[string][][]interface{} {
 	defer fake.deleteLRPDeploymentMutex.RUnlock()
 	fake.activateLRPDeploymentDefinitionMutex.RLock()
 	defer fake.activateLRPDeploymentDefinitionMutex.RUnlock()
-	fake.lRPDeploymentByDefinitionGuidMutex.RLock()
-	defer fake.lRPDeploymentByDefinitionGuidMutex.RUnlock()
 	fake.lRPDeploymentByProcessGuidMutex.RLock()
 	defer fake.lRPDeploymentByProcessGuidMutex.RUnlock()
 	fake.lRPDeploymentsMutex.RLock()

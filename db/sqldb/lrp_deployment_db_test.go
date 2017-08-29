@@ -37,13 +37,24 @@ var _ = Describe("LRPDeployment", func() {
 		})
 
 		It("fetches the LRP deployment associated with a LRPDefinition's definition guid", func() {
-			lrpDeployment, err := sqlDB.LRPDeploymentByDefinitionGuid(logger, lrpCreate.DefinitionId)
+			lrpDeployment, err := sqlDB.LRPDeploymentByProcessGuid(logger, lrpCreate.ProcessGuid)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(lrpDeployment.Definitions).To(HaveLen(2))
 			Expect(lrpDeployment.Definitions[lrpCreate.DefinitionId]).To(Equal(lrpCreate.Definition))
 			Expect(lrpDeployment.Definitions[*lrpUpdate.DefinitionId]).To(Equal(lrpUpdate.Definition))
 			Expect(processGuid).To(Equal(lrpDeployment.ProcessGuid))
+		})
+
+		Context("when the deployment has been deleted", func() {
+			It("does not leave any record of the deployment behind", func() {
+				_, err := sqlDB.DeleteLRPDeployment(logger, lrpCreate.ProcessGuid)
+				Expect(err).ToNot(HaveOccurred())
+
+				lrpDeployment, err := sqlDB.LRPDeploymentByProcessGuid(logger, lrpCreate.ProcessGuid)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+				Expect(lrpDeployment).To(BeNil())
+			})
 		})
 	})
 })

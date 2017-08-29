@@ -43,11 +43,11 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	// 		return err
 	// 	}
 
-	guid, err := db.guidProvider.NextGUID()
-	if err != nil {
-		logger.Error("failed-to-generate-guid", err)
-		return models.ErrGUIDGeneration
-	}
+	// guid, err := db.guidProvider.NextGUID()
+	// if err != nil {
+	// 	logger.Error("failed-to-generate-guid", err)
+	// 	return models.ErrGUIDGeneration
+	// }
 
 	// 	placementTagData, err := json.Marshal(desiredLRP.PlacementTags)
 	// 	if err != nil {
@@ -84,7 +84,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 	// })
 
 	lrp := &models.LRPDeploymentCreation{
-		ProcessGuid:  guid,
+		ProcessGuid:  desiredLRP.ProcessGuid,
 		Domain:       desiredLRP.Domain,
 		Instances:    desiredLRP.Instances,
 		Annotation:   desiredLRP.Annotation,
@@ -121,7 +121,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 			CheckDefinition:               desiredLRP.CheckDefinition,
 		},
 	}
-	_, err = db.CreateLRPDeployment(logger, lrp)
+	_, err := db.CreateLRPDeployment(logger, lrp)
 	return err
 }
 
