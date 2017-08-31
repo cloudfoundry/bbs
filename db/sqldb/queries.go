@@ -163,8 +163,7 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 	query = fmt.Sprintf(`
 		SELECT %s
 			FROM lrp_deployments
-			LEFT OUTER JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid
-			LEFT OUTER JOIN actual_lrps ON lrp_definitions.definition_guid = actual_lrps.process_guid
+			LEFT OUTER JOIN actual_lrps ON lrp_deployments.definition_guid = actual_lrps.process_guid
 			WHERE actual_lrps.evacuating = false
 			GROUP BY lrp_deployments.process_guid
 			HAVING COUNT(actual_lrps.instance_index) <> lrp_deployments.instances
@@ -180,7 +179,7 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sq
     SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
       FROM actual_lrps
       JOIN domains ON actual_lrps.domain = domains.domain
-      LEFT JOIN lrp_deployments ON actual_lrps.process_guid = lrp_deployments.process_guid
+      LEFT JOIN lrp_deployments ON actual_lrps.process_guid = lrp_deployments.definition_guid
       WHERE actual_lrps.evacuating = false AND lrp_deployments.process_guid IS NULL
 		`
 
@@ -202,8 +201,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 	query := fmt.Sprintf(`
 		SELECT %s
 			FROM lrp_deployments
-			JOIN actual_lrps ON lrp_deployments.process_guid = actual_lrps.process_guid
-			JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid
+			JOIN actual_lrps ON lrp_deployments.definition_guid = actual_lrps.process_guid
 			WHERE %s
 		`,
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
@@ -217,8 +215,7 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows,
 	query := fmt.Sprintf(`
 		SELECT %s
 			FROM lrp_deployments
-			JOIN actual_lrps ON lrp_deployments.process_guid = actual_lrps.process_guid
-			JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid
+			JOIN actual_lrps ON lrp_deployments.definition_guid = actual_lrps.process_guid
 			WHERE actual_lrps.state = ? AND actual_lrps.evacuating = ?
 		`,
 		strings.Join(
@@ -235,8 +232,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now 
 	query := fmt.Sprintf(`
 		SELECT %s
 			FROM lrp_deployments
-			JOIN actual_lrps ON lrp_deployments.process_guid = actual_lrps.process_guid
-			JOIN lrp_definitions ON lrp_deployments.process_guid = lrp_definitions.process_guid
+			JOIN actual_lrps ON lrp_deployments.definition_guid = actual_lrps.process_guid
 			WHERE actual_lrps.state = ? AND actual_lrps.since < ? AND actual_lrps.evacuating = ?
 		`,
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),

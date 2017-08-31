@@ -102,7 +102,7 @@ func (e *LRPDeployment) Version() int64 {
 func (e *LRPDeployment) dropTables(db *sql.DB) error {
 	tableNames := []string{
 		"lrp_deployments",
-		"lrp_definitions",
+		// "lrp_definitions",
 	}
 	for _, tableName := range tableNames {
 		_, err := db.Exec("DROP TABLE IF EXISTS " + tableName)
