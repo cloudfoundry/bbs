@@ -14,6 +14,7 @@ import (
 	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	"code.cloudfoundry.org/locket/lock"
 	locketmodels "code.cloudfoundry.org/locket/models"
+	"github.com/cloudfoundry/sonde-go/events"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -113,6 +114,32 @@ var _ = Describe("SqlLock", func() {
 			Expect(lock.Resource.Owner).To(Equal(bbsConfig.UUID))
 		})
 
+		It("emits metric about holding lock", func() {
+			Eventually(func() bool {
+				return client.Ping(logger)
+			}).Should(BeTrue())
+
+			var sawHeldMetric bool
+			timeout := time.After(50 * time.Millisecond)
+		OUTER_LOOP:
+			for {
+				select {
+				case envelope := <-testMetricsChan:
+					if envelope.GetEventType() == events.Envelope_ValueMetric {
+						if *envelope.ValueMetric.Name == "LockHeld" {
+							if *envelope.ValueMetric.Value == float64(1) {
+								sawHeldMetric = true
+								break
+							}
+						}
+					}
+				case <-timeout:
+					break OUTER_LOOP
+				}
+			}
+			Expect(sawHeldMetric).To(BeTrue())
+		})
+
 		Context("and the locking server becomes unreachable after grabbing the lock", func() {
 			JustBeforeEach(func() {
 				Eventually(func() bool {
@@ -183,6 +210,28 @@ var _ = Describe("SqlLock", func() {
 				Consistently(func() bool {
 					return client.Ping(logger)
 				}).Should(BeFalse())
+			})
+
+			It("emits metric about not holding lock", func() {
+				var sawHeldMetric bool
+				timeout := time.After(50 * time.Millisecond)
+			OUTER_LOOP:
+				for {
+					select {
+					case envelope := <-testMetricsChan:
+						if envelope.GetEventType() == events.Envelope_ValueMetric {
+							if *envelope.ValueMetric.Name == "LockHeld" {
+								if *envelope.ValueMetric.Value == float64(0) {
+									sawHeldMetric = true
+									break
+								}
+							}
+						}
+					case <-timeout:
+						break OUTER_LOOP
+					}
+				}
+				Expect(sawHeldMetric).To(BeTrue())
 			})
 
 			Context("and continues to be unavailable", func() {

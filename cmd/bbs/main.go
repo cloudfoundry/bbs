@@ -44,6 +44,7 @@ import (
 	"code.cloudfoundry.org/locket"
 	"code.cloudfoundry.org/locket/jointlock"
 	"code.cloudfoundry.org/locket/lock"
+	"code.cloudfoundry.org/locket/lockheldmetrics"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/rep/maintain"
@@ -301,6 +302,7 @@ func main() {
 
 	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
 	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker, metronClient)
+	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, metricsTicker, metronClient)
 
 	handler := handlers.New(
 		logger,
@@ -356,7 +358,9 @@ func main() {
 
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
+		{"lock-held-metrics", lockHeldMetronNotifier},
 		{"lock", lock},
+		{"set-lock-held-metrics", lockheldmetrics.SetLockHeldRunner(logger, *lockHeldMetronNotifier)},
 		{"workpool", cbWorkPool},
 		{"server", server},
 		{"migration-manager", migrationManager},
