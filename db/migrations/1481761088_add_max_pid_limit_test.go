@@ -110,6 +110,13 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 			Expect(row.Scan(&maxPids)).NotTo(HaveOccurred())
 			Expect(maxPids).To(Equal(0))
 		})
+
+		Context("with an existing max_pids table", func() {
+			It("should be idempotent to running the max_pids migration again", func() {
+				migErr = mig.Up(logger)
+				Expect(migErr).NotTo(HaveOccurred())
+			})
+		})
 	})
 
 	Describe("Down", func() {
