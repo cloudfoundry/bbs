@@ -11,38 +11,56 @@ import (
 
 var _ = Describe("ServiceRegistration", func() {
 	Context("when the bbs service starts", func() {
-		BeforeEach(func() {
-			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-			bbsProcess = ginkgomon.Invoke(bbsRunner)
+		Context("when consul is enabled", func() {
+			BeforeEach(func() {
+				bbsConfig.EnableConsulServiceRegistration = true
+				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
+				bbsProcess = ginkgomon.Invoke(bbsRunner)
+			})
+
+			It("registers itself with consul", func() {
+				client := consulRunner.NewClient()
+				services, err := client.Agent().Services()
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(services).To(HaveKeyWithValue("bbs",
+					&api.AgentService{
+						Service: "bbs",
+						ID:      "bbs",
+						Port:    bbsPort,
+					}))
+			})
+
+			It("registers a TTL healthcheck", func() {
+				client := consulRunner.NewClient()
+				checks, err := client.Agent().Checks()
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(checks).To(HaveKeyWithValue("service:bbs",
+					&api.AgentCheck{
+						Node:        "0",
+						CheckID:     "service:bbs",
+						Name:        "Service 'bbs' check",
+						Status:      "passing",
+						ServiceID:   "bbs",
+						ServiceName: "bbs",
+					}))
+			})
 		})
 
-		It("registers itself with consul", func() {
-			client := consulRunner.NewClient()
-			services, err := client.Agent().Services()
-			Expect(err).ToNot(HaveOccurred())
+		Context("when consul is disabled", func() {
+			BeforeEach(func() {
+				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
+				bbsProcess = ginkgomon.Invoke(bbsRunner)
+			})
 
-			Expect(services).To(HaveKeyWithValue("bbs",
-				&api.AgentService{
-					Service: "bbs",
-					ID:      "bbs",
-					Port:    bbsPort,
-				}))
-		})
+			It("does not register itself with consul", func() {
+				client := consulRunner.NewClient()
+				services, err := client.Agent().Services()
+				Expect(err).ToNot(HaveOccurred())
 
-		It("registers a TTL healthcheck", func() {
-			client := consulRunner.NewClient()
-			checks, err := client.Agent().Checks()
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(checks).To(HaveKeyWithValue("service:bbs",
-				&api.AgentCheck{
-					Node:        "0",
-					CheckID:     "service:bbs",
-					Name:        "Service 'bbs' check",
-					Status:      "passing",
-					ServiceID:   "bbs",
-					ServiceName: "bbs",
-				}))
+				Expect(services).NotTo(HaveKey("bbs"))
+			})
 		})
 	})
 })

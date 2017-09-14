@@ -44,6 +44,7 @@ var _ = Describe("BBSConfig", func() {
 			"desired_lrp_creation_timeout": "1m0s",
 			"detect_consul_cell_registrations": true,
 			"dropsonde_port": 3457,
+			"enable_consul_service_registration": false,
 			"encryption_keys": {"label": "key"},
 			"etcd_ca_file": "/var/vcap/jobs/bbs/config/etcd.ca",
 			"etcd_cert_file": "/var/vcap/jobs/bbs/config/etcd.crt",
@@ -137,9 +138,10 @@ var _ = Describe("BBSConfig", func() {
 			DebugServerConfig: debugserver.DebugServerConfig{
 				DebugAddress: "127.0.0.1:17017",
 			},
-			DesiredLRPCreationTimeout:     durationjson.Duration(1 * time.Minute),
-			DetectConsulCellRegistrations: true,
-			DropsondePort:                 3457,
+			DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
+			DetectConsulCellRegistrations:   true,
+			DropsondePort:                   3457,
+			EnableConsulServiceRegistration: false,
 			EncryptionConfig: encryption.EncryptionConfig{
 				ActiveKeyLabel: "label",
 				EncryptionKeys: map[string]string{

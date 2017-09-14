@@ -115,8 +115,6 @@ func main() {
 		logger.Fatal("failed-invalid-health-port", err)
 	}
 
-	registrationRunner := initializeRegistrationRunner(logger, consulClient, portNum, clock)
-
 	var activeDB db.DB
 	var sqlDB *sqldb.SQLDB
 	var sqlConn *sql.DB
@@ -369,7 +367,11 @@ func main() {
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
 		{"periodic-metrics", requestStatMetronNotifier},
 		{"converger", convergerProcess},
-		{"registration-runner", registrationRunner},
+	}
+
+	if bbsConfig.EnableConsulServiceRegistration {
+		registrationRunner := initializeRegistrationRunner(logger, consulClient, portNum, clock)
+		members = append(members, grouper.Member{"registration-runner", registrationRunner})
 	}
 
 	if bbsConfig.DebugAddress != "" {

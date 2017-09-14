@@ -14,25 +14,26 @@ import (
 )
 
 type BBSConfig struct {
-	AccessLogPath                 string                `json:"access_log_path,omitempty"`
-	AdvertiseURL                  string                `json:"advertise_url,omitempty"`
-	AuctioneerAddress             string                `json:"auctioneer_address,omitempty"`
-	AuctioneerCACert              string                `json:"auctioneer_ca_cert,omitempty"`
-	AuctioneerClientCert          string                `json:"auctioneer_client_cert,omitempty"`
-	AuctioneerClientKey           string                `json:"auctioneer_client_key,omitempty"`
-	AuctioneerRequireTLS          bool                  `json:"auctioneer_require_tls,omitempty"`
-	UUID                          string                `json:"uuid,omitempty"`
-	CaFile                        string                `json:"ca_file,omitempty"`
-	CertFile                      string                `json:"cert_file,omitempty"`
-	CommunicationTimeout          durationjson.Duration `json:"communication_timeout,omitempty"`
-	ConsulCluster                 string                `json:"consul_cluster,omitempty"`
-	ConvergeRepeatInterval        durationjson.Duration `json:"converge_repeat_interval,omitempty"`
-	ConvergenceWorkers            int                   `json:"convergence_workers,omitempty"`
-	DatabaseConnectionString      string                `json:"database_connection_string"`
-	DatabaseDriver                string                `json:"database_driver,omitempty"`
-	DesiredLRPCreationTimeout     durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
-	DetectConsulCellRegistrations bool                  `json:"detect_consul_cell_registrations,omitempty"`
-	DropsondePort                 int                   `json:"dropsonde_port,omitempty"`
+	AccessLogPath                   string                `json:"access_log_path,omitempty"`
+	AdvertiseURL                    string                `json:"advertise_url,omitempty"`
+	AuctioneerAddress               string                `json:"auctioneer_address,omitempty"`
+	AuctioneerCACert                string                `json:"auctioneer_ca_cert,omitempty"`
+	AuctioneerClientCert            string                `json:"auctioneer_client_cert,omitempty"`
+	AuctioneerClientKey             string                `json:"auctioneer_client_key,omitempty"`
+	AuctioneerRequireTLS            bool                  `json:"auctioneer_require_tls,omitempty"`
+	UUID                            string                `json:"uuid,omitempty"`
+	CaFile                          string                `json:"ca_file,omitempty"`
+	CertFile                        string                `json:"cert_file,omitempty"`
+	CommunicationTimeout            durationjson.Duration `json:"communication_timeout,omitempty"`
+	ConsulCluster                   string                `json:"consul_cluster,omitempty"`
+	ConvergeRepeatInterval          durationjson.Duration `json:"converge_repeat_interval,omitempty"`
+	ConvergenceWorkers              int                   `json:"convergence_workers,omitempty"`
+	DatabaseConnectionString        string                `json:"database_connection_string"`
+	DatabaseDriver                  string                `json:"database_driver,omitempty"`
+	DesiredLRPCreationTimeout       durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
+	DetectConsulCellRegistrations   bool                  `json:"detect_consul_cell_registrations,omitempty"`
+	DropsondePort                   int                   `json:"dropsonde_port,omitempty"`
+	EnableConsulServiceRegistration bool                  `json:"enable_consul_service_registration"`
 	ETCDConfig
 	ExpireCompletedTaskDuration durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration   durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
@@ -65,30 +66,31 @@ type BBSConfig struct {
 
 func DefaultConfig() BBSConfig {
 	return BBSConfig{
-		SessionName:                 "bbs",
-		CommunicationTimeout:        durationjson.Duration(10 * time.Second),
-		RequireSSL:                  false,
-		DesiredLRPCreationTimeout:   durationjson.Duration(1 * time.Minute),
-		ExpireCompletedTaskDuration: durationjson.Duration(2 * time.Minute),
-		ExpirePendingTaskDuration:   durationjson.Duration(30 * time.Minute),
-		ConvergeRepeatInterval:      durationjson.Duration(30 * time.Second),
-		KickTaskDuration:            durationjson.Duration(30 * time.Second),
-		LockTTL:                     durationjson.Duration(locket.DefaultSessionTTL),
-		LockRetryInterval:           durationjson.Duration(locket.RetryInterval),
-		ReportInterval:              durationjson.Duration(1 * time.Minute),
-		ConvergenceWorkers:          20,
-		UpdateWorkers:               1000,
-		TaskCallbackWorkers:         1000,
-		DropsondePort:               3457,
-		DatabaseDriver:              "mysql",
-		MaxOpenDatabaseConnections:  200,
-		MaxIdleDatabaseConnections:  200,
-		AuctioneerRequireTLS:        false,
-		RepClientSessionCacheSize:   0,
-		RepRequireTLS:               false,
-		ETCDConfig:                  DefaultETCDConfig(),
-		EncryptionConfig:            encryption.DefaultEncryptionConfig(),
-		LagerConfig:                 lagerflags.DefaultLagerConfig(),
+		SessionName:                     "bbs",
+		CommunicationTimeout:            durationjson.Duration(10 * time.Second),
+		RequireSSL:                      false,
+		DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
+		ExpireCompletedTaskDuration:     durationjson.Duration(2 * time.Minute),
+		ExpirePendingTaskDuration:       durationjson.Duration(30 * time.Minute),
+		EnableConsulServiceRegistration: false,
+		ConvergeRepeatInterval:          durationjson.Duration(30 * time.Second),
+		KickTaskDuration:                durationjson.Duration(30 * time.Second),
+		LockTTL:                         durationjson.Duration(locket.DefaultSessionTTL),
+		LockRetryInterval:               durationjson.Duration(locket.RetryInterval),
+		ReportInterval:                  durationjson.Duration(1 * time.Minute),
+		ConvergenceWorkers:              20,
+		UpdateWorkers:                   1000,
+		TaskCallbackWorkers:             1000,
+		DropsondePort:                   3457,
+		DatabaseDriver:                  "mysql",
+		MaxOpenDatabaseConnections:      200,
+		MaxIdleDatabaseConnections:      200,
+		AuctioneerRequireTLS:            false,
+		RepClientSessionCacheSize:       0,
+		RepRequireTLS:                   false,
+		ETCDConfig:                      DefaultETCDConfig(),
+		EncryptionConfig:                encryption.DefaultEncryptionConfig(),
+		LagerConfig:                     lagerflags.DefaultLagerConfig(),
 	}
 }
 
