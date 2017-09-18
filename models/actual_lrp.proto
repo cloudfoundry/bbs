@@ -13,6 +13,8 @@ message ActualLRPGroup {
 message PortMapping {
   optional uint32 container_port = 1;
   optional uint32 host_port = 2;
+  optional uint32 container_tls_proxy_port = 3 [(gogoproto.jsontag) = "container_tls_proxy_port,omitempty"];
+  optional uint32 host_tls_proxy_port = 4 [(gogoproto.jsontag) = "host_tls_proxy_port,omitempty"];
 }
 
 message ActualLRPKey {

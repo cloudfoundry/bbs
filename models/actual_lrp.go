@@ -66,6 +66,15 @@ func NewPortMapping(hostPort, containerPort uint32) *PortMapping {
 	}
 }
 
+func NewPortMappingWithTLSProxy(hostPort, containerPort, tlsHost, tlsContainer uint32) *PortMapping {
+	return &PortMapping{
+		HostPort:              hostPort,
+		ContainerPort:         containerPort,
+		ContainerTlsProxyPort: tlsContainer,
+		HostTlsProxyPort:      tlsHost,
+	}
+}
+
 func (key ActualLRPInstanceKey) Empty() bool {
 	return key.InstanceGuid == "" && key.CellId == ""
 }
