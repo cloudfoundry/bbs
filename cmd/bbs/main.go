@@ -298,9 +298,15 @@ func main() {
 	}
 	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
 
-	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
-	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker, metronClient)
-	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, metricsTicker, metronClient)
+	logger.Info("report-interval", lager.Data{"value": bbsConfig.ReportInterval})
+	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
+	requestStatsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
+	locksHeldTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
+
+	fileDescriptorPath := fmt.Sprintf("/proc/%d/fd", os.Getpid())
+	fileDescriptorMetronNotifier := metrics.NewFileDescriptorMetronNotifier(logger, fileDescriptorTicker, metronClient, fileDescriptorPath)
+	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, requestStatsTicker, metronClient)
+	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, locksHeldTicker, metronClient)
 
 	handler := handlers.New(
 		logger,
@@ -366,6 +372,7 @@ func main() {
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub, taskHub)},
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
 		{"periodic-metrics", requestStatMetronNotifier},
+		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
 		{"converger", convergerProcess},
 	}
 
