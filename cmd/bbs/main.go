@@ -299,6 +299,9 @@ func main() {
 	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
 
 	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
+
+	fdPath := fmt.Sprintf("/proc/%d/fd", os.Getpid())
+	fileDescriptorMetronNotifier := metrics.NewFileDescriptorMetronNotifier(logger, metricsTicker, metronClient, fdPath)
 	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker, metronClient)
 	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, metricsTicker, metronClient)
 
@@ -366,6 +369,7 @@ func main() {
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub, taskHub)},
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
 		{"periodic-metrics", requestStatMetronNotifier},
+		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
 		{"converger", convergerProcess},
 	}
 

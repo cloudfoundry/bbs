@@ -23,7 +23,7 @@ type FileDescriptorMetronNotifier struct {
 	procFSPath   string
 }
 
-func NewFileDescriptorMetronNotifier(logger lager.Logger, metronClient loggingclient.IngressClient, newTicker clock.Ticker, procPath string) ifrit.Runner {
+func NewFileDescriptorMetronNotifier(logger lager.Logger, newTicker clock.Ticker, metronClient loggingclient.IngressClient, procPath string) ifrit.Runner {
 	return &FileDescriptorMetronNotifier{
 		Logger:       logger,
 		metronClient: metronClient,
@@ -33,7 +33,7 @@ func NewFileDescriptorMetronNotifier(logger lager.Logger, metronClient loggingcl
 }
 
 func (notifier FileDescriptorMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	logger := notifier.Logger.Session("metrics-notifier")
+	logger := notifier.Logger.Session("file-descriptor-notifier")
 	logger.Info("starting")
 
 	close(ready)
@@ -46,17 +46,15 @@ func (notifier FileDescriptorMetronNotifier) Run(signals <-chan os.Signal, ready
 		case <-notifier.ticker.C():
 			nDescriptors, err := notifier.descriptorCount()
 
-			if err == nil {
-				err := notifier.metronClient.SendMetric(OpenFileDescriptors, nDescriptors)
-
-				if err != nil {
-					logger.Error("error-sending-metric", err)
-				}
-
-			} else {
+			if err != nil {
 				logger.Error("failed-to-read-proc-filesystem", err)
+				continue
 			}
 
+			err = notifier.metronClient.SendMetric(OpenFileDescriptors, nDescriptors)
+			if err != nil {
+				logger.Error("error-sending-metric", err)
+			}
 		case <-signals:
 			return nil
 		}
@@ -71,12 +69,8 @@ func (notifier FileDescriptorMetronNotifier) descriptorCount() (int, error) {
 	}
 
 	count := 0
-
-	for _, descriptorInfo := range descriptorInfos {
-		notifier.Logger.Info("file-info", lager.Data{"name": descriptorInfo.Name(), "mode": descriptorInfo.Mode()})
-		if descriptorInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-			count++
-		}
+	for range descriptorInfos {
+		count++
 	}
 
 	return count, nil

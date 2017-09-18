@@ -26,14 +26,27 @@ var _ = FDescribe("FileDescriptorMetronNotifier", func() {
 		fakeClock              *fakeclock.FakeClock
 		reportInterval         time.Duration
 		logger                 *lagertest.TestLogger
+		fdCount                int
+		err                    error
+		symlinkedFileDir       string
 	)
 
 	BeforeEach(func() {
+		fakeProcFileSystemPath, err = ioutil.TempDir("", "proc")
+		Expect(err).NotTo(HaveOccurred())
+
+		symlinkedFileDir, err = ioutil.TempDir("", "tmpdir")
+		Expect(err).NotTo(HaveOccurred())
+
 		fakeMetronClient = new(mfakes.FakeIngressClient)
-		fakeProcFileSystemPath = createTestPath("", 10)
 		reportInterval = 100 * time.Millisecond
 		fakeClock = fakeclock.NewFakeClock(time.Unix(123, 456))
 		logger = lagertest.NewTestLogger("test")
+
+		fdCount = 10
+		for i := 0; i < fdCount; i++ {
+			createSymlink(fakeProcFileSystemPath, symlinkedFileDir, strconv.Itoa(i))
+		}
 	})
 
 	JustBeforeEach(func() {
@@ -42,8 +55,8 @@ var _ = FDescribe("FileDescriptorMetronNotifier", func() {
 		fdNotifier = ifrit.Invoke(
 			metrics.NewFileDescriptorMetronNotifier(
 				logger,
-				fakeMetronClient,
 				ticker,
+				fakeMetronClient,
 				fakeProcFileSystemPath,
 			),
 		)
@@ -54,6 +67,9 @@ var _ = FDescribe("FileDescriptorMetronNotifier", func() {
 		Eventually(fdNotifier.Wait(), 2*time.Second).Should(Receive())
 
 		err := os.RemoveAll(fakeProcFileSystemPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = os.RemoveAll(symlinkedFileDir)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -73,8 +89,8 @@ var _ = FDescribe("FileDescriptorMetronNotifier", func() {
 			Expect(name).To(Equal("OpenFileDescriptors"))
 			Expect(value).To(BeEquivalentTo(10))
 
-			createTestPath(fakeProcFileSystemPath, 11)
-
+			By("creating a new symlink")
+			createSymlink(fakeProcFileSystemPath, symlinkedFileDir, strconv.Itoa(11))
 			fakeClock.WaitForWatcherAndIncrement(reportInterval)
 
 			Eventually(fakeMetronClient.SendMetricCallCount).Should(Equal(3))
@@ -96,26 +112,11 @@ var _ = FDescribe("FileDescriptorMetronNotifier", func() {
 	})
 })
 
-// TODO: check with routing about consolidating helpers
-func createTestPath(path string, symlink int) string {
-	// Create symlink structure similar to /proc/pid/fd in linux file system
-	createSymlink := func(dir string, n int) {
-		fd, err := ioutil.TempFile(dir, "socket")
-		Expect(err).NotTo(HaveOccurred())
-		for i := 0; i < n; i++ {
-			fdId := strconv.Itoa(i)
-			symlink := filepath.Join(dir, fdId)
-
-			err := os.Symlink(fd.Name()+fdId, symlink)
-			Expect(err).NotTo(HaveOccurred())
-		}
-	}
-	if path != "" {
-		createSymlink(path, symlink)
-		return path
-	}
-	procPath, err := ioutil.TempDir("", "proc")
+func createSymlink(dir, tmpdir, symlinkId string) {
+	fd, err := ioutil.TempFile(tmpdir, "socket")
 	Expect(err).NotTo(HaveOccurred())
-	createSymlink(procPath, symlink)
-	return procPath
+	symlink := filepath.Join(dir, symlinkId)
+
+	err = os.Symlink(fd.Name(), symlink)
+	Expect(err).NotTo(HaveOccurred())
 }
