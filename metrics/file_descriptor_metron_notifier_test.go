@@ -18,7 +18,7 @@ import (
 	"github.com/tedsuo/ifrit"
 )
 
-var _ = FDescribe("FileDescriptorMetronNotifier", func() {
+var _ = Describe("FileDescriptorMetronNotifier", func() {
 	var (
 		fdNotifier             ifrit.Process
 		fakeMetronClient       *mfakes.FakeIngressClient
