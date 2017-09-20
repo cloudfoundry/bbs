@@ -6,6 +6,7 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/localip"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -185,36 +186,24 @@ var _ = Describe("ActualLRP API", func() {
 	})
 
 	Describe("ActualLRPGroups", func() {
-		JustBeforeEach(func() {
-			actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)
-			for _, group := range actualActualLRPGroups {
-				if group.Instance != nil {
-					group.Instance.Since = 0
-					group.Instance.ModificationTag = models.ModificationTag{}
-				}
-
-				if group.Evacuating != nil {
-					group.Evacuating.Since = 0
-					group.Evacuating.ModificationTag = models.ModificationTag{}
-				}
-			}
-		})
-
 		It("responds without error", func() {
+			actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)
 			Expect(getErr).NotTo(HaveOccurred())
 		})
 
 		Context("when not filtering", func() {
 			It("returns all actual lrps from the bbs", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{
-					{Instance: baseLRP},
-					{Instance: evacuatingInstanceLRP, Evacuating: evacuatingLRP},
-					{Instance: otherLRP},
-					{Instance: unclaimedLRP},
-					{Instance: crashingLRP},
-				}
+				actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)
+				Expect(getErr).NotTo(HaveOccurred())
+				expectedActualLRPGroups = []*models.ActualLRPGroup{}
 
-				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
+				Expect(actualActualLRPGroups).To(ConsistOf(
+					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: baseLRP}),
+					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: evacuatingInstanceLRP, Evacuating: evacuatingLRP}),
+					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: otherLRP}),
+					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: unclaimedLRP}),
+					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: crashingLRP}),
+				))
 			})
 		})
 
@@ -224,8 +213,11 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested domain", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{{Instance: baseLRP}}
-				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
+				actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)
+				Expect(getErr).NotTo(HaveOccurred())
+
+				expectedActualLRPGroup := &models.ActualLRPGroup{Instance: baseLRP}
+				Expect(actualActualLRPGroups).To(ConsistOf(test_helpers.MatchActualLRPGroup(expectedActualLRPGroup)))
 			})
 		})
 
@@ -235,11 +227,56 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested cell", func() {
-				expectedActualLRPGroups = []*models.ActualLRPGroup{
-					{Instance: baseLRP},
-					{Evacuating: evacuatingLRP},
+				actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)
+				Expect(getErr).NotTo(HaveOccurred())
+				Expect(actualActualLRPGroups).To(ConsistOf(
+					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: baseLRP}),
+					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Evacuating: evacuatingLRP}),
+				))
+			})
+		})
+
+		Context("with a TLS-enabled actual LRP", func() {
+			const (
+				tlsEnabledProcessGuid  = "tlsEnabled-process-guid"
+				tlsEnabledDomain       = "tlsEnabled-domain"
+				tlsEnabledInstanceGuid = "tlsEnabled-instance-guid"
+				tlsEnabledIndex        = 0
+			)
+			var (
+				tlsEnabledLRP            *models.ActualLRP
+				tlsEnabledLRPKey         models.ActualLRPKey
+				tlsEnabledLRPInstanceKey models.ActualLRPInstanceKey
+				tlsNetInfo               models.ActualLRPNetInfo
+			)
+
+			JustBeforeEach(func() {
+				tlsEnabledLRPKey = models.NewActualLRPKey(tlsEnabledProcessGuid, tlsEnabledIndex, tlsEnabledDomain)
+				tlsEnabledLRPInstanceKey = models.NewActualLRPInstanceKey(tlsEnabledInstanceGuid, cellID)
+				tlsNetInfo = models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMappingWithTLSProxy(8080, 80, 60042, 443))
+
+				tlsEnabledLRP = &models.ActualLRP{
+					ActualLRPKey:         tlsEnabledLRPKey,
+					ActualLRPInstanceKey: tlsEnabledLRPInstanceKey,
+					ActualLRPNetInfo:     tlsNetInfo,
+					State:                models.ActualLRPStateRunning,
 				}
-				Expect(actualActualLRPGroups).To(ConsistOf(expectedActualLRPGroups))
+
+				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ProcessGuid)
+				tlsEnabledDesiredLRP.Domain = tlsEnabledDomain
+
+				err := client.DesireLRP(logger, tlsEnabledDesiredLRP)
+				Expect(err).NotTo(HaveOccurred())
+				err = client.StartActualLRP(logger, &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns the TLS host and container port", func() {
+				actualLRPGroups, err := client.ActualLRPGroups(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				tlsGroup := &models.ActualLRPGroup{Instance: tlsEnabledLRP}
+				Expect(actualLRPGroups).To(ContainElement(test_helpers.MatchActualLRPGroup(tlsGroup)))
 			})
 		})
 	})
@@ -249,15 +286,14 @@ var _ = Describe("ActualLRP API", func() {
 			actualActualLRPGroups, getErr = client.ActualLRPGroupsByProcessGuid(logger, baseProcessGuid)
 		})
 
-		It("returns all actual lrps from the bbs", func() {
+		It("returns the specific actual lrp from the bbs", func() {
 			Expect(getErr).NotTo(HaveOccurred())
 			Expect(actualActualLRPGroups).To(HaveLen(1))
-			baseLRP.ModificationTag.Increment()
 
 			fetchedActualLRPGroup := actualActualLRPGroups[0]
-			fetchedActualLRPGroup.Instance.Since = 0
-			fetchedActualLRPGroup.Instance.ModificationTag.Epoch = ""
-			Expect(fetchedActualLRPGroup.Instance).To(Equal(baseLRP))
+			Expect(fetchedActualLRPGroup).To(
+				test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: baseLRP}),
+			)
 		})
 	})
 
@@ -276,10 +312,8 @@ var _ = Describe("ActualLRP API", func() {
 		})
 
 		It("returns all actual lrps from the bbs", func() {
-			actualLRPGroup.Instance.Since = 0
-			actualLRPGroup.Instance.ModificationTag = models.ModificationTag{}
 			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: baseLRP}
-			Expect(actualLRPGroup).To(Equal(expectedActualLRPGroup))
+			Expect(actualLRPGroup).To(test_helpers.MatchActualLRPGroup(expectedActualLRPGroup))
 		})
 	})
 
@@ -303,17 +337,13 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP := *unclaimedLRP
 			expectedActualLRP.State = models.ActualLRPStateClaimed
 			expectedActualLRP.ActualLRPInstanceKey = instanceKey
-			expectedActualLRP.ModificationTag.Increment()
 
 			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())
 
-			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
-			Expect(evacuating).To(BeFalse())
-			fetchedActualLRP.ModificationTag.Epoch = ""
-			fetchedActualLRP.Since = 0
-
-			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
+			Expect(fetchedActualLRPGroup).To(test_helpers.MatchActualLRPGroup(
+				&models.ActualLRPGroup{Instance: &expectedActualLRP}),
+			)
 		})
 	})
 
@@ -338,18 +368,13 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.State = models.ActualLRPStateRunning
 			expectedActualLRP.ActualLRPInstanceKey = instanceKey
 			expectedActualLRP.ActualLRPNetInfo = netInfo
-			expectedActualLRP.ModificationTag.Increment()
-			expectedActualLRP.Since = 0
 
 			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())
 
-			fetchedActualLRP, evacuating := fetchedActualLRPGroup.Resolve()
-			Expect(evacuating).To(BeFalse())
-			fetchedActualLRP.ModificationTag.Epoch = ""
-			fetchedActualLRP.Since = 0
-
-			Expect(*fetchedActualLRP).To(Equal(expectedActualLRP))
+			Expect(fetchedActualLRPGroup).To(test_helpers.MatchActualLRPGroup(
+				&models.ActualLRPGroup{Instance: &expectedActualLRP}),
+			)
 		})
 	})
 
