@@ -153,11 +153,12 @@ var _ = BeforeEach(func() {
 	testMetricsChan = make(chan *events.Envelope, 1)
 	go func() {
 		defer GinkgoRecover()
+		defer close(testMetricsChan)
+
 		for {
 			buffer := make([]byte, 1024)
 			n, _, err := testMetricsListener.ReadFrom(buffer)
 			if err != nil {
-				close(testMetricsChan)
 				return
 			}
 

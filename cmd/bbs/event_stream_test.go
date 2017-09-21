@@ -412,6 +412,7 @@ var _ = Describe("Events API", func() {
 			for {
 				select {
 				case envelope := <-testMetricsChan:
+					By("received event")
 					if envelope.GetEventType() == sonde_events.Envelope_CounterEvent {
 						counter := envelope.CounterEvent
 						if *counter.Name == "RequestCount" {
