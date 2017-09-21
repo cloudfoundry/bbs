@@ -362,6 +362,7 @@ func main() {
 
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
+		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
 		{"lock-held-metrics", lockHeldMetronNotifier},
 		{"lock", lock},
 		{"set-lock-held-metrics", lockheldmetrics.SetLockHeldRunner(logger, *lockHeldMetronNotifier)},
@@ -372,7 +373,6 @@ func main() {
 		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub, taskHub)},
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
 		{"periodic-metrics", requestStatMetronNotifier},
-		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
 		{"converger", convergerProcess},
 	}
 
