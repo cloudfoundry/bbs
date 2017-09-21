@@ -58,6 +58,7 @@ var _ = Describe("Domain API", func() {
 			for {
 				select {
 				case envelope := <-testMetricsChan:
+					By("receive event")
 					if envelope.GetEventType() == events.Envelope_CounterEvent {
 						counter := envelope.CounterEvent
 						if *counter.Name == "RequestCount" {
