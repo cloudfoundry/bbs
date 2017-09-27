@@ -150,7 +150,7 @@ var _ = BeforeEach(func() {
 	}
 
 	testMetricsListener, _ = net.ListenPacket("udp", "127.0.0.1:0")
-	testMetricsChan = make(chan *events.Envelope, 1)
+	testMetricsChan = make(chan *events.Envelope, 1024)
 	go func() {
 		defer GinkgoRecover()
 		defer close(testMetricsChan)
