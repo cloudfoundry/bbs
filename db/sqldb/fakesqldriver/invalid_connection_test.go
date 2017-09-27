@@ -5,17 +5,17 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/fakesqldriver/fakesqldriverfakes"
+	"github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Bad Connections", func() {
+var _ = Describe("Invalid Connections", func() {
 	BeforeEach(func() {
 		fakeConn.PrepareStub = func(query string) (driver.Stmt, error) {
 			fakeStmt := &fakesqldriverfakes.FakeStmt{}
 			fakeStmt.NumInputReturns(strings.Count(query, "?"))
-			fakeStmt.ExecReturns(nil, driver.ErrBadConn)
-			fakeStmt.QueryReturns(nil, driver.ErrBadConn)
+			fakeStmt.QueryReturns(nil, mysql.ErrInvalidConn)
 			return fakeStmt, nil
 		}
 	})

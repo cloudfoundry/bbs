@@ -5,6 +5,8 @@ import (
 	"database/sql/driver"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
+
 	"code.cloudfoundry.org/lager"
 )
 
@@ -40,7 +42,7 @@ func (h *sqlHelper) Transact(logger lager.Logger, db *sql.DB, f func(logger lage
 		// is in the middle of a transaction. This make sense since the package
 		// cannot retry the entire transaction and has to return control to the
 		// caller to initiate a retry
-		if attempts >= 2 || (convertedErr != ErrDeadlock && convertedErr != driver.ErrBadConn) {
+		if attempts >= 2 || (convertedErr != ErrDeadlock && convertedErr != driver.ErrBadConn && convertedErr != mysql.ErrInvalidConn) {
 			break
 		} else {
 			logger.Error("deadlock-transaction", err, lager.Data{"attempts": attempts})
