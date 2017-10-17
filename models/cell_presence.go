@@ -79,7 +79,8 @@ func NewCellPresence(
 	for _, preProv := range preloadedRootFSes {
 		pProviders = append(pProviders, preProv)
 	}
-	providers = append(providers, &Provider{"preloaded", pProviders})
+	providers = append(providers, &Provider{PreloadedRootFSScheme, pProviders})
+	providers = append(providers, &Provider{PreloadedOCIRootFSScheme, pProviders})
 
 	for _, prov := range rootFSProviders {
 		providers = append(providers, &Provider{prov, []string{}})

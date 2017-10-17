@@ -22,6 +22,7 @@ var _ = Describe("CellPresence", func() {
 		cellPresence = models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone", capacity, rootfsProviders, preloadedRootFSes, placementTags, optionalPlacementTags)
 		expectedProviderList = []*models.Provider{
 			&models.Provider{"preloaded", []string{"provider-2", "provider-3"}},
+			&models.Provider{"preloaded+layer", []string{"provider-2", "provider-3"}},
 			&models.Provider{"provider-1", []string{}},
 		}
 	})
