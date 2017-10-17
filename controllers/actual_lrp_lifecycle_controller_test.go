@@ -318,6 +318,37 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		Context("when crashing the actual lrp in the DB succeeds", func() {
 			var desiredLRP *models.DesiredLRP
 
+			itEmitsCrashAndChangedEvents := func() {
+				var eventChan chan models.Event
+				BeforeEach(func() {
+					eventChan = make(chan models.Event)
+
+					actualHub.EmitStub = func(event models.Event) {
+						eventChan <- event
+					}
+
+				})
+
+				It("emits a crash and change event to the hub", func() {
+					Eventually(eventChan).Should(Receive(Equal(&models.ActualLRPCrashedEvent{
+						ActualLRPKey:         actualLRP.ActualLRPKey,
+						ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
+						Since:                1138,
+						CrashCount:           1,
+						CrashReason:          errorMessage,
+					})))
+
+				})
+
+				It("emits a change event to the hub", func() {
+					Eventually(eventChan).Should(Receive(Equal(&models.ActualLRPChangedEvent{
+						Before: newActualLRPGroup(&actualLRP, nil),
+						After:  newActualLRPGroup(&afterActualLRP, nil),
+					})))
+				})
+
+			}
+
 			BeforeEach(func() {
 				desiredLRP = &models.DesiredLRP{
 					ProcessGuid: "process-guid",
@@ -344,32 +375,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(actualErrorMessage).To(Equal(errorMessage))
 			})
 
-			It("emits a crash and change event to the hub", func() {
-				Eventually(actualHub.EmitCallCount).Should(Equal(2))
-				event1 := actualHub.EmitArgsForCall(0)
-				event2 := actualHub.EmitArgsForCall(1)
-				crashEvent, ok := event1.(*models.ActualLRPCrashedEvent)
-				if !ok {
-					crashEvent, ok = event2.(*models.ActualLRPCrashedEvent)
-				}
-
-				Expect(ok).To(BeTrue())
-				Expect(crashEvent.ActualLRPKey).To(Equal(actualLRP.ActualLRPKey))
-				Expect(crashEvent.ActualLRPInstanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
-				Expect(crashEvent.Since).To(Equal(int64(1138)))
-				Expect(crashEvent.CrashCount).To(Equal(int32(1)))
-				Expect(crashEvent.CrashReason).To(Equal(errorMessage))
-				Expect(crashEvent.InstanceGuid).To(Equal(instanceGuid))
-				Expect(crashEvent.CellId).To(Equal(cellId))
-
-				changedEvent, ok := event1.(*models.ActualLRPChangedEvent)
-				if !ok {
-					changedEvent, ok = event2.(*models.ActualLRPChangedEvent)
-				}
-
-				Expect(changedEvent.Before).To(Equal(newActualLRPGroup(&actualLRP, nil)))
-				Expect(changedEvent.After).To(Equal(newActualLRPGroup(&afterActualLRP, nil)))
-			})
+			itEmitsCrashAndChangedEvents()
 
 			Describe("restarting the instance", func() {
 				Context("when the actual LRP should be restarted", func() {
@@ -419,6 +425,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					It("returns an error", func() {
 						Expect(err).To(MatchError("some else bid higher"))
 					})
+
+					itEmitsCrashAndChangedEvents()
 				})
 			})
 		})

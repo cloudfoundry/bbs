@@ -85,28 +85,30 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	if shouldRestart {
-		desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, actualLRPKey.ProcessGuid)
-		if err != nil {
-			logger.Error("failed-fetching-desired-lrp", err)
-			return err
-		}
-
-		schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-		startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedInfo, int(actualLRPKey.Index))
-		logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
-		err = h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&startRequest})
-		logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
-		if err != nil {
-			logger.Error("failed-requesting-auction", err)
-			return err
-		}
-	}
-
 	beforeActualLRP, _ := before.Resolve()
 	afterActualLRP, _ := after.Resolve()
 	go h.actualHub.Emit(models.NewActualLRPCrashedEvent(beforeActualLRP, afterActualLRP))
 	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+
+	if !shouldRestart {
+		return nil
+	}
+
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, actualLRPKey.ProcessGuid)
+	if err != nil {
+		logger.Error("failed-fetching-desired-lrp", err)
+		return err
+	}
+
+	schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
+	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedInfo, int(actualLRPKey.Index))
+	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
+	err = h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&startRequest})
+	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
+	if err != nil {
+		logger.Error("failed-requesting-auction", err)
+		return err
+	}
 	return nil
 }
 
