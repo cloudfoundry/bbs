@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,18 +17,23 @@ import (
 // locally, and does not start or stop the mysql service.  mysql must be set up
 // on localhost as described in the CONTRIBUTING.md doc in diego-release.
 type MySQLRunner struct {
+	logger    lager.Logger
 	sqlDBName string
 	db        *sql.DB
 }
 
 func NewMySQLRunner(sqlDBName string) *MySQLRunner {
 	return &MySQLRunner{
+		logger:    lagertest.NewTestLogger("mysql-runner"),
 		sqlDBName: sqlDBName,
 	}
 }
 
 func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	defer GinkgoRecover()
+	logger := m.logger.Session("run")
+	logger.Info("starting")
+	defer logger.Info("completed")
 
 	var err error
 	m.db, err = sql.Open("mysql", "diego:diego_password@/")
@@ -86,6 +93,10 @@ func (m *MySQLRunner) DB() *sql.DB {
 }
 
 func (m *MySQLRunner) ResetTables(tables []string) {
+	logger := m.logger.Session("reset-tables")
+	logger.Info("starting")
+	defer logger.Info("completed")
+
 	for _, name := range tables {
 		query := fmt.Sprintf("TRUNCATE TABLE %s", name)
 		result, err := m.db.Exec(query)

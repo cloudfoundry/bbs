@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,18 +17,23 @@ import (
 // locally, and does not start or stop the mysql service.  mysql must be set up
 // on localhost as described in the CONTRIBUTING.md doc in diego-release.
 type PostgresRunner struct {
+	logger    lager.Logger
 	db        *sql.DB
 	sqlDBName string
 }
 
 func NewPostgresRunner(sqlDBName string) *PostgresRunner {
 	return &PostgresRunner{
+		logger:    lagertest.NewTestLogger("postgres-runner"),
 		sqlDBName: sqlDBName,
 	}
 }
 
 func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	defer GinkgoRecover()
+	logger := p.logger.Session("run")
+	logger.Info("starting")
+	defer logger.Info("completed")
 
 	var err error
 	p.db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
@@ -90,6 +97,10 @@ func (p *PostgresRunner) DB() *sql.DB {
 }
 
 func (p *PostgresRunner) ResetTables(tables []string) {
+	logger := p.logger.Session("reset-tables")
+	logger.Info("starting")
+	defer logger.Info("completed")
+
 	for _, name := range tables {
 		query := fmt.Sprintf("TRUNCATE TABLE %s", name)
 		result, err := p.db.Exec(query)
