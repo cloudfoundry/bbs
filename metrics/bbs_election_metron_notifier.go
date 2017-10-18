@@ -7,11 +7,6 @@ import (
 
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/runtimeschema/metric"
-)
-
-const (
-	bbsMasterElected = metric.Counter("BBSMasterElected")
 )
 
 type BBSElectionMetronNotifier struct {
