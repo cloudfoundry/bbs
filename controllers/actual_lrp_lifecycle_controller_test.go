@@ -320,11 +320,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			itEmitsCrashAndChangedEvents := func() {
 				var eventChan chan models.Event
+
 				BeforeEach(func() {
-					eventChan = make(chan models.Event)
+					ch := make(chan models.Event)
+					eventChan = ch
 
 					actualHub.EmitStub = func(event models.Event) {
-						eventChan <- event
+						ch <- event
 					}
 
 				})
