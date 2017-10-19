@@ -3,6 +3,7 @@ package main_test
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/locket"
 	sonde_events "github.com/cloudfoundry/sonde-go/events"
 	"github.com/tedsuo/ifrit"
@@ -39,7 +40,7 @@ var _ = Describe("Metrics", func() {
 		var competingBBSLockProcess ifrit.Process
 
 		BeforeEach(func() {
-			competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL)
+			competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&mfakes.FakeIngressClient{}))
 			competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
 
 			bbsRunner.StartCheck = "bbs.consul-lock.acquiring-lock"

@@ -249,7 +249,7 @@ func main() {
 	locks := []grouper.Member{}
 
 	if !bbsConfig.SkipConsulLock {
-		maintainer := initializeLockMaintainer(logger, consulClient, clock, &bbsConfig)
+		maintainer := initializeLockMaintainer(logger, consulClient, clock, &bbsConfig, metronClient)
 		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
 	}
 
@@ -506,6 +506,7 @@ func initializeLockMaintainer(
 	consulClient consuladapter.Client,
 	clock clock.Clock,
 	bbsConfig *config.BBSConfig,
+	metronClient loggingclient.IngressClient,
 ) ifrit.Runner {
 	uuid, err := uuid.NewV4()
 	if err != nil {
@@ -530,6 +531,7 @@ func initializeLockMaintainer(
 		clock,
 		time.Duration(bbsConfig.LockRetryInterval),
 		time.Duration(bbsConfig.LockTTL),
+		locket.WithMetronClient(metronClient),
 	)
 }
 
