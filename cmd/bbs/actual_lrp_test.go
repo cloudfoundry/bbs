@@ -51,8 +51,7 @@ var _ = Describe("ActualLRP API", func() {
 	)
 
 	var (
-		expectedActualLRPGroups []*models.ActualLRPGroup
-		actualActualLRPGroups   []*models.ActualLRPGroup
+		actualActualLRPGroups []*models.ActualLRPGroup
 
 		baseLRP               *models.ActualLRP
 		otherLRP              *models.ActualLRP
@@ -89,7 +88,6 @@ var _ = Describe("ActualLRP API", func() {
 		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-		expectedActualLRPGroups = []*models.ActualLRPGroup{}
 		actualActualLRPGroups = []*models.ActualLRPGroup{}
 
 		baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
@@ -195,7 +193,6 @@ var _ = Describe("ActualLRP API", func() {
 			It("returns all actual lrps from the bbs", func() {
 				actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)
 				Expect(getErr).NotTo(HaveOccurred())
-				expectedActualLRPGroups = []*models.ActualLRPGroup{}
 
 				Expect(actualActualLRPGroups).To(ConsistOf(
 					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: baseLRP}),
