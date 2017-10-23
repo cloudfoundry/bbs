@@ -94,5 +94,5 @@ message CodependentAction {
 
 message ResourceLimits {
   optional uint64 nofile = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nofile,omitempty"];
-  optional uint64 nproc = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nproc,omitempty"];
+  optional uint64 nproc = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nproc,omitempty", deprecated=true];
 }

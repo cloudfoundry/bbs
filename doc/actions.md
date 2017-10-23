@@ -34,7 +34,6 @@ action := &models.RunAction{
   },
   ResourceLimits: &models.ResourceLimits{
     Nofile: 1000,
-    Nproc: 1000,
   },
   LogSource: "some-log-source",
   SuppressLogOutput: false,
@@ -71,7 +70,7 @@ A list of environment variables. These override any container-level environment 
 A set of resource limits to apply to the process. Supported limits:
 
 - `Nofile`: Number of file descriptors the process may allocate.
-- `NProc`: Number of processes per user.
+- `NProc`: Number of processes per user. **Note** this field is deprecated and is ignored
 
 
 #### `LogSource` [optional]
