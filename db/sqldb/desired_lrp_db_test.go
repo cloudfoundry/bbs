@@ -56,6 +56,22 @@ var _ = Describe("DesiredLRPDB", func() {
 			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
 		})
 
+		Context("when there are duplicate ports", func() {
+			BeforeEach(func() {
+				desiredLRPGuid := "desired-lrp-guid-with-duplicate-ports"
+				expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
+				expectedDesiredLRP.Ports = []uint32{8080, 8080}
+				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+			})
+
+			It("de-dups the ports", func() {
+				expectedDesiredLRP.Ports = []uint32{8080}
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRP).To(Equal(expectedDesiredLRP))
+			})
+		})
+
 		Context("when the desired lrp does not exist", func() {
 			It("returns a ResourceNotFound error", func() {
 				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, "Sup dawg")
@@ -118,6 +134,26 @@ var _ = Describe("DesiredLRPDB", func() {
 				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
 				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
 			}
+		})
+
+		Context("when there are duplicate ports", func() {
+			var (
+				expectedDesiredLRP *models.DesiredLRP
+			)
+
+			BeforeEach(func() {
+				desiredLRPGuid := "desired-lrp-guid-with-duplicate-ports"
+				expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
+				expectedDesiredLRP.Ports = []uint32{8080, 8080}
+				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+			})
+
+			It("de-dups the ports", func() {
+				expectedDesiredLRP.Ports = []uint32{8080}
+				desiredLRP, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRP).To(ContainElement(expectedDesiredLRP))
+			})
 		})
 
 		It("returns all desired lrps", func() {

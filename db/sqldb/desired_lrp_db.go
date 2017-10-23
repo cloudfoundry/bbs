@@ -413,6 +413,8 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner RowScanner
 	if err != nil {
 		return nil, schedulingInfo.ProcessGuid, models.ErrDeserialize
 	}
+	// dedup the ports
+	runInfo.Ports = dedupSlice(runInfo.Ports)
 	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo)
 	return &desiredLRP, "", nil
 }
@@ -443,4 +445,28 @@ func whereClauseForProcessGuids(filter []string) string {
 
 	where += strings.Join(questionMarks, ", ")
 	return where + ")"
+}
+
+func dedupSlice(ints []uint32) []uint32 {
+	if ints == nil {
+		// this is really here to make some tests happy, otherwise we replace the
+		// nil with an empty slice and they barf
+		return nil
+	}
+
+	set := make(map[uint32]struct{})
+	for _, i := range ints {
+		set[i] = struct{}{}
+	}
+	if len(ints) == len(set) {
+		// short circuit the copying if the set has the same number of elements as
+		// the slice
+		return ints
+	}
+
+	newIs := make([]uint32, 0, len(ints))
+	for i := range set {
+		newIs = append(newIs, i)
+	}
+	return newIs
 }
