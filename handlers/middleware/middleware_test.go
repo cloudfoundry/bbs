@@ -122,7 +122,6 @@ var _ = Describe("Middleware", func() {
 
 	Describe("ContextCancellableRequest", func() {
 		var (
-			finishCh chan struct{}
 			req      *http.Request
 			ctx      context.Context
 			cancelFn context.CancelFunc
@@ -130,7 +129,6 @@ var _ = Describe("Middleware", func() {
 
 		BeforeEach(func() {
 			var err error
-			finishCh = make(chan struct{})
 
 			ctx, cancelFn = context.WithCancel(context.Background())
 			req, err = http.NewRequest("GET", "example.com", nil)
@@ -139,6 +137,7 @@ var _ = Describe("Middleware", func() {
 		})
 
 		It("finishes ServeHTTP when the frontend connection is closed", func() {
+			finishCh := make(chan struct{})
 			handler := middleware.ContextCancellableRequest(func(w http.ResponseWriter, r *http.Request) {
 				<-finishCh
 			})
@@ -153,6 +152,7 @@ var _ = Describe("Middleware", func() {
 		})
 
 		It("finishes ServeHTTP when the request returns", func() {
+			finishCh := make(chan struct{})
 			handler := middleware.ContextCancellableRequest(func(w http.ResponseWriter, r *http.Request) {})
 
 			go func(done chan struct{}) {
