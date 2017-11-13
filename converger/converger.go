@@ -80,6 +80,7 @@ func (c *Converger) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}()
 
 	cellEvents := c.serviceClient.CellEvents(logger)
+	convergeChan := make(chan struct{}, 2)
 
 	close(ready)
 
@@ -96,30 +97,35 @@ func (c *Converger) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			switch event.EventType() {
 			case models.EventTypeCellDisappeared:
 				logger.Info("received-cell-disappeared-event", lager.Data{"cell-id": event.CellIDs()})
-				c.converge()
+				c.converge(convergeChan)
 			}
 
 		case <-convergeTimer.C():
 			convergeTimer.Stop()
-			c.converge()
+			c.converge(convergeChan)
+		}
+
+		select {
+		case <-signals:
+			return nil
+		case <-convergeChan:
+		}
+		select {
+		case <-signals:
+			return nil
+		case <-convergeChan:
 		}
 
 		convergeTimer.Reset(c.convergeRepeatInterval)
 	}
 }
 
-func (c *Converger) converge() {
+func (c *Converger) converge(convergeChan chan struct{}) {
 	logger := c.logger.Session("executing-convergence")
-	wg := sync.WaitGroup{}
 
-	wg.Add(1)
 	go func() {
 		logger.Info("converge-tasks-started")
-
-		defer func() {
-			logger.Info("converge-tasks-done")
-			wg.Done()
-		}()
+		defer logger.Info("converge-tasks-done")
 
 		err := c.taskController.ConvergeTasks(
 			c.logger,
@@ -130,22 +136,19 @@ func (c *Converger) converge() {
 		if err != nil {
 			logger.Error("failed-to-converge-tasks", err)
 		}
+
+		convergeChan <- struct{}{}
 	}()
 
-	wg.Add(1)
 	go func() {
 		logger.Info("converge-lrps-started")
-
-		defer func() {
-			logger.Info("converge-lrps-done")
-			wg.Done()
-		}()
+		defer logger.Info("converge-lrps-done")
 
 		err := c.lrpConvergenceController.ConvergeLRPs(c.logger)
 		if err != nil {
 			logger.Error("failed-to-converge-lrps", err)
 		}
-	}()
 
-	wg.Wait()
+		convergeChan <- struct{}{}
+	}()
 }

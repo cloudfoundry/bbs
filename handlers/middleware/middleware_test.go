@@ -1,6 +1,7 @@
 package middleware_test
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -116,6 +117,50 @@ var _ = Describe("Middleware", func() {
 				Expect(accessLogger.Buffer()).To(gbytes.Say("request\":\"http://example.com\""))
 
 			})
+		})
+	})
+
+	Describe("ContextCancellableRequest", func() {
+		var (
+			finishCh chan struct{}
+			req      *http.Request
+			ctx      context.Context
+			cancelFn context.CancelFunc
+		)
+
+		BeforeEach(func() {
+			var err error
+			finishCh = make(chan struct{})
+
+			ctx, cancelFn = context.WithCancel(context.Background())
+			req, err = http.NewRequest("GET", "example.com", nil)
+			Expect(err).NotTo(HaveOccurred())
+			req = req.WithContext(ctx)
+		})
+
+		It("finishes ServeHTTP when the frontend connection is closed", func() {
+			handler := middleware.ContextCancellableRequest(func(w http.ResponseWriter, r *http.Request) {
+				<-finishCh
+			})
+
+			go func(done chan struct{}) {
+				handler.ServeHTTP(nil, req)
+				close(done)
+			}(finishCh)
+
+			cancelFn()
+			Eventually(finishCh).Should(BeClosed())
+		})
+
+		It("finishes ServeHTTP when the request returns", func() {
+			handler := middleware.ContextCancellableRequest(func(w http.ResponseWriter, r *http.Request) {})
+
+			go func(done chan struct{}) {
+				handler.ServeHTTP(nil, req)
+				close(done)
+			}(finishCh)
+
+			Eventually(finishCh).Should(BeClosed())
 		})
 	})
 })

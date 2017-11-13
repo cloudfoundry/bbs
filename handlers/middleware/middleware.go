@@ -74,3 +74,19 @@ func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc 
 		handler.ServeHTTP(w, r)
 	}
 }
+
+func ContextCancellableRequest(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		reqChan := make(chan struct{})
+		go func(doneChan chan struct{}) {
+			f(w, r)
+			close(doneChan)
+		}(reqChan)
+
+		select {
+		case <-ctx.Done():
+		case <-reqChan:
+		}
+	}
+}

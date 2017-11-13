@@ -123,11 +123,13 @@ func New(
 		panic("unable to create router: " + err.Error())
 	}
 
-	return middleware.RecordRequestCount(
-		UnavailableWrap(handler,
-			migrationsDone,
+	return middleware.ContextCancellableRequest(
+		middleware.RecordRequestCount(
+			UnavailableWrap(handler,
+				migrationsDone,
+			),
+			emitter,
 		),
-		emitter,
 	)
 }
 
