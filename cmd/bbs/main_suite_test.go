@@ -119,8 +119,12 @@ var _ = SynchronizedBeforeSuite(
 var _ = SynchronizedAfterSuite(func() {
 	ginkgomon.Kill(sqlProcess)
 
-	etcdRunner.Stop()
-	consulRunner.Stop()
+	if etcdRunner != nil {
+		etcdRunner.Stop()
+	}
+	if consulRunner != nil {
+		consulRunner.Stop()
+	}
 }, func() {
 	gexec.CleanupBuildArtifacts()
 })

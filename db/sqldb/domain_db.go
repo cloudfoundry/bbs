@@ -1,7 +1,6 @@
 package sqldb
 
 import (
-	"database/sql"
 	"math"
 	"time"
 
@@ -15,7 +14,7 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 	defer logger.Debug("complete")
 
 	var results []string
-	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		expireTime := db.clock.Now().Round(time.Second).UnixNano()
 		rows, err := db.all(logger, tx, domainsTable,
 			domainColumns, helpers.NoLockRow,
@@ -54,7 +53,7 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
 		if ttl == 0 {
 			expireTime = math.MaxInt64

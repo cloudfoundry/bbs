@@ -17,8 +17,8 @@ const (
 )
 
 type SQLHelper interface {
-	Transact(logger lager.Logger, db *sql.DB, f func(logger lager.Logger, tx *sql.Tx) error) error
-	One(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) *sql.Row
+	Transact(logger lager.Logger, db DB, f func(logger lager.Logger, tx Tx) error) error
+	One(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) RowScanner
 	All(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) (*sql.Rows, error)
 	Upsert(logger lager.Logger, q Queryable, table string, attributes SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error)
 	Insert(logger lager.Logger, q Queryable, table string, attributes SQLAttributes) (sql.Result, error)
@@ -36,13 +36,6 @@ type sqlHelper struct {
 
 func NewSQLHelper(flavor string) *sqlHelper {
 	return &sqlHelper{flavor: flavor}
-}
-
-type Queryable interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Prepare(query string) (*sql.Stmt, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
 type RowLock bool

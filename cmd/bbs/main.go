@@ -22,6 +22,7 @@ import (
 	etcddb "code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryptor"
 	"code.cloudfoundry.org/bbs/events"
@@ -164,7 +165,9 @@ func main() {
 			logger.Fatal("sql-failed-to-connect", err)
 		}
 
-		sqlDB = sqldb.NewSQLDB(sqlConn,
+		wrappedDB := helpers.NewMonitoredDB(sqlConn, helpers.NewQueryMonitor())
+		sqlDB = sqldb.NewSQLDB(
+			wrappedDB,
 			bbsConfig.ConvergenceWorkers,
 			bbsConfig.UpdateWorkers,
 			format.ENCRYPTED_PROTO,

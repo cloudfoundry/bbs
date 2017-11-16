@@ -90,7 +90,7 @@ func (db *SQLDB) CreateConfigurationsTable(logger lager.Logger) error {
 	return nil
 }
 
-func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql.Rows, error) {
+func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
 	var query string
 	columns := schedulingInfoColumns
 	columns = append(columns, "COUNT(actual_lrps.instance_index) AS actual_instances")
@@ -118,7 +118,7 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q Queryable) (*sql
 	return q.Query(query)
 }
 
-func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
+func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
 	query := `
     SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
       FROM actual_lrps
@@ -130,7 +130,7 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q Queryable) (*sq
 	return q.Query(query)
 }
 
-func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, cellSet models.CellSet) (*sql.Rows, error) {
+func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q helpers.Queryable, cellSet models.CellSet) (*sql.Rows, error) {
 	wheres := []string{"actual_lrps.evacuating = false"}
 	bindings := make([]interface{}, 0, len(cellSet))
 
@@ -155,7 +155,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q Queryable, ce
 	return q.Query(db.helper.Rebind(query), bindings...)
 }
 
-func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows, error) {
+func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
 	query := fmt.Sprintf(`
 		SELECT %s
 			FROM desired_lrps
@@ -171,7 +171,7 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q Queryable) (*sql.Rows,
 	return q.Query(db.helper.Rebind(query), models.ActualLRPStateCrashed, false)
 }
 
-func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now time.Time) (*sql.Rows, error) {
+func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q helpers.Queryable, now time.Time) (*sql.Rows, error) {
 	query := fmt.Sprintf(`
 		SELECT %s
 			FROM desired_lrps
@@ -188,7 +188,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q Queryable, now 
 	)
 }
 
-func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
+func (db *SQLDB) countDesiredInstances(logger lager.Logger, q helpers.Queryable) int {
 	query := `
 		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances
 			FROM desired_lrps
@@ -203,7 +203,7 @@ func (db *SQLDB) countDesiredInstances(logger lager.Logger, q Queryable) int {
 	return desiredInstances
 }
 
-func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q Queryable) (claimedCount, unclaimedCount, runningCount, crashedCount, crashingDesiredCount int) {
+func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q helpers.Queryable) (claimedCount, unclaimedCount, runningCount, crashedCount, crashingDesiredCount int) {
 	var query string
 	switch db.flavor {
 	case helpers.Postgres:
@@ -241,7 +241,7 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q Queryable) (claim
 	return
 }
 
-func (db *SQLDB) countTasksByState(logger lager.Logger, q Queryable) (pendingCount, runningCount, completedCount, resolvingCount int) {
+func (db *SQLDB) countTasksByState(logger lager.Logger, q helpers.Queryable) (pendingCount, runningCount, completedCount, resolvingCount int) {
 	var query string
 	switch db.flavor {
 	case helpers.Postgres:
@@ -278,7 +278,7 @@ func (db *SQLDB) countTasksByState(logger lager.Logger, q Queryable) (pendingCou
 func (db *SQLDB) one(logger lager.Logger, q helpers.Queryable, table string,
 	columns helpers.ColumnList, lockRow helpers.RowLock,
 	wheres string, whereBindings ...interface{},
-) *sql.Row {
+) helpers.RowScanner {
 	return db.helper.One(logger, q, table, columns, lockRow, wheres, whereBindings...)
 }
 

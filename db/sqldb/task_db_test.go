@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -1083,7 +1084,7 @@ var _ = Describe("TaskDB", func() {
 	})
 })
 
-func insertTask(db *sql.DB, serializer format.Serializer, task *models.Task, malformedTaskDefinition bool) {
+func insertTask(db helpers.DB, serializer format.Serializer, task *models.Task, malformedTaskDefinition bool) {
 	taskDefData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, task.TaskDefinition)
 	Expect(err).NotTo(HaveOccurred())
 

@@ -29,7 +29,8 @@ import (
 )
 
 var (
-	db                                   *sql.DB
+	rawDB                                *sql.DB
+	db                                   helpers.DB
 	sqlDB                                *sqldb.SQLDB
 	fakeClock                            *fakeclock.FakeClock
 	fakeGUIDProvider                     *guidproviderfakes.FakeGUIDProvider
@@ -68,20 +69,21 @@ var _ = BeforeSuite(func() {
 	}
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
-	// in diego-release.
-	db, err = sql.Open(dbDriverName, dbBaseConnectionString)
+	// in diego-release .
+	rawDB, err = sql.Open(dbDriverName, dbBaseConnectionString)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(db.Ping()).NotTo(HaveOccurred())
+
+	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 
 	// Ensure that if another test failed to clean up we can still proceed
-	db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
 
-	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
+	_, err = rawDB.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
 
-	db, err = sql.Open(dbDriverName, fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelNode()))
+	rawDB, err = sql.Open(dbDriverName, fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
-	Expect(db.Ping()).NotTo(HaveOccurred())
+	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 
 	encryptionKey, err := encryption.NewKey("label", "passphrase")
 	Expect(err).NotTo(HaveOccurred())
@@ -89,6 +91,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
+
+	db = helpers.NewMonitoredDB(rawDB, helpers.NewQueryMonitor())
 
 	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 	err = sqlDB.CreateConfigurationsTable(logger)
@@ -111,7 +115,7 @@ var _ = BeforeEach(func() {
 		nil,
 		nil,
 		sqlDB,
-		db,
+		rawDB,
 		cryptor,
 		migrations.Migrations,
 		migrationsDone,
@@ -128,12 +132,12 @@ var _ = BeforeEach(func() {
 	// ensure that all sqldb functions being tested only require one connection
 	// to operate, otherwise a deadlock can be caused in bbs. For more
 	// information see https://www.pivotaltracker.com/story/show/136754083
-	db.SetMaxOpenConns(1)
+	rawDB.SetMaxOpenConns(1)
 })
 
 var _ = AfterEach(func() {
 	fakeGUIDProvider.NextGUIDReturns("", nil)
-	truncateTables(db)
+	truncateTables(rawDB)
 })
 
 var _ = AfterSuite(func() {
@@ -141,13 +145,13 @@ var _ = AfterSuite(func() {
 		migrationProcess.Signal(os.Kill)
 	}
 
-	Expect(db.Close()).NotTo(HaveOccurred())
-	db, err := sql.Open(dbDriverName, dbBaseConnectionString)
+	Expect(rawDB.Close()).NotTo(HaveOccurred())
+	rawDB, err := sql.Open(dbDriverName, dbBaseConnectionString)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(db.Ping()).NotTo(HaveOccurred())
-	_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	Expect(rawDB.Ping()).NotTo(HaveOccurred())
+	_, err = rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
 	Expect(err).NotTo(HaveOccurred())
-	Expect(db.Close()).NotTo(HaveOccurred())
+	Expect(rawDB.Close()).NotTo(HaveOccurred())
 })
 
 func truncateTables(db *sql.DB) {

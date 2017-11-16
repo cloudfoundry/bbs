@@ -1,8 +1,6 @@
 package sqldb
 
 import (
-	"database/sql"
-
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
@@ -14,7 +12,7 @@ import (
 )
 
 type SQLDB struct {
-	db                     *sql.DB
+	db                     helpers.DB
 	convergenceWorkersSize int
 	updateWorkersSize      int
 	clock                  clock.Clock
@@ -28,19 +26,8 @@ type SQLDB struct {
 	metronClient           loggingclient.IngressClient
 }
 
-type RowScanner interface {
-	Scan(dest ...interface{}) error
-}
-
-type Queryable interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Prepare(query string) (*sql.Stmt, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-}
-
 func NewSQLDB(
-	db *sql.DB,
+	db helpers.DB,
 	convergenceWorkersSize int,
 	updateWorkersSize int,
 	serializationFormat *format.Format,
@@ -67,7 +54,7 @@ func NewSQLDB(
 	}
 }
 
-func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx *sql.Tx) error) error {
+func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx helpers.Tx) error) error {
 	err := db.helper.Transact(logger, db.db, f)
 	if err != nil {
 		return db.convertSQLError(err)

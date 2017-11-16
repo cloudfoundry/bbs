@@ -1,7 +1,6 @@
 package sqldb
 
 import (
-	"database/sql"
 	"reflect"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -22,7 +21,7 @@ func (db *SQLDB) EvacuateActualLRP(
 
 	var actualLRP *models.ActualLRP
 
-	err := db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
@@ -88,7 +87,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx *sql.Tx) error {
+	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
@@ -126,7 +125,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
-	tx *sql.Tx,
+	tx helpers.Tx,
 ) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {

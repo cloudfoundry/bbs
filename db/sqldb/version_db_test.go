@@ -107,7 +107,8 @@ var _ = Describe("Version", func() {
 			BeforeEach(func() {
 				db, err := sql.Open(dbDriverName, fmt.Sprintf("%sinvalid-db", dbBaseConnectionString))
 				Expect(err).NotTo(HaveOccurred())
-				sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+				helperDB := helpers.NewMonitoredDB(db, helpers.NewQueryMonitor())
+				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 			})
 
 			It("does not return an ErrResourceNotFound", func() {

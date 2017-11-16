@@ -76,5 +76,6 @@ var _ = BeforeEach(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, helpers.MySQL, fakeMetronClient)
+	helperDB := helpers.NewMonitoredDB(db, helpers.NewQueryMonitor())
+	sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, helpers.MySQL, fakeMetronClient)
 })
