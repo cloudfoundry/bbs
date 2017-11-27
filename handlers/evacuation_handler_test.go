@@ -55,6 +55,9 @@ var _ = Describe("Evacuation Handlers", func() {
 			instanceKey models.ActualLRPInstanceKey
 			actual      *models.ActualLRP
 
+			replacementInstanceKey models.ActualLRPInstanceKey
+			replacementActual      *models.ActualLRP
+
 			requestBody interface{}
 		)
 
@@ -68,11 +71,20 @@ var _ = Describe("Evacuation Handlers", func() {
 			actual = &models.ActualLRP{
 				ActualLRPInstanceKey: instanceKey,
 			}
+
+			replacementInstanceKey = models.NewActualLRPInstanceKey("replacement-instance-guid", "replacement-cell-id")
+			replacementActual = &models.ActualLRP{
+				ActualLRPInstanceKey: replacementInstanceKey,
+				State:                models.ActualLRPStateClaimed,
+				PlacementError:       "some-placement-error",
+			}
 			requestBody = &models.RemoveEvacuatingActualLRPRequest{
 				ActualLrpKey:         &key,
 				ActualLrpInstanceKey: &instanceKey,
 			}
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Evacuating: actual}, nil)
+			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
+				Evacuating: actual,
+			}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -100,6 +112,24 @@ var _ = Describe("Evacuation Handlers", func() {
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+			})
+
+			It("logs the stranded evacuating actual lrp", func() {
+				fakeLogger := lagertest.NewTestLogger("test")
+				Eventually(logger).Should(gbytes.Say(`removing-stranded-evacuating-actual-lrp.*"index":%d,"instance-key":{"instance_guid":"%s","cell_id":"%s"},"process-guid":"%s"`, key.Index, instanceKey.InstanceGuid, instanceKey.CellId, key.ProcessGuid))
+			})
+
+			Context("when the evacuating lrp is being replaced", func() {
+				BeforeEach(func() {
+					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
+						Evacuating: actual,
+						Instance:   replacementActual,
+					}, nil)
+				})
+
+				It("logs the current instance information for the evacuating lrp", func() {
+					Eventually(logger).Should(gbytes.Say(`removing-stranded-evacuating-actual-lrp.*,"replacement-lrp-instance-key":{"instance_guid":"%s","cell_id":"%s"},"replacement-lrp-placement-error":"%s","replacement-state":"%s"`, replacementInstanceKey.InstanceGuid, replacementInstanceKey.CellId, replacementActual.PlacementError, replacementActual.State))
+				})
 			})
 
 			Context("when the lrp has a running instance", func() {

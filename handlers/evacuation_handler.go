@@ -68,6 +68,19 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
+	evacuatingLRPLogData := lager.Data{
+		"process-guid": request.ActualLrpKey.ProcessGuid,
+		"index":        request.ActualLrpKey.Index,
+		"instance-key": request.ActualLrpInstanceKey,
+	}
+	if beforeActualLRPGroup.Instance != nil {
+		evacuatingLRPLogData["replacement-lrp-instance-key"] = beforeActualLRPGroup.Instance.ActualLRPInstanceKey
+		evacuatingLRPLogData["replacement-state"] = beforeActualLRPGroup.Instance.State
+		evacuatingLRPLogData["replacement-lrp-placement-error"] = beforeActualLRPGroup.Instance.PlacementError
+	}
+
+	logger.Info("removing-stranded-evacuating-actual-lrp", evacuatingLRPLogData)
+
 	err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	if err != nil {
 		response.Error = models.ConvertError(err)
