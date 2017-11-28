@@ -115,7 +115,6 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			It("logs the stranded evacuating actual lrp", func() {
-				fakeLogger := lagertest.NewTestLogger("test")
 				Eventually(logger).Should(gbytes.Say(`removing-stranded-evacuating-actual-lrp.*"index":%d,"instance-key":{"instance_guid":"%s","cell_id":"%s"},"process-guid":"%s"`, key.Index, instanceKey.InstanceGuid, instanceKey.CellId, key.ProcessGuid))
 			})
 
