@@ -21,16 +21,16 @@ const (
 
 	domainMetricPrefix = "Domain."
 
-	instanceLRPs  = "LRPsDesired" // this is the number of desired instances
-	claimedLRPs   = "LRPsClaimed"
-	unclaimedLRPs = "LRPsUnclaimed"
-	runningLRPs   = "LRPsRunning"
+	instanceLRPsMetric  = "LRPsDesired" // this is the number of desired instances
+	claimedLRPsMetric   = "LRPsClaimed"
+	unclaimedLRPsMetric = "LRPsUnclaimed"
+	runningLRPsMetric   = "LRPsRunning"
 
-	missingLRPs = "LRPsMissing"
-	extraLRPs   = "LRPsExtra"
+	missingLRPsMetric = "LRPsMissing"
+	extraLRPsMetric   = "LRPsExtra"
 
-	crashedActualLRPs   = "CrashedActualLRPs"
-	crashingDesiredLRPs = "CrashingDesiredLRPs"
+	crashedActualLRPsMetric   = "CrashedActualLRPs"
+	crashingDesiredLRPsMetric = "CrashingDesiredLRPs"
 )
 
 func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
@@ -307,7 +307,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	c.metronClient.SendMetric(missingLRPs, missingLRPCount)
+	c.metronClient.SendMetric(missingLRPsMetric, missingLRPCount)
 }
 
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
@@ -402,7 +402,7 @@ func (c *convergence) result(logger lager.Logger) []*auctioneer.LRPStartRequest 
 		startRequests = append(startRequests, startRequest)
 	}
 
-	c.metronClient.SendMetric(extraLRPs, len(c.keysToRetire))
+	c.metronClient.SendMetric(extraLRPsMetric, len(c.keysToRetire))
 	c.emitLRPMetrics(logger)
 
 	return startRequests
@@ -476,32 +476,32 @@ func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 
 	desiredInstances := db.countDesiredInstances(logger, db.db)
 
-	err = db.metronClient.SendMetric(unclaimedLRPs, unclaimedInstances)
+	err = db.metronClient.SendMetric(unclaimedLRPsMetric, unclaimedInstances)
 	if err != nil {
 		logger.Error("failed-sending-unclaimed-lrps-metric", err)
 	}
 
-	db.metronClient.SendMetric(claimedLRPs, claimedInstances)
+	db.metronClient.SendMetric(claimedLRPsMetric, claimedInstances)
 	if err != nil {
 		logger.Error("failed-sending-claimed-lrps-metric", err)
 	}
 
-	err = db.metronClient.SendMetric(runningLRPs, runningInstances)
+	err = db.metronClient.SendMetric(runningLRPsMetric, runningInstances)
 	if err != nil {
 		logger.Error("failed-sending-running-lrps-metric", err)
 	}
 
-	err = db.metronClient.SendMetric(crashedActualLRPs, crashedInstances)
+	err = db.metronClient.SendMetric(crashedActualLRPsMetric, crashedInstances)
 	if err != nil {
 		logger.Error("failed-sending-crashed-actual-lrps-metric", err)
 	}
 
-	err = db.metronClient.SendMetric(crashingDesiredLRPs, crashingDesireds)
+	err = db.metronClient.SendMetric(crashingDesiredLRPsMetric, crashingDesireds)
 	if err != nil {
 		logger.Error("failed-sending-crashing-desired-lrps-metric", err)
 	}
 
-	err = db.metronClient.SendMetric(instanceLRPs, desiredInstances)
+	err = db.metronClient.SendMetric(instanceLRPsMetric, desiredInstances)
 	if err != nil {
 		logger.Error("failed-sending-desired-lrps-metric", err)
 	}

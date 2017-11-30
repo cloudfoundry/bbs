@@ -16,10 +16,10 @@ const (
 	tasksKickedCounter = "ConvergenceTasksKicked"
 	tasksPrunedCounter = "ConvergenceTasksPruned"
 
-	pendingTasks   = "TasksPending"
-	runningTasks   = "TasksRunning"
-	completedTasks = "TasksCompleted"
-	resolvingTasks = "TasksResolving"
+	pendingTasksMetric   = "TasksPending"
+	runningTasksMetric   = "TasksRunning"
+	completedTasksMetric = "TasksCompleted"
+	resolvingTasksMetric = "TasksResolving"
 )
 
 type compareAndSwappableTask struct {
@@ -270,22 +270,22 @@ func (db *ETCDDB) batchDeleteTasks(taskGuids []string, logger lager.Logger) {
 }
 
 func sendTaskMetrics(logger lager.Logger, db *ETCDDB, pendingCount, runningCount, completedCount, resolvingCount int) {
-	err := db.metronClient.SendMetric(pendingTasks, pendingCount)
+	err := db.metronClient.SendMetric(pendingTasksMetric, pendingCount)
 	if err != nil {
 		logger.Error("failed-to-send-pending-tasks-metric", err)
 	}
 
-	err = db.metronClient.SendMetric(runningTasks, runningCount)
+	err = db.metronClient.SendMetric(runningTasksMetric, runningCount)
 	if err != nil {
 		logger.Error("failed-to-send-running-tasks-metric", err)
 	}
 
-	err = db.metronClient.SendMetric(completedTasks, completedCount)
+	err = db.metronClient.SendMetric(completedTasksMetric, completedCount)
 	if err != nil {
 		logger.Error("failed-to-send-completed-tasks-metric", err)
 	}
 
-	err = db.metronClient.SendMetric(resolvingTasks, resolvingCount)
+	err = db.metronClient.SendMetric(resolvingTasksMetric, resolvingCount)
 	if err != nil {
 		logger.Error("failed-to-send-resolving-tasks-metric", err)
 	}

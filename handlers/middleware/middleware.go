@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	RequestLatency = "RequestLatency"
-	RequestCount   = "RequestCount"
+	RequestLatencyDuration = "RequestLatency"
+	RequestCount           = "RequestCount"
 )
 
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)

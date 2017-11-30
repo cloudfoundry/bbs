@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	requestCounter = "RequestCount"
-	requestLatency = "RequestLatency"
+	requestCounter         = "RequestCount"
+	requestLatencyDuration = "RequestLatency"
 )
 
 type RequestStatMetronNotifier struct {
@@ -72,7 +72,7 @@ func (notifier *RequestStatMetronNotifier) Run(signals <-chan os.Signal, ready c
 			latency := notifier.ReadAndResetLatency()
 			if latency != 0 {
 				logger.Info("sending-latency", lager.Data{"latency": latency})
-				notifier.metronClient.SendDuration(requestLatency, latency)
+				notifier.metronClient.SendDuration(requestLatencyDuration, latency)
 			}
 		case <-signals:
 			return nil
