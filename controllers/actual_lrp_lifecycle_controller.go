@@ -107,7 +107,6 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
-		return err
 	}
 	return nil
 }

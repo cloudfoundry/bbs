@@ -424,8 +424,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						fakeAuctioneerClient.RequestLRPAuctionsReturns(errors.New("some else bid higher"))
 					})
 
-					It("returns an error", func() {
-						Expect(err).To(MatchError("some else bid higher"))
+					It("should not return an error", func() {
+						Expect(err).NotTo(HaveOccurred())
 					})
 
 					itEmitsCrashAndChangedEvents()
