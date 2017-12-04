@@ -15,7 +15,6 @@ type QueryMonitor interface {
 	QueriesFailed() int64
 	ReadAndResetQueryDurationMax() time.Duration
 	QueriesInFlight() int64
-	// QueryMetrics
 }
 
 type queryMonitor struct {
@@ -34,7 +33,6 @@ func NewQueryMonitor() QueryMonitor {
 }
 
 func (q *queryMonitor) MonitorQuery(f func() error) error {
-	atomic.AddInt64(&q.queriesStarted, 1)
 	atomic.AddInt64(&q.queriesInFlight, 1)
 	defer atomic.AddInt64(&q.queriesInFlight, -1)
 
@@ -43,8 +41,12 @@ func (q *queryMonitor) MonitorQuery(f func() error) error {
 	duration := time.Since(start)
 
 	if err != nil && err != sql.ErrNoRows {
-		atomic.AddInt64(&q.queriesFailed, 1)
+		if err != sql.ErrTxDone {
+			atomic.AddInt64(&q.queriesStarted, 1)
+			atomic.AddInt64(&q.queriesFailed, 1)
+		}
 	} else {
+		atomic.AddInt64(&q.queriesStarted, 1)
 		atomic.AddInt64(&q.queriesSucceeded, 1)
 	}
 
