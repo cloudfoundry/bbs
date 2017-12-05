@@ -12,14 +12,14 @@ import (
 
 var _ = Describe("QueryMonitor", func() {
 	Describe("MonitorQuery", func() {
-		It("increases the queries started count by 1", func() {
+		It("increases the total queries count by 1", func() {
 			q := helpers.NewQueryMonitor()
 
 			q.MonitorQuery(func() error {
 				return nil
 			})
 
-			Expect(q.QueriesStarted()).To(BeEquivalentTo(1))
+			Expect(q.QueriesTotal()).To(BeEquivalentTo(1))
 			Expect(q.QueriesSucceeded()).To(BeEquivalentTo(1))
 			Expect(q.QueriesFailed()).To(BeEquivalentTo(0))
 		})
@@ -31,7 +31,7 @@ var _ = Describe("QueryMonitor", func() {
 				return errors.New("boom!")
 			})
 
-			Expect(q.QueriesStarted()).To(BeEquivalentTo(1))
+			Expect(q.QueriesTotal()).To(BeEquivalentTo(1))
 			Expect(q.QueriesSucceeded()).To(BeEquivalentTo(0))
 			Expect(q.QueriesFailed()).To(BeEquivalentTo(1))
 		})

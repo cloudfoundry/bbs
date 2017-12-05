@@ -20,13 +20,13 @@ type FakeQueryMonitor struct {
 	monitorQueryReturnsOnCall map[int]struct {
 		result1 error
 	}
-	QueriesStartedStub        func() int64
-	queriesStartedMutex       sync.RWMutex
-	queriesStartedArgsForCall []struct{}
-	queriesStartedReturns     struct {
+	QueriesTotalStub        func() int64
+	queriesTotalMutex       sync.RWMutex
+	queriesTotalArgsForCall []struct{}
+	queriesTotalReturns     struct {
 		result1 int64
 	}
-	queriesStartedReturnsOnCall map[int]struct {
+	queriesTotalReturnsOnCall map[int]struct {
 		result1 int64
 	}
 	QueriesSucceededStub        func() int64
@@ -117,42 +117,42 @@ func (fake *FakeQueryMonitor) MonitorQueryReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeQueryMonitor) QueriesStarted() int64 {
-	fake.queriesStartedMutex.Lock()
-	ret, specificReturn := fake.queriesStartedReturnsOnCall[len(fake.queriesStartedArgsForCall)]
-	fake.queriesStartedArgsForCall = append(fake.queriesStartedArgsForCall, struct{}{})
-	fake.recordInvocation("QueriesStarted", []interface{}{})
-	fake.queriesStartedMutex.Unlock()
-	if fake.QueriesStartedStub != nil {
-		return fake.QueriesStartedStub()
+func (fake *FakeQueryMonitor) QueriesTotal() int64 {
+	fake.queriesTotalMutex.Lock()
+	ret, specificReturn := fake.queriesTotalReturnsOnCall[len(fake.queriesTotalArgsForCall)]
+	fake.queriesTotalArgsForCall = append(fake.queriesTotalArgsForCall, struct{}{})
+	fake.recordInvocation("QueriesTotal", []interface{}{})
+	fake.queriesTotalMutex.Unlock()
+	if fake.QueriesTotalStub != nil {
+		return fake.QueriesTotalStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.queriesStartedReturns.result1
+	return fake.queriesTotalReturns.result1
 }
 
-func (fake *FakeQueryMonitor) QueriesStartedCallCount() int {
-	fake.queriesStartedMutex.RLock()
-	defer fake.queriesStartedMutex.RUnlock()
-	return len(fake.queriesStartedArgsForCall)
+func (fake *FakeQueryMonitor) QueriesTotalCallCount() int {
+	fake.queriesTotalMutex.RLock()
+	defer fake.queriesTotalMutex.RUnlock()
+	return len(fake.queriesTotalArgsForCall)
 }
 
-func (fake *FakeQueryMonitor) QueriesStartedReturns(result1 int64) {
-	fake.QueriesStartedStub = nil
-	fake.queriesStartedReturns = struct {
+func (fake *FakeQueryMonitor) QueriesTotalReturns(result1 int64) {
+	fake.QueriesTotalStub = nil
+	fake.queriesTotalReturns = struct {
 		result1 int64
 	}{result1}
 }
 
-func (fake *FakeQueryMonitor) QueriesStartedReturnsOnCall(i int, result1 int64) {
-	fake.QueriesStartedStub = nil
-	if fake.queriesStartedReturnsOnCall == nil {
-		fake.queriesStartedReturnsOnCall = make(map[int]struct {
+func (fake *FakeQueryMonitor) QueriesTotalReturnsOnCall(i int, result1 int64) {
+	fake.QueriesTotalStub = nil
+	if fake.queriesTotalReturnsOnCall == nil {
+		fake.queriesTotalReturnsOnCall = make(map[int]struct {
 			result1 int64
 		})
 	}
-	fake.queriesStartedReturnsOnCall[i] = struct {
+	fake.queriesTotalReturnsOnCall[i] = struct {
 		result1 int64
 	}{result1}
 }
@@ -322,8 +322,8 @@ func (fake *FakeQueryMonitor) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.monitorQueryMutex.RLock()
 	defer fake.monitorQueryMutex.RUnlock()
-	fake.queriesStartedMutex.RLock()
-	defer fake.queriesStartedMutex.RUnlock()
+	fake.queriesTotalMutex.RLock()
+	defer fake.queriesTotalMutex.RUnlock()
 	fake.queriesSucceededMutex.RLock()
 	defer fake.queriesSucceededMutex.RUnlock()
 	fake.queriesFailedMutex.RLock()

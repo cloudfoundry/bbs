@@ -45,7 +45,7 @@ var _ = Describe("SQL Helpers", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(monitor.QueriesFailed()).To(BeZero())
 			Expect(monitor.QueriesSucceeded()).To(BeEquivalentTo(3))
-			Expect(monitor.QueriesStarted()).To(BeEquivalentTo(3))
+			Expect(monitor.QueriesTotal()).To(BeEquivalentTo(3))
 		})
 
 		It("rolls back a transaction and increments metrics", func() {

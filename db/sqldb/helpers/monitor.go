@@ -10,7 +10,7 @@ import (
 //go:generate counterfeiter . QueryMonitor
 type QueryMonitor interface {
 	MonitorQuery(func() error) error
-	QueriesStarted() int64
+	QueriesTotal() int64
 	QueriesSucceeded() int64
 	QueriesFailed() int64
 	ReadAndResetQueryDurationMax() time.Duration
@@ -19,7 +19,7 @@ type QueryMonitor interface {
 
 type queryMonitor struct {
 	durationLock     *sync.RWMutex
-	queriesStarted   int64
+	queriesTotal     int64
 	queriesSucceeded int64
 	queriesFailed    int64
 	queriesInFlight  int64
@@ -42,11 +42,11 @@ func (q *queryMonitor) MonitorQuery(f func() error) error {
 
 	if err != nil && err != sql.ErrNoRows {
 		if err != sql.ErrTxDone {
-			atomic.AddInt64(&q.queriesStarted, 1)
+			atomic.AddInt64(&q.queriesTotal, 1)
 			atomic.AddInt64(&q.queriesFailed, 1)
 		}
 	} else {
-		atomic.AddInt64(&q.queriesStarted, 1)
+		atomic.AddInt64(&q.queriesTotal, 1)
 		atomic.AddInt64(&q.queriesSucceeded, 1)
 	}
 
@@ -54,8 +54,8 @@ func (q *queryMonitor) MonitorQuery(f func() error) error {
 	return err
 }
 
-func (q *queryMonitor) QueriesStarted() int64 {
-	return atomic.LoadInt64(&q.queriesStarted)
+func (q *queryMonitor) QueriesTotal() int64 {
+	return atomic.LoadInt64(&q.queriesTotal)
 }
 
 func (q *queryMonitor) QueriesSucceeded() int64 {
@@ -79,8 +79,8 @@ func (q *queryMonitor) QueryDurationMax() time.Duration {
 	return durationMax
 }
 
-func (q *queryMonitor) ReadAndResetQueriesStarted() int64 {
-	return atomic.SwapInt64(&q.queriesStarted, 0)
+func (q *queryMonitor) ReadAndResetQueriesTotal() int64 {
+	return atomic.SwapInt64(&q.queriesTotal, 0)
 }
 
 func (q *queryMonitor) ReadAndResetQueriesSucceeded() int64 {
