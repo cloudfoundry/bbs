@@ -21,6 +21,7 @@ import (
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/consuladapter/consulrunner"
 	"code.cloudfoundry.org/durationjson"
+	"code.cloudfoundry.org/inigo/helpers/portauthority"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -28,7 +29,6 @@ import (
 	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
@@ -46,13 +46,14 @@ var (
 	etcdClient  *etcdclient.Client
 	storeClient etcd.StoreClient
 
-	logger lager.Logger
+	logger        lager.Logger
+	portAllocator portauthority.PortAllocator
 
 	client              bbs.InternalClient
 	bbsBinPath          string
 	bbsAddress          string
 	bbsHealthAddress    string
-	bbsPort             int
+	bbsPort             uint16
 	bbsURL              *url.URL
 	bbsConfig           bbsconfig.BBSConfig
 	bbsRunner           *ginkgomon.Runner
@@ -86,6 +87,11 @@ var _ = SynchronizedBeforeSuite(
 	},
 	func(binPaths []byte) {
 		grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
+		startPort := 1050 // This could be lowered when we remove etcd
+		portRange := 1000
+		var err error
+		portAllocator, err = portauthority.New(startPort+(portRange*(GinkgoParallelNode()-1)), startPort+(GinkgoParallelNode()*portRange))
+		Expect(err).NotTo(HaveOccurred())
 
 		path := string(binPaths)
 		bbsBinPath = strings.Split(path, ",")[0]
@@ -93,6 +99,13 @@ var _ = SynchronizedBeforeSuite(
 
 		SetDefaultEventuallyTimeout(15 * time.Second)
 
+		// The etcd cluster runner uses a port and that port+3000. We can't edit the
+		// cluster runner because it's in the attic. Thus, we do not use the portallocator
+		// for etcd but instead block off ports 4000-7050 for etcd. (This allows for 50
+		// parallel nodes).
+		//
+		// See the cluser runner
+		// https://github.com/cloudfoundry-attic/storeadapter/blob/master/storerunner/etcdstorerunner/etcd_cluster_runner.go#L348-L350
 		etcdPort = 4001 + GinkgoParallelNode()
 		etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
 		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
@@ -101,9 +114,12 @@ var _ = SynchronizedBeforeSuite(
 		sqlRunner = test_helpers.NewSQLRunner(dbName)
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
+		consulStartingPort, err := portAllocator.ClaimPorts(consulrunner.PortOffsetLength)
+		Expect(err).NotTo(HaveOccurred())
+
 		consulRunner = consulrunner.NewClusterRunner(
 			consulrunner.ClusterRunnerConfig{
-				StartingPort: 9001 + config.GinkgoConfig.ParallelNode*consulrunner.PortOffsetLength,
+				StartingPort: int(consulStartingPort),
 				NumNodes:     1,
 				Scheme:       "http",
 			},
@@ -130,6 +146,7 @@ var _ = SynchronizedAfterSuite(func() {
 })
 
 var _ = BeforeEach(func() {
+	var err error
 	logger = lagertest.NewTestLogger("test")
 
 	etcdRunner.Reset()
@@ -144,9 +161,13 @@ var _ = BeforeEach(func() {
 	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
 	auctioneerServer.AllowUnhandledRequests = true
 
-	bbsPort = 6700 + GinkgoParallelNode()*2
+	bbsPort, err = portAllocator.ClaimPorts(1)
+	Expect(err).NotTo(HaveOccurred())
 	bbsAddress = fmt.Sprintf("127.0.0.1:%d", bbsPort)
-	bbsHealthAddress = fmt.Sprintf("127.0.0.1:%d", bbsPort+1)
+
+	bbsHealthPort, err := portAllocator.ClaimPorts(1)
+	Expect(err).NotTo(HaveOccurred())
+	bbsHealthAddress = fmt.Sprintf("127.0.0.1:%d", bbsHealthPort)
 
 	bbsURL = &url.URL{
 		Scheme: "http",

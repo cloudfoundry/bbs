@@ -7,7 +7,6 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/localip"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -443,7 +442,7 @@ var _ = Describe("ActualLRP API", func() {
 			)
 
 			BeforeEach(func() {
-				locketPort, err := localip.LocalPort()
+				locketPort, err := portAllocator.ClaimPorts(1)
 				Expect(err).NotTo(HaveOccurred())
 
 				locketAddress := fmt.Sprintf("localhost:%d", locketPort)

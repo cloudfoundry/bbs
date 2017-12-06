@@ -9,7 +9,6 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
 	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
-	"code.cloudfoundry.org/localip"
 	"code.cloudfoundry.org/locket"
 	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
 	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
@@ -30,7 +29,7 @@ var _ = Describe("SqlLock", func() {
 	)
 
 	BeforeEach(func() {
-		locketPort, err := localip.LocalPort()
+		locketPort, err := portAllocator.ClaimPorts(1)
 		Expect(err).NotTo(HaveOccurred())
 
 		locketAddress = fmt.Sprintf("localhost:%d", locketPort)

@@ -49,7 +49,6 @@ var _ = Describe("DesiredLRP API", func() {
 		It("responds without error", func() {
 			Expect(getErr).NotTo(HaveOccurred())
 		})
-
 		It("has the correct number of responses", func() {
 			Expect(actualDesiredLRPs).To(HaveLen(5))
 		})
