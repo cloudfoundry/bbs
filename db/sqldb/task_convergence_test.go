@@ -201,19 +201,19 @@ var _ = Describe("Convergence of Tasks", func() {
 		It("emits task status count metrics", func() {
 			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(4))
 
-			name, value := fakeMetronClient.SendMetricArgsForCall(0)
+			name, value, _ := fakeMetronClient.SendMetricArgsForCall(0)
 			Expect(name).To(Equal("TasksPending"))
 			Expect(value).To(Equal(2))
 
-			name, value = fakeMetronClient.SendMetricArgsForCall(1)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(1)
 			Expect(name).To(Equal("TasksRunning"))
 			Expect(value).To(Equal(1))
 
-			name, value = fakeMetronClient.SendMetricArgsForCall(2)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(2)
 			Expect(name).To(Equal("TasksCompleted"))
 			Expect(value).To(Equal(6))
 
-			name, value = fakeMetronClient.SendMetricArgsForCall(3)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(3)
 			Expect(name).To(Equal("TasksResolving"))
 			Expect(value).To(Equal(1))
 

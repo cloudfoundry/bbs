@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/handlers/middleware"
+	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
@@ -32,6 +33,7 @@ func New(
 	serviceClient serviceclient.ServiceClient,
 	auctioneerClient auctioneer.Client,
 	repClientFactory rep.ClientFactory,
+	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 	migrationsDone <-chan struct{},
 	exitChan chan struct{},
 ) http.Handler {
@@ -42,7 +44,7 @@ func New(
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(db, db, db, actualHub, auctioneerClient, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
-	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub)
+	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier)
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	eventsHandler := NewEventHandler(desiredHub, actualHub)
 	taskEventsHandler := NewTaskEventHandler(taskHub)

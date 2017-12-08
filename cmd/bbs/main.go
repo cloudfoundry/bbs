@@ -311,6 +311,8 @@ func main() {
 	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, requestStatsTicker, metronClient)
 	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, locksHeldTicker, metronClient)
 
+	taskStatMetronNotifier := metrics.NewTaskStatMetronNotifier(logger, clock, metronClient)
+
 	handler := handlers.New(
 		logger,
 		accessLogger,
@@ -325,6 +327,7 @@ func main() {
 		serviceClient,
 		auctioneerClient,
 		repClientFactory,
+		taskStatMetronNotifier,
 		migrationsDone,
 		exitChan,
 	)
@@ -340,7 +343,7 @@ func main() {
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 	)
-	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub)
+	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier)
 
 	convergerProcess := converger.New(
 		logger,
@@ -365,6 +368,7 @@ func main() {
 
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
+		{"task-stat-metron-notifier", taskStatMetronNotifier},
 		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
 		{"lock-held-metrics", lockHeldMetronNotifier},
 		{"lock", lock},

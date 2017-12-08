@@ -6,6 +6,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
@@ -14,12 +15,13 @@ import (
 )
 
 type TaskController struct {
-	db                   db.TaskDB
-	taskCompletionClient taskworkpool.TaskCompletionClient
-	auctioneerClient     auctioneer.Client
-	serviceClient        serviceclient.ServiceClient
-	repClientFactory     rep.ClientFactory
-	taskHub              events.Hub
+	db                     db.TaskDB
+	taskCompletionClient   taskworkpool.TaskCompletionClient
+	auctioneerClient       auctioneer.Client
+	serviceClient          serviceclient.ServiceClient
+	repClientFactory       rep.ClientFactory
+	taskHub                events.Hub
+	taskStatMetronNotifier metrics.TaskStatMetronNotifier
 }
 
 func NewTaskController(
@@ -29,14 +31,16 @@ func NewTaskController(
 	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
 	taskHub events.Hub,
+	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 ) *TaskController {
 	return &TaskController{
-		db:                   db,
-		taskCompletionClient: taskCompletionClient,
-		auctioneerClient:     auctioneerClient,
-		serviceClient:        serviceClient,
-		repClientFactory:     repClientFactory,
-		taskHub:              taskHub,
+		db:                     db,
+		taskCompletionClient:   taskCompletionClient,
+		auctioneerClient:       auctioneerClient,
+		serviceClient:          serviceClient,
+		repClientFactory:       repClientFactory,
+		taskHub:                taskHub,
+		taskStatMetronNotifier: taskStatMetronNotifier,
 	}
 }
 
@@ -84,6 +88,7 @@ func (h *TaskController) StartTask(logger lager.Logger, taskGuid, cellId string)
 	before, after, shouldStart, err := h.db.StartTask(logger, taskGuid, cellId)
 	if err == nil && shouldStart {
 		go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+		h.taskStatMetronNotifier.TaskStarted(cellId)
 	}
 	return shouldStart, err
 }
@@ -139,6 +144,7 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 	if err != nil {
 		return err
 	}
+
 	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	if after.CompletionCallbackUrl != "" {
@@ -165,6 +171,12 @@ func (h *TaskController) CompleteTask(
 		return err
 	}
 	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+
+	if failed {
+		h.taskStatMetronNotifier.TaskFailed(cellId)
+	} else {
+		h.taskStatMetronNotifier.TaskSucceeded(cellId)
+	}
 
 	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")

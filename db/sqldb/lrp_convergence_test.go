@@ -335,10 +335,10 @@ var _ = Describe("LRPConvergence", func() {
 
 			domainMap := map[string]int{}
 			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
-			name, value := fakeMetronClient.SendMetricArgsForCall(0)
+			name, value, _ := fakeMetronClient.SendMetricArgsForCall(0)
 			domainMap[name] = value
 
-			name, value = fakeMetronClient.SendMetricArgsForCall(1)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(1)
 			domainMap[name] = value
 
 			Expect(domainMap["Domain."+freshDomain]).To(BeNumerically("==", 1))
@@ -349,7 +349,7 @@ var _ = Describe("LRPConvergence", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
 
 			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
-			name, value := fakeMetronClient.SendMetricArgsForCall(2)
+			name, value, _ := fakeMetronClient.SendMetricArgsForCall(2)
 			Expect(name).To(Equal("LRPsMissing"))
 			Expect(value).To(BeNumerically("==", 17))
 		})
@@ -357,7 +357,7 @@ var _ = Describe("LRPConvergence", func() {
 		It("emits extra LRP metrics", func() {
 			sqlDB.ConvergeLRPs(logger, cellSet)
 			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
-			name, value := fakeMetronClient.SendMetricArgsForCall(3)
+			name, value, _ := fakeMetronClient.SendMetricArgsForCall(3)
 			Expect(name).To(Equal("LRPsExtra"))
 			Expect(value).To(BeNumerically("==", 2))
 		})
@@ -366,22 +366,22 @@ var _ = Describe("LRPConvergence", func() {
 			convergenceLogger := lagertest.NewTestLogger("convergence")
 			sqlDB.ConvergeLRPs(convergenceLogger, cellSet)
 			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(10))
-			name, value := fakeMetronClient.SendMetricArgsForCall(4)
+			name, value, _ := fakeMetronClient.SendMetricArgsForCall(4)
 			Expect(name).To(Equal("LRPsUnclaimed"))
 			Expect(value).To(Equal(32)) // 16 fresh + 5 expired + 11 evac
-			name, value = fakeMetronClient.SendMetricArgsForCall(5)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(5)
 			Expect(name).To(Equal("LRPsClaimed"))
 			Expect(value).To(Equal(7))
-			name, value = fakeMetronClient.SendMetricArgsForCall(6)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(6)
 			Expect(name).To(Equal("LRPsRunning"))
 			Expect(value).To(Equal(1))
-			name, value = fakeMetronClient.SendMetricArgsForCall(7)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(7)
 			Expect(name).To(Equal("CrashedActualLRPs"))
 			Expect(value).To(Equal(2))
-			name, value = fakeMetronClient.SendMetricArgsForCall(8)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(8)
 			Expect(name).To(Equal("CrashingDesiredLRPs"))
 			Expect(value).To(Equal(1))
-			name, value = fakeMetronClient.SendMetricArgsForCall(9)
+			name, value, _ = fakeMetronClient.SendMetricArgsForCall(9)
 			Expect(name).To(Equal("LRPsDesired"))
 			Expect(value).To(Equal(38))
 			Consistently(convergenceLogger).ShouldNot(gbytes.Say("failed-.*"))

@@ -37,7 +37,7 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(gatherError).NotTo(HaveOccurred())
 
 				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(7))
-				name, value := fakeMetronClient.SendMetricArgsForCall(6)
+				name, value, _ := fakeMetronClient.SendMetricArgsForCall(6)
 				Expect(name).To(Equal("Domain.test-domain"))
 				Expect(value).To(Equal(1))
 			})
@@ -46,27 +46,27 @@ var _ = Describe("LRPConvergence", func() {
 				_, gatherError := etcdDB.GatherAndPruneLRPs(logger, testData.cells)
 				Expect(gatherError).NotTo(HaveOccurred())
 
-				name, value := fakeMetronClient.SendMetricArgsForCall(0)
+				name, value, _ := fakeMetronClient.SendMetricArgsForCall(0)
 				Expect(name).To(Equal("LRPsUnclaimed"))
 				Expect(value).To(Equal(0))
 
-				name, value = fakeMetronClient.SendMetricArgsForCall(1)
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(1)
 				Expect(name).To(Equal("LRPsClaimed"))
 				Expect(value).To(Equal(0))
 
-				name, value = fakeMetronClient.SendMetricArgsForCall(2)
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(2)
 				Expect(name).To(Equal("LRPsRunning"))
 				Expect(value).To(Equal(15))
 
-				name, value = fakeMetronClient.SendMetricArgsForCall(3)
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(3)
 				Expect(name).To(Equal("CrashedActualLRPs"))
 				Expect(value).To(Equal(0))
 
-				name, value = fakeMetronClient.SendMetricArgsForCall(4)
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(4)
 				Expect(name).To(Equal("CrashingDesiredLRPs"))
 				Expect(value).To(Equal(0))
 
-				name, value = fakeMetronClient.SendMetricArgsForCall(5)
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(5)
 				Expect(name).To(Equal("LRPsDesired"))
 				Expect(value).To(Equal(6))
 			})
@@ -525,7 +525,7 @@ var _ = Describe("LRPConvergence", func() {
 				})
 
 				It("emits missing LRP metrics", func() {
-					name, value := fakeMetronClient.SendMetricArgsForCall(0)
+					name, value, _ := fakeMetronClient.SendMetricArgsForCall(0)
 					Expect(name).To(Equal("LRPsMissing"))
 					Expect(value).To(Equal(2))
 				})
@@ -558,7 +558,7 @@ var _ = Describe("LRPConvergence", func() {
 
 				It("emits extra LRP metrics", func() {
 					Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(2))
-					name, value := fakeMetronClient.SendMetricArgsForCall(1)
+					name, value, _ := fakeMetronClient.SendMetricArgsForCall(1)
 					Expect(name).To(Equal("LRPsExtra"))
 					Expect(value).To(Equal(1))
 				})
@@ -670,7 +670,7 @@ var _ = Describe("LRPConvergence", func() {
 			It("emits extra LRP metrics", func() {
 				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(2))
 
-				name, value := fakeMetronClient.SendMetricArgsForCall(1)
+				name, value, _ := fakeMetronClient.SendMetricArgsForCall(1)
 				Expect(name).To(Equal("LRPsExtra"))
 				Expect(value).To(Equal(2))
 			})
@@ -723,11 +723,11 @@ var _ = Describe("LRPConvergence", func() {
 
 			It("emits no missing or extra lrps", func() {
 				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(2))
-				name, value := fakeMetronClient.SendMetricArgsForCall(0)
+				name, value, _ := fakeMetronClient.SendMetricArgsForCall(0)
 				Expect(name).To(Equal("LRPsMissing"))
 				Expect(value).To(Equal(0))
 
-				name, value = fakeMetronClient.SendMetricArgsForCall(1)
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(1)
 				Expect(name).To(Equal("LRPsExtra"))
 				Expect(value).To(Equal(0))
 			})

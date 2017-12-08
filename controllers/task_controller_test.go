@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
+	"code.cloudfoundry.org/bbs/metrics/fakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool/taskworkpoolfakes"
@@ -27,14 +28,16 @@ var _ = Describe("Task Controller", func() {
 		fakeTaskCompletionClient *taskworkpoolfakes.FakeTaskCompletionClient
 		taskHub                  *eventfakes.FakeHub
 
-		controller *controllers.TaskController
-		err        error
+		controller           *controllers.TaskController
+		fakeTaskStatNotifier *fakes.FakeTaskStatMetronNotifier
+		err                  error
 	)
 
 	BeforeEach(func() {
 		fakeTaskDB = new(dbfakes.FakeTaskDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		fakeTaskCompletionClient = new(taskworkpoolfakes.FakeTaskCompletionClient)
+		fakeTaskStatNotifier = &fakes.FakeTaskStatMetronNotifier{}
 
 		logger = lagertest.NewTestLogger("test")
 		err = nil
@@ -47,6 +50,7 @@ var _ = Describe("Task Controller", func() {
 			fakeServiceClient,
 			fakeRepClientFactory,
 			taskHub,
+			fakeTaskStatNotifier,
 		)
 	})
 
@@ -316,6 +320,12 @@ var _ = Describe("Task Controller", func() {
 					fakeTaskDB.StartTaskReturns(before, after, true, nil)
 				})
 
+				It("updates the task stats", func() {
+					Expect(fakeTaskStatNotifier.TaskStartedCallCount()).To(Equal(1))
+					actualCellId := fakeTaskStatNotifier.TaskStartedArgsForCall(0)
+					Expect(actualCellId).To(Equal(cellId))
+				})
+
 				It("responds with true", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(shouldStart).To(BeTrue())
@@ -341,6 +351,10 @@ var _ = Describe("Task Controller", func() {
 					Expect(shouldStart).To(BeFalse())
 				})
 
+				It("does not update the task stats", func() {
+					Expect(fakeTaskStatNotifier.TaskStartedCallCount()).To(BeZero())
+				})
+
 				It("does not emit a change to the hub", func() {
 					Consistently(taskHub.EmitCallCount).Should(Equal(0))
 				})
@@ -349,6 +363,10 @@ var _ = Describe("Task Controller", func() {
 			Context("when the DB fails", func() {
 				BeforeEach(func() {
 					fakeTaskDB.StartTaskReturns(nil, nil, false, errors.New("kaboom"))
+				})
+
+				It("does not update the task stats", func() {
+					Expect(fakeTaskStatNotifier.TaskStartedCallCount()).To(BeZero())
 				})
 
 				It("bubbles up the underlying model error", func() {
@@ -626,6 +644,18 @@ var _ = Describe("Task Controller", func() {
 			err = controller.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
 		})
 
+		Context("when the task is not marked failed", func() {
+			BeforeEach(func() {
+				failed = false
+			})
+
+			It("updates the task stats", func() {
+				Expect(fakeTaskStatNotifier.TaskSucceededCallCount()).To(Equal(1))
+				actualCellId := fakeTaskStatNotifier.TaskSucceededArgsForCall(0)
+				Expect(actualCellId).To(Equal(cellId))
+			})
+		})
+
 		Context("when completing the task succeeds", func() {
 			It("returns no error", func() {
 				Expect(fakeTaskDB.CompleteTaskCallCount()).To(Equal(1))
@@ -645,6 +675,12 @@ var _ = Describe("Task Controller", func() {
 				Expect(ok).To(BeTrue())
 				Expect(changedEvent.Before).To(Equal(before))
 				Expect(changedEvent.After).To(Equal(after))
+			})
+
+			It("updates the task stats", func() {
+				Expect(fakeTaskStatNotifier.TaskFailedCallCount()).To(Equal(1))
+				actualCellId := fakeTaskStatNotifier.TaskFailedArgsForCall(0)
+				Expect(actualCellId).To(Equal(cellId))
 			})
 
 			Context("and completing succeeds", func() {
@@ -680,6 +716,10 @@ var _ = Describe("Task Controller", func() {
 
 			It("responds with an error", func() {
 				Expect(err).To(MatchError("kaboom"))
+			})
+
+			It("does not update the task stats", func() {
+				Expect(fakeTaskStatNotifier.TaskSucceededCallCount()).To(BeZero())
 			})
 
 			It("does not emit a change to the hub", func() {
