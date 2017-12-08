@@ -17,6 +17,8 @@ import (
 	"github.com/cloudfoundry/sonde-go/events"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gstruct"
+	"github.com/onsi/gomega/types"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 )
@@ -213,25 +215,7 @@ var _ = Describe("SqlLock", func() {
 			})
 
 			It("emits metric about not holding lock", func() {
-				var sawHeldMetric bool
-				timeout := time.After(50 * time.Millisecond)
-			OUTER_LOOP:
-				for {
-					select {
-					case envelope := <-testMetricsChan:
-						if envelope.GetEventType() == events.Envelope_ValueMetric {
-							if *envelope.ValueMetric.Name == "LockHeld" {
-								if *envelope.ValueMetric.Value == float64(0) {
-									sawHeldMetric = true
-									break
-								}
-							}
-						}
-					case <-timeout:
-						break OUTER_LOOP
-					}
-				}
-				Expect(sawHeldMetric).To(BeTrue())
+				Eventually(testMetricsChan).Should(Receive(matchEvent(events.Envelope_ValueMetric, "LockHeld", 0)))
 			})
 
 			Context("and continues to be unavailable", func() {
@@ -258,3 +242,13 @@ var _ = Describe("SqlLock", func() {
 		})
 	})
 })
+
+func matchEvent(typ events.Envelope_EventType, name string, value float64) types.GomegaMatcher {
+	return gstruct.PointTo(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+		"EventType": gstruct.PointTo(Equal(typ)),
+		"ValueMetric": gstruct.PointTo(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+			"Name":  gstruct.PointTo(Equal(name)),
+			"Value": gstruct.PointTo(Equal(value)),
+		})),
+	}))
+}
