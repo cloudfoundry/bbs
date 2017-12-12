@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/lagertest"
 
@@ -750,7 +751,7 @@ var _ = Describe("LRPConvergence", func() {
 		It("reports the duration that it took to converge", func() {
 			etcdDB.ConvergeLRPs(logger, models.CellSet{})
 			Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
-			name, value := fakeMetronClient.SendDurationArgsForCall(0)
+			name, value, _ := fakeMetronClient.SendDurationArgsForCall(0)
 			Expect(name).To(Equal("ConvergenceLRPDuration"))
 			Expect(value).NotTo(BeZero())
 		})

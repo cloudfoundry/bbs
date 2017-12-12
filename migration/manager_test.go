@@ -493,7 +493,7 @@ var _ = Describe("Migration Manager", func() {
 					Expect(migrationsDone).To(BeClosed())
 
 					Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
-					name, value := fakeMetronClient.SendDurationArgsForCall(0)
+					name, value, _ := fakeMetronClient.SendDurationArgsForCall(0)
 					Expect(name).To(Equal("MigrationDuration"))
 					Expect(value).NotTo(BeZero())
 				})

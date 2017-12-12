@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/clock/fakeclock"
 	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
+	loggregator "code.cloudfoundry.org/go-loggregator"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 
@@ -40,7 +41,7 @@ var _ = Describe("PeriodicMetronCountNotifier", func() {
 			return nil
 		}
 
-		fakeMetronClient.SendDurationStub = func(name string, value time.Duration) error {
+		fakeMetronClient.SendDurationStub = func(name string, value time.Duration, opts ...loggregator.EmitGaugeOption) error {
 			metricsLock.Lock()
 			defer metricsLock.Unlock()
 			durationMap[name] = value

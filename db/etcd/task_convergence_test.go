@@ -6,6 +6,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/clock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -56,7 +57,7 @@ var _ = Describe("Convergence of Tasks", func() {
 
 		It("reports the duration that it took to converge", func() {
 			Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
-			name, value := fakeMetronClient.SendDurationArgsForCall(0)
+			name, value, _ := fakeMetronClient.SendDurationArgsForCall(0)
 			Expect(name).To(Equal("ConvergenceTaskDuration"))
 			Expect(value).NotTo(BeZero())
 		})

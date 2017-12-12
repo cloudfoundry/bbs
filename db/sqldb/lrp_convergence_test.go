@@ -403,7 +403,7 @@ var _ = Describe("LRPConvergence", func() {
 			sqlDB.ConvergeLRPs(logger, models.CellSet{})
 
 			Eventually(fakeMetronClient.SendDurationCallCount).Should(Equal(1))
-			name, value := fakeMetronClient.SendDurationArgsForCall(0)
+			name, value, _ := fakeMetronClient.SendDurationArgsForCall(0)
 			Expect(name).To(Equal("ConvergenceLRPDuration"))
 			Expect(value).NotTo(BeZero())
 		})
