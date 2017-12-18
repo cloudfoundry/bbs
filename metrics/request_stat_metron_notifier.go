@@ -33,7 +33,7 @@ func NewRequestStatMetronNotifier(logger lager.Logger, ticker clock.Ticker, metr
 	}
 }
 
-func (notifier *RequestStatMetronNotifier) IncrementCounter(delta int) {
+func (notifier *RequestStatMetronNotifier) IncrementRequestCounter(delta int) {
 	atomic.AddUint64(&notifier.requestCount, uint64(delta))
 }
 
