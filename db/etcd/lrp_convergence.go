@@ -16,6 +16,8 @@ import (
 )
 
 const (
+	domainMetricPrefix = "Domain."
+
 	convergeLRPRunsCounter = "ConvergenceLRPRuns"
 	convergeLRPDuration    = "ConvergenceLRPDuration"
 
@@ -147,7 +149,7 @@ func (db *ETCDDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet
 	}
 	logger.Debug("succeeded-listing-domains")
 	for _, domain := range domains {
-		err = db.metronClient.SendMetric(fmt.Sprintf("Domain.%s", domain), 1)
+		err = db.metronClient.SendMetric(domainMetricPrefix+domain, 1)
 		if err != nil {
 			logger.Error("failed-sending-domain-metric", err)
 		}

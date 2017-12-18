@@ -7,16 +7,11 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-const (
-	RequestLatencyDuration = "RequestLatency"
-	RequestCount           = "RequestCount"
-)
-
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)
 
 //go:generate counterfeiter -o fakes/fake_emitter.go . Emitter
 type Emitter interface {
-	IncrementCounter(delta int)
+	IncrementRequestCounter(delta int)
 	UpdateLatency(latency time.Duration)
 }
 
@@ -70,7 +65,7 @@ func RecordLatency(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
 
 func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		emitter.IncrementCounter(1)
+		emitter.IncrementRequestCounter(1)
 		handler.ServeHTTP(w, r)
 	}
 }

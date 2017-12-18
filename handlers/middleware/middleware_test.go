@@ -33,7 +33,7 @@ var _ = Describe("Middleware", func() {
 			handler.ServeHTTP(nil, nil)
 			handler.ServeHTTP(nil, nil)
 
-			Expect(emitter.IncrementCounterCallCount()).To(Equal(3))
+			Expect(emitter.IncrementRequestCounterCallCount()).To(Equal(3))
 		})
 	})
 

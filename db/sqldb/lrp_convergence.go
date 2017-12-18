@@ -16,12 +16,12 @@ import (
 )
 
 const (
+	domainMetricPrefix = "Domain."
+
 	convergeLRPRunsCounter = "ConvergenceLRPRuns"
 	convergeLRPDuration    = "ConvergenceLRPDuration"
 
-	domainMetricPrefix = "Domain."
-
-	instanceLRPsMetric  = "LRPsDesired" // this is the number of desired instances
+	instanceLRPsMetric  = "LRPsDesired"
 	claimedLRPsMetric   = "LRPsClaimed"
 	unclaimedLRPsMetric = "LRPsUnclaimed"
 	runningLRPsMetric   = "LRPsRunning"
@@ -465,7 +465,7 @@ func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {
 
 func (db *SQLDB) emitDomainMetrics(logger lager.Logger, domainSet map[string]struct{}) {
 	for domain := range domainSet {
-		db.metronClient.SendMetric("Domain."+domain, 1)
+		db.metronClient.SendMetric(domainMetricPrefix+domain, 1)
 	}
 }
 
