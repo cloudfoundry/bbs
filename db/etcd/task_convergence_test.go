@@ -6,7 +6,6 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"code.cloudfoundry.org/clock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
