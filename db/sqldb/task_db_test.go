@@ -1084,7 +1084,7 @@ var _ = Describe("TaskDB", func() {
 	})
 })
 
-func insertTask(db helpers.DB, serializer format.Serializer, task *models.Task, malformedTaskDefinition bool) {
+func insertTask(db helpers.QueryableDB, serializer format.Serializer, task *models.Task, malformedTaskDefinition bool) {
 	taskDefData, err := serializer.Marshal(logger, format.ENCRYPTED_PROTO, task.TaskDefinition)
 	Expect(err).NotTo(HaveOccurred())
 

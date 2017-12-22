@@ -30,7 +30,7 @@ import (
 
 var (
 	rawDB                                *sql.DB
-	db                                   helpers.DB
+	db                                   helpers.QueryableDB
 	sqlDB                                *sqldb.SQLDB
 	fakeClock                            *fakeclock.FakeClock
 	fakeGUIDProvider                     *guidproviderfakes.FakeGUIDProvider

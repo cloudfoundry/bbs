@@ -11,7 +11,7 @@ import (
 
 // BEGIN TRANSACTION; f ... ; COMMIT; or
 // BEGIN TRANSACTION; f ... ; ROLLBACK; if f returns an error.
-func (h *sqlHelper) Transact(logger lager.Logger, db DB, f func(logger lager.Logger, tx Tx) error) error {
+func (h *sqlHelper) Transact(logger lager.Logger, db QueryableDB, f func(logger lager.Logger, tx Tx) error) error {
 	var err error
 
 	for attempts := 0; attempts < 3; attempts++ {

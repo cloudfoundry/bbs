@@ -17,7 +17,7 @@ const (
 )
 
 type SQLHelper interface {
-	Transact(logger lager.Logger, db DB, f func(logger lager.Logger, tx Tx) error) error
+	Transact(logger lager.Logger, db QueryableDB, f func(logger lager.Logger, tx Tx) error) error
 	One(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) RowScanner
 	All(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) (*sql.Rows, error)
 	Upsert(logger lager.Logger, q Queryable, table string, attributes SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error)

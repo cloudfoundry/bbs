@@ -12,7 +12,7 @@ import (
 )
 
 type SQLDB struct {
-	db                     helpers.DB
+	db                     helpers.QueryableDB
 	convergenceWorkersSize int
 	updateWorkersSize      int
 	clock                  clock.Clock
@@ -27,7 +27,7 @@ type SQLDB struct {
 }
 
 func NewSQLDB(
-	db helpers.DB,
+	db helpers.QueryableDB,
 	convergenceWorkersSize int,
 	updateWorkersSize int,
 	serializationFormat *format.Format,

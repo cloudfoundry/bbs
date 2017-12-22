@@ -15,7 +15,8 @@ type Queryable interface {
 	QueryRow(query string, args ...interface{}) RowScanner
 }
 
-type DB interface {
+//go:generate counterfeiter . QueryableDB
+type QueryableDB interface {
 	Queryable
 	Begin() (Tx, error)
 	OpenConnections() int
@@ -37,7 +38,7 @@ type monitoredDB struct {
 	monitor QueryMonitor
 }
 
-func NewMonitoredDB(db *sql.DB, monitor QueryMonitor) DB {
+func NewMonitoredDB(db *sql.DB, monitor QueryMonitor) QueryableDB {
 	return &monitoredDB{
 		db:      db,
 		monitor: monitor,
