@@ -48,7 +48,7 @@ Run `go generate ./...` from the root directory of this repository to generate c
 
 The following documentation assume the following versions:
 
-1. [protoc](https://developers.google.com/protocol-buffers/docs/downloads) `> v3.0.0`
+1. [protoc](https://github.com/google/protobuf/releases) `> v3.0.0`
 2. [ruby protobuf gem](https://github.com/ruby-protobuf/protobuf) `> 3.6.12`
 
 Run the following commands from the `models` directory to generate `.pb.rb`
