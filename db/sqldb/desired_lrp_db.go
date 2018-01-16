@@ -180,15 +180,26 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 			strings.Join(wheres, " AND "), values...,
 		)
 		if err != nil {
-			logger.Error("failed-query", err)
+			if err != sql.ErrNoRows {
+				logger.Error("failed-query", err)
+			} else {
+				logger.Info("desired-lrps-do-not-exist")
+			}
+
 			return err
 		}
+
 		defer rows.Close()
 
 		for rows.Next() {
 			desiredLRPSchedulingInfo, err := db.fetchDesiredLRPSchedulingInfo(logger, rows)
 			if err != nil {
-				logger.Error("failed-reading-row", err)
+				if err != sql.ErrNoRows {
+					logger.Error("failed-reading-row", err)
+				} else {
+					logger.Info("desired-lrp-does-not-exist")
+				}
+
 				continue
 			}
 			results = append(results, desiredLRPSchedulingInfo)
@@ -220,7 +231,10 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
 
 		if err != nil {
-			logger.Error("failed-lock-desired", err)
+			if err != sql.ErrNoRows {
+				logger.Error("failed-lock-desired", err)
+			}
+
 			return err
 		}
 
@@ -244,7 +258,12 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 
 		_, err = db.update(logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
 		if err != nil {
-			logger.Error("failed-executing-query", err)
+			if err != sql.ErrNoRows {
+				logger.Error("failed-executing-query", err)
+			} else {
+				logger.Info("desired-lrp-does-not-exist")
+			}
+
 			return err
 		}
 
@@ -276,13 +295,23 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		err := db.lockDesiredLRPByGuidForUpdate(logger, processGuid, tx)
 		if err != nil {
-			logger.Error("failed-lock-desired", err)
+			if err != sql.ErrNoRows {
+				logger.Error("failed-lock-desired", err)
+			} else {
+				logger.Info("desired-lrp-does-not-exist")
+			}
+
 			return err
 		}
 
 		_, err = db.delete(logger, tx, desiredLRPsTable, "process_guid = ?", processGuid)
 		if err != nil {
-			logger.Error("failed-deleting-from-db", err)
+			if err != sql.ErrNoRows {
+				logger.Error("failed-deleting-from-db", err)
+			} else {
+				logger.Info("unable-to-delete-nonexistent-lrp")
+			}
+
 			return err
 		}
 
@@ -375,7 +404,9 @@ func (db *SQLDB) fetchDesiredLRPs(logger lager.Logger, rows *sql.Rows, queryable
 			guids = append(guids, guid)
 		}
 		if err != nil {
-			logger.Error("failed-reading-row", err)
+			if err != sql.ErrNoRows {
+				logger.Error("failed-reading-row", err)
+			}
 			continue
 		}
 		lrps = append(lrps, lrp)
@@ -404,7 +435,12 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	var runInfoData []byte
 	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData)
 	if err != nil {
-		logger.Error("failed-fetching-run-info", err)
+		if err != sql.ErrNoRows {
+			logger.Error("failed-fetching-run-info", err)
+		} else {
+			logger.Info("desired-lrp-not-found")
+		}
+
 		return nil, "", err
 	}
 
@@ -424,7 +460,9 @@ func (db *SQLDB) deleteInvalidLRPs(logger lager.Logger, queryable helpers.Querya
 		logger.Info("deleting-invalid-desired-lrp-from-db", lager.Data{"guid": guid})
 		_, err := db.delete(logger, queryable, desiredLRPsTable, "process_guid = ?", guid)
 		if err != nil {
-			logger.Error("failed-deleting-invalid-row", err)
+			if err != sql.ErrNoRows {
+				logger.Error("failed-deleting-invalid-row", err)
+			}
 			return err
 		}
 	}

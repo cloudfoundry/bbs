@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -157,7 +158,12 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 	logger.Debug("updating-desired-lrp")
 	beforeDesiredLRP, err := h.desiredLRPDB.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
 	if err != nil {
-		logger.Debug("failed-updating-desired-lrp")
+		if err != sql.ErrNoRows {
+			logger.Debug("failed-updating-desired-lrp")
+		} else {
+			logger.Debug("desired-lrp-does-not-exist")
+		}
+
 		response.Error = models.ConvertError(err)
 		return
 	}
@@ -165,7 +171,12 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 	if err != nil {
-		logger.Error("failed-fetching-desired-lrp", err)
+		if err != sql.ErrNoRows {
+			logger.Error("failed-fetching-desired-lrp", err)
+		} else {
+			logger.Debug("desired-lrp-does-not-exist")
+		}
+
 		return
 	}
 
