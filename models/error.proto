@@ -51,6 +51,8 @@ message Error {
     Unrecoverable = 29;
 
     LockCollision = 30;
+
+    Timeout = 31;
   }
 
   optional Type type = 1 [(gogoproto.nullable) = false];

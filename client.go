@@ -26,6 +26,7 @@ const (
 	ProtoContentType     = "application/x-protobuf"
 	KeepContainer        = true
 	DeleteContainer      = false
+	DefaultRetryCount    = 3
 )
 
 //go:generate counterfeiter -o fake_bbs/fake_internal_client.go . InternalClient
@@ -171,28 +172,66 @@ type ExternalEventClient interface {
 	SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
 }
 
-func newClient(url string) *client {
+type ClientConfig struct {
+	URL                    string
+	IsTLS                  bool
+	CAFile                 string
+	CertFile               string
+	KeyFile                string
+	ClientSessionCacheSize int
+	MaxIdleConnsPerHost    int
+	InsecureSkipVerify     bool
+	Retries                int
+}
+
+func newClient(url string, numRetries int) *client {
 	return &client{
 		httpClient:          cfhttp.NewClient(),
 		streamingHTTPClient: cfhttp.NewStreamingClient(),
 		reqGen:              rata.NewRequestGenerator(url, Routes),
+		requestRetryCount:   numRetries,
 	}
 }
 
 func NewClient(url string) InternalClient {
-	return newClient(url)
+	return newClient(url, DefaultRetryCount)
 }
 
 func NewSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
-	return newSecureClient(url, caFile, certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, false)
+	return newSecureClient(url, caFile, certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, false, DefaultRetryCount)
 }
 
 func NewSecureSkipVerifyClient(url, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
-	return newSecureClient(url, "", certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, true)
+	return newSecureClient(url, "", certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, true, DefaultRetryCount)
 }
 
-func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool) (InternalClient, error) {
-	client := newClient(url)
+func NewClientWithConfig(cfg ClientConfig) (InternalClient, error) {
+	if cfg.Retries == 0 {
+		cfg.Retries = DefaultRetryCount
+	}
+
+	if cfg.InsecureSkipVerify {
+		cfg.CAFile = ""
+	}
+
+	if cfg.IsTLS {
+		return newSecureClient(
+			cfg.URL,
+			cfg.CAFile,
+			cfg.CertFile,
+			cfg.KeyFile,
+			cfg.ClientSessionCacheSize,
+			cfg.MaxIdleConnsPerHost,
+			cfg.InsecureSkipVerify,
+			cfg.Retries,
+		)
+	} else {
+		return newClient(cfg.URL, cfg.Retries), nil
+	}
+}
+
+func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool, numRetries int) (InternalClient, error) {
+	client := newClient(url, numRetries)
 
 	tlsConfig, err := cfhttp.NewTLSConfig(certFile, keyFile, caFile)
 	if err != nil {
@@ -223,6 +262,7 @@ type client struct {
 	httpClient          *http.Client
 	streamingHTTPClient *http.Client
 	reqGen              *rata.RequestGenerator
+	requestRetryCount   int
 }
 
 func (c *client) Ping(logger lager.Logger) bool {
@@ -722,7 +762,7 @@ func (c *client) doRequest(logger lager.Logger, requestName string, params rata.
 	var err error
 	var request *http.Request
 
-	for attempts := 0; attempts < 3; attempts++ {
+	for attempts := 0; attempts < c.requestRetryCount; attempts++ {
 		logger.Debug("creating-request", lager.Data{"attempt": attempts + 1, "request_name": requestName})
 		request, err = c.createRequest(requestName, params, queryParams, requestBody)
 		if err != nil {
@@ -738,6 +778,7 @@ func (c *client) doRequest(logger lager.Logger, requestName string, params rata.
 
 		if err != nil {
 			logger.Error("failed-doing-request", err)
+			err = models.NewError(models.Error_Timeout, err.Error())
 			time.Sleep(500 * time.Millisecond)
 		} else {
 			logger.Debug("complete", lager.Data{"request_path": request.URL.Path, "duration_in_ns": finish - start})
