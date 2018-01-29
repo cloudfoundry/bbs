@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"mime"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -778,7 +779,11 @@ func (c *client) doRequest(logger lager.Logger, requestName string, params rata.
 
 		if err != nil {
 			logger.Error("failed-doing-request", err)
-			err = models.NewError(models.Error_Timeout, err.Error())
+			if netErr, ok := err.(net.Error); ok {
+				if netErr.Timeout() {
+					err = models.NewError(models.Error_Timeout, err.Error())
+				}
+			}
 			time.Sleep(500 * time.Millisecond)
 		} else {
 			logger.Debug("complete", lager.Data{"request_path": request.URL.Path, "duration_in_ns": finish - start})
