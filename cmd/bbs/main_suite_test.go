@@ -87,10 +87,10 @@ var _ = SynchronizedBeforeSuite(
 	},
 	func(binPaths []byte) {
 		grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
-		startPort := 1050 // This could be lowered when we remove etcd
+		startPort := 1050 * GinkgoParallelNode() // This could be lowered when we remove etcd
 		portRange := 1000
 		var err error
-		portAllocator, err = portauthority.New(startPort+(portRange*(GinkgoParallelNode()-1)), startPort+(GinkgoParallelNode()*portRange))
+		portAllocator, err = portauthority.New(startPort, startPort+portRange)
 		Expect(err).NotTo(HaveOccurred())
 
 		path := string(binPaths)
