@@ -10,9 +10,9 @@ option (gogoproto.goproto_enum_prefix_all) = true;
 message Error {
   enum Type {
     UnknownError = 0;
-    InvalidDomain = 1;
+    InvalidDomain = 1 [deprecated=true];
 
-    UnkownVersion          = 2;
+    UnkownVersion          = 2 [deprecated=true];
     InvalidRecord          = 3;
     InvalidRequest         = 4;
     InvalidResponse        = 5;
@@ -21,7 +21,7 @@ message Error {
     FailedToOpenEnvelope   = 8;
     InvalidStateTransition = 9;
 
-    Unauthorized = 10;
+    Unauthorized = 10 [deprecated=true];
 
     ResourceConflict = 11;
     ResourceExists   = 12;
@@ -33,15 +33,15 @@ message Error {
     ActualLRPCannotBeCrashed   = 17;
     ActualLRPCannotBeFailed    = 18;
     ActualLRPCannotBeRemoved   = 19;
-    ActualLRPCannotBeStopped   = 20;
+    ActualLRPCannotBeStopped   = 20 [deprecated=true];
     ActualLRPCannotBeUnclaimed = 21;
     ActualLRPCannotBeEvacuated = 22;
 
-    DesiredLRPCannotBeUpdated = 23;
+    DesiredLRPCannotBeUpdated = 23 [deprecated=true];
 
     RunningOnDifferentCell = 24;
 
-    DesiredLRPSchedulingInfoCannotBeUpdated = 25;
+    DesiredLRPSchedulingInfoCannotBeUpdated = 25 [deprecated=true];
 
     GUIDGeneration = 26;
 

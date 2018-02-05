@@ -29,7 +29,7 @@ message TaskDefinition {
   optional string annotation = 13 [(gogoproto.jsontag) = "annotation,omitempty"];
   repeated SecurityGroupRule egress_rules = 14 [(gogoproto.jsontag) = "egress_rules,omitempty"];
   repeated CachedDependency cached_dependencies = 15 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
-  optional string legacy_download_user = 16 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
+  optional string legacy_download_user = 16 [(gogoproto.jsontag) = "legacy_download_user,omitempty", deprecated=true];
   optional string trusted_system_certificates_path = 17 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 18 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 19 [(gogoproto.jsontag) = "network,omitempty"];

@@ -53,12 +53,14 @@ message TaskCallbackResponse {
 }
 
 message ConvergeTasksRequest {
+  option deprecated = true;
   optional int64 kick_task_duration = 1;
   optional int64 expire_pending_task_duration = 2;
   optional int64 expire_completed_task_duration = 3;
 }
 
 message ConvergeTasksResponse {
+  option deprecated = true;
   optional Error error = 1;
 }
 

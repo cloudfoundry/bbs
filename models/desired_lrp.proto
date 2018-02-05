@@ -46,7 +46,7 @@ message DesiredLRPRunInfo {
   optional string metrics_guid = 12;
   optional int64 created_at = 13;
   repeated CachedDependency cached_dependencies = 14 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
-  optional string legacy_download_user = 15 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
+  optional string legacy_download_user = 15 [(gogoproto.jsontag) = "legacy_download_user,omitempty", deprecated=true];
   optional string trusted_system_certificates_path = 16 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 17 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 18 [(gogoproto.jsontag) = "network,omitempty"];
@@ -111,7 +111,7 @@ message DesiredLRP {
   repeated SecurityGroupRule egress_rules = 20;
   optional ModificationTag modification_tag = 21;
   repeated CachedDependency cached_dependencies = 22 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
-  optional string legacy_download_user = 23 [(gogoproto.jsontag) = "legacy_download_user,omitempty"];
+  optional string legacy_download_user = 23 [(gogoproto.jsontag) = "legacy_download_user,omitempty", deprecated=true];
   optional string trusted_system_certificates_path = 24 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
   repeated VolumeMount volume_mounts = 25 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   optional Network network = 26 [(gogoproto.jsontag) = "network,omitempty"];
