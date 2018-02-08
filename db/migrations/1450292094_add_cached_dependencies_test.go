@@ -35,10 +35,4 @@ var _ = Describe("Add Cache Dependencies Migration", func() {
 			Expect(migrationErr).NotTo(HaveOccurred())
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(migration.Down(logger)).To(HaveOccurred())
-		})
-	})
 })

@@ -33,17 +33,6 @@ type FakeMigration struct {
 	upReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DownStub        func(logger lager.Logger) error
-	downMutex       sync.RWMutex
-	downArgsForCall []struct {
-		logger lager.Logger
-	}
-	downReturns struct {
-		result1 error
-	}
-	downReturnsOnCall map[int]struct {
-		result1 error
-	}
 	SetStoreClientStub        func(storeClient etcd.StoreClient)
 	setStoreClientMutex       sync.RWMutex
 	setStoreClientArgsForCall []struct {
@@ -166,54 +155,6 @@ func (fake *FakeMigration) UpReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.upReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeMigration) Down(logger lager.Logger) error {
-	fake.downMutex.Lock()
-	ret, specificReturn := fake.downReturnsOnCall[len(fake.downArgsForCall)]
-	fake.downArgsForCall = append(fake.downArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("Down", []interface{}{logger})
-	fake.downMutex.Unlock()
-	if fake.DownStub != nil {
-		return fake.DownStub(logger)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.downReturns.result1
-}
-
-func (fake *FakeMigration) DownCallCount() int {
-	fake.downMutex.RLock()
-	defer fake.downMutex.RUnlock()
-	return len(fake.downArgsForCall)
-}
-
-func (fake *FakeMigration) DownArgsForCall(i int) lager.Logger {
-	fake.downMutex.RLock()
-	defer fake.downMutex.RUnlock()
-	return fake.downArgsForCall[i].logger
-}
-
-func (fake *FakeMigration) DownReturns(result1 error) {
-	fake.DownStub = nil
-	fake.downReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeMigration) DownReturnsOnCall(i int, result1 error) {
-	fake.DownStub = nil
-	if fake.downReturnsOnCall == nil {
-		fake.downReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.downReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -385,8 +326,6 @@ func (fake *FakeMigration) Invocations() map[string][][]interface{} {
 	defer fake.versionMutex.RUnlock()
 	fake.upMutex.RLock()
 	defer fake.upMutex.RUnlock()
-	fake.downMutex.RLock()
-	defer fake.downMutex.RUnlock()
 	fake.setStoreClientMutex.RLock()
 	defer fake.setStoreClientMutex.RUnlock()
 	fake.setCryptorMutex.RLock()

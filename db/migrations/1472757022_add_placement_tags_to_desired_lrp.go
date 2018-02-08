@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"database/sql"
-	"errors"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
@@ -66,7 +65,3 @@ func (e *AddPlacementTagsToDesiredLRPs) Up(logger lager.Logger) error {
 
 const alterDesiredLRPAddPlacementTagSQL = `ALTER TABLE desired_lrps
 	ADD COLUMN placement_tags TEXT;`
-
-func (e *AddPlacementTagsToDesiredLRPs) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
-}

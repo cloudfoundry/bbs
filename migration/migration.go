@@ -14,7 +14,6 @@ import (
 type Migration interface {
 	Version() int64
 	Up(logger lager.Logger) error
-	Down(logger lager.Logger) error
 	SetStoreClient(storeClient etcd.StoreClient)
 	SetCryptor(cryptor encryption.Cryptor)
 	SetClock(c clock.Clock)

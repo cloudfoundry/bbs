@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"database/sql"
-	"errors"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
@@ -58,10 +57,6 @@ func (e *IncreaseErrorColumnsSize) Up(logger lager.Logger) error {
 	defer logger.Info("completed")
 
 	return e.alterTables(logger, e.rawSQLDB, e.dbFlavor)
-}
-
-func (e *IncreaseErrorColumnsSize) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
 }
 
 func (e *IncreaseErrorColumnsSize) alterTables(logger lager.Logger, db *sql.DB, flavor string) error {

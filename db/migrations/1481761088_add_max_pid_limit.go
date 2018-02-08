@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"database/sql"
-	"errors"
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
@@ -83,7 +82,3 @@ const mysqlColumnNotExistErr = `Unknown column 'max_pids'`
 const checkMaxPidsExistenceSQL = `SELECT count(max_pids) FROM desired_lrps`
 const alterDesiredLRPAddMaxPidsSQL = `ALTER TABLE desired_lrps
 	ADD COLUMN max_pids INTEGER DEFAULT 0;`
-
-func (e *AddMaxPidsToDesiredLRPs) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
-}

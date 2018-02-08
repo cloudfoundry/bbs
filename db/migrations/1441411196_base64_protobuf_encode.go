@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"database/sql"
-	"errors"
 
 	"code.cloudfoundry.org/bbs/db/deprecations"
 	"code.cloudfoundry.org/bbs/db/etcd"
@@ -120,10 +119,6 @@ func (b *Base64ProtobufEncode) Up(logger lager.Logger) error {
 	}
 
 	return nil
-}
-
-func (b *Base64ProtobufEncode) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
 }
 
 func (b *Base64ProtobufEncode) reWriteNode(logger lager.Logger, node *goetcd.Node, model format.Versioner) error {

@@ -97,10 +97,4 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 			Expect(fetchedJSONData).To(BeEquivalentTo(jsonData))
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(mig.Down(logger)).To(HaveOccurred())
-		})
-	})
 })

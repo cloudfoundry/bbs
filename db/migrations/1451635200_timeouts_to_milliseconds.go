@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"database/sql"
-	"errors"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
@@ -100,10 +99,6 @@ func (b *TimeoutToMilliseconds) Up(logger lager.Logger) error {
 	}
 
 	return nil
-}
-
-func (b *TimeoutToMilliseconds) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
 }
 
 func (b *TimeoutToMilliseconds) RequiresSQL() bool {

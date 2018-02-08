@@ -107,10 +107,4 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 			Expect(fetchedJSONData).ToNot(BeEquivalentTo(routes))
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(mig.Down(logger)).To(HaveOccurred())
-		})
-	})
 })

@@ -3,7 +3,6 @@ package migrations
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"path"
 	"time"
 
@@ -159,10 +158,6 @@ func (e *ETCDToSQL) Up(logger lager.Logger) error {
 	}
 
 	return nil
-}
-
-func (e *ETCDToSQL) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
 }
 
 func dropTables(db *sql.DB) error {

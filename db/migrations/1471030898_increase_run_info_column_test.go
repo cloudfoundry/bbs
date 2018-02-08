@@ -81,10 +81,4 @@ var _ = Describe("Increase Run Info Column Migration", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(migration.Down(logger)).To(HaveOccurred())
-		})
-	})
 })

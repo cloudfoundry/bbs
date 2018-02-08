@@ -418,10 +418,4 @@ var _ = Describe("ETCD to SQL Migration", func() {
 			})
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(migration.Down(logger)).To(HaveOccurred())
-		})
-	})
 })

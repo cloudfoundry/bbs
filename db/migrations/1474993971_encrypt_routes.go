@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/etcd"
@@ -100,8 +99,4 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 		return rows.Err()
 	}
 	return nil
-}
-
-func (e *EncryptRoutes) Down(logger lager.Logger) error {
-	return errors.New("not implemented")
 }

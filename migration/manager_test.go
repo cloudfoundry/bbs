@@ -139,9 +139,6 @@ var _ = Describe("Migration Manager", func() {
 
 					Expect(fakeMigration.UpCallCount()).To(Equal(1))
 					Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
-
-					Expect(fakeMigration.DownCallCount()).To(Equal(0))
-					Expect(fakeMigrationToSQL.DownCallCount()).To(Equal(0))
 				})
 
 				It("sets the raw SQL db and the storeClient on the migration to SQL", func() {
@@ -175,9 +172,6 @@ var _ = Describe("Migration Manager", func() {
 
 					Expect(fakeMigration.UpCallCount()).To(Equal(0))
 					Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
-
-					Expect(fakeMigration.DownCallCount()).To(Equal(0))
-					Expect(fakeMigrationToSQL.DownCallCount()).To(Equal(0))
 				})
 
 				It("sets the raw SQL db and the storeClient on the migration to SQL", func() {
@@ -515,9 +509,6 @@ var _ = Describe("Migration Manager", func() {
 
 				Expect(fakeMigration.UpCallCount()).To(Equal(1))
 				Expect(fakeMigration102.UpCallCount()).To(Equal(1))
-
-				Expect(fakeMigration.DownCallCount()).To(Equal(0))
-				Expect(fakeMigration102.DownCallCount()).To(Equal(0))
 			})
 
 			Describe("and one of the migrations takes a long time", func() {
@@ -631,9 +622,6 @@ var _ = Describe("Migration Manager", func() {
 
 					Expect(fakeMigration.UpCallCount()).To(Equal(1))
 					Expect(fakeMigration102.UpCallCount()).To(Equal(1))
-
-					Expect(fakeMigration.DownCallCount()).To(Equal(0))
-					Expect(fakeMigration102.DownCallCount()).To(Equal(0))
 				})
 			})
 		})

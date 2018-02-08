@@ -118,10 +118,4 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 			})
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(mig.Down(logger)).To(HaveOccurred())
-		})
-	})
 })

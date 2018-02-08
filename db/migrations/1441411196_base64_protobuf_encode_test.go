@@ -194,10 +194,4 @@ var _ = Describe("Base 64 Protobuf Encode Migration", func() {
 			})
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(migration.Down(logger)).To(HaveOccurred())
-		})
-	})
 })

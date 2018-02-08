@@ -95,10 +95,4 @@ var _ = Describe("Increase Error Columns Migration", func() {
 			Expect(err).To(MatchError(ContainSubstring("null")))
 		})
 	})
-
-	Describe("Down", func() {
-		It("returns a not implemented error", func() {
-			Expect(migration.Down(logger)).To(HaveOccurred())
-		})
-	})
 })
