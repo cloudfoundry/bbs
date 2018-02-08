@@ -118,14 +118,6 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		}
 	}
 
-	if version.TargetVersion < version.CurrentVersion {
-		return fmt.Errorf(
-			"Existing DB target version (%d) exceeds current version (%d)",
-			version.TargetVersion,
-			version.CurrentVersion,
-		)
-	}
-
 	if version.CurrentVersion > maxMigrationVersion {
 		return fmt.Errorf(
 			"Existing DB version (%d) exceeds bbs version (%d)",
@@ -172,7 +164,6 @@ func (m *Manager) performMigration(
 	migrateStart := m.clock.Now()
 	if version.CurrentVersion != maxMigrationVersion {
 		lastVersion := version.CurrentVersion
-		nextVersion := version.CurrentVersion
 
 		for _, currentMigration := range m.migrations {
 			if maxMigrationVersion < currentMigration.Version() {
