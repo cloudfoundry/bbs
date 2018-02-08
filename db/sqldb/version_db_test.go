@@ -18,7 +18,7 @@ var _ = Describe("Version", func() {
 	Describe("SetVersion", func() {
 		Context("when the version is not set", func() {
 			It("sets the version into the database", func() {
-				expectedVersion := &models.Version{CurrentVersion: 99, TargetVersion: 100}
+				expectedVersion := &models.Version{CurrentVersion: 99}
 				err := sqlDB.SetVersion(logger, expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -47,7 +47,7 @@ var _ = Describe("Version", func() {
 		Context("when a version is already set", func() {
 			var existingVersion *models.Version
 			BeforeEach(func() {
-				existingVersion = &models.Version{CurrentVersion: 99, TargetVersion: 100}
+				existingVersion = &models.Version{CurrentVersion: 99}
 				versionJSON, err := json.Marshal(existingVersion)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -57,7 +57,7 @@ var _ = Describe("Version", func() {
 			})
 
 			It("updates the version in the db", func() {
-				version := &models.Version{CurrentVersion: 20, TargetVersion: 1001}
+				version := &models.Version{CurrentVersion: 20}
 
 				err := sqlDB.SetVersion(logger, version)
 				Expect(err).NotTo(HaveOccurred())
@@ -88,7 +88,7 @@ var _ = Describe("Version", func() {
 	Describe("Version", func() {
 		Context("when the version exists", func() {
 			It("retrieves the version from the database", func() {
-				expectedVersion := &models.Version{CurrentVersion: 199, TargetVersion: 200}
+				expectedVersion := &models.Version{CurrentVersion: 199}
 				err := sqlDB.SetVersion(logger, expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 

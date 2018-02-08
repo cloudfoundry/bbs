@@ -12,7 +12,7 @@ import (
 var _ = Describe("Version", func() {
 	Describe("SetVersion", func() {
 		It("sets the version into the database", func() {
-			expectedVersion := &models.Version{CurrentVersion: 99, TargetVersion: 100}
+			expectedVersion := &models.Version{CurrentVersion: 99}
 			err := etcdDB.SetVersion(logger, expectedVersion)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -30,7 +30,7 @@ var _ = Describe("Version", func() {
 	Describe("Version", func() {
 		Context("when the version key exists", func() {
 			It("retrieves the version from the database", func() {
-				expectedVersion := &models.Version{CurrentVersion: 199, TargetVersion: 200}
+				expectedVersion := &models.Version{CurrentVersion: 199}
 				value, err := json.Marshal(expectedVersion)
 				Expect(err).NotTo(HaveOccurred())
 

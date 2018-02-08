@@ -40,7 +40,7 @@ var _ = Describe("Migration Version", func() {
 		Expect(err).NotTo(HaveOccurred())
 		bbsBinPath = string(bbsPath)
 
-		value, err := json.Marshal(models.Version{CurrentVersion: 100, TargetVersion: 100})
+		value, err := json.Marshal(models.Version{CurrentVersion: 100})
 		// write initial version
 		_, err = storeClient.Set(etcd.VersionKey, value, etcd.NO_TTL)
 		Expect(err).NotTo(HaveOccurred())
@@ -87,7 +87,6 @@ var _ = Describe("Migration Version", func() {
 
 			// the sql test migration
 			Expect(version.CurrentVersion).To(BeEquivalentTo(9999999999))
-			Expect(version.TargetVersion).To(BeEquivalentTo(9999999999))
 
 			var count int
 			err = sqlConn.QueryRow(`SELECT count(*) FROM information_schema.tables WHERE table_name = 'sweet_table'`).Scan(&count)

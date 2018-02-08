@@ -89,7 +89,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	if version == nil {
 		if m.hasETCDConfigured() && !m.hasSQLConfigured() {
 			logger.Info("fresh-etcd-skipping-migrations")
-			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion, lastETCDMigrationVersion)
+			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion)
 			if err != nil {
 				return err
 			}
@@ -105,9 +105,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			logger.Info("sql-is-configured")
 			version = &models.Version{
 				CurrentVersion: lastETCDMigrationVersion,
-				TargetVersion:  maxMigrationVersion,
 			}
-			err = m.writeVersion(lastETCDMigrationVersion, maxMigrationVersion, lastETCDMigrationVersion)
+			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion)
 			if err != nil {
 				return err
 			}
@@ -124,19 +123,6 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			version.CurrentVersion,
 			maxMigrationVersion,
 		)
-	}
-
-	if version.TargetVersion != maxMigrationVersion {
-		if version.TargetVersion > maxMigrationVersion {
-			version.TargetVersion = maxMigrationVersion
-		}
-
-		logger.Info("running-migrations", lager.Data{
-			"from_version": version.CurrentVersion,
-			"to_version":   maxMigrationVersion,
-		})
-
-		m.writeVersion(version.CurrentVersion, maxMigrationVersion, lastETCDMigrationVersion)
 	}
 
 	errorChan := make(chan error)
@@ -171,15 +157,7 @@ func (m *Manager) performMigration(
 			}
 
 			if lastVersion < currentMigration.Version() {
-				if nextVersion > currentMigration.Version() {
-					errorChan <- fmt.Errorf(
-						"Existing DB target version (%d) exceeds pending migration version (%d)",
-						nextVersion,
-						currentMigration.Version(),
-					)
-				}
-
-				nextVersion = currentMigration.Version()
+				nextVersion := currentMigration.Version()
 				logger.Info("running-migration", lager.Data{
 					"current_version":   lastVersion,
 					"migration_version": nextVersion,
@@ -200,7 +178,7 @@ func (m *Manager) performMigration(
 				}
 
 				lastVersion = nextVersion
-				err = m.writeVersion(lastVersion, maxMigrationVersion, lastETCDMigrationVersion)
+				err = m.writeVersion(lastVersion, lastETCDMigrationVersion)
 				if err != nil {
 					errorChan <- err
 					return
@@ -227,20 +205,6 @@ func (m *Manager) finish(logger lager.Logger, ready chan<- struct{}) {
 	close(ready)
 	close(m.migrationsDone)
 	logger.Info("finished-migrations")
-}
-
-func (m *Manager) findMaxTargetVersion() (int, int64) {
-	if len(m.migrations) > 0 {
-		if m.rawSQLDB == nil {
-			for i, migration := range m.migrations {
-				if migration.RequiresSQL() {
-					return i, m.migrations[i-1].Version()
-				}
-			}
-		}
-		return len(m.migrations), m.migrations[len(m.migrations)-1].Version()
-	}
-	return 0, 0
 }
 
 func (m *Manager) lastETCDMigrationVersion() int64 {
@@ -287,11 +251,10 @@ func (m *Manager) resolveStoredVersion(logger lager.Logger) (*models.Version, er
 	return nil, nil
 }
 
-func (m *Manager) writeVersion(currentVersion, targetVersion, lastETCDMigrationVersion int64) error {
+func (m *Manager) writeVersion(currentVersion, lastETCDMigrationVersion int64) error {
 	if m.hasSQLConfigured() {
 		err := m.sqlDB.SetVersion(m.logger, &models.Version{
 			CurrentVersion: currentVersion,
-			TargetVersion:  targetVersion,
 		})
 
 		if err != nil {
@@ -306,7 +269,6 @@ func (m *Manager) writeVersion(currentVersion, targetVersion, lastETCDMigrationV
 		}
 		err := m.etcdDB.SetVersion(m.logger, &models.Version{
 			CurrentVersion: currentVersion,
-			TargetVersion:  targetVersion,
 		})
 		if err != nil {
 			return err
