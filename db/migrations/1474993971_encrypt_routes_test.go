@@ -16,7 +16,6 @@ import (
 var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 	var (
 		mig       migration.Migration
-		migErr    error
 		fakeClock *fakeclock.FakeClock
 	)
 
@@ -60,8 +59,6 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			// Can't do this in the Describe BeforeEach
-			// as the test on line 37 will cause ginkgo to panic
 			mig.SetRawSQLDB(rawSQLDB)
 			mig.SetDBFlavor(flavor)
 
@@ -88,23 +85,20 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 				"log guid", 2, 1, 1, "rootfs", routes, "volumes yo", 1, "run info",
 			)
 			Expect(err).NotTo(HaveOccurred())
-
-		})
-
-		JustBeforeEach(func() {
-			migErr = mig.Up(logger)
-		})
-
-		It("does not error out", func() {
-			Expect(migErr).NotTo(HaveOccurred())
 		})
 
 		It("should encrypt route column in desired lrps", func() {
+			Expect(mig.Up(logger)).To(Succeed())
 			var fetchedJSONData string
 			query := helpers.RebindForFlavor("select routes from desired_lrps limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&fetchedJSONData)).NotTo(HaveOccurred())
 			Expect(fetchedJSONData).ToNot(BeEquivalentTo(routes))
+		})
+
+		It("is idempotent", func() {
+			Skip("this migration is not idempotent; it always encrypts whatever is already present")
+			testIdempotency(rawSQLDB, mig, logger)
 		})
 	})
 })

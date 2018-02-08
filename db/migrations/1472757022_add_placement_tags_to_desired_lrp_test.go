@@ -15,7 +15,6 @@ import (
 var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 	var (
 		mig       migration.Migration
-		migErr    error
 		fakeClock *fakeclock.FakeClock
 	)
 
@@ -62,15 +61,8 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 			mig.SetDBFlavor(flavor)
 		})
 
-		JustBeforeEach(func() {
-			migErr = mig.Up(logger)
-		})
-
-		It("does not error out", func() {
-			Expect(migErr).NotTo(HaveOccurred())
-		})
-
 		It("should add a placement_tags column to desired lrps", func() {
+			Expect(mig.Up(logger)).To(Succeed())
 			placementTags := []string{"tag-1"}
 
 			jsonData, err := json.Marshal(placementTags)
@@ -95,6 +87,10 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&fetchedJSONData)).NotTo(HaveOccurred())
 			Expect(fetchedJSONData).To(BeEquivalentTo(jsonData))
+		})
+
+		It("is idempotent", func() {
+			testIdempotency(rawSQLDB, mig, logger)
 		})
 	})
 })
