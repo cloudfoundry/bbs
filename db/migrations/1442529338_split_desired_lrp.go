@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewSplitDesiredLRP())
+	appendMigration(NewSplitDesiredLRP())
 }
 
 type SplitDesiredLRP struct {

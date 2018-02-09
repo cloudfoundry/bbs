@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewTimeoutMilliseconds())
+	appendMigration(NewTimeoutMilliseconds())
 }
 
 type TimeoutToMilliseconds struct {

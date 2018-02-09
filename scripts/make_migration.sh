@@ -39,7 +39,7 @@ import (
 )
 
 func init() {
-	AppendMigration(New${CAMEL_CASE_NAME}())
+	appendMigration(New${CAMEL_CASE_NAME}())
 }
 
 type ${CAMEL_CASE_NAME} struct {

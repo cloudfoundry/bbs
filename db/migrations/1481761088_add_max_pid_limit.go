@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewAddMaxPidsToDesiredLRPs())
+	appendMigration(NewAddMaxPidsToDesiredLRPs())
 }
 
 type AddMaxPidsToDesiredLRPs struct {

@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewETCDToSQL())
+	appendMigration(NewETCDToSQL())
 }
 
 type ETCDToSQL struct {

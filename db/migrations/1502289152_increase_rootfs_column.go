@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewIncreaseRootFSColumnSize())
+	appendMigration(NewIncreaseRootFSColumnSize())
 }
 
 type IncreaseRootFSColumnsSize struct {

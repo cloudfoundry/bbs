@@ -13,7 +13,7 @@ import (
 
 // null migration to bump the database version
 func init() {
-	AppendMigration(NewAddCachedDependencies())
+	appendMigration(NewAddCachedDependencies())
 }
 
 type AddCachedDependencies struct {

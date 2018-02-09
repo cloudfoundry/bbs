@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewEncryptRoutes())
+	appendMigration(NewEncryptRoutes())
 }
 
 type EncryptRoutes struct {

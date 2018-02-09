@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewIncreaseRunInfoColumnSize())
+	appendMigration(NewIncreaseRunInfoColumnSize())
 }
 
 type IncreaseRunInfoColumnSize struct {

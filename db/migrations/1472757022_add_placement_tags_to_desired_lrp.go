@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewAddPlacementTagsToDesiredLRPs())
+	appendMigration(NewAddPlacementTagsToDesiredLRPs())
 }
 
 type AddPlacementTagsToDesiredLRPs struct {

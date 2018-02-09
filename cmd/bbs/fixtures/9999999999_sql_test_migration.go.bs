@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewSQLTestMigration(9999999999))
+	appendMigration(NewSQLTestMigration(9999999999))
 }
 
 type SQLTestMigration struct {

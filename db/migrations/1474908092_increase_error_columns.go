@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	AppendMigration(NewIncreaseErrorColumnsSize())
+	appendMigration(NewIncreaseErrorColumnsSize())
 }
 
 type IncreaseErrorColumnsSize struct {
