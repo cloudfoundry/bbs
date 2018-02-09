@@ -1,15 +1,25 @@
 package migrations
 
-import "code.cloudfoundry.org/bbs/migration"
+import (
+	"reflect"
 
-var Migrations = []migration.Migration{}
+	"code.cloudfoundry.org/bbs/migration"
+)
 
-func appendMigration(migration migration.Migration) {
-	for _, m := range Migrations {
-		if m.Version() == migration.Version() {
-			panic("cannot have two migrations with the same version")
+var migrationsRegistry = migration.Migrations{}
+
+func appendMigration(migrationTemplate migration.Migration) {
+	migrationsRegistry = append(migrationsRegistry, migrationTemplate)
+}
+
+func AllMigrations() migration.Migrations {
+	migs := make(migration.Migrations, len(migrationsRegistry))
+	for i, mig := range migrationsRegistry {
+		rt := reflect.TypeOf(mig)
+		if rt.Kind() == reflect.Ptr {
+			rt = rt.Elem()
 		}
+		migs[i] = reflect.New(rt).Interface().(migration.Migration)
 	}
-
-	Migrations = append(Migrations, migration)
+	return migs
 }

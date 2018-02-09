@@ -11,18 +11,15 @@ import (
 )
 
 func init() {
-	appendMigration(NewSQLTestMigration(9999999999))
+	appendMigration(NewSQLTestMigration())
 }
 
 type SQLTestMigration struct {
-	version  int64
 	rawSQLDB *sql.DB
 }
 
-func NewSQLTestMigration(version int64) migration.Migration {
-	return &SQLTestMigration{
-		version: version,
-	}
+func NewSQLTestMigration() migration.Migration {
+	return &SQLTestMigration{}
 }
 
 func (t *SQLTestMigration) SetStoreClient(storeClient etcd.StoreClient) {}
@@ -55,5 +52,5 @@ func (t *SQLTestMigration) Down(logger lager.Logger) error {
 }
 
 func (t SQLTestMigration) Version() int64 {
-	return t.version
+	return 9999999999
 }

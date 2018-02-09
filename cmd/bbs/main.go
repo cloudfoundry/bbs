@@ -199,7 +199,7 @@ func main() {
 		sqlDB,
 		sqlConn,
 		cryptor,
-		migrations.Migrations,
+		migrations.AllMigrations(),
 		migrationsDone,
 		clock,
 		bbsConfig.DatabaseDriver,

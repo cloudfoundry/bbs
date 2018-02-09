@@ -117,7 +117,7 @@ var _ = BeforeEach(func() {
 		sqlDB,
 		rawDB,
 		cryptor,
-		migrations.Migrations,
+		migrations.AllMigrations(),
 		migrationsDone,
 		fakeClock,
 		dbDriverName,

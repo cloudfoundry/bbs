@@ -9,7 +9,7 @@ import (
 var _ = Describe("Migrations", func() {
 	It("has no duplicate migrations", func() {
 		allMigrations := make(map[int64]bool)
-		for _, mig := range migrations.Migrations {
+		for _, mig := range migrations.AllMigrations() {
 			Expect(allMigrations).ToNot(HaveKey(mig.Version()), "Duplicate migration version found")
 			allMigrations[mig.Version()] = true
 		}

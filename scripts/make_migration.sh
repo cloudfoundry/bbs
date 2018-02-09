@@ -102,7 +102,7 @@ var _ = Describe("${CAMEL_CASE_NAME}", func() {
 	})
 
 	It("appends itself to the migration list", func() {
-		Expect(migrations.Migrations).To(ContainElement(migration))
+		Expect(migrations.Migrations()).To(ContainElement(migration))
 	})
 
 	Describe("Version", func() {

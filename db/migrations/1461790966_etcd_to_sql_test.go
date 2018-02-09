@@ -34,7 +34,7 @@ var _ = Describe("ETCD to SQL Migration", func() {
 	})
 
 	It("appends itself to the migration list", func() {
-		Expect(migrations.Migrations).To(ContainElement(migration))
+		Expect(migrations.AllMigrations()).To(ContainElement(migration))
 	})
 
 	Describe("Version", func() {

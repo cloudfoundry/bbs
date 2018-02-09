@@ -26,7 +26,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 	})
 
 	It("appends itself to the migration list", func() {
-		Expect(migrations.Migrations).To(ContainElement(mig))
+		Expect(migrations.AllMigrations()).To(ContainElement(mig))
 	})
 
 	Describe("Version", func() {
