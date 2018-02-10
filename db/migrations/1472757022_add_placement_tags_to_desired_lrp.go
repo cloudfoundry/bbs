@@ -28,7 +28,7 @@ func NewAddPlacementTagsToDesiredLRPs() migration.Migration {
 }
 
 func (e *AddPlacementTagsToDesiredLRPs) String() string {
-	return "1472757022"
+	return migrationString(e)
 }
 
 func (e *AddPlacementTagsToDesiredLRPs) Version() int64 {

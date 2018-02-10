@@ -31,7 +31,7 @@ func NewEncryptRoutes() migration.Migration {
 }
 
 func (e *EncryptRoutes) String() string {
-	return "1474993971"
+	return migrationString(e)
 }
 
 func (e *EncryptRoutes) Version() int64 {

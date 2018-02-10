@@ -28,7 +28,7 @@ func NewIncreaseRunInfoColumnSize() migration.Migration {
 }
 
 func (e *IncreaseRunInfoColumnSize) String() string {
-	return "1471030898"
+	return migrationString(e)
 }
 
 func (e *IncreaseRunInfoColumnSize) Version() int64 {

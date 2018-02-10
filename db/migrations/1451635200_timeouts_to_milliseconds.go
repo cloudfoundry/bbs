@@ -25,6 +25,10 @@ func NewTimeoutMilliseconds() migration.Migration {
 	return &TimeoutToMilliseconds{}
 }
 
+func (b *TimeoutToMilliseconds) String() string {
+	return migrationString(b)
+}
+
 func (b *TimeoutToMilliseconds) Version() int64 {
 	return 1451635200
 }

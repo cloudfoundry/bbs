@@ -29,7 +29,7 @@ func NewAddMaxPidsToDesiredLRPs() migration.Migration {
 }
 
 func (e *AddMaxPidsToDesiredLRPs) String() string {
-	return "1481761088"
+	return migrationString(e)
 }
 
 func (e *AddMaxPidsToDesiredLRPs) Version() int64 {

@@ -12,6 +12,7 @@ import (
 //go:generate counterfeiter -o migrationfakes/fake_migration.go . Migration
 
 type Migration interface {
+	String() string
 	Version() int64
 	Up(logger lager.Logger) error
 	SetStoreClient(storeClient etcd.StoreClient)

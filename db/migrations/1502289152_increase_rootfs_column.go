@@ -28,7 +28,7 @@ func NewIncreaseRootFSColumnSize() migration.Migration {
 }
 
 func (e *IncreaseRootFSColumnsSize) String() string {
-	return "1502289152"
+	return migrationString(e)
 }
 
 func (e *IncreaseRootFSColumnsSize) Version() int64 {

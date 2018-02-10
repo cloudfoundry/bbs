@@ -54,7 +54,7 @@ func New${CAMEL_CASE_NAME}() migration.Migration {
 }
 
 func (e *${CAMEL_CASE_NAME}) String() string {
-	return "${VERSION}"
+	return migrationString(e)
 }
 
 func (e *${CAMEL_CASE_NAME}) Version() int64 {

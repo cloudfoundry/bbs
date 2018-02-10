@@ -13,6 +13,15 @@ import (
 )
 
 type FakeMigration struct {
+	StringStub        func() string
+	stringMutex       sync.RWMutex
+	stringArgsForCall []struct{}
+	stringReturns     struct {
+		result1 string
+	}
+	stringReturnsOnCall map[int]struct {
+		result1 string
+	}
 	VersionStub        func() int64
 	versionMutex       sync.RWMutex
 	versionArgsForCall []struct{}
@@ -69,6 +78,46 @@ type FakeMigration struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeMigration) String() string {
+	fake.stringMutex.Lock()
+	ret, specificReturn := fake.stringReturnsOnCall[len(fake.stringArgsForCall)]
+	fake.stringArgsForCall = append(fake.stringArgsForCall, struct{}{})
+	fake.recordInvocation("String", []interface{}{})
+	fake.stringMutex.Unlock()
+	if fake.StringStub != nil {
+		return fake.StringStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.stringReturns.result1
+}
+
+func (fake *FakeMigration) StringCallCount() int {
+	fake.stringMutex.RLock()
+	defer fake.stringMutex.RUnlock()
+	return len(fake.stringArgsForCall)
+}
+
+func (fake *FakeMigration) StringReturns(result1 string) {
+	fake.StringStub = nil
+	fake.stringReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeMigration) StringReturnsOnCall(i int, result1 string) {
+	fake.StringStub = nil
+	if fake.stringReturnsOnCall == nil {
+		fake.stringReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.stringReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
 }
 
 func (fake *FakeMigration) Version() int64 {
@@ -322,6 +371,8 @@ func (fake *FakeMigration) RequiresSQLReturnsOnCall(i int, result1 bool) {
 func (fake *FakeMigration) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.stringMutex.RLock()
+	defer fake.stringMutex.RUnlock()
 	fake.versionMutex.RLock()
 	defer fake.versionMutex.RUnlock()
 	fake.upMutex.RLock()

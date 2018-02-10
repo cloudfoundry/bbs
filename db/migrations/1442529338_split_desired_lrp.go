@@ -26,6 +26,10 @@ func NewSplitDesiredLRP() migration.Migration {
 	return &SplitDesiredLRP{}
 }
 
+func (m *SplitDesiredLRP) String() string {
+	return migrationString(m)
+}
+
 func (m *SplitDesiredLRP) Version() int64 {
 	return 1442529338
 }

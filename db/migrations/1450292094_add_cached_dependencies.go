@@ -25,6 +25,10 @@ func NewAddCachedDependencies() migration.Migration {
 	return &AddCachedDependencies{}
 }
 
+func (a *AddCachedDependencies) String() string {
+	return migrationString(a)
+}
+
 func (a *AddCachedDependencies) Version() int64 {
 	return 1450292094
 }

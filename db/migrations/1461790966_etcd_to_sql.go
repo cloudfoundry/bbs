@@ -96,7 +96,7 @@ func NewETCDToSQL() migration.Migration {
 }
 
 func (e *ETCDToSQL) String() string {
-	return "1461790966"
+	return migrationString(e)
 }
 
 func (e *ETCDToSQL) Version() int64 {

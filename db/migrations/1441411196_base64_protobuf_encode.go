@@ -27,6 +27,10 @@ func NewBase64ProtobufEncode() migration.Migration {
 	return &Base64ProtobufEncode{}
 }
 
+func (b *Base64ProtobufEncode) String() string {
+	return migrationString(b)
+}
+
 func (b *Base64ProtobufEncode) Version() int64 {
 	return 1441411196
 }

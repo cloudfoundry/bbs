@@ -28,7 +28,7 @@ func NewIncreaseErrorColumnsSize() migration.Migration {
 }
 
 func (e *IncreaseErrorColumnsSize) String() string {
-	return "1474908092"
+	return migrationString(e)
 }
 
 func (e *IncreaseErrorColumnsSize) Version() int64 {

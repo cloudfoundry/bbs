@@ -1,7 +1,11 @@
 package migrations
 
 import (
+	"path/filepath"
 	"reflect"
+	"runtime"
+	"strconv"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/migration"
 )
@@ -10,6 +14,14 @@ var migrationsRegistry = migration.Migrations{}
 
 func appendMigration(migrationTemplate migration.Migration) {
 	migrationsRegistry = append(migrationsRegistry, migrationTemplate)
+}
+
+func migrationString(m migration.Migration) string {
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		return strconv.FormatInt(m.Version(), 10)
+	}
+	return strings.Split(filepath.Base(filename), ".")[0]
 }
 
 func AllMigrations() migration.Migrations {
