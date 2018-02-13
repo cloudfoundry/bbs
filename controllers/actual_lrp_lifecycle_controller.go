@@ -95,14 +95,8 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 	}
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, actualLRPKey.ProcessGuid)
-
 	if err != nil {
-		if err != models.ErrResourceNotFound {
-			logger.Error("failed-fetching-desired-lrp", err)
-		} else {
-			logger.Info("desired-lrp-does-not-exist", lager.Data{"process-guid": actualLRPKey.ProcessGuid})
-		}
-
+		logger.Error("failed-fetching-desired-lrp", err)
 		return err
 	}
 

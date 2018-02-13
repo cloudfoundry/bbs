@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -34,11 +33,6 @@ func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string,
 			"id = ?", key,
 		).Scan(&value)
 	})
-
-	if err == models.ErrResourceNotFound {
-		logger.Info("configuration-value-does-not-exist", lager.Data{"key": key})
-		return "", err
-	}
 
 	if err != nil {
 		logger.Error("failed-fetching-configuration-value", err, lager.Data{"key": key})

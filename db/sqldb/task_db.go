@@ -78,17 +78,10 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 			taskColumns, helpers.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
-
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-query", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-query", err)
 			return err
 		}
-
 		defer rows.Close()
 
 		results, _, err = db.fetchTasks(logger, rows, tx, true)
@@ -135,12 +128,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (*model
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-locking-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -194,11 +182,7 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-locking-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -234,12 +218,7 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-locking-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 		beforeTask = *afterTask
@@ -277,12 +256,7 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-locking-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -323,12 +297,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) (*models.Ta
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-locking-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -348,12 +317,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) (*models.Ta
 			"guid = ?", taskGuid,
 		)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-updating-tasks", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-updating-tasks", err)
 			return err
 		}
 
@@ -377,12 +341,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) (*models.Task,
 		var err error
 		task, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-locking-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-locking-task", err)
 			return err
 		}
 
@@ -394,12 +353,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) (*models.Task,
 
 		_, err = db.delete(logger, tx, tasksTable, "guid = ?", taskGuid)
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-deleting-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
-
+			logger.Error("failed-deleting-task", err)
 			return err
 		}
 
@@ -423,12 +377,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 		"guid = ?", task.TaskGuid,
 	)
 	if err != nil {
-		if err != sql.ErrNoRows {
-			logger.Error("failed-updating-tasks", err)
-		} else {
-			logger.Info("task-does-not-exist")
-		}
-
+		logger.Error("failed-updating-tasks", err)
 		return err
 	}
 
@@ -548,13 +497,8 @@ func (db *SQLDB) deleteInvalidTasks(logger lager.Logger, queryable helpers.Query
 	for _, guid := range guids {
 		logger.Info("deleting-invalid-task-from-db", lager.Data{"guid": guid})
 		_, err := db.delete(logger, queryable, tasksTable, "guid = ?", guid)
-
 		if err != nil {
-			if err != sql.ErrNoRows {
-				logger.Error("failed-deleting-task", err)
-			} else {
-				logger.Info("task-does-not-exist")
-			}
+			logger.Error("failed-deleting-task", err)
 			return err
 		}
 	}
