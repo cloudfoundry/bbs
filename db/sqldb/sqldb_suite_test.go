@@ -54,7 +54,6 @@ var _ = BeforeSuite(func() {
 	fakeClock = fakeclock.NewFakeClock(time.Now())
 	fakeGUIDProvider = &guidproviderfakes.FakeGUIDProvider{}
 	fakeMetronClient = new(mfakes.FakeIngressClient)
-	logger = lagertest.NewTestLogger("sql-db")
 
 	if test_helpers.UsePostgres() {
 		dbDriverName = "postgres"
@@ -105,6 +104,8 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = BeforeEach(func() {
+	logger = lagertest.NewTestLogger("sql-db")
+
 	fakeMetronClient = new(mfakes.FakeIngressClient)
 	migrationMetronClient := new(mfakes.FakeIngressClient)
 	sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)

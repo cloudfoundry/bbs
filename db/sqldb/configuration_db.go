@@ -35,7 +35,6 @@ func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string,
 	})
 
 	if err != nil {
-		logger.Error("failed-fetching-configuration-value", err, lager.Data{"key": key})
 		return "", err
 	}
 

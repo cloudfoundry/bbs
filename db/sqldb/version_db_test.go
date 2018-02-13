@@ -123,6 +123,10 @@ var _ = Describe("Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
+			It("does not log an error", func() {
+				Expect(logger.Errors).To(BeEmpty())
+			})
+
 			It("returns a ErrResourceNotFound", func() {
 				version, err := sqlDB.Version(logger)
 				Expect(err).To(MatchError(models.ErrResourceNotFound))

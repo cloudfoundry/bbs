@@ -404,7 +404,6 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	var runInfoData []byte
 	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData)
 	if err != nil {
-		logger.Error("failed-fetching-run-info", err)
 		return nil, "", err
 	}
 
