@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -170,7 +172,7 @@ var _ = BeforeEach(func() {
 	bbsHealthAddress = fmt.Sprintf("127.0.0.1:%d", bbsHealthPort)
 
 	bbsURL = &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   bbsAddress,
 	}
 
@@ -197,7 +199,13 @@ var _ = BeforeEach(func() {
 	port, err := strconv.Atoi(strings.TrimPrefix(testMetricsListener.LocalAddr().String(), "127.0.0.1:"))
 	Expect(err).NotTo(HaveOccurred())
 
-	client = bbs.NewClient(bbsURL.String())
+	basePath := path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+
+	serverCaFile := path.Join(basePath, "green-certs", "server-ca.crt")
+	clientCertFile := path.Join(basePath, "green-certs", "client.crt")
+	clientKeyFile := path.Join(basePath, "green-certs", "client.key")
+	client, err = bbs.NewClient(bbsURL.String(), serverCaFile, clientCertFile, clientKeyFile, 0, 0)
+	Expect(err).ToNot(HaveOccurred())
 
 	bbsConfig = bbsconfig.BBSConfig{
 		ListenAddress:     bbsAddress,
@@ -220,6 +228,10 @@ var _ = BeforeEach(func() {
 		},
 		ConvergeRepeatInterval: durationjson.Duration(time.Hour),
 		UUID: "bbs-bosh-boshy-bosh-bosh",
+
+		CaFile:   serverCaFile,
+		CertFile: path.Join(basePath, "green-certs", "server.crt"),
+		KeyFile:  path.Join(basePath, "green-certs", "server.key"),
 	}
 	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)

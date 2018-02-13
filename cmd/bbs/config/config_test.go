@@ -187,7 +187,6 @@ var _ = Describe("BBSConfig", func() {
 			RepClientSessionCacheSize:  10,
 			RepRequireTLS:              true,
 			ReportInterval:             durationjson.Duration(1 * time.Minute),
-			RequireSSL:                 true,
 			SQLCACertFile:              "/var/vcap/jobs/bbs/config/sql.ca",
 			SessionName:                "bbs-session",
 			TaskCallbackWorkers:        1000,

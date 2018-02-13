@@ -51,7 +51,6 @@ type BBSConfig struct {
 	RepClientSessionCacheSize   int                   `json:"rep_client_session_cache_size,omitempty"`
 	RepRequireTLS               bool                  `json:"rep_require_tls,omitempty"`
 	ReportInterval              durationjson.Duration `json:"report_interval,omitempty"`
-	RequireSSL                  bool                  `json:"require_ssl,omitempty"`
 	SQLCACertFile               string                `json:"sql_ca_cert_file,omitempty"`
 	SessionName                 string                `json:"session_name,omitempty"`
 	SkipConsulLock              bool                  `json:"skip_consul_lock,omitempty"`
@@ -68,7 +67,6 @@ func DefaultConfig() BBSConfig {
 	return BBSConfig{
 		SessionName:                     "bbs",
 		CommunicationTimeout:            durationjson.Duration(10 * time.Second),
-		RequireSSL:                      false,
 		DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
 		ExpireCompletedTaskDuration:     durationjson.Duration(2 * time.Minute),
 		ExpirePendingTaskDuration:       durationjson.Duration(30 * time.Minute),

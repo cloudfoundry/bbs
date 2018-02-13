@@ -113,4 +113,11 @@ var _ = Describe("Client", func() {
 			Expect(responseError.Type).To(Equal(models.Error_InvalidResponse))
 		})
 	})
+
+	Context("when an http URL is provided to the secure client", func() {
+		It("creating the client returns an error", func() {
+			_, err := bbs.NewClient(bbsServer.URL(), "", "", "", 1, 1)
+			Expect(err).To(MatchError("Expected https URL"))
+		})
+	})
 })

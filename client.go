@@ -194,11 +194,7 @@ func newClient(url string, numRetries int) *client {
 	}
 }
 
-func NewClient(url string) InternalClient {
-	return newClient(url, DefaultRetryCount)
-}
-
-func NewSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
+func NewClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
 	return newSecureClient(url, caFile, certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, false, DefaultRetryCount)
 }
 
@@ -231,8 +227,16 @@ func NewClientWithConfig(cfg ClientConfig) (InternalClient, error) {
 	}
 }
 
-func newSecureClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool, numRetries int) (InternalClient, error) {
-	client := newClient(url, numRetries)
+func newSecureClient(addr, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool, numRetries int) (InternalClient, error) {
+	client := newClient(addr, numRetries)
+
+	bbsURL, err := url.Parse(addr)
+	if err != nil {
+		return nil, err
+	}
+	if bbsURL.Scheme != "https" {
+		return nil, errors.New("Expected https URL")
+	}
 
 	tlsConfig, err := cfhttp.NewTLSConfig(certFile, keyFile, caFile)
 	if err != nil {
