@@ -10,6 +10,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/etcd"
+	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
@@ -91,6 +92,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			logger.Info("fresh-etcd-skipping-migrations")
 			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion)
 			if err != nil {
+				logger.Error("failed-to-write-version", err)
 				return err
 			}
 
@@ -108,6 +110,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 			err = m.writeVersion(lastETCDMigrationVersion, lastETCDMigrationVersion)
 			if err != nil {
+				logger.Error("failed-to-write-version", err)
 				return err
 			}
 		} else {
@@ -233,7 +236,8 @@ func (m *Manager) resolveStoredVersion(logger lager.Logger) (*models.Version, er
 		version, err = m.sqlDB.Version(logger)
 		if err == nil {
 			return version, nil
-		} else if models.ConvertError(err) != models.ErrResourceNotFound {
+		} else if !sqldb.IsAvoidableE(err) {
+			logger.Error("resolve-stored-version", err)
 			return nil, err
 		}
 	}

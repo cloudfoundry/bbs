@@ -16,8 +16,7 @@ func (db *SQLDB) SetVersion(logger lager.Logger, version *models.Version) error 
 
 	versionJSON, err := json.Marshal(version)
 	if err != nil {
-		logger.Error("failed-marshalling-version", err)
-		return err
+		return F("set-version", err)
 	}
 
 	return db.setConfigurationValue(logger, VersionID, string(versionJSON))
@@ -30,14 +29,13 @@ func (db *SQLDB) Version(logger lager.Logger) (*models.Version, error) {
 
 	versionJSON, err := db.getConfigurationValue(logger, VersionID)
 	if err != nil {
-		return nil, err
+		return nil, E("version", err)
 	}
 
 	var version models.Version
 	err = json.Unmarshal([]byte(versionJSON), &version)
 	if err != nil {
-		logger.Error("failed-to-deserialize-version", err)
-		return nil, models.ErrDeserialize
+		return nil, F("version", err)
 	}
 
 	return &version, nil

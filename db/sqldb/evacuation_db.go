@@ -34,7 +34,6 @@ func (db *SQLDB) EvacuateActualLRP(
 		}
 
 		if err != nil {
-			logger.Error("failed-locking-lrp", err)
 			return err
 		}
 
@@ -54,7 +53,6 @@ func (db *SQLDB) EvacuateActualLRP(
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
-			logger.Error("failed-serializing-net-info", err)
 			return err
 		}
 
@@ -71,15 +69,11 @@ func (db *SQLDB) EvacuateActualLRP(
 			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			actualLRP.ProcessGuid, actualLRP.Index, true,
 		)
-		if err != nil {
-			logger.Error("failed-update-evacuating-lrp", err)
-			return err
-		}
 
-		return nil
+		return err
 	})
 
-	return &models.ActualLRPGroup{Evacuating: actualLRP}, err
+	return &models.ActualLRPGroup{Evacuating: actualLRP}, E("evacuate-lrp", err)
 }
 
 func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
@@ -87,7 +81,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
@@ -98,7 +92,6 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 		}
 
 		if err != nil {
-			logger.Error("failed-fetching-actual-lrp", err)
 			return err
 		}
 
@@ -112,12 +105,12 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 			processGuid, index, true,
 		)
 		if err != nil {
-			logger.Error("failed-delete", err)
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
 		return nil
 	})
+	return E("remove-evacuating-lrp", err)
 }
 
 func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,

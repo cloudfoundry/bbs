@@ -19,7 +19,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP("the-guid")
 		})
 
-		It("saves the lrp in the database", func() {
+		FIt("saves the lrp in the database", func() {
 			err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 

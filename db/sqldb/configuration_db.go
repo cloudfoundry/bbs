@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -17,11 +16,10 @@ func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) e
 			helpers.SQLAttributes{"value": value, "id": key},
 			"id = ?", key,
 		)
-		if err != nil {
-			logger.Error("failed-setting-config-value", err, lager.Data{"key": key})
-			return err
-		}
 
+		if err != nil {
+			return F("set-config-value", err)
+		}
 		return nil
 	})
 }
@@ -35,14 +33,8 @@ func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string,
 		).Scan(&value)
 	})
 
-	if err == models.ErrResourceNotFound {
-		logger.Info("configuration-value-does-not-exist", lager.Data{"key": key})
-		return "", err
-	}
-
 	if err != nil {
-		logger.Error("failed-fetching-configuration-value", err, lager.Data{"key": key})
-		return "", err
+		return "", E("get-config-value", err)
 	}
 
 	return value, nil
