@@ -76,7 +76,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 				"placement_tags":         placementTagData,
 			},
 		)
-		if err != nil {
+		if err != nil && err.Error() == "foo" { // TODO: what's the right implementation agnostic way to check for duplicate key error?
 			logger.Error("failed-inserting-desired", err)
 			return err
 		}
@@ -218,9 +218,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			"process_guid = ?", processGuid,
 		)
 		beforeDesiredLRP, err = db.fetchDesiredLRP(logger, row, tx)
-
 		if err != nil {
-			logger.Error("failed-lock-desired", err)
 			return err
 		}
 
@@ -251,6 +249,10 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		return nil
 	})
 
+	if err != nil && err != models.ErrResourceNotFound {
+		logger.Error("failed-lock-desired", err)
+	}
+
 	return beforeDesiredLRP, err
 }
 
@@ -275,7 +277,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 
 	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		err := db.lockDesiredLRPByGuidForUpdate(logger, processGuid, tx)
-		if err != nil {
+		if err != nil && err != sql.ErrNoRows {
 			logger.Error("failed-lock-desired", err)
 			return err
 		}
@@ -404,7 +406,6 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	var runInfoData []byte
 	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData)
 	if err != nil {
-		logger.Error("failed-fetching-run-info", err)
 		return nil, "", err
 	}
 

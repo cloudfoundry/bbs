@@ -34,6 +34,11 @@ var _ = Describe("DesiredLRPDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
+			It("does not log an error", func() {
+				sqlDB.DesireLRP(logger, expectedDesiredLRP)
+				Expect(logger.Errors).To(BeEmpty())
+			})
+
 			It("returns a resource exists error", func() {
 				err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
 				Expect(err).To(Equal(models.ErrResourceExists))
@@ -77,6 +82,11 @@ var _ = Describe("DesiredLRPDB", func() {
 				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, "Sup dawg")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 				Expect(desiredLRP).To(BeNil())
+			})
+
+			It("does not log an error", func() {
+				sqlDB.DesiredLRPByProcessGuid(logger, "Sup dawg")
+				Expect(logger.Errors).To(BeEmpty())
 			})
 		})
 
@@ -420,6 +430,11 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		Context("when the desired lrp does not exist", func() {
+			It("does not log an error", func() {
+				sqlDB.UpdateDesiredLRP(logger, "does-not-exist", update)
+				Expect(logger.Errors).To(BeEmpty())
+			})
+
 			It("returns a ResourceNotFound error", func() {
 				_, err := sqlDB.UpdateDesiredLRP(logger, "does-not-exist", update)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
@@ -446,6 +461,11 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		Context("when the desired lrp does not exist", func() {
+			It("does not log an error", func() {
+				sqlDB.RemoveDesiredLRP(logger, "does-not-exist")
+				Expect(logger.Errors).To(BeEmpty())
+			})
+
 			It("returns a ResourceNotFound error", func() {
 				err := sqlDB.RemoveDesiredLRP(logger, "does-not-exist")
 				Expect(err).To(Equal(models.ErrResourceNotFound))

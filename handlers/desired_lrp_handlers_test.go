@@ -224,6 +224,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
 			})
+
+			FIt("does not log an error", func() {
+				Expect(logger.Errors).To(BeEmpty())
+			})
 		})
 
 		Context("when the DB returns an unrecoverable error", func() {
