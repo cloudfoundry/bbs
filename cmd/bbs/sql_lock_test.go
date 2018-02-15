@@ -158,7 +158,7 @@ var _ = Describe("SqlLock", func() {
 			})
 		})
 
-		Context("when consul lock isn't required", func() {
+		Context("when skip consul locks is true", func() {
 			var competingBBSLockProcess ifrit.Process
 
 			BeforeEach(func() {
@@ -175,6 +175,73 @@ var _ = Describe("SqlLock", func() {
 				Eventually(func() bool {
 					return client.Ping(logger)
 				}).Should(BeTrue())
+			})
+		})
+
+		Context("when skip consul locks is false", func() {
+			var competingBBSLockProcess ifrit.Process
+
+			AfterEach(func() {
+				ginkgomon.Kill(competingBBSLockProcess)
+			})
+
+			Context("when locks locket enabled is false", func() {
+				BeforeEach(func() {
+					bbsConfig.LocksLocketEnabled = false
+					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&mfakes.FakeIngressClient{}))
+					competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
+				})
+
+				It("acquires the consul lock", func() {
+					Consistently(func() bool {
+						return client.Ping(logger)
+					}).Should(BeFalse())
+				})
+
+				Context("and the lock becomes available", func() {
+					JustBeforeEach(func() {
+						Consistently(func() bool {
+							return client.Ping(logger)
+						}).Should(BeFalse())
+
+						ginkgomon.Interrupt(competingBBSLockProcess)
+					})
+
+					It("does not grab the lock", func() {
+						Consistently(func() bool {
+							return client.Ping(logger)
+						}).Should(BeFalse())
+					})
+				})
+			})
+
+			Context("when locks locket enabled is true", func() {
+				BeforeEach(func() {
+					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&mfakes.FakeIngressClient{}))
+					competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
+				})
+
+				It("acquires the consul lock", func() {
+					Consistently(func() bool {
+						return client.Ping(logger)
+					}).Should(BeFalse())
+				})
+
+				Context("and the lock becomes available", func() {
+					JustBeforeEach(func() {
+						Consistently(func() bool {
+							return client.Ping(logger)
+						}).Should(BeFalse())
+
+						ginkgomon.Interrupt(competingBBSLockProcess)
+					})
+
+					It("grabs the lock", func() {
+						Eventually(func() bool {
+							return client.Ping(logger)
+						}, 5*locket.RetryInterval).Should(BeTrue())
+					})
+				})
 			})
 		})
 

@@ -265,21 +265,23 @@ func main() {
 			logger.Fatal("invalid-uuid", errors.New("invalid-uuid-from-config"))
 		}
 
-		lockIdentifier := &locketmodels.Resource{
-			Key:      bbsLockKey,
-			Owner:    bbsConfig.UUID,
-			TypeCode: locketmodels.LOCK,
-			Type:     locketmodels.LockType,
-		}
+		if bbsConfig.LocksLocketEnabled {
+			lockIdentifier := &locketmodels.Resource{
+				Key:      bbsLockKey,
+				Owner:    bbsConfig.UUID,
+				TypeCode: locketmodels.LOCK,
+				Type:     locketmodels.LockType,
+			}
 
-		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
-			logger,
-			locketClient,
-			lockIdentifier,
-			locket.DefaultSessionTTLInSeconds,
-			clock,
-			locket.SQLRetryInterval,
-		)})
+			locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
+				logger,
+				locketClient,
+				lockIdentifier,
+				locket.DefaultSessionTTLInSeconds,
+				clock,
+				locket.SQLRetryInterval,
+			)})
+		}
 	}
 
 	var lock ifrit.Runner
@@ -296,7 +298,12 @@ func main() {
 	if bbsConfig.DetectConsulCellRegistrations {
 		cellPresenceClient = maintain.NewCellPresenceClient(consulClient, clock)
 	}
-	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
+	var locketCellPresenceClient locketmodels.LocketClient
+	locketCellPresenceClient = serviceclient.NewNoopLocketClient()
+	if bbsConfig.CellRegistrationsLocketEnabled {
+		locketCellPresenceClient = locketClient
+	}
+	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketCellPresenceClient)
 
 	logger.Info("report-interval", lager.Data{"value": bbsConfig.ReportInterval})
 	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))

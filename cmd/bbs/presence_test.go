@@ -120,10 +120,12 @@ var _ = Describe("CellPresence", func() {
 			ginkgomon.Interrupt(cellPresenceConsul)
 		})
 
-		It("returns cell presences from both locket and consul", func() {
-			presences, err := client.Cells(logger)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(presences).To(ConsistOf(presenceLocket, presenceConsul))
+		Context("When detect consul cell registrations and cell registrations locket enabled are both true", func() {
+			It("returns cell presences from both locket and consul", func() {
+				presences, err := client.Cells(logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(presences).To(ConsistOf(presenceLocket, presenceConsul))
+			})
 		})
 
 		Context("when detect consul cell registrations is false", func() {
@@ -135,6 +137,18 @@ var _ = Describe("CellPresence", func() {
 				presences, err := client.Cells(logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(presences).To(ConsistOf(presenceLocket))
+			})
+		})
+
+		Context("when cell registrations locket enabled is false", func() {
+			BeforeEach(func() {
+				bbsConfig.CellRegistrationsLocketEnabled = false
+			})
+
+			It("only returns cell presences from consul", func() {
+				presences, err := client.Cells(logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(presences).To(ConsistOf(presenceConsul))
 			})
 		})
 	})
