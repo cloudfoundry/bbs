@@ -68,7 +68,7 @@ func DefaultConfig() BBSConfig {
 	return BBSConfig{
 		SessionName:                     "bbs",
 		CommunicationTimeout:            durationjson.Duration(10 * time.Second),
-		RequireSSL:                      false,
+		RequireSSL:                      true,
 		DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
 		ExpireCompletedTaskDuration:     durationjson.Duration(2 * time.Minute),
 		ExpirePendingTaskDuration:       durationjson.Duration(30 * time.Minute),

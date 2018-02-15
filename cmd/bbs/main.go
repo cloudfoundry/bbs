@@ -239,12 +239,9 @@ func main() {
 		accessLogger.RegisterSink(lager.NewWriterSink(file, lager.INFO))
 	}
 
-	var tlsConfig *tls.Config
-	if bbsConfig.RequireSSL {
-		tlsConfig, err = cfhttp.NewTLSConfig(bbsConfig.CertFile, bbsConfig.KeyFile, bbsConfig.CaFile)
-		if err != nil {
-			logger.Fatal("tls-configuration-failed", err)
-		}
+	tlsConfig, err := cfhttp.NewTLSConfig(bbsConfig.CertFile, bbsConfig.KeyFile, bbsConfig.CaFile)
+	if err != nil {
+		logger.Fatal("tls-configuration-failed", err)
 	}
 
 	cbWorkPool := taskworkpool.New(logger, bbsConfig.TaskCallbackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)

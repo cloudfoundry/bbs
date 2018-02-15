@@ -85,7 +85,6 @@ var _ = Describe("BBSConfig", func() {
 			"rep_client_session_cache_size": 10,
 			"rep_require_tls": true,
 			"report_interval": "1m0s",
-			"require_ssl": true,
 			"session_name": "bbs-session",
 			"skip_consul_lock": true,
 			"sql_ca_cert_file": "/var/vcap/jobs/bbs/config/sql.ca",

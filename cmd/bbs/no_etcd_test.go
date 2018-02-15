@@ -1,14 +1,8 @@
 package main_test
 
 import (
-	"strconv"
-	"strings"
-	"time"
-
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"code.cloudfoundry.org/bbs/encryption"
-	"code.cloudfoundry.org/durationjson"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -17,23 +11,9 @@ import (
 
 var _ = Describe("BBS With Only SQL", func() {
 	BeforeEach(func() {
-		port, err := strconv.Atoi(strings.TrimPrefix(testMetricsListener.LocalAddr().String(), "127.0.0.1:"))
-		Expect(err).NotTo(HaveOccurred())
-
-		bbsConfig = config.BBSConfig{
-			ListenAddress:     bbsAddress,
-			HealthAddress:     bbsHealthAddress,
-			AdvertiseURL:      bbsURL.String(),
-			AuctioneerAddress: auctioneerServer.URL(),
-			ConsulCluster:     consulRunner.ConsulCluster(),
-			DropsondePort:     port,
-			ReportInterval:    durationjson.Duration(10 * time.Millisecond),
-			EncryptionConfig: encryption.EncryptionConfig{
-				EncryptionKeys: map[string]string{"label": "key"},
-				ActiveKeyLabel: "label",
-			},
-			ETCDConfig: config.ETCDConfig{},
-		}
+		bbsConfig.ETCDConfig = config.ETCDConfig{}
+		bbsConfig.DatabaseDriver = ""
+		bbsConfig.DatabaseConnectionString = ""
 	})
 
 	JustBeforeEach(func() {
