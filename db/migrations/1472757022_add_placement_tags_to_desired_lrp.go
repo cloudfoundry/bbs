@@ -3,7 +3,6 @@ package migrations
 import (
 	"database/sql"
 
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -16,11 +15,10 @@ func init() {
 }
 
 type AddPlacementTagsToDesiredLRPs struct {
-	serializer  format.Serializer
-	storeClient etcd.StoreClient
-	clock       clock.Clock
-	rawSQLDB    *sql.DB
-	dbFlavor    string
+	serializer format.Serializer
+	clock      clock.Clock
+	rawSQLDB   *sql.DB
+	dbFlavor   string
 }
 
 func NewAddPlacementTagsToDesiredLRPs() migration.Migration {
@@ -35,10 +33,6 @@ func (e *AddPlacementTagsToDesiredLRPs) Version() int64 {
 	return 1472757022
 }
 
-func (e *AddPlacementTagsToDesiredLRPs) SetStoreClient(storeClient etcd.StoreClient) {
-	e.storeClient = storeClient
-}
-
 func (e *AddPlacementTagsToDesiredLRPs) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
@@ -47,7 +41,6 @@ func (e *AddPlacementTagsToDesiredLRPs) SetRawSQLDB(db *sql.DB) {
 	e.rawSQLDB = db
 }
 
-func (e *AddPlacementTagsToDesiredLRPs) RequiresSQL() bool         { return true }
 func (e *AddPlacementTagsToDesiredLRPs) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddPlacementTagsToDesiredLRPs) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 

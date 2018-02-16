@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"strings"
 
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -17,11 +16,10 @@ func init() {
 }
 
 type AddMaxPidsToDesiredLRPs struct {
-	serializer  format.Serializer
-	storeClient etcd.StoreClient
-	clock       clock.Clock
-	rawSQLDB    *sql.DB
-	dbFlavor    string
+	serializer format.Serializer
+	clock      clock.Clock
+	rawSQLDB   *sql.DB
+	dbFlavor   string
 }
 
 func NewAddMaxPidsToDesiredLRPs() migration.Migration {
@@ -36,10 +34,6 @@ func (e *AddMaxPidsToDesiredLRPs) Version() int64 {
 	return 1481761088
 }
 
-func (e *AddMaxPidsToDesiredLRPs) SetStoreClient(storeClient etcd.StoreClient) {
-	e.storeClient = storeClient
-}
-
 func (e *AddMaxPidsToDesiredLRPs) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
@@ -48,7 +42,6 @@ func (e *AddMaxPidsToDesiredLRPs) SetRawSQLDB(db *sql.DB) {
 	e.rawSQLDB = db
 }
 
-func (e *AddMaxPidsToDesiredLRPs) RequiresSQL() bool         { return true }
 func (e *AddMaxPidsToDesiredLRPs) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddMaxPidsToDesiredLRPs) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 

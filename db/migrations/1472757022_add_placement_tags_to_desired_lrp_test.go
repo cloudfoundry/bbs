@@ -43,7 +43,7 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 
 		BeforeEach(func() {
 			initialMigrations = []migration.Migration{
-				migrations.NewETCDToSQL(),
+				migrations.NewInitSQL(),
 				migrations.NewIncreaseRunInfoColumnSize(),
 			}
 

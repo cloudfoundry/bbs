@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
@@ -15,8 +14,6 @@ import (
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
-	etcdclient "github.com/coreos/go-etcd/etcd"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -28,12 +25,6 @@ import (
 )
 
 var (
-	etcdPort    int
-	etcdUrl     string
-	etcdRunner  *etcdstorerunner.ETCDClusterRunner
-	etcdClient  *etcdclient.Client
-	storeClient etcd.StoreClient
-
 	flavor string
 
 	rawSQLDB   *sql.DB
@@ -52,12 +43,6 @@ func TestMigrations(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
-
-	etcdPort = 4001 + GinkgoParallelNode()
-	etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
-	etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
-
-	etcdRunner.Start()
 
 	dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
 	sqlRunner = test_helpers.NewSQLRunner(dbName)
@@ -82,20 +67,11 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	etcdRunner.Stop()
-
 	Expect(rawSQLDB.Close()).NotTo(HaveOccurred())
 	ginkgomon.Kill(sqlProcess, 5*time.Second)
 })
 
 var _ = BeforeEach(func() {
-	etcdRunner.Reset()
-
-	etcdClient = etcdRunner.Client()
-	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
-
-	storeClient = etcd.NewStoreClient(etcdClient)
-
 	sqlRunner.Reset()
 })
 

@@ -3,7 +3,6 @@ package migrations
 import (
 	"database/sql"
 
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -16,11 +15,10 @@ func init() {
 }
 
 type IncreaseRootFSColumnsSize struct {
-	serializer  format.Serializer
-	storeClient etcd.StoreClient
-	clock       clock.Clock
-	rawSQLDB    *sql.DB
-	dbFlavor    string
+	serializer format.Serializer
+	clock      clock.Clock
+	rawSQLDB   *sql.DB
+	dbFlavor   string
 }
 
 func NewIncreaseRootFSColumnSize() migration.Migration {
@@ -35,10 +33,6 @@ func (e *IncreaseRootFSColumnsSize) Version() int64 {
 	return 1502289152
 }
 
-func (e *IncreaseRootFSColumnsSize) SetStoreClient(storeClient etcd.StoreClient) {
-	e.storeClient = storeClient
-}
-
 func (e *IncreaseRootFSColumnsSize) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
@@ -47,7 +41,6 @@ func (e *IncreaseRootFSColumnsSize) SetRawSQLDB(db *sql.DB) {
 	e.rawSQLDB = db
 }
 
-func (e *IncreaseRootFSColumnsSize) RequiresSQL() bool         { return true }
 func (e *IncreaseRootFSColumnsSize) SetClock(c clock.Clock)    { e.clock = c }
 func (e *IncreaseRootFSColumnsSize) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 

@@ -34,7 +34,7 @@ type BBSConfig struct {
 	DetectConsulCellRegistrations   bool                  `json:"detect_consul_cell_registrations,omitempty"`
 	DropsondePort                   int                   `json:"dropsonde_port,omitempty"`
 	EnableConsulServiceRegistration bool                  `json:"enable_consul_service_registration"`
-	ETCDConfig
+
 	ExpireCompletedTaskDuration durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration   durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
 	HealthAddress               string                `json:"health_address,omitempty"`
@@ -88,7 +88,6 @@ func DefaultConfig() BBSConfig {
 		AuctioneerRequireTLS:            false,
 		RepClientSessionCacheSize:       0,
 		RepRequireTLS:                   false,
-		ETCDConfig:                      DefaultETCDConfig(),
 		EncryptionConfig:                encryption.DefaultEncryptionConfig(),
 		LagerConfig:                     lagerflags.DefaultLagerConfig(),
 	}

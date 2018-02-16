@@ -16,7 +16,6 @@ import (
 
 	"code.cloudfoundry.org/bbs"
 	bbsconfig "code.cloudfoundry.org/bbs/cmd/bbs/config"
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
@@ -27,8 +26,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/cloudfoundry/sonde-go/events"
-	"github.com/cloudfoundry/storeadapter/storerunner/etcdstorerunner"
-	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -42,12 +39,6 @@ import (
 )
 
 var (
-	etcdPort    int
-	etcdUrl     string
-	etcdRunner  *etcdstorerunner.ETCDClusterRunner
-	etcdClient  *etcdclient.Client
-	storeClient etcd.StoreClient
-
 	logger        lager.Logger
 	portAllocator portauthority.PortAllocator
 
@@ -89,7 +80,7 @@ var _ = SynchronizedBeforeSuite(
 	},
 	func(binPaths []byte) {
 		grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
-		startPort := 1050 * GinkgoParallelNode() // This could be lowered when we remove etcd
+		startPort := 1050 * GinkgoParallelNode()
 		portRange := 1000
 		var err error
 		portAllocator, err = portauthority.New(startPort, startPort+portRange)
@@ -100,17 +91,6 @@ var _ = SynchronizedBeforeSuite(
 		locketBinPath = strings.Split(path, ",")[1]
 
 		SetDefaultEventuallyTimeout(15 * time.Second)
-
-		// The etcd cluster runner uses a port and that port+3000. We can't edit the
-		// cluster runner because it's in the attic. Thus, we do not use the portallocator
-		// for etcd but instead block off ports 4000-7050 for etcd. (This allows for 50
-		// parallel nodes).
-		//
-		// See the cluser runner
-		// https://github.com/cloudfoundry-attic/storeadapter/blob/master/storerunner/etcdstorerunner/etcd_cluster_runner.go#L348-L350
-		etcdPort = 4001 + GinkgoParallelNode()
-		etcdUrl = fmt.Sprintf("http://127.0.0.1:%d", etcdPort)
-		etcdRunner = etcdstorerunner.NewETCDClusterRunner(etcdPort, 1, nil)
 
 		dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
 		sqlRunner = test_helpers.NewSQLRunner(dbName)
@@ -129,17 +109,12 @@ var _ = SynchronizedBeforeSuite(
 
 		consulRunner.Start()
 		consulRunner.WaitUntilReady()
-
-		etcdRunner.Start()
 	},
 )
 
 var _ = SynchronizedAfterSuite(func() {
 	ginkgomon.Kill(sqlProcess)
 
-	if etcdRunner != nil {
-		etcdRunner.Stop()
-	}
 	if consulRunner != nil {
 		consulRunner.Stop()
 	}
@@ -151,13 +126,8 @@ var _ = BeforeEach(func() {
 	var err error
 	logger = lagertest.NewTestLogger("test")
 
-	etcdRunner.Reset()
-
 	consulRunner.Reset()
 	consulClient = consulRunner.NewClient()
-
-	etcdClient = etcdRunner.Client()
-	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
 
 	auctioneerServer = ghttp.NewServer()
 	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
@@ -213,9 +183,7 @@ var _ = BeforeEach(func() {
 		AuctioneerAddress: auctioneerServer.URL(),
 		ConsulCluster:     consulRunner.ConsulCluster(),
 		DropsondePort:     port,
-		ETCDConfig: bbsconfig.ETCDConfig{
-			ClusterUrls: []string{etcdUrl}, // etcd is still being used to test version migration in migration_version_test.go
-		},
+
 		DatabaseDriver:                sqlRunner.DriverName(),
 		DatabaseConnectionString:      sqlRunner.ConnectionString(),
 		DetectConsulCellRegistrations: true,
@@ -233,7 +201,6 @@ var _ = BeforeEach(func() {
 		CertFile: path.Join(basePath, "green-certs", "server.crt"),
 		KeyFile:  path.Join(basePath, "green-certs", "server.key"),
 	}
-	storeClient = etcd.NewStoreClient(etcdClient)
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 })
 

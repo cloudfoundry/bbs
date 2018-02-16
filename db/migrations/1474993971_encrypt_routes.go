@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
@@ -19,11 +18,10 @@ func init() {
 }
 
 type EncryptRoutes struct {
-	encoder     format.Encoder
-	storeClient etcd.StoreClient
-	clock       clock.Clock
-	rawSQLDB    *sql.DB
-	dbFlavor    string
+	encoder  format.Encoder
+	clock    clock.Clock
+	rawSQLDB *sql.DB
+	dbFlavor string
 }
 
 func NewEncryptRoutes() migration.Migration {
@@ -38,10 +36,6 @@ func (e *EncryptRoutes) Version() int64 {
 	return 1474993971
 }
 
-func (e *EncryptRoutes) SetStoreClient(storeClient etcd.StoreClient) {
-	e.storeClient = storeClient
-}
-
 func (e *EncryptRoutes) SetCryptor(cryptor encryption.Cryptor) {
 	e.encoder = format.NewEncoder(cryptor)
 }
@@ -50,7 +44,6 @@ func (e *EncryptRoutes) SetRawSQLDB(db *sql.DB) {
 	e.rawSQLDB = db
 }
 
-func (e *EncryptRoutes) RequiresSQL() bool         { return true }
 func (e *EncryptRoutes) SetClock(c clock.Clock)    { e.clock = c }
 func (e *EncryptRoutes) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 

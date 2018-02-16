@@ -113,8 +113,6 @@ var _ = BeforeEach(func() {
 	migrationsDone := make(chan struct{})
 
 	migrationManager := migration.NewManager(logger,
-		nil,
-		nil,
 		sqlDB,
 		rawDB,
 		cryptor,

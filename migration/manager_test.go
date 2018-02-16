@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/bbs/db/dbfakes"
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
 	"code.cloudfoundry.org/bbs/migration"
@@ -26,9 +25,7 @@ var _ = Describe("Migration Manager", func() {
 		manager          ifrit.Runner
 		migrationProcess ifrit.Process
 
-		logger          *lagertest.TestLogger
-		fakeETCDDB      *dbfakes.FakeDB
-		etcdStoreClient etcd.StoreClient
+		logger *lagertest.TestLogger
 
 		fakeSQLDB *dbfakes.FakeDB
 		rawSQLDB  *sql.DB
@@ -37,7 +34,6 @@ var _ = Describe("Migration Manager", func() {
 
 		migrationsDone chan struct{}
 
-		dbVersion     *models.Version
 		fakeMigration *migrationfakes.FakeMigration
 
 		cryptor encryption.Cryptor
@@ -50,23 +46,18 @@ var _ = Describe("Migration Manager", func() {
 
 		fakeMetronClient = new(mfakes.FakeIngressClient)
 
-		dbVersion = &models.Version{}
-
 		logger = lagertest.NewTestLogger("test")
-		fakeETCDDB = &dbfakes.FakeDB{}
-		fakeETCDDB.VersionReturns(dbVersion, nil)
 
 		fakeSQLDB = &dbfakes.FakeDB{}
 
 		cryptor = &encryptionfakes.FakeCryptor{}
 
 		fakeMigration = &migrationfakes.FakeMigration{}
-		fakeMigration.RequiresSQLReturns(false)
 		migrations = []migration.Migration{fakeMigration}
 	})
 
 	JustBeforeEach(func() {
-		manager = migration.NewManager(logger, fakeETCDDB, etcdStoreClient, fakeSQLDB, rawSQLDB, cryptor, migrations, migrationsDone, clock.NewClock(), "db-driver", fakeMetronClient)
+		manager = migration.NewManager(logger, fakeSQLDB, rawSQLDB, cryptor, migrations, migrationsDone, clock.NewClock(), "db-driver", fakeMetronClient)
 		migrationProcess = ifrit.Background(manager)
 	})
 
@@ -74,172 +65,15 @@ var _ = Describe("Migration Manager", func() {
 		ginkgomon.Kill(migrationProcess)
 	})
 
-	Context("when both a etcd and sql configurations are present", func() {
+	Context("when configured with a SQL database", func() {
 		BeforeEach(func() {
 			rawSQLDB = &sql.DB{}
-			etcdStoreClient = etcd.NewStoreClient(nil)
-		})
-
-		Context("but SQL does not have a version", func() {
-			BeforeEach(func() {
-				fakeSQLDB.VersionReturns(nil, models.ErrResourceNotFound)
-			})
-
-			It("fetches the version from etcd", func() {
-				Eventually(fakeSQLDB.VersionCallCount).Should(Equal(1))
-				Consistently(fakeSQLDB.VersionCallCount).Should(Equal(1))
-
-				Eventually(fakeETCDDB.VersionCallCount).Should(Equal(1))
-				Consistently(fakeETCDDB.VersionCallCount).Should(Equal(1))
-
-				ginkgomon.Interrupt(migrationProcess)
-				Eventually(migrationProcess.Wait()).Should(Receive(BeNil()))
-			})
-
-			// cross-db migration
-			Context("but etcd does", func() {
-				var fakeMigrationToSQL *migrationfakes.FakeMigration
-
-				BeforeEach(func() {
-					fakeMigrationToSQL = &migrationfakes.FakeMigration{}
-					fakeMigrationToSQL.VersionReturns(102)
-					fakeMigrationToSQL.RequiresSQLReturns(true)
-
-					dbVersion.CurrentVersion = 99
-					fakeMigration.VersionReturns(100)
-
-					migrations = []migration.Migration{fakeMigrationToSQL, fakeMigration}
-				})
-
-				It("sorts all the migrations and runs them", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
-					Expect(migrationsDone).To(BeClosed())
-					Expect(fakeETCDDB.SetVersionCallCount()).To(Equal(2))
-
-					_, version := fakeETCDDB.SetVersionArgsForCall(0)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 100}))
-
-					_, version = fakeETCDDB.SetVersionArgsForCall(1)
-					// Current Version set to last ETCD migration plus 1
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 101}))
-
-					Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(2))
-
-					_, version = fakeSQLDB.SetVersionArgsForCall(0)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 100}))
-
-					_, version = fakeSQLDB.SetVersionArgsForCall(1)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 102}))
-
-					Expect(fakeMigration.UpCallCount()).To(Equal(1))
-					Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
-				})
-
-				It("sets the raw SQL db and the storeClient on the migration to SQL", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
-					Expect(migrationsDone).To(BeClosed())
-					Expect(fakeMigrationToSQL.SetRawSQLDBCallCount()).To(Equal(1))
-					Expect(fakeMigrationToSQL.SetStoreClientCallCount()).To(Equal(1))
-				})
-			})
-
-			Context("etcd to sql has already been run", func() {
-				var fakeMigrationToSQL *migrationfakes.FakeMigration
-
-				BeforeEach(func() {
-					fakeMigrationToSQL = &migrationfakes.FakeMigration{}
-					fakeMigrationToSQL.VersionReturns(103)
-					fakeMigrationToSQL.RequiresSQLReturns(true)
-
-					// Current Version is 1 more than the last ETCD Migration (99)
-					dbVersion.CurrentVersion = 100
-					fakeMigration.VersionReturns(99)
-
-					migrations = []migration.Migration{fakeMigrationToSQL, fakeMigration}
-				})
-
-				It("sorts all the migrations and runs them", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
-					Expect(migrationsDone).To(BeClosed())
-					Expect(fakeETCDDB.SetVersionCallCount()).To(Equal(1))
-
-					Expect(fakeMigration.UpCallCount()).To(Equal(0))
-					Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
-				})
-
-				It("sets the raw SQL db and the storeClient on the migration to SQL", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
-					Expect(migrationsDone).To(BeClosed())
-					Expect(fakeMigrationToSQL.SetRawSQLDBCallCount()).To(Equal(1))
-					Expect(fakeMigrationToSQL.SetStoreClientCallCount()).To(Equal(0))
-				})
-			})
-
-			// fresh sql bbs
-			Context("and neither does etcd", func() {
-				BeforeEach(func() {
-					fakeETCDDB.VersionReturns(nil, models.ErrResourceNotFound)
-					fakeMigration.VersionReturns(101)
-				})
-
-				It("creates versions in both backends and doesn't run any migrations", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
-					Expect(migrationsDone).To(BeClosed())
-
-					Expect(fakeETCDDB.SetVersionCallCount()).To(Equal(1))
-					_, version := fakeETCDDB.SetVersionArgsForCall(0)
-					Expect(version.CurrentVersion).To(BeEquivalentTo(101))
-
-					Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(1))
-					_, version = fakeSQLDB.SetVersionArgsForCall(0)
-					Expect(version.CurrentVersion).To(BeEquivalentTo(101))
-
-					Expect(fakeMigration.UpCallCount()).To(Equal(0))
-				})
-			})
-		})
-
-		// already on sql
-		Context("and SQL has a version", func() {
-			BeforeEach(func() {
-				fakeSQLDB.VersionReturns(dbVersion, nil)
-
-				dbVersion.CurrentVersion = 99
-				fakeMigration.VersionReturns(100)
-				fakeMigration.RequiresSQLReturns(true)
-			})
-
-			It("ignores etcd entirely and uses SQL's stored version", func() {
-				Eventually(fakeSQLDB.VersionCallCount).Should(Equal(1))
-				Consistently(fakeSQLDB.VersionCallCount).Should(Equal(1))
-
-				Eventually(fakeETCDDB.VersionCallCount).Should(Equal(0))
-				Consistently(fakeETCDDB.VersionCallCount).Should(Equal(0))
-			})
-
-			It("runs migrations", func() {
-				Eventually(migrationProcess.Ready()).Should(BeClosed())
-				Expect(migrationsDone).To(BeClosed())
-
-				Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(1))
-				Expect(fakeMigration.UpCallCount()).To(Equal(1))
-				Expect(fakeMigration.SetRawSQLDBCallCount()).To(Equal(1))
-			})
-		})
-	})
-
-	Context("when there's only sql configuration present", func() {
-		BeforeEach(func() {
-			etcdStoreClient = nil
-			rawSQLDB = &sql.DB{}
+			fakeSQLDB.VersionReturns(&models.Version{}, nil)
 		})
 
 		It("fetches the stored version from sql", func() {
 			Eventually(fakeSQLDB.VersionCallCount).Should(Equal(1))
 			Consistently(fakeSQLDB.VersionCallCount).Should(Equal(1))
-
-			Eventually(fakeETCDDB.VersionCallCount).Should(Equal(0))
-			Consistently(fakeETCDDB.VersionCallCount).Should(Equal(0))
 
 			ginkgomon.Interrupt(migrationProcess)
 			Eventually(migrationProcess.Wait()).Should(Receive(BeNil()))
@@ -253,25 +87,21 @@ var _ = Describe("Migration Manager", func() {
 
 			BeforeEach(func() {
 				fakeSQLDB.VersionReturns(nil, models.ErrResourceNotFound)
-				fakeMigration.VersionReturns(99)
 
 				fakeMigrationToSQL = &migrationfakes.FakeMigration{}
 				fakeMigrationToSQL.VersionReturns(100)
-				fakeMigrationToSQL.RequiresSQLReturns(true)
 
 				fakeSQLOnlyMigration = &migrationfakes.FakeMigration{}
 				fakeSQLOnlyMigration.VersionReturns(101)
-				fakeSQLOnlyMigration.RequiresSQLReturns(true)
 
-				migrations = []migration.Migration{fakeMigrationToSQL, fakeMigration, fakeSQLOnlyMigration}
+				migrations = []migration.Migration{fakeSQLOnlyMigration, fakeMigrationToSQL}
 			})
 
-			It("creates a version table and seeds it with the lowest sql-requiring version", func() {
+			It("runs all the migrations in the correct order and sets the version to the latest migration version", func() {
 				Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(3))
-				Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(0))
 
 				_, version := fakeSQLDB.SetVersionArgsForCall(0)
-				Expect(version.CurrentVersion).To(BeEquivalentTo(99))
+				Expect(version.CurrentVersion).To(BeEquivalentTo(0))
 
 				_, version = fakeSQLDB.SetVersionArgsForCall(1)
 				Expect(version.CurrentVersion).To(BeEquivalentTo(100))
@@ -279,100 +109,14 @@ var _ = Describe("Migration Manager", func() {
 				_, version = fakeSQLDB.SetVersionArgsForCall(2)
 				Expect(version.CurrentVersion).To(BeEquivalentTo(101))
 
-				Expect(fakeMigration.UpCallCount()).To(Equal(0))
 				Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
 				Expect(fakeSQLOnlyMigration.UpCallCount()).To(Equal(1))
 			})
 		})
 
-		Context("and SQL has a version", func() {
-			BeforeEach(func() {
-				fakeSQLDB.VersionReturns(dbVersion, nil)
-
-				dbVersion.CurrentVersion = 99
-				fakeMigration.VersionReturns(100)
-				fakeMigration.RequiresSQLReturns(true)
-			})
-
-			It("runs migrations", func() {
-				Eventually(migrationProcess.Ready()).Should(BeClosed())
-				Expect(migrationsDone).To(BeClosed())
-
-				Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(1))
-				Expect(fakeMigration.UpCallCount()).To(Equal(1))
-				Expect(fakeMigration.SetRawSQLDBCallCount()).To(Equal(1))
-			})
-
-			Context("and there are more than one migrations", func() {
-				var fakeMigration2 *migrationfakes.FakeMigration
-
-				BeforeEach(func() {
-					fakeMigration2 = &migrationfakes.FakeMigration{}
-					migrations = append(migrations, fakeMigration2)
-
-					fakeMigration2.VersionReturns(101)
-					fakeMigration2.RequiresSQLReturns(true)
-				})
-
-				It("runs migrations", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
-					Expect(migrationsDone).To(BeClosed())
-
-					Expect(fakeSQLDB.SetVersionCallCount()).To(Equal(2))
-					_, v1 := fakeSQLDB.SetVersionArgsForCall(0)
-					_, v2 := fakeSQLDB.SetVersionArgsForCall(1)
-					Expect(v1).To(Equal(&models.Version{
-						CurrentVersion: 100,
-					}))
-					Expect(v2).To(Equal(&models.Version{
-						CurrentVersion: 101,
-					}))
-
-					Expect(fakeMigration.UpCallCount()).To(Equal(1))
-					Expect(fakeMigration2.UpCallCount()).To(Equal(1))
-					Expect(fakeMigration.SetRawSQLDBCallCount()).To(Equal(1))
-					Expect(fakeMigration2.SetRawSQLDBCallCount()).To(Equal(1))
-				})
-			})
-		})
-	})
-
-	Context("when there's only etcd configuration present", func() {
-		BeforeEach(func() {
-			rawSQLDB = nil
-			etcdStoreClient = etcd.NewStoreClient(nil)
-		})
-
-		It("fetches the stored version from etcd", func() {
-			Eventually(fakeETCDDB.VersionCallCount).Should(Equal(1))
-			Consistently(fakeETCDDB.VersionCallCount).Should(Equal(1))
-
-			Eventually(fakeSQLDB.VersionCallCount).Should(Equal(0))
-			Consistently(fakeSQLDB.VersionCallCount).Should(Equal(0))
-
-			ginkgomon.Interrupt(migrationProcess)
-			Eventually(migrationProcess.Wait()).Should(Receive(BeNil()))
-		})
-
-		Context("when there is no version", func() {
-			BeforeEach(func() {
-				fakeETCDDB.VersionReturns(nil, models.ErrResourceNotFound)
-				fakeMigration.VersionReturns(9)
-			})
-
-			It("creates a version with the correct target version and does not run any migrations", func() {
-				Eventually(fakeETCDDB.SetVersionCallCount).Should(Equal(1))
-
-				_, version := fakeETCDDB.SetVersionArgsForCall(0)
-				Expect(version.CurrentVersion).To(BeEquivalentTo(9))
-
-				Expect(fakeMigration.UpCallCount()).To(Equal(0))
-			})
-		})
-
 		Context("when fetching the version fails", func() {
 			BeforeEach(func() {
-				fakeETCDDB.VersionReturns(nil, errors.New("kablamo"))
+				fakeSQLDB.VersionReturns(nil, errors.New("kablamo"))
 			})
 
 			It("fails early", func() {
@@ -386,7 +130,7 @@ var _ = Describe("Migration Manager", func() {
 
 		Context("when the current version is newer than bbs migration version", func() {
 			BeforeEach(func() {
-				dbVersion.CurrentVersion = 100
+				fakeSQLDB.VersionReturns(&models.Version{CurrentVersion: 100}, nil)
 				fakeMigration.VersionReturns(99)
 			})
 
@@ -401,14 +145,14 @@ var _ = Describe("Migration Manager", func() {
 
 		Context("when the current version is the same as the bbs migration version", func() {
 			BeforeEach(func() {
-				dbVersion.CurrentVersion = 100
+				fakeSQLDB.VersionReturns(&models.Version{CurrentVersion: 100}, nil)
 				fakeMigration.VersionReturns(100)
 			})
 
 			It("signals ready and does not change the version", func() {
 				Eventually(migrationProcess.Ready()).Should(BeClosed())
 				Expect(migrationsDone).To(BeClosed())
-				Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(0))
+				Consistently(fakeSQLDB.SetVersionCallCount).Should(Equal(0))
 			})
 		})
 
@@ -419,7 +163,7 @@ var _ = Describe("Migration Manager", func() {
 				fakeMigration102 = &migrationfakes.FakeMigration{}
 				fakeMigration102.VersionReturns(102)
 
-				dbVersion.CurrentVersion = 99
+				fakeSQLDB.VersionReturns(&models.Version{CurrentVersion: 99}, nil)
 				fakeMigration.VersionReturns(100)
 
 				migrations = []migration.Migration{fakeMigration102, fakeMigration}
@@ -437,15 +181,15 @@ var _ = Describe("Migration Manager", func() {
 				})
 			})
 
-			It("it sorts the migrations and runs them sequentially", func() {
+			It("sorts the migrations and runs them sequentially", func() {
 				Eventually(migrationProcess.Ready()).Should(BeClosed())
 				Expect(migrationsDone).To(BeClosed())
-				Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(2))
+				Consistently(fakeSQLDB.SetVersionCallCount).Should(Equal(2))
 
-				_, version := fakeETCDDB.SetVersionArgsForCall(0)
+				_, version := fakeSQLDB.SetVersionArgsForCall(0)
 				Expect(version).To(Equal(&models.Version{CurrentVersion: 100}))
 
-				_, version = fakeETCDDB.SetVersionArgsForCall(1)
+				_, version = fakeSQLDB.SetVersionArgsForCall(1)
 				Expect(version).To(Equal(&models.Version{CurrentVersion: 102}))
 
 				Expect(fakeMigration.UpCallCount()).To(Equal(1))
@@ -495,47 +239,12 @@ var _ = Describe("Migration Manager", func() {
 				})
 			})
 
-			It("sets the store client on the migration", func() {
-				Eventually(migrationProcess.Ready()).Should(BeClosed())
-				Expect(migrationsDone).To(BeClosed())
-				Expect(fakeMigration.SetStoreClientCallCount()).To(Equal(1))
-				actualStoreClient := fakeMigration.SetStoreClientArgsForCall(0)
-				Expect(actualStoreClient).To(Equal(etcdStoreClient))
-			})
-
 			It("sets the cryptor on the migration", func() {
 				Eventually(migrationProcess.Ready()).Should(BeClosed())
 				Expect(migrationsDone).To(BeClosed())
 				Expect(fakeMigration.SetCryptorCallCount()).To(Equal(1))
 				actualCryptor := fakeMigration.SetCryptorArgsForCall(0)
 				Expect(actualCryptor).To(Equal(cryptor))
-			})
-
-			Context("when there's a migration that requires SQL", func() {
-				var fakeMigrationToSQL *migrationfakes.FakeMigration
-
-				BeforeEach(func() {
-					fakeMigrationToSQL = &migrationfakes.FakeMigration{}
-					fakeMigrationToSQL.VersionReturns(102)
-					fakeMigrationToSQL.RequiresSQLReturns(true)
-
-					dbVersion.CurrentVersion = 99
-					fakeMigration.VersionReturns(100)
-
-					migrations = []migration.Migration{fakeMigrationToSQL, fakeMigration}
-				})
-
-				It("Does not attempt to run that migration, and only upgrades to the max etcd version", func() {
-					Eventually(migrationProcess.Ready()).Should(BeClosed())
-					Expect(migrationsDone).To(BeClosed())
-					Consistently(fakeETCDDB.SetVersionCallCount).Should(Equal(1))
-
-					_, version := fakeETCDDB.SetVersionArgsForCall(0)
-					Expect(version).To(Equal(&models.Version{CurrentVersion: 100}))
-
-					Consistently(fakeSQLDB.SetVersionCallCount).Should(Equal(0))
-					Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(0))
-				})
 			})
 		})
 
@@ -546,7 +255,7 @@ var _ = Describe("Migration Manager", func() {
 
 			Context("and there is an existing version", func() {
 				BeforeEach(func() {
-					dbVersion.CurrentVersion = 100
+					fakeSQLDB.VersionReturns(&models.Version{CurrentVersion: 100}, nil)
 				})
 
 				It("treats the bbs migration version as 0", func() {
@@ -559,17 +268,31 @@ var _ = Describe("Migration Manager", func() {
 
 			Context("and there is no existing version", func() {
 				BeforeEach(func() {
-					fakeETCDDB.VersionReturns(nil, models.ErrResourceNotFound)
+					fakeSQLDB.VersionReturns(nil, models.ErrResourceNotFound)
 				})
 
 				It("writes a zero version into the db", func() {
-					Eventually(fakeETCDDB.SetVersionCallCount).Should(Equal(1))
+					Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(1))
 
-					_, version := fakeETCDDB.SetVersionArgsForCall(0)
+					_, version := fakeSQLDB.SetVersionArgsForCall(0)
 					Expect(version.CurrentVersion).To(BeEquivalentTo(0))
 					Expect(version.CurrentVersion).To(BeEquivalentTo(0))
 				})
 			})
+		})
+	})
+
+	Context("when not configured with a database", func() {
+		BeforeEach(func() {
+			rawSQLDB = nil
+		})
+
+		It("fails early", func() {
+			var err error
+			Eventually(migrationProcess.Wait()).Should(Receive(&err))
+			Expect(err).To(MatchError("no database configured"))
+			Expect(migrationProcess.Ready()).ToNot(BeClosed())
+			Expect(migrationsDone).NotTo(BeClosed())
 		})
 	})
 })

@@ -3,7 +3,6 @@ package migrations
 import (
 	"database/sql"
 
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/clock"
@@ -22,8 +21,6 @@ func NewSQLTestMigration() migration.Migration {
 	return &SQLTestMigration{}
 }
 
-func (t *SQLTestMigration) SetStoreClient(storeClient etcd.StoreClient) {}
-
 func (*SQLTestMigration) SetCryptor(cryptor encryption.Cryptor) {}
 
 func (t *SQLTestMigration) SetRawSQLDB(rawSQLDB *sql.DB) {
@@ -32,10 +29,6 @@ func (t *SQLTestMigration) SetRawSQLDB(rawSQLDB *sql.DB) {
 
 func (*SQLTestMigration) SetClock(clock.Clock) {}
 func (*SQLTestMigration) SetDBFlavor(string)   {}
-
-func (*SQLTestMigration) RequiresSQL() bool {
-	return true
-}
 
 func (t *SQLTestMigration) Up(logger lager.Logger) error {
 	_, err := t.rawSQLDB.Exec(`CREATE TABLE IF NOT EXISTS sweet_table (

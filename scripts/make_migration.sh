@@ -30,7 +30,6 @@ package migrations
 import (
 	"database/sql"
 
-	"code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -65,10 +64,7 @@ func (e *${CAMEL_CASE_NAME}) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *${CAMEL_CASE_NAME}) SetStoreClient(storeClient etcd.StoreClient) {}
-
 func (e *${CAMEL_CASE_NAME}) SetRawSQLDB(db *sql.DB)	{ e.rawSQLDB = db }
-func (e *${CAMEL_CASE_NAME}) RequiresSQL() bool		{ return true }
 func (e *${CAMEL_CASE_NAME}) SetClock(c clock.Clock)	{ e.clock = c }
 func (e *${CAMEL_CASE_NAME}) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 

@@ -42,7 +42,7 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 
 		BeforeEach(func() {
 			initialMigrations = []migration.Migration{
-				migrations.NewETCDToSQL(),
+				migrations.NewInitSQL(),
 				migrations.NewIncreaseRunInfoColumnSize(),
 			}
 

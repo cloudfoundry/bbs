@@ -45,7 +45,7 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 
 		BeforeEach(func() {
 			initialMigrations = []migration.Migration{
-				migrations.NewETCDToSQL(),
+				migrations.NewInitSQL(),
 				migrations.NewIncreaseRunInfoColumnSize(),
 				migrations.NewAddPlacementTagsToDesiredLRPs(),
 				migrations.NewIncreaseErrorColumnsSize(),

@@ -18,8 +18,6 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/converger"
-	"code.cloudfoundry.org/bbs/db"
-	etcddb "code.cloudfoundry.org/bbs/db/etcd"
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -50,7 +48,6 @@ import (
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/rep/maintain"
 	"github.com/cloudfoundry/dropsonde"
-	etcdclient "github.com/coreos/go-etcd/etcd"
 	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
 	"github.com/lib/pq"
@@ -116,12 +113,6 @@ func main() {
 		logger.Fatal("failed-invalid-health-port", err)
 	}
 
-	var activeDB db.DB
-	var sqlDB *sqldb.SQLDB
-	var sqlConn *sql.DB
-	var storeClient etcddb.StoreClient
-	var etcdDB *etcddb.ETCDDB
-
 	key, keys, err := bbsConfig.EncryptionConfig.Parse()
 	if err != nil {
 		logger.Fatal("cannot-setup-encryption", err)
@@ -132,70 +123,52 @@ func main() {
 	}
 	cryptor := encryption.NewCryptor(keyManager, rand.Reader)
 
-	etcdOptions, err := bbsConfig.ETCDConfig.Validate()
-	if err != nil {
-		logger.Fatal("etcd-validation-failed", err)
-	}
-
-	if etcdOptions.IsConfigured {
-		storeClient = initializeEtcdStoreClient(logger, etcdOptions)
-		etcdDB = initializeEtcdDB(logger, cryptor, storeClient, &bbsConfig, metronClient)
-		activeDB = etcdDB
-	}
-
-	// If SQL database info is passed in, use SQL instead of ETCD
-	if bbsConfig.DatabaseDriver != "" && bbsConfig.DatabaseConnectionString != "" {
-		var err error
-		connectionString := appendExtraConnectionStringParam(logger,
-			bbsConfig.DatabaseDriver,
-			bbsConfig.DatabaseConnectionString,
-			bbsConfig.SQLCACertFile,
-		)
-
-		sqlConn, err = sql.Open(bbsConfig.DatabaseDriver, connectionString)
-		if err != nil {
-			logger.Fatal("failed-to-open-sql", err)
-		}
-		defer sqlConn.Close()
-		sqlConn.SetMaxOpenConns(bbsConfig.MaxOpenDatabaseConnections)
-		sqlConn.SetMaxIdleConns(bbsConfig.MaxIdleDatabaseConnections)
-
-		err = sqlConn.Ping()
-		if err != nil {
-			logger.Fatal("sql-failed-to-connect", err)
-		}
-
-		wrappedDB := helpers.NewMonitoredDB(sqlConn, helpers.NewQueryMonitor())
-		sqlDB = sqldb.NewSQLDB(
-			wrappedDB,
-			bbsConfig.ConvergenceWorkers,
-			bbsConfig.UpdateWorkers,
-			format.ENCRYPTED_PROTO,
-			cryptor,
-			guidprovider.DefaultGuidProvider,
-			clock,
-			bbsConfig.DatabaseDriver,
-			metronClient,
-		)
-		err = sqlDB.CreateConfigurationsTable(logger)
-		if err != nil {
-			logger.Fatal("sql-failed-create-configurations-table", err)
-		}
-		activeDB = sqlDB
-	}
-
-	if activeDB == nil {
+	if bbsConfig.DatabaseDriver == "" || bbsConfig.DatabaseConnectionString == "" {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
-	encryptor := encryptor.New(logger, activeDB, keyManager, cryptor, clock, metronClient)
+	connectionString := appendExtraConnectionStringParam(logger,
+		bbsConfig.DatabaseDriver,
+		bbsConfig.DatabaseConnectionString,
+		bbsConfig.SQLCACertFile,
+	)
+
+	sqlConn, err := sql.Open(bbsConfig.DatabaseDriver, connectionString)
+	if err != nil {
+		logger.Fatal("failed-to-open-sql", err)
+	}
+	defer sqlConn.Close()
+	sqlConn.SetMaxOpenConns(bbsConfig.MaxOpenDatabaseConnections)
+	sqlConn.SetMaxIdleConns(bbsConfig.MaxIdleDatabaseConnections)
+
+	err = sqlConn.Ping()
+	if err != nil {
+		logger.Fatal("sql-failed-to-connect", err)
+	}
+
+	wrappedDB := helpers.NewMonitoredDB(sqlConn, helpers.NewQueryMonitor())
+	sqlDB := sqldb.NewSQLDB(
+		wrappedDB,
+		bbsConfig.ConvergenceWorkers,
+		bbsConfig.UpdateWorkers,
+		format.ENCRYPTED_PROTO,
+		cryptor,
+		guidprovider.DefaultGuidProvider,
+		clock,
+		bbsConfig.DatabaseDriver,
+		metronClient,
+	)
+	err = sqlDB.CreateConfigurationsTable(logger)
+	if err != nil {
+		logger.Fatal("sql-failed-create-configurations-table", err)
+	}
+
+	encryptor := encryptor.New(logger, sqlDB, keyManager, cryptor, clock, metronClient)
 
 	migrationsDone := make(chan struct{})
 
 	migrationManager := migration.NewManager(
 		logger,
-		etcdDB,
-		storeClient,
 		sqlDB,
 		sqlConn,
 		cryptor,
@@ -316,7 +289,7 @@ func main() {
 		bbsConfig.UpdateWorkers,
 		bbsConfig.ConvergenceWorkers,
 		requestStatMetronNotifier,
-		activeDB,
+		sqlDB,
 		desiredHub,
 		actualHub,
 		taskHub,
@@ -331,16 +304,16 @@ func main() {
 
 	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger, metronClient)
 
-	actualLRPController := controllers.NewActualLRPLifecycleController(activeDB, activeDB, activeDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
+	actualLRPController := controllers.NewActualLRPLifecycleController(sqlDB, sqlDB, sqlDB, auctioneerClient, serviceClient, repClientFactory, actualHub)
 	lrpConvergenceController := controllers.NewLRPConvergenceController(logger,
-		activeDB,
+		sqlDB,
 		actualHub,
 		auctioneerClient,
 		serviceClient,
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 	)
-	taskController := controllers.NewTaskController(activeDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier)
+	taskController := controllers.NewTaskController(sqlDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier)
 
 	convergerProcess := converger.New(
 		logger,
@@ -582,63 +555,4 @@ func initializeDropsonde(logger lager.Logger, dropsondePort int) {
 	if err != nil {
 		logger.Error("failed-to-initialize-dropsonde", err)
 	}
-}
-
-func initializeEtcdDB(
-	logger lager.Logger,
-	cryptor encryption.Cryptor,
-	storeClient etcddb.StoreClient,
-	bbsConfig *config.BBSConfig,
-	metronClient loggingclient.IngressClient,
-) *etcddb.ETCDDB {
-	return etcddb.NewETCD(
-		format.ENCRYPTED_PROTO,
-		bbsConfig.ConvergenceWorkers,
-		bbsConfig.UpdateWorkers,
-		time.Duration(bbsConfig.DesiredLRPCreationTimeout),
-		cryptor,
-		storeClient,
-		clock.NewClock(),
-		metronClient,
-	)
-}
-
-func initializeEtcdStoreClient(logger lager.Logger, etcdOptions *etcddb.ETCDOptions) etcddb.StoreClient {
-	var etcdClient *etcdclient.Client
-	var tr *http.Transport
-
-	if etcdOptions.IsSSL {
-		if etcdOptions.CertFile == "" || etcdOptions.KeyFile == "" {
-			logger.Fatal("failed-to-construct-etcd-tls-client", errors.New("Require both cert and key path"))
-		}
-
-		var err error
-		etcdClient, err = etcdclient.NewTLSClient(etcdOptions.ClusterUrls, etcdOptions.CertFile, etcdOptions.KeyFile, etcdOptions.CAFile)
-		if err != nil {
-			logger.Fatal("failed-to-construct-etcd-tls-client", err)
-		}
-
-		tlsCert, err := tls.LoadX509KeyPair(etcdOptions.CertFile, etcdOptions.KeyFile)
-		if err != nil {
-			logger.Fatal("failed-to-construct-etcd-tls-client", err)
-		}
-
-		tlsConfig := &tls.Config{
-			Certificates:       []tls.Certificate{tlsCert},
-			InsecureSkipVerify: true,
-			ClientSessionCache: tls.NewLRUClientSessionCache(etcdOptions.ClientSessionCacheSize),
-		}
-		tr = &http.Transport{
-			TLSClientConfig:     tlsConfig,
-			Dial:                etcdClient.DefaultDial,
-			MaxIdleConnsPerHost: etcdOptions.MaxIdleConnsPerHost,
-		}
-		etcdClient.SetTransport(tr)
-		etcdClient.AddRootCA(etcdOptions.CAFile)
-	} else {
-		etcdClient = etcdclient.NewClient(etcdOptions.ClusterUrls)
-	}
-	etcdClient.SetConsistency(etcdclient.STRONG_CONSISTENCY)
-
-	return etcddb.NewStoreClient(etcdClient)
 }

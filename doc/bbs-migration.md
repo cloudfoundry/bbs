@@ -19,9 +19,6 @@ expected to run against any schema versions other than N or N - 1 (where N is
 the schema version defined by the current migration).  Additionally, rollbacks
 and "down" migrations are not supported.
 
-Note that some older migrations are not idempotent, especially those prior to
-the transition from etcd to SQL.
-
 ### Writing a migration
 
 Use `scripts/make_migration.sh <name>` to create a new migration. `<name>`
