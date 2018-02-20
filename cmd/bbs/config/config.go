@@ -23,6 +23,7 @@ type BBSConfig struct {
 	AuctioneerRequireTLS            bool                  `json:"auctioneer_require_tls,omitempty"`
 	UUID                            string                `json:"uuid,omitempty"`
 	CaFile                          string                `json:"ca_file,omitempty"`
+	CellRegistrationsLocketEnabled  bool                  `json:"cell_registrations_locket_enabled"`
 	CertFile                        string                `json:"cert_file,omitempty"`
 	CommunicationTimeout            durationjson.Duration `json:"communication_timeout,omitempty"`
 	ConsulCluster                   string                `json:"consul_cluster,omitempty"`
@@ -41,6 +42,7 @@ type BBSConfig struct {
 	KeyFile                     string                `json:"key_file,omitempty"`
 	KickTaskDuration            durationjson.Duration `json:"kick_task_duration,omitempty"`
 	ListenAddress               string                `json:"listen_address,omitempty"`
+	LocksLocketEnabled          bool                  `json:"locket_enabled"`
 	LockRetryInterval           durationjson.Duration `json:"lock_retry_interval,omitempty"`
 	LockTTL                     durationjson.Duration `json:"lock_ttl,omitempty"`
 	MaxIdleDatabaseConnections  int                   `json:"max_idle_database_connections,omitempty"`

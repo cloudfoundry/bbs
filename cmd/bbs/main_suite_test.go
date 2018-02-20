@@ -184,11 +184,13 @@ var _ = BeforeEach(func() {
 		ConsulCluster:     consulRunner.ConsulCluster(),
 		DropsondePort:     port,
 
-		DatabaseDriver:                sqlRunner.DriverName(),
-		DatabaseConnectionString:      sqlRunner.ConnectionString(),
-		DetectConsulCellRegistrations: true,
-		ReportInterval:                durationjson.Duration(10 * time.Millisecond),
-		HealthAddress:                 bbsHealthAddress,
+		DatabaseDriver:                 sqlRunner.DriverName(),
+		DatabaseConnectionString:       sqlRunner.ConnectionString(),
+		DetectConsulCellRegistrations:  true,
+		ReportInterval:                 durationjson.Duration(10 * time.Millisecond),
+		HealthAddress:                  bbsHealthAddress,
+		CellRegistrationsLocketEnabled: false,
+		LocksLocketEnabled:             false,
 
 		EncryptionConfig: encryption.EncryptionConfig{
 			EncryptionKeys: map[string]string{"label": "key"},

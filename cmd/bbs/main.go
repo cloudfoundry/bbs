@@ -226,10 +226,8 @@ func main() {
 		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
 	}
 
-	var locketClient locketmodels.LocketClient
-	locketClient = serviceclient.NewNoopLocketClient()
-	if bbsConfig.LocketAddress != "" {
-		locketClient, err = locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+	if bbsConfig.LocksLocketEnabled {
+		locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 		if err != nil {
 			logger.Fatal("failed-to-create-locket-client", err)
 		}
@@ -269,7 +267,16 @@ func main() {
 	if bbsConfig.DetectConsulCellRegistrations {
 		cellPresenceClient = maintain.NewCellPresenceClient(consulClient, clock)
 	}
-	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketClient)
+	var locketCellPresenceClient locketmodels.LocketClient
+	locketCellPresenceClient = serviceclient.NewNoopLocketClient()
+	if bbsConfig.CellRegistrationsLocketEnabled {
+		locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+		if err != nil {
+			logger.Fatal("failed-to-create-locket-client", err)
+		}
+		locketCellPresenceClient = locketClient
+	}
+	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketCellPresenceClient)
 
 	logger.Info("report-interval", lager.Data{"value": bbsConfig.ReportInterval})
 	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
