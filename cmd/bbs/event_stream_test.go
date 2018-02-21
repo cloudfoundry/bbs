@@ -169,7 +169,7 @@ var _ = Describe("Events API", func() {
 					Expect(actualLRPCreatedEvent.ActualLrpGroup).To(Equal(actualLRPGroup))
 
 					By("updating the existing ActualLRP")
-					err = client.ClaimActualLRP(logger, processGuid, int(key.Index), &instanceKey)
+					err = client.ClaimActualLRP(logger, &key, &instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 
 					before := actualLRPGroup
@@ -258,7 +258,7 @@ var _ = Describe("Events API", func() {
 					Expect(err).NotTo(HaveOccurred())
 					actualLRP := *actualLRPGroup.GetInstance()
 
-					err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), nil)
+					err = client.RemoveActualLRP(logger, &key, nil)
 					Expect(err).NotTo(HaveOccurred())
 
 					Eventually(func() models.Event {
@@ -322,7 +322,7 @@ var _ = Describe("Events API", func() {
 							Expect(err).NotTo(HaveOccurred())
 
 							By("claiming the ActualLRP")
-							err = client.ClaimActualLRP(logger, processGuid, int(key.Index), &instanceKey)
+							err = client.ClaimActualLRP(logger, &key, &instanceKey)
 							Expect(err).NotTo(HaveOccurred())
 
 							actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
@@ -353,7 +353,7 @@ var _ = Describe("Events API", func() {
 						claimLRP()
 
 						By("removing the instance ActualLRP")
-						err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), &instanceKey)
+						err = client.RemoveActualLRP(logger, &key, &instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 						Eventually(eventChannel).Should(Receive(&event))
 
@@ -365,12 +365,12 @@ var _ = Describe("Events API", func() {
 
 					It("does not receive events from the other cells", func() {
 						By("updating the existing ActualLRP")
-						err = client.ClaimActualLRP(logger, processGuid, int(key.Index), &newInstanceKey)
+						err = client.ClaimActualLRP(logger, &key, &newInstanceKey)
 						Expect(err).NotTo(HaveOccurred())
 
 						Consistently(eventChannel).ShouldNot(Receive())
 
-						err = client.RemoveActualLRP(logger, key.ProcessGuid, int(key.Index), &newInstanceKey)
+						err = client.RemoveActualLRP(logger, &key, &newInstanceKey)
 						Expect(err).NotTo(HaveOccurred())
 						Consistently(eventChannel).ShouldNot(Receive())
 					})

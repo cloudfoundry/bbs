@@ -42,11 +42,11 @@ should be used instead.
 type InternalClient interface {
 	Client
 
-	ClaimActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
+	ClaimActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
 	CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
-	RemoveActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
+	RemoveActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 
 	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, uint64) (bool, error)
@@ -342,10 +342,10 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 	return response.ActualLrpGroup, response.Error.ToError()
 }
 
-func (c *client) ClaimActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
+func (c *client) ClaimActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
 	request := models.ClaimActualLRPRequest{
-		ProcessGuid:          processGuid,
-		Index:                int32(index),
+		ProcessGuid:          key.ProcessGuid,
+		Index:                key.Index,
 		ActualLrpInstanceKey: instanceKey,
 	}
 	response := models.ActualLRPLifecycleResponse{}
@@ -413,10 +413,10 @@ func (c *client) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) 
 	return response.Error.ToError()
 }
 
-func (c *client) RemoveActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error {
+func (c *client) RemoveActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
 	request := models.RemoveActualLRPRequest{
-		ProcessGuid:          processGuid,
-		Index:                int32(index),
+		ProcessGuid:          key.ProcessGuid,
+		Index:                key.Index,
 		ActualLrpInstanceKey: instanceKey,
 	}
 
