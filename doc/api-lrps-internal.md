@@ -207,13 +207,12 @@ and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.
 ### Golang Client API
 
 ```go
-RemoveActualLRP(logger lager.Logger, processGuid string, index int, instanceKey *models.ActualLRPInstanceKey) error
+RemoveActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 ```
 
 #### Inputs
 
-* `processGuid`: The GUID of the corresponding DesiredLRP.
-* `index int`: Index of the ActualLRP.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index (the domain is ignored).
 * `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the ActualLRP to remove. If present, must match the key in the BBS record. If nil, the ActualLRP is removed without requiring a match.
 
 #### Output
@@ -224,7 +223,7 @@ RemoveActualLRP(logger lager.Logger, processGuid string, index int, instanceKey 
 
 ```go
 client := bbs.NewClient(url)
-err := client.RemoveActualLRP(logger, "some-guid", 0, &models.ActualLRPInstanceKey{
+err := client.RemoveActualLRP(logger, &models.ActualLRPKey{ProcessGuid: "some-guid", Index: 0}, &models.ActualLRPInstanceKey{
 	InstanceGuid: "some-instance-guid",
 	CellId: "some-cellID",
 )

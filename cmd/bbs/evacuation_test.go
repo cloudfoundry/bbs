@@ -23,7 +23,7 @@ var _ = Describe("Evacuation API", func() {
 		desiredLRP.Instances = 2
 
 		Expect(client.DesireLRP(logger, desiredLRP)).To(Succeed())
-		Expect(client.ClaimActualLRP(logger, actual.ProcessGuid, 1, &actual.ActualLRPInstanceKey)).To(Succeed())
+		Expect(client.ClaimActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)).To(Succeed())
 		_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
 		Expect(err).NotTo(HaveOccurred())
 	})

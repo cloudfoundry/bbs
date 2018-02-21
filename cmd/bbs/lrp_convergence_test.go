@@ -36,9 +36,11 @@ var _ = Describe("Convergence API", func() {
 			)
 			consulHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
-			err := client.DesireLRP(logger, model_helpers.NewValidDesiredLRP(processGuid))
+			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
+			err := client.DesireLRP(logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
-			err = client.RemoveActualLRP(logger, processGuid, 0, nil)
+			key := models.ActualLRPKey{ProcessGuid: processGuid, Index: 0}
+			err = client.RemoveActualLRP(logger, &key, nil)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

@@ -324,7 +324,7 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			claimErr = client.ClaimActualLRP(logger, unclaimedProcessGuid, unclaimedIndex, &instanceKey)
+			claimErr = client.ClaimActualLRP(logger, &unclaimedLRPKey, &instanceKey)
 		})
 
 		It("claims the actual_lrp", func() {
@@ -493,7 +493,7 @@ var _ = Describe("ActualLRP API", func() {
 		)
 
 		JustBeforeEach(func() {
-			removeErr = client.RemoveActualLRP(logger, otherProcessGuid, otherIndex, instanceKey)
+			removeErr = client.RemoveActualLRP(logger, &otherLRPKey, instanceKey)
 		})
 
 		Describe("when the instance key isn't preset", func() {
