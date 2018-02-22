@@ -42,7 +42,7 @@ type BBSConfig struct {
 	KeyFile                     string                `json:"key_file,omitempty"`
 	KickTaskDuration            durationjson.Duration `json:"kick_task_duration,omitempty"`
 	ListenAddress               string                `json:"listen_address,omitempty"`
-	LocksLocketEnabled          bool                  `json:"locket_enabled"`
+	LocksLocketEnabled          bool                  `json:"locks_locket_enabled"`
 	LockRetryInterval           durationjson.Duration `json:"lock_retry_interval,omitempty"`
 	LockTTL                     durationjson.Duration `json:"lock_ttl,omitempty"`
 	MaxIdleDatabaseConnections  int                   `json:"max_idle_database_connections,omitempty"`

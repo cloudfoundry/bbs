@@ -55,7 +55,7 @@ var _ = Describe("BBSConfig", func() {
 			"listen_address": "0.0.0.0:8889",
 			"lock_retry_interval": "5s",
 			"lock_ttl": "15s",
-			"locket_enabled": true,
+			"locks_locket_enabled": true,
 			"locket_address": "127.0.0.1:18018",
 			"locket_ca_cert_file": "locket-ca-cert",
 			"locket_client_cert_file": "locket-client-cert",
