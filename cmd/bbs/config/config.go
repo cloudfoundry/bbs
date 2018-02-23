@@ -33,7 +33,6 @@ type BBSConfig struct {
 	DatabaseDriver                  string                `json:"database_driver,omitempty"`
 	DesiredLRPCreationTimeout       durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
 	DetectConsulCellRegistrations   bool                  `json:"detect_consul_cell_registrations,omitempty"`
-	DropsondePort                   int                   `json:"dropsonde_port,omitempty"`
 	EnableConsulServiceRegistration bool                  `json:"enable_consul_service_registration"`
 
 	ExpireCompletedTaskDuration durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
@@ -83,7 +82,6 @@ func DefaultConfig() BBSConfig {
 		ConvergenceWorkers:              20,
 		UpdateWorkers:                   1000,
 		TaskCallbackWorkers:             1000,
-		DropsondePort:                   3457,
 		DatabaseDriver:                  "mysql",
 		MaxOpenDatabaseConnections:      200,
 		MaxIdleDatabaseConnections:      200,

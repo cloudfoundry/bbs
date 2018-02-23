@@ -44,7 +44,6 @@ var _ = Describe("BBSConfig", func() {
 			"debug_address": "127.0.0.1:17017",
 			"desired_lrp_creation_timeout": "1m0s",
 			"detect_consul_cell_registrations": true,
-			"dropsonde_port": 3457,
 			"enable_consul_service_registration": false,
 			"encryption_keys": {"label": "key"},
 			"expire_completed_task_duration": "2m0s",
@@ -137,7 +136,6 @@ var _ = Describe("BBSConfig", func() {
 			},
 			DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
 			DetectConsulCellRegistrations:   true,
-			DropsondePort:                   3457,
 			EnableConsulServiceRegistration: false,
 			EncryptionConfig: encryption.EncryptionConfig{
 				ActiveKeyLabel: "label",

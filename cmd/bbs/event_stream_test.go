@@ -8,7 +8,8 @@ import (
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	sonde_events "github.com/cloudfoundry/sonde-go/events"
+	"code.cloudfoundry.org/diego-logging-client/testhelpers"
+	"code.cloudfoundry.org/go-loggregator/rpc/loggregator_v2"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	. "github.com/onsi/ginkgo"
@@ -379,52 +380,32 @@ var _ = Describe("Events API", func() {
 		})
 
 		It("does not emit latency metrics", func() {
-			timeout := time.After(50 * time.Millisecond)
-		METRICS:
-			for {
-				select {
-				case <-testMetricsChan:
-				case <-timeout:
-					break METRICS
-				}
-			}
+			time.Sleep(time.Millisecond * 50)
 			eventSource.Close()
 
-			timeout = time.After(50 * time.Millisecond)
-			for {
-				select {
-				case envelope := <-testMetricsChan:
-					if envelope.GetEventType() == sonde_events.Envelope_ValueMetric {
-						Expect(*envelope.ValueMetric.Name).NotTo(Equal("RequestLatency"))
-					}
-				case <-timeout:
-					return
-				}
-			}
+			Eventually(testMetricsChan).ShouldNot(Receive(testhelpers.MatchV2Metric(testhelpers.MetricAndValue{
+				Name: "RequestLatency",
+			})))
 		})
 
 		It("emits request counting metrics", func() {
 			eventSource.Close()
 
-			timeout := time.After(50 * time.Millisecond)
 			var total uint64
-		OUTER_LOOP:
-			for {
-				select {
-				case envelope := <-testMetricsChan:
-					By("received event")
-					if envelope.GetEventType() == sonde_events.Envelope_CounterEvent {
-						counter := envelope.CounterEvent
-						if *counter.Name == "RequestCount" {
-							total += *counter.Delta
-						}
-					}
-				case <-timeout:
-					break OUTER_LOOP
-				}
-			}
-
-			Expect(total).To(BeEquivalentTo(3))
+			Eventually(testMetricsChan).Should(Receive(
+				SatisfyAll(
+					WithTransform(func(source *loggregator_v2.Envelope) *loggregator_v2.Counter {
+						return source.GetCounter()
+					}, Not(BeNil())),
+					WithTransform(func(source *loggregator_v2.Envelope) string {
+						return source.GetCounter().Name
+					}, Equal("RequestCount")),
+					WithTransform(func(source *loggregator_v2.Envelope) uint64 {
+						total += source.GetCounter().Delta
+						return total
+					}, BeEquivalentTo(3)),
+				),
+			))
 		})
 	})
 

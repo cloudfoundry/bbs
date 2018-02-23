@@ -8,7 +8,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
-	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
+	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/locket"
 	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
 	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
@@ -140,25 +140,11 @@ var _ = Describe("SqlLock", func() {
 				return client.Ping(logger)
 			}).Should(BeTrue())
 
-			var sawHeldMetric bool
-			timeout := time.After(50 * time.Millisecond)
-		OUTER_LOOP:
-			for {
-				select {
-				case envelope := <-testMetricsChan:
-					if envelope.GetEventType() == events.Envelope_ValueMetric {
-						if *envelope.ValueMetric.Name == "LockHeld" {
-							if *envelope.ValueMetric.Value == float64(1) {
-								sawHeldMetric = true
-								break
-							}
-						}
-					}
-				case <-timeout:
-					break OUTER_LOOP
-				}
-			}
-			Expect(sawHeldMetric).To(BeTrue())
+			Eventually(testMetricsChan).Should(Receive(
+				testhelpers.MatchV2MetricAndValue(
+					testhelpers.MetricAndValue{Name: "LockHeld", Value: 1},
+				),
+			))
 		})
 
 		Context("and the locking server becomes unreachable after grabbing the lock", func() {
@@ -182,7 +168,7 @@ var _ = Describe("SqlLock", func() {
 
 			BeforeEach(func() {
 				bbsConfig.SkipConsulLock = true
-				competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&mfakes.FakeIngressClient{}))
+				competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&testhelpers.FakeIngressClient{}))
 				competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
 			})
 
@@ -207,7 +193,7 @@ var _ = Describe("SqlLock", func() {
 			Context("when locket enabled is false", func() {
 				BeforeEach(func() {
 					bbsConfig.LocksLocketEnabled = false
-					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&mfakes.FakeIngressClient{}))
+					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&testhelpers.FakeIngressClient{}))
 					competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
 				})
 
@@ -236,7 +222,7 @@ var _ = Describe("SqlLock", func() {
 
 			Context("when locket enabled is true", func() {
 				BeforeEach(func() {
-					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&mfakes.FakeIngressClient{}))
+					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&testhelpers.FakeIngressClient{}))
 					competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
 				})
 
@@ -301,7 +287,11 @@ var _ = Describe("SqlLock", func() {
 			})
 
 			It("emits metric about not holding lock", func() {
-				Eventually(testMetricsChan).Should(Receive(matchEvent(events.Envelope_ValueMetric, "LockHeld", 0)))
+				Eventually(testMetricsChan).Should(Receive(
+					testhelpers.MatchV2MetricAndValue(
+						testhelpers.MetricAndValue{Name: "LockHeld", Value: 0},
+					),
+				))
 			})
 
 			Context("and continues to be unavailable", func() {

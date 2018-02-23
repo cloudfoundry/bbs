@@ -47,7 +47,6 @@ import (
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/rep/maintain"
-	"github.com/cloudfoundry/dropsonde"
 	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
 	"github.com/lib/pq"
@@ -65,8 +64,7 @@ var configFilePath = flag.String(
 )
 
 const (
-	dropsondeOrigin = "bbs"
-	bbsLockKey      = "bbs"
+	bbsLockKey = "bbs"
 )
 
 func main() {
@@ -549,17 +547,7 @@ func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggingc
 	if bbsConfig.LoggregatorConfig.UseV2API {
 		emitter := runtimeemitter.NewV1(client)
 		go emitter.Run()
-	} else {
-		initializeDropsonde(logger, bbsConfig.DropsondePort)
 	}
 
 	return client, nil
-}
-
-func initializeDropsonde(logger lager.Logger, dropsondePort int) {
-	dropsondeDestination := fmt.Sprint("localhost:", dropsondePort)
-	err := dropsonde.Initialize(dropsondeDestination, dropsondeOrigin)
-	if err != nil {
-		logger.Error("failed-to-initialize-dropsonde", err)
-	}
 }
