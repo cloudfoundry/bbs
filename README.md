@@ -9,9 +9,10 @@ A general overview of the BBS is documented [here](doc).
 ## API
 
 To interact with the BBS from outside of Diego, use the methods provided on the
-ExternalClient interface, documented [here](https://godoc.org/github.com/cloudfoundry/bbs#ExternalClient).
+[`Client` interface](https://godoc.org/github.com/cloudfoundry/bbs#Client).
 
-Components within Diego may use the full [Client interface](https://godoc.org/github.com/cloudfoundry/bbs#Client) to modify internal state.
+Components within Diego may use the full [`InternalClient`
+interface](https://godoc.org/github.com/cloudfoundry/bbs#InternalClient) to modify internal state.
 
 ## Code Generation
 
