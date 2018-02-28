@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,13 +12,11 @@ import (
 var _ = Describe("Init SQL Migration", func() {
 	var (
 		migration    migration.Migration
-		serializer   format.Serializer
 		migrationErr error
 	)
 
 	BeforeEach(func() {
 		migration = migrations.NewInitSQL()
-		serializer = format.NewSerializer(cryptor)
 
 		rawSQLDB.Exec("DROP TABLE domains;")
 		rawSQLDB.Exec("DROP TABLE tasks;")
