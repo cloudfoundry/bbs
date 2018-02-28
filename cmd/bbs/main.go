@@ -24,7 +24,6 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryptor"
 	"code.cloudfoundry.org/bbs/events"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/metrics"
@@ -149,7 +148,6 @@ func main() {
 		wrappedDB,
 		bbsConfig.ConvergenceWorkers,
 		bbsConfig.UpdateWorkers,
-		format.ENCRYPTED_PROTO,
 		cryptor,
 		guidprovider.DefaultGuidProvider,
 		clock,

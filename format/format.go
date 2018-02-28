@@ -5,24 +5,12 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-type Format struct {
-	Encoding
-	EnvelopeFormat
-}
-
-var (
-	LEGACY_FORMATTING *Format = NewFormat(LEGACY_UNENCODED, LEGACY_JSON)
-	FORMATTED_JSON    *Format = NewFormat(UNENCODED, JSON)
-	ENCODED_PROTO     *Format = NewFormat(BASE64, PROTO)
-	ENCRYPTED_PROTO   *Format = NewFormat(BASE64_ENCRYPTED, PROTO)
-)
-
 type serializer struct {
 	encoder Encoder
 }
 
 type Serializer interface {
-	Marshal(logger lager.Logger, format *Format, model Versioner) ([]byte, error)
+	Marshal(logger lager.Logger, model Versioner) ([]byte, error)
 	Unmarshal(logger lager.Logger, encodedPayload []byte, model Versioner) error
 }
 
@@ -32,17 +20,13 @@ func NewSerializer(cryptor encryption.Cryptor) Serializer {
 	}
 }
 
-func NewFormat(encoding Encoding, format EnvelopeFormat) *Format {
-	return &Format{encoding, format}
-}
-
-func (s *serializer) Marshal(logger lager.Logger, format *Format, model Versioner) ([]byte, error) {
-	envelopedPayload, err := MarshalEnvelope(format.EnvelopeFormat, model)
+func (s *serializer) Marshal(logger lager.Logger, model Versioner) ([]byte, error) {
+	envelopedPayload, err := MarshalEnvelope(model)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.encoder.Encode(format.Encoding, envelopedPayload)
+	return s.encoder.Encode(envelopedPayload)
 }
 
 func (s *serializer) Unmarshal(logger lager.Logger, encodedPayload []byte, model Versioner) error {

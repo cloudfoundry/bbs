@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -260,7 +259,7 @@ func (db *SQLDB) encodeRouteData(logger lager.Logger, routes *models.Routes) ([]
 		logger.Error("failed-marshalling-routes", err)
 		return nil, models.ErrBadRequest
 	}
-	encodedData, err := db.encoder.Encode(format.BASE64_ENCRYPTED, routeData)
+	encodedData, err := db.encoder.Encode(routeData)
 	if err != nil {
 		logger.Error("failed-encrypting-routes", err)
 		return nil, models.ErrBadRequest

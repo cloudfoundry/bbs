@@ -15,7 +15,6 @@ var ValidVersions = []Version{V0, V1, V2}
 //go:generate counterfeiter . Versioner
 type Versioner interface {
 	Version() Version
-	Validate() error
 }
 
 //go:generate counterfeiter . ProtoVersioner

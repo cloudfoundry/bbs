@@ -32,15 +32,6 @@ type FakeProtoVersioner struct {
 	versionReturnsOnCall map[int]struct {
 		result1 format.Version
 	}
-	ValidateStub        func() error
-	validateMutex       sync.RWMutex
-	validateArgsForCall []struct{}
-	validateReturns     struct {
-		result1 error
-	}
-	validateReturnsOnCall map[int]struct {
-		result1 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -157,46 +148,6 @@ func (fake *FakeProtoVersioner) VersionReturnsOnCall(i int, result1 format.Versi
 	}{result1}
 }
 
-func (fake *FakeProtoVersioner) Validate() error {
-	fake.validateMutex.Lock()
-	ret, specificReturn := fake.validateReturnsOnCall[len(fake.validateArgsForCall)]
-	fake.validateArgsForCall = append(fake.validateArgsForCall, struct{}{})
-	fake.recordInvocation("Validate", []interface{}{})
-	fake.validateMutex.Unlock()
-	if fake.ValidateStub != nil {
-		return fake.ValidateStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.validateReturns.result1
-}
-
-func (fake *FakeProtoVersioner) ValidateCallCount() int {
-	fake.validateMutex.RLock()
-	defer fake.validateMutex.RUnlock()
-	return len(fake.validateArgsForCall)
-}
-
-func (fake *FakeProtoVersioner) ValidateReturns(result1 error) {
-	fake.ValidateStub = nil
-	fake.validateReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeProtoVersioner) ValidateReturnsOnCall(i int, result1 error) {
-	fake.ValidateStub = nil
-	if fake.validateReturnsOnCall == nil {
-		fake.validateReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.validateReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeProtoVersioner) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -208,8 +159,6 @@ func (fake *FakeProtoVersioner) Invocations() map[string][][]interface{} {
 	defer fake.protoMessageMutex.RUnlock()
 	fake.versionMutex.RLock()
 	defer fake.versionMutex.RUnlock()
-	fake.validateMutex.RLock()
-	defer fake.validateMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

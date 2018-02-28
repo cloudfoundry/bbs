@@ -21,7 +21,7 @@ var _ = Describe("Envelope", func() {
 	Describe("Marshal", func() {
 		It("can successfully marshal a model object envelope", func() {
 			task := model_helpers.NewValidTask("some-guid")
-			encoded, err := format.MarshalEnvelope(format.PROTO, task)
+			encoded, err := format.MarshalEnvelope(task)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(format.EnvelopeFormat(encoded[0])).To(Equal(format.PROTO))
@@ -35,7 +35,7 @@ var _ = Describe("Envelope", func() {
 
 		It("returns an error when marshalling when the envelope doesn't support the model", func() {
 			model := &formatfakes.FakeVersioner{}
-			_, err := format.MarshalEnvelope(format.PROTO, model)
+			_, err := format.MarshalEnvelope(model)
 			Expect(err).To(MatchError("Model object incompatible with envelope format"))
 		})
 	})
@@ -43,7 +43,7 @@ var _ = Describe("Envelope", func() {
 	Describe("Unmarshal", func() {
 		It("can marshal and unmarshal a task without losing data", func() {
 			task := model_helpers.NewValidTask("some-guid")
-			payload, err := format.MarshalEnvelope(format.PROTO, task)
+			payload, err := format.MarshalEnvelope(task)
 			Expect(err).NotTo(HaveOccurred())
 
 			resultingTask := new(models.Task)
@@ -60,13 +60,6 @@ var _ = Describe("Envelope", func() {
 			Expect(err).To(HaveOccurred())
 		})
 
-		It("returns an error when the json payload is invalid", func() {
-			model := &formatfakes.FakeVersioner{}
-			payload := []byte{byte(format.JSON), byte(format.V0), 'f', 'o', 'o'}
-			err := format.UnmarshalEnvelope(logger, payload, model)
-			Expect(err).To(HaveOccurred())
-		})
-
 		It("returns an error when the protobuf payload is invalid", func() {
 			model := model_helpers.NewValidTask("foo")
 			payload := []byte{byte(format.PROTO), byte(format.V0), 'f', 'o', 'o'}
@@ -76,7 +69,7 @@ var _ = Describe("Envelope", func() {
 
 		It("returns an error when unmarshalling when the model doesn't match the envelope", func() {
 			task := model_helpers.NewValidTask("some-guid")
-			payload, err := format.MarshalEnvelope(format.PROTO, task)
+			payload, err := format.MarshalEnvelope(task)
 			Expect(err).NotTo(HaveOccurred())
 
 			model := &formatfakes.FakeVersioner{}

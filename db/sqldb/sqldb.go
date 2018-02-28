@@ -16,7 +16,6 @@ type SQLDB struct {
 	convergenceWorkersSize int
 	updateWorkersSize      int
 	clock                  clock.Clock
-	format                 *format.Format
 	guidProvider           guidprovider.GUIDProvider
 	serializer             format.Serializer
 	cryptor                encryption.Cryptor
@@ -30,7 +29,6 @@ func NewSQLDB(
 	db helpers.QueryableDB,
 	convergenceWorkersSize int,
 	updateWorkersSize int,
-	serializationFormat *format.Format,
 	cryptor encryption.Cryptor,
 	guidProvider guidprovider.GUIDProvider,
 	clock clock.Clock,
@@ -43,7 +41,6 @@ func NewSQLDB(
 		convergenceWorkersSize: convergenceWorkersSize,
 		updateWorkersSize:      updateWorkersSize,
 		clock:                  clock,
-		format:                 serializationFormat,
 		guidProvider:           guidProvider,
 		serializer:             format.NewSerializer(cryptor),
 		cryptor:                cryptor,
@@ -63,7 +60,7 @@ func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx he
 }
 
 func (db *SQLDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
-	encodedPayload, err := db.serializer.Marshal(logger, db.format, model)
+	encodedPayload, err := db.serializer.Marshal(logger, model)
 	if err != nil {
 		logger.Error("failed-to-serialize-model", err)
 		return nil, models.NewError(models.Error_InvalidRecord, err.Error())

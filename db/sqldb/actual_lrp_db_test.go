@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
@@ -679,23 +678,17 @@ var _ = Describe("ActualLRPDB", func() {
 						InstanceAddress: "1.1.1.1",
 					}
 
-					netInfoData, err := serializer.Marshal(logger, format.ENCODED_PROTO, &netInfo)
-					Expect(err).NotTo(HaveOccurred())
+					expectedActualLRP.ModificationTag.Increment()
 
-					queryStr := `
-				UPDATE actual_lrps SET state = ?, net_info = ?, cell_id = ?, instance_guid = ?
-				WHERE process_guid = ? AND instance_index = ?`
-					if test_helpers.UsePostgres() {
-						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-					}
-					_, err = db.Exec(queryStr,
-						models.ActualLRPStateRunning,
-						netInfoData,
-						instanceKey.CellId,
-						instanceKey.InstanceGuid,
-						expectedActualLRP.ProcessGuid,
-						expectedActualLRP.Index,
-					)
+					_, _, err := sqlDB.StartActualLRP(logger, &models.ActualLRPKey{
+						ProcessGuid: expectedActualLRP.ProcessGuid,
+						Index:       expectedActualLRP.Index,
+						Domain:      expectedActualLRP.Domain,
+					}, &models.ActualLRPInstanceKey{
+						InstanceGuid: instanceKey.InstanceGuid,
+						CellId:       instanceKey.CellId,
+					},
+						&netInfo)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

@@ -7,7 +7,6 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
@@ -108,7 +107,7 @@ var _ = Describe("Version", func() {
 				db, err := sql.Open(dbDriverName, fmt.Sprintf("%sinvalid-db", dbBaseConnectionString))
 				Expect(err).NotTo(HaveOccurred())
 				helperDB := helpers.NewMonitoredDB(db, helpers.NewQueryMonitor())
-				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 			})
 
 			It("does not return an ErrResourceNotFound", func() {

@@ -110,7 +110,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 					logger.Error("failed-to-decode-blob", err)
 					return nil
 				}
-				encryptedPayload, err := encoder.Encode(format.BASE64_ENCRYPTED, payload)
+				encryptedPayload, err := encoder.Encode(payload)
 				if err != nil {
 					logger.Error("failed-to-encode-blob", err)
 					return err

@@ -7,7 +7,6 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
@@ -48,7 +47,7 @@ var _ = Describe("LRPConvergence", func() {
 	BeforeEach(func() {
 		fakeMetronClient = new(mfakes.FakeIngressClient)
 
-		sqlDB = sqldb.NewSQLDB(db, 5, 5, format.ENCRYPTED_PROTO, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+		sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 		var err error
 		freshDomain = "fresh-domain"
 		expiredDomain = "expired-domain"

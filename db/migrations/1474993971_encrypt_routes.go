@@ -70,7 +70,7 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 			logger.Error("failed-reading-row", err)
 			continue
 		}
-		encodedData, err := e.encoder.Encode(format.BASE64_ENCRYPTED, routeData)
+		encodedData, err := e.encoder.Encode(routeData)
 		if err != nil {
 			logger.Error("failed-encrypting-routes", err)
 			return models.ErrBadRequest
