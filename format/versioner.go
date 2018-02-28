@@ -12,13 +12,6 @@ const (
 
 var ValidVersions = []Version{V0, V1, V2}
 
-//go:generate counterfeiter . Versioner
-type Versioner interface {
-	Version() Version
-}
-
-//go:generate counterfeiter . ProtoVersioner
-type ProtoVersioner interface {
+type Model interface {
 	proto.Message
-	Versioner
 }

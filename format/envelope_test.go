@@ -2,7 +2,6 @@ package format_test
 
 import (
 	"code.cloudfoundry.org/bbs/format"
-	"code.cloudfoundry.org/bbs/format/formatfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/lager/lagertest"
@@ -32,12 +31,6 @@ var _ = Describe("Envelope", func() {
 
 			Expect(*task).To(Equal(newTask))
 		})
-
-		It("returns an error when marshalling when the envelope doesn't support the model", func() {
-			model := &formatfakes.FakeVersioner{}
-			_, err := format.MarshalEnvelope(model)
-			Expect(err).To(MatchError("Model object incompatible with envelope format"))
-		})
 	})
 
 	Describe("Unmarshal", func() {
@@ -53,28 +46,11 @@ var _ = Describe("Envelope", func() {
 			Expect(*resultingTask).To(BeEquivalentTo(*task))
 		})
 
-		It("returns an error when the serialization format is unknown", func() {
-			model := &formatfakes.FakeVersioner{}
-			payload := []byte{byte(format.EnvelopeFormat(99)), byte(format.V0), '{', '}'}
-			err := format.UnmarshalEnvelope(logger, payload, model)
-			Expect(err).To(HaveOccurred())
-		})
-
 		It("returns an error when the protobuf payload is invalid", func() {
 			model := model_helpers.NewValidTask("foo")
 			payload := []byte{byte(format.PROTO), byte(format.V0), 'f', 'o', 'o'}
 			err := format.UnmarshalEnvelope(logger, payload, model)
 			Expect(err).To(HaveOccurred())
-		})
-
-		It("returns an error when unmarshalling when the model doesn't match the envelope", func() {
-			task := model_helpers.NewValidTask("some-guid")
-			payload, err := format.MarshalEnvelope(task)
-			Expect(err).NotTo(HaveOccurred())
-
-			model := &formatfakes.FakeVersioner{}
-			err = format.UnmarshalEnvelope(logger, payload, model)
-			Expect(err).To(MatchError("Model object incompatible with envelope format"))
 		})
 	})
 })

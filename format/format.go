@@ -10,8 +10,8 @@ type serializer struct {
 }
 
 type Serializer interface {
-	Marshal(logger lager.Logger, model Versioner) ([]byte, error)
-	Unmarshal(logger lager.Logger, encodedPayload []byte, model Versioner) error
+	Marshal(logger lager.Logger, model Model) ([]byte, error)
+	Unmarshal(logger lager.Logger, encodedPayload []byte, model Model) error
 }
 
 func NewSerializer(cryptor encryption.Cryptor) Serializer {
@@ -20,7 +20,7 @@ func NewSerializer(cryptor encryption.Cryptor) Serializer {
 	}
 }
 
-func (s *serializer) Marshal(logger lager.Logger, model Versioner) ([]byte, error) {
+func (s *serializer) Marshal(logger lager.Logger, model Model) ([]byte, error) {
 	envelopedPayload, err := MarshalEnvelope(model)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func (s *serializer) Marshal(logger lager.Logger, model Versioner) ([]byte, erro
 	return s.encoder.Encode(envelopedPayload)
 }
 
-func (s *serializer) Unmarshal(logger lager.Logger, encodedPayload []byte, model Versioner) error {
+func (s *serializer) Unmarshal(logger lager.Logger, encodedPayload []byte, model Model) error {
 	unencodedPayload, err := s.encoder.Decode(encodedPayload)
 	if err != nil {
 		return err

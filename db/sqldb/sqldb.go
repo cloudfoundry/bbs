@@ -59,7 +59,7 @@ func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx he
 	return nil
 }
 
-func (db *SQLDB) serializeModel(logger lager.Logger, model format.Versioner) ([]byte, error) {
+func (db *SQLDB) serializeModel(logger lager.Logger, model format.Model) ([]byte, error) {
 	encodedPayload, err := db.serializer.Marshal(logger, model)
 	if err != nil {
 		logger.Error("failed-to-serialize-model", err)
@@ -68,7 +68,7 @@ func (db *SQLDB) serializeModel(logger lager.Logger, model format.Versioner) ([]
 	return encodedPayload, nil
 }
 
-func (db *SQLDB) deserializeModel(logger lager.Logger, data []byte, model format.Versioner) error {
+func (db *SQLDB) deserializeModel(logger lager.Logger, data []byte, model format.Model) error {
 	err := db.serializer.Unmarshal(logger, data, model)
 	if err != nil {
 		logger.Error("failed-to-deserialize-model", err)

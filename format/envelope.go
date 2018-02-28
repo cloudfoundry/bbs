@@ -1,8 +1,6 @@
 package format
 
 import (
-	"errors"
-
 	"code.cloudfoundry.org/lager"
 	"github.com/gogo/protobuf/proto"
 )
@@ -15,12 +13,8 @@ const (
 
 const EnvelopeOffset int = 2
 
-func UnmarshalEnvelope(logger lager.Logger, unencodedPayload []byte, model Versioner) error {
-	protoModel, ok := model.(ProtoVersioner)
-	if !ok {
-		return errors.New("Model object incompatible with envelope format")
-	}
-	return UnmarshalProto(logger, unencodedPayload[EnvelopeOffset:], protoModel)
+func UnmarshalEnvelope(logger lager.Logger, unencodedPayload []byte, model Model) error {
+	return UnmarshalProto(logger, unencodedPayload[EnvelopeOffset:], model)
 }
 
 // DEPRECATED
@@ -31,15 +25,11 @@ func UnmarshalEnvelope(logger lager.Logger, unencodedPayload []byte, model Versi
 // said, we have the ensure the header is a 2-byte to avoid breaking older BBS
 const version = 0
 
-func MarshalEnvelope(model Versioner) ([]byte, error) {
+func MarshalEnvelope(model Model) ([]byte, error) {
 	var payload []byte
 	var err error
 
-	protoModel, ok := model.(ProtoVersioner)
-	if !ok {
-		return nil, errors.New("Model object incompatible with envelope format")
-	}
-	payload, err = MarshalProto(protoModel)
+	payload, err = MarshalProto(model)
 
 	if err != nil {
 		return nil, err
@@ -52,7 +42,7 @@ func MarshalEnvelope(model Versioner) ([]byte, error) {
 	return data, nil
 }
 
-func UnmarshalProto(logger lager.Logger, marshaledPayload []byte, model ProtoVersioner) error {
+func UnmarshalProto(logger lager.Logger, marshaledPayload []byte, model Model) error {
 	err := proto.Unmarshal(marshaledPayload, model)
 	if err != nil {
 		logger.Error("failed-to-proto-unmarshal-payload", err)
@@ -61,7 +51,7 @@ func UnmarshalProto(logger lager.Logger, marshaledPayload []byte, model ProtoVer
 	return nil
 }
 
-func MarshalProto(v ProtoVersioner) ([]byte, error) {
+func MarshalProto(v Model) ([]byte, error) {
 	bytes, err := proto.Marshal(v)
 	if err != nil {
 		return nil, err
