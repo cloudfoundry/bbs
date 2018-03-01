@@ -125,8 +125,6 @@
 		TaskGuidRequest
 		CompleteTaskRequest
 		TaskCallbackResponse
-		ConvergeTasksRequest
-		ConvergeTasksResponse
 		TasksRequest
 		TasksResponse
 		TaskByGuidRequest
