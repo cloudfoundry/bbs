@@ -65,7 +65,6 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		EgressRules:                   egressRules,
 		LogSource:                     runInfo.LogSource,
 		MetricsGuid:                   runInfo.MetricsGuid,
-		LegacyDownloadUser:            runInfo.LegacyDownloadUser,
 		TrustedSystemCertificatesPath: runInfo.TrustedSystemCertificatesPath,
 		VolumeMounts:                  runInfo.VolumeMounts,
 		Network:                       runInfo.Network,
@@ -100,7 +99,6 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.EgressRules = egressRules
 	desiredLRP.LogSource = runInfo.LogSource
 	desiredLRP.MetricsGuid = runInfo.MetricsGuid
-	desiredLRP.LegacyDownloadUser = runInfo.LegacyDownloadUser
 	desiredLRP.TrustedSystemCertificatesPath = runInfo.TrustedSystemCertificatesPath
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
 	desiredLRP.Network = runInfo.Network
@@ -207,7 +205,6 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		egressRules,
 		d.LogSource,
 		d.MetricsGuid,
-		d.LegacyDownloadUser,
 		d.TrustedSystemCertificatesPath,
 		d.VolumeMounts,
 		d.Network,
@@ -237,7 +234,6 @@ func (d *DesiredLRP) actionsFromCachedDependencies() []ActionInterface {
 			To:        cacheDependency.To,
 			CacheKey:  cacheDependency.CacheKey,
 			LogSource: cacheDependency.LogSource,
-			User:      d.LegacyDownloadUser,
 		}
 	}
 	return actions
@@ -446,7 +442,6 @@ func NewDesiredLRPRunInfo(
 	egressRules []SecurityGroupRule,
 	logSource,
 	metricsGuid string,
-	legacyDownloadUser string,
 	trustedSystemCertificatesPath string,
 	volumeMounts []*VolumeMount,
 	network *Network,
@@ -469,7 +464,6 @@ func NewDesiredLRPRunInfo(
 		EgressRules:                   egressRules,
 		LogSource:                     logSource,
 		MetricsGuid:                   metricsGuid,
-		LegacyDownloadUser:            legacyDownloadUser,
 		TrustedSystemCertificatesPath: trustedSystemCertificatesPath,
 		VolumeMounts:                  volumeMounts,
 		Network:                       network,
@@ -522,7 +516,7 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"cpu_weight"})
 	}
 
-	err := validateCachedDependencies(runInfo.CachedDependencies, runInfo.LegacyDownloadUser)
+	err := validateCachedDependencies(runInfo.CachedDependencies)
 	if err != nil {
 		validationError = validationError.Append(err)
 	}

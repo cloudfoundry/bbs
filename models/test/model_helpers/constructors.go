@@ -84,7 +84,6 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			PortRange:    &models.PortRange{Start: 10, End: 16000},
 		}},
 		ModificationTag:               &modTag,
-		LegacyDownloadUser:            "legacy-dan",
 		TrustedSystemCertificatesPath: "/etc/somepath",
 		PlacementTags:                 []string{"red-tag", "blue-tag"},
 		VolumeMounts: []*models.VolumeMount{
@@ -161,7 +160,6 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 				"some-other-key": "some-other-value",
 			},
 		},
-		LegacyDownloadUser:            "legacy-jim",
 		TrustedSystemCertificatesPath: "/etc/somepath",
 		VolumeMounts: []*models.VolumeMount{
 			{

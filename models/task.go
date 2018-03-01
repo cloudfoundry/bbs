@@ -109,7 +109,6 @@ func (t *TaskDefinition) actionsFromCachedDependencies() []ActionInterface {
 			To:        cacheDependency.To,
 			CacheKey:  cacheDependency.CacheKey,
 			LogSource: cacheDependency.LogSource,
-			User:      t.LegacyDownloadUser,
 		}
 	}
 	return actions
@@ -174,7 +173,7 @@ func (def *TaskDefinition) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"image_password"})
 	}
 
-	err := validateCachedDependencies(def.CachedDependencies, def.LegacyDownloadUser)
+	err := validateCachedDependencies(def.CachedDependencies)
 	if err != nil {
 		validationError = validationError.Append(err)
 	}
