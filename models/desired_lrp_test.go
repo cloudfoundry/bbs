@@ -401,45 +401,6 @@ var _ = Describe("DesiredLRP", func() {
 	})
 
 	Describe("Version Down To", func() {
-		Context("V1", func() {
-			BeforeEach(func() {
-				desiredLRP.Setup = models.WrapAction(models.Timeout(
-					&models.RunAction{
-						Path: "/the/path",
-						User: "the user",
-					},
-					10*time.Millisecond,
-				))
-				desiredLRP.Action = models.WrapAction(models.Timeout(
-					&models.RunAction{
-						Path: "/the/path",
-						User: "the user",
-					},
-					20*time.Millisecond,
-				))
-				desiredLRP.Monitor = models.WrapAction(models.Timeout(
-					&models.RunAction{
-						Path: "/the/path",
-						User: "the user",
-					},
-					30*time.Millisecond,
-				))
-				desiredLRP.StartTimeoutMs = 10000
-			})
-
-			It("converts TimeoutMs to Timeout in Nanoseconds", func() {
-				convertedLRP := desiredLRP.VersionDownTo(format.V1)
-				Expect(convertedLRP.GetSetup().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(10 * time.Millisecond))
-				Expect(convertedLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
-				Expect(convertedLRP.GetMonitor().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(30 * time.Millisecond))
-			})
-
-			It("converts StartTimeoutMs to StartTimeout in seconds", func() {
-				convertedLRP := desiredLRP.VersionDownTo(format.V1)
-				Expect(convertedLRP.GetDeprecatedStartTimeoutS()).To(BeEquivalentTo(10))
-			})
-		})
-
 		Context("V0", func() {
 			var (
 				downloadAction1, downloadAction2 models.DownloadAction
@@ -518,13 +479,13 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			It("converts TimeoutMs to Timeout in Nanoseconds", func() {
-				convertedLRP := desiredLRP.VersionDownTo(format.V1)
+				convertedLRP := desiredLRP.VersionDownTo(format.V0)
 				Expect(convertedLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
 				Expect(convertedLRP.GetMonitor().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(30 * time.Millisecond))
 			})
 
 			It("converts StartTimeoutMs to StartTimeout in seconds", func() {
-				convertedLRP := desiredLRP.VersionDownTo(format.V1)
+				convertedLRP := desiredLRP.VersionDownTo(format.V0)
 				Expect(convertedLRP.GetDeprecatedStartTimeoutS()).To(BeEquivalentTo(10))
 			})
 

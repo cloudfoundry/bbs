@@ -35,18 +35,10 @@ const (
 	DesiredLRPSchedulingInfosRoute = "DesiredLRPSchedulingInfos"
 	DesiredLRPByProcessGuidRoute   = "DesiredLRPByProcessGuid_r2"
 
-	DesiredLRPsRoute_r1             = "DesiredLRPs_r1" // Deprecated
-	DesiredLRPByProcessGuidRoute_r1 = "DesiredLRPByProcessGuid_r1"
-	DesiredLRPsRoute_r0             = "DesiredLRPs"             // Deprecated
-	DesiredLRPByProcessGuidRoute_r0 = "DesiredLRPByProcessGuid" // Deprecated
-
 	// Desire LRP Lifecycle
 	DesireDesiredLRPRoute = "DesireDesiredLRP_r2"
 	UpdateDesiredLRPRoute = "UpdateDesireLRP"
 	RemoveDesiredLRPRoute = "RemoveDesiredLRP"
-
-	DesireDesiredLRPRoute_r1 = "DesireDesiredLRP_r1"
-	DesireDesiredLRPRoute_r0 = "DesireDesiredLRP"
 
 	// Tasks
 	TasksRoute         = "Tasks_r2"
@@ -59,21 +51,12 @@ const (
 	ResolvingTaskRoute = "ResolvingTask"
 	DeleteTaskRoute    = "DeleteTask"
 
-	TasksRoute_r1      = "Tasks_r1"      // Deprecated
-	TaskByGuidRoute_r1 = "TaskByGuid_r1" // Deprecated
-
-	DesireTaskRoute_r0 = "DesireTask"    // Deprecated
-	DesireTaskRoute_r1 = "DesireTask_r1" // Deprecated
-	TasksRoute_r0      = "Tasks"         // Deprecated
-	TaskByGuidRoute_r0 = "TaskByGuid"    // Deprecated
-
 	// Event Streaming
 	EventStreamRoute_r0     = "EventStream_r0"
 	TaskEventStreamRoute_r0 = "TaskEventStream_r0"
 
 	// Cell Presence
-	CellsRoute    = "Cells_r2"
-	CellsRoute_r1 = "Cells_r1"
+	CellsRoute = "Cells_r2"
 )
 
 var Routes = rata.Routes{
@@ -110,30 +93,17 @@ var Routes = rata.Routes{
 	{Path: "/v1/desired_lrps/list.r2", Method: "POST", Name: DesiredLRPsRoute},
 	{Path: "/v1/desired_lrps/get_by_process_guid.r2", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
 
-	{Path: "/v1/desired_lrps/list.r1", Method: "POST", Name: DesiredLRPsRoute_r1},                            // Deprecated
-	{Path: "/v1/desired_lrps/get_by_process_guid.r1", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r1}, // Deprecated
-	{Path: "/v1/desired_lrps/list", Method: "POST", Name: DesiredLRPsRoute_r0},                               // Deprecated
-	{Path: "/v1/desired_lrps/get_by_process_guid", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r0},    // Deprecated
-
 	// Desire LPR Lifecycle
 	{Path: "/v1/desired_lrp/desire.r2", Method: "POST", Name: DesireDesiredLRPRoute},
-	{Path: "/v1/desired_lrp/desire.r1", Method: "POST", Name: DesireDesiredLRPRoute_r1}, // Deprecated
 	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute},
 	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
-	{Path: "/v1/desired_lrp/desire", Method: "POST", Name: DesireDesiredLRPRoute_r0}, // Deprecated
 
 	// Tasks
 	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},
 	{Path: "/v1/tasks/get_by_task_guid.r2", Method: "POST", Name: TaskByGuidRoute},
 
-	{Path: "/v1/tasks/list.r1", Method: "POST", Name: TasksRoute_r1},                  // Deprecated
-	{Path: "/v1/tasks/get_by_task_guid.r1", Method: "POST", Name: TaskByGuidRoute_r1}, // Deprecated
-	{Path: "/v1/tasks/list", Method: "POST", Name: TasksRoute_r0},                     // Deprecated
-	{Path: "/v1/tasks/get_by_task_guid", Method: "GET", Name: TaskByGuidRoute_r0},     // Deprecated
-
 	// Task Lifecycle
 	{Path: "/v1/tasks/desire.r2", Method: "POST", Name: DesireTaskRoute},
-	{Path: "/v1/tasks/desire.r1", Method: "POST", Name: DesireTaskRoute_r1}, // Deprecated
 	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
 	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute},
 	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
@@ -141,13 +111,10 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks/resolving", Method: "POST", Name: ResolvingTaskRoute},
 	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute},
 
-	{Path: "/v1/tasks/desire", Method: "POST", Name: DesireTaskRoute_r0}, // Deprecated
-
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},
 	{Path: "/v1/events/tasks", Method: "POST", Name: TaskEventStreamRoute_r0},
 
 	// Cells
 	{Path: "/v1/cells/list.r1", Method: "POST", Name: CellsRoute},
-	{Path: "/v1/cells/list.r1", Method: "GET", Name: CellsRoute_r1}, // Deprecated
 }

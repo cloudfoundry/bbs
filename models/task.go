@@ -63,21 +63,6 @@ func (t *Task) Copy() *Task {
 	return &newTask
 }
 
-func (t *Task) VersionDownTo(v format.Version) *Task {
-	t = t.Copy()
-	switch v {
-	case format.V1:
-		t.Action.SetDeprecatedTimeoutNs()
-		return t
-	case format.V0:
-		t.Action.SetDeprecatedTimeoutNs()
-		t.TaskDefinition = newTaskDefWithCachedDependenciesAsActions(t.TaskDefinition)
-		return t
-	default:
-		return t
-	}
-}
-
 func (t *Task) ValidateTransitionTo(to Task_State) error {
 	var valid bool
 	from := t.State
