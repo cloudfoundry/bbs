@@ -16,8 +16,7 @@ interface](https://godoc.org/github.com/cloudfoundry/bbs#InternalClient) to modi
 
 ## Code Generation
 
-The protobuf models in this repository require version 3 of the `protoc` compiler.
-
+The protobuf models in this repository require version 3.5 or later of the `protoc` compiler.
 
 ### OSX
 
@@ -43,7 +42,6 @@ go install github.com/gogo/protobuf/protoc-gen-gogoslick
 ```
 
 Run `go generate ./...` from the root directory of this repository to generate code from the `.proto` files as well as to generate fake implementations of certain interfaces for use in test code.
-
 
 ### Generating ruby models for BBS models
 
