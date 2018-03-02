@@ -20,7 +20,6 @@
 		error.proto
 		evacuation.proto
 		events.proto
-		lrp_convergence_request.proto
 		modification_tag.proto
 		network.proto
 		ping.proto
@@ -108,7 +107,6 @@
 		TaskCreatedEvent
 		TaskChangedEvent
 		TaskRemovedEvent
-		ConvergeLRPsResponse
 		ModificationTag
 		Network
 		PingResponse
