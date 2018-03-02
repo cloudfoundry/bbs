@@ -506,7 +506,3 @@ func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 		logger.Error("failed-sending-desired-lrps-metric", err)
 	}
 }
-
-func (db *SQLDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error) {
-	panic("not implemented")
-}

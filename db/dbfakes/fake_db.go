@@ -363,20 +363,6 @@ type FakeDB struct {
 		result3 []*models.ActualLRPKey
 		result4 []models.Event
 	}
-	GatherAndPruneLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error)
-	gatherAndPruneLRPsMutex       sync.RWMutex
-	gatherAndPruneLRPsArgsForCall []struct {
-		logger  lager.Logger
-		cellSet models.CellSet
-	}
-	gatherAndPruneLRPsReturns struct {
-		result1 *models.ConvergenceInput
-		result2 error
-	}
-	gatherAndPruneLRPsReturnsOnCall map[int]struct {
-		result1 *models.ConvergenceInput
-		result2 error
-	}
 	TasksStub        func(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct {
@@ -1837,58 +1823,6 @@ func (fake *FakeDB) ConvergeLRPsReturnsOnCall(i int, result1 []*auctioneer.LRPSt
 	}{result1, result2, result3, result4}
 }
 
-func (fake *FakeDB) GatherAndPruneLRPs(logger lager.Logger, cellSet models.CellSet) (*models.ConvergenceInput, error) {
-	fake.gatherAndPruneLRPsMutex.Lock()
-	ret, specificReturn := fake.gatherAndPruneLRPsReturnsOnCall[len(fake.gatherAndPruneLRPsArgsForCall)]
-	fake.gatherAndPruneLRPsArgsForCall = append(fake.gatherAndPruneLRPsArgsForCall, struct {
-		logger  lager.Logger
-		cellSet models.CellSet
-	}{logger, cellSet})
-	fake.recordInvocation("GatherAndPruneLRPs", []interface{}{logger, cellSet})
-	fake.gatherAndPruneLRPsMutex.Unlock()
-	if fake.GatherAndPruneLRPsStub != nil {
-		return fake.GatherAndPruneLRPsStub(logger, cellSet)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.gatherAndPruneLRPsReturns.result1, fake.gatherAndPruneLRPsReturns.result2
-}
-
-func (fake *FakeDB) GatherAndPruneLRPsCallCount() int {
-	fake.gatherAndPruneLRPsMutex.RLock()
-	defer fake.gatherAndPruneLRPsMutex.RUnlock()
-	return len(fake.gatherAndPruneLRPsArgsForCall)
-}
-
-func (fake *FakeDB) GatherAndPruneLRPsArgsForCall(i int) (lager.Logger, models.CellSet) {
-	fake.gatherAndPruneLRPsMutex.RLock()
-	defer fake.gatherAndPruneLRPsMutex.RUnlock()
-	return fake.gatherAndPruneLRPsArgsForCall[i].logger, fake.gatherAndPruneLRPsArgsForCall[i].cellSet
-}
-
-func (fake *FakeDB) GatherAndPruneLRPsReturns(result1 *models.ConvergenceInput, result2 error) {
-	fake.GatherAndPruneLRPsStub = nil
-	fake.gatherAndPruneLRPsReturns = struct {
-		result1 *models.ConvergenceInput
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeDB) GatherAndPruneLRPsReturnsOnCall(i int, result1 *models.ConvergenceInput, result2 error) {
-	fake.GatherAndPruneLRPsStub = nil
-	if fake.gatherAndPruneLRPsReturnsOnCall == nil {
-		fake.gatherAndPruneLRPsReturnsOnCall = make(map[int]struct {
-			result1 *models.ConvergenceInput
-			result2 error
-		})
-	}
-	fake.gatherAndPruneLRPsReturnsOnCall[i] = struct {
-		result1 *models.ConvergenceInput
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
 	fake.tasksMutex.Lock()
 	ret, specificReturn := fake.tasksReturnsOnCall[len(fake.tasksArgsForCall)]
@@ -2595,8 +2529,6 @@ func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	defer fake.removeDesiredLRPMutex.RUnlock()
 	fake.convergeLRPsMutex.RLock()
 	defer fake.convergeLRPsMutex.RUnlock()
-	fake.gatherAndPruneLRPsMutex.RLock()
-	defer fake.gatherAndPruneLRPsMutex.RUnlock()
 	fake.tasksMutex.RLock()
 	defer fake.tasksMutex.RUnlock()
 	fake.taskByGuidMutex.RLock()
