@@ -70,9 +70,11 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 	VolumeMounts: []*models.VolumeMount{
 		{
 			Driver:        "my-driver",
-			VolumeId:      "my-volume",
 			ContainerPath: "/mnt/mypath",
 			Mode:          models.BindMountMode_RO,
+			Shared: {
+				VolumeId:      "my-volume",
+			},
 		},
 	},
 	PlacementTags: []string{"example-tag", "example-tag-2"},

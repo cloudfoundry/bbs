@@ -50,9 +50,11 @@ See the model documentation for VolumeMount [here](https://godoc.org/code.cloudf
 VolumeMounts: []*models.VolumeMount{
   {
     Driver:        "my-driver",
-    VolumeId:      "my-volume",
     ContainerPath: "/mnt/mypath",
     Mode:          models.BindMountMode_RO,
+    Shared: {
+      VolumeId:      "my-volume",
+    },
   },
 }
 ```

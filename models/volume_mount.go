@@ -19,12 +19,6 @@ func (*VolumePlacement) Validate() error {
 // when volume mounts are no longer experimental, this validation strategy must be reconsidered
 func (v *VolumeMount) Validate() error {
 	var ve ValidationError
-	if v.DeprecatedConfig != nil {
-		ve = ve.Append(errors.New("invalid volume_mount deprecated config"))
-	}
-	if v.DeprecatedVolumeId != "" {
-		ve = ve.Append(errors.New("invalid volume_mount deprecated id"))
-	}
 	if v.Driver == "" {
 		ve = ve.Append(errors.New("invalid volume_mount driver"))
 	}

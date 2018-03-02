@@ -63,9 +63,11 @@ err := client.DesireTask(
     VolumeMounts: []*models.VolumeMount{
       {
         Driver:        "my-driver",
-        VolumeId:      "my-volume",
         ContainerPath: "/mnt/mypath",
         Mode:          models.BindMountMode_RO,
+        Shared: {
+          VolumeId:      "my-volume",
+        },
       },
     }
     PlacementTags: []string{"tag-1", "tag-2"},
