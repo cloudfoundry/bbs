@@ -10,8 +10,6 @@ const (
 	V2         = 2
 )
 
-var ValidVersions = []Version{V0, V1, V2}
-
 type Model interface {
 	proto.Message
 }
