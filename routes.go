@@ -31,19 +31,19 @@ const (
 	EvacuateRunningActualLRPRoute  = "EvacuateRunningActualLRP"
 
 	// Desired LRPs
-	DesiredLRPsRoute               = "DesiredLRPs_r2"
+	DesiredLRPsRoute               = "DesiredLRPs"
 	DesiredLRPSchedulingInfosRoute = "DesiredLRPSchedulingInfos"
-	DesiredLRPByProcessGuidRoute   = "DesiredLRPByProcessGuid_r2"
+	DesiredLRPByProcessGuidRoute   = "DesiredLRPByProcessGuid"
 
 	// Desire LRP Lifecycle
-	DesireDesiredLRPRoute = "DesireDesiredLRP_r2"
+	DesireDesiredLRPRoute = "DesireDesiredLRP"
 	UpdateDesiredLRPRoute = "UpdateDesireLRP"
 	RemoveDesiredLRPRoute = "RemoveDesiredLRP"
 
 	// Tasks
-	TasksRoute         = "Tasks_r2"
-	TaskByGuidRoute    = "TaskByGuid_r2"
-	DesireTaskRoute    = "DesireTask_r2"
+	TasksRoute         = "Tasks"
+	TaskByGuidRoute    = "TaskByGuid"
+	DesireTaskRoute    = "DesireTask"
 	StartTaskRoute     = "StartTask"
 	CancelTaskRoute    = "CancelTask"
 	FailTaskRoute      = "FailTask"
@@ -56,7 +56,7 @@ const (
 	TaskEventStreamRoute_r0 = "TaskEventStream_r0"
 
 	// Cell Presence
-	CellsRoute = "Cells_r2"
+	CellsRoute = "Cells"
 )
 
 var Routes = rata.Routes{
