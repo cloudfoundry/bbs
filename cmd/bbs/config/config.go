@@ -58,7 +58,7 @@ type BBSConfig struct {
 	SkipConsulLock                  bool                  `json:"skip_consul_lock,omitempty"`
 	TaskCallbackWorkers             int                   `json:"task_callback_workers,omitempty"`
 	UpdateWorkers                   int                   `json:"update_workers,omitempty"`
-	LoggregatorConfig               loggingclient.Config  `json:"loggregator"`
+	LoggregatorConfig               *loggingclient.Config `json:"loggregator,omitempty"`
 	debugserver.DebugServerConfig
 	encryption.EncryptionConfig
 	lagerflags.LagerConfig
@@ -90,6 +90,9 @@ func DefaultConfig() BBSConfig {
 		RepRequireTLS:                   false,
 		EncryptionConfig:                encryption.DefaultEncryptionConfig(),
 		LagerConfig:                     lagerflags.DefaultLagerConfig(),
+		LoggregatorConfig: &loggingclient.Config{
+			SourceID: "bbs",
+		},
 	}
 }
 

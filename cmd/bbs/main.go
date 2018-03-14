@@ -538,7 +538,7 @@ func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig
 }
 
 func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggingclient.IngressClient, error) {
-	client, err := loggingclient.NewIngressClient(bbsConfig.LoggregatorConfig)
+	client, err := loggingclient.NewIngressClient(*bbsConfig.LoggregatorConfig)
 	if err != nil {
 		return nil, err
 	}
