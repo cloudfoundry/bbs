@@ -140,9 +140,14 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 	var err error
 	logger = logger.Session("fail-task")
 
-	before, after, err := h.db.FailTask(logger, taskGuid, failureReason)
+	before, after, shouldRestart, err := h.db.FailTask(logger, taskGuid, failureReason)
 	if err != nil {
 		return err
+	}
+
+	if shouldRestart {
+		logger.Info("restarting", lager.Data{"guid": taskGuid, "failure-reason": failureReason})
+		return nil
 	}
 
 	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))

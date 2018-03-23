@@ -195,7 +195,7 @@ func (db *SQLDB) CancelTask(logger lager.Logger, taskGuid string) (*models.Task,
 				return err
 			}
 		}
-		err = db.completeTask(logger, afterTask, true, "task was cancelled", "", tx)
+		err = db.completeTask(logger, afterTask, true, "task was cancelled", "", false, tx)
 		if err != nil {
 			return err
 		}
@@ -233,18 +233,13 @@ func (db *SQLDB) CompleteTask(logger lager.Logger, taskGuid, cellID string, fail
 			return err
 		}
 
-		err = db.completeTask(logger, afterTask, failed, failureReason, taskResult, tx)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return db.completeTask(logger, afterTask, failed, failureReason, taskResult, false, tx)
 	})
 
 	return &beforeTask, afterTask, err
 }
 
-func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, *models.Task, error) {
+func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (*models.Task, *models.Task, bool, error) {
 	logger = logger.Session("fail-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -269,18 +264,10 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 			}
 		}
 
-		err = db.completeTask(logger, afterTask, true, failureReason, "", tx)
-		if err != nil {
-			return err
-		}
-
-		afterTask.State = models.Task_Completed
-		afterTask.Failed = true
-		afterTask.FailureReason = failureReason
-		return nil
+		return db.completeTask(logger, afterTask, true, failureReason, "", true, tx)
 	})
 
-	return &beforeTask, afterTask, err
+	return &beforeTask, afterTask, afterTask.State == models.Task_Pending, err
 }
 
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
@@ -362,14 +349,26 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) (*models.Task,
 	return task, err
 }
 
-func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx helpers.Tx) error {
+const (
+	MaxTaskFailures = 3
+)
+
+func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, placementFailure bool, tx helpers.Tx) error {
+
+	state := models.Task_Completed
+	task.FailureCount++
+	if placementFailure && task.FailureCount < MaxTaskFailures {
+		state = models.Task_Pending
+	}
+
 	now := db.clock.Now().UnixNano()
 	_, err := db.update(logger, tx, tasksTable,
 		helpers.SQLAttributes{
 			"failed":             failed,
 			"failure_reason":     failureReason,
+			"failure_count":      task.FailureCount,
 			"result":             result,
-			"state":              models.Task_Completed,
+			"state":              state,
 			"first_completed_at": now,
 			"updated_at":         now,
 			"cell_id":            "",
@@ -381,7 +380,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 		return err
 	}
 
-	task.State = models.Task_Completed
+	task.State = state
 	task.UpdatedAt = now
 	task.FirstCompletedAt = now
 	task.Failed = failed
@@ -444,7 +443,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 	var guid, domain, cellID, failureReason string
 	var result sql.NullString
 	var createdAt, updatedAt, firstCompletedAt int64
-	var state int32
+	var state, failureCount int32
 	var failed bool
 	var taskDefData []byte
 
@@ -459,6 +458,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 		&result,
 		&failed,
 		&failureReason,
+		&failureCount,
 		&taskDefData,
 	)
 
@@ -488,6 +488,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 		Result:           result.String,
 		Failed:           failed,
 		FailureReason:    failureReason,
+		FailureCount:     failureCount,
 		TaskDefinition:   &taskDef,
 	}
 	return task, guid, nil

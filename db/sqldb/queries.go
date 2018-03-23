@@ -51,6 +51,7 @@ var (
 		tasksTable + ".result",
 		tasksTable + ".failed",
 		tasksTable + ".failure_reason",
+		tasksTable + ".failure_count",
 		tasksTable + ".task_definition",
 	}
 
