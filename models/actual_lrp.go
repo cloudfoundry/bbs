@@ -93,6 +93,7 @@ func (actual ActualLRP) ShouldStartUnclaimed(now time.Time) bool {
 	return false
 }
 
+// TODO: do we need to change this?
 func (actual ActualLRP) CellIsMissing(cellSet CellSet) bool {
 	if actual.State == ActualLRPStateUnclaimed ||
 		actual.State == ActualLRPStateCrashed {
@@ -162,16 +163,35 @@ func NewEvacuatingActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
 
 func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
 	switch {
-	case group.Instance == nil && group.Evacuating == nil:
+	case group.Instance == nil && group.Evacuating == nil && group.Suspect == nil:
+		panic(ErrActualLRPGroupInvalid)
+
+	case group.Instance == nil && group.Suspect == nil:
+		return group.Evacuating, true
+
+	case group.Evacuating == nil && group.Suspect == nil:
+		return group.Instance, false
+
+	case group.Evacuating == nil && group.Instance == nil:
+		return group.Suspect, false
+
+	case group.Instance.State == ActualLRPStateRunning || group.Instance.State == ActualLRPStateCrashed:
+		return group.Instance, false
+
+	default:
+		return group.Evacuating, true
+	}
+}
+
+func (group ActualLRPGroup) ResolveWithSuspect() (*ActualLRP, bool) {
+	switch {
+	case group.Instance == nil && group.Suspect == nil:
 		panic(ErrActualLRPGroupInvalid)
 
 	case group.Instance == nil:
-		return group.Evacuating, true
+		return group.Suspect, true
 
-	case group.Evacuating == nil:
-		return group.Instance, false
-
-	case group.Instance.State == ActualLRPStateRunning || group.Instance.State == ActualLRPStateCrashed:
+	case group.Suspect == nil:
 		return group.Instance, false
 
 	default:

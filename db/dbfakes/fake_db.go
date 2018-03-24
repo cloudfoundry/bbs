@@ -177,6 +177,22 @@ type FakeDB struct {
 		result2 *models.ActualLRPGroup
 		result3 error
 	}
+	SuspectActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	suspectActualLRPMutex       sync.RWMutex
+	suspectActualLRPArgsForCall []struct {
+		logger lager.Logger
+		key    *models.ActualLRPKey
+	}
+	suspectActualLRPReturns struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}
+	suspectActualLRPReturnsOnCall map[int]struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}
 	ClaimActualLRPStub        func(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
@@ -1171,6 +1187,61 @@ func (fake *FakeDB) UnclaimActualLRPReturnsOnCall(i int, result1 *models.ActualL
 		})
 	}
 	fake.unclaimActualLRPReturnsOnCall[i] = struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}{result1, result2, result3}
+}
+
+func (fake *FakeDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+	fake.suspectActualLRPMutex.Lock()
+	ret, specificReturn := fake.suspectActualLRPReturnsOnCall[len(fake.suspectActualLRPArgsForCall)]
+	fake.suspectActualLRPArgsForCall = append(fake.suspectActualLRPArgsForCall, struct {
+		logger lager.Logger
+		key    *models.ActualLRPKey
+	}{logger, key})
+	fake.recordInvocation("SuspectActualLRP", []interface{}{logger, key})
+	fake.suspectActualLRPMutex.Unlock()
+	if fake.SuspectActualLRPStub != nil {
+		return fake.SuspectActualLRPStub(logger, key)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2, ret.result3
+	}
+	return fake.suspectActualLRPReturns.result1, fake.suspectActualLRPReturns.result2, fake.suspectActualLRPReturns.result3
+}
+
+func (fake *FakeDB) SuspectActualLRPCallCount() int {
+	fake.suspectActualLRPMutex.RLock()
+	defer fake.suspectActualLRPMutex.RUnlock()
+	return len(fake.suspectActualLRPArgsForCall)
+}
+
+func (fake *FakeDB) SuspectActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
+	fake.suspectActualLRPMutex.RLock()
+	defer fake.suspectActualLRPMutex.RUnlock()
+	return fake.suspectActualLRPArgsForCall[i].logger, fake.suspectActualLRPArgsForCall[i].key
+}
+
+func (fake *FakeDB) SuspectActualLRPReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+	fake.SuspectActualLRPStub = nil
+	fake.suspectActualLRPReturns = struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}{result1, result2, result3}
+}
+
+func (fake *FakeDB) SuspectActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+	fake.SuspectActualLRPStub = nil
+	if fake.suspectActualLRPReturnsOnCall == nil {
+		fake.suspectActualLRPReturnsOnCall = make(map[int]struct {
+			result1 *models.ActualLRPGroup
+			result2 *models.ActualLRPGroup
+			result3 error
+		})
+	}
+	fake.suspectActualLRPReturnsOnCall[i] = struct {
 		result1 *models.ActualLRPGroup
 		result2 *models.ActualLRPGroup
 		result3 error
@@ -2505,6 +2576,8 @@ func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	defer fake.createUnclaimedActualLRPMutex.RUnlock()
 	fake.unclaimActualLRPMutex.RLock()
 	defer fake.unclaimActualLRPMutex.RUnlock()
+	fake.suspectActualLRPMutex.RLock()
+	defer fake.suspectActualLRPMutex.RUnlock()
 	fake.claimActualLRPMutex.RLock()
 	defer fake.claimActualLRPMutex.RUnlock()
 	fake.startActualLRPMutex.RLock()

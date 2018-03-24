@@ -8,6 +8,7 @@ import "modification_tag.proto";
 message ActualLRPGroup {
   optional ActualLRP instance = 1;
   optional ActualLRP evacuating = 2;
+  optional ActualLRP suspect = 3;
 }
 
 message PortMapping {

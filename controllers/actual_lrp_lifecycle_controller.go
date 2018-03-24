@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"errors"
+
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
@@ -51,13 +53,37 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 	}
 	return nil
 }
+
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
+	lrpGroups, err := h.db.AllActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	if err != nil {
+		logger.Error("err-when-finding-suspect", err)
+		return err
+	}
+
+	if len(lrpGroups) > 2 {
+		err := errors.New("more than one suspect")
+		logger.Error("more-than-one-suspect", err, lager.Data{"lrps": lrpGroups})
+		return err
+	}
+
+	// TODO: decide what happens if the suspect is already running
+	var lrpGroup *models.ActualLRPGroup
+	for _, lrpg := range lrpGroups {
+		if lrpg.Suspect != nil {
+			logger.Info("found-suspect-actual-lrp", lager.Data{"guid": actualLRPKey.ProcessGuid, "process_index": actualLRPKey.Index, "instance_guid": lrpg.Suspect.ActualLRPInstanceKey.InstanceGuid})
+			h.db.RemoveActualLRP(logger, lrpg.Suspect.ProcessGuid, lrpg.Suspect.Index, &lrpg.Suspect.ActualLRPInstanceKey)
+		} else {
+			lrpGroup = lrpg
+		}
+	}
+
 	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
 		return err
 	}
 
-	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	lrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	if err != nil {
 		return err
 	}

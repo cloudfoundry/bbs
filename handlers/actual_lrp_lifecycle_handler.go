@@ -59,6 +59,8 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.R
 }
 
 func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	// check if there's a suspect, and kill it
+	// or, check if this was previously suspect, and kill the currently unclaimed/claimed one
 	var err error
 
 	logger = logger.Session("start-actual-lrp")

@@ -58,6 +58,7 @@ var (
 		actualLRPsTable + ".process_guid",
 		actualLRPsTable + ".instance_index",
 		actualLRPsTable + ".evacuating",
+		actualLRPsTable + ".suspect",
 		actualLRPsTable + ".domain",
 		actualLRPsTable + ".state",
 		actualLRPsTable + ".instance_guid",
