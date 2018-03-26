@@ -663,6 +663,13 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 	})
 }
 
+func (db *SQLDB) CreateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
+	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		_, err := db.createRunningActualLRP(logger, key, instanceKey, netInfo, tx)
+		return err
+	})
+}
+
 func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, tx helpers.Tx) (*models.ActualLRP, error) {
 	now := db.clock.Now().UnixNano()
 	guid, err := db.guidProvider.NextGUID()

@@ -58,6 +58,10 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	lrpGroups, err := h.db.AllActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	if err != nil {
 		logger.Error("err-when-finding-suspect", err)
+		if err == models.ErrResourceNotFound {
+			logger.Info("create-missing-actual-lrp", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
+			return h.db.CreateRunningActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
+		}
 		return err
 	}
 

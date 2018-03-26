@@ -175,6 +175,10 @@ func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
 	case group.Evacuating == nil && group.Instance == nil:
 		return group.Suspect, false
 
+	// TODO: check what event we want to emit, if at all
+	case group.Suspect != nil && group.Instance != nil:
+		return group.Suspect, false
+
 	case group.Instance.State == ActualLRPStateRunning || group.Instance.State == ActualLRPStateCrashed:
 		return group.Instance, false
 

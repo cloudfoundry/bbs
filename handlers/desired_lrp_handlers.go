@@ -327,5 +327,16 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 				}
 			}
 		}
+
+		// if there is a suspect, the cell is not present so we cannot
+		// call the rep to let it know that it should remove the suspect lrp.
+		// We nuke it in the database.
+		//
+		// TODO: handle what happens when the rep with the suspect LRP
+		// comes back up when it is deleted from the database
+		if group.Suspect != nil {
+			lrp := group.Suspect
+			h.actualLRPDB.RemoveActualLRP(logger, lrp.ActualLRPKey.ProcessGuid, lrp.ActualLRPKey.Index, &lrp.ActualLRPInstanceKey)
+		}
 	}
 }
