@@ -766,11 +766,6 @@ func (db *SQLDB) getActualLRPCheckForSuspect(logger lager.Logger, key *models.Ac
 		return nil, models.ErrActualLRPCannotBeClaimed
 	}
 
-	// if instanceKey != nil && actualLRP.InstanceGuid != instanceKey.InstanceGuid {
-	// 	logger.Error("cannot-find-an-actual-lrp-instance-for-guid", nil)
-	// 	return nil, models.ErrActualLRPGroupInvalid
-	// }
-
 	return actualLRP, nil
 }
 

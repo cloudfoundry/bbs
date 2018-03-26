@@ -68,16 +68,24 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	}
 
 	// TODO: decide what happens if the suspect is already running
-	var lrpGroup *models.ActualLRPGroup
 	for _, lrpg := range lrpGroups {
-		if lrpg.Suspect != nil {
-			logger.Info("found-suspect-actual-lrp", lager.Data{"guid": actualLRPKey.ProcessGuid, "process_index": actualLRPKey.Index, "instance_guid": lrpg.Suspect.ActualLRPInstanceKey.InstanceGuid})
+		if lrpg.Suspect == nil {
+			continue
+		}
+
+		logger = logger.Session("found-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index})
+		suspectLRP := lrpg.Suspect
+		if suspectLRP.ActualLRPInstanceKey.InstanceGuid != actualLRPInstanceKey.InstanceGuid {
+			logger.Info("starting-shadow", lager.Data{"suspect-instance-guid": suspectLRP.ActualLRPInstanceKey.InstanceGuid, "shadow-instance-guid": actualLRPInstanceKey.InstanceGuid})
 			h.db.RemoveActualLRP(logger, lrpg.Suspect.ProcessGuid, lrpg.Suspect.Index, &lrpg.Suspect.ActualLRPInstanceKey)
 		} else {
-			lrpGroup = lrpg
+			err := errors.New("rep-restarting-suspect")
+			logger.Error("rep-cannot-restart-suspect", err, lager.Data{"suspect-instance-guid": suspectLRP.ActualLRPInstanceKey.InstanceGuid})
+			return err
 		}
 	}
 
+	var lrpGroup *models.ActualLRPGroup
 	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
 		return err
