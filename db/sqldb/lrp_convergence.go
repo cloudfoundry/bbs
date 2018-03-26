@@ -315,7 +315,10 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				}
 				if suspectRecovered {
 					// if suspect && cell is present -> no longer suspect, retire other one
-					c.UnsuspectActualLRP(logger, &suspectActualLRP.Suspect.ActualLRPKey)
+					err = c.UnsuspectActualLRP(logger, &suspectActualLRP.Suspect.ActualLRPKey)
+					if err != nil {
+						logger.Error("failed-to-unsuspect", err)
+					}
 				} else {
 					// if suspect && cell not present -> nothing to do for this one, do not retire other one
 					// TODO: handle a case where nonsuspect is taking too long and suspect does not come back
