@@ -350,7 +350,9 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		cellIDs = append(cellIDs, key)
 	}
 
-	logger.Info("detected-missing-cells", lager.Data{"cell_ids": cellIDs})
+	if len(cellIDs) > 0 {
+		logger.Info("detected-missing-cells", lager.Data{"cell_ids": cellIDs})
+	}
 
 	c.keysWithMissingCells = keysWithMissingCells
 }

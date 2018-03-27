@@ -93,7 +93,7 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "actual-with-missing-cell" + "-" + domain, CellId: "missing-cell"})
+			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "actual-with-missing-cell" + "-" + domain, CellId: "other-cell"})
 			Expect(err).NotTo(HaveOccurred())
 			queryStr = `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
 			if test_helpers.UsePostgres() {
@@ -475,7 +475,20 @@ var _ = Describe("LRPConvergence", func() {
 
 	It("logs the missing cells", func() {
 		sqlDB.ConvergeLRPs(logger, cellSet)
-		Expect(logger).To(gbytes.Say("detected-missing-cells.*cell_ids\":\\[\"missing-cell\"\\]"))
+		Expect(logger).To(gbytes.Say(`detected-missing-cells.*cell_ids":\["other-cell"\]`))
+	})
+
+	Context("when there are no missing cells", func() {
+		BeforeEach(func() {
+			cellSet = models.NewCellSetFromList([]*models.CellPresence{
+				{CellId: "existing-cell"},
+				{CellId: "other-cell"},
+			})
+		})
+		It("does not log missing cells", func() {
+			sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(logger).ToNot(gbytes.Say("detected-missing-cells"))
+		})
 	})
 
 	It("creates actual LRPs with missing indices, and returns it to be started", func() {
