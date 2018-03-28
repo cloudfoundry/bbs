@@ -76,24 +76,6 @@ func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 	return groups[0], nil
 }
 
-func (db *SQLDB) AllActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) ([]*models.ActualLRPGroup, error) {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
-
-	groups, err := db.getActualLRPS(logger, "process_guid = ? AND instance_index = ?", processGuid, index)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(groups) == 0 {
-		logger.Error("failed-to-find-actual-lrp-group", models.ErrResourceNotFound)
-		return nil, models.ErrResourceNotFound
-	}
-
-	return groups, nil
-}
-
 func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
 	logger = logger.WithData(lager.Data{"key": key})
 	logger.Info("starting")
@@ -158,18 +140,16 @@ func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		// if there is no suspect already, mark one as suspect and create a new one
 		// if there is a suspect but not a new one, error out
 		// if there is both a suspect and a new one, return both
-		actualLRPGroups, err := db.fetchAllActualLRPForUpdate(logger, processGuid, index, false, tx)
+		actualLRPGroup, err := db.fetchActualLRPGroupForUpdate(logger, processGuid, index, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
 		}
 
-		for _, actualLRPGroup := range actualLRPGroups {
-			if actualLRPGroup.Suspect != nil {
-				suspectLRP = actualLRPGroup.Suspect
-			} else if actualLRPGroup.Instance != nil {
-				actualLRP = actualLRPGroup.Instance
-			}
+		if actualLRPGroup.Suspect != nil {
+			suspectLRP = actualLRPGroup.Suspect
+		} else if actualLRPGroup.Instance != nil {
+			actualLRP = actualLRPGroup.Instance
 		}
 
 		// both already exist, just return them
@@ -221,13 +201,13 @@ func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
 	logger = logger.Session("marking-as-unsuspect", lager.Data{"key": key})
 
-	var actualLRPGroups []*models.ActualLRPGroup
+	var actualLRPGroup *models.ActualLRPGroup
 	processGuid := key.ProcessGuid
 	index := key.Index
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRPGroups, err = db.fetchAllActualLRPForUpdate(logger, processGuid, index, false, tx)
+		actualLRPGroup, err = db.fetchActualLRPGroupForUpdate(logger, processGuid, index, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
@@ -269,8 +249,8 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 			return nil
 		}
 
-		actualLRP := actualLRPGroups[0].Suspect
-		shadowLRP := actualLRPGroups[0].Instance
+		actualLRP := actualLRPGroup.Suspect
+		shadowLRP := actualLRPGroup.Instance
 
 		if actualLRP == nil {
 			return errors.New("no-suspect-lrp-for-the-group")
@@ -755,20 +735,15 @@ func (db *SQLDB) getActualLRPCheckForSuspect(logger lager.Logger, key *models.Ac
 	processGuid := key.ProcessGuid
 	index := key.Index
 	var actualLRP *models.ActualLRP
-	actualLRPGroups, err := db.fetchAllActualLRPForUpdate(logger, processGuid, index, false, tx)
+	actualLRPGroup, err := db.fetchActualLRPGroupForUpdate(logger, processGuid, index, tx)
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrp-for-share", err)
 		return nil, err
 	}
 
-	for _, actualLRPGroup := range actualLRPGroups {
-		if actualLRPGroup.Instance != nil {
-			actualLRP = actualLRPGroup.Instance
-			break
-		}
-	}
-
-	if actualLRP == nil {
+	if actualLRPGroup.Instance != nil {
+		actualLRP = actualLRPGroup.Instance
+	} else {
 		logger.Error("cannot-find-an-actual-lrp-instance", nil)
 		return nil, models.ErrActualLRPCannotBeClaimed
 	}
@@ -805,9 +780,9 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 	return actualLRP, nil
 }
 
-func (db *SQLDB) fetchAllActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx helpers.Tx) ([]*models.ActualLRPGroup, error) {
-	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
-	bindings := []interface{}{processGuid, index, evacuating}
+func (db *SQLDB) fetchActualLRPGroupForUpdate(logger lager.Logger, processGuid string, index int32, tx helpers.Tx) (*models.ActualLRPGroup, error) {
+	wheres := "process_guid = ? AND instance_index = ?"
+	bindings := []interface{}{processGuid, index}
 
 	rows, err := db.all(logger, tx, actualLRPsTable,
 		actualLRPColumns, helpers.LockRow, wheres, bindings...)
@@ -820,11 +795,11 @@ func (db *SQLDB) fetchAllActualLRPForUpdate(logger lager.Logger, processGuid str
 		return nil, err
 	}
 
-	if len(groups) == 0 {
-		return nil, models.ErrResourceNotFound
+	if len(groups) != 1 {
+		return nil, models.ErrResourceConflict
 	}
 
-	return groups, nil
+	return groups[0], nil
 }
 
 func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRPGroup, error) {

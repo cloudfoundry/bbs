@@ -284,7 +284,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		for index, count := range existingIndices {
 			if count > 1 { // TODO: are there other conditions other than a suspect actual LRP that could lead to this?
 				// one may be a suspect
-				actuallrps, err := c.AllActualLRPGroupByProcessGuidAndIndex(logger, schedulingInfo.ProcessGuid, int32(index))
+				actualLRPGroup, err := c.ActualLRPGroupByProcessGuidAndIndex(logger, schedulingInfo.ProcessGuid, int32(index))
 				if err != nil {
 					logger.Error("cannot-fetch-actual-lrps", err, lager.Data{
 						"process-guid": schedulingInfo.ProcessGuid,
@@ -294,28 +294,24 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				}
 
 				// validate assumption from above
-				var suspectActualLRP *models.ActualLRPGroup
-				for _, actuallrp := range actuallrps {
-					if actuallrp.Suspect != nil {
-						suspectActualLRP = actuallrp
-						break
-					}
-				}
-				if suspectActualLRP == nil {
+				var suspectActualLRP *models.ActualLRP
+				if actualLRPGroup.Suspect != nil {
+					suspectActualLRP = actualLRPGroup.Suspect
+				} else {
 					logger.Info("no-suspect-found-for-acutal-lrp-with-duplicate-at-same-index", lager.Data{"guid": schedulingInfo.ProcessGuid, "indices": existingIndices})
 					panic("this is impossible") // do we want to continue or do we want to proceed with retiring it?
 				}
 
 				suspectRecovered := false
 				for _, cell := range cellSet {
-					if suspectActualLRP.Suspect.CellId == cell.CellId {
+					if suspectActualLRP.CellId == cell.CellId {
 						suspectRecovered = true
 						break
 					}
 				}
 				if suspectRecovered {
 					// if suspect && cell is present -> no longer suspect, retire other one
-					err = c.UnsuspectActualLRP(logger, &suspectActualLRP.Suspect.ActualLRPKey)
+					err = c.UnsuspectActualLRP(logger, &suspectActualLRP.ActualLRPKey)
 					if err != nil {
 						logger.Error("failed-to-unsuspect", err)
 					}

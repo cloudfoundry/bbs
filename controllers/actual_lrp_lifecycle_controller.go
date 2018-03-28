@@ -55,7 +55,7 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 }
 
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
-	lrpGroups, err := h.db.AllActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	lrpg, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	if err != nil {
 		logger.Error("err-when-finding-suspect", err)
 		if err == models.ErrResourceNotFound {
@@ -65,18 +65,8 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	if len(lrpGroups) > 2 {
-		err := errors.New("more than one suspect")
-		logger.Error("more-than-one-suspect", err, lager.Data{"lrps": lrpGroups})
-		return err
-	}
-
 	// TODO: decide what happens if the suspect is already running
-	for _, lrpg := range lrpGroups {
-		if lrpg.Suspect == nil {
-			continue
-		}
-
+	if lrpg.Suspect != nil {
 		logger = logger.Session("found-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index})
 		suspectLRP := lrpg.Suspect
 		if suspectLRP.ActualLRPInstanceKey.InstanceGuid != actualLRPInstanceKey.InstanceGuid {
@@ -89,12 +79,12 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		}
 	}
 
-	var lrpGroup *models.ActualLRPGroup
 	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
 		return err
 	}
 
+	var lrpGroup *models.ActualLRPGroup
 	lrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	if err != nil {
 		return err
@@ -118,11 +108,24 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 }
 
 func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+	lrpg, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	if err != nil {
+		logger.Error("err-when-finding-actual-lrp-group", err)
+		return err
+	}
+
+	if lrpg.Suspect != nil && lrpg.Suspect.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
+		logger = logger.Session("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
+		err = h.db.RemoveActualLRP(logger, lrpg.Suspect.ProcessGuid, lrpg.Suspect.Index, &lrpg.Suspect.ActualLRPInstanceKey)
+		return err
+	}
+
 	before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
 	if err != nil {
 		return err
 	}
 
+	// again here what events do we want to emit?
 	beforeActualLRP, _ := before.Resolve()
 	afterActualLRP, _ := after.Resolve()
 	go h.actualHub.Emit(models.NewActualLRPCrashedEvent(beforeActualLRP, afterActualLRP))
@@ -170,6 +173,8 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 		return err
 
 	}
+
+	// what event to emit when removing an ActualLRPGroup with both Shadow and Suspect
 	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
 	return nil
 }
@@ -185,6 +190,15 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 		lrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 		if err != nil {
 			return err
+		}
+
+		// if there is a suspect actual lrp, just remove it
+		if lrpGroup.Suspect != nil {
+			suspectActualLRP := lrpGroup.Suspect
+			logger = logger.Session("found-suspect", lager.Data{"guid": suspectActualLRP.ProcessGuid, "index": suspectActualLRP.Index, "instance-guid": suspectActualLRP.ActualLRPInstanceKey.InstanceGuid})
+			err = h.db.RemoveActualLRP(logger, suspectActualLRP.ProcessGuid, suspectActualLRP.Index, &suspectActualLRP.ActualLRPInstanceKey)
+			logger.Error("retrying-failed-retire-of-actual-lrp", err, lager.Data{"attempt": retryCount + 1})
+			continue
 		}
 
 		lrp := lrpGroup.Instance
@@ -219,7 +233,14 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 			err = client.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
 		}
 
-		if err == nil {
+		// if there is a suspect actual lrp, what do? remove it?
+		// or just notice its existence and have some sort of a retry logic?
+		if lrpGroup.Suspect != nil {
+			// suspectActualLRP := lrpGroup.Suspect
+			// logger = logger.Session("found-suspect", lager.Data{"guid": suspectActualLRP.ProcessGuid, "index": suspectActualLRP.Index, "instance-guid": suspectActualLRP.ActualLRPInstanceKey.InstanceGuid})
+			// err = h.db.RemoveActualLRP(logger, suspectActualLRP.ProcessGuid, suspectActualLRP.Index, &suspectActualLRP.ActualLRPInstanceKey)
+			logger.Info("suspect-actual-lrp-found")
+		} else if err == nil {
 			return nil
 		}
 
