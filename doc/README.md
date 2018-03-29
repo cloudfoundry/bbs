@@ -27,3 +27,4 @@ Diego clients communicate with the BBS via an [ExternalClient](https://godoc.org
   - [Tasks](api-tasks-internal.md)
   - [LRPs](api-lrps-internal.md)
 - [Fields common to Tasks and LRPs](common-models.md)
+- [Descrition of BBS SQL schema](schema-description.md)
