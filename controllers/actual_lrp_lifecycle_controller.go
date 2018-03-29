@@ -116,8 +116,10 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 	}
 
 	if lrpg.Suspect != nil && lrpg.Suspect.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
+		suspectLRP := lrpg.Suspect
 		logger = logger.Session("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
-		err = h.db.RemoveActualLRP(logger, lrpg.Suspect.ProcessGuid, lrpg.Suspect.Index, &lrpg.Suspect.ActualLRPInstanceKey)
+		err = h.db.RemoveActualLRP(logger, suspectLRP.ProcessGuid, suspectLRP.Index, &suspectLRP.ActualLRPInstanceKey)
+		h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Suspect: suspectLRP}))
 		return err
 	}
 
