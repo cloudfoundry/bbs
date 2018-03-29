@@ -187,22 +187,6 @@ func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
 	}
 }
 
-func (group ActualLRPGroup) ResolveWithSuspect() (*ActualLRP, bool) {
-	switch {
-	case group.Instance == nil && group.Suspect == nil:
-		panic(ErrActualLRPGroupInvalid)
-
-	case group.Instance == nil:
-		return group.Suspect, true
-
-	case group.Suspect == nil:
-		return group.Instance, false
-
-	default:
-		return group.Evacuating, true
-	}
-}
-
 func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
 	return &ActualLRP{
 		ActualLRPKey: lrpKey,
