@@ -72,6 +72,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		if suspectLRP.ActualLRPInstanceKey.InstanceGuid != actualLRPInstanceKey.InstanceGuid {
 			logger.Info("starting-shadow", lager.Data{"suspect-instance-guid": suspectLRP.ActualLRPInstanceKey.InstanceGuid, "shadow-instance-guid": actualLRPInstanceKey.InstanceGuid})
 			h.db.RemoveActualLRP(logger, lrpg.Suspect.ProcessGuid, lrpg.Suspect.Index, &lrpg.Suspect.ActualLRPInstanceKey)
+			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Suspect: suspectLRP}))
 		} else {
 			err := errors.New("rep-restarting-suspect")
 			logger.Error("rep-cannot-restart-suspect", err, lager.Data{"suspect-instance-guid": suspectLRP.ActualLRPInstanceKey.InstanceGuid})
