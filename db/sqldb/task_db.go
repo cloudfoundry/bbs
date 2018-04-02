@@ -274,9 +274,6 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 			return err
 		}
 
-		afterTask.State = models.Task_Completed
-		afterTask.Failed = true
-		afterTask.FailureReason = failureReason
 		return nil
 	})
 
