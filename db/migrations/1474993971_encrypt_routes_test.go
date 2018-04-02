@@ -15,8 +15,7 @@ import (
 
 var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 	var (
-		mig       migration.Migration
-		fakeClock *fakeclock.FakeClock
+		mig migration.Migration
 	)
 
 	BeforeEach(func() {
@@ -40,11 +39,10 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 	})
 
 	Describe("Up", func() {
-		var initialMigrations migration.Migrations
 		var routes string
 
 		BeforeEach(func() {
-			initialMigrations = []migration.Migration{
+			initialMigrations := []migration.Migration{
 				migrations.NewInitSQL(),
 				migrations.NewIncreaseRunInfoColumnSize(),
 				migrations.NewAddPlacementTagsToDesiredLRPs(),

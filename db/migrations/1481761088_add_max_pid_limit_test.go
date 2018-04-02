@@ -13,8 +13,7 @@ import (
 
 var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 	var (
-		mig       migration.Migration
-		fakeClock *fakeclock.FakeClock
+		mig migration.Migration
 	)
 
 	BeforeEach(func() {
@@ -38,10 +37,8 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 	})
 
 	Describe("Up", func() {
-		var initialMigrations migration.Migrations
-
 		BeforeEach(func() {
-			initialMigrations = []migration.Migration{
+			initialMigrations := []migration.Migration{
 				migrations.NewInitSQL(),
 				migrations.NewIncreaseRunInfoColumnSize(),
 			}
