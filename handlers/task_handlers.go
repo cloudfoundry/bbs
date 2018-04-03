@@ -164,7 +164,7 @@ func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) { // TODO unit tests!
+func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("reject-task")
 
