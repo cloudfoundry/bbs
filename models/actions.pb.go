@@ -120,6 +120,7 @@
 		StartTaskRequest
 		StartTaskResponse
 		FailTaskRequest
+		RejectTaskRequest
 		TaskGuidRequest
 		CompleteTaskRequest
 		TaskCallbackResponse

@@ -26,6 +26,7 @@ func New(
 	accessLogger lager.Logger,
 	updateWorkers int,
 	convergenceWorkersSize int,
+	maxTaskPlacementRetries int,
 	emitter middleware.Emitter,
 	db db.DB,
 	desiredHub, actualHub, taskHub events.Hub,
@@ -44,7 +45,7 @@ func New(
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(db, db, db, actualHub, auctioneerClient, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
-	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier)
+	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, maxTaskPlacementRetries)
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	eventsHandler := NewEventHandler(desiredHub, actualHub)
 	taskEventsHandler := NewTaskEventHandler(taskHub)
@@ -93,6 +94,7 @@ func New(
 		bbs.StartTaskRoute:     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.StartTask), emitter)),
 		bbs.CancelTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CancelTask), emitter)),
 		bbs.FailTaskRoute:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.FailTask), emitter)),
+		bbs.RejectTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.RejectTask), emitter)),
 		bbs.CompleteTaskRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CompleteTask), emitter)),
 		bbs.ResolvingTaskRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.ResolvingTask), emitter)),
 		bbs.DeleteTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),

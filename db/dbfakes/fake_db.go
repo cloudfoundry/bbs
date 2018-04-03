@@ -461,6 +461,22 @@ type FakeDB struct {
 		result2 *models.Task
 		result3 error
 	}
+	IncrementTaskRejectionCountStub        func(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error)
+	incrementTaskRejectionCountMutex       sync.RWMutex
+	incrementTaskRejectionCountArgsForCall []struct {
+		logger   lager.Logger
+		taskGuid string
+	}
+	incrementTaskRejectionCountReturns struct {
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
+	}
+	incrementTaskRejectionCountReturnsOnCall map[int]struct {
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
+	}
 	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) (before *models.Task, after *models.Task, err error)
 	completeTaskMutex       sync.RWMutex
 	completeTaskArgsForCall []struct {
@@ -2154,6 +2170,61 @@ func (fake *FakeDB) FailTaskReturnsOnCall(i int, result1 *models.Task, result2 *
 	}{result1, result2, result3}
 }
 
+func (fake *FakeDB) IncrementTaskRejectionCount(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error) {
+	fake.incrementTaskRejectionCountMutex.Lock()
+	ret, specificReturn := fake.incrementTaskRejectionCountReturnsOnCall[len(fake.incrementTaskRejectionCountArgsForCall)]
+	fake.incrementTaskRejectionCountArgsForCall = append(fake.incrementTaskRejectionCountArgsForCall, struct {
+		logger   lager.Logger
+		taskGuid string
+	}{logger, taskGuid})
+	fake.recordInvocation("IncrementTaskRejectionCount", []interface{}{logger, taskGuid})
+	fake.incrementTaskRejectionCountMutex.Unlock()
+	if fake.IncrementTaskRejectionCountStub != nil {
+		return fake.IncrementTaskRejectionCountStub(logger, taskGuid)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2, ret.result3
+	}
+	return fake.incrementTaskRejectionCountReturns.result1, fake.incrementTaskRejectionCountReturns.result2, fake.incrementTaskRejectionCountReturns.result3
+}
+
+func (fake *FakeDB) IncrementTaskRejectionCountCallCount() int {
+	fake.incrementTaskRejectionCountMutex.RLock()
+	defer fake.incrementTaskRejectionCountMutex.RUnlock()
+	return len(fake.incrementTaskRejectionCountArgsForCall)
+}
+
+func (fake *FakeDB) IncrementTaskRejectionCountArgsForCall(i int) (lager.Logger, string) {
+	fake.incrementTaskRejectionCountMutex.RLock()
+	defer fake.incrementTaskRejectionCountMutex.RUnlock()
+	return fake.incrementTaskRejectionCountArgsForCall[i].logger, fake.incrementTaskRejectionCountArgsForCall[i].taskGuid
+}
+
+func (fake *FakeDB) IncrementTaskRejectionCountReturns(result1 *models.Task, result2 *models.Task, result3 error) {
+	fake.IncrementTaskRejectionCountStub = nil
+	fake.incrementTaskRejectionCountReturns = struct {
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
+}
+
+func (fake *FakeDB) IncrementTaskRejectionCountReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 error) {
+	fake.IncrementTaskRejectionCountStub = nil
+	if fake.incrementTaskRejectionCountReturnsOnCall == nil {
+		fake.incrementTaskRejectionCountReturnsOnCall = make(map[int]struct {
+			result1 *models.Task
+			result2 *models.Task
+			result3 error
+		})
+	}
+	fake.incrementTaskRejectionCountReturnsOnCall[i] = struct {
+		result1 *models.Task
+		result2 *models.Task
+		result3 error
+	}{result1, result2, result3}
+}
+
 func (fake *FakeDB) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) (before *models.Task, after *models.Task, err error) {
 	fake.completeTaskMutex.Lock()
 	ret, specificReturn := fake.completeTaskReturnsOnCall[len(fake.completeTaskArgsForCall)]
@@ -2541,6 +2612,8 @@ func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	defer fake.cancelTaskMutex.RUnlock()
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
+	fake.incrementTaskRejectionCountMutex.RLock()
+	defer fake.incrementTaskRejectionCountMutex.RUnlock()
 	fake.completeTaskMutex.RLock()
 	defer fake.completeTaskMutex.RUnlock()
 	fake.resolvingTaskMutex.RLock()

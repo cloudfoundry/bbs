@@ -280,6 +280,52 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 	return &beforeTask, afterTask, err
 }
 
+func (db *SQLDB) IncrementTaskRejectionCount(logger lager.Logger, taskGuid string) (*models.Task, *models.Task, error) {
+	logger = logger.Session("increment-task-rejection-count", lager.Data{"task_guid": taskGuid})
+	logger.Info("starting")
+	defer logger.Info("complete")
+
+	var beforeTask models.Task
+	var afterTask *models.Task
+
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		var err error
+		afterTask, err = db.fetchTaskForUpdate(logger, taskGuid, tx)
+		if err != nil {
+			logger.Error("failed-locking-task", err)
+			return err
+		}
+
+		if afterTask.State != models.Task_Pending {
+			logger.Info("invalid-task-state", lager.Data{"task_state": afterTask.State})
+			return models.ErrBadRequest
+		}
+
+		beforeTask = *afterTask
+
+		afterTask.RejectionCount++
+
+		now := db.clock.Now().UnixNano()
+		_, err = db.update(logger, tx, tasksTable,
+			helpers.SQLAttributes{
+				"rejection_count": afterTask.RejectionCount,
+				"updated_at":      now,
+			},
+			"guid = ?", taskGuid,
+		)
+		if err != nil {
+			logger.Error("failed-updating-tasks", err)
+			return err
+		}
+
+		logger.Info("incremented-task-rejection-count", lager.Data{"rejection_count": afterTask.RejectionCount})
+
+		return nil
+	})
+
+	return &beforeTask, afterTask, err
+}
+
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
 // stager ever attempts to handle a completed task
 func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) (*models.Task, *models.Task, error) {
@@ -441,7 +487,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 	var guid, domain, cellID, failureReason string
 	var result sql.NullString
 	var createdAt, updatedAt, firstCompletedAt int64
-	var state int32
+	var state, rejectionCount int32
 	var failed bool
 	var taskDefData []byte
 
@@ -457,6 +503,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 		&failed,
 		&failureReason,
 		&taskDefData,
+		&rejectionCount,
 	)
 
 	if err == sql.ErrNoRows {
@@ -486,6 +533,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 		Failed:           failed,
 		FailureReason:    failureReason,
 		TaskDefinition:   &taskDef,
+		RejectionCount:   rejectionCount,
 	}
 	return task, guid, nil
 }

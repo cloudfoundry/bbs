@@ -512,6 +512,63 @@ var _ = Describe("Task Handlers", func() {
 		})
 	})
 
+	Describe("RejectTask", func() {
+		const taskGuid = "task-guid"
+		const failureReason = "rejected"
+
+		BeforeEach(func() {
+			controller.RejectTaskReturns(nil)
+			requestBody = &models.RejectTaskRequest{
+				TaskGuid:      taskGuid,
+				FailureReason: failureReason,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request = newTestRequest(requestBody)
+			handler.RejectTask(logger, responseRecorder, request)
+		})
+
+		Context("when reject task succeeds", func() {
+			It("returns no error", func() {
+				_, actualTaskGuid, actualFailureReason := controller.RejectTaskArgsForCall(0)
+				Expect(actualTaskGuid).To(Equal(taskGuid))
+				Expect(actualFailureReason).To(Equal(failureReason))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var response models.TaskLifecycleResponse
+				Expect(response.Unmarshal(responseRecorder.Body.Bytes())).To(Succeed())
+				Expect(response.Error).To(BeNil())
+			})
+		})
+
+		Context("when the controller returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				controller.RejectTaskReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when failing the task fails", func() {
+			BeforeEach(func() {
+				controller.RejectTaskReturns(models.ErrUnknownError)
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+
+				var response models.TaskLifecycleResponse
+				Expect(response.Unmarshal(responseRecorder.Body.Bytes())).To(Succeed())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
 	Describe("CompleteTask", func() {
 		var (
 			taskGuid      string

@@ -14,7 +14,7 @@ import (
 var _ = Describe("Task API", func() {
 	var expectedTasks []*models.Task
 
-	BeforeEach(func() {
+	JustBeforeEach(func() {
 		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
@@ -103,7 +103,7 @@ var _ = Describe("Task API", func() {
 		const taskGuid = "task-1"
 		const cellId = "cell-1"
 
-		BeforeEach(func() {
+		JustBeforeEach(func() {
 			err := client.DesireTask(logger, taskGuid, "test", taskDef)
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -140,16 +140,60 @@ var _ = Describe("Task API", func() {
 			})
 		})
 
+		FDescribe("RejectTask", func() {
+			Context("when max_task_placement_retries is 0", func() {
+				It("fails the task with the provided error", func() {
+					Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
+
+					task, err := client.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(task.State).To(Equal(models.Task_Completed))
+					Expect(task.FailureReason).To(Equal("some failure reason"))
+				})
+			})
+
+			Context("when max_task_placement_retries is 1", func() {
+				BeforeEach(func() {
+					bbsConfig.MaxTaskPlacementRetries = 1
+				})
+
+				Context("on the first rejection call", func() {
+					It("does not transition the task to a new state, but increments the rejection count", func() {
+						Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
+
+						task, err := client.TaskByGuid(logger, taskGuid)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(task.State).To(Equal(models.Task_Pending))
+						Expect(task.RejectionCount).To(BeEquivalentTo(1))
+					})
+				})
+
+				Context("on the second rejection call", func() {
+					JustBeforeEach(func() {
+						Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
+					})
+
+					It("fails the task with the provided error", func() {
+						Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
+
+						task, err := client.TaskByGuid(logger, taskGuid)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(task.State).To(Equal(models.Task_Completed))
+						Expect(task.FailureReason).To(Equal("some failure reason"))
+					})
+				})
+			})
+		})
+
 		Context("task has been started", func() {
-			BeforeEach(func() {
+			JustBeforeEach(func() {
 				_, err := client.StartTask(logger, taskGuid, cellId)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Describe("FailTask", func() {
 				It("marks the task completed and sets FailureReason", func() {
-					err := client.FailTask(logger, taskGuid, "some failure happened")
-					Expect(err).NotTo(HaveOccurred())
+					Expect(client.FailTask(logger, taskGuid, "some failure happened")).To(Succeed())
 
 					task, err := client.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
@@ -174,7 +218,7 @@ var _ = Describe("Task API", func() {
 			})
 
 			Context("task has been completed", func() {
-				BeforeEach(func() {
+				JustBeforeEach(func() {
 					err := client.CompleteTask(logger, taskGuid, cellId, false, "", "result")
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -191,7 +235,7 @@ var _ = Describe("Task API", func() {
 				})
 
 				Context("task is resolving", func() {
-					BeforeEach(func() {
+					JustBeforeEach(func() {
 						err := client.ResolvingTask(logger, taskGuid)
 						Expect(err).NotTo(HaveOccurred())
 					})

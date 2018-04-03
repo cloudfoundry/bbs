@@ -291,6 +291,7 @@ func main() {
 		accessLogger,
 		bbsConfig.UpdateWorkers,
 		bbsConfig.ConvergenceWorkers,
+		bbsConfig.MaxTaskPlacementRetries,
 		requestStatMetronNotifier,
 		sqlDB,
 		desiredHub,
@@ -316,7 +317,7 @@ func main() {
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 	)
-	taskController := controllers.NewTaskController(sqlDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier)
+	taskController := controllers.NewTaskController(sqlDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, bbsConfig.MaxTaskPlacementRetries)
 
 	convergerProcess := converger.New(
 		logger,

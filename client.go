@@ -56,6 +56,7 @@ type InternalClient interface {
 
 	StartTask(logger lager.Logger, taskGuid string, cellID string) (bool, error)
 	FailTask(logger lager.Logger, taskGuid, failureReason string) error
+	RejectTask(logger lager.Logger, taskGuid, failureReason string) error
 	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
 }
 
@@ -671,6 +672,15 @@ func (c *client) FailTask(logger lager.Logger, taskGuid, failureReason string) e
 		FailureReason: failureReason,
 	}
 	route := FailTaskRoute
+	return c.doTaskLifecycleRequest(logger, route, &request)
+}
+
+func (c *client) RejectTask(logger lager.Logger, taskGuid, failureReason string) error {
+	request := models.RejectTaskRequest{
+		TaskGuid:      taskGuid,
+		FailureReason: failureReason,
+	}
+	route := RejectTaskRoute
 	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 

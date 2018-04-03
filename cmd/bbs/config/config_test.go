@@ -84,7 +84,8 @@ var _ = Describe("BBSConfig", func() {
 			"skip_consul_lock": true,
 			"sql_ca_cert_file": "/var/vcap/jobs/bbs/config/sql.ca",
 			"task_callback_workers": 1000,
-			"update_workers": 1000
+			"update_workers": 1000,
+			"max_task_placement_retries": 3
 		}`
 	})
 
@@ -180,6 +181,7 @@ var _ = Describe("BBSConfig", func() {
 			TaskCallbackWorkers:        1000,
 			UpdateWorkers:              1000,
 			SkipConsulLock:             true,
+			MaxTaskPlacementRetries:    3,
 		}
 
 		Expect(bbsConfig).To(Equal(config))
