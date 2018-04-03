@@ -50,7 +50,7 @@ var _ = Describe("TaskDB", func() {
 				var guid, domain, cellID, failureReason string
 				var result sql.NullString
 				var createdAt, updatedAt, firstCompletedAt int64
-				var state int32
+				var state, rejectionCount int32
 				var failed bool
 				var taskDefData []byte
 
@@ -66,6 +66,7 @@ var _ = Describe("TaskDB", func() {
 					&failed,
 					&failureReason,
 					&taskDefData,
+					&rejectionCount,
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -79,6 +80,7 @@ var _ = Describe("TaskDB", func() {
 				Expect(failureReason).To(Equal(""))
 				Expect(cellID).To(Equal(""))
 				Expect(failed).To(BeFalse())
+				Expect(rejectionCount).To(BeEquivalentTo(0))
 
 				var actualTaskDef models.TaskDefinition
 				err = serializer.Unmarshal(logger, taskDefData, &actualTaskDef)
@@ -95,6 +97,7 @@ var _ = Describe("TaskDB", func() {
 				Expect(desiredTask.FailureReason).To(Equal(""))
 				Expect(desiredTask.CellId).To(Equal(""))
 				Expect(desiredTask.Failed).To(BeFalse())
+				Expect(desiredTask.RejectionCount).To(BeEquivalentTo(0))
 			})
 		})
 
@@ -843,7 +846,7 @@ var _ = Describe("TaskDB", func() {
 
 		Context("when the task does not exist", func() {
 			It("returns an ResourceNotFound error", func() {
-				_, _, err := sqlDB.FailTask(logger, "", "")
+				_, _, err := sqlDB.FailTask(logger, "", "nota-guid")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
@@ -1078,6 +1081,87 @@ var _ = Describe("TaskDB", func() {
 		Context("when the task does not exist", func() {
 			It("returns a ResourceNotFound error", func() {
 				_, err := sqlDB.DeleteTask(logger, taskGuid)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+	})
+
+	Describe("IncrementTaskRejectionCount", func() {
+		Context("when the task exists", func() {
+			var (
+				taskGuid, taskDomain string
+				taskDefinition       *models.TaskDefinition
+				beforeTask           *models.Task
+			)
+
+			BeforeEach(func() {
+				var err error
+
+				taskGuid = "the-task-guid"
+				taskDomain = "the-task-domain"
+				taskDefinition = model_helpers.NewValidTaskDefinition()
+
+				beforeTask, err = sqlDB.DesireTask(logger, taskDefinition, taskGuid, taskDomain)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when the task is pending", func() {
+				It("fails the task", func() {
+					before, after, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(before).To(Equal(beforeTask))
+
+					Expect(after.RejectionCount).To(Equal(beforeTask.RejectionCount + 1))
+
+					task, err := sqlDB.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(task).To(Equal(after))
+				})
+			})
+
+			Context("when the task is running", func() {
+				BeforeEach(func() {
+					_, _, _, err := sqlDB.StartTask(logger, taskGuid, "cell-id")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns a BadRequest error", func() {
+					_, _, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+					Expect(err).To(Equal(models.ErrBadRequest))
+				})
+			})
+
+			Context("when the task is completed", func() {
+				BeforeEach(func() {
+					_, _, _, err := sqlDB.CancelTask(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns a BadRequest error", func() {
+					_, _, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+					Expect(err).To(Equal(models.ErrBadRequest))
+				})
+			})
+
+			Context("when the task is resolving", func() {
+				BeforeEach(func() {
+					_, _, _, err := sqlDB.CancelTask(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+					_, _, err = sqlDB.ResolvingTask(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns a BadRequest error", func() {
+					_, _, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+					Expect(err).To(Equal(models.ErrBadRequest))
+				})
+			})
+		})
+
+		Context("when the task does not exist", func() {
+			It("returns an ResourceNotFound error", func() {
+				_, _, err := sqlDB.IncrementTaskRejectionCount(logger, "nota-guid")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})

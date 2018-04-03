@@ -27,6 +27,7 @@ var _ = Describe("Task Controller", func() {
 		fakeAuctioneerClient     *auctioneerfakes.FakeClient
 		fakeTaskCompletionClient *taskworkpoolfakes.FakeTaskCompletionClient
 		taskHub                  *eventfakes.FakeHub
+		maxPlacementRetries      int
 
 		controller           *controllers.TaskController
 		fakeTaskStatNotifier *fakes.FakeTaskStatMetronNotifier
@@ -43,6 +44,10 @@ var _ = Describe("Task Controller", func() {
 		err = nil
 
 		taskHub = &eventfakes.FakeHub{}
+		maxPlacementRetries = 0
+	})
+
+	JustBeforeEach(func() {
 		controller = controllers.NewTaskController(
 			fakeTaskDB,
 			fakeTaskCompletionClient,
@@ -51,6 +56,7 @@ var _ = Describe("Task Controller", func() {
 			fakeRepClientFactory,
 			taskHub,
 			fakeTaskStatNotifier,
+			maxPlacementRetries,
 		)
 	})
 
@@ -543,25 +549,7 @@ var _ = Describe("Task Controller", func() {
 		})
 	})
 
-	Describe("FailTask", func() {
-		var (
-			taskGuid      string
-			failureReason string
-			before, after *models.Task
-		)
-
-		BeforeEach(func() {
-			taskGuid = "task-guid"
-			failureReason = "just cuz ;)"
-			before = &models.Task{}
-			after = model_helpers.NewValidTask("hi-bob")
-			fakeTaskDB.FailTaskReturns(before, after, nil)
-		})
-
-		JustBeforeEach(func() {
-			err = controller.FailTask(logger, taskGuid, failureReason)
-		})
-
+	AssertTaskFailing := func(taskGuid, failureReason string) {
 		Context("when failing the task succeeds", func() {
 			It("returns no error", func() {
 				_, actualTaskGuid, actualFailureReason := fakeTaskDB.FailTaskArgsForCall(0)
@@ -575,8 +563,8 @@ var _ = Describe("Task Controller", func() {
 				event := taskHub.EmitArgsForCall(0)
 				changedEvent, ok := event.(*models.TaskChangedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(changedEvent.Before).To(Equal(before))
-				Expect(changedEvent.After).To(Equal(after))
+				Expect(changedEvent.Before).To(Equal(&models.Task{}))
+				Expect(changedEvent.After).To(Equal(model_helpers.NewValidTask("hi-bob")))
 			})
 
 			Context("and the task has a complete URL", func() {
@@ -614,6 +602,85 @@ var _ = Describe("Task Controller", func() {
 
 			It("does not emit a change to the hub", func() {
 				Consistently(taskHub.EmitCallCount).Should(Equal(0))
+			})
+		})
+	}
+
+	Describe("FailTask", func() {
+		var (
+			taskGuid      = "task-guid"
+			failureReason = "just cuz ;)"
+		)
+
+		BeforeEach(func() {
+			before := &models.Task{}
+			after := model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.FailTaskReturns(before, after, nil)
+		})
+
+		JustBeforeEach(func() {
+			err = controller.FailTask(logger, taskGuid, failureReason)
+		})
+
+		AssertTaskFailing(taskGuid, failureReason)
+	})
+
+	Describe("RejectTask", func() {
+		var (
+			taskGuid      = "task-guid"
+			failureReason = "rejection"
+		)
+
+		BeforeEach(func() {
+			before := &models.Task{}
+			after := model_helpers.NewValidTask("hi-bob")
+			fakeTaskDB.FailTaskReturns(before, after, nil)
+			fakeTaskDB.TaskByGuidReturns(before, nil)
+		})
+
+		JustBeforeEach(func() {
+			err = controller.RejectTask(logger, taskGuid, failureReason)
+		})
+
+		Context("when fetching the task returns an error", func() {
+			BeforeEach(func() {
+				fakeTaskDB.TaskByGuidReturns(nil, errors.New("some db error"))
+			})
+
+			It("forwards the error", func() {
+				Expect(err).To(MatchError(errors.New("some db error")))
+			})
+		})
+
+		Context("when max_task_placement_retries is 0", func() {
+			BeforeEach(func() {
+				maxPlacementRetries = 0
+			})
+
+			By("immediately failing the task")
+			AssertTaskFailing(taskGuid, failureReason)
+		})
+
+		Context("when max_task_placement_retries is 1", func() {
+			BeforeEach(func() {
+				maxPlacementRetries = 1
+			})
+
+			Context("when the task has a rejection count of 0", func() {
+				It("increments the rejection count on the task", func() {
+					Expect(fakeTaskDB.IncrementTaskRejectionCountCallCount()).To(Equal(1))
+					_, actualTaskGuid := fakeTaskDB.IncrementTaskRejectionCountArgsForCall(0)
+					Expect(actualTaskGuid).To(Equal(taskGuid))
+				})
+			})
+
+			Context("when the task has a rejection count of 1", func() {
+				BeforeEach(func() {
+					fakeTaskDB.TaskByGuidReturns(&models.Task{RejectionCount: 1}, nil)
+				})
+
+				By("failing the task")
+				AssertTaskFailing(taskGuid, failureReason)
 			})
 		})
 	})

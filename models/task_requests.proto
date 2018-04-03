@@ -31,6 +31,11 @@ message FailTaskRequest {
   optional string failure_reason = 2;
 }
 
+message RejectTaskRequest {
+  optional string task_guid = 1;
+  optional string failure_reason = 2;
+}
+
 message TaskGuidRequest {
   optional string task_guid = 1;
 }

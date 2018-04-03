@@ -82,7 +82,8 @@ var _ = Describe("Task", func() {
 			"organizational_unit": ["stuff"]
 		},
 		"image_username": "jake",
-		"image_password": "thedog"
+		"image_password": "thedog",
+		"rejection_count": 0
 	}`
 
 		task = models.Task{

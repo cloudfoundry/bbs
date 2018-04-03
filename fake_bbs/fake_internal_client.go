@@ -526,6 +526,19 @@ type FakeInternalClient struct {
 	failTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
+	RejectTaskStub        func(logger lager.Logger, taskGuid, failureReason string) error
+	rejectTaskMutex       sync.RWMutex
+	rejectTaskArgsForCall []struct {
+		logger        lager.Logger
+		taskGuid      string
+		failureReason string
+	}
+	rejectTaskReturns struct {
+		result1 error
+	}
+	rejectTaskReturnsOnCall map[int]struct {
+		result1 error
+	}
 	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
 	completeTaskMutex       sync.RWMutex
 	completeTaskArgsForCall []struct {
@@ -2487,6 +2500,56 @@ func (fake *FakeInternalClient) FailTaskReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeInternalClient) RejectTask(logger lager.Logger, taskGuid string, failureReason string) error {
+	fake.rejectTaskMutex.Lock()
+	ret, specificReturn := fake.rejectTaskReturnsOnCall[len(fake.rejectTaskArgsForCall)]
+	fake.rejectTaskArgsForCall = append(fake.rejectTaskArgsForCall, struct {
+		logger        lager.Logger
+		taskGuid      string
+		failureReason string
+	}{logger, taskGuid, failureReason})
+	fake.recordInvocation("RejectTask", []interface{}{logger, taskGuid, failureReason})
+	fake.rejectTaskMutex.Unlock()
+	if fake.RejectTaskStub != nil {
+		return fake.RejectTaskStub(logger, taskGuid, failureReason)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.rejectTaskReturns.result1
+}
+
+func (fake *FakeInternalClient) RejectTaskCallCount() int {
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
+	return len(fake.rejectTaskArgsForCall)
+}
+
+func (fake *FakeInternalClient) RejectTaskArgsForCall(i int) (lager.Logger, string, string) {
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
+	return fake.rejectTaskArgsForCall[i].logger, fake.rejectTaskArgsForCall[i].taskGuid, fake.rejectTaskArgsForCall[i].failureReason
+}
+
+func (fake *FakeInternalClient) RejectTaskReturns(result1 error) {
+	fake.RejectTaskStub = nil
+	fake.rejectTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeInternalClient) RejectTaskReturnsOnCall(i int, result1 error) {
+	fake.RejectTaskStub = nil
+	if fake.rejectTaskReturnsOnCall == nil {
+		fake.rejectTaskReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.rejectTaskReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeInternalClient) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) error {
 	fake.completeTaskMutex.Lock()
 	ret, specificReturn := fake.completeTaskReturnsOnCall[len(fake.completeTaskArgsForCall)]
@@ -2619,6 +2682,8 @@ func (fake *FakeInternalClient) Invocations() map[string][][]interface{} {
 	defer fake.startTaskMutex.RUnlock()
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
 	fake.completeTaskMutex.RLock()
 	defer fake.completeTaskMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

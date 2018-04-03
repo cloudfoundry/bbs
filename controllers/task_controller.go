@@ -22,6 +22,7 @@ type TaskController struct {
 	repClientFactory       rep.ClientFactory
 	taskHub                events.Hub
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier
+	maxPlacementRetries    int
 }
 
 func NewTaskController(
@@ -32,6 +33,7 @@ func NewTaskController(
 	repClientFactory rep.ClientFactory,
 	taskHub events.Hub,
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
+	maxPlacementRetries int,
 ) *TaskController {
 	return &TaskController{
 		db:                     db,
@@ -41,6 +43,7 @@ func NewTaskController(
 		repClientFactory:       repClientFactory,
 		taskHub:                taskHub,
 		taskStatMetronNotifier: taskStatMetronNotifier,
+		maxPlacementRetries:    maxPlacementRetries,
 	}
 }
 
@@ -153,6 +156,23 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 	}
 
 	return nil
+}
+
+func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, failureReason string) error {
+	logger = logger.Session("reject-task")
+
+	var err error
+	var task *models.Task
+
+	if task, err = h.db.TaskByGuid(logger, taskGuid); err != nil {
+		return err
+	} else if int(task.RejectionCount) < h.maxPlacementRetries {
+		_, _, err = h.db.IncrementTaskRejectionCount(logger, taskGuid)
+	} else {
+		err = h.FailTask(logger, taskGuid, failureReason)
+	}
+
+	return err
 }
 
 func (h *TaskController) CompleteTask(

@@ -47,6 +47,7 @@ const (
 	StartTaskRoute     = "StartTask"
 	CancelTaskRoute    = "CancelTask"
 	FailTaskRoute      = "FailTask"
+	RejectTaskRoute    = "RejectTask"
 	CompleteTaskRoute  = "CompleteTask"
 	ResolvingTaskRoute = "ResolvingTask"
 	DeleteTaskRoute    = "DeleteTask"
@@ -107,6 +108,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
 	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute},
 	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
+	{Path: "/v1/tasks/reject", Method: "POST", Name: RejectTaskRoute},
 	{Path: "/v1/tasks/complete", Method: "POST", Name: CompleteTaskRoute},
 	{Path: "/v1/tasks/resolving", Method: "POST", Name: ResolvingTaskRoute},
 	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute},

@@ -17,6 +17,7 @@ type TaskController interface {
 	StartTask(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error)
 	CancelTask(logger lager.Logger, taskGuid string) error
 	FailTask(logger lager.Logger, taskGuid, failureReason string) error
+	RejectTask(logger lager.Logger, taskGuid, failureReason string) error
 	CompleteTask(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
 	ResolvingTask(logger lager.Logger, taskGuid string) error
 	DeleteTask(logger lager.Logger, taskGuid string) error
@@ -160,6 +161,27 @@ func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *
 	}
 
 	err = h.controller.FailTask(logger, request.TaskGuid, request.FailureReason)
+	response.Error = models.ConvertError(err)
+}
+
+func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) { // TODO unit tests!
+	var err error
+	logger = logger.Session("reject-task")
+
+	request := &models.RejectTaskRequest{}
+	response := &models.TaskLifecycleResponse{}
+
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer func() { writeResponse(w, response) }()
+
+	err = parseRequest(logger, req, request)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	err = h.controller.RejectTask(logger, request.TaskGuid, request.FailureReason)
 	response.Error = models.ConvertError(err)
 }
 

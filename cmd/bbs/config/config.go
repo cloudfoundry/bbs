@@ -34,31 +34,31 @@ type BBSConfig struct {
 	DesiredLRPCreationTimeout       durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
 	DetectConsulCellRegistrations   bool                  `json:"detect_consul_cell_registrations,omitempty"`
 	EnableConsulServiceRegistration bool                  `json:"enable_consul_service_registration"`
-
-	ExpireCompletedTaskDuration durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
-	ExpirePendingTaskDuration   durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
-	HealthAddress               string                `json:"health_address,omitempty"`
-	KeyFile                     string                `json:"key_file,omitempty"`
-	KickTaskDuration            durationjson.Duration `json:"kick_task_duration,omitempty"`
-	ListenAddress               string                `json:"listen_address,omitempty"`
-	LocksLocketEnabled          bool                  `json:"locks_locket_enabled"`
-	LockRetryInterval           durationjson.Duration `json:"lock_retry_interval,omitempty"`
-	LockTTL                     durationjson.Duration `json:"lock_ttl,omitempty"`
-	MaxIdleDatabaseConnections  int                   `json:"max_idle_database_connections,omitempty"`
-	MaxOpenDatabaseConnections  int                   `json:"max_open_database_connections,omitempty"`
-	RepCACert                   string                `json:"rep_ca_cert,omitempty"`
-	RepClientCert               string                `json:"rep_client_cert,omitempty"`
-	RepClientKey                string                `json:"rep_client_key,omitempty"`
-	RepClientSessionCacheSize   int                   `json:"rep_client_session_cache_size,omitempty"`
-	RepRequireTLS               bool                  `json:"rep_require_tls,omitempty"`
-	ReportInterval              durationjson.Duration `json:"report_interval,omitempty"`
-	RequireSSL                  bool                  `json:"require_ssl,omitempty"`
-	SQLCACertFile               string                `json:"sql_ca_cert_file,omitempty"`
-	SessionName                 string                `json:"session_name,omitempty"`
-	SkipConsulLock              bool                  `json:"skip_consul_lock,omitempty"`
-	TaskCallbackWorkers         int                   `json:"task_callback_workers,omitempty"`
-	UpdateWorkers               int                   `json:"update_workers,omitempty"`
-	LoggregatorConfig           loggingclient.Config  `json:"loggregator"`
+	ExpireCompletedTaskDuration     durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
+	ExpirePendingTaskDuration       durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
+	HealthAddress                   string                `json:"health_address,omitempty"`
+	KeyFile                         string                `json:"key_file,omitempty"`
+	KickTaskDuration                durationjson.Duration `json:"kick_task_duration,omitempty"`
+	ListenAddress                   string                `json:"listen_address,omitempty"`
+	LocksLocketEnabled              bool                  `json:"locks_locket_enabled"`
+	LockRetryInterval               durationjson.Duration `json:"lock_retry_interval,omitempty"`
+	LockTTL                         durationjson.Duration `json:"lock_ttl,omitempty"`
+	MaxIdleDatabaseConnections      int                   `json:"max_idle_database_connections,omitempty"`
+	MaxOpenDatabaseConnections      int                   `json:"max_open_database_connections,omitempty"`
+	MaxTaskPlacementRetries         int                   `json:"max_task_placement_retries,omitempty"`
+	RepCACert                       string                `json:"rep_ca_cert,omitempty"`
+	RepClientCert                   string                `json:"rep_client_cert,omitempty"`
+	RepClientKey                    string                `json:"rep_client_key,omitempty"`
+	RepClientSessionCacheSize       int                   `json:"rep_client_session_cache_size,omitempty"`
+	RepRequireTLS                   bool                  `json:"rep_require_tls,omitempty"`
+	ReportInterval                  durationjson.Duration `json:"report_interval,omitempty"`
+	RequireSSL                      bool                  `json:"require_ssl,omitempty"`
+	SQLCACertFile                   string                `json:"sql_ca_cert_file,omitempty"`
+	SessionName                     string                `json:"session_name,omitempty"`
+	SkipConsulLock                  bool                  `json:"skip_consul_lock,omitempty"`
+	TaskCallbackWorkers             int                   `json:"task_callback_workers,omitempty"`
+	UpdateWorkers                   int                   `json:"update_workers,omitempty"`
+	LoggregatorConfig               loggingclient.Config  `json:"loggregator"`
 	debugserver.DebugServerConfig
 	encryption.EncryptionConfig
 	lagerflags.LagerConfig
