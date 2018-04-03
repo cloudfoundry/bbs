@@ -140,7 +140,7 @@ var _ = Describe("Task API", func() {
 			})
 		})
 
-		FDescribe("RejectTask", func() {
+		Describe("RejectTask", func() {
 			Context("when max_task_placement_retries is 0", func() {
 				It("fails the task with the provided error", func() {
 					Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
