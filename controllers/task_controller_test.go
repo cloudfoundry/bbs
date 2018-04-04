@@ -674,7 +674,7 @@ var _ = Describe("Task Controller", func() {
 				})
 
 				It("logs the rejection reason", func() {
-					Expect(logger.Buffer()).To(gbytes.Say(failureReason))
+					Eventually(logger.Buffer()).Should(gbytes.Say(failureReason))
 				})
 			})
 
