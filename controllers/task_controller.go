@@ -168,6 +168,7 @@ func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, failureReason
 		return err
 	}
 	if int(task.RejectionCount) < h.maxPlacementRetries {
+		logger.Info("increment-rejection-count", lager.Data{"rejection-reason": failureReason})
 		_, _, err = h.db.IncrementTaskRejectionCount(logger, taskGuid)
 		return err
 	}
