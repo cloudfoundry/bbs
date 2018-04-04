@@ -281,10 +281,6 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 }
 
 func (db *SQLDB) IncrementTaskRejectionCount(logger lager.Logger, taskGuid string) (*models.Task, *models.Task, error) {
-	logger = logger.Session("increment-task-rejection-count", lager.Data{"task_guid": taskGuid})
-	logger.Info("starting")
-	defer logger.Info("complete")
-
 	var beforeTask models.Task
 	var afterTask *models.Task
 
@@ -317,8 +313,6 @@ func (db *SQLDB) IncrementTaskRejectionCount(logger lager.Logger, taskGuid strin
 			logger.Error("failed-updating-tasks", err)
 			return err
 		}
-
-		logger.Info("incremented-task-rejection-count", lager.Data{"rejection_count": afterTask.RejectionCount})
 
 		return nil
 	})

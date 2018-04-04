@@ -158,19 +158,20 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 }
 
 func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, failureReason string) error {
-	var err error
-	var task *models.Task
+	logger = logger.Session("reject-task", lager.Data{"guid": taskGuid})
+	logger.Info("start")
+	defer logger.Info("complete")
 
-	if task, err = h.db.TaskByGuid(logger, taskGuid); err != nil {
+	task, err := h.db.TaskByGuid(logger, taskGuid)
+	if err != nil {
+		logger.Error("error", err)
 		return err
-	} else if int(task.RejectionCount) < h.maxPlacementRetries {
-		logger.Info("increment-rejection-count", lager.Data{"rejection-reason": failureReason})
-		_, _, err = h.db.IncrementTaskRejectionCount(logger, taskGuid)
-	} else {
-		err = h.FailTask(logger, taskGuid, failureReason)
 	}
-
-	return err
+	if int(task.RejectionCount) < h.maxPlacementRetries {
+		_, _, err = h.db.IncrementTaskRejectionCount(logger, taskGuid)
+		return err
+	}
+	return h.FailTask(logger, taskGuid, failureReason)
 }
 
 func (h *TaskController) CompleteTask(

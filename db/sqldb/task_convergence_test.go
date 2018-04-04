@@ -221,7 +221,7 @@ var _ = Describe("Convergence of Tasks", func() {
 
 			name, value64 := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
 			Expect(name).To(Equal("ConvergenceTasksKicked"))
-			Expect(value64).To(Equal(uint64(6)))
+			Expect(value64).To(Equal(uint64(7)))
 
 			name, value64 = fakeMetronClient.IncrementCounterWithDeltaArgsForCall(1)
 			Expect(name).To(Equal("ConvergenceTasksPruned"))
@@ -269,16 +269,6 @@ var _ = Describe("Convergence of Tasks", func() {
 			It("delete tasks that should be kicked if they're invalid", func() {
 				_, err := sqlDB.TaskByGuid(logger, "pending-kickable-invalid-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
-			})
-
-			It("doesn't do anything with unexpired tasks that should not be kicked", func() {
-				taskRequest := auctioneer.NewTaskStartRequestFromModel("pending-task", domain, taskDef)
-				Expect(tasksToAuction).NotTo(ContainElement(&taskRequest))
-
-				task, err := sqlDB.TaskByGuid(logger, "pending-task")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(task.FailureReason).NotTo(Equal("not started within time limit"))
-				Expect(task.Failed).NotTo(BeTrue())
 			})
 		})
 

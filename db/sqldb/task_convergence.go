@@ -47,7 +47,7 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 	tasksPruned += failedFetches
 	tasksKicked += uint64(rowsAffected)
 
-	tasksToAuction, failedFetches := db.getTaskStartRequestsForKickablePendingTasks(logger, kickTasksDuration, expirePendingTaskDuration)
+	tasksToAuction, failedFetches := db.getTaskStartRequestsForKickablePendingTasks(logger, expirePendingTaskDuration)
 	tasksPruned += failedFetches
 	tasksKicked += uint64(len(tasksToAuction))
 
@@ -136,13 +136,13 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	return events, uint64(invalidTasksCount), rowsAffected
 }
 
-func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, kickTasksDuration, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
+func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
 	rows, err := db.all(logger, db.db, tasksTable,
 		taskColumns, helpers.NoLockRow,
-		"state = ? AND updated_at < ? AND created_at > ?",
-		models.Task_Pending, db.clock.Now().Add(-kickTasksDuration).UnixNano(), db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
+		"state = ? AND created_at > ?",
+		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
 	)
 
 	if err != nil {
