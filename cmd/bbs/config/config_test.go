@@ -68,7 +68,7 @@ var _ = Describe("BBSConfig", func() {
 				"loggregator_key_path": "key-path",
 				"loggregator_job_origin": "job-origin",
 				"loggregator_source_id": "my-source-id",
-				"loggregator_instance_id": 1
+				"loggregator_instance_id": "my-instance-id"
 			},
 			"max_idle_database_connections": 50,
 			"max_open_database_connections": 200,
@@ -158,7 +158,7 @@ var _ = Describe("BBSConfig", func() {
 				KeyPath:    "key-path",
 				JobOrigin:  "job-origin",
 				SourceID:   "my-source-id",
-				InstanceID: 1,
+				InstanceID: "my-instance-id",
 			},
 			ListenAddress:              "0.0.0.0:8889",
 			LockRetryInterval:          durationjson.Duration(locket.RetryInterval),
