@@ -369,14 +369,19 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 	missingCellSet := make(map[string]struct{})
 	for rows.Next() {
 		var index int32
+		var instanceGuid string
 		var cellID string
-		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &cellID)
+		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &instanceGuid, &cellID)
 		if err == nil {
 			keysWithMissingCells = append(keysWithMissingCells, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
 					ProcessGuid: schedulingInfo.ProcessGuid,
 					Domain:      schedulingInfo.Domain,
 					Index:       index,
+				},
+				InstanceKey: &models.ActualLRPInstanceKey{
+					InstanceGuid: instanceGuid,
+					CellId:       cellID,
 				},
 				SchedulingInfo: schedulingInfo,
 			})

@@ -115,27 +115,42 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
+	logger.Info("actual-lrpg-crash", lager.Data{"lrpg": lrpg})
 	if lrpg.Suspect != nil && lrpg.Suspect.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
 		suspectLRP := lrpg.Suspect
-		logger = logger.Session("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
+		logger.Info("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
 		err = h.db.RemoveActualLRP(logger, suspectLRP.ProcessGuid, suspectLRP.Index, &suspectLRP.ActualLRPInstanceKey)
 		h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Suspect: suspectLRP}))
 		return err
 	}
 
-	before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
-	if err != nil {
-		return err
+	if lrpg.Suspect != nil && lrpg.Instance.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
+		instanceLRP := lrpg.Instance
+		logger.Info("found-crashed-instance", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
+		err = h.db.RemoveActualLRP(logger, instanceLRP.ProcessGuid, instanceLRP.Index, &instanceLRP.ActualLRPInstanceKey)
+		if err != nil {
+			return err
+		}
+		_, err = h.db.CreateUnclaimedActualLRP(logger, actualLRPKey)
+		if err != nil {
+			return err
+		}
 	}
 
-	// again here what events do we want to emit?
-	beforeActualLRP, _ := before.Resolve()
-	afterActualLRP, _ := after.Resolve()
-	go h.actualHub.Emit(models.NewActualLRPCrashedEvent(beforeActualLRP, afterActualLRP))
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	if lrpg.Suspect == nil {
+		before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
+		if err != nil {
+			return err
+		}
 
-	if !shouldRestart {
-		return nil
+		// again here what events do we want to emit?
+		beforeActualLRP, _ := before.Resolve()
+		afterActualLRP, _ := after.Resolve()
+		go h.actualHub.Emit(models.NewActualLRPCrashedEvent(beforeActualLRP, afterActualLRP))
+		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+		if !shouldRestart {
+			return nil
+		}
 	}
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, actualLRPKey.ProcessGuid)

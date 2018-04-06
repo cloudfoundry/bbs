@@ -88,7 +88,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		key := key
 		works = append(works, func() {
 			// instead on unclaiming, mark as suspect
-			_, _, err := h.db.SuspectActualLRP(logger, key.Key)
+			_, _, err := h.db.SuspectActualLRP(logger, key.Key, key.InstanceKey)
 			if err == nil {
 				// h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after)) // TODO: do we need to this?
 				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))

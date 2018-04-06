@@ -124,7 +124,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 	}, nil
 }
 
-func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
 	logger = logger.Session("marking-as-suspect", lager.Data{"key": key})
 
 	var actualLRP, suspectLRP *models.ActualLRP
@@ -146,24 +146,42 @@ func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 			return err
 		}
 
-		if actualLRPGroup.Suspect != nil {
-			suspectLRP = actualLRPGroup.Suspect
-		} else if actualLRPGroup.Instance != nil {
-			actualLRP = actualLRPGroup.Instance
+		suspectLRP = actualLRPGroup.Suspect
+		actualLRP = actualLRPGroup.Instance
+
+		logger.Info("assess-lrp-stat", lager.Data{
+			"instance-guid": instanceKey.InstanceGuid,
+			"cell-id":       instanceKey.CellId,
+			"actual-nil?":   actualLRP == nil,
+			"suspect-nil?":  suspectLRP == nil,
+		})
+		if actualLRP != nil && suspectLRP != nil {
+			if suspectLRP.InstanceGuid == instanceKey.InstanceGuid {
+				// both already exist, just return them
+				logger.Info("both-suspect-and-instance-exist", lager.Data{"suspect-guid": suspectLRP.InstanceGuid})
+				return nil
+			}
+
+			// if we have both suspect and instance but actualLRP.InstanceGuid != instanceKey.InstanceGuid
+			// the new actual LRP also got a missing cell. replace it with another new instance
+			logger.Info("replacing-missing-new-instance", lager.Data{"old-guid": actualLRP.InstanceGuid})
+			err = db.deleteActualLRP(logger, actualLRP, tx)
+			if err != nil {
+				return err
+			}
+			actualLRP = suspectLRP
+			suspectLRP = nil
 		}
 
-		// both already exist, just return them
-		if actualLRP != nil && suspectLRP != nil {
+		if actualLRP == nil {
+			return errors.New("invalid-actual-lrp")
+		}
+
+		if actualLRP.State != models.ActualLRPStateRunning {
 			return nil
 		}
 
-		if suspectLRP != nil {
-			return errors.New("invalid suspect without actual")
-		}
-
-		if actualLRP != nil {
-			suspectLRP = actualLRP
-		}
+		suspectLRP = actualLRP
 
 		now := db.clock.Now().UnixNano()
 		suspectLRP.ModificationTag.Increment()
@@ -186,6 +204,10 @@ func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		return nil
 	})
 
+	if err != nil {
+		return &models.ActualLRPGroup{Instance: actualLRP}, &models.ActualLRPGroup{Suspect: suspectLRP}, err
+	}
+
 	if suspectLRP != nil {
 		actualLRPGroup, err := db.CreateUnclaimedActualLRP(logger, key)
 		if err != nil {
@@ -193,9 +215,10 @@ func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 			return nil, nil, err
 		}
 		actualLRP = actualLRPGroup.Instance
+		return &models.ActualLRPGroup{Instance: actualLRP}, &models.ActualLRPGroup{Suspect: suspectLRP}, err
 	}
 
-	return &models.ActualLRPGroup{Instance: actualLRP}, &models.ActualLRPGroup{Suspect: suspectLRP}, err
+	return db.UnclaimActualLRP(logger, key)
 }
 
 func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
@@ -237,18 +260,6 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 			return nil
 		}
 
-		deleteActualLRP := func(actualLRP *models.ActualLRP) error {
-			_, err := db.delete(logger, tx, actualLRPsTable,
-				"process_guid = ? AND instance_index = ? AND evacuating = ? AND instance_guid = ? AND cell_id = ?",
-				actualLRP.ProcessGuid, actualLRP.Index, false, actualLRP.ActualLRPInstanceKey.InstanceGuid, actualLRP.ActualLRPInstanceKey.CellId,
-			)
-			if err != nil {
-				logger.Error("failed-removing-actual-lrp", err)
-				return err
-			}
-			return nil
-		}
-
 		actualLRP := actualLRPGroup.Suspect
 		shadowLRP := actualLRPGroup.Instance
 
@@ -256,7 +267,7 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 			return errors.New("no-suspect-lrp-for-the-group")
 		}
 
-		err = deleteActualLRP(shadowLRP)
+		err = db.deleteActualLRP(logger, shadowLRP, tx)
 		if err != nil {
 			return err
 		}
@@ -270,6 +281,18 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 	})
 
 	return err
+}
+
+func (db *SQLDB) deleteActualLRP(logger lager.Logger, actualLRP *models.ActualLRP, tx helpers.Tx) error {
+	_, err := db.delete(logger, tx, actualLRPsTable,
+		"process_guid = ? AND instance_index = ? AND evacuating = ? AND instance_guid = ? AND cell_id = ?",
+		actualLRP.ProcessGuid, actualLRP.Index, false, actualLRP.ActualLRPInstanceKey.InstanceGuid, actualLRP.ActualLRPInstanceKey.CellId,
+	)
+	if err != nil {
+		logger.Error("failed-removing-actual-lrp", err)
+		return err
+	}
+	return nil
 }
 
 func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
