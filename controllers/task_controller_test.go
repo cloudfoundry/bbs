@@ -652,7 +652,7 @@ var _ = Describe("Task Controller", func() {
 			})
 		})
 
-		Context("when max_task_placement_retries is 0", func() {
+		Context("when max_task_retries is 0", func() {
 			BeforeEach(func() {
 				maxPlacementRetries = 0
 			})
@@ -661,7 +661,7 @@ var _ = Describe("Task Controller", func() {
 			AssertTaskFailing(taskGuid, failureReason)
 		})
 
-		Context("when max_task_placement_retries is 1", func() {
+		Context("when max_task_retries is 1", func() {
 			BeforeEach(func() {
 				maxPlacementRetries = 1
 			})

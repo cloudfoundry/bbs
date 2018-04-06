@@ -45,7 +45,7 @@ type BBSConfig struct {
 	LockTTL                         durationjson.Duration `json:"lock_ttl,omitempty"`
 	MaxIdleDatabaseConnections      int                   `json:"max_idle_database_connections,omitempty"`
 	MaxOpenDatabaseConnections      int                   `json:"max_open_database_connections,omitempty"`
-	MaxTaskPlacementRetries         int                   `json:"max_task_placement_retries,omitempty"`
+	MaxTaskRetries                  int                   `json:"max_task_retries,omitempty"`
 	RepCACert                       string                `json:"rep_ca_cert,omitempty"`
 	RepClientCert                   string                `json:"rep_client_cert,omitempty"`
 	RepClientKey                    string                `json:"rep_client_key,omitempty"`

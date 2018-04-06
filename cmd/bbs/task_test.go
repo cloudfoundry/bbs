@@ -141,7 +141,7 @@ var _ = Describe("Task API", func() {
 		})
 
 		Describe("RejectTask", func() {
-			Context("when max_task_placement_retries is 0", func() {
+			Context("when max_task_retries is 0", func() {
 				It("fails the task with the provided error", func() {
 					Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
 
@@ -152,9 +152,9 @@ var _ = Describe("Task API", func() {
 				})
 			})
 
-			Context("when max_task_placement_retries is 1", func() {
+			Context("when max_task_retries is 1", func() {
 				BeforeEach(func() {
-					bbsConfig.MaxTaskPlacementRetries = 1
+					bbsConfig.MaxTaskRetries = 1
 				})
 
 				Context("on the first rejection call", func() {
