@@ -47,7 +47,7 @@ var _ = Describe("TaskDB", func() {
 				defer rows.Close()
 				Expect(rows.Next()).To(BeTrue())
 
-				var guid, domain, cellID, failureReason string
+				var guid, domain, cellID, failureReason, rejectionReason string
 				var result sql.NullString
 				var createdAt, updatedAt, firstCompletedAt int64
 				var state, rejectionCount int32
@@ -67,6 +67,7 @@ var _ = Describe("TaskDB", func() {
 					&failureReason,
 					&taskDefData,
 					&rejectionCount,
+					&rejectionReason,
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -81,6 +82,7 @@ var _ = Describe("TaskDB", func() {
 				Expect(cellID).To(Equal(""))
 				Expect(failed).To(BeFalse())
 				Expect(rejectionCount).To(BeEquivalentTo(0))
+				Expect(rejectionReason).To(Equal(""))
 
 				var actualTaskDef models.TaskDefinition
 				err = serializer.Unmarshal(logger, taskDefData, &actualTaskDef)
@@ -1086,7 +1088,7 @@ var _ = Describe("TaskDB", func() {
 		})
 	})
 
-	Describe("IncrementTaskRejectionCount", func() {
+	Describe("RejectTask", func() {
 		Context("when the task exists", func() {
 			var (
 				taskGuid, taskDomain string
@@ -1105,13 +1107,14 @@ var _ = Describe("TaskDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			Context("when the task is pending", func() {
-				It("fails the task", func() {
-					before, after, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+			Context("and the task is pending", func() {
+				It("increments the rejection count and stores the rejection reason", func() {
+					before, after, err := sqlDB.RejectTask(logger, taskGuid, "some failure")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(before).To(Equal(beforeTask))
 
 					Expect(after.RejectionCount).To(Equal(beforeTask.RejectionCount + 1))
+					Expect(after.RejectionReason).To(Equal("some failure"))
 
 					task, err := sqlDB.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
@@ -1120,31 +1123,43 @@ var _ = Describe("TaskDB", func() {
 				})
 			})
 
-			Context("when the task is running", func() {
+			Context("and the task is running", func() {
 				BeforeEach(func() {
 					_, _, _, err := sqlDB.StartTask(logger, taskGuid, "cell-id")
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("returns a BadRequest error", func() {
-					_, _, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+				It("returns a BadRequest error and does not mutate the task", func() {
+					_, _, err := sqlDB.RejectTask(logger, taskGuid, "rejected")
 					Expect(err).To(Equal(models.ErrBadRequest))
+
+					task, err := sqlDB.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(task.RejectionCount).To(BeEquivalentTo(0))
+					Expect(task.RejectionReason).To(Equal(""))
 				})
 			})
 
-			Context("when the task is completed", func() {
+			Context("and the task is completed", func() {
 				BeforeEach(func() {
 					_, _, _, err := sqlDB.CancelTask(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("returns a BadRequest error", func() {
-					_, _, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+				It("returns a BadRequest error and does not mutate the task", func() {
+					_, _, err := sqlDB.RejectTask(logger, taskGuid, "rejected")
 					Expect(err).To(Equal(models.ErrBadRequest))
+
+					task, err := sqlDB.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(task.RejectionCount).To(BeEquivalentTo(0))
+					Expect(task.RejectionReason).To(Equal(""))
 				})
 			})
 
-			Context("when the task is resolving", func() {
+			Context("and the task is resolving", func() {
 				BeforeEach(func() {
 					_, _, _, err := sqlDB.CancelTask(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
@@ -1152,16 +1167,22 @@ var _ = Describe("TaskDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("returns a BadRequest error", func() {
-					_, _, err := sqlDB.IncrementTaskRejectionCount(logger, taskGuid)
+				It("returns a BadRequest error and does not mutate the task", func() {
+					_, _, err := sqlDB.RejectTask(logger, taskGuid, "rejected")
 					Expect(err).To(Equal(models.ErrBadRequest))
+
+					task, err := sqlDB.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(task.RejectionCount).To(BeEquivalentTo(0))
+					Expect(task.RejectionReason).To(Equal(""))
 				})
 			})
 		})
 
 		Context("when the task does not exist", func() {
 			It("returns an ResourceNotFound error", func() {
-				_, _, err := sqlDB.IncrementTaskRejectionCount(logger, "nota-guid")
+				_, _, err := sqlDB.RejectTask(logger, "nota-guid", "")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})

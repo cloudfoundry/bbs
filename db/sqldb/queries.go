@@ -53,6 +53,7 @@ var (
 		tasksTable + ".failure_reason",
 		tasksTable + ".task_definition",
 		tasksTable + ".rejection_count",
+		tasksTable + ".rejection_reason",
 	}
 
 	actualLRPColumns = helpers.ColumnList{

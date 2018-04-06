@@ -514,13 +514,13 @@ var _ = Describe("Task Handlers", func() {
 
 	Describe("RejectTask", func() {
 		const taskGuid = "task-guid"
-		const failureReason = "rejected"
+		const rejectionReason = "rejected"
 
 		BeforeEach(func() {
 			controller.RejectTaskReturns(nil)
 			requestBody = &models.RejectTaskRequest{
-				TaskGuid:      taskGuid,
-				FailureReason: failureReason,
+				TaskGuid:        taskGuid,
+				RejectionReason: rejectionReason,
 			}
 		})
 
@@ -533,7 +533,7 @@ var _ = Describe("Task Handlers", func() {
 			It("returns no error", func() {
 				_, actualTaskGuid, actualFailureReason := controller.RejectTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
-				Expect(actualFailureReason).To(Equal(failureReason))
+				Expect(actualFailureReason).To(Equal(rejectionReason))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 

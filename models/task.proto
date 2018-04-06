@@ -66,5 +66,6 @@ message Task {
   optional bool failed = 10;
   optional string failure_reason = 11;
   optional int32 rejection_count = 12;
+  optional string rejection_reason = 13;
 }
 

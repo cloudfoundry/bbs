@@ -627,8 +627,8 @@ var _ = Describe("Task Controller", func() {
 
 	Describe("RejectTask", func() {
 		var (
-			taskGuid      = "task-guid"
-			failureReason = "rejection"
+			taskGuid        = "task-guid"
+			rejectionReason = "rejection"
 		)
 
 		BeforeEach(func() {
@@ -639,7 +639,7 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.RejectTask(logger, taskGuid, failureReason)
+			err = controller.RejectTask(logger, taskGuid, rejectionReason)
 		})
 
 		Context("when fetching the task returns an error", func() {
@@ -658,7 +658,18 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			By("immediately failing the task")
-			AssertTaskFailing(taskGuid, failureReason)
+			AssertTaskFailing(taskGuid, rejectionReason)
+
+			It("rejects the task", func() {
+				Expect(fakeTaskDB.RejectTaskCallCount()).To(Equal(1))
+				_, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
+				Expect(actualTaskGuid).To(Equal(taskGuid))
+				Expect(actualRejectionReason).To(Equal(rejectionReason))
+			})
+
+			It("logs the rejection reason", func() {
+				Eventually(logger.Buffer()).Should(gbytes.Say(rejectionReason))
+			})
 		})
 
 		Context("when max_task_retries is 1", func() {
@@ -667,14 +678,15 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			Context("when the task has a rejection count of 0", func() {
-				It("increments the rejection count on the task", func() {
-					Expect(fakeTaskDB.IncrementTaskRejectionCountCallCount()).To(Equal(1))
-					_, actualTaskGuid := fakeTaskDB.IncrementTaskRejectionCountArgsForCall(0)
+				It("rejects the task", func() {
+					Expect(fakeTaskDB.RejectTaskCallCount()).To(Equal(1))
+					_, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
 					Expect(actualTaskGuid).To(Equal(taskGuid))
+					Expect(actualRejectionReason).To(Equal(rejectionReason))
 				})
 
 				It("logs the rejection reason", func() {
-					Eventually(logger.Buffer()).Should(gbytes.Say(failureReason))
+					Eventually(logger.Buffer()).Should(gbytes.Say(rejectionReason))
 				})
 			})
 
@@ -684,7 +696,27 @@ var _ = Describe("Task Controller", func() {
 				})
 
 				By("failing the task")
-				AssertTaskFailing(taskGuid, failureReason)
+				AssertTaskFailing(taskGuid, rejectionReason)
+
+				It("rejects the task", func() {
+					Expect(fakeTaskDB.RejectTaskCallCount()).To(Equal(1))
+					_, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
+					Expect(actualTaskGuid).To(Equal(taskGuid))
+					Expect(actualRejectionReason).To(Equal(rejectionReason))
+				})
+
+				It("logs the rejection reason", func() {
+					Eventually(logger.Buffer()).Should(gbytes.Say(rejectionReason))
+				})
+
+				Context("when RejectTask returns an error", func() {
+					BeforeEach(func() {
+						fakeTaskDB.RejectTaskReturns(nil, nil, errors.New("o noes!"))
+					})
+
+					By("it still calls FailTask regardless")
+					AssertTaskFailing(taskGuid, rejectionReason)
+				})
 			})
 		})
 	})

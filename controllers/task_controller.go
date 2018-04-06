@@ -157,22 +157,28 @@ func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 	return nil
 }
 
-func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, failureReason string) error {
+func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, rejectionReason string) error {
 	logger = logger.Session("reject-task", lager.Data{"guid": taskGuid})
 	logger.Info("start")
 	defer logger.Info("complete")
 
 	task, err := h.db.TaskByGuid(logger, taskGuid)
 	if err != nil {
-		logger.Error("error", err)
+		logger.Error("failed-to-fetch-task", err)
 		return err
 	}
-	if int(task.RejectionCount) < h.maxRetries {
-		logger.Info("increment-rejection-count", lager.Data{"rejection-reason": failureReason})
-		_, _, err = h.db.IncrementTaskRejectionCount(logger, taskGuid)
-		return err
+
+	logger.Info("reject-task", lager.Data{"rejection-reason": rejectionReason})
+	_, _, rejectTaskErr := h.db.RejectTask(logger, taskGuid, rejectionReason)
+	if rejectTaskErr != nil {
+		logger.Error("failed-to-reject-task", rejectTaskErr)
 	}
-	return h.FailTask(logger, taskGuid, failureReason)
+
+	if int(task.RejectionCount) >= h.maxRetries {
+		return h.FailTask(logger, taskGuid, rejectionReason)
+	}
+
+	return rejectTaskErr
 }
 
 func (h *TaskController) CompleteTask(

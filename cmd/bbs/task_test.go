@@ -158,28 +158,30 @@ var _ = Describe("Task API", func() {
 				})
 
 				Context("on the first rejection call", func() {
-					It("does not transition the task to a new state, but increments the rejection count", func() {
-						Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
+					It("does not transition the task to a new state, but increments the rejection count and updates the rejection reason", func() {
+						Expect(client.RejectTask(logger, taskGuid, "some rejection reason")).To(Succeed())
 
 						task, err := client.TaskByGuid(logger, taskGuid)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(task.State).To(Equal(models.Task_Pending))
 						Expect(task.RejectionCount).To(BeEquivalentTo(1))
+						Expect(task.RejectionReason).To(Equal("some rejection reason"))
 					})
 				})
 
 				Context("on the second rejection call", func() {
 					JustBeforeEach(func() {
-						Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
+						Expect(client.RejectTask(logger, taskGuid, "first rejection reason")).To(Succeed())
 					})
 
 					It("fails the task with the provided error", func() {
-						Expect(client.RejectTask(logger, taskGuid, "some failure reason")).To(Succeed())
+						Expect(client.RejectTask(logger, taskGuid, "second rejection reason")).To(Succeed())
 
 						task, err := client.TaskByGuid(logger, taskGuid)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(task.State).To(Equal(models.Task_Completed))
-						Expect(task.FailureReason).To(Equal("some failure reason"))
+						Expect(task.RejectionCount).To(BeEquivalentTo(2))
+						Expect(task.FailureReason).To(Equal("second rejection reason"))
 					})
 				})
 			})

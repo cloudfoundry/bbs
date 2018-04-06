@@ -280,7 +280,7 @@ func (db *SQLDB) FailTask(logger lager.Logger, taskGuid, failureReason string) (
 	return &beforeTask, afterTask, err
 }
 
-func (db *SQLDB) IncrementTaskRejectionCount(logger lager.Logger, taskGuid string) (*models.Task, *models.Task, error) {
+func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason string) (*models.Task, *models.Task, error) {
 	var beforeTask models.Task
 	var afterTask *models.Task
 
@@ -300,12 +300,14 @@ func (db *SQLDB) IncrementTaskRejectionCount(logger lager.Logger, taskGuid strin
 		beforeTask = *afterTask
 
 		afterTask.RejectionCount++
+		afterTask.RejectionReason = rejectionReason
 
 		now := db.clock.Now().UnixNano()
 		_, err = db.update(logger, tx, tasksTable,
 			helpers.SQLAttributes{
-				"rejection_count": afterTask.RejectionCount,
-				"updated_at":      now,
+				"rejection_count":  afterTask.RejectionCount,
+				"rejection_reason": rejectionReason,
+				"updated_at":       now,
 			},
 			"guid = ?", taskGuid,
 		)
@@ -478,7 +480,7 @@ func (db *SQLDB) fetchTask(logger lager.Logger, scanner helpers.RowScanner, quer
 }
 
 func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScanner) (*models.Task, string, error) {
-	var guid, domain, cellID, failureReason string
+	var guid, domain, cellID, failureReason, rejectionReason string
 	var result sql.NullString
 	var createdAt, updatedAt, firstCompletedAt int64
 	var state, rejectionCount int32
@@ -498,6 +500,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 		&failureReason,
 		&taskDefData,
 		&rejectionCount,
+		&rejectionReason,
 	)
 
 	if err == sql.ErrNoRows {
@@ -528,6 +531,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 		FailureReason:    failureReason,
 		TaskDefinition:   &taskDef,
 		RejectionCount:   rejectionCount,
+		RejectionReason:  rejectionReason,
 	}
 	return task, guid, nil
 }

@@ -42,7 +42,7 @@ func (e *AddTaskRejectionCount) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddTaskRejectionCount) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *AddTaskRejectionCount) Up(logger lager.Logger) error {
-	logger = logger.Session("add_task_rejection_count")
+	logger = logger.Session("add-task-rejection-count")
 	logger.Info("starting")
 	defer logger.Info("completed")
 

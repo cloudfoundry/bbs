@@ -461,18 +461,19 @@ type FakeDB struct {
 		result2 *models.Task
 		result3 error
 	}
-	IncrementTaskRejectionCountStub        func(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error)
-	incrementTaskRejectionCountMutex       sync.RWMutex
-	incrementTaskRejectionCountArgsForCall []struct {
-		logger   lager.Logger
-		taskGuid string
+	RejectTaskStub        func(logger lager.Logger, taskGuid, rejectionReason string) (before *models.Task, after *models.Task, err error)
+	rejectTaskMutex       sync.RWMutex
+	rejectTaskArgsForCall []struct {
+		logger          lager.Logger
+		taskGuid        string
+		rejectionReason string
 	}
-	incrementTaskRejectionCountReturns struct {
+	rejectTaskReturns struct {
 		result1 *models.Task
 		result2 *models.Task
 		result3 error
 	}
-	incrementTaskRejectionCountReturnsOnCall map[int]struct {
+	rejectTaskReturnsOnCall map[int]struct {
 		result1 *models.Task
 		result2 *models.Task
 		result3 error
@@ -2170,55 +2171,56 @@ func (fake *FakeDB) FailTaskReturnsOnCall(i int, result1 *models.Task, result2 *
 	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) IncrementTaskRejectionCount(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error) {
-	fake.incrementTaskRejectionCountMutex.Lock()
-	ret, specificReturn := fake.incrementTaskRejectionCountReturnsOnCall[len(fake.incrementTaskRejectionCountArgsForCall)]
-	fake.incrementTaskRejectionCountArgsForCall = append(fake.incrementTaskRejectionCountArgsForCall, struct {
-		logger   lager.Logger
-		taskGuid string
-	}{logger, taskGuid})
-	fake.recordInvocation("IncrementTaskRejectionCount", []interface{}{logger, taskGuid})
-	fake.incrementTaskRejectionCountMutex.Unlock()
-	if fake.IncrementTaskRejectionCountStub != nil {
-		return fake.IncrementTaskRejectionCountStub(logger, taskGuid)
+func (fake *FakeDB) RejectTask(logger lager.Logger, taskGuid string, rejectionReason string) (before *models.Task, after *models.Task, err error) {
+	fake.rejectTaskMutex.Lock()
+	ret, specificReturn := fake.rejectTaskReturnsOnCall[len(fake.rejectTaskArgsForCall)]
+	fake.rejectTaskArgsForCall = append(fake.rejectTaskArgsForCall, struct {
+		logger          lager.Logger
+		taskGuid        string
+		rejectionReason string
+	}{logger, taskGuid, rejectionReason})
+	fake.recordInvocation("RejectTask", []interface{}{logger, taskGuid, rejectionReason})
+	fake.rejectTaskMutex.Unlock()
+	if fake.RejectTaskStub != nil {
+		return fake.RejectTaskStub(logger, taskGuid, rejectionReason)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.incrementTaskRejectionCountReturns.result1, fake.incrementTaskRejectionCountReturns.result2, fake.incrementTaskRejectionCountReturns.result3
+	return fake.rejectTaskReturns.result1, fake.rejectTaskReturns.result2, fake.rejectTaskReturns.result3
 }
 
-func (fake *FakeDB) IncrementTaskRejectionCountCallCount() int {
-	fake.incrementTaskRejectionCountMutex.RLock()
-	defer fake.incrementTaskRejectionCountMutex.RUnlock()
-	return len(fake.incrementTaskRejectionCountArgsForCall)
+func (fake *FakeDB) RejectTaskCallCount() int {
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
+	return len(fake.rejectTaskArgsForCall)
 }
 
-func (fake *FakeDB) IncrementTaskRejectionCountArgsForCall(i int) (lager.Logger, string) {
-	fake.incrementTaskRejectionCountMutex.RLock()
-	defer fake.incrementTaskRejectionCountMutex.RUnlock()
-	return fake.incrementTaskRejectionCountArgsForCall[i].logger, fake.incrementTaskRejectionCountArgsForCall[i].taskGuid
+func (fake *FakeDB) RejectTaskArgsForCall(i int) (lager.Logger, string, string) {
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
+	return fake.rejectTaskArgsForCall[i].logger, fake.rejectTaskArgsForCall[i].taskGuid, fake.rejectTaskArgsForCall[i].rejectionReason
 }
 
-func (fake *FakeDB) IncrementTaskRejectionCountReturns(result1 *models.Task, result2 *models.Task, result3 error) {
-	fake.IncrementTaskRejectionCountStub = nil
-	fake.incrementTaskRejectionCountReturns = struct {
+func (fake *FakeDB) RejectTaskReturns(result1 *models.Task, result2 *models.Task, result3 error) {
+	fake.RejectTaskStub = nil
+	fake.rejectTaskReturns = struct {
 		result1 *models.Task
 		result2 *models.Task
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeDB) IncrementTaskRejectionCountReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 error) {
-	fake.IncrementTaskRejectionCountStub = nil
-	if fake.incrementTaskRejectionCountReturnsOnCall == nil {
-		fake.incrementTaskRejectionCountReturnsOnCall = make(map[int]struct {
+func (fake *FakeDB) RejectTaskReturnsOnCall(i int, result1 *models.Task, result2 *models.Task, result3 error) {
+	fake.RejectTaskStub = nil
+	if fake.rejectTaskReturnsOnCall == nil {
+		fake.rejectTaskReturnsOnCall = make(map[int]struct {
 			result1 *models.Task
 			result2 *models.Task
 			result3 error
 		})
 	}
-	fake.incrementTaskRejectionCountReturnsOnCall[i] = struct {
+	fake.rejectTaskReturnsOnCall[i] = struct {
 		result1 *models.Task
 		result2 *models.Task
 		result3 error
@@ -2612,8 +2614,8 @@ func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	defer fake.cancelTaskMutex.RUnlock()
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
-	fake.incrementTaskRejectionCountMutex.RLock()
-	defer fake.incrementTaskRejectionCountMutex.RUnlock()
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
 	fake.completeTaskMutex.RLock()
 	defer fake.completeTaskMutex.RUnlock()
 	fake.resolvingTaskMutex.RLock()

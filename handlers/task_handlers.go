@@ -181,7 +181,7 @@ func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req
 		return
 	}
 
-	err = h.controller.RejectTask(logger, request.TaskGuid, request.FailureReason)
+	err = h.controller.RejectTask(logger, request.TaskGuid, request.RejectionReason)
 	response.Error = models.ConvertError(err)
 }
 

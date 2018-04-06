@@ -675,10 +675,10 @@ func (c *client) FailTask(logger lager.Logger, taskGuid, failureReason string) e
 	return c.doTaskLifecycleRequest(logger, route, &request)
 }
 
-func (c *client) RejectTask(logger lager.Logger, taskGuid, failureReason string) error {
+func (c *client) RejectTask(logger lager.Logger, taskGuid, rejectionReason string) error {
 	request := models.RejectTaskRequest{
-		TaskGuid:      taskGuid,
-		FailureReason: failureReason,
+		TaskGuid:        taskGuid,
+		RejectionReason: rejectionReason,
 	}
 	route := RejectTaskRoute
 	return c.doTaskLifecycleRequest(logger, route, &request)

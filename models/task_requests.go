@@ -81,7 +81,7 @@ func (req *RejectTaskRequest) Validate() error {
 	if !taskGuidPattern.MatchString(req.TaskGuid) {
 		validationError = validationError.Append(ErrInvalidField{"task_guid"})
 	}
-	if req.FailureReason == "" {
+	if req.RejectionReason == "" {
 		validationError = validationError.Append(ErrInvalidField{"failure_reason"})
 	}
 
