@@ -80,6 +80,39 @@ if err != nil {
 }
 ```
 
+## RejectTask
+
+### BBS API Endpoint
+
+POST a [RejectTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RejectTaskRequest)
+to `/v1/tasks/reject`
+and receive a [TaskLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
+
+### Golang Client API
+
+```go
+RejectTask(logger lager.Logger, taskGuid, rejectionReason string) error
+```
+
+#### Input
+
+* `taskGuid string`: The GUID of the Task to fail.
+* `rejectReason string`: Reason why the Task was rejected.
+
+#### Output
+
+* `error`:  Non-nil if an error occurred.
+
+#### Example
+
+```go
+client := bbs.NewClient(url)
+err := client.RejectTask(logger, "task-guid", "not enough resources")
+if err != nil {
+    log.Printf("could not reject task: " + err.Error())
+}
+```
+
 ## CompleteTask
 
 ### BBS API Endpoint
