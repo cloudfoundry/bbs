@@ -14,6 +14,7 @@ func (h *sqlHelper) Upsert(
 	wheres string,
 	whereBindings ...interface{},
 ) (sql.Result, error) {
+	logger = logger.Session("upsert")
 	res, err := h.Update(
 		logger,
 		q,
@@ -32,6 +33,7 @@ func (h *sqlHelper) Upsert(
 		logger.Error("failed-getting-rows-affected", err)
 		return nil, err
 	}
+	logger.Info("rows-affected", lager.Data{"rows": rowsAffected})
 
 	if rowsAffected > 0 {
 		return res, nil
@@ -46,6 +48,8 @@ func (h *sqlHelper) Upsert(
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Info("insert-successful")
 
 	return res, nil
 }

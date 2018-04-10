@@ -341,8 +341,8 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			processGuid, index, false,
+			"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
+			processGuid, index, false, false,
 		)
 		if err != nil {
 			logger.Error("failed-to-unclaim-actual-lrp", err)
@@ -853,8 +853,10 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
 		} else if suspect {
 			mapOfGroups[actualLRP.ActualLRPKey].Suspect = actualLRP
+			logger.Info("suspect-found-in-scan", lager.Data{"instance-guid": actualLRP.ActualLRPInstanceKey.InstanceGuid})
 		} else {
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+			logger.Info("instance-found-in-scan", lager.Data{"instance-guid": actualLRP.ActualLRPInstanceKey.InstanceGuid})
 		}
 	}
 
@@ -873,5 +875,6 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 		}
 	}
 
+	logger.Info("results-in-scan", lager.Data{"results": result})
 	return result, nil
 }

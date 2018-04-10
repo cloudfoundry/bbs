@@ -113,25 +113,17 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 	}
 
 	beforeActualLRPGroup, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
-
-	keepRouteForSuspect := false
-	if beforeActualLRPGroup.Suspect != nil && beforeActualLRPGroup.Instance.ActualLRPInstanceKey.InstanceGuid == request.ActualLrpInstanceKey.InstanceGuid {
-		keepRouteForSuspect = true
-	}
-
 	if err == nil {
 		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
 		} else {
-			if !keepRouteForSuspect {
-				go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
-			}
+			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
 		}
 	}
 
-	err = h.unclaimAndRequestAuction(logger, request.ActualLrpKey, keepRouteForSuspect)
+	err = h.unclaimAndRequestAuction(logger, request.ActualLrpKey)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
 		response.Error = bbsErr
@@ -239,7 +231,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		}
 
 		if actualLRPGroup.Suspect != nil {
-			h.actualLRPDB.RemoveActualLRP(logger, suspect.ActualLRPKey.ProcessGuid, suspect.ActualLRPKey.Index, &suspect.ActualLRPInstanceKey)
+			h.actualLRPDB.RemoveActualLRP(logger, suspect.ActualLrpKey.ProcessGuid, suspect.ActualLrpKey.Index, suspect.ActualLRPInstanceKey)
 		}
 
 		group, err := h.db.EvacuateActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
@@ -292,7 +284,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 
 		go h.actualHub.Emit(models.NewActualLRPCreatedEvent(group))
 
-		err = h.unclaimAndRequestAuction(logger, request.ActualLrpKey, false)
+		err = h.unclaimAndRequestAuction(logger, request.ActualLrpKey)
 		if err != nil {
 			response.Error = models.ConvertError(err)
 			return
@@ -355,15 +347,13 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http
 	}
 }
 
-func (h *EvacuationHandler) unclaimAndRequestAuction(logger lager.Logger, lrpKey *models.ActualLRPKey, keepRouteForSuspect bool) error {
+func (h *EvacuationHandler) unclaimAndRequestAuction(logger lager.Logger, lrpKey *models.ActualLRPKey) error {
 	before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, lrpKey)
 	if err != nil {
 		return err
 	}
 
-	if !keepRouteForSuspect {
-		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
-	}
+	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, lrpKey.ProcessGuid)
 	if err != nil {

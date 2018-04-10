@@ -16,8 +16,8 @@ func (db *SQLDB) EvacuateActualLRP(
 	ttl uint64,
 ) (*models.ActualLRPGroup, error) {
 	logger = logger.Session("evacuate-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var actualLRP *models.ActualLRP
 
@@ -28,7 +28,7 @@ func (db *SQLDB) EvacuateActualLRP(
 
 		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
 		if err == models.ErrResourceNotFound {
-			logger.Debug("creating-evacuating-lrp")
+			logger.Info("creating-evacuating-lrp")
 			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
 			return err
 		}
@@ -41,7 +41,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		if actualLRP.ActualLRPKey.Equal(lrpKey) &&
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
 			reflect.DeepEqual(actualLRP.ActualLRPNetInfo, *netInfo) {
-			logger.Debug("evacuating-lrp-already-exists")
+			logger.Info("evacuating-lrp-already-exists")
 			return nil
 		}
 
@@ -133,6 +133,8 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		return nil, err
 	}
 
+	logger.Info("create-evacuting-actual-lrp-db")
+
 	now := db.clock.Now()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -171,6 +173,8 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		logger.Error("failed-inserting-evacuating-lrp", err)
 		return nil, err
 	}
+
+	logger.Info("done-create-evacuting-actual-lrp-db")
 
 	return actualLRP, nil
 }

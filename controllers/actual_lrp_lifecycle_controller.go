@@ -116,24 +116,26 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 	}
 
 	logger.Info("actual-lrpg-crash", lager.Data{"lrpg": lrpg})
-	if lrpg.Suspect != nil && lrpg.Suspect.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
-		suspectLRP := lrpg.Suspect
-		logger.Info("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
-		err = h.db.RemoveActualLRP(logger, suspectLRP.ProcessGuid, suspectLRP.Index, &suspectLRP.ActualLRPInstanceKey)
-		h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Suspect: suspectLRP}))
-		return err
-	}
-
-	if lrpg.Suspect != nil && lrpg.Instance.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
-		instanceLRP := lrpg.Instance
-		logger.Info("found-crashed-instance", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
-		err = h.db.RemoveActualLRP(logger, instanceLRP.ProcessGuid, instanceLRP.Index, &instanceLRP.ActualLRPInstanceKey)
-		if err != nil {
+	if lrpg.Suspect != nil {
+		if lrpg.Suspect.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
+			suspectLRP := lrpg.Suspect
+			logger.Info("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
+			err = h.db.RemoveActualLRP(logger, suspectLRP.ProcessGuid, suspectLRP.Index, &suspectLRP.ActualLRPInstanceKey)
+			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Suspect: suspectLRP}))
 			return err
 		}
-		_, err = h.db.CreateUnclaimedActualLRP(logger, actualLRPKey)
-		if err != nil {
-			return err
+
+		if lrpg.Instance.ActualLRPInstanceKey.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
+			instanceLRP := lrpg.Instance
+			logger.Info("found-crashed-instance", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
+			err = h.db.RemoveActualLRP(logger, instanceLRP.ProcessGuid, instanceLRP.Index, &instanceLRP.ActualLRPInstanceKey)
+			if err != nil {
+				return err
+			}
+			_, err = h.db.CreateUnclaimedActualLRP(logger, actualLRPKey)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -143,7 +145,6 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 			return err
 		}
 
-		// again here what events do we want to emit?
 		beforeActualLRP, _ := before.Resolve()
 		afterActualLRP, _ := after.Resolve()
 		go h.actualHub.Emit(models.NewActualLRPCrashedEvent(beforeActualLRP, afterActualLRP))
