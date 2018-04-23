@@ -238,7 +238,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 			return
 		}
 
-		if actualLRPGroup.Suspect != nil {
+		if actualLRPGroup.Suspect != nil && request.ActualLrpInstanceKey.InstanceGuid == actualLRPGroup.Suspect.ActualLRPInstanceKey.InstanceGuid {
 			h.actualLRPDB.RemoveActualLRP(logger, suspect.ActualLRPKey.ProcessGuid, suspect.ActualLRPKey.Index, &suspect.ActualLRPInstanceKey)
 		}
 

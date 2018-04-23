@@ -176,7 +176,7 @@ func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
 		return group.Suspect, false
 
 	// TODO: check what event we want to emit, if at all
-	case group.Suspect != nil && group.Instance != nil:
+	case group.Suspect != nil && group.Instance != nil && group.Instance.State != ActualLRPStateRunning:
 		return group.Suspect, false
 
 	case group.Instance.State == ActualLRPStateRunning || group.Instance.State == ActualLRPStateCrashed:

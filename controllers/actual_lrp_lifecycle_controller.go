@@ -69,7 +69,8 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	if lrpg.Suspect != nil {
 		logger = logger.Session("found-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index})
 		suspectLRP := lrpg.Suspect
-		if suspectLRP.ActualLRPInstanceKey.InstanceGuid != actualLRPInstanceKey.InstanceGuid {
+		if suspectLRP.ActualLRPInstanceKey.InstanceGuid != actualLRPInstanceKey.InstanceGuid &&
+			actualLRPInstanceKey.InstanceGuid == lrpg.Instance.ActualLRPInstanceKey.InstanceGuid {
 			logger.Info("starting-shadow", lager.Data{"suspect-instance-guid": suspectLRP.ActualLRPInstanceKey.InstanceGuid, "shadow-instance-guid": actualLRPInstanceKey.InstanceGuid})
 			h.db.RemoveActualLRP(logger, lrpg.Suspect.ProcessGuid, lrpg.Suspect.Index, &lrpg.Suspect.ActualLRPInstanceKey)
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Suspect: suspectLRP}))

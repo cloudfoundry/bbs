@@ -853,10 +853,8 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
 		} else if suspect {
 			mapOfGroups[actualLRP.ActualLRPKey].Suspect = actualLRP
-			logger.Info("suspect-found-in-scan", lager.Data{"instance-guid": actualLRP.ActualLRPInstanceKey.InstanceGuid})
 		} else {
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
-			logger.Info("instance-found-in-scan", lager.Data{"instance-guid": actualLRP.ActualLRPInstanceKey.InstanceGuid})
 		}
 	}
 
@@ -875,6 +873,5 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 		}
 	}
 
-	logger.Info("results-in-scan", lager.Data{"results": result})
 	return result, nil
 }
