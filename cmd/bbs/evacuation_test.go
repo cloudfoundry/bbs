@@ -40,6 +40,27 @@ var _ = Describe("Evacuation API", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(group.Evacuating).To(BeNil())
 		})
+
+		Context("when there is no evacuating lrp", func() {
+			It("returns an error", func() {
+				es, err := client.SubscribeToEventsByCellID(logger, "some-cell")
+				Expect(err).NotTo(HaveOccurred())
+				ch := make(chan models.Event, 10)
+				go func() {
+					defer GinkgoRecover()
+
+					for {
+						ev, err := es.Next()
+						Expect(err).NotTo(HaveOccurred())
+						ch <- ev
+					}
+				}()
+
+				err = client.RemoveEvacuatingActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+				Consistently(ch).ShouldNot(Receive())
+			})
+		})
 	})
 
 	Describe("EvacuateClaimedActualLRP", func() {
