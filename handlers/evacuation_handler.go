@@ -87,6 +87,12 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
+	if beforeActualLRPGroup.Evacuating == nil {
+		logger.Info("evacuating-lrp-is-emtpy")
+		response.Error = models.ConvertError(models.ErrResourceNotFound)
+		return
+	}
+
 	actualLRPGroup := &models.ActualLRPGroup{
 		Evacuating: beforeActualLRPGroup.Evacuating,
 	}

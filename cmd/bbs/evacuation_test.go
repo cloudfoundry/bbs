@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -29,16 +30,53 @@ var _ = Describe("Evacuation API", func() {
 	})
 
 	Describe("RemoveEvacuatingActualLRP", func() {
-		It("removes the evacuating actual_lrp", func() {
-			_, err := client.EvacuateClaimedActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the lrp is running", func() {
+			BeforeEach(func() {
+				Expect(client.StartActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)).To(Succeed())
+			})
 
-			err = client.RemoveEvacuatingActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
-			Expect(err).NotTo(HaveOccurred())
+			It("removes the evacuating actual_lrp", func() {
+				keepContainer, err := client.EvacuateRunningActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo, uint64(10000))
+				Expect(keepContainer).To(BeTrue())
+				Expect(err).NotTo(HaveOccurred())
 
-			group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
-			Expect(err).ToNot(HaveOccurred())
-			Expect(group.Evacuating).To(BeNil())
+				err = client.RemoveEvacuatingActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+				Expect(err).NotTo(HaveOccurred())
+
+				group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, actual.ProcessGuid, int(actual.Index))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(group.Evacuating).To(BeNil())
+			})
+		})
+
+		Context("when there is no evacuating lrp", func() {
+			var (
+				es  events.EventSource
+				err error
+			)
+			It("returns an error", func() {
+				es, err = client.SubscribeToEventsByCellID(logger, "some-cell")
+				Expect(err).NotTo(HaveOccurred())
+				ch := make(chan models.Event, 10)
+				go func() {
+					for {
+						ev, err := es.Next()
+						if err != nil {
+							close(ch)
+							return
+						}
+						ch <- ev
+					}
+				}()
+
+				err = client.RemoveEvacuatingActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+				Consistently(ch).ShouldNot(Receive())
+			})
+
+			AfterEach(func() {
+				es.Close()
+			})
 		})
 	})
 
