@@ -198,7 +198,7 @@ var _ = BeforeEach(func() {
 		CertFile: path.Join(fixturesPath, "green-certs", "server.crt"),
 		KeyFile:  path.Join(fixturesPath, "green-certs", "server.key"),
 
-		LoggregatorConfig: diego_logging_client.Config{
+		LoggregatorConfig: &diego_logging_client.Config{
 			BatchFlushInterval: 10 * time.Millisecond,
 			BatchMaxSize:       1,
 			UseV2API:           true,
