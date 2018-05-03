@@ -629,12 +629,14 @@ var _ = Describe("Task Controller", func() {
 		var (
 			taskGuid        = "task-guid"
 			rejectionReason = "rejection"
+			before, after   *models.Task
 		)
 
 		BeforeEach(func() {
-			before := &models.Task{}
-			after := model_helpers.NewValidTask("hi-bob")
+			before = &models.Task{}
+			after = model_helpers.NewValidTask("hi-bob")
 			fakeTaskDB.FailTaskReturns(before, after, nil)
+			fakeTaskDB.RejectTaskReturns(before, after, nil)
 			fakeTaskDB.TaskByGuidReturns(before, nil)
 		})
 
@@ -683,6 +685,15 @@ var _ = Describe("Task Controller", func() {
 					_, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
 					Expect(actualTaskGuid).To(Equal(taskGuid))
 					Expect(actualRejectionReason).To(Equal(rejectionReason))
+				})
+
+				It("emits a change to the hub", func() {
+					Eventually(taskHub.EmitCallCount).Should(Equal(1))
+					event := taskHub.EmitArgsForCall(0)
+					changedEvent, ok := event.(*models.TaskChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(changedEvent.Before).To(Equal(before))
+					Expect(changedEvent.After).To(Equal(after))
 				})
 
 				It("logs the rejection reason", func() {

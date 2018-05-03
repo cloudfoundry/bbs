@@ -169,7 +169,7 @@ func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, rejectionReas
 	}
 
 	logger.Info("reject-task", lager.Data{"rejection-reason": rejectionReason})
-	_, _, rejectTaskErr := h.db.RejectTask(logger, taskGuid, rejectionReason)
+	before, after, rejectTaskErr := h.db.RejectTask(logger, taskGuid, rejectionReason)
 	if rejectTaskErr != nil {
 		logger.Error("failed-to-reject-task", rejectTaskErr)
 	}
@@ -177,6 +177,8 @@ func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, rejectionReas
 	if int(task.RejectionCount) >= h.maxRetries {
 		return h.FailTask(logger, taskGuid, rejectionReason)
 	}
+
+	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	return rejectTaskErr
 }
