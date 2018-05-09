@@ -15,6 +15,10 @@ const (
 	ActualLRPGroupsByProcessGuidRoute        = "ActualLRPGroupsByProcessGuid"
 	ActualLRPGroupByProcessGuidAndIndexRoute = "ActualLRPGroupsByProcessGuidAndIndex"
 
+	ActualLRPsRoute                     = "ActualLRPs"
+	ActualLRPsByProcessGuidRoute        = "ActualLRPsByProcessGuid"
+	ActualLRPByProcessGuidAndIndexRoute = "ActualLRPByProcessGuidAndIndex"
+
 	// Actual LRP Lifecycle
 	ClaimActualLRPRoute  = "ClaimActualLRP"
 	StartActualLRPRoute  = "StartActualLRP"
@@ -72,6 +76,11 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute},
 	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute},
 	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute},
+
+	// Actual LRPs
+	{Path: "/v1/actual_lrps/list", Method: "POST", Name: ActualLRPsRoute},
+	{Path: "/v1/actual_lrps/list_by_process_guid", Method: "POST", Name: ActualLRPsByProcessGuidRoute},
+	{Path: "/v1/actual_lrps/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPByProcessGuidAndIndexRoute},
 
 	// Actual LRP Lifecycle
 	{Path: "/v1/actual_lrps/claim", Method: "POST", Name: ClaimActualLRPRoute},

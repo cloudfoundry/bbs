@@ -64,6 +64,11 @@ func New(
 		bbs.ActualLRPGroupsByProcessGuidRoute:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupsByProcessGuid), emitter)),
 		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex), emitter)),
 
+		// Actual LRPs
+		bbs.ActualLRPsRoute:                     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPs), emitter)),
+		bbs.ActualLRPsByProcessGuidRoute:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPsByProcessGuid), emitter)),
+		bbs.ActualLRPByProcessGuidAndIndexRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPByProcessGuidAndIndex), emitter)),
+
 		// Actual LRP Lifecycle
 		bbs.ClaimActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.ClaimActualLRP), emitter)),
 		bbs.StartActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP), emitter)),

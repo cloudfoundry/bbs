@@ -59,7 +59,9 @@ var _ = Describe("Client", func() {
 						ActualLrpGroups: []*models.ActualLRPGroup{
 							{
 								Instance: &models.ActualLRP{
-									State: "running",
+									ActualLRPInfo: models.ActualLRPInfo{
+										State: "running",
+									},
 								},
 							},
 						},
@@ -73,7 +75,9 @@ var _ = Describe("Client", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(lrps).To(ConsistOf(&models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
-					State: "running",
+					ActualLRPInfo: models.ActualLRPInfo{
+						State: "running",
+					},
 				},
 			}))
 		})

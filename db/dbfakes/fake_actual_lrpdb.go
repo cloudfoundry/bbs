@@ -53,37 +53,80 @@ type FakeActualLRPDB struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
-	CreateUnclaimedActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) (after *models.ActualLRPGroup, err error)
+	ActualLRPsStub        func(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.FlattenedActualLRP, error)
+	actualLRPsMutex       sync.RWMutex
+	actualLRPsArgsForCall []struct {
+		logger lager.Logger
+		filter models.ActualLRPFilter
+	}
+	actualLRPsReturns struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}
+	actualLRPsReturnsOnCall map[int]struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}
+	ActualLRPsByProcessGuidStub        func(logger lager.Logger, processGuid string) ([]*models.FlattenedActualLRP, error)
+	actualLRPsByProcessGuidMutex       sync.RWMutex
+	actualLRPsByProcessGuidArgsForCall []struct {
+		logger      lager.Logger
+		processGuid string
+	}
+	actualLRPsByProcessGuidReturns struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}
+	actualLRPsByProcessGuidReturnsOnCall map[int]struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}
+	ActualLRPByProcessGuidAndIndexStub        func(logger lager.Logger, processGuid string, index int32) (*models.FlattenedActualLRP, error)
+	actualLRPByProcessGuidAndIndexMutex       sync.RWMutex
+	actualLRPByProcessGuidAndIndexArgsForCall []struct {
+		logger      lager.Logger
+		processGuid string
+		index       int32
+	}
+	actualLRPByProcessGuidAndIndexReturns struct {
+		result1 *models.FlattenedActualLRP
+		result2 error
+	}
+	actualLRPByProcessGuidAndIndexReturnsOnCall map[int]struct {
+		result1 *models.FlattenedActualLRP
+		result2 error
+	}
+	CreateUnclaimedActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) (after *models.FlattenedActualLRP, err error)
 	createUnclaimedActualLRPMutex       sync.RWMutex
 	createUnclaimedActualLRPArgsForCall []struct {
 		logger lager.Logger
 		key    *models.ActualLRPKey
 	}
 	createUnclaimedActualLRPReturns struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
 		result2 error
 	}
 	createUnclaimedActualLRPReturnsOnCall map[int]struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
 		result2 error
 	}
-	UnclaimActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	UnclaimActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error)
 	unclaimActualLRPMutex       sync.RWMutex
 	unclaimActualLRPArgsForCall []struct {
 		logger lager.Logger
 		key    *models.ActualLRPKey
 	}
 	unclaimActualLRPReturns struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
 	unclaimActualLRPReturnsOnCall map[int]struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
-	ClaimActualLRPStub        func(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	ClaimActualLRPStub        func(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error)
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
 		logger      lager.Logger
@@ -92,16 +135,16 @@ type FakeActualLRPDB struct {
 		instanceKey *models.ActualLRPInstanceKey
 	}
 	claimActualLRPReturns struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
 	claimActualLRPReturnsOnCall map[int]struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
-	StartActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	StartActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error)
 	startActualLRPMutex       sync.RWMutex
 	startActualLRPArgsForCall []struct {
 		logger      lager.Logger
@@ -110,16 +153,16 @@ type FakeActualLRPDB struct {
 		netInfo     *models.ActualLRPNetInfo
 	}
 	startActualLRPReturns struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
 	startActualLRPReturnsOnCall map[int]struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
-	CrashActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, shouldRestart bool, err error)
+	CrashActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, shouldRestart bool, err error)
 	crashActualLRPMutex       sync.RWMutex
 	crashActualLRPArgsForCall []struct {
 		logger      lager.Logger
@@ -128,18 +171,18 @@ type FakeActualLRPDB struct {
 		crashReason string
 	}
 	crashActualLRPReturns struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 bool
 		result4 error
 	}
 	crashActualLRPReturnsOnCall map[int]struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 bool
 		result4 error
 	}
-	FailActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey, placementError string) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	FailActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey, placementError string) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error)
 	failActualLRPMutex       sync.RWMutex
 	failActualLRPArgsForCall []struct {
 		logger         lager.Logger
@@ -147,13 +190,13 @@ type FakeActualLRPDB struct {
 		placementError string
 	}
 	failActualLRPReturns struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
 	failActualLRPReturnsOnCall map[int]struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}
 	RemoveActualLRPStub        func(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error
@@ -331,7 +374,164 @@ func (fake *FakeActualLRPDB) ActualLRPGroupByProcessGuidAndIndexReturnsOnCall(i 
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (after *models.ActualLRPGroup, err error) {
+func (fake *FakeActualLRPDB) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.FlattenedActualLRP, error) {
+	fake.actualLRPsMutex.Lock()
+	ret, specificReturn := fake.actualLRPsReturnsOnCall[len(fake.actualLRPsArgsForCall)]
+	fake.actualLRPsArgsForCall = append(fake.actualLRPsArgsForCall, struct {
+		logger lager.Logger
+		filter models.ActualLRPFilter
+	}{logger, filter})
+	fake.recordInvocation("ActualLRPs", []interface{}{logger, filter})
+	fake.actualLRPsMutex.Unlock()
+	if fake.ActualLRPsStub != nil {
+		return fake.ActualLRPsStub(logger, filter)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.actualLRPsReturns.result1, fake.actualLRPsReturns.result2
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsCallCount() int {
+	fake.actualLRPsMutex.RLock()
+	defer fake.actualLRPsMutex.RUnlock()
+	return len(fake.actualLRPsArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsArgsForCall(i int) (lager.Logger, models.ActualLRPFilter) {
+	fake.actualLRPsMutex.RLock()
+	defer fake.actualLRPsMutex.RUnlock()
+	return fake.actualLRPsArgsForCall[i].logger, fake.actualLRPsArgsForCall[i].filter
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsReturns(result1 []*models.FlattenedActualLRP, result2 error) {
+	fake.ActualLRPsStub = nil
+	fake.actualLRPsReturns = struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsReturnsOnCall(i int, result1 []*models.FlattenedActualLRP, result2 error) {
+	fake.ActualLRPsStub = nil
+	if fake.actualLRPsReturnsOnCall == nil {
+		fake.actualLRPsReturnsOnCall = make(map[int]struct {
+			result1 []*models.FlattenedActualLRP
+			result2 error
+		})
+	}
+	fake.actualLRPsReturnsOnCall[i] = struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.FlattenedActualLRP, error) {
+	fake.actualLRPsByProcessGuidMutex.Lock()
+	ret, specificReturn := fake.actualLRPsByProcessGuidReturnsOnCall[len(fake.actualLRPsByProcessGuidArgsForCall)]
+	fake.actualLRPsByProcessGuidArgsForCall = append(fake.actualLRPsByProcessGuidArgsForCall, struct {
+		logger      lager.Logger
+		processGuid string
+	}{logger, processGuid})
+	fake.recordInvocation("ActualLRPsByProcessGuid", []interface{}{logger, processGuid})
+	fake.actualLRPsByProcessGuidMutex.Unlock()
+	if fake.ActualLRPsByProcessGuidStub != nil {
+		return fake.ActualLRPsByProcessGuidStub(logger, processGuid)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.actualLRPsByProcessGuidReturns.result1, fake.actualLRPsByProcessGuidReturns.result2
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidCallCount() int {
+	fake.actualLRPsByProcessGuidMutex.RLock()
+	defer fake.actualLRPsByProcessGuidMutex.RUnlock()
+	return len(fake.actualLRPsByProcessGuidArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidArgsForCall(i int) (lager.Logger, string) {
+	fake.actualLRPsByProcessGuidMutex.RLock()
+	defer fake.actualLRPsByProcessGuidMutex.RUnlock()
+	return fake.actualLRPsByProcessGuidArgsForCall[i].logger, fake.actualLRPsByProcessGuidArgsForCall[i].processGuid
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidReturns(result1 []*models.FlattenedActualLRP, result2 error) {
+	fake.ActualLRPsByProcessGuidStub = nil
+	fake.actualLRPsByProcessGuidReturns = struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidReturnsOnCall(i int, result1 []*models.FlattenedActualLRP, result2 error) {
+	fake.ActualLRPsByProcessGuidStub = nil
+	if fake.actualLRPsByProcessGuidReturnsOnCall == nil {
+		fake.actualLRPsByProcessGuidReturnsOnCall = make(map[int]struct {
+			result1 []*models.FlattenedActualLRP
+			result2 error
+		})
+	}
+	fake.actualLRPsByProcessGuidReturnsOnCall[i] = struct {
+		result1 []*models.FlattenedActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.FlattenedActualLRP, error) {
+	fake.actualLRPByProcessGuidAndIndexMutex.Lock()
+	ret, specificReturn := fake.actualLRPByProcessGuidAndIndexReturnsOnCall[len(fake.actualLRPByProcessGuidAndIndexArgsForCall)]
+	fake.actualLRPByProcessGuidAndIndexArgsForCall = append(fake.actualLRPByProcessGuidAndIndexArgsForCall, struct {
+		logger      lager.Logger
+		processGuid string
+		index       int32
+	}{logger, processGuid, index})
+	fake.recordInvocation("ActualLRPByProcessGuidAndIndex", []interface{}{logger, processGuid, index})
+	fake.actualLRPByProcessGuidAndIndexMutex.Unlock()
+	if fake.ActualLRPByProcessGuidAndIndexStub != nil {
+		return fake.ActualLRPByProcessGuidAndIndexStub(logger, processGuid, index)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.actualLRPByProcessGuidAndIndexReturns.result1, fake.actualLRPByProcessGuidAndIndexReturns.result2
+}
+
+func (fake *FakeActualLRPDB) ActualLRPByProcessGuidAndIndexCallCount() int {
+	fake.actualLRPByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPByProcessGuidAndIndexMutex.RUnlock()
+	return len(fake.actualLRPByProcessGuidAndIndexArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) ActualLRPByProcessGuidAndIndexArgsForCall(i int) (lager.Logger, string, int32) {
+	fake.actualLRPByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPByProcessGuidAndIndexMutex.RUnlock()
+	return fake.actualLRPByProcessGuidAndIndexArgsForCall[i].logger, fake.actualLRPByProcessGuidAndIndexArgsForCall[i].processGuid, fake.actualLRPByProcessGuidAndIndexArgsForCall[i].index
+}
+
+func (fake *FakeActualLRPDB) ActualLRPByProcessGuidAndIndexReturns(result1 *models.FlattenedActualLRP, result2 error) {
+	fake.ActualLRPByProcessGuidAndIndexStub = nil
+	fake.actualLRPByProcessGuidAndIndexReturns = struct {
+		result1 *models.FlattenedActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPByProcessGuidAndIndexReturnsOnCall(i int, result1 *models.FlattenedActualLRP, result2 error) {
+	fake.ActualLRPByProcessGuidAndIndexStub = nil
+	if fake.actualLRPByProcessGuidAndIndexReturnsOnCall == nil {
+		fake.actualLRPByProcessGuidAndIndexReturnsOnCall = make(map[int]struct {
+			result1 *models.FlattenedActualLRP
+			result2 error
+		})
+	}
+	fake.actualLRPByProcessGuidAndIndexReturnsOnCall[i] = struct {
+		result1 *models.FlattenedActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (after *models.FlattenedActualLRP, err error) {
 	fake.createUnclaimedActualLRPMutex.Lock()
 	ret, specificReturn := fake.createUnclaimedActualLRPReturnsOnCall[len(fake.createUnclaimedActualLRPArgsForCall)]
 	fake.createUnclaimedActualLRPArgsForCall = append(fake.createUnclaimedActualLRPArgsForCall, struct {
@@ -361,29 +561,29 @@ func (fake *FakeActualLRPDB) CreateUnclaimedActualLRPArgsForCall(i int) (lager.L
 	return fake.createUnclaimedActualLRPArgsForCall[i].logger, fake.createUnclaimedActualLRPArgsForCall[i].key
 }
 
-func (fake *FakeActualLRPDB) CreateUnclaimedActualLRPReturns(result1 *models.ActualLRPGroup, result2 error) {
+func (fake *FakeActualLRPDB) CreateUnclaimedActualLRPReturns(result1 *models.FlattenedActualLRP, result2 error) {
 	fake.CreateUnclaimedActualLRPStub = nil
 	fake.createUnclaimedActualLRPReturns = struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) CreateUnclaimedActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 error) {
+func (fake *FakeActualLRPDB) CreateUnclaimedActualLRPReturnsOnCall(i int, result1 *models.FlattenedActualLRP, result2 error) {
 	fake.CreateUnclaimedActualLRPStub = nil
 	if fake.createUnclaimedActualLRPReturnsOnCall == nil {
 		fake.createUnclaimedActualLRPReturnsOnCall = make(map[int]struct {
-			result1 *models.ActualLRPGroup
+			result1 *models.FlattenedActualLRP
 			result2 error
 		})
 	}
 	fake.createUnclaimedActualLRPReturnsOnCall[i] = struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeActualLRPDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+func (fake *FakeActualLRPDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error) {
 	fake.unclaimActualLRPMutex.Lock()
 	ret, specificReturn := fake.unclaimActualLRPReturnsOnCall[len(fake.unclaimActualLRPArgsForCall)]
 	fake.unclaimActualLRPArgsForCall = append(fake.unclaimActualLRPArgsForCall, struct {
@@ -413,32 +613,32 @@ func (fake *FakeActualLRPDB) UnclaimActualLRPArgsForCall(i int) (lager.Logger, *
 	return fake.unclaimActualLRPArgsForCall[i].logger, fake.unclaimActualLRPArgsForCall[i].key
 }
 
-func (fake *FakeActualLRPDB) UnclaimActualLRPReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) UnclaimActualLRPReturns(result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.UnclaimActualLRPStub = nil
 	fake.unclaimActualLRPReturns = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) UnclaimActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) UnclaimActualLRPReturnsOnCall(i int, result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.UnclaimActualLRPStub = nil
 	if fake.unclaimActualLRPReturnsOnCall == nil {
 		fake.unclaimActualLRPReturnsOnCall = make(map[int]struct {
-			result1 *models.ActualLRPGroup
-			result2 *models.ActualLRPGroup
+			result1 *models.FlattenedActualLRP
+			result2 *models.FlattenedActualLRP
 			result3 error
 		})
 	}
 	fake.unclaimActualLRPReturnsOnCall[i] = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+func (fake *FakeActualLRPDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error) {
 	fake.claimActualLRPMutex.Lock()
 	ret, specificReturn := fake.claimActualLRPReturnsOnCall[len(fake.claimActualLRPArgsForCall)]
 	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
@@ -470,32 +670,32 @@ func (fake *FakeActualLRPDB) ClaimActualLRPArgsForCall(i int) (lager.Logger, str
 	return fake.claimActualLRPArgsForCall[i].logger, fake.claimActualLRPArgsForCall[i].processGuid, fake.claimActualLRPArgsForCall[i].index, fake.claimActualLRPArgsForCall[i].instanceKey
 }
 
-func (fake *FakeActualLRPDB) ClaimActualLRPReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) ClaimActualLRPReturns(result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.ClaimActualLRPStub = nil
 	fake.claimActualLRPReturns = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) ClaimActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) ClaimActualLRPReturnsOnCall(i int, result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.ClaimActualLRPStub = nil
 	if fake.claimActualLRPReturnsOnCall == nil {
 		fake.claimActualLRPReturnsOnCall = make(map[int]struct {
-			result1 *models.ActualLRPGroup
-			result2 *models.ActualLRPGroup
+			result1 *models.FlattenedActualLRP
+			result2 *models.FlattenedActualLRP
 			result3 error
 		})
 	}
 	fake.claimActualLRPReturnsOnCall[i] = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+func (fake *FakeActualLRPDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error) {
 	fake.startActualLRPMutex.Lock()
 	ret, specificReturn := fake.startActualLRPReturnsOnCall[len(fake.startActualLRPArgsForCall)]
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
@@ -527,32 +727,32 @@ func (fake *FakeActualLRPDB) StartActualLRPArgsForCall(i int) (lager.Logger, *mo
 	return fake.startActualLRPArgsForCall[i].logger, fake.startActualLRPArgsForCall[i].key, fake.startActualLRPArgsForCall[i].instanceKey, fake.startActualLRPArgsForCall[i].netInfo
 }
 
-func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.StartActualLRPStub = nil
 	fake.startActualLRPReturns = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) StartActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) StartActualLRPReturnsOnCall(i int, result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.StartActualLRPStub = nil
 	if fake.startActualLRPReturnsOnCall == nil {
 		fake.startActualLRPReturnsOnCall = make(map[int]struct {
-			result1 *models.ActualLRPGroup
-			result2 *models.ActualLRPGroup
+			result1 *models.FlattenedActualLRP
+			result2 *models.FlattenedActualLRP
 			result3 error
 		})
 	}
 	fake.startActualLRPReturnsOnCall[i] = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, shouldRestart bool, err error) {
+func (fake *FakeActualLRPDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, shouldRestart bool, err error) {
 	fake.crashActualLRPMutex.Lock()
 	ret, specificReturn := fake.crashActualLRPReturnsOnCall[len(fake.crashActualLRPArgsForCall)]
 	fake.crashActualLRPArgsForCall = append(fake.crashActualLRPArgsForCall, struct {
@@ -584,35 +784,35 @@ func (fake *FakeActualLRPDB) CrashActualLRPArgsForCall(i int) (lager.Logger, *mo
 	return fake.crashActualLRPArgsForCall[i].logger, fake.crashActualLRPArgsForCall[i].key, fake.crashActualLRPArgsForCall[i].instanceKey, fake.crashActualLRPArgsForCall[i].crashReason
 }
 
-func (fake *FakeActualLRPDB) CrashActualLRPReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 bool, result4 error) {
+func (fake *FakeActualLRPDB) CrashActualLRPReturns(result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 bool, result4 error) {
 	fake.CrashActualLRPStub = nil
 	fake.crashActualLRPReturns = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 bool
 		result4 error
 	}{result1, result2, result3, result4}
 }
 
-func (fake *FakeActualLRPDB) CrashActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 bool, result4 error) {
+func (fake *FakeActualLRPDB) CrashActualLRPReturnsOnCall(i int, result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 bool, result4 error) {
 	fake.CrashActualLRPStub = nil
 	if fake.crashActualLRPReturnsOnCall == nil {
 		fake.crashActualLRPReturnsOnCall = make(map[int]struct {
-			result1 *models.ActualLRPGroup
-			result2 *models.ActualLRPGroup
+			result1 *models.FlattenedActualLRP
+			result2 *models.FlattenedActualLRP
 			result3 bool
 			result4 error
 		})
 	}
 	fake.crashActualLRPReturnsOnCall[i] = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 bool
 		result4 error
 	}{result1, result2, result3, result4}
 }
 
-func (fake *FakeActualLRPDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+func (fake *FakeActualLRPDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error) {
 	fake.failActualLRPMutex.Lock()
 	ret, specificReturn := fake.failActualLRPReturnsOnCall[len(fake.failActualLRPArgsForCall)]
 	fake.failActualLRPArgsForCall = append(fake.failActualLRPArgsForCall, struct {
@@ -643,27 +843,27 @@ func (fake *FakeActualLRPDB) FailActualLRPArgsForCall(i int) (lager.Logger, *mod
 	return fake.failActualLRPArgsForCall[i].logger, fake.failActualLRPArgsForCall[i].key, fake.failActualLRPArgsForCall[i].placementError
 }
 
-func (fake *FakeActualLRPDB) FailActualLRPReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) FailActualLRPReturns(result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.FailActualLRPStub = nil
 	fake.failActualLRPReturns = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) FailActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+func (fake *FakeActualLRPDB) FailActualLRPReturnsOnCall(i int, result1 *models.FlattenedActualLRP, result2 *models.FlattenedActualLRP, result3 error) {
 	fake.FailActualLRPStub = nil
 	if fake.failActualLRPReturnsOnCall == nil {
 		fake.failActualLRPReturnsOnCall = make(map[int]struct {
-			result1 *models.ActualLRPGroup
-			result2 *models.ActualLRPGroup
+			result1 *models.FlattenedActualLRP
+			result2 *models.FlattenedActualLRP
 			result3 error
 		})
 	}
 	fake.failActualLRPReturnsOnCall[i] = struct {
-		result1 *models.ActualLRPGroup
-		result2 *models.ActualLRPGroup
+		result1 *models.FlattenedActualLRP
+		result2 *models.FlattenedActualLRP
 		result3 error
 	}{result1, result2, result3}
 }
@@ -728,6 +928,12 @@ func (fake *FakeActualLRPDB) Invocations() map[string][][]interface{} {
 	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
 	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
+	fake.actualLRPsMutex.RLock()
+	defer fake.actualLRPsMutex.RUnlock()
+	fake.actualLRPsByProcessGuidMutex.RLock()
+	defer fake.actualLRPsByProcessGuidMutex.RUnlock()
+	fake.actualLRPByProcessGuidAndIndexMutex.RLock()
+	defer fake.actualLRPByProcessGuidAndIndexMutex.RUnlock()
 	fake.createUnclaimedActualLRPMutex.RLock()
 	defer fake.createUnclaimedActualLRPMutex.RUnlock()
 	fake.unclaimActualLRPMutex.RLock()

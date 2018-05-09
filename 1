@@ -143,16 +143,6 @@ func (event *ActualLRPCrashedEvent) Key() string {
 	return event.ActualLRPInstanceKey.InstanceGuid
 }
 
-func NewFlattenedActualLRPCrashedEvent(before, after *FlattenedActualLRP) *ActualLRPCrashedEvent {
-	return &ActualLRPCrashedEvent{
-		ActualLRPKey:         after.ActualLRPKey,
-		ActualLRPInstanceKey: before.ActualLRPInstanceKey,
-		CrashCount:           after.CrashCount,
-		CrashReason:          after.CrashReason,
-		Since:                after.Since,
-	}
-}
-
 func NewActualLRPRemovedEvent(actualLRPGroup *ActualLRPGroup) *ActualLRPRemovedEvent {
 	return &ActualLRPRemovedEvent{
 		ActualLrpGroup: actualLRPGroup,
@@ -208,7 +198,7 @@ func (event *FlattenedActualLRPCreatedEvent) EventType() string {
 }
 
 func (event *FlattenedActualLRPCreatedEvent) Key() string {
-	return event.ActualLrp.GetInstanceGuid()
+	return event.ActualLRP.GetInstanceGuid()
 }
 
 func (request *EventsByCellId) Validate() error {

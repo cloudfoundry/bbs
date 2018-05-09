@@ -4,6 +4,10 @@ func (request *ActualLRPGroupsRequest) Validate() error {
 	return nil
 }
 
+func (request *ActualLRPsRequest) Validate() error {
+	return nil
+}
+
 func (request *ActualLRPGroupsByProcessGuidRequest) Validate() error {
 	var validationError ValidationError
 
@@ -18,7 +22,39 @@ func (request *ActualLRPGroupsByProcessGuidRequest) Validate() error {
 	return nil
 }
 
+func (request *ActualLRPsByProcessGuidRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ProcessGuid == "" {
+		validationError = validationError.Append(ErrInvalidField{"process_guid"})
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
 func (request *ActualLRPGroupByProcessGuidAndIndexRequest) Validate() error {
+	var validationError ValidationError
+
+	if request.ProcessGuid == "" {
+		validationError = validationError.Append(ErrInvalidField{"process_guid"})
+	}
+
+	if request.Index < 0 {
+		validationError = validationError.Append(ErrInvalidField{"index"})
+	}
+
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
+func (request *ActualLRPByProcessGuidAndIndexRequest) Validate() error {
 	var validationError ValidationError
 
 	if request.ProcessGuid == "" {

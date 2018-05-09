@@ -107,8 +107,10 @@ var _ = Describe("ActualLRP API", func() {
 		baseLRP = &models.ActualLRP{
 			ActualLRPKey:         baseLRPKey,
 			ActualLRPInstanceKey: baseLRPInstanceKey,
-			ActualLRPNetInfo:     netInfo,
-			State:                models.ActualLRPStateRunning,
+			ActualLRPInfo: models.ActualLRPInfo{
+				ActualLRPNetInfo: netInfo,
+				State:            models.ActualLRPStateRunning,
+			},
 		}
 
 		evacuatingLRP = &models.ActualLRP{

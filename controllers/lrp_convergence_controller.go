@@ -89,7 +89,13 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		works = append(works, func() {
 			before, after, err := h.db.UnclaimActualLRP(logger, key.Key)
 			if err == nil {
-				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+				event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
+				if err != nil {
+					h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
+					h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
+				} else {
+					go h.actualHub.Emit(event)
+				}
 				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
 				startRequestLock.Lock()
 				startRequests = append(startRequests, &startRequest)

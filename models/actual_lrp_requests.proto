@@ -15,12 +15,27 @@ message ActualLRPGroupsResponse {
   repeated ActualLRPGroup actual_lrp_groups = 2;
 }
 
+message ActualLRPsResponse {
+  optional Error error = 1;
+  repeated FlattenedActualLRP actual_lrps = 2;
+}
+
 message ActualLRPGroupResponse {
   optional Error error = 1;
   optional ActualLRPGroup actual_lrp_group = 2;
 }
 
+message ActualLRPResponse {
+  optional Error error = 1;
+  optional FlattenedActualLRP actual_lrp = 2;
+}
+
 message ActualLRPGroupsRequest {
+  optional string domain = 1;
+  optional string cell_id = 2;
+}
+
+message ActualLRPsRequest {
   optional string domain = 1;
   optional string cell_id = 2;
 }
@@ -29,7 +44,16 @@ message ActualLRPGroupsByProcessGuidRequest {
   optional string process_guid = 1;
 }
 
+message ActualLRPsByProcessGuidRequest {
+  optional string process_guid = 1;
+}
+
 message ActualLRPGroupByProcessGuidAndIndexRequest {
+  optional string process_guid = 1;
+  optional int32 index = 2;
+}
+
+message ActualLRPByProcessGuidAndIndexRequest {
   optional string process_guid = 1;
   optional int32 index = 2;
 }

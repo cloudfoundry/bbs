@@ -46,12 +46,20 @@
 		ActualLRPInstanceKey
 		ActualLRPNetInfo
 		ActualLRP
+		FlattenedActualLRP
+		PlacementState
+		ActualLRPInfo
 		ActualLRPLifecycleResponse
 		ActualLRPGroupsResponse
+		ActualLRPsResponse
 		ActualLRPGroupResponse
+		ActualLRPResponse
 		ActualLRPGroupsRequest
+		ActualLRPsRequest
 		ActualLRPGroupsByProcessGuidRequest
+		ActualLRPsByProcessGuidRequest
 		ActualLRPGroupByProcessGuidAndIndexRequest
+		ActualLRPByProcessGuidAndIndexRequest
 		ClaimActualLRPRequest
 		StartActualLRPRequest
 		CrashActualLRPRequest
@@ -99,6 +107,9 @@
 		ActualLRPCreatedEvent
 		ActualLRPChangedEvent
 		ActualLRPRemovedEvent
+		FlattenedActualLRPCreatedEvent
+		FlattenedActualLRPChangedEvent
+		FlattenedActualLRPRemovedEvent
 		DesiredLRPCreatedEvent
 		DesiredLRPChangedEvent
 		DesiredLRPRemovedEvent

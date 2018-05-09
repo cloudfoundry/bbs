@@ -46,9 +46,11 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 		return err
 	}
 
-	if !after.Equal(before) {
-		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
+	if err != nil {
+		return err
 	}
+	go h.actualHub.Emit(event)
 	return nil
 }
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
@@ -57,23 +59,24 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	lrp, err := h.db.ActualLRPByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	if err != nil {
 		return err
 	}
 
-	if lrpGroup.Evacuating != nil {
-		h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrpGroup.Evacuating.ActualLRPKey, &lrpGroup.Evacuating.ActualLRPInstanceKey)
+	if lrp.ActualLRPInfo.PlacementState == models.PlacementStateType_Evacuating {
+		h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrp.ActualLRPKey, &lrp.ActualLRPInstanceKey)
 	}
 
 	go func() {
 		if before == nil {
-			h.actualHub.Emit(models.NewActualLRPCreatedEvent(after))
+			h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
 		} else if !before.Equal(after) {
-			h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+			h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
+			h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
 		}
-		if lrpGroup.Evacuating != nil {
-			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: lrpGroup.Evacuating}))
+		if lrp.ActualLRPInfo.PlacementState == models.PlacementStateType_Evacuating {
+			h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
 		}
 	}()
 	return nil
@@ -85,10 +88,15 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	beforeActualLRP, _ := before.Resolve()
-	afterActualLRP, _ := after.Resolve()
-	go h.actualHub.Emit(models.NewActualLRPCrashedEvent(beforeActualLRP, afterActualLRP))
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	// TODO need to figure out the events
+	go h.actualHub.Emit(models.NewFlattenedActualLRPCrashedEvent(before, after))
+	event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
+	if err != nil {
+		h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
+		h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
+	} else {
+		go h.actualHub.Emit(event)
+	}
 
 	if !shouldRestart {
 		return nil
@@ -117,12 +125,18 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 		return err
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
+	if err != nil {
+		h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
+		h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
+	} else {
+		go h.actualHub.Emit(event)
+	}
 	return nil
 }
 
 func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
-	beforeActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+	beforeActualLRPGroup, err := h.db.ActualLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		return err
 	}
@@ -132,7 +146,7 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 		return err
 
 	}
-	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
+	go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRPGroup))
 	return nil
 }
 
@@ -143,13 +157,12 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 	logger = logger.Session("retire-actual-lrp", lager.Data{"process_guid": key.ProcessGuid, "index": key.Index})
 
 	for retryCount := 0; retryCount < models.RetireActualLRPRetryAttempts; retryCount++ {
-		var lrpGroup *models.ActualLRPGroup
-		lrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+		var lrp *models.FlattenedActualLRP
+		lrp, err = h.db.ActualLRPByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 		if err != nil {
 			return err
 		}
 
-		lrp := lrpGroup.Instance
 		if lrp == nil {
 			return models.ErrResourceNotFound
 		}
@@ -158,7 +171,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
 			err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 			if err == nil {
-				go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrpGroup))
+				go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
 			}
 		case models.ActualLRPStateClaimed, models.ActualLRPStateRunning:
 			cell, err = h.serviceClient.CellById(logger, lrp.CellId)
@@ -167,7 +180,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 				if bbsErr.Type == models.Error_ResourceNotFound {
 					err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 					if err == nil {
-						go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrpGroup))
+						go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
 					}
 				}
 				return err

@@ -118,6 +118,52 @@ func (actual ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator
 	return calc.ShouldRestart(now.UnixNano(), actual.Since, actual.CrashCount)
 }
 
+func (actual FlattenedActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
+	if actual.State != ActualLRPStateCrashed {
+		return false
+	}
+
+	return calc.ShouldRestart(0, 0, actual.CrashCount)
+}
+
+func (actual FlattenedActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator) bool {
+	if actual.State != ActualLRPStateCrashed {
+		return false
+	}
+
+	return calc.ShouldRestart(now.UnixNano(), actual.Since, actual.CrashCount)
+}
+
+func (before FlattenedActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
+	if !before.ActualLRPKey.Equal(lrpKey) {
+		return false
+	}
+
+	var valid bool
+	switch before.State {
+	case ActualLRPStateUnclaimed:
+		valid = newState == ActualLRPStateUnclaimed ||
+			newState == ActualLRPStateClaimed ||
+			newState == ActualLRPStateRunning
+	case ActualLRPStateClaimed:
+		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
+			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateRunning ||
+			newState == ActualLRPStateCrashed && before.ActualLRPInstanceKey.Equal(instanceKey)
+	case ActualLRPStateRunning:
+		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
+			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateRunning && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateCrashed && before.ActualLRPInstanceKey.Equal(instanceKey)
+	case ActualLRPStateCrashed:
+		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
+			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateRunning && before.ActualLRPInstanceKey.Equal(instanceKey)
+	}
+
+	return valid
+}
+
 func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
 	if !before.ActualLRPKey.Equal(lrpKey) {
 		return false
@@ -179,30 +225,36 @@ func (group ActualLRPGroup) Resolve() (*ActualLRP, bool) {
 	}
 }
 
-func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
-	return &ActualLRP{
+func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *FlattenedActualLRP {
+	return &FlattenedActualLRP{
 		ActualLRPKey: lrpKey,
-		State:        ActualLRPStateUnclaimed,
-		Since:        since,
+		ActualLRPInfo: ActualLRPInfo{
+			State: ActualLRPStateUnclaimed,
+			Since: since,
+		},
 	}
 }
 
-func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, since int64) *ActualLRP {
-	return &ActualLRP{
+func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, since int64) *FlattenedActualLRP {
+	return &FlattenedActualLRP{
 		ActualLRPKey:         lrpKey,
 		ActualLRPInstanceKey: instanceKey,
-		State:                ActualLRPStateClaimed,
-		Since:                since,
+		ActualLRPInfo: ActualLRPInfo{
+			State: ActualLRPStateClaimed,
+			Since: since,
+		},
 	}
 }
 
-func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, netInfo ActualLRPNetInfo, since int64) *ActualLRP {
-	return &ActualLRP{
+func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, netInfo ActualLRPNetInfo, since int64) *FlattenedActualLRP {
+	return &FlattenedActualLRP{
 		ActualLRPKey:         lrpKey,
 		ActualLRPInstanceKey: instanceKey,
-		ActualLRPNetInfo:     netInfo,
-		State:                ActualLRPStateRunning,
-		Since:                since,
+		ActualLRPInfo: ActualLRPInfo{
+			ActualLRPNetInfo: netInfo,
+			State:            ActualLRPStateRunning,
+			Since:            since,
+		},
 	}
 }
 
@@ -210,7 +262,21 @@ func (*ActualLRP) Version() format.Version {
 	return format.V0
 }
 
-func (actual ActualLRP) Validate() error {
+func (actual FlattenedActualLRP) ToOldVersion() *ActualLRP {
+	return &ActualLRP{
+		ActualLRPKey:         actual.ActualLRPKey,
+		ActualLRPInstanceKey: actual.ActualLRPInstanceKey,
+		ActualLRPNetInfo:     actual.ActualLRPNetInfo,
+		CrashCount:           actual.CrashCount,
+		CrashReason:          actual.CrashReason,
+		State:                actual.State,
+		PlacementError:       actual.PlacementError,
+		Since:                actual.Since,
+		ModificationTag:      actual.ModificationTag,
+	}
+}
+
+func (actual FlattenedActualLRP) Validate() error {
 	var validationError ValidationError
 
 	err := actual.ActualLRPKey.Validate()
@@ -218,23 +284,33 @@ func (actual ActualLRP) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
+	if !validationError.Empty() {
+		return validationError
+	}
+
+	return nil
+}
+
+func (actual ActualLRPInfo) Validate() error {
+	var validationError ValidationError
 	if actual.Since == 0 {
 		validationError = validationError.Append(ErrInvalidField{"since"})
 	}
 
+	//TODO validation of the fields based on ActualLRPInstanceKey need to be figured out
 	switch actual.State {
 	case ActualLRPStateUnclaimed:
-		if !actual.ActualLRPInstanceKey.Empty() {
-			validationError = validationError.Append(errors.New("instance key cannot be set when state is unclaimed"))
-		}
+		// if !actual.ActualLRPInstanceKey.Empty() {
+		// 	validationError = validationError.Append(errors.New("instance key cannot be set when state is unclaimed"))
+		// }
 		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is unclaimed"))
 		}
 
 	case ActualLRPStateClaimed:
-		if err := actual.ActualLRPInstanceKey.Validate(); err != nil {
-			validationError = validationError.Append(err)
-		}
+		// if err := actual.ActualLRPInstanceKey.Validate(); err != nil {
+		// 	validationError = validationError.Append(err)
+		// }
 		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is claimed"))
 		}
@@ -243,9 +319,9 @@ func (actual ActualLRP) Validate() error {
 		}
 
 	case ActualLRPStateRunning:
-		if err := actual.ActualLRPInstanceKey.Validate(); err != nil {
-			validationError = validationError.Append(err)
-		}
+		// if err := actual.ActualLRPInstanceKey.Validate(); err != nil {
+		// 	validationError = validationError.Append(err)
+		// }
 		if err := actual.ActualLRPNetInfo.Validate(); err != nil {
 			validationError = validationError.Append(err)
 		}
@@ -254,9 +330,9 @@ func (actual ActualLRP) Validate() error {
 		}
 
 	case ActualLRPStateCrashed:
-		if !actual.ActualLRPInstanceKey.Empty() {
-			validationError = validationError.Append(errors.New("instance key cannot be set when state is crashed"))
-		}
+		// if !actual.ActualLRPInstanceKey.Empty() {
+		// 	validationError = validationError.Append(errors.New("instance key cannot be set when state is crashed"))
+		// }
 		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is crashed"))
 		}

@@ -5,6 +5,8 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "modification_tag.proto";
 
+option (gogoproto.goproto_enum_prefix_all) = true;
+
 message ActualLRPGroup {
   optional ActualLRP instance = 1;
   optional ActualLRP evacuating = 2;
@@ -44,4 +46,30 @@ message ActualLRP {
   optional string placement_error = 7 [(gogoproto.jsontag) = "placement_error,omitempty"];
   optional int64 since = 8;
   optional ModificationTag modification_tag = 9 [(gogoproto.nullable) = false];
+}
+
+message FlattenedActualLRP {
+  optional ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional ActualLRPInfo actual_lrp_info = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+}
+
+enum PlacementStateType {
+  Normal = 0;
+  Evacuating = 1;
+}
+
+message PlacementState {
+  optional PlacementStateType type = 1 [(gogoproto.nullable) = false];
+}
+
+message ActualLRPInfo {
+  optional ActualLRPNetInfo actual_lrp_net_info = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  optional int32 crash_count = 2;
+  optional string crash_reason = 3 [(gogoproto.jsontag) = "crash_reason,omitempty"];
+  optional string state = 4;
+  optional PlacementStateType placement_state = 5;
+  optional string placement_error = 6 [(gogoproto.jsontag) = "placement_error,omitempty"];
+  optional int64 since = 7;
+  optional ModificationTag modification_tag = 8 [(gogoproto.nullable) = false];
 }

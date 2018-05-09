@@ -20,6 +20,64 @@ func NewActualLRPHandler(db db.ActualLRPDB, exitChan chan<- struct{}) *ActualLRP
 	}
 }
 
+func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	//TODO
+	var err error
+	logger = logger.Session("actual-lrps")
+
+	request := &models.ActualLRPsRequest{}
+	response := &models.ActualLRPsResponse{}
+
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId}
+		response.ActualLrps, err = h.db.ActualLRPs(logger, filter)
+	}
+
+	response.Error = models.ConvertError(err)
+
+	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
+func (h *ActualLRPHandler) ActualLRPsByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	//TODO
+	var err error
+	logger = logger.Session("actual-lrps-by-process-guid")
+
+	request := &models.ActualLRPsByProcessGuidRequest{}
+	response := &models.ActualLRPsResponse{}
+
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.ActualLrps, err = h.db.ActualLRPsByProcessGuid(logger, request.ProcessGuid)
+	}
+
+	response.Error = models.ConvertError(err)
+
+	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
+func (h *ActualLRPHandler) ActualLRPByProcessGuidAndIndex(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	//TODO
+	var err error
+	logger = logger.Session("actual-lrp-by-process-guid-and-index")
+
+	request := &models.ActualLRPByProcessGuidAndIndexRequest{}
+	response := &models.ActualLRPResponse{}
+
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.ActualLrp, err = h.db.ActualLRPByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
+	}
+
+	response.Error = models.ConvertError(err)
+
+	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
 func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("actual-lrp-groups")

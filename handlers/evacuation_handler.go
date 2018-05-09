@@ -62,7 +62,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
-	beforeActualLRPGroup, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
+	beforeActualLRP, err := h.actualLRPDB.ActualLRPByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -73,10 +73,10 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		"index":        request.ActualLrpKey.Index,
 		"instance-key": request.ActualLrpInstanceKey,
 	}
-	if beforeActualLRPGroup.Instance != nil {
-		evacuatingLRPLogData["replacement-lrp-instance-key"] = beforeActualLRPGroup.Instance.ActualLRPInstanceKey
-		evacuatingLRPLogData["replacement-state"] = beforeActualLRPGroup.Instance.State
-		evacuatingLRPLogData["replacement-lrp-placement-error"] = beforeActualLRPGroup.Instance.PlacementError
+	if beforeActualLRP.PlacementState != models.PlacementStateType_Normal {
+		evacuatingLRPLogData["replacement-lrp-instance-key"] = beforeActualLRP.ActualLRPInstanceKey
+		evacuatingLRPLogData["replacement-state"] = beforeActualLRP.State
+		evacuatingLRPLogData["replacement-lrp-placement-error"] = beforeActualLRP.PlacementError
 	}
 
 	logger.Info("removing-stranded-evacuating-actual-lrp", evacuatingLRPLogData)
@@ -87,17 +87,13 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
-	if beforeActualLRPGroup.Evacuating == nil {
+	if beforeActualLRP.PlacementState != models.PlacementStateType_Evacuating {
 		logger.Info("evacuating-lrp-is-emtpy")
 		response.Error = models.ConvertError(models.ErrResourceNotFound)
 		return
 	}
 
-	actualLRPGroup := &models.ActualLRPGroup{
-		Evacuating: beforeActualLRPGroup.Evacuating,
-	}
-
-	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(actualLRPGroup))
+	go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRP))
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -118,14 +114,14 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	beforeActualLRPGroup, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
+	beforeActualLRP, err := h.actualLRPDB.ActualLRPByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
 	if err == nil {
 		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
 		} else {
-			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
+			go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRP))
 		}
 	}
 
@@ -138,6 +134,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 	}
 }
 
+// TODO: the following methods need modifications
 func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("evacuate-crashed-actual-lrp")
 	logger.Info("started")
@@ -155,14 +152,14 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	beforeActualLRPGroup, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
+	beforeActualLRP, err := h.actualLRPDB.ActualLRPGroupByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
 	if err == nil {
 		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
 		} else {
-			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
+			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRP))
 		}
 	}
 

@@ -131,12 +131,15 @@ The ExternalActualLRPClient is used to access and retire Actual LRPs
 type ExternalActualLRPClient interface {
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
 	ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
+	ActualLRPs(lager.Logger, models.ActualLRPFilter) ([]*models.FlattenedActualLRP, error)
 
 	// Returns all ActualLRPGroups that have the given process guid
 	ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error)
+	ActualLRPsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.FlattenedActualLRP, error)
 
 	// Returns the ActualLRPGroup with the given process guid and instance index
 	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error)
+	ActualLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.FlattenedActualLRP, error)
 
 	// Shuts down the ActualLRP matching the given ActualLRPKey, but does not modify the desired state
 	RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
@@ -316,6 +319,20 @@ func (c *client) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 	return response.ActualLrpGroups, response.Error.ToError()
 }
 
+func (c *client) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.FlattenedActualLRP, error) {
+	request := models.ActualLRPsRequest{
+		Domain: filter.Domain,
+		CellId: filter.CellID,
+	}
+	response := models.ActualLRPsResponse{}
+	err := c.doRequest(logger, ActualLRPsRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ActualLrps, response.Error.ToError()
+}
+
 func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
 	request := models.ActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: processGuid,
@@ -327,6 +344,19 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 	}
 
 	return response.ActualLrpGroups, response.Error.ToError()
+}
+
+func (c *client) ActualLRPsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.FlattenedActualLRP, error) {
+	request := models.ActualLRPsByProcessGuidRequest{
+		ProcessGuid: processGuid,
+	}
+	response := models.ActualLRPsResponse{}
+	err := c.doRequest(logger, ActualLRPsByProcessGuidRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ActualLrps, response.Error.ToError()
 }
 
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error) {
@@ -341,6 +371,20 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, proces
 	}
 
 	return response.ActualLrpGroup, response.Error.ToError()
+}
+
+func (c *client) ActualLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.FlattenedActualLRP, error) {
+	request := models.ActualLRPByProcessGuidAndIndexRequest{
+		ProcessGuid: processGuid,
+		Index:       int32(index),
+	}
+	response := models.ActualLRPResponse{}
+	err := c.doRequest(logger, ActualLRPByProcessGuidAndIndexRoute, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ActualLrp, response.Error.ToError()
 }
 
 func (c *client) ClaimActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {

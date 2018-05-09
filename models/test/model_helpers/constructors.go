@@ -8,18 +8,20 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
-	actualLRP := &models.ActualLRP{
+func NewValidActualLRP(guid string, index int32) *models.FlattenedActualLRP {
+	actualLRP := &models.FlattenedActualLRP{
 		ActualLRPKey:         models.NewActualLRPKey(guid, index, "some-domain"),
 		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-guid", "some-cell"),
-		ActualLRPNetInfo:     models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444)),
-		CrashCount:           33,
-		CrashReason:          "badness",
-		State:                models.ActualLRPStateRunning,
-		Since:                1138,
-		ModificationTag: models.ModificationTag{
-			Epoch: "some-epoch",
-			Index: 999,
+		ActualLRPInfo: models.ActualLRPInfo{
+			ActualLRPNetInfo: models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444)),
+			CrashCount:       33,
+			CrashReason:      "badness",
+			State:            models.ActualLRPStateRunning,
+			Since:            1138,
+			ModificationTag: models.ModificationTag{
+				Epoch: "some-epoch",
+				Index: 999,
+			},
 		},
 	}
 	err := actualLRP.Validate()
