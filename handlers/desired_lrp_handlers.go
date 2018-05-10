@@ -258,11 +258,12 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 		key := key
 		works[i] = func() {
 			logger.Info("starting", lager.Data{"actual_lrp_key": key})
-			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
+			actualLRP, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
 			if err != nil {
 				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
 			} else {
-				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
+				// go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
+				go h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(actualLRP))
 				createdIndicesChan <- int(key.Index)
 			}
 		}

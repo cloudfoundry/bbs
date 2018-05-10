@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -41,19 +42,22 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 	closeChan := make(chan struct{})
 	defer close(closeChan)
 
-	actualEventsFetcher := actualSource.Next
-	if request.CellId != "" {
-		actualEventsFetcher = func() (models.Event, error) {
-			for {
-				event, err := actualSource.Next()
-				if err != nil {
-					return event, err
-				}
-
-				if filterByCellID(request.CellId, event, err) {
-					return event, nil
-				}
+	actualEventsFetcher := func() (models.Event, error) {
+		for {
+			event, err := actualSource.Next()
+			if err != nil {
+				return nil, err
 			}
+
+			// convert flattneed to ALRG
+			event, err = convertFromFlattened(event)
+			if err != nil {
+				return nil, err
+			}
+			if request.CellId != "" && !filterByCellID(request.CellId, event, err) {
+				continue
+			}
+			return event, nil
 		}
 	}
 
@@ -122,4 +126,60 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) bool {
 	}
 
 	return true
+}
+
+func convertFromFlattened(event models.Event) (models.Event, error) {
+	convertLRP2Group := func(falrp *models.FlattenedActualLRP) models.ActualLRPGroup {
+		alrpg := models.ActualLRPGroup{}
+		alrp := models.ActualLRP{
+			ActualLRPKey:         falrp.ActualLRPKey,
+			ActualLRPInstanceKey: falrp.ActualLRPInstanceKey,
+			State:                falrp.State,
+			Since:                falrp.Since,
+			ActualLRPNetInfo:     falrp.ActualLRPNetInfo,
+			CrashCount:           falrp.CrashCount,
+			CrashReason:          falrp.CrashReason,
+			PlacementError:       falrp.PlacementError,
+			ModificationTag:      falrp.ModificationTag,
+		}
+		evacuating := falrp.ActualLRPInfo.PlacementState == models.PlacementStateType_Evacuating
+		if evacuating {
+			alrpg.Evacuating = &alrp
+		} else {
+			alrpg.Instance = &alrp
+		}
+		return alrpg
+	}
+
+	switch x := event.(type) {
+	case *models.FlattenedActualLRPCreatedEvent:
+		alrpg := convertLRP2Group(x.ActualLrp)
+		return &models.ActualLRPCreatedEvent{
+			ActualLrpGroup: &alrpg,
+		}, nil
+
+	case *models.FlattenedActualLRPChangedEvent:
+		beforeAlrpg := convertLRP2Group(&models.FlattenedActualLRP{
+			ActualLRPKey:         *x.ActualLrpKey,
+			ActualLRPInstanceKey: *x.ActualLrpInstanceKey,
+			ActualLRPInfo:        *x.Before,
+		})
+
+		afterAlrpg := convertLRP2Group(&models.FlattenedActualLRP{
+			ActualLRPKey:         *x.ActualLrpKey,
+			ActualLRPInstanceKey: *x.ActualLrpInstanceKey,
+			ActualLRPInfo:        *x.After,
+		})
+		return &models.ActualLRPChangedEvent{
+			Before: &beforeAlrpg,
+			After:  &afterAlrpg,
+		}, nil
+
+	case *models.FlattenedActualLRPRemovedEvent:
+		alrpg := convertLRP2Group(x.ActualLrp)
+		return &models.ActualLRPRemovedEvent{
+			ActualLrpGroup: &alrpg,
+		}, nil
+	}
+	return nil, errors.New("not possible")
 }

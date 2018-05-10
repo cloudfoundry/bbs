@@ -106,6 +106,7 @@ func New(
 
 		// Events
 		bbs.EventStreamRoute_r0:     route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
+		bbs.EventStreamRoute_r1:     route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r1)),
 		bbs.TaskEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
 
 		// Cells

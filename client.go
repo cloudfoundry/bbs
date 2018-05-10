@@ -175,6 +175,7 @@ type ExternalEventClient interface {
 	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
 	SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error)
 	SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
+	SubscribeToEventsR1ByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
 }
 
 type ClientConfig struct {
@@ -804,6 +805,10 @@ func (c *client) createRequest(requestName string, params rata.Params, queryPara
 	request.ContentLength = int64(len(messageBody))
 	request.Header.Set("Content-Type", ProtoContentType)
 	return request, nil
+}
+
+func (c *client) SubscribeToEventsR1ByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
+	return c.subscribeToEvents(EventStreamRoute_r1, cellId)
 }
 
 func (c *client) doEvacRequest(logger lager.Logger, route string, defaultKeepContainer bool, request proto.Message) (bool, error) {

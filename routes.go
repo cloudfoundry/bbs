@@ -58,6 +58,7 @@ const (
 
 	// Event Streaming
 	EventStreamRoute_r0     = "EventStream_r0"
+	EventStreamRoute_r1     = "EventStream_r1"
 	TaskEventStreamRoute_r0 = "TaskEventStream_r0"
 
 	// Cell Presence
@@ -124,6 +125,7 @@ var Routes = rata.Routes{
 
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},
+	{Path: "/v1/events.r1", Method: "GET", Name: EventStreamRoute_r1},
 	{Path: "/v1/events/tasks", Method: "POST", Name: TaskEventStreamRoute_r0},
 
 	// Cells
