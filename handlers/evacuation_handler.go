@@ -347,12 +347,13 @@ func (h *EvacuationHandler) unclaimAndRequestAuction(logger lager.Logger, lrpKey
 		return err
 	}
 
-	event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
-	if err != nil {
+	event := models.NewFlattenedActualLRPChangedEvent(before, after)
+	if event == nil {
 		go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
 		go h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
+	} else {
+		go h.actualHub.Emit(event)
 	}
-	go h.actualHub.Emit(event)
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, lrpKey.ProcessGuid)
 	if err != nil {

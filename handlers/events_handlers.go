@@ -73,6 +73,7 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 			logger.Debug("received-close-notify")
 			return
 		}
+		logger.Info("Got event", lager.Data{"event": event})
 
 		sseEvent, err := events.NewEventFromModelEvent(eventID, event)
 		if err != nil {

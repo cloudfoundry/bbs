@@ -1,8 +1,6 @@
 package models
 
 import (
-	"errors"
-
 	"code.cloudfoundry.org/bbs/format"
 	"github.com/gogo/protobuf/proto"
 )
@@ -24,6 +22,10 @@ const (
 	EventTypeActualLRPChanged = "actual_lrp_changed"
 	EventTypeActualLRPRemoved = "actual_lrp_removed"
 	EventTypeActualLRPCrashed = "actual_lrp_crashed"
+
+	EventTypeFlattenedActualLRPCreated = "flattened_actual_lrp_created"
+	EventTypeFlattenedActualLRPChanged = "flattened_actual_lrp_changed"
+	EventTypeFlattenedActualLRPRemoved = "flattened_actual_lrp_removed"
 
 	EventTypeTaskCreated = "task_created"
 	EventTypeTaskChanged = "task_changed"
@@ -105,24 +107,36 @@ func (event *ActualLRPChangedEvent) Key() string {
 	return actualLRP.GetInstanceGuid()
 }
 
-func NewFlattenedActualLRPChangedEvent(before, after *FlattenedActualLRP) (*FlattenedActualLRPChangedEvent, error) {
+func NewFlattenedActualLRPChangedEvent(before, after *FlattenedActualLRP) *FlattenedActualLRPChangedEvent {
 	if before.ActualLRPKey != after.ActualLRPKey || before.ActualLRPInstanceKey != after.ActualLRPInstanceKey {
-		return nil, errors.New("before and after do not match")
+		return nil
 	}
 	return &FlattenedActualLRPChangedEvent{
 		ActualLrpInstanceKey: &after.ActualLRPInstanceKey,
 		ActualLrpKey:         &after.ActualLRPKey,
 		Before:               &before.ActualLRPInfo,
 		After:                &after.ActualLRPInfo,
-	}, nil
+	}
 }
 
 func (event *FlattenedActualLRPChangedEvent) EventType() string {
-	return EventTypeActualLRPChanged
+	return EventTypeFlattenedActualLRPChanged
 }
 
 func (event *FlattenedActualLRPChangedEvent) Key() string {
 	return event.ActualLrpInstanceKey.GetInstanceGuid()
+}
+
+func (event *FlattenedActualLRPChangedEvent) BeforeAndAfter() (*FlattenedActualLRP, *FlattenedActualLRP) {
+	return &FlattenedActualLRP{
+			ActualLRPKey:         *event.ActualLrpKey,
+			ActualLRPInstanceKey: *event.ActualLrpInstanceKey,
+			ActualLRPInfo:        *event.Before,
+		}, &FlattenedActualLRP{
+			ActualLRPKey:         *event.ActualLrpKey,
+			ActualLRPInstanceKey: *event.ActualLrpInstanceKey,
+			ActualLRPInfo:        *event.After,
+		}
 }
 
 func NewActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
@@ -175,7 +189,7 @@ func NewFlattenedActualLRPRemovedEvent(actualLRP *FlattenedActualLRP) *Flattened
 }
 
 func (event *FlattenedActualLRPRemovedEvent) EventType() string {
-	return EventTypeActualLRPRemoved
+	return EventTypeFlattenedActualLRPRemoved
 }
 
 func (event *FlattenedActualLRPRemovedEvent) Key() string {
@@ -204,7 +218,7 @@ func NewFlattenedActualLRPCreatedEvent(actualLRP *FlattenedActualLRP) *Flattened
 }
 
 func (event *FlattenedActualLRPCreatedEvent) EventType() string {
-	return EventTypeActualLRPCreated
+	return EventTypeFlattenedActualLRPCreated
 }
 
 func (event *FlattenedActualLRPCreatedEvent) Key() string {

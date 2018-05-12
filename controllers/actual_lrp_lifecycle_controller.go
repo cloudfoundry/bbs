@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"errors"
+
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
@@ -46,9 +48,9 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 		return err
 	}
 
-	event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
-	if err != nil {
-		return err
+	event := models.NewFlattenedActualLRPChangedEvent(before, after)
+	if event == nil {
+		return errors.New("before and after ClaimActualLRP do not match")
 	}
 	go h.actualHub.Emit(event)
 	return nil
@@ -90,8 +92,8 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 
 	// TODO need to figure out the events
 	go h.actualHub.Emit(models.NewFlattenedActualLRPCrashedEvent(before, after))
-	event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
-	if err != nil {
+	event := models.NewFlattenedActualLRPChangedEvent(before, after)
+	if event == nil {
 		h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
 		h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
 	} else {
@@ -125,8 +127,8 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 		return err
 	}
 
-	event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
-	if err != nil {
+	event := models.NewFlattenedActualLRPChangedEvent(before, after)
+	if event == nil {
 		h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
 		h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
 	} else {
@@ -136,7 +138,7 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 }
 
 func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
-	beforeActualLRPGroup, err := h.db.ActualLRPByProcessGuidAndIndex(logger, processGuid, index)
+	beforeActualLRPs, err := h.db.ActualLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		return err
 	}
@@ -146,7 +148,7 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 		return err
 
 	}
-	go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRPGroup))
+	go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRP))
 	return nil
 }
 

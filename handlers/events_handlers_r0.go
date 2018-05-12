@@ -49,7 +49,7 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 				return nil, err
 			}
 
-			// convert flattneed to ALRG
+			// convert flattened to ALRG
 			event, err = convertFromFlattened(event)
 			if err != nil {
 				return nil, err
@@ -159,16 +159,38 @@ func convertFromFlattened(event models.Event) (models.Event, error) {
 		}, nil
 
 	case *models.FlattenedActualLRPChangedEvent:
+		pAlrpKey := x.GetActualLrpKey()
+		pAlrpInstanceKey := x.GetActualLrpInstanceKey()
+		pAlrpBefore := x.GetBefore()
+		pAlrpAfter := x.GetAfter()
+		var (
+			alrpKey         models.ActualLRPKey
+			alrpInstanceKey models.ActualLRPInstanceKey
+			before, after   models.ActualLRPInfo
+		)
+		if pAlrpKey != nil {
+			alrpKey = *pAlrpKey
+		}
+		if pAlrpInstanceKey != nil {
+			alrpInstanceKey = *pAlrpInstanceKey
+		}
+		if pAlrpBefore != nil {
+			before = *pAlrpBefore
+		}
+		if pAlrpAfter != nil {
+			after = *pAlrpAfter
+		}
+
 		beforeAlrpg := convertLRP2Group(&models.FlattenedActualLRP{
-			ActualLRPKey:         *x.ActualLrpKey,
-			ActualLRPInstanceKey: *x.ActualLrpInstanceKey,
-			ActualLRPInfo:        *x.Before,
+			ActualLRPKey:         alrpKey,
+			ActualLRPInstanceKey: alrpInstanceKey,
+			ActualLRPInfo:        before,
 		})
 
 		afterAlrpg := convertLRP2Group(&models.FlattenedActualLRP{
-			ActualLRPKey:         *x.ActualLrpKey,
-			ActualLRPInstanceKey: *x.ActualLrpInstanceKey,
-			ActualLRPInfo:        *x.After,
+			ActualLRPKey:         alrpKey,
+			ActualLRPInstanceKey: alrpInstanceKey,
+			ActualLRPInfo:        after,
 		})
 		return &models.ActualLRPChangedEvent{
 			Before: &beforeAlrpg,

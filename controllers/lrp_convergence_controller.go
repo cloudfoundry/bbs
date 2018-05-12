@@ -89,8 +89,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		works = append(works, func() {
 			before, after, err := h.db.UnclaimActualLRP(logger, key.Key)
 			if err == nil {
-				event, err := models.NewFlattenedActualLRPChangedEvent(before, after)
-				if err != nil {
+				event := models.NewFlattenedActualLRPChangedEvent(before, after)
+				if event == nil {
 					h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
 					h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
 				} else {
