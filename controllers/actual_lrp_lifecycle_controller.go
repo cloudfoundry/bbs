@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"errors"
-
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
@@ -43,16 +41,12 @@ func NewActualLRPLifecycleController(
 }
 
 func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
-	before, after, err := h.db.ClaimActualLRP(logger, processGuid, index, actualLRPInstanceKey)
+	_, after, err := h.db.ClaimActualLRP(logger, processGuid, index, actualLRPInstanceKey)
 	if err != nil {
 		return err
 	}
 
-	event := models.NewFlattenedActualLRPChangedEvent(before, after)
-	if event == nil {
-		return errors.New("before and after ClaimActualLRP do not match")
-	}
-	go h.actualHub.Emit(event)
+	go h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
 	return nil
 }
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
@@ -138,7 +132,7 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 }
 
 func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
-	beforeActualLRPs, err := h.db.ActualLRPByProcessGuidAndIndex(logger, processGuid, index)
+	beforeActualLRP, err := h.db.ActualLRPByProcessGuidAndIndex(logger, processGuid, index)
 	if err != nil {
 		return err
 	}

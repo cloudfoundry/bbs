@@ -2,11 +2,7 @@ package events
 
 import (
 	"errors"
-	"fmt"
-	"os"
-	"runtime/debug"
 	"sync"
-	"time"
 
 	"code.cloudfoundry.org/bbs/models"
 )
@@ -83,10 +79,6 @@ func (hub *hub) Subscribe() (EventSource, error) {
 }
 
 func (hub *hub) Emit(event models.Event) {
-	fmt.Fprintf(os.Stderr, "Emitting event: %#v at %s\n\n", event, time.Now().String())
-	debug.PrintStack()
-	fmt.Fprintln(os.Stderr, "==============================")
-
 	hub.lock.Lock()
 	size := len(hub.subscribers)
 

@@ -257,6 +257,5 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 		return event, nil
 
 	}
-
 	return nil, ErrUnrecognizedEventType
 }
