@@ -721,15 +721,15 @@ func (c *client) subscribeToEvents(route string, cellId string) (events.EventSou
 }
 
 func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(EventStreamRoute_r0, "")
+	return c.subscribeToEvents(EventStreamRoute, "")
 }
 
 func (c *client) SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(TaskEventStreamRoute_r0, "")
+	return c.subscribeToEvents(TaskEventStreamRoute, "")
 }
 
 func (c *client) SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
-	return c.subscribeToEvents(EventStreamRoute_r0, cellId)
+	return c.subscribeToEvents(EventStreamRoute, cellId)
 }
 
 func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {

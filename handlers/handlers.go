@@ -100,8 +100,9 @@ func New(
 		bbs.DeleteTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),
 
 		// Events
-		bbs.EventStreamRoute_r0:     route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
-		bbs.TaskEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
+		bbs.EventStreamRoute:     route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe)),
+		bbs.EventStreamRoute_r0:  route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
+		bbs.TaskEventStreamRoute: route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
 
 		// Cells
 		bbs.CellsRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells), emitter)),
