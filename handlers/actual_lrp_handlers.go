@@ -50,7 +50,9 @@ func (h *ActualLRPHandler) ActualLRPsByProcessGuid(logger lager.Logger, w http.R
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		response.ActualLrps, err = h.db.ActualLRPsByProcessGuid(logger, request.ProcessGuid)
+		response.ActualLrps, err = h.db.ActualLRPs(logger, models.ActualLRPFilter{
+			ProcessGUID: &request.ProcessGuid,
+		})
 	}
 
 	response.Error = models.ConvertError(err)
@@ -65,11 +67,14 @@ func (h *ActualLRPHandler) ActualLRPByProcessGuidAndIndex(logger lager.Logger, w
 	logger = logger.Session("actual-lrp-by-process-guid-and-index")
 
 	request := &models.ActualLRPByProcessGuidAndIndexRequest{}
-	response := &models.ActualLRPResponse{}
+	response := &models.ActualLRPsResponse{}
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		response.ActualLrp, err = h.db.ActualLRPByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
+		response.ActualLrps, err = h.db.ActualLRPs(logger, models.ActualLRPFilter{
+			ProcessGUID: &request.ProcessGuid,
+			Index:       &request.Index,
+		})
 	}
 
 	response.Error = models.ConvertError(err)

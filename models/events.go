@@ -108,15 +108,26 @@ func (event *ActualLRPChangedEvent) Key() string {
 }
 
 func NewFlattenedActualLRPChangedEvent(before, after *FlattenedActualLRP) *FlattenedActualLRPChangedEvent {
-	if before.ActualLRPKey != after.ActualLRPKey || before.ActualLRPInstanceKey != after.ActualLRPInstanceKey {
+	// if before.ActualLRPKey != after.ActualLRPKey || before.ActualLRPInstanceKey != after.ActualLRPInstanceKey {
+	// 	return nil
+	// }
+	if before == nil && after == nil {
 		return nil
 	}
-	return &FlattenedActualLRPChangedEvent{
-		ActualLrpInstanceKey: &after.ActualLRPInstanceKey,
-		ActualLrpKey:         &after.ActualLRPKey,
-		Before:               &before.ActualLRPInfo,
-		After:                &after.ActualLRPInfo,
+	event := &FlattenedActualLRPChangedEvent{}
+	if before != nil {
+		event.Before = &before.ActualLRPInfo
 	}
+	if after != nil {
+		event.ActualLrpInstanceKey = &after.ActualLRPInstanceKey
+		event.ActualLrpKey = &after.ActualLRPKey
+		event.After = &after.ActualLRPInfo
+	} else {
+		event.ActualLrpInstanceKey = &before.ActualLRPInstanceKey
+		event.ActualLrpKey = &before.ActualLRPKey
+	}
+
+	return event
 }
 
 func (event *FlattenedActualLRPChangedEvent) EventType() string {

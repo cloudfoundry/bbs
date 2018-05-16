@@ -44,6 +44,23 @@ type MessageValidator interface {
 	Unmarshal(data []byte) error
 }
 
+func normalLRP(lrps []*models.FlattenedActualLRP) *models.FlattenedActualLRP {
+	for _, lrp := range lrps {
+		if lrp.PlacementState == models.PlacementStateType_Normal {
+			return lrp
+		}
+	}
+	return nil
+}
+func evacuatingLRP(lrps []*models.FlattenedActualLRP) *models.FlattenedActualLRP {
+	for _, lrp := range lrps {
+		if lrp.PlacementState == models.PlacementStateType_Evacuating {
+			return lrp
+		}
+	}
+	return nil
+}
+
 func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("remove-evacuating-actual-lrp")
@@ -62,7 +79,10 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
-	beforeActualLRP, err := h.actualLRPDB.ActualLRPByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
+	beforeActualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{
+		ProcessGUID: &request.ActualLrpKey.ProcessGuid,
+		Index:       &request.ActualLrpKey.Index,
+	})
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -73,10 +93,12 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		"index":        request.ActualLrpKey.Index,
 		"instance-key": request.ActualLrpInstanceKey,
 	}
-	if beforeActualLRP.PlacementState != models.PlacementStateType_Normal {
-		evacuatingLRPLogData["replacement-lrp-instance-key"] = beforeActualLRP.ActualLRPInstanceKey
-		evacuatingLRPLogData["replacement-state"] = beforeActualLRP.State
-		evacuatingLRPLogData["replacement-lrp-placement-error"] = beforeActualLRP.PlacementError
+
+	evacuatingLRP := evacuatingLRP(beforeActualLRPs)
+	if evacuatingLRP != nil {
+		evacuatingLRPLogData["replacement-lrp-instance-key"] = evacuatingLRP.ActualLRPInstanceKey
+		evacuatingLRPLogData["replacement-state"] = evacuatingLRP.State
+		evacuatingLRPLogData["replacement-lrp-placement-error"] = evacuatingLRP.PlacementError
 	}
 
 	logger.Info("removing-stranded-evacuating-actual-lrp", evacuatingLRPLogData)
@@ -87,13 +109,13 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
-	if beforeActualLRP.PlacementState != models.PlacementStateType_Evacuating {
+	if evacuatingLRP == nil {
 		logger.Info("evacuating-lrp-is-emtpy")
 		response.Error = models.ConvertError(models.ErrResourceNotFound)
 		return
 	}
 
-	go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRP))
+	go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(evacuatingLRP))
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -114,14 +136,20 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	beforeActualLRP, err := h.actualLRPDB.ActualLRPByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
+	beforeActualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{
+		ProcessGUID: &request.ActualLrpKey.ProcessGuid,
+		Index:       &request.ActualLrpKey.Index,
+	})
 	if err == nil {
-		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
-		if err != nil {
-			logger.Error("failed-removing-evacuating-actual-lrp", err)
-			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
-		} else {
-			go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRP))
+		lrp := evacuatingLRP(beforeActualLRPs)
+		if lrp != nil {
+			err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+			if err != nil {
+				logger.Error("failed-removing-evacuating-actual-lrp", err)
+				exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
+			} else {
+				go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
+			}
 		}
 	}
 
@@ -151,14 +179,20 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	beforeActualLRP, err := h.actualLRPDB.ActualLRPByProcessGuidAndIndex(logger, request.ActualLrpKey.ProcessGuid, request.ActualLrpKey.Index)
+	beforeActualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{
+		ProcessGUID: &request.ActualLrpKey.ProcessGuid,
+		Index:       &request.ActualLrpKey.Index,
+	})
 	if err == nil {
-		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
-		if err != nil {
-			logger.Error("failed-removing-evacuating-actual-lrp", err)
-			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
-		} else {
-			go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(beforeActualLRP))
+		lrp := evacuatingLRP(beforeActualLRPs)
+		if lrp != nil {
+			err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+			if err != nil {
+				logger.Error("failed-removing-evacuating-actual-lrp", err)
+				exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
+			} else {
+				go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
+			}
 		}
 	}
 
@@ -188,9 +222,10 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	guid := request.ActualLrpKey.ProcessGuid
-	index := request.ActualLrpKey.Index
-	actualLRP, err := h.actualLRPDB.ActualLRPByProcessGuidAndIndex(logger, guid, index)
+	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{
+		ProcessGUID: &request.ActualLrpKey.ProcessGuid,
+		Index:       &request.ActualLrpKey.Index,
+	})
 	if err != nil {
 		if err == models.ErrResourceNotFound {
 			response.KeepContainer = false
@@ -201,8 +236,10 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
+	normal := normalLRP(actualLRPs)
+	evacuating := evacuatingLRP(actualLRPs)
 	// If the instance is not there, clean up the corresponding evacuating LRP, if one exists.
-	if actualLRP.PlacementState != models.PlacementStateType_Normal {
+	if normal == nil {
 		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 		if err != nil {
 			if err == models.ErrActualLRPCannotBeRemoved {
@@ -215,14 +252,16 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 			return
 		}
 
-		go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(actualLRP))
+		if evacuating != nil {
+			go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(evacuating))
+		}
 		response.KeepContainer = false
 		return
 	}
 
-	if (actualLRP.State == models.ActualLRPStateUnclaimed && actualLRP.PlacementError == "") ||
-		(actualLRP.State == models.ActualLRPStateClaimed && !actualLRP.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) {
-		if actualLRP.PlacementState == models.PlacementStateType_Evacuating && !actualLRP.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
+	if (normal.State == models.ActualLRPStateUnclaimed && normal.PlacementError == "") ||
+		(normal.State == models.ActualLRPStateClaimed && !normal.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) {
+		if evacuating != nil && !evacuating.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
 			logger.Error("already-evacuated-by-different-cell", err)
 			response.KeepContainer = false
 			return
@@ -247,19 +286,19 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	if (actualLRP.State == models.ActualLRPStateRunning && !actualLRP.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) ||
-		actualLRP.State == models.ActualLRPStateCrashed {
+	if (normal.State == models.ActualLRPStateRunning && !normal.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey)) ||
+		normal.State == models.ActualLRPStateCrashed {
 		response.KeepContainer = false
 
 		// if there is not evacuating instance, it probably got removed when the
 		// new instance transitioned to a Running state
-		if actualLRP.PlacementState != models.PlacementStateType_Evacuating {
+		if evacuating == nil {
 			return
 		}
 
-		err = h.db.RemoveEvacuatingActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+		err = h.db.RemoveEvacuatingActualLRP(logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
 		if err == nil {
-			go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(actualLRP))
+			go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(evacuating))
 		}
 		if err != nil && err != models.ErrActualLRPCannotBeRemoved {
 			response.KeepContainer = true
@@ -268,8 +307,8 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	if (actualLRP.State == models.ActualLRPStateClaimed || actualLRP.State == models.ActualLRPStateRunning) &&
-		actualLRP.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
+	if (normal.State == models.ActualLRPStateClaimed || normal.State == models.ActualLRPStateRunning) &&
+		normal.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
 		evacuatingLRP, err := h.db.EvacuateActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
 		if err != nil {
 			response.Error = models.ConvertError(err)
@@ -307,8 +346,11 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http
 
 	guid := request.ActualLrpKey.ProcessGuid
 	index := request.ActualLrpKey.Index
+	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{
+		ProcessGUID: &guid,
+		Index:       &index,
+	})
 
-	actualLRP, err := h.actualLRPDB.ActualLRPByProcessGuidAndIndex(logger, guid, index)
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrp-group", err)
 		bbsErr = models.ConvertError(err)
@@ -316,15 +358,18 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http
 		return
 	}
 
+	normal := normalLRP(actualLRPs)
+	evacuating := evacuatingLRP(actualLRPs)
+
 	err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	if err != nil {
 		logger.Error("failed-removing-evacuating-actual-lrp", err)
 		bbsErr = models.ConvertError(err)
-	} else if actualLRP.PlacementState != models.PlacementStateType_Evacuating {
-		go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(actualLRP))
+	} else if evacuating == nil {
+		go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(evacuating))
 	}
 
-	if actualLRP.PlacementState != models.PlacementStateType_Normal || !actualLRP.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
+	if normal == nil || !normal.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
 		logger.Debug("cannot-remove-actual-lrp")
 		response.Error = models.ErrActualLRPCannotBeRemoved
 		return
@@ -337,7 +382,9 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http
 		response.Error = bbsErr
 		return
 	} else {
-		go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(actualLRP))
+		if normal != nil {
+			go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(normal))
+		}
 	}
 }
 
@@ -347,13 +394,7 @@ func (h *EvacuationHandler) unclaimAndRequestAuction(logger lager.Logger, lrpKey
 		return err
 	}
 
-	event := models.NewFlattenedActualLRPChangedEvent(before, after)
-	if event == nil {
-		go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(before))
-		go h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
-	} else {
-		go h.actualHub.Emit(event)
-	}
+	go h.actualHub.Emit(models.NewFlattenedActualLRPChangedEvent(before, after))
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, lrpKey.ProcessGuid)
 	if err != nil {

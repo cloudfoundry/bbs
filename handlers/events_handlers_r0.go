@@ -159,39 +159,9 @@ func convertFromFlattened(event models.Event) (models.Event, error) {
 		}, nil
 
 	case *models.FlattenedActualLRPChangedEvent:
-		pAlrpKey := x.GetActualLrpKey()
-		pAlrpInstanceKey := x.GetActualLrpInstanceKey()
-		pAlrpBefore := x.GetBefore()
-		pAlrpAfter := x.GetAfter()
-		var (
-			alrpKey         models.ActualLRPKey
-			alrpInstanceKey models.ActualLRPInstanceKey
-			before, after   models.ActualLRPInfo
-		)
-		if pAlrpKey != nil {
-			alrpKey = *pAlrpKey
-		}
-		if pAlrpInstanceKey != nil {
-			alrpInstanceKey = *pAlrpInstanceKey
-		}
-		if pAlrpBefore != nil {
-			before = *pAlrpBefore
-		}
-		if pAlrpAfter != nil {
-			after = *pAlrpAfter
-		}
-
-		beforeAlrpg := convertLRP2Group(&models.FlattenedActualLRP{
-			ActualLRPKey:         alrpKey,
-			ActualLRPInstanceKey: alrpInstanceKey,
-			ActualLRPInfo:        before,
-		})
-
-		afterAlrpg := convertLRP2Group(&models.FlattenedActualLRP{
-			ActualLRPKey:         alrpKey,
-			ActualLRPInstanceKey: alrpInstanceKey,
-			ActualLRPInfo:        after,
-		})
+		before, after := x.BeforeAndAfter()
+		beforeAlrpg := convertLRP2Group(before)
+		afterAlrpg := convertLRP2Group(after)
 		return &models.ActualLRPChangedEvent{
 			Before: &beforeAlrpg,
 			After:  &afterAlrpg,

@@ -65,33 +65,17 @@ func (db *SQLDB) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) 
 		wheres = append(wheres, "cell_id = ?")
 		values = append(values, filter.CellID)
 	}
+
+	if filter.ProcessGUID != nil {
+		wheres = append(wheres, "process_guid = ?")
+		values = append(values, *filter.ProcessGUID)
+	}
+
+	if filter.Index != nil {
+		wheres = append(wheres, "instance_index = ?")
+		values = append(values, *filter.Index)
+	}
 	return db.getFlattenedActualLRPS(logger, strings.Join(wheres, " AND "), values...)
-}
-
-func (db *SQLDB) ActualLRPsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.FlattenedActualLRP, error) {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
-
-	return db.getFlattenedActualLRPS(logger, "process_guid = ?", processGuid)
-}
-
-func (db *SQLDB) ActualLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.FlattenedActualLRP, error) {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
-
-	lrps, err := db.getFlattenedActualLRPS(logger, "process_guid = ? AND instance_index = ?", processGuid, index)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(lrps) == 0 {
-		logger.Error("failed-to-find-actual-lrp", models.ErrResourceNotFound)
-		return nil, models.ErrResourceNotFound
-	}
-
-	return lrps[0], nil
 }
 
 func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {

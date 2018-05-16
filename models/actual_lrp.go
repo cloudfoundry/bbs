@@ -31,8 +31,10 @@ type ActualLRPChange struct {
 }
 
 type ActualLRPFilter struct {
-	Domain string
-	CellID string
+	Domain      string
+	CellID      string
+	ProcessGUID *string
+	Index       *int32
 }
 
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {

@@ -13,8 +13,8 @@ type ActualLRPDB interface {
 	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error)
 
 	ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.FlattenedActualLRP, error)
-	ActualLRPsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.FlattenedActualLRP, error)
-	ActualLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.FlattenedActualLRP, error)
+	// ActualLRPsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.FlattenedActualLRP, error)
+	// ActualLRPByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) ([][][][]*models.FlattenedActualLRP, error)
 
 	CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (after *models.FlattenedActualLRP, err error)
 	UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (before *models.FlattenedActualLRP, after *models.FlattenedActualLRP, err error)
