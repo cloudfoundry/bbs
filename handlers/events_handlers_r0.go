@@ -52,6 +52,7 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 			// convert flattened to ALRG
 			event, err = convertFromFlattened(event)
 			if err != nil {
+				logger.Error("cannot-convert-event-to-r0", err)
 				return nil, err
 			}
 			if request.CellId != "" && !filterByCellID(request.CellId, event, err) {
@@ -172,6 +173,8 @@ func convertFromFlattened(event models.Event) (models.Event, error) {
 		return &models.ActualLRPRemovedEvent{
 			ActualLrpGroup: &alrpg,
 		}, nil
+	case *models.ActualLRPCrashedEvent:
+		return x, nil
 	}
 	return nil, errors.New("not possible")
 }

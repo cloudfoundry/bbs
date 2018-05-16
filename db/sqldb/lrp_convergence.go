@@ -433,7 +433,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 		}
 	}
 
-	lrpsToDelete, err := db.getActualLRPS(logger, strings.Join(wheres, " AND "), bindings...)
+	lrpsToDelete, err := db.getFlattenedActualLRPS(logger, strings.Join(wheres, " AND "), bindings...)
 	if err != nil {
 		logger.Error("failed-fetching-evacuating-lrps-with-missing-cells", err)
 	}
@@ -445,7 +445,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 
 	events := []models.Event{}
 	for _, lrp := range lrpsToDelete {
-		events = append(events, models.NewActualLRPRemovedEvent(lrp))
+		events = append(events, models.NewFlattenedActualLRPRemovedEvent(lrp))
 	}
 	return events
 }
