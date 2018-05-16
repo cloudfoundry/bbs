@@ -78,7 +78,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		return err
 	}
 
-	if version == 0 {
+	if version < 0 {
+		version = 0
 		err = m.writeVersion(version)
 		if err != nil {
 			return err
@@ -179,7 +180,7 @@ func (m *Manager) resolveStoredVersion(logger lager.Logger) (int64, error) {
 		return 0, err
 	}
 
-	return 0, nil
+	return -1, nil
 }
 
 func (m *Manager) writeVersion(currentVersion int64) error {
