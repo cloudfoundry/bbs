@@ -21,7 +21,7 @@ message ActualLRPRemovedEvent {
 }
 
 message FlattenedActualLRPCreatedEvent  {
-  optional FlattenedActualLRP actual_lrp = 1;
+  optional ActualLRP actual_lrp = 1;
 }
 
 message FlattenedActualLRPChangedEvent {
@@ -32,7 +32,7 @@ message FlattenedActualLRPChangedEvent {
 }
 
 message FlattenedActualLRPRemovedEvent {
-  optional FlattenedActualLRP actual_lrp = 1;
+  optional ActualLRP actual_lrp = 1;
 }
 
 message DesiredLRPCreatedEvent {

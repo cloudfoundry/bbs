@@ -14,12 +14,12 @@ func (db *SQLDB) EvacuateActualLRP(
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
-) (*models.FlattenedActualLRP, error) {
+) (*models.ActualLRP, error) {
 	logger = logger.Session("evacuate-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	var actualLRP *models.FlattenedActualLRP
+	var actualLRP *models.ActualLRP
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
@@ -126,7 +126,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
 	tx helpers.Tx,
-) (*models.FlattenedActualLRP, error) {
+) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
 		logger.Error("failed-serializing-net-info", err)
@@ -139,16 +139,14 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		return nil, models.ErrGUIDGeneration
 	}
 
-	actualLRP := &models.FlattenedActualLRP{
+	actualLRP := &models.ActualLRP{
 		ActualLRPKey:         *lrpKey,
 		ActualLRPInstanceKey: *instanceKey,
-		ActualLRPInfo: models.ActualLRPInfo{
-			ActualLRPNetInfo: *netInfo,
-			State:            models.ActualLRPStateRunning,
-			PlacementState:   models.PlacementStateType_Evacuating,
-			Since:            now.UnixNano(),
-			ModificationTag:  models.ModificationTag{Epoch: guid, Index: 0},
-		},
+		ActualLRPNetInfo:     *netInfo,
+		State:                models.ActualLRPStateRunning,
+		PlacementState:       models.PlacementStateType_Evacuating,
+		Since:                now.UnixNano(),
+		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
 	}
 
 	sqlAttributes := helpers.SQLAttributes{

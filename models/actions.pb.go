@@ -46,8 +46,6 @@
 		ActualLRPInstanceKey
 		ActualLRPNetInfo
 		ActualLRP
-		FlattenedActualLRP
-		PlacementState
 		ActualLRPInfo
 		ActualLRPLifecycleResponse
 		ActualLRPGroupsResponse

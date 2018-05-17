@@ -130,7 +130,7 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) bool {
 }
 
 func convertFromFlattened(event models.Event) (models.Event, error) {
-	convertLRP2Group := func(falrp *models.FlattenedActualLRP) models.ActualLRPGroup {
+	convertLRP2Group := func(falrp *models.ActualLRP) models.ActualLRPGroup {
 		alrpg := models.ActualLRPGroup{}
 		alrp := models.ActualLRP{
 			ActualLRPKey:         falrp.ActualLRPKey,
@@ -143,7 +143,7 @@ func convertFromFlattened(event models.Event) (models.Event, error) {
 			PlacementError:       falrp.PlacementError,
 			ModificationTag:      falrp.ModificationTag,
 		}
-		evacuating := falrp.ActualLRPInfo.PlacementState == models.PlacementStateType_Evacuating
+		evacuating := falrp.PlacementState == models.PlacementStateType_Evacuating
 		if evacuating {
 			alrpg.Evacuating = &alrp
 		} else {

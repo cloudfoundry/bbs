@@ -17,7 +17,7 @@ message ActualLRPGroupsResponse {
 
 message ActualLRPsResponse {
   optional Error error = 1;
-  repeated FlattenedActualLRP actual_lrps = 2;
+  repeated ActualLRP actual_lrps = 2;
 }
 
 message ActualLRPGroupResponse {
@@ -27,7 +27,7 @@ message ActualLRPGroupResponse {
 
 message ActualLRPResponse {
   optional Error error = 1;
-  optional FlattenedActualLRP actual_lrp = 2;
+  optional ActualLRP actual_lrp = 2;
 }
 
 message ActualLRPGroupsRequest {

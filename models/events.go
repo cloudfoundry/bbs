@@ -107,7 +107,7 @@ func (event *ActualLRPChangedEvent) Key() string {
 	return actualLRP.GetInstanceGuid()
 }
 
-func NewFlattenedActualLRPChangedEvent(before, after *FlattenedActualLRP) *FlattenedActualLRPChangedEvent {
+func NewFlattenedActualLRPChangedEvent(before, after *ActualLRP) *FlattenedActualLRPChangedEvent {
 	// if before.ActualLRPKey != after.ActualLRPKey || before.ActualLRPInstanceKey != after.ActualLRPInstanceKey {
 	// 	return nil
 	// }
@@ -116,12 +116,30 @@ func NewFlattenedActualLRPChangedEvent(before, after *FlattenedActualLRP) *Flatt
 	}
 	event := &FlattenedActualLRPChangedEvent{}
 	if before != nil {
-		event.Before = &before.ActualLRPInfo
+		event.Before = &ActualLRPInfo{
+			ActualLRPNetInfo: before.ActualLRPNetInfo,
+			CrashCount:       before.CrashCount,
+			CrashReason:      before.CrashReason,
+			State:            before.State,
+			PlacementState:   before.PlacementState,
+			PlacementError:   before.PlacementError,
+			Since:            before.Since,
+			ModificationTag:  before.ModificationTag,
+		}
 	}
 	if after != nil {
 		event.ActualLrpInstanceKey = &after.ActualLRPInstanceKey
 		event.ActualLrpKey = &after.ActualLRPKey
-		event.After = &after.ActualLRPInfo
+		event.After = &ActualLRPInfo{
+			ActualLRPNetInfo: after.ActualLRPNetInfo,
+			CrashCount:       after.CrashCount,
+			CrashReason:      after.CrashReason,
+			State:            after.State,
+			PlacementState:   after.PlacementState,
+			PlacementError:   after.PlacementError,
+			Since:            after.Since,
+			ModificationTag:  after.ModificationTag,
+		}
 	} else {
 		event.ActualLrpInstanceKey = &before.ActualLRPInstanceKey
 		event.ActualLrpKey = &before.ActualLRPKey
@@ -138,12 +156,12 @@ func (event *FlattenedActualLRPChangedEvent) Key() string {
 	return event.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
-func (event *FlattenedActualLRPChangedEvent) BeforeAndAfter() (*FlattenedActualLRP, *FlattenedActualLRP) {
+func (event *FlattenedActualLRPChangedEvent) BeforeAndAfter() (*ActualLRP, *ActualLRP) {
 	if event == nil {
 		return nil, nil
 	}
-	before := new(FlattenedActualLRP)
-	after := new(FlattenedActualLRP)
+	before := new(ActualLRP)
+	after := new(ActualLRP)
 	if event.ActualLrpKey != nil {
 		before.ActualLRPKey = *event.ActualLrpKey
 		after.ActualLRPKey = *event.ActualLrpKey
@@ -153,10 +171,24 @@ func (event *FlattenedActualLRPChangedEvent) BeforeAndAfter() (*FlattenedActualL
 		after.ActualLRPInstanceKey = *event.ActualLrpInstanceKey
 	}
 	if event.Before != nil {
-		before.ActualLRPInfo = *event.Before
+		before.ActualLRPNetInfo = event.Before.ActualLRPNetInfo
+		before.CrashCount = event.Before.CrashCount
+		before.CrashReason = event.Before.CrashReason
+		before.State = event.Before.State
+		before.PlacementState = event.Before.PlacementState
+		before.PlacementError = event.Before.PlacementError
+		before.Since = event.Before.Since
+		before.ModificationTag = event.Before.ModificationTag
 	}
 	if event.After != nil {
-		after.ActualLRPInfo = *event.After
+		after.ActualLRPNetInfo = event.After.ActualLRPNetInfo
+		after.CrashCount = event.After.CrashCount
+		after.CrashReason = event.After.CrashReason
+		after.State = event.After.State
+		after.PlacementState = event.After.PlacementState
+		after.PlacementError = event.After.PlacementError
+		after.Since = event.After.Since
+		after.ModificationTag = event.After.ModificationTag
 	}
 	return before, after
 }
@@ -179,7 +211,7 @@ func (event *ActualLRPCrashedEvent) Key() string {
 	return event.ActualLRPInstanceKey.InstanceGuid
 }
 
-func NewFlattenedActualLRPCrashedEvent(before, after *FlattenedActualLRP) *ActualLRPCrashedEvent {
+func NewFlattenedActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
 	return &ActualLRPCrashedEvent{
 		ActualLRPKey:         after.ActualLRPKey,
 		ActualLRPInstanceKey: before.ActualLRPInstanceKey,
@@ -204,7 +236,7 @@ func (event *ActualLRPRemovedEvent) Key() string {
 	return actualLRP.GetInstanceGuid()
 }
 
-func NewFlattenedActualLRPRemovedEvent(actualLRP *FlattenedActualLRP) *FlattenedActualLRPRemovedEvent {
+func NewFlattenedActualLRPRemovedEvent(actualLRP *ActualLRP) *FlattenedActualLRPRemovedEvent {
 	return &FlattenedActualLRPRemovedEvent{
 		ActualLrp: actualLRP,
 	}
@@ -233,7 +265,7 @@ func (event *ActualLRPCreatedEvent) Key() string {
 	return actualLRP.GetInstanceGuid()
 }
 
-func NewFlattenedActualLRPCreatedEvent(actualLRP *FlattenedActualLRP) *FlattenedActualLRPCreatedEvent {
+func NewFlattenedActualLRPCreatedEvent(actualLRP *ActualLRP) *FlattenedActualLRPCreatedEvent {
 	return &FlattenedActualLRPCreatedEvent{
 		ActualLrp: actualLRP,
 	}

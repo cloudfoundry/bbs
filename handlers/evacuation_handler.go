@@ -44,7 +44,7 @@ type MessageValidator interface {
 	Unmarshal(data []byte) error
 }
 
-func normalLRP(lrps []*models.FlattenedActualLRP) *models.FlattenedActualLRP {
+func normalLRP(lrps []*models.ActualLRP) *models.ActualLRP {
 	for _, lrp := range lrps {
 		if lrp.PlacementState == models.PlacementStateType_Normal {
 			return lrp
@@ -52,7 +52,7 @@ func normalLRP(lrps []*models.FlattenedActualLRP) *models.FlattenedActualLRP {
 	}
 	return nil
 }
-func evacuatingLRP(lrps []*models.FlattenedActualLRP) *models.FlattenedActualLRP {
+func evacuatingLRP(lrps []*models.ActualLRP) *models.ActualLRP {
 	for _, lrp := range lrps {
 		if lrp.PlacementState == models.PlacementStateType_Evacuating {
 			return lrp
