@@ -297,6 +297,8 @@ var _ = Describe("ActualLRP", func() {
 
 				resolvedLRP *models.ActualLRP
 				evacuating  bool
+
+				resolveError error
 			)
 
 			BeforeEach(func() {
@@ -312,7 +314,7 @@ var _ = Describe("ActualLRP", func() {
 			})
 
 			JustBeforeEach(func() {
-				resolvedLRP, evacuating = group.Resolve()
+				resolvedLRP, evacuating, resolveError = group.Resolve()
 			})
 
 			Context("When only the Instance LRP is set", func() {
@@ -320,6 +322,10 @@ var _ = Describe("ActualLRP", func() {
 					group = models.ActualLRPGroup{
 						Instance: instanceLRP,
 					}
+				})
+
+				JustBeforeEach(func() {
+					Expect(resolveError).NotTo(HaveOccurred())
 				})
 
 				It("returns the Instance LRP", func() {
@@ -335,6 +341,10 @@ var _ = Describe("ActualLRP", func() {
 					}
 				})
 
+				JustBeforeEach(func() {
+					Expect(resolveError).NotTo(HaveOccurred())
+				})
+
 				It("returns the Evacuating LRP", func() {
 					Expect(resolvedLRP).To(Equal(evacuatingLRP))
 					Expect(evacuating).To(BeTrue())
@@ -347,6 +357,10 @@ var _ = Describe("ActualLRP", func() {
 						Evacuating: evacuatingLRP,
 						Instance:   instanceLRP,
 					}
+				})
+
+				JustBeforeEach(func() {
+					Expect(resolveError).NotTo(HaveOccurred())
 				})
 
 				Context("When the Instance is UNCLAIMED", func() {
@@ -391,6 +405,19 @@ var _ = Describe("ActualLRP", func() {
 						Expect(resolvedLRP).To(Equal(instanceLRP))
 						Expect(evacuating).To(BeFalse())
 					})
+				})
+			})
+
+			Context("When both the Instance and the Evacuating are nil", func() {
+				BeforeEach(func() {
+					group = models.ActualLRPGroup{
+						Evacuating: nil,
+						Instance:   nil,
+					}
+				})
+
+				It("returns an error", func() {
+					Expect(resolveError).To(MatchError("ActualLRPGroup invalid"))
 				})
 			})
 		})

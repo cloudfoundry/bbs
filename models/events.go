@@ -99,7 +99,10 @@ func (event *ActualLRPChangedEvent) EventType() string {
 }
 
 func (event *ActualLRPChangedEvent) Key() string {
-	actualLRP, _ := event.Before.Resolve()
+	actualLRP, _, resolveError := event.Before.Resolve()
+	if resolveError != nil {
+		return ""
+	}
 	return actualLRP.GetInstanceGuid()
 }
 
@@ -132,7 +135,10 @@ func (event *ActualLRPRemovedEvent) EventType() string {
 }
 
 func (event *ActualLRPRemovedEvent) Key() string {
-	actualLRP, _ := event.ActualLrpGroup.Resolve()
+	actualLRP, _, resolveError := event.ActualLrpGroup.Resolve()
+	if resolveError != nil {
+		return ""
+	}
 	return actualLRP.GetInstanceGuid()
 }
 
@@ -147,7 +153,10 @@ func (event *ActualLRPCreatedEvent) EventType() string {
 }
 
 func (event *ActualLRPCreatedEvent) Key() string {
-	actualLRP, _ := event.ActualLrpGroup.Resolve()
+	actualLRP, _, resolveError := event.ActualLrpGroup.Resolve()
+	if resolveError != nil {
+		return ""
+	}
 	return actualLRP.GetInstanceGuid()
 }
 

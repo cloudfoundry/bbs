@@ -598,8 +598,10 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 		return nil, models.ErrResourceNotFound
 	}
 
-	actualLRP, _ := groups[0].Resolve()
-
+	actualLRP, _, resolveError := groups[0].Resolve()
+	if resolveError != nil {
+		return nil, resolveError
+	}
 	return actualLRP, nil
 }
 

@@ -85,8 +85,14 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	beforeActualLRP, _ := before.Resolve()
-	afterActualLRP, _ := after.Resolve()
+	beforeActualLRP, _, beforeResolveError := before.Resolve()
+	if beforeResolveError != nil {
+		return beforeResolveError
+	}
+	afterActualLRP, _, afterResolveError := after.Resolve()
+	if afterResolveError != nil {
+		return afterResolveError
+	}
 	go h.actualHub.Emit(models.NewActualLRPCrashedEvent(beforeActualLRP, afterActualLRP))
 	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 

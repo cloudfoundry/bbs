@@ -391,7 +391,8 @@ var _ = Describe("ActualLRP API", func() {
 			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())
 
-			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
+			fetchedActualLRP, _, resolveError := fetchedActualLRPGroup.Resolve()
+			Expect(resolveError).NotTo(HaveOccurred())
 			Expect(fetchedActualLRP.PlacementError).To(Equal(errorMessage))
 		})
 	})
@@ -413,7 +414,8 @@ var _ = Describe("ActualLRP API", func() {
 			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 			Expect(err).NotTo(HaveOccurred())
 
-			fetchedActualLRP, _ := fetchedActualLRPGroup.Resolve()
+			fetchedActualLRP, _, resolveError := fetchedActualLRPGroup.Resolve()
+			Expect(resolveError).NotTo(HaveOccurred())
 			Expect(fetchedActualLRP.State).To(Equal(models.ActualLRPStateUnclaimed))
 			Expect(fetchedActualLRP.CrashCount).To(Equal(int32(1)))
 			Expect(fetchedActualLRP.CrashReason).To(Equal(errorMessage))

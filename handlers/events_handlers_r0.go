@@ -50,7 +50,9 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 					return event, err
 				}
 
-				if filterByCellID(request.CellId, event, err) {
+				if matches, err := filterByCellID(request.CellId, event, err); err != nil {
+					return nil, err
+				} else if matches {
 					return event, nil
 				}
 			}
@@ -94,32 +96,45 @@ func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWrit
 	streamEventsToResponse(logger, w, eventChan, errorChan)
 }
 
-func filterByCellID(cellID string, bbsEvent models.Event, err error) bool {
+func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, error) {
 	switch x := bbsEvent.(type) {
 	case *models.ActualLRPCreatedEvent:
-		lrp, _ := x.ActualLrpGroup.Resolve()
+		lrp, _, resolveError := x.ActualLrpGroup.Resolve()
+		if resolveError != nil {
+			return false, resolveError
+		}
+
 		if lrp.CellId != cellID {
-			return false
+			return false, nil
 		}
 
 	case *models.ActualLRPChangedEvent:
-		beforeLRP, _ := x.Before.Resolve()
-		afterLRP, _ := x.After.Resolve()
+		beforeLRP, _, beforeResolveError := x.Before.Resolve()
+		if beforeResolveError != nil {
+			return false, beforeResolveError
+		}
+		afterLRP, _, afterResolveError := x.After.Resolve()
+		if afterResolveError != nil {
+			return false, afterResolveError
+		}
 		if afterLRP.CellId != cellID && beforeLRP.CellId != cellID {
-			return false
+			return false, nil
 		}
 
 	case *models.ActualLRPRemovedEvent:
-		lrp, _ := x.ActualLrpGroup.Resolve()
+		lrp, _, resolveError := x.ActualLrpGroup.Resolve()
+		if resolveError != nil {
+			return false, resolveError
+		}
 		if lrp.CellId != cellID {
-			return false
+			return false, nil
 		}
 
 	case *models.ActualLRPCrashedEvent:
 		if x.ActualLRPInstanceKey.CellId != cellID {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }
