@@ -65,11 +65,16 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	var evacuatingLRP *models.ActualLRP
+	var evacuatingLRP, suspectLRP *models.ActualLRP
 	for _, lrp := range lrps {
 		if lrp.PlacementState == models.PlacementStateType_Evacuating {
 			evacuatingLRP = lrp
 			h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrp.ActualLRPKey, &lrp.ActualLRPInstanceKey)
+			break
+		}
+		if lrp.PlacementState == models.PlacementStateType_Suspect {
+			suspectLRP = lrp
+			h.db.RemoveSuspectActualLRP(logger, &lrp.ActualLRPKey, &lrp.ActualLRPInstanceKey)
 			break
 		}
 	}
@@ -82,6 +87,9 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		}
 		if evacuatingLRP != nil {
 			h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(evacuatingLRP))
+		}
+		if suspectLRP != nil {
+			h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(suspectLRP))
 		}
 	}()
 	return nil

@@ -26,7 +26,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, true, false, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
 			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
@@ -91,7 +91,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
+		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, true, false, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("evacuating-lrp-does-not-exist")
 			return nil

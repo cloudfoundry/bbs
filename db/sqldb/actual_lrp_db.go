@@ -181,7 +181,7 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, false, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
@@ -241,7 +241,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 	var actualLRP *models.ActualLRP
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, false, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
@@ -302,7 +302,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, false, tx)
 		if err == models.ErrResourceNotFound {
 			actualLRP, err = db.createRunningActualLRP(logger, key, instanceKey, netInfo, tx)
 			return err
@@ -392,7 +392,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, false, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
@@ -472,7 +472,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, false, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
@@ -592,12 +592,13 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 func (db *SQLDB) scanToFlattenedActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
-	var evacuating bool
+	var evacuating, suspect bool
 
 	err := row.Scan(
 		&actualLRP.ProcessGuid,
 		&actualLRP.Index,
 		&evacuating,
+		&suspect,
 		&actualLRP.Domain,
 		&actualLRP.State,
 		&actualLRP.InstanceGuid,
@@ -626,6 +627,8 @@ func (db *SQLDB) scanToFlattenedActualLRP(logger lager.Logger, row helpers.RowSc
 
 	if evacuating {
 		actualLRP.PlacementState = models.PlacementStateType_Evacuating
+	} else if suspect {
+		actualLRP.PlacementState = models.PlacementStateType_Suspect
 	} else {
 		actualLRP.PlacementState = models.PlacementStateType_Normal
 	}
@@ -681,9 +684,169 @@ type flattenedActualToDelete struct {
 	evacuating bool
 }
 
-func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx helpers.Tx) (*models.ActualLRP, error) {
-	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
-	bindings := []interface{}{processGuid, index, evacuating}
+func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
+	logger = logger.Session("marking-as-suspect", lager.Data{"key": key})
+
+	var beforeActualLRP models.ActualLRP
+	var actualLRP *models.ActualLRP
+	processGuid := key.ProcessGuid
+	index := key.Index
+
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		var err error
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, false, tx)
+		if err != nil {
+			logger.Error("failed-fetching-actual-lrp-for-suspect-update", err)
+			return err
+		}
+		beforeActualLRP = *actualLRP
+
+		logger.Info("starting")
+		defer logger.Info("complete")
+
+		now := db.clock.Now().UnixNano()
+		actualLRP.ModificationTag.Increment()
+		actualLRP.Since = now
+		actualLRP.PlacementState = models.PlacementStateType_Suspect
+
+		_, err = db.update(logger, tx, actualLRPsTable,
+			helpers.SQLAttributes{
+				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"since":                  actualLRP.Since,
+				"suspect":                true,
+			},
+			"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
+			processGuid, index, false, false,
+		)
+		if err != nil {
+			logger.Error("failed-to-suspect-actual-lrp", err)
+			return err
+		}
+
+		return nil
+	})
+
+	_, err = db.CreateUnclaimedActualLRP(logger, key)
+	if err != nil {
+		logger.Error("create-replacement-for-suspect-failed", err)
+		return nil, nil, err
+	}
+
+	return &beforeActualLRP, actualLRP, err
+}
+
+func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+	logger = logger.Session("marking-as-unsuspect", lager.Data{"key": key})
+
+	var actualLRPs []*models.ActualLRP
+	processGuid := key.ProcessGuid
+	index := key.Index
+
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		var err error
+		actualLRPs, err = db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGUID: &processGuid, Index: &index})
+		if err != nil {
+			logger.Error("failed-fetching-actual-lrp-for-share", err)
+			return err
+		}
+
+		unsuspectActualLRP := func(actualLRP *models.ActualLRP) error {
+			logger.Info("starting")
+			defer logger.Info("complete")
+
+			now := db.clock.Now().UnixNano()
+			actualLRP.ModificationTag.Increment()
+			actualLRP.Since = now
+			actualLRP.PlacementState = models.PlacementStateType_Normal
+
+			_, err = db.update(logger, tx, actualLRPsTable,
+				helpers.SQLAttributes{
+					"modification_tag_index": actualLRP.ModificationTag.Index,
+					"since":                  actualLRP.Since,
+					"suspect":                false,
+				},
+				"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
+				processGuid, index, false, false,
+			)
+			if err != nil {
+				logger.Error("failed-to-suspect-actual-lrp", err)
+				return err
+			}
+			return nil
+		}
+
+		deleteActualLRP := func(actualLRP *models.ActualLRP) error {
+			_, err := db.delete(logger, tx, actualLRPsTable,
+				"process_guid = ? AND instance_index = ? AND evacuating = ? AND instance_guid = ? AND cell_id = ?",
+				actualLRP.ProcessGuid, actualLRP.Index, false, actualLRP.ActualLRPInstanceKey.InstanceGuid, actualLRP.ActualLRPInstanceKey.CellId,
+			)
+			if err != nil {
+				logger.Error("failed-removing-actual-lrp", err)
+				return err
+			}
+			return nil
+		}
+
+		err = nil
+		for _, actualLRP := range actualLRPs {
+			switch actualLRP.PlacementState {
+			case models.PlacementStateType_Suspect:
+				err = unsuspectActualLRP(actualLRP)
+			default:
+				err = deleteActualLRP(actualLRP)
+			}
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+	logger = logger.Session("remove-suspect-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		processGuid := lrpKey.ProcessGuid
+		index := lrpKey.Index
+
+		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, false, true, tx)
+		if err == models.ErrResourceNotFound {
+			logger.Debug("suspect-lrp-does-not-exist")
+			return nil
+		}
+
+		if err != nil {
+			logger.Error("failed-fetching-actual-lrp", err)
+			return err
+		}
+
+		if !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
+			logger.Debug("actual-lrp-instance-key-mismatch", lager.Data{"instance_key_param": instanceKey, "instance_key_from_db": lrp.ActualLRPInstanceKey})
+			return models.ErrActualLRPCannotBeRemoved
+		}
+
+		_, err = db.delete(logger, tx, "actual_lrps",
+			"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
+			processGuid, index, false, true,
+		)
+		if err != nil {
+			logger.Error("failed-delete", err)
+			return models.ErrActualLRPCannotBeRemoved
+		}
+
+		return nil
+	})
+}
+
+func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating, suspect bool, tx helpers.Tx) (*models.ActualLRP, error) {
+	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?"
+	bindings := []interface{}{processGuid, index, evacuating, suspect}
 
 	rows, err := db.all(logger, tx, actualLRPsTable,
 		actualLRPColumns, helpers.LockRow, wheres, bindings...)

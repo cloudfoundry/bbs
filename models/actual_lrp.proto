@@ -39,6 +39,7 @@ message ActualLRPNetInfo {
 enum PlacementStateType {
   Normal = 0;
   Evacuating = 1;
+  Suspect = 2;
 }
 
 message ActualLRP {

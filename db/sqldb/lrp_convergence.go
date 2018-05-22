@@ -221,7 +221,7 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 
 // Creates and adds missing Actual LRPs to the list of start requests.
 // Adds extra Actual LRPs  to the list of keys to retire.
-func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}) {
+func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}, cellSet models.CellSet) {
 	logger = logger.Session("lrp-instance-counts")
 
 	rows, err := c.selectLRPInstanceCounts(logger, c.db)
@@ -243,7 +243,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		}
 
 		indices := []int{}
-		existingIndices := make(map[int]struct{})
+		existingIndices := make(map[int]int32)
 		if existingIndicesStr.String != "" {
 			for _, indexStr := range strings.Split(existingIndicesStr.String, ",") {
 				index, err := strconv.Atoi(indexStr)
@@ -254,7 +254,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 					})
 					return
 				}
-				existingIndices[index] = struct{}{}
+				existingIndices[index] += 1
 			}
 		}
 
@@ -278,7 +278,54 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 
 		c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, indices...)
 
-		for index := range existingIndices {
+		// logic here to resolve suspect conflicts
+		// TODO: current assumption is that if there are more than one for an index, at least one of them is suspect
+		for index, count := range existingIndices {
+			if count > 1 { // TODO: are there other conditions other than a suspect actual LRP that could lead to this?
+				// one may be a suspect
+				lrpIndex := int32(index)
+				actuallrps, err := c.ActualLRPs(logger, models.ActualLRPFilter{ProcessGUID: &schedulingInfo.ProcessGuid, Index: &lrpIndex})
+				if err != nil {
+					logger.Error("cannot-fetch-actual-lrps", err, lager.Data{
+						"process-guid": schedulingInfo.ProcessGuid,
+						"index":        index,
+					})
+					return
+				}
+
+				// validate assumption from above
+				var suspectActualLRP *models.ActualLRP
+				for _, actuallrp := range actuallrps {
+					if actuallrp.PlacementState != models.PlacementStateType_Suspect {
+						suspectActualLRP = actuallrp
+						break
+					}
+				}
+				if suspectActualLRP == nil {
+					logger.Info("no-suspect-found-for-acutal-lrp-with-duplicate-at-same-index", lager.Data{"guid": schedulingInfo.ProcessGuid, "indices": existingIndices})
+					panic("this is impossible") // do we want to continue or do we want to proceed with retiring it?
+				}
+
+				suspectRecovered := false
+				for _, cell := range cellSet {
+					if suspectActualLRP.CellId == cell.CellId {
+						suspectRecovered = true
+						break
+					}
+				}
+				if suspectRecovered {
+					// if suspect && cell is present -> no longer suspect, retire other one
+					err = c.UnsuspectActualLRP(logger, &suspectActualLRP.ActualLRPKey)
+					if err != nil {
+						logger.Error("fail-to-unsuspect", err)
+					}
+				} else {
+					// if suspect && cell not present -> nothing to do for this one, do not retire other one
+					// TODO: handle a case where nonsuspect is taking too long and suspect does not come back
+					continue
+				}
+			}
+
 			if index < int(schedulingInfo.Instances) {
 				continue
 			}
