@@ -60,7 +60,7 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	converge := newConvergence(db)
 	converge.staleUnclaimedActualLRPs(logger, now)
 	converge.actualLRPsWithMissingCells(logger, cellSet)
-	converge.lrpInstanceCounts(logger, domainSet)
+	converge.lrpInstanceCounts(logger, domainSet, cellSet)
 	converge.orphanedActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
@@ -296,7 +296,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				// validate assumption from above
 				var suspectActualLRP *models.ActualLRP
 				for _, actuallrp := range actuallrps {
-					if actuallrp.PlacementState != models.PlacementStateType_Suspect {
+					if actuallrp.PlacementState == models.PlacementStateType_Suspect {
 						suspectActualLRP = actuallrp
 						break
 					}
@@ -315,6 +315,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				}
 				if suspectRecovered {
 					// if suspect && cell is present -> no longer suspect, retire other one
+					logger.Info("suspect-recoverd")
 					err = c.UnsuspectActualLRP(logger, &suspectActualLRP.ActualLRPKey)
 					if err != nil {
 						logger.Error("fail-to-unsuspect", err)

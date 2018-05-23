@@ -280,8 +280,8 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			processGuid, index, false,
+			"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
+			processGuid, index, false, false,
 		)
 		if err != nil {
 			logger.Error("failed-claiming-actual-lrp", err)
@@ -334,6 +334,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 		now := db.clock.Now().UnixNano()
 		evacuating := false
+		suspect := false
 
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.ActualLRPNetInfo = *netInfo
@@ -359,8 +360,8 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			key.ProcessGuid, key.Index, evacuating,
+			"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
+			key.ProcessGuid, key.Index, evacuating, suspect,
 		)
 		if err != nil {
 			logger.Error("failed-starting-actual-lrp", err)
@@ -428,6 +429,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			return err
 		}
 		evacuating := false
+		suspect := false
 
 		if actualLRP.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
 			actualLRP.State = models.ActualLRPStateUnclaimed
@@ -448,8 +450,8 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			key.ProcessGuid, key.Index, evacuating,
+			"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
+			key.ProcessGuid, key.Index, evacuating, suspect,
 		)
 		if err != nil {
 			logger.Error("failed-to-crash-actual-lrp", err)
@@ -639,12 +641,13 @@ func (db *SQLDB) scanToFlattenedActualLRP(logger lager.Logger, row helpers.RowSc
 func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, bool, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
-	var evacuating bool
+	var evacuating, suspect bool
 
 	err := row.Scan(
 		&actualLRP.ProcessGuid,
 		&actualLRP.Index,
 		&evacuating,
+		&suspect,
 		&actualLRP.Domain,
 		&actualLRP.State,
 		&actualLRP.InstanceGuid,
@@ -766,7 +769,7 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 					"suspect":                false,
 				},
 				"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
-				processGuid, index, false, false,
+				processGuid, index, false, true,
 			)
 			if err != nil {
 				logger.Error("failed-to-suspect-actual-lrp", err)
