@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"sync"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -64,7 +65,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	startRequests, keysWithMissingCells, keysToRetire, events := h.db.ConvergeLRPs(logger, cellSet)
+	startRequests, keysWithMissingCells, suspectWithExistingCells, keysToRetire, events := h.db.ConvergeLRPs(logger, cellSet)
 
 	for _, e := range events {
 		go h.actualHub.Emit(e)
@@ -89,7 +90,9 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		works = append(works, func() {
 			// instead of unclaiming, mark as suspect
 			logger.Info("found-suspect", lager.Data{"process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
-			_, _, err := h.db.SuspectActualLRP(logger, key.Key)
+
+			// TODO: suspect should be creating a new lrp similar to evacuation
+			before, after, err := h.db.SuspectActualLRP(logger, key.Key)
 
 			if err != nil {
 				bbsErr := models.ConvertError(err)
@@ -104,6 +107,21 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 				}
 			}
 
+			if before == after {
+				logger.Error("unspected", errors.New("before and after are the same"), lager.Data{"before": before, "after": after})
+			}
+
+			go h.actualHub.Emit(models.NewFlattenedActualLRPChangedEvent(before, after))
+
+			// TODO: unclaim the existing lrp instead of creating a new one similar to evacuation
+			lrp, err := h.db.CreateUnclaimedActualLRP(logger, key.Key)
+			if err != nil {
+				logger.Error("create-replacement-for-suspect-failed", err)
+				return
+			}
+
+			go h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(lrp))
+
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
 			startRequestLock.Lock()
 			startRequests = append(startRequests, &startRequest)
@@ -113,6 +131,24 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 				"process_guid": key.Key.ProcessGuid,
 				"index":        key.Key.Index,
 			})
+		})
+	}
+
+	for _, key := range suspectWithExistingCells {
+		key := key
+		works = append(works, func() {
+			before, after, deleted, err := h.db.UnsuspectActualLRP(logger, key.Key)
+			if err != nil {
+				logger.Error("cannot-transition-to-normal", err, lager.Data{"key": key})
+			}
+			logger.Info("unsuspecting", lager.Data{"key": key})
+			// TODO: emit an unsuspect event
+			for _, lrp := range deleted {
+				go h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
+			}
+			if !before.Equal(after) {
+				go h.actualHub.Emit(models.NewFlattenedActualLRPChangedEvent(before, after))
+			}
 		})
 	}
 

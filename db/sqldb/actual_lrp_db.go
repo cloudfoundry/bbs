@@ -735,21 +735,18 @@ func (db *SQLDB) SuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		return nil
 	})
 
-	_, err = db.CreateUnclaimedActualLRP(logger, key)
-	if err != nil {
-		logger.Error("create-replacement-for-suspect-failed", err)
-		return nil, nil, err
-	}
-
 	return &beforeActualLRP, actualLRP, err
 }
 
-func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, []*models.ActualLRP, error) {
 	logger = logger.Session("marking-as-unsuspect", lager.Data{"key": key})
 
 	var actualLRPs []*models.ActualLRP
 	processGuid := key.ProcessGuid
 	index := key.Index
+
+	var suspectBefore, suspectAfter *models.ActualLRP
+	var deleted []*models.ActualLRP
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
@@ -759,9 +756,11 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 			return err
 		}
 
-		unsuspectActualLRP := func(actualLRP *models.ActualLRP) error {
+		unsuspectActualLRP := func(actualLRP *models.ActualLRP) (*models.ActualLRP, *models.ActualLRP, error) {
 			logger.Info("starting")
 			defer logger.Info("complete")
+
+			before := *actualLRP
 
 			now := db.clock.Now().UnixNano()
 			actualLRP.ModificationTag.Increment()
@@ -779,9 +778,9 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 			)
 			if err != nil {
 				logger.Error("failed-to-suspect-actual-lrp", err)
-				return err
+				return nil, nil, err
 			}
-			return nil
+			return &before, actualLRP, nil
 		}
 
 		deleteActualLRP := func(actualLRP *models.ActualLRP) error {
@@ -798,21 +797,32 @@ func (db *SQLDB) UnsuspectActualLRP(logger lager.Logger, key *models.ActualLRPKe
 
 		err = nil
 		for _, actualLRP := range actualLRPs {
-			switch actualLRP.PlacementState {
-			case models.PlacementStateType_Suspect:
-				err = unsuspectActualLRP(actualLRP)
-			default:
-				err = deleteActualLRP(actualLRP)
+			if actualLRP.PlacementState == models.PlacementStateType_Suspect {
+				continue
 			}
+			err = deleteActualLRP(actualLRP)
+			lrp := *actualLRP
+			deleted = append(deleted, &lrp)
 			if err != nil {
 				return err
 			}
 		}
 
+		for _, actualLRP := range actualLRPs {
+			if actualLRP.PlacementState != models.PlacementStateType_Suspect {
+				continue
+			}
+			suspectBefore, suspectAfter, err = unsuspectActualLRP(actualLRP)
+			if err != nil {
+				return err
+			}
+			break
+		}
+
 		return nil
 	})
 
-	return err
+	return suspectBefore, suspectAfter, deleted, err
 }
 
 func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {

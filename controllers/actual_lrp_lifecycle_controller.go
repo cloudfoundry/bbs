@@ -60,13 +60,13 @@ func findLRP(key *models.ActualLRPInstanceKey, lrps []*models.ActualLRP) (*model
 	return nil, false
 }
 
-func hasNormalInstance(lrps []*models.ActualLRP) bool {
+func findNormalInstance(lrps []*models.ActualLRP) *models.ActualLRP {
 	for _, lrp := range lrps {
 		if lrp.PlacementState == models.PlacementStateType_Normal {
-			return true
+			return lrp
 		}
 	}
-	return false
+	return nil
 }
 
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
@@ -81,7 +81,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	if _, suspect := findLRP(actualLRPInstanceKey, lrps); suspect {
 		// this is a suspect starting
 		// if there is a normal instance return an error to destroy the suspect lrps
-		if hasNormalInstance(lrps) {
+		if lrp := findNormalInstance(lrps); lrp != nil && lrp.State == models.ActualLRPStateRunning {
 			return models.ErrActualLRPCannotBeStarted
 		}
 		return nil
@@ -96,7 +96,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 
 	if before == nil {
 		events = append(events, models.NewFlattenedActualLRPCreatedEvent(after))
-	} else if before != after {
+	} else if !before.Equal(after) {
 		events = append(events, models.NewFlattenedActualLRPChangedEvent(before, after))
 	}
 

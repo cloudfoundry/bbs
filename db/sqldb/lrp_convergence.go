@@ -33,7 +33,7 @@ const (
 	crashingDesiredLRPsMetric = "CrashingDesiredLRPs"
 )
 
-func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
+func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
 	convergeStart := db.clock.Now()
 	db.metronClient.IncrementCounter(convergeLRPRunsCounter)
 	logger.Info("starting")
@@ -52,7 +52,7 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	events := db.pruneEvacuatingActualLRPs(logger, cellSet)
 	domainSet, err := db.domainSet(logger)
 	if err != nil {
-		return nil, nil, nil, nil
+		return nil, nil, nil, nil, nil
 	}
 
 	db.emitDomainMetrics(logger, domainSet)
@@ -64,7 +64,7 @@ func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*a
 	converge.orphanedActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
-	return converge.result(logger), converge.keysWithMissingCells, converge.keysToRetire, events
+	return converge.result(logger), converge.keysWithMissingCells, converge.suspectWithExistingCells, converge.keysToRetire, events
 }
 
 type convergence struct {
@@ -73,7 +73,8 @@ type convergence struct {
 	guidsToStartRequests map[string]*auctioneer.LRPStartRequest
 	startRequestsMutex   sync.Mutex
 
-	keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
+	keysWithMissingCells     []*models.ActualLRPKeyWithSchedulingInfo
+	suspectWithExistingCells []*models.ActualLRPKeyWithSchedulingInfo
 
 	keysToRetire []*models.ActualLRPKey
 	keysMutex    sync.Mutex
@@ -316,10 +317,18 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				if suspectRecovered {
 					// if suspect && cell is present -> no longer suspect, retire other one
 					logger.Info("suspect-recoverd")
-					err = c.UnsuspectActualLRP(logger, &suspectActualLRP.ActualLRPKey)
-					if err != nil {
-						logger.Error("fail-to-unsuspect", err)
-					}
+					c.suspectWithExistingCells = append(c.suspectWithExistingCells, &models.ActualLRPKeyWithSchedulingInfo{
+						Key: &models.ActualLRPKey{
+							ProcessGuid: schedulingInfo.ProcessGuid,
+							Domain:      schedulingInfo.Domain,
+							Index:       lrpIndex,
+						},
+						SchedulingInfo: schedulingInfo,
+					})
+					// err = c.UnsuspectActualLRP(logger, &suspectActualLRP.ActualLRPKey)
+					// if err != nil {
+					// 	logger.Error("fail-to-unsuspect", err)
+					// }
 				} else {
 					// if suspect && cell not present -> nothing to do for this one, do not retire other one
 					// TODO: handle a case where nonsuspect is taking too long and suspect does not come back

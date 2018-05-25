@@ -55,6 +55,11 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 				logger.Error("cannot-convert-event-to-r0", err)
 				return nil, err
 			}
+
+			if event == nil {
+				continue
+			}
+
 			if request.CellId != "" && !filterByCellID(request.CellId, event, err) {
 				continue
 			}
@@ -161,6 +166,13 @@ func convertFromFlattened(event models.Event) (models.Event, error) {
 
 	case *models.FlattenedActualLRPChangedEvent:
 		before, after := x.BeforeAndAfter()
+		if before.PlacementState == models.PlacementStateType_Suspect || after.PlacementState == models.PlacementStateType_Suspect {
+			// skip this event, this transition doesn't make sense for r0
+			// subscribers. from their pov nothing really change since we copy the
+			// suspect lrp into the instance field
+			return nil, nil
+		}
+
 		beforeAlrpg := convertLRP2Group(before)
 		afterAlrpg := convertLRP2Group(after)
 		return &models.ActualLRPChangedEvent{
