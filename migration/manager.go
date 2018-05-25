@@ -176,7 +176,7 @@ func (m *Manager) resolveStoredVersion(logger lager.Logger) (int64, error) {
 	if version != nil && err == nil {
 		return version.CurrentVersion, nil
 	} else if models.ConvertError(err) != models.ErrResourceNotFound {
-		return 0, err
+		return -1, err
 	}
 
 	return 0, nil

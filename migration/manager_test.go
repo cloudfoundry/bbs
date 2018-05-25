@@ -266,6 +266,16 @@ var _ = Describe("Migration Manager", func() {
 				})
 			})
 
+			Context("and there is an existing version 0", func() {
+				BeforeEach(func() {
+					fakeSQLDB.VersionReturns(&models.Version{CurrentVersion: 0}, nil)
+				})
+
+				It("it skips writing the version into the db", func() {
+					Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(0))
+				})
+			})
+
 			Context("and there is no existing version", func() {
 				BeforeEach(func() {
 					fakeSQLDB.VersionReturns(nil, models.ErrResourceNotFound)
