@@ -428,8 +428,6 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
 		}
-		evacuating := false
-		suspect := false
 
 		if actualLRP.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
 			actualLRP.State = models.ActualLRPStateUnclaimed
@@ -451,7 +449,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 				"net_info":               netInfoData,
 			},
 			"process_guid = ? AND instance_index = ? AND evacuating = ? AND suspect = ?",
-			key.ProcessGuid, key.Index, evacuating, suspect,
+			key.ProcessGuid, key.Index, false, false,
 		)
 		if err != nil {
 			logger.Error("failed-to-crash-actual-lrp", err)
@@ -638,7 +636,7 @@ func (db *SQLDB) scanToFlattenedActualLRP(logger lager.Logger, row helpers.RowSc
 	return &actualLRP, nil
 }
 
-func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, bool, error) {
+func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, bool, bool, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
 	var evacuating, suspect bool
@@ -662,7 +660,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	)
 	if err != nil {
 		logger.Error("failed-scanning-actual-lrp", err)
-		return nil, false, err
+		return nil, false, false, err
 	}
 
 	if len(netInfoData) > 0 {
@@ -670,11 +668,19 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
-			return &actualLRP, evacuating, models.ErrDeserialize
+			return &actualLRP, evacuating, suspect, models.ErrDeserialize
 		}
 	}
 
-	return &actualLRP, evacuating, nil
+	if evacuating {
+		actualLRP.PlacementState = models.PlacementStateType_Evacuating
+	} else if suspect {
+		actualLRP.PlacementState = models.PlacementStateType_Suspect
+	} else {
+		actualLRP.PlacementState = models.PlacementStateType_Normal
+	}
+
+	return &actualLRP, evacuating, suspect, nil
 }
 
 type actualToDelete struct {
@@ -914,7 +920,7 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 	result := []*models.ActualLRPGroup{}
 	actualsToDelete := []*actualToDelete{}
 	for rows.Next() {
-		actualLRP, evacuating, err := db.scanToActualLRP(logger, rows)
+		actualLRP, evacuating, suspect, err := db.scanToActualLRP(logger, rows)
 		if err == models.ErrDeserialize {
 			actualsToDelete = append(actualsToDelete, &actualToDelete{actualLRP, evacuating})
 			continue
@@ -933,9 +939,15 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
 			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
 		}
+		logger.Info("alrp-scanned", lager.Data{"alrp": actualLRP})
 		if evacuating {
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
+		} else if suspect {
+			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 		} else {
+			if mapOfGroups[actualLRP.ActualLRPKey].Instance != nil && mapOfGroups[actualLRP.ActualLRPKey].Instance.PlacementState == models.PlacementStateType_Suspect {
+				continue
+			}
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 		}
 	}

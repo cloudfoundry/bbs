@@ -51,6 +51,15 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 	return nil
 }
 
+func findLRP(key *models.ActualLRPInstanceKey, lrps []*models.ActualLRP) (*models.ActualLRP, bool) {
+	for _, lrp := range lrps {
+		if lrp.ActualLRPInstanceKey == *key {
+			return lrp, lrp.PlacementState == models.PlacementStateType_Suspect
+		}
+	}
+	return nil, false
+}
+
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
 	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGUID: &actualLRPKey.ProcessGuid, Index: &actualLRPKey.Index})
 	if err != nil {
@@ -60,58 +69,38 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		}
 	}
 
-	// make sure the Start request is from a normal replacement
-	replacementStarting := false
-	suspectsFound := false
-	for _, lrp := range lrps {
-		if lrp.PlacementState == models.PlacementStateType_Normal && lrp.InstanceGuid == actualLRPInstanceKey.InstanceGuid {
-			replacementStarting = true
-			break
-		}
-	}
-
-	// TODO: decide what happens if the suspect is already running
-	for _, lrp := range lrps {
-		if lrp.PlacementState != models.PlacementStateType_Suspect {
-			continue
-		}
-
-		suspectsFound = true
-
-		logger = logger.Session("found-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index})
-		if lrp.ActualLRPInstanceKey.InstanceGuid != actualLRPInstanceKey.InstanceGuid && replacementStarting {
-			logger.Info("starting-shadow", lager.Data{"suspect-instance-guid": lrp.ActualLRPInstanceKey.InstanceGuid, "shadow-instance-guid": actualLRPInstanceKey.InstanceGuid})
-			h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
-			h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
-		}
-	}
-
-	if suspectsFound && !replacementStarting {
+	if _, suspect := findLRP(actualLRPInstanceKey, lrps); suspect {
+		// this is a suspect starting
 		return nil
 	}
+
+	events := []models.Event{}
 
 	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
 		return err
 	}
 
-	var evacuatingLRP *models.ActualLRP
+	if before == nil {
+		events = append(events, models.NewFlattenedActualLRPCreatedEvent(after))
+	} else {
+		events = append(events, models.NewFlattenedActualLRPChangedEvent(before, after))
+	}
+
 	for _, lrp := range lrps {
-		if lrp.PlacementState == models.PlacementStateType_Evacuating {
-			evacuatingLRP = lrp
-			h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrp.ActualLRPKey, &lrp.ActualLRPInstanceKey)
-			break
+		if lrp.ActualLRPInstanceKey == *actualLRPInstanceKey {
+			// do not touch the lrp that just started
+			continue
 		}
+
+		// otherwise remove all evacuating/suspect lrps that have the same guid+index
+		h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+		events = append(events, models.NewFlattenedActualLRPRemovedEvent(lrp))
 	}
 
 	go func() {
-		if before == nil {
-			h.actualHub.Emit(models.NewFlattenedActualLRPCreatedEvent(after))
-		} else if !before.Equal(after) {
-			h.actualHub.Emit(models.NewFlattenedActualLRPChangedEvent(before, after))
-		}
-		if evacuatingLRP != nil {
-			h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(evacuatingLRP))
+		for _, ev := range events {
+			h.actualHub.Emit(ev)
 		}
 	}()
 	return nil
@@ -124,13 +113,11 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	for _, lrp := range lrps {
-		if lrp.PlacementState == models.PlacementStateType_Suspect {
-			logger = logger.Session("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
-			err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
-			h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
-			return err
-		}
+	if lrp, suspect := findLRP(actualLRPInstanceKey, lrps); suspect {
+		logger = logger.Session("found-crashed-suspect", lager.Data{"guid": actualLRPKey.ProcessGuid, "index": actualLRPKey.Index, "instance-guid": actualLRPInstanceKey.InstanceGuid})
+		err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+		h.actualHub.Emit(models.NewFlattenedActualLRPRemovedEvent(lrp))
+		return err
 	}
 
 	before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)

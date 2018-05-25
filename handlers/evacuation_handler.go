@@ -46,7 +46,7 @@ type MessageValidator interface {
 
 func normalLRP(lrps []*models.ActualLRP) *models.ActualLRP {
 	for _, lrp := range lrps {
-		if lrp.PlacementState == models.PlacementStateType_Normal {
+		if lrp.PlacementState == models.PlacementStateType_Normal || lrp.PlacementState == models.PlacementStateType_Suspect {
 			return lrp
 		}
 	}
