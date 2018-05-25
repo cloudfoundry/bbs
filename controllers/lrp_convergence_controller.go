@@ -90,16 +90,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 			// instead of unclaiming, mark as suspect
 			logger.Info("found-suspect", lager.Data{"process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
 			_, _, err := h.db.SuspectActualLRP(logger, key.Key)
-			if err == nil {
-				// do not emit any change events since we are unsure
-				// but at the same time, send another start request to get the LRP started on another cell
-				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
-				startRequestLock.Lock()
-				startRequests = append(startRequests, &startRequest)
-				startRequestLock.Unlock()
-				logger.Info("creating-start-request",
-					lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
-			} else {
+
+			if err != nil {
 				bbsErr := models.ConvertError(err)
 				if bbsErr.GetType() != models.Error_Unrecoverable {
 					return
@@ -111,6 +103,16 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 				default:
 				}
 			}
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+			logger.Info("creating-start-request", lager.Data{
+				"reason":       "missing-cell",
+				"process_guid": key.Key.ProcessGuid,
+				"index":        key.Key.Index,
+			})
 		})
 	}
 
