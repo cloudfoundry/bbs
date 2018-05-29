@@ -74,15 +74,13 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 
 	version, err := m.resolveStoredVersion(logger)
-	if err != nil {
-		return err
-	}
-
-	if version == 0 {
-		err = m.writeVersion(version)
+	if err == models.ErrResourceNotFound {
+		err = m.writeVersion(0)
 		if err != nil {
 			return err
 		}
+	} else if err != nil {
+		return err
 	}
 
 	if version > maxMigrationVersion {
@@ -173,13 +171,10 @@ func (m *Manager) finish(logger lager.Logger, ready chan<- struct{}) {
 
 func (m *Manager) resolveStoredVersion(logger lager.Logger) (int64, error) {
 	version, err := m.sqlDB.Version(logger)
-	if version != nil && err == nil {
-		return version.CurrentVersion, nil
-	} else if models.ConvertError(err) != models.ErrResourceNotFound {
+	if err != nil {
 		return -1, err
 	}
-
-	return 0, nil
+	return version.CurrentVersion, nil
 }
 
 func (m *Manager) writeVersion(currentVersion int64) error {

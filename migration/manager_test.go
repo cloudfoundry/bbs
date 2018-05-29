@@ -272,7 +272,7 @@ var _ = Describe("Migration Manager", func() {
 				})
 
 				It("it skips writing the version into the db", func() {
-					Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(0))
+					Consistently(fakeSQLDB.SetVersionCallCount).Should(Equal(0))
 				})
 			})
 
