@@ -229,12 +229,10 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	keys := make([]*models.ActualLRPKey, upper-lower)
-	i := 0
+	keys := []*models.ActualLRPKey{}
 	for actualIndex := lower; actualIndex < upper; actualIndex++ {
 		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
-		keys[i] = &key
-		i++
+		keys = append(keys, &key)
 	}
 
 	createdIndices := h.createUnclaimedActualLRPs(logger, keys)
