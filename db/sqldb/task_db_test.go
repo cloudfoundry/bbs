@@ -1108,13 +1108,14 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			Context("and the task is pending", func() {
-				It("increments the rejection count and stores the rejection reason", func() {
+				It("increments the rejection count, stores the rejection reason, and does not mutate the task state", func() {
 					before, after, err := sqlDB.RejectTask(logger, taskGuid, "some failure")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(before).To(Equal(beforeTask))
 
 					Expect(after.RejectionCount).To(Equal(beforeTask.RejectionCount + 1))
 					Expect(after.RejectionReason).To(Equal("some failure"))
+					Expect(after.State).To(Equal(models.Task_Pending))
 
 					task, err := sqlDB.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
@@ -1125,19 +1126,24 @@ var _ = Describe("TaskDB", func() {
 
 			Context("and the task is running", func() {
 				BeforeEach(func() {
-					_, _, _, err := sqlDB.StartTask(logger, taskGuid, "cell-id")
+					_, afterStartTask, _, err := sqlDB.StartTask(logger, taskGuid, "cell-id")
 					Expect(err).NotTo(HaveOccurred())
+					beforeTask = afterStartTask
 				})
 
-				It("returns a BadRequest error and does not mutate the task", func() {
-					_, _, err := sqlDB.RejectTask(logger, taskGuid, "rejected")
-					Expect(err).To(Equal(models.ErrBadRequest))
+				It("increments the rejection count, stores the rejection reason, and resets state to pending", func() {
+					before, after, err := sqlDB.RejectTask(logger, taskGuid, "some failure")
+					Expect(err).NotTo(HaveOccurred())
+					Expect(before).To(Equal(beforeTask))
+
+					Expect(after.RejectionCount).To(Equal(beforeTask.RejectionCount + 1))
+					Expect(after.RejectionReason).To(Equal("some failure"))
+					Expect(after.State).To(Equal(models.Task_Pending))
 
 					task, err := sqlDB.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(task.RejectionCount).To(BeEquivalentTo(0))
-					Expect(task.RejectionReason).To(Equal(""))
+					Expect(task).To(Equal(after))
 				})
 			})
 

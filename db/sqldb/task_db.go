@@ -292,7 +292,7 @@ func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason strin
 			return err
 		}
 
-		if afterTask.State != models.Task_Pending {
+		if afterTask.State != models.Task_Pending && afterTask.State != models.Task_Running {
 			logger.Info("invalid-task-state", lager.Data{"task_state": afterTask.State})
 			return models.ErrBadRequest
 		}
@@ -301,6 +301,7 @@ func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason strin
 
 		afterTask.RejectionCount++
 		afterTask.RejectionReason = rejectionReason
+		afterTask.State = models.Task_Pending
 
 		now := db.clock.Now().UnixNano()
 		_, err = db.update(logger, tx, tasksTable,
@@ -308,6 +309,7 @@ func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason strin
 				"rejection_count":  afterTask.RejectionCount,
 				"rejection_reason": rejectionReason,
 				"updated_at":       now,
+				"state":            afterTask.State,
 			},
 			"guid = ?", taskGuid,
 		)
