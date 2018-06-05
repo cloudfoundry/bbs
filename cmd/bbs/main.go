@@ -222,12 +222,13 @@ func main() {
 		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
 	}
 
+	var locketClient locketmodels.LocketClient
+
 	if bbsConfig.LocksLocketEnabled {
-		locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+		locketClient, err = locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 		if err != nil {
 			logger.Fatal("failed-to-create-locket-client", err)
 		}
-
 		if bbsConfig.UUID == "" {
 			logger.Fatal("invalid-uuid", errors.New("invalid-uuid-from-config"))
 		}
@@ -266,9 +267,11 @@ func main() {
 	var locketCellPresenceClient locketmodels.LocketClient
 	locketCellPresenceClient = serviceclient.NewNoopLocketClient()
 	if bbsConfig.CellRegistrationsLocketEnabled {
-		locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
-		if err != nil {
-			logger.Fatal("failed-to-create-locket-client", err)
+		if locketClient == nil {
+			locketClient, err = locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+			if err != nil {
+				logger.Fatal("failed-to-create-locket-client", err)
+			}
 		}
 		locketCellPresenceClient = locketClient
 	}
