@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	tasksTable       = "tasks"
 	desiredLRPsTable = "desired_lrps"
 	actualLRPsTable  = "actual_lrps"
 	domainsTable     = "domains"
@@ -39,22 +38,6 @@ var (
 	desiredLRPColumns = append(schedulingInfoColumns,
 		desiredLRPsTable+".run_info",
 	)
-
-	taskColumns = helpers.ColumnList{
-		tasksTable + ".guid",
-		tasksTable + ".domain",
-		tasksTable + ".updated_at",
-		tasksTable + ".created_at",
-		tasksTable + ".first_completed_at",
-		tasksTable + ".state",
-		tasksTable + ".cell_id",
-		tasksTable + ".result",
-		tasksTable + ".failed",
-		tasksTable + ".failure_reason",
-		tasksTable + ".task_definition",
-		tasksTable + ".rejection_count",
-		tasksTable + ".rejection_reason",
-	}
 
 	actualLRPColumns = helpers.ColumnList{
 		actualLRPsTable + ".process_guid",

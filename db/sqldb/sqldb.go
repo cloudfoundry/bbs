@@ -2,6 +2,7 @@ package sqldb
 
 import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/internal"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
@@ -23,6 +24,7 @@ type SQLDB struct {
 	flavor                 string
 	helper                 helpers.SQLHelper
 	metronClient           loggingclient.IngressClient
+	taskDb                 internal.TaskDbInternal
 }
 
 func NewSQLDB(
@@ -36,18 +38,20 @@ func NewSQLDB(
 	metronClient loggingclient.IngressClient,
 ) *SQLDB {
 	helper := helpers.NewSQLHelper(flavor)
+	serializer := format.NewSerializer(cryptor)
 	return &SQLDB{
 		db: db,
 		convergenceWorkersSize: convergenceWorkersSize,
 		updateWorkersSize:      updateWorkersSize,
 		clock:                  clock,
 		guidProvider:           guidProvider,
-		serializer:             format.NewSerializer(cryptor),
+		serializer:             serializer,
 		cryptor:                cryptor,
 		encoder:                format.NewEncoder(cryptor),
 		flavor:                 flavor,
 		helper:                 helper,
 		metronClient:           metronClient,
+		taskDb:                 internal.NewTaskDbInternal(helper, serializer, clock),
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/internal"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -86,8 +87,8 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 
 	now := db.clock.Now()
 
-	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+	rows, err := db.all(logger, db.db, internal.TasksTable,
+		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND created_at < ?", models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -95,7 +96,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.taskDb.FetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)
 	}
@@ -111,7 +112,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 		}
 	}
 
-	result, err := db.update(logger, db.db, tasksTable,
+	result, err := db.update(logger, db.db, internal.TasksTable,
 		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     expiredFailureReason,
@@ -150,8 +151,8 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
-	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+	rows, err := db.all(logger, db.db, internal.TasksTable,
+		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND created_at > ?",
 		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
 	)
@@ -164,7 +165,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 	defer rows.Close()
 
 	tasksToAuction := []*auctioneer.TaskStartRequest{}
-	tasks, _, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, _, invalidTasksCount, err := db.taskDb.FetchTasks(logger, rows, db.db, false)
 	for _, task := range tasks {
 		taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
 		tasksToAuction = append(tasksToAuction, &taskStartRequest)
@@ -193,14 +194,14 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 	}
 	now := db.clock.Now().UnixNano()
 
-	rows, err := db.all(logger, db.db, tasksTable, taskColumns, helpers.NoLockRow, wheres, values...)
+	rows, err := db.all(logger, db.db, internal.TasksTable, internal.TaskColumns, helpers.NoLockRow, wheres, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, 0, 0
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.taskDb.FetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 	}
@@ -213,7 +214,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 		}
 	}
 
-	result, err := db.update(logger, db.db, tasksTable,
+	result, err := db.update(logger, db.db, internal.TasksTable,
 		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     cellDisappearedFailureReason,
@@ -254,8 +255,8 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDuration time.Duration) ([]models.Event, uint64) {
 	logger = logger.Session("demote-kickable-resolving-tasks")
 
-	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+	rows, err := db.all(logger, db.db, internal.TasksTable,
+		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ?", models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
 	if err != nil {
@@ -264,7 +265,7 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.taskDb.FetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 	}
@@ -280,7 +281,7 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 		}
 	}
 
-	_, err = db.update(logger, db.db, tasksTable,
+	_, err = db.update(logger, db.db, internal.TasksTable,
 		helpers.SQLAttributes{"state": models.Task_Completed},
 		strings.Join(wheres, " AND "), bindings...,
 	)
@@ -303,8 +304,8 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 	wheres := "state = ? AND first_completed_at < ?"
 	values := []interface{}{models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano()}
 
-	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+	rows, err := db.all(logger, db.db, internal.TasksTable,
+		internal.TaskColumns, helpers.NoLockRow,
 		wheres, values...,
 	)
 	if err != nil {
@@ -313,7 +314,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.taskDb.FetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 		return nil, int64(invalidTasksCount)
@@ -327,7 +328,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 		}
 	}
 
-	result, err := db.delete(logger, db.db, tasksTable, wheres, values...)
+	result, err := db.delete(logger, db.db, internal.TasksTable, wheres, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, int64(invalidTasksCount)
@@ -351,8 +352,8 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
 	logger = logger.Session("get-kickable-complete-tasks-for-completion")
 
-	rows, err := db.all(logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+	rows, err := db.all(logger, db.db, internal.TasksTable,
+		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ?",
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
@@ -364,7 +365,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 
 	defer rows.Close()
 
-	tasksToComplete, _, failedFetches, err := db.fetchTasks(logger, rows, db.db, false)
+	tasksToComplete, _, failedFetches, err := db.taskDb.FetchTasks(logger, rows, db.db, false)
 
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)

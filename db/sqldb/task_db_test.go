@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("TaskDB", func() {
+var _ = FDescribe("TaskDB", func() {
 	Describe("DesireTask", func() {
 		var (
 			errDesire            error

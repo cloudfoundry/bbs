@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/internal"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/lager"
 )
@@ -31,7 +32,7 @@ func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
 
 	funcs := []func(){
 		func() {
-			errCh <- db.reEncrypt(logger, tasksTable, "guid", true, "task_definition")
+			errCh <- db.reEncrypt(logger, internal.TasksTable, "guid", true, "task_definition")
 		},
 		func() {
 			errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", true, "run_info", "volume_placement", "routes")
