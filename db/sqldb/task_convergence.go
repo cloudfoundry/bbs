@@ -3,6 +3,7 @@ package sqldb
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -94,10 +95,20 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	}
 	defer rows.Close()
 
-	tasks, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
-
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)
+	}
+
+	wheres := []string{"state = ?", "created_at < ?"}
+	bindings := []interface{}{models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano()}
+
+	if len(validTaskGuids) > 0 {
+		wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+
+		for _, guid := range validTaskGuids {
+			bindings = append(bindings, guid)
+		}
 	}
 
 	result, err := db.update(logger, db.db, tasksTable,
@@ -109,7 +120,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 			"first_completed_at": now.UnixNano(),
 			"updated_at":         now.UnixNano(),
 		},
-		"state = ? AND created_at < ?", models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
+		strings.Join(wheres, " AND "), bindings...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, uint64(invalidTasksCount), 0
@@ -153,7 +164,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 	defer rows.Close()
 
 	tasksToAuction := []*auctioneer.TaskStartRequest{}
-	tasks, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, _, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
 	for _, task := range tasks {
 		taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
 		tasksToAuction = append(tasksToAuction, &taskStartRequest)
@@ -189,9 +200,17 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 	}
 	defer rows.Close()
 
-	tasks, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
+	}
+
+	if len(validTaskGuids) > 0 {
+		wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+
+		for _, guid := range validTaskGuids {
+			values = append(values, guid)
+		}
 	}
 
 	result, err := db.update(logger, db.db, tasksTable,
@@ -245,15 +264,25 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 	}
 	defer rows.Close()
 
-	tasks, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 	}
 
+	wheres := []string{"state = ?", "updated_at < ?"}
+	bindings := []interface{}{models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano()}
+
+	if len(validTaskGuids) > 0 {
+		wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+
+		for _, guid := range validTaskGuids {
+			bindings = append(bindings, guid)
+		}
+	}
+
 	_, err = db.update(logger, db.db, tasksTable,
 		helpers.SQLAttributes{"state": models.Task_Completed},
-		"state = ? AND updated_at < ?",
-		models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
+		strings.Join(wheres, " AND "), bindings...,
 	)
 	if err != nil {
 		logger.Error("failed-updating-tasks", err)
@@ -284,10 +313,18 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 	}
 	defer rows.Close()
 
-	tasks, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 		return nil, int64(invalidTasksCount)
+	}
+
+	if len(validTaskGuids) > 0 {
+		wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+
+		for _, guid := range validTaskGuids {
+			values = append(values, guid)
+		}
 	}
 
 	result, err := db.delete(logger, db.db, tasksTable, wheres, values...)
@@ -327,7 +364,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 
 	defer rows.Close()
 
-	tasksToComplete, failedFetches, err := db.fetchTasks(logger, rows, db.db, false)
+	tasksToComplete, _, failedFetches, err := db.fetchTasks(logger, rows, db.db, false)
 
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)

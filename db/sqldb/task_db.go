@@ -84,7 +84,7 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 		}
 		defer rows.Close()
 
-		results, _, err = db.fetchTasks(logger, rows, tx, true)
+		results, _, _, err = db.fetchTasks(logger, rows, tx, true)
 		if err != nil {
 			logger.Error("failed-fetch", err)
 			return err
@@ -441,9 +441,10 @@ func (db *SQLDB) fetchTaskForUpdate(logger lager.Logger, taskGuid string, querya
 	return db.fetchTask(logger, row, queryable)
 }
 
-func (db *SQLDB) fetchTasks(logger lager.Logger, rows *sql.Rows, queryable helpers.Queryable, abortOnError bool) ([]*models.Task, int, error) {
+func (db *SQLDB) fetchTasks(logger lager.Logger, rows *sql.Rows, queryable helpers.Queryable, abortOnError bool) ([]*models.Task, []string, int, error) {
 	tasks := []*models.Task{}
 	invalidGuids := []string{}
+	validGuids := []string{}
 	var err error
 	for rows.Next() {
 		var task *models.Task
@@ -458,6 +459,7 @@ func (db *SQLDB) fetchTasks(logger lager.Logger, rows *sql.Rows, queryable helpe
 			continue
 		}
 		tasks = append(tasks, task)
+		validGuids = append(validGuids, task.TaskGuid)
 	}
 
 	if err == nil {
@@ -470,7 +472,7 @@ func (db *SQLDB) fetchTasks(logger lager.Logger, rows *sql.Rows, queryable helpe
 		db.deleteInvalidTasks(logger, queryable, invalidGuids...)
 	}
 
-	return tasks, len(invalidGuids), err
+	return tasks, validGuids, len(invalidGuids), err
 }
 
 func (db *SQLDB) fetchTask(logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.Task, error) {
