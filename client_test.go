@@ -43,17 +43,27 @@ var _ = Describe("Client", func() {
 	})
 
 	Context("when the server responds successfully after some time", func() {
-		var serverTimeout time.Duration
+		var (
+			serverTimeout time.Duration
+			blockCh       chan struct{}
+		)
 
 		BeforeEach(func() {
 			serverTimeout = 30 * time.Millisecond
+			cfhttp.Initialize(0)
+			blockCh = make(chan struct{}, 1)
 		})
+
+		AfterEach(func() {
+			close(blockCh)
+		})
+
 		JustBeforeEach(func() {
 			bbsServer.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", "/v1/actual_lrp_groups/list"),
 					func(w http.ResponseWriter, req *http.Request) {
-						time.Sleep(serverTimeout)
+						<-blockCh
 					},
 					ghttp.RespondWithProto(200, &models.ActualLRPGroupsResponse{
 						ActualLrpGroups: []*models.ActualLRPGroup{
@@ -69,6 +79,13 @@ var _ = Describe("Client", func() {
 		})
 
 		It("returns the successful response", func() {
+			go func() {
+				defer GinkgoRecover()
+
+				time.Sleep(serverTimeout)
+				Eventually(blockCh).Should(BeSent(struct{}{}))
+			}()
+
 			lrps, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(lrps).To(ConsistOf(&models.ActualLRPGroup{
