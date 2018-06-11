@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/internal"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -13,7 +14,7 @@ import (
 func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRPGroup, error) {
 	var groups []*models.ActualLRPGroup
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		rows, err := db.all(logger, tx, actualLRPsTable,
+		rows, err := db.helper.All(logger, tx, actualLRPsTable,
 			actualLRPColumns, helpers.NoLockRow,
 			wheres, whereBindinngs...,
 		)
@@ -86,14 +87,14 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 		return nil, models.ErrGUIDGeneration
 	}
 
-	netInfoData, err := db.serializeModel(logger, &models.ActualLRPNetInfo{})
+	netInfoData, err := internal.SerializeModel(logger, db.serializer, &models.ActualLRPNetInfo{})
 	if err != nil {
 		logger.Error("failed-to-serialize-net-info", err)
 		return nil, err
 	}
 	now := db.clock.Now().UnixNano()
 	err = db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		_, err := db.insert(logger, tx, actualLRPsTable,
+		_, err := db.helper.Insert(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
 				"process_guid":           key.ProcessGuid,
 				"instance_index":         key.Index,
@@ -154,13 +155,13 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		actualLRP.ActualLRPInstanceKey.InstanceGuid = ""
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
-		netInfoData, err := db.serializeModel(logger, &models.ActualLRPNetInfo{})
+		netInfoData, err := internal.SerializeModel(logger, db.serializer, &models.ActualLRPNetInfo{})
 		if err != nil {
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
 		}
 
-		_, err = db.update(logger, tx, actualLRPsTable,
+		_, err = db.helper.Update(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
@@ -214,13 +215,13 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		actualLRP.PlacementError = ""
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 		actualLRP.Since = db.clock.Now().UnixNano()
-		netInfoData, err := db.serializeModel(logger, &models.ActualLRPNetInfo{})
+		netInfoData, err := internal.SerializeModel(logger, db.serializer, &models.ActualLRPNetInfo{})
 		if err != nil {
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
 		}
 
-		_, err = db.update(logger, tx, actualLRPsTable,
+		_, err = db.helper.Update(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
@@ -291,13 +292,13 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		actualLRP.ModificationTag.Increment()
 		actualLRP.PlacementError = ""
 
-		netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
+		netInfoData, err := internal.SerializeModel(logger, db.serializer, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
 		}
 
-		_, err = db.update(logger, tx, actualLRPsTable,
+		_, err = db.helper.Update(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
@@ -369,7 +370,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		actualLRP.ActualLRPNetInfo = models.ActualLRPNetInfo{}
 		actualLRP.CrashCount = newCrashCount
 		actualLRP.CrashReason = crashReason
-		netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
+		netInfoData, err := internal.SerializeModel(logger, db.serializer, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
@@ -384,7 +385,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		now := db.clock.Now().UnixNano()
 		actualLRP.Since = now
 
-		_, err = db.update(logger, tx, actualLRPsTable,
+		_, err = db.helper.Update(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
@@ -437,7 +438,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		actualLRP.Since = now
 		evacuating := false
 
-		_, err = db.update(logger, tx, actualLRPsTable,
+		_, err = db.helper.Update(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
 				"modification_tag_index": actualLRP.ModificationTag.Index,
 				"placement_error":        truncateString(actualLRP.PlacementError, 1024),
@@ -466,12 +467,12 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 		var err error
 		var result sql.Result
 		if instanceKey == nil {
-			result, err = db.delete(logger, tx, actualLRPsTable,
+			result, err = db.helper.Delete(logger, tx, actualLRPsTable,
 				"process_guid = ? AND instance_index = ? AND evacuating = ?",
 				processGuid, index, false,
 			)
 		} else {
-			result, err = db.delete(logger, tx, actualLRPsTable,
+			result, err = db.helper.Delete(logger, tx, actualLRPsTable,
 				"process_guid = ? AND instance_index = ? AND evacuating = ? AND instance_guid = ? AND cell_id = ?",
 				processGuid, index, false, instanceKey.InstanceGuid, instanceKey.CellId,
 			)
@@ -510,12 +511,12 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 	actualLRP.State = models.ActualLRPStateRunning
 	actualLRP.Since = now
 
-	netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
+	netInfoData, err := internal.SerializeModel(logger, db.serializer, &actualLRP.ActualLRPNetInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = db.insert(logger, tx, actualLRPsTable,
+	_, err = db.helper.Insert(logger, tx, actualLRPsTable,
 		helpers.SQLAttributes{
 			"process_guid":           actualLRP.ActualLRPKey.ProcessGuid,
 			"instance_index":         actualLRP.ActualLRPKey.Index,
@@ -564,7 +565,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 
 	if len(netInfoData) > 0 {
 		logger.Debug("unmarshalling-net-info-data", lager.Data{"net_info": string(netInfoData)})
-		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
+		err = internal.DeserializeModel(logger, db.serializer, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
 			return &actualLRP, evacuating, models.ErrDeserialize
@@ -583,7 +584,7 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
 	bindings := []interface{}{processGuid, index, evacuating}
 
-	rows, err := db.all(logger, tx, actualLRPsTable,
+	rows, err := db.helper.All(logger, tx, actualLRPsTable,
 		actualLRPColumns, helpers.LockRow, wheres, bindings...)
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -642,7 +643,7 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 	}
 
 	for _, actual := range actualsToDelete {
-		_, err := db.delete(logger, q, actualLRPsTable,
+		_, err := db.helper.Delete(logger, q, actualLRPsTable,
 			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			actual.ProcessGuid, actual.Index, actual.evacuating,
 		)

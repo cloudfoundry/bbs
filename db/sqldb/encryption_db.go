@@ -81,7 +81,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 		err = db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 			blobs := make([]interface{}, len(blobColumns))
 
-			row := db.one(logger, tx, tableName, blobColumns, helpers.LockRow, where, guid)
+			row := db.helper.One(logger, tx, tableName, blobColumns, helpers.LockRow, where, guid)
 			for i := range blobColumns {
 				var blob []byte
 				blobs[i] = &blob
@@ -120,7 +120,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 				columnName := blobColumns[columnIdx]
 				updatedColumnValues[columnName] = encryptedPayload
 			}
-			_, err = db.update(logger, tx, tableName,
+			_, err = db.helper.Update(logger, tx, tableName,
 				updatedColumnValues,
 				where, guid,
 			)

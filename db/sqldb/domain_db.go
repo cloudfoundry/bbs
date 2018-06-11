@@ -16,7 +16,7 @@ func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
 	var results []string
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		expireTime := db.clock.Now().Round(time.Second).UnixNano()
-		rows, err := db.all(logger, tx, domainsTable,
+		rows, err := db.helper.All(logger, tx, domainsTable,
 			domainColumns, helpers.NoLockRow,
 			"expire_time > ?", expireTime,
 		)
@@ -59,7 +59,7 @@ func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) er
 			expireTime = math.MaxInt64
 		}
 
-		_, err := db.upsert(logger, tx, domainsTable,
+		_, err := db.helper.Upsert(logger, tx, domainsTable,
 			helpers.SQLAttributes{"domain": domain, "expire_time": expireTime},
 			"domain = ?", domain,
 		)

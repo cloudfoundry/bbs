@@ -9,7 +9,7 @@ const configurationsTable = "configurations"
 
 func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
 	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		_, err := db.upsert(
+		_, err := db.helper.Upsert(
 			logger,
 			tx,
 			configurationsTable,
@@ -28,7 +28,7 @@ func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) e
 func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string, error) {
 	var value string
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		return db.one(logger, tx, "configurations",
+		return db.helper.One(logger, tx, "configurations",
 			helpers.ColumnList{"value"}, helpers.NoLockRow,
 			"id = ?", key,
 		).Scan(&value)

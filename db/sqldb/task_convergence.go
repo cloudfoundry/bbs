@@ -84,10 +84,11 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 
 func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) ([]models.Event, uint64, int64) {
 	logger = logger.Session("fail-expired-pending-tasks")
+	var events []models.Event
 
 	now := db.clock.Now()
 
-	rows, err := db.all(logger, db.db, internal.TasksTable,
+	rows, err := db.helper.All(logger, db.db, internal.TasksTable,
 		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND created_at < ?", models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
@@ -104,15 +105,17 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	wheres := []string{"state = ?", "created_at < ?"}
 	bindings := []interface{}{models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano()}
 
-	if len(validTaskGuids) > 0 {
-		wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
-
-		for _, guid := range validTaskGuids {
-			bindings = append(bindings, guid)
-		}
+	if len(validTaskGuids) == 0 {
+		return events, uint64(invalidTasksCount), 0
 	}
 
-	result, err := db.update(logger, db.db, internal.TasksTable,
+	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+
+	for _, guid := range validTaskGuids {
+		bindings = append(bindings, guid)
+	}
+
+	result, err := db.helper.Update(logger, db.db, internal.TasksTable,
 		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     expiredFailureReason,
@@ -127,7 +130,6 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 		return nil, uint64(invalidTasksCount), 0
 	}
 
-	var events []models.Event
 	for _, task := range tasks {
 		afterTask := *task
 		afterTask.Failed = true
@@ -151,7 +153,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
-	rows, err := db.all(logger, db.db, internal.TasksTable,
+	rows, err := db.helper.All(logger, db.db, internal.TasksTable,
 		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND created_at > ?",
 		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
@@ -180,6 +182,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 
 func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet models.CellSet) ([]models.Event, uint64, int64) {
 	logger = logger.Session("fail-tasks-with-disappeared-cells")
+	var events []models.Event
 
 	values := make([]interface{}, 0, 1+len(cellSet))
 	values = append(values, models.Task_Running)
@@ -194,7 +197,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 	}
 	now := db.clock.Now().UnixNano()
 
-	rows, err := db.all(logger, db.db, internal.TasksTable, internal.TaskColumns, helpers.NoLockRow, wheres, values...)
+	rows, err := db.helper.All(logger, db.db, internal.TasksTable, internal.TaskColumns, helpers.NoLockRow, wheres, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, 0, 0
@@ -206,15 +209,17 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 		logger.Error("failed-fetching-tasks", err)
 	}
 
-	if len(validTaskGuids) > 0 {
-		wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
-
-		for _, guid := range validTaskGuids {
-			values = append(values, guid)
-		}
+	if len(validTaskGuids) == 0 {
+		return events, uint64(invalidTasksCount), 0
 	}
 
-	result, err := db.update(logger, db.db, internal.TasksTable,
+	wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+
+	for _, guid := range validTaskGuids {
+		values = append(values, guid)
+	}
+
+	result, err := db.helper.Update(logger, db.db, internal.TasksTable,
 		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     cellDisappearedFailureReason,
@@ -230,7 +235,6 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 		return nil, uint64(invalidTasksCount), 0
 	}
 
-	var events []models.Event
 	for _, task := range tasks {
 		afterTask := *task
 		afterTask.Failed = true
@@ -254,8 +258,9 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 
 func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDuration time.Duration) ([]models.Event, uint64) {
 	logger = logger.Session("demote-kickable-resolving-tasks")
+	var events []models.Event
 
-	rows, err := db.all(logger, db.db, internal.TasksTable,
+	rows, err := db.helper.All(logger, db.db, internal.TasksTable,
 		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ?", models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
@@ -273,15 +278,16 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 	wheres := []string{"state = ?", "updated_at < ?"}
 	bindings := []interface{}{models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano()}
 
-	if len(validTaskGuids) > 0 {
-		wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
-
-		for _, guid := range validTaskGuids {
-			bindings = append(bindings, guid)
-		}
+	if len(validTaskGuids) == 0 {
+		return events, uint64(invalidTasksCount)
 	}
 
-	_, err = db.update(logger, db.db, internal.TasksTable,
+	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+	for _, guid := range validTaskGuids {
+		bindings = append(bindings, guid)
+	}
+
+	_, err = db.helper.Update(logger, db.db, internal.TasksTable,
 		helpers.SQLAttributes{"state": models.Task_Completed},
 		strings.Join(wheres, " AND "), bindings...,
 	)
@@ -289,7 +295,6 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 		logger.Error("failed-updating-tasks", err)
 	}
 
-	var events []models.Event
 	for _, task := range tasks {
 		afterTask := *task
 		afterTask.State = models.Task_Completed
@@ -301,10 +306,11 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 
 func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireCompletedTaskDuration time.Duration) ([]models.Event, int64) {
 	logger = logger.Session("delete-expired-completed-tasks")
+	var events []models.Event
 	wheres := "state = ? AND first_completed_at < ?"
 	values := []interface{}{models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano()}
 
-	rows, err := db.all(logger, db.db, internal.TasksTable,
+	rows, err := db.helper.All(logger, db.db, internal.TasksTable,
 		internal.TaskColumns, helpers.NoLockRow,
 		wheres, values...,
 	)
@@ -320,21 +326,22 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 		return nil, int64(invalidTasksCount)
 	}
 
-	if len(validTaskGuids) > 0 {
-		wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
-
-		for _, guid := range validTaskGuids {
-			values = append(values, guid)
-		}
+	if len(validTaskGuids) == 0 {
+		return events, int64(invalidTasksCount)
 	}
 
-	result, err := db.delete(logger, db.db, internal.TasksTable, wheres, values...)
+	wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+
+	for _, guid := range validTaskGuids {
+		values = append(values, guid)
+	}
+
+	result, err := db.helper.Delete(logger, db.db, internal.TasksTable, wheres, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, int64(invalidTasksCount)
 	}
 
-	var events []models.Event
 	for _, task := range tasks {
 		events = append(events, models.NewTaskRemovedEvent(task))
 	}
@@ -352,7 +359,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
 	logger = logger.Session("get-kickable-complete-tasks-for-completion")
 
-	rows, err := db.all(logger, db.db, internal.TasksTable,
+	rows, err := db.helper.All(logger, db.db, internal.TasksTable,
 		internal.TaskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ?",
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),

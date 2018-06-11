@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/internal"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -52,13 +53,13 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = *netInfo
 
-		netInfoData, err := db.serializeModel(logger, netInfo)
+		netInfoData, err := internal.SerializeModel(logger, db.serializer, netInfo)
 		if err != nil {
 			logger.Error("failed-serializing-net-info", err)
 			return err
 		}
 
-		_, err = db.update(logger, tx, "actual_lrps",
+		_, err = db.helper.Update(logger, tx, "actual_lrps",
 			helpers.SQLAttributes{
 				"domain":                 actualLRP.Domain,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -107,7 +108,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
-		_, err = db.delete(logger, tx, "actual_lrps",
+		_, err = db.helper.Delete(logger, tx, "actual_lrps",
 			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			processGuid, index, true,
 		)
@@ -127,7 +128,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	ttl uint64,
 	tx helpers.Tx,
 ) (*models.ActualLRP, error) {
-	netInfoData, err := db.serializeModel(logger, netInfo)
+	netInfoData, err := internal.SerializeModel(logger, db.serializer, netInfo)
 	if err != nil {
 		logger.Error("failed-serializing-net-info", err)
 		return nil, err
@@ -162,7 +163,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		"modification_tag_index": actualLRP.ModificationTag.Index,
 	}
 
-	_, err = db.upsert(logger, tx, "actual_lrps",
+	_, err = db.helper.Upsert(logger, tx, "actual_lrps",
 		sqlAttributes,
 		"process_guid = ? AND instance_index = ? AND evacuating = ?",
 		actualLRP.ProcessGuid, actualLRP.Index, true,

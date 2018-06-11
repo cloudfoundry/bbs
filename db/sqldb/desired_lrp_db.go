@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/internal"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -24,7 +25,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 
 		runInfo := desiredLRP.DesiredLRPRunInfo(db.clock.Now())
 
-		runInfoData, err := db.serializeModel(logger, &runInfo)
+		runInfoData, err := internal.SerializeModel(logger, db.serializer, &runInfo)
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
 			return err
@@ -36,7 +37,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 			volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
 		}
 
-		volumePlacementData, err := db.serializeModel(logger, volumePlacement)
+		volumePlacementData, err := internal.SerializeModel(logger, db.serializer, volumePlacement)
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
 			return err
@@ -56,7 +57,7 @@ func (db *SQLDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) e
 
 		desiredLRP.ModificationTag = &models.ModificationTag{Epoch: guid, Index: 0}
 
-		_, err = db.insert(logger, tx, desiredLRPsTable,
+		_, err = db.helper.Insert(logger, tx, desiredLRPsTable,
 			helpers.SQLAttributes{
 				"process_guid":           desiredLRP.ProcessGuid,
 				"domain":                 desiredLRP.Domain,
@@ -92,7 +93,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		row := db.one(logger, tx, desiredLRPsTable,
+		row := db.helper.One(logger, tx, desiredLRPsTable,
 			desiredLRPColumns, helpers.NoLockRow,
 			"process_guid = ?", processGuid,
 		)
@@ -128,7 +129,7 @@ func (db *SQLDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 	results := []*models.DesiredLRP{}
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		rows, err := db.all(logger, tx, desiredLRPsTable,
+		rows, err := db.helper.All(logger, tx, desiredLRPsTable,
 			desiredLRPColumns, helpers.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
@@ -174,7 +175,7 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 	results := []*models.DesiredLRPSchedulingInfo{}
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		rows, err := db.all(logger, tx, desiredLRPsTable,
+		rows, err := db.helper.All(logger, tx, desiredLRPsTable,
 			schedulingInfoColumns, helpers.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
@@ -212,7 +213,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 	var beforeDesiredLRP *models.DesiredLRP
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		row := db.one(logger, tx, desiredLRPsTable,
+		row := db.helper.One(logger, tx, desiredLRPsTable,
 			desiredLRPColumns, helpers.LockRow,
 			"process_guid = ?", processGuid,
 		)
@@ -241,7 +242,7 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 			updateAttributes["routes"] = encodedData
 		}
 
-		_, err = db.update(logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
+		_, err = db.helper.Update(logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
 		if err != nil {
 			logger.Error("failed-executing-query", err)
 			return err
@@ -279,7 +280,7 @@ func (db *SQLDB) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 			return err
 		}
 
-		_, err = db.delete(logger, tx, desiredLRPsTable, "process_guid = ?", processGuid)
+		_, err = db.helper.Delete(logger, tx, desiredLRPsTable, "process_guid = ?", processGuid)
 		if err != nil {
 			logger.Error("failed-deleting-from-db", err)
 			return err
@@ -335,7 +336,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	schedulingInfo.Routes = routes
 
 	var volumePlacement models.VolumePlacement
-	err = db.deserializeModel(logger, volumePlacementData, &volumePlacement)
+	err = internal.DeserializeModel(logger, db.serializer, volumePlacementData, &volumePlacement)
 	if err != nil {
 		logger.Error("failed-parsing-volume-placement", err)
 		return nil, err
@@ -353,7 +354,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 }
 
 func (db *SQLDB) lockDesiredLRPByGuidForUpdate(logger lager.Logger, processGuid string, tx helpers.Tx) error {
-	row := db.one(logger, tx, desiredLRPsTable,
+	row := db.helper.One(logger, tx, desiredLRPsTable,
 		helpers.ColumnList{"1"}, helpers.LockRow,
 		"process_guid = ?", processGuid,
 	)
@@ -407,7 +408,7 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	}
 
 	var runInfo models.DesiredLRPRunInfo
-	err = db.deserializeModel(logger, runInfoData, &runInfo)
+	err = internal.DeserializeModel(logger, db.serializer, runInfoData, &runInfo)
 	if err != nil {
 		return nil, schedulingInfo.ProcessGuid, models.ErrDeserialize
 	}
@@ -420,7 +421,7 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 func (db *SQLDB) deleteInvalidLRPs(logger lager.Logger, queryable helpers.Queryable, guids ...string) error {
 	for _, guid := range guids {
 		logger.Info("deleting-invalid-desired-lrp-from-db", lager.Data{"guid": guid})
-		_, err := db.delete(logger, queryable, desiredLRPsTable, "process_guid = ?", guid)
+		_, err := db.helper.Delete(logger, queryable, desiredLRPsTable, "process_guid = ?", guid)
 		if err != nil {
 			logger.Error("failed-deleting-invalid-row", err)
 			return err

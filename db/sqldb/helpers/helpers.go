@@ -16,6 +16,7 @@ const (
 	NoLockRow RowLock = false
 )
 
+//go:generate counterfeiter . SQLHelper
 type SQLHelper interface {
 	Transact(logger lager.Logger, db QueryableDB, f func(logger lager.Logger, tx Tx) error) error
 	One(logger lager.Logger, q Queryable, table string, columns ColumnList, lockRow RowLock, wheres string, whereBindings ...interface{}) RowScanner

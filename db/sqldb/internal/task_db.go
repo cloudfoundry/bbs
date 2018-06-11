@@ -32,9 +32,10 @@ var (
 	}
 )
 
+//go:generate counterfeiter . TaskDbInternal
 type TaskDbInternal interface {
 	CompleteTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx helpers.Tx) error
-	FetchTaskForUpdate(logger lager.Logger, taskGuid string, queryable helpers.Queryable) (*models.Task, error)
+	FetchTaskForUpdate(logger lager.Logger, taskGuid string, tx helpers.Tx) (*models.Task, error)
 	FetchTasks(logger lager.Logger, rows *sql.Rows, queryable helpers.Queryable, abortOnError bool) ([]*models.Task, []string, int, error)
 	FetchTask(logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.Task, error)
 }
@@ -83,12 +84,12 @@ func (db *taskDbInternal) CompleteTask(logger lager.Logger, task *models.Task, f
 	return nil
 }
 
-func (db *taskDbInternal) FetchTaskForUpdate(logger lager.Logger, taskGuid string, queryable helpers.Queryable) (*models.Task, error) {
-	row := db.helper.One(logger, queryable, TasksTable,
+func (db *taskDbInternal) FetchTaskForUpdate(logger lager.Logger, taskGuid string, tx helpers.Tx) (*models.Task, error) {
+	row := db.helper.One(logger, tx, TasksTable,
 		TaskColumns, helpers.LockRow,
 		"guid = ?", taskGuid,
 	)
-	return db.FetchTask(logger, row, queryable)
+	return db.FetchTask(logger, row, tx)
 }
 
 func (db *taskDbInternal) FetchTasks(logger lager.Logger, rows *sql.Rows, queryable helpers.Queryable, abortOnError bool) ([]*models.Task, []string, int, error) {
@@ -167,7 +168,7 @@ func (db *taskDbInternal) fetchTaskInternal(logger lager.Logger, scanner helpers
 	}
 
 	var taskDef models.TaskDefinition
-	err = deserializeModel(logger, db.serializer, taskDefData, &taskDef)
+	err = DeserializeModel(logger, db.serializer, taskDefData, &taskDef)
 	if err != nil {
 		return nil, guid, models.ErrDeserialize
 	}

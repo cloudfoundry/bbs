@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/helpersfakes"
+	"code.cloudfoundry.org/bbs/db/sqldb/internal/internalfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "github.com/onsi/ginkgo"
@@ -383,6 +385,42 @@ var _ = Describe("Convergence of Tasks", func() {
 				event2 := models.NewTaskChangedEvent(runningTaskNoCell, after2)
 				Expect(taskEvents).To(ContainElement(event1))
 				Expect(taskEvents).To(ContainElement(event2))
+			})
+		})
+	})
+
+	Context("when fetching from the database partially fails", func() {
+		var fakeTaskDb *internalfakes.FakeTaskDbInternal
+		var fakeSQLHelper *helpersfakes.FakeSQLHelper
+		BeforeEach(func() {
+			fakeTaskDb = &internalfakes.FakeTaskDbInternal{}
+			fakeSQLHelper = &helpersfakes.FakeSQLHelper{}
+			sqlDB.WithInternalTaskDbAndHelper(fakeTaskDb, fakeSQLHelper)
+		})
+
+		Context("when FetchTask returns no rows", func() {
+			BeforeEach(func() {
+				fakeTaskDb.FetchTasksReturns([]*models.Task{}, []string{}, 0, nil)
+			})
+
+			FIt("should not write anything to database", func() {
+				Consistently(fakeSQLHelper.UpdateCallCount).Should(Equal(0))
+				Consistently(fakeSQLHelper.DeleteCallCount).Should(Equal(0))
+			})
+		})
+
+		Context("when FetchTask returns rows", func() {
+			var taskGuid string
+			BeforeEach(func() {
+				taskGuid = "some-task-guid"
+				fakeTaskDb.FetchTasksReturns([]*models.Task{
+					&models.Task{TaskGuid: taskGuid},
+				}, []string{taskGuid}, 0, nil)
+			})
+
+			FIt("should have the task guid in the where binding", func() {
+				Consistently(fakeSQLHelper.UpdateCallCount).Should(Equal(0))
+				Consistently(fakeSQLHelper.DeleteCallCount).Should(Equal(0))
 			})
 		})
 	})

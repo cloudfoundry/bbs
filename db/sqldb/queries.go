@@ -259,33 +259,3 @@ func (db *SQLDB) countTasksByState(logger lager.Logger, q helpers.Queryable) (pe
 	}
 	return
 }
-
-func (db *SQLDB) one(logger lager.Logger, q helpers.Queryable, table string,
-	columns helpers.ColumnList, lockRow helpers.RowLock,
-	wheres string, whereBindings ...interface{},
-) helpers.RowScanner {
-	return db.helper.One(logger, q, table, columns, lockRow, wheres, whereBindings...)
-}
-
-func (db *SQLDB) all(logger lager.Logger, q helpers.Queryable, table string,
-	columns helpers.ColumnList, lockRow helpers.RowLock,
-	wheres string, whereBindings ...interface{},
-) (*sql.Rows, error) {
-	return db.helper.All(logger, q, table, columns, lockRow, wheres, whereBindings...)
-}
-
-func (db *SQLDB) upsert(logger lager.Logger, q helpers.Queryable, table string, attributes helpers.SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error) {
-	return db.helper.Upsert(logger, q, table, attributes, wheres, whereBindings...)
-}
-
-func (db *SQLDB) insert(logger lager.Logger, q helpers.Queryable, table string, attributes helpers.SQLAttributes) (sql.Result, error) {
-	return db.helper.Insert(logger, q, table, attributes)
-}
-
-func (db *SQLDB) update(logger lager.Logger, q helpers.Queryable, table string, updates helpers.SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error) {
-	return db.helper.Update(logger, q, table, updates, wheres, whereBindings...)
-}
-
-func (db *SQLDB) delete(logger lager.Logger, q helpers.Queryable, table string, wheres string, whereBindings ...interface{}) (sql.Result, error) {
-	return db.helper.Delete(logger, q, table, wheres, whereBindings...)
-}

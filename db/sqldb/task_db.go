@@ -14,7 +14,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	taskDefData, err := db.serializeModel(logger, taskDef)
+	taskDefData, err := internal.SerializeModel(logger, db.serializer, taskDef)
 	if err != nil {
 		logger.Error("failed-serializing-task-definition", err)
 		return nil, err
@@ -22,7 +22,7 @@ func (db *SQLDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition,
 
 	now := db.clock.Now().UnixNano()
 	err = db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		_, err = db.insert(logger, tx, internal.TasksTable,
+		_, err = db.helper.Insert(logger, tx, internal.TasksTable,
 			helpers.SQLAttributes{
 				"guid":               taskGuid,
 				"domain":             domain,
@@ -74,7 +74,7 @@ func (db *SQLDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models
 	results := []*models.Task{}
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		rows, err := db.all(logger, tx, internal.TasksTable,
+		rows, err := db.helper.All(logger, tx, internal.TasksTable,
 			internal.TaskColumns, helpers.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
@@ -105,7 +105,7 @@ func (db *SQLDB) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		row := db.one(logger, tx, internal.TasksTable,
+		row := db.helper.One(logger, tx, internal.TasksTable,
 			internal.TaskColumns, helpers.NoLockRow,
 			"guid = ?", taskGuid,
 		)
@@ -146,7 +146,7 @@ func (db *SQLDB) StartTask(logger lager.Logger, taskGuid, cellId string) (*model
 		logger.Info("starting")
 		defer logger.Info("complete")
 		now := db.clock.Now().UnixNano()
-		_, err = db.update(logger, tx, internal.TasksTable,
+		_, err = db.helper.Update(logger, tx, internal.TasksTable,
 			helpers.SQLAttributes{
 				"state":      models.Task_Running,
 				"updated_at": now,
@@ -304,7 +304,7 @@ func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason strin
 		afterTask.State = models.Task_Pending
 
 		now := db.clock.Now().UnixNano()
-		_, err = db.update(logger, tx, internal.TasksTable,
+		_, err = db.helper.Update(logger, tx, internal.TasksTable,
 			helpers.SQLAttributes{
 				"rejection_count":  afterTask.RejectionCount,
 				"rejection_reason": rejectionReason,
@@ -350,7 +350,7 @@ func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) (*models.Ta
 		}
 
 		now := db.clock.Now().UnixNano()
-		_, err = db.update(logger, tx, internal.TasksTable,
+		_, err = db.helper.Update(logger, tx, internal.TasksTable,
 			helpers.SQLAttributes{
 				"state":      models.Task_Resolving,
 				"updated_at": now,
@@ -392,7 +392,7 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) (*models.Task,
 			return err
 		}
 
-		_, err = db.delete(logger, tx, internal.TasksTable, "guid = ?", taskGuid)
+		_, err = db.helper.Delete(logger, tx, internal.TasksTable, "guid = ?", taskGuid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
 			return err

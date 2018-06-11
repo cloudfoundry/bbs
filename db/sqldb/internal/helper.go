@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func serializeModel(logger lager.Logger, serializer format.Serializer, model format.Model) ([]byte, error) {
+func SerializeModel(logger lager.Logger, serializer format.Serializer, model format.Model) ([]byte, error) {
 	encodedPayload, err := serializer.Marshal(logger, model)
 	if err != nil {
 		logger.Error("failed-to-serialize-model", err)
@@ -15,7 +15,7 @@ func serializeModel(logger lager.Logger, serializer format.Serializer, model for
 	return encodedPayload, nil
 }
 
-func deserializeModel(logger lager.Logger, serializer format.Serializer, data []byte, model format.Model) error {
+func DeserializeModel(logger lager.Logger, serializer format.Serializer, data []byte, model format.Model) error {
 	err := serializer.Unmarshal(logger, data, model)
 	if err != nil {
 		logger.Error("failed-to-deserialize-model", err)

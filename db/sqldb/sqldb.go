@@ -55,28 +55,15 @@ func NewSQLDB(
 	}
 }
 
+func (db *SQLDB) WithInternalTaskDbAndHelper(taskDb internal.TaskDbInternal, helper helpers.SQLHelper) {
+	db.taskDb = taskDb
+	db.helper = helper
+}
+
 func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx helpers.Tx) error) error {
 	err := db.helper.Transact(logger, db.db, f)
 	if err != nil {
 		return db.convertSQLError(err)
-	}
-	return nil
-}
-
-func (db *SQLDB) serializeModel(logger lager.Logger, model format.Model) ([]byte, error) {
-	encodedPayload, err := db.serializer.Marshal(logger, model)
-	if err != nil {
-		logger.Error("failed-to-serialize-model", err)
-		return nil, models.NewError(models.Error_InvalidRecord, err.Error())
-	}
-	return encodedPayload, nil
-}
-
-func (db *SQLDB) deserializeModel(logger lager.Logger, data []byte, model format.Model) error {
-	err := db.serializer.Unmarshal(logger, data, model)
-	if err != nil {
-		logger.Error("failed-to-deserialize-model", err)
-		return models.NewError(models.Error_InvalidRecord, err.Error())
 	}
 	return nil
 }
