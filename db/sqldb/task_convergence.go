@@ -103,12 +103,13 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	wheres := []string{"state = ?", "created_at < ?"}
 	bindings := []interface{}{models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano()}
 
-	if len(validTaskGuids) > 0 {
-		wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+	if len(validTaskGuids) == 0 {
+		return nil, uint64(invalidTasksCount), 0
+	}
 
-		for _, guid := range validTaskGuids {
-			bindings = append(bindings, guid)
-		}
+	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+	for _, guid := range validTaskGuids {
+		bindings = append(bindings, guid)
 	}
 
 	result, err := db.update(logger, db.db, tasksTable,
@@ -205,12 +206,14 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 		logger.Error("failed-fetching-tasks", err)
 	}
 
-	if len(validTaskGuids) > 0 {
-		wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+	if len(validTaskGuids) == 0 {
+		return nil, uint64(invalidTasksCount), 0
+	}
 
-		for _, guid := range validTaskGuids {
-			values = append(values, guid)
-		}
+	wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+
+	for _, guid := range validTaskGuids {
+		values = append(values, guid)
 	}
 
 	result, err := db.update(logger, db.db, tasksTable,
@@ -272,12 +275,14 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 	wheres := []string{"state = ?", "updated_at < ?"}
 	bindings := []interface{}{models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano()}
 
-	if len(validTaskGuids) > 0 {
-		wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+	if len(validTaskGuids) == 0 {
+		return nil, uint64(invalidTasksCount)
+	}
 
-		for _, guid := range validTaskGuids {
-			bindings = append(bindings, guid)
-		}
+	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+
+	for _, guid := range validTaskGuids {
+		bindings = append(bindings, guid)
 	}
 
 	_, err = db.update(logger, db.db, tasksTable,
@@ -319,12 +324,14 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 		return nil, int64(invalidTasksCount)
 	}
 
-	if len(validTaskGuids) > 0 {
-		wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+	if len(validTaskGuids) == 0 {
+		return nil, int64(invalidTasksCount)
+	}
 
-		for _, guid := range validTaskGuids {
-			values = append(values, guid)
-		}
+	wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+
+	for _, guid := range validTaskGuids {
+		values = append(values, guid)
 	}
 
 	result, err := db.delete(logger, db.db, tasksTable, wheres, values...)
