@@ -307,7 +307,7 @@ func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason strin
 		_, err = db.update(logger, tx, tasksTable,
 			helpers.SQLAttributes{
 				"rejection_count":  afterTask.RejectionCount,
-				"rejection_reason": rejectionReason,
+				"rejection_reason": truncateString(rejectionReason, 1024),
 				"updated_at":       now,
 				"state":            afterTask.State,
 			},
@@ -408,7 +408,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	_, err := db.update(logger, tx, tasksTable,
 		helpers.SQLAttributes{
 			"failed":             failed,
-			"failure_reason":     failureReason,
+			"failure_reason":     truncateString(failureReason, 1024),
 			"result":             result,
 			"state":              models.Task_Completed,
 			"first_completed_at": now,
@@ -426,7 +426,7 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	task.UpdatedAt = now
 	task.FirstCompletedAt = now
 	task.Failed = failed
-	task.FailureReason = failureReason
+	task.FailureReason = truncateString(failureReason, 1024)
 	task.Result = result
 	task.CellId = ""
 

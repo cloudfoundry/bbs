@@ -2,6 +2,7 @@ package sqldb_test
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -587,9 +588,15 @@ var _ = Describe("TaskDB", func() {
 					})
 
 					Context("with an invalid failure reason", func() {
-						It("returns an error and does not update the record", func() {
-							_, _, err := sqlDB.CompleteTask(logger, taskGuid, cellID, true, randStr(256), "i am the result")
-							Expect(err).To(Equal(models.ErrBadRequest))
+						It("truncates the failure reason", func() {
+							failureReason := strings.Repeat("x", 2*1024)
+							expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
+							_, _, err := sqlDB.CompleteTask(logger, taskGuid, cellID, true, failureReason, "i am the result")
+							Expect(err).NotTo(HaveOccurred())
+
+							task, err := sqlDB.TaskByGuid(logger, taskGuid)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(task.FailureReason).To(Equal(expectedFailureReason))
 						})
 					})
 
@@ -738,10 +745,16 @@ var _ = Describe("TaskDB", func() {
 					})
 				})
 
-				Context("with an invalid failure reason", func() {
-					It("returns an error and does not update the record", func() {
-						_, _, err := sqlDB.FailTask(logger, taskGuid, randStr(256))
-						Expect(err).To(Equal(models.ErrBadRequest))
+				Context("when the failure reason is longer than 1K", func() {
+					It("truncates the crash reason", func() {
+						failureReason := strings.Repeat("x", 2*1024)
+						expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
+						_, _, err := sqlDB.FailTask(logger, taskGuid, failureReason)
+						Expect(err).NotTo(HaveOccurred())
+
+						task, err := sqlDB.TaskByGuid(logger, taskGuid)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(task.FailureReason).To(Equal(expectedFailureReason))
 					})
 				})
 			})
@@ -1162,6 +1175,19 @@ var _ = Describe("TaskDB", func() {
 
 					Expect(task.RejectionCount).To(BeEquivalentTo(0))
 					Expect(task.RejectionReason).To(Equal(""))
+				})
+			})
+
+			Context("when the rejection reason is longer than 1K", func() {
+				It("truncates the crash reason", func() {
+					failureReason := strings.Repeat("x", 2*1024)
+					expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
+					_, _, err := sqlDB.RejectTask(logger, taskGuid, failureReason)
+					Expect(err).NotTo(HaveOccurred())
+
+					task, err := sqlDB.TaskByGuid(logger, taskGuid)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(task.RejectionReason).To(Equal(expectedFailureReason))
 				})
 			})
 

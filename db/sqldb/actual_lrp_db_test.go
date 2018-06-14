@@ -1186,7 +1186,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP := *actualLRP
 						expectedActualLRP.State = models.ActualLRPStateUnclaimed
 						expectedActualLRP.CrashCount = 1
-						expectedActualLRP.CrashReason = crashReason[:1024]
+						expectedActualLRP.CrashReason = crashReason[:1013] + "(truncated)"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
@@ -1470,7 +1470,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 						expectedActualLRP := *actualLRP
 						expectedActualLRP.State = models.ActualLRPStateUnclaimed
-						expectedActualLRP.PlacementError = value[:1024]
+						expectedActualLRP.PlacementError = value[:1013] + "(truncated)"
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ModificationTag = models.ModificationTag{
 							Epoch: "my-awesome-guid",

@@ -10,6 +10,10 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+const (
+	Truncated = "(truncated)"
+)
+
 func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRPGroup, error) {
 	var groups []*models.ActualLRPGroup
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
@@ -326,7 +330,7 @@ func truncateString(s string, maxLen int) string {
 	if l < maxLen {
 		return s
 	}
-	return s[:maxLen]
+	return s[:maxLen-len(Truncated)] + Truncated
 }
 
 func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (*models.ActualLRPGroup, *models.ActualLRPGroup, bool, error) {
