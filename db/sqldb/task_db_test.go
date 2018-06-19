@@ -587,13 +587,26 @@ var _ = Describe("TaskDB", func() {
 						Expect(task.CellId).To(Equal(""))
 					})
 
-					Context("with an invalid failure reason", func() {
-						It("truncates the failure reason", func() {
-							failureReason := strings.Repeat("x", 2*1024)
-							expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
-							_, _, err := sqlDB.CompleteTask(logger, taskGuid, cellID, true, failureReason, "i am the result")
-							Expect(err).NotTo(HaveOccurred())
+					Context("when the rejection reason is longer than 1K", func() {
+						var (
+							failureReason string
+							after         *models.Task
+						)
 
+						JustBeforeEach(func() {
+							failureReason = strings.Repeat("x", 2*1024)
+							var err error
+							_, after, err = sqlDB.CompleteTask(logger, taskGuid, cellID, true, failureReason, "i am the result")
+							Expect(err).NotTo(HaveOccurred())
+						})
+
+						It("truncates the crash reason in the returned task", func() {
+							expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
+							Expect(after.FailureReason).To(Equal(expectedFailureReason))
+						})
+
+						It("truncates the crash reason", func() {
+							expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
 							task, err := sqlDB.TaskByGuid(logger, taskGuid)
 							Expect(err).NotTo(HaveOccurred())
 							Expect(task.FailureReason).To(Equal(expectedFailureReason))
@@ -1179,12 +1192,26 @@ var _ = Describe("TaskDB", func() {
 			})
 
 			Context("when the rejection reason is longer than 1K", func() {
-				It("truncates the crash reason", func() {
-					failureReason := strings.Repeat("x", 2*1024)
-					expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
-					_, _, err := sqlDB.RejectTask(logger, taskGuid, failureReason)
+				var (
+					failureReason string
+					after         *models.Task
+				)
+
+				JustBeforeEach(func() {
+					failureReason = strings.Repeat("x", 2*1024)
+					var err error
+					_, after, err = sqlDB.RejectTask(logger, taskGuid, failureReason)
 					Expect(err).NotTo(HaveOccurred())
 
+				})
+
+				It("truncates the crash reason in the returned task", func() {
+					expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
+					Expect(after.RejectionReason).To(Equal(expectedFailureReason))
+				})
+
+				It("truncates the crash reason", func() {
+					expectedFailureReason := strings.Repeat("x", 1013) + "(truncated)"
 					task, err := sqlDB.TaskByGuid(logger, taskGuid)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(task.RejectionReason).To(Equal(expectedFailureReason))

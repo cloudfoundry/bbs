@@ -299,16 +299,18 @@ func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason strin
 
 		beforeTask = *afterTask
 
-		afterTask.RejectionCount++
-		afterTask.RejectionReason = rejectionReason
-		afterTask.State = models.Task_Pending
-
 		now := db.clock.Now().UnixNano()
+
+		afterTask.RejectionCount++
+		afterTask.RejectionReason = truncateString(rejectionReason, 1024)
+		afterTask.State = models.Task_Pending
+		afterTask.UpdatedAt = now
+
 		_, err = db.update(logger, tx, tasksTable,
 			helpers.SQLAttributes{
 				"rejection_count":  afterTask.RejectionCount,
-				"rejection_reason": truncateString(rejectionReason, 1024),
-				"updated_at":       now,
+				"rejection_reason": afterTask.RejectionReason,
+				"updated_at":       afterTask.UpdatedAt,
 				"state":            afterTask.State,
 			},
 			"guid = ?", taskGuid,
@@ -405,22 +407,6 @@ func (db *SQLDB) DeleteTask(logger lager.Logger, taskGuid string) (*models.Task,
 
 func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx helpers.Tx) error {
 	now := db.clock.Now().UnixNano()
-	_, err := db.update(logger, tx, tasksTable,
-		helpers.SQLAttributes{
-			"failed":             failed,
-			"failure_reason":     truncateString(failureReason, 1024),
-			"result":             result,
-			"state":              models.Task_Completed,
-			"first_completed_at": now,
-			"updated_at":         now,
-			"cell_id":            "",
-		},
-		"guid = ?", task.TaskGuid,
-	)
-	if err != nil {
-		logger.Error("failed-updating-tasks", err)
-		return err
-	}
 
 	task.State = models.Task_Completed
 	task.UpdatedAt = now
@@ -429,6 +415,23 @@ func (db *SQLDB) completeTask(logger lager.Logger, task *models.Task, failed boo
 	task.FailureReason = truncateString(failureReason, 1024)
 	task.Result = result
 	task.CellId = ""
+
+	_, err := db.update(logger, tx, tasksTable,
+		helpers.SQLAttributes{
+			"failed":             task.Failed,
+			"failure_reason":     task.FailureReason,
+			"result":             task.Result,
+			"state":              task.State,
+			"first_completed_at": task.FirstCompletedAt,
+			"updated_at":         task.UpdatedAt,
+			"cell_id":            "",
+		},
+		"guid = ?", task.TaskGuid,
+	)
+	if err != nil {
+		logger.Error("failed-updating-tasks", err)
+		return err
+	}
 
 	return nil
 }
