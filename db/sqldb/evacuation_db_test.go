@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Evacuation", func() {
+var _ = FDescribe("Evacuation", func() {
 	var (
 		actualLRP *models.ActualLRP
 		guid      string
@@ -51,6 +51,8 @@ var _ = Describe("Evacuation", func() {
 				false,
 			)
 			Expect(err).NotTo(HaveOccurred())
+
+			actualLRP.Presence = models.ActualLRPPresenceEvacuating
 		})
 
 		Context("when the something about the actual LRP has changed", func() {
@@ -65,7 +67,7 @@ var _ = Describe("Evacuation", func() {
 					actualLRP.Domain = "some-other-domain"
 				})
 
-				It("persists the evacuating lrp in sqldb", func() {
+				FIt("persists the evacuating lrp in sqldb", func() {
 					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
 					Expect(err).NotTo(HaveOccurred())
 

@@ -44,4 +44,5 @@ message ActualLRP {
   optional string placement_error = 7 [(gogoproto.jsontag) = "placement_error,omitempty"];
   optional int64 since = 8;
   optional ModificationTag modification_tag = 9 [(gogoproto.nullable) = false];
+  optional string presence = 10;
 }

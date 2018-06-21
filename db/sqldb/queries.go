@@ -71,6 +71,7 @@ var (
 		actualLRPsTable + ".modification_tag_index",
 		actualLRPsTable + ".crash_count",
 		actualLRPsTable + ".crash_reason",
+		actualLRPsTable + ".presence",
 	}
 
 	domainColumns = helpers.ColumnList{

@@ -51,6 +51,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = *netInfo
+		actualLRP.Presence = models.ActualLRPPresenceEvacuating
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
@@ -67,6 +68,7 @@ func (db *SQLDB) EvacuateActualLRP(
 				"state":                  actualLRP.State,
 				"since":                  actualLRP.Since,
 				"modification_tag_index": actualLRP.ModificationTag.Index,
+				"presence":               actualLRP.Presence,
 			},
 			"process_guid = ? AND instance_index = ? AND evacuating = ?",
 			actualLRP.ProcessGuid, actualLRP.Index, true,
@@ -146,6 +148,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		State:                models.ActualLRPStateRunning,
 		Since:                now.UnixNano(),
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
+		Presence:             models.ActualLRPPresenceEvacuating,
 	}
 
 	sqlAttributes := helpers.SQLAttributes{
@@ -160,6 +163,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		"since":                  actualLRP.Since,
 		"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 		"modification_tag_index": actualLRP.ModificationTag.Index,
+		// "presence":               actualLRP.Presence,
 	}
 
 	_, err = db.upsert(logger, tx, "actual_lrps",
