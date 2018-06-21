@@ -67,7 +67,7 @@ var _ = FDescribe("Evacuation", func() {
 					actualLRP.Domain = "some-other-domain"
 				})
 
-				FIt("persists the evacuating lrp in sqldb", func() {
+				It("persists the evacuating lrp in sqldb", func() {
 					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -145,7 +145,38 @@ var _ = FDescribe("Evacuation", func() {
 			})
 		})
 
+		Context("when the presence key is empty", func() {
+			BeforeEach(func() {
+				queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr,
+					"",
+					actualLRP.ProcessGuid,
+					actualLRP.Index,
+					models.ActualLRPPresenceEvacuating,
+				)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("sets the presence to evacuating and persists the evacuating lrp", func() {
+				group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				Expect(err).NotTo(HaveOccurred())
+
+				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
+				Expect(group).To(BeEquivalentTo(actualLRPGroup))
+			})
+		})
+
 		Context("when the fetched lrp has not changed", func() {
+			BeforeEach(func() {
+				// either in this before each, or the global one, the actual lrp needs to be set to presence=evacuating just
+				// as the evacuating bool is set
+			})
+
 			It("does not update the record", func() {
 				_, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
 				Expect(err).NotTo(HaveOccurred())

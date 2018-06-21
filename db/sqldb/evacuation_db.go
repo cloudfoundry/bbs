@@ -40,6 +40,7 @@ func (db *SQLDB) EvacuateActualLRP(
 
 		if actualLRP.ActualLRPKey.Equal(lrpKey) &&
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
+			actualLRP.Presence == models.ActualLRPPresenceEvacuating &&
 			reflect.DeepEqual(actualLRP.ActualLRPNetInfo, *netInfo) {
 			logger.Debug("evacuating-lrp-already-exists")
 			return nil
@@ -163,7 +164,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		"since":                  actualLRP.Since,
 		"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 		"modification_tag_index": actualLRP.ModificationTag.Index,
-		// "presence":               actualLRP.Presence,
+		"presence":               actualLRP.Presence,
 	}
 
 	_, err = db.upsert(logger, tx, "actual_lrps",
