@@ -26,7 +26,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
 			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
@@ -40,7 +40,7 @@ func (db *SQLDB) EvacuateActualLRP(
 
 		if actualLRP.ActualLRPKey.Equal(lrpKey) &&
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
-			actualLRP.Presence == models.ActualLRPPresenceEvacuating &&
+			actualLRP.Presence == models.ActualLRP_Evacuating &&
 			reflect.DeepEqual(actualLRP.ActualLRPNetInfo, *netInfo) {
 			logger.Debug("evacuating-lrp-already-exists")
 			return nil
@@ -52,7 +52,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = *netInfo
-		actualLRP.Presence = models.ActualLRPPresenceEvacuating
+		actualLRP.Presence = models.ActualLRP_Evacuating
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
@@ -94,7 +94,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
+		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("evacuating-lrp-does-not-exist")
 			return nil
@@ -149,7 +149,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		State:                models.ActualLRPStateRunning,
 		Since:                now.UnixNano(),
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
-		Presence:             models.ActualLRPPresenceEvacuating,
+		Presence:             models.ActualLRP_Evacuating,
 	}
 
 	sqlAttributes := helpers.SQLAttributes{

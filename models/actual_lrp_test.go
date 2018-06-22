@@ -844,7 +844,7 @@ func itValidatesAbsenceOfPlacementError(lrp *models.ActualLRP) {
 func itValidatesOrdinaryPresence(lrp *models.ActualLRP) {
 	Context("when presence is set", func() {
 		BeforeEach(func() {
-			lrp.Presence = models.ActualLRPPresenceEvacuating
+			lrp.Presence = models.ActualLRP_Evacuating
 		})
 
 		It("validate returns an error", func() {
@@ -856,7 +856,7 @@ func itValidatesOrdinaryPresence(lrp *models.ActualLRP) {
 
 	Context("when presence is not set", func() {
 		BeforeEach(func() {
-			lrp.Presence = models.ActualLRPPresenceOrdinary
+			lrp.Presence = models.ActualLRP_Ordinary
 		})
 
 		It("validate does not return an error", func() {

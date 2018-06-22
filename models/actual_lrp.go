@@ -14,10 +14,6 @@ const (
 	ActualLRPStateRunning   = "RUNNING"
 	ActualLRPStateCrashed   = "CRASHED"
 
-	ActualLRPPresenceOrdinary   = ordinary
-	ActualLRPPresenceEvacuating = evacuating
-	ActualLRPPresenceSuspect    = suspect
-
 	CrashResetTimeout            = 5 * time.Minute
 	RetireActualLRPRetryAttempts = 5
 )
@@ -234,7 +230,7 @@ func (actual ActualLRP) Validate() error {
 		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is unclaimed"))
 		}
-		if actual.Presence != ActualLRPPresenceOrdinary {
+		if actual.Presence != ActualLRP_Ordinary {
 			validationError = validationError.Append(errors.New("presence cannot be set when state is unclaimed"))
 		}
 

@@ -45,14 +45,14 @@ var _ = XDescribe("Evacuation", func() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err := db.Exec(queryStr,
-				models.ActualLRPPresenceEvacuating,
+				models.ActualLRP_Evacuating,
 				actualLRP.ProcessGuid,
 				actualLRP.Index,
 				"",
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			actualLRP.Presence = models.ActualLRPPresenceEvacuating
+			actualLRP.Presence = models.ActualLRP_Evacuating
 		})
 
 		Context("when the something about the actual LRP has changed", func() {
@@ -155,7 +155,7 @@ var _ = XDescribe("Evacuation", func() {
 					"",
 					actualLRP.ProcessGuid,
 					actualLRP.Index,
-					models.ActualLRPPresenceEvacuating,
+					models.ActualLRP_Evacuating,
 				)
 				Expect(err).NotTo(HaveOccurred())
 			})

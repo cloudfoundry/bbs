@@ -57,14 +57,13 @@ func (e *AddPresenceToActualLrp) alterTable(logger lager.Logger) error {
 	if e.dbFlavor == "mysql" {
 		alterTablesSQL = append(alterTablesSQL,
 			"ALTER TABLE actual_lrps DROP primary key, ADD PRIMARY KEY (process_guid, instance_index, evacuating, presence);",
-			"UPDATE actual_lrps SET presence = 1 WHERE evacuating = true;",
 		)
 	} else {
 		alterTablesSQL = append(alterTablesSQL,
 			"ALTER TABLE actual_lrps DROP CONSTRAINT actual_lrps_pkey, ADD PRIMARY KEY (process_guid, instance_index, evacuating, presence);",
-			"UPDATE actual_lrps SET presence = 1 WHERE evacuating = true;",
 		)
 	}
+	alterTablesSQL = append(alterTablesSQL, "UPDATE actual_lrps SET presence = 1 WHERE evacuating = true;")
 
 	logger.Info("altering-table")
 	for _, query := range alterTablesSQL {
