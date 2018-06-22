@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Evacuation", func() {
+var _ = XDescribe("Evacuation", func() {
 	var (
 		actualLRP *models.ActualLRP
 		guid      string
@@ -40,15 +40,15 @@ var _ = FDescribe("Evacuation", func() {
 		BeforeEach(func() {
 			ttl = 60
 
-			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err := db.Exec(queryStr,
-				true,
+				models.ActualLRPPresenceEvacuating,
 				actualLRP.ProcessGuid,
 				actualLRP.Index,
-				false,
+				"",
 			)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -67,7 +67,7 @@ var _ = FDescribe("Evacuation", func() {
 					actualLRP.Domain = "some-other-domain"
 				})
 
-				It("persists the evacuating lrp in sqldb", func() {
+				FIt("persists the evacuating lrp in sqldb", func() {
 					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
 					Expect(err).NotTo(HaveOccurred())
 

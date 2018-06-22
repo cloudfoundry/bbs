@@ -34,6 +34,12 @@ message ActualLRPNetInfo {
   optional string instance_address = 3 [(gogoproto.jsontag) = "instance_address,omitempty"];
 }
 
+enum Presence {
+  ordinary = 0;
+  evacuating = 1;
+  suspect = 2;
+}
+
 message ActualLRP {
   optional ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   optional ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
@@ -44,5 +50,5 @@ message ActualLRP {
   optional string placement_error = 7 [(gogoproto.jsontag) = "placement_error,omitempty"];
   optional int64 since = 8;
   optional ModificationTag modification_tag = 9 [(gogoproto.nullable) = false];
-  optional string presence = 10;
+  optional Presence presence = 10;
 }

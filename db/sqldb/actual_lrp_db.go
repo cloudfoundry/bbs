@@ -579,11 +579,6 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	return &actualLRP, evacuating, nil
 }
 
-type actualToDelete struct {
-	*models.ActualLRP
-	evacuating bool
-}
-
 func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx helpers.Tx) (*models.ActualLRP, error) {
 	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
 	bindings := []interface{}{processGuid, index, evacuating}
@@ -613,11 +608,11 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRPGroup, error) {
 	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
 	result := []*models.ActualLRPGroup{}
-	actualsToDelete := []*actualToDelete{}
+	actualsToDelete := []*models.ActualLRP{}
 	for rows.Next() {
-		actualLRP, evacuating, err := db.scanToActualLRP(logger, rows)
+		actualLRP, _, err := db.scanToActualLRP(logger, rows)
 		if err == models.ErrDeserialize {
-			actualsToDelete = append(actualsToDelete, &actualToDelete{actualLRP, evacuating})
+			actualsToDelete = append(actualsToDelete, actualLRP)
 			continue
 		}
 
@@ -634,9 +629,10 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
 			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
 		}
-		if evacuating {
+		if actualLRP.Presence == models.ActualLRPPresenceEvacuating {
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
 		} else {
+			logger.Debug("Instance found", lager.Data{"instance": actualLRP})
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 		}
 	}
@@ -648,13 +644,14 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 
 	for _, actual := range actualsToDelete {
 		_, err := db.delete(logger, q, actualLRPsTable,
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			actual.ProcessGuid, actual.Index, actual.evacuating,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			actual.ProcessGuid, actual.Index, actual.Presence,
 		)
 		if err != nil {
 			logger.Error("failed-cleaning-up-invalid-actual-lrp", err)
 		}
 	}
 
+	logger.Debug("Got Result", lager.Data{"result": result})
 	return result, nil
 }

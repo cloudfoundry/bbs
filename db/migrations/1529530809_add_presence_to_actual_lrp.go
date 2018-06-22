@@ -3,6 +3,7 @@ package migrations
 import (
 	"database/sql"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
@@ -46,11 +47,34 @@ func (e *AddPresenceToActualLrp) Up(logger lager.Logger) error {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	const query = "ALTER TABLE actual_lrps ADD COLUMN presence VARCHAR(255) NOT NULL DEFAULT '';"
-	_, err := e.rawSQLDB.Exec(query)
-	if err != nil {
-		logger.Error("failed-altering-table", err)
-		return err
+	return e.alterTable(logger)
+}
+
+func (e *AddPresenceToActualLrp) alterTable(logger lager.Logger) error {
+	alterTablesSQL := []string{
+		"ALTER TABLE actual_lrps ADD COLUMN presence INT NOT NULL DEFAULT 0;",
+	}
+	if e.dbFlavor == "mysql" {
+		alterTablesSQL = append(alterTablesSQL,
+			"ALTER TABLE actual_lrps DROP primary key, ADD PRIMARY KEY (process_guid, instance_index, evacuating, presence);",
+			"UPDATE actual_lrps SET presence = 1 WHERE evacuating = true;",
+		)
+	} else {
+		alterTablesSQL = append(alterTablesSQL,
+			"ALTER TABLE actual_lrps DROP CONSTRAINT actual_lrps_pkey, ADD PRIMARY KEY (process_guid, instance_index, evacuating, presence);",
+			"UPDATE actual_lrps SET presence = 1 WHERE evacuating = true;",
+		)
+	}
+
+	logger.Info("altering-table")
+	for _, query := range alterTablesSQL {
+		logger.Info("altering the table", lager.Data{"query": query})
+		_, err := e.rawSQLDB.Exec(helpers.RebindForFlavor(query, e.dbFlavor))
+		if err != nil {
+			logger.Error("failed-altering-table", err)
+			return err
+		}
+		logger.Info("altered the table", lager.Data{"query": query})
 	}
 
 	return nil
