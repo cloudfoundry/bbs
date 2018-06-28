@@ -51,6 +51,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = *netInfo
+		actualLRP.Presence = models.ActualLRP_Evacuating
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
@@ -146,6 +147,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		State:                models.ActualLRPStateRunning,
 		Since:                now.UnixNano(),
 		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
+		Presence:             models.ActualLRP_Evacuating,
 	}
 
 	sqlAttributes := helpers.SQLAttributes{

@@ -105,6 +105,7 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				_, err := db.Exec(queryStr, true, actualLRP.ProcessGuid, actualLRP.Index, false)
 				Expect(err).NotTo(HaveOccurred())
+				actualLRP.Presence = models.ActualLRP_Evacuating
 			})
 
 			It("returns the existing actual lrp group", func() {
@@ -119,7 +120,13 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 
 		Context("when there are both instance and evacuating LRPs", func() {
+			var evacuatingLRP *models.ActualLRP
 			BeforeEach(func() {
+				actualLRP.Since = fakeClock.Now().UnixNano()
+				cpy := *actualLRP
+				evacuatingLRP = &cpy
+				evacuatingLRP.Presence = models.ActualLRP_Evacuating
+
 				queryStr := "UPDATE actual_lrps SET evacuating = true WHERE process_guid = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
@@ -131,13 +138,11 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("returns the existing actual lrp group", func() {
-				actualLRP.Since = fakeClock.Now().UnixNano()
-
 				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(group).NotTo(BeNil())
 				Expect(group.Instance).To(BeEquivalentTo(actualLRP))
-				Expect(group.Evacuating).To(BeEquivalentTo(actualLRP))
+				Expect(group.Evacuating).To(BeEquivalentTo(evacuatingLRP))
 			})
 		})
 
@@ -291,6 +296,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					Presence: models.ActualLRP_Evacuating,
 				},
 			})
 
@@ -313,6 +319,7 @@ var _ = Describe("ActualLRPDB", func() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err = db.Exec(queryStr, true, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
 			Expect(err).NotTo(HaveOccurred())
@@ -340,6 +347,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 1,
 					},
+					Presence: models.ActualLRP_Evacuating,
 				},
 			})
 		})
@@ -452,6 +460,7 @@ var _ = Describe("ActualLRPDB", func() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err = db.Exec(queryStr, true, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, false)
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
 			Expect(err).NotTo(HaveOccurred())
@@ -475,6 +484,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "mod-tag-guid",
 						Index: 0,
 					},
+					Presence: models.ActualLRP_Evacuating,
 				},
 			})
 
@@ -755,8 +765,8 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("and the actual lrp is CRASHED", func() {
 				BeforeEach(func() {
 					queryStr := `
-			UPDATE actual_lrps SET state = ?
-			WHERE process_guid = ? AND instance_index = ?`
+						UPDATE actual_lrps SET state = ?
+						WHERE process_guid = ? AND instance_index = ?`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
@@ -775,6 +785,37 @@ var _ = Describe("ActualLRPDB", func() {
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateCrashed))
+				})
+			})
+
+			Context("and the actual lrp is evacuating", func() {
+				BeforeEach(func() {
+					queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+					_, err := db.Exec(queryStr,
+						true,
+						expectedActualLRP.ActualLRPKey.ProcessGuid,
+						expectedActualLRP.ActualLRPKey.Index,
+						false,
+					)
+					Expect(err).NotTo(HaveOccurred())
+
+					expectedActualLRP.State = models.ActualLRPStateUnclaimed
+					expectedActualLRP.Since = lrpCreationTime.UnixNano()
+					expectedActualLRP.Presence = models.ActualLRP_Evacuating
+				})
+
+				It("returns an error", func() {
+					_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrResourceNotFound))
+
+					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPGroup.Instance).To(BeNil())
+					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(expectedActualLRP))
 				})
 			})
 		})
@@ -1113,6 +1154,42 @@ var _ = Describe("ActualLRPDB", func() {
 				Expect(*fetchedActualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
 				Expect(afterActualLRPGroup).To(BeEquivalentTo(fetchedActualLRPGroup))
 			})
+
+			Context("when there is only an evacuating actual LRP", func() {
+				BeforeEach(func() {
+					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+					queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+					_, err = db.Exec(queryStr,
+						true,
+						actualLRP.ActualLRPKey.ProcessGuid,
+						actualLRP.ActualLRPKey.Index,
+						false,
+					)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("creates a new actual LRP", func() {
+					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &models.ActualLRP{}}))
+
+					fetchedActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					Expect(err).NotTo(HaveOccurred())
+
+					expectedActualLRP := *actualLRP
+					expectedActualLRP.State = models.ActualLRPStateRunning
+					expectedActualLRP.ActualLRPNetInfo = *netInfo
+					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
+					expectedActualLRP.Since = fakeClock.Now().UnixNano()
+
+					Expect(*fetchedActualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+					Expect(afterActualLRPGroup.Instance).To(BeEquivalentTo(fetchedActualLRPGroup.Instance))
+				})
+			})
 		})
 	})
 
@@ -1396,6 +1473,98 @@ var _ = Describe("ActualLRPDB", func() {
 					_, _, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(models.ErrActualLRPCannotBeCrashed))
+				})
+			})
+			Context("and it's EVACUATING", func() {
+				BeforeEach(func() {
+					queryStr := `
+							UPDATE actual_lrps SET crash_count = ?, evacuating = ?
+							WHERE process_guid = ? AND instance_index = ?`
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+					_, err := db.Exec(queryStr,
+						models.DefaultImmediateRestarts+2,
+						true,
+						actualLRP.ProcessGuid,
+						actualLRP.Index,
+					)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns a cannot crash error", func() {
+					_, _, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrResourceNotFound))
+				})
+			})
+
+			Context("When two actual LRPs exist and only one is evacuating", func() {
+				BeforeEach(func() {
+					instanceKey = &models.ActualLRPInstanceKey{
+						InstanceGuid: "the-instance-guid",
+						CellId:       "the-cell-id",
+					}
+
+					netInfo = &models.ActualLRPNetInfo{
+						Address:         "1.2.1.2",
+						Ports:           []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
+						InstanceAddress: "2.2.2.2",
+					}
+					evacuatingInstanceKey := &models.ActualLRPInstanceKey{
+						InstanceGuid: "evacuating-instance-guid",
+						CellId:       "evac-cell-id",
+					}
+					evacuatingLRP := &models.ActualLRP{
+						ActualLRPKey: models.ActualLRPKey{
+							ProcessGuid: "the-unclaimed-guid",
+							Index:       1,
+							Domain:      "the-domain",
+						},
+						Presence:             models.ActualLRP_Evacuating,
+						ActualLRPInstanceKey: *instanceKey,
+					}
+					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &evacuatingLRP.ActualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, _, err = sqlDB.StartActualLRP(logger, &evacuatingLRP.ActualLRPKey, evacuatingInstanceKey, netInfo)
+					Expect(err).NotTo(HaveOccurred())
+					queryStr := `
+							UPDATE actual_lrps SET evacuating = ?
+							WHERE process_guid = ? AND instance_index = ?`
+
+					if test_helpers.UsePostgres() {
+						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+					}
+
+					_, err = db.Exec(queryStr,
+						true,
+						evacuatingLRP.ProcessGuid,
+						evacuatingLRP.Index,
+					)
+					Expect(err).NotTo(HaveOccurred())
+
+					actualLRP = &models.ActualLRP{
+						ActualLRPKey: models.ActualLRPKey{
+							ProcessGuid: "the-unclaimed-guid",
+							Index:       1,
+							Domain:      "the-domain",
+						},
+						Presence:             models.ActualLRP_Ordinary,
+						ActualLRPInstanceKey: *instanceKey,
+					}
+					_, err = sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, _, err = sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					Expect(err).NotTo(HaveOccurred())
+
+				})
+
+				It("only update the non evacuating one", func() {
+					_, actualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actualLRPGroup.Instance.CrashCount).To(Equal(actualLRP.CrashCount + 1))
 				})
 			})
 		})

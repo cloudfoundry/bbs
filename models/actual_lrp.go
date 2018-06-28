@@ -230,6 +230,9 @@ func (actual ActualLRP) Validate() error {
 		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is unclaimed"))
 		}
+		if actual.Presence != ActualLRP_Ordinary {
+			validationError = validationError.Append(errors.New("presence cannot be set when state is unclaimed"))
+		}
 
 	case ActualLRPStateClaimed:
 		if err := actual.ActualLRPInstanceKey.Validate(); err != nil {

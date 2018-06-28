@@ -588,6 +588,7 @@ var _ = Describe("ActualLRP", func() {
 				itValidatesAbsenceOfTheInstanceKey(&lrp)
 				itValidatesAbsenceOfNetInfo(&lrp)
 				itValidatesPresenceOfPlacementError(&lrp)
+				itValidatesOrdinaryPresence(&lrp)
 			})
 
 			Context("when state is claimed", func() {
@@ -832,6 +833,30 @@ func itValidatesAbsenceOfPlacementError(lrp *models.ActualLRP) {
 	Context("when placement error is not set", func() {
 		BeforeEach(func() {
 			lrp.PlacementError = ""
+		})
+
+		It("validate does not return an error", func() {
+			Expect(lrp.Validate()).NotTo(HaveOccurred())
+		})
+	})
+}
+
+func itValidatesOrdinaryPresence(lrp *models.ActualLRP) {
+	Context("when presence is set", func() {
+		BeforeEach(func() {
+			lrp.Presence = models.ActualLRP_Evacuating
+		})
+
+		It("validate returns an error", func() {
+			err := lrp.Validate()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("presence cannot be set"))
+		})
+	})
+
+	Context("when presence is not set", func() {
+		BeforeEach(func() {
+			lrp.Presence = models.ActualLRP_Ordinary
 		})
 
 		It("validate does not return an error", func() {

@@ -51,6 +51,8 @@ var _ = Describe("Evacuation", func() {
 				false,
 			)
 			Expect(err).NotTo(HaveOccurred())
+
+			actualLRP.Presence = models.ActualLRP_Evacuating
 		})
 
 		Context("when the something about the actual LRP has changed", func() {
@@ -140,17 +142,6 @@ var _ = Describe("Evacuation", func() {
 					actualLRPGroup.Evacuating.ModificationTag = actualLRP.ModificationTag
 					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
 				})
-			})
-		})
-
-		Context("when the fetched lrp has not changed", func() {
-			It("does not update the record", func() {
-				_, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
-				Expect(err).NotTo(HaveOccurred())
-
-				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(actualLRP))
 			})
 		})
 

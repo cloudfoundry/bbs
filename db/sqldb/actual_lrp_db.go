@@ -540,7 +540,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 	return actualLRP, nil
 }
 
-func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, bool, error) {
+func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
 	var evacuating bool
@@ -563,7 +563,11 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	)
 	if err != nil {
 		logger.Error("failed-scanning-actual-lrp", err)
-		return nil, false, err
+		return nil, err
+	}
+
+	if evacuating {
+		actualLRP.Presence = models.ActualLRP_Evacuating
 	}
 
 	if len(netInfoData) > 0 {
@@ -571,16 +575,11 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
-			return &actualLRP, evacuating, models.ErrDeserialize
+			return &actualLRP, models.ErrDeserialize
 		}
 	}
 
-	return &actualLRP, evacuating, nil
-}
-
-type actualToDelete struct {
-	*models.ActualLRP
-	evacuating bool
+	return &actualLRP, nil
 }
 
 func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx helpers.Tx) (*models.ActualLRP, error) {
@@ -612,11 +611,11 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRPGroup, error) {
 	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
 	result := []*models.ActualLRPGroup{}
-	actualsToDelete := []*actualToDelete{}
+	actualsToDelete := []*models.ActualLRP{}
 	for rows.Next() {
-		actualLRP, evacuating, err := db.scanToActualLRP(logger, rows)
+		actualLRP, err := db.scanToActualLRP(logger, rows)
 		if err == models.ErrDeserialize {
-			actualsToDelete = append(actualsToDelete, &actualToDelete{actualLRP, evacuating})
+			actualsToDelete = append(actualsToDelete, actualLRP)
 			continue
 		}
 
@@ -633,7 +632,7 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
 			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
 		}
-		if evacuating {
+		if actualLRP.Presence == models.ActualLRP_Evacuating {
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
 		} else {
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
@@ -648,7 +647,7 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 	for _, actual := range actualsToDelete {
 		_, err := db.delete(logger, q, actualLRPsTable,
 			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			actual.ProcessGuid, actual.Index, actual.evacuating,
+			actual.ProcessGuid, actual.Index, actual.Presence == models.ActualLRP_Evacuating,
 		)
 		if err != nil {
 			logger.Error("failed-cleaning-up-invalid-actual-lrp", err)
