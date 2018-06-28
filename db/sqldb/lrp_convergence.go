@@ -422,8 +422,8 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.CellSet) []models.Event {
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
-	wheres := []string{"evacuating = ?"}
-	bindings := []interface{}{true}
+	wheres := []string{"presence = ?"}
+	bindings := []interface{}{models.ActualLRP_Evacuating}
 
 	if len(cellSet) > 0 {
 		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet))))

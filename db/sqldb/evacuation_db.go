@@ -155,7 +155,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	sqlAttributes := helpers.SQLAttributes{
 		"process_guid":           actualLRP.ProcessGuid,
 		"instance_index":         actualLRP.Index,
-		"evacuating":             true,
+		"evacuating":             true, // should this be false to prevent it's use in the future?
 		"domain":                 actualLRP.Domain,
 		"instance_guid":          actualLRP.InstanceGuid,
 		"cell_id":                actualLRP.CellId,

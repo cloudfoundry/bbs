@@ -173,8 +173,8 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			processGuid, index, false,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			processGuid, index, models.ActualLRP_Ordinary,
 		)
 		if err != nil {
 			logger.Error("failed-to-unclaim-actual-lrp", err)
@@ -377,7 +377,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
 		}
-		evacuating := false
+		evacuating := models.ActualLRP_Ordinary
 
 		if actualLRP.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
 			actualLRP.State = models.ActualLRPStateUnclaimed
@@ -398,7 +398,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
+			"process_guid = ? AND instance_index = ? AND presence = ?",
 			key.ProcessGuid, key.Index, evacuating,
 		)
 		if err != nil {
@@ -438,7 +438,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		actualLRP.ModificationTag.Increment()
 		actualLRP.PlacementError = placementError
 		actualLRP.Since = now
-		evacuating := false
+		evacuating := models.ActualLRP_Ordinary
 
 		_, err = db.update(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
@@ -446,7 +446,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 				"placement_error":        truncateString(actualLRP.PlacementError, 1024),
 				"since":                  actualLRP.Since,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
+			"process_guid = ? AND instance_index = ? AND presence = ?",
 			key.ProcessGuid, key.Index, evacuating,
 		)
 		if err != nil {
@@ -468,15 +468,16 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
 		var result sql.Result
+		presence := models.ActualLRP_Ordinary
 		if instanceKey == nil {
 			result, err = db.delete(logger, tx, actualLRPsTable,
-				"process_guid = ? AND instance_index = ? AND evacuating = ?",
-				processGuid, index, false,
+				"process_guid = ? AND instance_index = ? AND presence = ?",
+				processGuid, index, presence,
 			)
 		} else {
 			result, err = db.delete(logger, tx, actualLRPsTable,
-				"process_guid = ? AND instance_index = ? AND evacuating = ? AND instance_guid = ? AND cell_id = ?",
-				processGuid, index, false, instanceKey.InstanceGuid, instanceKey.CellId,
+				"process_guid = ? AND instance_index = ? AND presence = ? AND instance_guid = ? AND cell_id = ?",
+				processGuid, index, presence, instanceKey.InstanceGuid, instanceKey.CellId,
 			)
 		}
 		if err != nil {
@@ -539,7 +540,7 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 	return actualLRP, nil
 }
 
-func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, bool, error) {
+func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
 	var evacuating bool
@@ -547,7 +548,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	err := row.Scan(
 		&actualLRP.ProcessGuid,
 		&actualLRP.Index,
-		&evacuating,
+		&evacuating, // Do we need this, won't this be false by default if not scanned?
 		&actualLRP.Domain,
 		&actualLRP.State,
 		&actualLRP.InstanceGuid,
@@ -563,7 +564,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	)
 	if err != nil {
 		logger.Error("failed-scanning-actual-lrp", err)
-		return nil, false, err
+		return nil, err
 	}
 
 	if len(netInfoData) > 0 {
@@ -571,11 +572,11 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
-			return &actualLRP, evacuating, models.ErrDeserialize
+			return &actualLRP, models.ErrDeserialize
 		}
 	}
 
-	return &actualLRP, evacuating, nil
+	return &actualLRP, nil
 }
 
 func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, presence models.ActualLRP_Presence, tx helpers.Tx) (*models.ActualLRP, error) {
@@ -609,7 +610,7 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 	result := []*models.ActualLRPGroup{}
 	actualsToDelete := []*models.ActualLRP{}
 	for rows.Next() {
-		actualLRP, _, err := db.scanToActualLRP(logger, rows)
+		actualLRP, err := db.scanToActualLRP(logger, rows)
 		if err == models.ErrDeserialize {
 			actualsToDelete = append(actualsToDelete, actualLRP)
 			continue

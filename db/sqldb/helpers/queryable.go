@@ -66,6 +66,8 @@ func (q *monitoredDB) Begin() (Tx, error) {
 }
 
 func (q *monitoredDB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	// why not do the  string replace here if the DB is a pgsql
+
 	var result sql.Result
 	err := q.monitor.MonitorQuery(func() error {
 		var err error

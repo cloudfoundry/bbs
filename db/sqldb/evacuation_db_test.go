@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = XDescribe("Evacuation", func() {
+var _ = FDescribe("Evacuation", func() {
 	var (
 		actualLRP *models.ActualLRP
 		guid      string
@@ -40,7 +40,7 @@ var _ = XDescribe("Evacuation", func() {
 		BeforeEach(func() {
 			ttl = 60
 
-			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
+			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
@@ -48,14 +48,14 @@ var _ = XDescribe("Evacuation", func() {
 				models.ActualLRP_Evacuating,
 				actualLRP.ProcessGuid,
 				actualLRP.Index,
-				"",
+				// models.ActualLRP_Ordinary,
 			)
 			Expect(err).NotTo(HaveOccurred())
 
 			actualLRP.Presence = models.ActualLRP_Evacuating
 		})
 
-		Context("when the something about the actual LRP has changed", func() {
+		FContext("when the something about the actual LRP has changed", func() {
 			BeforeEach(func() {
 				fakeClock.IncrementBySeconds(5)
 				actualLRP.Since = fakeClock.Now().UnixNano()
@@ -67,7 +67,7 @@ var _ = XDescribe("Evacuation", func() {
 					actualLRP.Domain = "some-other-domain"
 				})
 
-				FIt("persists the evacuating lrp in sqldb", func() {
+				It("persists the evacuating lrp in sqldb", func() {
 					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
 					Expect(err).NotTo(HaveOccurred())
 
