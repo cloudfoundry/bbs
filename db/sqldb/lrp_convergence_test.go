@@ -2,10 +2,8 @@ package sqldb_test
 
 import (
 	"fmt"
-	"sort"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -408,41 +406,48 @@ var _ = Describe("LRPConvergence", func() {
 		})
 	})
 
+	actualLRPKeyWithSchedulingInfo := func(desiredLRP *models.DesiredLRP, index int) *models.ActualLRPKeyWithSchedulingInfo {
+		schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+		lrpKey := models.NewActualLRPKey(desiredLRP.ProcessGuid, 0, desiredLRP.Domain)
+
+		lrp := &models.ActualLRPKeyWithSchedulingInfo{
+			Key:            &lrpKey,
+			SchedulingInfo: &schedulingInfo,
+		}
+		return lrp
+	}
+
 	It("returns start requests for stale unclaimed actual LRPs", func() {
-		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		result := sqlDB.ConvergeLRPs(logger, cellSet)
+		missingLRPKeys := result.MissingLRPKeys
 		Expect(logger).To(gbytes.Say("creating-start-request.*reason\":\"stale-unclaimed-lrp"))
 
 		By("fresh domain", func() {
-			Expect(startRequests).NotTo(BeEmpty())
+			Expect(missingLRPKeys).NotTo(BeEmpty())
 
 			processGuid := "desired-with-stale-actuals" + "-" + freshDomain
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
-
-			for _, startRequest := range startRequests {
-				sort.Ints(startRequest.Indices)
-			}
-
-			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 1)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 1)))
 		})
 
 		By("expired domain", func() {
-			Expect(startRequests).NotTo(BeEmpty())
+			Expect(missingLRPKeys).NotTo(BeEmpty())
 
 			processGuid := "desired-with-stale-actuals" + "-" + expiredDomain
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
-
-			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 0)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 1)))
 		})
 	})
 
 	It("returns the start requests and actual lrp keys for actuals with missing cells", func() {
-		_, keysWithMissingCells, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		result := sqlDB.ConvergeLRPs(logger, cellSet)
+		keysWithMissingCells := result.KeysWithMissingCells
 
 		By("fresh domain", func() {
 			processGuid := "desired-with-missing-cell-actuals" + "-" + freshDomain
@@ -492,8 +497,9 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("creates actual LRPs with missing indices, and returns it to be started", func() {
-		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
-		Expect(startRequests).NotTo(BeEmpty())
+		result := sqlDB.ConvergeLRPs(logger, cellSet)
+		missingLRPKeys := result.MissingLRPKeys
+		Expect(missingLRPKeys).NotTo(BeEmpty())
 
 		Expect(logger).To(gbytes.Say("creating-start-request.*reason\":\"missing-instance"))
 
@@ -502,13 +508,11 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 0)))
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
-
-			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			// actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 		})
 
 		By("missing some actuals, fresh domain", func() {
@@ -516,17 +520,16 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1, 3)
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 1)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 3)))
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			// actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 1)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 
-			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 1)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
-
-			actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 3)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			// actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 3)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 		})
 
 		By("missing all actuals, expired domain", func() {
@@ -534,13 +537,11 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0)
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 0)))
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
-
-			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			// actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 		})
 
 		By("missing some actuals, expired domain", func() {
@@ -548,23 +549,23 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 1, 3)
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 1)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 3)))
 
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
+			// actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 1)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 
-			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 1)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
-
-			actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 3)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			// actualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 3)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 		})
 	})
 
 	It("unclaims actual LRPs that are crashed and restartable, and returns it to be started", func() {
-		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
-		Expect(startRequests).NotTo(BeEmpty())
+		result := sqlDB.ConvergeLRPs(logger, cellSet)
+		missingLRPKeys := result.MissingLRPKeys
+		Expect(missingLRPKeys).NotTo(BeEmpty())
 
 		Expect(logger).To(gbytes.Say("creating-start-request.*reason\":\"crashed-instance"))
 
@@ -573,14 +574,14 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
-			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 0)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 1)))
 
-			for i := 0; i < 2; i++ {
-				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, int32(i))
-				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
-			}
+			// for i := 0; i < 2; i++ {
+			// 	actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, int32(i))
+			// 	Expect(err).NotTo(HaveOccurred())
+			// 	Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			// }
 		})
 
 		By("expired domain", func() {
@@ -588,18 +589,18 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, 0, 1)
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 0)))
+			Expect(missingLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, 1)))
 
-			Expect(startRequests).To(ContainElement(BeActualLRPStartRequest(lrpStartRequest)))
-
-			actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			// actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+			// Expect(err).NotTo(HaveOccurred())
+			// Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
 		})
 	})
 
 	It("returns extra actual LRPs to be retired", func() {
-		_, _, keysToRetire, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		result := sqlDB.ConvergeLRPs(logger, cellSet)
+		keysToRetire := result.KeysToRetire
 		Expect(keysToRetire).NotTo(BeEmpty())
 
 		processGuid := "desired-with-extra-actuals" + "-" + freshDomain
@@ -612,8 +613,7 @@ var _ = Describe("LRPConvergence", func() {
 	})
 
 	It("creates unclaimed for evacuating instances that are missing the running record", func() {
-		startRequests, _, _, _ := sqlDB.ConvergeLRPs(logger, cellSet)
-		Expect(startRequests).NotTo(BeEmpty())
+		result := sqlDB.ConvergeLRPs(logger, cellSet)
 
 		processGuids := []string{
 			"desired-with-stale-actuals" + "-" + evacuatingDomain,
@@ -628,20 +628,15 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			indices := []int{}
 			for i := 0; i < int(desiredLRP.Instances); i++ {
-				indices = append(indices, i)
+				Expect(result.UnstartedLRPKeys).To(ContainElement(actualLRPKeyWithSchedulingInfo(desiredLRP, i)))
 			}
 
-			lrpStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, indices...)
-
-			Expect(startRequests).To(ContainElement(&lrpStartRequest))
-
-			for i := 0; i < int(desiredLRP.Instances); i++ {
-				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, int32(i))
-				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
-			}
+			// for i := 0; i < int(desiredLRP.Instances); i++ {
+			// 	actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, int32(i))
+			// 	Expect(err).NotTo(HaveOccurred())
+			// 	Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+			// }
 		}
 	})
 
@@ -680,7 +675,8 @@ var _ = Describe("LRPConvergence", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(lrps)).To(Equal(1))
 
-			_, _, _, events := sqlDB.ConvergeLRPs(logger, cellSet)
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			events := result.Events
 
 			Expect(len(events)).NotTo(BeZero())
 			event := models.NewActualLRPRemovedEvent(lrps[0])
@@ -724,11 +720,14 @@ var _ = Describe("LRPConvergence", func() {
 			beforeActuals = append(beforeActuals, actuals)
 		}
 
-		startRequests, keysWithMissingCells, keysToRetire, _ := sqlDB.ConvergeLRPs(logger, cellSet)
+		result := sqlDB.ConvergeLRPs(logger, cellSet)
+		missingLRPKeys := result.MissingLRPKeys
+		keysWithMissingCells := result.KeysWithMissingCells
+		keysToRetire := result.KeysToRetire
 
-		startGuids := make([]string, 0, len(startRequests))
-		for _, startRequest := range startRequests {
-			startGuids = append(startGuids, startRequest.ProcessGuid)
+		startGuids := make([]string, 0, len(missingLRPKeys))
+		for _, lrpKey := range missingLRPKeys {
+			startGuids = append(startGuids, lrpKey.Key.ProcessGuid)
 		}
 
 		for _, processGuid := range processGuids {
@@ -769,7 +768,8 @@ var _ = Describe("LRPConvergence", func() {
 		})
 
 		It("reports all non evacuating actual lrps as missing cells", func() {
-			_, actualsWithMissingCells, _, _ := sqlDB.ConvergeLRPs(logger, models.CellSet{})
+			result := sqlDB.ConvergeLRPs(logger, models.CellSet{})
+			actualsWithMissingCells := result.KeysWithMissingCells
 			Expect(len(actualsWithMissingCells)).To(Equal(23))
 		})
 

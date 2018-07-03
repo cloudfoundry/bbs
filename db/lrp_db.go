@@ -1,16 +1,24 @@
 package db
 
 import (
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter . LRPDB
 
+type ConvergenceResult struct {
+	MissingLRPKeys               []*models.ActualLRPKeyWithSchedulingInfo
+	UnstartedLRPKeys             []*models.ActualLRPKeyWithSchedulingInfo
+	KeysToRetire                 []*models.ActualLRPKey
+	KeysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
+	SuspectKeysWithExistingCells []*models.ActualLRPKey
+	Events                       []models.Event
+}
+
 type LRPDB interface {
 	ActualLRPDB
 	DesiredLRPDB
 
-	ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey, events []models.Event)
+	ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ConvergenceResult
 }

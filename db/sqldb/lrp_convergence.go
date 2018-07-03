@@ -8,11 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/workpool"
 )
 
 const (
@@ -33,66 +32,66 @@ const (
 	crashingDesiredLRPsMetric = "CrashingDesiredLRPs"
 )
 
-func (db *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ([]*auctioneer.LRPStartRequest, []*models.ActualLRPKeyWithSchedulingInfo, []*models.ActualLRPKey, []models.Event) {
-	convergeStart := db.clock.Now()
-	db.metronClient.IncrementCounter(convergeLRPRunsCounter)
+func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult {
+	convergeStart := sqldb.clock.Now()
+	sqldb.metronClient.IncrementCounter(convergeLRPRunsCounter)
 	logger.Info("starting")
 	defer logger.Info("completed")
 
 	defer func() {
-		err := db.metronClient.SendDuration(convergeLRPDuration, time.Since(convergeStart))
+		err := sqldb.metronClient.SendDuration(convergeLRPDuration, time.Since(convergeStart))
 		if err != nil {
 			logger.Error("failed-sending-converge-lrp-duration-metric", err)
 		}
 	}()
 
-	now := db.clock.Now()
+	now := sqldb.clock.Now()
 
-	db.pruneDomains(logger, now)
-	events := db.pruneEvacuatingActualLRPs(logger, cellSet)
-	domainSet, err := db.domainSet(logger)
+	sqldb.pruneDomains(logger, now)
+	events := sqldb.pruneEvacuatingActualLRPs(logger, cellSet)
+	domainSet, err := sqldb.domainSet(logger)
 	if err != nil {
-		return nil, nil, nil, nil
+		return db.ConvergenceResult{}
 	}
 
-	db.emitDomainMetrics(logger, domainSet)
+	sqldb.emitDomainMetrics(logger, domainSet)
 
-	converge := newConvergence(db)
+	converge := newConvergence(sqldb)
 	converge.staleUnclaimedActualLRPs(logger, now)
 	converge.actualLRPsWithMissingCells(logger, cellSet)
 	converge.lrpInstanceCounts(logger, domainSet)
 	converge.orphanedActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
-	return converge.result(logger), converge.keysWithMissingCells, converge.keysToRetire, events
+	return db.ConvergenceResult{
+		MissingLRPKeys:       converge.result(logger),
+		UnstartedLRPKeys:     converge.unstartedLRPKeys,
+		KeysToRetire:         converge.keysToRetire,
+		KeysWithMissingCells: converge.keysWithMissingCells,
+		Events:               events,
+		SuspectKeysWithExistingCells: nil,
+	}
 }
 
 type convergence struct {
 	*SQLDB
 
-	guidsToStartRequests map[string]*auctioneer.LRPStartRequest
-	startRequestsMutex   sync.Mutex
-
 	keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
 
-	keysToRetire []*models.ActualLRPKey
 	keysMutex    sync.Mutex
+	keysToRetire []*models.ActualLRPKey
 
-	pool   *workpool.WorkPool
-	poolWg sync.WaitGroup
+	missingLRPKeysMutex sync.Mutex
+	missingLRPKeys      []*models.ActualLRPKeyWithSchedulingInfo
+
+	unstartedLRPKeysMutex sync.Mutex
+	unstartedLRPKeys      []*models.ActualLRPKeyWithSchedulingInfo
 }
 
 func newConvergence(db *SQLDB) *convergence {
-	pool, err := workpool.NewWorkPool(db.convergenceWorkersSize)
-	if err != nil {
-		panic(fmt.Sprintf("failing to create workpool is irrecoverable %v", err))
-	}
-
 	return &convergence{
-		SQLDB:                db,
-		guidsToStartRequests: map[string]*auctioneer.LRPStartRequest{},
-		keysToRetire:         []*models.ActualLRPKey{},
-		pool:                 pool,
+		SQLDB:        db,
+		keysToRetire: []*models.ActualLRPKey{},
 	}
 }
 
@@ -110,7 +109,10 @@ func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Tim
 		var index int
 		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index)
 		if err == nil {
-			c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, index)
+			c.addUnstartedLRPKey(logger, &models.ActualLRPKeyWithSchedulingInfo{
+				Key:            &models.ActualLRPKey{schedulingInfo.ProcessGuid, int32(index), schedulingInfo.Domain},
+				SchedulingInfo: schedulingInfo,
+			})
 			logger.Info("creating-start-request",
 				lager.Data{"reason": "stale-unclaimed-lrp", "process_guid": schedulingInfo.ProcessGuid, "index": index})
 		}
@@ -168,15 +170,10 @@ func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
 	for _, lrp := range lrps {
 		key := lrp.lrpKey
 		schedulingInfo := lrp.schedulingInfo
-		index := lrp.index
-		c.submit(func() {
-			_, _, err := c.UnclaimActualLRP(logger, &key)
-			if err != nil {
-				logger.Error("failed-unclaiming-actual-lrp", err)
-				return
-			}
 
-			c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, index)
+		c.addUnstartedLRPKey(logger, &models.ActualLRPKeyWithSchedulingInfo{
+			Key:            &key,
+			SchedulingInfo: schedulingInfo,
 		})
 	}
 
@@ -230,8 +227,6 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		return
 	}
 
-	keys := []models.ActualLRPKey{}
-
 	missingLRPCount := 0
 	for rows.Next() {
 		var existingIndicesStr sql.NullString
@@ -267,16 +262,15 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 			missingLRPCount++
 			indices = append(indices, i)
 			index := int32(i)
-			keys = append(keys, models.ActualLRPKey{
-				ProcessGuid: schedulingInfo.ProcessGuid,
-				Domain:      schedulingInfo.Domain,
-				Index:       index,
+			c.addMissingLRPKey(logger, &models.ActualLRPKeyWithSchedulingInfo{
+				Key: &models.ActualLRPKey{
+					ProcessGuid: schedulingInfo.ProcessGuid,
+					Domain:      schedulingInfo.Domain,
+					Index:       index,
+				},
+				SchedulingInfo: schedulingInfo,
 			})
-			logger.Info("creating-start-request",
-				lager.Data{"reason": "missing-instance", "process_guid": schedulingInfo.ProcessGuid, "index": index})
 		}
-
-		c.addStartRequestFromSchedulingInfo(logger, schedulingInfo, indices...)
 
 		for index := range existingIndices {
 			if index < int(schedulingInfo.Instances) {
@@ -291,16 +285,6 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				})
 			}
 		}
-	}
-
-	for _, key := range keys {
-		lrpKey := key
-		c.submit(func() {
-			_, err := c.CreateUnclaimedActualLRP(logger, &lrpKey)
-			if err != nil {
-				logger.Error("failed-creating-missing-actual-lrp", err)
-			}
-		})
 	}
 
 	if rows.Err() != nil {
@@ -357,21 +341,18 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 	c.keysWithMissingCells = keysWithMissingCells
 }
 
-func (c *convergence) addStartRequestFromSchedulingInfo(logger lager.Logger, schedulingInfo *models.DesiredLRPSchedulingInfo, indices ...int) {
-	if len(indices) == 0 {
-		return
-	}
+func (c *convergence) addUnstartedLRPKey(logger lager.Logger, key *models.ActualLRPKeyWithSchedulingInfo) {
+	c.unstartedLRPKeysMutex.Lock()
+	defer c.unstartedLRPKeysMutex.Unlock()
 
-	c.startRequestsMutex.Lock()
-	defer c.startRequestsMutex.Unlock()
+	c.unstartedLRPKeys = append(c.unstartedLRPKeys, key)
+}
 
-	if startRequest, ok := c.guidsToStartRequests[schedulingInfo.ProcessGuid]; ok {
-		startRequest.Indices = append(startRequest.Indices, indices...)
-		return
-	}
+func (c *convergence) addMissingLRPKey(logger lager.Logger, key *models.ActualLRPKeyWithSchedulingInfo) {
+	c.missingLRPKeysMutex.Lock()
+	defer c.missingLRPKeysMutex.Unlock()
 
-	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, indices...)
-	c.guidsToStartRequests[schedulingInfo.ProcessGuid] = &startRequest
+	c.missingLRPKeys = append(c.missingLRPKeys, key)
 }
 
 func (c *convergence) addKeyToRetire(logger lager.Logger, key *models.ActualLRPKey) {
@@ -381,33 +362,11 @@ func (c *convergence) addKeyToRetire(logger lager.Logger, key *models.ActualLRPK
 	c.keysToRetire = append(c.keysToRetire, key)
 }
 
-func (c *convergence) submit(work func()) {
-	c.poolWg.Add(1)
-	c.pool.Submit(func() {
-		defer c.poolWg.Done()
-		work()
-	})
-}
-
-func (c *convergence) result(logger lager.Logger) []*auctioneer.LRPStartRequest {
-	c.poolWg.Wait()
-	c.pool.Stop()
-
-	c.startRequestsMutex.Lock()
-	defer c.startRequestsMutex.Unlock()
-
-	c.keysMutex.Lock()
-	defer c.keysMutex.Unlock()
-
-	startRequests := make([]*auctioneer.LRPStartRequest, 0, len(c.guidsToStartRequests))
-	for _, startRequest := range c.guidsToStartRequests {
-		startRequests = append(startRequests, startRequest)
-	}
-
+func (c *convergence) result(logger lager.Logger) []*models.ActualLRPKeyWithSchedulingInfo {
 	c.metronClient.SendMetric(extraLRPsMetric, len(c.keysToRetire))
 	c.emitLRPMetrics(logger)
 
-	return startRequests
+	return c.unstartedLRPKeys
 }
 
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {

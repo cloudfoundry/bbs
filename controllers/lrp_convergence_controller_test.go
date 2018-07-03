@@ -37,11 +37,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		retiringActualLRP2 *models.ActualLRP
 
 		desiredLRP1, desiredLRP2 models.DesiredLRPSchedulingInfo
-		unclaimingActualLRP1     *models.ActualLRP
-		unclaimingActualLRP2     *models.ActualLRP
-
-		cellID  string
-		cellSet models.CellSet
+		cellID                   string
+		cellSet                  models.CellSet
 
 		controller *controllers.LRPConvergenceController
 	)
@@ -59,14 +56,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		keysToRetire = []*models.ActualLRPKey{&retiringActualLRP1.ActualLRPKey, &retiringActualLRP2.ActualLRPKey}
 
 		desiredLRP1 = model_helpers.NewValidDesiredLRP("to-unclaim-1").DesiredLRPSchedulingInfo()
-		unclaimingActualLRP1 = model_helpers.NewValidActualLRP("to-unclaim-1", 0)
 		desiredLRP2 = model_helpers.NewValidDesiredLRP("to-unclaim-2").DesiredLRPSchedulingInfo()
-		unclaimingActualLRP2 = model_helpers.NewValidActualLRP("to-unclaim-2", 1)
-		keysWithMissingCells = []*models.ActualLRPKeyWithSchedulingInfo{
-			{Key: &unclaimingActualLRP1.ActualLRPKey, SchedulingInfo: &desiredLRP1},
-			{Key: &unclaimingActualLRP2.ActualLRPKey, SchedulingInfo: &desiredLRP2},
-		}
-
 		keysToAuction = []*auctioneer.LRPStartRequest{&request1, &request2}
 
 		cellID = "cell-id"
@@ -93,19 +83,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			return nil, models.ErrResourceNotFound
 		}
 
-		fakeLRPDB.UnclaimActualLRPStub = func(_ lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
-			if key.ProcessGuid == unclaimingActualLRP1.ProcessGuid {
-				return &models.ActualLRPGroup{Instance: unclaimingActualLRP1},
-					&models.ActualLRPGroup{Instance: unclaimingActualLRP1}, nil
-			}
-			if key.ProcessGuid == unclaimingActualLRP2.ProcessGuid {
-				return &models.ActualLRPGroup{Instance: unclaimingActualLRP2},
-					&models.ActualLRPGroup{Instance: unclaimingActualLRP2}, nil
-			}
-			return nil, nil, models.ErrResourceNotFound
-		}
-
-		fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysWithMissingCells, keysToRetire, nil)
+		fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysWithMissingCells, keysToRetire, nil, nil)
 
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
@@ -169,20 +147,14 @@ var _ = Describe("LRP Convergence Controllers", func() {
 	It("auctions off the returned keys", func() {
 		Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-		unclaimedStartRequest1 := auctioneer.NewLRPStartRequestFromSchedulingInfo(&desiredLRP1, 0)
-		unclaimedStartRequest2 := auctioneer.NewLRPStartRequestFromSchedulingInfo(&desiredLRP2, 1)
-
-		expectedStartRequests := append(keysToAuction, &unclaimedStartRequest1)
-		expectedStartRequests = append(expectedStartRequests, &unclaimedStartRequest2)
-
 		_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-		Expect(startAuctions).To(HaveLen(4))
-		Expect(startAuctions).To(ConsistOf(expectedStartRequests))
+		Expect(startAuctions).To(HaveLen(2))
+		Expect(startAuctions).To(ConsistOf(keysToAuction))
 	})
 
 	Context("when no lrps to auction", func() {
 		BeforeEach(func() {
-			fakeLRPDB.ConvergeLRPsReturns(nil, nil, nil, nil)
+			fakeLRPDB.ConvergeLRPsReturns(nil, nil, nil, nil, nil)
 		})
 
 		It("doesn't start the auctions", func() {
@@ -190,66 +162,186 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		})
 	})
 
-	It("unclaims and auctions the actual lrps with missing cells", func() {
-		Eventually(fakeLRPDB.UnclaimActualLRPCallCount).Should(Equal(2))
+	FContext("when there are suspect LRPs with existing cells", func() {
+		var (
+			suspectActualLRP             *models.ActualLRP
+			ordinaryActualLRP            *models.ActualLRP
+			suspectKeysWithExistingCells []*models.ActualLRPKey
+		)
 
-		unclaimedKeys := []*models.ActualLRPKey{}
-		for i := 0; i < fakeLRPDB.UnclaimActualLRPCallCount(); i++ {
-			_, key := fakeLRPDB.UnclaimActualLRPArgsForCall(i)
-			unclaimedKeys = append(unclaimedKeys, key)
-		}
-		Expect(unclaimedKeys).To(ContainElement(&unclaimingActualLRP1.ActualLRPKey))
-		Expect(unclaimedKeys).To(ContainElement(&unclaimingActualLRP2.ActualLRPKey))
+		BeforeEach(func() {
+			ordinaryActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
+			suspectActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
+			group := &models.ActualLRPGroup{Instance: suspectActualLRP}
 
-		Eventually(actualHub.EmitCallCount).Should(Equal(2))
-		changeEvents := []*models.ActualLRPChangedEvent{}
-		for i := 0; i < actualHub.EmitCallCount(); i++ {
-			event := actualHub.EmitArgsForCall(i)
-			if changeEvent, ok := event.(*models.ActualLRPChangedEvent); ok {
-				changeEvents = append(changeEvents, changeEvent)
+			suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLRPKey}
+
+			fakeLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: ordinaryActualLRP}, nil)
+			fakeLRPDB.ChangeActualLRPPresenceReturns(group, group, nil)
+			fakeLRPDB.ConvergeLRPsReturns(nil, keysWithMissingCells, nil, suspectKeysWithExistingCells, nil)
+		})
+
+		It("remove the Ordinary LRP", func() {
+			Eventually(fakeLRPDB.RemoveActualLRPCallCount).Should(Equal(1))
+
+			_, guid, index, key := fakeLRPDB.RemoveActualLRPArgsForCall(0)
+
+			Expect(guid).To(Equal(ordinaryActualLRP.ProcessGuid))
+			Expect(index).To(Equal(ordinaryActualLRP.Index))
+			Expect(key).To(BeNil())
+		})
+
+		It("changes the suspect LRP presence to Ordinary", func() {
+			Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
+			_, lrpKey, presence := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
+
+			Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
+			Expect(presence).To(Equal(models.ActualLRP_Ordinary))
+		})
+
+		It("does not emit any events", func() {
+			Consistently(actualHub.EmitCallCount).Should(Equal(0))
+		})
+
+		Context("when the suspect lrp cannot be changed to ordinary lrp", func() {
+			Context("and the error is unrecoverable", func() {
+				BeforeEach(func() {
+					fakeLRPDB.ChangeActualLRPPresenceReturns(nil, nil, models.NewUnrecoverableError(nil))
+				})
+
+				It("logs the error", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				})
+
+				It("returns the error", func() {
+					Expect(err).To(HaveOccurred())
+					Expect(err).Should(Equal(models.NewUnrecoverableError(nil)))
+				})
+			})
+		})
+
+		Context("when the ordinary lrp cannot be removed", func() {
+			BeforeEach(func() {
+				fakeLRPDB.RemoveActualLRPReturns(errors.New("booom!"))
+			})
+
+			It("does not change the suspect LRP presence", func() {
+				Consistently(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(BeZero())
+			})
+
+			Context("and the error is unrecoverable", func() {
+				BeforeEach(func() {
+					fakeLRPDB.RemoveActualLRPReturns(models.NewUnrecoverableError(nil))
+				})
+
+				It("logs the error", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				})
+
+				It("returns the error", func() {
+					Expect(err).To(HaveOccurred())
+					Expect(err).Should(Equal(models.NewUnrecoverableError(nil)))
+				})
+			})
+		})
+	})
+
+	FContext("when there are LRPs with missing cells", func() {
+		var (
+			suspectActualLRP1 *models.ActualLRP
+			suspectActualLRP2 *models.ActualLRP
+		)
+
+		BeforeEach(func() {
+			suspectActualLRP1 = model_helpers.NewValidActualLRP("to-unclaim-1", 0)
+			suspectActualLRP2 = model_helpers.NewValidActualLRP("to-unclaim-2", 1)
+
+			fakeLRPDB.ChangeActualLRPPresenceStub = func(_ lager.Logger, key *models.ActualLRPKey, _ models.ActualLRP_Presence) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+				if key.ProcessGuid == suspectActualLRP1.ProcessGuid {
+					return &models.ActualLRPGroup{Instance: suspectActualLRP1},
+						&models.ActualLRPGroup{Instance: suspectActualLRP1}, nil
+				}
+				if key.ProcessGuid == suspectActualLRP2.ProcessGuid {
+					return &models.ActualLRPGroup{Instance: suspectActualLRP2},
+						&models.ActualLRPGroup{Instance: suspectActualLRP2}, nil
+				}
+				return nil, nil, models.ErrResourceNotFound
 			}
-		}
-		group1 := &models.ActualLRPGroup{Instance: unclaimingActualLRP1}
-		group2 := &models.ActualLRPGroup{Instance: unclaimingActualLRP2}
-		Expect(changeEvents).To(ContainElement(models.NewActualLRPChangedEvent(group1, group1)))
-		Expect(changeEvents).To(ContainElement(models.NewActualLRPChangedEvent(group2, group2)))
-	})
 
-	It("logs the reason for starting actual lrps with missing cells", func() {
-		Eventually(logger).Should(gbytes.Say("creating-start-request.*reason\":\"missing-cell"))
-	})
-
-	Context("when the DB returns an unrecoverable error", func() {
-		BeforeEach(func() {
-			fakeLRPDB.UnclaimActualLRPReturns(nil, nil, models.NewUnrecoverableError(nil))
+			keysWithMissingCells = []*models.ActualLRPKeyWithSchedulingInfo{
+				{Key: &suspectActualLRP1.ActualLRPKey, SchedulingInfo: &desiredLRP1},
+				{Key: &suspectActualLRP2.ActualLRPKey, SchedulingInfo: &desiredLRP2},
+			}
+			fakeLRPDB.ConvergeLRPsReturns(nil, keysWithMissingCells, nil, nil, nil)
 		})
 
-		It("logs the error", func() {
-			Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+		It("change the LRP presence to 'Suspect' and auctions a new actual lrp", func() {
+			Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(2))
+
+			unclaimedKeys := []*models.ActualLRPKey{}
+			for i := 0; i < fakeLRPDB.ChangeActualLRPPresenceCallCount(); i++ {
+				_, key, presence := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(i)
+				Expect(presence).To(Equal(models.ActualLRP_Suspect))
+				unclaimedKeys = append(unclaimedKeys, key)
+			}
+			Expect(unclaimedKeys).To(ContainElement(&suspectActualLRP1.ActualLRPKey))
+			Expect(unclaimedKeys).To(ContainElement(&suspectActualLRP2.ActualLRPKey))
 		})
 
-		It("returns the error", func() {
-			Expect(err).To(HaveOccurred())
-			Expect(err).Should(Equal(models.NewUnrecoverableError(nil)))
-		})
-	})
-
-	Context("when unclaiming the actual lrp fails", func() {
-		BeforeEach(func() {
-			fakeLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("terrrible"))
-		})
-
-		It("auctions off the returned keys", func() {
+		It("auctions new lrps", func() {
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+
+			unclaimedStartRequest1 := auctioneer.NewLRPStartRequestFromSchedulingInfo(&desiredLRP1, 0)
+			unclaimedStartRequest2 := auctioneer.NewLRPStartRequestFromSchedulingInfo(&desiredLRP2, 1)
+
+			keysToAuction := []*auctioneer.LRPStartRequest{&unclaimedStartRequest1, &unclaimedStartRequest2}
 
 			_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(2))
 			Expect(startAuctions).To(ConsistOf(keysToAuction))
 		})
 
-		It("does not emit change events", func() {
-			Eventually(fakeLRPDB.UnclaimActualLRPCallCount).Should(Equal(2))
+		It("emits the proper events", func() {
 			Consistently(actualHub.EmitCallCount).Should(Equal(0))
+		})
+
+		It("logs the reason for starting actual lrps with missing cells", func() {
+			Eventually(logger).Should(gbytes.Say("creating-start-request.*reason\":\"missing-cell"))
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeLRPDB.ChangeActualLRPPresenceReturns(nil, nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs the error", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+			})
+
+			It("returns the error", func() {
+				Expect(err).To(HaveOccurred())
+				Expect(err).Should(Equal(models.NewUnrecoverableError(nil)))
+			})
+		})
+
+		Context("when changing the actual lrp presence fails", func() {
+			BeforeEach(func() {
+				fakeLRPDB.ConvergeLRPsReturns(keysToAuction, keysWithMissingCells, nil, nil, nil)
+				fakeLRPDB.ChangeActualLRPPresenceReturns(nil, nil, errors.New("terrrible"))
+			})
+
+			It("auctions off the returned keys", func() {
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+
+				_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				Expect(startAuctions).To(HaveLen(2))
+				Expect(startAuctions).To(ConsistOf(keysToAuction))
+			})
+
+			It("does not emit change events", func() {
+				Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(2))
+				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
 		})
 	})
 
@@ -339,7 +431,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			group1 := &models.ActualLRPGroup{Instance: model_helpers.NewValidActualLRP("evacuating-lrp", 0)}
 			expectedRemovedEvent = models.NewActualLRPRemovedEvent(group1)
 			events := []models.Event{expectedRemovedEvent}
-			fakeLRPDB.ConvergeLRPsReturns([]*auctioneer.LRPStartRequest{}, []*models.ActualLRPKeyWithSchedulingInfo{}, []*models.ActualLRPKey{}, events)
+			fakeLRPDB.ConvergeLRPsReturns([]*auctioneer.LRPStartRequest{}, []*models.ActualLRPKeyWithSchedulingInfo{}, []*models.ActualLRPKey{}, nil, events)
 		})
 
 		It("emits those events", func() {

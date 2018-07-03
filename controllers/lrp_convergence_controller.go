@@ -64,7 +64,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	startRequests, keysWithMissingCells, keysToRetire, events := h.db.ConvergeLRPs(logger, cellSet)
+	startRequests, keysWithMissingCells, keysToRetire, keysWithPresentCells, events := h.db.ConvergeLRPs(logger, cellSet)
 
 	for _, e := range events {
 		go h.actualHub.Emit(e)
@@ -83,13 +83,43 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 
 	errChan := make(chan *models.Error, 1)
 
+	handleUnrecoverableError := func(err error) {
+		bbsErr := models.ConvertError(err)
+		if bbsErr.GetType() != models.Error_Unrecoverable {
+			return
+		}
+
+		logger.Error("unrecoverable-error", bbsErr)
+		select {
+		case errChan <- bbsErr:
+		default:
+		}
+	}
+
+	for _, key := range keysWithPresentCells {
+		key := key
+		works = append(works, func() {
+			err := h.db.RemoveActualLRP(logger, key.ProcessGuid, key.Index, nil)
+			handleUnrecoverableError(err)
+			if err != nil {
+				logger.Error("cannot-remove-lrp", err, lager.Data{"key": key})
+				return
+			}
+			_, _, err = h.db.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary)
+			handleUnrecoverableError(err)
+			if err != nil {
+				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})
+				return
+			}
+		})
+	}
+
 	startRequestLock := &sync.Mutex{}
 	for _, key := range keysWithMissingCells {
 		key := key
 		works = append(works, func() {
-			before, after, err := h.db.UnclaimActualLRP(logger, key.Key)
+			_, _, err := h.db.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Suspect)
 			if err == nil {
-				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
 				startRequestLock.Lock()
 				startRequests = append(startRequests, &startRequest)
@@ -97,16 +127,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 				logger.Info("creating-start-request",
 					lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
 			} else {
-				bbsErr := models.ConvertError(err)
-				if bbsErr.GetType() != models.Error_Unrecoverable {
-					return
-				}
-
-				logger.Error("unrecoverable-error", bbsErr)
-				select {
-				case errChan <- bbsErr:
-				default:
-				}
+				handleUnrecoverableError(err)
+				return
 			}
 		})
 	}

@@ -2,6 +2,7 @@ package sqldb
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
 	"time"
 
@@ -31,6 +32,10 @@ func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinng
 	})
 
 	return groups, err
+}
+
+func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, newPresence models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+	return nil, nil, errors.New("not implemented")
 }
 
 func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
