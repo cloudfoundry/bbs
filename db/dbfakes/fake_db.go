@@ -362,25 +362,17 @@ type FakeDB struct {
 	removeDesiredLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ConvergeLRPsStub        func(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey, suspectKeysWithExistingCells []*models.ActualLRPKey, events []models.Event)
+	ConvergeLRPsStub        func(logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
 		logger  lager.Logger
 		cellSet models.CellSet
 	}
 	convergeLRPsReturns struct {
-		result1 []*auctioneer.LRPStartRequest
-		result2 []*models.ActualLRPKeyWithSchedulingInfo
-		result3 []*models.ActualLRPKey
-		result4 []*models.ActualLRPKey
-		result5 []models.Event
+		result1 db.ConvergenceResult
 	}
 	convergeLRPsReturnsOnCall map[int]struct {
-		result1 []*auctioneer.LRPStartRequest
-		result2 []*models.ActualLRPKeyWithSchedulingInfo
-		result3 []*models.ActualLRPKey
-		result4 []*models.ActualLRPKey
-		result5 []models.Event
+		result1 db.ConvergenceResult
 	}
 	TasksStub        func(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
@@ -1857,7 +1849,7 @@ func (fake *FakeDB) RemoveDesiredLRPReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (startRequests []*auctioneer.LRPStartRequest, keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo, keysToRetire []*models.ActualLRPKey, suspectKeysWithExistingCells []*models.ActualLRPKey, events []models.Event) {
+func (fake *FakeDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult {
 	fake.convergeLRPsMutex.Lock()
 	ret, specificReturn := fake.convergeLRPsReturnsOnCall[len(fake.convergeLRPsArgsForCall)]
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
@@ -1870,9 +1862,9 @@ func (fake *FakeDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) (s
 		return fake.ConvergeLRPsStub(logger, cellSet)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2, ret.result3, ret.result4, ret.result5
+		return ret.result1
 	}
-	return fake.convergeLRPsReturns.result1, fake.convergeLRPsReturns.result2, fake.convergeLRPsReturns.result3, fake.convergeLRPsReturns.result4, fake.convergeLRPsReturns.result5
+	return fake.convergeLRPsReturns.result1
 }
 
 func (fake *FakeDB) ConvergeLRPsCallCount() int {
@@ -1887,35 +1879,23 @@ func (fake *FakeDB) ConvergeLRPsArgsForCall(i int) (lager.Logger, models.CellSet
 	return fake.convergeLRPsArgsForCall[i].logger, fake.convergeLRPsArgsForCall[i].cellSet
 }
 
-func (fake *FakeDB) ConvergeLRPsReturns(result1 []*auctioneer.LRPStartRequest, result2 []*models.ActualLRPKeyWithSchedulingInfo, result3 []*models.ActualLRPKey, result4 []*models.ActualLRPKey, result5 []models.Event) {
+func (fake *FakeDB) ConvergeLRPsReturns(result1 db.ConvergenceResult) {
 	fake.ConvergeLRPsStub = nil
 	fake.convergeLRPsReturns = struct {
-		result1 []*auctioneer.LRPStartRequest
-		result2 []*models.ActualLRPKeyWithSchedulingInfo
-		result3 []*models.ActualLRPKey
-		result4 []*models.ActualLRPKey
-		result5 []models.Event
-	}{result1, result2, result3, result4, result5}
+		result1 db.ConvergenceResult
+	}{result1}
 }
 
-func (fake *FakeDB) ConvergeLRPsReturnsOnCall(i int, result1 []*auctioneer.LRPStartRequest, result2 []*models.ActualLRPKeyWithSchedulingInfo, result3 []*models.ActualLRPKey, result4 []*models.ActualLRPKey, result5 []models.Event) {
+func (fake *FakeDB) ConvergeLRPsReturnsOnCall(i int, result1 db.ConvergenceResult) {
 	fake.ConvergeLRPsStub = nil
 	if fake.convergeLRPsReturnsOnCall == nil {
 		fake.convergeLRPsReturnsOnCall = make(map[int]struct {
-			result1 []*auctioneer.LRPStartRequest
-			result2 []*models.ActualLRPKeyWithSchedulingInfo
-			result3 []*models.ActualLRPKey
-			result4 []*models.ActualLRPKey
-			result5 []models.Event
+			result1 db.ConvergenceResult
 		})
 	}
 	fake.convergeLRPsReturnsOnCall[i] = struct {
-		result1 []*auctioneer.LRPStartRequest
-		result2 []*models.ActualLRPKeyWithSchedulingInfo
-		result3 []*models.ActualLRPKey
-		result4 []*models.ActualLRPKey
-		result5 []models.Event
-	}{result1, result2, result3, result4, result5}
+		result1 db.ConvergenceResult
+	}{result1}
 }
 
 func (fake *FakeDB) Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {

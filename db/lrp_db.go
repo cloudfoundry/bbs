@@ -10,9 +10,9 @@ import (
 type ConvergenceResult struct {
 	MissingLRPKeys               []*models.ActualLRPKeyWithSchedulingInfo
 	UnstartedLRPKeys             []*models.ActualLRPKeyWithSchedulingInfo
+	SuspectKeysWithExistingCells []*models.ActualLRPKey
 	KeysToRetire                 []*models.ActualLRPKey
 	KeysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
-	SuspectKeysWithExistingCells []*models.ActualLRPKey
 	Events                       []models.Event
 }
 

@@ -270,6 +270,8 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				},
 				SchedulingInfo: schedulingInfo,
 			})
+			logger.Info("creating-start-request",
+				lager.Data{"reason": "missing-instance", "process_guid": schedulingInfo.ProcessGuid, "index": index})
 		}
 
 		for index := range existingIndices {
@@ -366,7 +368,7 @@ func (c *convergence) result(logger lager.Logger) []*models.ActualLRPKeyWithSche
 	c.metronClient.SendMetric(extraLRPsMetric, len(c.keysToRetire))
 	c.emitLRPMetrics(logger)
 
-	return c.unstartedLRPKeys
+	return c.missingLRPKeys
 }
 
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {

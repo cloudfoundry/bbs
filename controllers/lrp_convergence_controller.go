@@ -64,7 +64,11 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	startRequests, keysWithMissingCells, keysToRetire, keysWithPresentCells, events := h.db.ConvergeLRPs(logger, cellSet)
+	convergenceResult := h.db.ConvergeLRPs(logger, cellSet)
+	keysWithMissingCells := convergenceResult.KeysWithMissingCells
+	keysToRetire := convergenceResult.KeysToRetire
+	keysWithPresentCells := convergenceResult.SuspectKeysWithExistingCells
+	events := convergenceResult.Events
 
 	for _, e := range events {
 		go h.actualHub.Emit(e)
@@ -114,22 +118,60 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		})
 	}
 
+	startRequests := []*auctioneer.LRPStartRequest{}
 	startRequestLock := &sync.Mutex{}
+
+	for _, lrpKey := range convergenceResult.MissingLRPKeys {
+		key := lrpKey
+		works = append(works, func() {
+			lrpGroup, err := h.db.CreateUnclaimedActualLRP(logger, key.Key)
+			if err != nil {
+				handleUnrecoverableError(err)
+				return
+			}
+
+			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrpGroup))
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+		})
+	}
+
+	for _, lrpKey := range convergenceResult.UnstartedLRPKeys {
+		key := lrpKey
+		works = append(works, func() {
+			before, after, err := h.db.UnclaimActualLRP(logger, key.Key)
+			if err != nil {
+				handleUnrecoverableError(err)
+				return
+			}
+
+			go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+		})
+	}
+
 	for _, key := range keysWithMissingCells {
 		key := key
 		works = append(works, func() {
 			_, _, err := h.db.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Suspect)
-			if err == nil {
-				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
-				startRequestLock.Lock()
-				startRequests = append(startRequests, &startRequest)
-				startRequestLock.Unlock()
-				logger.Info("creating-start-request",
-					lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
-			} else {
+			if err != nil {
 				handleUnrecoverableError(err)
 				return
 			}
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+			logger.Info("creating-start-request",
+				lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
 		})
 	}
 
