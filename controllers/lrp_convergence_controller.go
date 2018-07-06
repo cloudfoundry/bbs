@@ -68,6 +68,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	keysWithMissingCells := convergenceResult.KeysWithMissingCells
 	keysToRetire := convergenceResult.KeysToRetire
 	keysWithPresentCells := convergenceResult.SuspectKeysWithExistingCells
+	// confusing....
+	suspectKeysWithPresentCells := convergenceResult.SuspectKeysWithPresentCells
 	events := convergenceResult.Events
 
 	for _, e := range events {
@@ -172,6 +174,28 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 			startRequestLock.Unlock()
 			logger.Info("creating-start-request",
 				lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
+		})
+	}
+
+	for _, key := range suspectKeysWithPresentCells {
+		key := key
+		works = append(works, func() {
+			// how do I create the after ActualLRPGroup while minimizing db access... should I do a get?
+			// how do I get the ActualLRPInstanceKey, actualrpnetinfo and all the other proper metadata?
+			// should I be using the lifecycle methods? http://127.0.0.1:7080/github.com/cloudfoundry/bbs/-/blob/controllers/actual_lrp_lifecycle_controller.go#L130:1
+			beforeActualLRPGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+			if err != nil {
+				handleUnrecoverableError(err)
+				return
+			}
+			err = h.db.RemoveActualLRP(logger, key.ProcessGuid, key.Index, nil)
+			if err != nil {
+				handleUnrecoverableError(err)
+				return
+			}
+			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
+			logger.Info("removing-lrp",
+				lager.Data{"reason": "suspect-cell", "process_guid": key.ProcessGuid, "index": key.Index})
 		})
 	}
 

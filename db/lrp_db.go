@@ -11,6 +11,7 @@ type ConvergenceResult struct {
 	MissingLRPKeys               []*models.ActualLRPKeyWithSchedulingInfo
 	UnstartedLRPKeys             []*models.ActualLRPKeyWithSchedulingInfo
 	SuspectKeysWithExistingCells []*models.ActualLRPKey
+	SuspectKeysWithPresentCells  []*models.ActualLRPKey
 	KeysToRetire                 []*models.ActualLRPKey
 	KeysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
 	Events                       []models.Event

@@ -462,6 +462,54 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		Context("when the cell", func() {
 			Context("is present", func() {
+				FContext("and the extra lrp is suspect", func() {
+					var (
+						key            *models.ActualLRPKey
+						schedulingInfo models.DesiredLRPSchedulingInfo
+						/*before,*/ after      *models.ActualLRPGroup
+						runningLRP, suspectLRP *models.ActualLRP
+					)
+					BeforeEach(func() {
+						lrp := model_helpers.NewValidDesiredLRP("some-guid")
+						schedulingInfo = lrp.DesiredLRPSchedulingInfo()
+						key = &models.ActualLRPKey{
+							ProcessGuid: lrp.ProcessGuid,
+							Index:       0,
+							Domain:      lrp.Domain,
+						}
+						/*lrpKeyWithSchedulingInfo := &models.ActualLRPKeyWithSchedulingInfo{
+							Key:            key,
+							SchedulingInfo: &schedulingInfo,
+						}*/
+						// convergence should return the following
+						fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
+
+							SuspectKeysWithPresentCells: []*models.ActualLRPKey{key},
+						})
+						///
+						runningLRP = model_helpers.NewValidActualLRP("some-guid", 1)
+						runningLRP.State = models.ActualLRPStateClaimed
+						runningLRP.Presence = models.ActualLRP_Ordinary
+						suspectLRP = model_helpers.NewValidActualLRP("some-guid", 0)
+						suspectLRP.State = models.ActualLRPStateClaimed
+						suspectLRP.Presence = models.ActualLRP_Suspect
+						after = &models.ActualLRPGroup{Instance: runningLRP}
+						fakeLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(after, nil)
+					})
+					It("removes the suspect LRP", func() {
+						Eventually(fakeLRPDB.RemoveActualLRPCallCount).Should(Equal(1))
+						_, removedProcessGUID, removedIndex, _ := fakeLRPDB.RemoveActualLRPArgsForCall(0)
+						Expect(removedIndex).To(Equal(suspectLRP.ActualLRPKey.Index))
+						Expect(removedProcessGUID).To(Equal(suspectLRP.ActualLRPKey.ProcessGuid))
+						// we aren't testing the ActualLRPInstanceKey that is returned...
+					})
+					It("emits an ActualLRPRemovedEvent containing the suspect LRP", func() {
+						Eventually(actualHub.EmitCallCount).Should(Equal(1))
+						event := actualHub.EmitArgsForCall(0)
+						Expect(event).To(Equal(models.NewActualLRPRemovedEvent(after)))
+					})
+
+				})
 				BeforeEach(func() {
 					cellPresence = models.NewCellPresence(
 						cellID,
