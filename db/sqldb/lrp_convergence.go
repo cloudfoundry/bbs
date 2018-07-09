@@ -55,7 +55,10 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	}
 
 	sqldb.emitDomainMetrics(logger, domainSet)
-
+	// the fact that each of the func calls below call out to the db on their own
+	// instead of working on filtering out data from a query at init, doesn't that
+	// lead to potential change of state in between each function thus leading to a
+	// bad state?
 	converge := newConvergence(sqldb)
 	converge.staleUnclaimedActualLRPs(logger, now)
 	converge.actualLRPsWithMissingCells(logger, cellSet)
