@@ -16,6 +16,96 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
+var _ = FDescribe("New LRPConvergence", func() {
+	type event struct {
+		name  string
+		value int
+	}
+
+	getMetricsEmitted := func(metronClient *mfakes.FakeIngressClient) func() []event {
+		return func() []event {
+			var events []event
+			for i := 0; i < metronClient.SendMetricCallCount(); i++ {
+				name, value, _ := metronClient.SendMetricArgsForCall(i)
+				events = append(events, event{
+					name:  name,
+					value: value,
+				})
+			}
+			return events
+		}
+	}
+
+	Context("when there are stale unclaimed LRPs", func() {
+		BeforeEach(func() {
+			processGuid := "desired-with-stale-actuals"
+			desiredLRPWithStaleActuals := model_helpers.NewValidDesiredLRP(processGuid)
+			desiredLRPWithStaleActuals.Domain = "some-domain"
+			desiredLRPWithStaleActuals.Instances = 2
+			err := sqlDB.DesireLRP(logger, desiredLRPWithStaleActuals)
+			Expect(err).NotTo(HaveOccurred())
+			fakeClock.Increment(-models.StaleUnclaimedActualLRPDuration)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: "some-domain"})
+			Expect(err).NotTo(HaveOccurred())
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: "some-domain"})
+			Expect(err).NotTo(HaveOccurred())
+			fakeClock.Increment(models.StaleUnclaimedActualLRPDuration)
+		})
+
+		Context("when the domain is fresh", func() {
+			BeforeEach(func() {
+				Expect(sqlDB.UpsertDomain(logger, "some-domain", 5)).To(Succeed())
+			})
+
+			It("emits stale unclaimed LRP metrics", func() {
+				sqlDB.ConvergeLRPs(logger, models.NewCellSetFromList(nil))
+
+				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
+					name:  "LRPsUnclaimed",
+					value: 2,
+				}))
+			})
+		})
+
+		Context("when the domain is expired", func() {
+			BeforeEach(func() {
+				fakeClock.Increment(-10 * time.Second)
+				Expect(sqlDB.UpsertDomain(logger, "some-domain", 5)).To(Succeed())
+				fakeClock.Increment(10 * time.Second)
+			})
+
+			It("emits stale unclaimed LRP metrics", func() {
+				sqlDB.ConvergeLRPs(logger, models.NewCellSetFromList(nil))
+
+				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
+					name:  "LRPsUnclaimed",
+					value: 2,
+				}))
+			})
+		})
+
+		Context("when the ActualLRPs presence is set to evacuating", func() {
+			BeforeEach(func() {
+				queryStr := `UPDATE actual_lrps SET evacuating = ?`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err := db.Exec(queryStr, true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("ignore the evacuaitng LRPs and emits LRP missing metric", func() {
+				sqlDB.ConvergeLRPs(logger, models.NewCellSetFromList(nil))
+
+				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
+					name:  "LRPsMissing",
+					value: 2,
+				}))
+			})
+		})
+	})
+})
+
 var _ = Describe("LRPConvergence", func() {
 	var (
 		freshDomain      string
