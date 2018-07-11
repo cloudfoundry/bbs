@@ -23,15 +23,4 @@ var _ = Describe("BBS main test", func() {
 			Eventually(bbsProcess.Wait()).Should(Receive(HaveOccurred()))
 		})
 	})
-
-	Context("when the metron agent isn't up", func() {
-		BeforeEach(func() {
-			testIngressServer.Stop()
-		})
-
-		It("exit with non-zero status code", func() {
-			bbsProcess = ifrit.Background(bbsRunner)
-			Eventually(bbsProcess.Wait()).Should(Receive(HaveOccurred()))
-		})
-	})
 })
