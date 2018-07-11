@@ -282,6 +282,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				continue
 			}
 
+			// only take destructive actions for fresh domains
 			if _, ok := domainSet[schedulingInfo.Domain]; ok {
 				c.addKeyToRetire(logger, &models.ActualLRPKey{
 					ProcessGuid: schedulingInfo.ProcessGuid,
