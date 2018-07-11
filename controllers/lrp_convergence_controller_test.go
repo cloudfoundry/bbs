@@ -461,6 +461,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		Context("when the cell", func() {
 			Context("is present", func() {
+
+				// TODO: Row 3, let's revisit this after changing the ConvergenceResult API and testing it
 				Context("and the extra lrp is suspect", func() {
 					var (
 						key            *models.ActualLRPKey
@@ -483,7 +485,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 						// convergence should return the following
 						fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 
-							SuspectKeysWithPresentCells: []*models.ActualLRPKey{key},
+							SuspectLRPKeysToRetire: []*models.ActualLRPKey{key},
 							//SuspectKeysWithExistingCells: []*models.ActualLRPKey{key},
 						})
 						///
@@ -510,6 +512,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 					})
 
 				})
+
 				BeforeEach(func() {
 					cellPresence = models.NewCellPresence(
 						cellID,

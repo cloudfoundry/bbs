@@ -93,8 +93,7 @@ type convergence struct {
 
 func newConvergence(db *SQLDB) *convergence {
 	return &convergence{
-		SQLDB:        db,
-		keysToRetire: []*models.ActualLRPKey{},
+		SQLDB: db,
 	}
 }
 
@@ -305,7 +304,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
 	logger = logger.Session("actual-lrps-with-missing-cells")
 
-	keysWithMissingCells := make([]*models.ActualLRPKeyWithSchedulingInfo, 0)
+	var keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
 
 	rows, err := c.selectLRPsWithMissingCells(logger, c.db, cellSet)
 	if err != nil {
@@ -408,7 +407,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 		logger.Error("failed-query", err)
 	}
 
-	events := []models.Event{}
+	var events []models.Event
 	for _, lrp := range lrpsToDelete {
 		events = append(events, models.NewActualLRPRemovedEvent(lrp))
 	}
