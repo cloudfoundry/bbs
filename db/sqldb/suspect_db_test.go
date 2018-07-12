@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Suspect ActualLRPs", func() {
+var _ = Describe("Suspect ActualLRPs", func() {
 	var (
 		actualLRP *models.ActualLRP
 		guid      string

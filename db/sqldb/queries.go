@@ -59,7 +59,7 @@ var (
 	actualLRPColumns = helpers.ColumnList{
 		actualLRPsTable + ".process_guid",
 		actualLRPsTable + ".instance_index",
-		actualLRPsTable + ".evacuating",
+		actualLRPsTable + ".presence",
 		actualLRPsTable + ".domain",
 		actualLRPsTable + ".state",
 		actualLRPsTable + ".instance_guid",
@@ -110,30 +110,42 @@ func (db *SQLDB) selectLRPInstanceCounts(logger lager.Logger, q helpers.Queryabl
 	query = fmt.Sprintf(`
 		SELECT %s
 			FROM desired_lrps
-			LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.evacuating = false
+			LEFT OUTER JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid AND actual_lrps.presence = %d
 			GROUP BY desired_lrps.process_guid
 			HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
 		`,
-		strings.Join(columns, ", "),
+		strings.Join(columns, ", "), models.ActualLRP_Ordinary,
 	)
 
 	return q.Query(query)
 }
 
 func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
-	query := `
+	query := fmt.Sprintf(`
     SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
       FROM actual_lrps
       JOIN domains ON actual_lrps.domain = domains.domain
       LEFT JOIN desired_lrps ON actual_lrps.process_guid = desired_lrps.process_guid
-      WHERE actual_lrps.evacuating = false AND desired_lrps.process_guid IS NULL
-		`
+      WHERE actual_lrps.presence = %d AND desired_lrps.process_guid IS NULL
+		`, models.ActualLRP_Ordinary)
+
+	return q.Query(query)
+}
+
+func (db *SQLDB) selectExtraSuspectActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+	query := fmt.Sprintf(`
+    SELECT process_guid, instance_index, domain
+      FROM actual_lrps
+      WHERE actual_lrps.presence IN (%d,%d)
+			GROUP BY (process_guid, instance_index, domain)
+			HAVING count(*) >= 2
+		`, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 
 	return q.Query(query)
 }
 
 func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q helpers.Queryable, cellSet models.CellSet) (*sql.Rows, error) {
-	wheres := []string{"actual_lrps.evacuating = false"}
+	wheres := []string{fmt.Sprintf("actual_lrps.presence = %d", models.ActualLRP_Ordinary)}
 	bindings := make([]interface{}, 0, len(cellSet))
 
 	if len(cellSet) > 0 {
@@ -162,7 +174,7 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q helpers.Queryable) (*s
 		SELECT %s
 			FROM desired_lrps
 			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-			WHERE actual_lrps.state = ? AND actual_lrps.evacuating = ?
+			WHERE actual_lrps.state = ? AND actual_lrps.presence = ?
 		`,
 		strings.Join(
 			append(schedulingInfoColumns, "actual_lrps.instance_index", "actual_lrps.since", "actual_lrps.crash_count"),
@@ -170,7 +182,7 @@ func (db *SQLDB) selectCrashedLRPs(logger lager.Logger, q helpers.Queryable) (*s
 		),
 	)
 
-	return q.Query(db.helper.Rebind(query), models.ActualLRPStateCrashed, false)
+	return q.Query(db.helper.Rebind(query), models.ActualLRPStateCrashed, models.ActualLRP_Ordinary)
 }
 
 func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q helpers.Queryable, now time.Time) (*sql.Rows, error) {
@@ -178,7 +190,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q helpers.Queryab
 		SELECT %s
 			FROM desired_lrps
 			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
-			WHERE actual_lrps.state = ? AND actual_lrps.since < ? AND actual_lrps.evacuating = ?
+			WHERE actual_lrps.state = ? AND actual_lrps.since < ? AND actual_lrps.presence = ?
 		`,
 		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index"), ", "),
 	)
@@ -186,7 +198,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q helpers.Queryab
 	return q.Query(db.helper.Rebind(query),
 		models.ActualLRPStateUnclaimed,
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
-		false,
+		models.ActualLRP_Ordinary,
 	)
 }
 
@@ -217,7 +229,7 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q helpers.Queryable
 				COUNT(*) FILTER (WHERE actual_lrps.state = $4) AS crashed_instances,
 				COUNT(DISTINCT process_guid) FILTER (WHERE actual_lrps.state = $5) AS crashing_desireds
 			FROM actual_lrps
-			WHERE evacuating = $6
+			WHERE presence = $6
 		`
 	case helpers.MySQL:
 		query = `
@@ -228,14 +240,14 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q helpers.Queryable
 				COUNT(IF(actual_lrps.state = ?, 1, NULL)) AS crashed_instances,
 				COUNT(DISTINCT IF(state = ?, process_guid, NULL)) AS crashing_desireds
 			FROM actual_lrps
-			WHERE evacuating = ?
+			WHERE presence = ?
 		`
 	default:
 		// totally shouldn't happen
 		panic("database flavor not implemented: " + db.flavor)
 	}
 
-	row := db.db.QueryRow(query, models.ActualLRPStateClaimed, models.ActualLRPStateUnclaimed, models.ActualLRPStateRunning, models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, false)
+	row := db.db.QueryRow(query, models.ActualLRPStateClaimed, models.ActualLRPStateUnclaimed, models.ActualLRPStateRunning, models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, models.ActualLRP_Ordinary)
 	err := row.Scan(&claimedCount, &unclaimedCount, &runningCount, &crashedCount, &crashingDesiredCount)
 	if err != nil {
 		logger.Error("failed-counting-actual-lrps", err)

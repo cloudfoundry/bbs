@@ -142,7 +142,7 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
@@ -178,8 +178,8 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			processGuid, index, false,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			processGuid, index, models.ActualLRP_Ordinary,
 		)
 		if err != nil {
 			logger.Error("failed-to-unclaim-actual-lrp", err)
@@ -201,7 +201,7 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 	var actualLRP *models.ActualLRP
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp-for-share", err)
 			return err
@@ -239,8 +239,8 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			processGuid, index, false,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			processGuid, index, models.ActualLRP_Ordinary,
 		)
 		if err != nil {
 			logger.Error("failed-claiming-actual-lrp", err)
@@ -261,7 +261,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err == models.ErrResourceNotFound {
 			actualLRP, err = db.createRunningActualLRP(logger, key, instanceKey, netInfo, tx)
 			return err
@@ -291,7 +291,6 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		defer logger.Info("completed")
 
 		now := db.clock.Now().UnixNano()
-		evacuating := false
 
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.ActualLRPNetInfo = *netInfo
@@ -316,8 +315,8 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			key.ProcessGuid, key.Index, evacuating,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			key.ProcessGuid, key.Index, models.ActualLRP_Ordinary,
 		)
 		if err != nil {
 			logger.Error("failed-starting-actual-lrp", err)
@@ -349,7 +348,7 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
@@ -383,7 +382,6 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 			logger.Error("failed-to-serialize-net-info", err)
 			return err
 		}
-		evacuating := false
 
 		if actualLRP.ShouldRestartImmediately(models.NewDefaultRestartCalculator()) {
 			actualLRP.State = models.ActualLRPStateUnclaimed
@@ -404,8 +402,8 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			key.ProcessGuid, key.Index, evacuating,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			key.ProcessGuid, key.Index, models.ActualLRP_Ordinary,
 		)
 		if err != nil {
 			logger.Error("failed-to-crash-actual-lrp", err)
@@ -428,7 +426,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, false, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
 			logger.Error("failed-to-get-actual-lrp", err)
 			return err
@@ -444,7 +442,6 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		actualLRP.ModificationTag.Increment()
 		actualLRP.PlacementError = placementError
 		actualLRP.Since = now
-		evacuating := false
 
 		_, err = db.update(logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
@@ -452,8 +449,8 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 				"placement_error":        truncateString(actualLRP.PlacementError, 1024),
 				"since":                  actualLRP.Since,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			key.ProcessGuid, key.Index, evacuating,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			key.ProcessGuid, key.Index, models.ActualLRP_Ordinary,
 		)
 		if err != nil {
 			logger.Error("failed-failing-actual-lrp", err)
@@ -476,13 +473,13 @@ func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index 
 		var result sql.Result
 		if instanceKey == nil {
 			result, err = db.delete(logger, tx, actualLRPsTable,
-				"process_guid = ? AND instance_index = ? AND evacuating = ?",
-				processGuid, index, false,
+				"process_guid = ? AND instance_index = ? AND presence = ?",
+				processGuid, index, models.ActualLRP_Ordinary,
 			)
 		} else {
 			result, err = db.delete(logger, tx, actualLRPsTable,
-				"process_guid = ? AND instance_index = ? AND evacuating = ? AND instance_guid = ? AND cell_id = ?",
-				processGuid, index, false, instanceKey.InstanceGuid, instanceKey.CellId,
+				"process_guid = ? AND instance_index = ? AND presence = ? AND instance_guid = ? AND cell_id = ?",
+				processGuid, index, models.ActualLRP_Ordinary, instanceKey.InstanceGuid, instanceKey.CellId,
 			)
 		}
 		if err != nil {
@@ -548,12 +545,11 @@ func (db *SQLDB) createRunningActualLRP(logger lager.Logger, key *models.ActualL
 func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
-	var evacuating bool
 
 	err := row.Scan(
 		&actualLRP.ProcessGuid,
 		&actualLRP.Index,
-		&evacuating,
+		&actualLRP.Presence,
 		&actualLRP.Domain,
 		&actualLRP.State,
 		&actualLRP.InstanceGuid,
@@ -571,10 +567,6 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		return nil, err
 	}
 
-	if evacuating {
-		actualLRP.Presence = models.ActualLRP_Evacuating
-	}
-
 	if len(netInfoData) > 0 {
 		logger.Debug("unmarshalling-net-info-data", lager.Data{"net_info": string(netInfoData)})
 		err = db.deserializeModel(logger, netInfoData, &actualLRP.ActualLRPNetInfo)
@@ -587,35 +579,9 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	return &actualLRP, nil
 }
 
-func (db *SQLDB) fetchActualLRPForUpdateNext(logger lager.Logger, processGuid string, index int32, presence models.ActualLRP_Presence, tx helpers.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, presence models.ActualLRP_Presence, tx helpers.Tx) (*models.ActualLRP, error) {
 	wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
 	bindings := []interface{}{processGuid, index, presence}
-
-	rows, err := db.all(logger, tx, actualLRPsTable,
-		actualLRPColumns, helpers.LockRow, wheres, bindings...)
-	if err != nil {
-		logger.Error("failed-query", err)
-		return nil, err
-	}
-	groups, err := db.scanAndCleanupActualLRPs(logger, tx, rows)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(groups) == 0 {
-		return nil, models.ErrResourceNotFound
-	}
-
-	actualLRP, _, resolveError := groups[0].Resolve()
-	if resolveError != nil {
-		return nil, resolveError
-	}
-	return actualLRP, nil
-}
-
-func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx helpers.Tx) (*models.ActualLRP, error) {
-	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
-	bindings := []interface{}{processGuid, index, evacuating}
 
 	rows, err := db.all(logger, tx, actualLRPsTable,
 		actualLRPColumns, helpers.LockRow, wheres, bindings...)
@@ -677,8 +643,8 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 
 	for _, actual := range actualsToDelete {
 		_, err := db.delete(logger, q, actualLRPsTable,
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			actual.ProcessGuid, actual.Index, actual.Presence == models.ActualLRP_Evacuating,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			actual.ProcessGuid, actual.Index, actual.Presence,
 		)
 		if err != nil {
 			logger.Error("failed-cleaning-up-invalid-actual-lrp", err)

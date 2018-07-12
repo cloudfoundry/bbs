@@ -2,11 +2,13 @@ package migrations
 
 import (
 	"database/sql"
+	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
+	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
 )
@@ -54,16 +56,20 @@ func (e *AddPresenceToActualLrp) alterTable(logger lager.Logger) error {
 	alterTablesSQL := []string{
 		"ALTER TABLE actual_lrps ADD COLUMN presence INT NOT NULL DEFAULT 0;",
 	}
+
+	alterTablesSQL = append(alterTablesSQL, fmt.Sprintf("UPDATE actual_lrps SET presence = %d WHERE evacuating = true;", models.ActualLRP_Evacuating))
+
+	// alterTablesSQL = append(alterTablesSQL, "ALTER TABLE actual_lrps DROP COLUMN evacuating")
+
 	if e.dbFlavor == "mysql" {
 		alterTablesSQL = append(alterTablesSQL,
-			"ALTER TABLE actual_lrps DROP primary key, ADD PRIMARY KEY (process_guid, instance_index, evacuating, presence);",
+			"ALTER TABLE actual_lrps DROP primary key, ADD PRIMARY KEY (process_guid, instance_index, presence);",
 		)
 	} else {
 		alterTablesSQL = append(alterTablesSQL,
-			"ALTER TABLE actual_lrps DROP CONSTRAINT actual_lrps_pkey, ADD PRIMARY KEY (process_guid, instance_index, evacuating, presence);",
+			"ALTER TABLE actual_lrps DROP CONSTRAINT actual_lrps_pkey, ADD PRIMARY KEY (process_guid, instance_index, presence);",
 		)
 	}
-	alterTablesSQL = append(alterTablesSQL, "UPDATE actual_lrps SET presence = 1 WHERE evacuating = true;")
 
 	logger.Info("altering-table")
 	for _, query := range alterTablesSQL {

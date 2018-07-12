@@ -2,6 +2,7 @@ package sqldb_test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -99,11 +100,11 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when there's just an evacuating LRP", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+				queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true, actualLRP.ProcessGuid, actualLRP.Index, false)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Ordinary)
 				Expect(err).NotTo(HaveOccurred())
 				actualLRP.Presence = models.ActualLRP_Evacuating
 			})
@@ -127,7 +128,7 @@ var _ = Describe("ActualLRPDB", func() {
 				evacuatingLRP = &cpy
 				evacuatingLRP.Presence = models.ActualLRP_Evacuating
 
-				queryStr := "UPDATE actual_lrps SET evacuating = true WHERE process_guid = ?"
+				queryStr := fmt.Sprintf("UPDATE actual_lrps SET presence = %d WHERE process_guid = ?", models.ActualLRP_Evacuating)
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
@@ -280,11 +281,11 @@ var _ = Describe("ActualLRPDB", func() {
 			fakeClock.Increment(time.Hour)
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
 			Expect(err).NotTo(HaveOccurred())
-			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, true, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, false)
+			_, err = db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, models.ActualLRP_Ordinary)
 			Expect(err).NotTo(HaveOccurred())
 			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
 				Evacuating: &models.ActualLRP{
@@ -314,11 +315,11 @@ var _ = Describe("ActualLRPDB", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
 			Expect(err).NotTo(HaveOccurred())
-			queryStr = "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+			queryStr = "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, true, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, false)
+			_, err = db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, models.ActualLRP_Ordinary)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
@@ -455,11 +456,11 @@ var _ = Describe("ActualLRPDB", func() {
 			fakeClock.Increment(time.Hour)
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
 			Expect(err).NotTo(HaveOccurred())
-			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err = db.Exec(queryStr, true, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, false)
+			_, err = db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, models.ActualLRP_Ordinary)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
@@ -790,15 +791,15 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and the actual lrp is evacuating", func() {
 				BeforeEach(func() {
-					queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+					queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err := db.Exec(queryStr,
-						true,
+						models.ActualLRP_Evacuating,
 						expectedActualLRP.ActualLRPKey.ProcessGuid,
 						expectedActualLRP.ActualLRPKey.Index,
-						false,
+						models.ActualLRP_Ordinary,
 					)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -1159,15 +1160,15 @@ var _ = Describe("ActualLRPDB", func() {
 				BeforeEach(func() {
 					_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
 					Expect(err).NotTo(HaveOccurred())
-					queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+					queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err = db.Exec(queryStr,
-						true,
+						models.ActualLRP_Evacuating,
 						actualLRP.ActualLRPKey.ProcessGuid,
 						actualLRP.ActualLRPKey.Index,
-						false,
+						models.ActualLRP_Ordinary,
 					)
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -1478,14 +1479,14 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("and it's EVACUATING", func() {
 				BeforeEach(func() {
 					queryStr := `
-							UPDATE actual_lrps SET crash_count = ?, evacuating = ?
+							UPDATE actual_lrps SET crash_count = ?, presence = ?
 							WHERE process_guid = ? AND instance_index = ?`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err := db.Exec(queryStr,
 						models.DefaultImmediateRestarts+2,
-						true,
+						models.ActualLRP_Evacuating,
 						actualLRP.ProcessGuid,
 						actualLRP.Index,
 					)
@@ -1530,7 +1531,7 @@ var _ = Describe("ActualLRPDB", func() {
 					_, _, err = sqlDB.StartActualLRP(logger, &evacuatingLRP.ActualLRPKey, evacuatingInstanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
 					queryStr := `
-							UPDATE actual_lrps SET evacuating = ?
+							UPDATE actual_lrps SET presence = ?
 							WHERE process_guid = ? AND instance_index = ?`
 
 					if test_helpers.UsePostgres() {
@@ -1538,7 +1539,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 
 					_, err = db.Exec(queryStr,
-						true,
+						models.ActualLRP_Evacuating,
 						evacuatingLRP.ProcessGuid,
 						evacuatingLRP.Index,
 					)

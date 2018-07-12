@@ -15,7 +15,7 @@ func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.Actu
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		lrp, err := db.fetchActualLRPForUpdateNext(logger, processGuid, index, models.ActualLRP_Suspect, tx)
+		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Suspect, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("suspect-lrp-does-not-exist")
 			return nil

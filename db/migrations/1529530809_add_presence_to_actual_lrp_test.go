@@ -137,6 +137,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 				Expect(row.Scan(&presence)).To(Succeed())
 				Expect(presence).To(Equal(fmt.Sprintf("%d", models.ActualLRP_Evacuating)))
 			})
+
 			It("is idempotent even with preexisting data", func() {
 				testIdempotency(rawSQLDB, migration, logger)
 			})

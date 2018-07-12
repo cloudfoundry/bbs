@@ -1,6 +1,7 @@
 package sqldb_test
 
 import (
+	"fmt"
 	"time"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -121,7 +122,7 @@ var _ = Describe("New LRPConvergence", func() {
 			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"})
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = db.Exec(`UPDATE actual_lrps SET evacuating = true`)
+			_, err = db.Exec(fmt.Sprintf(`UPDATE actual_lrps SET presence = %d`, models.ActualLRP_Evacuating))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -264,11 +265,11 @@ var _ = Describe("New LRPConvergence", func() {
 			BeforeEach(func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 
-				queryStr := `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+				queryStr := `UPDATE actual_lrps SET presence = ? WHERE process_guid = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true, processGuid)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating, processGuid)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -306,7 +307,7 @@ var _ = Describe("New LRPConvergence", func() {
 			// add suspect and ordinary lrps that are running on different cells
 		})
 
-		It("should return the suspect lrp key in the SuspectLRPKeysToRetire", func() {
+		XIt("should return the suspect lrp key in the SuspectLRPKeysToRetire", func() {
 			Fail("not implemented")
 		})
 	})
@@ -463,11 +464,11 @@ var _ = Describe("New LRPConvergence", func() {
 			BeforeEach(func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 
-				queryStr := `UPDATE actual_lrps SET evacuating = ?`
+				queryStr := `UPDATE actual_lrps SET presence = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -609,11 +610,11 @@ var _ = Describe("New LRPConvergence", func() {
 			BeforeEach(func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 
-				queryStr := `UPDATE actual_lrps SET evacuating = ?`
+				queryStr := `UPDATE actual_lrps SET presence = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -765,11 +766,11 @@ var _ = Describe("New LRPConvergence", func() {
 			BeforeEach(func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 
-				queryStr := `UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ?`
+				queryStr := `UPDATE actual_lrps SET presence = ? WHERE process_guid = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true, processGuid)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating, processGuid)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -786,7 +787,7 @@ var _ = Describe("New LRPConvergence", func() {
 				}))
 			})
 
-			It("remoes the extra key to retire", func() {
+			XIt("returns the extra key to retire", func() {
 				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 4)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -794,16 +795,18 @@ var _ = Describe("New LRPConvergence", func() {
 				Expect(result.KeysToRetire).To(ConsistOf(group.Evacuating.ActualLRPKey))
 			})
 
-			It("return an ActualLRPRemoved Event", func() {
+			XIt("removes the extra LRP from the db", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
 				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
 				Expect(err).NotTo(HaveOccurred())
-
 				Expect(groups).To(HaveLen(1))
+
+				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 4)
+				Expect(err).To(HaveOccurred())
 			})
 
-			It("return an ActualLRPRemoved Event", func() {
+			XIt("return an ActualLRPRemoved Event", func() {
 				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 4)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -1003,11 +1006,11 @@ var _ = Describe("New LRPConvergence", func() {
 			BeforeEach(func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 
-				queryStr := `UPDATE actual_lrps SET evacuating = ?`
+				queryStr := `UPDATE actual_lrps SET presence = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -1237,11 +1240,11 @@ var _ = Describe("New LRPConvergence", func() {
 			BeforeEach(func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 
-				queryStr := `UPDATE actual_lrps SET evacuating = ?`
+				queryStr := `UPDATE actual_lrps SET presence = ?`
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
