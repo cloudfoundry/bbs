@@ -587,6 +587,32 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	return &actualLRP, nil
 }
 
+func (db *SQLDB) fetchActualLRPForUpdateNext(logger lager.Logger, processGuid string, index int32, presence models.ActualLRP_Presence, tx helpers.Tx) (*models.ActualLRP, error) {
+	wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
+	bindings := []interface{}{processGuid, index, presence}
+
+	rows, err := db.all(logger, tx, actualLRPsTable,
+		actualLRPColumns, helpers.LockRow, wheres, bindings...)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return nil, err
+	}
+	groups, err := db.scanAndCleanupActualLRPs(logger, tx, rows)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(groups) == 0 {
+		return nil, models.ErrResourceNotFound
+	}
+
+	actualLRP, _, resolveError := groups[0].Resolve()
+	if resolveError != nil {
+		return nil, resolveError
+	}
+	return actualLRP, nil
+}
+
 func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string, index int32, evacuating bool, tx helpers.Tx) (*models.ActualLRP, error) {
 	wheres := "process_guid = ? AND instance_index = ? AND evacuating = ?"
 	bindings := []interface{}{processGuid, index, evacuating}
