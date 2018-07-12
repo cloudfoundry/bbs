@@ -6,12 +6,14 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, error) {
 	logger = logger.Session("remove-suspect-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+	var lrpGroup *models.ActualLRPGroup
+
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
@@ -31,10 +33,13 @@ func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.Actu
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
+		lrpGroup = &models.ActualLRPGroup{Instance: lrp}
+
 		_, err = db.delete(logger, tx, "actual_lrps",
 			"process_guid = ? AND instance_index = ? AND presence = ?",
 			processGuid, index, models.ActualLRP_Suspect,
 		)
+
 		if err != nil {
 			logger.Error("failed-delete", err)
 			return models.ErrActualLRPCannotBeRemoved
@@ -42,4 +47,6 @@ func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.Actu
 
 		return nil
 	})
+
+	return lrpGroup, err
 }

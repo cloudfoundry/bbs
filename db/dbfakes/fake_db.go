@@ -583,7 +583,7 @@ type FakeDB struct {
 	setVersionReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveSuspectActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	RemoveSuspectActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, error)
 	removeSuspectActualLRPMutex       sync.RWMutex
 	removeSuspectActualLRPArgsForCall []struct {
 		arg1 lager.Logger
@@ -591,10 +591,12 @@ type FakeDB struct {
 		arg3 *models.ActualLRPInstanceKey
 	}
 	removeSuspectActualLRPReturns struct {
-		result1 error
+		result1 *models.ActualLRPGroup
+		result2 error
 	}
 	removeSuspectActualLRPReturnsOnCall map[int]struct {
-		result1 error
+		result1 *models.ActualLRPGroup
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -2622,7 +2624,7 @@ func (fake *FakeDB) SetVersionReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDB) RemoveSuspectActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) error {
+func (fake *FakeDB) RemoveSuspectActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, error) {
 	fake.removeSuspectActualLRPMutex.Lock()
 	ret, specificReturn := fake.removeSuspectActualLRPReturnsOnCall[len(fake.removeSuspectActualLRPArgsForCall)]
 	fake.removeSuspectActualLRPArgsForCall = append(fake.removeSuspectActualLRPArgsForCall, struct {
@@ -2636,9 +2638,9 @@ func (fake *FakeDB) RemoveSuspectActualLRP(arg1 lager.Logger, arg2 *models.Actua
 		return fake.RemoveSuspectActualLRPStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.removeSuspectActualLRPReturns.result1
+	return fake.removeSuspectActualLRPReturns.result1, fake.removeSuspectActualLRPReturns.result2
 }
 
 func (fake *FakeDB) RemoveSuspectActualLRPCallCount() int {
@@ -2653,23 +2655,26 @@ func (fake *FakeDB) RemoveSuspectActualLRPArgsForCall(i int) (lager.Logger, *mod
 	return fake.removeSuspectActualLRPArgsForCall[i].arg1, fake.removeSuspectActualLRPArgsForCall[i].arg2, fake.removeSuspectActualLRPArgsForCall[i].arg3
 }
 
-func (fake *FakeDB) RemoveSuspectActualLRPReturns(result1 error) {
+func (fake *FakeDB) RemoveSuspectActualLRPReturns(result1 *models.ActualLRPGroup, result2 error) {
 	fake.RemoveSuspectActualLRPStub = nil
 	fake.removeSuspectActualLRPReturns = struct {
-		result1 error
-	}{result1}
+		result1 *models.ActualLRPGroup
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeDB) RemoveSuspectActualLRPReturnsOnCall(i int, result1 error) {
+func (fake *FakeDB) RemoveSuspectActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 error) {
 	fake.RemoveSuspectActualLRPStub = nil
 	if fake.removeSuspectActualLRPReturnsOnCall == nil {
 		fake.removeSuspectActualLRPReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 *models.ActualLRPGroup
+			result2 error
 		})
 	}
 	fake.removeSuspectActualLRPReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 *models.ActualLRPGroup
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeDB) Invocations() map[string][][]interface{} {

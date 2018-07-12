@@ -133,15 +133,12 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q helpers.Queryab
 }
 
 func (db *SQLDB) selectExtraSuspectActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
-	query := fmt.Sprintf(`
-    SELECT process_guid, instance_index, domain
+	query := db.helper.Rebind(`SELECT process_guid, instance_index, domain
       FROM actual_lrps
-      WHERE actual_lrps.presence IN (%d,%d)
-			GROUP BY (process_guid, instance_index, domain)
-			HAVING count(*) >= 2
-		`, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-
-	return q.Query(query)
+      WHERE actual_lrps.presence IN (?, ?) AND actual_lrps.state = ?
+			GROUP BY process_guid, instance_index, domain
+			HAVING count(*) >= 2`)
+	return q.Query(query, models.ActualLRP_Ordinary, models.ActualLRP_Suspect, models.ActualLRPStateRunning)
 }
 
 func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q helpers.Queryable, cellSet models.CellSet) (*sql.Rows, error) {

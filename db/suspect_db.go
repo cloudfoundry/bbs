@@ -5,8 +5,8 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter . DB
+//go:generate counterfeiter . SuspectDB
 
 type SuspectDB interface {
-	RemoveSuspectActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	RemoveSuspectActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, error)
 }

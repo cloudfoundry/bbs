@@ -303,12 +303,54 @@ var _ = Describe("New LRPConvergence", func() {
 	})
 
 	Context("when there is a suspect LRP and ordinary LRP present", func() {
+		var (
+			processGuid, domain string
+		)
+
 		BeforeEach(func() {
+			cellSet = models.NewCellSetFromList([]*models.CellPresence{
+				{CellId: "existing-cell"},
+				{CellId: "suspect-cell"},
+			})
+
 			// add suspect and ordinary lrps that are running on different cells
+			domain = "some-domain"
+			processGuid = "desired-with-suspect-and-running-actual"
+			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
+			desiredLRP.Domain = domain
+			err := sqlDB.DesireLRP(logger, desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			// create the suspect lrp
+			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444))
+			lrpKey := models.NewActualLRPKey(processGuid, 0, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = db.Exec(fmt.Sprintf(`UPDATE actual_lrps SET presence = %d`, models.ActualLRP_Suspect))
+			Expect(err).NotTo(HaveOccurred())
+
+			// create the ordinary lrp
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
-		XIt("should return the suspect lrp key in the SuspectLRPKeysToRetire", func() {
-			Fail("not implemented")
+		It("should return the suspect lrp key in the SuspectLRPKeysToRetire", func() {
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			key := models.NewActualLRPKey(processGuid, 0, domain)
+			Expect(result.SuspectLRPKeysToRetire).To(ConsistOf(&key))
+		})
+
+		Context("if the ordinary lrp is not running", func() {
+			BeforeEach(func() {
+				lrpKey := models.NewActualLRPKey(processGuid, 0, domain)
+				_, _, _, err := sqlDB.CrashActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{CellId: "existing-cell", InstanceGuid: "ig-2"}, "booooom!")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("does not retire the Suspect LRP", func() {
+				result := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(result.SuspectLRPKeysToRetire).To(BeEmpty())
+			})
 		})
 	})
 

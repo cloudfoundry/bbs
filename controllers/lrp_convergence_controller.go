@@ -19,7 +19,8 @@ type Retirer interface {
 
 type LRPConvergenceController struct {
 	logger                 lager.Logger
-	db                     db.LRPDB
+	lrpDB                  db.LRPDB
+	suspectDB              db.SuspectDB
 	actualHub              events.Hub
 	auctioneerClient       auctioneer.Client
 	serviceClient          serviceclient.ServiceClient
@@ -30,6 +31,7 @@ type LRPConvergenceController struct {
 func NewLRPConvergenceController(
 	logger lager.Logger,
 	db db.LRPDB,
+	suspectDB db.SuspectDB,
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
@@ -38,7 +40,8 @@ func NewLRPConvergenceController(
 ) *LRPConvergenceController {
 	return &LRPConvergenceController{
 		logger:                 logger,
-		db:                     db,
+		lrpDB:                  db,
+		suspectDB:              suspectDB,
 		actualHub:              actualHub,
 		auctioneerClient:       auctioneerClient,
 		serviceClient:          serviceClient,
@@ -64,7 +67,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	convergenceResult := h.db.ConvergeLRPs(logger, cellSet)
+	convergenceResult := h.lrpDB.ConvergeLRPs(logger, cellSet)
 	keysWithMissingCells := convergenceResult.KeysWithMissingCells
 	keysToRetire := convergenceResult.KeysToRetire
 	keysWithPresentCells := convergenceResult.SuspectKeysWithExistingCells
@@ -106,7 +109,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, lrpKey := range convergenceResult.MissingLRPKeys {
 		key := lrpKey
 		works = append(works, func() {
-			lrpGroup, err := h.db.CreateUnclaimedActualLRP(logger, key.Key)
+			lrpGroup, err := h.lrpDB.CreateUnclaimedActualLRP(logger, key.Key)
 			if err != nil {
 				handleUnrecoverableError(err)
 				return
@@ -124,7 +127,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, lrpKey := range convergenceResult.UnstartedLRPKeys {
 		key := lrpKey
 		works = append(works, func() {
-			before, after, err := h.db.UnclaimActualLRP(logger, key.Key)
+			before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
 			if err != nil {
 				handleUnrecoverableError(err)
 				return
@@ -142,7 +145,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range keysWithMissingCells {
 		key := key
 		works = append(works, func() {
-			_, _, err := h.db.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Suspect)
+			_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Suspect)
 			if err != nil {
 				handleUnrecoverableError(err)
 				return
@@ -160,13 +163,13 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range keysWithPresentCells {
 		key := key
 		works = append(works, func() {
-			err := h.db.RemoveActualLRP(logger, key.ProcessGuid, key.Index, nil)
+			err := h.lrpDB.RemoveActualLRP(logger, key.ProcessGuid, key.Index, nil)
 			handleUnrecoverableError(err)
 			if err != nil {
 				logger.Error("cannot-remove-lrp", err, lager.Data{"key": key})
 				return
 			}
-			_, _, err = h.db.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary)
+			_, _, err = h.lrpDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary)
 			handleUnrecoverableError(err)
 			if err != nil {
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})

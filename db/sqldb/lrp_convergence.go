@@ -64,14 +64,16 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	converge.actualLRPsWithMissingCells(logger, cellSet)
 	converge.lrpInstanceCounts(logger, domainSet)
 	converge.orphanedActualLRPs(logger)
+	converge.extraSuspectActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
 	return db.ConvergenceResult{
-		MissingLRPKeys:       converge.result(logger),
-		UnstartedLRPKeys:     converge.unstartedLRPKeys,
-		KeysToRetire:         converge.keysToRetire,
-		KeysWithMissingCells: converge.keysWithMissingCells,
-		Events:               events,
+		MissingLRPKeys:         converge.result(logger),
+		UnstartedLRPKeys:       converge.unstartedLRPKeys,
+		KeysToRetire:           converge.keysToRetire,
+		SuspectLRPKeysToRetire: converge.suspectKeysToRetire,
+		KeysWithMissingCells:   converge.keysWithMissingCells,
+		Events:                 events,
 		SuspectKeysWithExistingCells: nil,
 	}
 }
@@ -80,6 +82,9 @@ type convergence struct {
 	*SQLDB
 
 	keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
+
+	suspectKeysToRetireMutex sync.Mutex
+	suspectKeysToRetire      []*models.ActualLRPKey
 
 	keysMutex    sync.Mutex
 	keysToRetire []*models.ActualLRPKey
@@ -211,6 +216,36 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 		}
 
 		c.addKeyToRetire(logger, actualLRPKey)
+	}
+
+	if rows.Err() != nil {
+		logger.Error("failed-getting-next-row", rows.Err())
+	}
+}
+
+func (c *convergence) extraSuspectActualLRPs(logger lager.Logger) {
+	logger = logger.Session("extra-suspect-lrps")
+
+	rows, err := c.selectExtraSuspectActualLRPs(logger, c.db)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return
+	}
+
+	for rows.Next() {
+		actualLRPKey := &models.ActualLRPKey{}
+
+		err := rows.Scan(
+			&actualLRPKey.ProcessGuid,
+			&actualLRPKey.Index,
+			&actualLRPKey.Domain,
+		)
+		if err != nil {
+			logger.Error("failed-scanning", err)
+			continue
+		}
+
+		c.addExtraSuspectLRPKeyToRetire(logger, actualLRPKey)
 	}
 
 	if rows.Err() != nil {
@@ -358,6 +393,13 @@ func (c *convergence) addMissingLRPKey(logger lager.Logger, key *models.ActualLR
 	defer c.missingLRPKeysMutex.Unlock()
 
 	c.missingLRPKeys = append(c.missingLRPKeys, key)
+}
+
+func (c *convergence) addExtraSuspectLRPKeyToRetire(logger lager.Logger, key *models.ActualLRPKey) {
+	c.suspectKeysToRetireMutex.Lock()
+	defer c.suspectKeysToRetireMutex.Unlock()
+
+	c.suspectKeysToRetire = append(c.suspectKeysToRetire, key)
 }
 
 func (c *convergence) addKeyToRetire(logger lager.Logger, key *models.ActualLRPKey) {

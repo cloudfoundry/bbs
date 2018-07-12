@@ -35,7 +35,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 	})
 
 	Describe("RemoveSuspectActualLRP", func() {
-		Context("when there is an suspect actualLRP", func() {
+		Context("when there is a suspect actualLRP", func() {
 			BeforeEach(func() {
 				queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 				if test_helpers.UsePostgres() {
@@ -46,12 +46,17 @@ var _ = Describe("Suspect ActualLRPs", func() {
 			})
 
 			It("removes the suspect actual LRP", func() {
-				err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+				before, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				Expect(err).NotTo(HaveOccurred())
+
+				lrp, err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
+
+				Expect(lrp).To(Equal(before))
 			})
 
 			Context("when the actual lrp instance key is not the same", func() {
@@ -60,27 +65,26 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				})
 
 				It("returns a ErrActualLRPCannotBeRemoved error", func() {
-					err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+					_, err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
 					Expect(err).To(Equal(models.ErrActualLRPCannotBeRemoved))
-				})
-			})
-
-			Context("when the actualLRP is expired", func() {
-				It("does not return an error", func() {
-					err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
-					Expect(err).NotTo(HaveOccurred())
-
-					_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(Equal(models.ErrResourceNotFound))
 				})
 			})
 		})
 
 		Context("when the actualLRP does not exist", func() {
+			// the only LRP in the database is the Ordinary one created in the
+			// BeforeEach
 			It("does not return an error", func() {
-				err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+				before, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "some-guid")
 				Expect(err).NotTo(HaveOccurred())
+
+				_, err = sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+				Expect(err).NotTo(HaveOccurred())
+
+				after, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "some-guid")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(after).To(Equal(before))
 			})
 		})
 	})
