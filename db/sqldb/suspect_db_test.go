@@ -49,7 +49,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				before, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
 				Expect(err).NotTo(HaveOccurred())
 
-				lrp, err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+				lrp, err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey)
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -57,17 +57,6 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 
 				Expect(lrp).To(Equal(before))
-			})
-
-			Context("when the actual lrp instance key is not the same", func() {
-				BeforeEach(func() {
-					actualLRP.CellId = "a different cell"
-				})
-
-				It("returns a ErrActualLRPCannotBeRemoved error", func() {
-					_, err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
-					Expect(err).To(Equal(models.ErrActualLRPCannotBeRemoved))
-				})
 			})
 		})
 
@@ -78,7 +67,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				before, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "some-guid")
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey)
+				_, err = sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 
 				after, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "some-guid")

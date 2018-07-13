@@ -6,8 +6,8 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, error) {
-	logger = logger.Session("remove-suspect-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey})
+func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+	logger = logger.Session("remove-suspect-lrp", lager.Data{"lrp_key": lrpKey})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -26,11 +26,6 @@ func (db *SQLDB) RemoveSuspectActualLRP(logger lager.Logger, lrpKey *models.Actu
 		if err != nil {
 			logger.Error("failed-fetching-actual-lrp", err)
 			return err
-		}
-
-		if !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
-			logger.Debug("actual-lrp-instance-key-mismatch", lager.Data{"instance_key_param": instanceKey, "instance_key_from_db": lrp.ActualLRPInstanceKey})
-			return models.ErrActualLRPCannotBeRemoved
 		}
 
 		lrpGroup = &models.ActualLRPGroup{Instance: lrp}
