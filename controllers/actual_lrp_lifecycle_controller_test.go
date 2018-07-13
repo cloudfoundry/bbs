@@ -168,6 +168,21 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			err = controller.StartActualLRP(logger, &key, &instanceKey, &netInfo)
 		})
 
+		// NOP: Row 7 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+		// Context("when there is another Running Suspect LRP", func() {
+		// })
+
+		// Row 8 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+		Context("when the LRP being started is Suspect", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.StartActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&afterActualLRP, nil), nil)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&afterActualLRP, nil), nil)
+			})
+
+			It("don't do anything", func() {
+			})
+		})
+
 		Context("when starting the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.StartActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&afterActualLRP, nil), nil)

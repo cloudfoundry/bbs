@@ -249,11 +249,6 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		BeforeEach(func() {
 			suspectActualLRP = model_helpers.NewValidActualLRP("to-unclaim-1", 0)
 
-			fakeLRPDB.ChangeActualLRPPresenceStub = func(_ lager.Logger, key *models.ActualLRPKey, _ models.ActualLRP_Presence) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
-				return &models.ActualLRPGroup{Instance: suspectActualLRP},
-					&models.ActualLRPGroup{Instance: suspectActualLRP}, nil
-			}
-
 			keysWithMissingCells = []*models.ActualLRPKeyWithSchedulingInfo{
 				{Key: &suspectActualLRP.ActualLRPKey, SchedulingInfo: &desiredLRP1},
 			}
@@ -265,8 +260,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("change the LRP presence to 'Suspect'", func() {
 			Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
 
-			_, key, presence := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
-			Expect(presence).To(Equal(models.ActualLRP_Suspect))
+			_, key, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
+			Expect(from).To(Equal(models.ActualLRP_Ordinary))
+			Expect(to).To(Equal(models.ActualLRP_Suspect))
 			Expect(key).To(Equal(&suspectActualLRP.ActualLRPKey))
 		})
 
@@ -281,8 +277,38 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(startAuctions).To(ConsistOf(keysToAuction))
 		})
 
-		It("emits the proper events", func() {
+		It("emits no events", func() {
 			Consistently(actualHub.EmitCallCount).Should(Equal(0))
+		})
+
+		// Row 5 in
+		// https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA. This
+		// is implemented by always unclaiming LRPs that cannot be transitioned to
+		// Suspect
+		Context("when change the actual lrp presence fail because there is already a Suspect LRP", func() {
+			var (
+				before, after *models.ActualLRPGroup
+			)
+
+			BeforeEach(func() {
+				fakeLRPDB.ChangeActualLRPPresenceReturns(nil, nil, models.ErrResourceExists)
+				fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
+					KeysWithMissingCells: keysWithMissingCells,
+				})
+				before = &models.ActualLRPGroup{Instance: &models.ActualLRP{State: models.ActualLRPStateClaimed}}
+				after = &models.ActualLRPGroup{Instance: &models.ActualLRP{State: models.ActualLRPStateUnclaimed}}
+				fakeLRPDB.UnclaimActualLRPReturns(before, after, nil)
+			})
+
+			It("unclaims the lrp", func() {
+				Expect(fakeLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+			})
+
+			It("emits a ActualLRPChangedEvent", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				Expect(event).To(Equal(models.NewActualLRPChangedEvent(before, after)))
+			})
 		})
 
 		Context("when changing the actual lrp presence fails", func() {
@@ -375,10 +401,11 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		It("changes the suspect LRP presence to Ordinary", func() {
 			Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
-			_, lrpKey, presence := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
+			_, lrpKey, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
 
 			Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
-			Expect(presence).To(Equal(models.ActualLRP_Ordinary))
+			Expect(from).To(Equal(models.ActualLRP_Suspect))
+			Expect(to).To(Equal(models.ActualLRP_Ordinary))
 		})
 
 		It("does not emit any events", func() {
@@ -457,8 +484,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		It("removes the suspect LRP", func() {
 			Eventually(fakeSuspectDB.RemoveSuspectActualLRPCallCount).Should(Equal(1))
-			_, lrpKey, lrpInstanceKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
-			Expect(lrpInstanceKey).To(BeNil())
+			_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
 			Expect(lrpKey).To(Equal(key))
 		})
 
@@ -468,6 +494,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(event).To(Equal(models.NewActualLRPRemovedEvent(after)))
 		})
 	})
+
+	// NOP: Row 4 in https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA
 
 	Context("when there are extra ordinary LRPs", func() {
 		BeforeEach(func() {

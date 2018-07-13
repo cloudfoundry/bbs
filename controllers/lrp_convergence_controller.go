@@ -143,7 +143,19 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range convergenceResult.KeysWithMissingCells {
 		key := key
 		works = append(works, func() {
-			_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Suspect)
+			_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			if err == models.ErrResourceExists {
+				// there is a Suspect LRP already, unclaim this one and reauction it
+				before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
+				if err != nil {
+					handleUnrecoverableError(err)
+					return
+				}
+
+				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+				return
+			}
+
 			if err != nil {
 				handleUnrecoverableError(err)
 				return
@@ -167,7 +179,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 				logger.Error("cannot-remove-lrp", err, lager.Data{"key": key})
 				return
 			}
-			_, _, err = h.lrpDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary)
+			_, _, err = h.lrpDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Suspect, models.ActualLRP_Ordinary)
 			handleUnrecoverableError(err)
 			if err != nil {
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})
@@ -179,7 +191,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range convergenceResult.SuspectLRPKeysToRetire {
 		key := key
 		works = append(works, func() {
-			lrp, err := h.suspectDB.RemoveSuspectActualLRP(logger, key, nil)
+			lrp, err := h.suspectDB.RemoveSuspectActualLRP(logger, key)
 			if err != nil {
 				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": key})
 			}

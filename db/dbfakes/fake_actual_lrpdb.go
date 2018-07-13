@@ -170,12 +170,13 @@ type FakeActualLRPDB struct {
 	removeActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ChangeActualLRPPresenceStub        func(logger lager.Logger, key *models.ActualLRPKey, newPresence models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	ChangeActualLRPPresenceStub        func(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
 	changeActualLRPPresenceMutex       sync.RWMutex
 	changeActualLRPPresenceArgsForCall []struct {
-		logger      lager.Logger
-		key         *models.ActualLRPKey
-		newPresence models.ActualLRP_Presence
+		logger lager.Logger
+		key    *models.ActualLRPKey
+		from   models.ActualLRP_Presence
+		to     models.ActualLRP_Presence
 	}
 	changeActualLRPPresenceReturns struct {
 		result1 *models.ActualLRPGroup
@@ -736,18 +737,19 @@ func (fake *FakeActualLRPDB) RemoveActualLRPReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeActualLRPDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, newPresence models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+func (fake *FakeActualLRPDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from models.ActualLRP_Presence, to models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
 	fake.changeActualLRPPresenceMutex.Lock()
 	ret, specificReturn := fake.changeActualLRPPresenceReturnsOnCall[len(fake.changeActualLRPPresenceArgsForCall)]
 	fake.changeActualLRPPresenceArgsForCall = append(fake.changeActualLRPPresenceArgsForCall, struct {
-		logger      lager.Logger
-		key         *models.ActualLRPKey
-		newPresence models.ActualLRP_Presence
-	}{logger, key, newPresence})
-	fake.recordInvocation("ChangeActualLRPPresence", []interface{}{logger, key, newPresence})
+		logger lager.Logger
+		key    *models.ActualLRPKey
+		from   models.ActualLRP_Presence
+		to     models.ActualLRP_Presence
+	}{logger, key, from, to})
+	fake.recordInvocation("ChangeActualLRPPresence", []interface{}{logger, key, from, to})
 	fake.changeActualLRPPresenceMutex.Unlock()
 	if fake.ChangeActualLRPPresenceStub != nil {
-		return fake.ChangeActualLRPPresenceStub(logger, key, newPresence)
+		return fake.ChangeActualLRPPresenceStub(logger, key, from, to)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
@@ -761,10 +763,10 @@ func (fake *FakeActualLRPDB) ChangeActualLRPPresenceCallCount() int {
 	return len(fake.changeActualLRPPresenceArgsForCall)
 }
 
-func (fake *FakeActualLRPDB) ChangeActualLRPPresenceArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, models.ActualLRP_Presence) {
+func (fake *FakeActualLRPDB) ChangeActualLRPPresenceArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, models.ActualLRP_Presence, models.ActualLRP_Presence) {
 	fake.changeActualLRPPresenceMutex.RLock()
 	defer fake.changeActualLRPPresenceMutex.RUnlock()
-	return fake.changeActualLRPPresenceArgsForCall[i].logger, fake.changeActualLRPPresenceArgsForCall[i].key, fake.changeActualLRPPresenceArgsForCall[i].newPresence
+	return fake.changeActualLRPPresenceArgsForCall[i].logger, fake.changeActualLRPPresenceArgsForCall[i].key, fake.changeActualLRPPresenceArgsForCall[i].from, fake.changeActualLRPPresenceArgsForCall[i].to
 }
 
 func (fake *FakeActualLRPDB) ChangeActualLRPPresenceReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {

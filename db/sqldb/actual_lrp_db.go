@@ -2,7 +2,6 @@ package sqldb
 
 import (
 	"database/sql"
-	"errors"
 	"strings"
 	"time"
 
@@ -34,8 +33,38 @@ func (db *SQLDB) getActualLRPS(logger lager.Logger, wheres string, whereBindinng
 	return groups, err
 }
 
-func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, newPresence models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
-	return nil, nil, errors.New("not implemented")
+func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+
+	logger = logger.Session("change-actual-lrp-presence", lager.Data{"key": key, "from": from, "to": to})
+	logger.Info("starting")
+	defer logger.Info("finished")
+
+	var beforeLRP *models.ActualLRP
+	var afterLRP models.ActualLRP
+
+	err = db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		var err error
+		beforeLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, from, tx)
+		if err != nil {
+			logger.Error("failed-fetching-lrp", err)
+			return err
+		}
+
+		afterLRP = *beforeLRP
+
+		afterLRP.Presence = to
+
+		wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
+		_, err = db.update(logger, tx, actualLRPsTable, helpers.SQLAttributes{
+			"presence": afterLRP.Presence,
+		}, wheres, key.ProcessGuid, key.Index, from)
+		if err != nil {
+			logger.Error("failed-updating-lrp", err)
+		}
+		return err
+	})
+
+	return &models.ActualLRPGroup{Instance: beforeLRP}, &models.ActualLRPGroup{Instance: &afterLRP}, err
 }
 
 func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
@@ -629,9 +658,15 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
 			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
 		}
-		if actualLRP.Presence == models.ActualLRP_Evacuating {
+		switch actualLRP.Presence {
+		case models.ActualLRP_Evacuating:
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
-		} else {
+		case models.ActualLRP_Suspect:
+			// only resolve to the Suspect if the Ordinary instance is missing or not running
+			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || mapOfGroups[actualLRP.ActualLRPKey].Instance.State != models.ActualLRPStateRunning {
+				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+			}
+		default:
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 		}
 	}

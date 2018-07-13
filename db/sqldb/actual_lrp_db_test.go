@@ -18,6 +18,182 @@ var _ = Describe("ActualLRPDB", func() {
 		fakeGUIDProvider.NextGUIDReturns("my-awesome-guid", nil)
 	})
 
+	Describe("ActualLRPGroupsByProcessGuid", func() {
+		var (
+			processGuid       = "some-guid"
+			index       int32 = 0
+			domain            = "some-domain"
+		)
+
+		Context("when there is a running suspect lrp", func() {
+			BeforeEach(func() {
+				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "missing-cell"}, &models.ActualLRPNetInfo{})
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = sqlDB.CreateUnclaimedActualLRP(logger, key)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, index, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("always return the Suspect as the instance", func() {
+				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(groups).To(HaveLen(1))
+				Expect(groups[0].Instance.InstanceGuid).To(Equal("ig-1"))
+				Expect(groups[0].Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+			})
+		})
+
+		Context("when there is no running suspect lrp", func() {
+			BeforeEach(func() {
+				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}, &models.ActualLRPNetInfo{})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("always return the Ordinary as the instance", func() {
+				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(groups).To(HaveLen(1))
+				Expect(groups[0].Instance.InstanceGuid).To(Equal("ig-1"))
+				Expect(groups[0].Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+			})
+		})
+	})
+
+	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
+		var (
+			processGuid       = "some-guid"
+			index       int32 = 0
+			domain            = "some-domain"
+		)
+
+		Context("when there is a running suspect lrp", func() {
+			BeforeEach(func() {
+				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "missing-cell"}, &models.ActualLRPNetInfo{})
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = sqlDB.CreateUnclaimedActualLRP(logger, key)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, index, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("always return the Suspect as the instance", func() {
+				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(group.Instance.InstanceGuid).To(Equal("ig-1"))
+				Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+			})
+		})
+
+		Context("when there is no running suspect lrp", func() {
+			BeforeEach(func() {
+				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}, &models.ActualLRPNetInfo{})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("always return the Ordinary as the instance", func() {
+				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(group.Instance.InstanceGuid).To(Equal("ig-1"))
+				Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+			})
+		})
+	})
+
+	Describe("ChangeActualLRPPresence", func() {
+		var (
+			key         *models.ActualLRPKey
+			instanceKey *models.ActualLRPInstanceKey
+			netInfo     *models.ActualLRPNetInfo
+		)
+
+		BeforeEach(func() {
+			lrpKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+			key = &lrpKey
+			lrpInstanceKey := models.NewActualLRPInstanceKey("ig-1", "cell-id")
+			instanceKey = &lrpInstanceKey
+			netInfo = &models.ActualLRPNetInfo{
+				Address:         "0.0.0.0",
+				Ports:           []*models.PortMapping{},
+				InstanceAddress: "1.1.1.1",
+			}
+		})
+
+		Context("when the lrp exists", func() {
+			BeforeEach(func() {
+				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, err = sqlDB.StartActualLRP(logger, key, instanceKey, netInfo)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("changes its presence", func() {
+				before, after, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(before.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+				Expect(after.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+			})
+
+			Context("when an LRP with the desired presence already exist", func() {
+				BeforeEach(func() {
+					_, _, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+					Expect(err).NotTo(HaveOccurred())
+					_, err = sqlDB.CreateUnclaimedActualLRP(logger, key)
+					Expect(err).NotTo(HaveOccurred())
+					_, _, err = sqlDB.StartActualLRP(logger, key, instanceKey, netInfo)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("changes its presence", func() {
+					_, _, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+					Expect(err).To(MatchError(models.ErrResourceExists))
+				})
+			})
+		})
+
+		Context("when the key doesn't exist", func() {
+			Context("because it does not exist", func() {
+				BeforeEach(func() {
+					// intentionally left blank
+				})
+
+				It("returns a ResourceNotFound error", func() {
+					_, _, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+					Expect(err).To(MatchError(models.ErrResourceNotFound))
+				})
+			})
+
+			Context("because it has the wrong presence", func() {
+				BeforeEach(func() {
+					_, err := sqlDB.EvacuateActualLRP(logger, key, instanceKey, netInfo, 0)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns a ResourceNotFound error", func() {
+					_, _, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+					Expect(err).To(MatchError(models.ErrResourceNotFound))
+				})
+			})
+		})
+	})
+
 	Describe("CreateUnclaimedActualLRP", func() {
 		var key *models.ActualLRPKey
 

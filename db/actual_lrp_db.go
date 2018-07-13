@@ -20,5 +20,5 @@ type ActualLRPDB interface {
 	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
 	RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error
 
-	ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, newPresence models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
 }
