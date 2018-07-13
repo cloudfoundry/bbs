@@ -68,9 +68,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	logger.Debug("succeeded-listing-cells")
 
 	convergenceResult := h.lrpDB.ConvergeLRPs(logger, cellSet)
-	keysWithMissingCells := convergenceResult.KeysWithMissingCells
 	keysToRetire := convergenceResult.KeysToRetire
-	keysWithPresentCells := convergenceResult.SuspectKeysWithExistingCells
 	events := convergenceResult.Events
 
 	for _, e := range events {
@@ -142,7 +140,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		})
 	}
 
-	for _, key := range keysWithMissingCells {
+	for _, key := range convergenceResult.KeysWithMissingCells {
 		key := key
 		works = append(works, func() {
 			_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Suspect)
@@ -160,7 +158,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		})
 	}
 
-	for _, key := range keysWithPresentCells {
+	for _, key := range convergenceResult.SuspectKeysWithExistingCells {
 		key := key
 		works = append(works, func() {
 			err := h.lrpDB.RemoveActualLRP(logger, key.ProcessGuid, key.Index, nil)
@@ -174,6 +172,16 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 			if err != nil {
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})
 				return
+			}
+		})
+	}
+
+	for _, key := range convergenceResult.SuspectLRPKeysToRetire {
+		key := key
+		works = append(works, func() {
+			_, err := h.suspectDB.RemoveSuspectActualLRP(logger, key, nil)
+			if err != nil {
+				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": key})
 			}
 		})
 	}
