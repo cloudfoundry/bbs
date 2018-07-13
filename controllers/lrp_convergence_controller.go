@@ -179,10 +179,12 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range convergenceResult.SuspectLRPKeysToRetire {
 		key := key
 		works = append(works, func() {
-			_, err := h.suspectDB.RemoveSuspectActualLRP(logger, key, nil)
+			lrp, err := h.suspectDB.RemoveSuspectActualLRP(logger, key, nil)
 			if err != nil {
 				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": key})
 			}
+
+			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp))
 		})
 	}
 
