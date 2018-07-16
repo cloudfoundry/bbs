@@ -141,6 +141,28 @@ func (db *SQLDB) selectExtraSuspectActualLRPs(logger lager.Logger, q helpers.Que
 	return q.Query(query, models.ActualLRP_Ordinary, models.ActualLRP_Suspect, models.ActualLRPStateRunning)
 }
 
+func (db *SQLDB) selectSuspectLRPsWithExistingCells(logger lager.Logger, q helpers.Queryable, cellSet models.CellSet) (*sql.Rows, error) {
+	wheres := []string{fmt.Sprintf("actual_lrps.presence = %d", models.ActualLRP_Suspect)}
+	bindings := make([]interface{}, 0, len(cellSet))
+
+	if len(cellSet) > 0 {
+		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id IN (%s)", helpers.QuestionMarks(len(cellSet))))
+		for cellID := range cellSet {
+			bindings = append(bindings, cellID)
+		}
+	}
+
+	query := fmt.Sprintf(`
+		SELECT process_guid, instance_index, domain
+			FROM actual_lrps
+			WHERE %s
+		`,
+		strings.Join(wheres, " AND "),
+	)
+
+	return q.Query(db.helper.Rebind(query), bindings...)
+}
+
 func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q helpers.Queryable, cellSet models.CellSet) (*sql.Rows, error) {
 	wheres := []string{fmt.Sprintf("actual_lrps.presence = %d", models.ActualLRP_Ordinary)}
 	bindings := make([]interface{}, 0, len(cellSet))

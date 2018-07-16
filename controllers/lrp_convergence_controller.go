@@ -141,22 +141,36 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	}
 
 	for _, key := range convergenceResult.KeysWithMissingCells {
+
 		key := key
 		works = append(works, func() {
+			logger = logger.Session("keys-with-missing-cells")
+
 			_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 			if err == models.ErrResourceExists {
+				logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": key.Key})
 				// there is a Suspect LRP already, unclaim this one and reauction it
 				before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
 				if err != nil {
+					logger.Error("failed-unclaiming-lrp", err)
 					handleUnrecoverableError(err)
 					return
 				}
 
+				logger.Info("emitting-unclaim-event", lager.Data{"before": before, "after": after})
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 				return
 			}
 
 			if err != nil {
+				logger.Error("failed-changing-presence", err)
+				handleUnrecoverableError(err)
+				return
+			}
+
+			_, err = h.lrpDB.CreateUnclaimedActualLRP(logger, key.Key)
+			if err != nil {
+				logger.Error("cannot-unclaim-lrp", err)
 				handleUnrecoverableError(err)
 				return
 			}
@@ -173,6 +187,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range convergenceResult.SuspectKeysWithExistingCells {
 		key := key
 		works = append(works, func() {
+			logger = logger.Session("suspect-keys-with-existing-cells")
 			err := h.lrpDB.RemoveActualLRP(logger, key.ProcessGuid, key.Index, nil)
 			handleUnrecoverableError(err)
 			if err != nil {
@@ -191,6 +206,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	for _, key := range convergenceResult.SuspectLRPKeysToRetire {
 		key := key
 		works = append(works, func() {
+			logger = logger.Session("suspect-keys-to-retire")
 			lrp, err := h.suspectDB.RemoveSuspectActualLRP(logger, key)
 			if err != nil {
 				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": key})

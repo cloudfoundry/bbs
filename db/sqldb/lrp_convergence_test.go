@@ -302,6 +302,41 @@ var _ = Describe("New LRPConvergence", func() {
 		})
 	})
 
+	Context("when there is a suspect LRP with an existing cell", func() {
+		var (
+			processGuid, domain string
+			lrpKey              models.ActualLRPKey
+		)
+
+		BeforeEach(func() {
+			cellSet = models.NewCellSetFromList([]*models.CellPresence{
+				{CellId: "existing-cell"},
+				{CellId: "suspect-cell"},
+			})
+
+			// add suspect and ordinary lrps that are running on different cells
+			domain = "some-domain"
+			processGuid = "desired-with-suspect-and-running-actual"
+			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
+			desiredLRP.Domain = domain
+			err := sqlDB.DesireLRP(logger, desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			// create the suspect lrp
+			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444))
+			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ChangeActualLRPPresence(logger, &lrpKey, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("returns the LRP key in the SuspectKeysWithExistingCells", func() {
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(result.SuspectKeysWithExistingCells).To(ConsistOf(&lrpKey))
+		})
+	})
+
 	Context("when there is a suspect LRP and ordinary LRP present", func() {
 		var (
 			processGuid, domain string

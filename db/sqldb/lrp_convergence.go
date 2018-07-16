@@ -65,6 +65,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	converge.lrpInstanceCounts(logger, domainSet)
 	converge.orphanedActualLRPs(logger)
 	converge.extraSuspectActualLRPs(logger)
+	converge.suspectActualLRPsWithExistingCells(logger, cellSet)
 	converge.crashedActualLRPs(logger, now)
 
 	return db.ConvergenceResult{
@@ -74,14 +75,15 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 		SuspectLRPKeysToRetire: converge.suspectKeysToRetire,
 		KeysWithMissingCells:   converge.keysWithMissingCells,
 		Events:                 events,
-		SuspectKeysWithExistingCells: nil,
+		SuspectKeysWithExistingCells: converge.suspectKeysWithExistingCells,
 	}
 }
 
 type convergence struct {
 	*SQLDB
 
-	keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
+	keysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
+	suspectKeysWithExistingCells []*models.ActualLRPKey
 
 	suspectKeysToRetireMutex sync.Mutex
 	suspectKeysToRetire      []*models.ActualLRPKey
@@ -337,6 +339,38 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
 // convergence) and add them to the list of start requests.
 func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
+	logger = logger.Session("suspect-lrps-with-existing-cells")
+
+	rows, err := c.selectSuspectLRPsWithExistingCells(logger, c.db, cellSet)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return
+	}
+
+	for rows.Next() {
+		actualLRPKey := &models.ActualLRPKey{}
+
+		err := rows.Scan(
+			&actualLRPKey.ProcessGuid,
+			&actualLRPKey.Index,
+			&actualLRPKey.Domain,
+		)
+		if err != nil {
+			logger.Error("failed-scanning", err)
+			continue
+		}
+
+		c.suspectKeysWithExistingCells = append(c.suspectKeysWithExistingCells, actualLRPKey)
+	}
+
+	if rows.Err() != nil {
+		logger.Error("failed-getting-next-row", rows.Err())
+	}
+}
+
+// Unclaim Actual LRPs that have missing cells (not in the cell set passed to
+// convergence) and add them to the list of start requests.
+func (c *convergence) suspectActualLRPsWithExistingCells(logger lager.Logger, cellSet models.CellSet) {
 	logger = logger.Session("actual-lrps-with-missing-cells")
 
 	var keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo

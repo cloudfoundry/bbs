@@ -169,17 +169,55 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 
 		// NOP: Row 7 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
-		// Context("when there is another Running Suspect LRP", func() {
-		// })
+		Context("when there is a Suspect LRP running", func() {})
 
-		// Row 8 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
 		Context("when the LRP being started is Suspect", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&afterActualLRP, nil), nil)
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&afterActualLRP, nil), nil)
+				instanceKey = models.NewActualLRPInstanceKey(
+					"instance-guid-0",
+					"cell-id-0",
+				)
+				actualLRPKey := models.NewActualLRPKey(
+					processGuid,
+					1,
+					"domain-0",
+				)
+				actualLRP = models.ActualLRP{
+					ActualLRPKey:         actualLRPKey,
+					ActualLRPInstanceKey: instanceKey,
+				}
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
 			})
 
-			It("don't do anything", func() {
+			// Row 8 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+			Context("when there is another Running Ordinary LRP", func() {
+				// TODO: It's not very obvious but we assume that
+				// ActualLRPGroupByProcessGuidAndIndex implements the resolution logic
+				// and will return the Running LRP in the Instance field.
+				BeforeEach(func() {
+					actualLRP.Presence = models.ActualLRP_Ordinary
+					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+					fakeActualLRPDB.StartActualLRPReturns(nil, nil, models.ErrActualLRPCannotBeStarted)
+				})
+
+				It("returns ErrActualLRPCannotBeStarted", func() {
+					Fail("that's not entirely right. The container can be removed without removing the LRP being removed")
+					Expect(err).To(MatchError(models.ErrActualLRPCannotBeStarted))
+				})
+			})
+
+			// Row 9 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+			Context("and the Ordinary LRP is not running", func() {
+				// TODO: It's not very obvious but we assume that
+				// ActualLRPGroupByProcessGuidAndIndex implements the resolution logic
+				// and will return the Running LRP in the Instance field.
+				BeforeEach(func() {
+					actualLRP.Presence = models.ActualLRP_Suspect
+				})
+
+				It("don't do anything", func() {
+					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(BeZero())
+				})
 			})
 		})
 
@@ -269,6 +307,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when starting the actual lrp fails", func() {
 			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
 				fakeActualLRPDB.StartActualLRPReturns(nil, nil, models.ErrUnknownError)
 			})
 

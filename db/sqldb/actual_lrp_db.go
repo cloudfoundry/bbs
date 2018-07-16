@@ -57,7 +57,7 @@ func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.Actual
 		wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
 		_, err = db.update(logger, tx, actualLRPsTable, helpers.SQLAttributes{
 			"presence": afterLRP.Presence,
-		}, wheres, key.ProcessGuid, key.Index, from)
+		}, wheres, key.ProcessGuid, key.Index, beforeLRP.Presence)
 		if err != nil {
 			logger.Error("failed-updating-lrp", err)
 		}

@@ -266,6 +266,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(key).To(Equal(&suspectActualLRP.ActualLRPKey))
 		})
 
+		FIt("creates a new unclaimed LRP", func() {
+			Expect(fakeLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(1))
+			_, lrpKey := fakeLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
+
+			Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
+		})
+
 		It("auctions new lrps", func() {
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 

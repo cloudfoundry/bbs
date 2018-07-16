@@ -41,7 +41,16 @@ func New(
 	pingHandler := NewPingHandler()
 	domainHandler := NewDomainHandler(db, exitChan)
 	actualLRPHandler := NewActualLRPHandler(db, exitChan)
-	actualLRPController := controllers.NewActualLRPLifecycleController(db, db, db, auctioneerClient, serviceClient, repClientFactory, actualHub)
+	actualLRPController := controllers.NewActualLRPLifecycleController(
+		db,
+		db,
+		db,
+		db,
+		auctioneerClient,
+		serviceClient,
+		repClientFactory,
+		actualHub,
+	)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(db, db, db, actualHub, auctioneerClient, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)

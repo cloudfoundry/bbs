@@ -12,6 +12,7 @@ import (
 
 type ActualLRPLifecycleController struct {
 	db               db.ActualLRPDB
+	suspectDB        db.SuspectDB
 	evacuationDB     db.EvacuationDB
 	desiredLRPDB     db.DesiredLRPDB
 	auctioneerClient auctioneer.Client
@@ -22,6 +23,7 @@ type ActualLRPLifecycleController struct {
 
 func NewActualLRPLifecycleController(
 	db db.ActualLRPDB,
+	suspectDB db.SuspectDB,
 	evacuationDB db.EvacuationDB,
 	desiredLRPDB db.DesiredLRPDB,
 	auctioneerClient auctioneer.Client,
@@ -31,6 +33,7 @@ func NewActualLRPLifecycleController(
 ) *ActualLRPLifecycleController {
 	return &ActualLRPLifecycleController{
 		db:               db,
+		suspectDB:        suspectDB,
 		evacuationDB:     evacuationDB,
 		desiredLRPDB:     desiredLRPDB,
 		auctioneerClient: auctioneerClient,
@@ -52,12 +55,17 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 	return nil
 }
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
-	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
+	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	if err != nil {
 		return err
 	}
 
-	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	if lrpGroup.Instance.Presence == models.ActualLRP_Suspect && lrpGroup.Instance.ActualLRPInstanceKey == *actualLRPInstanceKey {
+		// nothing to do
+		return nil
+	}
+
+	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
 		return err
 	}
@@ -66,11 +74,20 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrpGroup.Evacuating.ActualLRPKey, &lrpGroup.Evacuating.ActualLRPInstanceKey)
 	}
 
+	// prior to starting this ActualLRP there was a suspect LRP that we need to remove
+	var suspectLRP *models.ActualLRPGroup
+	if lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
+		suspectLRP, err = h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+	}
+
 	go func() {
 		if before == nil {
 			h.actualHub.Emit(models.NewActualLRPCreatedEvent(after))
 		} else if !before.Equal(after) {
 			h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+		}
+		if suspectLRP != nil {
+			h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP))
 		}
 		if lrpGroup.Evacuating != nil {
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: lrpGroup.Evacuating}))
