@@ -51,23 +51,30 @@ var _ = Describe("Convergence API", func() {
 		})
 
 		Context("when an LRP cell is dead", func() {
+			var (
+				lrpKey                *models.ActualLRPKey
+				suspectLRPInstanceKey *models.ActualLRPInstanceKey
+			)
+
 			BeforeEach(func() {
 				netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
 
-				err := client.StartActualLRP(logger, &models.ActualLRPKey{
+				lrpKey = &models.ActualLRPKey{
 					ProcessGuid: processGuid,
 					Index:       0,
 					Domain:      "some-domain",
-				}, &models.ActualLRPInstanceKey{
+				}
+				suspectLRPInstanceKey = &models.ActualLRPInstanceKey{
 					InstanceGuid: "ig-1",
 					CellId:       "missing-cell",
-				}, &netInfo)
+				}
+				err := client.StartActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo)
 
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			// Row 1 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
-			FIt("makes the LRP suspect", func() {
+			It("makes the LRP suspect", func() {
 				Eventually(func() models.ActualLRP_Presence {
 					group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
 					Expect(err).NotTo(HaveOccurred())
@@ -127,7 +134,7 @@ var _ = Describe("Convergence API", func() {
 						consulHelper.RegisterCell(&cellPresence)
 					})
 
-					FIt("it transitions back to Ordinary", func() {
+					It("it transitions back to Ordinary", func() {
 						Eventually(func() models.ActualLRP_Presence {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
@@ -153,7 +160,7 @@ var _ = Describe("Convergence API", func() {
 						Expect(err).NotTo(HaveOccurred())
 					})
 
-					FIt("removes the suspect LRP", func() {
+					It("removes the suspect LRP", func() {
 						var lrp *models.ActualLRP
 						Eventually(func() string {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
@@ -164,7 +171,7 @@ var _ = Describe("Convergence API", func() {
 						Expect(lrp.Presence).To(Equal(models.ActualLRP_Ordinary))
 					})
 
-					FIt("emits a LRPRemoved event", func() {
+					It("emits a LRPRemoved event", func() {
 						eventCh := streamEvents(events)
 						var removedEvent *models.ActualLRPRemovedEvent
 						Eventually(eventCh).Should(Receive(&removedEvent))
@@ -194,20 +201,10 @@ var _ = Describe("Convergence API", func() {
 						Expect(err).NotTo(HaveOccurred())
 					})
 
-					FIt("Unclaims the LRP and emits a LRPChanged event", func() {
+					It("does not emit any events", func() {
 						eventCh := streamEvents(events)
 
-						var e *models.ActualLRPChangedEvent
-
-						Eventually(func() string {
-							Eventually(eventCh).Should(Receive(&e))
-							return e.After.Instance.State
-						}).Should(Equal(models.ActualLRPStateUnclaimed))
-
-						Expect(e.Before.Instance.InstanceGuid).To(Equal("ig-2"))
-						Expect(e.Before.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
-						Expect(e.Before.Instance.State).To(Equal(models.ActualLRPStateClaimed))
-						Expect(e.After.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+						Consistently(eventCh).ShouldNot(Receive())
 					})
 				})
 
@@ -222,7 +219,7 @@ var _ = Describe("Convergence API", func() {
 						Expect(err).NotTo(HaveOccurred())
 					})
 
-					FIt("keeps the suspect LRP untouched", func() {
+					It("keeps the suspect LRP untouched", func() {
 						Consistently(func() models.ActualLRP_Presence {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
@@ -252,6 +249,42 @@ var _ = Describe("Convergence API", func() {
 						Expect(err).NotTo(HaveOccurred())
 					})
 
+					Context("when the auctioneer fails to place the replacement instance", func() {
+						BeforeEach(func() {
+							err := client.FailActualLRP(logger, &models.ActualLRPKey{
+								ProcessGuid: "some-process-guid",
+								Index:       0,
+								Domain:      "some-domain",
+							}, "boooom!")
+							Expect(err).NotTo(HaveOccurred())
+						})
+
+						It("does not emit a ActualLRPChangedEvent", func() {
+							eventCh := streamEvents(events)
+							Consistently(eventCh, 5*time.Second).ShouldNot(Receive())
+						})
+					})
+
+					// Row 15 (still in the suggestions)
+					Context("when the replacement cell is claimed", func() {
+						BeforeEach(func() {
+							err := client.ClaimActualLRP(logger, &models.ActualLRPKey{
+								ProcessGuid: "some-process-guid",
+								Index:       0,
+								Domain:      "some-domain",
+							}, &models.ActualLRPInstanceKey{
+								InstanceGuid: "ig-2",
+								CellId:       "some-cell",
+							})
+							Expect(err).NotTo(HaveOccurred())
+						})
+
+						It("does not emit any events", func() {
+							eventCh := streamEvents(events)
+							Consistently(eventCh, 5*time.Second).ShouldNot(Receive())
+						})
+					})
+
 					// Row 7 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
 					Context("when the replacement cell is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
@@ -267,13 +300,13 @@ var _ = Describe("Convergence API", func() {
 							Expect(err).NotTo(HaveOccurred())
 						})
 
-						FIt("replaces the Running LRP instance with the ordinary one", func() {
+						It("replaces the Running LRP instance with the ordinary one", func() {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
 						})
 
-						FIt("emits a LRPCreated event", func() {
+						It("emits a LRPCreated event", func() {
 							eventCh := streamEvents(events)
 
 							var e *models.ActualLRPCreatedEvent
@@ -283,7 +316,7 @@ var _ = Describe("Convergence API", func() {
 							Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
 						})
 
-						FIt("emits a LRPRemoved event", func() {
+						It("emits a LRPRemoved event", func() {
 							eventCh := streamEvents(events)
 
 							var e *models.ActualLRPRemovedEvent
@@ -291,6 +324,232 @@ var _ = Describe("Convergence API", func() {
 							Eventually(eventCh, 2*time.Second).Should(Receive(&e))
 							Expect(e.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
 							Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+						})
+
+						// Row 9 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+						It("returns ErrActualLRPCannotBeStarted when the Suspect LRP is started", func() {
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
+							err := client.StartActualLRP(logger, &models.ActualLRPKey{
+								ProcessGuid: "some-process-guid",
+								Index:       0,
+								Domain:      "some-domain",
+							}, &models.ActualLRPInstanceKey{
+								InstanceGuid: "ig-1",
+								CellId:       "missing-cell",
+							}, &netInfo)
+							Expect(err).To(MatchError(models.ErrActualLRPCannotBeStarted))
+						})
+					})
+
+					// Row 8 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+					Context("when the suspect cell is started by calling StartActualLRP", func() {
+						BeforeEach(func() {
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
+							err := client.StartActualLRP(logger, &models.ActualLRPKey{
+								ProcessGuid: "some-process-guid",
+								Index:       0,
+								Domain:      "some-domain",
+							}, &models.ActualLRPInstanceKey{
+								InstanceGuid: "ig-1",
+								CellId:       "missing-cell",
+							}, &netInfo)
+							Expect(err).NotTo(HaveOccurred())
+						})
+
+						It("does not change the ActualLRPGroups returned from the API", func() {
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+						})
+
+						It("does not emit any events", func() {
+							eventCh := streamEvents(events)
+							Consistently(eventCh, 2*time.Second).ShouldNot(Receive())
+						})
+					})
+
+					Context("when the replacement is in the CLAIMED state", func() {
+						var (
+							replacementLRPInstanceKey *models.ActualLRPInstanceKey
+						)
+
+						BeforeEach(func() {
+							replacementLRPInstanceKey = &models.ActualLRPInstanceKey{
+								InstanceGuid: "ig-2",
+								CellId:       "some-cell",
+							}
+							err := client.ClaimActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+							Expect(err).NotTo(HaveOccurred())
+						})
+
+						// Row 10 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+						Context("when the suspect LRP crashes", func() {
+							BeforeEach(func() {
+								err := client.CrashActualLRP(logger, lrpKey, suspectLRPInstanceKey, "boooom!")
+								Expect(err).NotTo(HaveOccurred())
+							})
+
+							It("emits an ActualLRPRemovedEvent event", func() {
+								eventCh := streamEvents(events)
+
+								var e *models.ActualLRPRemovedEvent
+
+								Eventually(eventCh, 2*time.Second).Should(Receive(&e))
+								Expect(e.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
+								Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+							})
+
+							It("removes the Suspect instance from the database", func() {
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								Expect(err).NotTo(HaveOccurred())
+								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+							})
+						})
+
+						// Row 11 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+						Context("when the replacement crashes", func() {
+							BeforeEach(func() {
+								err := client.CrashActualLRP(logger, lrpKey, replacementLRPInstanceKey, "boooom!")
+								Expect(err).NotTo(HaveOccurred())
+							})
+
+							// FIXME: since the flat actual LRP api doesn't exist yet, we have
+							// no way to tell that the LRP has been unclaimed other than
+							// trying to claim it again. We are indirectly testing that the
+							// LRP is unclaimed. We should use the flat LRP api once it is
+							// ready instead of using this method.
+							It("can be claimed again", func() {
+								replacementLRPInstanceKey = &models.ActualLRPInstanceKey{
+									InstanceGuid: "ig-3",
+									CellId:       "some-other-cell",
+								}
+								err := client.ClaimActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+								Expect(err).NotTo(HaveOccurred())
+							})
+						})
+
+						// Row 12 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+						Context("when the suspect LRP is evacuated", func() {
+							BeforeEach(func() {
+								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
+								_, err := client.EvacuateRunningActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo, 0)
+								Expect(err).NotTo(HaveOccurred())
+							})
+
+							It("creates an evacuating LRP", func() {
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								Expect(err).NotTo(HaveOccurred())
+								Expect(group.Evacuating.Presence).To(Equal(models.ActualLRP_Evacuating))
+								Expect(group.Evacuating.ActualLRPInstanceKey).To(Equal(*suspectLRPInstanceKey))
+							})
+
+							It("removes the suspect LRP", func() {
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								Expect(err).NotTo(HaveOccurred())
+								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
+							})
+
+							It("emits a LRPCreated event and a LRPRemoved event", func() {
+								eventCh := streamEvents(events)
+
+								var ce *models.ActualLRPCreatedEvent
+
+								Eventually(eventCh, 2*time.Second).Should(Receive(&ce))
+								Expect(ce.ActualLrpGroup.Evacuating.InstanceGuid).To(Equal("ig-1"))
+								Expect(ce.ActualLrpGroup.Evacuating.Presence).To(Equal(models.ActualLRP_Evacuating))
+
+								var re *models.ActualLRPRemovedEvent
+
+								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
+								Expect(re.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+							})
+						})
+
+						// Row 13 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+						Context("when the replacement is evacuated", func() {
+							BeforeEach(func() {
+								_, err := client.EvacuateClaimedActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+								Expect(err).NotTo(HaveOccurred())
+							})
+
+							// FIXME: since the flat actual LRP api doesn't exist yet, we have
+							// no way to tell that the LRP has been unclaimed other than
+							// trying to claim it again. We are indirectly testing that the
+							// LRP is unclaimed. We should use the flat LRP api once it is
+							// ready instead of using this method.
+							It("can be claimed again", func() {
+								replacementLRPInstanceKey = &models.ActualLRPInstanceKey{
+									InstanceGuid: "ig-3",
+									CellId:       "some-other-cell",
+								}
+								err := client.ClaimActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+								Expect(err).NotTo(HaveOccurred())
+							})
+
+							It("emits an ActualLRPChangedEvent event", func() {
+								eventCh := streamEvents(events)
+
+								var e *models.ActualLRPChangedEvent
+
+								Eventually(func() string {
+									Eventually(eventCh).Should(Receive(&e))
+									return e.After.Instance.State
+								}).Should(Equal(models.ActualLRPStateUnclaimed))
+
+								Expect(e.Before.Instance.InstanceGuid).To(Equal("ig-2"))
+								Expect(e.Before.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+								Expect(e.Before.Instance.State).To(Equal(models.ActualLRPStateClaimed))
+								Expect(e.After.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+							})
+						})
+
+						// Row 14 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+						Context("when the suspect LRP is evacuating after crashing", func() {
+							BeforeEach(func() {
+								_, err := client.EvacuateCrashedActualLRP(logger, lrpKey, suspectLRPInstanceKey, "boom!")
+								Expect(err).NotTo(HaveOccurred())
+							})
+
+							It("removes the suspect LRP", func() {
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								Expect(err).NotTo(HaveOccurred())
+								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
+							})
+
+							It("emits a LRPRemoved event", func() {
+								eventCh := streamEvents(events)
+
+								var re *models.ActualLRPRemovedEvent
+
+								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
+								Expect(re.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+							})
+						})
+
+						// Row 14 https://docs.google.com/document/d/19880DjH4nJKzsDP8BT09m28jBlFfSiVx64skbvilbnA/edit
+						Context("when the suspect LRP is evacuating after stopping", func() {
+							BeforeEach(func() {
+								_, err := client.EvacuateStoppedActualLRP(logger, lrpKey, suspectLRPInstanceKey)
+								Expect(err).NotTo(HaveOccurred())
+							})
+
+							It("removes the suspect LRP", func() {
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								Expect(err).NotTo(HaveOccurred())
+								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
+							})
+
+							It("emits a LRPRemoved event", func() {
+								eventCh := streamEvents(events)
+
+								var re *models.ActualLRPRemovedEvent
+
+								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
+								Expect(re.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+							})
 						})
 					})
 				})

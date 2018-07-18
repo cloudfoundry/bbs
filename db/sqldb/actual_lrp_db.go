@@ -666,8 +666,13 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || mapOfGroups[actualLRP.ActualLRPKey].Instance.State != models.ActualLRPStateRunning {
 				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 			}
+		case models.ActualLRP_Ordinary:
+			// only resolve to the Suspect if the Ordinary instance is missing or not running
+			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || actualLRP.State == models.ActualLRPStateRunning {
+				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+			}
 		default:
-			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+			logger.Info("unknown-presence", lager.Data{"presence": actualLRP.Presence})
 		}
 	}
 

@@ -49,11 +49,23 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 		return err
 	}
 
-	if !after.Equal(before) {
+	// TODO: is this the most efficient way of doing this ?
+	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, index)
+	if err != nil {
+		return err
+	}
+
+	// Only emit ActualLRPChangedEvent if there was no Suspect instance.
+	// Otherwise, we shouldn't emit any events until the replacement instance is
+	// up.  This combined with the API internal resolve logic (i.e. to return the
+	// Suspect LRP in the Instance field while the replacement is starting) will
+	// give consistent view to the clients.
+	if !after.Equal(before) && lrpGroup.Instance.ActualLRPInstanceKey == *actualLRPInstanceKey {
 		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 	}
 	return nil
 }
+
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
 	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
 	if err != nil {
@@ -75,19 +87,37 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	}
 
 	// prior to starting this ActualLRP there was a suspect LRP that we need to remove
-	var suspectLRP *models.ActualLRPGroup
+	var suspectLRPGroup *models.ActualLRPGroup
 	if lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
-		suspectLRP, err = h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+		suspectLRPGroup, err = h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+		if err != nil {
+			logger.Error("failed-to-remove-suspect-lrp", err)
+		}
 	}
 
 	go func() {
-		if before == nil {
+		if suspectLRPGroup == nil {
+			// there is no suspect LRP proceed like normal
+			if before == nil {
+				h.actualHub.Emit(models.NewActualLRPCreatedEvent(after))
+			} else if !before.Equal(after) {
+				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+			}
+		} else {
+			// Otherwise, emit an ActualLRPCreatedEvent.  This behavior is designed
+			// to be backward compatible with old clients.  The API will project the
+			// Suspect LRP as the ActualLRPGroup's Instance until the new Instance is
+			// in the Running state (i.e. is started).  Once the new LRP is in the
+			// running state the following two lines will emit ActualLRPRemovedEvent
+			// for the Suspect LRP and a ActualLRPCreatedEvent for the Ordinary LRP.
+			// At any point in time calls to ActualLRPGroups or
+			// ActualLRPGroupByProcessGuidAndIndex should get a consistent result
+			// with the events being received.
+			//
+			// see https://www.pivotaltracker.com/story/show/158123373 for more
+			// information
 			h.actualHub.Emit(models.NewActualLRPCreatedEvent(after))
-		} else if !before.Equal(after) {
-			h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
-		}
-		if suspectLRP != nil {
-			h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP))
+			h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRPGroup))
 		}
 		if lrpGroup.Evacuating != nil {
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: lrpGroup.Evacuating}))
@@ -97,6 +127,21 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 }
 
 func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+	if err != nil {
+		return err
+	}
+
+	if lrpGroup.Instance != nil &&
+		lrpGroup.Instance.Presence == models.ActualLRP_Suspect &&
+		lrpGroup.Instance.ActualLRPInstanceKey == *actualLRPInstanceKey {
+		suspectLRPGroup, err := h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+		if err == nil {
+			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRPGroup))
+		}
+		return err
+	}
+
 	before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
 	if err != nil {
 		return err
@@ -140,7 +185,15 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 		return err
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+	if err != nil {
+		return err
+	}
+
+	if lrpGroup.Instance == nil || lrpGroup.Instance.Presence != models.ActualLRP_Suspect {
+		logger.Info("wtf-why-are-we-doing-this", lager.Data{"lrp": lrpGroup.Instance})
+		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+	}
 	return nil
 }
 

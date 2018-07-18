@@ -161,7 +161,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				FIt("changes its presence", func() {
+				It("changes its presence", func() {
 					_, _, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 					Expect(err).To(MatchError(models.ErrResourceExists))
 				})

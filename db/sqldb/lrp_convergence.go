@@ -55,10 +55,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	}
 
 	sqldb.emitDomainMetrics(logger, domainSet)
-	// the fact that each of the func calls below call out to the db on their own
-	// instead of working on filtering out data from a query at init, doesn't that
-	// lead to potential change of state in between each function thus leading to a
-	// bad state?
+
 	converge := newConvergence(sqldb)
 	converge.staleUnclaimedActualLRPs(logger, now)
 	converge.actualLRPsWithMissingCells(logger, cellSet)
@@ -338,8 +335,12 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
 // convergence) and add them to the list of start requests.
-func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
+func (c *convergence) suspectActualLRPsWithExistingCells(logger lager.Logger, cellSet models.CellSet) {
 	logger = logger.Session("suspect-lrps-with-existing-cells")
+
+	if len(cellSet) == 0 {
+		return
+	}
 
 	rows, err := c.selectSuspectLRPsWithExistingCells(logger, c.db, cellSet)
 	if err != nil {
@@ -370,7 +371,7 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
 // convergence) and add them to the list of start requests.
-func (c *convergence) suspectActualLRPsWithExistingCells(logger lager.Logger, cellSet models.CellSet) {
+func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
 	logger = logger.Session("actual-lrps-with-missing-cells")
 
 	var keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
