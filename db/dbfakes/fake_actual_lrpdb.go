@@ -170,6 +170,24 @@ type FakeActualLRPDB struct {
 	removeActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
+	ChangeActualLRPPresenceStub        func(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error)
+	changeActualLRPPresenceMutex       sync.RWMutex
+	changeActualLRPPresenceArgsForCall []struct {
+		logger lager.Logger
+		key    *models.ActualLRPKey
+		from   models.ActualLRP_Presence
+		to     models.ActualLRP_Presence
+	}
+	changeActualLRPPresenceReturns struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}
+	changeActualLRPPresenceReturnsOnCall map[int]struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -719,6 +737,63 @@ func (fake *FakeActualLRPDB) RemoveActualLRPReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
+func (fake *FakeActualLRPDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from models.ActualLRP_Presence, to models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+	fake.changeActualLRPPresenceMutex.Lock()
+	ret, specificReturn := fake.changeActualLRPPresenceReturnsOnCall[len(fake.changeActualLRPPresenceArgsForCall)]
+	fake.changeActualLRPPresenceArgsForCall = append(fake.changeActualLRPPresenceArgsForCall, struct {
+		logger lager.Logger
+		key    *models.ActualLRPKey
+		from   models.ActualLRP_Presence
+		to     models.ActualLRP_Presence
+	}{logger, key, from, to})
+	fake.recordInvocation("ChangeActualLRPPresence", []interface{}{logger, key, from, to})
+	fake.changeActualLRPPresenceMutex.Unlock()
+	if fake.ChangeActualLRPPresenceStub != nil {
+		return fake.ChangeActualLRPPresenceStub(logger, key, from, to)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2, ret.result3
+	}
+	return fake.changeActualLRPPresenceReturns.result1, fake.changeActualLRPPresenceReturns.result2, fake.changeActualLRPPresenceReturns.result3
+}
+
+func (fake *FakeActualLRPDB) ChangeActualLRPPresenceCallCount() int {
+	fake.changeActualLRPPresenceMutex.RLock()
+	defer fake.changeActualLRPPresenceMutex.RUnlock()
+	return len(fake.changeActualLRPPresenceArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) ChangeActualLRPPresenceArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, models.ActualLRP_Presence, models.ActualLRP_Presence) {
+	fake.changeActualLRPPresenceMutex.RLock()
+	defer fake.changeActualLRPPresenceMutex.RUnlock()
+	return fake.changeActualLRPPresenceArgsForCall[i].logger, fake.changeActualLRPPresenceArgsForCall[i].key, fake.changeActualLRPPresenceArgsForCall[i].from, fake.changeActualLRPPresenceArgsForCall[i].to
+}
+
+func (fake *FakeActualLRPDB) ChangeActualLRPPresenceReturns(result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+	fake.ChangeActualLRPPresenceStub = nil
+	fake.changeActualLRPPresenceReturns = struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}{result1, result2, result3}
+}
+
+func (fake *FakeActualLRPDB) ChangeActualLRPPresenceReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 *models.ActualLRPGroup, result3 error) {
+	fake.ChangeActualLRPPresenceStub = nil
+	if fake.changeActualLRPPresenceReturnsOnCall == nil {
+		fake.changeActualLRPPresenceReturnsOnCall = make(map[int]struct {
+			result1 *models.ActualLRPGroup
+			result2 *models.ActualLRPGroup
+			result3 error
+		})
+	}
+	fake.changeActualLRPPresenceReturnsOnCall[i] = struct {
+		result1 *models.ActualLRPGroup
+		result2 *models.ActualLRPGroup
+		result3 error
+	}{result1, result2, result3}
+}
+
 func (fake *FakeActualLRPDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -742,6 +817,8 @@ func (fake *FakeActualLRPDB) Invocations() map[string][][]interface{} {
 	defer fake.failActualLRPMutex.RUnlock()
 	fake.removeActualLRPMutex.RLock()
 	defer fake.removeActualLRPMutex.RUnlock()
+	fake.changeActualLRPPresenceMutex.RLock()
+	defer fake.changeActualLRPPresenceMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

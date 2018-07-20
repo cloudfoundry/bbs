@@ -40,15 +40,15 @@ var _ = Describe("Evacuation", func() {
 		BeforeEach(func() {
 			ttl = 60
 
-			queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err := db.Exec(queryStr,
-				true,
+				models.ActualLRP_Evacuating,
 				actualLRP.ProcessGuid,
 				actualLRP.Index,
-				false,
+				models.ActualLRP_Ordinary,
 			)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -116,11 +116,11 @@ var _ = Describe("Evacuation", func() {
 		Context("when the evacuating actual lrp does not exist", func() {
 			Context("because the record is deleted", func() {
 				BeforeEach(func() {
-					queryStr := "DELETE FROM actual_lrps WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+					queryStr := "DELETE FROM actual_lrps WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
-					_, err := db.Exec(queryStr, actualLRP.ProcessGuid, actualLRP.Index, true)
+					_, err := db.Exec(queryStr, actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Evacuating)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRP.CrashCount = 0
@@ -147,12 +147,12 @@ var _ = Describe("Evacuation", func() {
 
 		Context("when deserializing the data fails", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE actual_lrps SET net_info = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+				queryStr := "UPDATE actual_lrps SET net_info = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
 				_, err := db.Exec(queryStr,
-					"garbage", actualLRP.ProcessGuid, actualLRP.Index, true)
+					"garbage", actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Evacuating)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -176,11 +176,11 @@ var _ = Describe("Evacuation", func() {
 	Describe("RemoveEvacuatingActualLRP", func() {
 		Context("when there is an evacuating actualLRP", func() {
 			BeforeEach(func() {
-				queryStr := "UPDATE actual_lrps SET evacuating = ? WHERE process_guid = ? AND instance_index = ? AND evacuating = ?"
+				queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, true, actualLRP.ProcessGuid, actualLRP.Index, false)
+				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Ordinary)
 				Expect(err).NotTo(HaveOccurred())
 			})
 

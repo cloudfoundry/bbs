@@ -26,7 +26,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
 			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
@@ -69,8 +69,8 @@ func (db *SQLDB) EvacuateActualLRP(
 				"since":                  actualLRP.Since,
 				"modification_tag_index": actualLRP.ModificationTag.Index,
 			},
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			actualLRP.ProcessGuid, actualLRP.Index, true,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Evacuating,
 		)
 		if err != nil {
 			logger.Error("failed-update-evacuating-lrp", err)
@@ -92,7 +92,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, true, tx)
+		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("evacuating-lrp-does-not-exist")
 			return nil
@@ -109,8 +109,8 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 		}
 
 		_, err = db.delete(logger, tx, "actual_lrps",
-			"process_guid = ? AND instance_index = ? AND evacuating = ?",
-			processGuid, index, true,
+			"process_guid = ? AND instance_index = ? AND presence = ?",
+			processGuid, index, models.ActualLRP_Evacuating,
 		)
 		if err != nil {
 			logger.Error("failed-delete", err)
@@ -153,7 +153,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	sqlAttributes := helpers.SQLAttributes{
 		"process_guid":           actualLRP.ProcessGuid,
 		"instance_index":         actualLRP.Index,
-		"evacuating":             true,
+		"presence":               models.ActualLRP_Evacuating,
 		"domain":                 actualLRP.Domain,
 		"instance_guid":          actualLRP.InstanceGuid,
 		"cell_id":                actualLRP.CellId,
@@ -166,8 +166,8 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 
 	_, err = db.upsert(logger, tx, "actual_lrps",
 		sqlAttributes,
-		"process_guid = ? AND instance_index = ? AND evacuating = ?",
-		actualLRP.ProcessGuid, actualLRP.Index, true,
+		"process_guid = ? AND instance_index = ? AND presence = ?",
+		actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Evacuating,
 	)
 	if err != nil {
 		logger.Error("failed-inserting-evacuating-lrp", err)
