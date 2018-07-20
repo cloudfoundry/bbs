@@ -27,6 +27,7 @@ import (
 	"code.cloudfoundry.org/go-loggregator/rpc/loggregator_v2"
 	"code.cloudfoundry.org/inigo/helpers/portauthority"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -197,6 +198,10 @@ var _ = BeforeEach(func() {
 		CaFile:   serverCaFile,
 		CertFile: path.Join(fixturesPath, "green-certs", "server.crt"),
 		KeyFile:  path.Join(fixturesPath, "green-certs", "server.key"),
+
+		LagerConfig: lagerflags.LagerConfig{
+			LogLevel: lagerflags.DEBUG,
+		},
 
 		LoggregatorConfig: diego_logging_client.Config{
 			BatchFlushInterval: 10 * time.Millisecond,

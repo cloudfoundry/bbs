@@ -14,6 +14,7 @@ import (
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("ActualLRP Lifecycle Controller", func() {
@@ -22,6 +23,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeEvacuationDB     *dbfakes.FakeEvacuationDB
+		fakeSuspectDB        *dbfakes.FakeSuspectDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		actualHub            *eventfakes.FakeHub
 
@@ -33,6 +35,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 	BeforeEach(func() {
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
+		fakeSuspectDB = new(dbfakes.FakeSuspectDB)
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeEvacuationDB = new(dbfakes.FakeEvacuationDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
@@ -46,6 +49,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		actualHub = &eventfakes.FakeHub{}
 		controller = controllers.NewActualLRPLifecycleController(
 			fakeActualLRPDB,
+			fakeSuspectDB,
 			fakeEvacuationDB,
 			fakeDesiredLRPDB,
 			fakeAuctioneerClient,
@@ -78,18 +82,39 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Since:        1138,
 			}
 			afterActualLRP = models.ActualLRP{
-				ActualLRPKey: models.NewActualLRPKey(
-					processGuid,
-					1,
-					"domain-0",
-				),
-				State: models.ActualLRPStateClaimed,
-				Since: 1140,
+				ActualLRPKey:         actualLRPKey,
+				ActualLRPInstanceKey: instanceKey,
+				State:                models.ActualLRPStateClaimed,
+				Since:                1140,
 			}
+
+			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
+				Instance: &afterActualLRP,
+			}, nil)
 		})
 
 		JustBeforeEach(func() {
 			err = controller.ClaimActualLRP(logger, processGuid, index, &instanceKey)
+		})
+
+		Context("when there is a running Suspect LRP", func() {
+			BeforeEach(func() {
+				group := &models.ActualLRPGroup{
+					Instance: &models.ActualLRP{
+						Presence:     models.ActualLRP_Suspect,
+						ActualLRPKey: actualLRP.ActualLRPKey,
+						ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+							InstanceGuid: "suspect-ig",
+							CellId:       "suspect-cell-id",
+						},
+					},
+				}
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(group, nil)
+			})
+
+			It("does not emit ActualLRPChangedEvent", func() {
+				Consistently(actualHub.EmitCallCount).Should(BeZero())
+			})
 		})
 
 		Context("when claiming the actual lrp in the DB succeeds", func() {
@@ -110,6 +135,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(changedEvent.Before).To(Equal(newActualLRPGroup(&actualLRP, nil)))
 				Expect(changedEvent.After).To(Equal(newActualLRPGroup(&afterActualLRP, nil)))
 			})
+
 			Context("when the actual lrp did not actually change", func() {
 				BeforeEach(func() {
 					fakeActualLRPDB.ClaimActualLRPReturns(
@@ -166,6 +192,105 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		JustBeforeEach(func() {
 			err = controller.StartActualLRP(logger, &key, &instanceKey, &netInfo)
+		})
+
+		Context("when there is a Suspect LRP running", func() {
+			BeforeEach(func() {
+				group := &models.ActualLRPGroup{
+					Instance: &models.ActualLRP{
+						Presence: models.ActualLRP_Suspect,
+						ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+							InstanceGuid: "suspect-instance-guid",
+							CellId:       "cell-id-1",
+						},
+						ActualLRPKey: models.ActualLRPKey{
+							ProcessGuid: processGuid,
+							Index:       index,
+							Domain:      "domain-0",
+						},
+					},
+				}
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(group, nil)
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(group, nil)
+			})
+
+			It("removes the suspect lrp", func() {
+				Eventually(fakeSuspectDB.RemoveSuspectActualLRPCallCount).Should(Equal(1))
+				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(lrpKey).To(Equal(&models.ActualLRPKey{
+					ProcessGuid: processGuid,
+					Index:       index,
+					Domain:      "domain-0",
+				}))
+			})
+
+			It("emits ActualLRPCreatedEvent", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(2))
+				var e *models.ActualLRPCreatedEvent
+				Expect(actualHub.EmitArgsForCall(0)).To(BeAssignableToTypeOf(e))
+			})
+
+			Context("when RemoveSuspectActualLRP returns an error", func() {
+				BeforeEach(func() {
+					fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("boooom!"))
+				})
+
+				It("logs the error", func() {
+					Expect(logger.Buffer()).Should(gbytes.Say("boooom!"))
+				})
+
+				It("does not emit the ActualLRPRemovedEvent", func() {
+					Eventually(actualHub.EmitCallCount).Should(Equal(1))
+
+					event := actualHub.EmitArgsForCall(0)
+					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+
+					Consistently(actualHub.EmitCallCount).Should(Equal(1))
+				})
+			})
+		})
+
+		Context("when the LRP being started is Suspect", func() {
+			BeforeEach(func() {
+				instanceKey = models.NewActualLRPInstanceKey(
+					"instance-guid-0",
+					"cell-id-0",
+				)
+				actualLRPKey := models.NewActualLRPKey(
+					processGuid,
+					1,
+					"domain-0",
+				)
+				actualLRP = models.ActualLRP{
+					ActualLRPKey:         actualLRPKey,
+					ActualLRPInstanceKey: instanceKey,
+				}
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+			})
+
+			Context("when there is a Running Ordinary LRP", func() {
+				BeforeEach(func() {
+					// the db layer resolution logic will return the Ordinary LRP
+					actualLRP.Presence = models.ActualLRP_Ordinary
+					fakeActualLRPDB.StartActualLRPReturns(nil, nil, models.ErrActualLRPCannotBeStarted)
+				})
+
+				It("returns ErrActualLRPCannotBeStarted", func() {
+					Expect(err).To(MatchError(models.ErrActualLRPCannotBeStarted))
+				})
+			})
+
+			Context("and the Ordinary LRP is not running", func() {
+				BeforeEach(func() {
+					// the db layer resolution logic will return the Suspect LRP
+					actualLRP.Presence = models.ActualLRP_Suspect
+					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+				})
+
+				It("don't do anything", func() {
+					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(BeZero())
+				})
+			})
 		})
 
 		Context("when starting the actual lrp in the DB succeeds", func() {
@@ -254,6 +379,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when starting the actual lrp fails", func() {
 			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
 				fakeActualLRPDB.StartActualLRPReturns(nil, nil, models.ErrUnknownError)
 			})
 
@@ -278,6 +404,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			key          models.ActualLRPKey
 			instanceKey  models.ActualLRPInstanceKey
 			errorMessage string
+			group        *models.ActualLRPGroup
 		)
 
 		BeforeEach(func() {
@@ -309,10 +436,66 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				CrashCount:  1,
 				CrashReason: errorMessage,
 			}
+
+			group = &models.ActualLRPGroup{Instance: &actualLRP}
+		})
+
+		BeforeEach(func() {
+			fakeActualLRPDB.CrashActualLRPReturns(
+				&models.ActualLRPGroup{Instance: &actualLRP},
+				&models.ActualLRPGroup{Instance: &afterActualLRP},
+				false,
+				nil,
+			)
 		})
 
 		JustBeforeEach(func() {
+			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(group, nil)
 			err = controller.CrashActualLRP(logger, &key, &instanceKey, errorMessage)
+		})
+
+		Context("when no instance is returned from the DB", func() {
+			BeforeEach(func() {
+				group.Instance = nil
+			})
+
+			It("assumes the LRP being crashed isn't the suspect LRP", func() {
+				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(BeZero())
+				Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
+			})
+		})
+
+		Context("when the LRP being crashed is a Suspect LRP", func() {
+			BeforeEach(func() {
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
+				group.Instance.Presence = models.ActualLRP_Suspect
+			})
+
+			It("removes the Suspsect LRP", func() {
+				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+			})
+
+			It("emits ActualLRPRemovedEvent", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+			})
+
+			Context("when RemoveSuspectActualLRP returns an error", func() {
+				BeforeEach(func() {
+					fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("boooom!"))
+				})
+
+				It("returns the error to the caller", func() {
+					Expect(err).To(MatchError("boooom!"))
+				})
+
+				It("does not emit any events", func() {
+					Consistently(actualHub.EmitCallCount).Should(BeZero())
+				})
+			})
 		})
 
 		Context("when crashing the actual lrp in the DB succeeds", func() {
@@ -446,6 +629,30 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 		})
+
+		Context("when the instance key matches the suspect LRP instance key", func() {
+			BeforeEach(func() {
+				actualLRP.Presence = models.ActualLRP_Suspect
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
+			})
+
+			It("removes the suspect LRP", func() {
+				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+
+				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(lrpKey.ProcessGuid).To(Equal(processGuid))
+				Expect(lrpKey.Index).To(BeEquivalentTo(index))
+			})
+
+			It("emits an actual LRP removed event", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+			})
+		})
 	})
 
 	Describe("FailActualLRP", func() {
@@ -489,6 +696,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				State: models.ActualLRPStateUnclaimed,
 				Since: 1138,
 			}
+
+			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -516,6 +725,20 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(ok).To(BeTrue())
 				Expect(changedEvent.Before).To(Equal(newActualLRPGroup(&actualLRP, nil)))
 				Expect(changedEvent.After).To(Equal(newActualLRPGroup(&afterActualLRP, nil)))
+			})
+		})
+
+		Context("when there is a Suspect LRP running", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
+					Instance: &models.ActualLRP{
+						Presence: models.ActualLRP_Suspect,
+					},
+				}, nil)
+			})
+
+			It("does not emit a ActualLRPChangedEventChanged", func() {
+				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 		})
 

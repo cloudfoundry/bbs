@@ -161,9 +161,8 @@ var _ = Describe("ConvergerProcess", func() {
 
 		BeforeEach(func() {
 			finishChan = make(chan struct{})
-			fakeLrpConvergenceController.ConvergeLRPsStub = func(lager.Logger) error {
+			fakeLrpConvergenceController.ConvergeLRPsStub = func(lager.Logger) {
 				<-finishChan
-				return nil
 			}
 		})
 

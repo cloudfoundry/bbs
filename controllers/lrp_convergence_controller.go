@@ -19,7 +19,8 @@ type Retirer interface {
 
 type LRPConvergenceController struct {
 	logger                 lager.Logger
-	db                     db.LRPDB
+	lrpDB                  db.LRPDB
+	suspectDB              db.SuspectDB
 	actualHub              events.Hub
 	auctioneerClient       auctioneer.Client
 	serviceClient          serviceclient.ServiceClient
@@ -30,6 +31,7 @@ type LRPConvergenceController struct {
 func NewLRPConvergenceController(
 	logger lager.Logger,
 	db db.LRPDB,
+	suspectDB db.SuspectDB,
 	actualHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
@@ -38,7 +40,8 @@ func NewLRPConvergenceController(
 ) *LRPConvergenceController {
 	return &LRPConvergenceController{
 		logger:                 logger,
-		db:                     db,
+		lrpDB:                  db,
+		suspectDB:              suspectDB,
 		actualHub:              actualHub,
 		auctioneerClient:       auctioneerClient,
 		serviceClient:          serviceClient,
@@ -47,7 +50,7 @@ func NewLRPConvergenceController(
 	}
 }
 
-func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
+func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	logger = h.logger.Session("converge-lrps")
 	var err error
 
@@ -60,11 +63,13 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	} else if err != nil {
 		logger.Error("failed-listing-cells", err)
 		// convergence should run again later
-		return nil
+		return
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	startRequests, keysWithMissingCells, keysToRetire, events := h.db.ConvergeLRPs(logger, cellSet)
+	convergenceResult := h.lrpDB.ConvergeLRPs(logger, cellSet)
+	keysToRetire := convergenceResult.KeysToRetire
+	events := convergenceResult.Events
 
 	for _, e := range events {
 		go h.actualHub.Emit(e)
@@ -81,33 +86,125 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 		})
 	}
 
-	errChan := make(chan *models.Error, 1)
-
+	startRequests := []*auctioneer.LRPStartRequest{}
 	startRequestLock := &sync.Mutex{}
-	for _, key := range keysWithMissingCells {
+
+	defer func() {
+		startLogger := logger.WithData(lager.Data{"start_requests_count": len(startRequests)})
+		if len(startRequests) > 0 {
+			startLogger.Debug("requesting-start-auctions")
+			err = h.auctioneerClient.RequestLRPAuctions(logger, startRequests)
+			if err != nil {
+				startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp_start_auctions": startRequests})
+			}
+			startLogger.Debug("done-requesting-start-auctions")
+		}
+	}()
+
+	for _, lrpKey := range convergenceResult.MissingLRPKeys {
+		key := lrpKey
+		works = append(works, func() {
+			lrpGroup, err := h.lrpDB.CreateUnclaimedActualLRP(logger, key.Key)
+			if err != nil {
+				logger.Error("failed-to-create-unclaimed-lrp", err, lager.Data{"key": key.Key})
+				return
+			}
+
+			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrpGroup))
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+		})
+	}
+
+	for _, lrpKey := range convergenceResult.UnstartedLRPKeys {
+		key := lrpKey
+		works = append(works, func() {
+			before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
+			if err != nil && err != models.ErrActualLRPCannotBeUnclaimed {
+				logger.Error("cannot-unclaim-lrp", err, lager.Data{"key": key})
+				return
+			} else if !after.Equal(before) {
+				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
+				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+			}
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+		})
+	}
+
+	for _, key := range convergenceResult.KeysWithMissingCells {
+
 		key := key
 		works = append(works, func() {
-			before, after, err := h.db.UnclaimActualLRP(logger, key.Key)
-			if err == nil {
-				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
-				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
-				startRequestLock.Lock()
-				startRequests = append(startRequests, &startRequest)
-				startRequestLock.Unlock()
-				logger.Info("creating-start-request",
-					lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
-			} else {
-				bbsErr := models.ConvertError(err)
-				if bbsErr.GetType() != models.Error_Unrecoverable {
+			logger := logger.Session("keys-with-missing-cells")
+
+			_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			if err == models.ErrResourceExists {
+				logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": key.Key})
+				// there is a Suspect LRP already, unclaim this one and reauction it
+				_, _, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
+				if err != nil {
+					logger.Error("failed-unclaiming-lrp", err)
 					return
 				}
 
-				logger.Error("unrecoverable-error", bbsErr)
-				select {
-				case errChan <- bbsErr:
-				default:
-				}
+				return
 			}
+
+			if err != nil {
+				logger.Error("failed-changing-presence", err)
+				return
+			}
+
+			_, err = h.lrpDB.CreateUnclaimedActualLRP(logger, key.Key)
+			if err != nil {
+				logger.Error("cannot-unclaim-lrp", err)
+				return
+			}
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+			logger.Info("creating-start-request",
+				lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
+		})
+	}
+
+	for _, key := range convergenceResult.SuspectKeysWithExistingCells {
+		key := key
+		works = append(works, func() {
+			logger := logger.Session("suspect-keys-with-existing-cells")
+			err := h.lrpDB.RemoveActualLRP(logger, key.ProcessGuid, key.Index, nil)
+			if err != nil {
+				logger.Error("cannot-remove-lrp", err, lager.Data{"key": key})
+				return
+			}
+			_, _, err = h.lrpDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Suspect, models.ActualLRP_Ordinary)
+			if err != nil {
+				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})
+				return
+			}
+		})
+	}
+
+	for _, key := range convergenceResult.SuspectLRPKeysToRetire {
+		key := key
+		works = append(works, func() {
+			logger := logger.Session("suspect-keys-to-retire")
+			suspectLRPGroup, err := h.suspectDB.RemoveSuspectActualLRP(logger, key)
+			if err != nil {
+				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": key})
+				return
+			}
+
+			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRPGroup))
 		})
 	}
 
@@ -115,28 +212,12 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) error {
 	throttler, err = workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {
 		logger.Error("failed-constructing-throttler", err, lager.Data{"max_workers": h.convergenceWorkersSize, "num_works": len(works)})
-		return nil
+		return
 	}
 
 	retireLogger.Debug("retiring-actual-lrps")
 	throttler.Work()
 	retireLogger.Debug("done-retiring-actual-lrps")
 
-	select {
-	case err := <-errChan:
-		return err
-	default:
-	}
-
-	startLogger := logger.WithData(lager.Data{"start_requests_count": len(startRequests)})
-	if len(startRequests) > 0 {
-		startLogger.Debug("requesting-start-auctions")
-		err = h.auctioneerClient.RequestLRPAuctions(logger, startRequests)
-		if err != nil {
-			startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp_start_auctions": startRequests})
-		}
-		startLogger.Debug("done-requesting-start-auctions")
-	}
-
-	return nil
+	return
 }

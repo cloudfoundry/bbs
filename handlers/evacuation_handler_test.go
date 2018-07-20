@@ -2,7 +2,6 @@ package handlers_test
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 
@@ -26,6 +25,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		fakeEvacuationDB     *dbfakes.FakeEvacuationDB
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
+		fakeSuspectLRPDB     *dbfakes.FakeSuspectDB
 		actualHub            *eventfakes.FakeHub
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		responseRecorder     *httptest.ResponseRecorder
@@ -37,13 +37,14 @@ var _ = Describe("Evacuation Handlers", func() {
 		fakeEvacuationDB = new(dbfakes.FakeEvacuationDB)
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
+		fakeSuspectLRPDB = new(dbfakes.FakeSuspectDB)
 		actualHub = new(eventfakes.FakeHub)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
-		handler = handlers.NewEvacuationHandler(fakeEvacuationDB, fakeActualLRPDB, fakeDesiredLRPDB, actualHub, fakeAuctioneerClient, exitCh)
+		handler = handlers.NewEvacuationHandler(fakeEvacuationDB, fakeActualLRPDB, fakeDesiredLRPDB, fakeSuspectLRPDB, actualHub, fakeAuctioneerClient, exitCh)
 	})
 
 	Describe("RemoveEvacuatingActualLRP", func() {
@@ -273,20 +274,19 @@ var _ = Describe("Evacuation Handlers", func() {
 			Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
 		})
 
-		It("emits events to the hub", func() {
+		It("emits a LRPRemoved event then a LRPChanged event to the hub", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
-			for i := 0; i < actualHub.EmitCallCount(); i++ {
-				switch event := actualHub.EmitArgsForCall(i).(type) {
-				case *models.ActualLRPRemovedEvent:
-					Expect(event.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
-				case *models.ActualLRPChangedEvent:
-					Expect(event.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-					Expect(event.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
-				default:
-					Fail(fmt.Sprintf("unexpected event %#v", event))
-				}
-			}
+			event := actualHub.EmitArgsForCall(0)
+			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+			re := event.(*models.ActualLRPRemovedEvent)
+			Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+
+			event = actualHub.EmitArgsForCall(1)
+			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+			che := event.(*models.ActualLRPChangedEvent)
+			Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+			Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
 		})
 
 		It("unclaims the actual lrp instance and requests an auction", func() {
@@ -460,6 +460,61 @@ var _ = Describe("Evacuation Handlers", func() {
 		JustBeforeEach(func() {
 			handler.EvacuateCrashedActualLRP(logger, responseRecorder, request)
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+		})
+
+		Context("when the LRP presence is Suspect", func() {
+			BeforeEach(func() {
+				actual.Presence = models.ActualLRP_Suspect
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+				fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+			})
+
+			It("removes the suspect lrp", func() {
+				Expect(fakeSuspectLRPDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+				_, lrpKey := fakeSuspectLRPDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+				Expect(lrpKey.Index).To(Equal(actual.Index))
+			})
+
+			It("emits ActualLRPRemovedEvent", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				events := []models.Event{}
+				events = append(events, actualHub.EmitArgsForCall(0))
+				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual})))
+			})
+
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(nil, models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
+				})
+			})
+
+			Context("when removing the evacuating actual lrp fails", func() {
+				BeforeEach(func() {
+					fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(nil, errors.New("oh no!"))
+				})
+
+				It("returns the error", func() {
+					response := models.EvacuationResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(response.KeepContainer).To(BeFalse())
+					Expect(response.Error).To(MatchError("oh no!"))
+				})
+
+				It("does not emit ActualLRPRemovedEvent", func() {
+					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("logs the error", func() {
+					Expect(logger).To(gbytes.Say("failed-removing-suspect-actual-lrp"))
+				})
+			})
 		})
 
 		It("does not return an error or keep the container", func() {
@@ -731,14 +786,10 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("emits events to the hub", func() {
 						Eventually(actualHub.EmitCallCount).Should(Equal(1))
 
-						for i := 0; i < actualHub.EmitCallCount(); i++ {
-							switch event := actualHub.EmitArgsForCall(i).(type) {
-							case *models.ActualLRPCreatedEvent:
-								Expect(event.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
-							default:
-								Fail(fmt.Sprintf("unexpected event %#v", event))
-							}
-						}
+						event := actualHub.EmitArgsForCall(0)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						ce := event.(*models.ActualLRPCreatedEvent)
+						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 					})
 
 					Context("when there's an existing evacuating on another cell", func() {
@@ -838,14 +889,10 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("emits events to the hub", func() {
 						Eventually(actualHub.EmitCallCount).Should(Equal(1))
 
-						for i := 0; i < actualHub.EmitCallCount(); i++ {
-							switch event := actualHub.EmitArgsForCall(i).(type) {
-							case *models.ActualLRPCreatedEvent:
-								Expect(event.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
-							default:
-								Fail(fmt.Sprintf("unexpected event %#v", event))
-							}
-						}
+						event := actualHub.EmitArgsForCall(0)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						ce := event.(*models.ActualLRPCreatedEvent)
+						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 					})
 
 					Context("when there's an existing evacuating on another cell", func() {
@@ -934,17 +981,16 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("emits events to the hub", func() {
 						Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
-						for i := 0; i < actualHub.EmitCallCount(); i++ {
-							switch event := actualHub.EmitArgsForCall(i).(type) {
-							case *models.ActualLRPCreatedEvent:
-								Expect(event.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
-							case *models.ActualLRPChangedEvent:
-								Expect(event.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-								Expect(event.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
-							default:
-								Fail(fmt.Sprintf("unexpected event %#v", event))
-							}
-						}
+						event := actualHub.EmitArgsForCall(0)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						ce := event.(*models.ActualLRPCreatedEvent)
+						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+
+						event = actualHub.EmitArgsForCall(1)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+						che := event.(*models.ActualLRPChangedEvent)
+						Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
 					})
 
 					Context("when evacuating fails", func() {
@@ -1019,20 +1065,79 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
 					})
 
-					It("emits events to the hub", func() {
+					Context("when the instance is suspect", func() {
+						BeforeEach(func() {
+							actual.Presence = models.ActualLRP_Suspect
+							fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+						})
+
+						It("removes the suspect LRP", func() {
+							Expect(fakeSuspectLRPDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+							_, lrpKey := fakeSuspectLRPDB.RemoveSuspectActualLRPArgsForCall(0)
+							Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+							Expect(lrpKey.Index).To(Equal(actual.Index))
+						})
+
+						It("does not unclaim the LRP", func() {
+							Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+						})
+
+						It("emits a LRPCreated and then LRPRemoved event", func() {
+							Eventually(actualHub.EmitCallCount).Should(Equal(2))
+
+							event := actualHub.EmitArgsForCall(0)
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+							ce := event.(*models.ActualLRPCreatedEvent)
+							Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+
+							event = actualHub.EmitArgsForCall(1)
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+							re := event.(*models.ActualLRPRemovedEvent)
+							Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+						})
+
+						Context("when removing the suspect lrp fails", func() {
+							BeforeEach(func() {
+								fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(nil, errors.New("didnt work"))
+							})
+
+							It("does not emit an LRPRemoved event", func() {
+								Eventually(actualHub.EmitCallCount).Should(Equal(1))
+								event := actualHub.EmitArgsForCall(0)
+								Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+								Consistently(actualHub.EmitCallCount).Should(Equal(1))
+							})
+
+							It("logs the failure", func() {
+								Eventually(logger).Should(gbytes.Say("failed-removing-suspect-actual-lrp"))
+							})
+						})
+
+						Context("when removing the suspect LRP fails with an unrecoverable error", func() {
+							BeforeEach(func() {
+								fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(nil, models.NewUnrecoverableError(nil))
+							})
+
+							It("logs and writes to the exit channel", func() {
+								Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+								Eventually(exitCh).Should(Receive())
+							})
+						})
+					})
+
+					It("emits an LRPCreated event and then an LRPChanged event to the hub", func() {
 						Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
-						for i := 0; i < actualHub.EmitCallCount(); i++ {
-							switch event := actualHub.EmitArgsForCall(i).(type) {
-							case *models.ActualLRPCreatedEvent:
-								Expect(event.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
-							case *models.ActualLRPChangedEvent:
-								Expect(event.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-								Expect(event.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
-							default:
-								Fail(fmt.Sprintf("unexpected event %#v", event))
-							}
-						}
+						event := actualHub.EmitArgsForCall(0)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						ce := event.(*models.ActualLRPCreatedEvent)
+						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+
+						event = actualHub.EmitArgsForCall(1)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+						che := event.(*models.ActualLRPChangedEvent)
+						Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
 					})
 
 					Context("when evacuating fails", func() {
@@ -1255,6 +1360,67 @@ var _ = Describe("Evacuation Handlers", func() {
 			handler.EvacuateStoppedActualLRP(logger, responseRecorder, request)
 		})
 
+		Context("when the LRP Instace is missing", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{}, nil)
+			})
+
+			It("returns an error", func() {
+				response := models.EvacuationResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.KeepContainer).To(BeFalse())
+				Expect(response.Error).To(Equal(models.ErrActualLRPCannotBeRemoved))
+			})
+		})
+
+		Context("when the LRP presence is Suspect", func() {
+			BeforeEach(func() {
+				actual.Presence = models.ActualLRP_Suspect
+				fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+			})
+
+			It("removes the suspect lrp", func() {
+				Expect(fakeSuspectLRPDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+				_, lrpKey := fakeSuspectLRPDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+				Expect(lrpKey.Index).To(Equal(actual.Index))
+			})
+
+			It("emits ActualLRPRemovedEvent", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				events := []models.Event{}
+				events = append(events, actualHub.EmitArgsForCall(0))
+				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual})))
+			})
+
+			Context("when the DB returns an unrecoverable error", func() {
+				BeforeEach(func() {
+					fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(nil, models.NewUnrecoverableError(nil))
+				})
+
+				It("logs and writes to the exit channel", func() {
+					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(exitCh).Should(Receive())
+				})
+			})
+
+			Context("when removing the suspect actual lrp fails", func() {
+				BeforeEach(func() {
+					fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(nil, errors.New("boom!"))
+				})
+
+				It("logs the failure", func() {
+					Eventually(logger).Should(gbytes.Say("failed-removing-suspect-actual-lrp"))
+				})
+
+				It("does not emit any events", func() {
+					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+			})
+		})
+
 		It("does not error and does not keep the container", func() {
 			response := models.EvacuationResponse{}
 			err := response.Unmarshal(responseRecorder.Body.Bytes())
@@ -1280,17 +1446,15 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		It("emits events to the hub", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(2))
+			events := []models.Event{}
 
-			removeEventGroups := []*models.ActualLRPGroup{}
-			for i := 0; i < actualHub.EmitCallCount(); i++ {
-				event := actualHub.EmitArgsForCall(i)
-				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
-				Expect(ok).To(BeTrue())
-				removeEventGroups = append(removeEventGroups, removeEvent.ActualLrpGroup)
-			}
+			events = append(events, actualHub.EmitArgsForCall(0))
+			events = append(events, actualHub.EmitArgsForCall(1))
 
-			Expect(removeEventGroups).To(ContainElement(&models.ActualLRPGroup{Instance: actual}))
-			Expect(removeEventGroups).To(ContainElement(&models.ActualLRPGroup{Evacuating: actual}))
+			Expect(events).To(ConsistOf(
+				models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: actual}),
+				models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual}),
+			))
 		})
 
 		Context("when the actual lrp is on a different cell", func() {
