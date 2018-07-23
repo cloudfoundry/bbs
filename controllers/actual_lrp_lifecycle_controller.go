@@ -190,7 +190,6 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 	}
 
 	if lrpGroup.Instance == nil || lrpGroup.Instance.Presence != models.ActualLRP_Suspect {
-		logger.Info("wtf-why-are-we-doing-this", lager.Data{"lrp": lrpGroup.Instance})
 		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 	}
 	return nil
