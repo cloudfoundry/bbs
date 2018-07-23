@@ -67,11 +67,11 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
 	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
-	if err != nil {
+	if err != nil && err != models.ErrResourceNotFound {
 		return err
 	}
 
-	if lrpGroup.Instance.Presence == models.ActualLRP_Suspect && lrpGroup.Instance.ActualLRPInstanceKey == *actualLRPInstanceKey {
+	if lrpGroup != nil && lrpGroup.Instance.Presence == models.ActualLRP_Suspect && lrpGroup.Instance.ActualLRPInstanceKey == *actualLRPInstanceKey {
 		// nothing to do
 		return nil
 	}
@@ -81,13 +81,13 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	if lrpGroup.Evacuating != nil {
+	if lrpGroup != nil && lrpGroup.Evacuating != nil {
 		h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrpGroup.Evacuating.ActualLRPKey, &lrpGroup.Evacuating.ActualLRPInstanceKey)
 	}
 
 	// prior to starting this ActualLRP there was a suspect LRP that we need to remove
 	var suspectLRPGroup *models.ActualLRPGroup
-	if lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
+	if lrpGroup != nil && lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
 		suspectLRPGroup, err = h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
 		if err != nil {
 			logger.Error("failed-to-remove-suspect-lrp", err)
@@ -118,7 +118,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 			h.actualHub.Emit(models.NewActualLRPCreatedEvent(after))
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRPGroup))
 		}
-		if lrpGroup.Evacuating != nil {
+		if lrpGroup != nil && lrpGroup.Evacuating != nil {
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: lrpGroup.Evacuating}))
 		}
 	}()

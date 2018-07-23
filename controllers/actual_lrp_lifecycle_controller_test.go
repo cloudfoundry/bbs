@@ -305,13 +305,24 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(1))
 			})
 
-			Context("when an error occur while fetching the lrp group", func() {
+			Context("when a non-ResourceNotFound error occurs while fetching the lrp group", func() {
 				BeforeEach(func() {
 					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, errors.New("BOOM!!!"))
 				})
 
 				It("should return the error", func() {
 					Expect(err).To(MatchError("BOOM!!!"))
+				})
+			})
+
+			Context("when a ResourceNotFound error occurs while fetching the lrp group", func() {
+				BeforeEach(func() {
+					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
+				})
+
+				It("should continue to start the LRP", func() {
+					Expect(err).NotTo(HaveOccurred())
+					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
 				})
 			})
 
