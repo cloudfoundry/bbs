@@ -141,7 +141,7 @@ var _ = Describe("Convergence API", func() {
 					})
 				})
 
-				Context("when there is a new Ordinary LRP in Running statea", func() {
+				Context("when there is a new Ordinary LRP in Running state", func() {
 					BeforeEach(func() {
 						var err error
 

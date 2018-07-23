@@ -179,19 +179,25 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 }
 
 func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {
-	before, after, err := h.db.FailActualLRP(logger, key, errorMessage)
-	if err != nil {
-		return err
-	}
-
 	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	if err != nil {
 		return err
 	}
 
-	if lrpGroup.Instance == nil || lrpGroup.Instance.Presence != models.ActualLRP_Suspect {
+	if lrpGroup.Instance != nil && lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
+		// nothing to do
+		return nil
+	}
+
+	before, after, err := h.db.FailActualLRP(logger, key, errorMessage)
+	if err != nil {
+		return err
+	}
+
+	if lrpGroup.Instance == nil {
 		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 	}
+
 	return nil
 }
 
