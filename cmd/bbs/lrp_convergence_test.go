@@ -19,6 +19,7 @@ import (
 	"code.cloudfoundry.org/durationjson"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
@@ -143,6 +144,13 @@ var _ = Describe("Convergence API", func() {
 
 				Context("when there is a new Ordinary LRP in Running state", func() {
 					BeforeEach(func() {
+						// Wait for the BBS to create the Unclaimed LRP and auction it.
+						// Otherwise, the StartActualLRP can try creating a new LRP and
+						// fail if the new UnclaimedLRP.
+						//
+						// TODO: Replace this with a real check once flat Actual LRP api
+						// is in place.
+						Eventually(bbsRunner).Should(gbytes.Say("done-requesting-start-auctions"))
 						var err error
 
 						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
