@@ -189,6 +189,7 @@ var _ = Describe("Convergence API", func() {
 
 				Context("when the new Ordinary LRP cells goes missing", func() {
 					BeforeEach(func() {
+						Eventually(bbsRunner).Should(gbytes.Say("done-requesting-start-auctions"))
 						var err error
 
 						events, err = client.SubscribeToEvents(logger)
