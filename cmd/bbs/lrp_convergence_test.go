@@ -260,7 +260,7 @@ var _ = Describe("Convergence API", func() {
 						})
 					})
 
-					Context("when the replacement cell is claimed", func() {
+					Context("when the replacement LRP is claimed", func() {
 						BeforeEach(func() {
 							err := client.ClaimActualLRP(logger, &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
@@ -279,7 +279,7 @@ var _ = Describe("Convergence API", func() {
 						})
 					})
 
-					Context("when the replacement cell is started by calling StartActualLRP", func() {
+					Context("when the replacement LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
 							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, &models.ActualLRPKey{
@@ -333,7 +333,7 @@ var _ = Describe("Convergence API", func() {
 						})
 					})
 
-					Context("when the suspect cell is started by calling StartActualLRP", func() {
+					Context("when the suspect LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
 							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, &models.ActualLRPKey{
