@@ -81,16 +81,18 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	if lrpGroup != nil && lrpGroup.Evacuating != nil {
-		h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrpGroup.Evacuating.ActualLRPKey, &lrpGroup.Evacuating.ActualLRPInstanceKey)
-	}
-
-	// prior to starting this ActualLRP there was a suspect LRP that we need to remove
 	var suspectLRPGroup *models.ActualLRPGroup
-	if lrpGroup != nil && lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
-		suspectLRPGroup, err = h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
-		if err != nil {
-			logger.Error("failed-to-remove-suspect-lrp", err)
+	if lrpGroup != nil {
+		if lrpGroup.Evacuating != nil {
+			h.evacuationDB.RemoveEvacuatingActualLRP(logger, &lrpGroup.Evacuating.ActualLRPKey, &lrpGroup.Evacuating.ActualLRPInstanceKey)
+		}
+
+		// prior to starting this ActualLRP there was a suspect LRP that we need to remove
+		if lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
+			suspectLRPGroup, err = h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+			if err != nil {
+				logger.Error("failed-to-remove-suspect-lrp", err)
+			}
 		}
 	}
 
@@ -179,22 +181,17 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 }
 
 func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {
+	before, after, err := h.db.FailActualLRP(logger, key, errorMessage)
+	if err != nil && err != models.ErrResourceNotFound {
+		return err
+	}
+
 	lrpGroup, err := h.db.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
 	if err != nil {
 		return err
 	}
 
-	if lrpGroup.Instance != nil && lrpGroup.Instance.Presence == models.ActualLRP_Suspect {
-		// nothing to do
-		return nil
-	}
-
-	before, after, err := h.db.FailActualLRP(logger, key, errorMessage)
-	if err != nil {
-		return err
-	}
-
-	if lrpGroup.Instance == nil {
+	if lrpGroup.Instance == nil || lrpGroup.Instance.Presence != models.ActualLRP_Suspect {
 		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 	}
 

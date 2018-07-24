@@ -162,7 +162,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 				return
 			}
 
-			_, err = h.lrpDB.CreateUnclaimedActualLRP(logger, key.Key)
+			_, err = h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), key.Key)
 			if err != nil {
 				logger.Error("cannot-unclaim-lrp", err)
 				return

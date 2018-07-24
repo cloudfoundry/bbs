@@ -751,15 +751,44 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			It("does not emit a ActualLRPChangedEventChanged", func() {
 				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
+
+			Context("when there is no non-suspect instance", func() {
+				BeforeEach(func() {
+					fakeActualLRPDB.FailActualLRPReturns(nil, nil, models.ErrResourceNotFound)
+				})
+
+				It("does not error", func() {
+					Expect(err).To(BeNil())
+				})
+
+				It("does not emit a ActualLRPChangedEventChanged", func() {
+					Consistently(actualHub.EmitCallCount).Should(BeZero())
+				})
+			})
 		})
 
-		Context("when failing the actual lrp fails", func() {
+		Context("when failing the actual lrp fails with a non-ResourceNotFound error", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.FailActualLRPReturns(nil, nil, models.ErrUnknownError)
 			})
 
 			It("responds with an error", func() {
 				Expect(err).To(MatchError(models.ErrUnknownError))
+			})
+
+			It("does not emit a change event to the hub", func() {
+				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
+		})
+
+		Context("when there is no LRP", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.FailActualLRPReturns(nil, nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
+			})
+
+			It("responds with a ResourceNotFound error", func() {
+				Expect(err).To(MatchError(models.ErrResourceNotFound))
 			})
 
 			It("does not emit a change event to the hub", func() {
