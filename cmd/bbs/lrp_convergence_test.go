@@ -189,6 +189,12 @@ var _ = Describe("Convergence API", func() {
 
 				Context("when the new Ordinary LRP cells goes missing", func() {
 					BeforeEach(func() {
+						// Wait for the BBS to create the Unclaimed LRP and auction it.
+						// Otherwise, the StartActualLRP can try creating a new LRP and
+						// fail if the new UnclaimedLRP.
+						//
+						// TODO: Replace this with a real check once flat Actual LRP api
+						// is in place.
 						Eventually(bbsRunner).Should(gbytes.Say("done-requesting-start-auctions"))
 						var err error
 
