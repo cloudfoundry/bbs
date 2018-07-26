@@ -330,6 +330,7 @@ func main() {
 		serviceClient,
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
+		bbsConfig.GenerateSuspectAcutalLRPs,
 	)
 	taskController := controllers.NewTaskController(sqlDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, bbsConfig.MaxTaskRetries)
 
