@@ -143,26 +143,11 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 
 	for _, key := range convergenceResult.KeysWithMissingCells {
 		key := key
-		var handleLRP func()
-		if h.generateSuspectAcutalLRPs {
-			handleLRP = func() {
-				logger := logger.Session("keys-with-missing-cells")
-
-				_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-				if err == models.ErrResourceExists {
-					logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": key.Key})
-					// there is a Suspect LRP already, unclaim this one and reauction it
-					_, _, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
-					if err != nil {
-						logger.Error("failed-unclaiming-lrp", err)
-						return
-					}
-
-					return
-				}
-
+		handleLRP := func() {
+			logger := logger.Session("keys-with-missing-cells")
+			if h.generateSuspectAcutalLRPs {
+				err = h.markLRPAsSuspect(logger, key)
 				if err != nil {
-					logger.Error("failed-changing-presence", err)
 					return
 				}
 
@@ -171,33 +156,24 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 					logger.Error("cannot-unclaim-lrp", err)
 					return
 				}
-
-				startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
-				startRequestLock.Lock()
-				startRequests = append(startRequests, &startRequest)
-				startRequestLock.Unlock()
-				logger.Info("creating-start-request",
-					lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
-			}
-		} else {
-			handleLRP = func() {
+			} else {
 				before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
-				if err == nil {
-					h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
-					startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
-					startRequestLock.Lock()
-					startRequests = append(startRequests, &startRequest)
-					startRequestLock.Unlock()
-				} else {
-					bbsErr := models.ConvertError(err)
-					if bbsErr.GetType() != models.Error_Unrecoverable {
-						return
-					}
-
-					logger.Error("unrecoverable-error", bbsErr)
+				if err != nil {
+					logger.Error("failed-unclaiming-lrp", err)
+					return
 				}
+
+				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
 			}
+
+			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
+			startRequestLock.Lock()
+			startRequests = append(startRequests, &startRequest)
+			startRequestLock.Unlock()
+			logger.Info("creating-start-request",
+				lager.Data{"reason": "missing-cell", "process_guid": key.Key.ProcessGuid, "index": key.Key.Index})
 		}
+
 		works = append(works, handleLRP)
 	}
 
@@ -244,4 +220,26 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	retireLogger.Debug("done-retiring-actual-lrps")
 
 	return
+}
+
+func (h *LRPConvergenceController) markLRPAsSuspect(logger lager.Logger, key *models.ActualLRPKeyWithSchedulingInfo) error {
+	_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+	if err == models.ErrResourceExists {
+		// there is a Suspect LRP already, unclaim this one and reauction it
+		logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": key.Key})
+		_, _, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
+		if err != nil {
+			logger.Error("failed-unclaiming-lrp", err)
+			return err
+		}
+
+		return err
+	}
+
+	if err != nil {
+		logger.Error("failed-changing-presence", err)
+		return err
+	}
+
+	return nil
 }
