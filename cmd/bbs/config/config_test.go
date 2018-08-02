@@ -147,7 +147,7 @@ var _ = Describe("BBSConfig", func() {
 			},
 			ExpireCompletedTaskDuration: durationjson.Duration(2 * time.Minute),
 			ExpirePendingTaskDuration:   durationjson.Duration(30 * time.Minute),
-			GenerateSuspectAcutalLRPs:   true,
+			GenerateSuspectActualLRPs:   true,
 			HealthAddress:               "127.0.0.1:8890",
 			KeyFile:                     "/var/vcap/jobs/bbs/config/bbs.key",
 			KickTaskDuration:            durationjson.Duration(30 * time.Second),

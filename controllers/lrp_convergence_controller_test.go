@@ -39,7 +39,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		desiredLRP1 models.DesiredLRPSchedulingInfo
 		cellSet     models.CellSet
 
-		generateSuspectAcutalLRPs bool
+		generateSuspectActualLRPs bool
 
 		controller *controllers.LRPConvergenceController
 	)
@@ -67,7 +67,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		actualHub = &eventfakes.FakeHub{}
 		retirer = &fakes.FakeRetirer{}
 
-		generateSuspectAcutalLRPs = false
+		generateSuspectActualLRPs = false
 	})
 
 	JustBeforeEach(func() {
@@ -80,7 +80,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			fakeServiceClient,
 			retirer,
 			2,
-			generateSuspectAcutalLRPs,
+			generateSuspectActualLRPs,
 		)
 		controller.ConvergeLRPs(logger)
 	})
@@ -280,7 +280,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			})
 		})
 
-		Context("and generateSuspectAcutalLRPs is disabled", func() {
+		Context("and generateSuspectActualLRPs is disabled", func() {
 			It("updates the actual lrp to be unclaimed", func() {
 				Expect(fakeLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
 				_, lrpKey := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
@@ -306,9 +306,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		})
 
-		Context("and generateSuspectAcutalLRPs is enabled", func() {
+		Context("and generateSuspectActualLRPs is enabled", func() {
 			BeforeEach(func() {
-				generateSuspectAcutalLRPs = true
+				generateSuspectActualLRPs = true
 			})
 
 			It("change the LRP presence to 'Suspect'", func() {

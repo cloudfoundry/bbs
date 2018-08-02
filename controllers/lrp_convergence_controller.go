@@ -26,7 +26,7 @@ type LRPConvergenceController struct {
 	serviceClient             serviceclient.ServiceClient
 	retirer                   Retirer
 	convergenceWorkersSize    int
-	generateSuspectAcutalLRPs bool
+	generateSuspectActualLRPs bool
 }
 
 func NewLRPConvergenceController(
@@ -38,7 +38,7 @@ func NewLRPConvergenceController(
 	serviceClient serviceclient.ServiceClient,
 	retirer Retirer,
 	convergenceWorkersSize int,
-	generateSuspectAcutalLRPs bool,
+	generateSuspectActualLRPs bool,
 ) *LRPConvergenceController {
 	return &LRPConvergenceController{
 		logger:                    logger,
@@ -49,7 +49,7 @@ func NewLRPConvergenceController(
 		serviceClient:             serviceClient,
 		retirer:                   retirer,
 		convergenceWorkersSize:    convergenceWorkersSize,
-		generateSuspectAcutalLRPs: generateSuspectAcutalLRPs,
+		generateSuspectActualLRPs: generateSuspectActualLRPs,
 	}
 }
 
@@ -145,7 +145,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 		key := key
 		handleLRP := func() {
 			logger := logger.Session("keys-with-missing-cells")
-			if h.generateSuspectAcutalLRPs {
+			if h.generateSuspectActualLRPs {
 				err = h.markLRPAsSuspect(logger, key)
 				if err != nil {
 					return
