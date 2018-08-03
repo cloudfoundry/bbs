@@ -51,7 +51,7 @@ var _ = Describe("Convergence API", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		Context("when an LRP cell is dead", func() {
+		Context("when an LRP's cell is dead", func() {
 			var (
 				lrpKey                *models.ActualLRPKey
 				suspectLRPInstanceKey *models.ActualLRPInstanceKey
@@ -503,6 +503,16 @@ var _ = Describe("Convergence API", func() {
 								Expect(e.Before.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
 								Expect(e.Before.Instance.State).To(Equal(models.ActualLRPStateClaimed))
 								Expect(e.After.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+							})
+
+							It("does not remove the suspect LRP", func() {
+								eventCh := streamEvents(events)
+
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+								Consistently(eventCh).ShouldNot(Receive(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{})))
 							})
 						})
 

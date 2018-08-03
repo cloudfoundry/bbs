@@ -137,7 +137,11 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
 		} else {
-			events = append(events, models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
+			if beforeActualLRPGroup.Instance != nil && beforeActualLRPGroup.Instance.Presence == models.ActualLRP_Suspect {
+				// do nothing
+			} else {
+				events = append(events, models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
+			}
 		}
 	}
 
