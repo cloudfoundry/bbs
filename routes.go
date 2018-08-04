@@ -4,119 +4,119 @@ import "github.com/tedsuo/rata"
 
 const (
 	// Ping
-	PingRoute = "Ping"
+	PingRoute_r0 = "Ping"
 
 	// Domains
-	DomainsRoute      = "Domains"
-	UpsertDomainRoute = "UpsertDomain"
+	DomainsRoute_r0      = "Domains"
+	UpsertDomainRoute_r0 = "UpsertDomain"
 
 	// Actual LRPs
-	ActualLRPGroupsRoute                     = "ActualLRPGroups"
-	ActualLRPGroupsByProcessGuidRoute        = "ActualLRPGroupsByProcessGuid"
-	ActualLRPGroupByProcessGuidAndIndexRoute = "ActualLRPGroupsByProcessGuidAndIndex"
+	ActualLRPGroupsRoute_r0                     = "ActualLRPGroups"
+	ActualLRPGroupsByProcessGuidRoute_r0        = "ActualLRPGroupsByProcessGuid"
+	ActualLRPGroupByProcessGuidAndIndexRoute_r0 = "ActualLRPGroupsByProcessGuidAndIndex"
 
 	// Actual LRP Lifecycle
-	ClaimActualLRPRoute  = "ClaimActualLRP"
-	StartActualLRPRoute  = "StartActualLRP"
-	CrashActualLRPRoute  = "CrashActualLRP"
-	FailActualLRPRoute   = "FailActualLRP"
-	RemoveActualLRPRoute = "RemoveActualLRP"
-	RetireActualLRPRoute = "RetireActualLRP"
+	ClaimActualLRPRoute_r0  = "ClaimActualLRP"
+	StartActualLRPRoute_r0  = "StartActualLRP"
+	CrashActualLRPRoute_r0  = "CrashActualLRP"
+	FailActualLRPRoute_r0   = "FailActualLRP"
+	RemoveActualLRPRoute_r0 = "RemoveActualLRP"
+	RetireActualLRPRoute_r0 = "RetireActualLRP"
 
 	// Evacuation
-	RemoveEvacuatingActualLRPRoute = "RemoveEvacuatingActualLRP"
-	EvacuateClaimedActualLRPRoute  = "EvacuateClaimedActualLRP"
-	EvacuateCrashedActualLRPRoute  = "EvacuateCrashedActualLRP"
-	EvacuateStoppedActualLRPRoute  = "EvacuateStoppedActualLRP"
-	EvacuateRunningActualLRPRoute  = "EvacuateRunningActualLRP"
+	RemoveEvacuatingActualLRPRoute_r0 = "RemoveEvacuatingActualLRP"
+	EvacuateClaimedActualLRPRoute_r0  = "EvacuateClaimedActualLRP"
+	EvacuateCrashedActualLRPRoute_r0  = "EvacuateCrashedActualLRP"
+	EvacuateStoppedActualLRPRoute_r0  = "EvacuateStoppedActualLRP"
+	EvacuateRunningActualLRPRoute_r0  = "EvacuateRunningActualLRP"
 
 	// Desired LRPs
-	DesiredLRPsRoute               = "DesiredLRPs"
-	DesiredLRPSchedulingInfosRoute = "DesiredLRPSchedulingInfos"
-	DesiredLRPByProcessGuidRoute   = "DesiredLRPByProcessGuid"
+	DesiredLRPsRoute_r2               = "DesiredLRPs"
+	DesiredLRPSchedulingInfosRoute_r0 = "DesiredLRPSchedulingInfos"
+	DesiredLRPByProcessGuidRoute_r2   = "DesiredLRPByProcessGuid"
 
 	// Desire LRP Lifecycle
-	DesireDesiredLRPRoute = "DesireDesiredLRP"
-	UpdateDesiredLRPRoute = "UpdateDesireLRP"
-	RemoveDesiredLRPRoute = "RemoveDesiredLRP"
+	DesireDesiredLRPRoute_r2 = "DesireDesiredLRP"
+	UpdateDesiredLRPRoute_r0 = "UpdateDesireLRP"
+	RemoveDesiredLRPRoute    = "RemoveDesiredLRP"
 
 	// Tasks
-	TasksRoute         = "Tasks"
-	TaskByGuidRoute    = "TaskByGuid"
-	DesireTaskRoute    = "DesireTask"
-	StartTaskRoute     = "StartTask"
-	CancelTaskRoute    = "CancelTask"
-	FailTaskRoute      = "FailTask"
-	RejectTaskRoute    = "RejectTask"
-	CompleteTaskRoute  = "CompleteTask"
-	ResolvingTaskRoute = "ResolvingTask"
-	DeleteTaskRoute    = "DeleteTask"
+	TasksRoute_r2         = "Tasks"
+	TaskByGuidRoute_r2    = "TaskByGuid"
+	DesireTaskRoute_r2    = "DesireTask"
+	StartTaskRoute_r0     = "StartTask"
+	CancelTaskRoute_r0    = "CancelTask"
+	FailTaskRoute_r0      = "FailTask"
+	RejectTaskRoute_r0    = "RejectTask"
+	CompleteTaskRoute_r0  = "CompleteTask"
+	ResolvingTaskRoute_r0 = "ResolvingTask"
+	DeleteTaskRoute_r0    = "DeleteTask"
 
 	// Event Streaming
 	EventStreamRoute_r0     = "EventStream_r0"
 	TaskEventStreamRoute_r0 = "TaskEventStream_r0"
 
 	// Cell Presence
-	CellsRoute = "Cells"
+	CellsRoute_r0 = "Cells"
 )
 
 var Routes = rata.Routes{
 	// Ping
-	{Path: "/v1/ping", Method: "POST", Name: PingRoute},
+	{Path: "/v1/ping", Method: "POST", Name: PingRoute_r0},
 
 	// Domains
-	{Path: "/v1/domains/list", Method: "POST", Name: DomainsRoute},
-	{Path: "/v1/domains/upsert", Method: "POST", Name: UpsertDomainRoute},
+	{Path: "/v1/domains/list", Method: "POST", Name: DomainsRoute_r0},
+	{Path: "/v1/domains/upsert", Method: "POST", Name: UpsertDomainRoute_r0},
 
 	// Actual LRPs
-	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute},
-	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute},
-	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute},
+	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute_r0},
+	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute_r0},
+	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute_r0},
 
 	// Actual LRP Lifecycle
-	{Path: "/v1/actual_lrps/claim", Method: "POST", Name: ClaimActualLRPRoute},
-	{Path: "/v1/actual_lrps/start", Method: "POST", Name: StartActualLRPRoute},
-	{Path: "/v1/actual_lrps/crash", Method: "POST", Name: CrashActualLRPRoute},
-	{Path: "/v1/actual_lrps/fail", Method: "POST", Name: FailActualLRPRoute},
-	{Path: "/v1/actual_lrps/remove", Method: "POST", Name: RemoveActualLRPRoute},
-	{Path: "/v1/actual_lrps/retire", Method: "POST", Name: RetireActualLRPRoute},
+	{Path: "/v1/actual_lrps/claim", Method: "POST", Name: ClaimActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/start", Method: "POST", Name: StartActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/crash", Method: "POST", Name: CrashActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/fail", Method: "POST", Name: FailActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/remove", Method: "POST", Name: RemoveActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/retire", Method: "POST", Name: RetireActualLRPRoute_r0},
 
 	// Evacuation
-	{Path: "/v1/actual_lrps/remove_evacuating", Method: "POST", Name: RemoveEvacuatingActualLRPRoute},
-	{Path: "/v1/actual_lrps/evacuate_claimed", Method: "POST", Name: EvacuateClaimedActualLRPRoute},
-	{Path: "/v1/actual_lrps/evacuate_crashed", Method: "POST", Name: EvacuateCrashedActualLRPRoute},
-	{Path: "/v1/actual_lrps/evacuate_stopped", Method: "POST", Name: EvacuateStoppedActualLRPRoute},
-	{Path: "/v1/actual_lrps/evacuate_running", Method: "POST", Name: EvacuateRunningActualLRPRoute},
+	{Path: "/v1/actual_lrps/remove_evacuating", Method: "POST", Name: RemoveEvacuatingActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/evacuate_claimed", Method: "POST", Name: EvacuateClaimedActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/evacuate_crashed", Method: "POST", Name: EvacuateCrashedActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/evacuate_stopped", Method: "POST", Name: EvacuateStoppedActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/evacuate_running", Method: "POST", Name: EvacuateRunningActualLRPRoute_r0},
 
 	// Desired LRPs
-	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute},
+	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute_r0},
 
-	{Path: "/v1/desired_lrps/list.r2", Method: "POST", Name: DesiredLRPsRoute},
-	{Path: "/v1/desired_lrps/get_by_process_guid.r2", Method: "POST", Name: DesiredLRPByProcessGuidRoute},
+	{Path: "/v1/desired_lrps/list.r2", Method: "POST", Name: DesiredLRPsRoute_r2},
+	{Path: "/v1/desired_lrps/get_by_process_guid.r2", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r2},
 
 	// Desire LPR Lifecycle
-	{Path: "/v1/desired_lrp/desire.r2", Method: "POST", Name: DesireDesiredLRPRoute},
-	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute},
+	{Path: "/v1/desired_lrp/desire.r2", Method: "POST", Name: DesireDesiredLRPRoute_r2},
+	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute_r0},
 	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
 
 	// Tasks
-	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute},
-	{Path: "/v1/tasks/get_by_task_guid.r2", Method: "POST", Name: TaskByGuidRoute},
+	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute_r2},
+	{Path: "/v1/tasks/get_by_task_guid.r2", Method: "POST", Name: TaskByGuidRoute_r2},
 
 	// Task Lifecycle
-	{Path: "/v1/tasks/desire.r2", Method: "POST", Name: DesireTaskRoute},
-	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute},
-	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute},
-	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute},
-	{Path: "/v1/tasks/reject", Method: "POST", Name: RejectTaskRoute},
-	{Path: "/v1/tasks/complete", Method: "POST", Name: CompleteTaskRoute},
-	{Path: "/v1/tasks/resolving", Method: "POST", Name: ResolvingTaskRoute},
-	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute},
+	{Path: "/v1/tasks/desire.r2", Method: "POST", Name: DesireTaskRoute_r2},
+	{Path: "/v1/tasks/start", Method: "POST", Name: StartTaskRoute_r0},
+	{Path: "/v1/tasks/cancel", Method: "POST", Name: CancelTaskRoute_r0},
+	{Path: "/v1/tasks/fail", Method: "POST", Name: FailTaskRoute_r0},
+	{Path: "/v1/tasks/reject", Method: "POST", Name: RejectTaskRoute_r0},
+	{Path: "/v1/tasks/complete", Method: "POST", Name: CompleteTaskRoute_r0},
+	{Path: "/v1/tasks/resolving", Method: "POST", Name: ResolvingTaskRoute_r0},
+	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute_r0},
 
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},
 	{Path: "/v1/events/tasks", Method: "POST", Name: TaskEventStreamRoute_r0},
 
 	// Cells
-	{Path: "/v1/cells/list.r1", Method: "POST", Name: CellsRoute},
+	{Path: "/v1/cells/list.r1", Method: "POST", Name: CellsRoute_r0},
 }

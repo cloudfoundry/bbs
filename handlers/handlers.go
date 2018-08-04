@@ -62,58 +62,58 @@ func New(
 
 	actions := rata.Handlers{
 		// Ping
-		bbs.PingRoute: middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, pingHandler.Ping), emitter),
+		bbs.PingRoute_r0: middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, pingHandler.Ping), emitter),
 
 		// Domains
-		bbs.DomainsRoute:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, domainHandler.Domains), emitter)),
-		bbs.UpsertDomainRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, domainHandler.Upsert), emitter)),
+		bbs.DomainsRoute_r0:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, domainHandler.Domains), emitter)),
+		bbs.UpsertDomainRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, domainHandler.Upsert), emitter)),
 
 		// Actual LRPs
-		bbs.ActualLRPGroupsRoute:                     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroups), emitter)),
-		bbs.ActualLRPGroupsByProcessGuidRoute:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupsByProcessGuid), emitter)),
-		bbs.ActualLRPGroupByProcessGuidAndIndexRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex), emitter)),
+		bbs.ActualLRPGroupsRoute_r0:                     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroups), emitter)),
+		bbs.ActualLRPGroupsByProcessGuidRoute_r0:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupsByProcessGuid), emitter)),
+		bbs.ActualLRPGroupByProcessGuidAndIndexRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex), emitter)),
 
 		// Actual LRP Lifecycle
-		bbs.ClaimActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.ClaimActualLRP), emitter)),
-		bbs.StartActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP), emitter)),
-		bbs.CrashActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.CrashActualLRP), emitter)),
-		bbs.RetireActualLRPRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.RetireActualLRP), emitter)),
-		bbs.FailActualLRPRoute:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.FailActualLRP), emitter)),
-		bbs.RemoveActualLRPRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.RemoveActualLRP), emitter)),
+		bbs.ClaimActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.ClaimActualLRP), emitter)),
+		bbs.StartActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP), emitter)),
+		bbs.CrashActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.CrashActualLRP), emitter)),
+		bbs.RetireActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.RetireActualLRP), emitter)),
+		bbs.FailActualLRPRoute_r0:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.FailActualLRP), emitter)),
+		bbs.RemoveActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.RemoveActualLRP), emitter)),
 
 		// Evacuation
-		bbs.RemoveEvacuatingActualLRPRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.RemoveEvacuatingActualLRP), emitter)),
-		bbs.EvacuateClaimedActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateClaimedActualLRP), emitter)),
-		bbs.EvacuateCrashedActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateCrashedActualLRP), emitter)),
-		bbs.EvacuateStoppedActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateStoppedActualLRP), emitter)),
-		bbs.EvacuateRunningActualLRPRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP), emitter)),
+		bbs.RemoveEvacuatingActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.RemoveEvacuatingActualLRP), emitter)),
+		bbs.EvacuateClaimedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateClaimedActualLRP), emitter)),
+		bbs.EvacuateCrashedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateCrashedActualLRP), emitter)),
+		bbs.EvacuateStoppedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateStoppedActualLRP), emitter)),
+		bbs.EvacuateRunningActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP), emitter)),
 
 		// Desired LRPs
-		bbs.DesiredLRPsRoute:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs), emitter)),
-		bbs.DesiredLRPByProcessGuidRoute:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid), emitter)),
-		bbs.DesiredLRPSchedulingInfosRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPSchedulingInfos), emitter)),
-		bbs.DesireDesiredLRPRoute:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP), emitter)),
-		bbs.UpdateDesiredLRPRoute:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.UpdateDesiredLRP), emitter)),
-		bbs.RemoveDesiredLRPRoute:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.RemoveDesiredLRP), emitter)),
+		bbs.DesiredLRPsRoute_r2:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs), emitter)),
+		bbs.DesiredLRPByProcessGuidRoute_r2:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid), emitter)),
+		bbs.DesiredLRPSchedulingInfosRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPSchedulingInfos), emitter)),
+		bbs.DesireDesiredLRPRoute_r2:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP), emitter)),
+		bbs.UpdateDesiredLRPRoute_r0:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.UpdateDesiredLRP), emitter)),
+		bbs.RemoveDesiredLRPRoute:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.RemoveDesiredLRP), emitter)),
 
 		// Tasks
-		bbs.TasksRoute:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),
-		bbs.TaskByGuidRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.TaskByGuid), emitter)),
-		bbs.DesireTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DesireTask), emitter)),
-		bbs.StartTaskRoute:     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.StartTask), emitter)),
-		bbs.CancelTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CancelTask), emitter)),
-		bbs.FailTaskRoute:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.FailTask), emitter)),
-		bbs.RejectTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.RejectTask), emitter)),
-		bbs.CompleteTaskRoute:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CompleteTask), emitter)),
-		bbs.ResolvingTaskRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.ResolvingTask), emitter)),
-		bbs.DeleteTaskRoute:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),
+		bbs.TasksRoute_r2:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),
+		bbs.TaskByGuidRoute_r2:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.TaskByGuid), emitter)),
+		bbs.DesireTaskRoute_r2:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DesireTask), emitter)),
+		bbs.StartTaskRoute_r0:     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.StartTask), emitter)),
+		bbs.CancelTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CancelTask), emitter)),
+		bbs.FailTaskRoute_r0:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.FailTask), emitter)),
+		bbs.RejectTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.RejectTask), emitter)),
+		bbs.CompleteTaskRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CompleteTask), emitter)),
+		bbs.ResolvingTaskRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.ResolvingTask), emitter)),
+		bbs.DeleteTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),
 
 		// Events
 		bbs.EventStreamRoute_r0:     route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
 		bbs.TaskEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
 
 		// Cells
-		bbs.CellsRoute: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells), emitter)),
+		bbs.CellsRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells), emitter)),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)
