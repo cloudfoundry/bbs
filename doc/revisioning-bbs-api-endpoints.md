@@ -35,3 +35,5 @@ In the example above, that endpoint would be `/v1/desired_lrps/list.r1`.
 This route will not change at this time.
 Similarly, the handler key `DesiredLRPsRoute_r1` will also remain the same.
 
+# See Also
+- To find more documentation about specific endpoints, look in the [table of contents](README.md) for links to API references.
