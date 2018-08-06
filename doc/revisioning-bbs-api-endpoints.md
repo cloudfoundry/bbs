@@ -35,5 +35,15 @@ In the example above, that endpoint would be `/v1/desired_lrps/list.r1`.
 This route will not change at this time.
 Similarly, the handler key `DesiredLRPsRoute_r1` will also remain the same.
 
+For example, the table below shows how revisions `r0` through `r3` would be supported in sequential major releases of diego-release
+based on when each was introduced:
+
+| diego-release 0.x.y              | diego-release 1.x.y              | diego-release 2.x.y        | diego-release 3.x.y        |
+| -------------------------------- | -------------------------------- | -------------------------- | -------------------------- |
+| `/v1/desired_lrps/list`          | `/v1/desired_lrps/list`          | `/v1/desired_lrps/list.r2` | `/v1/desired_lrps/list.r3` |
+| `/v1/desired_lrps/list.r1` (new) | `/v1/desired_lrps/list.r1`       | `/v1/desired_lrps/list.r3` |                            |
+|                                  | `/v1/desired_lrps/list.r2` (new) |                            |                            |
+|                                  | `/v1/desired_lrps/list.r3` (new) |                            |                            |
+
 # See Also
 - To find more documentation about specific endpoints, look in the [table of contents](README.md) for links to API references.
