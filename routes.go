@@ -11,6 +11,7 @@ const (
 	UpsertDomainRoute_r0 = "UpsertDomain"
 
 	// Actual LRPs
+	ActualLRPsRoute_r0                          = "ActualLRPs"
 	ActualLRPGroupsRoute_r0                     = "ActualLRPGroups"
 	ActualLRPGroupsByProcessGuidRoute_r0        = "ActualLRPGroupsByProcessGuid"
 	ActualLRPGroupByProcessGuidAndIndexRoute_r0 = "ActualLRPGroupsByProcessGuidAndIndex"
@@ -69,6 +70,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/domains/upsert", Method: "POST", Name: UpsertDomainRoute_r0},
 
 	// Actual LRPs
+	{Path: "/v1/actual_lrps/list", Method: "POST", Name: ActualLRPsRoute_r0},
 	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute_r0},
 	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute_r0},
 	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute_r0},

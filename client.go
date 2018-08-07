@@ -129,6 +129,9 @@ type ExternalDomainClient interface {
 The ExternalActualLRPClient is used to access and retire Actual LRPs
 */
 type ExternalActualLRPClient interface {
+	// Returns all ActualLRPs matching the given ActualLRPFilter
+	ActualLRPs(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRP, error)
+
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
 	ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 
@@ -300,6 +303,20 @@ func (c *client) UpsertDomain(logger lager.Logger, domain string, ttl time.Durat
 		return err
 	}
 	return response.Error.ToError()
+}
+
+func (c *client) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRP, error) {
+	request := models.ActualLRPsRequest{
+		Domain: filter.Domain,
+		CellId: filter.CellID,
+	}
+	response := models.ActualLRPsResponse{}
+	err := c.doRequest(logger, ActualLRPsRoute_r0, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ActualLrps, response.Error.ToError()
 }
 
 func (c *client) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {

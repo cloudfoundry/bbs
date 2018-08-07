@@ -20,6 +20,25 @@ func NewActualLRPHandler(db db.ActualLRPDB, exitChan chan<- struct{}) *ActualLRP
 	}
 }
 
+func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
+	logger = logger.Session("actual-lrps")
+
+	request := &models.ActualLRPsRequest{}
+	response := &models.ActualLRPsResponse{}
+
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId, Index: request.Index, ProcessGuid: request.ProcessGuid}
+		response.ActualLrps, err = h.db.ActualLRPs(logger, filter)
+	}
+
+	response.Error = models.ConvertError(err)
+
+	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
 func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("actual-lrp-groups")

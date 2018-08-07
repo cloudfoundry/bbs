@@ -328,6 +328,316 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 	})
 
+	Describe("ActualLRPs", func() {
+		var allActualLRPs []*models.ActualLRP
+
+		BeforeEach(func() {
+			allActualLRPs = []*models.ActualLRP{}
+			fakeGUIDProvider.NextGUIDReturns("mod-tag-guid", nil)
+
+			actualLRPKey1 := &models.ActualLRPKey{
+				ProcessGuid: "guid1",
+				Index:       1,
+				Domain:      "domain1",
+			}
+			instanceKey1 := &models.ActualLRPInstanceKey{
+				InstanceGuid: "i-guid1",
+				CellId:       "cell1",
+			}
+
+			_, err := sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey1)
+			Expect(err).NotTo(HaveOccurred())
+
+			fakeClock.Increment(time.Hour)
+
+			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey1.ProcessGuid, actualLRPKey1.Index, instanceKey1)
+			Expect(err).NotTo(HaveOccurred())
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *actualLRPKey1,
+				ActualLRPInstanceKey: *instanceKey1,
+				State:                models.ActualLRPStateClaimed,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 1,
+				},
+			})
+
+			actualLRPKey2 := &models.ActualLRPKey{
+				ProcessGuid: "guid-2",
+				Index:       1,
+				Domain:      "domain2",
+			}
+			instanceKey2 := &models.ActualLRPInstanceKey{
+				InstanceGuid: "i-guid2",
+				CellId:       "cell1",
+			}
+
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
+			Expect(err).NotTo(HaveOccurred())
+			fakeClock.Increment(time.Hour)
+			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, instanceKey2)
+			Expect(err).NotTo(HaveOccurred())
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *actualLRPKey2,
+				ActualLRPInstanceKey: *instanceKey2,
+				State:                models.ActualLRPStateClaimed,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 1,
+				},
+			})
+
+			actualLRPKey3 := &models.ActualLRPKey{
+				ProcessGuid: "guid3",
+				Index:       1,
+				Domain:      "domain1",
+			}
+			instanceKey3 := &models.ActualLRPInstanceKey{
+				InstanceGuid: "i-guid3",
+				CellId:       "cell2",
+			}
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3)
+			Expect(err).NotTo(HaveOccurred())
+			fakeClock.Increment(time.Hour)
+			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey3.ProcessGuid, actualLRPKey3.Index, instanceKey3)
+			Expect(err).NotTo(HaveOccurred())
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *actualLRPKey3,
+				ActualLRPInstanceKey: *instanceKey3,
+				State:                models.ActualLRPStateClaimed,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 1,
+				},
+			})
+
+			actualLRPKey4 := &models.ActualLRPKey{
+				ProcessGuid: "guid4",
+				Index:       1,
+				Domain:      "domain2",
+			}
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey4)
+			Expect(err).NotTo(HaveOccurred())
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey: *actualLRPKey4,
+				State:        models.ActualLRPStateUnclaimed,
+				Since:        fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 0,
+				},
+			})
+
+			actualLRPKey5 := &models.ActualLRPKey{
+				ProcessGuid: "guid5",
+				Index:       1,
+				Domain:      "domain2",
+			}
+			instanceKey5 := &models.ActualLRPInstanceKey{
+				InstanceGuid: "i-guid5",
+				CellId:       "cell2",
+			}
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey5)
+			Expect(err).NotTo(HaveOccurred())
+			fakeClock.Increment(time.Hour)
+			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
+			Expect(err).NotTo(HaveOccurred())
+			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, models.ActualLRP_Ordinary)
+			Expect(err).NotTo(HaveOccurred())
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *actualLRPKey5,
+				ActualLRPInstanceKey: *instanceKey5,
+				State:                models.ActualLRPStateClaimed,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 1,
+				},
+				Presence: models.ActualLRP_Evacuating,
+			})
+
+			actualLRPKey6 := &models.ActualLRPKey{
+				ProcessGuid: "guid6",
+				Index:       2,
+				Domain:      "domain1",
+			}
+			instanceKey6 := &models.ActualLRPInstanceKey{
+				InstanceGuid: "i-guid6",
+				CellId:       "cell2",
+			}
+			fakeClock.Increment(time.Hour)
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
+			Expect(err).NotTo(HaveOccurred())
+			netInfo := models.ActualLRPNetInfo{
+				Address:         "0.0.0.0",
+				InstanceAddress: "1.1.1.1",
+			}
+			_, _, err = sqlDB.StartActualLRP(logger, actualLRPKey6, instanceKey6, &netInfo)
+			Expect(err).NotTo(HaveOccurred())
+			queryStr = "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr, models.ActualLRP_Suspect, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, models.ActualLRP_Ordinary)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(err).NotTo(HaveOccurred())
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *actualLRPKey6,
+				ActualLRPInstanceKey: *instanceKey6,
+				ActualLRPNetInfo:     netInfo,
+				State:                models.ActualLRPStateRunning,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 2,
+				},
+				Presence: models.ActualLRP_Suspect,
+			})
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *actualLRPKey6,
+				ActualLRPInstanceKey: *instanceKey6,
+				State:                models.ActualLRPStateClaimed,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 1,
+				},
+			})
+		})
+
+		It("returns all the actual lrps", func() {
+			actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualLRPs).To(ConsistOf(allActualLRPs))
+		})
+
+		It("prunes all actual lrps containing invalid data", func() {
+			actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
+			_, _, err := sqlDB.StartActualLRP(logger, &actualLRPWithInvalidData.ActualLRPKey, &actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			queryStr := `UPDATE actual_lrps SET net_info = 'garbage' WHERE process_guid = 'invalid'`
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.Exec(queryStr)
+			Expect(err).NotTo(HaveOccurred())
+
+			actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(actualLRPs).NotTo(ContainElement(actualLRPWithInvalidData))
+		})
+
+		Context("when filtering on domains", func() {
+			It("returns the actual lrps in the domain", func() {
+				filter := models.ActualLRPFilter{
+					Domain: "domain2",
+				}
+				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).To(HaveLen(3))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[1]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[3]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[4]))
+			})
+		})
+
+		Context("when filtering on cell", func() {
+			It("returns the actual lrps claimed by the cell", func() {
+				filter := models.ActualLRPFilter{
+					CellID: "cell1",
+				}
+				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).To(HaveLen(2))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[0]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[1]))
+			})
+		})
+
+		Context("when filtering on process GUID", func() {
+			It("returns the actual lrps with the matching process GUID", func() {
+				filter := models.ActualLRPFilter{
+					ProcessGuid: "guid6",
+				}
+				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).To(HaveLen(2))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[5]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[6]))
+			})
+		})
+
+		Context("when filtering on instance index", func() {
+			It("returns the actual lrps with the matching index", func() {
+				index := int32(1)
+				filter := models.ActualLRPFilter{
+					Index: &index,
+				}
+				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).To(HaveLen(5))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[0]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[1]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[2]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[3]))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[4]))
+			})
+		})
+
+		Context("when filtering on multiple fields", func() {
+			It("returns the actual lrps that match all the filters", func() {
+				index := int32(1)
+				filter := models.ActualLRPFilter{
+					Domain:      "domain1",
+					CellID:      "cell2",
+					ProcessGuid: "guid3",
+					Index:       &index,
+				}
+				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).To(HaveLen(1))
+				Expect(actualLRPs).To(ContainElement(allActualLRPs[2]))
+			})
+		})
+
+		Context("when the filter does not match any ActualLRPs", func() {
+			It("returns an empty list", func() {
+				index := int32(1)
+				filter := models.ActualLRPFilter{
+					Domain:      "domain1-that-doesnt-exist",
+					CellID:      "cell2",
+					ProcessGuid: "guid3",
+					Index:       &index,
+				}
+				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).To(HaveLen(0))
+			})
+		})
+	})
+
 	Describe("ActualLRPGroups", func() {
 		var allActualLRPGroups []*models.ActualLRPGroup
 

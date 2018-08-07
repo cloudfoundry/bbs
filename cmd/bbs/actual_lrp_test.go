@@ -183,6 +183,102 @@ var _ = Describe("ActualLRP API", func() {
 		}
 	})
 
+	Describe("ActualLRPs", func() {
+		var actualActualLRPs []*models.ActualLRP
+
+		It("responds without error", func() {
+			actualActualLRPs, getErr = client.ActualLRPs(logger, filter)
+			Expect(getErr).NotTo(HaveOccurred())
+		})
+
+		Context("when not filtering", func() {
+			It("returns all actual lrps from the bbs", func() {
+				actualActualLRPs, getErr = client.ActualLRPs(logger, filter)
+				Expect(getErr).NotTo(HaveOccurred())
+
+				Expect(actualActualLRPs).To(ConsistOf(
+					test_helpers.MatchActualLRP(baseLRP),
+					test_helpers.MatchActualLRP(evacuatingInstanceLRP),
+					test_helpers.MatchActualLRP(evacuatingLRP),
+					test_helpers.MatchActualLRP(otherLRP),
+					test_helpers.MatchActualLRP(unclaimedLRP),
+					test_helpers.MatchActualLRP(crashingLRP),
+				))
+			})
+		})
+
+		Context("when filtering by domain", func() {
+			BeforeEach(func() {
+				filter = models.ActualLRPFilter{Domain: baseDomain}
+			})
+
+			It("returns actual lrps from the requested domain", func() {
+				actualActualLRPs, getErr = client.ActualLRPs(logger, filter)
+				Expect(getErr).NotTo(HaveOccurred())
+
+				Expect(actualActualLRPs).To(ConsistOf(test_helpers.MatchActualLRP(baseLRP)))
+			})
+		})
+
+		Context("when filtering by cell", func() {
+			BeforeEach(func() {
+				filter = models.ActualLRPFilter{CellID: cellID}
+			})
+
+			It("returns actual lrps from the requested cell", func() {
+				actualActualLRPs, getErr = client.ActualLRPs(logger, filter)
+				Expect(getErr).NotTo(HaveOccurred())
+				Expect(actualActualLRPs).To(ConsistOf(
+					test_helpers.MatchActualLRP(baseLRP),
+					test_helpers.MatchActualLRP(evacuatingLRP),
+				))
+			})
+		})
+
+		Context("with a TLS-enabled actual LRP", func() {
+			const (
+				tlsEnabledProcessGuid  = "tlsEnabled-process-guid"
+				tlsEnabledDomain       = "tlsEnabled-domain"
+				tlsEnabledInstanceGuid = "tlsEnabled-instance-guid"
+				tlsEnabledIndex        = 0
+			)
+			var (
+				tlsEnabledLRP            *models.ActualLRP
+				tlsEnabledLRPKey         models.ActualLRPKey
+				tlsEnabledLRPInstanceKey models.ActualLRPInstanceKey
+				tlsNetInfo               models.ActualLRPNetInfo
+			)
+
+			JustBeforeEach(func() {
+				tlsEnabledLRPKey = models.NewActualLRPKey(tlsEnabledProcessGuid, tlsEnabledIndex, tlsEnabledDomain)
+				tlsEnabledLRPInstanceKey = models.NewActualLRPInstanceKey(tlsEnabledInstanceGuid, cellID)
+				tlsNetInfo = models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMappingWithTLSProxy(8080, 80, 60042, 443))
+
+				tlsEnabledLRP = &models.ActualLRP{
+					ActualLRPKey:         tlsEnabledLRPKey,
+					ActualLRPInstanceKey: tlsEnabledLRPInstanceKey,
+					ActualLRPNetInfo:     tlsNetInfo,
+					State:                models.ActualLRPStateRunning,
+				}
+
+				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ProcessGuid)
+				tlsEnabledDesiredLRP.Domain = tlsEnabledDomain
+
+				err := client.DesireLRP(logger, tlsEnabledDesiredLRP)
+				Expect(err).NotTo(HaveOccurred())
+				err = client.StartActualLRP(logger, &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns the TLS host and container port", func() {
+				actualLRPs, err := client.ActualLRPs(logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).To(ContainElement(test_helpers.MatchActualLRP(tlsEnabledLRP)))
+			})
+		})
+	})
+
 	Describe("ActualLRPGroups", func() {
 		It("responds without error", func() {
 			actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, filter)

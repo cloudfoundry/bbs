@@ -474,7 +474,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 		}
 	}
 
-	lrpsToDelete, err := db.getActualLRPS(logger, strings.Join(wheres, " AND "), bindings...)
+	lrpsToDelete, err := db.getActualLRPGroups(logger, strings.Join(wheres, " AND "), bindings...)
 	if err != nil {
 		logger.Error("failed-fetching-evacuating-lrps-with-missing-cells", err)
 	}

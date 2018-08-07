@@ -58,6 +58,8 @@
 		FailActualLRPRequest
 		RetireActualLRPRequest
 		RemoveActualLRPRequest
+		ActualLRPsResponse
+		ActualLRPsRequest
 		CachedDependency
 		CellCapacity
 		CellPresence

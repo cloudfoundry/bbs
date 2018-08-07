@@ -11,6 +11,52 @@ For detailed information on the types referred to below, see the [godoc document
 
 ## ActualLRPs
 
+Returns all [ActualLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRP) matching the given [ActualLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPFilter).
+
+### BBS API Endpoint
+
+POST an [ActualLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPsRequest)
+to `/v1/actual_lrps/list`
+and receive an [ActualLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPsResponse).
+
+### Golang Client API
+
+```go
+ActualLRPs(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRP, error)
+```
+
+#### Inputs
+
+* `models.ActualLRPFilter`:
+  * `Domain string`: If non-empty, filter to only ActualLRPs in this domain.
+  * `CellId string`: If non-empty, filter to only ActualLRPs with this cell ID.
+  * `ProcessGuid string`: If non-empty, filter to only ActualLRPs with this process GUID.
+  * `Index *int32`: If non-nil, filter to only ActualLRPs with this instance index.
+
+#### Output
+
+* `[]*models.ActualLRP`: Slice of [`*models.ActualLRP`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRP).
+* `error`:  Non-nil if an error occurred.
+
+
+#### Example
+
+```go
+client := bbs.NewClient(url)
+actualLRPs, err := client.ActualLRPs(logger, &models.ActualLRPFilter{
+    Domain:      "some-domain",
+    CellId:      "some-cell",
+    ProcessGuid: "some-process-guid",
+    Index:       &someIndex,
+    })
+if err != nil {
+    log.Printf("failed to retrieve actual lrps: " + err.Error())
+}
+```
+
+
+## ActualLRPGroups
+
 Returns all [ActualLRPGroups](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroup) matching the given [ActualLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPFilter).
 
 ### BBS API Endpoint
