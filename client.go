@@ -307,8 +307,10 @@ func (c *client) UpsertDomain(logger lager.Logger, domain string, ttl time.Durat
 
 func (c *client) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRP, error) {
 	request := models.ActualLRPsRequest{
-		Domain: filter.Domain,
-		CellId: filter.CellID,
+		Domain:      filter.Domain,
+		CellId:      filter.CellID,
+		ProcessGuid: filter.ProcessGuid,
+		Index:       filter.Index,
 	}
 	response := models.ActualLRPsResponse{}
 	err := c.doRequest(logger, ActualLRPsRoute_r0, nil, nil, &request, &response)
