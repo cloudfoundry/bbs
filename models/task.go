@@ -174,7 +174,7 @@ func (def *TaskDefinition) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"image_password"})
 	}
 
-	err := validateCachedDependencies(def.CachedDependencies, def.LegacyDownloadUser)
+	err := validateCachedDependencies(def.CachedDependencies)
 	if err != nil {
 		validationError = validationError.Append(err)
 	}

@@ -397,22 +397,6 @@ var _ = Describe("Task", func() {
 				},
 			},
 			{
-				"legacy_download_user",
-				&models.Task{
-					TaskGuid: "guid-1",
-					Domain:   "some-domain",
-					TaskDefinition: &models.TaskDefinition{
-						RootFs: "some-rootfs",
-						CachedDependencies: []*models.CachedDependency{
-							{
-								To:   "here",
-								From: "there",
-							},
-						},
-					},
-				},
-			},
-			{
 				"cached_dependency",
 				&models.Task{
 					TaskGuid: "guid-1",
