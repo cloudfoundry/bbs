@@ -38,10 +38,17 @@ func (c *CachedDependency) Validate() error {
 	return nil
 }
 
-func validateCachedDependencies(cachedDependencies []*CachedDependency) ValidationError {
+func validateCachedDependencies(
+	cachedDependencies []*CachedDependency,
+	legacyDownloadUser string,
+) ValidationError {
 	var validationError ValidationError
 
 	if len(cachedDependencies) > 0 {
+		if legacyDownloadUser == "" {
+			validationError = validationError.Append(ErrInvalidField{"legacy_download_user"})
+		}
+
 		for _, cacheDep := range cachedDependencies {
 			err := cacheDep.Validate()
 			if err != nil {
