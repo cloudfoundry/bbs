@@ -10,6 +10,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	. "code.cloudfoundry.org/bbs/test_helpers"
 	"github.com/gogo/protobuf/proto"
 
 	. "github.com/onsi/ginkgo"
@@ -268,7 +269,16 @@ var _ = Describe("DesiredLRP", func() {
 				}
 			],
 			"log_source": "healthcheck_log_source"
-		}
+		},
+		"image_layers": [
+		  {
+				"url": "some-url",
+				"destination_path": "/tmp",
+				"media_type": "tgz",
+				"layer_type": "shared"
+			}
+		],
+		"legacy_download_user": "some-user"
   }`
 
 	BeforeEach(func() {
@@ -293,7 +303,6 @@ var _ = Describe("DesiredLRP", func() {
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
 			jsonSerialization, err := json.Marshal(desiredLRP)
-			fmt.Sprintf("*******************\n%#v", desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(jsonDesiredLRP))
 
@@ -400,18 +409,18 @@ var _ = Describe("DesiredLRP", func() {
 		})
 	})
 
-	Describe("Version Down To", func() {
-		Context("V0", func() {
+	Describe("VersionDownTo", func() {
+		Context("V2->V0", func() {
 			var (
 				downloadAction1, downloadAction2 models.DownloadAction
 			)
 
 			BeforeEach(func() {
+				desiredLRP.ImageLayers = nil // V2 does not include ImageLayers
 				desiredLRP.CachedDependencies = []*models.CachedDependency{
 					{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 					{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
 				}
-				desiredLRP.LegacyDownloadUser = "joe-schmoe"
 
 				downloadAction1 = models.DownloadAction{
 					Artifact:  "name-1",
@@ -420,7 +429,6 @@ var _ = Describe("DesiredLRP", func() {
 					CacheKey:  "cache-key-1",
 					User:      "some-user",
 					LogSource: "log-source-1",
-					User:      "joe-schmoe",
 				}
 
 				downloadAction2 = models.DownloadAction{
@@ -430,7 +438,6 @@ var _ = Describe("DesiredLRP", func() {
 					CacheKey:  "cache-key-2",
 					User:      "some-user",
 					LogSource: "log-source-2",
-					User:      "joe-schmoe",
 				}
 
 				desiredLRP.Action = models.WrapAction(models.Timeout(
@@ -440,6 +447,7 @@ var _ = Describe("DesiredLRP", func() {
 					},
 					20*time.Millisecond,
 				))
+
 				desiredLRP.Monitor = models.WrapAction(models.Timeout(
 					&models.RunAction{
 						Path: "/the/path",
@@ -528,13 +536,261 @@ var _ = Describe("DesiredLRP", func() {
 				})
 			})
 		})
+
+		Context("V3->V0", func() {
+			Context("when there are image layers and cached dependencies", func() {
+				BeforeEach(func() {
+					desiredLRP.ImageLayers = []*models.ImageLayer{
+						{
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.LayerTypeExclusive,
+							MediaType:       models.MediaTypeTgz,
+							DigestAlgorithm: models.DigestAlgorithmSha256,
+							DigestValue:     "some-sha",
+						},
+						{
+							Name:            "dep1",
+							Url:             "u1",
+							DestinationPath: "/tmp/1",
+							LayerType:       models.LayerTypeShared,
+							MediaType:       models.MediaTypeTgz,
+						},
+					}
+					desiredLRP.CachedDependencies = []*models.CachedDependency{
+						{
+							Name:      "dep2",
+							From:      "u2",
+							To:        "/tmp/2",
+							CacheKey:  "key2",
+							LogSource: "download",
+						},
+					}
+				})
+
+				It("converts image layers and cached dependencies to download actions", func() {
+					desiredLRP.LegacyDownloadUser = "the user"
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(models.UnwrapAction(convertedLRP.Setup)).To(DeepEqual(
+						models.Serial(
+							models.Parallel(
+								&models.DownloadAction{
+									Artifact: "dep1",
+									From:     "u1",
+									To:       "/tmp/1",
+									CacheKey: "u1",
+									User:     "the user",
+								},
+								&models.DownloadAction{
+									Artifact:  "dep2",
+									From:      "u2",
+									To:        "/tmp/2",
+									CacheKey:  "key2",
+									LogSource: "download",
+									User:      "the user",
+								},
+							),
+							models.Serial(
+								models.Parallel(
+									&models.DownloadAction{
+										Artifact:          "dep0",
+										From:              "u0",
+										To:                "/tmp/0",
+										CacheKey:          "sha256:some-sha",
+										User:              "the user",
+										ChecksumAlgorithm: "sha256",
+										ChecksumValue:     "some-sha",
+									},
+								),
+								models.UnwrapAction(desiredLRP.Setup),
+							),
+						),
+					))
+				})
+
+				It("removes the existing image layers", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(convertedLRP.ImageLayers).To(BeNil())
+				})
+			})
+		})
+
+		Context("V3->V2", func() {
+			Context("when there are no image layers", func() {
+				BeforeEach(func() {
+					desiredLRP.ImageLayers = nil
+				})
+
+				It("does not add any cached dependencies", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V2)
+					Expect(convertedLRP.CachedDependencies).To(BeEmpty())
+				})
+
+				It("does not add any download actions to the Setup", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V2)
+					Expect(convertedLRP.Setup).To(Equal(desiredLRP.Setup))
+				})
+			})
+
+			Context("when there are shared image layers", func() {
+				BeforeEach(func() {
+					desiredLRP.ImageLayers = []*models.ImageLayer{
+						{
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.LayerTypeShared,
+							MediaType:       models.MediaTypeTgz,
+							DigestAlgorithm: models.DigestAlgorithmSha256,
+							DigestValue:     "some-sha",
+						},
+						{
+							Name:            "dep1",
+							Url:             "u1",
+							DestinationPath: "/tmp/1",
+							LayerType:       models.LayerTypeShared,
+							MediaType:       models.MediaTypeTgz,
+						},
+					}
+					desiredLRP.CachedDependencies = []*models.CachedDependency{
+						{
+							Name:      "dep2",
+							From:      "u2",
+							To:        "/tmp/2",
+							CacheKey:  "key2",
+							LogSource: "download",
+						},
+					}
+				})
+
+				It("converts them to cached dependencies and prepends them to the list", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V2)
+					Expect(convertedLRP.CachedDependencies).To(DeepEqual([]*models.CachedDependency{
+						{
+							Name:              "dep0",
+							From:              "u0",
+							To:                "/tmp/0",
+							CacheKey:          "sha256:some-sha",
+							LogSource:         "",
+							ChecksumAlgorithm: "sha256",
+							ChecksumValue:     "some-sha",
+						},
+						{
+							Name:      "dep1",
+							From:      "u1",
+							To:        "/tmp/1",
+							CacheKey:  "u1",
+							LogSource: "",
+						},
+						{
+							Name:      "dep2",
+							From:      "u2",
+							To:        "/tmp/2",
+							CacheKey:  "key2",
+							LogSource: "download",
+						},
+					}))
+				})
+
+				It("removes the existing image layers", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(convertedLRP.ImageLayers).To(BeNil())
+				})
+			})
+
+			Context("when there are exclusive image layers", func() {
+				var (
+					downloadAction1, downloadAction2 models.DownloadAction
+				)
+
+				BeforeEach(func() {
+					desiredLRP.ImageLayers = []*models.ImageLayer{
+						{
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.LayerTypeExclusive,
+							MediaType:       models.MediaTypeTgz,
+							DigestAlgorithm: models.DigestAlgorithmSha256,
+							DigestValue:     "some-sha",
+						},
+						{
+							Name:            "dep1",
+							Url:             "u1",
+							DestinationPath: "/tmp/1",
+							LayerType:       models.LayerTypeExclusive,
+							MediaType:       models.MediaTypeTgz,
+							DigestAlgorithm: models.DigestAlgorithmSha256,
+							DigestValue:     "some-other-sha",
+						},
+					}
+					desiredLRP.LegacyDownloadUser = "the user"
+					desiredLRP.Action = models.WrapAction(models.Timeout(
+						&models.RunAction{
+							Path: "/the/path",
+							User: "the user",
+						},
+						20*time.Millisecond,
+					))
+
+					downloadAction1 = models.DownloadAction{
+						Artifact:          "dep0",
+						From:              "u0",
+						To:                "/tmp/0",
+						CacheKey:          "sha256:some-sha",
+						LogSource:         "",
+						User:              "the user",
+						ChecksumAlgorithm: "sha256",
+						ChecksumValue:     "some-sha",
+					}
+					downloadAction2 = models.DownloadAction{
+						Artifact:          "dep1",
+						From:              "u1",
+						To:                "/tmp/1",
+						CacheKey:          "sha256:some-other-sha",
+						LogSource:         "",
+						User:              "the user",
+						ChecksumAlgorithm: "sha256",
+						ChecksumValue:     "some-other-sha",
+					}
+				})
+
+				It("converts them to download actions with the correct user and prepends them to the setup action", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V2)
+					Expect(models.UnwrapAction(convertedLRP.Setup)).To(DeepEqual(models.Serial(
+						models.Parallel(&downloadAction1, &downloadAction2),
+						models.UnwrapAction(desiredLRP.Setup),
+					)))
+
+				})
+
+				It("sets removes the existing image layers", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(convertedLRP.ImageLayers).To(BeNil())
+				})
+
+				Context("when there is no existing setup action", func() {
+					BeforeEach(func() {
+						desiredLRP.Setup = nil
+					})
+
+					It("creates a setup action with exclusive layers converted to download actions", func() {
+						convertedLRP := desiredLRP.VersionDownTo(format.V2)
+						Expect(models.UnwrapAction(convertedLRP.Setup)).To(Equal(models.Serial(
+							models.Parallel(&downloadAction1, &downloadAction2),
+						)))
+					})
+				})
+			})
+		})
 	})
 
 	Describe("Validate", func() {
 		var assertDesiredLRPValidationFailsWithMessage = func(lrp models.DesiredLRP, substring string) {
 			validationErr := lrp.Validate()
-			Expect(validationErr).To(HaveOccurred())
-			Expect(validationErr.Error()).To(ContainSubstring(substring))
+			ExpectWithOffset(1, validationErr).To(HaveOccurred())
+			ExpectWithOffset(1, validationErr.Error()).To(ContainSubstring(substring))
 		}
 
 		Context("process_guid only contains `A-Z`, `a-z`, `0-9`, `-`, and `_`", func() {
@@ -691,18 +947,7 @@ var _ = Describe("DesiredLRP", func() {
 						From: "",
 					},
 				}
-				desiredLRP.LegacyDownloadUser = "user"
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "cached_dependency")
-			})
-
-			It("requires a legacy download user", func() {
-				desiredLRP.CachedDependencies = []*models.CachedDependency{
-					{
-						To:   "here",
-						From: "there",
-					},
-				}
-				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "legacy_download_user")
 			})
 
 			It("requires a valid checksum algorithm", func() {
@@ -714,7 +959,6 @@ var _ = Describe("DesiredLRP", func() {
 						ChecksumValue:     "sum value",
 					},
 				}
-				desiredLRP.LegacyDownloadUser = "user"
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "invalid algorithm")
 			})
 
@@ -726,8 +970,46 @@ var _ = Describe("DesiredLRP", func() {
 						ChecksumAlgorithm: "md5",
 					},
 				}
-				desiredLRP.LegacyDownloadUser = "user"
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "value")
+			})
+		})
+
+		Context("when image layers are specified", func() {
+			It("requires requires them to be valid", func() {
+				desiredLRP.ImageLayers = []*models.ImageLayer{
+					{
+						Url:             "",
+						DestinationPath: "",
+					},
+				}
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "image_layer")
+			})
+
+			It("requires a valid digest value", func() {
+				desiredLRP.ImageLayers = []*models.ImageLayer{
+					{
+						Url:             "here",
+						DestinationPath: "there",
+						DigestAlgorithm: models.DigestAlgorithmSha256,
+					},
+				}
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "value")
+			})
+
+			Context("when there are exclusive layers specified", func() {
+				It("requires a legacy download user", func() {
+					desiredLRP.LegacyDownloadUser = ""
+					desiredLRP.ImageLayers = []*models.ImageLayer{
+						{
+							Url:             "here",
+							DestinationPath: "there",
+							DigestAlgorithm: models.DigestAlgorithmSha256,
+							DigestValue:     "sum value",
+							LayerType:       models.LayerTypeExclusive,
+						},
+					}
+					assertDesiredLRPValidationFailsWithMessage(desiredLRP, "legacy_download_user")
+				})
 			})
 		})
 
@@ -937,21 +1219,22 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), ""),
-		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "process_guid"),
-		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "name"),
-		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "inner-action"),
-		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "inner-action"),
-		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "inner-action"),
-		Entry("invalid http check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 65536}}}, "healthcheck_log_source"}), "port"),
-		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}), "port"),
-		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}), "check"),
-		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "cpu_weight"),
-		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here", From: "there"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "legacy_download_user"),
-		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef), "cached_dependency"),
-		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef), "volume_mount"),
-		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef), "image_username"),
-		Entry("invalid image password", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "username", "", httpCheckDef), "image_password"),
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), ""),
+		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "process_guid"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "name"),
+		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "inner-action"),
+		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "inner-action"),
+		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "inner-action"),
+		Entry("invalid http check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 65536}}}, "healthcheck_log_source"}, nil), "port"),
+		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil), "port"),
+		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil), "check"),
+		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "cpu_weight"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}}), "legacy_download_user"),
+		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "cached_dependency"),
+		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef, nil), "volume_mount"),
+		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef, nil), "image_username"),
+		Entry("invalid image password", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "username", "", httpCheckDef, nil), "image_password"),
+		Entry("invalid layers", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "some-url"}}), "image_layer"),
 	)
 })
 

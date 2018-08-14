@@ -10,6 +10,7 @@ import "cached_dependency.proto";
 import "volume_mount.proto";
 import "network.proto";
 import "certificate_properties.proto";
+import "image_layer.proto";
 
 option (gogoproto.goproto_enum_prefix_all) = true;
 
@@ -38,6 +39,7 @@ message TaskDefinition {
   optional CertificateProperties certificate_properties = 22 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
   optional string image_username = 23;
   optional string image_password = 24;
+  repeated ImageLayer image_layers = 25;
 }
 
 message Task {

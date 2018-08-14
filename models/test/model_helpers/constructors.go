@@ -103,6 +103,10 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		},
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
+		ImageLayers: []*models.ImageLayer{
+			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
+			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
+		},
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
@@ -180,6 +184,10 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		},
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
+		ImageLayers: []*models.ImageLayer{
+			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
+			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
+		},
 	}
 }
 

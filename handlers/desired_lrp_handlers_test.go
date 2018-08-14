@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -84,14 +85,46 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPs, nil)
 			})
 
-			It("returns a list of desired lrp groups", func() {
+			It("returns a list of desired lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := models.DesiredLRPsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
+
+				for _, lrp := range response.DesiredLrps {
+					Expect(lrp.CachedDependencies).To(BeNil())
+				}
+
 				Expect(response.DesiredLrps).To(Equal(desiredLRPs))
+			})
+
+			Context("when the desired lrps contain image layers", func() {
+				var downgradedDesiredLRPs []*models.DesiredLRP
+
+				BeforeEach(func() {
+					desiredLRPsWithImageLayers := []*models.DesiredLRP{
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
+					}
+					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithImageLayers, nil)
+
+					for _, d := range desiredLRPsWithImageLayers {
+						desiredLRP := d.Copy()
+						downgradedDesiredLRPs = append(downgradedDesiredLRPs, desiredLRP.VersionDownTo(format.V2))
+					}
+				})
+
+				It("returns a list of desired lrps downgraded to convert image layers to cached dependencies and download actions", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPsResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+					Expect(response.DesiredLrps).To(ConsistOf(downgradedDesiredLRPs[0], downgradedDesiredLRPs[1]))
+				})
 			})
 
 			Context("and no filter is provided", func() {
@@ -127,7 +160,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
-		Context("when the DB returns no desired lrp groups", func() {
+		Context("when the DB returns no desired lrps", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, nil)
 			})
@@ -211,6 +244,32 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
+		Context("when the desired lrps contain image layers", func() {
+			var downgradedDesiredLRP *models.DesiredLRP
+
+			BeforeEach(func() {
+				desiredLRP := &models.DesiredLRP{
+					ProcessGuid: processGuid,
+					ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}},
+				}
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
+
+				downgradedDesiredLRP = desiredLRP.VersionDownTo(format.V2)
+			})
+
+			It("returns a list of desired lrps downgraded to convert image layers to cached dependencies and download actions", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrp.CachedDependencies).To(HaveLen(1))
+				Expect(response.DesiredLrp.Setup.SerialAction.Actions).To(HaveLen(1))
+				Expect(response.DesiredLrp).To(Equal(downgradedDesiredLRP))
+			})
+		})
+
 		Context("when the DB returns no desired lrp", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, models.ErrResourceNotFound)
@@ -279,7 +338,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(schedulingInfos, nil)
 			})
 
-			It("returns a list of desired lrp groups", func() {
+			It("returns a list of desired lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := models.DesiredLRPSchedulingInfosResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
@@ -322,7 +381,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
-		Context("when the DB returns no desired lrp groups", func() {
+		Context("when the DB returns no desired lrps", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns([]*models.DesiredLRPSchedulingInfo{}, nil)
 			})
