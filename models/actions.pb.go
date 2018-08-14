@@ -20,6 +20,7 @@
 		error.proto
 		evacuation.proto
 		events.proto
+		image_layer.proto
 		modification_tag.proto
 		network.proto
 		ping.proto
@@ -109,6 +110,7 @@
 		TaskCreatedEvent
 		TaskChangedEvent
 		TaskRemovedEvent
+		ImageLayer
 		ModificationTag
 		Network
 		PingResponse

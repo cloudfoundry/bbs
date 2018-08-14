@@ -103,6 +103,10 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		},
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
+		ImageLayers: []*models.ImageLayer{
+			{Name: "shared layer", LayerType: models.ImageLayer_Shared, Url: "some-url", DestinationPath: "/tmp", ContentType: "some-type"},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_Exclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", ContentType: "some-type"},
+		},
 	}
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())

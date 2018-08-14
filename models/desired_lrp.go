@@ -74,6 +74,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		ImageUsername:                 runInfo.ImageUsername,
 		ImagePassword:                 runInfo.ImagePassword,
 		CheckDefinition:               runInfo.CheckDefinition,
+		ImageLayers:                   runInfo.ImageLayers,
 	}
 }
 
@@ -215,6 +216,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.ImageUsername,
 		d.ImagePassword,
 		d.CheckDefinition,
+		d.ImageLayers,
 	)
 }
 
@@ -453,6 +455,7 @@ func NewDesiredLRPRunInfo(
 	certificateProperties *CertificateProperties,
 	imageUsername, imagePassword string,
 	checkDefinition *CheckDefinition,
+	ImageLayers []*ImageLayer,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -477,6 +480,7 @@ func NewDesiredLRPRunInfo(
 		ImageUsername:                 imageUsername,
 		ImagePassword:                 imagePassword,
 		CheckDefinition:               checkDefinition,
+		ImageLayers:                   ImageLayers,
 	}
 }
 
@@ -525,6 +529,15 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 	err := validateCachedDependencies(runInfo.CachedDependencies)
 	if err != nil {
 		validationError = validationError.Append(err)
+	}
+
+	err = validateImageLayers(runInfo.ImageLayers)
+	if err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	if runInfo.LegacyDownloadUser == "" {
+		validationError = validationError.Append(ErrInvalidField{"legacy_download_user"})
 	}
 
 	for _, mount := range runInfo.VolumeMounts {

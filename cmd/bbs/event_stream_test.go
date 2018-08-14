@@ -71,10 +71,11 @@ var _ = Describe("Events API", func() {
 				routes := &models.Routes{"cf-router": &routeMessage}
 
 				desiredLRP = &models.DesiredLRP{
-					ProcessGuid: "some-guid",
-					Domain:      "some-domain",
-					RootFs:      "some:rootfs",
-					Routes:      routes,
+					ProcessGuid:        "some-guid",
+					Domain:             "some-domain",
+					RootFs:             "some:rootfs",
+					Routes:             routes,
+					LegacyDownloadUser: "some-user",
 					Action: models.WrapAction(&models.RunAction{
 						User:      "me",
 						Dir:       "/tmp",
@@ -139,10 +140,11 @@ var _ = Describe("Events API", func() {
 				netInfo = models.NewActualLRPNetInfo("1.1.1.1", "3.3.3.3")
 
 				desiredLRP = &models.DesiredLRP{
-					ProcessGuid: processGuid,
-					Domain:      domain,
-					RootFs:      "some:rootfs",
-					Instances:   1,
+					ProcessGuid:        processGuid,
+					Domain:             domain,
+					RootFs:             "some:rootfs",
+					Instances:          1,
+					LegacyDownloadUser: "some-user",
 					Action: models.WrapAction(&models.RunAction{
 						Path: "true",
 						User: "me",
