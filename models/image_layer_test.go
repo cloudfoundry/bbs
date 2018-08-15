@@ -71,6 +71,24 @@ var _ = Describe("ImageLayer", func() {
 				},
 			},
 			{
+				"checksum value",
+				&models.ImageLayer{
+					Url:             "web_location",
+					DestinationPath: "local_location",
+					ContentType:     "some-type",
+					LayerType:       models.ImageLayer_Exclusive,
+				},
+			},
+			{
+				"checksum algorithm",
+				&models.ImageLayer{
+					Url:             "web_location",
+					DestinationPath: "local_location",
+					ContentType:     "some-type",
+					LayerType:       models.ImageLayer_Exclusive,
+				},
+			},
+			{
 				"invalid algorithm",
 				&models.ImageLayer{
 					Url:               "web_location",

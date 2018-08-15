@@ -21,11 +21,11 @@ func (l *ImageLayer) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"content_type"})
 	}
 
-	if l.GetChecksumValue() != "" && l.GetChecksumAlgorithm() == "" {
+	if (l.GetChecksumValue() != "" || l.GetLayerType() == ImageLayer_Exclusive) && l.GetChecksumAlgorithm() == "" {
 		validationError = validationError.Append(ErrInvalidField{"checksum algorithm"})
 	}
 
-	if l.GetChecksumValue() == "" && l.GetChecksumAlgorithm() != "" {
+	if (l.GetChecksumAlgorithm() != "" || l.GetLayerType() == ImageLayer_Exclusive) && l.GetChecksumValue() == "" {
 		validationError = validationError.Append(ErrInvalidField{"checksum value"})
 	}
 
@@ -42,9 +42,10 @@ func (l *ImageLayer) Validate() error {
 	return nil
 }
 
-func validateImageLayers(layers []*ImageLayer) ValidationError {
+func validateImageLayers(layers []*ImageLayer, legacyDownloadUser string) ValidationError {
 	var validationError ValidationError
 
+	requiresLegacyDownloadUser := false
 	if len(layers) > 0 {
 		for _, layer := range layers {
 			err := layer.Validate()
@@ -52,7 +53,15 @@ func validateImageLayers(layers []*ImageLayer) ValidationError {
 				validationError = validationError.Append(ErrInvalidField{"image_layer"})
 				validationError = validationError.Append(err)
 			}
+
+			if layer.LayerType == ImageLayer_Exclusive {
+				requiresLegacyDownloadUser = true
+			}
 		}
+	}
+
+	if requiresLegacyDownloadUser && legacyDownloadUser == "" {
+		validationError = validationError.Append(ErrInvalidField{"legacy_download_user"})
 	}
 
 	return validationError

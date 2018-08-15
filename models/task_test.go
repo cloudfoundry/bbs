@@ -84,7 +84,16 @@ var _ = Describe("Task", func() {
 		"image_username": "jake",
 		"image_password": "thedog",
 		"rejection_count": 0,
-		"rejection_reason": ""
+		"rejection_reason": "",
+		"image_layers": [
+		  {
+				"url": "some-url",
+				"destination_path": "/tmp",
+				"content_type": "some-content-type",
+				"layer_type": "Shared"
+			}
+		],
+    "legacy_download_user": "some-user"
 	}`
 
 		task = models.Task{
@@ -144,6 +153,10 @@ var _ = Describe("Task", func() {
 				},
 				ImageUsername: "jake",
 				ImagePassword: "thedog",
+				ImageLayers: []*models.ImageLayer{
+					{Url: "some-url", DestinationPath: "/tmp", ContentType: "some-content-type"},
+				},
+				LegacyDownloadUser: "some-user",
 			},
 			TaskGuid:         "some-guid",
 			Domain:           "some-domain",
@@ -458,6 +471,44 @@ var _ = Describe("Task", func() {
 						}),
 						ImageUsername: "jake",
 						ImagePassword: "",
+					},
+				},
+			},
+			{
+				"image_layer",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						ImageUsername: "jake",
+						ImagePassword: "pass",
+						ImageLayers: []*models.ImageLayer{
+							{Url: "some-url", DestinationPath: "", ContentType: "some-type"},
+						},
+					},
+				},
+			},
+			{
+				"legacy_download_user",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						ImageUsername: "jake",
+						ImagePassword: "pass",
+						ImageLayers: []*models.ImageLayer{
+							{Url: "some-url", DestinationPath: "/tmp", ContentType: "some-type", LayerType: models.ImageLayer_Exclusive},
+						},
 					},
 				},
 			},

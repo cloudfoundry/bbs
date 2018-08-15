@@ -179,6 +179,11 @@ func (def *TaskDefinition) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
+	err = validateImageLayers(def.ImageLayers, def.LegacyDownloadUser)
+	if err != nil {
+		validationError = validationError.Append(err)
+	}
+
 	if !validationError.Empty() {
 		return validationError
 	}
