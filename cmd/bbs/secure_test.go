@@ -26,7 +26,7 @@ var _ = Describe("Secure", func() {
 	)
 
 	BeforeEach(func() {
-		basePath = path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+		basePath = path.Join(os.Getenv("TOPDIR"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
 		bbsURL.Scheme = "https"
 	})
 

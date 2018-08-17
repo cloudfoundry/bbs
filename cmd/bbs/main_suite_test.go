@@ -128,7 +128,7 @@ var _ = SynchronizedAfterSuite(func() {
 var _ = BeforeEach(func() {
 	var err error
 	logger = lagertest.NewTestLogger("test")
-	fixturesPath := path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+	fixturesPath := path.Join(os.Getenv("TOPDIR"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
 
 	consulRunner.Reset()
 	consulClient = consulRunner.NewClient()
