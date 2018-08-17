@@ -443,7 +443,7 @@ var _ = Describe("ActualLRPDB", func() {
 					filter.Index = &index
 				})
 
-				It("returns a resource not found error", func() {
+				It("returns an empty array", func() {
 					actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(actualLRPs).To(BeEmpty())
