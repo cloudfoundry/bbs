@@ -91,7 +91,16 @@ func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWrit
 	closeChan := make(chan struct{})
 	defer close(closeChan)
 
-	go streamSource(eventChan, errorChan, closeChan, taskSource.Next)
+	taskEventsFetcher := func() (models.Event, error) {
+		event, err := taskSource.Next()
+		if err != nil {
+			return event, err
+		}
+		event = models.VersionTaskDefinitionsToV2(event)
+		return event, err
+	}
+
+	go streamSource(eventChan, errorChan, closeChan, taskEventsFetcher)
 
 	streamEventsToResponse(logger, w, eventChan, errorChan)
 }

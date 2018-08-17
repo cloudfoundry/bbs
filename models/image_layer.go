@@ -67,6 +67,59 @@ func validateImageLayers(layers []*ImageLayer, legacyDownloadUser string) Valida
 	return validationError
 }
 
+func convertImageLayersToDownloadActionsAndCachedDependencies(layers []*ImageLayer, legacyDownloadUser string, existingCachedDependencies []*CachedDependency, existingAction *Action) ([]*CachedDependency, *Action) {
+	cachedDependencies := []*CachedDependency{}
+	downloadActions := []ActionInterface{}
+
+	for _, layer := range layers {
+		if layer.LayerType == ImageLayer_Shared {
+			c := &CachedDependency{
+				Name:              layer.Name,
+				From:              layer.Url,
+				To:                layer.DestinationPath,
+				ChecksumAlgorithm: layer.ChecksumAlgorithm,
+				ChecksumValue:     layer.ChecksumValue,
+			}
+
+			if layer.ChecksumValue == "" {
+				c.CacheKey = layer.Url
+			} else {
+				c.CacheKey = layer.ChecksumAlgorithm + ":" + layer.ChecksumValue
+			}
+
+			cachedDependencies = append(cachedDependencies, c)
+		}
+
+		if layer.LayerType == ImageLayer_Exclusive {
+			downloadActions = append(downloadActions, &DownloadAction{
+				Artifact:          layer.Name,
+				From:              layer.Url,
+				To:                layer.DestinationPath,
+				CacheKey:          layer.ChecksumAlgorithm + ":" + layer.ChecksumValue, // checksum required for exclusive layers
+				User:              legacyDownloadUser,
+				ChecksumAlgorithm: layer.ChecksumAlgorithm,
+				ChecksumValue:     layer.ChecksumValue,
+			})
+		}
+	}
+
+	cachedDependencies = append(cachedDependencies, existingCachedDependencies...)
+
+	var action *Action
+	if len(downloadActions) > 0 {
+		parallelDownloadActions := Parallel(downloadActions...)
+		if existingAction != nil {
+			action = WrapAction(Serial(parallelDownloadActions, UnwrapAction(existingAction)))
+		} else {
+			action = WrapAction(Serial(parallelDownloadActions))
+		}
+	} else {
+		action = existingAction
+	}
+
+	return cachedDependencies, action
+}
+
 func (l *ImageLayer) Version() format.Version {
 	return format.V0
 }

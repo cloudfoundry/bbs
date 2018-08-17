@@ -85,36 +85,6 @@ func (t *Task) ValidateTransitionTo(to Task_State) error {
 	return nil
 }
 
-func newTaskDefWithCachedDependenciesAsActions(t *TaskDefinition) *TaskDefinition {
-	t = t.Copy()
-	if len(t.CachedDependencies) > 0 {
-		cachedDownloads := Parallel(t.actionsFromCachedDependencies()...)
-		if t.Action != nil {
-			t.Action = WrapAction(Serial(cachedDownloads, UnwrapAction(t.Action)))
-		} else {
-			t.Action = WrapAction(Serial(cachedDownloads))
-		}
-		t.CachedDependencies = nil
-	}
-	return t
-}
-
-func (t *TaskDefinition) actionsFromCachedDependencies() []ActionInterface {
-	actions := make([]ActionInterface, len(t.CachedDependencies))
-	for i := range t.CachedDependencies {
-		cacheDependency := t.CachedDependencies[i]
-		actions[i] = &DownloadAction{
-			Artifact:  cacheDependency.Name,
-			From:      cacheDependency.From,
-			To:        cacheDependency.To,
-			CacheKey:  cacheDependency.CacheKey,
-			LogSource: cacheDependency.LogSource,
-			User:      t.LegacyDownloadUser,
-		}
-	}
-	return actions
-}
-
 func (t *TaskDefinition) Copy() *TaskDefinition {
 	newTaskDef := *t
 	return &newTaskDef
@@ -191,6 +161,28 @@ func (def *TaskDefinition) Validate() error {
 	return nil
 }
 
+func downgradeTaskDefinitionV3ToV2(t *TaskDefinition) *TaskDefinition {
+	t.CachedDependencies, t.Action = convertImageLayersToDownloadActionsAndCachedDependencies(
+		t.ImageLayers,
+		t.LegacyDownloadUser,
+		t.CachedDependencies,
+		t.Action,
+	)
+	t.ImageLayers = nil
+
+	return t
+}
+
+func (t *TaskDefinition) VersionDownTo(v format.Version) *TaskDefinition {
+	t = t.Copy()
+
+	if v < t.Version() {
+		return downgradeTaskDefinitionV3ToV2(t)
+	}
+
+	return t
+}
+
 func (t *TaskDefinition) Version() format.Version {
-	return format.V2
+	return format.V3
 }

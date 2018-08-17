@@ -44,6 +44,25 @@ func VersionDesiredLRPsToV0(event Event) Event {
 	}
 }
 
+func VersionTaskDefinitionsToV2(event Event) Event {
+	downgradeTask := func(t *Task) *Task {
+		t = t.Copy()
+		t.TaskDefinition = t.TaskDefinition.VersionDownTo(format.V2)
+		return t
+	}
+
+	switch event := event.(type) {
+	case *TaskCreatedEvent:
+		return NewTaskCreatedEvent(downgradeTask(event.Task))
+	case *TaskRemovedEvent:
+		return NewTaskRemovedEvent(downgradeTask(event.Task))
+	case *TaskChangedEvent:
+		return NewTaskChangedEvent(downgradeTask(event.Before), downgradeTask(event.After))
+	default:
+		return event
+	}
+}
+
 func NewDesiredLRPCreatedEvent(desiredLRP *DesiredLRP) *DesiredLRPCreatedEvent {
 	return &DesiredLRPCreatedEvent{
 		DesiredLrp: desiredLRP,

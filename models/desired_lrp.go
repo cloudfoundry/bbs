@@ -108,6 +108,26 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.CheckDefinition = runInfo.CheckDefinition
 }
 
+func (*DesiredLRP) Version() format.Version {
+	return format.V3
+}
+
+func (d *DesiredLRP) actionsFromCachedDependencies() []ActionInterface {
+	actions := make([]ActionInterface, len(d.CachedDependencies))
+	for i := range d.CachedDependencies {
+		cacheDependency := d.CachedDependencies[i]
+		actions[i] = &DownloadAction{
+			Artifact:  cacheDependency.Name,
+			From:      cacheDependency.From,
+			To:        cacheDependency.To,
+			CacheKey:  cacheDependency.CacheKey,
+			LogSource: cacheDependency.LogSource,
+			User:      d.LegacyDownloadUser,
+		}
+	}
+	return actions
+}
+
 func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLRP {
 	d = d.Copy()
 	if len(d.CachedDependencies) > 0 {
@@ -125,79 +145,35 @@ func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLR
 	return d
 }
 
-func downgradeV3ToV2(d *DesiredLRP) *DesiredLRP {
-	d = d.Copy()
+func downgradeDesiredLRPV2ToV1(d *DesiredLRP) *DesiredLRP {
+	return d
+}
 
-	cachedDependencies := []*CachedDependency{}
-	downloadActions := []ActionInterface{}
-	for _, layer := range d.ImageLayers {
-		if layer.LayerType == ImageLayer_Shared {
-			c := &CachedDependency{
-				Name:              layer.Name,
-				From:              layer.Url,
-				To:                layer.DestinationPath,
-				ChecksumAlgorithm: layer.ChecksumAlgorithm,
-				ChecksumValue:     layer.ChecksumValue,
-			}
-			if layer.ChecksumValue == "" {
-				c.CacheKey = layer.Url
-			} else {
-				c.CacheKey = layer.ChecksumAlgorithm + ":" + layer.ChecksumValue
-			}
-			cachedDependencies = append(cachedDependencies, c)
-		}
+func downgradeDesiredLRPV1ToV0(d *DesiredLRP) *DesiredLRP {
+	d.Action.SetDeprecatedTimeoutNs()
+	d.Setup.SetDeprecatedTimeoutNs()
+	d.Monitor.SetDeprecatedTimeoutNs()
+	d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
+	return newDesiredLRPWithCachedDependenciesAsSetupActions(d)
+}
 
-		if layer.LayerType == ImageLayer_Exclusive {
-			downloadActions = append(downloadActions, &DownloadAction{
-				Artifact:          layer.Name,
-				From:              layer.Url,
-				To:                layer.DestinationPath,
-				CacheKey:          layer.ChecksumAlgorithm + ":" + layer.ChecksumValue, // checksum required for exclusive layers
-				User:              d.LegacyDownloadUser,
-				ChecksumAlgorithm: layer.ChecksumAlgorithm,
-				ChecksumValue:     layer.ChecksumValue,
-			})
-		}
-	}
-
-	if len(cachedDependencies) > 0 {
-		d.CachedDependencies = append(cachedDependencies, d.CachedDependencies...)
-	}
-
-	if len(downloadActions) > 0 {
-		parallelDownloadActions := Parallel(downloadActions...)
-		if d.Setup != nil {
-			d.Setup = WrapAction(Serial(parallelDownloadActions, UnwrapAction(d.Setup)))
-		} else {
-			d.Setup = WrapAction(Serial(parallelDownloadActions))
-		}
-	}
+func downgradeDesiredLRPV3ToV2(d *DesiredLRP) *DesiredLRP {
+	d.CachedDependencies, d.Setup = convertImageLayersToDownloadActionsAndCachedDependencies(
+		d.ImageLayers,
+		d.LegacyDownloadUser,
+		d.CachedDependencies,
+		d.Setup,
+	)
 
 	d.ImageLayers = nil
 
 	return d
 }
 
-func (*DesiredLRP) Version() format.Version {
-	return format.V3
-}
-
 var downgrades = []func(*DesiredLRP) *DesiredLRP{
-	downgradeV1ToV0,
-	downgradeV2ToV1,
-	downgradeV3ToV2,
-}
-
-func downgradeV2ToV1(d *DesiredLRP) *DesiredLRP {
-	return d
-}
-
-func downgradeV1ToV0(d *DesiredLRP) *DesiredLRP {
-	d.Action.SetDeprecatedTimeoutNs()
-	d.Setup.SetDeprecatedTimeoutNs()
-	d.Monitor.SetDeprecatedTimeoutNs()
-	d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
-	return newDesiredLRPWithCachedDependenciesAsSetupActions(d)
+	downgradeDesiredLRPV1ToV0,
+	downgradeDesiredLRPV2ToV1,
+	downgradeDesiredLRPV3ToV2,
 }
 
 func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
@@ -208,21 +184,6 @@ func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 	}
 
 	return versionedLRP
-
-	// switch v {
-	// case format.V2:
-	// 	return downgradeV3ToV2(versionedLRP)
-	// case format.V1:
-	// 	panic("unreachable")
-	// case format.V0:
-	// 	versionedLRP.Action.SetDeprecatedTimeoutNs()
-	// 	versionedLRP.Setup.SetDeprecatedTimeoutNs()
-	// 	versionedLRP.Monitor.SetDeprecatedTimeoutNs()
-	// 	versionedLRP.DeprecatedStartTimeoutS = uint32(versionedLRP.StartTimeoutMs) / 1000
-	// 	return newDesiredLRPWithCachedDependenciesAsSetupActions(versionedLRP)
-	// default:
-	// 	return versionedLRP
-	// }
 }
 
 func (d *DesiredLRP) DesiredLRPKey() DesiredLRPKey {
@@ -306,22 +267,6 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 
 func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
 	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
-}
-
-func (d *DesiredLRP) actionsFromCachedDependencies() []ActionInterface {
-	actions := make([]ActionInterface, len(d.CachedDependencies))
-	for i := range d.CachedDependencies {
-		cacheDependency := d.CachedDependencies[i]
-		actions[i] = &DownloadAction{
-			Artifact:  cacheDependency.Name,
-			From:      cacheDependency.From,
-			To:        cacheDependency.To,
-			CacheKey:  cacheDependency.CacheKey,
-			LogSource: cacheDependency.LogSource,
-			User:      d.LegacyDownloadUser,
-		}
-	}
-	return actions
 }
 
 func (desired DesiredLRP) Validate() error {

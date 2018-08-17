@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -56,7 +57,13 @@ func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *htt
 		return
 	}
 
-	response.Tasks, err = h.controller.Tasks(logger, request.Domain, request.CellId)
+	tasks, err := h.controller.Tasks(logger, request.Domain, request.CellId)
+	for i, t := range tasks {
+		if t.TaskDefinition != nil {
+			tasks[i].TaskDefinition = t.TaskDefinition.VersionDownTo(format.V2)
+		}
+	}
+	response.Tasks = tasks
 	response.Error = models.ConvertError(err)
 }
 
@@ -77,7 +84,13 @@ func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req
 		return
 	}
 
-	response.Task, err = h.controller.TaskByGuid(logger, request.TaskGuid)
+	var task *models.Task
+	task, err = h.controller.TaskByGuid(logger, request.TaskGuid)
+	if task != nil && task.TaskDefinition != nil {
+		task.TaskDefinition = task.TaskDefinition.VersionDownTo(format.V2)
+	}
+
+	response.Task = task
 	response.Error = models.ConvertError(err)
 }
 

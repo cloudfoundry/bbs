@@ -408,7 +408,7 @@ var _ = Describe("DesiredLRP", func() {
 		})
 	})
 
-	Describe("Version Down To", func() {
+	Describe("VersionDownTo", func() {
 		Context("V2->V0", func() {
 			var (
 				downloadAction1, downloadAction2 models.DownloadAction
@@ -416,6 +416,7 @@ var _ = Describe("DesiredLRP", func() {
 
 			BeforeEach(func() {
 				desiredLRP.ImageLayers = nil // V2 does not include ImageLayers
+				desiredLRP.LegacyDownloadUser = "the user"
 				desiredLRP.CachedDependencies = []*models.CachedDependency{
 					{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 					{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
@@ -427,6 +428,7 @@ var _ = Describe("DesiredLRP", func() {
 					To:        "to-1",
 					CacheKey:  "cache-key-1",
 					LogSource: "log-source-1",
+					User:      "the user",
 				}
 
 				downloadAction2 = models.DownloadAction{
@@ -435,6 +437,7 @@ var _ = Describe("DesiredLRP", func() {
 					To:        "to-2",
 					CacheKey:  "cache-key-2",
 					LogSource: "log-source-2",
+					User:      "the user",
 				}
 
 				desiredLRP.Action = models.WrapAction(models.Timeout(
@@ -565,12 +568,6 @@ var _ = Describe("DesiredLRP", func() {
 					}
 				})
 
-				// exclusive layer: l1
-				// shared layer: l2
-				// cached dep: d1
-				// v3 -> v2: 2 cached dependencies (l2, d1), setup: serial( parallel( download(l1) ), orig_setup)
-				// v2 -> v0: setup: serial( parallel(l2, d1), serial( parallel( download(l1) ), orig_setup) )
-
 				It("converts image layers and cached dependencies to download actions", func() {
 					desiredLRP.LegacyDownloadUser = "the user"
 					convertedLRP := desiredLRP.VersionDownTo(format.V0)
@@ -591,7 +588,7 @@ var _ = Describe("DesiredLRP", func() {
 												Artifact:  "dep2",
 												From:      "u2",
 												To:        "/tmp/2",
-												CacheKey:  "u2",
+												CacheKey:  "key2",
 												LogSource: "download",
 												User:      "the user",
 											}},
@@ -624,6 +621,11 @@ var _ = Describe("DesiredLRP", func() {
 						},
 					}))
 				})
+
+				It("sets removes the existing image layers", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(convertedLRP.ImageLayers).To(BeNil())
+				})
 			})
 		})
 
@@ -633,9 +635,14 @@ var _ = Describe("DesiredLRP", func() {
 					desiredLRP.ImageLayers = nil
 				})
 
-				It("does nothing", func() {
+				It("does not add any cached dependencies", func() {
 					convertedLRP := desiredLRP.VersionDownTo(format.V2)
-					Expect(*convertedLRP).To(Equal(desiredLRP))
+					Expect(convertedLRP.CachedDependencies).To(BeEmpty())
+				})
+
+				It("does not add any download actions to the Setup", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V2)
+					Expect(convertedLRP.Setup).To(Equal(desiredLRP.Setup))
 				})
 			})
 
@@ -697,6 +704,11 @@ var _ = Describe("DesiredLRP", func() {
 							LogSource: "download",
 						},
 					}))
+				})
+
+				It("sets removes the existing image layers", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(convertedLRP.ImageLayers).To(BeNil())
 				})
 			})
 
@@ -774,6 +786,11 @@ var _ = Describe("DesiredLRP", func() {
 							},
 						},
 					}))
+				})
+
+				It("sets removes the existing image layers", func() {
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(convertedLRP.ImageLayers).To(BeNil())
 				})
 
 				Context("when there is no existing setup action", func() {

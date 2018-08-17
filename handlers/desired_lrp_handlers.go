@@ -6,6 +6,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
@@ -59,7 +60,17 @@ func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWrit
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids}
-		response.DesiredLrps, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
+
+		var desiredLRPs []*models.DesiredLRP
+		desiredLRPs, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
+		for i, d := range desiredLRPs {
+			desiredLRPs[i] = d.VersionDownTo(format.V2)
+			if len(desiredLRPs[i].CachedDependencies) == 0 {
+				desiredLRPs[i].CachedDependencies = nil
+			}
+		}
+
+		response.DesiredLrps = desiredLRPs
 	}
 
 	response.Error = models.ConvertError(err)
@@ -76,7 +87,12 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(logger lager.Logger, w http.
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		response.DesiredLrp, err = h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+		var desiredLRP *models.DesiredLRP
+		desiredLRP, err = h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+		if desiredLRP != nil {
+			desiredLRP = desiredLRP.VersionDownTo(format.V2)
+		}
+		response.DesiredLrp = desiredLRP
 	}
 
 	response.Error = models.ConvertError(err)

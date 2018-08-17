@@ -6,6 +6,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
@@ -71,11 +72,10 @@ var _ = Describe("Events API", func() {
 				routes := &models.Routes{"cf-router": &routeMessage}
 
 				desiredLRP = &models.DesiredLRP{
-					ProcessGuid:        "some-guid",
-					Domain:             "some-domain",
-					RootFs:             "some:rootfs",
-					Routes:             routes,
-					LegacyDownloadUser: "some-user",
+					ProcessGuid: "some-guid",
+					Domain:      "some-domain",
+					RootFs:      "some:rootfs",
+					Routes:      routes,
 					Action: models.WrapAction(&models.RunAction{
 						User:      "me",
 						Dir:       "/tmp",
@@ -140,11 +140,10 @@ var _ = Describe("Events API", func() {
 				netInfo = models.NewActualLRPNetInfo("1.1.1.1", "3.3.3.3")
 
 				desiredLRP = &models.DesiredLRP{
-					ProcessGuid:        processGuid,
-					Domain:             domain,
-					RootFs:             "some:rootfs",
-					Instances:          1,
-					LegacyDownloadUser: "some-user",
+					ProcessGuid: processGuid,
+					Domain:      domain,
+					RootFs:      "some:rootfs",
+					Instances:   1,
 					Action: models.WrapAction(&models.RunAction{
 						Path: "true",
 						User: "me",
@@ -430,7 +429,7 @@ var _ = Describe("Events API", func() {
 			Eventually(eventChannel).Should(Receive(&event))
 			taskCreatedEvent, ok := event.(*models.TaskCreatedEvent)
 			Expect(ok).To(BeTrue())
-			Expect(taskCreatedEvent.Task.TaskDefinition).To(Equal(taskDef))
+			Expect(taskCreatedEvent.Task.TaskDefinition).To(Equal(taskDef.VersionDownTo(format.V2)))
 
 			err = client.CancelTask(logger, "completed-task")
 			Expect(err).NotTo(HaveOccurred())
@@ -456,7 +455,7 @@ var _ = Describe("Events API", func() {
 			Eventually(eventChannel).Should(Receive(&event))
 			taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
 			Expect(ok).To(BeTrue())
-			Expect(taskRemovedEvent.Task.TaskDefinition).To(Equal(taskDef))
+			Expect(taskRemovedEvent.Task.TaskDefinition).To(Equal(taskDef.VersionDownTo(format.V2)))
 		})
 	})
 

@@ -536,10 +536,82 @@ var _ = Describe("Event Handlers", func() {
 
 			ItStreamsEventsFromHub(&taskHub)
 			ItRecoversFromLostConnections(&taskHub)
+
+			Context("downgrading task definitions down to v2", func() {
+				var (
+					server          *httptest.Server
+					task            *models.Task
+					downgradedTask  *models.Task
+					event           models.Event
+					downgradedEvent models.Event
+					eventSource     events.EventSource
+				)
+
+				BeforeEach(func() {
+					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						handler.Subscribe_r0(logger, w, r)
+					}))
+
+					response, err := http.Get(server.URL)
+					Expect(err).NotTo(HaveOccurred())
+					reader := sse.NewReadCloser(response.Body)
+					eventSource = events.NewEventSource(reader)
+
+					task = model_helpers.NewValidTask("guid")
+
+					downgradedTask = task.Copy()
+					downgradedTask.TaskDefinition = task.TaskDefinition.VersionDownTo(format.V2)
+				})
+
+				JustBeforeEach(func() {
+					taskHub.Emit(event)
+				})
+
+				AfterEach(func() {
+					server.Close()
+				})
+
+				Context("TaskCreatedEvent", func() {
+					BeforeEach(func() {
+						event = models.NewTaskCreatedEvent(task)
+						downgradedEvent = models.NewTaskCreatedEvent(downgradedTask)
+					})
+
+					It("downgrades correctly", func() {
+						actualEvent, err := eventSource.Next()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(actualEvent).To(Equal(downgradedEvent))
+					})
+				})
+
+				Context("TaskRemovedEvent", func() {
+					BeforeEach(func() {
+						event = models.NewTaskRemovedEvent(task)
+						downgradedEvent = models.NewTaskRemovedEvent(downgradedTask)
+					})
+
+					It("downgrades correctly", func() {
+						actualEvent, err := eventSource.Next()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(actualEvent).To(Equal(downgradedEvent))
+					})
+				})
+
+				Context("TaskChangedEvent", func() {
+					BeforeEach(func() {
+						event = models.NewTaskChangedEvent(task, task)
+						downgradedEvent = models.NewTaskChangedEvent(downgradedTask, downgradedTask)
+					})
+
+					It("downgrades correctly", func() {
+						actualEvent, err := eventSource.Next()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(actualEvent).To(Equal(downgradedEvent))
+					})
+				})
+			})
 		})
-
 	})
-
 })
 
 func streamEvents(eventSource events.EventSource) chan models.Event {

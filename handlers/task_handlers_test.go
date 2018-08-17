@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
 	"code.cloudfoundry.org/bbs/models"
@@ -67,7 +68,7 @@ var _ = Describe("Task Handlers", func() {
 				controller.TasksReturns(tasks, nil)
 			})
 
-			It("returns a list of task", func() {
+			It("returns a list of tasks", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := models.TasksResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
@@ -82,6 +83,34 @@ var _ = Describe("Task Handlers", func() {
 				_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
 				Expect(actualDomain).To(Equal(domain))
 				Expect(actualCellId).To(Equal(cellId))
+			})
+
+			Context("when the tasks include image layers", func() {
+				var downgradedTasks []*models.Task
+
+				BeforeEach(func() {
+					tasksWithImageLayers := []*models.Task{
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_Exclusive}, {LayerType: models.ImageLayer_Shared}}}},
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_Exclusive}, {LayerType: models.ImageLayer_Shared}}}},
+					}
+					controller.TasksReturns(tasksWithImageLayers, nil)
+
+					for _, t := range tasksWithImageLayers {
+						task := t.Copy()
+						task.TaskDefinition = t.TaskDefinition.VersionDownTo(format.V2)
+						downgradedTasks = append(downgradedTasks, task)
+					}
+				})
+
+				It("returns a list of tasks downgraded to convert image layers to cached dependencies and download actions", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.TasksResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+					Expect(response.Tasks).To(Equal(downgradedTasks))
+				})
 			})
 
 			Context("and filtering by domain", func() {
@@ -174,6 +203,37 @@ var _ = Describe("Task Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.Task).To(Equal(task))
+			})
+		})
+
+		Context("when the task includes image layers", func() {
+			var downgradedTask *models.Task
+
+			BeforeEach(func() {
+				taskWithImageLayers := &models.Task{
+					TaskGuid: taskGuid,
+					TaskDefinition: &models.TaskDefinition{
+						ImageLayers: []*models.ImageLayer{
+							{LayerType: models.ImageLayer_Exclusive},
+							{LayerType: models.ImageLayer_Shared},
+						},
+					},
+				}
+				controller.TaskByGuidReturns(taskWithImageLayers, nil)
+
+				downgradedTask = taskWithImageLayers.Copy()
+				downgradedTask.TaskDefinition = taskWithImageLayers.VersionDownTo(format.V2)
+			})
+
+			It("returns a list of tasks downgraded to convert image layers to cached dependencies and download actions", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.TaskResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.Task.ImageLayers).To(BeNil())
+				Expect(response.Task).To(Equal(downgradedTask))
 			})
 		})
 

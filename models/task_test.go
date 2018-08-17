@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
@@ -515,5 +516,207 @@ var _ = Describe("Task", func() {
 		} {
 			testValidatorErrorCase(testCase)
 		}
+	})
+})
+
+var _ = Describe("TaskDefinition", func() {
+	Describe("VersionDownTo", func() {
+		var taskDefinition *models.TaskDefinition
+
+		BeforeEach(func() {
+			taskDefinition = &models.TaskDefinition{}
+		})
+
+		Context("V3->V2", func() {
+			Context("when there are no image layers", func() {
+				BeforeEach(func() {
+					taskDefinition.ImageLayers = nil
+				})
+
+				It("does not add any cached dependencies to the TaskDefinition", func() {
+					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
+					Expect(convertedTaskDefinition.CachedDependencies).To(BeEmpty())
+				})
+
+				It("does not add any Download Actions", func() {
+					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
+					Expect(convertedTaskDefinition.Action).To(Equal(taskDefinition.Action))
+				})
+			})
+
+			Context("when there are shared image layers", func() {
+				BeforeEach(func() {
+					taskDefinition.ImageLayers = []*models.ImageLayer{
+						{
+							Name:              "dep0",
+							Url:               "u0",
+							DestinationPath:   "/tmp/0",
+							LayerType:         models.ImageLayer_Shared,
+							ContentType:       "",
+							ChecksumAlgorithm: "sha256",
+							ChecksumValue:     "some-sha",
+						},
+						{
+							Name:            "dep1",
+							Url:             "u1",
+							DestinationPath: "/tmp/1",
+							LayerType:       models.ImageLayer_Shared,
+							ContentType:     "",
+						},
+					}
+
+					taskDefinition.CachedDependencies = []*models.CachedDependency{
+						{
+							Name:      "dep2",
+							From:      "u2",
+							To:        "/tmp/2",
+							CacheKey:  "key2",
+							LogSource: "download",
+						},
+					}
+				})
+
+				It("converts them to cached dependencies and prepends them to the list", func() {
+					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
+					Expect(convertedTaskDefinition.CachedDependencies).To(Equal([]*models.CachedDependency{
+						{
+							Name:              "dep0",
+							From:              "u0",
+							To:                "/tmp/0",
+							CacheKey:          "sha256:some-sha",
+							LogSource:         "",
+							ChecksumAlgorithm: "sha256",
+							ChecksumValue:     "some-sha",
+						},
+						{
+							Name:      "dep1",
+							From:      "u1",
+							To:        "/tmp/1",
+							CacheKey:  "u1",
+							LogSource: "",
+						},
+						{
+							Name:      "dep2",
+							From:      "u2",
+							To:        "/tmp/2",
+							CacheKey:  "key2",
+							LogSource: "download",
+						},
+					}))
+				})
+
+				It("sets removes the existing image layers", func() {
+					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
+					Expect(convertedTaskDefinition.ImageLayers).To(BeNil())
+				})
+			})
+
+			Context("when there are exclusive image layers", func() {
+				var (
+					downloadAction1, downloadAction2 models.DownloadAction
+				)
+
+				BeforeEach(func() {
+					taskDefinition.ImageLayers = []*models.ImageLayer{
+						{
+							Name:              "dep0",
+							Url:               "u0",
+							DestinationPath:   "/tmp/0",
+							LayerType:         models.ImageLayer_Exclusive,
+							ContentType:       "",
+							ChecksumAlgorithm: "sha256",
+							ChecksumValue:     "some-sha",
+						},
+						{
+							Name:              "dep1",
+							Url:               "u1",
+							DestinationPath:   "/tmp/1",
+							LayerType:         models.ImageLayer_Exclusive,
+							ContentType:       "",
+							ChecksumAlgorithm: "sha256",
+							ChecksumValue:     "some-other-sha",
+						},
+					}
+					taskDefinition.LegacyDownloadUser = "the user"
+					taskDefinition.Action = models.WrapAction(models.Timeout(
+						&models.RunAction{
+							Path: "/the/path",
+							User: "the user",
+						},
+						20*time.Millisecond,
+					))
+
+					downloadAction1 = models.DownloadAction{
+						Artifact:          "dep0",
+						From:              "u0",
+						To:                "/tmp/0",
+						CacheKey:          "sha256:some-sha",
+						LogSource:         "",
+						User:              "the user",
+						ChecksumAlgorithm: "sha256",
+						ChecksumValue:     "some-sha",
+					}
+					downloadAction2 = models.DownloadAction{
+						Artifact:          "dep1",
+						From:              "u1",
+						To:                "/tmp/1",
+						CacheKey:          "sha256:some-other-sha",
+						LogSource:         "",
+						User:              "the user",
+						ChecksumAlgorithm: "sha256",
+						ChecksumValue:     "some-other-sha",
+					}
+				})
+
+				It("converts them to download actions with the correct user and prepends them to the action", func() {
+					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
+
+					Expect(*convertedTaskDefinition.Action).To(Equal(models.Action{
+						SerialAction: &models.SerialAction{
+							Actions: []*models.Action{
+								{
+									ParallelAction: &models.ParallelAction{
+										Actions: []*models.Action{
+											&models.Action{DownloadAction: &downloadAction1},
+											&models.Action{DownloadAction: &downloadAction2},
+										},
+									},
+								},
+								taskDefinition.Action,
+							},
+						},
+					}))
+				})
+
+				It("sets removes the existing image layers", func() {
+					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
+					Expect(convertedTaskDefinition.ImageLayers).To(BeNil())
+				})
+
+				Context("when there is no existing action", func() {
+					BeforeEach(func() {
+						taskDefinition.Action = nil
+					})
+
+					It("creates an action with exclusive layers converted to download actions", func() {
+						convertedLRP := taskDefinition.VersionDownTo(format.V2)
+						Expect(*convertedLRP.Action).To(Equal(models.Action{
+							SerialAction: &models.SerialAction{
+								Actions: []*models.Action{
+									{
+										ParallelAction: &models.ParallelAction{
+											Actions: []*models.Action{
+												&models.Action{DownloadAction: &downloadAction1},
+												&models.Action{DownloadAction: &downloadAction2},
+											},
+										},
+									},
+								},
+							},
+						}))
+					})
+				})
+			})
+		})
 	})
 })
