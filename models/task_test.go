@@ -489,7 +489,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "", ContentType: "some-type"},
+							{Url: "some-url", DestinationPath: "", ContentType: "some-type"}, // invalid destination path
 						},
 					},
 				},
@@ -508,7 +508,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "/tmp", ContentType: "some-type", LayerType: models.ImageLayer_Exclusive},
+							{Url: "some-url", DestinationPath: "/tmp", ContentType: "some-type", LayerType: models.ImageLayer_Exclusive}, // exclusive layers require legacy_download_user to be set
 						},
 					},
 				},

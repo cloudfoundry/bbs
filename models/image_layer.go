@@ -2,8 +2,6 @@ package models
 
 import (
 	"strings"
-
-	"code.cloudfoundry.org/bbs/format"
 )
 
 func (l *ImageLayer) Validate() error {
@@ -118,8 +116,4 @@ func convertImageLayersToDownloadActionsAndCachedDependencies(layers []*ImageLay
 	}
 
 	return cachedDependencies, action
-}
-
-func (l *ImageLayer) Version() format.Version {
-	return format.V0
 }
