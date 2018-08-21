@@ -11,12 +11,12 @@ var _ = Describe("ImageLayer", func() {
 	Describe("Validate", func() {
 		var layer *models.ImageLayer
 
-		Context("when 'url', 'destination_path', 'content_type' are specified", func() {
+		Context("when 'url', 'destination_path', 'media_type' are specified", func() {
 			It("is valid", func() {
 				layer = &models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					ContentType:     "content_type",
+					MediaType:       "media_type",
 				}
 
 				err := layer.Validate()
@@ -30,7 +30,7 @@ var _ = Describe("ImageLayer", func() {
 						DestinationPath:   "local_location",
 						ChecksumValue:     "some checksum",
 						ChecksumAlgorithm: "md5",
-						ContentType:       "content_type",
+						MediaType:         "media_type",
 					}
 
 					err := layer.Validate()
@@ -58,7 +58,7 @@ var _ = Describe("ImageLayer", func() {
 					Url:               "web_location",
 					DestinationPath:   "local_location",
 					ChecksumAlgorithm: "md5",
-					ContentType:       "some-type",
+					MediaType:         "some-type",
 				},
 			},
 			{
@@ -67,7 +67,7 @@ var _ = Describe("ImageLayer", func() {
 					Url:             "web_location",
 					DestinationPath: "local_location",
 					ChecksumValue:   "some checksum",
-					ContentType:     "some-type",
+					MediaType:       "some-type",
 				},
 			},
 			{
@@ -75,7 +75,7 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					ContentType:     "some-type",
+					MediaType:       "some-type",
 					LayerType:       models.ImageLayer_Exclusive,
 				},
 			},
@@ -84,7 +84,7 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					ContentType:     "some-type",
+					MediaType:       "some-type",
 					LayerType:       models.ImageLayer_Exclusive,
 				},
 			},
@@ -95,11 +95,11 @@ var _ = Describe("ImageLayer", func() {
 					DestinationPath:   "local_location",
 					ChecksumAlgorithm: "invalid",
 					ChecksumValue:     "some checksum",
-					ContentType:       "some-type",
+					MediaType:         "some-type",
 				},
 			},
 			{
-				"content_type",
+				"media_type",
 				&models.ImageLayer{
 					Url:               "web_location",
 					DestinationPath:   "local_location",

@@ -90,7 +90,7 @@ var _ = Describe("Task", func() {
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
-				"content_type": "some-content-type",
+				"media_type": "some-content-type",
 				"layer_type": "Shared"
 			}
 		],
@@ -155,7 +155,7 @@ var _ = Describe("Task", func() {
 				ImageUsername: "jake",
 				ImagePassword: "thedog",
 				ImageLayers: []*models.ImageLayer{
-					{Url: "some-url", DestinationPath: "/tmp", ContentType: "some-content-type"},
+					{Url: "some-url", DestinationPath: "/tmp", MediaType: "some-content-type"},
 				},
 				LegacyDownloadUser: "some-user",
 			},
@@ -489,7 +489,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "", ContentType: "some-type"}, // invalid destination path
+							{Url: "some-url", DestinationPath: "", MediaType: "some-type"}, // invalid destination path
 						},
 					},
 				},
@@ -508,7 +508,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "/tmp", ContentType: "some-type", LayerType: models.ImageLayer_Exclusive}, // exclusive layers require legacy_download_user to be set
+							{Url: "some-url", DestinationPath: "/tmp", MediaType: "some-type", LayerType: models.ImageLayer_Exclusive}, // exclusive layers require legacy_download_user to be set
 						},
 					},
 				},
@@ -552,7 +552,7 @@ var _ = Describe("TaskDefinition", func() {
 							Url:               "u0",
 							DestinationPath:   "/tmp/0",
 							LayerType:         models.ImageLayer_Shared,
-							ContentType:       "",
+							MediaType:         "",
 							ChecksumAlgorithm: "sha256",
 							ChecksumValue:     "some-sha",
 						},
@@ -561,7 +561,7 @@ var _ = Describe("TaskDefinition", func() {
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
 							LayerType:       models.ImageLayer_Shared,
-							ContentType:     "",
+							MediaType:       "",
 						},
 					}
 
@@ -623,7 +623,7 @@ var _ = Describe("TaskDefinition", func() {
 							Url:               "u0",
 							DestinationPath:   "/tmp/0",
 							LayerType:         models.ImageLayer_Exclusive,
-							ContentType:       "",
+							MediaType:         "",
 							ChecksumAlgorithm: "sha256",
 							ChecksumValue:     "some-sha",
 						},
@@ -632,7 +632,7 @@ var _ = Describe("TaskDefinition", func() {
 							Url:               "u1",
 							DestinationPath:   "/tmp/1",
 							LayerType:         models.ImageLayer_Exclusive,
-							ContentType:       "",
+							MediaType:         "",
 							ChecksumAlgorithm: "sha256",
 							ChecksumValue:     "some-other-sha",
 						},

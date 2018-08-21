@@ -15,8 +15,8 @@ func (l *ImageLayer) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"destination_path"})
 	}
 
-	if l.GetContentType() == "" {
-		validationError = validationError.Append(ErrInvalidField{"content_type"})
+	if l.GetMediaType() == "" {
+		validationError = validationError.Append(ErrInvalidField{"media_type"})
 	}
 
 	if (l.GetChecksumValue() != "" || l.GetLayerType() == ImageLayer_Exclusive) && l.GetChecksumAlgorithm() == "" {

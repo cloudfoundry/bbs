@@ -273,7 +273,7 @@ var _ = Describe("DesiredLRP", func() {
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
-				"content_type": "some-content-type",
+				"media_type": "some-content-type",
 				"layer_type": "Shared"
 			}
 		],
@@ -545,7 +545,7 @@ var _ = Describe("DesiredLRP", func() {
 							Url:               "u0",
 							DestinationPath:   "/tmp/0",
 							LayerType:         models.ImageLayer_Exclusive,
-							ContentType:       "",
+							MediaType:         "",
 							ChecksumAlgorithm: "sha256",
 							ChecksumValue:     "some-sha",
 						},
@@ -554,7 +554,7 @@ var _ = Describe("DesiredLRP", func() {
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
 							LayerType:       models.ImageLayer_Shared,
-							ContentType:     "",
+							MediaType:       "",
 						},
 					}
 					desiredLRP.CachedDependencies = []*models.CachedDependency{
@@ -654,7 +654,7 @@ var _ = Describe("DesiredLRP", func() {
 							Url:               "u0",
 							DestinationPath:   "/tmp/0",
 							LayerType:         models.ImageLayer_Shared,
-							ContentType:       "",
+							MediaType:         "",
 							ChecksumAlgorithm: "sha256",
 							ChecksumValue:     "some-sha",
 						},
@@ -663,7 +663,7 @@ var _ = Describe("DesiredLRP", func() {
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
 							LayerType:       models.ImageLayer_Shared,
-							ContentType:     "",
+							MediaType:       "",
 						},
 					}
 					desiredLRP.CachedDependencies = []*models.CachedDependency{
@@ -724,7 +724,7 @@ var _ = Describe("DesiredLRP", func() {
 							Url:               "u0",
 							DestinationPath:   "/tmp/0",
 							LayerType:         models.ImageLayer_Exclusive,
-							ContentType:       "",
+							MediaType:         "",
 							ChecksumAlgorithm: "sha256",
 							ChecksumValue:     "some-sha",
 						},
@@ -733,7 +733,7 @@ var _ = Describe("DesiredLRP", func() {
 							Url:               "u1",
 							DestinationPath:   "/tmp/1",
 							LayerType:         models.ImageLayer_Exclusive,
-							ContentType:       "",
+							MediaType:         "",
 							ChecksumAlgorithm: "sha256",
 							ChecksumValue:     "some-other-sha",
 						},
@@ -1275,7 +1275,7 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil), "port"),
 		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil), "check"),
 		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "cpu_weight"),
-		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", ContentType: "type", LayerType: models.ImageLayer_Exclusive}}), "legacy_download_user"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: "type", LayerType: models.ImageLayer_Exclusive}}), "legacy_download_user"),
 		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil), "cached_dependency"),
 		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef, nil), "volume_mount"),
 		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef, nil), "image_username"),
