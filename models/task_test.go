@@ -548,13 +548,13 @@ var _ = Describe("TaskDefinition", func() {
 				BeforeEach(func() {
 					taskDefinition.ImageLayers = []*models.ImageLayer{
 						{
-							Name:              "dep0",
-							Url:               "u0",
-							DestinationPath:   "/tmp/0",
-							LayerType:         models.ImageLayer_Shared,
-							MediaType:         "",
-							ChecksumAlgorithm: "sha256",
-							ChecksumValue:     "some-sha",
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.ImageLayer_Shared,
+							MediaType:       "",
+							DigestAlgorithm: "sha256",
+							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
@@ -619,22 +619,22 @@ var _ = Describe("TaskDefinition", func() {
 				BeforeEach(func() {
 					taskDefinition.ImageLayers = []*models.ImageLayer{
 						{
-							Name:              "dep0",
-							Url:               "u0",
-							DestinationPath:   "/tmp/0",
-							LayerType:         models.ImageLayer_Exclusive,
-							MediaType:         "",
-							ChecksumAlgorithm: "sha256",
-							ChecksumValue:     "some-sha",
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.ImageLayer_Exclusive,
+							MediaType:       "",
+							DigestAlgorithm: "sha256",
+							DigestValue:     "some-sha",
 						},
 						{
-							Name:              "dep1",
-							Url:               "u1",
-							DestinationPath:   "/tmp/1",
-							LayerType:         models.ImageLayer_Exclusive,
-							MediaType:         "",
-							ChecksumAlgorithm: "sha256",
-							ChecksumValue:     "some-other-sha",
+							Name:            "dep1",
+							Url:             "u1",
+							DestinationPath: "/tmp/1",
+							LayerType:       models.ImageLayer_Exclusive,
+							MediaType:       "",
+							DigestAlgorithm: "sha256",
+							DigestValue:     "some-other-sha",
 						},
 					}
 					taskDefinition.LegacyDownloadUser = "the user"

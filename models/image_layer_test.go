@@ -23,14 +23,14 @@ var _ = Describe("ImageLayer", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			Context("when the action also has valid 'checksum_value' and 'checksum_algorithm'", func() {
+			Context("when the action also has valid 'digest_value' and 'digest_algorithm'", func() {
 				It("is valid", func() {
 					layer = &models.ImageLayer{
-						Url:               "web_location",
-						DestinationPath:   "local_location",
-						ChecksumValue:     "some checksum",
-						ChecksumAlgorithm: "md5",
-						MediaType:         "media_type",
+						Url:             "web_location",
+						DestinationPath: "local_location",
+						DigestValue:     "some digest",
+						DigestAlgorithm: "md5",
+						MediaType:       "media_type",
 					}
 
 					err := layer.Validate()
@@ -55,10 +55,10 @@ var _ = Describe("ImageLayer", func() {
 			{
 				"checksum value",
 				&models.ImageLayer{
-					Url:               "web_location",
-					DestinationPath:   "local_location",
-					ChecksumAlgorithm: "md5",
-					MediaType:         "some-type",
+					Url:             "web_location",
+					DestinationPath: "local_location",
+					DigestAlgorithm: "md5",
+					MediaType:       "some-type",
 				},
 			},
 			{
@@ -66,7 +66,7 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					ChecksumValue:   "some checksum",
+					DigestValue:     "some digest",
 					MediaType:       "some-type",
 				},
 			},
@@ -91,20 +91,20 @@ var _ = Describe("ImageLayer", func() {
 			{
 				"invalid algorithm",
 				&models.ImageLayer{
-					Url:               "web_location",
-					DestinationPath:   "local_location",
-					ChecksumAlgorithm: "invalid",
-					ChecksumValue:     "some checksum",
-					MediaType:         "some-type",
+					Url:             "web_location",
+					DestinationPath: "local_location",
+					DigestAlgorithm: "invalid",
+					DigestValue:     "some digest",
+					MediaType:       "some-type",
 				},
 			},
 			{
 				"media_type",
 				&models.ImageLayer{
-					Url:               "web_location",
-					DestinationPath:   "local_location",
-					ChecksumAlgorithm: "md5",
-					ChecksumValue:     "some checksum",
+					Url:             "web_location",
+					DestinationPath: "local_location",
+					DigestAlgorithm: "md5",
+					DigestValue:     "some digest",
 				},
 			},
 		} {

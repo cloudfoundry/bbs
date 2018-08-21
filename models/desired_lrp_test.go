@@ -541,13 +541,13 @@ var _ = Describe("DesiredLRP", func() {
 				BeforeEach(func() {
 					desiredLRP.ImageLayers = []*models.ImageLayer{
 						{
-							Name:              "dep0",
-							Url:               "u0",
-							DestinationPath:   "/tmp/0",
-							LayerType:         models.ImageLayer_Exclusive,
-							MediaType:         "",
-							ChecksumAlgorithm: "sha256",
-							ChecksumValue:     "some-sha",
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.ImageLayer_Exclusive,
+							MediaType:       "",
+							DigestAlgorithm: "sha256",
+							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
@@ -650,13 +650,13 @@ var _ = Describe("DesiredLRP", func() {
 				BeforeEach(func() {
 					desiredLRP.ImageLayers = []*models.ImageLayer{
 						{
-							Name:              "dep0",
-							Url:               "u0",
-							DestinationPath:   "/tmp/0",
-							LayerType:         models.ImageLayer_Shared,
-							MediaType:         "",
-							ChecksumAlgorithm: "sha256",
-							ChecksumValue:     "some-sha",
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.ImageLayer_Shared,
+							MediaType:       "",
+							DigestAlgorithm: "sha256",
+							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
@@ -720,22 +720,22 @@ var _ = Describe("DesiredLRP", func() {
 				BeforeEach(func() {
 					desiredLRP.ImageLayers = []*models.ImageLayer{
 						{
-							Name:              "dep0",
-							Url:               "u0",
-							DestinationPath:   "/tmp/0",
-							LayerType:         models.ImageLayer_Exclusive,
-							MediaType:         "",
-							ChecksumAlgorithm: "sha256",
-							ChecksumValue:     "some-sha",
+							Name:            "dep0",
+							Url:             "u0",
+							DestinationPath: "/tmp/0",
+							LayerType:       models.ImageLayer_Exclusive,
+							MediaType:       "",
+							DigestAlgorithm: "sha256",
+							DigestValue:     "some-sha",
 						},
 						{
-							Name:              "dep1",
-							Url:               "u1",
-							DestinationPath:   "/tmp/1",
-							LayerType:         models.ImageLayer_Exclusive,
-							MediaType:         "",
-							ChecksumAlgorithm: "sha256",
-							ChecksumValue:     "some-other-sha",
+							Name:            "dep1",
+							Url:             "u1",
+							DestinationPath: "/tmp/1",
+							LayerType:       models.ImageLayer_Exclusive,
+							MediaType:       "",
+							DigestAlgorithm: "sha256",
+							DigestValue:     "some-other-sha",
 						},
 					}
 					desiredLRP.LegacyDownloadUser = "the user"
@@ -1019,24 +1019,24 @@ var _ = Describe("DesiredLRP", func() {
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "image_layer")
 			})
 
-			It("requires a valid checksum algorithm", func() {
+			It("requires a valid digest algorithm", func() {
 				desiredLRP.ImageLayers = []*models.ImageLayer{
 					{
-						Url:               "here",
-						DestinationPath:   "there",
-						ChecksumAlgorithm: "wrong algorithm",
-						ChecksumValue:     "sum value",
+						Url:             "here",
+						DestinationPath: "there",
+						DigestAlgorithm: "wrong algorithm",
+						DigestValue:     "sum value",
 					},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "invalid algorithm")
 			})
 
-			It("requires a valid checksum value", func() {
+			It("requires a valid digest value", func() {
 				desiredLRP.ImageLayers = []*models.ImageLayer{
 					{
-						Url:               "here",
-						DestinationPath:   "there",
-						ChecksumAlgorithm: "md5",
+						Url:             "here",
+						DestinationPath: "there",
+						DigestAlgorithm: "md5",
 					},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "value")
@@ -1047,11 +1047,11 @@ var _ = Describe("DesiredLRP", func() {
 					desiredLRP.LegacyDownloadUser = ""
 					desiredLRP.ImageLayers = []*models.ImageLayer{
 						{
-							Url:               "here",
-							DestinationPath:   "there",
-							ChecksumAlgorithm: "md5",
-							ChecksumValue:     "sum value",
-							LayerType:         models.ImageLayer_Exclusive,
+							Url:             "here",
+							DestinationPath: "there",
+							DigestAlgorithm: "md5",
+							DigestValue:     "sum value",
+							LayerType:       models.ImageLayer_Exclusive,
 						},
 					}
 					assertDesiredLRPValidationFailsWithMessage(desiredLRP, "legacy_download_user")

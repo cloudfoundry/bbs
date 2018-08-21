@@ -17,6 +17,6 @@ message ImageLayer {
   optional string destination_path = 3;
   optional Type layer_type = 4;
   optional string media_type = 5;
-  optional string checksum_algorithm = 6 [(gogoproto.jsontag) = "checksum_algorithm,omitempty"];
-  optional string checksum_value = 7[(gogoproto.jsontag) = "checksum_value,omitempty"];
+  optional string digest_algorithm = 6 [(gogoproto.jsontag) = "digest_algorithm,omitempty"];
+  optional string digest_value = 7[(gogoproto.jsontag) = "digest_value,omitempty"];
 }

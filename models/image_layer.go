@@ -19,16 +19,16 @@ func (l *ImageLayer) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"media_type"})
 	}
 
-	if (l.GetChecksumValue() != "" || l.GetLayerType() == ImageLayer_Exclusive) && l.GetChecksumAlgorithm() == "" {
+	if (l.GetDigestValue() != "" || l.GetLayerType() == ImageLayer_Exclusive) && l.GetDigestAlgorithm() == "" {
 		validationError = validationError.Append(ErrInvalidField{"checksum algorithm"})
 	}
 
-	if (l.GetChecksumAlgorithm() != "" || l.GetLayerType() == ImageLayer_Exclusive) && l.GetChecksumValue() == "" {
+	if (l.GetDigestAlgorithm() != "" || l.GetLayerType() == ImageLayer_Exclusive) && l.GetDigestValue() == "" {
 		validationError = validationError.Append(ErrInvalidField{"checksum value"})
 	}
 
-	if l.GetChecksumValue() != "" && l.GetChecksumAlgorithm() != "" {
-		if !contains([]string{"md5", "sha1", "sha256"}, strings.ToLower(l.GetChecksumAlgorithm())) {
+	if l.GetDigestValue() != "" && l.GetDigestAlgorithm() != "" {
+		if !contains([]string{"md5", "sha1", "sha256"}, strings.ToLower(l.GetDigestAlgorithm())) {
 			validationError = validationError.Append(ErrInvalidField{"invalid algorithm"})
 		}
 	}
@@ -75,14 +75,14 @@ func convertImageLayersToDownloadActionsAndCachedDependencies(layers []*ImageLay
 				Name:              layer.Name,
 				From:              layer.Url,
 				To:                layer.DestinationPath,
-				ChecksumAlgorithm: layer.ChecksumAlgorithm,
-				ChecksumValue:     layer.ChecksumValue,
+				ChecksumAlgorithm: layer.DigestAlgorithm,
+				ChecksumValue:     layer.DigestValue,
 			}
 
-			if layer.ChecksumValue == "" {
+			if layer.DigestValue == "" {
 				c.CacheKey = layer.Url
 			} else {
-				c.CacheKey = layer.ChecksumAlgorithm + ":" + layer.ChecksumValue
+				c.CacheKey = layer.DigestAlgorithm + ":" + layer.DigestValue
 			}
 
 			cachedDependencies = append(cachedDependencies, c)
@@ -93,10 +93,10 @@ func convertImageLayersToDownloadActionsAndCachedDependencies(layers []*ImageLay
 				Artifact:          layer.Name,
 				From:              layer.Url,
 				To:                layer.DestinationPath,
-				CacheKey:          layer.ChecksumAlgorithm + ":" + layer.ChecksumValue, // checksum required for exclusive layers
+				CacheKey:          layer.DigestAlgorithm + ":" + layer.DigestValue, // digest required for exclusive layers
 				User:              legacyDownloadUser,
-				ChecksumAlgorithm: layer.ChecksumAlgorithm,
-				ChecksumValue:     layer.ChecksumValue,
+				ChecksumAlgorithm: layer.DigestAlgorithm,
+				ChecksumValue:     layer.DigestValue,
 			})
 		}
 	}

@@ -105,7 +105,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		ImagePassword: "image-password",
 		ImageLayers: []*models.ImageLayer{
 			{Name: "shared layer", LayerType: models.ImageLayer_Shared, Url: "some-url", DestinationPath: "/tmp", MediaType: "some-type"},
-			{Name: "exclusive layer", LayerType: models.ImageLayer_Exclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: "some-type", ChecksumAlgorithm: "sha256", ChecksumValue: "some-sha256"},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_Exclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: "some-type", DigestAlgorithm: "sha256", DigestValue: "some-sha256"},
 		},
 	}
 	err := desiredLRP.Validate()
@@ -186,7 +186,7 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		ImagePassword: "image-password",
 		ImageLayers: []*models.ImageLayer{
 			{Name: "shared layer", LayerType: models.ImageLayer_Shared, Url: "some-url", DestinationPath: "/tmp", MediaType: "some-type"},
-			{Name: "exclusive layer", LayerType: models.ImageLayer_Exclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: "some-type", ChecksumAlgorithm: "sha256", ChecksumValue: "some-sha256"},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_Exclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: "some-type", DigestAlgorithm: "sha256", DigestValue: "some-sha256"},
 		},
 	}
 }
