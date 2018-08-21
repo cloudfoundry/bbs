@@ -578,7 +578,7 @@ var _ = Describe("TaskDefinition", func() {
 
 				It("converts them to cached dependencies and prepends them to the list", func() {
 					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
-					Expect(convertedTaskDefinition.CachedDependencies).To(Equal([]*models.CachedDependency{
+					Expect(convertedTaskDefinition.CachedDependencies).To(DeepEqual([]*models.CachedDependency{
 						{
 							Name:              "dep0",
 							From:              "u0",
@@ -671,21 +671,10 @@ var _ = Describe("TaskDefinition", func() {
 				It("converts them to download actions with the correct user and prepends them to the action", func() {
 					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
 
-					Expect(*convertedTaskDefinition.Action).To(Equal(models.Action{
-						SerialAction: &models.SerialAction{
-							Actions: []*models.Action{
-								{
-									ParallelAction: &models.ParallelAction{
-										Actions: []*models.Action{
-											&models.Action{DownloadAction: &downloadAction1},
-											&models.Action{DownloadAction: &downloadAction2},
-										},
-									},
-								},
-								taskDefinition.Action,
-							},
-						},
-					}))
+					Expect(convertedTaskDefinition.Action.GetValue()).To(Equal(models.Serial(
+						models.Parallel(&downloadAction1, &downloadAction2),
+						taskDefinition.Action.GetValue().(models.ActionInterface),
+					)))
 				})
 
 				It("sets removes the existing image layers", func() {
@@ -700,20 +689,9 @@ var _ = Describe("TaskDefinition", func() {
 
 					It("creates an action with exclusive layers converted to download actions", func() {
 						convertedLRP := taskDefinition.VersionDownTo(format.V2)
-						Expect(*convertedLRP.Action).To(Equal(models.Action{
-							SerialAction: &models.SerialAction{
-								Actions: []*models.Action{
-									{
-										ParallelAction: &models.ParallelAction{
-											Actions: []*models.Action{
-												&models.Action{DownloadAction: &downloadAction1},
-												&models.Action{DownloadAction: &downloadAction2},
-											},
-										},
-									},
-								},
-							},
-						}))
+						Expect(convertedLRP.Action.GetValue()).To(DeepEqual(models.Serial(
+							models.Parallel(&downloadAction1, &downloadAction2),
+						)))
 					})
 				})
 			})

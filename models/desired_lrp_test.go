@@ -571,58 +571,44 @@ var _ = Describe("DesiredLRP", func() {
 				It("converts image layers and cached dependencies to download actions", func() {
 					desiredLRP.LegacyDownloadUser = "the user"
 					convertedLRP := desiredLRP.VersionDownTo(format.V0)
-					Expect(*convertedLRP.Setup).To(DeepEqual(models.Action{
-						SerialAction: &models.SerialAction{
-							Actions: []*models.Action{
-								{
-									ParallelAction: &models.ParallelAction{
-										Actions: []*models.Action{
-											&models.Action{DownloadAction: &models.DownloadAction{
-												Artifact: "dep1",
-												From:     "u1",
-												To:       "/tmp/1",
-												CacheKey: "u1",
-												User:     "the user",
-											}},
-											&models.Action{DownloadAction: &models.DownloadAction{
-												Artifact:  "dep2",
-												From:      "u2",
-												To:        "/tmp/2",
-												CacheKey:  "key2",
-												LogSource: "download",
-												User:      "the user",
-											}},
-										},
-									},
+					Expect(models.UnwrapAction(convertedLRP.Setup)).To(DeepEqual(
+						models.Serial(
+							models.Parallel(
+								&models.DownloadAction{
+									Artifact: "dep1",
+									From:     "u1",
+									To:       "/tmp/1",
+									CacheKey: "u1",
+									User:     "the user",
 								},
-								{
-									SerialAction: &models.SerialAction{
-										Actions: []*models.Action{
-											{
-												ParallelAction: &models.ParallelAction{
-													Actions: []*models.Action{
-														&models.Action{DownloadAction: &models.DownloadAction{
-															Artifact:          "dep0",
-															From:              "u0",
-															To:                "/tmp/0",
-															CacheKey:          "sha256:some-sha",
-															User:              "the user",
-															ChecksumAlgorithm: "sha256",
-															ChecksumValue:     "some-sha",
-														}},
-													},
-												},
-											},
-											desiredLRP.Setup,
-										},
-									},
+								&models.DownloadAction{
+									Artifact:  "dep2",
+									From:      "u2",
+									To:        "/tmp/2",
+									CacheKey:  "key2",
+									LogSource: "download",
+									User:      "the user",
 								},
-							},
-						},
-					}))
+							),
+							models.Serial(
+								models.Parallel(
+									&models.DownloadAction{
+										Artifact:          "dep0",
+										From:              "u0",
+										To:                "/tmp/0",
+										CacheKey:          "sha256:some-sha",
+										User:              "the user",
+										ChecksumAlgorithm: "sha256",
+										ChecksumValue:     "some-sha",
+									},
+								),
+								models.UnwrapAction(desiredLRP.Setup),
+							),
+						),
+					))
 				})
 
-				It("sets removes the existing image layers", func() {
+				It("removes the existing image layers", func() {
 					convertedLRP := desiredLRP.VersionDownTo(format.V0)
 					Expect(convertedLRP.ImageLayers).To(BeNil())
 				})
@@ -679,7 +665,7 @@ var _ = Describe("DesiredLRP", func() {
 
 				It("converts them to cached dependencies and prepends them to the list", func() {
 					convertedLRP := desiredLRP.VersionDownTo(format.V2)
-					Expect(convertedLRP.CachedDependencies).To(Equal([]*models.CachedDependency{
+					Expect(convertedLRP.CachedDependencies).To(DeepEqual([]*models.CachedDependency{
 						{
 							Name:              "dep0",
 							From:              "u0",
@@ -706,7 +692,7 @@ var _ = Describe("DesiredLRP", func() {
 					}))
 				})
 
-				It("sets removes the existing image layers", func() {
+				It("removes the existing image layers", func() {
 					convertedLRP := desiredLRP.VersionDownTo(format.V0)
 					Expect(convertedLRP.ImageLayers).To(BeNil())
 				})
@@ -771,21 +757,11 @@ var _ = Describe("DesiredLRP", func() {
 
 				It("converts them to download actions with the correct user and prepends them to the setup action", func() {
 					convertedLRP := desiredLRP.VersionDownTo(format.V2)
-					Expect(*convertedLRP.Setup).To(Equal(models.Action{
-						SerialAction: &models.SerialAction{
-							Actions: []*models.Action{
-								{
-									ParallelAction: &models.ParallelAction{
-										Actions: []*models.Action{
-											&models.Action{DownloadAction: &downloadAction1},
-											&models.Action{DownloadAction: &downloadAction2},
-										},
-									},
-								},
-								desiredLRP.Setup,
-							},
-						},
-					}))
+					Expect(models.UnwrapAction(convertedLRP.Setup)).To(DeepEqual(models.Serial(
+						models.Parallel(&downloadAction1, &downloadAction2),
+						models.UnwrapAction(desiredLRP.Setup),
+					)))
+
 				})
 
 				It("sets removes the existing image layers", func() {
@@ -800,20 +776,9 @@ var _ = Describe("DesiredLRP", func() {
 
 					It("creates a setup action with exclusive layers converted to download actions", func() {
 						convertedLRP := desiredLRP.VersionDownTo(format.V2)
-						Expect(*convertedLRP.Setup).To(Equal(models.Action{
-							SerialAction: &models.SerialAction{
-								Actions: []*models.Action{
-									{
-										ParallelAction: &models.ParallelAction{
-											Actions: []*models.Action{
-												&models.Action{DownloadAction: &downloadAction1},
-												&models.Action{DownloadAction: &downloadAction2},
-											},
-										},
-									},
-								},
-							},
-						}))
+						Expect(models.UnwrapAction(convertedLRP.Setup)).To(Equal(models.Serial(
+							models.Parallel(&downloadAction1, &downloadAction2),
+						)))
 					})
 				})
 			})

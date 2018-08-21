@@ -158,13 +158,8 @@ func downgradeDesiredLRPV1ToV0(d *DesiredLRP) *DesiredLRP {
 }
 
 func downgradeDesiredLRPV3ToV2(d *DesiredLRP) *DesiredLRP {
-	d.CachedDependencies, d.Setup = convertImageLayersToDownloadActionsAndCachedDependencies(
-		d.ImageLayers,
-		d.LegacyDownloadUser,
-		d.CachedDependencies,
-		d.Setup,
-	)
-
+	d.CachedDependencies = append(ImageLayers(d.ImageLayers).ToCachedDependencies(), d.CachedDependencies...)
+	d.Setup = ImageLayers(d.ImageLayers).ToDownloadActions(d.LegacyDownloadUser, d.Setup)
 	d.ImageLayers = nil
 
 	return d
@@ -580,10 +575,6 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 	}
 
 	return validationError.ToError()
-}
-
-func (*DesiredLRPRunInfo) Version() format.Version {
-	return format.V0
 }
 
 func (*CertificateProperties) Version() format.Version {

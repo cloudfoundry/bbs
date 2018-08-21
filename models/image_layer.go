@@ -65,43 +65,33 @@ func validateImageLayers(layers []*ImageLayer, legacyDownloadUser string) Valida
 	return validationError
 }
 
-func convertImageLayersToDownloadActionsAndCachedDependencies(layers []*ImageLayer, legacyDownloadUser string, existingCachedDependencies []*CachedDependency, existingAction *Action) ([]*CachedDependency, *Action) {
-	cachedDependencies := []*CachedDependency{}
-	downloadActions := []ActionInterface{}
+type ImageLayers []*ImageLayer
+
+func (layers ImageLayers) FilterByType(layerType ImageLayer_Type) ImageLayers {
+	var filtered ImageLayers
 
 	for _, layer := range layers {
-		if layer.LayerType == ImageLayer_Shared {
-			c := &CachedDependency{
-				Name:              layer.Name,
-				From:              layer.Url,
-				To:                layer.DestinationPath,
-				ChecksumAlgorithm: layer.DigestAlgorithm,
-				ChecksumValue:     layer.DigestValue,
-			}
-
-			if layer.DigestValue == "" {
-				c.CacheKey = layer.Url
-			} else {
-				c.CacheKey = layer.DigestAlgorithm + ":" + layer.DigestValue
-			}
-
-			cachedDependencies = append(cachedDependencies, c)
-		}
-
-		if layer.LayerType == ImageLayer_Exclusive {
-			downloadActions = append(downloadActions, &DownloadAction{
-				Artifact:          layer.Name,
-				From:              layer.Url,
-				To:                layer.DestinationPath,
-				CacheKey:          layer.DigestAlgorithm + ":" + layer.DigestValue, // digest required for exclusive layers
-				User:              legacyDownloadUser,
-				ChecksumAlgorithm: layer.DigestAlgorithm,
-				ChecksumValue:     layer.DigestValue,
-			})
+		if layer.GetLayerType() == layerType {
+			filtered = append(filtered, layer)
 		}
 	}
+	return filtered
+}
 
-	cachedDependencies = append(cachedDependencies, existingCachedDependencies...)
+func (layers ImageLayers) ToDownloadActions(legacyDownloadUser string, existingAction *Action) *Action {
+	downloadActions := []ActionInterface{}
+
+	for _, layer := range layers.FilterByType(ImageLayer_Exclusive) {
+		downloadActions = append(downloadActions, &DownloadAction{
+			Artifact:          layer.Name,
+			From:              layer.Url,
+			To:                layer.DestinationPath,
+			CacheKey:          layer.DigestAlgorithm + ":" + layer.DigestValue, // digest required for exclusive layers
+			User:              legacyDownloadUser,
+			ChecksumAlgorithm: layer.DigestAlgorithm,
+			ChecksumValue:     layer.DigestValue,
+		})
+	}
 
 	var action *Action
 	if len(downloadActions) > 0 {
@@ -115,5 +105,28 @@ func convertImageLayersToDownloadActionsAndCachedDependencies(layers []*ImageLay
 		action = existingAction
 	}
 
-	return cachedDependencies, action
+	return action
+}
+
+func (layers ImageLayers) ToCachedDependencies() []*CachedDependency {
+	cachedDependencies := []*CachedDependency{}
+	for _, layer := range layers.FilterByType(ImageLayer_Shared) {
+		c := &CachedDependency{
+			Name:              layer.Name,
+			From:              layer.Url,
+			To:                layer.DestinationPath,
+			ChecksumAlgorithm: layer.DigestAlgorithm,
+			ChecksumValue:     layer.DigestValue,
+		}
+
+		if layer.DigestValue == "" {
+			c.CacheKey = layer.Url
+		} else {
+			c.CacheKey = layer.DigestAlgorithm + ":" + layer.DigestValue
+		}
+
+		cachedDependencies = append(cachedDependencies, c)
+	}
+
+	return cachedDependencies
 }
