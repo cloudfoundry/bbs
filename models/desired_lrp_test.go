@@ -416,7 +416,6 @@ var _ = Describe("DesiredLRP", func() {
 
 			BeforeEach(func() {
 				desiredLRP.ImageLayers = nil // V2 does not include ImageLayers
-				desiredLRP.LegacyDownloadUser = "the user"
 				desiredLRP.CachedDependencies = []*models.CachedDependency{
 					{Name: "name-1", From: "from-1", To: "to-1", CacheKey: "cache-key-1", LogSource: "log-source-1"},
 					{Name: "name-2", From: "from-2", To: "to-2", CacheKey: "cache-key-2", LogSource: "log-source-2"},
@@ -429,7 +428,6 @@ var _ = Describe("DesiredLRP", func() {
 					CacheKey:  "cache-key-1",
 					User:      "some-user",
 					LogSource: "log-source-1",
-					User:      "the user",
 				}
 
 				downloadAction2 = models.DownloadAction{
@@ -439,7 +437,6 @@ var _ = Describe("DesiredLRP", func() {
 					CacheKey:  "cache-key-2",
 					User:      "some-user",
 					LogSource: "log-source-2",
-					User:      "the user",
 				}
 
 				desiredLRP.Action = models.WrapAction(models.Timeout(
@@ -449,6 +446,7 @@ var _ = Describe("DesiredLRP", func() {
 					},
 					20*time.Millisecond,
 				))
+
 				desiredLRP.Monitor = models.WrapAction(models.Timeout(
 					&models.RunAction{
 						Path: "/the/path",
