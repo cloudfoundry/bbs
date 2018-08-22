@@ -90,8 +90,8 @@ var _ = Describe("Task", func() {
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
-				"media_type": "some-content-type",
-				"layer_type": "Shared"
+				"media_type": "tgz",
+				"layer_type": "shared"
 			}
 		],
     "legacy_download_user": "some-user"
@@ -155,7 +155,7 @@ var _ = Describe("Task", func() {
 				ImageUsername: "jake",
 				ImagePassword: "thedog",
 				ImageLayers: []*models.ImageLayer{
-					{Url: "some-url", DestinationPath: "/tmp", MediaType: "some-content-type"},
+					{Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeShared},
 				},
 				LegacyDownloadUser: "some-user",
 			},
@@ -489,7 +489,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "", MediaType: "some-type"}, // invalid destination path
+							{Url: "some-url", DestinationPath: "", MediaType: models.MediaTypeTgz}, // invalid destination path
 						},
 					},
 				},
@@ -508,7 +508,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "/tmp", MediaType: "some-type", LayerType: models.ImageLayer_Exclusive}, // exclusive layers require legacy_download_user to be set
+							{Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}, // exclusive layers require legacy_download_user to be set
 						},
 					},
 				},
@@ -551,17 +551,17 @@ var _ = Describe("TaskDefinition", func() {
 							Name:            "dep0",
 							Url:             "u0",
 							DestinationPath: "/tmp/0",
-							LayerType:       models.ImageLayer_Shared,
-							MediaType:       "",
-							DigestAlgorithm: "sha256",
+							LayerType:       models.LayerTypeShared,
+							MediaType:       models.MediaTypeTgz,
+							DigestAlgorithm: models.DigestAlgorithmSha256,
 							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
-							LayerType:       models.ImageLayer_Shared,
-							MediaType:       "",
+							LayerType:       models.LayerTypeShared,
+							MediaType:       models.MediaTypeTgz,
 						},
 					}
 
@@ -622,18 +622,18 @@ var _ = Describe("TaskDefinition", func() {
 							Name:            "dep0",
 							Url:             "u0",
 							DestinationPath: "/tmp/0",
-							LayerType:       models.ImageLayer_Exclusive,
-							MediaType:       "",
-							DigestAlgorithm: "sha256",
+							LayerType:       models.LayerTypeExclusive,
+							MediaType:       models.MediaTypeTgz,
+							DigestAlgorithm: models.DigestAlgorithmSha256,
 							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
-							LayerType:       models.ImageLayer_Exclusive,
-							MediaType:       "",
-							DigestAlgorithm: "sha256",
+							LayerType:       models.LayerTypeExclusive,
+							MediaType:       models.MediaTypeTgz,
+							DigestAlgorithm: models.DigestAlgorithmSha256,
 							DigestValue:     "some-other-sha",
 						},
 					}

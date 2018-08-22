@@ -16,7 +16,7 @@ var _ = Describe("ImageLayer", func() {
 				layer = &models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					MediaType:       "media_type",
+					MediaType:       models.MediaTypeTgz,
 				}
 
 				err := layer.Validate()
@@ -29,8 +29,8 @@ var _ = Describe("ImageLayer", func() {
 						Url:             "web_location",
 						DestinationPath: "local_location",
 						DigestValue:     "some digest",
-						DigestAlgorithm: "md5",
-						MediaType:       "media_type",
+						DigestAlgorithm: models.DigestAlgorithmSha256,
+						MediaType:       models.MediaTypeTgz,
 					}
 
 					err := layer.Validate()
@@ -53,57 +53,57 @@ var _ = Describe("ImageLayer", func() {
 				},
 			},
 			{
-				"checksum value",
+				"digest value",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					DigestAlgorithm: "md5",
-					MediaType:       "some-type",
+					DigestAlgorithm: models.DigestAlgorithmSha256,
+					MediaType:       models.MediaTypeTgz,
 				},
 			},
 			{
-				"checksum algorithm",
+				"digest algorithm",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
 					DigestValue:     "some digest",
-					MediaType:       "some-type",
+					MediaType:       models.MediaTypeTgz,
 				},
 			},
 			{
-				"checksum value",
+				"digest value",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					MediaType:       "some-type",
-					LayerType:       models.ImageLayer_Exclusive,
+					MediaType:       models.MediaTypeTgz,
+					LayerType:       models.LayerTypeExclusive,
 				},
 			},
 			{
-				"checksum algorithm",
+				"digest algorithm",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					MediaType:       "some-type",
-					LayerType:       models.ImageLayer_Exclusive,
+					MediaType:       models.MediaTypeTgz,
+					LayerType:       models.LayerTypeExclusive,
 				},
 			},
-			{
-				"invalid algorithm",
-				&models.ImageLayer{
-					Url:             "web_location",
-					DestinationPath: "local_location",
-					DigestAlgorithm: "invalid",
-					DigestValue:     "some digest",
-					MediaType:       "some-type",
-				},
-			},
+			// {
+			// 	"invalid algorithm",
+			// 	&models.ImageLayer{
+			// 		Url:             "web_location",
+			// 		DestinationPath: "local_location",
+			// 		DigestAlgorithm: "invalid",
+			// 		DigestValue:     "some digest",
+			// 		MediaType:       models.MediaTypeTgz,
+			// 	},
+			// },
 			{
 				"media_type",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					DigestAlgorithm: "md5",
+					DigestAlgorithm: models.DigestAlgorithmSha256,
 					DigestValue:     "some digest",
 				},
 			},
