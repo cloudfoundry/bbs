@@ -162,8 +162,10 @@ func (def *TaskDefinition) Validate() error {
 }
 
 func downgradeTaskDefinitionV3ToV2(t *TaskDefinition) *TaskDefinition {
-	t.CachedDependencies = append(ImageLayers(t.ImageLayers).ToCachedDependencies(), t.CachedDependencies...)
-	t.Action = ImageLayers(t.ImageLayers).ToDownloadActions(t.LegacyDownloadUser, t.Action)
+	layers := ImageLayers(t.ImageLayers)
+
+	t.CachedDependencies = append(layers.ToCachedDependencies(), t.CachedDependencies...)
+	t.Action = layers.ToDownloadActions(t.LegacyDownloadUser, t.Action)
 	t.ImageLayers = nil
 
 	return t

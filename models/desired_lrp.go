@@ -158,8 +158,10 @@ func downgradeDesiredLRPV1ToV0(d *DesiredLRP) *DesiredLRP {
 }
 
 func downgradeDesiredLRPV3ToV2(d *DesiredLRP) *DesiredLRP {
-	d.CachedDependencies = append(ImageLayers(d.ImageLayers).ToCachedDependencies(), d.CachedDependencies...)
-	d.Setup = ImageLayers(d.ImageLayers).ToDownloadActions(d.LegacyDownloadUser, d.Setup)
+	layers := ImageLayers(d.ImageLayers)
+
+	d.CachedDependencies = append(layers.ToCachedDependencies(), d.CachedDependencies...)
+	d.Setup = layers.ToDownloadActions(d.LegacyDownloadUser, d.Setup)
 	d.ImageLayers = nil
 
 	return d
