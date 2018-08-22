@@ -35,11 +35,8 @@ var _ = Describe("Evacuation", func() {
 	})
 
 	Describe("EvacuateActualLRP", func() {
-		var ttl uint64
 
 		BeforeEach(func() {
-			ttl = 60
-
 			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
@@ -68,7 +65,7 @@ var _ = Describe("Evacuation", func() {
 				})
 
 				It("persists the evacuating lrp in sqldb", func() {
-					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -84,7 +81,7 @@ var _ = Describe("Evacuation", func() {
 				})
 
 				It("persists the evacuating lrp", func() {
-					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -102,7 +99,7 @@ var _ = Describe("Evacuation", func() {
 				})
 
 				It("persists the evacuating lrp", func() {
-					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -129,7 +126,7 @@ var _ = Describe("Evacuation", func() {
 				})
 
 				It("creates the evacuating actual lrp", func() {
-					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+					group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
@@ -157,7 +154,7 @@ var _ = Describe("Evacuation", func() {
 			})
 
 			It("removes the invalid record and inserts a replacement", func() {
-				group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, ttl)
+				group, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
 				Expect(err).NotTo(HaveOccurred())
 
 				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)

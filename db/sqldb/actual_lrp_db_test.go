@@ -178,7 +178,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("because it has the wrong presence", func() {
 				BeforeEach(func() {
-					_, err := sqlDB.EvacuateActualLRP(logger, key, instanceKey, netInfo, 0)
+					_, err := sqlDB.EvacuateActualLRP(logger, key, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

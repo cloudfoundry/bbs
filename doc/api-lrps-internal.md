@@ -381,13 +381,14 @@ and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/
 ### Golang Client API
 
 ```go
-EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error)
+EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (bool, error)
 ```
 
 #### Inputs
 
 * `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
 * `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the running ActualLRP to evacuate.
+* `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
 
 #### Output
 
@@ -406,7 +407,12 @@ keepContainer, err := client.EvacuateRunningActualLRP(logger, &models.ActualLRPK
 	&models.ActualLRPInstanceKey{
 	    InstanceGuid: "some-instance-guid",
 	    CellId: "some-cellID",
-	"some error message",
+	},
+	&models.ActualLRPNetInfo{
+	    Address: "1.2.3.4",
+	    models.NewPortMapping(10,20),
+	    InstanceAddress: "2.2.2.2",
+	},
 )
 if err != nil {
     log.Printf("failed to evacuate running actual lrp: " + err.Error())

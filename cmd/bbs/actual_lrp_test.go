@@ -19,9 +19,8 @@ import (
 
 var _ = Describe("ActualLRP API", func() {
 	const (
-		cellID          = "cell-id"
-		otherCellID     = "other-cell-id"
-		noExpirationTTL = 0
+		cellID      = "cell-id"
+		otherCellID = "other-cell-id"
 
 		baseProcessGuid  = "base-process-guid"
 		baseDomain       = "base-domain"
@@ -178,7 +177,7 @@ var _ = Describe("ActualLRP API", func() {
 		Expect(err).NotTo(HaveOccurred())
 		err = client.StartActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = client.EvacuateRunningActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, noExpirationTTL)
+		_, err = client.EvacuateRunningActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo)
 		Expect(err).NotTo(HaveOccurred())
 
 		unclaimedDesiredLRP := model_helpers.NewValidDesiredLRP(unclaimedLRP.ProcessGuid)

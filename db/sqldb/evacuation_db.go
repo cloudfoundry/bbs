@@ -13,7 +13,6 @@ func (db *SQLDB) EvacuateActualLRP(
 	lrpKey *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
-	ttl uint64,
 ) (*models.ActualLRPGroup, error) {
 	logger = logger.Session("evacuate-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
 	logger.Debug("starting")
@@ -29,7 +28,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
-			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, ttl, tx)
+			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, tx)
 			return err
 		}
 
@@ -125,7 +124,6 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 	lrpKey *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
-	ttl uint64,
 	tx helpers.Tx,
 ) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)

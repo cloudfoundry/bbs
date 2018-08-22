@@ -176,7 +176,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("EvacuateActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.EvacuateActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, 0)
+			_, err := sqlDB.EvacuateActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
