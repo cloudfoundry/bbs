@@ -26,6 +26,16 @@ err := client.DesireTask(
         ChecksumValue: "the-checksum",
       },
     },
+	ImageLayers: []*models.ImageLayer{
+        {
+            Url:             "https://blobstore.com/bits/other-bits",
+            DestinationPath: "/usr/local/app/other",
+            DigestValue:     "some digest",
+            DigestAlgorithm: models.DigestAlgorithmSha256,
+            MediaType:       models.MediaTypeTgz,
+            LayerType:       models.LayerTypeExclusive,
+        },
+	},
     Action: models.WrapAction(&models.RunAction{
       User:           "user",
       Path:           "echo",
@@ -144,6 +154,10 @@ See description of [Environment Variables](common-models.md#environmentvariables
 ##### `CachedDependencies` [optional]
 
 See description of [Cached Dependencies](common-models.md#cacheddependencies-optional)
+
+##### `ImageLayers` [optional]
+
+See description of [Image Layers](common-models.md#imagelayers-optional)
 
 ##### `TrustedSystemCertificatesPath` [optional]
 

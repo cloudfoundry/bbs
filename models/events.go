@@ -44,6 +44,19 @@ func VersionDesiredLRPsToV0(event Event) Event {
 	}
 }
 
+func VersionTaskDefinitionsToV2(event Event) Event {
+	switch event := event.(type) {
+	case *TaskCreatedEvent:
+		return NewTaskCreatedEvent(event.Task.VersionDownTo(format.V2))
+	case *TaskRemovedEvent:
+		return NewTaskRemovedEvent(event.Task.VersionDownTo(format.V2))
+	case *TaskChangedEvent:
+		return NewTaskChangedEvent(event.Before.VersionDownTo(format.V2), event.After.VersionDownTo(format.V2))
+	default:
+		return event
+	}
+}
+
 func NewDesiredLRPCreatedEvent(desiredLRP *DesiredLRP) *DesiredLRPCreatedEvent {
 	return &DesiredLRPCreatedEvent{
 		DesiredLrp: desiredLRP,

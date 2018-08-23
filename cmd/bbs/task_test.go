@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	. "code.cloudfoundry.org/bbs/models/test/matchers"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -19,9 +20,11 @@ var _ = Describe("Task API", func() {
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 		expectedTasks = []*models.Task{model_helpers.NewValidTask("a-guid"), model_helpers.NewValidTask("b-guid")}
 		expectedTasks[1].Domain = "b-domain"
-		for _, t := range expectedTasks {
+		for i, t := range expectedTasks {
 			err := client.DesireTask(logger, t.TaskGuid, t.Domain, t.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
+
+			expectedTasks[i] = t.VersionDownTo(format.V2)
 		}
 		client.StartTask(logger, expectedTasks[1].TaskGuid, "b-cell")
 	})
@@ -91,6 +94,8 @@ var _ = Describe("Task API", func() {
 			expectedTask := model_helpers.NewValidTask("task-1")
 			err := client.DesireTask(logger, expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
+
+			expectedTask = expectedTask.VersionDownTo(format.V2)
 
 			task, err := client.TaskByGuid(logger, expectedTask.TaskGuid)
 			Expect(err).NotTo(HaveOccurred())

@@ -28,6 +28,16 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 			ChecksumValue: "checksum-value"
 		},
 	},
+	ImageLayers: []*models.ImageLayer{
+        {
+            Url:             "https://blobstore.com/bits/other-bits",
+            DestinationPath: "/usr/local/app/other",
+            DigestValue:     "some digest",
+            DigestAlgorithm: models.DigestAlgorithmSha256,
+            MediaType:       models.MediaTypeTgz,
+            LayerType:       models.LayerTypeExclusive,
+        },
+	},
 	Setup:          models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 	Action:         models.WrapAction(&models.RunAction{Path: "ls", User: "name"}),
 	StartTimeoutMs: 15000,
@@ -66,6 +76,7 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 		PortRange:    &models.PortRange{Start: 10, End: 16000},
 	}},
 	ModificationTag:               &models.NewModificationTag("epoch", 0),
+	LegacyDownloadUser:            "legacy-dan",
 	TrustedSystemCertificatesPath: "/etc/somepath",
 	VolumeMounts: []*models.VolumeMount{
 		{
@@ -181,6 +192,10 @@ See description of [Environment Variables](common-models.md#environmentvariables
 ##### `CachedDependencies` [optional]
 
 See description of [Cached Dependencies](common-models.md#cacheddependencies-optional)
+
+##### `ImageLayers` [optional]
+
+See description of [Image Layers](common-models.md#imagelayers-optional)
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -320,6 +335,11 @@ If provided, Diego will give the `Action` action up to `StartTimeoutMs` seconds 
 The `DeprecatedStartTimeoutS` field has been deprecated in favor of
 `StartTimeoutMs`. The `StartTimeoutMs` field is required and will be translated
 into `DeprecatedStartTimeoutS` for older clients.
+
+##### `LegacyDownloadUser` [optional]
+
+For backwards compatibility, `LegacyDownloadUser` specifies the user for a
+`DownloadAction`.
 
 #### Networking
 

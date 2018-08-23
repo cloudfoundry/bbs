@@ -65,6 +65,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		EgressRules:                   egressRules,
 		LogSource:                     runInfo.LogSource,
 		MetricsGuid:                   runInfo.MetricsGuid,
+		LegacyDownloadUser:            runInfo.LegacyDownloadUser,
 		TrustedSystemCertificatesPath: runInfo.TrustedSystemCertificatesPath,
 		VolumeMounts:                  runInfo.VolumeMounts,
 		Network:                       runInfo.Network,
@@ -73,6 +74,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		ImageUsername:                 runInfo.ImageUsername,
 		ImagePassword:                 runInfo.ImagePassword,
 		CheckDefinition:               runInfo.CheckDefinition,
+		ImageLayers:                   runInfo.ImageLayers,
 	}
 }
 
@@ -99,10 +101,31 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.EgressRules = egressRules
 	desiredLRP.LogSource = runInfo.LogSource
 	desiredLRP.MetricsGuid = runInfo.MetricsGuid
+	desiredLRP.LegacyDownloadUser = runInfo.LegacyDownloadUser
 	desiredLRP.TrustedSystemCertificatesPath = runInfo.TrustedSystemCertificatesPath
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
 	desiredLRP.Network = runInfo.Network
 	desiredLRP.CheckDefinition = runInfo.CheckDefinition
+}
+
+func (*DesiredLRP) Version() format.Version {
+	return format.V3
+}
+
+func (d *DesiredLRP) actionsFromCachedDependencies() []ActionInterface {
+	actions := make([]ActionInterface, len(d.CachedDependencies))
+	for i := range d.CachedDependencies {
+		cacheDependency := d.CachedDependencies[i]
+		actions[i] = &DownloadAction{
+			Artifact:  cacheDependency.Name,
+			From:      cacheDependency.From,
+			To:        cacheDependency.To,
+			CacheKey:  cacheDependency.CacheKey,
+			LogSource: cacheDependency.LogSource,
+			User:      d.LegacyDownloadUser,
+		}
+	}
+	return actions
 }
 
 func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLRP {
@@ -122,25 +145,42 @@ func newDesiredLRPWithCachedDependenciesAsSetupActions(d *DesiredLRP) *DesiredLR
 	return d
 }
 
-func (*DesiredLRP) Version() format.Version {
-	return format.V2
+func downgradeDesiredLRPV2ToV1(d *DesiredLRP) *DesiredLRP {
+	return d
+}
+
+func downgradeDesiredLRPV1ToV0(d *DesiredLRP) *DesiredLRP {
+	d.Action.SetDeprecatedTimeoutNs()
+	d.Setup.SetDeprecatedTimeoutNs()
+	d.Monitor.SetDeprecatedTimeoutNs()
+	d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
+	return newDesiredLRPWithCachedDependenciesAsSetupActions(d)
+}
+
+func downgradeDesiredLRPV3ToV2(d *DesiredLRP) *DesiredLRP {
+	layers := ImageLayers(d.ImageLayers)
+
+	d.CachedDependencies = append(layers.ToCachedDependencies(), d.CachedDependencies...)
+	d.Setup = layers.ToDownloadActions(d.LegacyDownloadUser, d.Setup)
+	d.ImageLayers = nil
+
+	return d
+}
+
+var downgrades = []func(*DesiredLRP) *DesiredLRP{
+	downgradeDesiredLRPV1ToV0,
+	downgradeDesiredLRPV2ToV1,
+	downgradeDesiredLRPV3ToV2,
 }
 
 func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 	versionedLRP := d.Copy()
 
-	switch v {
-	case format.V1:
-		panic("unreachable")
-	case format.V0:
-		versionedLRP.Action.SetDeprecatedTimeoutNs()
-		versionedLRP.Setup.SetDeprecatedTimeoutNs()
-		versionedLRP.Monitor.SetDeprecatedTimeoutNs()
-		versionedLRP.DeprecatedStartTimeoutS = uint32(versionedLRP.StartTimeoutMs) / 1000
-		return newDesiredLRPWithCachedDependenciesAsSetupActions(versionedLRP)
-	default:
-		return versionedLRP
+	for version := d.Version(); version > v; version-- {
+		versionedLRP = downgrades[version-1](versionedLRP)
 	}
+
+	return versionedLRP
 }
 
 func (d *DesiredLRP) DesiredLRPKey() DesiredLRPKey {
@@ -205,6 +245,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		egressRules,
 		d.LogSource,
 		d.MetricsGuid,
+		d.LegacyDownloadUser,
 		d.TrustedSystemCertificatesPath,
 		d.VolumeMounts,
 		d.Network,
@@ -212,6 +253,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.ImageUsername,
 		d.ImagePassword,
 		d.CheckDefinition,
+		d.ImageLayers,
 	)
 }
 
@@ -222,21 +264,6 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 
 func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
 	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
-}
-
-func (d *DesiredLRP) actionsFromCachedDependencies() []ActionInterface {
-	actions := make([]ActionInterface, len(d.CachedDependencies))
-	for i := range d.CachedDependencies {
-		cacheDependency := d.CachedDependencies[i]
-		actions[i] = &DownloadAction{
-			Artifact:  cacheDependency.Name,
-			From:      cacheDependency.From,
-			To:        cacheDependency.To,
-			CacheKey:  cacheDependency.CacheKey,
-			LogSource: cacheDependency.LogSource,
-		}
-	}
-	return actions
 }
 
 func (desired DesiredLRP) Validate() error {
@@ -442,12 +469,14 @@ func NewDesiredLRPRunInfo(
 	egressRules []SecurityGroupRule,
 	logSource,
 	metricsGuid string,
+	legacyDownloadUser string,
 	trustedSystemCertificatesPath string,
 	volumeMounts []*VolumeMount,
 	network *Network,
 	certificateProperties *CertificateProperties,
 	imageUsername, imagePassword string,
 	checkDefinition *CheckDefinition,
+	ImageLayers []*ImageLayer,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -464,6 +493,7 @@ func NewDesiredLRPRunInfo(
 		EgressRules:                   egressRules,
 		LogSource:                     logSource,
 		MetricsGuid:                   metricsGuid,
+		LegacyDownloadUser:            legacyDownloadUser,
 		TrustedSystemCertificatesPath: trustedSystemCertificatesPath,
 		VolumeMounts:                  volumeMounts,
 		Network:                       network,
@@ -471,6 +501,7 @@ func NewDesiredLRPRunInfo(
 		ImageUsername:                 imageUsername,
 		ImagePassword:                 imagePassword,
 		CheckDefinition:               checkDefinition,
+		ImageLayers:                   ImageLayers,
 	}
 }
 
@@ -521,6 +552,11 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
+	err = validateImageLayers(runInfo.ImageLayers, runInfo.LegacyDownloadUser)
+	if err != nil {
+		validationError = validationError.Append(err)
+	}
+
 	for _, mount := range runInfo.VolumeMounts {
 		validationError = validationError.Check(mount)
 	}
@@ -541,10 +577,6 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 	}
 
 	return validationError.ToError()
-}
-
-func (*DesiredLRPRunInfo) Version() format.Version {
-	return format.V0
 }
 
 func (*CertificateProperties) Version() format.Version {
