@@ -418,6 +418,7 @@ var _ = Describe("DesiredLRP", func() {
 					From:      "from-1",
 					To:        "to-1",
 					CacheKey:  "cache-key-1",
+					User:      "some-user",
 					LogSource: "log-source-1",
 					User:      "joe-schmoe",
 				}
@@ -427,6 +428,7 @@ var _ = Describe("DesiredLRP", func() {
 					From:      "from-2",
 					To:        "to-2",
 					CacheKey:  "cache-key-2",
+					User:      "some-user",
 					LogSource: "log-source-2",
 					User:      "joe-schmoe",
 				}
@@ -495,7 +497,7 @@ var _ = Describe("DesiredLRP", func() {
 					Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
 					Expect(convertedLRP.Setup.SerialAction.Actions[0].ParallelAction.Actions).To(HaveLen(2))
 
-					Expect(*convertedLRP.Setup).To(Equal(models.Action{
+					Expect(*convertedLRP.Setup).To(DeepEqual(models.Action{
 						SerialAction: &models.SerialAction{
 							Actions: []*models.Action{
 								{
