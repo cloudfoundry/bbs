@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
+	. "code.cloudfoundry.org/bbs/test_helpers"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -517,36 +518,36 @@ var _ = Describe("Task", func() {
 			testValidatorErrorCase(testCase)
 		}
 	})
-})
 
-var _ = Describe("TaskDefinition", func() {
 	Describe("VersionDownTo", func() {
-		var taskDefinition *models.TaskDefinition
+		var task *models.Task
 
 		BeforeEach(func() {
-			taskDefinition = &models.TaskDefinition{}
+			task = &models.Task{
+				TaskDefinition: &models.TaskDefinition{},
+			}
 		})
 
 		Context("V3->V2", func() {
 			Context("when there are no image layers", func() {
 				BeforeEach(func() {
-					taskDefinition.ImageLayers = nil
+					task.ImageLayers = nil
 				})
 
 				It("does not add any cached dependencies to the TaskDefinition", func() {
-					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
-					Expect(convertedTaskDefinition.CachedDependencies).To(BeEmpty())
+					convertedTask := task.VersionDownTo(format.V2)
+					Expect(convertedTask.CachedDependencies).To(BeEmpty())
 				})
 
 				It("does not add any Download Actions", func() {
-					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
-					Expect(convertedTaskDefinition.Action).To(Equal(taskDefinition.Action))
+					convertedTask := task.VersionDownTo(format.V2)
+					Expect(convertedTask.Action).To(Equal(task.Action))
 				})
 			})
 
 			Context("when there are shared image layers", func() {
 				BeforeEach(func() {
-					taskDefinition.ImageLayers = []*models.ImageLayer{
+					task.ImageLayers = []*models.ImageLayer{
 						{
 							Name:            "dep0",
 							Url:             "u0",
@@ -565,7 +566,7 @@ var _ = Describe("TaskDefinition", func() {
 						},
 					}
 
-					taskDefinition.CachedDependencies = []*models.CachedDependency{
+					task.CachedDependencies = []*models.CachedDependency{
 						{
 							Name:      "dep2",
 							From:      "u2",
@@ -577,8 +578,8 @@ var _ = Describe("TaskDefinition", func() {
 				})
 
 				It("converts them to cached dependencies and prepends them to the list", func() {
-					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
-					Expect(convertedTaskDefinition.CachedDependencies).To(DeepEqual([]*models.CachedDependency{
+					convertedTask := task.VersionDownTo(format.V2)
+					Expect(convertedTask.CachedDependencies).To(DeepEqual([]*models.CachedDependency{
 						{
 							Name:              "dep0",
 							From:              "u0",
@@ -606,8 +607,8 @@ var _ = Describe("TaskDefinition", func() {
 				})
 
 				It("sets removes the existing image layers", func() {
-					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
-					Expect(convertedTaskDefinition.ImageLayers).To(BeNil())
+					convertedTask := task.VersionDownTo(format.V2)
+					Expect(convertedTask.ImageLayers).To(BeNil())
 				})
 			})
 
@@ -617,7 +618,7 @@ var _ = Describe("TaskDefinition", func() {
 				)
 
 				BeforeEach(func() {
-					taskDefinition.ImageLayers = []*models.ImageLayer{
+					task.ImageLayers = []*models.ImageLayer{
 						{
 							Name:            "dep0",
 							Url:             "u0",
@@ -637,8 +638,8 @@ var _ = Describe("TaskDefinition", func() {
 							DigestValue:     "some-other-sha",
 						},
 					}
-					taskDefinition.LegacyDownloadUser = "the user"
-					taskDefinition.Action = models.WrapAction(models.Timeout(
+					task.LegacyDownloadUser = "the user"
+					task.Action = models.WrapAction(models.Timeout(
 						&models.RunAction{
 							Path: "/the/path",
 							User: "the user",
@@ -669,26 +670,27 @@ var _ = Describe("TaskDefinition", func() {
 				})
 
 				It("converts them to download actions with the correct user and prepends them to the action", func() {
-					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
+					convertedTask := task.VersionDownTo(format.V2)
 
-					Expect(convertedTaskDefinition.Action.GetValue()).To(Equal(models.Serial(
-						models.Parallel(&downloadAction1, &downloadAction2),
-						taskDefinition.Action.GetValue().(models.ActionInterface),
-					)))
+					Expect(convertedTask.Action.GetValue()).To(DeepEqual(
+						models.Serial(
+							models.Parallel(&downloadAction1, &downloadAction2),
+							task.Action.GetValue().(models.ActionInterface),
+						)))
 				})
 
 				It("sets removes the existing image layers", func() {
-					convertedTaskDefinition := taskDefinition.VersionDownTo(format.V2)
-					Expect(convertedTaskDefinition.ImageLayers).To(BeNil())
+					convertedTask := task.VersionDownTo(format.V2)
+					Expect(convertedTask.ImageLayers).To(BeNil())
 				})
 
 				Context("when there is no existing action", func() {
 					BeforeEach(func() {
-						taskDefinition.Action = nil
+						task.Action = nil
 					})
 
 					It("creates an action with exclusive layers converted to download actions", func() {
-						convertedLRP := taskDefinition.VersionDownTo(format.V2)
+						convertedLRP := task.VersionDownTo(format.V2)
 						Expect(convertedLRP.Action.GetValue()).To(DeepEqual(models.Serial(
 							models.Parallel(&downloadAction1, &downloadAction2),
 						)))

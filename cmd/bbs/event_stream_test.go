@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	. "code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/go-loggregator/rpc/loggregator_v2"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -425,11 +426,20 @@ var _ = Describe("Events API", func() {
 			err := client.DesireTask(logger, "completed-task", "some-domain", taskDef)
 			Expect(err).NotTo(HaveOccurred())
 
+			task := &models.Task{
+				TaskGuid:       "completed-task",
+				Domain:         "some-domain",
+				TaskDefinition: taskDef,
+				State:          models.Task_Pending,
+			}
+
 			var event models.Event
 			Eventually(eventChannel).Should(Receive(&event))
 			taskCreatedEvent, ok := event.(*models.TaskCreatedEvent)
 			Expect(ok).To(BeTrue())
-			Expect(taskCreatedEvent.Task.TaskDefinition).To(Equal(taskDef.VersionDownTo(format.V2)))
+			taskCreatedEvent.Task.CreatedAt = 0
+			taskCreatedEvent.Task.UpdatedAt = 0
+			Expect(taskCreatedEvent.Task).To(DeepEqual(task.VersionDownTo(format.V2)))
 
 			err = client.CancelTask(logger, "completed-task")
 			Expect(err).NotTo(HaveOccurred())
@@ -455,7 +465,15 @@ var _ = Describe("Events API", func() {
 			Eventually(eventChannel).Should(Receive(&event))
 			taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
 			Expect(ok).To(BeTrue())
-			Expect(taskRemovedEvent.Task.TaskDefinition).To(Equal(taskDef.VersionDownTo(format.V2)))
+
+			taskRemovedEvent.Task.CreatedAt = 0
+			taskRemovedEvent.Task.UpdatedAt = 0
+			taskRemovedEvent.Task.FirstCompletedAt = 0
+			task.State = models.Task_Resolving
+			task.Failed = true
+			task.FailureReason = "task was cancelled"
+
+			Expect(taskRemovedEvent.Task).To(DeepEqual(task.VersionDownTo(format.V2)))
 		})
 	})
 

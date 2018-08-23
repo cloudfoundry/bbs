@@ -21,7 +21,7 @@ var _ = Describe("Encryption", func() {
 	BeforeEach(func() {
 		task = model_helpers.NewValidTask("task-1")
 		expectedTask = task.Copy()
-		expectedTask.TaskDefinition = task.TaskDefinition.VersionDownTo(format.V2)
+		expectedTask = task.VersionDownTo(format.V2)
 	})
 
 	JustBeforeEach(func() {
@@ -54,7 +54,7 @@ var _ = Describe("Encryption", func() {
 			BeforeEach(func() {
 				oldTask := model_helpers.NewValidTask("old-task")
 				expectedOldTask = oldTask.Copy()
-				expectedOldTask.TaskDefinition = oldTask.TaskDefinition.VersionDownTo(format.V2)
+				expectedOldTask = oldTask.VersionDownTo(format.V2)
 
 				bbsConfig.ActiveKeyLabel = "oldkey"
 				bbsConfig.EncryptionKeys = map[string]string{"oldkey": "old phrase"}

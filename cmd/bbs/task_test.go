@@ -24,7 +24,7 @@ var _ = Describe("Task API", func() {
 			err := client.DesireTask(logger, t.TaskGuid, t.Domain, t.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedTasks[i].TaskDefinition = t.TaskDefinition.VersionDownTo(format.V2)
+			expectedTasks[i] = t.VersionDownTo(format.V2)
 		}
 		client.StartTask(logger, expectedTasks[1].TaskGuid, "b-cell")
 	})
@@ -95,7 +95,7 @@ var _ = Describe("Task API", func() {
 			err := client.DesireTask(logger, expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedTask.TaskDefinition = expectedTask.TaskDefinition.VersionDownTo(format.V2)
+			expectedTask = expectedTask.VersionDownTo(format.V2)
 
 			task, err := client.TaskByGuid(logger, expectedTask.TaskGuid)
 			Expect(err).NotTo(HaveOccurred())

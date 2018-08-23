@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	. "code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -46,8 +47,14 @@ var _ = Describe("Task Handlers", func() {
 		)
 
 		BeforeEach(func() {
-			task1 = models.Task{Domain: "domain-1"}
-			task2 = models.Task{CellId: "cell-id"}
+			task1 = models.Task{
+				Domain:         "domain-1",
+				TaskDefinition: &models.TaskDefinition{},
+			}
+			task2 = models.Task{
+				CellId:         "cell-id",
+				TaskDefinition: &models.TaskDefinition{},
+			}
 			requestBody = &models.TasksRequest{}
 		})
 
@@ -65,6 +72,7 @@ var _ = Describe("Task Handlers", func() {
 
 			BeforeEach(func() {
 				tasks = []*models.Task{&task1, &task2}
+
 				controller.TasksReturns(tasks, nil)
 			})
 
@@ -75,7 +83,8 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
-				Expect(response.Tasks).To(Equal(tasks))
+
+				Expect(response.Tasks).To(DeepEqual([]*models.Task{&task1, &task2}))
 			})
 
 			It("calls the controller with no filter", func() {
@@ -96,8 +105,7 @@ var _ = Describe("Task Handlers", func() {
 					controller.TasksReturns(tasksWithImageLayers, nil)
 
 					for _, t := range tasksWithImageLayers {
-						task := t.Copy()
-						task.TaskDefinition = t.TaskDefinition.VersionDownTo(format.V2)
+						task := t.VersionDownTo(format.V2)
 						downgradedTasks = append(downgradedTasks, task)
 					}
 				})
@@ -185,7 +193,10 @@ var _ = Describe("Task Handlers", func() {
 			var task *models.Task
 
 			BeforeEach(func() {
-				task = &models.Task{TaskGuid: taskGuid}
+				task = &models.Task{
+					TaskGuid:       taskGuid,
+					TaskDefinition: &models.TaskDefinition{},
+				}
 				controller.TaskByGuidReturns(task, nil)
 			})
 
@@ -202,7 +213,7 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
-				Expect(response.Task).To(Equal(task))
+				Expect(response.Task).To(DeepEqual(task))
 			})
 		})
 
@@ -221,8 +232,7 @@ var _ = Describe("Task Handlers", func() {
 				}
 				controller.TaskByGuidReturns(taskWithImageLayers, nil)
 
-				downgradedTask = taskWithImageLayers.Copy()
-				downgradedTask.TaskDefinition = taskWithImageLayers.VersionDownTo(format.V2)
+				downgradedTask = taskWithImageLayers.VersionDownTo(format.V2)
 			})
 
 			It("returns a list of tasks downgraded to convert image layers to cached dependencies and download actions", func() {

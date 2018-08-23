@@ -1,4 +1,4 @@
-package models_test
+package test_helpers
 
 import (
 	"fmt"

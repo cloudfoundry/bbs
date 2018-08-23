@@ -45,19 +45,13 @@ func VersionDesiredLRPsToV0(event Event) Event {
 }
 
 func VersionTaskDefinitionsToV2(event Event) Event {
-	downgradeTask := func(t *Task) *Task {
-		t = t.Copy()
-		t.TaskDefinition = t.TaskDefinition.VersionDownTo(format.V2)
-		return t
-	}
-
 	switch event := event.(type) {
 	case *TaskCreatedEvent:
-		return NewTaskCreatedEvent(downgradeTask(event.Task))
+		return NewTaskCreatedEvent(event.Task.VersionDownTo(format.V2))
 	case *TaskRemovedEvent:
-		return NewTaskRemovedEvent(downgradeTask(event.Task))
+		return NewTaskRemovedEvent(event.Task.VersionDownTo(format.V2))
 	case *TaskChangedEvent:
-		return NewTaskChangedEvent(downgradeTask(event.Before), downgradeTask(event.After))
+		return NewTaskChangedEvent(event.Before.VersionDownTo(format.V2), event.After.VersionDownTo(format.V2))
 	default:
 		return event
 	}

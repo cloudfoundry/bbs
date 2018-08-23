@@ -58,12 +58,12 @@ func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *htt
 	}
 
 	tasks, err := h.controller.Tasks(logger, request.Domain, request.CellId)
-	for i, t := range tasks {
-		if t.TaskDefinition != nil {
-			tasks[i].TaskDefinition = t.TaskDefinition.VersionDownTo(format.V2)
-		}
+
+	downgradedTasks := []*models.Task{}
+	for _, t := range tasks {
+		downgradedTasks = append(downgradedTasks, t.VersionDownTo(format.V2))
 	}
-	response.Tasks = tasks
+	response.Tasks = downgradedTasks
 	response.Error = models.ConvertError(err)
 }
 
@@ -86,8 +86,8 @@ func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req
 
 	var task *models.Task
 	task, err = h.controller.TaskByGuid(logger, request.TaskGuid)
-	if task != nil && task.TaskDefinition != nil {
-		task.TaskDefinition = task.TaskDefinition.VersionDownTo(format.V2)
+	if task != nil {
+		task = task.VersionDownTo(format.V2)
 	}
 
 	response.Task = task

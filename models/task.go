@@ -21,10 +21,6 @@ type TaskFilter struct {
 	CellID string
 }
 
-func (t *Task) Version() format.Version {
-	return format.V1
-}
-
 func (t *Task) LagerData() lager.Data {
 	return lager.Data{
 		"task_guid": t.TaskGuid,
@@ -60,6 +56,7 @@ func (task *Task) Validate() error {
 
 func (t *Task) Copy() *Task {
 	newTask := *t
+	newTask.TaskDefinition = t.TaskDefinition.Copy()
 	return &newTask
 }
 
@@ -86,6 +83,9 @@ func (t *Task) ValidateTransitionTo(to Task_State) error {
 }
 
 func (t *TaskDefinition) Copy() *TaskDefinition {
+	if t == nil {
+		return &TaskDefinition{}
+	}
 	newTaskDef := *t
 	return &newTaskDef
 }
@@ -171,16 +171,16 @@ func downgradeTaskDefinitionV3ToV2(t *TaskDefinition) *TaskDefinition {
 	return t
 }
 
-func (t *TaskDefinition) VersionDownTo(v format.Version) *TaskDefinition {
+func (t *Task) VersionDownTo(v format.Version) *Task {
 	t = t.Copy()
 
 	if v < t.Version() {
-		return downgradeTaskDefinitionV3ToV2(t)
+		t.TaskDefinition = downgradeTaskDefinitionV3ToV2(t.TaskDefinition)
 	}
 
 	return t
 }
 
-func (t *TaskDefinition) Version() format.Version {
+func (t *Task) Version() format.Version {
 	return format.V3
 }

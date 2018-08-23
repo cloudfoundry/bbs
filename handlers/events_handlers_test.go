@@ -559,8 +559,7 @@ var _ = Describe("Event Handlers", func() {
 
 					task = model_helpers.NewValidTask("guid")
 
-					downgradedTask = task.Copy()
-					downgradedTask.TaskDefinition = task.TaskDefinition.VersionDownTo(format.V2)
+					downgradedTask = task.VersionDownTo(format.V2)
 				})
 
 				JustBeforeEach(func() {
