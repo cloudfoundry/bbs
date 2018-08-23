@@ -11,23 +11,24 @@ func (l *ImageLayer) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"destination_path"})
 	}
 
-	if l.MediaType == MediaTypeInvalid {
+	if !l.LayerType.Valid() {
+		validationError = validationError.Append(ErrInvalidField{"layer_type"})
+	}
+
+	if !l.MediaType.Valid() {
 		validationError = validationError.Append(ErrInvalidField{"media_type"})
 	}
 
 	if (l.DigestValue != "" || l.LayerType == LayerTypeExclusive) && l.DigestAlgorithm == DigestAlgorithmInvalid {
-		validationError = validationError.Append(ErrInvalidField{"digest algorithm"})
+		validationError = validationError.Append(ErrInvalidField{"digest_algorithm"})
 	}
 
 	if (l.DigestAlgorithm != DigestAlgorithmInvalid || l.LayerType == LayerTypeExclusive) && l.DigestValue == "" {
-		validationError = validationError.Append(ErrInvalidField{"digest value"})
+		validationError = validationError.Append(ErrInvalidField{"digest_value"})
 	}
 
-	if l.DigestValue != "" && l.DigestAlgorithm != DigestAlgorithmInvalid {
-		// if !contains([]Digest_Algorithm{"md5", "sha1", "sha256"}, l.Digest.Algorithm) {
-		// 	validationError = validationError.Append(ErrInvalidField{"invalid algorithm"})
-		// }
-		//TODO: new contains func for list of Digest_Algorithms
+	if l.DigestValue != "" && !l.DigestAlgorithm.Valid() {
+		validationError = validationError.Append(ErrInvalidField{"digest_algorithm"})
 	}
 
 	if !validationError.Empty() {
@@ -110,11 +111,16 @@ func (layers ImageLayers) ToCachedDependencies() []*CachedDependency {
 	cachedDependencies := []*CachedDependency{}
 	for _, layer := range layers.FilterByType(LayerTypeShared) {
 		c := &CachedDependency{
-			Name:              layer.Name,
-			From:              layer.Url,
-			To:                layer.DestinationPath,
-			ChecksumAlgorithm: layer.DigestAlgorithm.String(),
-			ChecksumValue:     layer.DigestValue,
+			Name:          layer.Name,
+			From:          layer.Url,
+			To:            layer.DestinationPath,
+			ChecksumValue: layer.DigestValue,
+		}
+
+		if layer.DigestAlgorithm == DigestAlgorithmInvalid {
+			c.ChecksumAlgorithm = ""
+		} else {
+			c.ChecksumAlgorithm = layer.DigestAlgorithm.String()
 		}
 
 		if layer.DigestValue == "" {
@@ -127,4 +133,39 @@ func (layers ImageLayers) ToCachedDependencies() []*CachedDependency {
 	}
 
 	return cachedDependencies
+}
+
+func (d ImageLayer_DigestAlgorithm) Valid() bool {
+	switch d {
+	case DigestAlgorithmSha256:
+		return true
+	case DigestAlgorithmSha512:
+		return true
+	default:
+		return false
+	}
+}
+
+func (m ImageLayer_MediaType) Valid() bool {
+	switch m {
+	case MediaTypeTar:
+		return true
+	case MediaTypeTgz:
+		return true
+	case MediaTypeZip:
+		return true
+	default:
+		return false
+	}
+}
+
+func (t ImageLayer_Type) Valid() bool {
+	switch t {
+	case LayerTypeExclusive:
+		return true
+	case LayerTypeShared:
+		return true
+	default:
+		return false
+	}
 }

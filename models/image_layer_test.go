@@ -17,6 +17,7 @@ var _ = Describe("ImageLayer", func() {
 					Url:             "web_location",
 					DestinationPath: "local_location",
 					MediaType:       models.MediaTypeTgz,
+					LayerType:       models.LayerTypeShared,
 				}
 
 				err := layer.Validate()
@@ -31,6 +32,7 @@ var _ = Describe("ImageLayer", func() {
 						DigestValue:     "some digest",
 						DigestAlgorithm: models.DigestAlgorithmSha256,
 						MediaType:       models.MediaTypeTgz,
+						LayerType:       models.LayerTypeExclusive,
 					}
 
 					err := layer.Validate()
@@ -53,7 +55,17 @@ var _ = Describe("ImageLayer", func() {
 				},
 			},
 			{
-				"digest value",
+				"layer_type",
+				&models.ImageLayer{},
+			},
+			{
+				"layer_type",
+				&models.ImageLayer{
+					LayerType: models.ImageLayer_Type(10),
+				},
+			},
+			{
+				"digest_value",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
@@ -62,7 +74,7 @@ var _ = Describe("ImageLayer", func() {
 				},
 			},
 			{
-				"digest algorithm",
+				"digest_algorithm",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
@@ -71,7 +83,7 @@ var _ = Describe("ImageLayer", func() {
 				},
 			},
 			{
-				"digest value",
+				"digest_value",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
@@ -80,7 +92,7 @@ var _ = Describe("ImageLayer", func() {
 				},
 			},
 			{
-				"digest algorithm",
+				"digest_algorithm",
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
@@ -88,16 +100,16 @@ var _ = Describe("ImageLayer", func() {
 					LayerType:       models.LayerTypeExclusive,
 				},
 			},
-			// {
-			// 	"invalid algorithm",
-			// 	&models.ImageLayer{
-			// 		Url:             "web_location",
-			// 		DestinationPath: "local_location",
-			// 		DigestAlgorithm: "invalid",
-			// 		DigestValue:     "some digest",
-			// 		MediaType:       models.MediaTypeTgz,
-			// 	},
-			// },
+			{
+				"digest_algorithm",
+				&models.ImageLayer{
+					Url:             "web_location",
+					DestinationPath: "local_location",
+					DigestAlgorithm: models.ImageLayer_DigestAlgorithm(5),
+					DigestValue:     "some digest",
+					MediaType:       models.MediaTypeTgz,
+				},
+			},
 			{
 				"media_type",
 				&models.ImageLayer{
@@ -105,6 +117,16 @@ var _ = Describe("ImageLayer", func() {
 					DestinationPath: "local_location",
 					DigestAlgorithm: models.DigestAlgorithmSha256,
 					DigestValue:     "some digest",
+				},
+			},
+			{
+				"media_type",
+				&models.ImageLayer{
+					Url:             "web_location",
+					DestinationPath: "local_location",
+					DigestAlgorithm: models.DigestAlgorithmSha256,
+					DigestValue:     "some digest",
+					MediaType:       models.ImageLayer_MediaType(9),
 				},
 			},
 		} {

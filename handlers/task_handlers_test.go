@@ -90,8 +90,8 @@ var _ = Describe("Task Handlers", func() {
 
 				BeforeEach(func() {
 					tasksWithImageLayers := []*models.Task{
-						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_Exclusive}, {LayerType: models.ImageLayer_Shared}}}},
-						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_Exclusive}, {LayerType: models.ImageLayer_Shared}}}},
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}},
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}},
 					}
 					controller.TasksReturns(tasksWithImageLayers, nil)
 
@@ -214,8 +214,8 @@ var _ = Describe("Task Handlers", func() {
 					TaskGuid: taskGuid,
 					TaskDefinition: &models.TaskDefinition{
 						ImageLayers: []*models.ImageLayer{
-							{LayerType: models.ImageLayer_Exclusive},
-							{LayerType: models.ImageLayer_Shared},
+							{LayerType: models.LayerTypeExclusive},
+							{LayerType: models.LayerTypeShared},
 						},
 					},
 				}

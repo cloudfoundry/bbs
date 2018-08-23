@@ -105,8 +105,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithImageLayers := []*models.DesiredLRP{
-						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_Exclusive}, {LayerType: models.ImageLayer_Shared}}},
-						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_Exclusive}, {LayerType: models.ImageLayer_Shared}}},
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithImageLayers, nil)
 
@@ -250,7 +250,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRP := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_Exclusive}, {LayerType: models.ImageLayer_Shared}},
+					ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 
