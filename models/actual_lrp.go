@@ -212,6 +212,19 @@ func (*ActualLRP) Version() format.Version {
 	return format.V0
 }
 
+func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
+	if actual == nil {
+		return nil
+	}
+
+	switch actual.Presence {
+	case ActualLRP_Evacuating:
+		return &ActualLRPGroup{Evacuating: actual}
+	default:
+		return &ActualLRPGroup{Instance: actual}
+	}
+}
+
 func (actual ActualLRP) Validate() error {
 	var validationError ValidationError
 

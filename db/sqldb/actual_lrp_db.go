@@ -14,25 +14,6 @@ const (
 	Truncated = "(truncated)"
 )
 
-func (db *SQLDB) getActualLRPGroups(logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRPGroup, error) {
-	var groups []*models.ActualLRPGroup
-	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		rows, err := db.all(logger, tx, actualLRPsTable,
-			actualLRPColumns, helpers.NoLockRow,
-			wheres, whereBindinngs...,
-		)
-		if err != nil {
-			logger.Error("failed-query", err)
-			return err
-		}
-		defer rows.Close()
-		groups, err = db.getAndCleanupActualLRPGroups(logger, tx, rows)
-		return err
-	})
-
-	return groups, err
-}
-
 func (db *SQLDB) getActualLRPs(logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRP, error) {
 	var actualLRPs []*models.ActualLRP
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
@@ -52,7 +33,7 @@ func (db *SQLDB) getActualLRPs(logger lager.Logger, wheres string, whereBindinng
 	return actualLRPs, err
 }
 
-func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRPGroup, after *models.ActualLRPGroup, err error) {
+func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRP, after *models.ActualLRP, err error) {
 
 	logger = logger.Session("change-actual-lrp-presence", lager.Data{"key": key, "from": from, "to": to})
 	logger.Info("starting")
@@ -60,7 +41,6 @@ func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.Actual
 
 	var beforeLRP *models.ActualLRP
 	var afterLRP models.ActualLRP
-
 	err = db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
 		beforeLRP, err = db.fetchActualLRPForUpdate(logger, key.ProcessGuid, key.Index, from, tx)
@@ -70,9 +50,7 @@ func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.Actual
 		}
 
 		afterLRP = *beforeLRP
-
 		afterLRP.Presence = to
-
 		wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
 		_, err = db.update(logger, tx, actualLRPsTable, helpers.SQLAttributes{
 			"presence": afterLRP.Presence,
@@ -83,7 +61,7 @@ func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.Actual
 		return err
 	})
 
-	return &models.ActualLRPGroup{Instance: beforeLRP}, &models.ActualLRPGroup{Instance: &afterLRP}, err
+	return beforeLRP, &afterLRP, err
 }
 
 func (db *SQLDB) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRP, error) {
@@ -113,56 +91,16 @@ func (db *SQLDB) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) 
 		wheres = append(wheres, "instance_index = ?")
 		values = append(values, *filter.Index)
 	}
-	return db.getActualLRPs(logger, strings.Join(wheres, " AND "), values...)
-}
 
-func (db *SQLDB) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
-	logger = logger.WithData(lager.Data{"filter": filter})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
-
-	var wheres []string
-	var values []interface{}
-
-	if filter.Domain != "" {
-		wheres = append(wheres, "domain = ?")
-		values = append(values, filter.Domain)
-	}
-
-	if filter.CellID != "" {
-		wheres = append(wheres, "cell_id = ?")
-		values = append(values, filter.CellID)
-	}
-	return db.getActualLRPGroups(logger, strings.Join(wheres, " AND "), values...)
-}
-
-func (db *SQLDB) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
-
-	return db.getActualLRPGroups(logger, "process_guid = ?", processGuid)
-}
-
-func (db *SQLDB) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int32) (*models.ActualLRPGroup, error) {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
-	logger.Debug("starting")
-	defer logger.Debug("complete")
-
-	groups, err := db.getActualLRPGroups(logger, "process_guid = ? AND instance_index = ?", processGuid, index)
+	lrps, err := db.getActualLRPs(logger, strings.Join(wheres, " AND "), values...)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(groups) == 0 {
-		logger.Error("failed-to-find-actual-lrp-group", models.ErrResourceNotFound)
-		return nil, models.ErrResourceNotFound
-	}
-
-	return groups[0], nil
+	return lrps, nil
 }
 
-func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, error) {
 	logger = logger.WithData(lager.Data{"key": key})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -200,17 +138,15 @@ func (db *SQLDB) CreateUnclaimedActualLRP(logger lager.Logger, key *models.Actua
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
 		return nil, err
 	}
-	return &models.ActualLRPGroup{
-		Instance: &models.ActualLRP{
-			ActualLRPKey:    *key,
-			State:           models.ActualLRPStateUnclaimed,
-			Since:           now,
-			ModificationTag: models.ModificationTag{Epoch: guid, Index: 0},
-		},
+	return &models.ActualLRP{
+		ActualLRPKey:    *key,
+		State:           models.ActualLRPStateUnclaimed,
+		Since:           now,
+		ModificationTag: models.ModificationTag{Epoch: guid, Index: 0},
 	}, nil
 }
 
-func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.WithData(lager.Data{"key": key})
 
 	var beforeActualLRP models.ActualLRP
@@ -267,10 +203,10 @@ func (db *SQLDB) UnclaimActualLRP(logger lager.Logger, key *models.ActualLRPKey)
 		return nil
 	})
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
+	return &beforeActualLRP, actualLRP, err
 }
 
-func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -328,10 +264,10 @@ func (db *SQLDB) ClaimActualLRP(logger lager.Logger, processGuid string, index i
 		return nil
 	})
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
+	return &beforeActualLRP, actualLRP, err
 }
 
-func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
 
 	var beforeActualLRP models.ActualLRP
@@ -404,7 +340,7 @@ func (db *SQLDB) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		return nil
 	})
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
+	return &beforeActualLRP, actualLRP, err
 }
 
 func truncateString(s string, maxLen int) string {
@@ -415,7 +351,7 @@ func truncateString(s string, maxLen int) string {
 	return s[:maxLen-len(Truncated)] + Truncated
 }
 
-func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (*models.ActualLRPGroup, *models.ActualLRPGroup, bool, error) {
+func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (*models.ActualLRP, *models.ActualLRP, bool, error) {
 	logger = logger.WithData(lager.Data{"key": key, "instance_key": instanceKey, "crash_reason": crashReason})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -491,10 +427,10 @@ func (db *SQLDB) CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 		return nil
 	})
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, immediateRestart, err
+	return &beforeActualLRP, actualLRP, immediateRestart, err
 }
 
-func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) (*models.ActualLRPGroup, *models.ActualLRPGroup, error) {
+func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, placementError string) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "placement_error": placementError})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -538,7 +474,7 @@ func (db *SQLDB) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, pl
 		return nil
 	})
 
-	return &models.ActualLRPGroup{Instance: &beforeActualLRP}, &models.ActualLRPGroup{Instance: actualLRP}, err
+	return &beforeActualLRP, actualLRP, err
 }
 
 func (db *SQLDB) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
@@ -667,55 +603,20 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 		logger.Error("failed-query", err)
 		return nil, err
 	}
-	groups, err := db.getAndCleanupActualLRPGroups(logger, tx, rows)
+	actualLRPs, err := db.getAndCleanupActualLRPs(logger, tx, rows)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(groups) == 0 {
+	if len(actualLRPs) == 0 {
 		return nil, models.ErrResourceNotFound
 	}
 
-	actualLRP, _, resolveError := groups[0].Resolve()
-	if resolveError != nil {
-		return nil, resolveError
+	if len(actualLRPs) > 1 {
+		return nil, models.ErrResourceConflict
 	}
-	return actualLRP, nil
-}
 
-func (db *SQLDB) getAndCleanupActualLRPGroups(logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRPGroup, error) {
-	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
-	result := []*models.ActualLRPGroup{}
-	err := db.scanAndCleanupActualLRPs(logger, q, rows, func(actualLRP *models.ActualLRP) {
-		// Every actual LRP has potentially 2 rows in the database: one for the instance
-		// one for the evacuating.  When building the list of actual LRP groups (where
-		// a group is the instance and corresponding evacuating), make sure we don't add the same
-		// actual lrp twice.
-		if mapOfGroups[actualLRP.ActualLRPKey] == nil {
-			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
-			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
-		}
-		switch actualLRP.Presence {
-		case models.ActualLRP_Evacuating:
-			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
-		case models.ActualLRP_Suspect:
-			// only resolve to the Suspect if the Ordinary instance is missing or not running
-			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || mapOfGroups[actualLRP.ActualLRPKey].Instance.State != models.ActualLRPStateRunning {
-				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
-			}
-		case models.ActualLRP_Ordinary:
-			// only resolve to the Suspect if the Ordinary instance is missing or not running
-			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || actualLRP.State == models.ActualLRPStateRunning {
-				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
-			}
-		default:
-			logger.Info("unknown-presence", lager.Data{"presence": actualLRP.Presence})
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return actualLRPs[0], nil
 }
 
 func (db *SQLDB) getAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRP, error) {

@@ -169,10 +169,10 @@ var _ = Describe("LRPConvergence", func() {
 			It("keeps evacuating actual lrps with available cells", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrps, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groups).To(HaveLen(1))
+				Expect(lrps).To(HaveLen(1))
 			})
 		})
 
@@ -184,20 +184,19 @@ var _ = Describe("LRPConvergence", func() {
 			It("clears out evacuating actual lrps with missing cells", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrps, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(BeEmpty())
+				Expect(lrps).To(BeEmpty())
 			})
 
 			It("return an ActualLRPRemovedEvent", func() {
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groups).To(HaveLen(1))
+				Expect(actualLRPs).To(HaveLen(1))
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Expect(result.Events).To(ContainElement(models.NewActualLRPRemovedEvent(groups[0])))
+				Expect(result.Events).To(ContainElement(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
 			})
 		})
 	})
@@ -283,15 +282,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
 			It("returns an empty convergence result", func() {
@@ -324,19 +323,19 @@ var _ = Describe("LRPConvergence", func() {
 			It("removes the evacuating lrps", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(BeEmpty())
+				Expect(actualLRPs).To(BeEmpty())
 			})
 
 			It("return ActualLRPRemoveEvent", func() {
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groups).To(HaveLen(1))
+				Expect(actualLRPs).To(HaveLen(1))
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
-				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(groups[0])))
+				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
 			})
 		})
 	})
@@ -507,15 +506,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 		})
 	})
@@ -561,15 +560,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
 			It("emits stale unclaimed LRP metrics", func() {
@@ -603,15 +602,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
 			It("emits stale unclaimed LRP metrics", func() {
@@ -662,20 +661,20 @@ var _ = Describe("LRPConvergence", func() {
 			It("prune the evacuating LRPs and does not create new ones", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrps, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(BeEmpty())
+				Expect(lrps).To(BeEmpty())
 			})
 
 			It("return ActualLRPRemovedEvent for the removed evacuating LRPs", func() {
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(HaveLen(2))
+				Expect(actualLRPs).To(HaveLen(2))
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
 				Expect(result.Events).To(ConsistOf(
-					models.NewActualLRPRemovedEvent(groups[0]),
-					models.NewActualLRPRemovedEvent(groups[1]),
+					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
+					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
 				))
 			})
 		})
@@ -712,25 +711,27 @@ var _ = Describe("LRPConvergence", func() {
 				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 				Expect(err).NotTo(HaveOccurred())
 
-				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+				index := int32(0)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
 				Expect(err).NotTo(HaveOccurred())
 				expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
+				Expect(actualLRPs).To(HaveLen(1))
 				Expect(keysWithMissingCells).To(ContainElement(&models.ActualLRPKeyWithSchedulingInfo{
-					Key:            &actualLRPGroup.Instance.ActualLRPKey,
+					Key:            &actualLRPs[0].ActualLRPKey,
 					SchedulingInfo: &expectedSched,
 				}))
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 		})
 
@@ -748,25 +749,27 @@ var _ = Describe("LRPConvergence", func() {
 				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 				Expect(err).NotTo(HaveOccurred())
 
-				actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+				index := int32(0)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
 				Expect(err).NotTo(HaveOccurred())
 				expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
+				Expect(actualLRPs).To(HaveLen(1))
 				Expect(keysWithMissingCells).To(ContainElement(&models.ActualLRPKeyWithSchedulingInfo{
-					Key:            &actualLRPGroup.Instance.ActualLRPKey,
+					Key:            &actualLRPs[0].ActualLRPKey,
 					SchedulingInfo: &expectedSched,
 				}))
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 		})
 
@@ -807,9 +810,9 @@ var _ = Describe("LRPConvergence", func() {
 			It("removes the evacuating lrp", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrps, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(BeEmpty())
+				Expect(lrps).To(BeEmpty())
 			})
 		})
 
@@ -871,15 +874,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
 			It("emits LRPsExtra metric", func() {
@@ -905,15 +908,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
 			It("emits a zero for the LRPsExtra metric", func() {
@@ -1162,9 +1165,9 @@ var _ = Describe("LRPConvergence", func() {
 			It("prune the evacuating LRPs and does not create new ones", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrps, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(BeEmpty())
+				Expect(lrps).To(BeEmpty())
 			})
 
 			It("return ActualLRPKeys for missing actuals", func() {
@@ -1181,14 +1184,14 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("return ActualLRPRemovedEvent for the removed evacuating LRPs", func() {
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(HaveLen(2))
+				Expect(actualLRPs).To(HaveLen(2))
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
 				Expect(result.Events).To(ConsistOf(
-					models.NewActualLRPRemovedEvent(groups[0]),
-					models.NewActualLRPRemovedEvent(groups[1]),
+					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
+					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
 				))
 			})
 		})
@@ -1310,15 +1313,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
 			It("emits LRPsExtra metric", func() {
@@ -1350,15 +1353,15 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {
-				groupsBefore, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsBefore, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groupsAfter, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				lrpsAfter, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groupsAfter).To(Equal(groupsBefore))
+				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
 			It("emits zero value for LRPsExtra metric", func() {
@@ -1392,21 +1395,19 @@ var _ = Describe("LRPConvergence", func() {
 			It("removes the evacuating LRPs", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
 
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(BeEmpty())
+				Expect(actualLRPs).To(BeEmpty())
 			})
 
 			It("return an ActualLRPRemoved Event", func() {
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
+				actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(groups).To(HaveLen(1))
+				Expect(actualLRPs).To(HaveLen(1))
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
-				Expect(result.Events).To(ConsistOf(
-					models.NewActualLRPRemovedEvent(groups[0]),
-				))
+				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
 			})
 
 			It("emits LRPsExtra metric", func() {

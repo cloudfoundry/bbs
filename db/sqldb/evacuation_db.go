@@ -14,7 +14,7 @@ func (db *SQLDB) EvacuateActualLRP(
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	ttl uint64,
-) (*models.ActualLRPGroup, error) {
+) (*models.ActualLRP, error) {
 	logger = logger.Session("evacuate-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
@@ -80,7 +80,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		return nil
 	})
 
-	return &models.ActualLRPGroup{Evacuating: actualLRP}, err
+	return actualLRP, err
 }
 
 func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {

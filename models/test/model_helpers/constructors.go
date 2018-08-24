@@ -28,6 +28,12 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	return actualLRP
 }
 
+func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
+	actualLRP := NewValidActualLRP(guid, index)
+	actualLRP.Presence = models.ActualLRP_Evacuating
+	return actualLRP
+}
+
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	modTag := models.NewModificationTag("epoch", 0)

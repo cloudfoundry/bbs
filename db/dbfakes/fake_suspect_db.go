@@ -10,25 +10,25 @@ import (
 )
 
 type FakeSuspectDB struct {
-	RemoveSuspectActualLRPStub        func(lager.Logger, *models.ActualLRPKey) (*models.ActualLRPGroup, error)
+	RemoveSuspectActualLRPStub        func(lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, error)
 	removeSuspectActualLRPMutex       sync.RWMutex
 	removeSuspectActualLRPArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 *models.ActualLRPKey
 	}
 	removeSuspectActualLRPReturns struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.ActualLRP
 		result2 error
 	}
 	removeSuspectActualLRPReturnsOnCall map[int]struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.ActualLRP
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSuspectDB) RemoveSuspectActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
+func (fake *FakeSuspectDB) RemoveSuspectActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey) (*models.ActualLRP, error) {
 	fake.removeSuspectActualLRPMutex.Lock()
 	ret, specificReturn := fake.removeSuspectActualLRPReturnsOnCall[len(fake.removeSuspectActualLRPArgsForCall)]
 	fake.removeSuspectActualLRPArgsForCall = append(fake.removeSuspectActualLRPArgsForCall, struct {
@@ -58,24 +58,24 @@ func (fake *FakeSuspectDB) RemoveSuspectActualLRPArgsForCall(i int) (lager.Logge
 	return fake.removeSuspectActualLRPArgsForCall[i].arg1, fake.removeSuspectActualLRPArgsForCall[i].arg2
 }
 
-func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturns(result1 *models.ActualLRPGroup, result2 error) {
+func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturns(result1 *models.ActualLRP, result2 error) {
 	fake.RemoveSuspectActualLRPStub = nil
 	fake.removeSuspectActualLRPReturns = struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.ActualLRP
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturnsOnCall(i int, result1 *models.ActualLRPGroup, result2 error) {
+func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturnsOnCall(i int, result1 *models.ActualLRP, result2 error) {
 	fake.RemoveSuspectActualLRPStub = nil
 	if fake.removeSuspectActualLRPReturnsOnCall == nil {
 		fake.removeSuspectActualLRPReturnsOnCall = make(map[int]struct {
-			result1 *models.ActualLRPGroup
+			result1 *models.ActualLRP
 			result2 error
 		})
 	}
 	fake.removeSuspectActualLRPReturnsOnCall[i] = struct {
-		result1 *models.ActualLRPGroup
+		result1 *models.ActualLRP
 		result2 error
 	}{result1, result2}
 }

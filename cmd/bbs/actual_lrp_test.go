@@ -42,12 +42,17 @@ var _ = Describe("ActualLRP API", func() {
 		crashingDomain       = "crashing-domain"
 		crashingInstanceGuid = "crashing-instance-guid"
 
+		retiredProcessGuid  = "retired-process-guid"
+		retiredDomain       = "retired-domain"
+		retiredInstanceGuid = "retired-instance-guid"
+
 		baseIndex       = 0
 		otherIndex0     = 0
 		otherIndex1     = 1
 		evacuatingIndex = 0
 		unclaimedIndex  = 0
 		crashingIndex   = 0
+		retiredIndex    = 0
 	)
 
 	var (
@@ -60,6 +65,7 @@ var _ = Describe("ActualLRP API", func() {
 		evacuatingInstanceLRP *models.ActualLRP
 		unclaimedLRP          *models.ActualLRP
 		crashingLRP           *models.ActualLRP
+		retiredLRP            *models.ActualLRP
 
 		baseLRPKey         models.ActualLRPKey
 		baseLRPInstanceKey models.ActualLRPInstanceKey
@@ -73,6 +79,9 @@ var _ = Describe("ActualLRP API", func() {
 
 		crashingLRPKey         models.ActualLRPKey
 		crashingLRPInstanceKey models.ActualLRPInstanceKey
+
+		retiredLRPKey         models.ActualLRPKey
+		retiredLRPInstanceKey models.ActualLRPInstanceKey
 
 		netInfo         models.ActualLRPNetInfo
 		unclaimedLRPKey models.ActualLRPKey
@@ -97,6 +106,9 @@ var _ = Describe("ActualLRP API", func() {
 
 		evacuatingLRPKey = models.NewActualLRPKey(evacuatingProcessGuid, evacuatingIndex, evacuatingDomain)
 		evacuatingLRPInstanceKey = models.NewActualLRPInstanceKey(evacuatingInstanceGuid, cellID)
+
+		retiredLRPKey = models.NewActualLRPKey(retiredProcessGuid, retiredIndex, retiredDomain)
+		retiredLRPInstanceKey = models.NewActualLRPInstanceKey(retiredInstanceGuid, cellID)
 
 		otherLRP0Key = models.NewActualLRPKey(otherProcessGuid, otherIndex0, otherDomain)
 		otherLRP1Key = models.NewActualLRPKey(otherProcessGuid, otherIndex1, otherDomain)
@@ -155,6 +167,11 @@ var _ = Describe("ActualLRP API", func() {
 			CrashCount:   3,
 		}
 
+		retiredLRP = &models.ActualLRP{
+			ActualLRPKey: retiredLRPKey,
+			State:        models.ActualLRPStateRunning,
+		}
+
 		var err error
 
 		baseDesiredLRP := model_helpers.NewValidDesiredLRP(baseLRP.ProcessGuid)
@@ -195,6 +212,15 @@ var _ = Describe("ActualLRP API", func() {
 			err = client.CrashActualLRP(logger, &crashingLRPKey, &crashingLRPInstanceKey, "crash")
 			Expect(err).NotTo(HaveOccurred())
 		}
+
+		retiredDesiredLRP := model_helpers.NewValidDesiredLRP(retiredLRP.ProcessGuid)
+		retiredDesiredLRP.Domain = retiredDomain
+		err = client.DesireLRP(logger, retiredDesiredLRP)
+		Expect(err).NotTo(HaveOccurred())
+		err = client.StartActualLRP(logger, &retiredLRPKey, &retiredLRPInstanceKey, &netInfo)
+		Expect(err).NotTo(HaveOccurred())
+		retireErr := client.RetireActualLRP(logger, &retiredLRPKey)
+		Expect(retireErr).NotTo(HaveOccurred())
 	})
 
 	Describe("ActualLRPs", func() {
@@ -460,17 +486,22 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRPGroup *models.ActualLRPGroup
 		)
 
-		JustBeforeEach(func() {
-			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
-		})
-
 		It("responds without error", func() {
+			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 			Expect(getErr).NotTo(HaveOccurred())
 		})
 
 		It("returns all actual lrps from the bbs", func() {
+			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(logger, baseProcessGuid, baseIndex)
 			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: baseLRP}
 			Expect(actualLRPGroup).To(test_helpers.MatchActualLRPGroup(expectedActualLRPGroup))
+		})
+
+		Context("when no ActualLRP group matches the process guid and index", func() {
+			It("returns an error", func() {
+				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, retiredProcessGuid, retiredIndex)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
 		})
 	})
 

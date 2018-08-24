@@ -46,17 +46,16 @@ var _ = Describe("Suspect ActualLRPs", func() {
 			})
 
 			It("removes the suspect actual LRP", func() {
-				before, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+				beforeLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 				Expect(err).NotTo(HaveOccurred())
 
 				lrp, err := sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey)
 				Expect(err).ToNot(HaveOccurred())
+				Expect(beforeLRPs).To(ConsistOf(lrp))
 
-				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(models.ErrResourceNotFound))
-
-				Expect(lrp).To(Equal(before))
+				afterLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(afterLRPs).To(BeEmpty())
 			})
 		})
 
@@ -64,13 +63,13 @@ var _ = Describe("Suspect ActualLRPs", func() {
 			// the only LRP in the database is the Ordinary one created in the
 			// BeforeEach
 			It("does not return an error", func() {
-				before, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "some-guid")
+				before, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: "some-guid"})
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 
-				after, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "some-guid")
+				after, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: "some-guid"})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(after).To(Equal(before))

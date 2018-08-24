@@ -107,13 +107,13 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	for _, lrpKey := range convergenceResult.MissingLRPKeys {
 		key := lrpKey
 		works = append(works, func() {
-			lrpGroup, err := h.lrpDB.CreateUnclaimedActualLRP(logger, key.Key)
+			lrp, err := h.lrpDB.CreateUnclaimedActualLRP(logger, key.Key)
 			if err != nil {
 				logger.Error("failed-to-create-unclaimed-lrp", err, lager.Data{"key": key.Key})
 				return
 			}
 
-			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrpGroup))
+			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrp.ToActualLRPGroup()))
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
 			startRequestLock.Lock()
@@ -131,7 +131,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 				return
 			} else if !after.Equal(before) {
 				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
-				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
@@ -163,7 +163,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 					return
 				}
 
-				h.actualHub.Emit(models.NewActualLRPChangedEvent(before, after))
+				h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
@@ -198,13 +198,13 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 		key := key
 		works = append(works, func() {
 			logger := logger.Session("suspect-keys-to-retire")
-			suspectLRPGroup, err := h.suspectDB.RemoveSuspectActualLRP(logger, key)
+			suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(logger, key)
 			if err != nil {
 				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": key})
 				return
 			}
 
-			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRPGroup))
+			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
 		})
 	}
 

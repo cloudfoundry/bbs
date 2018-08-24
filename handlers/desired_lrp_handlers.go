@@ -256,11 +256,11 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 		key := key
 		works[i] = func() {
 			logger.Info("starting", lager.Data{"actual_lrp_key": key})
-			actualLRPGroup, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
+			actualLRP, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
 			if err != nil {
 				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
 			} else {
-				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRPGroup))
+				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRP.ToActualLRPGroup()))
 				createdIndicesChan <- int(key.Index)
 			}
 		}
@@ -288,17 +288,16 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 
 func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid string, index int) {
 	logger = logger.Session("stop-instances-from", lager.Data{"process_guid": processGuid, "index": index})
-	actualLRPGroups, err := h.actualLRPDB.ActualLRPGroupsByProcessGuid(logger.Session("fetch-actuals"), processGuid)
+	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger.Session("fetch-actuals"), models.ActualLRPFilter{ProcessGuid: processGuid})
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrps", err)
 		return
 	}
 
-	for i := 0; i < len(actualLRPGroups); i++ {
-		group := actualLRPGroups[i]
+	for i := 0; i < len(actualLRPs); i++ {
+		lrp := actualLRPs[i]
 
-		if group.Instance != nil {
-			lrp := group.Instance
+		if lrp.Presence != models.ActualLRP_Evacuating {
 			if lrp.Index >= int32(index) {
 				switch lrp.State {
 				case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:

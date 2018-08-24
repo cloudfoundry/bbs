@@ -88,9 +88,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Since:                1140,
 			}
 
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
-				Instance: &afterActualLRP,
-			}, nil)
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&afterActualLRP}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -99,17 +97,15 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when there is a running Suspect LRP", func() {
 			BeforeEach(func() {
-				group := &models.ActualLRPGroup{
-					Instance: &models.ActualLRP{
-						Presence:     models.ActualLRP_Suspect,
-						ActualLRPKey: actualLRP.ActualLRPKey,
-						ActualLRPInstanceKey: models.ActualLRPInstanceKey{
-							InstanceGuid: "suspect-ig",
-							CellId:       "suspect-cell-id",
-						},
+				suspect := &models.ActualLRP{
+					Presence:     models.ActualLRP_Suspect,
+					ActualLRPKey: actualLRP.ActualLRPKey,
+					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+						InstanceGuid: "suspect-ig",
+						CellId:       "suspect-cell-id",
 					},
 				}
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(group, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspect}, nil)
 			})
 
 			It("does not emit ActualLRPChangedEvent", func() {
@@ -119,7 +115,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when claiming the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ClaimActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&afterActualLRP, nil), nil)
+				fakeActualLRPDB.ClaimActualLRPReturns(&actualLRP, &afterActualLRP, nil)
 			})
 
 			It("calls the DB successfully", func() {
@@ -132,15 +128,15 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				changedEvent, ok := event.(*models.ActualLRPChangedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(changedEvent.Before).To(Equal(newActualLRPGroup(&actualLRP, nil)))
-				Expect(changedEvent.After).To(Equal(newActualLRPGroup(&afterActualLRP, nil)))
+				Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
+				Expect(changedEvent.After).To(Equal(afterActualLRP.ToActualLRPGroup()))
 			})
 
 			Context("when the actual lrp did not actually change", func() {
 				BeforeEach(func() {
 					fakeActualLRPDB.ClaimActualLRPReturns(
-						newActualLRPGroup(&afterActualLRP, nil),
-						newActualLRPGroup(&afterActualLRP, nil),
+						&afterActualLRP,
+						&afterActualLRP,
 						nil,
 					)
 				})
@@ -196,22 +192,20 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when there is a Suspect LRP running", func() {
 			BeforeEach(func() {
-				group := &models.ActualLRPGroup{
-					Instance: &models.ActualLRP{
-						Presence: models.ActualLRP_Suspect,
-						ActualLRPInstanceKey: models.ActualLRPInstanceKey{
-							InstanceGuid: "suspect-instance-guid",
-							CellId:       "cell-id-1",
-						},
-						ActualLRPKey: models.ActualLRPKey{
-							ProcessGuid: processGuid,
-							Index:       index,
-							Domain:      "domain-0",
-						},
+				suspect := &models.ActualLRP{
+					Presence: models.ActualLRP_Suspect,
+					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+						InstanceGuid: "suspect-instance-guid",
+						CellId:       "cell-id-1",
+					},
+					ActualLRPKey: models.ActualLRPKey{
+						ProcessGuid: processGuid,
+						Index:       index,
+						Domain:      "domain-0",
 					},
 				}
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(group, nil)
-				fakeSuspectDB.RemoveSuspectActualLRPReturns(group, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspect}, nil)
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(suspect, nil)
 			})
 
 			It("removes the suspect lrp", func() {
@@ -265,7 +259,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					ActualLRPKey:         actualLRPKey,
 					ActualLRPInstanceKey: instanceKey,
 				}
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&actualLRP}, nil)
 			})
 
 			Context("when there is a Running Ordinary LRP", func() {
@@ -284,7 +278,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				BeforeEach(func() {
 					// the db layer resolution logic will return the Suspect LRP
 					actualLRP.Presence = models.ActualLRP_Suspect
-					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&actualLRP}, nil)
 				})
 
 				It("don't do anything", func() {
@@ -295,19 +289,22 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when starting the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.StartActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&afterActualLRP, nil), nil)
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&afterActualLRP, nil), nil)
+				newActualLRP := actualLRP
+				newAfterActualLRP := afterActualLRP
+
+				fakeActualLRPDB.StartActualLRPReturns(&newActualLRP, &newAfterActualLRP, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&newAfterActualLRP}, nil)
 			})
 
 			It("calls DB successfully", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
-				Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(1))
+				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 			})
 
-			Context("when a non-ResourceNotFound error occurs while fetching the lrp group", func() {
+			Context("when a non-ResourceNotFound error occurs while fetching the lrp", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, errors.New("BOOM!!!"))
+					fakeActualLRPDB.ActualLRPsReturns(nil, errors.New("BOOM!!!"))
 				})
 
 				It("should return the error", func() {
@@ -315,9 +312,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 			})
 
-			Context("when a ResourceNotFound error occurs while fetching the lrp group", func() {
+			Context("when a ResourceNotFound error occurs while fetching the lrp", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
+					fakeActualLRPDB.ActualLRPsReturns(nil, models.ErrResourceNotFound)
 				})
 
 				It("should continue to start the LRP", func() {
@@ -335,8 +332,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						"instance-guid-1",
 						"cell-id-1",
 					)
-
-					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&afterActualLRP, &evacuatingLRP), nil)
+					evacuatingLRP.Presence = models.ActualLRP_Evacuating
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&evacuatingLRP, &afterActualLRP}, nil)
 				})
 
 				It("removes the evacuating lrp", func() {
@@ -348,13 +345,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					event := actualHub.EmitArgsForCall(1)
 					removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(nil, &evacuatingLRP)))
+					Expect(removedEvent.ActualLrpGroup).To(Equal(evacuatingLRP.ToActualLRPGroup()))
 				})
 			})
 
 			Context("when the actual lrp was created", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.StartActualLRPReturns(nil, newActualLRPGroup(&afterActualLRP, nil), nil)
+					newAfterActualLRP := afterActualLRP
+					fakeActualLRPDB.StartActualLRPReturns(nil, &newAfterActualLRP, nil)
 				})
 
 				It("emits a created event to the hub", func() {
@@ -362,7 +360,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					event := actualHub.EmitArgsForCall(0)
 					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(createdEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&afterActualLRP, nil)))
+					Expect(createdEvent.ActualLrpGroup).To(Equal(afterActualLRP.ToActualLRPGroup()))
 				})
 			})
 
@@ -372,14 +370,15 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					event := actualHub.EmitArgsForCall(0)
 					changedEvent, ok := event.(*models.ActualLRPChangedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(changedEvent.Before).To(Equal(newActualLRPGroup(&actualLRP, nil)))
-					Expect(changedEvent.After).To(Equal(newActualLRPGroup(&afterActualLRP, nil)))
+					Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
+					Expect(changedEvent.After).To(Equal(afterActualLRP.ToActualLRPGroup()))
 				})
 			})
 
 			Context("when the actual lrp wasn't updated", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.StartActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&actualLRP, nil), nil)
+					newActualLRP := actualLRP
+					fakeActualLRPDB.StartActualLRPReturns(&newActualLRP, &newActualLRP, nil)
 				})
 
 				It("does not emit a change event to the hub", func() {
@@ -390,7 +389,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when starting the actual lrp fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&actualLRP}, nil)
 				fakeActualLRPDB.StartActualLRPReturns(nil, nil, models.ErrUnknownError)
 			})
 
@@ -415,7 +414,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			key          models.ActualLRPKey
 			instanceKey  models.ActualLRPInstanceKey
 			errorMessage string
-			group        *models.ActualLRPGroup
+			lrps         []*models.ActualLRP
 		)
 
 		BeforeEach(func() {
@@ -448,38 +447,27 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				CrashReason: errorMessage,
 			}
 
-			group = &models.ActualLRPGroup{Instance: &actualLRP}
+			lrps = []*models.ActualLRP{&actualLRP}
 		})
 
 		BeforeEach(func() {
 			fakeActualLRPDB.CrashActualLRPReturns(
-				&models.ActualLRPGroup{Instance: &actualLRP},
-				&models.ActualLRPGroup{Instance: &afterActualLRP},
+				&actualLRP,
+				&afterActualLRP,
 				false,
 				nil,
 			)
 		})
 
 		JustBeforeEach(func() {
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(group, nil)
+			fakeActualLRPDB.ActualLRPsReturns(lrps, nil)
 			err = controller.CrashActualLRP(logger, &key, &instanceKey, errorMessage)
-		})
-
-		Context("when no instance is returned from the DB", func() {
-			BeforeEach(func() {
-				group.Instance = nil
-			})
-
-			It("assumes the LRP being crashed isn't the suspect LRP", func() {
-				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(BeZero())
-				Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
-			})
 		})
 
 		Context("when the LRP being crashed is a Suspect LRP", func() {
 			BeforeEach(func() {
-				fakeSuspectDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
-				group.Instance.Presence = models.ActualLRP_Suspect
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(&actualLRP, nil)
+				actualLRP.Presence = models.ActualLRP_Suspect
 			})
 
 			It("removes the Suspsect LRP", func() {
@@ -491,7 +479,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
 			})
 
 			Context("when RemoveSuspectActualLRP returns an error", func() {
@@ -522,7 +510,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					actualHub.EmitStub = func(event models.Event) {
 						ch <- event
 					}
-
 				})
 
 				It("emits a crash and change event to the hub", func() {
@@ -533,16 +520,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						CrashCount:           1,
 						CrashReason:          errorMessage,
 					})))
-
 				})
 
 				It("emits a change event to the hub", func() {
 					Eventually(eventChan).Should(Receive(Equal(&models.ActualLRPChangedEvent{
-						Before: newActualLRPGroup(&actualLRP, nil),
-						After:  newActualLRPGroup(&afterActualLRP, nil),
+						Before: actualLRP.ToActualLRPGroup(),
+						After:  afterActualLRP.ToActualLRPGroup(),
 					})))
 				})
-
 			}
 
 			BeforeEach(func() {
@@ -556,7 +541,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				}
 
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
-				fakeActualLRPDB.CrashActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&afterActualLRP, nil), true, nil)
+				fakeActualLRPDB.CrashActualLRPReturns(&actualLRP, &afterActualLRP, true, nil)
 			})
 
 			It("response with no error", func() {
@@ -593,7 +578,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				Context("when the actual lrp should not be restarted (e.g., crashed)", func() {
 					BeforeEach(func() {
-						fakeActualLRPDB.CrashActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&actualLRP, nil), false, nil)
+						fakeActualLRPDB.CrashActualLRPReturns(&actualLRP, &actualLRP, false, nil)
 					})
 
 					It("does not request an auction", func() {
@@ -644,8 +629,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		Context("when the instance key matches the suspect LRP instance key", func() {
 			BeforeEach(func() {
 				actualLRP.Presence = models.ActualLRP_Suspect
-				fakeSuspectDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: &actualLRP}, nil)
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(&actualLRP, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&actualLRP}, nil)
 			})
 
 			It("removes the suspect LRP", func() {
@@ -661,7 +646,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
 			})
 		})
 	})
@@ -684,12 +669,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			errorMessage = "something went wrong"
 
 			actualLRP = models.ActualLRP{
-				ActualLRPKey: key,
-				State:        models.ActualLRPStateUnclaimed,
-				Since:        1138,
-			}
-
-			actualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
 					processGuid,
 					1,
@@ -698,6 +677,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				State: models.ActualLRPStateUnclaimed,
 				Since: 1138,
 			}
+
 			afterActualLRP = models.ActualLRP{
 				ActualLRPKey: models.NewActualLRPKey(
 					processGuid,
@@ -708,7 +688,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Since: 1138,
 			}
 
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{}, nil)
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -717,7 +697,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when failing the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.FailActualLRPReturns(newActualLRPGroup(&actualLRP, nil), newActualLRPGroup(&afterActualLRP, nil), nil)
+				fakeActualLRPDB.FailActualLRPReturns(&actualLRP, &afterActualLRP, nil)
 			})
 
 			It("fails the actual lrp by process guid and index", func() {
@@ -734,15 +714,15 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				changedEvent, ok := event.(*models.ActualLRPChangedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(changedEvent.Before).To(Equal(newActualLRPGroup(&actualLRP, nil)))
-				Expect(changedEvent.After).To(Equal(newActualLRPGroup(&afterActualLRP, nil)))
+				Expect(changedEvent.Before).To(Equal(&models.ActualLRPGroup{Instance: &actualLRP}))
+				Expect(changedEvent.After).To(Equal(&models.ActualLRPGroup{Instance: &afterActualLRP}))
 			})
 		})
 
 		Context("when there is a Suspect LRP running", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
-					Instance: &models.ActualLRP{
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{
+					&models.ActualLRP{
 						Presence: models.ActualLRP_Suspect,
 					},
 				}, nil)
@@ -784,7 +764,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		Context("when there is no LRP", func() {
 			BeforeEach(func() {
 				fakeActualLRPDB.FailActualLRPReturns(nil, nil, models.ErrResourceNotFound)
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.ActualLRPsReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("responds with a ResourceNotFound error", func() {
@@ -820,7 +800,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Since: 1138,
 			}
 
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&actualLRP}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -854,14 +834,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
 			})
 		})
 
 		Context("when the DB returns an error", func() {
 			Context("when doing the actual LRP lookup", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrUnknownError)
+					fakeActualLRPDB.ActualLRPsReturns(nil, models.ErrUnknownError)
 				})
 
 				It("returns the error", func() {
@@ -894,7 +874,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			processGuid = "process-guid"
 			index       = int32(1)
 
-			key models.ActualLRPKey
+			key              models.ActualLRPKey
+			retiredActualLRP models.ActualLRP
 		)
 
 		BeforeEach(func() {
@@ -904,7 +885,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				"domain-0",
 			)
 
-			actualLRP = models.ActualLRP{
+			retiredActualLRP = models.ActualLRP{
 				ActualLRPKey: key,
 				State:        models.ActualLRPStateUnclaimed,
 				Since:        1138,
@@ -917,12 +898,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when finding the actualLRP fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
+				fakeActualLRPDB.ActualLRPsReturns(nil, models.ErrUnknownError)
 			})
 
 			It("returns an error and does not retry", func() {
-				Expect(err).To(MatchError(models.ErrResourceNotFound))
-				Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(1))
+				Expect(err).To(MatchError(models.ErrUnknownError))
+				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 			})
 
 			It("does not emit a change event to the hub", func() {
@@ -930,14 +911,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 		})
 
-		Context("when there is no instance in the actual lrp group", func() {
+		Context("when there is no matching actual lrp", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{}, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{}, nil)
 			})
 
 			It("returns an error and does not retry", func() {
 				Expect(err).To(Equal(models.ErrResourceNotFound))
-				Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(1))
+				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 			})
 
 			It("does not emit a change event to the hub", func() {
@@ -947,7 +928,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("with an Unclaimed LRP", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&retiredActualLRP}, nil)
 			})
 
 			It("removes the LRP", func() {
@@ -957,7 +938,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
-				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLRPInstanceKey))
+				Expect(deletedLRPInstanceKey).To(Equal(&retiredActualLRP.ActualLRPInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
@@ -965,7 +946,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+				Expect(removedEvent.ActualLrpGroup).To(Equal(retiredActualLRP.ToActualLRPGroup()))
 			})
 
 			Context("when removing the actual lrp fails", func() {
@@ -976,7 +957,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				It("retries removing up to RetireActualLRPRetryAttempts times", func() {
 					Expect(err).To(MatchError("boom!"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(5))
-					Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(5))
+					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(5))
 				})
 
 				It("does not emit a change event to the hub", func() {
@@ -987,8 +968,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when the LRP is crashed", func() {
 			BeforeEach(func() {
-				actualLRP.State = models.ActualLRPStateCrashed
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+				retiredActualLRP.State = models.ActualLRPStateCrashed
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&retiredActualLRP}, nil)
 			})
 
 			It("removes the LRP", func() {
@@ -998,7 +979,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
-				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLRPInstanceKey))
+				Expect(deletedLRPInstanceKey).To(Equal(&retiredActualLRP.ActualLRPInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
@@ -1006,7 +987,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+				Expect(removedEvent.ActualLrpGroup).To(Equal(retiredActualLRP.ToActualLRPGroup()))
 			})
 
 			Context("when removing the actual lrp fails", func() {
@@ -1017,7 +998,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				It("retries removing up to RetireActualLRPRetryAttempts times", func() {
 					Expect(err).To(MatchError("boom!"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(5))
-					Expect(fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexCallCount()).To(Equal(5))
+					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(5))
 				})
 
 				It("does not emit a change event to the hub", func() {
@@ -1037,10 +1018,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				cellID = "cell-id"
 				instanceKey = models.NewActualLRPInstanceKey("instance-guid", cellID)
 
-				actualLRP.CellId = cellID
-				actualLRP.ActualLRPInstanceKey = instanceKey
-				actualLRP.State = models.ActualLRPStateClaimed
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(newActualLRPGroup(&actualLRP, nil), nil)
+				retiredActualLRP.CellId = cellID
+				retiredActualLRP.ActualLRPInstanceKey = instanceKey
+				retiredActualLRP.State = models.ActualLRPStateClaimed
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{&retiredActualLRP}, nil)
 			})
 
 			Context("when the cell", func() {
@@ -1148,7 +1129,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 							event := actualHub.EmitArgsForCall(0)
 							removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 							Expect(ok).To(BeTrue())
-							Expect(removedEvent.ActualLrpGroup).To(Equal(newActualLRPGroup(&actualLRP, nil)))
+							Expect(removedEvent.ActualLrpGroup).To(Equal(retiredActualLRP.ToActualLRPGroup()))
 						})
 					})
 
@@ -1187,16 +1168,3 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 	})
 })
-
-func newActualLRPGroup(instance, evacuating *models.ActualLRP) *models.ActualLRPGroup {
-	lrpGroup := &models.ActualLRPGroup{}
-	if instance != nil {
-		tempInstance := *instance
-		lrpGroup.Instance = &tempInstance
-	}
-	if evacuating != nil {
-		tempEvacuating := *evacuating
-		lrpGroup.Evacuating = &tempEvacuating
-	}
-	return lrpGroup
-}

@@ -49,7 +49,13 @@ func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseW
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId}
-		response.ActualLrpGroups, err = h.db.ActualLRPGroups(logger, filter)
+		lrps, err := h.db.ActualLRPs(logger, filter)
+		if err != nil {
+			response.Error = models.ConvertError(err)
+			writeResponse(w, response)
+			exitIfUnrecoverable(logger, h.exitChan, response.Error)
+		}
+		response.ActualLrpGroups = actualLRPCleanup(lrps)
 	}
 
 	response.Error = models.ConvertError(err)
@@ -67,7 +73,14 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w h
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		response.ActualLrpGroups, err = h.db.ActualLRPGroupsByProcessGuid(logger, request.ProcessGuid)
+		filter := models.ActualLRPFilter{ProcessGuid: request.ProcessGuid}
+		lrps, err := h.db.ActualLRPs(logger, filter)
+		if err != nil {
+			response.Error = models.ConvertError(err)
+			writeResponse(w, response)
+			exitIfUnrecoverable(logger, h.exitChan, response.Error)
+		}
+		response.ActualLrpGroups = actualLRPCleanup(lrps)
 	}
 
 	response.Error = models.ConvertError(err)
@@ -85,11 +98,65 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logg
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		response.ActualLrpGroup, err = h.db.ActualLRPGroupByProcessGuidAndIndex(logger, request.ProcessGuid, request.Index)
-	}
+		filter := models.ActualLRPFilter{ProcessGuid: request.ProcessGuid, Index: &request.Index}
+		lrps, err := h.db.ActualLRPs(logger, filter)
 
+		if err == nil && len(lrps) == 0 {
+			err = models.ErrResourceNotFound
+		}
+
+		if err != nil {
+			response.Error = models.ConvertError(err)
+			writeResponse(w, response)
+			exitIfUnrecoverable(logger, h.exitChan, response.Error)
+		}
+		response.ActualLrpGroup = resolveToActualLRPGroup(lrps)
+	}
 	response.Error = models.ConvertError(err)
 
 	writeResponse(w, response)
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
+func actualLRPCleanup(lrps []*models.ActualLRP) []*models.ActualLRPGroup {
+	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
+	result := []*models.ActualLRPGroup{}
+	for _, actualLRP := range lrps {
+		// Every actual LRP has potentially 2 rows in the database: one for the instance
+		// one for the evacuating.  When building the list of actual LRP groups (where
+		// a group is the instance and corresponding evacuating), make sure we don't add the same
+		// actual lrp twice.
+		if mapOfGroups[actualLRP.ActualLRPKey] == nil {
+			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
+			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
+		}
+		switch actualLRP.Presence {
+		case models.ActualLRP_Evacuating:
+			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
+		case models.ActualLRP_Suspect:
+			// only resolve to the Suspect if the Ordinary instance is missing or not running
+			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || mapOfGroups[actualLRP.ActualLRPKey].Instance.State != models.ActualLRPStateRunning {
+				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+			}
+		case models.ActualLRP_Ordinary:
+			// only resolve to the Suspect if the Ordinary instance is missing or not running
+			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || actualLRP.State == models.ActualLRPStateRunning {
+				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+			}
+		default:
+		}
+	}
+	return result
+}
+
+func resolveToActualLRPGroup(lrps []*models.ActualLRP) *models.ActualLRPGroup {
+	actualLRPGroups := actualLRPCleanup(lrps)
+	switch len(actualLRPGroups) {
+	case 0:
+		return &models.ActualLRPGroup{}
+	case 1:
+		return actualLRPGroups[0]
+	default:
+		panic("shouldn't get here")
+	}
 }

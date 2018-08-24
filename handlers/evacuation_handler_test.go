@@ -52,9 +52,9 @@ var _ = Describe("Evacuation Handlers", func() {
 			processGuid = "process-guid"
 			index       = int32(1)
 
-			key         models.ActualLRPKey
-			instanceKey models.ActualLRPInstanceKey
-			actual      *models.ActualLRP
+			key                   models.ActualLRPKey
+			instanceKey           models.ActualLRPInstanceKey
+			actual, evacuatingLRP *models.ActualLRP
 
 			replacementInstanceKey models.ActualLRPInstanceKey
 			replacementActual      *models.ActualLRP
@@ -72,6 +72,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			actual = &models.ActualLRP{
 				ActualLRPInstanceKey: instanceKey,
 			}
+			evacuatingLRP = &models.ActualLRP{
+				ActualLRPInstanceKey: instanceKey,
+				Presence:             models.ActualLRP_Evacuating,
+			}
 
 			replacementInstanceKey = models.NewActualLRPInstanceKey("replacement-instance-guid", "replacement-cell-id")
 			replacementActual = &models.ActualLRP{
@@ -83,8 +87,8 @@ var _ = Describe("Evacuation Handlers", func() {
 				ActualLrpKey:         &key,
 				ActualLrpInstanceKey: &instanceKey,
 			}
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
-				Evacuating: actual,
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{
+				evacuatingLRP,
 			}, nil)
 		})
 
@@ -112,7 +116,7 @@ var _ = Describe("Evacuation Handlers", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingLRP}))
 			})
 
 			It("logs the stranded evacuating actual lrp", func() {
@@ -121,9 +125,9 @@ var _ = Describe("Evacuation Handlers", func() {
 
 			Context("when the evacuating lrp is being replaced", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
-						Evacuating: actual,
-						Instance:   replacementActual,
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{
+						evacuatingLRP,
+						replacementActual,
 					}, nil)
 				})
 
@@ -134,9 +138,9 @@ var _ = Describe("Evacuation Handlers", func() {
 
 			Context("when the lrp has a running instance", func() {
 				BeforeEach(func() {
-					fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
-						Evacuating: actual,
-						Instance:   actual,
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{
+						evacuatingLRP,
+						actual,
 					}, nil)
 				})
 
@@ -145,7 +149,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					event := actualHub.EmitArgsForCall(0)
 					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingLRP}))
 				})
 			})
 		})
@@ -232,11 +236,11 @@ var _ = Describe("Evacuation Handlers", func() {
 
 	Describe("EvacuateClaimedActualLRP", func() {
 		var (
-			request     *http.Request
-			requestBody *models.EvacuateClaimedActualLRPRequest
-			actual      *models.ActualLRP
-			afterActual *models.ActualLRP
-			desiredLRP  *models.DesiredLRP
+			request            *http.Request
+			requestBody        *models.EvacuateClaimedActualLRPRequest
+			actual, evacuating *models.ActualLRP
+			afterActual        *models.ActualLRP
+			desiredLRP         *models.DesiredLRP
 		)
 
 		BeforeEach(func() {
@@ -244,14 +248,17 @@ var _ = Describe("Evacuation Handlers", func() {
 			fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 
 			actual = model_helpers.NewValidActualLRP("process-guid", 1)
+			evacuating = model_helpers.NewValidActualLRP("process-guid", 1)
+			evacuating.Presence = models.ActualLRP_Evacuating
+
 			requestBody = &models.EvacuateClaimedActualLRPRequest{
 				ActualLrpKey:         &actual.ActualLRPKey,
 				ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
 			}
 			afterActual = model_helpers.NewValidActualLRP("process-guid", 1)
 			afterActual.State = models.ActualLRPStateUnclaimed
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Evacuating: actual}, nil)
-			fakeActualLRPDB.UnclaimActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, &models.ActualLRPGroup{Instance: afterActual}, nil)
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{evacuating}, nil)
+			fakeActualLRPDB.UnclaimActualLRPReturns(actual, afterActual, nil)
 
 			request = newTestRequest(requestBody)
 		})
@@ -280,7 +287,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			event := actualHub.EmitArgsForCall(0)
 			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
 			re := event.(*models.ActualLRPRemovedEvent)
-			Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+			Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
 
 			event = actualHub.EmitArgsForCall(1)
 			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
@@ -315,7 +322,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			BeforeEach(func() {
 				suspectActual := model_helpers.NewValidActualLRP("process-guid", 1)
 				suspectActual.Presence = models.ActualLRP_Suspect
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: suspectActual, Evacuating: actual}, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectActual, evacuating}, nil)
 			})
 
 			It("removes the evacuating actual lrp", func() {
@@ -406,7 +413,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					event := actualHub.EmitArgsForCall(0)
 					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
 				})
 			})
 
@@ -429,7 +436,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					event := actualHub.EmitArgsForCall(0)
 					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
 				})
 			})
 		})
@@ -472,17 +479,17 @@ var _ = Describe("Evacuation Handlers", func() {
 		var (
 			request     *http.Request
 			requestBody *models.EvacuateCrashedActualLRPRequest
-			actual      *models.ActualLRP
+			actualLRP   *models.ActualLRP
 		)
 
 		BeforeEach(func() {
-			actual = model_helpers.NewValidActualLRP("process-guid", 1)
+			actualLRP = model_helpers.NewValidEvacuatingActualLRP("process-guid", 1)
 			requestBody = &models.EvacuateCrashedActualLRPRequest{
-				ActualLrpKey:         &actual.ActualLRPKey,
-				ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+				ActualLrpKey:         &actualLRP.ActualLRPKey,
+				ActualLrpInstanceKey: &actualLRP.ActualLRPInstanceKey,
 				ErrorMessage:         "i failed",
 			}
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Evacuating: actual}, nil)
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 
 			request = newTestRequest(requestBody)
 		})
@@ -494,23 +501,23 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		Context("when the LRP presence is Suspect", func() {
 			BeforeEach(func() {
-				actual.Presence = models.ActualLRP_Suspect
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: actual}, nil)
-				fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+				actualLRP.Presence = models.ActualLRP_Suspect
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+				fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(actualLRP, nil)
 			})
 
 			It("removes the suspect lrp", func() {
 				Expect(fakeSuspectLRPDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
 				_, lrpKey := fakeSuspectLRPDB.RemoveSuspectActualLRPArgsForCall(0)
-				Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-				Expect(lrpKey.Index).To(Equal(actual.Index))
+				Expect(lrpKey.ProcessGuid).To(Equal(actualLRP.ProcessGuid))
+				Expect(lrpKey.Index).To(Equal(actualLRP.Index))
 			})
 
 			It("emits ActualLRPRemovedEvent", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				events := []models.Event{}
 				events = append(events, actualHub.EmitArgsForCall(0))
-				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual})))
+				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actualLRP})))
 			})
 
 			Context("when the DB returns an unrecoverable error", func() {
@@ -558,8 +565,8 @@ var _ = Describe("Evacuation Handlers", func() {
 		It("removes the evacuating actual lrp", func() {
 			Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 			_, key, instanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-			Expect(*key).To(Equal(actual.ActualLRPKey))
-			Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
+			Expect(*key).To(Equal(actualLRP.ActualLRPKey))
+			Expect(*instanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
 		})
 
 		It("emits events to the hub", func() {
@@ -567,14 +574,14 @@ var _ = Describe("Evacuation Handlers", func() {
 			event := actualHub.EmitArgsForCall(0)
 			removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 			Expect(ok).To(BeTrue())
-			Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+			Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actualLRP}))
 		})
 
 		It("crashes the actual lrp instance", func() {
 			Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
 			_, key, instanceKey, errorMessage := fakeActualLRPDB.CrashActualLRPArgsForCall(0)
-			Expect(*key).To(Equal(actual.ActualLRPKey))
-			Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
+			Expect(*key).To(Equal(actualLRP.ActualLRPKey))
+			Expect(*instanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
 			Expect(errorMessage).To(Equal("i failed"))
 		})
 
@@ -664,14 +671,17 @@ var _ = Describe("Evacuation Handlers", func() {
 
 	Describe("EvacuateRunningActualLRP", func() {
 		var (
-			request        *http.Request
-			requestBody    *models.EvacuateRunningActualLRPRequest
-			actualLRPGroup *models.ActualLRPGroup
-			desiredLRP     *models.DesiredLRP
+			request     *http.Request
+			requestBody *models.EvacuateRunningActualLRPRequest
+			// actualLRPGroup *models.ActualLRPGroup
+			desiredLRP *models.DesiredLRP
 
-			actual           *models.ActualLRP
-			evacuatingActual *models.ActualLRP
-			afterActual      *models.ActualLRP
+			actual             *models.ActualLRP
+			evacuatingActual   *models.ActualLRP
+			afterActual        *models.ActualLRP
+			unclaimedActualLRP *models.ActualLRP
+			actualLRPs         []*models.ActualLRP
+			customErr          error
 		)
 
 		BeforeEach(func() {
@@ -680,8 +690,8 @@ var _ = Describe("Evacuation Handlers", func() {
 			fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 
 			actual = model_helpers.NewValidActualLRP("the-guid", 1)
-			evacuatingActual = model_helpers.NewValidActualLRP("the-guid", 1)
-			afterActual = model_helpers.NewValidActualLRP("the-guid", 1)
+			evacuatingActual = model_helpers.NewValidEvacuatingActualLRP("the-guid", 1)
+			afterActual = model_helpers.NewValidEvacuatingActualLRP("the-guid", 1)
 
 			key := actual.ActualLRPKey
 			instanceKey := actual.ActualLRPInstanceKey
@@ -693,16 +703,15 @@ var _ = Describe("Evacuation Handlers", func() {
 				Ttl:                  60,
 			}
 
-			actualLRPGroup = &models.ActualLRPGroup{
-				Instance:   actual,
-				Evacuating: evacuatingActual,
-			}
+			actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(actualLRPGroup, nil)
-			fakeActualLRPDB.UnclaimActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, &models.ActualLRPGroup{Instance: afterActual}, nil)
+			unclaimedActualLRP = model_helpers.NewValidActualLRP("some-guid", 1)
+			unclaimedActualLRP.State = models.ActualLRPStateUnclaimed
+			fakeActualLRPDB.UnclaimActualLRPReturns(actual, unclaimedActualLRP, nil)
 		})
 
 		JustBeforeEach(func() {
+			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, customErr)
 			if request == nil {
 				request = newTestRequest(requestBody)
 			}
@@ -713,7 +722,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when the actual lrp group exists", func() {
 			Context("when the actual lrp instance does not exist", func() {
 				BeforeEach(func() {
-					actualLRPGroup.Instance = nil
+					actualLRPs = []*models.ActualLRP{evacuatingActual}
 				})
 
 				It("removes the evacuating lrp and does not keep the container", func() {
@@ -734,6 +743,8 @@ var _ = Describe("Evacuation Handlers", func() {
 					event := actualHub.EmitArgsForCall(0)
 					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
+					// altering presence for actual
+					actual.Presence = models.ActualLRP_Evacuating
 					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
 				})
 
@@ -794,8 +805,7 @@ var _ = Describe("Evacuation Handlers", func() {
 				Context("without a placement error", func() {
 					BeforeEach(func() {
 						actual.PlacementError = ""
-						group := &models.ActualLRPGroup{Evacuating: afterActual}
-						fakeEvacuationDB.EvacuateActualLRPReturns(group, nil)
+						fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
 					})
 
 					It("evacuates the LRP", func() {
@@ -826,7 +836,7 @@ var _ = Describe("Evacuation Handlers", func() {
 						BeforeEach(func() {
 							evacuatingLRP := model_helpers.NewValidActualLRP("the-guid", 1)
 							evacuatingLRP.CellId = "some-other-cell"
-							actualLRPGroup.Evacuating = evacuatingLRP
+							actualLRPs = []*models.ActualLRP{actual, evacuatingLRP}
 						})
 
 						It("does not error and does not keep the container", func() {
@@ -897,8 +907,7 @@ var _ = Describe("Evacuation Handlers", func() {
 				Context("by another cell", func() {
 					BeforeEach(func() {
 						actual.CellId = "some-other-cell"
-						group := &models.ActualLRPGroup{Evacuating: afterActual}
-						fakeEvacuationDB.EvacuateActualLRPReturns(group, nil)
+						fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
 					})
 
 					It("evacuates the LRP", func() {
@@ -929,7 +938,7 @@ var _ = Describe("Evacuation Handlers", func() {
 						BeforeEach(func() {
 							evacuatingLRP := model_helpers.NewValidActualLRP("the-guid", 1)
 							evacuatingLRP.CellId = "some-other-cell"
-							actualLRPGroup.Evacuating = evacuatingLRP
+							actualLRPs = []*models.ActualLRP{actual, evacuatingLRP}
 						})
 
 						It("does not error and does not keep the container", func() {
@@ -973,8 +982,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("by the same cell", func() {
 					BeforeEach(func() {
-						group := &models.ActualLRPGroup{Evacuating: afterActual}
-						fakeEvacuationDB.EvacuateActualLRPReturns(group, nil)
+						fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
 					})
 
 					It("evacuates the lrp", func() {
@@ -1020,7 +1028,7 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 						che := event.(*models.ActualLRPChangedEvent)
 						Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
+						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
 					})
 
 					Context("when evacuating fails", func() {
@@ -1062,8 +1070,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("on this cell", func() {
 					BeforeEach(func() {
-						group := &models.ActualLRPGroup{Evacuating: afterActual}
-						fakeEvacuationDB.EvacuateActualLRPReturns(group, nil)
+						fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
 					})
 
 					It("evacuates the lrp and keeps the container", func() {
@@ -1098,7 +1105,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					Context("when the instance is suspect", func() {
 						BeforeEach(func() {
 							actual.Presence = models.ActualLRP_Suspect
-							fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+							fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(actual, nil)
 						})
 
 						It("removes the suspect LRP", func() {
@@ -1167,7 +1174,7 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 						che := event.(*models.ActualLRPChangedEvent)
 						Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
+						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
 					})
 
 					Context("when evacuating fails", func() {
@@ -1272,7 +1279,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					Context("and there is no evacuating lrp", func() {
 						BeforeEach(func() {
-							actualLRPGroup.Evacuating = nil
+							actualLRPs = []*models.ActualLRP{actual}
 						})
 
 						It("responds with KeepContainer set to false", func() {
@@ -1337,7 +1344,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		Context("when the actual lrp group does not exist", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.ErrResourceNotFound)
+				customErr = models.ErrResourceNotFound
 			})
 
 			It("does not return an error or keep the container", func() {
@@ -1367,20 +1374,21 @@ var _ = Describe("Evacuation Handlers", func() {
 
 	Describe("EvacuateStoppedActualLRP", func() {
 		var (
-			request *http.Request
-			actual  *models.ActualLRP
+			request            *http.Request
+			actual, evacuating *models.ActualLRP
 		)
 
 		BeforeEach(func() {
 			actual = model_helpers.NewValidActualLRP("process-guid", 1)
+			evacuating = model_helpers.NewValidEvacuatingActualLRP("process-guid", 1)
 			requestBody := &models.EvacuateStoppedActualLRPRequest{
 				ActualLrpKey:         &actual.ActualLRPKey,
 				ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
 			}
 
-			fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{
-				Instance:   actual,
-				Evacuating: actual,
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{
+				actual,
+				evacuating,
 			}, nil)
 
 			request = newTestRequest(requestBody)
@@ -1392,7 +1400,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		Context("when the LRP Instace is missing", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{}, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{}, nil)
 			})
 
 			It("returns an error", func() {
@@ -1407,8 +1415,8 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when the LRP presence is Suspect", func() {
 			BeforeEach(func() {
 				actual.Presence = models.ActualLRP_Suspect
-				fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(&models.ActualLRPGroup{Instance: actual}, nil)
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: actual}, nil)
+				fakeSuspectLRPDB.RemoveSuspectActualLRPReturns(actual, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual}, nil)
 			})
 
 			It("removes the suspect lrp", func() {
@@ -1482,7 +1490,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			events = append(events, actualHub.EmitArgsForCall(1))
 
 			Expect(events).To(ConsistOf(
-				models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: actual}),
+				models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating}),
 				models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual}),
 			))
 		})
@@ -1505,7 +1513,7 @@ var _ = Describe("Evacuation Handlers", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
 			})
 		})
 
@@ -1539,13 +1547,13 @@ var _ = Describe("Evacuation Handlers", func() {
 				event := actualHub.EmitArgsForCall(0)
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
-				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actual}))
+				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
 			})
 		})
 
 		Context("when the DB returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, models.NewUnrecoverableError(nil))
+				fakeActualLRPDB.ActualLRPsReturns(nil, models.NewUnrecoverableError(nil))
 			})
 
 			It("logs and writes to the exit channel", func() {
@@ -1556,7 +1564,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		Context("when fetching the actual lrp group fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(nil, errors.New("i failed"))
+				fakeActualLRPDB.ActualLRPsReturns(nil, errors.New("i failed"))
 			})
 
 			It("returns an error but does not keep the container", func() {

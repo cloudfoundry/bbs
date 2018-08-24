@@ -95,7 +95,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		var (
 			key            *models.ActualLRPKey
 			schedulingInfo models.DesiredLRPSchedulingInfo
-			before, after  *models.ActualLRPGroup
+			before, after  *models.ActualLRP
 		)
 
 		BeforeEach(func() {
@@ -114,12 +114,11 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				UnstartedLRPKeys: []*models.ActualLRPKeyWithSchedulingInfo{lrpKeyWithSchedulingInfo},
 			})
 
-			crashedLRP := model_helpers.NewValidActualLRP("some-guid", 0)
-			crashedLRP.State = models.ActualLRPStateCrashed
-			before = &models.ActualLRPGroup{Instance: crashedLRP}
-			unclaimedLRP := *crashedLRP
+			before = model_helpers.NewValidActualLRP("some-guid", 0)
+			before.State = models.ActualLRPStateCrashed
+			unclaimedLRP := *before
 			unclaimedLRP.State = models.ActualLRPStateUnclaimed
-			after = &models.ActualLRPGroup{Instance: &unclaimedLRP}
+			after = &unclaimedLRP
 			fakeLRPDB.UnclaimActualLRPReturns(before, after, nil)
 		})
 
@@ -141,14 +140,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("emits an LRPChanged event", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 			event := actualHub.EmitArgsForCall(0)
-			Expect(event).To(Equal(models.NewActualLRPChangedEvent(before, after)))
+			Expect(event).To(Equal(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup())))
 		})
 
 		Context("and the LRP isn't changed", func() {
 			BeforeEach(func() {
-				unclaimedLRP := *after.Instance
-				unclaimedLRP.State = models.ActualLRPStateUnclaimed
-				before = &models.ActualLRPGroup{Instance: &unclaimedLRP}
+				*before = *after
+				before.State = models.ActualLRPStateUnclaimed
 				fakeLRPDB.UnclaimActualLRPReturns(before, after, nil)
 			})
 
@@ -181,7 +179,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		var (
 			key            *models.ActualLRPKey
 			schedulingInfo models.DesiredLRPSchedulingInfo
-			after          *models.ActualLRPGroup
+			after          *models.ActualLRP
 		)
 
 		BeforeEach(func() {
@@ -200,9 +198,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				MissingLRPKeys: []*models.ActualLRPKeyWithSchedulingInfo{lrpKeyWithSchedulingInfo},
 			})
 
-			unclaimedLRP := model_helpers.NewValidActualLRP("some-guid", 0)
-			unclaimedLRP.State = models.ActualLRPStateUnclaimed
-			after = &models.ActualLRPGroup{Instance: unclaimedLRP}
+			after = model_helpers.NewValidActualLRP("some-guid", 0)
+			after.State = models.ActualLRPStateUnclaimed
 			fakeLRPDB.CreateUnclaimedActualLRPReturns(after, nil)
 		})
 
@@ -224,7 +221,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("emits a LPRCreated event", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 			event := actualHub.EmitArgsForCall(0)
-			Expect(event).To(Equal(models.NewActualLRPCreatedEvent(after)))
+			Expect(event).To(Equal(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup())))
 		})
 	})
 
@@ -344,7 +341,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			Context("when ChangeActualLRPPresence fails because there is already a Suspect LRP", func() {
 				var (
-					before, after *models.ActualLRPGroup
+					before, after *models.ActualLRP
 				)
 
 				BeforeEach(func() {
@@ -352,8 +349,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 					fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 						KeysWithMissingCells: keysWithMissingCells,
 					})
-					before = &models.ActualLRPGroup{Instance: &models.ActualLRP{State: models.ActualLRPStateClaimed}}
-					after = &models.ActualLRPGroup{Instance: &models.ActualLRP{State: models.ActualLRPStateUnclaimed}}
+					before = &models.ActualLRP{State: models.ActualLRPStateClaimed}
+					after = &models.ActualLRP{State: models.ActualLRPStateUnclaimed}
 					fakeLRPDB.UnclaimActualLRPReturns(before, after, nil)
 				})
 
@@ -393,12 +390,12 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		BeforeEach(func() {
 			ordinaryActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
 			suspectActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
-			group := &models.ActualLRPGroup{Instance: suspectActualLRP}
+			suspectActualLRP.Presence = models.ActualLRP_Suspect
 
 			suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLRPKey}
 
-			fakeLRPDB.ActualLRPGroupByProcessGuidAndIndexReturns(&models.ActualLRPGroup{Instance: ordinaryActualLRP}, nil)
-			fakeLRPDB.ChangeActualLRPPresenceReturns(group, group, nil)
+			fakeLRPDB.ActualLRPsReturns([]*models.ActualLRP{ordinaryActualLRP}, nil)
+			fakeLRPDB.ChangeActualLRPPresenceReturns(suspectActualLRP, ordinaryActualLRP, nil)
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				SuspectKeysWithExistingCells: suspectKeysWithExistingCells,
 			})
@@ -441,7 +438,6 @@ var _ = Describe("LRP Convergence Controllers", func() {
 	Context("there are extra suspect LRPs", func() {
 		var (
 			key                    *models.ActualLRPKey
-			after                  *models.ActualLRPGroup
 			runningLRP, suspectLRP *models.ActualLRP
 		)
 
@@ -464,16 +460,22 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			suspectLRP.Presence = models.ActualLRP_Suspect
 		})
 
-		It("removes the suspect LRP", func() {
-			Eventually(fakeSuspectDB.RemoveSuspectActualLRPCallCount).Should(Equal(1))
-			_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
-			Expect(lrpKey).To(Equal(key))
-		})
+		Context("when removing a suspect lrp", func() {
+			BeforeEach(func() {
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(suspectLRP, nil)
+			})
 
-		It("emits an ActualLRPRemovedEvent containing the suspect LRP", func() {
-			Eventually(actualHub.EmitCallCount).Should(Equal(1))
-			event := actualHub.EmitArgsForCall(0)
-			Expect(event).To(Equal(models.NewActualLRPRemovedEvent(after)))
+			It("removes the suspect LRP", func() {
+				Eventually(fakeSuspectDB.RemoveSuspectActualLRPCallCount).Should(Equal(1))
+				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(lrpKey).To(Equal(key))
+			})
+
+			It("emits an ActualLRPRemovedEvent containing the suspect LRP", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				Expect(event).To(Equal(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup())))
+			})
 		})
 
 		Context("when RemoveSuspectActualLRP returns an error", func() {

@@ -386,19 +386,19 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		Context("when creating desired lrp in DB succeeds", func() {
-			var createdActualLRPGroups []*models.ActualLRPGroup
+			var createdActualLRPs []*models.ActualLRP
 
 			BeforeEach(func() {
-				createdActualLRPGroups = []*models.ActualLRPGroup{}
+				createdActualLRPs = []*models.ActualLRP{}
 				for i := 0; i < 5; i++ {
-					createdActualLRPGroups = append(createdActualLRPGroups, &models.ActualLRPGroup{Instance: model_helpers.NewValidActualLRP("some-guid", int32(i))})
+					createdActualLRPs = append(createdActualLRPs, model_helpers.NewValidActualLRP("some-guid", int32(i)))
 				}
 				fakeDesiredLRPDB.DesireLRPReturns(nil)
-				fakeActualLRPDB.CreateUnclaimedActualLRPStub = func(_ lager.Logger, key *models.ActualLRPKey) (*models.ActualLRPGroup, error) {
-					if int(key.Index) > len(createdActualLRPGroups)-1 {
+				fakeActualLRPDB.CreateUnclaimedActualLRPStub = func(_ lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, error) {
+					if int(key.Index) > len(createdActualLRPs)-1 {
 						return nil, errors.New("boom")
 					}
-					return createdActualLRPGroups[int(key.Index)], nil
+					return createdActualLRPs[int(key.Index)], nil
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 			})
@@ -445,7 +445,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					event := actualHub.EmitArgsForCall(i)
 					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(createdActualLRPGroups).To(ContainElement(createdEvent.ActualLrpGroup))
+					Expect(createdActualLRPs).To(ContainElement(createdEvent.ActualLrpGroup.Instance))
 				}
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -602,17 +602,15 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				})
 
 				Context("when the number of instances decreased", func() {
-					var actualLRPGroups []*models.ActualLRPGroup
+					var actualLRPs []*models.ActualLRP
 
 					BeforeEach(func() {
-						actualLRPGroups = []*models.ActualLRPGroup{}
+						actualLRPs = []*models.ActualLRP{}
 						for i := 4; i >= 0; i-- {
-							actualLRPGroups = append(actualLRPGroups, &models.ActualLRPGroup{
-								Instance: model_helpers.NewValidActualLRP("some-guid", int32(i)),
-							})
+							actualLRPs = append(actualLRPs, model_helpers.NewValidActualLRP("some-guid", int32(i)))
 						}
 
-						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(actualLRPGroups, nil)
+						fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 					})
 
 					It("stops extra actual lrps", func() {
@@ -631,11 +629,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-						Expect(key).To(Equal(actualLRPGroups[0].Instance.ActualLRPKey))
-						Expect(instanceKey).To(Equal(actualLRPGroups[0].Instance.ActualLRPInstanceKey))
+						Expect(key).To(Equal(actualLRPs[0].ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPs[0].ActualLRPInstanceKey))
 						_, key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
-						Expect(key).To(Equal(actualLRPGroups[1].Instance.ActualLRPKey))
-						Expect(instanceKey).To(Equal(actualLRPGroups[1].Instance.ActualLRPInstanceKey))
+						Expect(key).To(Equal(actualLRPs[1].ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPs[1].ActualLRPInstanceKey))
 					})
 
 					Context("when the rep announces a url", func() {
@@ -706,18 +704,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				})
 
 				Context("when the number of instances increases", func() {
-					var runningActualLRPGroup *models.ActualLRPGroup
 
 					BeforeEach(func() {
 						beforeDesiredLRP.Instances = 1
 						fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
-						runningActualLRPGroup = &models.ActualLRPGroup{
-							Instance: model_helpers.NewValidActualLRP("some-guid", 0),
-						}
-						actualLRPGroups := []*models.ActualLRPGroup{
-							runningActualLRPGroup,
-						}
-						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(actualLRPGroups, nil)
+						actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+						fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 					})
 
 					It("creates missing actual lrps", func() {
@@ -779,7 +771,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Context("when fetching the actual lrps groups fails", func() {
 					BeforeEach(func() {
-						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(nil, errors.New("you lose."))
+						fakeActualLRPDB.ActualLRPsReturns(nil, errors.New("you lose."))
 					})
 
 					It("does not update the actual lrps", func() {
@@ -880,49 +872,44 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			Context("when there are running instances on a present cell", func() {
 				var (
-					runningActualLRPGroup, evacuatingAndRunningActualLRPGroup, evacuatingActualLRPGroup *models.ActualLRPGroup
-					unclaimedActualLRPGroup, crashedActualLRPGroup                                      *models.ActualLRPGroup
+					runningActualLRP0    *models.ActualLRP
+					runningActualLRP1    *models.ActualLRP
+					evacuatingActualLRP1 *models.ActualLRP
+					evacuatingActualLRP2 *models.ActualLRP
+					unclaimedActualLRP3  *models.ActualLRP
+					crashedActualLRP4    *models.ActualLRP
 				)
 
 				BeforeEach(func() {
-					runningActualLRPGroup = &models.ActualLRPGroup{
-						Instance: model_helpers.NewValidActualLRP("some-guid", 0),
-					}
+					runningActualLRP0 = model_helpers.NewValidActualLRP("some-guid", 0)
 
-					evacuatingAndRunningActualLRPGroup = &models.ActualLRPGroup{
-						Instance:   model_helpers.NewValidActualLRP("some-guid", 1),
-						Evacuating: model_helpers.NewValidActualLRP("some-guid", 1),
-					}
-					evacuatingActualLRPGroup = &models.ActualLRPGroup{
-						Evacuating: model_helpers.NewValidActualLRP("some-guid", 2),
-					}
+					evacuatingActualLRP1 = model_helpers.NewValidActualLRP("some-guid", 1)
+					runningActualLRP1 = model_helpers.NewValidEvacuatingActualLRP("some-guid", 1)
 
-					unclaimedActualLRPGroup = &models.ActualLRPGroup{
-						Instance: model_helpers.NewValidActualLRP("some-guid", 3),
-					}
-					unclaimedActualLRPGroup.Instance.State = models.ActualLRPStateUnclaimed
+					evacuatingActualLRP2 = model_helpers.NewValidEvacuatingActualLRP("some-guid", 2)
 
-					crashedActualLRPGroup = &models.ActualLRPGroup{
-						Instance: model_helpers.NewValidActualLRP("some-guid", 4),
-					}
-					crashedActualLRPGroup.Instance.State = models.ActualLRPStateCrashed
+					unclaimedActualLRP3 = model_helpers.NewValidActualLRP("some-guid", 3)
+					unclaimedActualLRP3.State = models.ActualLRPStateUnclaimed
 
-					actualLRPGroups := []*models.ActualLRPGroup{
-						runningActualLRPGroup,
-						evacuatingAndRunningActualLRPGroup,
-						evacuatingActualLRPGroup,
-						unclaimedActualLRPGroup,
-						crashedActualLRPGroup,
-					}
+					crashedActualLRP4 = model_helpers.NewValidActualLRP("some-guid", 4)
+					crashedActualLRP4.State = models.ActualLRPStateCrashed
 
-					fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(actualLRPGroups, nil)
+					actualLRPs := []*models.ActualLRP{
+						runningActualLRP0,
+						runningActualLRP1,
+						evacuatingActualLRP1,
+						evacuatingActualLRP2,
+						unclaimedActualLRP3,
+						crashedActualLRP4,
+					}
+					fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 				})
 
 				It("stops all of the corresponding running actual lrps", func() {
-					Expect(fakeActualLRPDB.ActualLRPGroupsByProcessGuidCallCount()).To(Equal(1))
+					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 
-					_, processGuid := fakeActualLRPDB.ActualLRPGroupsByProcessGuidArgsForCall(0)
-					Expect(processGuid).To(Equal("some-guid"))
+					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					Expect(filter.ProcessGuid).To(Equal("some-guid"))
 
 					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
 					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal("some-address"))
@@ -930,18 +917,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 					_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-					Expect(key).To(Equal(runningActualLRPGroup.Instance.ActualLRPKey))
-					Expect(instanceKey).To(Equal(runningActualLRPGroup.Instance.ActualLRPInstanceKey))
+					Expect(key).To(Equal(runningActualLRP0.ActualLRPKey))
+					Expect(instanceKey).To(Equal(runningActualLRP0.ActualLRPInstanceKey))
 					_, key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
-					Expect(key).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.ActualLRPKey))
-					Expect(instanceKey).To(Equal(evacuatingAndRunningActualLRPGroup.Instance.ActualLRPInstanceKey))
+					Expect(key).To(Equal(evacuatingActualLRP1.ActualLRPKey))
+					Expect(instanceKey).To(Equal(evacuatingActualLRP1.ActualLRPInstanceKey))
 				})
 
 				It("removes all of the corresponding unclaimed and crashed actual lrps", func() {
-					Expect(fakeActualLRPDB.ActualLRPGroupsByProcessGuidCallCount()).To(Equal(1))
+					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 
-					_, processGuid := fakeActualLRPDB.ActualLRPGroupsByProcessGuidArgsForCall(0)
-					Expect(processGuid).To(Equal("some-guid"))
+					// _, returnedActualLRPFilter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					// Expect(processGuidStr).To(Equal("some-guid"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(2))
 
 					_, processGuid, index, actualLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
@@ -957,7 +944,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Context("when fetching the actual lrps fails", func() {
 					BeforeEach(func() {
-						fakeActualLRPDB.ActualLRPGroupsByProcessGuidReturns(nil, errors.New("new error dawg"))
+						fakeActualLRPDB.ActualLRPsReturns(nil, errors.New("new error dawg"))
 					})
 
 					It("logs the error but still succeeds", func() {

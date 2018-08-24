@@ -8,5 +8,5 @@ import (
 //go:generate counterfeiter . SuspectDB
 
 type SuspectDB interface {
-	RemoveSuspectActualLRP(lager.Logger, *models.ActualLRPKey) (*models.ActualLRPGroup, error)
+	RemoveSuspectActualLRP(lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, error)
 }

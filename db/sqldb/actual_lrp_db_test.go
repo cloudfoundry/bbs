@@ -2,7 +2,6 @@ package sqldb_test
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -16,104 +15,6 @@ import (
 var _ = Describe("ActualLRPDB", func() {
 	BeforeEach(func() {
 		fakeGUIDProvider.NextGUIDReturns("my-awesome-guid", nil)
-	})
-
-	Describe("ActualLRPGroupsByProcessGuid", func() {
-		var (
-			processGuid       = "some-guid"
-			index       int32 = 0
-			domain            = "some-domain"
-		)
-
-		Context("when there is a running suspect lrp", func() {
-			BeforeEach(func() {
-				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "missing-cell"}, &models.ActualLRPNetInfo{})
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-				Expect(err).NotTo(HaveOccurred())
-				_, err = sqlDB.CreateUnclaimedActualLRP(logger, key)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, index, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"})
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("always return the Suspect as the instance", func() {
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(HaveLen(1))
-				Expect(groups[0].Instance.InstanceGuid).To(Equal("ig-1"))
-				Expect(groups[0].Instance.Presence).To(Equal(models.ActualLRP_Suspect))
-			})
-		})
-
-		Context("when there is no running suspect lrp", func() {
-			BeforeEach(func() {
-				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}, &models.ActualLRPNetInfo{})
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("always return the Ordinary as the instance", func() {
-				groups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, processGuid)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(groups).To(HaveLen(1))
-				Expect(groups[0].Instance.InstanceGuid).To(Equal("ig-1"))
-				Expect(groups[0].Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
-			})
-		})
-	})
-
-	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
-		var (
-			processGuid       = "some-guid"
-			index       int32 = 0
-			domain            = "some-domain"
-		)
-
-		Context("when there is a running suspect lrp", func() {
-			BeforeEach(func() {
-				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "missing-cell"}, &models.ActualLRPNetInfo{})
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-				Expect(err).NotTo(HaveOccurred())
-				_, err = sqlDB.CreateUnclaimedActualLRP(logger, key)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, index, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"})
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("always return the Suspect as the instance", func() {
-				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(group.Instance.InstanceGuid).To(Equal("ig-1"))
-				Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
-			})
-		})
-
-		Context("when there is no running suspect lrp", func() {
-			BeforeEach(func() {
-				key := &models.ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
-				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.StartActualLRP(logger, key, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}, &models.ActualLRPNetInfo{})
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("always return the Ordinary as the instance", func() {
-				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(group.Instance.InstanceGuid).To(Equal("ig-1"))
-				Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
-			})
-		})
 	})
 
 	Describe("ChangeActualLRPPresence", func() {
@@ -147,8 +48,8 @@ var _ = Describe("ActualLRPDB", func() {
 				before, after, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(before.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
-				Expect(after.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+				Expect(before.Presence).To(Equal(models.ActualLRP_Ordinary))
+				Expect(after.Presence).To(Equal(models.ActualLRP_Suspect))
 			})
 
 			Context("when an LRP with the desired presence already exist", func() {
@@ -202,20 +103,18 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 
 		It("persists the actual lrp into the database", func() {
-			actualLRPGroup, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
+			actualLRP, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
 			Expect(err).NotTo(HaveOccurred())
 
-			actualLRP := models.NewUnclaimedActualLRP(*key, fakeClock.Now().UnixNano())
-			actualLRP.ModificationTag.Epoch = "my-awesome-guid"
-			actualLRP.ModificationTag.Index = 0
+			expectedActualLRP := models.NewUnclaimedActualLRP(*key, fakeClock.Now().UnixNano())
+			expectedActualLRP.ModificationTag.Epoch = "my-awesome-guid"
+			expectedActualLRP.ModificationTag.Index = 0
 
-			group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, key.ProcessGuid, key.Index)
+			actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(group).NotTo(BeNil())
-			Expect(group.Instance).To(BeEquivalentTo(actualLRP))
-			Expect(group.Evacuating).To(BeNil())
-
-			Expect(actualLRPGroup).To(Equal(group))
+			Expect(actualLRPs).NotTo(BeNil())
+			Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
+			Expect(actualLRP).To(Equal(expectedActualLRP))
 		})
 
 		Context("when generating a guid fails", func() {
@@ -240,90 +139,6 @@ var _ = Describe("ActualLRPDB", func() {
 				_, err := sqlDB.CreateUnclaimedActualLRP(logger, key)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceExists))
-			})
-		})
-	})
-
-	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
-		var actualLRP *models.ActualLRP
-
-		BeforeEach(func() {
-			actualLRP = &models.ActualLRP{
-				ActualLRPKey: models.NewActualLRPKey("some-guid", 0, "some-domain"),
-				State:        models.ActualLRPStateUnclaimed,
-				ModificationTag: models.ModificationTag{
-					Epoch: "my-awesome-guid",
-					Index: 0,
-				},
-			}
-			_, err := sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("returns the existing actual lrp group", func() {
-			actualLRP.Since = fakeClock.Now().UnixNano()
-
-			group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(group).NotTo(BeNil())
-			Expect(group.Instance).To(BeEquivalentTo(actualLRP))
-			Expect(group.Evacuating).To(BeNil())
-		})
-
-		Context("when there's just an evacuating LRP", func() {
-			BeforeEach(func() {
-				queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
-				if test_helpers.UsePostgres() {
-					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-				}
-				_, err := db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Ordinary)
-				Expect(err).NotTo(HaveOccurred())
-				actualLRP.Presence = models.ActualLRP_Evacuating
-			})
-
-			It("returns the existing actual lrp group", func() {
-				actualLRP.Since = fakeClock.Now().UnixNano()
-
-				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(group).NotTo(BeNil())
-				Expect(group.Instance).To(BeNil())
-				Expect(group.Evacuating).To(BeEquivalentTo(actualLRP))
-			})
-		})
-
-		Context("when there are both instance and evacuating LRPs", func() {
-			var evacuatingLRP *models.ActualLRP
-			BeforeEach(func() {
-				actualLRP.Since = fakeClock.Now().UnixNano()
-				cpy := *actualLRP
-				evacuatingLRP = &cpy
-				evacuatingLRP.Presence = models.ActualLRP_Evacuating
-
-				queryStr := fmt.Sprintf("UPDATE actual_lrps SET presence = %d WHERE process_guid = ?", models.ActualLRP_Evacuating)
-				if test_helpers.UsePostgres() {
-					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-				}
-				_, err := db.Exec(queryStr, actualLRP.ProcessGuid)
-				Expect(err).NotTo(HaveOccurred())
-				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &actualLRP.ActualLRPKey)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns the existing actual lrp group", func() {
-				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(group).NotTo(BeNil())
-				Expect(group.Instance).To(BeEquivalentTo(actualLRP))
-				Expect(group.Evacuating).To(BeEquivalentTo(evacuatingLRP))
-			})
-		})
-
-		Context("when the actual LRP does not exist", func() {
-			It("returns a resource not found error", func() {
-				group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, "nope", 0)
-				Expect(err).To(Equal(models.ErrResourceNotFound))
-				Expect(group).To(BeNil())
 			})
 		})
 	})
@@ -550,11 +365,7 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPs).To(HaveLen(3))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[1]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[3]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[4]))
+				Expect(actualLRPs).To(ConsistOf(allActualLRPs[1], allActualLRPs[3], allActualLRPs[4]))
 			})
 		})
 
@@ -565,10 +376,7 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPs).To(HaveLen(2))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[0]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[1]))
+				Expect(actualLRPs).To(ConsistOf(allActualLRPs[0], allActualLRPs[1]))
 			})
 		})
 
@@ -579,10 +387,7 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPs).To(HaveLen(2))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[5]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[6]))
+				Expect(actualLRPs).To(ConsistOf(allActualLRPs[5], allActualLRPs[6]))
 			})
 		})
 
@@ -594,13 +399,7 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPs).To(HaveLen(5))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[0]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[1]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[2]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[3]))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[4]))
+				Expect(actualLRPs).To(BeEquivalentTo(allActualLRPs[0:5]))
 			})
 		})
 
@@ -615,399 +414,40 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPs).To(HaveLen(1))
-				Expect(actualLRPs).To(ContainElement(allActualLRPs[2]))
+				Expect(actualLRPs).To(ConsistOf(allActualLRPs[2]))
 			})
 		})
 
 		Context("when the filter does not match any ActualLRPs", func() {
-			It("returns an empty list", func() {
-				index := int32(1)
-				filter := models.ActualLRPFilter{
+			var filter models.ActualLRPFilter
+
+			BeforeEach(func() {
+				filter = models.ActualLRPFilter{
 					Domain:      "domain1-that-doesnt-exist",
 					CellID:      "cell2",
 					ProcessGuid: "guid3",
-					Index:       &index,
 				}
-				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPs).To(HaveLen(0))
-			})
-		})
-	})
-
-	Describe("ActualLRPGroups", func() {
-		var allActualLRPGroups []*models.ActualLRPGroup
-
-		BeforeEach(func() {
-			allActualLRPGroups = []*models.ActualLRPGroup{}
-			fakeGUIDProvider.NextGUIDReturns("mod-tag-guid", nil)
-
-			actualLRPKey1 := &models.ActualLRPKey{
-				ProcessGuid: "guid1",
-				Index:       1,
-				Domain:      "domain1",
-			}
-			instanceKey1 := &models.ActualLRPInstanceKey{
-				InstanceGuid: "i-guid1",
-				CellId:       "cell1",
-			}
-
-			_, err := sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey1)
-			Expect(err).NotTo(HaveOccurred())
-
-			fakeClock.Increment(time.Hour)
-
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey1.ProcessGuid, actualLRPKey1.Index, instanceKey1)
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey:         *actualLRPKey1,
-					ActualLRPInstanceKey: *instanceKey1,
-					State:                models.ActualLRPStateClaimed,
-					Since:                fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 1,
-					},
-				},
 			})
 
-			actualLRPKey2 := &models.ActualLRPKey{
-				ProcessGuid: "guid-2",
-				Index:       1,
-				Domain:      "domain2",
-			}
-			instanceKey2 := &models.ActualLRPInstanceKey{
-				InstanceGuid: "i-guid2",
-				CellId:       "cell1",
-			}
-
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
-			Expect(err).NotTo(HaveOccurred())
-			fakeClock.Increment(time.Hour)
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, instanceKey2)
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey:         *actualLRPKey2,
-					ActualLRPInstanceKey: *instanceKey2,
-					State:                models.ActualLRPStateClaimed,
-					Since:                fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 1,
-					},
-				},
+			Context("without a specific filter defined", func() {
+				It("returns an empty list", func() {
+					actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPs).To(BeEmpty())
+				})
 			})
 
-			actualLRPKey3 := &models.ActualLRPKey{
-				ProcessGuid: "guid3",
-				Index:       1,
-				Domain:      "domain1",
-			}
-			instanceKey3 := &models.ActualLRPInstanceKey{
-				InstanceGuid: "i-guid3",
-				CellId:       "cell2",
-			}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3)
-			Expect(err).NotTo(HaveOccurred())
-			fakeClock.Increment(time.Hour)
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey3.ProcessGuid, actualLRPKey3.Index, instanceKey3)
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey:         *actualLRPKey3,
-					ActualLRPInstanceKey: *instanceKey3,
-					State:                models.ActualLRPStateClaimed,
-					Since:                fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 1,
-					},
-				},
-			})
+			Context("if the index is set", func() {
+				BeforeEach(func() {
+					index := int32(1)
+					filter.Index = &index
+				})
 
-			actualLRPKey4 := &models.ActualLRPKey{
-				ProcessGuid: "guid4",
-				Index:       1,
-				Domain:      "domain2",
-			}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey4)
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey: *actualLRPKey4,
-					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 0,
-					},
-				},
-			})
-
-			actualLRPKey5 := &models.ActualLRPKey{
-				ProcessGuid: "guid5",
-				Index:       1,
-				Domain:      "domain2",
-			}
-			instanceKey5 := &models.ActualLRPInstanceKey{
-				InstanceGuid: "i-guid5",
-				CellId:       "cell2",
-			}
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey5)
-			Expect(err).NotTo(HaveOccurred())
-			fakeClock.Increment(time.Hour)
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, instanceKey5)
-			Expect(err).NotTo(HaveOccurred())
-			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRPKey5.ProcessGuid, actualLRPKey5.Index, models.ActualLRP_Ordinary)
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Evacuating: &models.ActualLRP{
-					ActualLRPKey:         *actualLRPKey5,
-					ActualLRPInstanceKey: *instanceKey5,
-					State:                models.ActualLRPStateClaimed,
-					Since:                fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 1,
-					},
-					Presence: models.ActualLRP_Evacuating,
-				},
-			})
-
-			actualLRPKey6 := &models.ActualLRPKey{
-				ProcessGuid: "guid6",
-				Index:       1,
-				Domain:      "domain1",
-			}
-			instanceKey6 := &models.ActualLRPInstanceKey{
-				InstanceGuid: "i-guid6",
-				CellId:       "cell2",
-			}
-			fakeClock.Increment(time.Hour)
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
-			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
-			Expect(err).NotTo(HaveOccurred())
-			queryStr = "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, models.ActualLRP_Ordinary)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey6)
-			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ClaimActualLRP(logger, actualLRPKey6.ProcessGuid, actualLRPKey6.Index, instanceKey6)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey:         *actualLRPKey6,
-					ActualLRPInstanceKey: *instanceKey6,
-					State:                models.ActualLRPStateClaimed,
-					Since:                fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 1,
-					},
-				},
-				Evacuating: &models.ActualLRP{
-					ActualLRPKey:         *actualLRPKey6,
-					ActualLRPInstanceKey: *instanceKey6,
-					State:                models.ActualLRPStateClaimed,
-					Since:                fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 1,
-					},
-					Presence: models.ActualLRP_Evacuating,
-				},
-			})
-		})
-
-		It("returns all the actual lrp groups", func() {
-			actualLRPGroups, err := sqlDB.ActualLRPGroups(logger, models.ActualLRPFilter{})
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(actualLRPGroups).To(ConsistOf(allActualLRPGroups))
-		})
-
-		It("prunes all actual lrps containing invalid data", func() {
-			actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
-			_, _, err := sqlDB.StartActualLRP(logger, &actualLRPWithInvalidData.ActualLRPKey, &actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo)
-			Expect(err).NotTo(HaveOccurred())
-			queryStr := `UPDATE actual_lrps SET net_info = 'garbage' WHERE process_guid = 'invalid'`
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr)
-			Expect(err).NotTo(HaveOccurred())
-
-			actualLRPGroups, err := sqlDB.ActualLRPGroups(logger, models.ActualLRPFilter{})
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(actualLRPGroups).NotTo(ContainElement(actualLRPWithInvalidData))
-		})
-
-		Context("when filtering on domains", func() {
-			It("returns the actual lrp groups in the domain", func() {
-				filter := models.ActualLRPFilter{
-					Domain: "domain2",
-				}
-				actualLRPGroups, err := sqlDB.ActualLRPGroups(logger, filter)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPGroups).To(HaveLen(3))
-				Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[1]))
-				Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[3]))
-				Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[4]))
-			})
-		})
-
-		Context("when filtering on cell", func() {
-			It("returns the actual lrp groups claimed by the cell", func() {
-				filter := models.ActualLRPFilter{
-					CellID: "cell1",
-				}
-				actualLRPGroups, err := sqlDB.ActualLRPGroups(logger, filter)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPGroups).To(HaveLen(2))
-				Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[0]))
-				Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[1]))
-			})
-		})
-
-		Context("when filtering on domain and cell", func() {
-			It("returns the actual lrp groups in the domain and claimed by the cell", func() {
-				filter := models.ActualLRPFilter{
-					Domain: "domain1",
-					CellID: "cell2",
-				}
-				actualLRPGroups, err := sqlDB.ActualLRPGroups(logger, filter)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPGroups).To(HaveLen(2))
-				Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[2]))
-				Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[5]))
-			})
-		})
-	})
-
-	Describe("ActualLRPGroupsByProcessGuid", func() {
-		var allActualLRPGroups []*models.ActualLRPGroup
-
-		BeforeEach(func() {
-			allActualLRPGroups = []*models.ActualLRPGroup{}
-			fakeGUIDProvider.NextGUIDReturns("mod-tag-guid", nil)
-
-			actualLRPKey1 := &models.ActualLRPKey{
-				ProcessGuid: "guid1",
-				Index:       0,
-				Domain:      "domain1",
-			}
-			_, err := sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey1)
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey: *actualLRPKey1,
-					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 0,
-					},
-				},
-			})
-
-			actualLRPKey2 := &models.ActualLRPKey{
-				ProcessGuid: "guid1",
-				Index:       1,
-				Domain:      "domain1",
-			}
-			fakeClock.Increment(time.Hour)
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
-			Expect(err).NotTo(HaveOccurred())
-			queryStr := "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, models.ActualLRP_Evacuating, actualLRPKey2.ProcessGuid, actualLRPKey2.Index, models.ActualLRP_Ordinary)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey2)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey: *actualLRPKey2,
-					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 0,
-					},
-				},
-				Evacuating: &models.ActualLRP{
-					ActualLRPKey: *actualLRPKey2,
-					State:        models.ActualLRPStateUnclaimed,
-					Since:        fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 0,
-					},
-					Presence: models.ActualLRP_Evacuating,
-				},
-			})
-
-			actualLRPKey3 := &models.ActualLRPKey{
-				ProcessGuid: "guid2",
-				Index:       0,
-				Domain:      "domain1",
-			}
-			fakeClock.Increment(time.Hour)
-			_, err = sqlDB.CreateUnclaimedActualLRP(logger, actualLRPKey3)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(err).NotTo(HaveOccurred())
-			allActualLRPGroups = append(allActualLRPGroups, &models.ActualLRPGroup{
-				Instance: &models.ActualLRP{
-					ActualLRPKey: *actualLRPKey3,
-					State:        models.ActualLRPStateClaimed,
-					Since:        fakeClock.Now().UnixNano(),
-					ModificationTag: models.ModificationTag{
-						Epoch: "mod-tag-guid",
-						Index: 0,
-					},
-				},
-			})
-		})
-
-		It("returns all the actual lrp groups for the chosen process guid", func() {
-			actualLRPGroups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "guid1")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(actualLRPGroups).To(HaveLen(2))
-			Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[0]))
-			Expect(actualLRPGroups).To(ContainElement(allActualLRPGroups[1]))
-		})
-
-		Context("when no actual lrps exist for the process guid", func() {
-			It("returns an empty slice", func() {
-				actualLRPGroups, err := sqlDB.ActualLRPGroupsByProcessGuid(logger, "guid3")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(actualLRPGroups).To(HaveLen(0))
+				It("returns a resource not found error", func() {
+					actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(actualLRPs).To(BeEmpty())
+				})
 			})
 		})
 	})
@@ -1054,23 +494,22 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ModificationTag.Increment()
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
-					Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-					Expect(actualLRPGroup.Evacuating).To(BeNil())
+					Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
+					beforeActualLRP, afterActualLRP, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
 					expectedActualLRP.Since = lrpCreationTime.UnixNano()
-					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: expectedActualLRP}))
+					Expect(beforeActualLRP).To(Equal(expectedActualLRP))
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
 
 				Context("and there is a placement error", func() {
@@ -1098,10 +537,9 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
-						Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-						Expect(actualLRPGroup.Evacuating).To(BeNil())
+						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
 				})
 			})
@@ -1125,12 +563,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(beforeActualLRP).To(Equal(afterActualLRP))
-						Expect(afterActualLRP).To(Equal(&models.ActualLRPGroup{Instance: expectedActualLRP}))
+						Expect(afterActualLRP).To(Equal(expectedActualLRP))
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
-						Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-						Expect(actualLRPGroup.Evacuating).To(BeNil())
+						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
 				})
 
@@ -1139,11 +576,9 @@ var _ = Describe("ActualLRPDB", func() {
 						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 
-						group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(group).NotTo(BeNil())
-						Expect(group.Instance).NotTo(BeNil())
-						expectedActualLRP = group.Instance
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
+						Expect(actualLRPs).To(HaveLen(1))
+						expectedActualLRP = actualLRPs[0]
 					})
 
 					It("returns an error", func() {
@@ -1155,10 +590,9 @@ var _ = Describe("ActualLRPDB", func() {
 						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).To(HaveOccurred())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
-						Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-						Expect(actualLRPGroup.Evacuating).To(BeNil())
+						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
 				})
 			})
@@ -1190,15 +624,14 @@ var _ = Describe("ActualLRPDB", func() {
 						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 						expectedActualLRP.State = models.ActualLRPStateClaimed
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ModificationTag.Increment()
-						Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-						Expect(actualLRPGroup.Evacuating).To(BeNil())
+						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
 				})
 
@@ -1206,20 +639,19 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						instanceKey.CellId = "another-cell"
 
-						group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
-						Expect(group).NotTo(BeNil())
-						Expect(group.Instance).NotTo(BeNil())
-						expectedActualLRP = group.Instance
+						Expect(actualLRPs).To(HaveLen(1))
+						expectedActualLRP = actualLRPs[0]
 					})
 
 					It("returns an error", func() {
 						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).To(HaveOccurred())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
-						Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
 				})
 
@@ -1227,20 +659,19 @@ var _ = Describe("ActualLRPDB", func() {
 					BeforeEach(func() {
 						instanceKey.InstanceGuid = "another-instance-guid"
 
-						group, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
-						Expect(group).NotTo(BeNil())
-						Expect(group.Instance).NotTo(BeNil())
-						expectedActualLRP = group.Instance
+						Expect(actualLRPs).To(HaveLen(1))
+						expectedActualLRP = actualLRPs[0]
 					})
 
 					It("returns an error", func() {
 						_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 						Expect(err).To(HaveOccurred())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
-						Expect(actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
 				})
 			})
@@ -1265,9 +696,10 @@ var _ = Describe("ActualLRPDB", func() {
 					_, _, err := sqlDB.ClaimActualLRP(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index, instanceKey)
 					Expect(err).To(HaveOccurred())
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
-					Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateCrashed))
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].State).To(Equal(models.ActualLRPStateCrashed))
 				})
 			})
 
@@ -1295,10 +727,9 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(models.ErrResourceNotFound))
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, expectedActualLRP.ProcessGuid, expectedActualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
-					Expect(actualLRPGroup.Instance).To(BeNil())
-					Expect(actualLRPGroup.Evacuating).To(BeEquivalentTo(expectedActualLRP))
+					Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 				})
 			})
 		})
@@ -1366,7 +797,7 @@ var _ = Describe("ActualLRPDB", func() {
 					_, _, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1379,11 +810,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 1,
 					}
 
-					Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
 					expectedActualLRP := *actualLRP
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
@@ -1392,11 +823,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 0,
 					}
-					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
+					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
 			})
 
@@ -1411,7 +842,7 @@ var _ = Describe("ActualLRPDB", func() {
 					_, _, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1424,11 +855,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 2,
 					}
 
-					Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1441,11 +872,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 1,
 					}
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
+					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
 
 				Context("and the instance key is different", func() {
@@ -1454,7 +885,7 @@ var _ = Describe("ActualLRPDB", func() {
 						_, _, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, otherInstanceKey, netInfo)
 						Expect(err).NotTo(HaveOccurred())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
@@ -1467,7 +898,7 @@ var _ = Describe("ActualLRPDB", func() {
 							Index: 2,
 						}
 
-						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
 				})
 
@@ -1480,51 +911,51 @@ var _ = Describe("ActualLRPDB", func() {
 					Context("and the instance key is the same", func() {
 						Context("and the net info is the same", func() {
 							It("does nothing", func() {
-								beforeActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+								beforeActualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 								Expect(err).NotTo(HaveOccurred())
 
 								_, _, err = sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 								Expect(err).NotTo(HaveOccurred())
 
-								afterActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+								afterActualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 								Expect(err).NotTo(HaveOccurred())
 
-								Expect(beforeActualLRPGroup).To(BeEquivalentTo(afterActualLRPGroup))
+								Expect(beforeActualLRPs).To(BeEquivalentTo(afterActualLRPs))
 							})
 
 							It("returns the same actual lrp group for before and after", func() {
-								beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 								Expect(err).NotTo(HaveOccurred())
-								Expect(beforeActualLRPGroup).To(Equal(afterActualLRPGroup))
+								Expect(beforeActualLRP).To(Equal(afterActualLRP))
 							})
 						})
 
 						Context("and the net info is NOT the same", func() {
 							var (
-								expectedActualLRPGroup *models.ActualLRPGroup
-								newNetInfo             *models.ActualLRPNetInfo
+								expectedActualLRPs []*models.ActualLRP
+								newNetInfo         *models.ActualLRPNetInfo
 							)
 
 							BeforeEach(func() {
 								var err error
-								expectedActualLRPGroup, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+								expectedActualLRPs, err = sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 								Expect(err).NotTo(HaveOccurred())
 								newNetInfo = &models.ActualLRPNetInfo{Address: "some-other-address"}
 							})
 
 							It("updates the net info", func() {
-								beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, newNetInfo)
+								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, newNetInfo)
 								Expect(err).NotTo(HaveOccurred())
 
-								Expect(beforeActualLRPGroup).To(Equal(expectedActualLRPGroup))
+								Expect(expectedActualLRPs).To(ConsistOf(beforeActualLRP))
 
-								actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+								actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 								Expect(err).NotTo(HaveOccurred())
 
-								expectedActualLRPGroup.Instance.ActualLRPNetInfo = *newNetInfo
-								expectedActualLRPGroup.Instance.ModificationTag.Increment()
-								Expect(actualLRPGroup).To(BeEquivalentTo(expectedActualLRPGroup))
-								Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+								expectedActualLRPs[0].ActualLRPNetInfo = *newNetInfo
+								expectedActualLRPs[0].ModificationTag.Increment()
+								Expect(actualLRPs).To(BeEquivalentTo(expectedActualLRPs))
+								Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 							})
 						})
 					})
@@ -1554,7 +985,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("transitions the state to RUNNING", func() {
-						beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+						beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(err).NotTo(HaveOccurred())
@@ -1567,9 +998,9 @@ var _ = Describe("ActualLRPDB", func() {
 							Epoch: "my-awesome-guid",
 							Index: 1,
 						}
-						Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedBeforeActualLRP}))
+						Expect(beforeActualLRP).To(Equal(&expectedBeforeActualLRP))
 
-						fetchedActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						fetchedActualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedAfterActualLRP := *actualLRP
@@ -1582,8 +1013,8 @@ var _ = Describe("ActualLRPDB", func() {
 							Index: 2,
 						}
 
-						Expect(fetchedActualLRPGroup.Instance).To(BeEquivalentTo(&expectedAfterActualLRP))
-						Expect(afterActualLRPGroup).To(BeEquivalentTo(fetchedActualLRPGroup))
+						Expect(fetchedActualLRPs).To(ContainElement(afterActualLRP))
+						Expect(fetchedActualLRPs).To(ContainElement(&expectedAfterActualLRP))
 					})
 				})
 			})
@@ -1621,11 +1052,11 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("creates the actual lrp", func() {
-				beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+				beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &models.ActualLRP{}}))
+				Expect(beforeActualLRP).To(Equal(&models.ActualLRP{}))
 
-				fetchedActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+				fetchedActualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 				Expect(err).NotTo(HaveOccurred())
 
 				expectedActualLRP := *actualLRP
@@ -1634,8 +1065,8 @@ var _ = Describe("ActualLRPDB", func() {
 				expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 				expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-				Expect(*fetchedActualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-				Expect(afterActualLRPGroup).To(BeEquivalentTo(fetchedActualLRPGroup))
+				Expect(fetchedActualLRPs).To(ContainElement(afterActualLRP))
+				Expect(fetchedActualLRPs).To(ContainElement(&expectedActualLRP))
 			})
 
 			Context("when there is only an evacuating actual LRP", func() {
@@ -1656,11 +1087,11 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("creates a new actual LRP", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &models.ActualLRP{}}))
+					Expect(beforeActualLRP).To(Equal(&models.ActualLRP{}))
 
-					fetchedActualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					fetchedActualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1669,8 +1100,8 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-					Expect(*fetchedActualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
-					Expect(afterActualLRPGroup.Instance).To(BeEquivalentTo(fetchedActualLRPGroup.Instance))
+					Expect(fetchedActualLRPs).To(ContainElement(afterActualLRP))
+					Expect(fetchedActualLRPs).To(ContainElement(&expectedActualLRP))
 				})
 			})
 		})
@@ -1717,7 +1148,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns the before and after actual lrps", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					beforeActualLRP, afterActualLRP, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1726,12 +1157,12 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
 
-					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
+					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
 
 				Context("and the crash reason is larger than 1K", func() {
@@ -1740,7 +1171,7 @@ var _ = Describe("ActualLRPDB", func() {
 						_, _, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, crashReason)
 						Expect(err).NotTo(HaveOccurred())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
@@ -1750,7 +1181,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
 				})
 
@@ -1760,7 +1191,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeTrue())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
@@ -1770,7 +1201,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
 				})
 
@@ -1795,7 +1226,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeFalse())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
@@ -1805,7 +1236,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
 
 					Context("and it has NOT been updated recently", func() {
@@ -1829,10 +1260,11 @@ var _ = Describe("ActualLRPDB", func() {
 							Expect(err).NotTo(HaveOccurred())
 							Expect(shouldRestart).To(BeTrue())
 
-							actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+							actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 							Expect(err).NotTo(HaveOccurred())
 
-							Expect(actualLRPGroup.Instance.CrashCount).To(BeNumerically("==", 1))
+							Expect(actualLRPs).To(HaveLen(1))
+							Expect(actualLRPs[0].CrashCount).To(BeNumerically("==", 1))
 						})
 					})
 				})
@@ -1847,7 +1279,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns the previous and current actual lrp", func() {
-					beforeActualLRPGroup, afterActualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					beforeActualLRP, afterActualLRP, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -1855,11 +1287,11 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.Since = fakeClock.Now().Add(-time.Hour).UnixNano()
 
-					Expect(beforeActualLRPGroup).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
+					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
-					Expect(afterActualLRPGroup).To(Equal(actualLRPGroup))
+					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
 
 				Context("and it should be restarted", func() {
@@ -1883,7 +1315,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeTrue())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
@@ -1893,7 +1325,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
 				})
 
@@ -1918,7 +1350,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(shouldRestart).To(BeFalse())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
@@ -1928,7 +1360,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
-						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
 				})
 			})
@@ -2045,9 +1477,9 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("only update the non evacuating one", func() {
-					_, actualLRPGroup, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
+					_, crashedActualLRP, _, err := sqlDB.CrashActualLRP(logger, &actualLRP.ActualLRPKey, instanceKey, "because it didn't go well")
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actualLRPGroup.Instance.CrashCount).To(Equal(actualLRP.CrashCount + 1))
+					Expect(crashedActualLRP.CrashCount).To(Equal(actualLRP.CrashCount + 1))
 				})
 			})
 		})
@@ -2096,7 +1528,7 @@ var _ = Describe("ActualLRPDB", func() {
 					_, _, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
 					Expect(err).NotTo(HaveOccurred())
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -2108,7 +1540,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Index: 1,
 					}
 
-					Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
 
 				Context("and the placement error is longer than 1K", func() {
@@ -2117,7 +1549,7 @@ var _ = Describe("ActualLRPDB", func() {
 						_, _, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, value)
 						Expect(err).NotTo(HaveOccurred())
 
-						actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+						actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
 
 						expectedActualLRP := *actualLRP
@@ -2129,7 +1561,7 @@ var _ = Describe("ActualLRPDB", func() {
 							Index: 1,
 						}
 
-						Expect(*actualLRPGroup.Instance).To(BeEquivalentTo(expectedActualLRP))
+						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
 				})
 
@@ -2137,7 +1569,7 @@ var _ = Describe("ActualLRPDB", func() {
 					beforeActualLRP, afterActualLRP, err := sqlDB.FailActualLRP(logger, &actualLRP.ActualLRPKey, "failing the LRP")
 					Expect(err).NotTo(HaveOccurred())
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -2147,8 +1579,8 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 0,
 					}
-					Expect(beforeActualLRP).To(Equal(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
-					Expect(afterActualLRP).To(Equal(actualLRPGroup))
+					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
+					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
 			})
 
@@ -2211,16 +1643,16 @@ var _ = Describe("ActualLRPDB", func() {
 				err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, nil)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(models.ErrResourceNotFound))
+				lrps, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lrps).To(BeEmpty())
 			})
 
 			It("keeps the other lrps around", func() {
 				err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, nil)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, otherActualLRPKey.ProcessGuid, otherActualLRPKey.Index)
+				_, err = sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: otherActualLRPKey.ProcessGuid, Index: &otherActualLRPKey.Index})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -2239,9 +1671,9 @@ var _ = Describe("ActualLRPDB", func() {
 						err := sqlDB.RemoveActualLRP(logger, actualLRP.ProcessGuid, actualLRP.Index, &instanceKey)
 						Expect(err).NotTo(HaveOccurred())
 
-						_, err = sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, actualLRP.ProcessGuid, actualLRP.Index)
-						Expect(err).To(HaveOccurred())
-						Expect(err).To(Equal(models.ErrResourceNotFound))
+						lrps, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+						Expect(err).NotTo(HaveOccurred())
+						Expect(lrps).To(BeEmpty())
 					})
 				})
 
@@ -2279,7 +1711,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP exists", func() {
 			Context("When the actual LRP is claimed", func() {
-				var beforeActualLRPGroup, afterActualLRPGroup *models.ActualLRPGroup
+				var beforeActualLRP, afterActualLRP *models.ActualLRP
 
 				BeforeEach(func() {
 					actualLRP = &models.ActualLRP{
@@ -2294,39 +1726,44 @@ var _ = Describe("ActualLRPDB", func() {
 
 				JustBeforeEach(func() {
 					var err error
-					beforeActualLRPGroup, afterActualLRPGroup, err = sqlDB.UnclaimActualLRP(logger, actualLRPKey)
+					beforeActualLRP, afterActualLRP, err = sqlDB.UnclaimActualLRP(logger, actualLRPKey)
 					Expect(err).ToNot(HaveOccurred())
 				})
 
 				It("unclaims the actual LRP", func() {
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actualLRPGroup.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].State).To(Equal(models.ActualLRPStateUnclaimed))
 				})
 
 				It("it removes the net info from the actualLRP", func() {
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actualLRPGroup.Instance.ActualLRPNetInfo).To(Equal(models.ActualLRPNetInfo{}))
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].ActualLRPNetInfo).To(Equal(models.ActualLRPNetInfo{}))
 				})
 
 				It("it increments the modification tag on the actualLRP", func() {
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 					Expect(err).ToNot(HaveOccurred())
 					// +2 because of claim AND unclaim
-					Expect(actualLRPGroup.Instance.ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + uint32(2)))
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + uint32(2)))
 				})
 
 				It("it clears the actualLRP's instance key", func() {
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actualLRPGroup.Instance.ActualLRPInstanceKey).To(Equal(models.ActualLRPInstanceKey{}))
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].ActualLRPInstanceKey).To(Equal(models.ActualLRPInstanceKey{}))
 				})
 
 				It("it updates the actualLRP's update at timestamp", func() {
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actualLRPGroup.Instance.Since).To(BeNumerically(">", actualLRP.Since))
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].Since).To(BeNumerically(">", actualLRP.Since))
 				})
 
 				It("returns the previous and current actual lrp", func() {
@@ -2337,11 +1774,11 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 1,
 					}
-					Expect(beforeActualLRPGroup).To(BeEquivalentTo(&models.ActualLRPGroup{Instance: &expectedActualLRP}))
+					Expect(beforeActualLRP).To(BeEquivalentTo(&expectedActualLRP))
 
-					actualLRPGroup, err := sqlDB.ActualLRPGroupByProcessGuidAndIndex(logger, guid, index)
+					actualLRPs, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(afterActualLRPGroup).To(BeEquivalentTo(actualLRPGroup))
+					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
 			})
 
