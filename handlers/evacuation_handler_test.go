@@ -700,7 +700,6 @@ var _ = Describe("Evacuation Handlers", func() {
 				ActualLrpKey:         &key,
 				ActualLrpInstanceKey: &instanceKey,
 				ActualLrpNetInfo:     &netInfo,
-				Ttl:                  60,
 			}
 
 			actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
@@ -816,11 +815,10 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(response.Error).To(BeNil())
 
 						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, ttl := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
-						Expect(ttl).To(BeEquivalentTo(60))
 					})
 
 					It("emits events to the hub", func() {
@@ -918,11 +916,10 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(response.Error).To(BeNil())
 
 						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, ttl := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 						Expect(*actualLRPInstanceKey).To(Equal(*requestBody.ActualLrpInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
-						Expect(ttl).To(BeEquivalentTo(60))
 					})
 
 					It("emits events to the hub", func() {
@@ -993,20 +990,18 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(response.Error).To(BeNil())
 
 						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, ttl := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
-						Expect(ttl).To(BeEquivalentTo(60))
 					})
 
 					It("unclaims the lrp and requests an auction", func() {
 						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, ttl := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
-						Expect(ttl).To(BeEquivalentTo(60))
 
 						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
@@ -1081,11 +1076,10 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(response.Error).To(BeNil())
 
 						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, ttl := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
-						Expect(ttl).To(BeEquivalentTo(60))
 					})
 
 					It("unclaims the lrp and requests an auction", func() {

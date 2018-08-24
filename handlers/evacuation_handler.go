@@ -286,7 +286,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 			return
 		}
 
-		evacuating, err := h.db.EvacuateActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
+		evacuating, err := h.db.EvacuateActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
 		if err == models.ErrActualLRPCannotBeEvacuated {
 			logger.Error("cannot-evacuate-actual-lrp", err)
 			response.KeepContainer = false
@@ -328,7 +328,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 
 	if (instance.State == models.ActualLRPStateClaimed || instance.State == models.ActualLRPStateRunning) &&
 		instance.ActualLRPInstanceKey.Equal(request.ActualLrpInstanceKey) {
-		evacuating, err := h.db.EvacuateActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.Ttl)
+		evacuating, err := h.db.EvacuateActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
 		if err != nil {
 			response.Error = models.ConvertError(err)
 			return

@@ -36,7 +36,7 @@ var _ = Describe("Evacuation API", func() {
 			})
 
 			It("removes the evacuating actual_lrp", func() {
-				keepContainer, err := client.EvacuateRunningActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo, uint64(10000))
+				keepContainer, err := client.EvacuateRunningActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
 				Expect(keepContainer).To(BeTrue())
 				Expect(err).NotTo(HaveOccurred())
 
@@ -101,7 +101,7 @@ var _ = Describe("Evacuation API", func() {
 		})
 
 		It("runs the evacuating ActualLRP and unclaims the instance ActualLRP", func() {
-			keepContainer, err := client.EvacuateRunningActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo, uint64(10000))
+			keepContainer, err := client.EvacuateRunningActualLRP(logger, &actual.ActualLRPKey, &actual.ActualLRPInstanceKey, &actual.ActualLRPNetInfo)
 			Expect(keepContainer).To(BeTrue())
 			Expect(err).NotTo(HaveOccurred())
 
