@@ -766,20 +766,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 	})
 
 	Describe("RemoveActualLRP", func() {
-		BeforeEach(func() {
+		JustBeforeEach(func() {
 			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 		})
 
-		JustBeforeEach(func() {
-			err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
-		})
-
 		Context("when removing the actual lrp in the DB succeeds", func() {
-			BeforeEach(func() {
+			JustBeforeEach(func() {
 				fakeActualLRPDB.RemoveActualLRPReturns(nil)
 			})
 
 			It("removes the actual lrp by process guid and index", func() {
+				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
 				_, actualProcessGuid, idx, actualInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
@@ -789,10 +786,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("response with no error", func() {
+				err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("emits a removed event to the hub", func() {
+				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
@@ -803,29 +802,33 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when the DB returns an error", func() {
 			Context("when doing the actual LRP lookup", func() {
-				BeforeEach(func() {
+				JustBeforeEach(func() {
 					fakeActualLRPDB.ActualLRPsReturns(nil, models.ErrUnknownError)
 				})
 
 				It("returns the error", func() {
+					err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
 					Expect(err).To(MatchError(models.ErrUnknownError))
 				})
 
 				It("does not emit a change event to the hub", func() {
+					controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 
 			Context("when doing the actual LRP removal", func() {
-				BeforeEach(func() {
+				JustBeforeEach(func() {
 					fakeActualLRPDB.RemoveActualLRPReturns(models.ErrUnknownError)
 				})
 
 				It("returns the error", func() {
+					err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
 					Expect(err).To(MatchError(models.ErrUnknownError))
 				})
 
 				It("does not emit a change event to the hub", func() {
+					controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
 			})
