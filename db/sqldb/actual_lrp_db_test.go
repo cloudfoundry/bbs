@@ -399,7 +399,13 @@ var _ = Describe("ActualLRPDB", func() {
 				}
 				actualLRPs, err := sqlDB.ActualLRPs(logger, filter)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualLRPs).To(BeEquivalentTo(allActualLRPs[0:5]))
+				Expect(actualLRPs).To(ConsistOf(
+					allActualLRPs[0],
+					allActualLRPs[1],
+					allActualLRPs[2],
+					allActualLRPs[3],
+					allActualLRPs[4],
+				))
 			})
 		})
 
