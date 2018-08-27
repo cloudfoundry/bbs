@@ -673,15 +673,13 @@ var _ = Describe("Evacuation Handlers", func() {
 		var (
 			request     *http.Request
 			requestBody *models.EvacuateRunningActualLRPRequest
-			// actualLRPGroup *models.ActualLRPGroup
-			desiredLRP *models.DesiredLRP
+			desiredLRP  *models.DesiredLRP
 
 			actual             *models.ActualLRP
 			evacuatingActual   *models.ActualLRP
 			afterActual        *models.ActualLRP
 			unclaimedActualLRP *models.ActualLRP
 			actualLRPs         []*models.ActualLRP
-			customErr          error
 		)
 
 		BeforeEach(func() {
@@ -710,7 +708,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, customErr)
+			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 			if request == nil {
 				request = newTestRequest(requestBody)
 			}
@@ -1338,7 +1336,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		Context("when the actual lrp group does not exist", func() {
 			BeforeEach(func() {
-				customErr = models.ErrResourceNotFound
+				actualLRPs = []*models.ActualLRP{}
 			})
 
 			It("does not return an error or keep the container", func() {

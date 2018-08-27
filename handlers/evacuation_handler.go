@@ -243,9 +243,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 	guid := request.ActualLrpKey.ProcessGuid
 	index := request.ActualLrpKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
-	logger.Info("HERE!!!!!", lager.Data{"err": err})
 	if err != nil {
-		logger.Info("HERE!!!!!")
 		if err == models.ErrResourceNotFound {
 			response.KeepContainer = false
 			return
