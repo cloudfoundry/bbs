@@ -26,7 +26,7 @@ func (db *SQLDB) getActualLRPs(logger lager.Logger, wheres string, whereBindinng
 			return err
 		}
 		defer rows.Close()
-		actualLRPs, err = db.getAndCleanupActualLRPs(logger, tx, rows)
+		actualLRPs, err = db.scanAndCleanupActualLRPs(logger, tx, rows)
 		return err
 	})
 
@@ -603,7 +603,7 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 		logger.Error("failed-query", err)
 		return nil, err
 	}
-	actualLRPs, err := db.getAndCleanupActualLRPs(logger, tx, rows)
+	actualLRPs, err := db.scanAndCleanupActualLRPs(logger, tx, rows)
 	if err != nil {
 		return nil, err
 	}
@@ -619,20 +619,10 @@ func (db *SQLDB) fetchActualLRPForUpdate(logger lager.Logger, processGuid string
 	return actualLRPs[0], nil
 }
 
-func (db *SQLDB) getAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRP, error) {
+func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRP, error) {
 	result := []*models.ActualLRP{}
-	err := db.scanAndCleanupActualLRPs(logger, q, rows, func(actualLRP *models.ActualLRP) {
-		result = append(result, actualLRP)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryable, rows *sql.Rows, scanFunc func(actualLRP *models.ActualLRP)) error {
 	actualsToDelete := []*models.ActualLRP{}
+
 	for rows.Next() {
 		actualLRP, err := db.scanToActualLRP(logger, rows)
 		if err == models.ErrDeserialize {
@@ -640,14 +630,14 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 			continue
 		} else if err != nil {
 			logger.Error("failed-scanning-actual-lrp", err)
-			return err
+			return nil, err
 		}
 
-		scanFunc(actualLRP)
+		result = append(result, actualLRP)
 	}
 	if rows.Err() != nil {
 		logger.Error("failed-getting-next-row", rows.Err())
-		return db.convertSQLError(rows.Err())
+		return nil, db.convertSQLError(rows.Err())
 	}
 
 	for _, actual := range actualsToDelete {
@@ -660,5 +650,5 @@ func (db *SQLDB) scanAndCleanupActualLRPs(logger lager.Logger, q helpers.Queryab
 		}
 	}
 
-	return nil
+	return result, nil
 }
