@@ -2,7 +2,7 @@
 |----------------|------------------------|-------------------------|-----------|--------------------------------------------------------------------------------------------------------------------------------|
 | actual_lrps    | process_guid           | character varying(255)  | No        | DesiredLRP unique identifier (foreign key)                                                                                     |
 |                | instance_index         | integer                 | No        | ActualLRP index                                                                                                                |
-|                | evacuating             | boolean                 | No        | True if the LRP is on an evacuating cell, false otherwise                                                                      |
+|                | evacuating             | boolean                 | No        | **Deprecated in favor of `presence`.** True if the LRP is on an evacuating cell, false otherwise.                              |
 |                | domain                 | character varying(255)  | No        | Domain to which the DesiredLRP belong (either cf-apps or cf-tasks)                                                             |
 |                | state                  | character varying(255)  | No        | One of UNCLAIMED, CLAIMED, RUNNING OR CRASHED                                                                                  |
 |                | instance_guid          | character varying(255)  | No        | Globally unique id for this row                                                                                                |
@@ -15,6 +15,7 @@
 |                | crash_count            | integer                 | No        | Number of crashes                                                                                                              |
 |                | crash_reason           | character varying(1024) | No        | Reason for the most reason crash (e.g. app failed the healthcheck)                                                             |
 |                | expire_time            | bigint                  | No        | Unused                                                                                                                         |
+|                | presence               | integer                 | No        | Describes the presence of the cell hosting the ActualLRP. 0 for `Ordinary`, 1 for `Evacuating`, and 2 for `Suspect`.           |
 | configurations | id                     | character varying(255)  | No        | Configuration table holds configuration values for BBS. Currently id can be one of "version" or "encryption_key_label"         |
 |                | value                  | character varying(255)  | No        | For "version" it is the current version of the database. "encryption_key_label" holds the label of the active encryption key   |
 | desired_lrps   | process_guid           | character varying(255)  | No        | Unique identifier of the DesiredLRP                                                                                            |
