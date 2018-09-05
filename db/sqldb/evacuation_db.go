@@ -41,7 +41,7 @@ func (db *SQLDB) EvacuateActualLRP(
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
 			reflect.DeepEqual(actualLRP.ActualLRPNetInfo, *netInfo) {
 			logger.Debug("evacuating-lrp-already-exists")
-			return nil
+			return models.ErrResourceExists
 		}
 
 		now := db.clock.Now().UnixNano()

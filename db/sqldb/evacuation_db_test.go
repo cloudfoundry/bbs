@@ -110,6 +110,13 @@ var _ = Describe("Evacuation", func() {
 			})
 		})
 
+		Context("when the evacuating actual lrp already exists", func() {
+			It("returns an ErrResourceExists", func() {
+				_, err := sqlDB.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
+				Expect(err).To(Equal(models.ErrResourceExists))
+			})
+		})
+
 		Context("when the evacuating actual lrp does not exist", func() {
 			Context("because the record is deleted", func() {
 				BeforeEach(func() {

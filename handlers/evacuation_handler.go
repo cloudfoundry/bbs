@@ -243,11 +243,11 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 	guid := request.ActualLrpKey.ProcessGuid
 	index := request.ActualLrpKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+	if len(actualLRPs) == 0 {
+		response.KeepContainer = false
+		return
+	}
 	if err != nil {
-		if err == models.ErrResourceNotFound {
-			response.KeepContainer = false
-			return
-		}
 		logger.Error("failed-fetching-lrp-group", err)
 		response.Error = models.ConvertError(err)
 		return
@@ -292,6 +292,9 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		}
 
 		response.KeepContainer = true
+		if err == models.ErrResourceExists {
+			return
+		}
 
 		if err != nil {
 			logger.Error("failed-evacuating-actual-lrp", err)
@@ -349,6 +352,14 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 				logger.Error("failed-removing-suspect-actual-lrp", err)
 				response.Error = models.ConvertError(err)
 				return
+			}
+
+			// after removing the running suspect instance, if the replacement instance is claimed we can now
+			// emit a created event since this instance is taking over from the evacuating one
+			for _, lrp := range actualLRPs {
+				if lrp.State == models.ActualLRPStateClaimed {
+					events = append(events, models.NewActualLRPCreatedEvent(lrp.ToActualLRPGroup()))
+				}
 			}
 
 			events = append(events, models.NewActualLRPRemovedEvent(suspect.ToActualLRPGroup()))

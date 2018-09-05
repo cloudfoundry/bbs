@@ -900,7 +900,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					actual.State = models.ActualLRPStateClaimed
 				})
 
-				Context("by another cell", func() {
+				Context("by a different cell than where the evacuate request came from", func() {
 					BeforeEach(func() {
 						actual.CellId = "some-other-cell"
 						fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
@@ -929,9 +929,9 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 					})
 
-					Context("when there's an existing evacuating on another cell", func() {
+					Context("when there's an existing evacuating on a different cell than where the evacuate request came from", func() {
 						BeforeEach(func() {
-							evacuatingLRP := model_helpers.NewValidActualLRP("the-guid", 1)
+							evacuatingLRP := model_helpers.NewValidEvacuatingActualLRP("the-guid", 1)
 							evacuatingLRP.CellId = "some-other-cell"
 							actualLRPs = []*models.ActualLRP{actual, evacuatingLRP}
 						})
@@ -941,6 +941,20 @@ var _ = Describe("Evacuation Handlers", func() {
 							err := response.Unmarshal(responseRecorder.Body.Bytes())
 							Expect(err).NotTo(HaveOccurred())
 							Expect(response.KeepContainer).To(BeFalse())
+							Expect(response.Error).To(BeNil())
+						})
+					})
+
+					Context("when there's an existing evacuating instance on the cell the request came from", func() {
+						BeforeEach(func() {
+							fakeEvacuationDB.EvacuateActualLRPReturns(nil, models.ErrResourceExists)
+						})
+
+						It("does not error and keeps the container", func() {
+							response := models.EvacuationResponse{}
+							err := response.Unmarshal(responseRecorder.Body.Bytes())
+							Expect(err).NotTo(HaveOccurred())
+							Expect(response.KeepContainer).To(BeTrue())
 							Expect(response.Error).To(BeNil())
 						})
 					})
@@ -1113,6 +1127,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 						It("emits a LRPCreated and then LRPRemoved event", func() {
 							Eventually(actualHub.EmitCallCount).Should(Equal(2))
+							Consistently(actualHub.EmitCallCount).Should(Equal(2))
 
 							event := actualHub.EmitArgsForCall(0)
 							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
@@ -1123,6 +1138,38 @@ var _ = Describe("Evacuation Handlers", func() {
 							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
 							re := event.(*models.ActualLRPRemovedEvent)
 							Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+						})
+
+						Context("when there is an ordinary claimed replacement LRP", func() {
+							var replacementActual *models.ActualLRP
+
+							BeforeEach(func() {
+								replacementActual = model_helpers.NewValidActualLRP("the-guid", 1)
+								replacementActual.State = models.ActualLRPStateClaimed
+								replacementActual.CellId = "other-cell"
+								replacementActual.InstanceGuid = "other-guid"
+								actualLRPs = append(actualLRPs, replacementActual)
+							})
+
+							It("emits two LRPCreated events and then a LRPRemoved event", func() {
+								Eventually(actualHub.EmitCallCount).Should(Equal(3))
+								Consistently(actualHub.EmitCallCount).Should(Equal(3))
+
+								event := actualHub.EmitArgsForCall(0)
+								Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+								ce := event.(*models.ActualLRPCreatedEvent)
+								Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+
+								event = actualHub.EmitArgsForCall(1)
+								Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+								ce = event.(*models.ActualLRPCreatedEvent)
+								Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: replacementActual}))
+
+								event = actualHub.EmitArgsForCall(2)
+								Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+								re := event.(*models.ActualLRPRemovedEvent)
+								Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+							})
 						})
 
 						Context("when removing the suspect lrp fails", func() {

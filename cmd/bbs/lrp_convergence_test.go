@@ -469,7 +469,7 @@ var _ = Describe("Convergence API", func() {
 								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
 							})
 
-							It("emits a LRPCreated event and a LRPRemoved event", func() {
+							It("emits two LRPCreated events and a LRPRemoved event", func() {
 								eventCh := streamEvents(events)
 
 								var ce *models.ActualLRPCreatedEvent
@@ -477,6 +477,12 @@ var _ = Describe("Convergence API", func() {
 								Eventually(eventCh, 2*time.Second).Should(Receive(&ce))
 								Expect(ce.ActualLrpGroup.Evacuating.InstanceGuid).To(Equal("ig-1"))
 								Expect(ce.ActualLrpGroup.Evacuating.Presence).To(Equal(models.ActualLRP_Evacuating))
+
+								var ce2 *models.ActualLRPCreatedEvent
+
+								Eventually(eventCh, 2*time.Second).Should(Receive(&ce2))
+								Expect(ce2.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-2"))
+								Expect(ce2.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
 
 								var re *models.ActualLRPRemovedEvent
 
