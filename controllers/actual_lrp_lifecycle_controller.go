@@ -11,14 +11,15 @@ import (
 )
 
 type ActualLRPLifecycleController struct {
-	db               db.ActualLRPDB
-	suspectDB        db.SuspectDB
-	evacuationDB     db.EvacuationDB
-	desiredLRPDB     db.DesiredLRPDB
-	auctioneerClient auctioneer.Client
-	serviceClient    serviceclient.ServiceClient
-	repClientFactory rep.ClientFactory
-	actualHub        events.Hub
+	db                   db.ActualLRPDB
+	suspectDB            db.SuspectDB
+	evacuationDB         db.EvacuationDB
+	desiredLRPDB         db.DesiredLRPDB
+	auctioneerClient     auctioneer.Client
+	serviceClient        serviceclient.ServiceClient
+	repClientFactory     rep.ClientFactory
+	actualHub            events.Hub
+	actualLRPInstanceHub events.Hub
 }
 
 func NewActualLRPLifecycleController(
@@ -30,16 +31,18 @@ func NewActualLRPLifecycleController(
 	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
 	actualHub events.Hub,
+	actualLRPInstanceHub events.Hub,
 ) *ActualLRPLifecycleController {
 	return &ActualLRPLifecycleController{
-		db:               db,
-		suspectDB:        suspectDB,
-		evacuationDB:     evacuationDB,
-		desiredLRPDB:     desiredLRPDB,
-		auctioneerClient: auctioneerClient,
-		serviceClient:    serviceClient,
-		repClientFactory: repClientFactory,
-		actualHub:        actualHub,
+		db:                   db,
+		suspectDB:            suspectDB,
+		evacuationDB:         evacuationDB,
+		desiredLRPDB:         desiredLRPDB,
+		auctioneerClient:     auctioneerClient,
+		serviceClient:        serviceClient,
+		repClientFactory:     repClientFactory,
+		actualHub:            actualHub,
+		actualLRPInstanceHub: actualLRPInstanceHub,
 	}
 }
 
@@ -74,6 +77,10 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 
 	suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
 	if !after.Equal(before) {
+		// emit lrp instance event
+		go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+
+		// emit lrp group instance event
 		if suspectLRP == nil {
 			go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 		} else if suspectLRP.State == models.ActualLRPStateClaimed {
@@ -84,6 +91,39 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 		}
 	}
 	return nil
+}
+
+func (h *ActualLRPLifecycleController) emitV0StartEvent(before, after, suspect *models.ActualLRP) {
+	if suspect != nil || before == nil {
+		// This behavior (emitting a create event if there was a suspect LRP) is
+		// designed to be backward compatible with old clients.  The API will
+		// project the Suspect LRP as the ActualLRPGroup's Instance until the new
+		// Instance is in the Running state (i.e. is started).  Once the new LRP is
+		// in the running state the following two lines will emit
+		// ActualLRPRemovedEvent for the Suspect LRP and a ActualLRPCreatedEvent
+		// for the Ordinary LRP.  At any point in time calls to ActualLRPs should
+		// get a consistent result with the events being received.
+		//
+		// see https://www.pivotaltracker.com/story/show/158123373 for more
+		// information
+		h.actualHub.Emit(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()))
+		return
+	}
+
+	if !before.Equal(after) {
+		h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+	}
+}
+
+func (h *ActualLRPLifecycleController) emitV1StartEvent(before, after, suspect *models.ActualLRP) {
+	if before == nil {
+		h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
+		return
+	}
+
+	if !before.Equal(after) {
+		h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+	}
 }
 
 func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
@@ -120,32 +160,22 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	}
 
 	go func() {
-		if suspectLRP == nil {
-			// there is no suspect LRP proceed like normal
-			if before == nil {
-				h.actualHub.Emit(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()))
-			} else if !before.Equal(after) {
-				h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-			}
-		} else {
-			// Otherwise, emit an ActualLRPCreatedEvent. This behavior is designed
-			// to be backward compatible with old clients.  The API will project the
-			// Suspect LRP as the ActualLRPGroup's Instance until the new Instance is
-			// in the Running state (i.e. is started).  Once the new LRP is in the
-			// running state the following two lines will emit ActualLRPRemovedEvent
-			// for the Suspect LRP and a ActualLRPCreatedEvent for the Ordinary LRP.
-			// At any point in time calls to ActualLRPs should get a consistent result
-			// with the events being received.
-			//
-			// see https://www.pivotaltracker.com/story/show/158123373 for more
-			// information
-			h.actualHub.Emit(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()))
-			h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
+		h.emitV0StartEvent(before, after, suspect)
+		h.emitV1StartEvent(before, after, suspect)
+
+		if suspectLRP != nil {
+			h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspect.ToActualLRPGroup()))
+
+			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspect))
 		}
+
 		if evacuating != nil {
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(evacuating.ToActualLRPGroup()))
+
+			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(evacuating))
 		}
 	}()
+
 	return nil
 }
 
@@ -163,8 +193,10 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 				replacementLRP := findWithPresence(lrps, models.ActualLRP_Ordinary)
 				if replacementLRP != nil {
 					h.actualHub.Emit(models.NewActualLRPCreatedEvent(replacementLRP.ToActualLRPGroup()))
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(replacementLRP))
 				}
 				h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
+				h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
 			}()
 		}
 
@@ -179,13 +211,28 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 	suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
 	if suspectLRP == nil {
 		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+		go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 	}
 
 	go func() {
 		h.actualHub.Emit(models.NewActualLRPCrashedEvent(before, after))
-		if before.State == models.ActualLRPStateClaimed && suspectLRP != nil && suspectLRP.State == models.ActualLRPStateClaimed {
+
+		if before.State == models.ActualLRPStateClaimed &&
+			suspectLRP != nil &&
+			suspectLRP.State == models.ActualLRPStateClaimed {
 			h.actualHub.Emit(models.NewActualLRPCreatedEvent(suspectLRP.ToActualLRPGroup()))
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(before.ToActualLRPGroup()))
+		}
+	}()
+
+	go func() {
+		h.actualLRPInstanceHub.Emit(models.NewActualLRPCrashedEvent(before, after))
+
+		if before.State == models.ActualLRPStateClaimed &&
+			suspectLRP != nil &&
+			suspectLRP.State == models.ActualLRPStateClaimed {
+			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(suspectLRP))
+			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
 		}
 	}()
 
@@ -224,6 +271,7 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 	suspectExists := findWithPresence(lrps, models.ActualLRP_Suspect)
 	if suspectExists == nil {
 		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+		go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 	}
 
 	return nil
@@ -238,9 +286,9 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 	err = h.db.RemoveActualLRP(logger, processGuid, index, instanceKey)
 	if err != nil {
 		return err
-
 	}
 	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeLRPs[0].ToActualLRPGroup()))
+	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(beforeLRPs[0]))
 	return nil
 }
 
@@ -267,6 +315,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 			err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 			if err == nil {
 				go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp))
 			}
 		case models.ActualLRPStateClaimed, models.ActualLRPStateRunning:
 			cell, err = h.serviceClient.CellById(logger, lrp.CellId)
@@ -276,6 +325,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 					err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 					if err == nil {
 						go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
+						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp))
 					}
 				}
 				return err

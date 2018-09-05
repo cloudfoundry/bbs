@@ -20,6 +20,19 @@ message ActualLRPRemovedEvent {
   optional ActualLRPGroup actual_lrp_group = 1;
 }
 
+message ActualLRPInstanceCreatedEvent  {
+  optional ActualLRP actual_lrp = 1;
+}
+
+message ActualLRPInstanceChangedEvent {
+  optional ActualLRP before = 1;
+  optional ActualLRP after = 2;
+}
+
+message ActualLRPInstanceRemovedEvent {
+  optional ActualLRP actual_lrp = 1;
+}
+
 message DesiredLRPCreatedEvent {
   optional DesiredLRP desired_lrp = 1;
 }

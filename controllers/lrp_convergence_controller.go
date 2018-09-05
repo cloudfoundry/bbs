@@ -22,6 +22,7 @@ type LRPConvergenceController struct {
 	lrpDB                     db.LRPDB
 	suspectDB                 db.SuspectDB
 	actualHub                 events.Hub
+	actualLRPInstanceHub      events.Hub
 	auctioneerClient          auctioneer.Client
 	serviceClient             serviceclient.ServiceClient
 	retirer                   Retirer
@@ -34,6 +35,7 @@ func NewLRPConvergenceController(
 	db db.LRPDB,
 	suspectDB db.SuspectDB,
 	actualHub events.Hub,
+	actualLRPInstanceHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
 	retirer Retirer,
@@ -45,6 +47,7 @@ func NewLRPConvergenceController(
 		lrpDB:                     db,
 		suspectDB:                 suspectDB,
 		actualHub:                 actualHub,
+		actualLRPInstanceHub:      actualLRPInstanceHub,
 		auctioneerClient:          auctioneerClient,
 		serviceClient:             serviceClient,
 		retirer:                   retirer,
@@ -76,6 +79,11 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 
 	for _, e := range events {
 		go h.actualHub.Emit(e)
+	}
+
+	instaceEvents := convergenceResult.InstanceEvents
+	for _, e := range instaceEvents {
+		go h.actualLRPInstanceHub.Emit(e)
 	}
 	retireLogger := logger.WithData(lager.Data{"retiring_lrp_count": len(keysToRetire)})
 	works := []func(){}
@@ -114,6 +122,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			}
 
 			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrp.ToActualLRPGroup()))
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(lrp))
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
 			startRequestLock.Lock()
@@ -132,6 +141,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			} else if !after.Equal(before) {
 				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
@@ -182,7 +192,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 					return
 				}
 
-				h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
@@ -224,6 +235,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			}
 
 			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
 		})
 	}
 
