@@ -462,6 +462,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			It("removes the Suspect LRP", func() {
 				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+
+				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(lrpKey.ProcessGuid).To(Equal(processGuid))
+				Expect(lrpKey.Index).To(BeEquivalentTo(index))
 			})
 
 			It("emits ActualLRPRemovedEvent", func() {
@@ -685,35 +689,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			It("does not emit a change event to the hub", func() {
 				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
-			})
-		})
-
-		Context("when the instance key matches the suspect LRP instance key", func() {
-			BeforeEach(func() {
-				presence = models.ActualLRP_Suspect
-			})
-
-			JustBeforeEach(func() {
-				fakeSuspectDB.RemoveSuspectActualLRPReturns(actualLRP, nil)
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
-			})
-
-			It("removes the suspect LRP", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
-
-				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
-				Expect(lrpKey.ProcessGuid).To(Equal(processGuid))
-				Expect(lrpKey.Index).To(BeEquivalentTo(index))
-			})
-
-			It("emits an actual LRP removed event", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-				Eventually(actualHub.EmitCallCount).Should(Equal(1))
-				event := actualHub.EmitArgsForCall(0)
-				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
-				Expect(ok).To(BeTrue())
-				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
 			})
 		})
 	})
