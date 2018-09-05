@@ -557,34 +557,41 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			var desiredLRP *models.DesiredLRP
 
 			itEmitsCrashAndChangedEvents := func() {
-				var eventChan chan models.Event
-
-				BeforeEach(func() {
-					ch := make(chan models.Event)
-					eventChan = ch
-
-					actualHub.EmitStub = func(event models.Event) {
-						ch <- event
-					}
-				})
-
 				It("emits a crash to the hub", func() {
 					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-					Eventually(eventChan).Should(Receive(Equal(&models.ActualLRPCrashedEvent{
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(actualHub.EmitCallCount).Should(Equal(2))
+					Consistently(actualHub.EmitCallCount).Should(Equal(2))
+
+					events := []models.Event{
+						actualHub.EmitArgsForCall(0),
+						actualHub.EmitArgsForCall(1),
+					}
+
+					Expect(events).To(ContainElement(&models.ActualLRPCrashedEvent{
 						ActualLRPKey:         actualLRP.ActualLRPKey,
 						ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
 						Since:                afterActualLRP.Since,
 						CrashCount:           1,
 						CrashReason:          errorMessage,
-					})))
+					}))
 				})
 
 				It("emits a change event to the hub", func() {
 					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-					Eventually(eventChan).Should(Receive(Equal(&models.ActualLRPChangedEvent{
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(actualHub.EmitCallCount).Should(Equal(2))
+					Consistently(actualHub.EmitCallCount).Should(Equal(2))
+
+					events := []models.Event{
+						actualHub.EmitArgsForCall(0),
+						actualHub.EmitArgsForCall(1),
+					}
+
+					Expect(events).To(ContainElement(&models.ActualLRPChangedEvent{
 						Before: actualLRP.ToActualLRPGroup(),
 						After:  afterActualLRP.ToActualLRPGroup(),
-					})))
+					}))
 				})
 			}
 
