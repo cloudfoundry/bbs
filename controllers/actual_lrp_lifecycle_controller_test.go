@@ -425,8 +425,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 	Describe("CrashActualLRP", func() {
 		var (
-			errorMessage string
-			lrps         []*models.ActualLRP
+			errorMessage  string
+			lrps          []*models.ActualLRP
+			desiredLRP    *models.DesiredLRP
+			shouldRestart bool
 		)
 
 		BeforeEach(func() {
@@ -436,18 +438,147 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			afterActualLRPState = models.ActualLRPStateUnclaimed
 			afterActualLRPCrashCount = 1
 			afterActualLRPCrashReason = errorMessage
+			shouldRestart = true
 		})
 
 		JustBeforeEach(func() {
 			fakeActualLRPDB.CrashActualLRPReturns(
 				actualLRP,
 				afterActualLRP,
-				false,
+				shouldRestart,
 				nil,
 			)
 
 			lrps = []*models.ActualLRP{actualLRP}
 			fakeActualLRPDB.ActualLRPsReturns(lrps, nil)
+
+			desiredLRP = &models.DesiredLRP{
+				ProcessGuid: "process-guid",
+				Domain:      "some-domain",
+				RootFs:      "some-stack",
+				MemoryMb:    128,
+				DiskMb:      512,
+				MaxPids:     100,
+			}
+
+			fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
+		})
+
+		It("responds with no error", func() {
+			err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("crashes the actual lrp by process guid and index", func() {
+			err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+			Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
+			_, actualKey, actualInstanceKey, actualErrorMessage := fakeActualLRPDB.CrashActualLRPArgsForCall(0)
+			Expect(*actualKey).To(Equal(actualLRPKey))
+			Expect(*actualInstanceKey).To(Equal(beforeInstanceKey))
+			Expect(actualErrorMessage).To(Equal(errorMessage))
+		})
+
+		It("emits both crashed and change events to the hub", func() {
+			err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(actualHub.EmitCallCount).Should(Equal(2))
+			Consistently(actualHub.EmitCallCount).Should(Equal(2))
+
+			events := []models.Event{
+				actualHub.EmitArgsForCall(0),
+				actualHub.EmitArgsForCall(1),
+			}
+
+			Expect(events).To(ConsistOf(&models.ActualLRPCrashedEvent{
+				ActualLRPKey:         actualLRP.ActualLRPKey,
+				ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
+				Since:                afterActualLRP.Since,
+				CrashCount:           1,
+				CrashReason:          errorMessage,
+			},
+				&models.ActualLRPChangedEvent{
+					Before: actualLRP.ToActualLRPGroup(),
+					After:  afterActualLRP.ToActualLRPGroup(),
+				}))
+		})
+
+		Describe("restarting the instance", func() {
+			Context("when the actual LRP should be restarted", func() {
+				It("request an auction", func() {
+					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+					_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+					Expect(processGuid).To(Equal("process-guid"))
+
+					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+					_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+					Expect(startRequests).To(HaveLen(1))
+					schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, 1)
+					Expect(startRequests[0]).To(BeEquivalentTo(&expectedStartRequest))
+				})
+			})
+
+			Context("when the actual lrp should not be restarted (e.g., crashed)", func() {
+				BeforeEach(func() {
+					shouldRestart = false
+				})
+
+				It("does not request an auction", func() {
+					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+				})
+			})
+
+			Context("when fetching the desired lrp fails", func() {
+				JustBeforeEach(func() {
+					fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, errors.New("error occured"))
+				})
+
+				It("fails and does not request an auction", func() {
+					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					Expect(err).To(MatchError("error occured"))
+					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+				})
+			})
+
+			Context("when requesting the auction fails", func() {
+				BeforeEach(func() {
+					fakeAuctioneerClient.RequestLRPAuctionsReturns(errors.New("some else bid higher"))
+				})
+
+				It("should not return an error", func() {
+					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("emits both crashed and change events to the hub", func() {
+					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(actualHub.EmitCallCount).Should(Equal(2))
+					Consistently(actualHub.EmitCallCount).Should(Equal(2))
+
+					events := []models.Event{
+						actualHub.EmitArgsForCall(0),
+						actualHub.EmitArgsForCall(1),
+					}
+
+					Expect(events).To(ConsistOf(&models.ActualLRPCrashedEvent{
+						ActualLRPKey:         actualLRP.ActualLRPKey,
+						ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
+						Since:                afterActualLRP.Since,
+						CrashCount:           1,
+						CrashReason:          errorMessage,
+					},
+						&models.ActualLRPChangedEvent{
+							Before: actualLRP.ToActualLRPGroup(),
+							After:  afterActualLRP.ToActualLRPGroup(),
+						}))
+				})
+			})
 		})
 
 		Context("when the LRP being crashed is a Suspect LRP", func() {
@@ -549,136 +680,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Expect(event).To(BeAssignableToTypeOf(createdEvent))
 					createdEvent = event.(*models.ActualLRPCreatedEvent)
 					Expect(createdEvent.ActualLrpGroup).To(Equal(replacementLRP.ToActualLRPGroup()))
-				})
-			})
-		})
-
-		Context("when crashing the actual lrp in the DB succeeds", func() {
-			var desiredLRP *models.DesiredLRP
-
-			itEmitsCrashAndChangedEvents := func() {
-				It("emits a crash to the hub", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-					Expect(err).NotTo(HaveOccurred())
-					Eventually(actualHub.EmitCallCount).Should(Equal(2))
-					Consistently(actualHub.EmitCallCount).Should(Equal(2))
-
-					events := []models.Event{
-						actualHub.EmitArgsForCall(0),
-						actualHub.EmitArgsForCall(1),
-					}
-
-					Expect(events).To(ContainElement(&models.ActualLRPCrashedEvent{
-						ActualLRPKey:         actualLRP.ActualLRPKey,
-						ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
-						Since:                afterActualLRP.Since,
-						CrashCount:           1,
-						CrashReason:          errorMessage,
-					}))
-				})
-
-				It("emits a change event to the hub", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-					Expect(err).NotTo(HaveOccurred())
-					Eventually(actualHub.EmitCallCount).Should(Equal(2))
-					Consistently(actualHub.EmitCallCount).Should(Equal(2))
-
-					events := []models.Event{
-						actualHub.EmitArgsForCall(0),
-						actualHub.EmitArgsForCall(1),
-					}
-
-					Expect(events).To(ContainElement(&models.ActualLRPChangedEvent{
-						Before: actualLRP.ToActualLRPGroup(),
-						After:  afterActualLRP.ToActualLRPGroup(),
-					}))
-				})
-			}
-
-			JustBeforeEach(func() {
-				desiredLRP = &models.DesiredLRP{
-					ProcessGuid: "process-guid",
-					Domain:      "some-domain",
-					RootFs:      "some-stack",
-					MemoryMb:    128,
-					DiskMb:      512,
-					MaxPids:     100,
-				}
-
-				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
-				fakeActualLRPDB.CrashActualLRPReturns(actualLRP, afterActualLRP, true, nil)
-			})
-
-			It("response with no error", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("crashes the actual lrp by process guid and index", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-				Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
-				_, actualKey, actualInstanceKey, actualErrorMessage := fakeActualLRPDB.CrashActualLRPArgsForCall(0)
-				Expect(*actualKey).To(Equal(actualLRPKey))
-				Expect(*actualInstanceKey).To(Equal(beforeInstanceKey))
-				Expect(actualErrorMessage).To(Equal(errorMessage))
-			})
-
-			itEmitsCrashAndChangedEvents()
-
-			Describe("restarting the instance", func() {
-				Context("when the actual LRP should be restarted", func() {
-					It("request an auction", func() {
-						err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-						Expect(err).NotTo(HaveOccurred())
-
-						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
-						Expect(processGuid).To(Equal("process-guid"))
-
-						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-						Expect(startRequests).To(HaveLen(1))
-						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, 1)
-						Expect(startRequests[0]).To(BeEquivalentTo(&expectedStartRequest))
-					})
-				})
-
-				Context("when the actual lrp should not be restarted (e.g., crashed)", func() {
-					JustBeforeEach(func() {
-						fakeActualLRPDB.CrashActualLRPReturns(actualLRP, actualLRP, false, nil)
-					})
-
-					It("does not request an auction", func() {
-						err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
-					})
-				})
-
-				Context("when fetching the desired lrp fails", func() {
-					JustBeforeEach(func() {
-						fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, errors.New("error occured"))
-					})
-
-					It("fails and does not request an auction", func() {
-						err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-						Expect(err).To(MatchError("error occured"))
-						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
-					})
-				})
-
-				Context("when requesting the auction fails", func() {
-					BeforeEach(func() {
-						fakeAuctioneerClient.RequestLRPAuctionsReturns(errors.New("some else bid higher"))
-					})
-
-					It("should not return an error", func() {
-						err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-						Expect(err).NotTo(HaveOccurred())
-					})
-
-					itEmitsCrashAndChangedEvents()
 				})
 			})
 		})
