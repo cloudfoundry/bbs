@@ -144,17 +144,20 @@ var _ = Describe("Convergence API", func() {
 
 				Context("when there is a new Ordinary LRP in Running state", func() {
 					BeforeEach(func() {
-						// Wait for the BBS to create the Unclaimed LRP and auction it.
-						// Otherwise, the StartActualLRP can try creating a new LRP and
-						// fail if the new UnclaimedLRP.
-						//
-						// TODO: Replace this with a real check once flat Actual LRP api
-						// is in place.
-						Eventually(bbsRunner).Should(gbytes.Say("done-requesting-start-auctions"))
-						var err error
+						Eventually(func() bool {
+							index := int32(0)
+							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{Index: &index, ProcessGuid: "some-process-guid"})
+							Expect(err).NotTo(HaveOccurred())
+							for _, lrp := range lrps {
+								if lrp.State == models.ActualLRPStateUnclaimed {
+									return true
+								}
+							}
+							return false
+						}).Should(BeTrue())
 
 						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
-						_, _, err = db.StartActualLRP(logger, &models.ActualLRPKey{
+						_, _, err := db.StartActualLRP(logger, &models.ActualLRPKey{
 							ProcessGuid: "some-process-guid",
 							Index:       0,
 							Domain:      "some-domain",
@@ -429,18 +432,20 @@ var _ = Describe("Convergence API", func() {
 								Expect(err).NotTo(HaveOccurred())
 							})
 
-							// FIXME: since the flat actual LRP api doesn't exist yet, we have
-							// no way to tell that the LRP has been unclaimed other than
-							// trying to claim it again. We are indirectly testing that the
-							// LRP is unclaimed. We should use the flat LRP api once it is
-							// ready instead of using this method.
-							It("can be claimed again", func() {
-								replacementLRPInstanceKey = &models.ActualLRPInstanceKey{
-									InstanceGuid: "ig-3",
-									CellId:       "some-other-cell",
-								}
-								err := client.ClaimActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+							It("is unclaimed", func() {
+								lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{
+									ProcessGuid: lrpKey.ProcessGuid,
+									Index:       &lrpKey.Index,
+								})
 								Expect(err).NotTo(HaveOccurred())
+								foundUnclaimed := false
+								for _, lrp := range lrps {
+									if lrp.Presence == models.ActualLRP_Ordinary {
+										Expect(lrp.State).To(Equal(models.ActualLRPStateUnclaimed))
+										foundUnclaimed = true
+									}
+								}
+								Expect(foundUnclaimed).To(BeTrue())
 							})
 						})
 
@@ -487,18 +492,20 @@ var _ = Describe("Convergence API", func() {
 								Expect(err).NotTo(HaveOccurred())
 							})
 
-							// FIXME: since the flat actual LRP api doesn't exist yet, we have
-							// no way to tell that the LRP has been unclaimed other than
-							// trying to claim it again. We are indirectly testing that the
-							// LRP is unclaimed. We should use the flat LRP api once it is
-							// ready instead of using this method.
-							It("can be claimed again", func() {
-								replacementLRPInstanceKey = &models.ActualLRPInstanceKey{
-									InstanceGuid: "ig-3",
-									CellId:       "some-other-cell",
-								}
-								err := client.ClaimActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+							It("is unclaimed", func() {
+								lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{
+									ProcessGuid: lrpKey.ProcessGuid,
+									Index:       &lrpKey.Index,
+								})
 								Expect(err).NotTo(HaveOccurred())
+								foundUnclaimed := false
+								for _, lrp := range lrps {
+									if lrp.Presence == models.ActualLRP_Ordinary {
+										Expect(lrp.State).To(Equal(models.ActualLRPStateUnclaimed))
+										foundUnclaimed = true
+									}
+								}
+								Expect(foundUnclaimed).To(BeTrue())
 							})
 
 							It("emits an ActualLRPChangedEvent event", func() {
