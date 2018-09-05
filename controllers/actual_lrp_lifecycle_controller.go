@@ -77,9 +77,16 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 	// up.  This combined with the API internal resolve logic (i.e. to return the
 	// Suspect LRP in the Instance field while the replacement is starting) will
 	// give consistent view to the clients.
-	lrp := findWithPresence(lrps, models.ActualLRP_Suspect)
-	if !after.Equal(before) && lrp == nil {
-		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+	suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
+	if !after.Equal(before) {
+		if suspectLRP == nil {
+			go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+		} else if suspectLRP.State == models.ActualLRPStateClaimed {
+			go func() {
+				h.actualHub.Emit(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()))
+				h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
+			}()
+		}
 	}
 	return nil
 }

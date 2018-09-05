@@ -124,11 +124,44 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		JustBeforeEach(func() {
 			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{afterActualLRP}, nil)
+			fakeActualLRPDB.ClaimActualLRPReturns(actualLRP, afterActualLRP, nil)
+		})
+
+		It("calls the DB successfully", func() {
+			err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeActualLRPDB.ClaimActualLRPCallCount()).To(Equal(1))
+		})
+
+		It("emits a change to the hub", func() {
+			err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+			Eventually(actualHub.EmitCallCount).Should(Equal(1))
+			event := actualHub.EmitArgsForCall(0)
+			changedEvent, ok := event.(*models.ActualLRPChangedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
+			Expect(changedEvent.After).To(Equal(afterActualLRP.ToActualLRPGroup()))
+		})
+
+		Context("when the actual lrp did not actually change", func() {
+			JustBeforeEach(func() {
+				fakeActualLRPDB.ClaimActualLRPReturns(
+					afterActualLRP,
+					afterActualLRP,
+					nil,
+				)
+			})
+
+			It("does not emit a change event to the hub", func() {
+				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Eventually(actualHub.EmitCallCount).Should(Equal(0))
+			})
 		})
 
 		Context("when there is a running Suspect LRP", func() {
-			BeforeEach(func() {
+			JustBeforeEach(func() {
 				suspect := &models.ActualLRP{
+					State:        models.ActualLRPStateRunning,
 					Presence:     models.ActualLRP_Suspect,
 					ActualLRPKey: actualLRPKey,
 					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
@@ -140,44 +173,44 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("does not emit ActualLRPChangedEvent", func() {
+				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Expect(err).NotTo(HaveOccurred())
 				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 		})
 
-		Context("when claiming the actual lrp in the DB succeeds", func() {
+		Context("when there is a claimed Suspect LRP", func() {
+			var suspectLRP *models.ActualLRP
 			JustBeforeEach(func() {
-				fakeActualLRPDB.ClaimActualLRPReturns(actualLRP, afterActualLRP, nil)
+				suspectLRP = &models.ActualLRP{
+					State:        models.ActualLRPStateClaimed,
+					Presence:     models.ActualLRP_Suspect,
+					ActualLRPKey: actualLRPKey,
+					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+						InstanceGuid: "suspect-ig",
+						CellId:       "suspect-cell-id",
+					},
+				}
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectLRP}, nil)
 			})
 
-			It("calls the DB successfully", func() {
+			It("emits a created event for the new claimed ordinary LRP and a removed event for the claimed suspect LRP", func() {
 				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeActualLRPDB.ClaimActualLRPCallCount()).To(Equal(1))
-			})
+				Eventually(actualHub.EmitCallCount).Should(Equal(2))
+				Consistently(actualHub.EmitCallCount).Should(Equal(2))
 
-			It("emits a change to the hub", func() {
-				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
-				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
-				changedEvent, ok := event.(*models.ActualLRPChangedEvent)
-				Expect(ok).To(BeTrue())
-				Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
-				Expect(changedEvent.After).To(Equal(afterActualLRP.ToActualLRPGroup()))
-			})
+				var createdEvent *models.ActualLRPCreatedEvent
+				Expect(event).To(BeAssignableToTypeOf(createdEvent))
+				createdEvent = event.(*models.ActualLRPCreatedEvent)
+				Expect(createdEvent.ActualLrpGroup).To(Equal(afterActualLRP.ToActualLRPGroup()))
 
-			Context("when the actual lrp did not actually change", func() {
-				JustBeforeEach(func() {
-					fakeActualLRPDB.ClaimActualLRPReturns(
-						afterActualLRP,
-						afterActualLRP,
-						nil,
-					)
-				})
-
-				It("does not emit a change event to the hub", func() {
-					err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
-					Eventually(actualHub.EmitCallCount).Should(Equal(0))
-				})
+				event = actualHub.EmitArgsForCall(1)
+				var removedEvent *models.ActualLRPRemovedEvent
+				Expect(event).To(BeAssignableToTypeOf(removedEvent))
+				removedEvent = event.(*models.ActualLRPRemovedEvent)
+				Expect(removedEvent.ActualLrpGroup).To(Equal(suspectLRP.ToActualLRPGroup()))
 			})
 		})
 	})
