@@ -158,11 +158,11 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
 		if err == nil {
 			go func() {
-				h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
 				replacementLRP := findWithPresence(lrps, models.ActualLRP_Ordinary)
 				if replacementLRP != nil {
 					h.actualHub.Emit(models.NewActualLRPCreatedEvent(replacementLRP.ToActualLRPGroup()))
 				}
+				h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
 			}()
 		}
 
@@ -174,8 +174,18 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPCrashedEvent(before, after))
-	go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+	suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
+	if suspectLRP == nil {
+		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+	}
+
+	go func() {
+		h.actualHub.Emit(models.NewActualLRPCrashedEvent(before, after))
+		if before.State == models.ActualLRPStateClaimed && suspectLRP != nil && suspectLRP.State == models.ActualLRPStateClaimed {
+			h.actualHub.Emit(models.NewActualLRPCreatedEvent(suspectLRP.ToActualLRPGroup()))
+			h.actualHub.Emit(models.NewActualLRPRemovedEvent(before.ToActualLRPGroup()))
+		}
+	}()
 
 	if !shouldRestart {
 		return nil
