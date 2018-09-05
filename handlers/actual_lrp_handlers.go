@@ -55,7 +55,7 @@ func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseW
 			writeResponse(w, response)
 			exitIfUnrecoverable(logger, h.exitChan, response.Error)
 		}
-		response.ActualLrpGroups = actualLRPCleanup(lrps)
+		response.ActualLrpGroups = ResolveActualLRPGroups(lrps)
 	}
 
 	response.Error = models.ConvertError(err)
@@ -80,7 +80,7 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w h
 			writeResponse(w, response)
 			exitIfUnrecoverable(logger, h.exitChan, response.Error)
 		}
-		response.ActualLrpGroups = actualLRPCleanup(lrps)
+		response.ActualLrpGroups = ResolveActualLRPGroups(lrps)
 	}
 
 	response.Error = models.ConvertError(err)
@@ -118,7 +118,32 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logg
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func actualLRPCleanup(lrps []*models.ActualLRP) []*models.ActualLRPGroup {
+// resolvePriority returns true if lrp1 takes precendence over lrp2
+func resolvePriority(lrp1, lrp2 *models.ActualLRP) bool {
+	if lrp2 == nil {
+		return true
+	}
+	if lrp1.Presence == models.ActualLRP_Ordinary {
+		switch lrp1.State {
+		case models.ActualLRPStateRunning:
+			return true
+		case models.ActualLRPStateClaimed:
+			return lrp2.State != models.ActualLRPStateRunning
+		}
+	} else if lrp1.Presence == models.ActualLRP_Suspect {
+		switch lrp1.State {
+		case models.ActualLRPStateRunning:
+			return lrp2.State != models.ActualLRPStateRunning
+		case models.ActualLRPStateClaimed:
+			return lrp2.State != models.ActualLRPStateRunning && lrp2.State != models.ActualLRPStateClaimed
+		}
+	}
+	// Cases where we are comparing two LRPs with the same presence have undefined behavior since it shouldn't happen
+	// with the way they're stored in the database
+	return false
+}
+
+func ResolveActualLRPGroups(lrps []*models.ActualLRP) []*models.ActualLRPGroup {
 	mapOfGroups := map[models.ActualLRPKey]*models.ActualLRPGroup{}
 	result := []*models.ActualLRPGroup{}
 	for _, actualLRP := range lrps {
@@ -130,27 +155,18 @@ func actualLRPCleanup(lrps []*models.ActualLRP) []*models.ActualLRPGroup {
 			mapOfGroups[actualLRP.ActualLRPKey] = &models.ActualLRPGroup{}
 			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
 		}
-		switch actualLRP.Presence {
-		case models.ActualLRP_Evacuating:
+		if actualLRP.Presence == models.ActualLRP_Evacuating {
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
-		case models.ActualLRP_Suspect:
-			// only resolve to the Suspect if the Ordinary instance is missing or not running
-			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || mapOfGroups[actualLRP.ActualLRPKey].Instance.State != models.ActualLRPStateRunning {
-				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
-			}
-		case models.ActualLRP_Ordinary:
-			// only resolve to the Suspect if the Ordinary instance is missing or not running
-			if mapOfGroups[actualLRP.ActualLRPKey].Instance == nil || actualLRP.State == models.ActualLRPStateRunning {
-				mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
-			}
-		default:
+		} else if resolvePriority(actualLRP, mapOfGroups[actualLRP.ActualLRPKey].Instance) {
+			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 		}
 	}
+
 	return result
 }
 
 func resolveToActualLRPGroup(lrps []*models.ActualLRP) *models.ActualLRPGroup {
-	actualLRPGroups := actualLRPCleanup(lrps)
+	actualLRPGroups := ResolveActualLRPGroups(lrps)
 	switch len(actualLRPGroups) {
 	case 0:
 		return &models.ActualLRPGroup{}
