@@ -467,6 +467,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			It("emits ActualLRPRemovedEvent", func() {
 				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				Consistently(actualHub.EmitCallCount).Should(Equal(1))
+
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
@@ -486,6 +488,63 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				It("does not emit any events", func() {
 					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Consistently(actualHub.EmitCallCount).Should(BeZero())
+				})
+			})
+
+			Context("and a replacement instance has already been created, but not claimed", func() {
+				var replacementLRP *models.ActualLRP
+
+				BeforeEach(func() {
+					replacementLRP = &models.ActualLRP{
+						ActualLRPKey: actualLRPKey,
+						State:        models.ActualLRPStateUnclaimed,
+						Presence:     models.ActualLRP_Ordinary,
+					}
+				})
+
+				JustBeforeEach(func() {
+					lrps = []*models.ActualLRP{actualLRP, replacementLRP}
+					fakeActualLRPDB.ActualLRPsReturns(lrps, nil)
+				})
+
+				It("emits an ActualLRPCreatedEvent because the replacement instance has taken over the ActualLRPGroup", func() {
+					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					Eventually(actualHub.EmitCallCount).Should(Equal(2))
+
+					event := actualHub.EmitArgsForCall(1)
+					createdEvent := new(models.ActualLRPCreatedEvent)
+					Expect(event).To(BeAssignableToTypeOf(createdEvent))
+					createdEvent = event.(*models.ActualLRPCreatedEvent)
+					Expect(createdEvent.ActualLrpGroup).To(Equal(replacementLRP.ToActualLRPGroup()))
+				})
+			})
+
+			Context("and a replacement instance has already been claimed", func() {
+				var replacementLRP *models.ActualLRP
+				BeforeEach(func() {
+					ordinaryInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1")
+					replacementLRP = &models.ActualLRP{
+						ActualLRPKey:         actualLRPKey,
+						ActualLRPInstanceKey: ordinaryInstanceKey,
+						State:                models.ActualLRPStateClaimed,
+						Presence:             models.ActualLRP_Ordinary,
+					}
+				})
+
+				JustBeforeEach(func() {
+					lrps = []*models.ActualLRP{actualLRP, replacementLRP}
+					fakeActualLRPDB.ActualLRPsReturns(lrps, nil)
+				})
+
+				It("emits an ActualLRPCreatedEvent because the replacement instance has taken over the ActualLRPGroup", func() {
+					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					Eventually(actualHub.EmitCallCount).Should(Equal(2))
+
+					event := actualHub.EmitArgsForCall(1)
+					createdEvent := new(models.ActualLRPCreatedEvent)
+					Expect(event).To(BeAssignableToTypeOf(createdEvent))
+					createdEvent = event.(*models.ActualLRPCreatedEvent)
+					Expect(createdEvent.ActualLrpGroup).To(Equal(replacementLRP.ToActualLRPGroup()))
 				})
 			})
 		})
