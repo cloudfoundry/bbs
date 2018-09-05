@@ -72,11 +72,6 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 		return err
 	}
 
-	// Only emit ActualLRPChangedEvent if there was no Suspect instance.
-	// Otherwise, we shouldn't emit any events until the replacement instance is
-	// up.  This combined with the API internal resolve logic (i.e. to return the
-	// Suspect LRP in the Instance field while the replacement is starting) will
-	// give consistent view to the clients.
 	suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
 	if !after.Equal(before) {
 		if suspectLRP == nil {
