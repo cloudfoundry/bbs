@@ -29,7 +29,7 @@ func New(
 	maxTaskPlacementRetries int,
 	emitter middleware.Emitter,
 	db db.DB,
-	desiredHub, actualHub, taskHub events.Hub,
+	desiredHub, actualHub, actualLRPInstanceHub, taskHub events.Hub,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
 	serviceClient serviceclient.ServiceClient,
 	auctioneerClient auctioneer.Client,
@@ -47,6 +47,7 @@ func New(
 		serviceClient,
 		repClientFactory,
 		actualHub,
+		actualLRPInstanceHub,
 	)
 	evacuationController := controllers.NewEvacuationController(
 		db, db, db, db,

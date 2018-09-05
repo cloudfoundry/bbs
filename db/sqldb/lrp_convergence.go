@@ -48,7 +48,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	now := sqldb.clock.Now()
 
 	sqldb.pruneDomains(logger, now)
-	events := sqldb.pruneEvacuatingActualLRPs(logger, cellSet)
+	events, instanceEvents := sqldb.pruneEvacuatingActualLRPs(logger, cellSet)
 	domainSet, err := sqldb.domainSet(logger)
 	if err != nil {
 		return db.ConvergenceResult{}
@@ -67,12 +67,13 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	converge.crashedActualLRPs(logger, now)
 
 	return db.ConvergenceResult{
-		MissingLRPKeys:         converge.result(logger),
-		UnstartedLRPKeys:       converge.unstartedLRPKeys,
-		KeysToRetire:           converge.keysToRetire,
-		SuspectLRPKeysToRetire: converge.suspectKeysToRetire,
-		KeysWithMissingCells:   converge.keysWithMissingCells,
-		Events:                 events,
+		MissingLRPKeys:               converge.result(logger),
+		UnstartedLRPKeys:             converge.unstartedLRPKeys,
+		KeysToRetire:                 converge.keysToRetire,
+		SuspectLRPKeysToRetire:       converge.suspectKeysToRetire,
+		KeysWithMissingCells:         converge.keysWithMissingCells,
+		Events:                       events,
+		InstanceEvents:               instanceEvents,
 		SuspectKeysWithExistingCells: converge.suspectKeysWithExistingCells,
 		SuspectKeys:                  converge.suspectKeys,
 	}
@@ -494,7 +495,7 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	}
 }
 
-func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.CellSet) []models.Event {
+func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.CellSet) ([]models.Event, []models.Event) {
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
 	wheres := []string{"presence = ?"}
@@ -519,10 +520,12 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 	}
 
 	var events []models.Event
+	var instanceEvents []models.Event
 	for _, lrp := range lrpsToDelete {
 		events = append(events, models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
+		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(lrp))
 	}
-	return events
+	return events, instanceEvents
 }
 
 func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {
