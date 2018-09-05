@@ -62,7 +62,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("changes its presence", func() {
+				It("returns a ResourceExists error", func() {
 					_, _, err := sqlDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 					Expect(err).To(MatchError(models.ErrResourceExists))
 				})

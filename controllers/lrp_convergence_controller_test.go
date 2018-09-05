@@ -339,15 +339,18 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
-			Context("when ChangeActualLRPPresence fails because there is already a Suspect LRP", func() {
+			Context("when there already is a Suspect LRP", func() {
 				var (
 					before, after *models.ActualLRP
 				)
 
 				BeforeEach(func() {
-					fakeLRPDB.ChangeActualLRPPresenceReturns(nil, nil, models.ErrResourceExists)
+					suspectLRPKeys := []*models.ActualLRPKey{
+						&suspectActualLRP.ActualLRPKey,
+					}
 					fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 						KeysWithMissingCells: keysWithMissingCells,
+						SuspectKeys:          suspectLRPKeys,
 					})
 					before = &models.ActualLRP{State: models.ActualLRPStateClaimed}
 					after = &models.ActualLRP{State: models.ActualLRPStateUnclaimed}
@@ -359,8 +362,12 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				})
 
 				It("does not emit change events", func() {
-					Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not try to change the LRP presence or create a new unclaimed LRP", func() {
+					Consistently(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(0))
+					Consistently(fakeLRPDB.CreateUnclaimedActualLRPCallCount).Should(Equal(0))
 				})
 			})
 

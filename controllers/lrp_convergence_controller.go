@@ -141,20 +141,39 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 		})
 	}
 
+	suspectKeyMap := map[models.ActualLRPKey]int{}
+	for _, suspectKey := range convergenceResult.SuspectKeys {
+		suspectKeyMap[*suspectKey] = 0
+	}
+
 	for _, key := range convergenceResult.KeysWithMissingCells {
 		key := key
 		handleLRP := func() {
 			logger := logger.Session("keys-with-missing-cells")
 			if h.generateSuspectActualLRPs {
-				err = h.markLRPAsSuspect(logger, key)
-				if err != nil {
-					return
-				}
+				_, existingSuspect := suspectKeyMap[*key.Key]
+				if existingSuspect {
+					// there is a Suspect LRP already, unclaim this one and reauction it
+					logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": key.Key})
+					_, _, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
+					if err != nil {
+						logger.Error("failed-unclaiming-lrp", err)
+						return
+					}
 
-				_, err = h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), key.Key)
-				if err != nil {
-					logger.Error("cannot-unclaim-lrp", err)
 					return
+				} else {
+					_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+					if err != nil {
+						logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})
+						return
+					}
+
+					_, err = h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), key.Key)
+					if err != nil {
+						logger.Error("cannot-unclaim-lrp", err)
+						return
+					}
 				}
 			} else {
 				before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
@@ -220,26 +239,4 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	retireLogger.Debug("done-retiring-actual-lrps")
 
 	return
-}
-
-func (h *LRPConvergenceController) markLRPAsSuspect(logger lager.Logger, key *models.ActualLRPKeyWithSchedulingInfo) error {
-	_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-	if err == models.ErrResourceExists {
-		// there is a Suspect LRP already, unclaim this one and reauction it
-		logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": key.Key})
-		_, _, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
-		if err != nil {
-			logger.Error("failed-unclaiming-lrp", err)
-			return err
-		}
-
-		return err
-	}
-
-	if err != nil {
-		logger.Error("failed-changing-presence", err)
-		return err
-	}
-
-	return nil
 }

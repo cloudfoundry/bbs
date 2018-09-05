@@ -347,11 +347,6 @@ var _ = Describe("LRPConvergence", func() {
 		)
 
 		BeforeEach(func() {
-			cellSet = models.NewCellSetFromList([]*models.CellPresence{
-				{CellId: "existing-cell"},
-				{CellId: "suspect-cell"},
-			})
-
 			// add suspect and ordinary lrps that are running on different cells
 			domain = "some-domain"
 			processGuid = "desired-with-suspect-and-running-actual"
@@ -392,6 +387,51 @@ var _ = Describe("LRPConvergence", func() {
 		var (
 			processGuid, domain string
 			lrpKey              models.ActualLRPKey
+			lrpKey2             models.ActualLRPKey
+		)
+
+		BeforeEach(func() {
+			// add suspect and ordinary lrps that are running on different cells
+			domain = "some-domain"
+			processGuid = "desired-with-suspect-and-running-actual"
+			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
+			desiredLRP.Domain = domain
+			desiredLRP.Instances = 2
+			err := sqlDB.DesireLRP(logger, desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			// create the suspect lrp
+			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444))
+			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ChangeActualLRPPresence(logger, &lrpKey, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			Expect(err).NotTo(HaveOccurred())
+
+			// create the second suspect lrp
+			lrpKey2 = models.NewActualLRPKey(processGuid, 1, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ChangeActualLRPPresence(logger, &lrpKey2, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("returns the LRP key with the existing cell in the SuspectKeysWithExistingCells", func() {
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(result.SuspectKeysWithExistingCells).To(ConsistOf(&lrpKey))
+		})
+
+		It("returns all suspect LRP keys in the SuspectKeys", func() {
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(result.SuspectKeys).To(ConsistOf(&lrpKey, &lrpKey2))
+		})
+	})
+
+	Context("when there is a suspect LRP and ordinary LRP present", func() {
+		var (
+			processGuid, domain string
+			lrpKey              models.ActualLRPKey
+			lrpKey2             models.ActualLRPKey
 		)
 
 		BeforeEach(func() {
@@ -413,57 +453,38 @@ var _ = Describe("LRPConvergence", func() {
 			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
 			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo)
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ChangeActualLRPPresence(logger, &lrpKey, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("returns the LRP key in the SuspectKeysWithExistingCells", func() {
-			result := sqlDB.ConvergeLRPs(logger, cellSet)
-			Expect(result.SuspectKeysWithExistingCells).To(ConsistOf(&lrpKey))
-		})
-	})
-
-	Context("when there is a suspect LRP and ordinary LRP present", func() {
-		var (
-			processGuid, domain string
-		)
-
-		BeforeEach(func() {
-			cellSet = models.NewCellSetFromList([]*models.CellPresence{
-				{CellId: "existing-cell"},
-				{CellId: "suspect-cell"},
-			})
-
-			// add suspect and ordinary lrps that are running on different cells
-			domain = "some-domain"
-			processGuid = "desired-with-suspect-and-running-actual"
-			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
-			desiredLRP.Domain = domain
-			err := sqlDB.DesireLRP(logger, desiredLRP)
-			Expect(err).NotTo(HaveOccurred())
-
-			// create the suspect lrp
-			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444))
-			lrpKey := models.NewActualLRPKey(processGuid, 0, domain)
-			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo)
-			Expect(err).NotTo(HaveOccurred())
 			_, err = db.Exec(fmt.Sprintf(`UPDATE actual_lrps SET presence = %d`, models.ActualLRP_Suspect))
 			Expect(err).NotTo(HaveOccurred())
 
 			// create the ordinary lrp
 			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}, &actualLRPNetInfo)
 			Expect(err).NotTo(HaveOccurred())
+
+			// create the unrelated suspect lrp
+			processGuid2 := "other-process-guid"
+			desiredLRP2 := model_helpers.NewValidDesiredLRP(processGuid2)
+			desiredLRP.Domain = domain
+			err = sqlDB.DesireLRP(logger, desiredLRP2)
+			Expect(err).NotTo(HaveOccurred())
+			lrpKey2 = models.NewActualLRPKey(processGuid2, 1, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ChangeActualLRPPresence(logger, &lrpKey2, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should return the suspect lrp key in the SuspectLRPKeysToRetire", func() {
 			result := sqlDB.ConvergeLRPs(logger, cellSet)
-			key := models.NewActualLRPKey(processGuid, 0, domain)
-			Expect(result.SuspectLRPKeysToRetire).To(ConsistOf(&key))
+			Expect(result.SuspectLRPKeysToRetire).To(ConsistOf(&lrpKey))
+		})
+
+		It("returns all suspect LRP keys in the SuspectKeys", func() {
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(result.SuspectKeys).To(ConsistOf(&lrpKey, &lrpKey2))
 		})
 
 		Context("if the ordinary lrp is not running", func() {
 			BeforeEach(func() {
-				lrpKey := models.NewActualLRPKey(processGuid, 0, domain)
 				_, _, _, err := sqlDB.CrashActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{CellId: "existing-cell", InstanceGuid: "ig-2"}, "booooom!")
 				Expect(err).NotTo(HaveOccurred())
 			})

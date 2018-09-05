@@ -63,6 +63,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	converge.orphanedActualLRPs(logger)
 	converge.extraSuspectActualLRPs(logger)
 	converge.suspectActualLRPsWithExistingCells(logger, cellSet)
+	converge.suspectActualLRPs(logger)
 	converge.crashedActualLRPs(logger, now)
 
 	return db.ConvergenceResult{
@@ -73,6 +74,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 		KeysWithMissingCells:   converge.keysWithMissingCells,
 		Events:                 events,
 		SuspectKeysWithExistingCells: converge.suspectKeysWithExistingCells,
+		SuspectKeys:                  converge.suspectKeys,
 	}
 }
 
@@ -84,6 +86,8 @@ type convergence struct {
 
 	suspectKeysToRetireMutex sync.Mutex
 	suspectKeysToRetire      []*models.ActualLRPKey
+
+	suspectKeys []*models.ActualLRPKey
 
 	keysMutex    sync.Mutex
 	keysToRetire []*models.ActualLRPKey
@@ -331,6 +335,36 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 	}
 
 	c.metronClient.SendMetric(missingLRPsMetric, missingLRPCount)
+}
+
+func (c *convergence) suspectActualLRPs(logger lager.Logger) {
+	logger = logger.Session("suspect-lrps")
+
+	rows, err := c.selectSuspectActualLRPs(logger, c.db)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return
+	}
+
+	for rows.Next() {
+		actualLRPKey := &models.ActualLRPKey{}
+
+		err := rows.Scan(
+			&actualLRPKey.ProcessGuid,
+			&actualLRPKey.Index,
+			&actualLRPKey.Domain,
+		)
+		if err != nil {
+			logger.Error("failed-scanning", err)
+			continue
+		}
+
+		c.suspectKeys = append(c.suspectKeys, actualLRPKey)
+	}
+
+	if rows.Err() != nil {
+		logger.Error("failed-getting-next-row", rows.Err())
+	}
 }
 
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to

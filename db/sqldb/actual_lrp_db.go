@@ -34,7 +34,6 @@ func (db *SQLDB) getActualLRPs(logger lager.Logger, wheres string, whereBindinng
 }
 
 func (db *SQLDB) ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRP, after *models.ActualLRP, err error) {
-
 	logger = logger.Session("change-actual-lrp-presence", lager.Data{"key": key, "from": from, "to": to})
 	logger.Info("starting")
 	defer logger.Info("finished")

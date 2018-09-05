@@ -132,6 +132,14 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q helpers.Queryab
 	return q.Query(query)
 }
 
+func (db *SQLDB) selectSuspectActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+	query := db.helper.Rebind(`SELECT process_guid, instance_index, domain
+			FROM actual_lrps
+			WHERE actual_lrps.presence = ?`)
+
+	return q.Query(query, models.ActualLRP_Suspect)
+}
+
 func (db *SQLDB) selectExtraSuspectActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
 	query := db.helper.Rebind(`SELECT process_guid, instance_index, domain
       FROM actual_lrps

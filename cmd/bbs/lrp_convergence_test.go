@@ -189,27 +189,39 @@ var _ = Describe("Convergence API", func() {
 
 				Context("when the new Ordinary LRP cells goes missing", func() {
 					BeforeEach(func() {
-						// Wait for the BBS to create the Unclaimed LRP and auction it.
-						// Otherwise, the StartActualLRP can try creating a new LRP and
-						// fail if the new UnclaimedLRP.
-						//
-						// TODO: Replace this with a real check once flat Actual LRP api
-						// is in place.
 						Eventually(bbsRunner).Should(gbytes.Say("done-requesting-start-auctions"))
 						var err error
 
 						events, err = client.SubscribeToEvents(logger)
 						Expect(err).NotTo(HaveOccurred())
 
-						err = client.ClaimActualLRP(logger, &models.ActualLRPKey{
-							ProcessGuid: "some-process-guid",
-							Index:       0,
-							Domain:      "some-domain",
-						}, &models.ActualLRPInstanceKey{
+						err = client.ClaimActualLRP(logger, lrpKey, &models.ActualLRPInstanceKey{
 							InstanceGuid: "ig-2",
 							CellId:       "another-missing-cell",
 						})
 						Expect(err).NotTo(HaveOccurred())
+					})
+
+					It("keeps the suspect LRP untouched", func() {
+						Consistently(func() models.ActualLRP_Presence {
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							Expect(err).NotTo(HaveOccurred())
+							return group.Instance.Presence
+						}).Should(Equal(models.ActualLRP_Suspect))
+					})
+
+					It("unclaims the replacement", func() {
+						Eventually(func() string {
+							index := int32(0)
+							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
+							Expect(err).NotTo(HaveOccurred())
+							for _, lrp := range lrps {
+								if lrp.Presence == models.ActualLRP_Ordinary {
+									return lrp.State
+								}
+							}
+							return ""
+						}).Should(Equal(models.ActualLRPStateUnclaimed))
 					})
 
 					It("does not emit any events", func() {
