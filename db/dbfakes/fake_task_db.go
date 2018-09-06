@@ -196,6 +196,23 @@ type FakeTaskDB struct {
 		result2 []*models.Task
 		result3 []models.Event
 	}
+	GetTaskCountByStateStub        func(logger lager.Logger) (int, int, int, int)
+	getTaskCountByStateMutex       sync.RWMutex
+	getTaskCountByStateArgsForCall []struct {
+		logger lager.Logger
+	}
+	getTaskCountByStateReturns struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+	}
+	getTaskCountByStateReturnsOnCall map[int]struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -811,6 +828,63 @@ func (fake *FakeTaskDB) ConvergeTasksReturnsOnCall(i int, result1 []*auctioneer.
 	}{result1, result2, result3}
 }
 
+func (fake *FakeTaskDB) GetTaskCountByState(logger lager.Logger) (int, int, int, int) {
+	fake.getTaskCountByStateMutex.Lock()
+	ret, specificReturn := fake.getTaskCountByStateReturnsOnCall[len(fake.getTaskCountByStateArgsForCall)]
+	fake.getTaskCountByStateArgsForCall = append(fake.getTaskCountByStateArgsForCall, struct {
+		logger lager.Logger
+	}{logger})
+	fake.recordInvocation("GetTaskCountByState", []interface{}{logger})
+	fake.getTaskCountByStateMutex.Unlock()
+	if fake.GetTaskCountByStateStub != nil {
+		return fake.GetTaskCountByStateStub(logger)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2, ret.result3, ret.result4
+	}
+	return fake.getTaskCountByStateReturns.result1, fake.getTaskCountByStateReturns.result2, fake.getTaskCountByStateReturns.result3, fake.getTaskCountByStateReturns.result4
+}
+
+func (fake *FakeTaskDB) GetTaskCountByStateCallCount() int {
+	fake.getTaskCountByStateMutex.RLock()
+	defer fake.getTaskCountByStateMutex.RUnlock()
+	return len(fake.getTaskCountByStateArgsForCall)
+}
+
+func (fake *FakeTaskDB) GetTaskCountByStateArgsForCall(i int) lager.Logger {
+	fake.getTaskCountByStateMutex.RLock()
+	defer fake.getTaskCountByStateMutex.RUnlock()
+	return fake.getTaskCountByStateArgsForCall[i].logger
+}
+
+func (fake *FakeTaskDB) GetTaskCountByStateReturns(result1 int, result2 int, result3 int, result4 int) {
+	fake.GetTaskCountByStateStub = nil
+	fake.getTaskCountByStateReturns = struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+	}{result1, result2, result3, result4}
+}
+
+func (fake *FakeTaskDB) GetTaskCountByStateReturnsOnCall(i int, result1 int, result2 int, result3 int, result4 int) {
+	fake.GetTaskCountByStateStub = nil
+	if fake.getTaskCountByStateReturnsOnCall == nil {
+		fake.getTaskCountByStateReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 int
+			result3 int
+			result4 int
+		})
+	}
+	fake.getTaskCountByStateReturnsOnCall[i] = struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+	}{result1, result2, result3, result4}
+}
+
 func (fake *FakeTaskDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -836,6 +910,8 @@ func (fake *FakeTaskDB) Invocations() map[string][][]interface{} {
 	defer fake.deleteTaskMutex.RUnlock()
 	fake.convergeTasksMutex.RLock()
 	defer fake.convergeTasksMutex.RUnlock()
+	fake.getTaskCountByStateMutex.RLock()
+	defer fake.getTaskCountByStateMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

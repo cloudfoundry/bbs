@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool/taskworkpoolfakes"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep"
 	. "github.com/onsi/ginkgo"
@@ -30,6 +31,7 @@ var _ = Describe("Task Controller", func() {
 		maxPlacementRetries      int
 
 		controller           *controllers.TaskController
+		fakeMetronClient     *mfakes.FakeIngressClient
 		fakeTaskStatNotifier *fakes.FakeTaskStatMetronNotifier
 		err                  error
 	)
@@ -38,6 +40,7 @@ var _ = Describe("Task Controller", func() {
 		fakeTaskDB = new(dbfakes.FakeTaskDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		fakeTaskCompletionClient = new(taskworkpoolfakes.FakeTaskCompletionClient)
+		fakeMetronClient = &mfakes.FakeIngressClient{}
 		fakeTaskStatNotifier = &fakes.FakeTaskStatMetronNotifier{}
 
 		logger = lagertest.NewTestLogger("test")
@@ -55,6 +58,7 @@ var _ = Describe("Task Controller", func() {
 			fakeServiceClient,
 			fakeRepClientFactory,
 			taskHub,
+			fakeMetronClient,
 			fakeTaskStatNotifier,
 			maxPlacementRetries,
 		)
@@ -957,6 +961,8 @@ var _ = Describe("Task Controller", func() {
 				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
 				cellSet = models.CellSet{"cell-id": &cellPresence}
 				fakeServiceClient.CellsReturns(cellSet, nil)
+
+				fakeTaskDB.GetTaskCountByStateReturns(2, 1, 6, 1)
 			})
 
 			JustBeforeEach(func() {
@@ -972,6 +978,41 @@ var _ = Describe("Task Controller", func() {
 				Expect(actualKickDuration).To(BeEquivalentTo(kickTaskDuration))
 				Expect(actualPendingDuration).To(BeEquivalentTo(expirePendingTaskDuration))
 				Expect(actualCompletedDuration).To(BeEquivalentTo(expireCompletedTaskDuration))
+			})
+
+			It("emits task status count metrics", func() {
+				Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(4))
+
+				name, value, _ := fakeMetronClient.SendMetricArgsForCall(0)
+				Expect(name).To(Equal("TasksPending"))
+				Expect(value).To(Equal(2))
+
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(1)
+				Expect(name).To(Equal("TasksRunning"))
+				Expect(value).To(Equal(1))
+
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(2)
+				Expect(name).To(Equal("TasksCompleted"))
+				Expect(value).To(Equal(6))
+
+				name, value, _ = fakeMetronClient.SendMetricArgsForCall(3)
+				Expect(name).To(Equal("TasksResolving"))
+				Expect(value).To(Equal(1))
+			})
+
+			Context("when emitting metrics fails", func() {
+				BeforeEach(func() {
+					fakeMetronClient.SendMetricReturns(errors.New("kaboom"))
+				})
+
+				It("does not error but logs the failure", func() {
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(logger).To(gbytes.Say("failed-to-send-pending-tasks-metric"))
+					Expect(logger).To(gbytes.Say("failed-to-send-running-tasks-metric"))
+					Expect(logger).To(gbytes.Say("failed-to-send-completed-tasks-metric"))
+					Expect(logger).To(gbytes.Say("failed-to-send-resolving-tasks-metric"))
+				})
 			})
 
 			Context("when fetching cells fails", func() {

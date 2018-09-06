@@ -19,11 +19,6 @@ const (
 	tasksKickedCounter = "ConvergenceTasksKicked"
 	tasksPrunedCounter = "ConvergenceTasksPruned"
 
-	pendingTasksMetric   = "TasksPending"
-	runningTasksMetric   = "TasksRunning"
-	completedTasksMetric = "TasksCompleted"
-	resolvingTasksMetric = "TasksResolving"
-
 	expiredFailureReason         = "not started within time limit"
 	cellDisappearedFailureReason = "cell disappeared before completion"
 )
@@ -70,10 +65,6 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 	tasksToComplete, failedFetches := db.getKickableCompleteTasksForCompletion(logger, kickTasksDuration)
 	tasksPruned += failedFetches
 	tasksKicked += uint64(len(tasksToComplete))
-
-	pendingCount, runningCount, completedCount, resolvingCount := db.countTasksByState(logger.Session("count-tasks"), db.db)
-
-	db.sendTaskMetrics(logger, pendingCount, runningCount, completedCount, resolvingCount)
 
 	db.metronClient.IncrementCounterWithDelta(tasksKickedCounter, uint64(tasksKicked))
 	db.metronClient.IncrementCounterWithDelta(tasksPrunedCounter, uint64(tasksPruned))
@@ -380,24 +371,36 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 	return tasksToComplete, uint64(failedFetches)
 }
 
-func (db *SQLDB) sendTaskMetrics(logger lager.Logger, pendingCount, runningCount, completedCount, resolvingCount int) {
-	err := db.metronClient.SendMetric(pendingTasksMetric, pendingCount)
-	if err != nil {
-		logger.Error("failed-to-send-pending-tasks-metric", err)
+func (db *SQLDB) GetTaskCountByState(logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
+	var query string
+	switch db.flavor {
+	case helpers.Postgres:
+		query = `
+			SELECT
+				COUNT(*) FILTER (WHERE state = $1) AS pending_tasks,
+				COUNT(*) FILTER (WHERE state = $2) AS running_tasks,
+				COUNT(*) FILTER (WHERE state = $3) AS completed_tasks,
+				COUNT(*) FILTER (WHERE state = $4) AS resolving_tasks
+			FROM tasks
+		`
+	case helpers.MySQL:
+		query = `
+			SELECT
+				COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,
+				COUNT(IF(state = ?, 1, NULL)) AS running_tasks,
+				COUNT(IF(state = ?, 1, NULL)) AS completed_tasks,
+				COUNT(IF(state = ?, 1, NULL)) AS resolving_tasks
+			FROM tasks
+		`
+	default:
+		// totally shouldn't happen
+		panic("database flavor not implemented: " + db.flavor)
 	}
 
-	err = db.metronClient.SendMetric(runningTasksMetric, runningCount)
+	row := db.db.QueryRow(query, models.Task_Pending, models.Task_Running, models.Task_Completed, models.Task_Resolving)
+	err := row.Scan(&pendingCount, &runningCount, &completedCount, &resolvingCount)
 	if err != nil {
-		logger.Error("failed-to-send-running-tasks-metric", err)
+		logger.Error("failed-counting-tasks", err)
 	}
-
-	err = db.metronClient.SendMetric(completedTasksMetric, completedCount)
-	if err != nil {
-		logger.Error("failed-to-send-completed-tasks-metric", err)
-	}
-
-	err = db.metronClient.SendMetric(resolvingTasksMetric, resolvingCount)
-	if err != nil {
-		logger.Error("failed-to-send-resolving-tasks-metric", err)
-	}
+	return
 }

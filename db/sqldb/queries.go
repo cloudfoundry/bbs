@@ -288,40 +288,6 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q helpers.Queryable
 	return
 }
 
-func (db *SQLDB) countTasksByState(logger lager.Logger, q helpers.Queryable) (pendingCount, runningCount, completedCount, resolvingCount int) {
-	var query string
-	switch db.flavor {
-	case helpers.Postgres:
-		query = `
-			SELECT
-				COUNT(*) FILTER (WHERE state = $1) AS pending_tasks,
-				COUNT(*) FILTER (WHERE state = $2) AS running_tasks,
-				COUNT(*) FILTER (WHERE state = $3) AS completed_tasks,
-				COUNT(*) FILTER (WHERE state = $4) AS resolving_tasks
-			FROM tasks
-		`
-	case helpers.MySQL:
-		query = `
-			SELECT
-				COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,
-				COUNT(IF(state = ?, 1, NULL)) AS running_tasks,
-				COUNT(IF(state = ?, 1, NULL)) AS completed_tasks,
-				COUNT(IF(state = ?, 1, NULL)) AS resolving_tasks
-			FROM tasks
-		`
-	default:
-		// totally shouldn't happen
-		panic("database flavor not implemented: " + db.flavor)
-	}
-
-	row := db.db.QueryRow(query, models.Task_Pending, models.Task_Running, models.Task_Completed, models.Task_Resolving)
-	err := row.Scan(&pendingCount, &runningCount, &completedCount, &resolvingCount)
-	if err != nil {
-		logger.Error("failed-counting-tasks", err)
-	}
-	return
-}
-
 func (db *SQLDB) one(logger lager.Logger, q helpers.Queryable, table string,
 	columns helpers.ColumnList, lockRow helpers.RowLock,
 	wheres string, whereBindings ...interface{},

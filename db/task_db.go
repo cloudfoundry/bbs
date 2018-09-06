@@ -29,4 +29,6 @@ type TaskDB interface {
 		cellSet models.CellSet,
 		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
 	) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task, taskEvents []models.Event)
+
+	GetTaskCountByState(logger lager.Logger) (int, int, int, int)
 }
