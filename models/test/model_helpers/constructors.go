@@ -31,6 +31,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := NewValidActualLRP(guid, index)
 	actualLRP.Presence = models.ActualLRP_Evacuating
+	actualLRP.ActualLRPInstanceKey = models.NewActualLRPInstanceKey("some-guid", "some-evacuating-cell")
 	return actualLRP
 }
 
