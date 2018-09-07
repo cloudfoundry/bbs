@@ -1,13 +1,13 @@
 package config_test
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/encryption"
+	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/debugserver"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/durationjson"
@@ -81,6 +81,7 @@ var _ = Describe("BBSConfig", func() {
 			"rep_client_session_cache_size": 10,
 			"rep_require_tls": true,
 			"report_interval": "1m0s",
+			"require_ssl": true,
 			"session_name": "bbs-session",
 			"skip_consul_lock": true,
 			"sql_ca_cert_file": "/var/vcap/jobs/bbs/config/sql.ca",
@@ -111,17 +112,17 @@ var _ = Describe("BBSConfig", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		config := config.BBSConfig{
-			AccessLogPath:                  "/var/vcap/sys/log/bbs/access.log",
-			AdvertiseURL:                   "bbs.service.cf.internal",
-			AuctioneerAddress:              "https://auctioneer.service.cf.internal:9016",
-			AuctioneerCACert:               "/var/vcap/jobs/bbs/config/auctioneer.ca",
-			AuctioneerClientCert:           "/var/vcap/jobs/bbs/config/auctioneer.crt",
-			AuctioneerClientKey:            "/var/vcap/jobs/bbs/config/auctioneer.key",
-			AuctioneerRequireTLS:           true,
-			UUID:                           "bosh-boshy-bosh-bosh",
-			CaFile:                         "/var/vcap/jobs/bbs/config/ca.crt",
-			CertFile:                       "/var/vcap/jobs/bbs/config/bbs.crt",
+			AccessLogPath:        "/var/vcap/sys/log/bbs/access.log",
+			AdvertiseURL:         "bbs.service.cf.internal",
+			AuctioneerAddress:    "https://auctioneer.service.cf.internal:9016",
+			AuctioneerCACert:     "/var/vcap/jobs/bbs/config/auctioneer.ca",
+			AuctioneerClientCert: "/var/vcap/jobs/bbs/config/auctioneer.crt",
+			AuctioneerClientKey:  "/var/vcap/jobs/bbs/config/auctioneer.key",
+			AuctioneerRequireTLS: true,
+			UUID:                 "bosh-boshy-bosh-bosh",
+			CaFile:               "/var/vcap/jobs/bbs/config/ca.crt",
 			CellRegistrationsLocketEnabled: true,
+			CertFile:                       "/var/vcap/jobs/bbs/config/bbs.crt",
 			LocksLocketEnabled:             true,
 			ClientLocketConfig: locket.ClientLocketConfig{
 				LocketAddress:        "127.0.0.1:18018",
@@ -186,7 +187,7 @@ var _ = Describe("BBSConfig", func() {
 			MaxTaskRetries:             3,
 		}
 
-		Expect(bbsConfig).To(Equal(config))
+		Expect(bbsConfig).To(test_helpers.DeepEqual(config))
 	})
 
 	Context("when the file does not exist", func() {
@@ -216,35 +217,6 @@ var _ = Describe("BBSConfig", func() {
 		It("returns an error", func() {
 			_, err := config.NewBBSConfig(configFilePath)
 			Expect(err).To(MatchError(ContainSubstring("missing unit")))
-		})
-	})
-
-	Context("default values", func() {
-		BeforeEach(func() {
-			configData = `{}`
-		})
-
-		It("uses default values when they are not specified", func() {
-			bbsConfig, err := config.NewBBSConfig(configFilePath)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(bbsConfig).To(Equal(config.DefaultConfig()))
-		})
-
-		Context("when serialized from BBSConfig", func() {
-			BeforeEach(func() {
-				bbsConfig := config.BBSConfig{}
-				bytes, err := json.Marshal(bbsConfig)
-				Expect(err).NotTo(HaveOccurred())
-				configData = string(bytes)
-			})
-
-			It("uses default values when they are not specified", func() {
-				bbsConfig, err := config.NewBBSConfig(configFilePath)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(bbsConfig).To(Equal(config.DefaultConfig()))
-			})
 		})
 	})
 })

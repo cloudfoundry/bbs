@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"os"
-	"time"
 
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/debugserver"
@@ -66,37 +65,8 @@ type BBSConfig struct {
 	locket.ClientLocketConfig
 }
 
-func DefaultConfig() BBSConfig {
-	return BBSConfig{
-		SessionName:                     "bbs",
-		CommunicationTimeout:            durationjson.Duration(10 * time.Second),
-		RequireSSL:                      true,
-		DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
-		ExpireCompletedTaskDuration:     durationjson.Duration(2 * time.Minute),
-		ExpirePendingTaskDuration:       durationjson.Duration(30 * time.Minute),
-		EnableConsulServiceRegistration: false,
-		ConvergeRepeatInterval:          durationjson.Duration(30 * time.Second),
-		KickTaskDuration:                durationjson.Duration(30 * time.Second),
-		LockTTL:                         durationjson.Duration(locket.DefaultSessionTTL),
-		LockRetryInterval:               durationjson.Duration(locket.RetryInterval),
-		ReportInterval:                  durationjson.Duration(1 * time.Minute),
-		ConvergenceWorkers:              20,
-		UpdateWorkers:                   1000,
-		TaskCallbackWorkers:             1000,
-		DatabaseDriver:                  "mysql",
-		MaxOpenDatabaseConnections:      200,
-		MaxIdleDatabaseConnections:      200,
-		AuctioneerRequireTLS:            false,
-		RepClientSessionCacheSize:       0,
-		RepRequireTLS:                   false,
-		EncryptionConfig:                encryption.DefaultEncryptionConfig(),
-		LagerConfig:                     lagerflags.DefaultLagerConfig(),
-		GenerateSuspectActualLRPs:       false,
-	}
-}
-
 func NewBBSConfig(configPath string) (BBSConfig, error) {
-	bbsConfig := DefaultConfig()
+	bbsConfig := BBSConfig{}
 	configFile, err := os.Open(configPath)
 	if err != nil {
 		return BBSConfig{}, err

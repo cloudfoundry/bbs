@@ -29,6 +29,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/locket"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -175,6 +176,25 @@ var _ = BeforeEach(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	bbsConfig = bbsconfig.BBSConfig{
+		SessionName:                     "bbs",
+		CommunicationTimeout:            durationjson.Duration(10 * time.Second),
+		RequireSSL:                      true,
+		DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
+		ExpireCompletedTaskDuration:     durationjson.Duration(2 * time.Minute),
+		ExpirePendingTaskDuration:       durationjson.Duration(30 * time.Minute),
+		EnableConsulServiceRegistration: false,
+		KickTaskDuration:                durationjson.Duration(30 * time.Second),
+		LockTTL:                         durationjson.Duration(locket.DefaultSessionTTL),
+		LockRetryInterval:               durationjson.Duration(locket.RetryInterval),
+		ConvergenceWorkers:              20,
+		UpdateWorkers:                   1000,
+		TaskCallbackWorkers:             1000,
+		MaxOpenDatabaseConnections:      200,
+		MaxIdleDatabaseConnections:      200,
+		AuctioneerRequireTLS:            false,
+		RepClientSessionCacheSize:       0,
+		RepRequireTLS:                   false,
+
 		ListenAddress:     bbsAddress,
 		AdvertiseURL:      bbsURL.String(),
 		AuctioneerAddress: auctioneerServer.URL(),
