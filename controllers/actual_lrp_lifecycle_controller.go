@@ -61,6 +61,43 @@ func findLRP(key *models.ActualLRPInstanceKey, lrps []*models.ActualLRP) (*model
 	return nil, false
 }
 
+func getHigherPriorityActualLRP(lrp1, lrp2 *models.ActualLRP) *models.ActualLRP {
+	if hasHigherPriority(lrp1, lrp2) {
+		return lrp1
+	}
+	return lrp2
+}
+
+// hasHigherPriority returns true if lrp1 takes precendence over lrp2
+func hasHigherPriority(lrp1, lrp2 *models.ActualLRP) bool {
+	if lrp1 == nil {
+		return false
+	}
+
+	if lrp2 == nil {
+		return true
+	}
+
+	if lrp1.Presence == models.ActualLRP_Ordinary {
+		switch lrp1.State {
+		case models.ActualLRPStateRunning:
+			return true
+		case models.ActualLRPStateClaimed:
+			return lrp2.State != models.ActualLRPStateRunning
+		}
+	} else if lrp1.Presence == models.ActualLRP_Suspect {
+		switch lrp1.State {
+		case models.ActualLRPStateRunning:
+			return lrp2.State != models.ActualLRPStateRunning
+		case models.ActualLRPStateClaimed:
+			return lrp2.State != models.ActualLRPStateRunning && lrp2.State != models.ActualLRPStateClaimed
+		}
+	}
+	// Cases where we are comparing two LRPs with the same presence have undefined behavior since it shouldn't happen
+	// with the way they're stored in the database
+	return false
+}
+
 func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
 	before, after, err := h.db.ClaimActualLRP(logger, processGuid, index, actualLRPInstanceKey)
 	if err != nil {
