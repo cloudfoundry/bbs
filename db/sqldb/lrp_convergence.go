@@ -558,7 +558,7 @@ func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
 		logger.Error("failed-sending-unclaimed-lrps-metric", err)
 	}
 
-	db.metronClient.SendMetric(claimedLRPsMetric, claimedInstances)
+	err = db.metronClient.SendMetric(claimedLRPsMetric, claimedInstances)
 	if err != nil {
 		logger.Error("failed-sending-claimed-lrps-metric", err)
 	}
