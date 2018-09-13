@@ -136,6 +136,106 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			})))
 		})
 	})
+
+	Describe("convergence metrics", func() {
+		BeforeEach(func() {
+			taskStatMetronNotifier.TaskConvergenceResults(1, 2, 3, 4)
+		})
+
+		It("emits the number of pending, running, completed, and resolving tasks", func() {
+			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+				"Name":  Equal(metrics.PendingTasksMetric),
+				"Value": Equal(1),
+				"Opts":  BeEmpty(),
+			})))
+
+			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+				"Name":  Equal(metrics.RunningTasksMetric),
+				"Value": Equal(2),
+				"Opts":  BeEmpty(),
+			})))
+
+			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+				"Name":  Equal(metrics.CompletedTasksMetric),
+				"Value": Equal(3),
+				"Opts":  BeEmpty(),
+			})))
+
+			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+				"Name":  Equal(metrics.ResolvingTasksMetric),
+				"Value": Equal(4),
+				"Opts":  BeEmpty(),
+			})))
+		})
+
+		Context("after 60 seconds have elapsed", func() {
+			JustBeforeEach(func() {
+				fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
+			})
+
+			Context("and a convergence loop has also occurred", func() {
+				BeforeEach(func() {
+					taskStatMetronNotifier.TaskConvergenceResults(5, 6, 7, 8)
+				})
+
+				It("emits the new value for the metric", func() {
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.PendingTasksMetric),
+						"Value": Equal(5),
+						"Opts":  BeEmpty(),
+					})))
+
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.RunningTasksMetric),
+						"Value": Equal(6),
+						"Opts":  BeEmpty(),
+					})))
+
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.CompletedTasksMetric),
+						"Value": Equal(7),
+						"Opts":  BeEmpty(),
+					})))
+
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.ResolvingTasksMetric),
+						"Value": Equal(8),
+						"Opts":  BeEmpty(),
+					})))
+
+				})
+			})
+
+			Context("and a convergence loop has not occurred in the meantime", func() {
+				It("emits the last value of the metric", func() {
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.PendingTasksMetric),
+						"Value": Equal(1),
+						"Opts":  BeEmpty(),
+					})))
+
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.RunningTasksMetric),
+						"Value": Equal(2),
+						"Opts":  BeEmpty(),
+					})))
+
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.CompletedTasksMetric),
+						"Value": Equal(3),
+						"Opts":  BeEmpty(),
+					})))
+
+					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal(metrics.ResolvingTasksMetric),
+						"Value": Equal(4),
+						"Opts":  BeEmpty(),
+					})))
+
+				})
+			})
+		})
+	})
 })
 
 func haveTag(name, value string) types.GomegaMatcher {

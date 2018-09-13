@@ -16,10 +16,19 @@ const (
 	TasksStartedMetric   = "TasksStarted"
 	TasksSucceededMetric = "TasksSucceeded"
 	TasksFailedMetric    = "TasksFailed"
+
+	PendingTasksMetric   = "TasksPending"
+	RunningTasksMetric   = "TasksRunning"
+	CompletedTasksMetric = "TasksCompleted"
+	ResolvingTasksMetric = "TasksResolving"
 )
 
-type taskStats struct {
+type perCellStats struct {
 	tasksStarted, tasksFailed, tasksSucceeded int
+}
+
+type globalStats struct {
+	pendingTasks, runningTasks, completedTasks, resolvingTasks int
 }
 
 //go:generate counterfeiter -o fakes/fake_task_stat_metron_notifier.go . TaskStatMetronNotifier
@@ -28,19 +37,21 @@ type TaskStatMetronNotifier interface {
 	TaskSucceeded(cellID string)
 	TaskFailed(cellID string)
 	TaskStarted(cellID string)
+	TaskConvergenceResults(pending, running, completed, resolved int)
 }
 
 type taskStatMetronNotifier struct {
-	clock        clock.Clock
-	mutex        sync.Mutex
-	metronClient logging.IngressClient
-	perCellStats map[string]taskStats
+	clock           clock.Clock
+	mutex           sync.Mutex
+	metronClient    logging.IngressClient
+	perCellStats    map[string]perCellStats
+	globalTaskStats globalStats
 }
 
 func NewTaskStatMetronNotifier(logger lager.Logger, clock clock.Clock, metronClient logging.IngressClient) TaskStatMetronNotifier {
 	return &taskStatMetronNotifier{
 		clock:        clock,
-		perCellStats: make(map[string]taskStats),
+		perCellStats: make(map[string]perCellStats),
 		metronClient: metronClient,
 	}
 }
@@ -69,6 +80,10 @@ func (t *taskStatMetronNotifier) emitMetrics() {
 		t.metronClient.SendMetric(TasksFailedMetric, stats.tasksFailed, opt)
 		t.metronClient.SendMetric(TasksSucceededMetric, stats.tasksSucceeded, opt)
 	}
+	t.metronClient.SendMetric(PendingTasksMetric, t.globalTaskStats.pendingTasks)
+	t.metronClient.SendMetric(RunningTasksMetric, t.globalTaskStats.runningTasks)
+	t.metronClient.SendMetric(CompletedTasksMetric, t.globalTaskStats.completedTasks)
+	t.metronClient.SendMetric(ResolvingTasksMetric, t.globalTaskStats.resolvingTasks)
 }
 
 func (t *taskStatMetronNotifier) TaskSucceeded(cellID string) {
@@ -93,4 +108,14 @@ func (t *taskStatMetronNotifier) TaskStarted(cellID string) {
 	stats := t.perCellStats[cellID]
 	stats.tasksStarted += 1
 	t.perCellStats[cellID] = stats
+}
+
+func (t *taskStatMetronNotifier) TaskConvergenceResults(pending, running, completed, resolving int) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	t.globalTaskStats.pendingTasks = pending
+	t.globalTaskStats.runningTasks = running
+	t.globalTaskStats.completedTasks = completed
+	t.globalTaskStats.resolvingTasks = resolving
 }

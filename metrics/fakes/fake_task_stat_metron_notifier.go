@@ -36,6 +36,14 @@ type FakeTaskStatMetronNotifier struct {
 	taskStartedArgsForCall []struct {
 		cellID string
 	}
+	TaskConvergenceResultsStub        func(pending, running, completed, resolved int)
+	taskConvergenceResultsMutex       sync.RWMutex
+	taskConvergenceResultsArgsForCall []struct {
+		pending   int
+		running   int
+		completed int
+		resolved  int
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -161,6 +169,33 @@ func (fake *FakeTaskStatMetronNotifier) TaskStartedArgsForCall(i int) string {
 	return fake.taskStartedArgsForCall[i].cellID
 }
 
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceResults(pending int, running int, completed int, resolved int) {
+	fake.taskConvergenceResultsMutex.Lock()
+	fake.taskConvergenceResultsArgsForCall = append(fake.taskConvergenceResultsArgsForCall, struct {
+		pending   int
+		running   int
+		completed int
+		resolved  int
+	}{pending, running, completed, resolved})
+	fake.recordInvocation("TaskConvergenceResults", []interface{}{pending, running, completed, resolved})
+	fake.taskConvergenceResultsMutex.Unlock()
+	if fake.TaskConvergenceResultsStub != nil {
+		fake.TaskConvergenceResultsStub(pending, running, completed, resolved)
+	}
+}
+
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceResultsCallCount() int {
+	fake.taskConvergenceResultsMutex.RLock()
+	defer fake.taskConvergenceResultsMutex.RUnlock()
+	return len(fake.taskConvergenceResultsArgsForCall)
+}
+
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceResultsArgsForCall(i int) (int, int, int, int) {
+	fake.taskConvergenceResultsMutex.RLock()
+	defer fake.taskConvergenceResultsMutex.RUnlock()
+	return fake.taskConvergenceResultsArgsForCall[i].pending, fake.taskConvergenceResultsArgsForCall[i].running, fake.taskConvergenceResultsArgsForCall[i].completed, fake.taskConvergenceResultsArgsForCall[i].resolved
+}
+
 func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -172,6 +207,8 @@ func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{}
 	defer fake.taskFailedMutex.RUnlock()
 	fake.taskStartedMutex.RLock()
 	defer fake.taskStartedMutex.RUnlock()
+	fake.taskConvergenceResultsMutex.RLock()
+	defer fake.taskConvergenceResultsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -10,16 +10,8 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
-	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
-)
-
-const (
-	pendingTasksMetric   = "TasksPending"
-	runningTasksMetric   = "TasksRunning"
-	completedTasksMetric = "TasksCompleted"
-	resolvingTasksMetric = "TasksResolving"
 )
 
 type TaskController struct {
@@ -29,7 +21,6 @@ type TaskController struct {
 	serviceClient          serviceclient.ServiceClient
 	repClientFactory       rep.ClientFactory
 	taskHub                events.Hub
-	metronClient           loggingclient.IngressClient
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier
 	maxRetries             int
 }
@@ -41,7 +32,6 @@ func NewTaskController(
 	serviceClient serviceclient.ServiceClient,
 	repClientFactory rep.ClientFactory,
 	taskHub events.Hub,
-	metronClient loggingclient.IngressClient,
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 	maxRetries int,
 ) *TaskController {
@@ -52,7 +42,6 @@ func NewTaskController(
 		serviceClient:          serviceClient,
 		repClientFactory:       repClientFactory,
 		taskHub:                taskHub,
-		metronClient:           metronClient,
 		taskStatMetronNotifier: taskStatMetronNotifier,
 		maxRetries:             maxRetries,
 	}
@@ -310,24 +299,5 @@ func (c *TaskController) ConvergeTasks(
 func (c *TaskController) emitTaskMetrics(logger lager.Logger) {
 	logger = logger.Session("emit-task-metrics")
 	pendingCount, runningCount, completedCount, resolvingCount := c.db.GetTaskCountByState(logger)
-
-	err := c.metronClient.SendMetric(pendingTasksMetric, pendingCount)
-	if err != nil {
-		logger.Error("failed-to-send-pending-tasks-metric", err)
-	}
-
-	err = c.metronClient.SendMetric(runningTasksMetric, runningCount)
-	if err != nil {
-		logger.Error("failed-to-send-running-tasks-metric", err)
-	}
-
-	err = c.metronClient.SendMetric(completedTasksMetric, completedCount)
-	if err != nil {
-		logger.Error("failed-to-send-completed-tasks-metric", err)
-	}
-
-	err = c.metronClient.SendMetric(resolvingTasksMetric, resolvingCount)
-	if err != nil {
-		logger.Error("failed-to-send-resolving-tasks-metric", err)
-	}
+	c.taskStatMetronNotifier.TaskConvergenceResults(pendingCount, runningCount, completedCount, resolvingCount)
 }
