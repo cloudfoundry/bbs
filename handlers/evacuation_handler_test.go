@@ -390,13 +390,8 @@ var _ = Describe("Evacuation Handlers", func() {
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual, suspectActual}, nil)
 			})
 
-			It("only emits an LRPChanged event to the hub", func() {
-				Eventually(actualHub.EmitCallCount).Should(Equal(1))
-				event := actualHub.EmitArgsForCall(0)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
-				che := event.(*models.ActualLRPChangedEvent)
-				Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-				Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
+			It("does not emit any events to the hub", func() {
+				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 		})
 

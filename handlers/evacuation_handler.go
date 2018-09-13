@@ -148,7 +148,8 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 	}
 
 	before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, request.ActualLrpKey)
-	if err == nil {
+	if err == nil && beforeActualLRPGroup.Instance.Presence != models.ActualLRP_Suspect {
+		// only emit the event if there is no suspect LRP running and the LRP was indeed transitioned to UNCLAIMED
 		events = append(events, models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 	}
 	bbsErr := models.ConvertError(err)

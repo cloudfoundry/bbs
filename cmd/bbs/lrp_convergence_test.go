@@ -514,20 +514,9 @@ var _ = Describe("Convergence API", func() {
 								Expect(foundUnclaimed).To(BeTrue())
 							})
 
-							It("emits an ActualLRPChangedEvent event", func() {
+							It("does not emit any events", func() {
 								eventCh := streamEvents(events)
-
-								var e *models.ActualLRPChangedEvent
-
-								Eventually(func() string {
-									Eventually(eventCh).Should(Receive(&e))
-									return e.After.Instance.State
-								}).Should(Equal(models.ActualLRPStateUnclaimed))
-
-								Expect(e.Before.Instance.InstanceGuid).To(Equal("ig-2"))
-								Expect(e.Before.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
-								Expect(e.Before.Instance.State).To(Equal(models.ActualLRPStateClaimed))
-								Expect(e.After.Instance.State).To(Equal(models.ActualLRPStateUnclaimed))
+								Consistently(eventCh).ShouldNot(Receive())
 							})
 
 							It("does not remove the suspect LRP", func() {
