@@ -134,17 +134,16 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 
 	beforeActualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: request.ActualLrpKey.ProcessGuid, Index: &request.ActualLrpKey.Index})
 	beforeActualLRPGroup := resolveToActualLRPGroup(beforeActualLRPs)
-	if err == nil {
-		err = h.db.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+
+	// remove any existing evacuating LRP
+	if beforeActualLRPGroup.Evacuating != nil {
+		lrp := beforeActualLRPGroup.Evacuating
+		err = h.db.RemoveEvacuatingActualLRP(logger, &lrp.ActualLRPKey, &lrp.ActualLRPInstanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			exitIfUnrecoverable(logger, h.exitChan, models.ConvertError(err))
 		} else {
-			if beforeActualLRPGroup.Instance != nil && beforeActualLRPGroup.Instance.Presence == models.ActualLRP_Suspect {
-				// do nothing
-			} else {
-				events = append(events, models.NewActualLRPRemovedEvent(beforeActualLRPGroup))
-			}
+			events = append(events, models.NewActualLRPRemovedEvent(beforeActualLRPGroup.Evacuating.ToActualLRPGroup()))
 		}
 	}
 
