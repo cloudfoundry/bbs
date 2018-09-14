@@ -184,13 +184,6 @@ var _ = Describe("Convergence of Tasks", func() {
 			tasksToAuction, tasksToComplete, taskEvents = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
-		It("bumps the convergence counter", func() {
-			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(1))
-			name := fakeMetronClient.IncrementCounterArgsForCall(0)
-
-			Expect(name).To(Equal("ConvergenceTaskRuns"))
-		})
-
 		It("reports the duration that it took to converge", func() {
 			Expect(fakeMetronClient.SendDurationCallCount()).To(Equal(1))
 			name, value, _ := fakeMetronClient.SendDurationArgsForCall(0)

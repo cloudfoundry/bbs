@@ -36,22 +36,15 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		logger                 lager.Logger
 		metronClient           *testhelpers.FakeIngressClient
 		metricsCh              chan metric
-		counterCh              chan counter
 		process                ifrit.Process
 	)
 
 	BeforeEach(func() {
 		metricsCh = make(chan metric, 100)
-		counterCh = make(chan counter, 100)
 
 		metronClient = &testhelpers.FakeIngressClient{}
 		metronClient.SendMetricStub = func(name string, value int, opts ...loggregator.EmitGaugeOption) error {
 			metricsCh <- metric{name, value, opts}
-			return nil
-		}
-
-		metronClient.IncrementCounterWithDeltaStub = func(name string, delta uint64) error {
-			counterCh <- counter{name, delta}
 			return nil
 		}
 
@@ -150,7 +143,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 	})
 
-	FDescribe("metrics about convergence", func() {
+	Describe("metrics about convergence", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskConvergenceStarted()
 			taskStatMetronNotifier.TaskConvergenceStarted()
@@ -158,28 +151,46 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 
 		It("emits the number of convergence runs since the last time metrics were emitted", func() {
-			Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-				"Name":  Equal("ConvergenceTaskRuns"),
-				"Delta": Equal(uint64(3)),
-			})))
+			fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
+			Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(1))
+
+			counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(0)
+			Expect(counterName).To(Equal("ConvergenceTaskRuns"))
+			Expect(delta).To(BeEquivalentTo(3))
 		})
 
 		Context("after metrics have been emitted, and then another convergence loop starts", func() {
 			JustBeforeEach(func() {
-				fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
+				// This causes the ticker loop to stop, and gives the test a chance to update the fixtures
+				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
 				taskStatMetronNotifier.TaskConvergenceStarted()
+
+				fakeClock.Increment(60 * time.Second)
 			})
 
-			FIt("resets the value and emits the number of runs since the last time metrics were emitted", func() {
-				Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-					"Name":  Equal("ConvergenceTaskRuns"),
-					"Delta": Equal(uint64(1)),
-				})))
+			It("resets the value and emits the number of runs since the last time metrics were emitted", func() {
+				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
+				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(2))
+
+				counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(1)
+				Expect(counterName).To(Equal(metrics.ConvergeTaskRunsCounter))
+				Expect(delta).To(BeEquivalentTo(1))
+			})
+		})
+
+		Context("after metrics have been emitted, but another convergence loop has not yet started", func() {
+			JustBeforeEach(func() {
+				fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
+			})
+
+			It("doesn't update the converge runs counter", func() {
+				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
+				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(1))
 			})
 		})
 	})
 
-	Describe("convergence metrics", func() {
+	Describe("metrics about tasks resulting from convergence", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskConvergenceResults(1, 2, 3, 4)
 		})

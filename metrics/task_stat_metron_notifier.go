@@ -21,6 +21,8 @@ const (
 	RunningTasksMetric   = "TasksRunning"
 	CompletedTasksMetric = "TasksCompleted"
 	ResolvingTasksMetric = "TasksResolving"
+
+	ConvergeTaskRunsCounter = "ConvergenceTaskRuns"
 )
 
 type perCellStats struct {
@@ -60,12 +62,10 @@ func NewTaskStatMetronNotifier(logger lager.Logger, clock clock.Clock, metronCli
 }
 
 func (t *taskStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	ticker := t.clock.NewTicker(60 * time.Second)
-
 	close(ready)
 	for {
 		select {
-		case <-ticker.C():
+		case <-t.clock.NewTimer(60 * time.Second).C():
 			t.emitMetrics()
 		case <-signals:
 			return nil
@@ -89,9 +89,10 @@ func (t *taskStatMetronNotifier) emitMetrics() {
 	t.metronClient.SendMetric(CompletedTasksMetric, t.globalTaskStats.completedTasks)
 	t.metronClient.SendMetric(ResolvingTasksMetric, t.globalTaskStats.resolvingTasks)
 
-	t.metronClient.IncrementCounterWithDelta("ConvergenceTaskRuns", t.convergenceRunsDelta)
-	println("Resetting")
-	t.convergenceRunsDelta = 0
+	if t.convergenceRunsDelta > 0 {
+		t.metronClient.IncrementCounterWithDelta(ConvergeTaskRunsCounter, t.convergenceRunsDelta)
+		t.convergenceRunsDelta = 0
+	}
 }
 
 func (t *taskStatMetronNotifier) TaskSucceeded(cellID string) {
@@ -121,7 +122,6 @@ func (t *taskStatMetronNotifier) TaskStarted(cellID string) {
 func (t *taskStatMetronNotifier) TaskConvergenceResults(pending, running, completed, resolving int) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	println("recording results")
 
 	t.globalTaskStats.pendingTasks = pending
 	t.globalTaskStats.runningTasks = running
@@ -133,6 +133,5 @@ func (t *taskStatMetronNotifier) TaskConvergenceStarted() {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
-	println("incrementing")
 	t.convergenceRunsDelta += 1
 }

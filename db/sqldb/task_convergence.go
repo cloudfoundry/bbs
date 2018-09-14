@@ -13,9 +13,7 @@ import (
 )
 
 const (
-	convergeTaskRunsCounter = "ConvergenceTaskRuns"
 	convergeTaskDuration    = "ConvergenceTaskDuration"
-
 	tasksKickedCounter = "ConvergenceTasksKicked"
 	tasksPrunedCounter = "ConvergenceTasksPruned"
 
