@@ -260,6 +260,7 @@ func (c *TaskController) ConvergeTasks(
 	}
 	logger.Debug("succeeded-listing-cells")
 
+	convergenceStartTime := time.Now()
 	tasksToAuction, tasksToComplete, eventsToEmit := c.db.ConvergeTasks(
 		logger,
 		cellSet,
@@ -269,6 +270,7 @@ func (c *TaskController) ConvergeTasks(
 	)
 
 	c.taskStatMetronNotifier.TaskConvergenceStarted()
+	c.taskStatMetronNotifier.TaskConvergenceDuration(time.Since(convergenceStartTime))
 
 	logger.Debug("emitting-events-from-convergence", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
 	for _, event := range eventsToEmit {

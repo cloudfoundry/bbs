@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	convergeTaskDuration    = "ConvergenceTaskDuration"
 	tasksKickedCounter = "ConvergenceTasksKicked"
 	tasksPrunedCounter = "ConvergenceTasksPruned"
 
@@ -24,15 +23,6 @@ const (
 func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, []*models.Task, []models.Event) {
 	logger.Info("starting")
 	defer logger.Info("completed")
-
-	convergeStart := db.clock.Now()
-
-	defer func() {
-		err := db.metronClient.SendDuration(convergeTaskDuration, time.Since(convergeStart))
-		if err != nil {
-			logger.Error("failed-to-send-converge-task-duration-metric", err)
-		}
-	}()
 
 	var tasksPruned, tasksKicked uint64
 

@@ -23,6 +23,7 @@ const (
 	ResolvingTasksMetric = "TasksResolving"
 
 	ConvergeTaskRunsCounter = "ConvergenceTaskRuns"
+	ConvergeTaskDuration    = "ConvergenceTaskDuration"
 )
 
 type perCellStats struct {
@@ -42,6 +43,7 @@ type TaskStatMetronNotifier interface {
 
 	TaskConvergenceResults(pending, running, completed, resolved int)
 	TaskConvergenceStarted()
+	TaskConvergenceDuration(duration time.Duration)
 }
 
 type taskStatMetronNotifier struct {
@@ -51,6 +53,7 @@ type taskStatMetronNotifier struct {
 	perCellStats         map[string]perCellStats
 	globalTaskStats      globalStats
 	convergenceRunsDelta uint64
+	convergenceDuration  time.Duration
 }
 
 func NewTaskStatMetronNotifier(logger lager.Logger, clock clock.Clock, metronClient logging.IngressClient) TaskStatMetronNotifier {
@@ -93,6 +96,8 @@ func (t *taskStatMetronNotifier) emitMetrics() {
 		t.metronClient.IncrementCounterWithDelta(ConvergeTaskRunsCounter, t.convergenceRunsDelta)
 		t.convergenceRunsDelta = 0
 	}
+
+	t.metronClient.SendDuration(ConvergeTaskDuration, t.convergenceDuration)
 }
 
 func (t *taskStatMetronNotifier) TaskSucceeded(cellID string) {
@@ -134,4 +139,11 @@ func (t *taskStatMetronNotifier) TaskConvergenceStarted() {
 	defer t.mutex.Unlock()
 
 	t.convergenceRunsDelta += 1
+}
+
+func (t *taskStatMetronNotifier) TaskConvergenceDuration(duration time.Duration) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	t.convergenceDuration = duration
 }

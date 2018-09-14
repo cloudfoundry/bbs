@@ -4,6 +4,7 @@ package fakes
 import (
 	"os"
 	"sync"
+	"time"
 
 	"code.cloudfoundry.org/bbs/metrics"
 )
@@ -44,11 +45,16 @@ type FakeTaskStatMetronNotifier struct {
 		completed int
 		resolved  int
 	}
-	TaskConvergenceStartedStub        func()
-	taskConvergenceStartedMutex       sync.RWMutex
-	taskConvergenceStartedArgsForCall []struct{}
-	invocations                       map[string][][]interface{}
-	invocationsMutex                  sync.RWMutex
+	TaskConvergenceStartedStub         func()
+	taskConvergenceStartedMutex        sync.RWMutex
+	taskConvergenceStartedArgsForCall  []struct{}
+	TaskConvergenceDurationStub        func(duration time.Duration)
+	taskConvergenceDurationMutex       sync.RWMutex
+	taskConvergenceDurationArgsForCall []struct {
+		duration time.Duration
+	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeTaskStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -215,6 +221,30 @@ func (fake *FakeTaskStatMetronNotifier) TaskConvergenceStartedCallCount() int {
 	return len(fake.taskConvergenceStartedArgsForCall)
 }
 
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceDuration(duration time.Duration) {
+	fake.taskConvergenceDurationMutex.Lock()
+	fake.taskConvergenceDurationArgsForCall = append(fake.taskConvergenceDurationArgsForCall, struct {
+		duration time.Duration
+	}{duration})
+	fake.recordInvocation("TaskConvergenceDuration", []interface{}{duration})
+	fake.taskConvergenceDurationMutex.Unlock()
+	if fake.TaskConvergenceDurationStub != nil {
+		fake.TaskConvergenceDurationStub(duration)
+	}
+}
+
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceDurationCallCount() int {
+	fake.taskConvergenceDurationMutex.RLock()
+	defer fake.taskConvergenceDurationMutex.RUnlock()
+	return len(fake.taskConvergenceDurationArgsForCall)
+}
+
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceDurationArgsForCall(i int) time.Duration {
+	fake.taskConvergenceDurationMutex.RLock()
+	defer fake.taskConvergenceDurationMutex.RUnlock()
+	return fake.taskConvergenceDurationArgsForCall[i].duration
+}
+
 func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -230,6 +260,8 @@ func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{}
 	defer fake.taskConvergenceResultsMutex.RUnlock()
 	fake.taskConvergenceStartedMutex.RLock()
 	defer fake.taskConvergenceStartedMutex.RUnlock()
+	fake.taskConvergenceDurationMutex.RLock()
+	defer fake.taskConvergenceDurationMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -148,6 +148,8 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			taskStatMetronNotifier.TaskConvergenceStarted()
 			taskStatMetronNotifier.TaskConvergenceStarted()
 			taskStatMetronNotifier.TaskConvergenceStarted()
+
+			taskStatMetronNotifier.TaskConvergenceDuration(1 * time.Second)
 		})
 
 		It("emits the number of convergence runs since the last time metrics were emitted", func() {
@@ -159,11 +161,20 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			Expect(delta).To(BeEquivalentTo(3))
 		})
 
+		It("emits the duration of the last convergence run", func() {
+			Eventually(metronClient.SendDurationCallCount).Should(Equal(1))
+
+			metricName, duration, _ := metronClient.SendDurationArgsForCall(0)
+			Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
+			Expect(duration).To(BeEquivalentTo(1 * time.Second))
+		})
+
 		Context("after metrics have been emitted, and then another convergence loop starts", func() {
 			JustBeforeEach(func() {
 				// This causes the ticker loop to stop, and gives the test a chance to update the fixtures
 				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
 				taskStatMetronNotifier.TaskConvergenceStarted()
+				taskStatMetronNotifier.TaskConvergenceDuration(2 * time.Second)
 
 				fakeClock.Increment(60 * time.Second)
 			})
@@ -176,6 +187,14 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 				Expect(counterName).To(Equal(metrics.ConvergeTaskRunsCounter))
 				Expect(delta).To(BeEquivalentTo(1))
 			})
+
+			It("emits the duration of the new convergence run", func() {
+				Eventually(metronClient.SendDurationCallCount).Should(Equal(2))
+
+				metricName, duration, _ := metronClient.SendDurationArgsForCall(1)
+				Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
+				Expect(duration).To(BeEquivalentTo(2 * time.Second))
+			})
 		})
 
 		Context("after metrics have been emitted, but another convergence loop has not yet started", func() {
@@ -186,6 +205,15 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			It("doesn't update the converge runs counter", func() {
 				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
 				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(1))
+			})
+
+			It("emits the duration of the last convergence run", func() {
+				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
+				Eventually(metronClient.SendDurationCallCount).Should(Equal(2))
+
+				metricName, duration, _ := metronClient.SendDurationArgsForCall(1)
+				Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
+				Expect(duration).To(BeEquivalentTo(1 * time.Second))
 			})
 		})
 	})
