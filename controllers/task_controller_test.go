@@ -986,6 +986,10 @@ var _ = Describe("Task Controller", func() {
 				Expect(resolving).To(Equal(1))
 			})
 
+			It("increments the number of convergence runs", func() {
+				Expect(fakeTaskStatNotifier.TaskConvergenceStartedCallCount()).To(Equal(1))
+			})
+
 			Context("when fetching cells fails", func() {
 				BeforeEach(func() {
 					fakeServiceClient.CellsReturns(nil, errors.New("kaboom"))

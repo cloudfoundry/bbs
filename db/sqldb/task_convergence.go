@@ -27,7 +27,6 @@ func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kick
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	db.metronClient.IncrementCounter(convergeTaskRunsCounter)
 	convergeStart := db.clock.Now()
 
 	defer func() {

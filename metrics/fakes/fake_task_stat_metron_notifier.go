@@ -44,8 +44,11 @@ type FakeTaskStatMetronNotifier struct {
 		completed int
 		resolved  int
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
+	TaskConvergenceStartedStub        func()
+	taskConvergenceStartedMutex       sync.RWMutex
+	taskConvergenceStartedArgsForCall []struct{}
+	invocations                       map[string][][]interface{}
+	invocationsMutex                  sync.RWMutex
 }
 
 func (fake *FakeTaskStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -196,6 +199,22 @@ func (fake *FakeTaskStatMetronNotifier) TaskConvergenceResultsArgsForCall(i int)
 	return fake.taskConvergenceResultsArgsForCall[i].pending, fake.taskConvergenceResultsArgsForCall[i].running, fake.taskConvergenceResultsArgsForCall[i].completed, fake.taskConvergenceResultsArgsForCall[i].resolved
 }
 
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceStarted() {
+	fake.taskConvergenceStartedMutex.Lock()
+	fake.taskConvergenceStartedArgsForCall = append(fake.taskConvergenceStartedArgsForCall, struct{}{})
+	fake.recordInvocation("TaskConvergenceStarted", []interface{}{})
+	fake.taskConvergenceStartedMutex.Unlock()
+	if fake.TaskConvergenceStartedStub != nil {
+		fake.TaskConvergenceStartedStub()
+	}
+}
+
+func (fake *FakeTaskStatMetronNotifier) TaskConvergenceStartedCallCount() int {
+	fake.taskConvergenceStartedMutex.RLock()
+	defer fake.taskConvergenceStartedMutex.RUnlock()
+	return len(fake.taskConvergenceStartedArgsForCall)
+}
+
 func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -209,6 +228,8 @@ func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{}
 	defer fake.taskStartedMutex.RUnlock()
 	fake.taskConvergenceResultsMutex.RLock()
 	defer fake.taskConvergenceResultsMutex.RUnlock()
+	fake.taskConvergenceStartedMutex.RLock()
+	defer fake.taskConvergenceStartedMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

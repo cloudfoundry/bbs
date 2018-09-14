@@ -37,15 +37,18 @@ type TaskStatMetronNotifier interface {
 	TaskSucceeded(cellID string)
 	TaskFailed(cellID string)
 	TaskStarted(cellID string)
+
 	TaskConvergenceResults(pending, running, completed, resolved int)
+	TaskConvergenceStarted()
 }
 
 type taskStatMetronNotifier struct {
-	clock           clock.Clock
-	mutex           sync.Mutex
-	metronClient    logging.IngressClient
-	perCellStats    map[string]perCellStats
-	globalTaskStats globalStats
+	clock                clock.Clock
+	mutex                sync.Mutex
+	metronClient         logging.IngressClient
+	perCellStats         map[string]perCellStats
+	globalTaskStats      globalStats
+	convergenceRunsDelta uint64
 }
 
 func NewTaskStatMetronNotifier(logger lager.Logger, clock clock.Clock, metronClient logging.IngressClient) TaskStatMetronNotifier {
@@ -80,10 +83,15 @@ func (t *taskStatMetronNotifier) emitMetrics() {
 		t.metronClient.SendMetric(TasksFailedMetric, stats.tasksFailed, opt)
 		t.metronClient.SendMetric(TasksSucceededMetric, stats.tasksSucceeded, opt)
 	}
+
 	t.metronClient.SendMetric(PendingTasksMetric, t.globalTaskStats.pendingTasks)
 	t.metronClient.SendMetric(RunningTasksMetric, t.globalTaskStats.runningTasks)
 	t.metronClient.SendMetric(CompletedTasksMetric, t.globalTaskStats.completedTasks)
 	t.metronClient.SendMetric(ResolvingTasksMetric, t.globalTaskStats.resolvingTasks)
+
+	t.metronClient.IncrementCounterWithDelta("ConvergenceTaskRuns", t.convergenceRunsDelta)
+	println("Resetting")
+	t.convergenceRunsDelta = 0
 }
 
 func (t *taskStatMetronNotifier) TaskSucceeded(cellID string) {
@@ -113,9 +121,18 @@ func (t *taskStatMetronNotifier) TaskStarted(cellID string) {
 func (t *taskStatMetronNotifier) TaskConvergenceResults(pending, running, completed, resolving int) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
+	println("recording results")
 
 	t.globalTaskStats.pendingTasks = pending
 	t.globalTaskStats.runningTasks = running
 	t.globalTaskStats.completedTasks = completed
 	t.globalTaskStats.resolvingTasks = resolving
+}
+
+func (t *taskStatMetronNotifier) TaskConvergenceStarted() {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	println("incrementing")
+	t.convergenceRunsDelta += 1
 }

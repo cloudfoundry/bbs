@@ -25,20 +25,33 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		Opts  []loggregator.EmitGaugeOption
 	}
 
+	type counter struct {
+		Name  string
+		Delta uint64
+	}
+
 	var (
 		taskStatMetronNotifier metrics.TaskStatMetronNotifier
 		fakeClock              *fakeclock.FakeClock
 		logger                 lager.Logger
 		metronClient           *testhelpers.FakeIngressClient
 		metricsCh              chan metric
+		counterCh              chan counter
 		process                ifrit.Process
 	)
 
 	BeforeEach(func() {
 		metricsCh = make(chan metric, 100)
+		counterCh = make(chan counter, 100)
+
 		metronClient = &testhelpers.FakeIngressClient{}
 		metronClient.SendMetricStub = func(name string, value int, opts ...loggregator.EmitGaugeOption) error {
 			metricsCh <- metric{name, value, opts}
+			return nil
+		}
+
+		metronClient.IncrementCounterWithDeltaStub = func(name string, delta uint64) error {
+			counterCh <- counter{name, delta}
 			return nil
 		}
 
@@ -134,6 +147,35 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 				"Value": Equal(1),
 				"Opts":  haveTag("cell-id", "cell-1"),
 			})))
+		})
+	})
+
+	FDescribe("metrics about convergence", func() {
+		BeforeEach(func() {
+			taskStatMetronNotifier.TaskConvergenceStarted()
+			taskStatMetronNotifier.TaskConvergenceStarted()
+			taskStatMetronNotifier.TaskConvergenceStarted()
+		})
+
+		It("emits the number of convergence runs since the last time metrics were emitted", func() {
+			Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+				"Name":  Equal("ConvergenceTaskRuns"),
+				"Delta": Equal(uint64(3)),
+			})))
+		})
+
+		Context("after metrics have been emitted, and then another convergence loop starts", func() {
+			JustBeforeEach(func() {
+				fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
+				taskStatMetronNotifier.TaskConvergenceStarted()
+			})
+
+			FIt("resets the value and emits the number of runs since the last time metrics were emitted", func() {
+				Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+					"Name":  Equal("ConvergenceTaskRuns"),
+					"Delta": Equal(uint64(1)),
+				})))
+			})
 		})
 	})
 

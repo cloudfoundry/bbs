@@ -268,6 +268,8 @@ func (c *TaskController) ConvergeTasks(
 		expireCompletedTaskDuration,
 	)
 
+	c.taskStatMetronNotifier.TaskConvergenceStarted()
+
 	logger.Debug("emitting-events-from-convergence", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
 	for _, event := range eventsToEmit {
 		go c.taskHub.Emit(event)
