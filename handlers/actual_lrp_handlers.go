@@ -118,11 +118,23 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logg
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-// resolvePriority returns true if lrp1 takes precendence over lrp2
-func resolvePriority(lrp1, lrp2 *models.ActualLRP) bool {
+func getHigherPriorityActualLRP(lrp1, lrp2 *models.ActualLRP) *models.ActualLRP {
+	if hasHigherPriority(lrp1, lrp2) {
+		return lrp1
+	}
+	return lrp2
+}
+
+// hasHigherPriority returns true if lrp1 takes precendence over lrp2
+func hasHigherPriority(lrp1, lrp2 *models.ActualLRP) bool {
+	if lrp1 == nil {
+		return false
+	}
+
 	if lrp2 == nil {
 		return true
 	}
+
 	if lrp1.Presence == models.ActualLRP_Ordinary {
 		switch lrp1.State {
 		case models.ActualLRPStateRunning:
@@ -157,7 +169,7 @@ func ResolveActualLRPGroups(lrps []*models.ActualLRP) []*models.ActualLRPGroup {
 		}
 		if actualLRP.Presence == models.ActualLRP_Evacuating {
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
-		} else if resolvePriority(actualLRP, mapOfGroups[actualLRP.ActualLRPKey].Instance) {
+		} else if hasHigherPriority(actualLRP, mapOfGroups[actualLRP.ActualLRPKey].Instance) {
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
 		}
 	}

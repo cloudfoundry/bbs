@@ -42,17 +42,19 @@ func New(
 	domainHandler := NewDomainHandler(db, exitChan)
 	actualLRPHandler := NewActualLRPHandler(db, exitChan)
 	actualLRPController := controllers.NewActualLRPLifecycleController(
-		db,
-		db,
-		db,
-		db,
+		db, db, db, db,
 		auctioneerClient,
 		serviceClient,
 		repClientFactory,
 		actualHub,
 	)
+	evacuationController := controllers.NewEvacuationController(
+		db, db, db, db,
+		auctioneerClient,
+		actualHub,
+	)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
-	evacuationHandler := NewEvacuationHandler(db, db, db, db, actualHub, auctioneerClient, exitChan)
+	evacuationHandler := NewEvacuationHandler(evacuationController, exitChan)
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
 	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, maxTaskPlacementRetries)
 	taskHandler := NewTaskHandler(taskController, exitChan)
