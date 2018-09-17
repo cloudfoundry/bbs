@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 	"github.com/gogo/protobuf/proto"
@@ -11,20 +10,20 @@ import (
 
 //go:generate counterfeiter -o fake_controllers/fake_evacuation_controller.go . EvacuationController
 type EvacuationController interface {
-	RemoveEvacuatingActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) error
-	EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) (error, bool)
-	EvacuateCrashedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) (error, bool)
-	EvacuateRunningActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) (error, bool)
-	EvacuateStoppedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) (error, bool)
+	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (error, bool)
+	EvacuateCrashedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
+	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (error, bool)
+	EvacuateStoppedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 }
 
 type EvacuationHandler struct {
-	controller *controllers.EvacuationController
+	controller EvacuationController
 	exitChan   chan<- struct{}
 }
 
 func NewEvacuationHandler(
-	controller *controllers.EvacuationController,
+	controller EvacuationController,
 	exitChan chan<- struct{},
 ) *EvacuationHandler {
 	return &EvacuationHandler{

@@ -9,13 +9,12 @@ import (
 )
 
 type EvacuationController struct {
-	db                   db.EvacuationDB
-	actualLRPDB          db.ActualLRPDB
-	suspectLRPDB         db.SuspectDB
-	desiredLRPDB         db.DesiredLRPDB
-	auctioneerClient     auctioneer.Client
-	actualHub            events.Hub
-	actualLRPInstanceHub events.Hub
+	db               db.EvacuationDB
+	actualLRPDB      db.ActualLRPDB
+	suspectLRPDB     db.SuspectDB
+	desiredLRPDB     db.DesiredLRPDB
+	auctioneerClient auctioneer.Client
+	actualHub        events.Hub
 }
 
 func NewEvacuationController(
@@ -25,16 +24,14 @@ func NewEvacuationController(
 	desiredLRPDB db.DesiredLRPDB,
 	auctioneerClient auctioneer.Client,
 	actualHub events.Hub,
-	actualLRPInstanceHub events.Hub,
 ) *EvacuationController {
 	return &EvacuationController{
-		db:                   db,
-		actualLRPDB:          actualLRPDB,
-		suspectLRPDB:         suspectLRPDB,
-		desiredLRPDB:         desiredLRPDB,
-		auctioneerClient:     auctioneerClient,
-		actualHub:            actualHub,
-		actualLRPInstanceHub: actualLRPInstanceHub,
+		db:               db,
+		actualLRPDB:      actualLRPDB,
+		suspectLRPDB:     suspectLRPDB,
+		desiredLRPDB:     desiredLRPDB,
+		auctioneerClient: auctioneerClient,
+		actualHub:        actualHub,
 	}
 }
 
@@ -111,7 +108,6 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 		err = h.db.RemoveEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
-			// TODO: can we do better here?
 			convertedErr := models.ConvertError(err)
 			if convertedErr != nil && convertedErr.Type == models.Error_Unrecoverable {
 				return convertedErr, false
