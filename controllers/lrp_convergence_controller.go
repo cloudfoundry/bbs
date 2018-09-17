@@ -141,6 +141,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			} else if !after.Equal(before) {
 				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+				//TODO: needs fixing
 				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 			}
 
@@ -192,6 +193,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 					return
 				}
 
+				// TODO: check if this is correct what we emit here
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 			}
