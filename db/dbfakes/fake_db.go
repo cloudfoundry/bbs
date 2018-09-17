@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
@@ -510,7 +509,7 @@ type FakeDB struct {
 		result1 *models.Task
 		result2 error
 	}
-	ConvergeTasksStub        func(logger lager.Logger, cellSet models.CellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task, taskEvents []models.Event)
+	ConvergeTasksStub        func(logger lager.Logger, cellSet models.CellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) db.TaskConvergenceResult
 	convergeTasksMutex       sync.RWMutex
 	convergeTasksArgsForCall []struct {
 		logger                      lager.Logger
@@ -520,14 +519,10 @@ type FakeDB struct {
 		expireCompletedTaskDuration time.Duration
 	}
 	convergeTasksReturns struct {
-		result1 []*auctioneer.TaskStartRequest
-		result2 []*models.Task
-		result3 []models.Event
+		result1 db.TaskConvergenceResult
 	}
 	convergeTasksReturnsOnCall map[int]struct {
-		result1 []*auctioneer.TaskStartRequest
-		result2 []*models.Task
-		result3 []models.Event
+		result1 db.TaskConvergenceResult
 	}
 	GetTaskCountByStateStub        func(logger lager.Logger) (int, int, int, int)
 	getTaskCountByStateMutex       sync.RWMutex
@@ -2348,7 +2343,7 @@ func (fake *FakeDB) DeleteTaskReturnsOnCall(i int, result1 *models.Task, result2
 	}{result1, result2}
 }
 
-func (fake *FakeDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task, taskEvents []models.Event) {
+func (fake *FakeDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) db.TaskConvergenceResult {
 	fake.convergeTasksMutex.Lock()
 	ret, specificReturn := fake.convergeTasksReturnsOnCall[len(fake.convergeTasksArgsForCall)]
 	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
@@ -2364,9 +2359,9 @@ func (fake *FakeDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, k
 		return fake.ConvergeTasksStub(logger, cellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2, ret.result3
+		return ret.result1
 	}
-	return fake.convergeTasksReturns.result1, fake.convergeTasksReturns.result2, fake.convergeTasksReturns.result3
+	return fake.convergeTasksReturns.result1
 }
 
 func (fake *FakeDB) ConvergeTasksCallCount() int {
@@ -2381,29 +2376,23 @@ func (fake *FakeDB) ConvergeTasksArgsForCall(i int) (lager.Logger, models.CellSe
 	return fake.convergeTasksArgsForCall[i].logger, fake.convergeTasksArgsForCall[i].cellSet, fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
 }
 
-func (fake *FakeDB) ConvergeTasksReturns(result1 []*auctioneer.TaskStartRequest, result2 []*models.Task, result3 []models.Event) {
+func (fake *FakeDB) ConvergeTasksReturns(result1 db.TaskConvergenceResult) {
 	fake.ConvergeTasksStub = nil
 	fake.convergeTasksReturns = struct {
-		result1 []*auctioneer.TaskStartRequest
-		result2 []*models.Task
-		result3 []models.Event
-	}{result1, result2, result3}
+		result1 db.TaskConvergenceResult
+	}{result1}
 }
 
-func (fake *FakeDB) ConvergeTasksReturnsOnCall(i int, result1 []*auctioneer.TaskStartRequest, result2 []*models.Task, result3 []models.Event) {
+func (fake *FakeDB) ConvergeTasksReturnsOnCall(i int, result1 db.TaskConvergenceResult) {
 	fake.ConvergeTasksStub = nil
 	if fake.convergeTasksReturnsOnCall == nil {
 		fake.convergeTasksReturnsOnCall = make(map[int]struct {
-			result1 []*auctioneer.TaskStartRequest
-			result2 []*models.Task
-			result3 []models.Event
+			result1 db.TaskConvergenceResult
 		})
 	}
 	fake.convergeTasksReturnsOnCall[i] = struct {
-		result1 []*auctioneer.TaskStartRequest
-		result2 []*models.Task
-		result3 []models.Event
-	}{result1, result2, result3}
+		result1 db.TaskConvergenceResult
+	}{result1}
 }
 
 func (fake *FakeDB) GetTaskCountByState(logger lager.Logger) (int, int, int, int) {

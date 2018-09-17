@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
+	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/metrics/fakes"
@@ -1026,7 +1027,12 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					task1 := model_helpers.NewValidTask(taskGuid1)
 					task2 := model_helpers.NewValidTask(taskGuid2)
-					fakeTaskDB.ConvergeTasksReturns(nil, []*models.Task{task1, task2}, []models.Event{})
+					convergenceResult := db.TaskConvergenceResult{
+						TasksToAuction:  nil,
+						TasksToComplete: []*models.Task{task1, task2},
+						Events:          []models.Event{},
+					}
+					fakeTaskDB.ConvergeTasksReturns(convergenceResult)
 				})
 
 				It("submits the tasks to the workpool", func() {
@@ -1061,7 +1067,12 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					taskStartRequest1 := auctioneer.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
 					taskStartRequest2 := auctioneer.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
-					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2}, nil, []models.Event{})
+					convergenceResult := db.TaskConvergenceResult{
+						TasksToAuction:  []*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2},
+						TasksToComplete: nil,
+						Events:          nil,
+					}
+					fakeTaskDB.ConvergeTasksReturns(convergenceResult)
 				})
 
 				It("requests an auction", func() {
@@ -1089,7 +1100,12 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					event1 = models.NewTaskRemovedEvent(&models.Task{TaskGuid: "removed-task-1"})
 					event2 = models.NewTaskRemovedEvent(&models.Task{TaskGuid: "removed-task-2"})
-					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{}, nil, []models.Event{event1, event2})
+					convergenceResult := db.TaskConvergenceResult{
+						TasksToAuction:  nil,
+						TasksToComplete: nil,
+						Events:          []models.Event{event1, event2},
+					}
+					fakeTaskDB.ConvergeTasksReturns(convergenceResult)
 				})
 
 				It("emits a Task event to the hub", func() {

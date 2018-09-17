@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	dbpkg "code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "github.com/onsi/ginkgo"
@@ -28,11 +29,9 @@ var _ = Describe("Convergence of Tasks", func() {
 
 	Describe("ConvergeTasks", func() {
 		var (
-			domain          string
-			tasksToAuction  []*auctioneer.TaskStartRequest
-			tasksToComplete []*models.Task
-			taskEvents      []models.Event
-			cellSet         models.CellSet
+			domain            string
+			cellSet           models.CellSet
+			convergenceResult dbpkg.TaskConvergenceResult
 
 			taskDef *models.TaskDefinition
 
@@ -181,7 +180,7 @@ var _ = Describe("Convergence of Tasks", func() {
 		})
 
 		JustBeforeEach(func() {
-			tasksToAuction, tasksToComplete, taskEvents = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+			convergenceResult = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
 		It("emits task kicked and pruned count metrics", func() {
@@ -208,7 +207,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(task.FirstCompletedAt).To(Equal(fakeClock.Now().UnixNano()))
 
 				taskRequest := auctioneer.NewTaskStartRequestFromModel("pending-expired-task", domain, taskDef)
-				Expect(tasksToAuction).NotTo(ContainElement(&taskRequest))
+				Expect(convergenceResult.TasksToAuction).NotTo(ContainElement(&taskRequest))
 			})
 
 			It("returns TaskChangedEvents for all failed pending tasks", func() {
@@ -220,8 +219,8 @@ var _ = Describe("Convergence of Tasks", func() {
 				event1 := models.NewTaskChangedEvent(pendingTask, afterPending)
 				event2 := models.NewTaskChangedEvent(anotherPendingTask, afterAnotherPending)
 
-				Expect(taskEvents).To(ContainElement(event1))
-				Expect(taskEvents).To(ContainElement(event2))
+				Expect(convergenceResult.Events).To(ContainElement(event1))
+				Expect(convergenceResult.Events).To(ContainElement(event2))
 			})
 
 			It("returns tasks that should be kicked for auctioning", func() {
@@ -231,7 +230,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(task.Failed).NotTo(BeTrue())
 
 				taskRequest := auctioneer.NewTaskStartRequestFromModel("pending-kickable-task", domain, taskDef)
-				Expect(tasksToAuction).To(ContainElement(&taskRequest))
+				Expect(convergenceResult.TasksToAuction).To(ContainElement(&taskRequest))
 			})
 
 			It("delete tasks that should be kicked if they're invalid", func() {
@@ -254,7 +253,7 @@ var _ = Describe("Convergence of Tasks", func() {
 
 			It("doesn't do anything when their cells are present", func() {
 				taskRequest := auctioneer.NewTaskStartRequestFromModel("running-task", domain, taskDef)
-				Expect(tasksToAuction).NotTo(ContainElement(taskRequest))
+				Expect(convergenceResult.TasksToAuction).NotTo(ContainElement(taskRequest))
 
 				task, err := sqlDB.TaskByGuid(logger, "running-task")
 				Expect(err).NotTo(HaveOccurred())
@@ -273,13 +272,13 @@ var _ = Describe("Convergence of Tasks", func() {
 			It("returns tasks that should be kicked for completion", func() {
 				task, err := sqlDB.TaskByGuid(logger, "completed-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tasksToComplete).To(ContainElement(task))
+				Expect(convergenceResult.TasksToComplete).To(ContainElement(task))
 			})
 
 			It("doesn't do anything with unexpired tasks that should not be kicked", func() {
 				task, err := sqlDB.TaskByGuid(logger, "completed-task")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tasksToComplete).NotTo(ContainElement(task))
+				Expect(convergenceResult.TasksToComplete).NotTo(ContainElement(task))
 			})
 
 			It("delete tasks that should be kicked if they're invalid", func() {
@@ -289,7 +288,7 @@ var _ = Describe("Convergence of Tasks", func() {
 
 			It("returns TaskRemovedEvents for all deleted tasks", func() {
 				event1 := models.NewTaskRemovedEvent(expiredCompletedTask)
-				Expect(taskEvents).To(ContainElement(event1))
+				Expect(convergenceResult.Events).To(ContainElement(event1))
 			})
 		})
 
@@ -308,14 +307,14 @@ var _ = Describe("Convergence of Tasks", func() {
 			It("returns tasks that should be kicked for completion", func() {
 				task, err := sqlDB.TaskByGuid(logger, "resolving-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tasksToComplete).To(ContainElement(task))
+				Expect(convergenceResult.TasksToComplete).To(ContainElement(task))
 			})
 
 			It("doesn't do anything with unexpired tasks that should not be kicked", func() {
 				task, err := sqlDB.TaskByGuid(logger, "resolving-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.State).To(Equal(models.Task_Resolving))
-				Expect(tasksToComplete).NotTo(ContainElement(task))
+				Expect(convergenceResult.TasksToComplete).NotTo(ContainElement(task))
 			})
 
 			It("returns TaskChangedEvents for all kicked resolved tasks", func() {
@@ -324,7 +323,7 @@ var _ = Describe("Convergence of Tasks", func() {
 
 				event1 := models.NewTaskChangedEvent(resolvingKickableTask, after)
 
-				Expect(taskEvents).To(ContainElement(event1))
+				Expect(convergenceResult.Events).To(ContainElement(event1))
 			})
 		})
 
@@ -349,8 +348,8 @@ var _ = Describe("Convergence of Tasks", func() {
 
 				event1 := models.NewTaskChangedEvent(runningTask, after1)
 				event2 := models.NewTaskChangedEvent(runningTaskNoCell, after2)
-				Expect(taskEvents).To(ContainElement(event1))
-				Expect(taskEvents).To(ContainElement(event2))
+				Expect(convergenceResult.Events).To(ContainElement(event1))
+				Expect(convergenceResult.Events).To(ContainElement(event2))
 			})
 		})
 	})

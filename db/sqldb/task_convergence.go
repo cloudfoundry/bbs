@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
@@ -20,43 +21,47 @@ const (
 	cellDisappearedFailureReason = "cell disappeared before completion"
 )
 
-func (db *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, []*models.Task, []models.Event) {
+func (sqldb *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) db.TaskConvergenceResult {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
 	var tasksPruned, tasksKicked uint64
+	convergenceResult := db.TaskConvergenceResult{}
 
-	events, failedFetches, rowsAffected := db.failExpiredPendingTasks(logger, expirePendingTaskDuration)
+	failedEvents, failedFetches, rowsAffected := sqldb.failExpiredPendingTasks(logger, expirePendingTaskDuration)
+	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
 	tasksPruned += failedFetches
 	tasksKicked += uint64(rowsAffected)
 
-	tasksToAuction, failedFetches := db.getTaskStartRequestsForKickablePendingTasks(logger, expirePendingTaskDuration)
+	tasksToAuction, failedFetches := sqldb.getTaskStartRequestsForKickablePendingTasks(logger, expirePendingTaskDuration)
+	convergenceResult.TasksToAuction = tasksToAuction
 	tasksPruned += failedFetches
 	tasksKicked += uint64(len(tasksToAuction))
 
-	failedEvents, failedFetches, rowsAffected := db.failTasksWithDisappearedCells(logger, cellSet)
+	failedEvents, failedFetches, rowsAffected = sqldb.failTasksWithDisappearedCells(logger, cellSet)
+	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
 	tasksPruned += failedFetches
 	tasksKicked += uint64(rowsAffected)
-	events = append(events, failedEvents...)
 
 	// do this first so that we now have "Completed" tasks before cleaning up
 	// or re-sending the completion callback
-	demotedEvents, failedFetches := db.demoteKickableResolvingTasks(logger, kickTasksDuration)
+	demotedEvents, failedFetches := sqldb.demoteKickableResolvingTasks(logger, kickTasksDuration)
+	convergenceResult.Events = append(convergenceResult.Events, demotedEvents...)
 	tasksPruned += failedFetches
-	events = append(events, demotedEvents...)
 
-	removedEvents, rowsAffected := db.deleteExpiredCompletedTasks(logger, expireCompletedTaskDuration)
+	removedEvents, rowsAffected := sqldb.deleteExpiredCompletedTasks(logger, expireCompletedTaskDuration)
+	convergenceResult.Events = append(convergenceResult.Events, removedEvents...)
 	tasksPruned += uint64(rowsAffected)
-	events = append(events, removedEvents...)
 
-	tasksToComplete, failedFetches := db.getKickableCompleteTasksForCompletion(logger, kickTasksDuration)
+	tasksToComplete, failedFetches := sqldb.getKickableCompleteTasksForCompletion(logger, kickTasksDuration)
+	convergenceResult.TasksToComplete = tasksToComplete
 	tasksPruned += failedFetches
 	tasksKicked += uint64(len(tasksToComplete))
 
-	db.metronClient.IncrementCounterWithDelta(tasksKickedCounter, uint64(tasksKicked))
-	db.metronClient.IncrementCounterWithDelta(tasksPrunedCounter, uint64(tasksPruned))
+	sqldb.metronClient.IncrementCounterWithDelta(tasksKickedCounter, uint64(tasksKicked))
+	sqldb.metronClient.IncrementCounterWithDelta(tasksPrunedCounter, uint64(tasksPruned))
 
-	return tasksToAuction, tasksToComplete, events
+	return convergenceResult
 }
 
 func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) ([]models.Event, uint64, int64) {

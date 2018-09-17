@@ -10,6 +10,12 @@ import (
 
 type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task) func()
 
+type TaskConvergenceResult struct {
+	TasksToAuction  []*auctioneer.TaskStartRequest
+	TasksToComplete []*models.Task
+	Events          []models.Event
+}
+
 //go:generate counterfeiter . TaskDB
 type TaskDB interface {
 	Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
@@ -28,7 +34,7 @@ type TaskDB interface {
 		logger lager.Logger,
 		cellSet models.CellSet,
 		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-	) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task, taskEvents []models.Event)
+	) TaskConvergenceResult
 
 	GetTaskCountByState(logger lager.Logger) (int, int, int, int)
 }

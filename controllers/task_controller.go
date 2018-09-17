@@ -261,7 +261,7 @@ func (c *TaskController) ConvergeTasks(
 	logger.Debug("succeeded-listing-cells")
 
 	convergenceStartTime := time.Now()
-	tasksToAuction, tasksToComplete, eventsToEmit := c.db.ConvergeTasks(
+	taskConvergenceResult := c.db.ConvergeTasks(
 		logger,
 		cellSet,
 		kickTaskDuration,
@@ -272,30 +272,30 @@ func (c *TaskController) ConvergeTasks(
 	c.taskStatMetronNotifier.TaskConvergenceStarted()
 	c.taskStatMetronNotifier.TaskConvergenceDuration(time.Since(convergenceStartTime))
 
-	logger.Debug("emitting-events-from-convergence", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
-	for _, event := range eventsToEmit {
+	logger.Debug("emitting-events-from-convergence", lager.Data{"num_tasks_to_complete": len(taskConvergenceResult.TasksToComplete)})
+	for _, event := range taskConvergenceResult.Events {
 		go c.taskHub.Emit(event)
 	}
 
-	if len(tasksToAuction) > 0 {
-		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
-		err = c.auctioneerClient.RequestTaskAuctions(logger, tasksToAuction)
+	if len(taskConvergenceResult.TasksToAuction) > 0 {
+		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(taskConvergenceResult.TasksToAuction)})
+		err = c.auctioneerClient.RequestTaskAuctions(logger, taskConvergenceResult.TasksToAuction)
 		if err != nil {
-			taskGuids := make([]string, len(tasksToAuction))
-			for i, task := range tasksToAuction {
+			taskGuids := make([]string, len(taskConvergenceResult.TasksToAuction))
+			for i, task := range taskConvergenceResult.TasksToAuction {
 				taskGuids[i] = task.TaskGuid
 			}
 			logger.Error("failed-to-request-auctions-for-pending-tasks", err,
 				lager.Data{"task_guids": taskGuids})
 		}
-		logger.Debug("done-requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
+		logger.Debug("done-requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(taskConvergenceResult.TasksToAuction)})
 	}
 
-	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
-	for _, task := range tasksToComplete {
+	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(taskConvergenceResult.TasksToComplete)})
+	for _, task := range taskConvergenceResult.TasksToComplete {
 		c.taskCompletionClient.Submit(c.db, c.taskHub, task)
 	}
-	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(taskConvergenceResult.TasksToComplete)})
 
 	return nil
 }
