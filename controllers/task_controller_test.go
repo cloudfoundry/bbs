@@ -959,6 +959,13 @@ var _ = Describe("Task Controller", func() {
 				cellSet = models.CellSet{"cell-id": &cellPresence}
 				fakeServiceClient.CellsReturns(cellSet, nil)
 
+				fakeTaskDB.ConvergeTasksReturns(db.TaskConvergenceResult{
+					TasksToAuction:  nil,
+					TasksToComplete: nil,
+					Events:          nil,
+					TasksPruned:     3,
+					TasksKicked:     4,
+				})
 				fakeTaskDB.GetTaskCountByStateReturns(2, 1, 6, 1)
 			})
 
@@ -978,13 +985,15 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			It("emits task status count metrics", func() {
-				Expect(fakeTaskStatNotifier.TaskConvergenceResultsCallCount()).To(Equal(1))
+				Expect(fakeTaskStatNotifier.SnapshotTasksCallCount()).To(Equal(1))
 
-				pending, running, completed, resolving := fakeTaskStatNotifier.TaskConvergenceResultsArgsForCall(0)
+				pending, running, completed, resolving, pruned, kicked := fakeTaskStatNotifier.SnapshotTasksArgsForCall(0)
 				Expect(pending).To(Equal(2))
 				Expect(running).To(Equal(1))
 				Expect(completed).To(Equal(6))
 				Expect(resolving).To(Equal(1))
+				Expect(pruned).To(Equal(uint64(3)))
+				Expect(kicked).To(Equal(uint64(4)))
 			})
 
 			It("increments the number of convergence runs", func() {

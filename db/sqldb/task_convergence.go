@@ -14,9 +14,6 @@ import (
 )
 
 const (
-	tasksKickedCounter = "ConvergenceTasksKicked"
-	tasksPrunedCounter = "ConvergenceTasksPruned"
-
 	expiredFailureReason         = "not started within time limit"
 	cellDisappearedFailureReason = "cell disappeared before completion"
 )
@@ -25,41 +22,37 @@ func (sqldb *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, k
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	var tasksPruned, tasksKicked uint64
 	convergenceResult := db.TaskConvergenceResult{}
 
 	failedEvents, failedFetches, rowsAffected := sqldb.failExpiredPendingTasks(logger, expirePendingTaskDuration)
 	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
-	tasksPruned += failedFetches
-	tasksKicked += uint64(rowsAffected)
+	convergenceResult.TasksPruned += failedFetches
+	convergenceResult.TasksKicked += uint64(rowsAffected)
 
 	tasksToAuction, failedFetches := sqldb.getTaskStartRequestsForKickablePendingTasks(logger, expirePendingTaskDuration)
 	convergenceResult.TasksToAuction = tasksToAuction
-	tasksPruned += failedFetches
-	tasksKicked += uint64(len(tasksToAuction))
+	convergenceResult.TasksPruned += failedFetches
+	convergenceResult.TasksKicked += uint64(len(tasksToAuction))
 
 	failedEvents, failedFetches, rowsAffected = sqldb.failTasksWithDisappearedCells(logger, cellSet)
 	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
-	tasksPruned += failedFetches
-	tasksKicked += uint64(rowsAffected)
+	convergenceResult.TasksPruned += failedFetches
+	convergenceResult.TasksKicked += uint64(rowsAffected)
 
 	// do this first so that we now have "Completed" tasks before cleaning up
 	// or re-sending the completion callback
 	demotedEvents, failedFetches := sqldb.demoteKickableResolvingTasks(logger, kickTasksDuration)
 	convergenceResult.Events = append(convergenceResult.Events, demotedEvents...)
-	tasksPruned += failedFetches
+	convergenceResult.TasksPruned += failedFetches
 
 	removedEvents, rowsAffected := sqldb.deleteExpiredCompletedTasks(logger, expireCompletedTaskDuration)
 	convergenceResult.Events = append(convergenceResult.Events, removedEvents...)
-	tasksPruned += uint64(rowsAffected)
+	convergenceResult.TasksPruned += uint64(rowsAffected)
 
 	tasksToComplete, failedFetches := sqldb.getKickableCompleteTasksForCompletion(logger, kickTasksDuration)
 	convergenceResult.TasksToComplete = tasksToComplete
-	tasksPruned += failedFetches
-	tasksKicked += uint64(len(tasksToComplete))
-
-	sqldb.metronClient.IncrementCounterWithDelta(tasksKickedCounter, uint64(tasksKicked))
-	sqldb.metronClient.IncrementCounterWithDelta(tasksPrunedCounter, uint64(tasksPruned))
+	convergenceResult.TasksPruned += failedFetches
+	convergenceResult.TasksKicked += uint64(len(tasksToComplete))
 
 	return convergenceResult
 }

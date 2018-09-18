@@ -183,16 +183,9 @@ var _ = Describe("Convergence of Tasks", func() {
 			convergenceResult = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
-		It("emits task kicked and pruned count metrics", func() {
-			Expect(fakeMetronClient.IncrementCounterWithDeltaCallCount()).To(Equal(2))
-
-			name, value64 := fakeMetronClient.IncrementCounterWithDeltaArgsForCall(0)
-			Expect(name).To(Equal("ConvergenceTasksKicked"))
-			Expect(value64).To(Equal(uint64(7)))
-
-			name, value64 = fakeMetronClient.IncrementCounterWithDeltaArgsForCall(1)
-			Expect(name).To(Equal("ConvergenceTasksPruned"))
-			Expect(value64).To(Equal(uint64(8)))
+		It("returns the number of kicked and pruned tasks", func() {
+			Expect(convergenceResult.TasksKicked).To(Equal(uint64(7)))
+			Expect(convergenceResult.TasksPruned).To(Equal(uint64(8)))
 		})
 
 		Context("pending tasks", func() {

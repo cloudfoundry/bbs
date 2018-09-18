@@ -27,7 +27,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 	type counter struct {
 		Name  string
-		Delta uint64
+		Value uint64
 	}
 
 	var (
@@ -36,15 +36,21 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		logger                 lager.Logger
 		metronClient           *testhelpers.FakeIngressClient
 		metricsCh              chan metric
+		counterCh              chan counter
 		process                ifrit.Process
 	)
 
 	BeforeEach(func() {
 		metricsCh = make(chan metric, 100)
+		counterCh = make(chan counter, 100)
 
 		metronClient = &testhelpers.FakeIngressClient{}
 		metronClient.SendMetricStub = func(name string, value int, opts ...loggregator.EmitGaugeOption) error {
 			metricsCh <- metric{name, value, opts}
+			return nil
+		}
+		metronClient.IncrementCounterWithDeltaStub = func(name string, value uint64) error {
+			counterCh <- counter{name, value}
 			return nil
 		}
 
@@ -154,9 +160,9 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 		It("emits the number of convergence runs since the last time metrics were emitted", func() {
 			fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
-			Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(1))
+			Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(3))
 
-			counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(0)
+			counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(2)
 			Expect(counterName).To(Equal("ConvergenceTaskRuns"))
 			Expect(delta).To(BeEquivalentTo(3))
 		})
@@ -181,9 +187,9 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 			It("resets the value and emits the number of runs since the last time metrics were emitted", func() {
 				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
-				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(2))
+				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(6))
 
-				counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(1)
+				counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(5)
 				Expect(counterName).To(Equal(metrics.ConvergeTaskRunsCounter))
 				Expect(delta).To(BeEquivalentTo(1))
 			})
@@ -204,7 +210,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 			It("doesn't update the converge runs counter", func() {
 				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
-				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(1))
+				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(5))
 			})
 
 			It("emits the duration of the last convergence run", func() {
@@ -220,10 +226,10 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 	Describe("metrics about tasks resulting from convergence", func() {
 		BeforeEach(func() {
-			taskStatMetronNotifier.TaskConvergenceResults(1, 2, 3, 4)
+			taskStatMetronNotifier.SnapshotTasks(1, 2, 3, 4, 5, 6)
 		})
 
-		It("emits the number of pending, running, completed, and resolving tasks", func() {
+		It("emits the number of pending, running, completed, resolving, pruned, and kicked tasks", func() {
 			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
 				"Name":  Equal(metrics.PendingTasksMetric),
 				"Value": Equal(1),
@@ -247,6 +253,16 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 				"Value": Equal(4),
 				"Opts":  BeEmpty(),
 			})))
+
+			Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+				"Name":  Equal("ConvergenceTasksPruned"),
+				"Value": Equal(uint64(5)),
+			})))
+
+			Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+				"Name":  Equal("ConvergenceTasksKicked"),
+				"Value": Equal(uint64(6)),
+			})))
 		})
 
 		Context("after 60 seconds have elapsed", func() {
@@ -256,7 +272,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 			Context("and a convergence loop has also occurred", func() {
 				BeforeEach(func() {
-					taskStatMetronNotifier.TaskConvergenceResults(5, 6, 7, 8)
+					taskStatMetronNotifier.SnapshotTasks(5, 6, 7, 8, 9, 10)
 				})
 
 				It("emits the new value for the metric", func() {
@@ -284,6 +300,15 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 						"Opts":  BeEmpty(),
 					})))
 
+					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal("ConvergenceTasksPruned"),
+						"Value": Equal(uint64(9)),
+					})))
+
+					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal("ConvergenceTasksKicked"),
+						"Value": Equal(uint64(10)),
+					})))
 				})
 			})
 
@@ -313,6 +338,15 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 						"Opts":  BeEmpty(),
 					})))
 
+					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal("ConvergenceTasksPruned"),
+						"Value": Equal(uint64(5)),
+					})))
+
+					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
+						"Name":  Equal("ConvergenceTasksKicked"),
+						"Value": Equal(uint64(6)),
+					})))
 				})
 			})
 		})

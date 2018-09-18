@@ -14,6 +14,9 @@ type TaskConvergenceResult struct {
 	TasksToAuction  []*auctioneer.TaskStartRequest
 	TasksToComplete []*models.Task
 	Events          []models.Event
+
+	TasksPruned uint64
+	TasksKicked uint64
 }
 
 //go:generate counterfeiter . TaskDB

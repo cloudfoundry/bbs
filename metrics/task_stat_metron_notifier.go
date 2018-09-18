@@ -21,6 +21,8 @@ const (
 	RunningTasksMetric   = "TasksRunning"
 	CompletedTasksMetric = "TasksCompleted"
 	ResolvingTasksMetric = "TasksResolving"
+	PrunedTasksMetric    = "ConvergenceTasksPruned"
+	KickedTasksMetric    = "ConvergenceTasksKicked"
 
 	ConvergeTaskRunsCounter = "ConvergenceTaskRuns"
 	ConvergeTaskDuration    = "ConvergenceTaskDuration"
@@ -32,6 +34,7 @@ type perCellStats struct {
 
 type globalStats struct {
 	pendingTasks, runningTasks, completedTasks, resolvingTasks int
+	prunedTasks, kickedTasks                                   uint64
 }
 
 //go:generate counterfeiter -o fakes/fake_task_stat_metron_notifier.go . TaskStatMetronNotifier
@@ -41,7 +44,8 @@ type TaskStatMetronNotifier interface {
 	TaskFailed(cellID string)
 	TaskStarted(cellID string)
 
-	TaskConvergenceResults(pending, running, completed, resolved int)
+	SnapshotTasks(pending, running, completed, resolved int, pruned, kicked uint64)
+
 	TaskConvergenceStarted()
 	TaskConvergenceDuration(duration time.Duration)
 }
@@ -91,6 +95,8 @@ func (t *taskStatMetronNotifier) emitMetrics() {
 	t.metronClient.SendMetric(RunningTasksMetric, t.globalTaskStats.runningTasks)
 	t.metronClient.SendMetric(CompletedTasksMetric, t.globalTaskStats.completedTasks)
 	t.metronClient.SendMetric(ResolvingTasksMetric, t.globalTaskStats.resolvingTasks)
+	t.metronClient.IncrementCounterWithDelta(PrunedTasksMetric, t.globalTaskStats.prunedTasks)
+	t.metronClient.IncrementCounterWithDelta(KickedTasksMetric, t.globalTaskStats.kickedTasks)
 
 	if t.convergenceRunsDelta > 0 {
 		t.metronClient.IncrementCounterWithDelta(ConvergeTaskRunsCounter, t.convergenceRunsDelta)
@@ -124,7 +130,7 @@ func (t *taskStatMetronNotifier) TaskStarted(cellID string) {
 	t.perCellStats[cellID] = stats
 }
 
-func (t *taskStatMetronNotifier) TaskConvergenceResults(pending, running, completed, resolving int) {
+func (t *taskStatMetronNotifier) SnapshotTasks(pending, running, completed, resolving int, pruned, kicked uint64) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
@@ -132,6 +138,8 @@ func (t *taskStatMetronNotifier) TaskConvergenceResults(pending, running, comple
 	t.globalTaskStats.runningTasks = running
 	t.globalTaskStats.completedTasks = completed
 	t.globalTaskStats.resolvingTasks = resolving
+	t.globalTaskStats.prunedTasks = pruned
+	t.globalTaskStats.kickedTasks = kicked
 }
 
 func (t *taskStatMetronNotifier) TaskConvergenceStarted() {

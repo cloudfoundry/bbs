@@ -247,8 +247,6 @@ func (c *TaskController) ConvergeTasks(
 	var err error
 	logger = logger.Session("converge-tasks")
 
-	defer c.emitTaskMetrics(logger)
-
 	logger.Debug("listing-cells")
 	cellSet, err := c.serviceClient.Cells(logger)
 	if err == models.ErrResourceNotFound {
@@ -268,6 +266,8 @@ func (c *TaskController) ConvergeTasks(
 		expirePendingTaskDuration,
 		expireCompletedTaskDuration,
 	)
+
+	defer c.emitTaskMetrics(logger, taskConvergenceResult.TasksPruned, taskConvergenceResult.TasksKicked)
 
 	c.taskStatMetronNotifier.TaskConvergenceStarted()
 	c.taskStatMetronNotifier.TaskConvergenceDuration(time.Since(convergenceStartTime))
@@ -300,8 +300,8 @@ func (c *TaskController) ConvergeTasks(
 	return nil
 }
 
-func (c *TaskController) emitTaskMetrics(logger lager.Logger) {
+func (c *TaskController) emitTaskMetrics(logger lager.Logger, pruned, kicked uint64) {
 	logger = logger.Session("emit-task-metrics")
 	pendingCount, runningCount, completedCount, resolvingCount := c.db.GetTaskCountByState(logger)
-	c.taskStatMetronNotifier.TaskConvergenceResults(pendingCount, runningCount, completedCount, resolvingCount)
+	c.taskStatMetronNotifier.SnapshotTasks(pendingCount, runningCount, completedCount, resolvingCount, pruned, kicked)
 }
