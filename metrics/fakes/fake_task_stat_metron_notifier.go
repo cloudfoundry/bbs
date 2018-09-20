@@ -37,9 +37,9 @@ type FakeTaskStatMetronNotifier struct {
 	taskStartedArgsForCall []struct {
 		cellID string
 	}
-	SnapshotTasksStub        func(pending, running, completed, resolved int, pruned, kicked uint64)
-	snapshotTasksMutex       sync.RWMutex
-	snapshotTasksArgsForCall []struct {
+	SnapshotTaskStatsStub        func(pending, running, completed, resolved int, pruned, kicked uint64)
+	snapshotTaskStatsMutex       sync.RWMutex
+	snapshotTaskStatsArgsForCall []struct {
 		pending   int
 		running   int
 		completed int
@@ -180,9 +180,9 @@ func (fake *FakeTaskStatMetronNotifier) TaskStartedArgsForCall(i int) string {
 	return fake.taskStartedArgsForCall[i].cellID
 }
 
-func (fake *FakeTaskStatMetronNotifier) SnapshotTasks(pending int, running int, completed int, resolved int, pruned uint64, kicked uint64) {
-	fake.snapshotTasksMutex.Lock()
-	fake.snapshotTasksArgsForCall = append(fake.snapshotTasksArgsForCall, struct {
+func (fake *FakeTaskStatMetronNotifier) SnapshotTaskStats(pending int, running int, completed int, resolved int, pruned uint64, kicked uint64) {
+	fake.snapshotTaskStatsMutex.Lock()
+	fake.snapshotTaskStatsArgsForCall = append(fake.snapshotTaskStatsArgsForCall, struct {
 		pending   int
 		running   int
 		completed int
@@ -190,23 +190,23 @@ func (fake *FakeTaskStatMetronNotifier) SnapshotTasks(pending int, running int, 
 		pruned    uint64
 		kicked    uint64
 	}{pending, running, completed, resolved, pruned, kicked})
-	fake.recordInvocation("SnapshotTasks", []interface{}{pending, running, completed, resolved, pruned, kicked})
-	fake.snapshotTasksMutex.Unlock()
-	if fake.SnapshotTasksStub != nil {
-		fake.SnapshotTasksStub(pending, running, completed, resolved, pruned, kicked)
+	fake.recordInvocation("SnapshotTaskStats", []interface{}{pending, running, completed, resolved, pruned, kicked})
+	fake.snapshotTaskStatsMutex.Unlock()
+	if fake.SnapshotTaskStatsStub != nil {
+		fake.SnapshotTaskStatsStub(pending, running, completed, resolved, pruned, kicked)
 	}
 }
 
-func (fake *FakeTaskStatMetronNotifier) SnapshotTasksCallCount() int {
-	fake.snapshotTasksMutex.RLock()
-	defer fake.snapshotTasksMutex.RUnlock()
-	return len(fake.snapshotTasksArgsForCall)
+func (fake *FakeTaskStatMetronNotifier) SnapshotTaskStatsCallCount() int {
+	fake.snapshotTaskStatsMutex.RLock()
+	defer fake.snapshotTaskStatsMutex.RUnlock()
+	return len(fake.snapshotTaskStatsArgsForCall)
 }
 
-func (fake *FakeTaskStatMetronNotifier) SnapshotTasksArgsForCall(i int) (int, int, int, int, uint64, uint64) {
-	fake.snapshotTasksMutex.RLock()
-	defer fake.snapshotTasksMutex.RUnlock()
-	return fake.snapshotTasksArgsForCall[i].pending, fake.snapshotTasksArgsForCall[i].running, fake.snapshotTasksArgsForCall[i].completed, fake.snapshotTasksArgsForCall[i].resolved, fake.snapshotTasksArgsForCall[i].pruned, fake.snapshotTasksArgsForCall[i].kicked
+func (fake *FakeTaskStatMetronNotifier) SnapshotTaskStatsArgsForCall(i int) (int, int, int, int, uint64, uint64) {
+	fake.snapshotTaskStatsMutex.RLock()
+	defer fake.snapshotTaskStatsMutex.RUnlock()
+	return fake.snapshotTaskStatsArgsForCall[i].pending, fake.snapshotTaskStatsArgsForCall[i].running, fake.snapshotTaskStatsArgsForCall[i].completed, fake.snapshotTaskStatsArgsForCall[i].resolved, fake.snapshotTaskStatsArgsForCall[i].pruned, fake.snapshotTaskStatsArgsForCall[i].kicked
 }
 
 func (fake *FakeTaskStatMetronNotifier) TaskConvergenceStarted() {
@@ -260,8 +260,8 @@ func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{}
 	defer fake.taskFailedMutex.RUnlock()
 	fake.taskStartedMutex.RLock()
 	defer fake.taskStartedMutex.RUnlock()
-	fake.snapshotTasksMutex.RLock()
-	defer fake.snapshotTasksMutex.RUnlock()
+	fake.snapshotTaskStatsMutex.RLock()
+	defer fake.snapshotTaskStatsMutex.RUnlock()
 	fake.taskConvergenceStartedMutex.RLock()
 	defer fake.taskConvergenceStartedMutex.RUnlock()
 	fake.taskConvergenceDurationMutex.RLock()

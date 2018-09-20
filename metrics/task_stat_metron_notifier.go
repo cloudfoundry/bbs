@@ -44,7 +44,7 @@ type TaskStatMetronNotifier interface {
 	TaskFailed(cellID string)
 	TaskStarted(cellID string)
 
-	SnapshotTasks(pending, running, completed, resolved int, pruned, kicked uint64)
+	SnapshotTaskStats(pending, running, completed, resolved int, pruned, kicked uint64)
 
 	TaskConvergenceStarted()
 	TaskConvergenceDuration(duration time.Duration)
@@ -130,7 +130,7 @@ func (t *taskStatMetronNotifier) TaskStarted(cellID string) {
 	t.perCellStats[cellID] = stats
 }
 
-func (t *taskStatMetronNotifier) SnapshotTasks(pending, running, completed, resolving int, pruned, kicked uint64) {
+func (t *taskStatMetronNotifier) SnapshotTaskStats(pending, running, completed, resolving int, pruned, kicked uint64) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 

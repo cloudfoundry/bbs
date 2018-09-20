@@ -985,9 +985,9 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			It("emits task status count metrics", func() {
-				Expect(fakeTaskStatNotifier.SnapshotTasksCallCount()).To(Equal(1))
+				Expect(fakeTaskStatNotifier.SnapshotTaskStatsCallCount()).To(Equal(1))
 
-				pending, running, completed, resolving, pruned, kicked := fakeTaskStatNotifier.SnapshotTasksArgsForCall(0)
+				pending, running, completed, resolving, pruned, kicked := fakeTaskStatNotifier.SnapshotTaskStatsArgsForCall(0)
 				Expect(pending).To(Equal(2))
 				Expect(running).To(Equal(1))
 				Expect(completed).To(Equal(6))

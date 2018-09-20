@@ -303,5 +303,5 @@ func (c *TaskController) ConvergeTasks(
 func (c *TaskController) emitTaskMetrics(logger lager.Logger, pruned, kicked uint64) {
 	logger = logger.Session("emit-task-metrics")
 	pendingCount, runningCount, completedCount, resolvingCount := c.db.GetTaskCountByState(logger)
-	c.taskStatMetronNotifier.SnapshotTasks(pendingCount, runningCount, completedCount, resolvingCount, pruned, kicked)
+	c.taskStatMetronNotifier.SnapshotTaskStats(pendingCount, runningCount, completedCount, resolvingCount, pruned, kicked)
 }

@@ -226,7 +226,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 	Describe("metrics about tasks resulting from convergence", func() {
 		BeforeEach(func() {
-			taskStatMetronNotifier.SnapshotTasks(1, 2, 3, 4, 5, 6)
+			taskStatMetronNotifier.SnapshotTaskStats(1, 2, 3, 4, 5, 6)
 		})
 
 		It("emits the number of pending, running, completed, resolving, pruned, and kicked tasks", func() {
@@ -272,7 +272,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 
 			Context("and a convergence loop has also occurred", func() {
 				BeforeEach(func() {
-					taskStatMetronNotifier.SnapshotTasks(5, 6, 7, 8, 9, 10)
+					taskStatMetronNotifier.SnapshotTaskStats(5, 6, 7, 8, 9, 10)
 				})
 
 				It("emits the new value for the metric", func() {
