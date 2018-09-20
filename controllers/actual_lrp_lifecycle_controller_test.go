@@ -207,25 +207,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				}
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectLRP}, nil)
 			})
-
-			It("emits a created event for the new claimed ordinary LRP and a removed event for the claimed suspect LRP", func() {
-				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
-				Expect(err).NotTo(HaveOccurred())
-				Eventually(actualHub.EmitCallCount).Should(Equal(2))
-				Consistently(actualHub.EmitCallCount).Should(Equal(2))
-
-				event := actualHub.EmitArgsForCall(0)
-				var createdEvent *models.ActualLRPCreatedEvent
-				Expect(event).To(BeAssignableToTypeOf(createdEvent))
-				createdEvent = event.(*models.ActualLRPCreatedEvent)
-				Expect(createdEvent.ActualLrpGroup).To(Equal(afterActualLRP.ToActualLRPGroup()))
-
-				event = actualHub.EmitArgsForCall(1)
-				var removedEvent *models.ActualLRPRemovedEvent
-				Expect(event).To(BeAssignableToTypeOf(removedEvent))
-				removedEvent = event.(*models.ActualLRPRemovedEvent)
-				Expect(removedEvent.ActualLrpGroup).To(Equal(suspectLRP.ToActualLRPGroup()))
-			})
 		})
 	})
 
@@ -770,77 +751,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				event := actualHub.EmitArgsForCall(0)
 				var changedEvent *models.ActualLRPChangedEvent
 				Expect(event).NotTo(BeAssignableToTypeOf(changedEvent))
-			})
-
-			Context("when the related suspect instance is claimed", func() {
-				BeforeEach(func() {
-					suspectInstanceState = models.ActualLRPStateClaimed
-				})
-
-				Context("and instance being crashed was originally CLAIMED", func() {
-
-					BeforeEach(func() {
-						actualLRPState = models.ActualLRPStateClaimed
-					})
-
-					It("should emit an ActualLRPRemovedEvent and ActualLRPCreatedEvent because the ActualLRPGroup was updated from CLAIMED ORDINARY to CLAIMED SUSPECT", func() {
-						err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-						Expect(err).NotTo(HaveOccurred())
-						Eventually(actualHub.EmitCallCount).Should(Equal(3))
-						Consistently(actualHub.EmitCallCount).Should(Equal(3))
-
-						events := []models.Event{
-							actualHub.EmitArgsForCall(0),
-							actualHub.EmitArgsForCall(1),
-							actualHub.EmitArgsForCall(2),
-						}
-
-						Expect(events).To(ConsistOf(
-							&models.ActualLRPCrashedEvent{
-								ActualLRPKey:         actualLRP.ActualLRPKey,
-								ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
-								Since:                afterActualLRP.Since,
-								CrashCount:           1,
-								CrashReason:          errorMessage,
-							},
-							&models.ActualLRPCreatedEvent{
-								ActualLrpGroup: suspectLRP.ToActualLRPGroup(),
-							},
-							&models.ActualLRPRemovedEvent{
-								ActualLrpGroup: actualLRP.ToActualLRPGroup(),
-							},
-						))
-					})
-
-					It("should emit an ActualLRPRemovedEvent and ActualLRPCreatedEvent because the ActualLRPGroup was updated from CLAIMED ORDINARY to CLAIMED SUSPECT", func() {
-						err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
-						Expect(err).NotTo(HaveOccurred())
-						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
-						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
-
-						events := []models.Event{
-							actualLRPInstanceHub.EmitArgsForCall(0),
-							actualLRPInstanceHub.EmitArgsForCall(1),
-							actualLRPInstanceHub.EmitArgsForCall(2),
-						}
-
-						Expect(events).To(ConsistOf(
-							&models.ActualLRPCrashedEvent{
-								ActualLRPKey:         actualLRP.ActualLRPKey,
-								ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
-								Since:                afterActualLRP.Since,
-								CrashCount:           1,
-								CrashReason:          errorMessage,
-							},
-							&models.ActualLRPInstanceCreatedEvent{
-								ActualLrp: suspectLRP,
-							},
-							&models.ActualLRPInstanceRemovedEvent{
-								ActualLrp: actualLRP,
-							},
-						))
-					})
-				})
 			})
 		})
 

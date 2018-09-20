@@ -120,11 +120,6 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 		// emit lrp group instance event
 		if suspectLRP == nil {
 			go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-		} else if suspectLRP.State == models.ActualLRPStateClaimed {
-			go func() {
-				h.actualHub.Emit(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()))
-				h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
-			}()
 		}
 	}
 	return nil
@@ -202,13 +197,11 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 
 		if suspectLRP != nil {
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspect.ToActualLRPGroup()))
-
 			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspect))
 		}
 
 		if evacuating != nil {
 			h.actualHub.Emit(models.NewActualLRPRemovedEvent(evacuating.ToActualLRPGroup()))
-
 			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(evacuating))
 		}
 	}()
@@ -245,33 +238,17 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
-	if suspectLRP == nil {
-		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-		go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
-	}
-
+	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 	go func() {
-		h.actualHub.Emit(models.NewActualLRPCrashedEvent(before, after))
-
-		if before.State == models.ActualLRPStateClaimed &&
-			suspectLRP != nil &&
-			suspectLRP.State == models.ActualLRPStateClaimed {
-			h.actualHub.Emit(models.NewActualLRPCreatedEvent(suspectLRP.ToActualLRPGroup()))
-			h.actualHub.Emit(models.NewActualLRPRemovedEvent(before.ToActualLRPGroup()))
+		suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
+		if suspectLRP == nil {
+			h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 		}
 	}()
 
-	go func() {
-		h.actualLRPInstanceHub.Emit(models.NewActualLRPCrashedEvent(before, after))
-
-		if before.State == models.ActualLRPStateClaimed &&
-			suspectLRP != nil &&
-			suspectLRP.State == models.ActualLRPStateClaimed {
-			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(suspectLRP))
-			h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
-		}
-	}()
+	crashedEvent := models.NewActualLRPCrashedEvent(before, after)
+	go h.actualHub.Emit(crashedEvent)
+	go h.actualLRPInstanceHub.Emit(crashedEvent)
 
 	if !shouldRestart {
 		return nil
