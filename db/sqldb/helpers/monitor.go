@@ -69,27 +69,6 @@ func (q *queryMonitor) QueriesFailed() int64 {
 	return atomic.LoadInt64(&q.queriesFailed)
 }
 
-func (q *queryMonitor) QueryDurationMax() time.Duration {
-	var durationMax time.Duration
-	q.durationLock.RLock()
-	durationMax = q.queryDurationMax
-	q.durationLock.RUnlock()
-
-	return durationMax
-}
-
-func (q *queryMonitor) ReadAndResetQueriesTotal() int64 {
-	return atomic.SwapInt64(&q.queriesTotal, 0)
-}
-
-func (q *queryMonitor) ReadAndResetQueriesSucceeded() int64 {
-	return atomic.SwapInt64(&q.queriesSucceeded, 0)
-}
-
-func (q *queryMonitor) ReadAndResetQueriesFailed() int64 {
-	return atomic.SwapInt64(&q.queriesFailed, 0)
-}
-
 func (q *queryMonitor) ReadAndResetQueriesInFlightMax() int64 {
 	var oldMax int64
 	q.inFlightLock.Lock()
