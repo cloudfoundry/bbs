@@ -146,10 +146,12 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(event).To(Equal(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup())))
 		})
 
-		It("emits an LRPInstanceChanged event", func() {
-			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+		It("emits an LRPInstanceCreate event followed by an LRPInstanceRemoved event", func() {
+			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 			event := actualLRPInstanceHub.EmitArgsForCall(0)
-			Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(before, after)))
+			Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(after)))
+			event = actualLRPInstanceHub.EmitArgsForCall(1)
+			Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(before)))
 		})
 
 		Context("and the LRP isn't changed", func() {
@@ -286,7 +288,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 	Context("when there is an LRP with missing cell", func() {
 		var (
-			suspectActualLRP *models.ActualLRP
+			before, after, suspectActualLRP *models.ActualLRP
 		)
 
 		BeforeEach(func() {
@@ -298,6 +300,11 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				KeysWithMissingCells: keysWithMissingCells,
 			})
+
+			before = &models.ActualLRP{State: models.ActualLRPStateClaimed}
+			after = &models.ActualLRP{State: models.ActualLRPStateUnclaimed}
+
+			fakeLRPDB.UnclaimActualLRPReturns(before, after, nil)
 		})
 
 		Context("and generateSuspectActualLRPs is disabled", func() {
@@ -313,10 +320,14 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Expect(event.EventType()).To(Equal(models.EventTypeActualLRPChanged))
 			})
 
-			It("emites instance change events", func() {
-				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+			It("emits ActualLRPInstanceCreatedEvent for unclaimed lrp and ActualLRPInstanceRemovedEvent for the other lrp", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
-				Expect(event.EventType()).To(Equal(models.EventTypeActualLRPInstanceChanged))
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+				Expect(event.(*models.ActualLRPInstanceCreatedEvent).ActualLrp).To(Equal(after))
+				event = actualLRPInstanceHub.EmitArgsForCall(1)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+				Expect(event.(*models.ActualLRPInstanceRemovedEvent).ActualLrp).To(Equal(before))
 			})
 
 			It("auctions the unclaimed lrp", func() {
@@ -333,8 +344,18 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		})
 
 		Context("and generateSuspectActualLRPs is enabled", func() {
+			var (
+				before, after, unclaimed *models.ActualLRP
+			)
+
 			BeforeEach(func() {
 				generateSuspectActualLRPs = true
+
+				before = &models.ActualLRP{Presence: models.ActualLRP_Ordinary}
+				after = &models.ActualLRP{Presence: models.ActualLRP_Suspect}
+				unclaimed = &models.ActualLRP{State: models.ActualLRPStateUnclaimed}
+				fakeLRPDB.ChangeActualLRPPresenceReturns(before, after, nil)
+				fakeLRPDB.CreateUnclaimedActualLRPReturns(unclaimed, nil)
 			})
 
 			It("change the LRP presence to 'Suspect'", func() {
@@ -364,12 +385,22 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Expect(startAuctions).To(ConsistOf(keysToAuction))
 			})
 
-			It("emits no events", func() {
+			It("emits no group events", func() {
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
-			It("emits no instance  events", func() {
-				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+			It("emits instance change events for the suspect", func() {
+				Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+
+				event := actualLRPInstanceHub.EmitArgsForCall(0)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
+				Expect(event.(*models.ActualLRPInstanceChangedEvent).Before).To(Equal(before))
+				Expect(event.(*models.ActualLRPInstanceChangedEvent).After).To(Equal(after))
+
+				event = actualLRPInstanceHub.EmitArgsForCall(1)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+				Expect(event.(*models.ActualLRPInstanceCreatedEvent).ActualLrp).To(Equal(unclaimed))
 			})
 
 			Context("when there already is a Suspect LRP", func() {
@@ -398,8 +429,14 @@ var _ = Describe("LRP Convergence Controllers", func() {
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
 
-				It("does not emit instance change events", func() {
-					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+				It("emits ActualLRPInstanceCreatedEvent for unclaimed and ActualLRPInstanceRemovedEvent for suspect", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+					Expect(event.(*models.ActualLRPInstanceCreatedEvent).ActualLrp).To(Equal(after))
+					event = actualLRPInstanceHub.EmitArgsForCall(1)
+					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+					Expect(event.(*models.ActualLRPInstanceRemovedEvent).ActualLrp).To(Equal(before))
 				})
 
 				It("does not try to change the LRP presence or create a new unclaimed LRP", func() {
@@ -433,12 +470,14 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		var (
 			suspectActualLRP             *models.ActualLRP
 			ordinaryActualLRP            *models.ActualLRP
+			removedActualLRP             *models.ActualLRP
 			suspectKeysWithExistingCells []*models.ActualLRPKey
 		)
 
 		BeforeEach(func() {
 			ordinaryActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
 			suspectActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
+			removedActualLRP = model_helpers.NewValidActualLRP("removed-1", 0)
 			suspectActualLRP.Presence = models.ActualLRP_Suspect
 
 			suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLRPKey}
@@ -448,6 +487,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				SuspectKeysWithExistingCells: suspectKeysWithExistingCells,
 			})
+			fakeSuspectDB.RemoveSuspectActualLRPReturns(removedActualLRP, nil)
 		})
 
 		It("remove the Ordinary LRP", func() {
@@ -473,8 +513,15 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Consistently(actualHub.EmitCallCount).Should(Equal(0))
 		})
 
-		It("does not emit any instance events", func() {
-			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+		It("emits ActualLRPInstanceChangedEvent for suspect becoming ordinary and ActualLRPRemovedEvent for the replacement ordinary going away", func() {
+			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+			event := actualLRPInstanceHub.EmitArgsForCall(0)
+			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
+			Expect(event.(*models.ActualLRPInstanceChangedEvent).Before).To(Equal(suspectActualLRP))
+			Expect(event.(*models.ActualLRPInstanceChangedEvent).After).To(Equal(ordinaryActualLRP))
+			event = actualLRPInstanceHub.EmitArgsForCall(1)
+			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+			Expect(event.(*models.ActualLRPInstanceRemovedEvent).ActualLrp).To(Equal(removedActualLRP))
 		})
 
 		Context("when the ordinary lrp cannot be removed", func() {

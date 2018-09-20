@@ -141,8 +141,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			} else if !after.Equal(before) {
 				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-				//TODO: needs fixing
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
@@ -166,25 +166,32 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 				if existingSuspect {
 					// there is a Suspect LRP already, unclaim this one and reauction it
 					logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": key.Key})
-					_, _, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
+					before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
 					if err != nil {
 						logger.Error("failed-unclaiming-lrp", err)
 						return
 					}
 
+					//emit instance events for removing suspect and creating unclaimed
+					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
+					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+
 					return
 				} else {
-					_, _, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+					before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, key.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 					if err != nil {
 						logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})
 						return
 					}
 
-					_, err = h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), key.Key)
+					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+
+					unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), key.Key)
 					if err != nil {
 						logger.Error("cannot-unclaim-lrp", err)
 						return
 					}
+					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed))
 				}
 			} else {
 				before, after, err := h.lrpDB.UnclaimActualLRP(logger, key.Key)
@@ -193,9 +200,9 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 					return
 				}
 
-				// TODO: check if this is correct what we emit here
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
@@ -218,11 +225,15 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 				logger.Error("cannot-remove-lrp", err, lager.Data{"key": key})
 				return
 			}
-			_, _, err = h.lrpDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Suspect, models.ActualLRP_Ordinary)
+			before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, key, models.ActualLRP_Suspect, models.ActualLRP_Ordinary)
 			if err != nil {
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": key})
 				return
 			}
+
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+			//TODO: the following does not work right now, because we do not return removed lrp from the DB
+			// go h.actualInstanceHub.Emit(models.NewActualLRPRemovedEvent(removed))
 		})
 	}
 

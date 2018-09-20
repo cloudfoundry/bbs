@@ -282,11 +282,13 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 		return err
 	}
 
-	suspectExists := findWithPresence(lrps, models.ActualLRP_Suspect)
-	if suspectExists == nil {
-		go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-		go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
-	}
+	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+	go func() {
+		suspectExists := findWithPresence(lrps, models.ActualLRP_Suspect)
+		if suspectExists == nil {
+			h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+		}
+	}()
 
 	return nil
 }

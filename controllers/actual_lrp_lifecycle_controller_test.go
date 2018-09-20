@@ -1006,9 +1006,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 
-			It("does not emit a ActualLRPInstanceChangedEvent", func() {
+			It("emits an ActualLRPInstanceChangedEvent", func() {
 				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
-				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 			})
 
 			Context("when there is no non-suspect instance", func() {
@@ -1026,9 +1027,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Consistently(actualHub.EmitCallCount).Should(BeZero())
 				})
 
-				It("does not emit a ActualLRPInstanceChangedEvent", func() {
+				It("emits an ActualLRPInstanceChangedEvent", func() {
 					err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
-					Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				})
 			})
 		})

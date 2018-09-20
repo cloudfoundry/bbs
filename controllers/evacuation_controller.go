@@ -409,7 +409,6 @@ func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*
 		return err
 	}
 
-	// TODO: check what to emit here
 	events = append(events, models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 	instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(before))
 	instanceEvents = append(instanceEvents, models.NewActualLRPInstanceCreatedEvent(after))
