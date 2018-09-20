@@ -14,27 +14,30 @@ type QueryMonitor interface {
 	QueriesSucceeded() int64
 	QueriesFailed() int64
 	ReadAndResetQueryDurationMax() time.Duration
-	QueriesInFlight() int64
+	ReadAndResetQueriesInFlightMax() int64
 }
 
 type queryMonitor struct {
-	durationLock     *sync.RWMutex
-	queriesTotal     int64
-	queriesSucceeded int64
-	queriesFailed    int64
-	queriesInFlight  int64
-	queryDurationMax time.Duration
+	queriesTotal       int64
+	queriesSucceeded   int64
+	queriesFailed      int64
+	queriesInFlight    int64
+	queriesInFlightMax int64
+	inFlightLock       *sync.RWMutex
+	queryDurationMax   time.Duration
+	durationLock       *sync.RWMutex
 }
 
 func NewQueryMonitor() QueryMonitor {
 	return &queryMonitor{
 		durationLock: &sync.RWMutex{},
+		inFlightLock: &sync.RWMutex{},
 	}
 }
 
 func (q *queryMonitor) MonitorQuery(f func() error) error {
-	atomic.AddInt64(&q.queriesInFlight, 1)
-	defer atomic.AddInt64(&q.queriesInFlight, -1)
+	q.updateQueriesInFlight(1)
+	defer q.updateQueriesInFlight(-1)
 
 	start := time.Now()
 	err := f()
@@ -66,10 +69,6 @@ func (q *queryMonitor) QueriesFailed() int64 {
 	return atomic.LoadInt64(&q.queriesFailed)
 }
 
-func (q *queryMonitor) QueriesInFlight() int64 {
-	return atomic.LoadInt64(&q.queriesInFlight)
-}
-
 func (q *queryMonitor) QueryDurationMax() time.Duration {
 	var durationMax time.Duration
 	q.durationLock.RLock()
@@ -89,6 +88,24 @@ func (q *queryMonitor) ReadAndResetQueriesSucceeded() int64 {
 
 func (q *queryMonitor) ReadAndResetQueriesFailed() int64 {
 	return atomic.SwapInt64(&q.queriesFailed, 0)
+}
+
+func (q *queryMonitor) ReadAndResetQueriesInFlightMax() int64 {
+	var oldMax int64
+	q.inFlightLock.Lock()
+	oldMax = q.queriesInFlightMax
+	q.queriesInFlightMax = q.queriesInFlight
+	q.inFlightLock.Unlock()
+	return oldMax
+}
+
+func (q *queryMonitor) updateQueriesInFlight(delta int64) {
+	q.inFlightLock.Lock()
+	q.queriesInFlight += delta
+	if q.queriesInFlight > q.queriesInFlightMax {
+		q.queriesInFlightMax = q.queriesInFlight
+	}
+	q.inFlightLock.Unlock()
 }
 
 func (q *queryMonitor) ReadAndResetQueryDurationMax() time.Duration {

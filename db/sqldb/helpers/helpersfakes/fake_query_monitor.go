@@ -56,13 +56,13 @@ type FakeQueryMonitor struct {
 	readAndResetQueryDurationMaxReturnsOnCall map[int]struct {
 		result1 time.Duration
 	}
-	QueriesInFlightStub        func() int64
-	queriesInFlightMutex       sync.RWMutex
-	queriesInFlightArgsForCall []struct{}
-	queriesInFlightReturns     struct {
+	ReadAndResetQueriesInFlightMaxStub        func() int64
+	readAndResetQueriesInFlightMaxMutex       sync.RWMutex
+	readAndResetQueriesInFlightMaxArgsForCall []struct{}
+	readAndResetQueriesInFlightMaxReturns     struct {
 		result1 int64
 	}
-	queriesInFlightReturnsOnCall map[int]struct {
+	readAndResetQueriesInFlightMaxReturnsOnCall map[int]struct {
 		result1 int64
 	}
 	invocations      map[string][][]interface{}
@@ -277,42 +277,42 @@ func (fake *FakeQueryMonitor) ReadAndResetQueryDurationMaxReturnsOnCall(i int, r
 	}{result1}
 }
 
-func (fake *FakeQueryMonitor) QueriesInFlight() int64 {
-	fake.queriesInFlightMutex.Lock()
-	ret, specificReturn := fake.queriesInFlightReturnsOnCall[len(fake.queriesInFlightArgsForCall)]
-	fake.queriesInFlightArgsForCall = append(fake.queriesInFlightArgsForCall, struct{}{})
-	fake.recordInvocation("QueriesInFlight", []interface{}{})
-	fake.queriesInFlightMutex.Unlock()
-	if fake.QueriesInFlightStub != nil {
-		return fake.QueriesInFlightStub()
+func (fake *FakeQueryMonitor) ReadAndResetQueriesInFlightMax() int64 {
+	fake.readAndResetQueriesInFlightMaxMutex.Lock()
+	ret, specificReturn := fake.readAndResetQueriesInFlightMaxReturnsOnCall[len(fake.readAndResetQueriesInFlightMaxArgsForCall)]
+	fake.readAndResetQueriesInFlightMaxArgsForCall = append(fake.readAndResetQueriesInFlightMaxArgsForCall, struct{}{})
+	fake.recordInvocation("ReadAndResetQueriesInFlightMax", []interface{}{})
+	fake.readAndResetQueriesInFlightMaxMutex.Unlock()
+	if fake.ReadAndResetQueriesInFlightMaxStub != nil {
+		return fake.ReadAndResetQueriesInFlightMaxStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.queriesInFlightReturns.result1
+	return fake.readAndResetQueriesInFlightMaxReturns.result1
 }
 
-func (fake *FakeQueryMonitor) QueriesInFlightCallCount() int {
-	fake.queriesInFlightMutex.RLock()
-	defer fake.queriesInFlightMutex.RUnlock()
-	return len(fake.queriesInFlightArgsForCall)
+func (fake *FakeQueryMonitor) ReadAndResetQueriesInFlightMaxCallCount() int {
+	fake.readAndResetQueriesInFlightMaxMutex.RLock()
+	defer fake.readAndResetQueriesInFlightMaxMutex.RUnlock()
+	return len(fake.readAndResetQueriesInFlightMaxArgsForCall)
 }
 
-func (fake *FakeQueryMonitor) QueriesInFlightReturns(result1 int64) {
-	fake.QueriesInFlightStub = nil
-	fake.queriesInFlightReturns = struct {
+func (fake *FakeQueryMonitor) ReadAndResetQueriesInFlightMaxReturns(result1 int64) {
+	fake.ReadAndResetQueriesInFlightMaxStub = nil
+	fake.readAndResetQueriesInFlightMaxReturns = struct {
 		result1 int64
 	}{result1}
 }
 
-func (fake *FakeQueryMonitor) QueriesInFlightReturnsOnCall(i int, result1 int64) {
-	fake.QueriesInFlightStub = nil
-	if fake.queriesInFlightReturnsOnCall == nil {
-		fake.queriesInFlightReturnsOnCall = make(map[int]struct {
+func (fake *FakeQueryMonitor) ReadAndResetQueriesInFlightMaxReturnsOnCall(i int, result1 int64) {
+	fake.ReadAndResetQueriesInFlightMaxStub = nil
+	if fake.readAndResetQueriesInFlightMaxReturnsOnCall == nil {
+		fake.readAndResetQueriesInFlightMaxReturnsOnCall = make(map[int]struct {
 			result1 int64
 		})
 	}
-	fake.queriesInFlightReturnsOnCall[i] = struct {
+	fake.readAndResetQueriesInFlightMaxReturnsOnCall[i] = struct {
 		result1 int64
 	}{result1}
 }
@@ -330,8 +330,8 @@ func (fake *FakeQueryMonitor) Invocations() map[string][][]interface{} {
 	defer fake.queriesFailedMutex.RUnlock()
 	fake.readAndResetQueryDurationMaxMutex.RLock()
 	defer fake.readAndResetQueryDurationMaxMutex.RUnlock()
-	fake.queriesInFlightMutex.RLock()
-	defer fake.queriesInFlightMutex.RUnlock()
+	fake.readAndResetQueriesInFlightMaxMutex.RLock()
+	defer fake.readAndResetQueriesInFlightMaxMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

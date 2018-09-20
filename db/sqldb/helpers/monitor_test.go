@@ -36,21 +36,19 @@ var _ = Describe("QueryMonitor", func() {
 			Expect(q.QueriesFailed()).To(BeEquivalentTo(1))
 		})
 
-		It("increments the in-flight count for a query in progress", func() {
+		It("executes queries and updates the maximum count of queries in flight", func() {
 			q := helpers.NewQueryMonitor()
-
+			startedCh := make(chan struct{})
 			blockCh := make(chan struct{})
 			go q.MonitorQuery(func() error {
+				close(startedCh)
 				<-blockCh
 				return nil
 			})
+			defer close(blockCh)
 
-			defer func() {
-				close(blockCh)
-				Eventually(q.QueriesInFlight).Should(BeEquivalentTo(0))
-			}()
-
-			Eventually(q.QueriesInFlight).Should(BeEquivalentTo(1))
+			<-startedCh
+			Expect(q.ReadAndResetQueriesInFlightMax()).To(Equal(int64(1)))
 		})
 
 		It("executes queries and updates the maximum time", func() {
@@ -81,7 +79,7 @@ var _ = Describe("QueryMonitor", func() {
 				q.MonitorQuery(updateFunc)
 			}()
 
-			Consistently(q.ReadAndResetQueryDurationMax()).Should(BeNumerically("==", 0))
+			Consistently(q.ReadAndResetQueryDurationMax).Should(BeNumerically("==", 0))
 			close(blockCh)
 			Eventually(q.ReadAndResetQueryDurationMax).Should(BeNumerically(">", 0))
 		})
@@ -99,6 +97,47 @@ var _ = Describe("QueryMonitor", func() {
 			expectedDuration := q.ReadAndResetQueryDurationMax()
 			Expect(expectedDuration).To(BeNumerically(">", 0))
 			Expect(q.ReadAndResetQueryDurationMax()).To(BeZero())
+		})
+	})
+
+	Describe("ReadAndResetQueriesInFlightMax", func() {
+		It("resets queriesInFlightMax", func() {
+			q := helpers.NewQueryMonitor()
+			blockCh1 := make(chan struct{})
+			startedCh1 := make(chan struct{})
+			finishedCh1 := make(chan struct{})
+			blockCh2 := make(chan struct{})
+			startedCh2 := make(chan struct{})
+			finishedCh2 := make(chan struct{})
+			go func() {
+				q.MonitorQuery(func() error {
+					close(startedCh1)
+					<-blockCh1
+					return nil
+				})
+				close(finishedCh1)
+			}()
+			go func() {
+				q.MonitorQuery(func() error {
+					close(startedCh2)
+					<-blockCh2
+					return nil
+				})
+				close(finishedCh2)
+			}()
+
+			<-startedCh1
+			<-startedCh2
+
+			Consistently(q.ReadAndResetQueriesInFlightMax).Should(Equal(int64(2)))
+			close(blockCh1)
+			<-finishedCh1
+			Expect(q.ReadAndResetQueriesInFlightMax()).To(Equal(int64(2)))
+			Consistently(q.ReadAndResetQueriesInFlightMax).Should(Equal(int64(1)))
+			close(blockCh2)
+			<-finishedCh2
+			Expect(q.ReadAndResetQueriesInFlightMax()).To(Equal(int64(1)))
+			Consistently(q.ReadAndResetQueriesInFlightMax).Should(Equal(int64(0)))
 		})
 	})
 })
