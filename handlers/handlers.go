@@ -53,6 +53,7 @@ func New(
 		db, db, db, db,
 		auctioneerClient,
 		actualHub,
+		actualLRPInstanceHub,
 	)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(evacuationController, exitChan)
