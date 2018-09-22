@@ -514,14 +514,11 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		})
 
 		It("emits ActualLRPInstanceChangedEvent for suspect becoming ordinary and ActualLRPRemovedEvent for the replacement ordinary going away", func() {
-			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 			event := actualLRPInstanceHub.EmitArgsForCall(0)
 			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
 			Expect(event.(*models.ActualLRPInstanceChangedEvent).Before).To(Equal(suspectActualLRP))
 			Expect(event.(*models.ActualLRPInstanceChangedEvent).After).To(Equal(ordinaryActualLRP))
-			event = actualLRPInstanceHub.EmitArgsForCall(1)
-			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
-			Expect(event.(*models.ActualLRPInstanceRemovedEvent).ActualLrp).To(Equal(removedActualLRP))
 		})
 
 		Context("when the ordinary lrp cannot be removed", func() {

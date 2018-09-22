@@ -62,6 +62,7 @@ func New(
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	eventsHandler := NewEventHandler(desiredHub, actualHub)
 	taskEventsHandler := NewTaskEventHandler(taskHub)
+	lrpInstanceEventsHandler := NewLRPInstanceEventHandler(actualLRPInstanceHub)
 	cellsHandler := NewCellHandler(serviceClient, exitChan)
 
 	actions := rata.Handlers{
@@ -114,8 +115,9 @@ func New(
 		bbs.DeleteTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),
 
 		// Events
-		bbs.EventStreamRoute_r0:     route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
-		bbs.TaskEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
+		bbs.EventStreamRoute_r0:            route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
+		bbs.TaskEventStreamRoute_r0:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
+		bbs.LrpInstanceEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0)),
 
 		// Cells
 		bbs.CellsRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells), emitter)),

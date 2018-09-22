@@ -232,8 +232,6 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			}
 
 			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
-			//TODO: the following does not work right now, because we do not return removed lrp from the DB
-			// go h.actualInstanceHub.Emit(models.NewActualLRPRemovedEvent(removed))
 		})
 	}
 
