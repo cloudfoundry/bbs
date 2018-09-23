@@ -85,11 +85,19 @@ func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.Respo
 		return
 	}
 
-	logger.Info("subscribed-to-event-stream", lager.Data{"cell_id": request.CellId})
+	logger.Info("subscribed-to-instance-event-stream", lager.Data{"cell_id": request.CellId})
+
+	desiredSource, err := h.desiredHub.Subscribe()
+	if err != nil {
+		logger.Error("failed-to-subscribe-to-desired-event-hub", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer desiredSource.Close()
 
 	lrpInstanceSource, err := h.lrpInstanceHub.Subscribe()
 	if err != nil {
-		logger.Error("failed-to-subscribe-to-actual-event-hub", err)
+		logger.Error("failed-to-subscribe-to-actual-instance-event-hub", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -116,6 +124,16 @@ func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.Respo
 		}
 	}
 
+	desiredEventsFetcher := func() (models.Event, error) {
+		event, err := desiredSource.Next()
+		if err != nil {
+			return event, err
+		}
+		event = models.VersionDesiredLRPsToV0(event)
+		return event, err
+	}
+
+	go streamSource(eventChan, errorChan, closeChan, desiredEventsFetcher)
 	go streamSource(eventChan, errorChan, closeChan, lrpInstanceEventFetcher)
 
 	streamEventsToResponse(logger, w, eventChan, errorChan)

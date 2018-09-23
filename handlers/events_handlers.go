@@ -22,6 +22,7 @@ type TaskEventHandler struct {
 }
 
 type LRPInstanceEventHandler struct {
+	desiredHub     events.Hub
 	lrpInstanceHub events.Hub
 }
 
@@ -38,8 +39,9 @@ func NewTaskEventHandler(taskHub events.Hub) *TaskEventHandler {
 	}
 }
 
-func NewLRPInstanceEventHandler(lrpInstanceHub events.Hub) *LRPInstanceEventHandler {
+func NewLRPInstanceEventHandler(desiredHub, lrpInstanceHub events.Hub) *LRPInstanceEventHandler {
 	return &LRPInstanceEventHandler{
+		desiredHub:     desiredHub,
 		lrpInstanceHub: lrpInstanceHub,
 	}
 }

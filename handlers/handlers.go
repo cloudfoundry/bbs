@@ -62,7 +62,7 @@ func New(
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	eventsHandler := NewEventHandler(desiredHub, actualHub)
 	taskEventsHandler := NewTaskEventHandler(taskHub)
-	lrpInstanceEventsHandler := NewLRPInstanceEventHandler(actualLRPInstanceHub)
+	lrpInstanceEventsHandler := NewLRPInstanceEventHandler(desiredHub, actualLRPInstanceHub)
 	cellsHandler := NewCellHandler(serviceClient, exitChan)
 
 	actions := rata.Handlers{

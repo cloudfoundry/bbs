@@ -173,7 +173,7 @@ func NewActualLRPInstanceRemovedEvent(actualLrp *ActualLRP) *ActualLRPInstanceRe
 }
 
 func (event *ActualLRPInstanceRemovedEvent) EventType() string {
-	return EventTypeActualLRPRemoved
+	return EventTypeActualLRPInstanceRemoved
 }
 
 func (event *ActualLRPInstanceRemovedEvent) Key() string {

@@ -173,8 +173,10 @@ The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
 	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
+	SubscribeToInstanceEvents(logger lager.Logger) (events.EventSource, error)
 	SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error)
 	SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
+	SubscribeToInstanceEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
 }
 
 type ClientConfig struct {
@@ -742,12 +744,20 @@ func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, err
 	return c.subscribeToEvents(EventStreamRoute_r0, "")
 }
 
+func (c *client) SubscribeToInstanceEvents(logger lager.Logger) (events.EventSource, error) {
+	return c.subscribeToEvents(LrpInstanceEventStreamRoute_r0, "")
+}
+
 func (c *client) SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(TaskEventStreamRoute_r0, "")
 }
 
 func (c *client) SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
 	return c.subscribeToEvents(EventStreamRoute_r0, cellId)
+}
+
+func (c *client) SubscribeToInstanceEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
+	return c.subscribeToEvents(LrpInstanceEventStreamRoute_r0, cellId)
 }
 
 func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {
