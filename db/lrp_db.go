@@ -16,6 +16,7 @@ type ConvergenceResult struct {
 	KeysToRetire                 []*models.ActualLRPKey
 	KeysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
 	Events                       []models.Event
+	InstanceEvents               []models.Event
 }
 
 type LRPDB interface {

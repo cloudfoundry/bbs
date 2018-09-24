@@ -54,8 +54,9 @@ const (
 	DeleteTaskRoute_r0    = "DeleteTask"
 
 	// Event Streaming
-	EventStreamRoute_r0     = "EventStream_r0"
-	TaskEventStreamRoute_r0 = "TaskEventStream_r0"
+	EventStreamRoute_r0            = "EventStream_r0"
+	TaskEventStreamRoute_r0        = "TaskEventStream_r0"
+	LrpInstanceEventStreamRoute_r0 = "LrpInstanceEventStream_r0"
 
 	// Cell Presence
 	CellsRoute_r0 = "Cells"
@@ -118,6 +119,7 @@ var Routes = rata.Routes{
 	// Event Streaming
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},
 	{Path: "/v1/events/tasks", Method: "POST", Name: TaskEventStreamRoute_r0},
+	{Path: "/v1/events/lrp_instances", Method: "POST", Name: LrpInstanceEventStreamRoute_r0},
 
 	// Cells
 	{Path: "/v1/cells/list.r1", Method: "POST", Name: CellsRoute_r0},

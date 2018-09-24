@@ -18,7 +18,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("ActualLRP Lifecycle Controller", func() {
+var _ = Describe("Evacuation Controller", func() {
 	var (
 		logger               *lagertest.TestLogger
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
@@ -27,6 +27,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeSuspectDB        *dbfakes.FakeSuspectDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		actualHub            *eventfakes.FakeHub
+		actualLRPInstanceHub *eventfakes.FakeHub
 
 		controller *controllers.EvacuationController
 		err        error
@@ -47,6 +48,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 
 		actualHub = &eventfakes.FakeHub{}
+		actualLRPInstanceHub = &eventfakes.FakeHub{}
 		controller = controllers.NewEvacuationController(
 			fakeEvacuationDB,
 			fakeActualLRPDB,
@@ -54,6 +56,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			fakeDesiredLRPDB,
 			fakeAuctioneerClient,
 			actualHub,
+			actualLRPInstanceHub,
 		)
 	})
 
@@ -153,6 +156,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Expect(ok).To(BeTrue())
 					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingLRP}))
 				})
+
+				It("emits an LRP instance remove event to the instance hub", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+
+					Expect(removeEvent.ActualLrp).To(Equal(evacuatingLRP))
+				})
+
 			})
 		})
 
@@ -249,16 +263,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual}, nil)
 			})
 
-			It("emits an LRPChanged event to the hub", func() {
-				Eventually(actualHub.EmitCallCount).Should(Equal(1))
-
-				event := actualHub.EmitArgsForCall(0)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
-				che := event.(*models.ActualLRPChangedEvent)
-				Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-				Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
-			})
-
 			It("unclaims the actual lrp instance and requests an auction", func() {
 				Expect(keepContainer).To(BeFalse())
 				Expect(modelErr).To(BeNil())
@@ -277,6 +281,31 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
 			})
+
+			It("emits an LRPChanged event to the hub", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+
+				event := actualHub.EmitArgsForCall(0)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+				che := event.(*models.ActualLRPChangedEvent)
+				Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+				Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
+			})
+
+			It("emits and LRPInstanceRemoved event followed by LRPInstanceCreated for the unclaimed lrp", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+
+				event := actualLRPInstanceHub.EmitArgsForCall(0)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+				removedEvent := event.(*models.ActualLRPInstanceRemovedEvent)
+				Expect(removedEvent.ActualLrp).To(Equal(actual))
+
+				event = actualLRPInstanceHub.EmitArgsForCall(1)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+				createdEvent := event.(*models.ActualLRPInstanceCreatedEvent)
+				Expect(createdEvent.ActualLrp).To(Equal(afterActual))
+			})
+
 		})
 
 		Context("when the evacuating actual lrp instance is suspect", func() {
@@ -318,6 +347,25 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: suspectActual}))
 				Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
 			})
+
+			It("emits an LRPInstanceRemoved for evacuating, an LRPInstanceREmoved event for the suspect and an LRPCreated event for the unclaimed", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
+
+				event := actualHub.EmitArgsForCall(0)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+				ev := event.(*models.ActualLRPRemovedEvent)
+				Expect(ev.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
+
+				event = actualLRPInstanceHub.EmitArgsForCall(1)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+				removedEvent := event.(*models.ActualLRPInstanceRemovedEvent)
+				Expect(removedEvent.ActualLrp).To(Equal(suspectActual))
+
+				event = actualLRPInstanceHub.EmitArgsForCall(2)
+				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+				createdEvent := event.(*models.ActualLRPInstanceCreatedEvent)
+				Expect(createdEvent.ActualLrp).To(Equal(afterActual))
+			})
 		})
 
 		Context("when the evacuating instance is not the suspect one", func() {
@@ -334,8 +382,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(key).To(Equal(&actual.ActualLRPKey))
 			})
 
-			It("should not emit an LRPChanged event", func() {
+			It("should not emit an LRPChanged or LRPRemoved event", func() {
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
+
+			It("should not emit any LRP instance events", func() {
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
 
@@ -358,6 +410,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			It("should not emit an LRPChanged event", func() {
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
+
+			It("should not emit any LRP instance events", func() {
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
 
@@ -427,6 +483,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						Expect(ok).To(BeTrue())
 						Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
 					})
+
+					It("only emits LRPInstanceRemove event for deleting evacuating", func() {
+						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+						Expect(ok).To(BeTrue())
+						Expect(removeEvent.ActualLrp).To(Equal(evacuating))
+					})
 				})
 			})
 
@@ -452,6 +516,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 						Expect(ok).To(BeTrue())
 						Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
+					})
+
+					It("only emits LRPInstanceRemove event for deleting evacuating", func() {
+						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+						Expect(ok).To(BeTrue())
+						Expect(removeEvent.ActualLrp).To(Equal(evacuating))
 					})
 				})
 			})
@@ -537,6 +609,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actualLRP})))
 			})
 
+			It("emits ActualLRPInstancedRemovedEvent", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+				events := []models.Event{}
+				events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
+				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRP)))
+			})
+
 			Context("when the DB returns an unrecoverable error", func() {
 				BeforeEach(func() {
 					fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, models.NewUnrecoverableError(nil))
@@ -559,6 +638,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				It("does not emit ActualLRPRemovedEvent", func() {
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not emit ActualLRPRemovedEvent", func() {
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 
 				It("logs the error", func() {
@@ -584,6 +667,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 			Expect(ok).To(BeTrue())
 			Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actualLRP}))
+		})
+
+		It("emits instance events to the hub", func() {
+			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+			event := actualLRPInstanceHub.EmitArgsForCall(0)
+			removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+			Expect(ok).To(BeTrue())
+			Expect(removeEvent.ActualLrp).To(Equal(actualLRP))
 		})
 
 		It("crashes the actual lrp instance", func() {
@@ -720,6 +811,16 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
 			})
 
+			It("emits ActualLRPInstanceRemoved events to the hub", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+				event := actualLRPInstanceHub.EmitArgsForCall(0)
+				removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+				Expect(ok).To(BeTrue())
+
+				Expect(removeEvent.ActualLrp).To(Equal(evacuatingActual))
+			})
+
 			Context("when the evacuating lrp cannot be removed", func() {
 				BeforeEach(func() {
 					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
@@ -732,6 +833,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				It("does not emit any events", func() {
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not emit any instance events", func() {
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 
@@ -746,6 +851,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				It("does not emit any events", func() {
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not emit any instance events", func() {
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 
@@ -762,6 +871,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				It("does not emit any events", func() {
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not emit any instance events", func() {
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})
@@ -796,6 +909,15 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
 					ce := event.(*models.ActualLRPCreatedEvent)
 					Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+				})
+
+				It("emits instance events to the hub", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+					ce := event.(*models.ActualLRPInstanceCreatedEvent)
+					Expect(ce.ActualLrp).To(Equal(afterActual))
 				})
 
 				Context("when there's an existing evacuating on another cell", func() {
@@ -847,6 +969,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				It("does not emit events to the hub", func() {
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not emit events to the hub", func() {
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})
@@ -957,6 +1083,25 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
 					})
 
+					It("emits instance events to the hub", func() {
+						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
+
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+						ce := event.(*models.ActualLRPInstanceCreatedEvent)
+						Expect(ce.ActualLrp).To(Equal(afterActual))
+
+						event = actualLRPInstanceHub.EmitArgsForCall(1)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+						removed := event.(*models.ActualLRPInstanceRemovedEvent)
+						Expect(removed.ActualLrp).To(Equal(actual))
+
+						event = actualLRPInstanceHub.EmitArgsForCall(2)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+						ce = event.(*models.ActualLRPInstanceCreatedEvent)
+						Expect(ce.ActualLrp).To(Equal(unclaimedActualLRP))
+					})
+
 					Context("when evacuating fails", func() {
 						BeforeEach(func() {
 							fakeEvacuationDB.EvacuateActualLRPReturns(nil, errors.New("this is a disaster"))
@@ -1052,6 +1197,21 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
 					})
 
+					It("emits a LRPInstaceCreated and then LRPInstanceRemoved event", func() {
+						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+						ce := event.(*models.ActualLRPInstanceCreatedEvent)
+						Expect(ce.ActualLrp).To(Equal(afterActual))
+
+						event = actualLRPInstanceHub.EmitArgsForCall(1)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+						re := event.(*models.ActualLRPInstanceRemovedEvent)
+						Expect(re.ActualLrp).To(Equal(actual))
+					})
+
 					Context("when there is an ordinary claimed replacement LRP", func() {
 						var replacementActual *models.ActualLRP
 
@@ -1082,6 +1242,26 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 							re := event.(*models.ActualLRPRemovedEvent)
 							Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
 						})
+
+						It("emits two LRPInstanceCreated events and then a LRPInstanceRemoved event", func() {
+							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
+							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
+
+							event := actualLRPInstanceHub.EmitArgsForCall(0)
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+							ce := event.(*models.ActualLRPInstanceCreatedEvent)
+							Expect(ce.ActualLrp).To(Equal(afterActual))
+
+							event = actualLRPInstanceHub.EmitArgsForCall(1)
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+							ce = event.(*models.ActualLRPInstanceCreatedEvent)
+							Expect(ce.ActualLrp).To(Equal(replacementActual))
+
+							event = actualLRPInstanceHub.EmitArgsForCall(2)
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+							re := event.(*models.ActualLRPInstanceRemovedEvent)
+							Expect(re.ActualLrp).To(Equal(actual))
+						})
 					})
 
 					Context("when removing the suspect lrp fails", func() {
@@ -1094,6 +1274,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 							event := actualHub.EmitArgsForCall(0)
 							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
 							Consistently(actualHub.EmitCallCount).Should(Equal(1))
+						})
+
+						It("does not emit an LRPInstanceRemoved event", func() {
+							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+							event := actualLRPInstanceHub.EmitArgsForCall(0)
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 						})
 
 						It("logs the failure", func() {
@@ -1125,6 +1312,25 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					che := event.(*models.ActualLRPChangedEvent)
 					Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
 					Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
+				})
+
+				It("emits two LRPInstanceCreated event and then an LRPInstanceRemoved event to the hub", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
+
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+					ce := event.(*models.ActualLRPInstanceCreatedEvent)
+					Expect(ce.ActualLrp).To(Equal(afterActual))
+
+					event = actualLRPInstanceHub.EmitArgsForCall(1)
+					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
+					removed := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(removed.ActualLrp).To(Equal(actual))
+
+					event = actualLRPInstanceHub.EmitArgsForCall(2)
+					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+					ce = event.(*models.ActualLRPInstanceCreatedEvent)
+					Expect(ce.ActualLrp).To(Equal(unclaimedActualLRP))
 				})
 
 				Context("when evacuating fails", func() {
@@ -1185,6 +1391,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
+				})
+
+				It("emits instance events to the hub", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(removeEvent.ActualLrp).To(Equal(evacuatingActual))
 				})
 
 				Context("when removing the evacuating LRP fails", func() {
@@ -1314,6 +1528,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			))
 		})
 
+		It("emits an ActualLRPInstanceRemoved event for the removal of the non-evacuating instance", func() {
+			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+			events := []models.Event{}
+
+			events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
+
+			Expect(events).To(ConsistOf(
+				models.NewActualLRPInstanceRemovedEvent(actual),
+			))
+		})
+
 		It("does not error and does not keep the container", func() {
 			Expect(err).To(BeNil())
 		})
@@ -1362,6 +1587,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual})))
 			})
 
+			It("emits ActualLRPInstanceRemovedEvent", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+				events := []models.Event{}
+				events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
+				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actual)))
+			})
+
 			Context("when the DB returns an unrecoverable error", func() {
 				BeforeEach(func() {
 					fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, models.NewUnrecoverableError(nil))
@@ -1383,6 +1615,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				It("does not emit any events", func() {
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not emit any events", func() {
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})
@@ -1406,6 +1642,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				events := []models.Event{}
 				events = append(events, actualHub.EmitArgsForCall(0))
 				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating})))
+
+			})
+
+			It("emits an instance removal event for the evacuating actual LRP", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+				events := []models.Event{}
+				events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
+				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(evacuating)))
 
 			})
 		})

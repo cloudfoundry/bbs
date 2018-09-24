@@ -23,6 +23,10 @@ const (
 	EventTypeActualLRPRemoved = "actual_lrp_removed"
 	EventTypeActualLRPCrashed = "actual_lrp_crashed"
 
+	EventTypeActualLRPInstanceCreated = "actual_lrp_instance_created"
+	EventTypeActualLRPInstanceChanged = "actual_lrp_instance_changed"
+	EventTypeActualLRPInstanceRemoved = "actual_lrp_instance_removed"
+
 	EventTypeTaskCreated = "task_created"
 	EventTypeTaskChanged = "task_changed"
 	EventTypeTaskRemoved = "task_removed"
@@ -100,6 +104,13 @@ func (event DesiredLRPRemovedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
 }
 
+func NewActualLRPInstanceChangedEvent(before, after *ActualLRP) *ActualLRPInstanceChangedEvent {
+	return &ActualLRPInstanceChangedEvent{
+		Before: before,
+		After:  after,
+	}
+}
+
 func NewActualLRPChangedEvent(before, after *ActualLRPGroup) *ActualLRPChangedEvent {
 	return &ActualLRPChangedEvent{
 		Before: before,
@@ -155,6 +166,20 @@ func (event *ActualLRPRemovedEvent) Key() string {
 	return actualLRP.GetInstanceGuid()
 }
 
+func NewActualLRPInstanceRemovedEvent(actualLrp *ActualLRP) *ActualLRPInstanceRemovedEvent {
+	return &ActualLRPInstanceRemovedEvent{
+		ActualLrp: actualLrp,
+	}
+}
+
+func (event *ActualLRPInstanceRemovedEvent) EventType() string {
+	return EventTypeActualLRPInstanceRemoved
+}
+
+func (event *ActualLRPInstanceRemovedEvent) Key() string {
+	return event.ActualLrp.GetInstanceGuid()
+}
+
 func NewActualLRPCreatedEvent(actualLRPGroup *ActualLRPGroup) *ActualLRPCreatedEvent {
 	return &ActualLRPCreatedEvent{
 		ActualLrpGroup: actualLRPGroup,
@@ -171,6 +196,20 @@ func (event *ActualLRPCreatedEvent) Key() string {
 		return ""
 	}
 	return actualLRP.GetInstanceGuid()
+}
+
+func NewActualLRPInstanceCreatedEvent(actualLrp *ActualLRP) *ActualLRPInstanceCreatedEvent {
+	return &ActualLRPInstanceCreatedEvent{
+		ActualLrp: actualLrp,
+	}
+}
+
+func (event *ActualLRPInstanceCreatedEvent) EventType() string {
+	return EventTypeActualLRPInstanceCreated
+}
+
+func (event *ActualLRPInstanceCreatedEvent) Key() string {
+	return event.ActualLrp.GetInstanceGuid()
 }
 
 func (request *EventsByCellId) Validate() error {
@@ -218,4 +257,12 @@ func (event *TaskRemovedEvent) EventType() string {
 
 func (event TaskRemovedEvent) Key() string {
 	return event.Task.GetTaskGuid()
+}
+
+func (event *ActualLRPInstanceChangedEvent) EventType() string {
+	return EventTypeActualLRPInstanceChanged
+}
+
+func (event *ActualLRPInstanceChangedEvent) Key() string {
+	return event.Before.GetInstanceGuid()
 }

@@ -177,6 +177,7 @@ func main() {
 
 	desiredHub := events.NewHub()
 	actualHub := events.NewHub()
+	actualLRPInstanceHub := events.NewHub()
 	taskHub := events.NewHub()
 
 	repTLSConfig := &rep.TLSConfig{
@@ -299,6 +300,7 @@ func main() {
 		sqlDB,
 		desiredHub,
 		actualHub,
+		actualLRPInstanceHub,
 		taskHub,
 		cbWorkPool,
 		serviceClient,
@@ -320,12 +322,14 @@ func main() {
 		serviceClient,
 		repClientFactory,
 		actualHub,
+		actualLRPInstanceHub,
 	)
 	lrpConvergenceController := controllers.NewLRPConvergenceController(
 		logger,
 		sqlDB,
 		sqlDB,
 		actualHub,
+		actualLRPInstanceHub,
 		auctioneerClient,
 		serviceClient,
 		actualLRPController,

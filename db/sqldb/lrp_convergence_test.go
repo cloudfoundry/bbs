@@ -197,6 +197,7 @@ var _ = Describe("LRPConvergence", func() {
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
 				Expect(result.Events).To(ContainElement(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
+				Expect(result.InstanceEvents).To(ContainElement(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0])))
 			})
 		})
 	})
@@ -336,6 +337,7 @@ var _ = Describe("LRPConvergence", func() {
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
 				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
+				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0])))
 			})
 		})
 	})
@@ -696,6 +698,10 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(result.Events).To(ConsistOf(
 					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
 					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
+				))
+				Expect(result.InstanceEvents).To(ConsistOf(
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[0]),
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[1]),
 				))
 			})
 		})
@@ -1214,6 +1220,10 @@ var _ = Describe("LRPConvergence", func() {
 					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
 					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
 				))
+				Expect(result.InstanceEvents).To(ConsistOf(
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[0]),
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[1]),
+				))
 			})
 		})
 	})
@@ -1429,6 +1439,7 @@ var _ = Describe("LRPConvergence", func() {
 
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
 				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
+				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0])))
 			})
 
 			It("emits LRPsExtra metric", func() {

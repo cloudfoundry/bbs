@@ -74,6 +74,71 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 	streamEventsToResponse(logger, w, eventChan, errorChan)
 }
 
+func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("subscribe-r0")
+
+	request := &models.EventsByCellId{}
+	err := parseRequest(logger, req, request)
+	if err != nil {
+		logger.Error("failed-parsing-request", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	logger.Info("subscribed-to-instance-event-stream", lager.Data{"cell_id": request.CellId})
+
+	desiredSource, err := h.desiredHub.Subscribe()
+	if err != nil {
+		logger.Error("failed-to-subscribe-to-desired-event-hub", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer desiredSource.Close()
+
+	lrpInstanceSource, err := h.lrpInstanceHub.Subscribe()
+	if err != nil {
+		logger.Error("failed-to-subscribe-to-actual-instance-event-hub", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer lrpInstanceSource.Close()
+
+	eventChan := make(chan models.Event)
+	errorChan := make(chan error)
+	closeChan := make(chan struct{})
+	defer close(closeChan)
+
+	lrpInstanceEventFetcher := lrpInstanceSource.Next
+	if request.CellId != "" {
+		lrpInstanceEventFetcher = func() (models.Event, error) {
+			for {
+				event, err := lrpInstanceSource.Next()
+				if err != nil {
+					return event, err
+				}
+
+				if filterInstanceEventByCellID(request.CellId, event, err) {
+					return event, nil
+				}
+			}
+		}
+	}
+
+	desiredEventsFetcher := func() (models.Event, error) {
+		event, err := desiredSource.Next()
+		if err != nil {
+			return event, err
+		}
+		event = models.VersionDesiredLRPsToV0(event)
+		return event, err
+	}
+
+	go streamSource(eventChan, errorChan, closeChan, desiredEventsFetcher)
+	go streamSource(eventChan, errorChan, closeChan, lrpInstanceEventFetcher)
+
+	streamEventsToResponse(logger, w, eventChan, errorChan)
+}
+
 func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("tasks-subscribe-r0")
 	logger.Info("subscribed-to-tasks-event-stream")
@@ -146,4 +211,34 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 	}
 
 	return true, nil
+}
+
+func filterInstanceEventByCellID(cellID string, bbsEvent models.Event, err error) bool {
+	switch x := bbsEvent.(type) {
+	case *models.ActualLRPInstanceCreatedEvent:
+		lrp := x.ActualLrp
+		if lrp.CellId != cellID {
+			return false
+		}
+
+	case *models.ActualLRPInstanceChangedEvent:
+		before := x.Before
+		after := x.After
+		if after.CellId != cellID && before.CellId != cellID {
+			return false
+		}
+
+	case *models.ActualLRPInstanceRemovedEvent:
+		lrp := x.ActualLrp
+		if lrp.CellId != cellID {
+			return false
+		}
+
+	case *models.ActualLRPCrashedEvent:
+		if x.ActualLRPInstanceKey.CellId != cellID {
+			return false
+		}
+	}
+
+	return true
 }
