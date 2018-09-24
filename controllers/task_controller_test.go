@@ -963,10 +963,15 @@ var _ = Describe("Task Controller", func() {
 					TasksToAuction:  nil,
 					TasksToComplete: nil,
 					Events:          nil,
-					TasksPruned:     3,
-					TasksKicked:     4,
+					Metrics: db.TaskMetrics{
+						TasksPending:   1,
+						TasksRunning:   2,
+						TasksCompleted: 3,
+						TasksResolving: 4,
+						TasksPruned:    5,
+						TasksKicked:    6,
+					},
 				})
-				fakeTaskDB.GetTaskCountByStateReturns(2, 1, 6, 1)
 			})
 
 			JustBeforeEach(func() {
@@ -988,12 +993,12 @@ var _ = Describe("Task Controller", func() {
 				Expect(fakeTaskStatNotifier.SnapshotTaskStatsCallCount()).To(Equal(1))
 
 				pending, running, completed, resolving, pruned, kicked := fakeTaskStatNotifier.SnapshotTaskStatsArgsForCall(0)
-				Expect(pending).To(Equal(2))
-				Expect(running).To(Equal(1))
-				Expect(completed).To(Equal(6))
-				Expect(resolving).To(Equal(1))
-				Expect(pruned).To(Equal(uint64(3)))
-				Expect(kicked).To(Equal(uint64(4)))
+				Expect(pending).To(Equal(1))
+				Expect(running).To(Equal(2))
+				Expect(completed).To(Equal(3))
+				Expect(resolving).To(Equal(4))
+				Expect(pruned).To(Equal(uint64(5)))
+				Expect(kicked).To(Equal(uint64(6)))
 			})
 
 			It("increments the number of convergence runs", func() {

@@ -329,7 +329,7 @@ func (db *SQLDB) RejectTask(logger lager.Logger, taskGuid, rejectionReason strin
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
 // stager ever attempts to handle a completed task
 func (db *SQLDB) ResolvingTask(logger lager.Logger, taskGuid string) (*models.Task, *models.Task, error) {
-	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
+	logger = logger.Session("resolving-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 

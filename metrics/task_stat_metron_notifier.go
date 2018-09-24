@@ -8,7 +8,6 @@ import (
 	"code.cloudfoundry.org/clock"
 	logging "code.cloudfoundry.org/diego-logging-client"
 	loggregator "code.cloudfoundry.org/go-loggregator"
-	"code.cloudfoundry.org/lager"
 	"github.com/tedsuo/ifrit"
 )
 
@@ -60,7 +59,7 @@ type taskStatMetronNotifier struct {
 	convergenceDuration  time.Duration
 }
 
-func NewTaskStatMetronNotifier(logger lager.Logger, clock clock.Clock, metronClient logging.IngressClient) TaskStatMetronNotifier {
+func NewTaskStatMetronNotifier(clock clock.Clock, metronClient logging.IngressClient) TaskStatMetronNotifier {
 	return &taskStatMetronNotifier{
 		clock:        clock,
 		perCellStats: make(map[string]perCellStats),

@@ -24,35 +24,46 @@ func (sqldb *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, k
 
 	convergenceResult := db.TaskConvergenceResult{}
 
+	// failedEvents is a list of tasks that have transitioned from the pending to the completed state (but expired and failed)
+	// failedFetches are tasks that failed to deserialize (invalid task def)
+	// rowsAffected are the number of pending tasks that have expired
 	failedEvents, failedFetches, rowsAffected := sqldb.failExpiredPendingTasks(logger, expirePendingTaskDuration)
 	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
-	convergenceResult.TasksPruned += failedFetches
-	convergenceResult.TasksKicked += uint64(rowsAffected)
+	convergenceResult.Metrics.TasksPruned += failedFetches
+	convergenceResult.Metrics.TasksKicked += uint64(rowsAffected)
 
+	// tasksToAuction is a list of tasks in the pending state that have not expired and are being auctioned
 	tasksToAuction, failedFetches := sqldb.getTaskStartRequestsForKickablePendingTasks(logger, expirePendingTaskDuration)
 	convergenceResult.TasksToAuction = tasksToAuction
-	convergenceResult.TasksPruned += failedFetches
-	convergenceResult.TasksKicked += uint64(len(tasksToAuction))
+	convergenceResult.Metrics.TasksPruned += failedFetches
+	convergenceResult.Metrics.TasksKicked += uint64(len(tasksToAuction))
 
+	// failedEvents is a list of tasks that have transitioned from the running to completed state (but cell dissappeared and failed)
+	// rowsAffected is the number of running tasks that have lost their cells
 	failedEvents, failedFetches, rowsAffected = sqldb.failTasksWithDisappearedCells(logger, cellSet)
 	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
-	convergenceResult.TasksPruned += failedFetches
-	convergenceResult.TasksKicked += uint64(rowsAffected)
+	convergenceResult.Metrics.TasksPruned += failedFetches
+	convergenceResult.Metrics.TasksKicked += uint64(rowsAffected)
 
 	// do this first so that we now have "Completed" tasks before cleaning up
 	// or re-sending the completion callback
+	// demotedEvents is a list of tasks transitioning from resolving back to completed state (bc they exceeded kickTasksDuration)
 	demotedEvents, failedFetches := sqldb.demoteKickableResolvingTasks(logger, kickTasksDuration)
 	convergenceResult.Events = append(convergenceResult.Events, demotedEvents...)
-	convergenceResult.TasksPruned += failedFetches
+	convergenceResult.Metrics.TasksPruned += failedFetches
 
+	// removedEvents is a list of tasks in the completed stated that have been deleted bc the time since they initially changed to completed exceeded expireCompleteTaskDuration
 	removedEvents, rowsAffected := sqldb.deleteExpiredCompletedTasks(logger, expireCompletedTaskDuration)
 	convergenceResult.Events = append(convergenceResult.Events, removedEvents...)
-	convergenceResult.TasksPruned += uint64(rowsAffected)
+	convergenceResult.Metrics.TasksPruned += uint64(rowsAffected)
 
+	// tasksToComplete is a list of tasks in the complete state that have exceeded kickTasksDuration
 	tasksToComplete, failedFetches := sqldb.getKickableCompleteTasksForCompletion(logger, kickTasksDuration)
 	convergenceResult.TasksToComplete = tasksToComplete
-	convergenceResult.TasksPruned += failedFetches
-	convergenceResult.TasksKicked += uint64(len(tasksToComplete))
+	convergenceResult.Metrics.TasksPruned += failedFetches
+	convergenceResult.Metrics.TasksKicked += uint64(len(tasksToComplete))
+
+	convergenceResult.Metrics.TasksPending, convergenceResult.Metrics.TasksRunning, convergenceResult.Metrics.TasksCompleted, convergenceResult.Metrics.TasksResolving = sqldb.getTaskCountByState(logger)
 
 	return convergenceResult
 }
@@ -142,13 +153,13 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 
 	tasksToAuction := []*auctioneer.TaskStartRequest{}
 	tasks, _, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	if err != nil {
+		logger.Error("failed-fetching-some-tasks", err)
+	}
+
 	for _, task := range tasks {
 		taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
 		tasksToAuction = append(tasksToAuction, &taskStartRequest)
-	}
-
-	if err != nil {
-		logger.Error("failed-fetching-some-tasks", err)
 	}
 
 	return tasksToAuction, uint64(invalidTasksCount)
@@ -356,7 +367,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 	return tasksToComplete, uint64(failedFetches)
 }
 
-func (db *SQLDB) GetTaskCountByState(logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
+func (db *SQLDB) getTaskCountByState(logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
 	var query string
 	switch db.flavor {
 	case helpers.Postgres:

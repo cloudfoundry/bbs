@@ -287,7 +287,7 @@ func main() {
 	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, requestStatsTicker, metronClient)
 	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, locksHeldTicker, metronClient)
 
-	taskStatMetronNotifier := metrics.NewTaskStatMetronNotifier(logger, clock, metronClient)
+	taskStatMetronNotifier := metrics.NewTaskStatMetronNotifier(clock, metronClient)
 
 	handler := handlers.New(
 		logger,

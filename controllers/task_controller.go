@@ -267,7 +267,14 @@ func (c *TaskController) ConvergeTasks(
 		expireCompletedTaskDuration,
 	)
 
-	defer c.emitTaskMetrics(logger, taskConvergenceResult.TasksPruned, taskConvergenceResult.TasksKicked)
+	c.taskStatMetronNotifier.SnapshotTaskStats(
+		taskConvergenceResult.Metrics.TasksPending,
+		taskConvergenceResult.Metrics.TasksRunning,
+		taskConvergenceResult.Metrics.TasksCompleted,
+		taskConvergenceResult.Metrics.TasksResolving,
+		taskConvergenceResult.Metrics.TasksPruned,
+		taskConvergenceResult.Metrics.TasksKicked,
+	)
 
 	c.taskStatMetronNotifier.TaskConvergenceStarted()
 	c.taskStatMetronNotifier.TaskConvergenceDuration(time.Since(convergenceStartTime))
@@ -298,10 +305,4 @@ func (c *TaskController) ConvergeTasks(
 	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(taskConvergenceResult.TasksToComplete)})
 
 	return nil
-}
-
-func (c *TaskController) emitTaskMetrics(logger lager.Logger, pruned, kicked uint64) {
-	logger = logger.Session("emit-task-metrics")
-	pendingCount, runningCount, completedCount, resolvingCount := c.db.GetTaskCountByState(logger)
-	c.taskStatMetronNotifier.SnapshotTaskStats(pendingCount, runningCount, completedCount, resolvingCount, pruned, kicked)
 }

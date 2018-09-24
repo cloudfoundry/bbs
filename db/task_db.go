@@ -15,8 +15,16 @@ type TaskConvergenceResult struct {
 	TasksToComplete []*models.Task
 	Events          []models.Event
 
-	TasksPruned uint64
-	TasksKicked uint64
+	Metrics TaskMetrics
+}
+
+type TaskMetrics struct {
+	TasksPending   int
+	TasksRunning   int
+	TasksCompleted int
+	TasksResolving int
+	TasksPruned    uint64
+	TasksKicked    uint64
 }
 
 //go:generate counterfeiter . TaskDB
@@ -33,11 +41,5 @@ type TaskDB interface {
 	ResolvingTask(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error)
 	DeleteTask(logger lager.Logger, taskGuid string) (task *models.Task, err error)
 
-	ConvergeTasks(
-		logger lager.Logger,
-		cellSet models.CellSet,
-		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-	) TaskConvergenceResult
-
-	GetTaskCountByState(logger lager.Logger) (int, int, int, int)
+	ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) TaskConvergenceResult
 }

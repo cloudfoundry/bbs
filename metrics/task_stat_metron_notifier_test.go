@@ -8,8 +8,6 @@ import (
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/go-loggregator"
 	"code.cloudfoundry.org/go-loggregator/rpc/loggregator_v2"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gstruct"
@@ -33,7 +31,6 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 	var (
 		taskStatMetronNotifier metrics.TaskStatMetronNotifier
 		fakeClock              *fakeclock.FakeClock
-		logger                 lager.Logger
 		metronClient           *testhelpers.FakeIngressClient
 		metricsCh              chan metric
 		counterCh              chan counter
@@ -54,9 +51,8 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			return nil
 		}
 
-		logger = lagertest.NewTestLogger("test")
 		fakeClock = fakeclock.NewFakeClock(time.Now())
-		taskStatMetronNotifier = metrics.NewTaskStatMetronNotifier(logger, fakeClock, metronClient)
+		taskStatMetronNotifier = metrics.NewTaskStatMetronNotifier(fakeClock, metronClient)
 		Expect(taskStatMetronNotifier).NotTo(BeNil())
 	})
 
