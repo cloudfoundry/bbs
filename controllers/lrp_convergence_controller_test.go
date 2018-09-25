@@ -392,15 +392,38 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			It("emits instance change events for the suspect", func() {
 				Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
-				event := actualLRPInstanceHub.EmitArgsForCall(0)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
-				Expect(event.(*models.ActualLRPInstanceChangedEvent).Before).To(Equal(before))
-				Expect(event.(*models.ActualLRPInstanceChangedEvent).After).To(Equal(after))
+				events := []models.Event{
+					actualLRPInstanceHub.EmitArgsForCall(0),
+					actualLRPInstanceHub.EmitArgsForCall(1),
+				}
 
-				event = actualLRPInstanceHub.EmitArgsForCall(1)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
-				Expect(event.(*models.ActualLRPInstanceCreatedEvent).ActualLrp).To(Equal(unclaimed))
+				getOriginalActualLRP := func(e models.Event) *models.ActualLRP {
+					return e.(*models.ActualLRPInstanceChangedEvent).Before
+				}
+
+				getUpdatedActualLRP := func(e models.Event) *models.ActualLRP {
+					return e.(*models.ActualLRPInstanceChangedEvent).After
+				}
+
+				getCreatedActualLRP := func(e models.Event) *models.ActualLRP {
+					return e.(*models.ActualLRPInstanceCreatedEvent).ActualLrp
+				}
+
+				Expect(events).To(
+					ConsistOf(
+						And(
+							BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}),
+							WithTransform(getOriginalActualLRP, Equal(before)),
+							WithTransform(getUpdatedActualLRP, Equal(after)),
+						),
+						And(
+							BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}),
+							WithTransform(getCreatedActualLRP, Equal(unclaimed)),
+						),
+					),
+				)
 			})
 
 			Context("when there already is a Suspect LRP", func() {
@@ -514,7 +537,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		})
 
 		It("emits ActualLRPInstanceChangedEvent for suspect becoming ordinary and ActualLRPRemovedEvent for the replacement ordinary going away", func() {
+			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
 			event := actualLRPInstanceHub.EmitArgsForCall(0)
 			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
 			Expect(event.(*models.ActualLRPInstanceChangedEvent).Before).To(Equal(suspectActualLRP))

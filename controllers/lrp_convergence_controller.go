@@ -81,8 +81,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 		go h.actualHub.Emit(e)
 	}
 
-	instaceEvents := convergenceResult.InstanceEvents
-	for _, e := range instaceEvents {
+	instanceEvents := convergenceResult.InstanceEvents
+	for _, e := range instanceEvents {
 		go h.actualLRPInstanceHub.Emit(e)
 	}
 	retireLogger := logger.WithData(lager.Data{"retiring_lrp_count": len(keysToRetire)})
@@ -141,8 +141,10 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			} else if !after.Equal(before) {
 				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+				go func() {
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+				}()
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
@@ -173,8 +175,10 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 					}
 
 					//emit instance events for removing suspect and creating unclaimed
-					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
-					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+					go func() {
+						h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
+						h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+					}()
 
 					return
 				} else {
@@ -201,8 +205,10 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 				}
 
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+				go func() {
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+				}()
 			}
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(key.SchedulingInfo, int(key.Key.Index))
