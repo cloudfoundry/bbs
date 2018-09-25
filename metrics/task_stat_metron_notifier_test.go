@@ -54,11 +54,8 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		fakeClock = fakeclock.NewFakeClock(time.Now())
 		taskStatMetronNotifier = metrics.NewTaskStatMetronNotifier(fakeClock, metronClient)
 		Expect(taskStatMetronNotifier).NotTo(BeNil())
-	})
 
-	JustBeforeEach(func() {
 		process = ginkgomon.Invoke(taskStatMetronNotifier)
-		fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
 	})
 
 	AfterEach(func() {
@@ -68,6 +65,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 	Context("when a task is started", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskStarted("cell-1")
+			fakeClock.Increment(60 * time.Second)
 		})
 
 		It("emits the metric", func() {
@@ -78,12 +76,13 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			})))
 		})
 
-		Context("when 60 seconds have elapsed", func() {
-			JustBeforeEach(func() {
-				fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
+		Context("when metrics were emitted and another 60 seconds have elapsed", func() {
+			BeforeEach(func() {
+				Eventually(metricsCh).Should(Receive())
+				fakeClock.Increment(60 * time.Second)
 			})
 
-			It("emits the metric again", func() {
+			It("emits the same metric again", func() {
 				Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
 					"Name":  Equal("TasksStarted"),
 					"Value": Equal(1),
@@ -96,6 +95,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 	Context("when a task succeeds", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskSucceeded("cell-1")
+			fakeClock.Increment(60 * time.Second)
 		})
 
 		It("emits the metric with the proper tag", func() {
@@ -111,6 +111,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskFailed("cell-1")
 			taskStatMetronNotifier.TaskFailed("cell-1")
+			fakeClock.Increment(60 * time.Second)
 		})
 
 		It("emits the metric with the proper tag", func() {
@@ -126,6 +127,7 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskFailed("cell-1")
 			taskStatMetronNotifier.TaskFailed("cell-2")
+			fakeClock.Increment(60 * time.Second)
 		})
 
 		It("emits the metric for the second cell with the proper tag", func() {
@@ -151,16 +153,17 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			taskStatMetronNotifier.TaskConvergenceStarted()
 			taskStatMetronNotifier.TaskConvergenceStarted()
 
+			taskStatMetronNotifier.TaskConvergenceDuration(5 * time.Second)
 			taskStatMetronNotifier.TaskConvergenceDuration(1 * time.Second)
+
+			fakeClock.Increment(60 * time.Second)
 		})
 
 		It("emits the number of convergence runs since the last time metrics were emitted", func() {
-			fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
-			Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(3))
-
-			counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(2)
-			Expect(counterName).To(Equal("ConvergenceTaskRuns"))
-			Expect(delta).To(BeEquivalentTo(3))
+			Eventually(counterCh).Should(Receive(Equal(counter{
+				Name:  "ConvergenceTaskRuns",
+				Value: 3,
+			})))
 		})
 
 		It("emits the duration of the last convergence run", func() {
@@ -172,9 +175,10 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 
 		Context("after metrics have been emitted, and then another convergence loop starts", func() {
-			JustBeforeEach(func() {
-				// This causes the ticker loop to stop, and gives the test a chance to update the fixtures
-				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
+			BeforeEach(func() {
+				// wait for previous set of metrics to be emitted then emit the next set
+				Eventually(counterCh).Should(Receive())
+
 				taskStatMetronNotifier.TaskConvergenceStarted()
 				taskStatMetronNotifier.TaskConvergenceDuration(2 * time.Second)
 
@@ -182,12 +186,10 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			})
 
 			It("resets the value and emits the number of runs since the last time metrics were emitted", func() {
-				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
-				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(6))
-
-				counterName, delta := metronClient.IncrementCounterWithDeltaArgsForCall(5)
-				Expect(counterName).To(Equal(metrics.ConvergeTaskRunsCounter))
-				Expect(delta).To(BeEquivalentTo(1))
+				Eventually(counterCh).Should(Receive(Equal(counter{
+					Name:  "ConvergenceTaskRuns",
+					Value: 1,
+				})))
 			})
 
 			It("emits the duration of the new convergence run", func() {
@@ -200,17 +202,18 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 
 		Context("after metrics have been emitted, but another convergence loop has not yet started", func() {
-			JustBeforeEach(func() {
-				fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
+			BeforeEach(func() {
+				Eventually(counterCh).Should(Receive())
+				fakeClock.Increment(60 * time.Second)
 			})
 
 			It("doesn't update the converge runs counter", func() {
-				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
-				Eventually(metronClient.IncrementCounterWithDeltaCallCount).Should(Equal(5))
+				Consistently(counterCh).ShouldNot(Receive(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+					"Name": Equal("TasksFailed"),
+				})))
 			})
 
 			It("emits the duration of the last convergence run", func() {
-				fakeClock.WaitForWatcherAndIncrement(0 * time.Second)
 				Eventually(metronClient.SendDurationCallCount).Should(Equal(2))
 
 				metricName, duration, _ := metronClient.SendDurationArgsForCall(1)
@@ -223,125 +226,115 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 	Describe("metrics about tasks resulting from convergence", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.SnapshotTaskStats(1, 2, 3, 4, 5, 6)
+			fakeClock.Increment(60 * time.Second)
 		})
 
 		It("emits the number of pending, running, completed, resolving, pruned, and kicked tasks", func() {
-			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-				"Name":  Equal(metrics.PendingTasksMetric),
-				"Value": Equal(1),
-				"Opts":  BeEmpty(),
+			Eventually(metricsCh).Should(Receive(Equal(metric{
+				Name:  "TasksPending",
+				Value: 1,
 			})))
 
-			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-				"Name":  Equal(metrics.RunningTasksMetric),
-				"Value": Equal(2),
-				"Opts":  BeEmpty(),
+			Eventually(metricsCh).Should(Receive(Equal(metric{
+				Name:  "TasksRunning",
+				Value: 2,
 			})))
 
-			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-				"Name":  Equal(metrics.CompletedTasksMetric),
-				"Value": Equal(3),
-				"Opts":  BeEmpty(),
+			Eventually(metricsCh).Should(Receive(Equal(metric{
+				Name:  "TasksCompleted",
+				Value: 3,
 			})))
 
-			Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-				"Name":  Equal(metrics.ResolvingTasksMetric),
-				"Value": Equal(4),
-				"Opts":  BeEmpty(),
+			Eventually(metricsCh).Should(Receive(Equal(metric{
+				Name:  "TasksResolving",
+				Value: 4,
 			})))
 
-			Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-				"Name":  Equal("ConvergenceTasksPruned"),
-				"Value": Equal(uint64(5)),
+			Eventually(counterCh).Should(Receive(Equal(counter{
+				Name:  "ConvergenceTasksPruned",
+				Value: uint64(5),
 			})))
 
-			Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-				"Name":  Equal("ConvergenceTasksKicked"),
-				"Value": Equal(uint64(6)),
+			Eventually(counterCh).Should(Receive(Equal(counter{
+				Name:  "ConvergenceTasksKicked",
+				Value: uint64(6),
 			})))
 		})
 
 		Context("after 60 seconds have elapsed", func() {
-			JustBeforeEach(func() {
-				fakeClock.WaitForWatcherAndIncrement(60 * time.Second)
-			})
-
-			Context("and a convergence loop has also occurred", func() {
+			Context("and task state metrics have been updated", func() {
 				BeforeEach(func() {
 					taskStatMetronNotifier.SnapshotTaskStats(5, 6, 7, 8, 9, 10)
+					fakeClock.Increment(60 * time.Second)
 				})
 
 				It("emits the new value for the metric", func() {
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.PendingTasksMetric),
-						"Value": Equal(5),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksPending",
+						Value: 5,
 					})))
 
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.RunningTasksMetric),
-						"Value": Equal(6),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksRunning",
+						Value: 6,
 					})))
 
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.CompletedTasksMetric),
-						"Value": Equal(7),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksCompleted",
+						Value: 7,
 					})))
 
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.ResolvingTasksMetric),
-						"Value": Equal(8),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksResolving",
+						Value: 8,
 					})))
 
-					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal("ConvergenceTasksPruned"),
-						"Value": Equal(uint64(9)),
+					Eventually(counterCh).Should(Receive(Equal(counter{
+						Name:  "ConvergenceTasksPruned",
+						Value: uint64(9),
 					})))
 
-					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal("ConvergenceTasksKicked"),
-						"Value": Equal(uint64(10)),
+					Eventually(counterCh).Should(Receive(Equal(counter{
+						Name:  "ConvergenceTasksKicked",
+						Value: uint64(10),
 					})))
 				})
 			})
 
-			Context("and a convergence loop has not occurred in the meantime", func() {
+			Context("and task state metrics have not been updated", func() {
+				BeforeEach(func() {
+					fakeClock.Increment(60 * time.Second)
+				})
+
 				It("emits the last value of the metric", func() {
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.PendingTasksMetric),
-						"Value": Equal(1),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksPending",
+						Value: 1,
 					})))
 
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.RunningTasksMetric),
-						"Value": Equal(2),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksRunning",
+						Value: 2,
 					})))
 
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.CompletedTasksMetric),
-						"Value": Equal(3),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksCompleted",
+						Value: 3,
 					})))
 
-					Eventually(metricsCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal(metrics.ResolvingTasksMetric),
-						"Value": Equal(4),
-						"Opts":  BeEmpty(),
+					Eventually(metricsCh).Should(Receive(Equal(metric{
+						Name:  "TasksResolving",
+						Value: 4,
 					})))
 
-					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal("ConvergenceTasksPruned"),
-						"Value": Equal(uint64(5)),
+					Eventually(counterCh).Should(Receive(Equal(counter{
+						Name:  "ConvergenceTasksPruned",
+						Value: uint64(5),
 					})))
 
-					Eventually(counterCh).Should(Receive(gstruct.MatchAllFields(gstruct.Fields{
-						"Name":  Equal("ConvergenceTasksKicked"),
-						"Value": Equal(uint64(6)),
+					Eventually(counterCh).Should(Receive(Equal(counter{
+						Name:  "ConvergenceTasksKicked",
+						Value: uint64(6),
 					})))
 				})
 			})

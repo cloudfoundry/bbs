@@ -68,10 +68,11 @@ func NewTaskStatMetronNotifier(clock clock.Clock, metronClient logging.IngressCl
 }
 
 func (t *taskStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+	ticker := t.clock.NewTicker(60 * time.Second)
 	close(ready)
 	for {
 		select {
-		case <-t.clock.NewTimer(60 * time.Second).C():
+		case <-ticker.C():
 			t.emitMetrics()
 		case <-signals:
 			return nil
