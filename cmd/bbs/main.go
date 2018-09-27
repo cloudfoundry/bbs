@@ -321,8 +321,13 @@ func main() {
 		repClientFactory,
 		actualHub,
 	)
+
+	lrpStatMetronNotifier := metrics.NewLRPStatMetronNotifier(clock, metronClient)
+
 	lrpConvergenceController := controllers.NewLRPConvergenceController(
 		logger,
+		clock,
+		sqlDB,
 		sqlDB,
 		sqlDB,
 		actualHub,
@@ -331,6 +336,7 @@ func main() {
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 		bbsConfig.GenerateSuspectActualLRPs,
+		lrpStatMetronNotifier,
 	)
 	taskController := controllers.NewTaskController(sqlDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, bbsConfig.MaxTaskRetries)
 

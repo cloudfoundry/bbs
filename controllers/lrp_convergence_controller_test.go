@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"errors"
+	"time"
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
@@ -10,9 +11,11 @@ import (
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
+	mfakes "code.cloudfoundry.org/bbs/metrics/fakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
@@ -23,12 +26,15 @@ import (
 
 var _ = Describe("LRP Convergence Controllers", func() {
 	var (
-		logger               *lagertest.TestLogger
-		fakeLRPDB            *dbfakes.FakeLRPDB
-		fakeSuspectDB        *dbfakes.FakeSuspectDB
-		actualHub            *eventfakes.FakeHub
-		retirer              *fakes.FakeRetirer
-		fakeAuctioneerClient *auctioneerfakes.FakeClient
+		logger                    *lagertest.TestLogger
+		fakeClock                 *fakeclock.FakeClock
+		fakeLRPDB                 *dbfakes.FakeLRPDB
+		fakeSuspectDB             *dbfakes.FakeSuspectDB
+		fakeDomainDB              *dbfakes.FakeDomainDB
+		actualHub                 *eventfakes.FakeHub
+		retirer                   *fakes.FakeRetirer
+		fakeAuctioneerClient      *auctioneerfakes.FakeClient
+		fakeLRPStatMetronNotifier *mfakes.FakeLRPStatMetronNotifier
 
 		keysToRetire         []*models.ActualLRPKey
 		keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
@@ -45,8 +51,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 	)
 
 	BeforeEach(func() {
+		fakeClock = fakeclock.NewFakeClock(time.Now())
 		fakeLRPDB = new(dbfakes.FakeLRPDB)
 		fakeSuspectDB = new(dbfakes.FakeSuspectDB)
+		fakeDomainDB = new(dbfakes.FakeDomainDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
 		logger = lagertest.NewTestLogger("test")
 
@@ -59,6 +67,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeRepClient = new(repfakes.FakeClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 		fakeServiceClient.CellByIdReturns(nil, errors.New("hi"))
+		fakeLRPStatMetronNotifier = new(mfakes.FakeLRPStatMetronNotifier)
 
 		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
 		cellSet = models.CellSet{"cell-id": &cellPresence}
@@ -73,14 +82,17 @@ var _ = Describe("LRP Convergence Controllers", func() {
 	JustBeforeEach(func() {
 		controller = controllers.NewLRPConvergenceController(
 			logger,
+			fakeClock,
 			fakeLRPDB,
 			fakeSuspectDB,
+			fakeDomainDB,
 			actualHub,
 			fakeAuctioneerClient,
 			fakeServiceClient,
 			retirer,
 			2,
 			generateSuspectActualLRPs,
+			fakeLRPStatMetronNotifier,
 		)
 		controller.ConvergeLRPs(logger)
 	})
@@ -89,6 +101,107 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(1))
 		_, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
 		Expect(actualCellSet).To(BeEquivalentTo(cellSet))
+	})
+
+	Describe("metrics", func() {
+		BeforeEach(func() {
+			fakeLRPDB.ConvergeLRPsStub = func(lager.Logger, models.CellSet) db.ConvergenceResult {
+				fakeClock.Increment(50 * time.Second)
+				return db.ConvergenceResult{}
+			}
+		})
+
+		It("records convergence duration", func() {
+			Expect(fakeLRPStatMetronNotifier.RecordLRPConvergenceDurationCallCount()).To(Equal(1))
+			Expect(fakeLRPStatMetronNotifier.RecordLRPConvergenceDurationArgsForCall(0)).To(Equal(50 * time.Second))
+		})
+
+		Context("when there are fresh domains", func() {
+			var domains []string
+
+			BeforeEach(func() {
+				domains = []string{"domain-1", "domain-2"}
+				fakeDomainDB.DomainsReturns(domains, nil)
+			})
+
+			It("records domain freshness metric for each domain", func() {
+				Expect(fakeLRPStatMetronNotifier.RecordFreshDomainsCallCount()).To(Equal(1))
+				Expect(fakeLRPStatMetronNotifier.RecordFreshDomainsArgsForCall(0)).To(ConsistOf(domains))
+			})
+		})
+
+		Context("when there are actual LRPs", func() {
+			BeforeEach(func() {
+				fakeLRPDB.CountActualLRPsByStateReturns(2, 1, 3, 4, 5)
+			})
+
+			It("records the state of the LRPs", func() {
+				Expect(fakeLRPStatMetronNotifier.RecordStateOfLRPsCallCount()).To(Equal(1))
+				unclaimed, claimed, running, crashed, crashingDesired := fakeLRPStatMetronNotifier.RecordStateOfLRPsArgsForCall(0)
+				Expect(unclaimed).To(Equal(1))
+				Expect(claimed).To(Equal(2))
+				Expect(running).To(Equal(3))
+				Expect(crashed).To(Equal(4))
+				Expect(crashingDesired).To(Equal(5))
+			})
+		})
+
+		Context("when there are desired LRPs", func() {
+			BeforeEach(func() {
+				fakeLRPDB.CountDesiredInstancesReturns(6)
+			})
+
+			It("records the number of desired LRPs", func() {
+				Expect(fakeLRPStatMetronNotifier.RecordDesiredLRPsCallCount()).To(Equal(1))
+				Expect(fakeLRPStatMetronNotifier.RecordDesiredLRPsArgsForCall(0)).To(Equal(6))
+			})
+		})
+
+		Context("when there are LRPs to retire", func() {
+			BeforeEach(func() {
+				fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
+					KeysToRetire: []*models.ActualLRPKey{
+						{ProcessGuid: "some-lrp"},
+						{ProcessGuid: "some-other-lrp"},
+					},
+				})
+			})
+
+			It("records the number of extra LRPs", func() {
+				Expect(fakeLRPStatMetronNotifier.RecordExtraLRPsCallCount()).To(Equal(1))
+				Expect(fakeLRPStatMetronNotifier.RecordExtraLRPsArgsForCall(0)).To(Equal(2))
+			})
+		})
+
+		Context("when there are missing LRPs", func() {
+			BeforeEach(func() {
+				fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
+					MissingLRPKeys: []*models.ActualLRPKeyWithSchedulingInfo{
+						{
+							Key: &models.ActualLRPKey{
+								ProcessGuid: "some-lrp",
+								Index:       0,
+								Domain:      "some-domain",
+							},
+							SchedulingInfo: &desiredLRP1,
+						},
+						{
+							Key: &models.ActualLRPKey{
+								ProcessGuid: "some-other-lrp",
+								Index:       1,
+								Domain:      "some-other-domain",
+							},
+							SchedulingInfo: &desiredLRP1,
+						},
+					},
+				})
+			})
+
+			It("records the number of missing LRPs", func() {
+				Expect(fakeLRPStatMetronNotifier.RecordMissingLRPsCallCount()).To(Equal(1))
+				Expect(fakeLRPStatMetronNotifier.RecordMissingLRPsArgsForCall(0)).To(Equal(2))
+			})
+		})
 	})
 
 	Context("when there are unstarted ActualLRPs", func() {

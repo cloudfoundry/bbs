@@ -62,10 +62,10 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		ginkgomon.Kill(process)
 	})
 
-	Context("when a task is started", func() {
+	Context("when a task is started and convergence has happened", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskStarted("cell-1")
-			fakeClock.Increment(60 * time.Second)
+			fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 		})
 
 		It("emits the metric", func() {
@@ -76,10 +76,10 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 			})))
 		})
 
-		Context("when metrics were emitted and another 60 seconds have elapsed", func() {
+		Context("when metrics were emitted a second time and convergence has NOT happened again", func() {
 			BeforeEach(func() {
 				Eventually(metricsCh).Should(Receive())
-				fakeClock.Increment(60 * time.Second)
+				fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 			})
 
 			It("emits the same metric again", func() {
@@ -92,10 +92,10 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 	})
 
-	Context("when a task succeeds", func() {
+	Context("when a task succeeds and convergence has happened", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskSucceeded("cell-1")
-			fakeClock.Increment(60 * time.Second)
+			fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 		})
 
 		It("emits the metric with the proper tag", func() {
@@ -107,11 +107,11 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 	})
 
-	Context("when a task fails", func() {
+	Context("when a task fails and convergence has happened", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskFailed("cell-1")
 			taskStatMetronNotifier.TaskFailed("cell-1")
-			fakeClock.Increment(60 * time.Second)
+			fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 		})
 
 		It("emits the metric with the proper tag", func() {
@@ -123,11 +123,11 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 	})
 
-	Context("when tasks on multiple cells are started", func() {
+	Context("when tasks on multiple cells are started and convergence has happened", func() {
 		BeforeEach(func() {
 			taskStatMetronNotifier.TaskFailed("cell-1")
 			taskStatMetronNotifier.TaskFailed("cell-2")
-			fakeClock.Increment(60 * time.Second)
+			fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 		})
 
 		It("emits the metric for the second cell with the proper tag", func() {
@@ -147,125 +147,127 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 		})
 	})
 
-	Describe("metrics about convergence", func() {
-		BeforeEach(func() {
-			taskStatMetronNotifier.TaskConvergenceStarted()
-			taskStatMetronNotifier.TaskConvergenceStarted()
-			taskStatMetronNotifier.TaskConvergenceStarted()
-
-			taskStatMetronNotifier.TaskConvergenceDuration(5 * time.Second)
-			taskStatMetronNotifier.TaskConvergenceDuration(1 * time.Second)
-
-			fakeClock.Increment(60 * time.Second)
-		})
-
-		It("emits the number of convergence runs since the last time metrics were emitted", func() {
-			Eventually(counterCh).Should(Receive(Equal(counter{
-				Name:  "ConvergenceTaskRuns",
-				Value: 3,
-			})))
-		})
-
-		It("emits the duration of the last convergence run", func() {
-			Eventually(metronClient.SendDurationCallCount).Should(Equal(1))
-
-			metricName, duration, _ := metronClient.SendDurationArgsForCall(0)
-			Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
-			Expect(duration).To(BeEquivalentTo(1 * time.Second))
-		})
-
-		Context("after metrics have been emitted, and then another convergence loop starts", func() {
+	Describe("convergence runs metrics", func() {
+		Context("when metrics are emitted and convergence has happened", func() {
 			BeforeEach(func() {
-				// wait for previous set of metrics to be emitted then emit the next set
-				Eventually(counterCh).Should(Receive())
-
 				taskStatMetronNotifier.TaskConvergenceStarted()
-				taskStatMetronNotifier.TaskConvergenceDuration(2 * time.Second)
+				taskStatMetronNotifier.TaskConvergenceStarted()
+				taskStatMetronNotifier.TaskConvergenceStarted()
 
-				fakeClock.Increment(60 * time.Second)
+				taskStatMetronNotifier.TaskConvergenceDuration(5 * time.Second)
+				taskStatMetronNotifier.TaskConvergenceDuration(1 * time.Second)
+
+				fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 			})
 
-			It("resets the value and emits the number of runs since the last time metrics were emitted", func() {
+			It("emits the number of convergence runs since the last time metrics were emitted", func() {
 				Eventually(counterCh).Should(Receive(Equal(counter{
 					Name:  "ConvergenceTaskRuns",
-					Value: 1,
-				})))
-			})
-
-			It("emits the duration of the new convergence run", func() {
-				Eventually(metronClient.SendDurationCallCount).Should(Equal(2))
-
-				metricName, duration, _ := metronClient.SendDurationArgsForCall(1)
-				Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
-				Expect(duration).To(BeEquivalentTo(2 * time.Second))
-			})
-		})
-
-		Context("after metrics have been emitted, but another convergence loop has not yet started", func() {
-			BeforeEach(func() {
-				Eventually(counterCh).Should(Receive())
-				fakeClock.Increment(60 * time.Second)
-			})
-
-			It("doesn't update the converge runs counter", func() {
-				Consistently(counterCh).ShouldNot(Receive(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-					"Name": Equal("TasksFailed"),
+					Value: 3,
 				})))
 			})
 
 			It("emits the duration of the last convergence run", func() {
-				Eventually(metronClient.SendDurationCallCount).Should(Equal(2))
+				Eventually(metronClient.SendDurationCallCount).Should(Equal(1))
 
-				metricName, duration, _ := metronClient.SendDurationArgsForCall(1)
+				metricName, duration, _ := metronClient.SendDurationArgsForCall(0)
 				Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
 				Expect(duration).To(BeEquivalentTo(1 * time.Second))
+			})
+
+			Context("when metrics are emitted a second time and convergence has happened again", func() {
+				BeforeEach(func() {
+					// wait for previous set of metrics to be emitted then emit the next set
+					Eventually(counterCh).Should(Receive())
+
+					taskStatMetronNotifier.TaskConvergenceStarted()
+					taskStatMetronNotifier.TaskConvergenceDuration(2 * time.Second)
+
+					fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
+				})
+
+				It("resets the value and emits the number of runs since the last time metrics were emitted", func() {
+					Eventually(counterCh).Should(Receive(Equal(counter{
+						Name:  "ConvergenceTaskRuns",
+						Value: 1,
+					})))
+				})
+
+				It("emits the duration of the new convergence run", func() {
+					Eventually(metronClient.SendDurationCallCount).Should(Equal(2))
+
+					metricName, duration, _ := metronClient.SendDurationArgsForCall(1)
+					Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
+					Expect(duration).To(BeEquivalentTo(2 * time.Second))
+				})
+			})
+
+			Context("when metrics are emitted a second time but convergence has NOT happened again", func() {
+				BeforeEach(func() {
+					Eventually(counterCh).Should(Receive())
+					fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
+				})
+
+				It("doesn't update the converge runs counter", func() {
+					Consistently(counterCh).ShouldNot(Receive(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
+						"Name": Equal("TasksFailed"),
+					})))
+				})
+
+				It("emits the duration of the last convergence run", func() {
+					Eventually(metronClient.SendDurationCallCount).Should(Equal(2))
+
+					metricName, duration, _ := metronClient.SendDurationArgsForCall(1)
+					Expect(metricName).To(Equal(metrics.ConvergeTaskDuration))
+					Expect(duration).To(BeEquivalentTo(1 * time.Second))
+				})
 			})
 		})
 	})
 
-	Describe("metrics about tasks resulting from convergence", func() {
-		BeforeEach(func() {
-			taskStatMetronNotifier.SnapshotTaskStats(1, 2, 3, 4, 5, 6)
-			fakeClock.Increment(60 * time.Second)
-		})
+	Describe("task count metrics", func() {
+		Context("when metrics are emitted and convergence has happened", func() {
+			BeforeEach(func() {
+				taskStatMetronNotifier.SnapshotTaskStats(1, 2, 3, 4, 5, 6)
+				fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
+			})
 
-		It("emits the number of pending, running, completed, resolving, pruned, and kicked tasks", func() {
-			Eventually(metricsCh).Should(Receive(Equal(metric{
-				Name:  "TasksPending",
-				Value: 1,
-			})))
+			It("emits the number of pending, running, completed, resolving, pruned, and kicked tasks", func() {
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "TasksPending",
+					Value: 1,
+				})))
 
-			Eventually(metricsCh).Should(Receive(Equal(metric{
-				Name:  "TasksRunning",
-				Value: 2,
-			})))
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "TasksRunning",
+					Value: 2,
+				})))
 
-			Eventually(metricsCh).Should(Receive(Equal(metric{
-				Name:  "TasksCompleted",
-				Value: 3,
-			})))
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "TasksCompleted",
+					Value: 3,
+				})))
 
-			Eventually(metricsCh).Should(Receive(Equal(metric{
-				Name:  "TasksResolving",
-				Value: 4,
-			})))
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "TasksResolving",
+					Value: 4,
+				})))
 
-			Eventually(counterCh).Should(Receive(Equal(counter{
-				Name:  "ConvergenceTasksPruned",
-				Value: uint64(5),
-			})))
+				Eventually(counterCh).Should(Receive(Equal(counter{
+					Name:  "ConvergenceTasksPruned",
+					Value: uint64(5),
+				})))
 
-			Eventually(counterCh).Should(Receive(Equal(counter{
-				Name:  "ConvergenceTasksKicked",
-				Value: uint64(6),
-			})))
-		})
+				Eventually(counterCh).Should(Receive(Equal(counter{
+					Name:  "ConvergenceTasksKicked",
+					Value: uint64(6),
+				})))
+			})
 
-		Context("after 60 seconds have elapsed", func() {
-			Context("and task state metrics have been updated", func() {
+			Context("when metrics have been emitted a second time and convergence has happened again", func() {
 				BeforeEach(func() {
 					taskStatMetronNotifier.SnapshotTaskStats(5, 6, 7, 8, 9, 10)
-					fakeClock.Increment(60 * time.Second)
+					fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 				})
 
 				It("emits the new value for the metric", func() {
@@ -301,12 +303,12 @@ var _ = Describe("TaskStatMetronNotifier", func() {
 				})
 			})
 
-			Context("and task state metrics have not been updated", func() {
+			Context("when metrics are emitted a second time but convergence has NOT happened again", func() {
 				BeforeEach(func() {
-					fakeClock.Increment(60 * time.Second)
+					fakeClock.Increment(metrics.DefaultTaskEmitMetricsFrequency)
 				})
 
-				It("emits the last value of the metric", func() {
+				It("emits the last cached value of the metric", func() {
 					Eventually(metricsCh).Should(Receive(Equal(metric{
 						Name:  "TasksPending",
 						Value: 1,

@@ -7,34 +7,13 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/lager/lagertest"
 
-	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("LRPConvergence", func() {
-	type event struct {
-		name  string
-		value int
-	}
-
-	getMetricsEmitted := func(metronClient *mfakes.FakeIngressClient) func() []event {
-		return func() []event {
-			var events []event
-			for i := 0; i < metronClient.SendMetricCallCount(); i++ {
-				name, value, _ := metronClient.SendMetricArgsForCall(i)
-				events = append(events, event{
-					name:  name,
-					value: value,
-				})
-			}
-			return events
-		}
-	}
-
 	actualLRPKeyWithSchedulingInfo := func(desiredLRP *models.DesiredLRP, index int) *models.ActualLRPKeyWithSchedulingInfo {
 		schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 		lrpKey := models.NewActualLRPKey(desiredLRP.ProcessGuid, int32(index), desiredLRP.Domain)
@@ -53,93 +32,6 @@ var _ = Describe("LRPConvergence", func() {
 	BeforeEach(func() {
 		cellSet = models.NewCellSetFromList([]*models.CellPresence{
 			{CellId: "existing-cell"},
-		})
-	})
-
-	Describe("general metrics", func() {
-		BeforeEach(func() {
-			domain := "some-domain"
-			processGuid := "lrps-for-metrics"
-			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
-			desiredLRP.Domain = domain
-			desiredLRP.Instances = 4
-			err := sqlDB.DesireLRP(logger, desiredLRP)
-			Expect(err).NotTo(HaveOccurred())
-			for i := int32(0); i < desiredLRP.Instances; i++ {
-				_, err = sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: i, Domain: domain})
-				Expect(err).NotTo(HaveOccurred())
-			}
-			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 1, &models.ActualLRPInstanceKey{InstanceGuid: "claimed", CellId: "existing-cell"})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 2, &models.ActualLRPInstanceKey{InstanceGuid: "running", CellId: "existing-cell"})
-			Expect(err).NotTo(HaveOccurred())
-			lrpKey := models.NewActualLRPKey(processGuid, 2, domain)
-			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444))
-			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "running", CellId: "existing-cell"}, &actualLRPNetInfo)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, _, err = sqlDB.ClaimActualLRP(logger, processGuid, 3, &models.ActualLRPInstanceKey{InstanceGuid: "running", CellId: "existing-cell"})
-			Expect(err).NotTo(HaveOccurred())
-			lrpKey = models.NewActualLRPKey(processGuid, 3, domain)
-			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "crashed", CellId: "existing-cell"}, &actualLRPNetInfo)
-			Expect(err).NotTo(HaveOccurred())
-			queryStr := `
-				UPDATE actual_lrps
-				SET state = ?
-				WHERE instance_guid = ?
-			`
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.Exec(queryStr, models.ActualLRPStateCrashed, "crashed")
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("emits metrics for lrps", func() {
-			convergenceLogger := lagertest.NewTestLogger("convergence")
-			sqlDB.ConvergeLRPs(convergenceLogger, cellSet)
-			Expect(fakeMetronClient.SendMetricCallCount()).To(Equal(8))
-			name, value, _ := fakeMetronClient.SendMetricArgsForCall(2)
-			Expect(name).To(Equal("LRPsUnclaimed"))
-			Expect(value).To(Equal(1))
-			name, value, _ = fakeMetronClient.SendMetricArgsForCall(3)
-			Expect(name).To(Equal("LRPsClaimed"))
-			Expect(value).To(Equal(1))
-			name, value, _ = fakeMetronClient.SendMetricArgsForCall(4)
-			Expect(name).To(Equal("LRPsRunning"))
-			Expect(value).To(Equal(1))
-			name, value, _ = fakeMetronClient.SendMetricArgsForCall(5)
-			Expect(name).To(Equal("CrashedActualLRPs"))
-			Expect(value).To(Equal(1))
-			name, value, _ = fakeMetronClient.SendMetricArgsForCall(6)
-			Expect(name).To(Equal("CrashingDesiredLRPs"))
-			Expect(value).To(Equal(1))
-			name, value, _ = fakeMetronClient.SendMetricArgsForCall(7)
-			Expect(name).To(Equal("LRPsDesired"))
-			Expect(value).To(Equal(4))
-			Consistently(convergenceLogger).ShouldNot(gbytes.Say("failed-.*"))
-		})
-	})
-
-	Describe("convergence counters", func() {
-		It("bumps the convergence counter", func() {
-			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(0))
-			sqlDB.ConvergeLRPs(logger, models.CellSet{})
-			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetronClient.IncrementCounterArgsForCall(0)).To(Equal("ConvergenceLRPRuns"))
-			sqlDB.ConvergeLRPs(logger, models.CellSet{})
-			Expect(fakeMetronClient.IncrementCounterCallCount()).To(Equal(2))
-			Expect(fakeMetronClient.IncrementCounterArgsForCall(1)).To(Equal("ConvergenceLRPRuns"))
-		})
-
-		It("reports the duration that it took to converge", func() {
-			sqlDB.ConvergeLRPs(logger, models.CellSet{})
-
-			Eventually(fakeMetronClient.SendDurationCallCount).Should(Equal(1))
-			name, value, _ := fakeMetronClient.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("ConvergenceLRPDuration"))
-			Expect(value).NotTo(BeZero())
 		})
 	})
 
@@ -201,27 +93,6 @@ var _ = Describe("LRPConvergence", func() {
 		})
 	})
 
-	Context("when there are fresh domains", func() {
-		BeforeEach(func() {
-			Expect(sqlDB.UpsertDomain(logger, "some-domain", 5)).To(Succeed())
-			Expect(sqlDB.UpsertDomain(logger, "other-domain", 5)).To(Succeed())
-		})
-
-		It("emits domain freshness metric for each domain", func() {
-			sqlDB.ConvergeLRPs(logger, cellSet)
-
-			Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-				name:  "Domain.some-domain",
-				value: 1,
-			}))
-
-			Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-				name:  "Domain.other-domain",
-				value: 1,
-			}))
-		})
-	})
-
 	Context("when there are expired domains", func() {
 		var (
 			expiredDomain = "expired-domain"
@@ -255,7 +126,6 @@ var _ = Describe("LRPConvergence", func() {
 
 			Expect(fetchDomains()).NotTo(ContainElement(expiredDomain))
 		})
-
 	})
 
 	Context("when there are unclaimed LRPs", func() {
@@ -311,13 +181,17 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("ignores the evacuating LRPs and emits LRP missing metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
+			It("ignores the evacuating LRPs and sets missing LRPs to the correct value", func() {
+				schedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{ProcessGuids: []string{processGuid}})
+				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsMissing",
-					value: 1,
-				}))
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.MissingLRPKeys).To(ConsistOf(
+					&models.ActualLRPKeyWithSchedulingInfo{
+						Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain},
+						SchedulingInfo: schedulingInfos[0],
+					},
+				))
 			})
 
 			It("removes the evacuating lrps", func() {
@@ -592,13 +466,10 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
-			It("emits stale unclaimed LRP metrics", func() {
+			It("should have the correct number of unclaimed LRP instances", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsUnclaimed",
-					value: 2,
-				}))
+				_, unclaimed, _, _, _ := sqlDB.CountActualLRPsByState(logger)
+				Expect(unclaimed).To(Equal(2))
 			})
 		})
 
@@ -634,13 +505,10 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
-			It("emits stale unclaimed LRP metrics", func() {
+			It("should have the correct number of unclaimed LRP instances", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsUnclaimed",
-					value: 2,
-				}))
+				_, unclaimed, _, _, _ := sqlDB.CountActualLRPsByState(logger)
+				Expect(unclaimed).To(Equal(2))
 			})
 		})
 
@@ -656,13 +524,21 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("ignores the evacuating LRPs and emits LRP missing metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
+			It("ignores the evacuating LRPs and should have the correct number of missing LRPs", func() {
+				schedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{ProcessGuids: []string{processGuid}})
+				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsMissing",
-					value: 2,
-				}))
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.MissingLRPKeys).To(ConsistOf(
+					&models.ActualLRPKeyWithSchedulingInfo{
+						Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain},
+						SchedulingInfo: schedulingInfos[0],
+					},
+					&models.ActualLRPKeyWithSchedulingInfo{
+						Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain},
+						SchedulingInfo: schedulingInfos[0],
+					},
+				))
 			})
 
 			It("returns the lrp keys in the MissingLRPKeys", func() {
@@ -806,13 +682,16 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("ignores the evacuating LRPs and emits LRP missing metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
+			It("ignores the evacuating LRPs and should have the correct number of missing LRPs", func() {
+				schedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{ProcessGuids: []string{processGuid}})
+				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsMissing",
-					value: 1,
-				}))
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.MissingLRPKeys).To(ConsistOf(&models.ActualLRPKeyWithSchedulingInfo{
+					Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain},
+					SchedulingInfo: schedulingInfos[0],
+				},
+				))
 			})
 
 			It("returns the start requests and actual lrp keys for actuals with missing cells", func() {
@@ -906,13 +785,9 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
-			It("emits LRPsExtra metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsExtra",
-					value: 1,
-				}))
+			It("should have the correct number of extra LRPs instances", func() {
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.KeysToRetire).To(ConsistOf(&models.ActualLRPKey{ProcessGuid: processGuid, Index: 4, Domain: domain}))
 			})
 		})
 
@@ -940,13 +815,9 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
-			It("emits a zero for the LRPsExtra metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsExtra",
-					value: 0,
-				}))
+			It("should not have any extra LRP instances", func() {
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.KeysToRetire).To(BeEmpty())
 			})
 		})
 
@@ -974,15 +845,6 @@ var _ = Describe("LRPConvergence", func() {
 					SchedulingInfo: schedulingInfos[0],
 				}))
 			})
-
-			It("emits a LRPsMissing metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsMissing",
-					value: 1,
-				}))
-			})
 		})
 	})
 
@@ -1006,12 +868,16 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 			})
 
-			It("emits a LRPsMissing metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
+			It("should have the correct number of missing LRP instances", func() {
+				schedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{ProcessGuids: []string{processGuid}})
+				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsMissing",
-					value: 1,
+				Expect(schedulingInfos).To(HaveLen(1))
+
+				result := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(result.MissingLRPKeys).To(ConsistOf(&models.ActualLRPKeyWithSchedulingInfo{
+					Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain},
+					SchedulingInfo: schedulingInfos[0],
 				}))
 			})
 
@@ -1036,12 +902,16 @@ var _ = Describe("LRPConvergence", func() {
 				fakeClock.Increment(10 * time.Second)
 			})
 
-			It("emits a LRPsMissing metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
+			It("should have the correct number of missing LRP instances", func() {
+				schedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{ProcessGuids: []string{processGuid}})
+				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsMissing",
-					value: 1,
+				Expect(schedulingInfos).To(HaveLen(1))
+
+				result := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(result.MissingLRPKeys).To(ConsistOf(&models.ActualLRPKeyWithSchedulingInfo{
+					Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain},
+					SchedulingInfo: schedulingInfos[0],
 				}))
 			})
 
@@ -1107,13 +977,10 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 			})
 
-			It("emit CrashedActualLRPs", func() {
+			It("should have the correct number of crashed LRP instances", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "CrashedActualLRPs",
-					value: 2,
-				}))
+				_, _, _, crashed, _ := sqlDB.CountActualLRPsByState(logger)
+				Expect(crashed).To(Equal(2))
 			})
 
 			It("add the keys to UnstartedLRPKeys", func() {
@@ -1127,7 +994,6 @@ var _ = Describe("LRPConvergence", func() {
 					Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain},
 					SchedulingInfo: &expectedSched,
 				}))
-
 			})
 		})
 
@@ -1138,13 +1004,10 @@ var _ = Describe("LRPConvergence", func() {
 				fakeClock.Increment(10 * time.Second)
 			})
 
-			It("emit CrashedActualLRPs", func() {
+			It("should have the correct number of crashed LRP instances", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "CrashedActualLRPs",
-					value: 2,
-				}))
+				_, _, _, crashed, _ := sqlDB.CountActualLRPsByState(logger)
+				Expect(crashed).To(Equal(2))
 			})
 
 			It("add the keys to UnstartedLRPKeys", func() {
@@ -1173,13 +1036,23 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("emits a LRPsMissing metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
+			It("should have the correct number of missing LRP instances", func() {
+				schedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{ProcessGuids: []string{processGuid}})
+				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsMissing",
-					value: 2,
-				}))
+				Expect(schedulingInfos).To(HaveLen(1))
+
+				result := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(result.MissingLRPKeys).To(ConsistOf(
+					&models.ActualLRPKeyWithSchedulingInfo{
+						Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain},
+						SchedulingInfo: schedulingInfos[0],
+					},
+					&models.ActualLRPKeyWithSchedulingInfo{
+						Key:            &models.ActualLRPKey{ProcessGuid: processGuid, Index: 1, Domain: domain},
+						SchedulingInfo: schedulingInfos[0],
+					},
+				))
 			})
 
 			// it is the responsibility of the caller to create new LRPs
@@ -1263,13 +1136,10 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 			})
 
-			It("emit CrashedActualLRPs", func() {
+			It("should have the correct number of crashed LRP instances", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "CrashedActualLRPs",
-					value: 2,
-				}))
+				_, _, _, crashed, _ := sqlDB.CountActualLRPsByState(logger)
+				Expect(crashed).To(Equal(2))
 			})
 
 			It("returns an empty convergence result", func() {
@@ -1285,13 +1155,10 @@ var _ = Describe("LRPConvergence", func() {
 				fakeClock.Increment(10 * time.Second)
 			})
 
-			It("emit CrashedActualLRPs", func() {
+			It("should have the correct number of crashed LRP instances", func() {
 				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "CrashedActualLRPs",
-					value: 2,
-				}))
+				_, _, _, crashed, _ := sqlDB.CountActualLRPsByState(logger)
+				Expect(crashed).To(Equal(2))
 			})
 
 			It("does not add the keys to UnstartedLRPKeys", func() {
@@ -1345,13 +1212,9 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
-			It("emits LRPsExtra metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsExtra",
-					value: 1,
-				}))
+			It("should have the correct number of extra LRP instances", func() {
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.KeysToRetire).To(ConsistOf(&models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain}))
 			})
 		})
 
@@ -1385,13 +1248,9 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(lrpsAfter).To(Equal(lrpsBefore))
 			})
 
-			It("emits zero value for LRPsExtra metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsExtra",
-					value: 0,
-				}))
+			It("should not have any extra LRP instances", func() {
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.KeysToRetire).To(BeEmpty())
 			})
 		})
 
@@ -1431,13 +1290,9 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
 			})
 
-			It("emits LRPsExtra metric", func() {
-				sqlDB.ConvergeLRPs(logger, cellSet)
-
-				Eventually(getMetricsEmitted(fakeMetronClient)).Should(ContainElement(event{
-					name:  "LRPsExtra",
-					value: 0,
-				}))
+			It("should not have any extra LRP instances", func() {
+				results := sqlDB.ConvergeLRPs(logger, cellSet)
+				Expect(results.KeysToRetire).To(BeEmpty())
 			})
 		})
 	})

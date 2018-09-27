@@ -14,47 +14,17 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-const (
-	domainMetricPrefix = "Domain."
-
-	convergeLRPRunsCounter = "ConvergenceLRPRuns"
-	convergeLRPDuration    = "ConvergenceLRPDuration"
-
-	instanceLRPsMetric  = "LRPsDesired"
-	claimedLRPsMetric   = "LRPsClaimed"
-	unclaimedLRPsMetric = "LRPsUnclaimed"
-	runningLRPsMetric   = "LRPsRunning"
-
-	missingLRPsMetric = "LRPsMissing"
-	extraLRPsMetric   = "LRPsExtra"
-
-	crashedActualLRPsMetric   = "CrashedActualLRPs"
-	crashingDesiredLRPsMetric = "CrashingDesiredLRPs"
-)
-
 func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult {
-	convergeStart := sqldb.clock.Now()
-	sqldb.metronClient.IncrementCounter(convergeLRPRunsCounter)
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	defer func() {
-		err := sqldb.metronClient.SendDuration(convergeLRPDuration, time.Since(convergeStart))
-		if err != nil {
-			logger.Error("failed-sending-converge-lrp-duration-metric", err)
-		}
-	}()
-
 	now := sqldb.clock.Now()
-
 	sqldb.pruneDomains(logger, now)
 	events := sqldb.pruneEvacuatingActualLRPs(logger, cellSet)
 	domainSet, err := sqldb.domainSet(logger)
 	if err != nil {
 		return db.ConvergenceResult{}
 	}
-
-	sqldb.emitDomainMetrics(logger, domainSet)
 
 	converge := newConvergence(sqldb)
 	converge.staleUnclaimedActualLRPs(logger, now)
@@ -67,7 +37,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	converge.crashedActualLRPs(logger, now)
 
 	return db.ConvergenceResult{
-		MissingLRPKeys:         converge.result(logger),
+		MissingLRPKeys:         converge.missingLRPKeys,
 		UnstartedLRPKeys:       converge.unstartedLRPKeys,
 		KeysToRetire:           converge.keysToRetire,
 		SuspectLRPKeysToRetire: converge.suspectKeysToRetire,
@@ -267,7 +237,6 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 		return
 	}
 
-	missingLRPCount := 0
 	for rows.Next() {
 		var existingIndicesStr sql.NullString
 		var actualInstances int
@@ -299,7 +268,6 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				continue
 			}
 
-			missingLRPCount++
 			indices = append(indices, i)
 			index := int32(i)
 			c.addMissingLRPKey(logger, &models.ActualLRPKeyWithSchedulingInfo{
@@ -333,8 +301,6 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 	if rows.Err() != nil {
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
-
-	c.metronClient.SendMetric(missingLRPsMetric, missingLRPCount)
 }
 
 func (c *convergence) suspectActualLRPs(logger lager.Logger) {
@@ -478,13 +444,6 @@ func (c *convergence) addKeyToRetire(logger lager.Logger, key *models.ActualLRPK
 	c.keysToRetire = append(c.keysToRetire, key)
 }
 
-func (c *convergence) result(logger lager.Logger) []*models.ActualLRPKeyWithSchedulingInfo {
-	c.metronClient.SendMetric(extraLRPsMetric, len(c.keysToRetire))
-	c.emitLRPMetrics(logger)
-
-	return c.missingLRPKeys
-}
-
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-domains")
 
@@ -538,48 +497,4 @@ func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {
 		m[domain] = struct{}{}
 	}
 	return m, nil
-}
-
-func (db *SQLDB) emitDomainMetrics(logger lager.Logger, domainSet map[string]struct{}) {
-	for domain := range domainSet {
-		db.metronClient.SendMetric(domainMetricPrefix+domain, 1)
-	}
-}
-
-func (db *SQLDB) emitLRPMetrics(logger lager.Logger) {
-	var err error
-	logger = logger.Session("emit-lrp-metrics")
-	claimedInstances, unclaimedInstances, runningInstances, crashedInstances, crashingDesireds := db.countActualLRPsByState(logger, db.db)
-
-	desiredInstances := db.countDesiredInstances(logger, db.db)
-
-	err = db.metronClient.SendMetric(unclaimedLRPsMetric, unclaimedInstances)
-	if err != nil {
-		logger.Error("failed-sending-unclaimed-lrps-metric", err)
-	}
-
-	err = db.metronClient.SendMetric(claimedLRPsMetric, claimedInstances)
-	if err != nil {
-		logger.Error("failed-sending-claimed-lrps-metric", err)
-	}
-
-	err = db.metronClient.SendMetric(runningLRPsMetric, runningInstances)
-	if err != nil {
-		logger.Error("failed-sending-running-lrps-metric", err)
-	}
-
-	err = db.metronClient.SendMetric(crashedActualLRPsMetric, crashedInstances)
-	if err != nil {
-		logger.Error("failed-sending-crashed-actual-lrps-metric", err)
-	}
-
-	err = db.metronClient.SendMetric(crashingDesiredLRPsMetric, crashingDesireds)
-	if err != nil {
-		logger.Error("failed-sending-crashing-desired-lrps-metric", err)
-	}
-
-	err = db.metronClient.SendMetric(instanceLRPsMetric, desiredInstances)
-	if err != nil {
-		logger.Error("failed-sending-desired-lrps-metric", err)
-	}
 }

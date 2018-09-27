@@ -12,6 +12,8 @@ import (
 )
 
 const (
+	DefaultTaskEmitMetricsFrequency = 15 * time.Second
+
 	TasksStartedMetric   = "TasksStarted"
 	TasksSucceededMetric = "TasksSucceeded"
 	TasksFailedMetric    = "TasksFailed"
@@ -68,7 +70,7 @@ func NewTaskStatMetronNotifier(clock clock.Clock, metronClient logging.IngressCl
 }
 
 func (t *taskStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	ticker := t.clock.NewTicker(60 * time.Second)
+	ticker := t.clock.NewTicker(DefaultTaskEmitMetricsFrequency)
 	close(ready)
 	for {
 		select {

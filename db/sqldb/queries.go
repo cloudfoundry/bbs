@@ -235,14 +235,14 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q helpers.Queryab
 	)
 }
 
-func (db *SQLDB) countDesiredInstances(logger lager.Logger, q helpers.Queryable) int {
+func (db *SQLDB) CountDesiredInstances(logger lager.Logger) int {
 	query := `
 		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances
 			FROM desired_lrps
 	`
 
 	var desiredInstances int
-	row := q.QueryRow(db.helper.Rebind(query))
+	row := db.db.QueryRow(db.helper.Rebind(query))
 	err := row.Scan(&desiredInstances)
 	if err != nil {
 		logger.Error("failed-desired-instances-query", err)
@@ -250,7 +250,7 @@ func (db *SQLDB) countDesiredInstances(logger lager.Logger, q helpers.Queryable)
 	return desiredInstances
 }
 
-func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q helpers.Queryable) (claimedCount, unclaimedCount, runningCount, crashedCount, crashingDesiredCount int) {
+func (db *SQLDB) CountActualLRPsByState(logger lager.Logger) (claimedCount, unclaimedCount, runningCount, crashedCount, crashingDesiredCount int) {
 	var query string
 	switch db.flavor {
 	case helpers.Postgres:
