@@ -55,13 +55,13 @@ func findWithPresence(lrps []*models.ActualLRP, presence models.ActualLRP_Presen
 	return nil
 }
 
-func findLRP(key *models.ActualLRPInstanceKey, lrps []*models.ActualLRP) (*models.ActualLRP, bool) {
+func lookupLRPInSlice(lrps []*models.ActualLRP, key *models.ActualLRPInstanceKey) *models.ActualLRP {
 	for _, lrp := range lrps {
 		if lrp.ActualLRPInstanceKey == *key {
-			return lrp, lrp.Presence == models.ActualLRP_Suspect
+			return lrp
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func getHigherPriorityActualLRP(lrp1, lrp2 *models.ActualLRP) *models.ActualLRP {
@@ -164,9 +164,14 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	_, isSuspect := findLRP(actualLRPInstanceKey, lrps)
-	if isSuspect {
-		// nothing to do
+	lrp := lookupLRPInSlice(lrps, actualLRPInstanceKey)
+	if lrp != nil && lrp.Presence == models.ActualLRP_Suspect {
+		logger.Info("ignored-start-request-from-suspect", lager.Data{
+			"process_guid":  actualLRPKey.ProcessGuid,
+			"index":         actualLRPKey.Index,
+			"instance_guid": actualLRPInstanceKey,
+			"state":         lrp.State,
+		})
 		return nil
 	}
 
@@ -215,8 +220,8 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	_, isSuspect := findLRP(actualLRPInstanceKey, lrps)
-	if isSuspect {
+	lrp := lookupLRPInSlice(lrps, actualLRPInstanceKey)
+	if lrp != nil && lrp.Presence == models.ActualLRP_Suspect {
 		suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
 		if err == nil {
 			go func() {

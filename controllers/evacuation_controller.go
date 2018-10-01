@@ -102,7 +102,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 		return err, false
 	}
 
-	targetActualLRP, _ := findLRP(actualLRPInstanceKey, actualLRPs)
+	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	if targetActualLRP == nil {
 		logger.Debug("actual-lrp-not-found", lager.Data{"guid": guid, "index": index})
 		return models.ErrResourceNotFound, false
@@ -163,7 +163,7 @@ func (h *EvacuationController) EvacuateCrashedActualLRP(logger lager.Logger, act
 		return err
 	}
 
-	targetActualLRP, _ := findLRP(actualLRPInstanceKey, actualLRPs)
+	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	if targetActualLRP != nil && targetActualLRP.Presence == models.ActualLRP_Suspect {
 		suspect, err := h.suspectLRPDB.RemoveSuspectActualLRP(logger, actualLRPKey)
 		if err != nil {
@@ -212,7 +212,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 		return nil, false
 	}
 
-	targetActualLRP, _ := findLRP(actualLRPInstanceKey, actualLRPs)
+	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
 	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
 	suspect := findWithPresence(actualLRPs, models.ActualLRP_Suspect)
@@ -297,7 +297,7 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, act
 		return err
 	}
 
-	targetActualLRP, _ := findLRP(actualLRPInstanceKey, actualLRPs)
+	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	if targetActualLRP == nil {
 		logger.Debug("actual-lrp-not-found", lager.Data{"guid": guid, "index": index})
 		return models.ErrResourceNotFound

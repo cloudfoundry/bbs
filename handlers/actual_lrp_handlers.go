@@ -140,14 +140,14 @@ func hasHigherPriority(lrp1, lrp2 *models.ActualLRP) bool {
 		case models.ActualLRPStateRunning:
 			return true
 		case models.ActualLRPStateClaimed:
-			return lrp2.State != models.ActualLRPStateRunning
+			return lrp2.State != models.ActualLRPStateRunning && lrp2.State != models.ActualLRPStateClaimed
 		}
 	} else if lrp1.Presence == models.ActualLRP_Suspect {
 		switch lrp1.State {
 		case models.ActualLRPStateRunning:
 			return lrp2.State != models.ActualLRPStateRunning
 		case models.ActualLRPStateClaimed:
-			return lrp2.State != models.ActualLRPStateRunning && lrp2.State != models.ActualLRPStateClaimed
+			return lrp2.State != models.ActualLRPStateRunning
 		}
 	}
 	// Cases where we are comparing two LRPs with the same presence have undefined behavior since it shouldn't happen
