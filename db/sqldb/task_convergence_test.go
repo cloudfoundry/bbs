@@ -7,7 +7,6 @@ import (
 	dbpkg "code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -220,15 +219,6 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, expiredCompletedTask, err = sqlDB.CompleteTask(logger, "completed-expired-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
-
-				_, err = sqlDB.DesireTask(logger, taskDef, "invalid-completed-expired-task", domain)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "invalid-completed-expired-task", existingCellID)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "invalid-completed-expired-task", existingCellID, false, "", "")
-				Expect(err).NotTo(HaveOccurred())
-				_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-completed-expired-task'")
-				Expect(err).NotTo(HaveOccurred())
 				fakeClock.Increment(expireCompletedTaskDuration)
 
 				fakeClock.IncrementBySeconds(-kickTasksDurationInSeconds)
@@ -264,7 +254,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(convergenceResult.Metrics.TasksRunning).To(Equal(int(0)))
 				Expect(convergenceResult.Metrics.TasksCompleted).To(Equal(int(2)))
 				Expect(convergenceResult.Metrics.TasksResolving).To(Equal(int(0)))
-				Expect(convergenceResult.Metrics.TasksPruned).To(Equal(uint64(3)))
+				Expect(convergenceResult.Metrics.TasksPruned).To(Equal(uint64(2)))
 				Expect(convergenceResult.Metrics.TasksKicked).To(Equal(uint64(1)))
 			})
 
@@ -401,7 +391,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				event2 := models.NewTaskChangedEvent(resolvingExpiredTask, afterResolvingExpiredTask)
 				event3 := models.NewTaskRemovedEvent(afterResolvingExpiredTask)
 
-				Expect(convergenceResult.Events).To(DeepEqual([]models.Event{event1, event2, event3}))
+				Expect(convergenceResult.Events).To(ConsistOf(event1, event2, event3))
 			})
 		})
 	})
