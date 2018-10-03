@@ -159,6 +159,36 @@ type FakeLRPDB struct {
 		result2 *models.ActualLRP
 		result3 error
 	}
+	CountActualLRPsByStateStub        func(logger lager.Logger) (int, int, int, int, int)
+	countActualLRPsByStateMutex       sync.RWMutex
+	countActualLRPsByStateArgsForCall []struct {
+		logger lager.Logger
+	}
+	countActualLRPsByStateReturns struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+		result5 int
+	}
+	countActualLRPsByStateReturnsOnCall map[int]struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+		result5 int
+	}
+	CountDesiredInstancesStub        func(logger lager.Logger) int
+	countDesiredInstancesMutex       sync.RWMutex
+	countDesiredInstancesArgsForCall []struct {
+		logger lager.Logger
+	}
+	countDesiredInstancesReturns struct {
+		result1 int
+	}
+	countDesiredInstancesReturnsOnCall map[int]struct {
+		result1 int
+	}
 	DesiredLRPsStub        func(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
@@ -753,6 +783,114 @@ func (fake *FakeLRPDB) ChangeActualLRPPresenceReturnsOnCall(i int, result1 *mode
 	}{result1, result2, result3}
 }
 
+func (fake *FakeLRPDB) CountActualLRPsByState(logger lager.Logger) (int, int, int, int, int) {
+	fake.countActualLRPsByStateMutex.Lock()
+	ret, specificReturn := fake.countActualLRPsByStateReturnsOnCall[len(fake.countActualLRPsByStateArgsForCall)]
+	fake.countActualLRPsByStateArgsForCall = append(fake.countActualLRPsByStateArgsForCall, struct {
+		logger lager.Logger
+	}{logger})
+	fake.recordInvocation("CountActualLRPsByState", []interface{}{logger})
+	fake.countActualLRPsByStateMutex.Unlock()
+	if fake.CountActualLRPsByStateStub != nil {
+		return fake.CountActualLRPsByStateStub(logger)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2, ret.result3, ret.result4, ret.result5
+	}
+	return fake.countActualLRPsByStateReturns.result1, fake.countActualLRPsByStateReturns.result2, fake.countActualLRPsByStateReturns.result3, fake.countActualLRPsByStateReturns.result4, fake.countActualLRPsByStateReturns.result5
+}
+
+func (fake *FakeLRPDB) CountActualLRPsByStateCallCount() int {
+	fake.countActualLRPsByStateMutex.RLock()
+	defer fake.countActualLRPsByStateMutex.RUnlock()
+	return len(fake.countActualLRPsByStateArgsForCall)
+}
+
+func (fake *FakeLRPDB) CountActualLRPsByStateArgsForCall(i int) lager.Logger {
+	fake.countActualLRPsByStateMutex.RLock()
+	defer fake.countActualLRPsByStateMutex.RUnlock()
+	return fake.countActualLRPsByStateArgsForCall[i].logger
+}
+
+func (fake *FakeLRPDB) CountActualLRPsByStateReturns(result1 int, result2 int, result3 int, result4 int, result5 int) {
+	fake.CountActualLRPsByStateStub = nil
+	fake.countActualLRPsByStateReturns = struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+		result5 int
+	}{result1, result2, result3, result4, result5}
+}
+
+func (fake *FakeLRPDB) CountActualLRPsByStateReturnsOnCall(i int, result1 int, result2 int, result3 int, result4 int, result5 int) {
+	fake.CountActualLRPsByStateStub = nil
+	if fake.countActualLRPsByStateReturnsOnCall == nil {
+		fake.countActualLRPsByStateReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 int
+			result3 int
+			result4 int
+			result5 int
+		})
+	}
+	fake.countActualLRPsByStateReturnsOnCall[i] = struct {
+		result1 int
+		result2 int
+		result3 int
+		result4 int
+		result5 int
+	}{result1, result2, result3, result4, result5}
+}
+
+func (fake *FakeLRPDB) CountDesiredInstances(logger lager.Logger) int {
+	fake.countDesiredInstancesMutex.Lock()
+	ret, specificReturn := fake.countDesiredInstancesReturnsOnCall[len(fake.countDesiredInstancesArgsForCall)]
+	fake.countDesiredInstancesArgsForCall = append(fake.countDesiredInstancesArgsForCall, struct {
+		logger lager.Logger
+	}{logger})
+	fake.recordInvocation("CountDesiredInstances", []interface{}{logger})
+	fake.countDesiredInstancesMutex.Unlock()
+	if fake.CountDesiredInstancesStub != nil {
+		return fake.CountDesiredInstancesStub(logger)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.countDesiredInstancesReturns.result1
+}
+
+func (fake *FakeLRPDB) CountDesiredInstancesCallCount() int {
+	fake.countDesiredInstancesMutex.RLock()
+	defer fake.countDesiredInstancesMutex.RUnlock()
+	return len(fake.countDesiredInstancesArgsForCall)
+}
+
+func (fake *FakeLRPDB) CountDesiredInstancesArgsForCall(i int) lager.Logger {
+	fake.countDesiredInstancesMutex.RLock()
+	defer fake.countDesiredInstancesMutex.RUnlock()
+	return fake.countDesiredInstancesArgsForCall[i].logger
+}
+
+func (fake *FakeLRPDB) CountDesiredInstancesReturns(result1 int) {
+	fake.CountDesiredInstancesStub = nil
+	fake.countDesiredInstancesReturns = struct {
+		result1 int
+	}{result1}
+}
+
+func (fake *FakeLRPDB) CountDesiredInstancesReturnsOnCall(i int, result1 int) {
+	fake.CountDesiredInstancesStub = nil
+	if fake.countDesiredInstancesReturnsOnCall == nil {
+		fake.countDesiredInstancesReturnsOnCall = make(map[int]struct {
+			result1 int
+		})
+	}
+	fake.countDesiredInstancesReturnsOnCall[i] = struct {
+		result1 int
+	}{result1}
+}
+
 func (fake *FakeLRPDB) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	fake.desiredLRPsMutex.Lock()
 	ret, specificReturn := fake.desiredLRPsReturnsOnCall[len(fake.desiredLRPsArgsForCall)]
@@ -1130,6 +1268,10 @@ func (fake *FakeLRPDB) Invocations() map[string][][]interface{} {
 	defer fake.removeActualLRPMutex.RUnlock()
 	fake.changeActualLRPPresenceMutex.RLock()
 	defer fake.changeActualLRPPresenceMutex.RUnlock()
+	fake.countActualLRPsByStateMutex.RLock()
+	defer fake.countActualLRPsByStateMutex.RUnlock()
+	fake.countDesiredInstancesMutex.RLock()
+	defer fake.countDesiredInstancesMutex.RUnlock()
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
 	fake.desiredLRPByProcessGuidMutex.RLock()

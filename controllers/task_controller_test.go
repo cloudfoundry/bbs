@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
+	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/metrics/fakes"
@@ -327,8 +328,8 @@ var _ = Describe("Task Controller", func() {
 				})
 
 				It("updates the task stats", func() {
-					Expect(fakeTaskStatNotifier.TaskStartedCallCount()).To(Equal(1))
-					actualCellId := fakeTaskStatNotifier.TaskStartedArgsForCall(0)
+					Expect(fakeTaskStatNotifier.RecordTaskStartedCallCount()).To(Equal(1))
+					actualCellId := fakeTaskStatNotifier.RecordTaskStartedArgsForCall(0)
 					Expect(actualCellId).To(Equal(cellId))
 				})
 
@@ -358,7 +359,7 @@ var _ = Describe("Task Controller", func() {
 				})
 
 				It("does not update the task stats", func() {
-					Expect(fakeTaskStatNotifier.TaskStartedCallCount()).To(BeZero())
+					Expect(fakeTaskStatNotifier.RecordTaskStartedCallCount()).To(BeZero())
 				})
 
 				It("does not emit a change to the hub", func() {
@@ -372,7 +373,7 @@ var _ = Describe("Task Controller", func() {
 				})
 
 				It("does not update the task stats", func() {
-					Expect(fakeTaskStatNotifier.TaskStartedCallCount()).To(BeZero())
+					Expect(fakeTaskStatNotifier.RecordTaskStartedCallCount()).To(BeZero())
 				})
 
 				It("bubbles up the underlying model error", func() {
@@ -764,8 +765,8 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			It("updates the task stats", func() {
-				Expect(fakeTaskStatNotifier.TaskSucceededCallCount()).To(Equal(1))
-				actualCellId := fakeTaskStatNotifier.TaskSucceededArgsForCall(0)
+				Expect(fakeTaskStatNotifier.RecordTaskSucceededCallCount()).To(Equal(1))
+				actualCellId := fakeTaskStatNotifier.RecordTaskSucceededArgsForCall(0)
 				Expect(actualCellId).To(Equal(cellId))
 			})
 		})
@@ -792,8 +793,8 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			It("updates the task stats", func() {
-				Expect(fakeTaskStatNotifier.TaskFailedCallCount()).To(Equal(1))
-				actualCellId := fakeTaskStatNotifier.TaskFailedArgsForCall(0)
+				Expect(fakeTaskStatNotifier.RecordTaskFailedCallCount()).To(Equal(1))
+				actualCellId := fakeTaskStatNotifier.RecordTaskFailedArgsForCall(0)
 				Expect(actualCellId).To(Equal(cellId))
 			})
 
@@ -833,7 +834,7 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			It("does not update the task stats", func() {
-				Expect(fakeTaskStatNotifier.TaskSucceededCallCount()).To(BeZero())
+				Expect(fakeTaskStatNotifier.RecordTaskSucceededCallCount()).To(BeZero())
 			})
 
 			It("does not emit a change to the hub", func() {
@@ -957,6 +958,20 @@ var _ = Describe("Task Controller", func() {
 				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
 				cellSet = models.CellSet{"cell-id": &cellPresence}
 				fakeServiceClient.CellsReturns(cellSet, nil)
+
+				fakeTaskDB.ConvergeTasksReturns(db.TaskConvergenceResult{
+					TasksToAuction:  nil,
+					TasksToComplete: nil,
+					Events:          nil,
+					Metrics: db.TaskMetrics{
+						TasksPending:   1,
+						TasksRunning:   2,
+						TasksCompleted: 3,
+						TasksResolving: 4,
+						TasksPruned:    5,
+						TasksKicked:    6,
+					},
+				})
 			})
 
 			JustBeforeEach(func() {
@@ -972,6 +987,23 @@ var _ = Describe("Task Controller", func() {
 				Expect(actualKickDuration).To(BeEquivalentTo(kickTaskDuration))
 				Expect(actualPendingDuration).To(BeEquivalentTo(expirePendingTaskDuration))
 				Expect(actualCompletedDuration).To(BeEquivalentTo(expireCompletedTaskDuration))
+			})
+
+			It("records task count metrics", func() {
+				Expect(fakeTaskStatNotifier.RecordTaskCountsCallCount()).To(Equal(1))
+
+				pending, running, completed, resolving, pruned, kicked := fakeTaskStatNotifier.RecordTaskCountsArgsForCall(0)
+				Expect(pending).To(Equal(1))
+				Expect(running).To(Equal(2))
+				Expect(completed).To(Equal(3))
+				Expect(resolving).To(Equal(4))
+				Expect(pruned).To(Equal(uint64(5)))
+				Expect(kicked).To(Equal(uint64(6)))
+			})
+
+			It("records the convergence runs counter and duration", func() {
+				Expect(fakeTaskStatNotifier.RecordConvergenceDurationCallCount()).To(Equal(1))
+				Expect(fakeTaskStatNotifier.RecordConvergenceDurationArgsForCall(0)).To(BeNumerically(">", 0))
 			})
 
 			Context("when fetching cells fails", func() {
@@ -1005,7 +1037,12 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					task1 := model_helpers.NewValidTask(taskGuid1)
 					task2 := model_helpers.NewValidTask(taskGuid2)
-					fakeTaskDB.ConvergeTasksReturns(nil, []*models.Task{task1, task2}, []models.Event{})
+					convergenceResult := db.TaskConvergenceResult{
+						TasksToAuction:  nil,
+						TasksToComplete: []*models.Task{task1, task2},
+						Events:          []models.Event{},
+					}
+					fakeTaskDB.ConvergeTasksReturns(convergenceResult)
 				})
 
 				It("submits the tasks to the workpool", func() {
@@ -1040,7 +1077,12 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					taskStartRequest1 := auctioneer.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
 					taskStartRequest2 := auctioneer.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
-					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2}, nil, []models.Event{})
+					convergenceResult := db.TaskConvergenceResult{
+						TasksToAuction:  []*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2},
+						TasksToComplete: nil,
+						Events:          nil,
+					}
+					fakeTaskDB.ConvergeTasksReturns(convergenceResult)
 				})
 
 				It("requests an auction", func() {
@@ -1068,7 +1110,12 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					event1 = models.NewTaskRemovedEvent(&models.Task{TaskGuid: "removed-task-1"})
 					event2 = models.NewTaskRemovedEvent(&models.Task{TaskGuid: "removed-task-2"})
-					fakeTaskDB.ConvergeTasksReturns([]*auctioneer.TaskStartRequest{}, nil, []models.Event{event1, event2})
+					convergenceResult := db.TaskConvergenceResult{
+						TasksToAuction:  nil,
+						TasksToComplete: nil,
+						Events:          []models.Event{event1, event2},
+					}
+					fakeTaskDB.ConvergeTasksReturns(convergenceResult)
 				})
 
 				It("emits a Task event to the hub", func() {

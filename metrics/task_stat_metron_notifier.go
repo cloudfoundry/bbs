@@ -13,41 +13,69 @@ import (
 )
 
 const (
+	DefaultTaskEmitMetricsFrequency = 15 * time.Second
+
+	ConvergenceTaskRunsMetric     = "ConvergenceTaskRuns"
+	ConvergenceTaskDurationMetric = "ConvergenceTaskDuration"
+
 	TasksStartedMetric   = "TasksStarted"
 	TasksSucceededMetric = "TasksSucceeded"
 	TasksFailedMetric    = "TasksFailed"
-)
 
-type taskStats struct {
-	tasksStarted, tasksFailed, tasksSucceeded int
-}
+	TasksPendingMetric   = "TasksPending"
+	TasksRunningMetric   = "TasksRunning"
+	TasksCompletedMetric = "TasksCompleted"
+	TasksResolvingMetric = "TasksResolving"
+
+	ConvergenceTasksPrunedMetric = "ConvergenceTasksPruned"
+	ConvergenceTasksKickedMetric = "ConvergenceTasksKicked"
+)
 
 //go:generate counterfeiter -o fakes/fake_task_stat_metron_notifier.go . TaskStatMetronNotifier
 type TaskStatMetronNotifier interface {
 	ifrit.Runner
-	TaskSucceeded(cellID string)
-	TaskFailed(cellID string)
-	TaskStarted(cellID string)
+
+	RecordConvergenceDuration(duration time.Duration)
+	RecordTaskStarted(cellID string)
+	RecordTaskSucceeded(cellID string)
+	RecordTaskFailed(cellID string)
+	RecordTaskCounts(pending, running, completed, resolved int, pruned, kicked uint64)
 }
 
 type taskStatMetronNotifier struct {
-	clock        clock.Clock
 	mutex        sync.Mutex
-	metronClient logging.IngressClient
-	perCellStats map[string]taskStats
+	clock        clock.Clock
+	metricSender loggingMetricSender
+
+	perCellMetrics map[string]perCellMetrics
+	globalMetrics  globalMetrics
+}
+
+type perCellMetrics struct {
+	tasksStarted, tasksFailed, tasksSucceeded int
+}
+
+type globalMetrics struct {
+	convergenceTaskRuns     uint64
+	convergenceTaskDuration time.Duration
+
+	tasksPending, tasksRunning, tasksCompleted, tasksResolving int
+	convergenceTasksPruned, convergenceTasksKicked             uint64
 }
 
 func NewTaskStatMetronNotifier(logger lager.Logger, clock clock.Clock, metronClient logging.IngressClient) TaskStatMetronNotifier {
 	return &taskStatMetronNotifier{
-		clock:        clock,
-		perCellStats: make(map[string]taskStats),
-		metronClient: metronClient,
+		clock: clock,
+		metricSender: loggingMetricSender{
+			logger:       logger,
+			metronClient: metronClient,
+		},
+		perCellMetrics: make(map[string]perCellMetrics),
 	}
 }
 
 func (t *taskStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	ticker := t.clock.NewTicker(60 * time.Second)
-
+	ticker := t.clock.NewTicker(DefaultEmitMetricsFrequency)
 	close(ready)
 	for {
 		select {
@@ -59,38 +87,75 @@ func (t *taskStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<- stru
 	}
 }
 
+func (t *taskStatMetronNotifier) RecordConvergenceDuration(duration time.Duration) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	t.globalMetrics.convergenceTaskRuns += 1
+	t.globalMetrics.convergenceTaskDuration = duration
+}
+
+func (t *taskStatMetronNotifier) RecordTaskStarted(cellID string) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	stats := t.perCellMetrics[cellID]
+	stats.tasksStarted += 1
+	t.perCellMetrics[cellID] = stats
+}
+
+func (t *taskStatMetronNotifier) RecordTaskSucceeded(cellID string) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	stats := t.perCellMetrics[cellID]
+	stats.tasksSucceeded += 1
+	t.perCellMetrics[cellID] = stats
+}
+
+func (t *taskStatMetronNotifier) RecordTaskFailed(cellID string) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	stats := t.perCellMetrics[cellID]
+	stats.tasksFailed += 1
+	t.perCellMetrics[cellID] = stats
+}
+
+func (t *taskStatMetronNotifier) RecordTaskCounts(pending, running, completed, resolving int, pruned, kicked uint64) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	t.globalMetrics.tasksPending = pending
+	t.globalMetrics.tasksRunning = running
+	t.globalMetrics.tasksCompleted = completed
+	t.globalMetrics.tasksResolving = resolving
+	t.globalMetrics.convergenceTasksPruned = pruned
+	t.globalMetrics.convergenceTasksKicked = kicked
+}
+
 func (t *taskStatMetronNotifier) emitMetrics() {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	// emit the metrics
-	for cell, stats := range t.perCellStats {
+
+	for cell, stats := range t.perCellMetrics {
 		opt := loggregator.WithEnvelopeTag("cell-id", cell)
-		t.metronClient.SendMetric(TasksStartedMetric, stats.tasksStarted, opt)
-		t.metronClient.SendMetric(TasksFailedMetric, stats.tasksFailed, opt)
-		t.metronClient.SendMetric(TasksSucceededMetric, stats.tasksSucceeded, opt)
+		t.metricSender.SendMetric(TasksStartedMetric, stats.tasksStarted, opt)
+		t.metricSender.SendMetric(TasksFailedMetric, stats.tasksFailed, opt)
+		t.metricSender.SendMetric(TasksSucceededMetric, stats.tasksSucceeded, opt)
 	}
-}
 
-func (t *taskStatMetronNotifier) TaskSucceeded(cellID string) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	stats := t.perCellStats[cellID]
-	stats.tasksSucceeded += 1
-	t.perCellStats[cellID] = stats
-}
+	t.metricSender.SendMetric(TasksPendingMetric, t.globalMetrics.tasksPending)
+	t.metricSender.SendMetric(TasksRunningMetric, t.globalMetrics.tasksRunning)
+	t.metricSender.SendMetric(TasksCompletedMetric, t.globalMetrics.tasksCompleted)
+	t.metricSender.SendMetric(TasksResolvingMetric, t.globalMetrics.tasksResolving)
+	t.metricSender.IncrementCounterWithDelta(ConvergenceTasksPrunedMetric, t.globalMetrics.convergenceTasksPruned)
+	t.metricSender.IncrementCounterWithDelta(ConvergenceTasksKickedMetric, t.globalMetrics.convergenceTasksKicked)
 
-func (t *taskStatMetronNotifier) TaskFailed(cellID string) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	stats := t.perCellStats[cellID]
-	stats.tasksFailed += 1
-	t.perCellStats[cellID] = stats
-}
+	if t.globalMetrics.convergenceTaskRuns > 0 {
+		t.metricSender.IncrementCounterWithDelta(ConvergenceTaskRunsMetric, t.globalMetrics.convergenceTaskRuns)
+		t.globalMetrics.convergenceTaskRuns = 0
+	}
 
-func (t *taskStatMetronNotifier) TaskStarted(cellID string) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	stats := t.perCellStats[cellID]
-	stats.tasksStarted += 1
-	t.perCellStats[cellID] = stats
+	t.metricSender.SendDuration(ConvergenceTaskDurationMetric, t.globalMetrics.convergenceTaskDuration)
 }

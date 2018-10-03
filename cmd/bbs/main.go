@@ -324,8 +324,13 @@ func main() {
 		actualHub,
 		actualLRPInstanceHub,
 	)
+
+	lrpStatMetronNotifier := metrics.NewLRPStatMetronNotifier(logger, clock, metronClient)
+
 	lrpConvergenceController := controllers.NewLRPConvergenceController(
 		logger,
+		clock,
+		sqlDB,
 		sqlDB,
 		sqlDB,
 		actualHub,
@@ -335,6 +340,7 @@ func main() {
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 		bbsConfig.GenerateSuspectActualLRPs,
+		lrpStatMetronNotifier,
 	)
 	taskController := controllers.NewTaskController(sqlDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, bbsConfig.MaxTaskRetries)
 
@@ -362,6 +368,7 @@ func main() {
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
 		{"task-stat-metron-notifier", taskStatMetronNotifier},
+		{"lrp-stat-metron-notifier", lrpStatMetronNotifier},
 		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
 		{"lock-held-metrics", lockHeldMetronNotifier},
 		{"lock", lock},

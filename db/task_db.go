@@ -10,6 +10,23 @@ import (
 
 type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task) func()
 
+type TaskConvergenceResult struct {
+	TasksToAuction  []*auctioneer.TaskStartRequest
+	TasksToComplete []*models.Task
+	Events          []models.Event
+
+	Metrics TaskMetrics
+}
+
+type TaskMetrics struct {
+	TasksPending   int
+	TasksRunning   int
+	TasksCompleted int
+	TasksResolving int
+	TasksPruned    uint64
+	TasksKicked    uint64
+}
+
 //go:generate counterfeiter . TaskDB
 type TaskDB interface {
 	Tasks(logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
@@ -24,9 +41,5 @@ type TaskDB interface {
 	ResolvingTask(logger lager.Logger, taskGuid string) (before *models.Task, after *models.Task, err error)
 	DeleteTask(logger lager.Logger, taskGuid string) (task *models.Task, err error)
 
-	ConvergeTasks(
-		logger lager.Logger,
-		cellSet models.CellSet,
-		kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration,
-	) (tasksToAuction []*auctioneer.TaskStartRequest, tasksToComplete []*models.Task, taskEvents []models.Event)
+	ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) TaskConvergenceResult
 }

@@ -47,35 +47,35 @@ func NewTaskController(
 	}
 }
 
-func (h *TaskController) Tasks(logger lager.Logger, domain, cellId string) ([]*models.Task, error) {
+func (c *TaskController) Tasks(logger lager.Logger, domain, cellId string) ([]*models.Task, error) {
 	logger = logger.Session("tasks")
 
 	filter := models.TaskFilter{Domain: domain, CellID: cellId}
-	return h.db.Tasks(logger, filter)
+	return c.db.Tasks(logger, filter)
 }
 
-func (h *TaskController) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
+func (c *TaskController) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
 	logger = logger.Session("task-by-guid")
 
-	return h.db.TaskByGuid(logger, taskGuid)
+	return c.db.TaskByGuid(logger, taskGuid)
 }
 
-func (h *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error {
+func (c *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error {
 	var err error
 	var task *models.Task
 	logger = logger.Session("desire-task")
 
 	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
 
-	task, err = h.db.DesireTask(logger, taskDefinition, taskGuid, domain)
+	task, err = c.db.DesireTask(logger, taskDefinition, taskGuid, domain)
 	if err != nil {
 		return err
 	}
-	go h.taskHub.Emit(models.NewTaskCreatedEvent(task))
+	go c.taskHub.Emit(models.NewTaskCreatedEvent(task))
 
 	logger.Debug("start-task-auction-request")
 	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDefinition)
-	err = h.auctioneerClient.RequestTaskAuctions(logger, []*auctioneer.TaskStartRequest{&taskStartRequest})
+	err = c.auctioneerClient.RequestTaskAuctions(logger, []*auctioneer.TaskStartRequest{&taskStartRequest})
 	if err != nil {
 		logger.Error("failed-requesting-task-auction", err)
 		// The creation succeeded, the auction request error can be dropped
@@ -86,28 +86,28 @@ func (h *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.
 	return nil
 }
 
-func (h *TaskController) StartTask(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error) {
+func (c *TaskController) StartTask(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error) {
 	logger = logger.Session("start-task", lager.Data{"task_guid": taskGuid, "cell_id": cellId})
-	before, after, shouldStart, err := h.db.StartTask(logger, taskGuid, cellId)
+	before, after, shouldStart, err := c.db.StartTask(logger, taskGuid, cellId)
 	if err == nil && shouldStart {
-		go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
-		h.taskStatMetronNotifier.TaskStarted(cellId)
+		go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+		c.taskStatMetronNotifier.RecordTaskStarted(cellId)
 	}
 	return shouldStart, err
 }
 
-func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error {
+func (c *TaskController) CancelTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("cancel-task")
 
-	before, after, cellID, err := h.db.CancelTask(logger, taskGuid)
+	before, after, cellID, err := c.db.CancelTask(logger, taskGuid)
 	if err != nil {
 		return err
 	}
-	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
+		go c.taskCompletionClient.Submit(c.db, c.taskHub, after)
 	}
 
 	if cellID == "" {
@@ -115,7 +115,7 @@ func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error 
 	}
 
 	logger.Info("start-check-cell-presence", lager.Data{"cell_id": cellID})
-	cellPresence, err := h.serviceClient.CellById(logger, cellID)
+	cellPresence, err := c.serviceClient.CellById(logger, cellID)
 	if err != nil {
 		logger.Error("failed-fetching-cell-presence", err)
 		// don't return an error, the rep will converge later
@@ -123,7 +123,7 @@ func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error 
 	}
 	logger.Info("finished-check-cell-presence", lager.Data{"cell_id": cellID})
 
-	repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+	repClient, err := c.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
 	if err != nil {
 		logger.Error("create-rep-client-failed", err)
 		return err
@@ -139,51 +139,51 @@ func (h *TaskController) CancelTask(logger lager.Logger, taskGuid string) error 
 	return nil
 }
 
-func (h *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
+func (c *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
 	var err error
 
-	before, after, err := h.db.FailTask(logger, taskGuid, failureReason)
+	before, after, err := c.db.FailTask(logger, taskGuid, failureReason)
 	if err != nil {
 		return err
 	}
 
-	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
+		go c.taskCompletionClient.Submit(c.db, c.taskHub, after)
 	}
 
 	return nil
 }
 
-func (h *TaskController) RejectTask(logger lager.Logger, taskGuid, rejectionReason string) error {
+func (c *TaskController) RejectTask(logger lager.Logger, taskGuid, rejectionReason string) error {
 	logger = logger.Session("reject-task", lager.Data{"guid": taskGuid})
 	logger.Info("start")
 	defer logger.Info("complete")
 
-	task, err := h.db.TaskByGuid(logger, taskGuid)
+	task, err := c.db.TaskByGuid(logger, taskGuid)
 	if err != nil {
 		logger.Error("failed-to-fetch-task", err)
 		return err
 	}
 
 	logger.Info("reject-task", lager.Data{"rejection-reason": rejectionReason})
-	before, after, rejectTaskErr := h.db.RejectTask(logger, taskGuid, rejectionReason)
+	before, after, rejectTaskErr := c.db.RejectTask(logger, taskGuid, rejectionReason)
 	if rejectTaskErr != nil {
 		logger.Error("failed-to-reject-task", rejectTaskErr)
 	}
 
-	if int(task.RejectionCount) >= h.maxRetries {
-		return h.FailTask(logger, taskGuid, rejectionReason)
+	if int(task.RejectionCount) >= c.maxRetries {
+		return c.FailTask(logger, taskGuid, rejectionReason)
 	}
 
-	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	return rejectTaskErr
 }
 
-func (h *TaskController) CompleteTask(
+func (c *TaskController) CompleteTask(
 	logger lager.Logger,
 	taskGuid,
 	cellId string,
@@ -194,51 +194,51 @@ func (h *TaskController) CompleteTask(
 	var err error
 	logger = logger.Session("complete-task")
 
-	before, after, err := h.db.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
+	before, after, err := c.db.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
 	if err != nil {
 		return err
 	}
-	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	if failed {
-		h.taskStatMetronNotifier.TaskFailed(cellId)
+		c.taskStatMetronNotifier.RecordTaskFailed(cellId)
 	} else {
-		h.taskStatMetronNotifier.TaskSucceeded(cellId)
+		c.taskStatMetronNotifier.RecordTaskSucceeded(cellId)
 	}
 
 	if after.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
-		go h.taskCompletionClient.Submit(h.db, h.taskHub, after)
+		go c.taskCompletionClient.Submit(c.db, c.taskHub, after)
 	}
 
 	return nil
 }
 
-func (h *TaskController) ResolvingTask(logger lager.Logger, taskGuid string) error {
+func (c *TaskController) ResolvingTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("resolving-task")
 
-	before, after, err := h.db.ResolvingTask(logger, taskGuid)
+	before, after, err := c.db.ResolvingTask(logger, taskGuid)
 	if err != nil {
 		return err
 	}
-	go h.taskHub.Emit(models.NewTaskChangedEvent(before, after))
+	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	return nil
 }
 
-func (h *TaskController) DeleteTask(logger lager.Logger, taskGuid string) error {
+func (c *TaskController) DeleteTask(logger lager.Logger, taskGuid string) error {
 	logger = logger.Session("delete-task")
 
-	task, err := h.db.DeleteTask(logger, taskGuid)
+	task, err := c.db.DeleteTask(logger, taskGuid)
 	if err != nil {
 		return err
 	}
-	go h.taskHub.Emit(models.NewTaskRemovedEvent(task))
+	go c.taskHub.Emit(models.NewTaskRemovedEvent(task))
 
 	return nil
 }
 
-func (h *TaskController) ConvergeTasks(
+func (c *TaskController) ConvergeTasks(
 	logger lager.Logger,
 	kickTaskDuration,
 	expirePendingTaskDuration,
@@ -248,7 +248,7 @@ func (h *TaskController) ConvergeTasks(
 	logger = logger.Session("converge-tasks")
 
 	logger.Debug("listing-cells")
-	cellSet, err := h.serviceClient.Cells(logger)
+	cellSet, err := c.serviceClient.Cells(logger)
 	if err == models.ErrResourceNotFound {
 		logger.Debug("no-cells-found")
 		cellSet = models.CellSet{}
@@ -258,7 +258,8 @@ func (h *TaskController) ConvergeTasks(
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	tasksToAuction, tasksToComplete, eventsToEmit := h.db.ConvergeTasks(
+	convergenceStartTime := time.Now()
+	taskConvergenceResult := c.db.ConvergeTasks(
 		logger,
 		cellSet,
 		kickTaskDuration,
@@ -266,30 +267,41 @@ func (h *TaskController) ConvergeTasks(
 		expireCompletedTaskDuration,
 	)
 
-	logger.Debug("emitting events from convergence", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
-	for _, event := range eventsToEmit {
-		go h.taskHub.Emit(event)
+	c.taskStatMetronNotifier.RecordTaskCounts(
+		taskConvergenceResult.Metrics.TasksPending,
+		taskConvergenceResult.Metrics.TasksRunning,
+		taskConvergenceResult.Metrics.TasksCompleted,
+		taskConvergenceResult.Metrics.TasksResolving,
+		taskConvergenceResult.Metrics.TasksPruned,
+		taskConvergenceResult.Metrics.TasksKicked,
+	)
+
+	c.taskStatMetronNotifier.RecordConvergenceDuration(time.Since(convergenceStartTime))
+
+	logger.Debug("emitting-events-from-convergence", lager.Data{"num_tasks_to_complete": len(taskConvergenceResult.TasksToComplete)})
+	for _, event := range taskConvergenceResult.Events {
+		go c.taskHub.Emit(event)
 	}
 
-	if len(tasksToAuction) > 0 {
-		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
-		err = h.auctioneerClient.RequestTaskAuctions(logger, tasksToAuction)
+	if len(taskConvergenceResult.TasksToAuction) > 0 {
+		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(taskConvergenceResult.TasksToAuction)})
+		err = c.auctioneerClient.RequestTaskAuctions(logger, taskConvergenceResult.TasksToAuction)
 		if err != nil {
-			taskGuids := make([]string, len(tasksToAuction))
-			for i, task := range tasksToAuction {
+			taskGuids := make([]string, len(taskConvergenceResult.TasksToAuction))
+			for i, task := range taskConvergenceResult.TasksToAuction {
 				taskGuids[i] = task.TaskGuid
 			}
 			logger.Error("failed-to-request-auctions-for-pending-tasks", err,
 				lager.Data{"task_guids": taskGuids})
 		}
-		logger.Debug("done-requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(tasksToAuction)})
+		logger.Debug("done-requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(taskConvergenceResult.TasksToAuction)})
 	}
 
-	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
-	for _, task := range tasksToComplete {
-		h.taskCompletionClient.Submit(h.db, h.taskHub, task)
+	logger.Debug("submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(taskConvergenceResult.TasksToComplete)})
+	for _, task := range taskConvergenceResult.TasksToComplete {
+		c.taskCompletionClient.Submit(c.db, c.taskHub, task)
 	}
-	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(tasksToComplete)})
+	logger.Debug("done-submitting-tasks-to-be-completed", lager.Data{"num_tasks_to_complete": len(taskConvergenceResult.TasksToComplete)})
 
 	return nil
 }

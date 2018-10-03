@@ -33,6 +33,24 @@ var _ = Describe("Metrics", func() {
 		))
 	})
 
+	It("starts emitting lrp metrics", func() {
+		// our lrp stat emission interval is 15 seconds and the default eventually timeout is 15 seconds
+		Eventually(testMetricsChan).Should(Receive(
+			testhelpers.MatchV2Metric(
+				testhelpers.MetricAndValue{Name: "ConvergenceLRPDuration"},
+			),
+		))
+	})
+
+	It("starts emitting task metrics", func() {
+		// our task stat emission interval is 15 seconds and the default eventually timeout is 15 seconds
+		Eventually(testMetricsChan).Should(Receive(
+			testhelpers.MatchV2Metric(
+				testhelpers.MetricAndValue{Name: "ConvergenceTaskDuration"},
+			),
+		))
+	})
+
 	Context("when the BBS instance isn't holding the lock", func() {
 		var competingBBSLockProcess ifrit.Process
 

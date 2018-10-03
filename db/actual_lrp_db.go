@@ -18,4 +18,7 @@ type ActualLRPDB interface {
 	RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error
 
 	ChangeActualLRPPresence(logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRP, after *models.ActualLRP, err error)
+
+	CountActualLRPsByState(logger lager.Logger) (int, int, int, int, int)
+	CountDesiredInstances(logger lager.Logger) int
 }

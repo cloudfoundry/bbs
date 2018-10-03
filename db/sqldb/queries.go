@@ -132,12 +132,20 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q helpers.Queryab
 	return q.Query(query)
 }
 
-func (db *SQLDB) selectSuspectActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+func (db *SQLDB) selectSuspectRunningActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
 	query := db.helper.Rebind(`SELECT process_guid, instance_index, domain
 			FROM actual_lrps
-			WHERE actual_lrps.presence = ?`)
+			WHERE actual_lrps.presence = ? AND actual_lrps.state = ?`)
 
-	return q.Query(query, models.ActualLRP_Suspect)
+	return q.Query(query, models.ActualLRP_Suspect, models.ActualLRPStateRunning)
+}
+
+func (db *SQLDB) selectSuspectClaimedActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+	query := db.helper.Rebind(`SELECT process_guid, instance_index, domain
+			FROM actual_lrps
+			WHERE actual_lrps.presence = ? AND actual_lrps.state = ?`)
+
+	return q.Query(query, models.ActualLRP_Suspect, models.ActualLRPStateClaimed)
 }
 
 func (db *SQLDB) selectExtraSuspectActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
@@ -235,14 +243,14 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(logger lager.Logger, q helpers.Queryab
 	)
 }
 
-func (db *SQLDB) countDesiredInstances(logger lager.Logger, q helpers.Queryable) int {
+func (db *SQLDB) CountDesiredInstances(logger lager.Logger) int {
 	query := `
 		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances
 			FROM desired_lrps
 	`
 
 	var desiredInstances int
-	row := q.QueryRow(db.helper.Rebind(query))
+	row := db.db.QueryRow(db.helper.Rebind(query))
 	err := row.Scan(&desiredInstances)
 	if err != nil {
 		logger.Error("failed-desired-instances-query", err)
@@ -250,7 +258,7 @@ func (db *SQLDB) countDesiredInstances(logger lager.Logger, q helpers.Queryable)
 	return desiredInstances
 }
 
-func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q helpers.Queryable) (claimedCount, unclaimedCount, runningCount, crashedCount, crashingDesiredCount int) {
+func (db *SQLDB) CountActualLRPsByState(logger lager.Logger) (claimedCount, unclaimedCount, runningCount, crashedCount, crashingDesiredCount int) {
 	var query string
 	switch db.flavor {
 	case helpers.Postgres:
@@ -284,40 +292,6 @@ func (db *SQLDB) countActualLRPsByState(logger lager.Logger, q helpers.Queryable
 	err := row.Scan(&claimedCount, &unclaimedCount, &runningCount, &crashedCount, &crashingDesiredCount)
 	if err != nil {
 		logger.Error("failed-counting-actual-lrps", err)
-	}
-	return
-}
-
-func (db *SQLDB) countTasksByState(logger lager.Logger, q helpers.Queryable) (pendingCount, runningCount, completedCount, resolvingCount int) {
-	var query string
-	switch db.flavor {
-	case helpers.Postgres:
-		query = `
-			SELECT
-				COUNT(*) FILTER (WHERE state = $1) AS pending_tasks,
-				COUNT(*) FILTER (WHERE state = $2) AS running_tasks,
-				COUNT(*) FILTER (WHERE state = $3) AS completed_tasks,
-				COUNT(*) FILTER (WHERE state = $4) AS resolving_tasks
-			FROM tasks
-		`
-	case helpers.MySQL:
-		query = `
-			SELECT
-				COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,
-				COUNT(IF(state = ?, 1, NULL)) AS running_tasks,
-				COUNT(IF(state = ?, 1, NULL)) AS completed_tasks,
-				COUNT(IF(state = ?, 1, NULL)) AS resolving_tasks
-			FROM tasks
-		`
-	default:
-		// totally shouldn't happen
-		panic("database flavor not implemented: " + db.flavor)
-	}
-
-	row := db.db.QueryRow(query, models.Task_Pending, models.Task_Running, models.Task_Completed, models.Task_Resolving)
-	err := row.Scan(&pendingCount, &runningCount, &completedCount, &resolvingCount)
-	if err != nil {
-		logger.Error("failed-counting-tasks", err)
 	}
 	return
 }

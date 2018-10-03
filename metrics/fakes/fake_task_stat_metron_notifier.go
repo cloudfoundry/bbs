@@ -4,6 +4,7 @@ package fakes
 import (
 	"os"
 	"sync"
+	"time"
 
 	"code.cloudfoundry.org/bbs/metrics"
 )
@@ -21,20 +22,35 @@ type FakeTaskStatMetronNotifier struct {
 	runReturnsOnCall map[int]struct {
 		result1 error
 	}
-	TaskSucceededStub        func(cellID string)
-	taskSucceededMutex       sync.RWMutex
-	taskSucceededArgsForCall []struct {
+	RecordConvergenceDurationStub        func(duration time.Duration)
+	recordConvergenceDurationMutex       sync.RWMutex
+	recordConvergenceDurationArgsForCall []struct {
+		duration time.Duration
+	}
+	RecordTaskStartedStub        func(cellID string)
+	recordTaskStartedMutex       sync.RWMutex
+	recordTaskStartedArgsForCall []struct {
 		cellID string
 	}
-	TaskFailedStub        func(cellID string)
-	taskFailedMutex       sync.RWMutex
-	taskFailedArgsForCall []struct {
+	RecordTaskSucceededStub        func(cellID string)
+	recordTaskSucceededMutex       sync.RWMutex
+	recordTaskSucceededArgsForCall []struct {
 		cellID string
 	}
-	TaskStartedStub        func(cellID string)
-	taskStartedMutex       sync.RWMutex
-	taskStartedArgsForCall []struct {
+	RecordTaskFailedStub        func(cellID string)
+	recordTaskFailedMutex       sync.RWMutex
+	recordTaskFailedArgsForCall []struct {
 		cellID string
+	}
+	RecordTaskCountsStub        func(pending, running, completed, resolved int, pruned, kicked uint64)
+	recordTaskCountsMutex       sync.RWMutex
+	recordTaskCountsArgsForCall []struct {
+		pending   int
+		running   int
+		completed int
+		resolved  int
+		pruned    uint64
+		kicked    uint64
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -89,76 +105,129 @@ func (fake *FakeTaskStatMetronNotifier) RunReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskSucceeded(cellID string) {
-	fake.taskSucceededMutex.Lock()
-	fake.taskSucceededArgsForCall = append(fake.taskSucceededArgsForCall, struct {
-		cellID string
-	}{cellID})
-	fake.recordInvocation("TaskSucceeded", []interface{}{cellID})
-	fake.taskSucceededMutex.Unlock()
-	if fake.TaskSucceededStub != nil {
-		fake.TaskSucceededStub(cellID)
+func (fake *FakeTaskStatMetronNotifier) RecordConvergenceDuration(duration time.Duration) {
+	fake.recordConvergenceDurationMutex.Lock()
+	fake.recordConvergenceDurationArgsForCall = append(fake.recordConvergenceDurationArgsForCall, struct {
+		duration time.Duration
+	}{duration})
+	fake.recordInvocation("RecordConvergenceDuration", []interface{}{duration})
+	fake.recordConvergenceDurationMutex.Unlock()
+	if fake.RecordConvergenceDurationStub != nil {
+		fake.RecordConvergenceDurationStub(duration)
 	}
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskSucceededCallCount() int {
-	fake.taskSucceededMutex.RLock()
-	defer fake.taskSucceededMutex.RUnlock()
-	return len(fake.taskSucceededArgsForCall)
+func (fake *FakeTaskStatMetronNotifier) RecordConvergenceDurationCallCount() int {
+	fake.recordConvergenceDurationMutex.RLock()
+	defer fake.recordConvergenceDurationMutex.RUnlock()
+	return len(fake.recordConvergenceDurationArgsForCall)
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskSucceededArgsForCall(i int) string {
-	fake.taskSucceededMutex.RLock()
-	defer fake.taskSucceededMutex.RUnlock()
-	return fake.taskSucceededArgsForCall[i].cellID
+func (fake *FakeTaskStatMetronNotifier) RecordConvergenceDurationArgsForCall(i int) time.Duration {
+	fake.recordConvergenceDurationMutex.RLock()
+	defer fake.recordConvergenceDurationMutex.RUnlock()
+	return fake.recordConvergenceDurationArgsForCall[i].duration
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskFailed(cellID string) {
-	fake.taskFailedMutex.Lock()
-	fake.taskFailedArgsForCall = append(fake.taskFailedArgsForCall, struct {
+func (fake *FakeTaskStatMetronNotifier) RecordTaskStarted(cellID string) {
+	fake.recordTaskStartedMutex.Lock()
+	fake.recordTaskStartedArgsForCall = append(fake.recordTaskStartedArgsForCall, struct {
 		cellID string
 	}{cellID})
-	fake.recordInvocation("TaskFailed", []interface{}{cellID})
-	fake.taskFailedMutex.Unlock()
-	if fake.TaskFailedStub != nil {
-		fake.TaskFailedStub(cellID)
+	fake.recordInvocation("RecordTaskStarted", []interface{}{cellID})
+	fake.recordTaskStartedMutex.Unlock()
+	if fake.RecordTaskStartedStub != nil {
+		fake.RecordTaskStartedStub(cellID)
 	}
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskFailedCallCount() int {
-	fake.taskFailedMutex.RLock()
-	defer fake.taskFailedMutex.RUnlock()
-	return len(fake.taskFailedArgsForCall)
+func (fake *FakeTaskStatMetronNotifier) RecordTaskStartedCallCount() int {
+	fake.recordTaskStartedMutex.RLock()
+	defer fake.recordTaskStartedMutex.RUnlock()
+	return len(fake.recordTaskStartedArgsForCall)
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskFailedArgsForCall(i int) string {
-	fake.taskFailedMutex.RLock()
-	defer fake.taskFailedMutex.RUnlock()
-	return fake.taskFailedArgsForCall[i].cellID
+func (fake *FakeTaskStatMetronNotifier) RecordTaskStartedArgsForCall(i int) string {
+	fake.recordTaskStartedMutex.RLock()
+	defer fake.recordTaskStartedMutex.RUnlock()
+	return fake.recordTaskStartedArgsForCall[i].cellID
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskStarted(cellID string) {
-	fake.taskStartedMutex.Lock()
-	fake.taskStartedArgsForCall = append(fake.taskStartedArgsForCall, struct {
+func (fake *FakeTaskStatMetronNotifier) RecordTaskSucceeded(cellID string) {
+	fake.recordTaskSucceededMutex.Lock()
+	fake.recordTaskSucceededArgsForCall = append(fake.recordTaskSucceededArgsForCall, struct {
 		cellID string
 	}{cellID})
-	fake.recordInvocation("TaskStarted", []interface{}{cellID})
-	fake.taskStartedMutex.Unlock()
-	if fake.TaskStartedStub != nil {
-		fake.TaskStartedStub(cellID)
+	fake.recordInvocation("RecordTaskSucceeded", []interface{}{cellID})
+	fake.recordTaskSucceededMutex.Unlock()
+	if fake.RecordTaskSucceededStub != nil {
+		fake.RecordTaskSucceededStub(cellID)
 	}
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskStartedCallCount() int {
-	fake.taskStartedMutex.RLock()
-	defer fake.taskStartedMutex.RUnlock()
-	return len(fake.taskStartedArgsForCall)
+func (fake *FakeTaskStatMetronNotifier) RecordTaskSucceededCallCount() int {
+	fake.recordTaskSucceededMutex.RLock()
+	defer fake.recordTaskSucceededMutex.RUnlock()
+	return len(fake.recordTaskSucceededArgsForCall)
 }
 
-func (fake *FakeTaskStatMetronNotifier) TaskStartedArgsForCall(i int) string {
-	fake.taskStartedMutex.RLock()
-	defer fake.taskStartedMutex.RUnlock()
-	return fake.taskStartedArgsForCall[i].cellID
+func (fake *FakeTaskStatMetronNotifier) RecordTaskSucceededArgsForCall(i int) string {
+	fake.recordTaskSucceededMutex.RLock()
+	defer fake.recordTaskSucceededMutex.RUnlock()
+	return fake.recordTaskSucceededArgsForCall[i].cellID
+}
+
+func (fake *FakeTaskStatMetronNotifier) RecordTaskFailed(cellID string) {
+	fake.recordTaskFailedMutex.Lock()
+	fake.recordTaskFailedArgsForCall = append(fake.recordTaskFailedArgsForCall, struct {
+		cellID string
+	}{cellID})
+	fake.recordInvocation("RecordTaskFailed", []interface{}{cellID})
+	fake.recordTaskFailedMutex.Unlock()
+	if fake.RecordTaskFailedStub != nil {
+		fake.RecordTaskFailedStub(cellID)
+	}
+}
+
+func (fake *FakeTaskStatMetronNotifier) RecordTaskFailedCallCount() int {
+	fake.recordTaskFailedMutex.RLock()
+	defer fake.recordTaskFailedMutex.RUnlock()
+	return len(fake.recordTaskFailedArgsForCall)
+}
+
+func (fake *FakeTaskStatMetronNotifier) RecordTaskFailedArgsForCall(i int) string {
+	fake.recordTaskFailedMutex.RLock()
+	defer fake.recordTaskFailedMutex.RUnlock()
+	return fake.recordTaskFailedArgsForCall[i].cellID
+}
+
+func (fake *FakeTaskStatMetronNotifier) RecordTaskCounts(pending int, running int, completed int, resolved int, pruned uint64, kicked uint64) {
+	fake.recordTaskCountsMutex.Lock()
+	fake.recordTaskCountsArgsForCall = append(fake.recordTaskCountsArgsForCall, struct {
+		pending   int
+		running   int
+		completed int
+		resolved  int
+		pruned    uint64
+		kicked    uint64
+	}{pending, running, completed, resolved, pruned, kicked})
+	fake.recordInvocation("RecordTaskCounts", []interface{}{pending, running, completed, resolved, pruned, kicked})
+	fake.recordTaskCountsMutex.Unlock()
+	if fake.RecordTaskCountsStub != nil {
+		fake.RecordTaskCountsStub(pending, running, completed, resolved, pruned, kicked)
+	}
+}
+
+func (fake *FakeTaskStatMetronNotifier) RecordTaskCountsCallCount() int {
+	fake.recordTaskCountsMutex.RLock()
+	defer fake.recordTaskCountsMutex.RUnlock()
+	return len(fake.recordTaskCountsArgsForCall)
+}
+
+func (fake *FakeTaskStatMetronNotifier) RecordTaskCountsArgsForCall(i int) (int, int, int, int, uint64, uint64) {
+	fake.recordTaskCountsMutex.RLock()
+	defer fake.recordTaskCountsMutex.RUnlock()
+	return fake.recordTaskCountsArgsForCall[i].pending, fake.recordTaskCountsArgsForCall[i].running, fake.recordTaskCountsArgsForCall[i].completed, fake.recordTaskCountsArgsForCall[i].resolved, fake.recordTaskCountsArgsForCall[i].pruned, fake.recordTaskCountsArgsForCall[i].kicked
 }
 
 func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{} {
@@ -166,12 +235,16 @@ func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{}
 	defer fake.invocationsMutex.RUnlock()
 	fake.runMutex.RLock()
 	defer fake.runMutex.RUnlock()
-	fake.taskSucceededMutex.RLock()
-	defer fake.taskSucceededMutex.RUnlock()
-	fake.taskFailedMutex.RLock()
-	defer fake.taskFailedMutex.RUnlock()
-	fake.taskStartedMutex.RLock()
-	defer fake.taskStartedMutex.RUnlock()
+	fake.recordConvergenceDurationMutex.RLock()
+	defer fake.recordConvergenceDurationMutex.RUnlock()
+	fake.recordTaskStartedMutex.RLock()
+	defer fake.recordTaskStartedMutex.RUnlock()
+	fake.recordTaskSucceededMutex.RLock()
+	defer fake.recordTaskSucceededMutex.RUnlock()
+	fake.recordTaskFailedMutex.RLock()
+	defer fake.recordTaskFailedMutex.RUnlock()
+	fake.recordTaskCountsMutex.RLock()
+	defer fake.recordTaskCountsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
