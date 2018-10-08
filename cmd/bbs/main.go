@@ -367,8 +367,6 @@ func main() {
 
 	members := grouper.Members{
 		{"healthcheck", healthcheckServer},
-		{"task-stat-metron-notifier", taskStatMetronNotifier},
-		{"lrp-stat-metron-notifier", lrpStatMetronNotifier},
 		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
 		{"lock-held-metrics", lockHeldMetronNotifier},
 		{"lock", lock},
@@ -381,6 +379,8 @@ func main() {
 		{"bbs-election-metrics", bbsElectionMetronNotifier},
 		{"periodic-metrics", requestStatMetronNotifier},
 		{"converger", convergerProcess},
+		{"lrp-stat-metron-notifier", lrpStatMetronNotifier},
+		{"task-stat-metron-notifier", taskStatMetronNotifier},
 	}
 
 	if bbsConfig.EnableConsulServiceRegistration {

@@ -1,6 +1,8 @@
 package main_test
 
 import (
+	"time"
+
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
@@ -34,8 +36,7 @@ var _ = Describe("Metrics", func() {
 	})
 
 	It("starts emitting lrp metrics", func() {
-		// our lrp stat emission interval is 15 seconds and the default eventually timeout is 15 seconds
-		Eventually(testMetricsChan).Should(Receive(
+		Eventually(testMetricsChan, 20*time.Second).Should(Receive(
 			testhelpers.MatchV2Metric(
 				testhelpers.MetricAndValue{Name: "ConvergenceLRPDuration"},
 			),
@@ -43,8 +44,7 @@ var _ = Describe("Metrics", func() {
 	})
 
 	It("starts emitting task metrics", func() {
-		// our task stat emission interval is 15 seconds and the default eventually timeout is 15 seconds
-		Eventually(testMetricsChan).Should(Receive(
+		Eventually(testMetricsChan, 20*time.Second).Should(Receive(
 			testhelpers.MatchV2Metric(
 				testhelpers.MetricAndValue{Name: "ConvergenceTaskDuration"},
 			),
@@ -69,6 +69,22 @@ var _ = Describe("Metrics", func() {
 			Eventually(testMetricsChan).Should(Receive(
 				testhelpers.MatchV2Metric(
 					testhelpers.MetricAndValue{Name: "OpenFileDescriptors"},
+				),
+			))
+		})
+
+		It("does not emit lrp metrics", func() {
+			Consistently(testMetricsChan, 20*time.Second).ShouldNot(Receive(
+				testhelpers.MatchV2Metric(
+					testhelpers.MetricAndValue{Name: "ConvergenceLRPDuration"},
+				),
+			))
+		})
+
+		It("does not emit task metrics", func() {
+			Consistently(testMetricsChan, 20*time.Second).ShouldNot(Receive(
+				testhelpers.MatchV2Metric(
+					testhelpers.MetricAndValue{Name: "ConvergenceTaskDuration"},
 				),
 			))
 		})
