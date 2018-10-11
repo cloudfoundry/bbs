@@ -222,9 +222,7 @@ func filterInstanceEventByCellID(cellID string, bbsEvent models.Event, err error
 		}
 
 	case *models.ActualLRPInstanceChangedEvent:
-		before := x.Before
-		after := x.After
-		if after.CellId != cellID && before.CellId != cellID {
+		if x.CellId != cellID {
 			return false
 		}
 

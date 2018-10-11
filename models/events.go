@@ -104,10 +104,13 @@ func (event DesiredLRPRemovedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
 }
 
+// FIXME: change the signature
 func NewActualLRPInstanceChangedEvent(before, after *ActualLRP) *ActualLRPInstanceChangedEvent {
 	return &ActualLRPInstanceChangedEvent{
-		Before: before,
-		After:  after,
+		ActualLRPKey:         after.ActualLRPKey,
+		ActualLRPInstanceKey: after.ActualLRPInstanceKey,
+		Before:               before.ToActualLRPInfo(),
+		After:                after.ToActualLRPInfo(),
 	}
 }
 
@@ -264,5 +267,5 @@ func (event *ActualLRPInstanceChangedEvent) EventType() string {
 }
 
 func (event *ActualLRPInstanceChangedEvent) Key() string {
-	return event.Before.GetInstanceGuid()
+	return event.GetInstanceGuid()
 }

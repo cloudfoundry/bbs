@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/format"
@@ -15,15 +16,16 @@ import (
 )
 
 type DesiredLRPHandler struct {
-	desiredLRPDB       db.DesiredLRPDB
-	actualLRPDB        db.ActualLRPDB
-	desiredHub         events.Hub
-	actualHub          events.Hub
-	auctioneerClient   auctioneer.Client
-	repClientFactory   rep.ClientFactory
-	serviceClient      serviceclient.ServiceClient
-	updateWorkersCount int
-	exitChan           chan<- struct{}
+	desiredLRPDB         db.DesiredLRPDB
+	actualLRPDB          db.ActualLRPDB
+	desiredHub           events.Hub
+	actualHub            events.Hub
+	actualLRPInstanceHub events.Hub
+	auctioneerClient     auctioneer.Client
+	repClientFactory     rep.ClientFactory
+	serviceClient        serviceclient.ServiceClient
+	updateWorkersCount   int
+	exitChan             chan<- struct{}
 }
 
 func NewDesiredLRPHandler(
@@ -32,21 +34,23 @@ func NewDesiredLRPHandler(
 	actualLRPDB db.ActualLRPDB,
 	desiredHub events.Hub,
 	actualHub events.Hub,
+	actualLRPInstanceHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	repClientFactory rep.ClientFactory,
 	serviceClient serviceclient.ServiceClient,
 	exitChan chan<- struct{},
 ) *DesiredLRPHandler {
 	return &DesiredLRPHandler{
-		desiredLRPDB:       desiredLRPDB,
-		actualLRPDB:        actualLRPDB,
-		desiredHub:         desiredHub,
-		actualHub:          actualHub,
-		auctioneerClient:   auctioneerClient,
-		repClientFactory:   repClientFactory,
-		serviceClient:      serviceClient,
-		updateWorkersCount: updateWorkersCount,
-		exitChan:           exitChan,
+		desiredLRPDB:         desiredLRPDB,
+		actualLRPDB:          actualLRPDB,
+		desiredHub:           desiredHub,
+		actualHub:            actualHub,
+		actualLRPInstanceHub: actualLRPInstanceHub,
+		auctioneerClient:     auctioneerClient,
+		repClientFactory:     repClientFactory,
+		serviceClient:        serviceClient,
+		updateWorkersCount:   updateWorkersCount,
+		exitChan:             exitChan,
 	}
 }
 
@@ -266,6 +270,11 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 	count := len(keys)
 	createdIndicesChan := make(chan int, count)
 
+	eventCalculator := controllers.EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
 	works := make([]func(), count)
 	logger = logger.Session("create-unclaimed-actual-lrp")
 	for i, key := range keys {
@@ -275,10 +284,12 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 			actualLRP, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
 			if err != nil {
 				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
-			} else {
-				go h.actualHub.Emit(models.NewActualLRPCreatedEvent(actualLRP.ToActualLRPGroup()))
-				createdIndicesChan <- int(key.Index)
+				return
 			}
+
+			lrps := eventCalculator.RecordChange(nil, actualLRP, nil)
+			go eventCalculator.EmitEvents(nil, lrps)
+			createdIndicesChan <- int(key.Index)
 		}
 	}
 

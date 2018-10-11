@@ -51,8 +51,8 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(logger lager.Logger, ac
 	}
 
 	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
-	suspect := findWithPresence(actualLRPs, models.ActualLRP_Suspect)
-	instance = getHigherPriorityActualLRP(instance, suspect)
+	lrpGroup := models.ResolveActualLRPGroup(actualLRPs)
+	instance = lrpGroup.Instance
 
 	if instance != nil {
 		evacuatingLRPLogData["replacement-lrp-instance-key"] = instance.ActualLRPInstanceKey
@@ -79,28 +79,26 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(logger lager.Logger, ac
 }
 
 func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) (error, bool) {
-	events := []models.Event{}
-	instanceEvents := []models.Event{}
-	defer func() {
-		go func() {
-			for _, event := range events {
-				h.actualHub.Emit(event)
-			}
 
-			for _, event := range instanceEvents {
-				h.actualLRPInstanceHub.Emit(event)
-			}
-		}()
-	}()
+	eventCalculator := EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
 
 	guid := actualLRPKey.ProcessGuid
 	index := actualLRPKey.Index
-
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
 		logger.Error("failed-querying-actualLRPs", err, lager.Data{"guid": guid, "indec": index})
 		return err, false
 	}
+
+	newLRPs := make([]*models.ActualLRP, len(actualLRPs))
+	copy(newLRPs, actualLRPs)
+
+	defer func() {
+		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+	}()
 
 	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	if targetActualLRP == nil {
@@ -121,8 +119,8 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 				return convertedErr, false
 			}
 		}
-		events = append(events, models.NewActualLRPRemovedEvent(evacuating.ToActualLRPGroup()))
-		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(evacuating))
+
+		newLRPs = eventCalculator.RecordChange(evacuating, nil, newLRPs)
 	}
 
 	if ordinary != nil && targetActualLRP.Equal(suspect) {
@@ -138,17 +136,15 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 		}
 		return nil, false
 	}
+
+	newLRPs = eventCalculator.RecordChange(before, after, newLRPs)
+
 	err = h.requestAuction(logger, actualLRPKey)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
 		return bbsErr, true
 	}
 
-	if suspect == nil || targetActualLRP.Equal(suspect) {
-		events = append(events, models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(before))
-		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceCreatedEvent(after))
-	}
 	return nil, false
 }
 
@@ -215,8 +211,9 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
 	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
-	suspect := findWithPresence(actualLRPs, models.ActualLRP_Suspect)
-	instance = getHigherPriorityActualLRP(instance, suspect)
+
+	lrpGroup := models.ResolveActualLRPGroup(actualLRPs)
+	instance = lrpGroup.Instance
 
 	if instance == nil {
 		if targetActualLRP != nil && targetActualLRP.Equal(evacuating) {
@@ -361,57 +358,50 @@ func (h *EvacuationController) evacuateRequesting(logger lager.Logger, actualLRP
 }
 
 func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*models.ActualLRP, actualLRP *models.ActualLRP) error {
+	eventCalculator := EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
 	evacuating, err := h.db.EvacuateActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
 	if err != nil {
 		return err
 	}
 
-	events := []models.Event{}
-	instanceEvents := []models.Event{}
-	defer func() {
-		go func() {
-			for _, event := range events {
-				h.actualHub.Emit(event)
-			}
+	// although EvacuateActualLRP above creates a new database record.  We
+	// would like to record that as a change event instead, since the instance
+	// guid hasn't changed.  This will produce a simpler instance event stream
+	// with a single changed event and keep the group events backward
+	// compatible.
+	newLRPs := eventCalculator.RecordChange(actualLRP, evacuating, allLRPs)
 
-			for _, event := range instanceEvents {
-				h.actualLRPInstanceHub.Emit(event)
-			}
-		}()
+	defer func() {
+		go eventCalculator.EmitEvents(allLRPs, newLRPs)
 	}()
 
-	events = append(events, models.NewActualLRPCreatedEvent(evacuating.ToActualLRPGroup()))
-	instanceEvents = append(instanceEvents, models.NewActualLRPInstanceCreatedEvent(evacuating))
+	// events = append(events, models.NewActualLRPCreatedEvent(evacuating.ToActualLRPGroup()))
+	// instanceEvents = append(instanceEvents, models.NewActualLRPInstanceCreatedEvent(evacuating))
 
 	if actualLRP.Presence == models.ActualLRP_Suspect {
-		suspect, err := h.suspectLRPDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey)
+		_, err := h.suspectLRPDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey)
 		if err != nil {
 			logger.Error("failed-removing-suspect-actual-lrp", err)
 			return err
 		}
 
-		// after removing the running suspect instance, if the replacement instance is claimed we can now
-		// emit a created event since this instance is taking over from the evacuating one
-		for _, lrp := range allLRPs {
-			if lrp.State == models.ActualLRPStateClaimed {
-				events = append(events, models.NewActualLRPCreatedEvent(lrp.ToActualLRPGroup()))
-				instanceEvents = append(instanceEvents, models.NewActualLRPInstanceCreatedEvent(lrp))
-			}
-		}
-
-		events = append(events, models.NewActualLRPRemovedEvent(suspect.ToActualLRPGroup()))
-		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(suspect))
 		return nil
 	}
 
-	before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, &actualLRP.ActualLRPKey)
+	_, after, err := h.actualLRPDB.UnclaimActualLRP(logger, &actualLRP.ActualLRPKey)
 	if err != nil {
 		return err
 	}
 
-	events = append(events, models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-	instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(before))
-	instanceEvents = append(instanceEvents, models.NewActualLRPInstanceCreatedEvent(after))
+	// although UnclaimActualLRP above updates a database record.  We would
+	// like to record that as a create event instead.  This will produce a
+	// simpler instance event stream and keep the group events backward
+	// compatible.
+	newLRPs = eventCalculator.RecordChange(nil, after, newLRPs)
 
 	return h.requestAuction(logger, &actualLRP.ActualLRPKey)
 }
