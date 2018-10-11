@@ -170,6 +170,16 @@ var _ = Describe("Events API", func() {
 					actualLRPCreatedEvent := event.(*models.ActualLRPCreatedEvent)
 					Expect(actualLRPCreatedEvent.ActualLrpGroup).To(Equal(actualLRPGroup))
 
+					By("failing to place the lrp")
+					err = client.FailActualLRP(logger, &key, "some failure")
+					Expect(err).NotTo(HaveOccurred())
+
+					// the lrp group has changed and has a placement error
+					actualLRPGroup, err = client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+					Expect(err).NotTo(HaveOccurred())
+
+					Eventually(eventChannel).Should(Receive(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{})))
+
 					By("updating the existing ActualLRP")
 					err = client.ClaimActualLRP(logger, &key, &instanceKey)
 					Expect(err).NotTo(HaveOccurred())

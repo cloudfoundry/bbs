@@ -232,13 +232,13 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 }
 
 func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {
-	before, after, err := h.db.FailActualLRP(logger, key, errorMessage)
-	if err != nil && err != models.ErrResourceNotFound {
+	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
+	if err != nil {
 		return err
 	}
 
-	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
-	if err != nil {
+	before, after, err := h.db.FailActualLRP(logger, key, errorMessage)
+	if err != nil && err != models.ErrResourceNotFound {
 		return err
 	}
 
