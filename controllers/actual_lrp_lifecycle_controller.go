@@ -208,7 +208,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 	}
 
 	afterLRPs := eventCalculator.RecordChange(before, after, lrps)
-	eventCalculator.EmitEvents(lrps, afterLRPs)
+	go eventCalculator.EmitEvents(lrps, afterLRPs)
 
 	if !shouldRestart {
 		return nil
@@ -242,13 +242,13 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 		return err
 	}
 
-	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
-	go func() {
-		suspectExists := findWithPresence(lrps, models.ActualLRP_Suspect)
-		if suspectExists == nil {
-			h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-		}
-	}()
+	eventCalculator := EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
+	newLRPs := eventCalculator.RecordChange(before, after, lrps)
+	go eventCalculator.EmitEvents(lrps, newLRPs)
 
 	return nil
 }

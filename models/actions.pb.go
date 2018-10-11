@@ -103,6 +103,7 @@
 		ActualLRPChangedEvent
 		ActualLRPRemovedEvent
 		ActualLRPInstanceCreatedEvent
+		ActualLRPInfo
 		ActualLRPInstanceChangedEvent
 		ActualLRPInstanceRemovedEvent
 		DesiredLRPCreatedEvent

@@ -160,6 +160,12 @@ func generateUnclaimedInstanceEvents(before, after *models.ActualLRP) []models.E
 		events = append(events, models.NewActualLRPCrashedEvent(before, after))
 	}
 
+	if before.State == models.ActualLRPStateUnclaimed {
+		// we can get here if auctioneer calls FailActualLRP which updates the
+		// placement error but doesn't change the LRP's state
+		return append(events, models.NewActualLRPInstanceChangedEvent(before, after))
+	}
+
 	return append(
 		events,
 		models.NewActualLRPInstanceCreatedEvent(after),
@@ -273,7 +279,7 @@ func getEventLRP(e models.Event) (*models.ActualLRP, bool) {
 	case *models.ActualLRPInstanceCreatedEvent:
 		return x.ActualLrp, false
 	case *models.ActualLRPInstanceChangedEvent:
-		return x.After, false
+		return x.After.ToActualLRP(x.ActualLRPKey, x.ActualLRPInstanceKey), false
 	case *models.ActualLRPCrashedEvent:
 		return nil, true
 	}

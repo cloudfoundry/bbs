@@ -611,7 +611,6 @@ var _ = Describe("Event Handlers", func() {
 				Context("ActualLRPInstanceChangedEvent", func() {
 					var (
 						expectedActualLRPBeforeEvent *models.ActualLRPInstanceChangedEvent
-						expectedActualLRPAfterEvent  *models.ActualLRPInstanceChangedEvent
 					)
 
 					BeforeEach(func() {
@@ -623,15 +622,11 @@ var _ = Describe("Event Handlers", func() {
 							1,
 						)
 						expectedActualLRPBeforeEvent = models.NewActualLRPInstanceChangedEvent(actualLRPBefore, actualLRPAfter)
-
-						unclaimedActualLRP := models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
-						expectedActualLRPAfterEvent = models.NewActualLRPInstanceChangedEvent(actualLRPAfter, unclaimedActualLRP)
 					})
 
 					JustBeforeEach(func() {
 						By("sending actual lrp changed event")
 						lrpInstanceHub.Emit(expectedActualLRPBeforeEvent)
-						lrpInstanceHub.Emit(expectedActualLRPAfterEvent)
 					})
 
 					Context("subscriber with the right filter", func() {
@@ -678,18 +673,10 @@ var _ = Describe("Event Handlers", func() {
 								)
 								expectedActualLRPBeforeEvent = models.NewActualLRPInstanceChangedEvent(actualLRPBefore, actualLRPAfter)
 							})
-
-							It("receives changed events if the lrp used to run on the cell", func() {
-								Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
-							})
-						})
-
-						It("receives changed events if the lrp used to run on the cell", func() {
-							Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
 						})
 
 						It("receives changed events if the lrp started running on the cell", func() {
-							Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPAfterEvent)))
+							Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
 						})
 					})
 
@@ -702,10 +689,6 @@ var _ = Describe("Event Handlers", func() {
 
 						It("does not receive changed events if the lrp did not use to run on the cell", func() {
 							Consistently(eventsCh).ShouldNot(Receive(Equal(expectedActualLRPBeforeEvent)))
-						})
-
-						It("does not receive changed events if the lrp did not start running on the cell", func() {
-							Eventually(eventsCh).ShouldNot(Receive(Equal(expectedActualLRPAfterEvent)))
 						})
 					})
 				})

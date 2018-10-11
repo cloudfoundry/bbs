@@ -11,7 +11,6 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
-	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo"
@@ -1099,15 +1098,10 @@ var _ = Describe("Evacuation Controller", func() {
 						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 						event := actualLRPInstanceHub.EmitArgsForCall(0)
-						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
-						e := event.(*models.ActualLRPInstanceChangedEvent)
-						Expect(e.Before).To(Equal(actual))
-						Expect(e.After).To(Equal(afterActual))
+						Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual)))
 
 						event = actualLRPInstanceHub.EmitArgsForCall(1)
-						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
-						ce := event.(*models.ActualLRPInstanceCreatedEvent)
-						Expect(ce.ActualLrp).To(Equal(unclaimedActualLRP))
+						Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP)))
 					})
 
 					Context("when evacuating fails", func() {
@@ -1209,11 +1203,9 @@ var _ = Describe("Evacuation Controller", func() {
 						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
-						event := actualLRPInstanceHub.EmitArgsForCall(0)
-						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
-						ce := event.(*models.ActualLRPInstanceChangedEvent)
-						Expect(ce.Before).To(Equal(actual))
-						Expect(ce.After).To(Equal(afterActual))
+						Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
+							models.NewActualLRPInstanceChangedEvent(actual, afterActual),
+						))
 					})
 
 					Context("when there is an ordinary claimed replacement LRP", func() {
@@ -1251,11 +1243,7 @@ var _ = Describe("Evacuation Controller", func() {
 							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
-							event := actualLRPInstanceHub.EmitArgsForCall(0)
-							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
-							ce := event.(*models.ActualLRPInstanceChangedEvent)
-							Expect(ce.Before).To(Equal(actual))
-							Expect(ce.After).To(Equal(afterActual))
+							Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual)))
 						})
 					})
 
@@ -1314,15 +1302,10 @@ var _ = Describe("Evacuation Controller", func() {
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 					event := actualLRPInstanceHub.EmitArgsForCall(0)
-					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
-					changed := event.(*models.ActualLRPInstanceChangedEvent)
-					Expect(changed.Before).To(Equal(actual))
-					Expect(changed.After).To(test_helpers.DeepEqual(afterActual))
+					Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual)))
 
 					event = actualLRPInstanceHub.EmitArgsForCall(1)
-					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
-					ce := event.(*models.ActualLRPInstanceCreatedEvent)
-					Expect(ce.ActualLrp).To(test_helpers.DeepEqual(unclaimedActualLRP))
+					Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP)))
 				})
 
 				Context("when evacuating fails", func() {

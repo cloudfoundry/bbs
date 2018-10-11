@@ -495,29 +495,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 					actualLRPInstanceHub.EmitArgsForCall(1),
 				}
 
-				getOriginalActualLRP := func(e models.Event) *models.ActualLRP {
-					return e.(*models.ActualLRPInstanceChangedEvent).Before
-				}
-
-				getUpdatedActualLRP := func(e models.Event) *models.ActualLRP {
-					return e.(*models.ActualLRPInstanceChangedEvent).After
-				}
-
-				getCreatedActualLRP := func(e models.Event) *models.ActualLRP {
-					return e.(*models.ActualLRPInstanceCreatedEvent).ActualLrp
-				}
-
 				Expect(events).To(
 					ConsistOf(
-						And(
-							BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}),
-							WithTransform(getOriginalActualLRP, Equal(before)),
-							WithTransform(getUpdatedActualLRP, Equal(after)),
-						),
-						And(
-							BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}),
-							WithTransform(getCreatedActualLRP, Equal(unclaimed)),
-						),
+						models.NewActualLRPInstanceChangedEvent(before, after),
+						models.NewActualLRPInstanceCreatedEvent(unclaimed),
 					),
 				)
 			})
@@ -654,10 +635,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
-			event := actualLRPInstanceHub.EmitArgsForCall(0)
-			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
-			Expect(event.(*models.ActualLRPInstanceChangedEvent).Before).To(Equal(suspectActualLRP))
-			Expect(event.(*models.ActualLRPInstanceChangedEvent).After).To(Equal(ordinaryActualLRP))
+			Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
+				models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP),
+			))
 		})
 
 		Context("when the ordinary lrp cannot be removed", func() {

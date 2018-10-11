@@ -216,6 +216,34 @@ func (*ActualLRP) Version() format.Version {
 	return format.V0
 }
 
+func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstanceKey ActualLRPInstanceKey) *ActualLRP {
+	return &ActualLRP{
+		ActualLRPKey:         lrpKey,
+		ActualLRPInstanceKey: lrpInstanceKey,
+		ActualLRPNetInfo:     actualLRPInfo.ActualLRPNetInfo,
+		CrashCount:           actualLRPInfo.CrashCount,
+		CrashReason:          actualLRPInfo.CrashReason,
+		State:                actualLRPInfo.State,
+		PlacementError:       actualLRPInfo.PlacementError,
+		Since:                actualLRPInfo.Since,
+		ModificationTag:      actualLRPInfo.ModificationTag,
+		Presence:             actualLRPInfo.Presence,
+	}
+}
+
+func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
+	return &ActualLRPInfo{
+		ActualLRPNetInfo: actual.ActualLRPNetInfo,
+		CrashCount:       actual.CrashCount,
+		CrashReason:      actual.CrashReason,
+		State:            actual.State,
+		PlacementError:   actual.PlacementError,
+		Since:            actual.Since,
+		ModificationTag:  actual.ModificationTag,
+		Presence:         actual.Presence,
+	}
+}
+
 func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
 	if actual == nil {
 		return nil
