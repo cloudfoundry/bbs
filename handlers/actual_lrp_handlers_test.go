@@ -593,7 +593,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Presence:             models.ActualLRP_Ordinary,
 				State:                models.ActualLRPStateRunning,
 			}
-			groups := handlers.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
+			groups := models.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
 			Expect(groups).To(ConsistOf(
 				&models.ActualLRPGroup{Instance: lrp1},
 				&models.ActualLRPGroup{Instance: lrp2},
@@ -612,7 +612,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Presence:             models.ActualLRP_Ordinary,
 				State:                models.ActualLRPStateRunning,
 			}
-			groups := handlers.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
+			groups := models.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
 			Expect(groups).To(ConsistOf(
 				&models.ActualLRPGroup{Instance: lrp2, Evacuating: lrp1},
 			))
@@ -635,7 +635,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 					Presence:             infLRPPresence,
 					State:                infLRPState,
 				}
-				groups := handlers.ResolveActualLRPGroups([]*models.ActualLRP{supLRP, infLRP})
+				groups := models.ResolveActualLRPGroups([]*models.ActualLRP{supLRP, infLRP})
 				Expect(groups).To(ConsistOf(
 					&models.ActualLRPGroup{Instance: supLRP},
 				))

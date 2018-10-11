@@ -64,43 +64,6 @@ func lookupLRPInSlice(lrps []*models.ActualLRP, key *models.ActualLRPInstanceKey
 	return nil
 }
 
-func getHigherPriorityActualLRP(lrp1, lrp2 *models.ActualLRP) *models.ActualLRP {
-	if hasHigherPriority(lrp1, lrp2) {
-		return lrp1
-	}
-	return lrp2
-}
-
-// hasHigherPriority returns true if lrp1 takes precendence over lrp2
-func hasHigherPriority(lrp1, lrp2 *models.ActualLRP) bool {
-	if lrp1 == nil {
-		return false
-	}
-
-	if lrp2 == nil {
-		return true
-	}
-
-	if lrp1.Presence == models.ActualLRP_Ordinary {
-		switch lrp1.State {
-		case models.ActualLRPStateRunning:
-			return true
-		case models.ActualLRPStateClaimed:
-			return lrp2.State != models.ActualLRPStateRunning
-		}
-	} else if lrp1.Presence == models.ActualLRP_Suspect {
-		switch lrp1.State {
-		case models.ActualLRPStateRunning:
-			return lrp2.State != models.ActualLRPStateRunning
-		case models.ActualLRPStateClaimed:
-			return lrp2.State != models.ActualLRPStateRunning && lrp2.State != models.ActualLRPStateClaimed
-		}
-	}
-	// Cases where we are comparing two LRPs with the same presence have undefined behavior since it shouldn't happen
-	// with the way they're stored in the database
-	return false
-}
-
 func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
 	before, after, err := h.db.ClaimActualLRP(logger, processGuid, index, actualLRPInstanceKey)
 	if err != nil {
@@ -220,22 +183,23 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
+	eventCalculator := EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
 	lrp := lookupLRPInSlice(lrps, actualLRPInstanceKey)
 	if lrp != nil && lrp.Presence == models.ActualLRP_Suspect {
 		suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
-		if err == nil {
-			go func() {
-				replacementLRP := findWithPresence(lrps, models.ActualLRP_Ordinary)
-				if replacementLRP != nil {
-					h.actualHub.Emit(models.NewActualLRPCreatedEvent(replacementLRP.ToActualLRPGroup()))
-					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(replacementLRP))
-				}
-				h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
-				h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
-			}()
+		if err != nil {
+			return err
 		}
 
-		return err
+		afterLRPs := eventCalculator.RecordChange(suspectLRP, nil, lrps)
+		logger.Info("removing-suspect-lrp", lager.Data{"ig": suspectLRP.InstanceGuid})
+		go eventCalculator.EmitEvents(lrps, afterLRPs)
+
+		return nil
 	}
 
 	before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
@@ -243,17 +207,8 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
-	go func() {
-		suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
-		if suspectLRP == nil {
-			h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
-		}
-	}()
-
-	crashedEvent := models.NewActualLRPCrashedEvent(before, after)
-	go h.actualHub.Emit(crashedEvent)
-	go h.actualLRPInstanceHub.Emit(crashedEvent)
+	afterLRPs := eventCalculator.RecordChange(before, after, lrps)
+	eventCalculator.EmitEvents(lrps, afterLRPs)
 
 	if !shouldRestart {
 		return nil

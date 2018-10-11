@@ -80,6 +80,10 @@ func NewPortMappingWithTLSProxy(hostPort, containerPort, tlsHost, tlsContainer u
 func (key ActualLRPInstanceKey) Empty() bool {
 	return key.InstanceGuid == "" && key.CellId == ""
 }
+func (a *ActualLRP) Copy() *ActualLRP {
+	newActualLRP := *a
+	return &newActualLRP
+}
 
 const StaleUnclaimedActualLRPDuration = 30 * time.Second
 
@@ -341,4 +345,83 @@ func (key *ActualLRPInstanceKey) Validate() error {
 	}
 
 	return nil
+}
+
+func getHigherPriorityActualLRP(lrp1, lrp2 *ActualLRP) *ActualLRP {
+	if hasHigherPriority(lrp1, lrp2) {
+		return lrp1
+	}
+	return lrp2
+}
+
+// hasHigherPriority returns true if lrp1 takes precendence over lrp2
+func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
+	if lrp1 == nil {
+		return false
+	}
+
+	if lrp2 == nil {
+		return true
+	}
+
+	if lrp1.Presence == ActualLRP_Ordinary {
+		switch lrp1.State {
+		case ActualLRPStateRunning:
+			return true
+		case ActualLRPStateClaimed:
+			return lrp2.State != ActualLRPStateRunning && lrp2.State != ActualLRPStateClaimed
+		}
+	} else if lrp1.Presence == ActualLRP_Suspect {
+		switch lrp1.State {
+		case ActualLRPStateRunning:
+			return lrp2.State != ActualLRPStateRunning
+		case ActualLRPStateClaimed:
+			return lrp2.State != ActualLRPStateRunning
+		}
+	}
+	// Cases where we are comparing two LRPs with the same presence have undefined behavior since it shouldn't happen
+	// with the way they're stored in the database
+	return false
+}
+
+// ResolveActualLRPGroups convert the given set of lrp instances into
+// ActualLRPGroup.  This conversion is lossy.  A suspect LRP is given
+// precendence over an Ordinary instance if it is Running.  Otherwise, the
+// Ordinary instance is returned in the Instance field of the ActualLRPGroup.
+func ResolveActualLRPGroups(lrps []*ActualLRP) []*ActualLRPGroup {
+	mapOfGroups := map[ActualLRPKey]*ActualLRPGroup{}
+	result := []*ActualLRPGroup{}
+	for _, actualLRP := range lrps {
+		// Every actual LRP has potentially 2 rows in the database: one for the instance
+		// one for the evacuating.  When building the list of actual LRP groups (where
+		// a group is the instance and corresponding evacuating), make sure we don't add the same
+		// actual lrp twice.
+		if mapOfGroups[actualLRP.ActualLRPKey] == nil {
+			mapOfGroups[actualLRP.ActualLRPKey] = &ActualLRPGroup{}
+			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
+		}
+		if actualLRP.Presence == ActualLRP_Evacuating {
+			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
+		} else if hasHigherPriority(actualLRP, mapOfGroups[actualLRP.ActualLRPKey].Instance) {
+			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+		}
+	}
+
+	return result
+}
+
+// ResolveToActualLRPGroup calls ResolveActualLRPGroups and return the first
+// LRP group.  It panics if there are more than one group.  If there no LRP
+// groups were returned by ResolveActualLRPGroups, then an empty ActualLRPGroup
+// is returned.
+func ResolveActualLRPGroup(lrps []*ActualLRP) *ActualLRPGroup {
+	actualLRPGroups := ResolveActualLRPGroups(lrps)
+	switch len(actualLRPGroups) {
+	case 0:
+		return &ActualLRPGroup{}
+	case 1:
+		return actualLRPGroups[0]
+	default:
+		panic("shouldn't get here")
+	}
 }

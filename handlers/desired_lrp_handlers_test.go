@@ -29,6 +29,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
 		desiredHub           *eventfakes.FakeHub
 		actualHub            *eventfakes.FakeHub
+		actualLRPInstanceHub *eventfakes.FakeHub
 
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DesiredLRPHandler
@@ -48,6 +49,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		responseRecorder = httptest.NewRecorder()
 		desiredHub = new(eventfakes.FakeHub)
 		actualHub = new(eventfakes.FakeHub)
+		actualLRPInstanceHub = new(eventfakes.FakeHub)
 		Expect(err).NotTo(HaveOccurred())
 		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewDesiredLRPHandler(
@@ -56,6 +58,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			fakeActualLRPDB,
 			desiredHub,
 			actualHub,
+			actualLRPInstanceHub,
 			fakeAuctioneerClient,
 			fakeRepClientFactory,
 			fakeServiceClient,
@@ -483,7 +486,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(createEvent.DesiredLrp).To(Equal(desiredLRP))
 			})
 
-			It("creates and emits an event for one ActualLRP per index", func() {
+			It("creates and emits a ActualLRPCreatedEvent per index", func() {
 				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(5))
 				Eventually(actualHub.EmitCallCount).Should(Equal(5))
 
@@ -505,6 +508,33 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(createdActualLRPs).To(ContainElement(createdEvent.ActualLrpGroup.Instance))
+				}
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			It("creates and emits a ActualLRPInstanceCreatedEvent per index", func() {
+				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(5))
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(5))
+
+				expectedLRPKeys := []*models.ActualLRPKey{}
+
+				for i := 0; i < 5; i++ {
+					expectedLRPKeys = append(expectedLRPKeys, &models.ActualLRPKey{
+						ProcessGuid: desiredLRP.ProcessGuid,
+						Domain:      desiredLRP.Domain,
+						Index:       int32(i),
+					})
+
+				}
+
+				for i := 0; i < 5; i++ {
+					_, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
+					Expect(expectedLRPKeys).To(ContainElement(actualLRPKey))
+					event := actualLRPInstanceHub.EmitArgsForCall(i)
+					createdEvent, ok := event.(*models.ActualLRPInstanceCreatedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(createdActualLRPs).To(ContainElement(createdEvent.ActualLrp))
 				}
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
