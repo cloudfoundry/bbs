@@ -102,7 +102,7 @@ func (e EventCalculator) EmitEvents(beforeSet, afterSet []*models.ActualLRP) {
 	}
 
 	sort.Slice(events, func(i, j int) bool {
-		return shouldEventComeFirst(events[i], events[j])
+		return eventScore(events[i]) > eventScore(events[j])
 	})
 
 	for _, ev := range events {
@@ -287,43 +287,29 @@ func getEventLRP(e models.Event) (*models.ActualLRP, bool) {
 	return nil, false
 }
 
-// determine if i should be emitted before j.  The ordering ensures continuous
+// Determine the score of an event. An event with higher score should be
+// emitted before lower ones.  The score based ordering ensures continuous
 // routability, so events with running instances should be emitted first
-// followed by remove/crash events.
-func shouldEventComeFirst(i, j models.Event) bool {
-	first, firstCrashed := getEventLRP(i)
-	second, secondCrashed := getEventLRP(j)
+// followed by remove events.
+func eventScore(e models.Event) int {
+	lrp, crashed := getEventLRP(e)
 
 	// sort crashed events first to be backward compatible with the old
 	// event stream which emitted the crashed event before the
 	// remove/changed events.
-	if firstCrashed {
-		return !secondCrashed
+	if crashed {
+		return 2
 	}
 
-	if secondCrashed {
-		return false
+	// this is an event with a running instance, this should be emitted before
+	// any other event, such as removed ro changed event to non-running state.
+	if lrp != nil && lrp.State == models.ActualLRPStateRunning {
+		return 1
 	}
 
 	// i is a removed event.  These should be emitted last, so i cannot less
 	// than j.
-	if first == nil {
-		return false
-	}
-
-	// j is a removed event.  These should be emitted last, so i is less than
-	// (emitted before) j.
-	if second == nil {
-		return true
-	}
-
-	if first.State == models.ActualLRPStateRunning {
-		// true if the lrp from the other event isn't running, otherwise
-		// treat them as equal
-		return second.State != models.ActualLRPStateRunning
-	}
-
-	return false
+	return 0
 }
 
 func generateLRPGroupEvents(before, after *models.ActualLRPGroup) []models.Event {
@@ -331,7 +317,7 @@ func generateLRPGroupEvents(before, after *models.ActualLRPGroup) []models.Event
 	events = append(events, generateLRPInstanceGroupEvents(before.Evacuating, after.Evacuating)...)
 
 	sort.Slice(events, func(i, j int) bool {
-		return shouldEventComeFirst(events[i], events[j])
+		return eventScore(events[i]) > eventScore(events[j])
 	})
 
 	return events
