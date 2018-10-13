@@ -10,6 +10,7 @@ import (
 
 type EventController interface {
 	Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request)
+	Subscribe_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request)
 }
 
 type LRPGroupEventsHandler struct {

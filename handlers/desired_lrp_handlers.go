@@ -54,7 +54,7 @@ func NewDesiredLRPHandler(
 	}
 }
 
-func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("desired-lrps")
 
@@ -68,7 +68,7 @@ func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWrit
 		var desiredLRPs []*models.DesiredLRP
 		desiredLRPs, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
 		for i, d := range desiredLRPs {
-			desiredLRPs[i] = d.VersionDownTo(format.V2)
+			desiredLRPs[i] = d.VersionDownTo(targetVersion)
 			if len(desiredLRPs[i].CachedDependencies) == 0 {
 				desiredLRPs[i].CachedDependencies = nil
 			}
@@ -80,9 +80,18 @@ func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWrit
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+
 }
 
-func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *DesiredLRPHandler) DesiredLRPs(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonDesiredLRPs(logger, format.V3, w, req)
+}
+
+func (h *DesiredLRPHandler) DesiredLRPs_r2(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonDesiredLRPs(logger, format.V2, w, req)
+}
+
+func (h *DesiredLRPHandler) commonDesiredLRPByProcessGuid(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("desired-lrp-by-process-guid")
 
@@ -94,7 +103,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(logger lager.Logger, w http.
 		var desiredLRP *models.DesiredLRP
 		desiredLRP, err = h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 		if desiredLRP != nil {
-			desiredLRP = desiredLRP.VersionDownTo(format.V2)
+			desiredLRP = desiredLRP.VersionDownTo(targetVersion)
 		}
 		response.DesiredLrp = desiredLRP
 	}
@@ -102,6 +111,15 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(logger lager.Logger, w http.
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+
+}
+
+func (h *DesiredLRPHandler) DesiredLRPByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonDesiredLRPByProcessGuid(logger, format.V3, w, req)
+}
+
+func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r2(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonDesiredLRPByProcessGuid(logger, format.V2, w, req)
 }
 
 func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w http.ResponseWriter, req *http.Request) {

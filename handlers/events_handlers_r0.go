@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (h *LRPGroupEventsHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *LRPGroupEventsHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
 	logger = logger.Session("subscribe-r0")
 
 	request := &models.EventsByCellId{}
@@ -65,7 +65,7 @@ func (h *LRPGroupEventsHandler) Subscribe_r0(logger lager.Logger, w http.Respons
 		if err != nil {
 			return event, err
 		}
-		event = models.VersionDesiredLRPsTo(event, format.V0)
+		event = models.VersionDesiredLRPsTo(event, target)
 		return event, err
 	}
 
@@ -75,7 +75,15 @@ func (h *LRPGroupEventsHandler) Subscribe_r0(logger lager.Logger, w http.Respons
 	streamEventsToResponse(logger, w, eventChan, errorChan)
 }
 
-func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *LRPGroupEventsHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonSubscribe(logger, w, req, format.V0)
+}
+
+func (h *LRPGroupEventsHandler) Subscribe_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonSubscribe(logger, w, req, format.V3)
+}
+
+func (h *LRPInstanceEventHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
 	logger = logger.Session("subscribe-r0")
 
 	request := &models.EventsByCellId{}
@@ -130,7 +138,7 @@ func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.Respo
 		if err != nil {
 			return event, err
 		}
-		event = models.VersionDesiredLRPsTo(event, format.V0)
+		event = models.VersionDesiredLRPsTo(event, target)
 		return event, err
 	}
 
@@ -140,7 +148,15 @@ func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.Respo
 	streamEventsToResponse(logger, w, eventChan, errorChan)
 }
 
-func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonSubscribe(logger, w, req, format.V0)
+}
+
+func (h *LRPInstanceEventHandler) Subscribe_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonSubscribe(logger, w, req, format.V3)
+}
+
+func (h *TaskEventHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
 	logger = logger.Session("tasks-subscribe-r0")
 	logger.Info("subscribed-to-tasks-event-stream")
 
@@ -162,13 +178,21 @@ func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWrit
 		if err != nil {
 			return event, err
 		}
-		event = models.VersionTaskDefinitionsTo(event, format.V2)
+		event = models.VersionTaskDefinitionsTo(event, target)
 		return event, err
 	}
 
 	go streamSource(eventChan, errorChan, closeChan, taskEventsFetcher)
 
 	streamEventsToResponse(logger, w, eventChan, errorChan)
+}
+
+func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonSubscribe(logger, w, req, format.V0)
+}
+
+func (h *TaskEventHandler) Subscribe_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonSubscribe(logger, w, req, format.V3)
 }
 
 func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, error) {

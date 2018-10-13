@@ -40,7 +40,7 @@ func NewTaskHandler(
 	}
 }
 
-func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) commonTasks(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("tasks")
 
@@ -61,13 +61,21 @@ func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *htt
 
 	downgradedTasks := []*models.Task{}
 	for _, t := range tasks {
-		downgradedTasks = append(downgradedTasks, t.VersionDownTo(format.V2))
+		downgradedTasks = append(downgradedTasks, t.VersionDownTo(targetVersion))
 	}
 	response.Tasks = downgradedTasks
 	response.Error = models.ConvertError(err)
 }
 
-func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *TaskHandler) Tasks_r2(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTasks(logger, format.V2, w, req)
+}
+
+func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTasks(logger, format.V3, w, req)
+}
+
+func (h *TaskHandler) commonTaskByGuid(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("task-by-guid")
 
@@ -87,11 +95,19 @@ func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req
 	var task *models.Task
 	task, err = h.controller.TaskByGuid(logger, request.TaskGuid)
 	if task != nil {
-		task = task.VersionDownTo(format.V2)
+		task = task.VersionDownTo(targetVersion)
 	}
 
 	response.Task = task
 	response.Error = models.ConvertError(err)
+}
+
+func (h *TaskHandler) TaskByGuid_r2(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTaskByGuid(logger, format.V2, w, req)
+}
+
+func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	h.commonTaskByGuid(logger, format.V3, w, req)
 }
 
 func (h *TaskHandler) DesireTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {

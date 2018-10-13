@@ -95,16 +95,20 @@ func New(
 		bbs.EvacuateRunningActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP), emitter)),
 
 		// Desired LRPs
-		bbs.DesiredLRPsRoute_r2:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs), emitter)),
-		bbs.DesiredLRPByProcessGuidRoute_r2:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid), emitter)),
+		bbs.DesiredLRPsRoute_r3:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs), emitter)),
+		bbs.DesiredLRPByProcessGuidRoute_r3:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid), emitter)),
+		bbs.DesiredLRPsRoute_r2:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs_r2), emitter)),
+		bbs.DesiredLRPByProcessGuidRoute_r2:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid_r2), emitter)),
 		bbs.DesiredLRPSchedulingInfosRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPSchedulingInfos), emitter)),
 		bbs.DesireDesiredLRPRoute_r2:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP), emitter)),
 		bbs.UpdateDesiredLRPRoute_r0:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.UpdateDesiredLRP), emitter)),
 		bbs.RemoveDesiredLRPRoute:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.RemoveDesiredLRP), emitter)),
 
 		// Tasks
-		bbs.TasksRoute_r2:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),
-		bbs.TaskByGuidRoute_r2:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.TaskByGuid), emitter)),
+		bbs.TasksRoute_r2:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks_r2), emitter)),      // DEPRECATED
+		bbs.TaskByGuidRoute_r2:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.TaskByGuid_r2), emitter)), // DEPRECATED
+		bbs.TasksRoute_r3:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),
+		bbs.TaskByGuidRoute_r3:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.TaskByGuid), emitter)),
 		bbs.DesireTaskRoute_r2:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DesireTask), emitter)),
 		bbs.StartTaskRoute_r0:     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.StartTask), emitter)),
 		bbs.CancelTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CancelTask), emitter)),
@@ -118,6 +122,9 @@ func New(
 		bbs.EventStreamRoute_r0:            route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0)),
 		bbs.TaskEventStreamRoute_r0:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
 		bbs.LrpInstanceEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0)),
+		bbs.EventStreamRoute_r1:            route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1)),
+		bbs.TaskEventStreamRoute_r1:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1)),
+		bbs.LrpInstanceEventStreamRoute_r1: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1)),
 
 		// Cells
 		bbs.CellsRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells), emitter)),

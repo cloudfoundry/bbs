@@ -157,7 +157,7 @@ var _ = Describe("Event Handlers", func() {
 		})
 	}
 
-	Describe("Subscribe_r0", func() {
+	Describe("LRPGroup events Subscribe_r0", func() {
 		var (
 			desiredHub events.Hub
 			actualHub  events.Hub
@@ -192,6 +192,8 @@ var _ = Describe("Event Handlers", func() {
 				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
 
 				migratedLRP := desiredLRP.VersionDownTo(format.V0)
+				migratedLRP.ImageLayers = nil
+
 				Expect(migratedLRP).NotTo(Equal(desiredLRP))
 				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
 
@@ -518,6 +520,54 @@ var _ = Describe("Event Handlers", func() {
 		})
 	})
 
+	Describe("LRPGroup events Subscribe_r1", func() {
+		var (
+			desiredHub events.Hub
+			actualHub  events.Hub
+		)
+
+		BeforeEach(func() {
+			desiredHub = events.NewHub()
+			actualHub = events.NewHub()
+			handler = handlers.NewLRPGroupEventsHandler(desiredHub, actualHub)
+		})
+
+		AfterEach(func() {
+			desiredHub.Close()
+			actualHub.Close()
+		})
+
+		Describe("Subscribe to Desired Events", func() {
+			It("migrates desired lrps down to v3", func() {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handler.Subscribe_r1(logger, w, r)
+				}))
+
+				response, err := http.Get(server.URL)
+				Expect(err).NotTo(HaveOccurred())
+				reader := sse.NewReadCloser(response.Body)
+
+				desiredLRP := model_helpers.NewValidDesiredLRP("guid")
+				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
+
+				migratedLRP := desiredLRP.VersionDownTo(format.V3)
+				Expect(migratedLRP).To(Equal(desiredLRP))
+				Expect(migratedLRP.ImageLayers).NotTo(BeEmpty())
+
+				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
+
+				desiredHub.Emit(event)
+
+				events := events.NewEventSource(reader)
+				actualEvent, err := events.Next()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualEvent).To(Equal(migratedEvent))
+
+				server.Close()
+			})
+		})
+	})
+
 	Describe("Instance Events Subscribe_r0", func() {
 		var (
 			desiredHub     events.Hub
@@ -566,287 +616,52 @@ var _ = Describe("Event Handlers", func() {
 				server.Close()
 			})
 		})
+	})
 
-		Describe("Subscribe to Instance Events", func() {
-			Context("when cell id not specified", func() {
-				ItStreamsEventsFromHub(&lrpInstanceHub)
-				ItRecoversFromLostConnections(&lrpInstanceHub)
-			})
+	Describe("Instance Events Subscribe_r1", func() {
+		var (
+			desiredHub     events.Hub
+			lrpInstanceHub events.Hub
+		)
 
-			Context("when cell id is specified", func() {
-				var (
-					reader      *sse.ReadCloser
-					requestBody interface{}
-					cellId      = "cell-id"
-					eventSource events.EventSource
-					eventsCh    chan models.Event
-					server      *httptest.Server
-				)
+		BeforeEach(func() {
+			desiredHub = events.NewHub()
+			lrpInstanceHub = events.NewHub()
+			handler = handlers.NewLRPInstanceEventHandler(desiredHub, lrpInstanceHub)
+		})
 
-				BeforeEach(func() {
-					requestBody = nil
-				})
+		AfterEach(func() {
+			desiredHub.Close()
+			lrpInstanceHub.Close()
+		})
 
-				AfterEach(func() {
-					server.Close()
-				})
+		Describe("Subscribe to Desired Events", func() {
+			It("migrates desired lrps down to v3", func() {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handler.Subscribe_r1(logger, w, r)
+				}))
 
-				JustBeforeEach(func() {
-					By("creating server")
-					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						request := newTestRequest(requestBody)
-						handler.Subscribe_r0(logger, w, request)
-					}))
+				response, err := http.Get(server.URL)
+				Expect(err).NotTo(HaveOccurred())
+				reader := sse.NewReadCloser(response.Body)
 
-					By("starting server")
-					response, err := http.Get(server.URL)
-					Expect(err).NotTo(HaveOccurred())
-					reader = sse.NewReadCloser(response.Body)
+				desiredLRP := model_helpers.NewValidDesiredLRP("guid")
+				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
 
-					eventSource = events.NewEventSource(reader)
+				migratedLRP := desiredLRP.VersionDownTo(format.V3)
+				Expect(migratedLRP).To(Equal(desiredLRP))
+				Expect(migratedLRP.ImageLayers).NotTo(BeEmpty())
 
-					eventsCh = streamEvents(eventSource)
-				})
+				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
 
-				Context("ActualLRPInstanceChangedEvent", func() {
-					var (
-						expectedActualLRPBeforeEvent *models.ActualLRPInstanceChangedEvent
-					)
+				desiredHub.Emit(event)
 
-					BeforeEach(func() {
-						actualLRPBefore := models.NewUnclaimedActualLRP(models.NewActualLRPKey("guid", 0, "some-domain"), 1)
+				events := events.NewEventSource(reader)
+				actualEvent, err := events.Next()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(actualEvent).To(Equal(migratedEvent))
 
-						actualLRPAfter := models.NewClaimedActualLRP(
-							models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
-							1,
-						)
-						expectedActualLRPBeforeEvent = models.NewActualLRPInstanceChangedEvent(actualLRPBefore, actualLRPAfter)
-					})
-
-					JustBeforeEach(func() {
-						By("sending actual lrp changed event")
-						lrpInstanceHub.Emit(expectedActualLRPBeforeEvent)
-					})
-
-					Context("subscriber with the right filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: cellId,
-							}
-						})
-
-						Context("and an LRP transitions to evacuating", func() {
-							BeforeEach(func() {
-								actualLRPBefore := models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
-									1,
-								)
-
-								actualLRPAfter := models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
-									1,
-								)
-
-								expectedActualLRPBeforeEvent = models.NewActualLRPInstanceChangedEvent(actualLRPBefore, actualLRPAfter)
-							})
-
-							It("receives changed events if the lrp is running on the cell", func() {
-								Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
-							})
-						})
-
-						Context("and an evacuating LRP leaves the cell", func() {
-							BeforeEach(func() {
-								actualLRPBefore := models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
-									1,
-								)
-
-								actualLRPAfter := models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", "another-cell-id"),
-									1,
-								)
-								expectedActualLRPBeforeEvent = models.NewActualLRPInstanceChangedEvent(actualLRPBefore, actualLRPAfter)
-							})
-						})
-
-						It("receives changed events if the lrp started running on the cell", func() {
-							Eventually(eventsCh).Should(Receive(Equal(expectedActualLRPBeforeEvent)))
-						})
-					})
-
-					Context("subscriber with the wrong filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: "another-cell-id",
-							}
-						})
-
-						It("does not receive changed events if the lrp did not use to run on the cell", func() {
-							Consistently(eventsCh).ShouldNot(Receive(Equal(expectedActualLRPBeforeEvent)))
-						})
-					})
-				})
-
-				Context("ActualLRPInstanceCreatedEvent", func() {
-					var (
-						expectedEvent *models.ActualLRPInstanceCreatedEvent
-					)
-
-					BeforeEach(func() {
-						actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
-							1,
-						)
-						expectedEvent = models.NewActualLRPInstanceCreatedEvent(actualLRP)
-					})
-
-					JustBeforeEach(func() {
-						lrpInstanceHub.Emit(expectedEvent)
-					})
-
-					Context("subscriber with the right filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: cellId,
-							}
-						})
-
-						Context("and the LRP is in an evacuating state", func() {
-							BeforeEach(func() {
-								actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
-									1,
-								)
-								expectedEvent = models.NewActualLRPInstanceCreatedEvent(actualLRP)
-							})
-
-							It("receives events from the filtered cell", func() {
-								Eventually(eventsCh).Should(Receive(Equal(expectedEvent)))
-							})
-						})
-
-						It("receives events from the filtered cell", func() {
-							Eventually(eventsCh).Should(Receive(Equal(expectedEvent)))
-						})
-					})
-
-					Context("subscriber with the wrong filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: "another-cell-id",
-							}
-						})
-
-						It("does not receives events from the filtered cell", func() {
-							Consistently(eventsCh).ShouldNot(Receive(Equal(expectedEvent)))
-						})
-					})
-				})
-
-				Context("ActualLRPInstanceRemovedEvent", func() {
-					var (
-						expectedEvent *models.ActualLRPInstanceRemovedEvent
-					)
-
-					BeforeEach(func() {
-						actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
-							1,
-						)
-						expectedEvent = models.NewActualLRPInstanceRemovedEvent(actualLRP)
-					})
-
-					JustBeforeEach(func() {
-						lrpInstanceHub.Emit(expectedEvent)
-					})
-
-					Context("subscriber with the right filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: cellId,
-							}
-						})
-
-						Context("and the LRP is in an evacuating state", func() {
-							BeforeEach(func() {
-								actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
-									1,
-								)
-								expectedEvent = models.NewActualLRPInstanceRemovedEvent(actualLRP)
-							})
-
-							It("receives events from the filtered cell", func() {
-								Eventually(eventsCh).Should(Receive(Equal(expectedEvent)))
-							})
-						})
-
-						It("receives events from the filtered cell", func() {
-							Eventually(eventsCh).Should(Receive(Equal(expectedEvent)))
-						})
-					})
-
-					Context("subscriber with the wrong filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: "another-cell-id",
-							}
-						})
-
-						It("does not receives events from the filtered cell", func() {
-							Consistently(eventsCh).ShouldNot(Receive(Equal(expectedEvent)))
-						})
-					})
-				})
-
-				Context("ActualLRPCrashedEvent", func() {
-					var (
-						expectedEvent *models.ActualLRPCrashedEvent
-					)
-
-					JustBeforeEach(func() {
-						actualLRPBefore := models.NewClaimedActualLRP(
-							models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
-							1,
-						)
-						actualLRPAfter := models.NewUnclaimedActualLRP(models.NewActualLRPKey("guid", 0, "some-domain"), 1)
-
-						expectedEvent = models.NewActualLRPCrashedEvent(actualLRPBefore, actualLRPAfter)
-
-						lrpInstanceHub.Emit(expectedEvent)
-					})
-
-					Context("subscriber with the right filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: cellId,
-							}
-						})
-
-						It("receives events from the filtered cell", func() {
-							Eventually(eventsCh).Should(Receive(Equal(expectedEvent)))
-						})
-					})
-
-					Context("subscriber with the wrong filter", func() {
-						BeforeEach(func() {
-							requestBody = &models.EventsByCellId{
-								CellId: "another-cell-id",
-							}
-						})
-
-						It("does not receives events from the filtered cell", func() {
-							Consistently(eventsCh).ShouldNot(Receive(Equal(expectedEvent)))
-						})
-					})
-				})
+				server.Close()
 			})
 		})
 	})
@@ -893,6 +708,98 @@ var _ = Describe("Event Handlers", func() {
 					task = model_helpers.NewValidTask("guid")
 
 					downgradedTask = task.VersionDownTo(format.V2)
+				})
+
+				JustBeforeEach(func() {
+					taskHub.Emit(event)
+				})
+
+				AfterEach(func() {
+					server.Close()
+				})
+
+				Context("TaskCreatedEvent", func() {
+					BeforeEach(func() {
+						event = models.NewTaskCreatedEvent(task)
+						downgradedEvent = models.NewTaskCreatedEvent(downgradedTask)
+					})
+
+					It("downgrades correctly", func() {
+						actualEvent, err := eventSource.Next()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(actualEvent).To(Equal(downgradedEvent))
+					})
+				})
+
+				Context("TaskRemovedEvent", func() {
+					BeforeEach(func() {
+						event = models.NewTaskRemovedEvent(task)
+						downgradedEvent = models.NewTaskRemovedEvent(downgradedTask)
+					})
+
+					It("downgrades correctly", func() {
+						actualEvent, err := eventSource.Next()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(actualEvent).To(Equal(downgradedEvent))
+					})
+				})
+
+				Context("TaskChangedEvent", func() {
+					BeforeEach(func() {
+						event = models.NewTaskChangedEvent(task, task)
+						downgradedEvent = models.NewTaskChangedEvent(downgradedTask, downgradedTask)
+					})
+
+					It("downgrades correctly", func() {
+						actualEvent, err := eventSource.Next()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(actualEvent).To(Equal(downgradedEvent))
+					})
+				})
+			})
+		})
+	})
+
+	Describe("Tasks Subscribe_r1", func() {
+		var (
+			taskHub events.Hub
+		)
+
+		BeforeEach(func() {
+			taskHub = events.NewHub()
+			handler = handlers.NewTaskEventHandler(taskHub)
+		})
+
+		AfterEach(func() {
+			taskHub.Close()
+		})
+
+		Describe("Subscribe to Task Events", func() {
+			Context("downgrading task definitions down to v3", func() {
+				var (
+					server          *httptest.Server
+					task            *models.Task
+					downgradedTask  *models.Task
+					event           models.Event
+					downgradedEvent models.Event
+					eventSource     events.EventSource
+				)
+
+				BeforeEach(func() {
+					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						handler.Subscribe_r1(logger, w, r)
+					}))
+
+					response, err := http.Get(server.URL)
+					Expect(err).NotTo(HaveOccurred())
+					reader := sse.NewReadCloser(response.Body)
+					eventSource = events.NewEventSource(reader)
+
+					task = model_helpers.NewValidTask("guid")
+
+					downgradedTask = task.VersionDownTo(format.V3)
+					Expect(downgradedTask).To(Equal(task))
+					Expect(downgradedTask.ImageLayers).NotTo(BeNil())
 				})
 
 				JustBeforeEach(func() {

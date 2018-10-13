@@ -217,10 +217,11 @@ Lists all [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#Desir
 
 ### BBS API Endpoint
 
-POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest) to `/v1/desired_lrps/list.r2` and receive a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse) with V2 [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
+POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest) to `/v1/desired_lrps/list.r3` and receive a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse) with V3 [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 
 #### Deprecated Endpoints
 
+* POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest) to `/v1/desired_lrps/list.r2` and receive a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse) with V2 [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 * POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest) to `/v1/desired_lrps/list.r1` and receive a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse) with V1 [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 * POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest) to `/v1/desired_lrps/list` and receive a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse) with V0 [DesiredLRPs](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 
@@ -260,10 +261,11 @@ Returns the DesiredLRP with the given process guid.
 
 ### BBS API Endpoint
 
-POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest) to `/v1/desired_lrps/get_by_process_guid.r2` and receive a [DesiredLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPResponse) with a V2 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
+POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest) to `/v1/desired_lrps/get_by_process_guid.r3` and receive a [DesiredLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPResponse) with a V3 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 
 #### Deprecated Endpoints
 
+* POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest) to `/v1/desired_lrps/get_by_process_guid.r2` and receive a [DesiredLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPResponse) with a V2 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 * POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest) to `/v1/desired_lrps/get_by_process_guid.r1` and receive a [DesiredLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPResponse) with a V1 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 * POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest) to `/v1/desired_lrps/get_by_process_guid` and receive an [DesiredLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPResponse) with a V0 [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP).
 
