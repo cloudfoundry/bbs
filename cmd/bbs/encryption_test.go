@@ -2,7 +2,6 @@ package main_test
 
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	. "code.cloudfoundry.org/bbs/models/test/matchers"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -21,7 +20,6 @@ var _ = Describe("Encryption", func() {
 	BeforeEach(func() {
 		task = model_helpers.NewValidTask("task-1")
 		expectedTask = task.Copy()
-		expectedTask = task.VersionDownTo(format.V2)
 	})
 
 	JustBeforeEach(func() {
@@ -54,7 +52,7 @@ var _ = Describe("Encryption", func() {
 			BeforeEach(func() {
 				oldTask := model_helpers.NewValidTask("old-task")
 				expectedOldTask = oldTask.Copy()
-				expectedOldTask = oldTask.VersionDownTo(format.V2)
+				expectedOldTask = oldTask
 
 				bbsConfig.ActiveKeyLabel = "oldkey"
 				bbsConfig.EncryptionKeys = map[string]string{"oldkey": "old phrase"}

@@ -2,7 +2,6 @@ package main_test
 
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	. "code.cloudfoundry.org/bbs/models/test/matchers"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -24,7 +23,7 @@ var _ = Describe("Task API", func() {
 			err := client.DesireTask(logger, t.TaskGuid, t.Domain, t.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedTasks[i] = t.VersionDownTo(format.V2)
+			expectedTasks[i] = t
 		}
 		client.StartTask(logger, expectedTasks[1].TaskGuid, "b-cell")
 	})
@@ -95,7 +94,7 @@ var _ = Describe("Task API", func() {
 			err := client.DesireTask(logger, expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedTask = expectedTask.VersionDownTo(format.V2)
+			expectedTask = expectedTask
 
 			task, err := client.TaskByGuid(logger, expectedTask.TaskGuid)
 			Expect(err).NotTo(HaveOccurred())

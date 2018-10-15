@@ -61,9 +61,9 @@ const (
 	EventStreamRoute_r0            = "EventStream_r0"
 	TaskEventStreamRoute_r0        = "TaskEventStream_r0"
 	LrpInstanceEventStreamRoute_r0 = "LrpInstanceEventStream_r0"
-	EventStreamRoute_r1            = "EventStream"
+	LRPGroupEventStreamRoute_r1    = "EventStream"
 	TaskEventStreamRoute_r1        = "TaskEventStream"
-	LrpInstanceEventStreamRoute_r1 = "LrpInstanceEventStream"
+	LRPInstanceEventStreamRoute_r1 = "LRPInstanceEventStream"
 
 	// Cell Presence
 	CellsRoute_r0 = "Cells"
@@ -131,9 +131,9 @@ var Routes = rata.Routes{
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},
 	{Path: "/v1/events/tasks", Method: "POST", Name: TaskEventStreamRoute_r0},
 	{Path: "/v1/events/lrp_instances", Method: "POST", Name: LrpInstanceEventStreamRoute_r0},
-	{Path: "/v1/events.r1", Method: "GET", Name: EventStreamRoute_r1},
+	{Path: "/v1/events.r1", Method: "GET", Name: LRPGroupEventStreamRoute_r1},
 	{Path: "/v1/events/tasks.r1", Method: "POST", Name: TaskEventStreamRoute_r1},
-	{Path: "/v1/events/lrp_instances.r1", Method: "POST", Name: LrpInstanceEventStreamRoute_r1},
+	{Path: "/v1/events/lrp_instances.r1", Method: "POST", Name: LRPInstanceEventStreamRoute_r1},
 
 	// Cells
 	{Path: "/v1/cells/list.r1", Method: "POST", Name: CellsRoute_r0},

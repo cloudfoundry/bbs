@@ -501,7 +501,7 @@ func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter
 		ProcessGuids: filter.ProcessGuids,
 	}
 	response := models.DesiredLRPsResponse{}
-	err := c.doRequest(logger, DesiredLRPsRoute_r2, nil, nil, &request, &response)
+	err := c.doRequest(logger, DesiredLRPsRoute_r3, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -514,7 +514,7 @@ func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, processGuid string
 		ProcessGuid: processGuid,
 	}
 	response := models.DesiredLRPResponse{}
-	err := c.doRequest(logger, DesiredLRPByProcessGuidRoute_r2, nil, nil, &request, &response)
+	err := c.doRequest(logger, DesiredLRPByProcessGuidRoute_r3, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -570,7 +570,7 @@ func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error) {
 	request := models.TasksRequest{}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, TasksRoute_r2, nil, nil, &request, &response)
+	err := c.doRequest(logger, TasksRoute_r3, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -584,7 +584,7 @@ func (c *client) TasksWithFilter(logger lager.Logger, filter models.TaskFilter) 
 		CellId: filter.CellID,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, TasksRoute_r2, nil, nil, &request, &response)
+	err := c.doRequest(logger, TasksRoute_r3, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -596,7 +596,7 @@ func (c *client) TasksByDomain(logger lager.Logger, domain string) ([]*models.Ta
 		Domain: domain,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, TasksRoute_r2, nil, nil, &request, &response)
+	err := c.doRequest(logger, TasksRoute_r3, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -609,7 +609,7 @@ func (c *client) TasksByCellID(logger lager.Logger, cellId string) ([]*models.Ta
 		CellId: cellId,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, TasksRoute_r2, nil, nil, &request, &response)
+	err := c.doRequest(logger, TasksRoute_r3, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -622,7 +622,7 @@ func (c *client) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 		TaskGuid: taskGuid,
 	}
 	response := models.TaskResponse{}
-	err := c.doRequest(logger, TaskByGuidRoute_r2, nil, nil, &request, &response)
+	err := c.doRequest(logger, TaskByGuidRoute_r3, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -741,23 +741,23 @@ func (c *client) subscribeToEvents(route string, cellId string) (events.EventSou
 }
 
 func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(EventStreamRoute_r0, "")
+	return c.subscribeToEvents(LRPGroupEventStreamRoute_r1, "")
 }
 
 func (c *client) SubscribeToInstanceEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(LrpInstanceEventStreamRoute_r0, "")
+	return c.subscribeToEvents(LRPInstanceEventStreamRoute_r1, "")
 }
 
 func (c *client) SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error) {
-	return c.subscribeToEvents(TaskEventStreamRoute_r0, "")
+	return c.subscribeToEvents(TaskEventStreamRoute_r1, "")
 }
 
 func (c *client) SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
-	return c.subscribeToEvents(EventStreamRoute_r0, cellId)
+	return c.subscribeToEvents(LRPGroupEventStreamRoute_r1, cellId)
 }
 
 func (c *client) SubscribeToInstanceEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
-	return c.subscribeToEvents(LrpInstanceEventStreamRoute_r0, cellId)
+	return c.subscribeToEvents(LRPInstanceEventStreamRoute_r1, cellId)
 }
 
 func (c *client) Cells(logger lager.Logger) ([]*models.CellPresence, error) {

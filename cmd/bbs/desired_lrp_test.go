@@ -6,7 +6,6 @@ import (
 
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -58,7 +57,7 @@ var _ = Describe("DesiredLRP API", func() {
 			It("returns all desired lrps from the bbs", func() {
 				for _, domainLRPs := range desiredLRPs {
 					for _, lrp := range domainLRPs {
-						expectedDesiredLRPs = append(expectedDesiredLRPs, lrp.VersionDownTo(format.V2))
+						expectedDesiredLRPs = append(expectedDesiredLRPs, lrp)
 					}
 				}
 				Expect(actualDesiredLRPs).To(ConsistOf(expectedDesiredLRPs))
@@ -78,7 +77,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 			It("returns only the desired lrps in the requested domain", func() {
 				for _, lrp := range desiredLRPs[domain] {
-					expectedDesiredLRPs = append(expectedDesiredLRPs, lrp.VersionDownTo(format.V2))
+					expectedDesiredLRPs = append(expectedDesiredLRPs, lrp)
 				}
 				Expect(actualDesiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 			})
@@ -98,8 +97,8 @@ var _ = Describe("DesiredLRP API", func() {
 				Expect(actualDesiredLRPs).To(HaveLen(2))
 
 				expectedDesiredLRPs := []*models.DesiredLRP{
-					desiredLRPs["domain-1"][1].VersionDownTo(format.V2),
-					desiredLRPs["domain-2"][2].VersionDownTo(format.V2),
+					desiredLRPs["domain-1"][1],
+					desiredLRPs["domain-2"][2],
 				}
 				Expect(actualDesiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 			})
@@ -113,7 +112,7 @@ var _ = Describe("DesiredLRP API", func() {
 		)
 
 		JustBeforeEach(func() {
-			expectedDesiredLRP = desiredLRPs["domain-1"][0].VersionDownTo(format.V2)
+			expectedDesiredLRP = desiredLRPs["domain-1"][0]
 			desiredLRP, getErr = client.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.GetProcessGuid())
 			desiredLRP.ModificationTag.Epoch = "epoch"
 		})
@@ -210,7 +209,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 		BeforeEach(func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
-			expectedDesiredLRP = desiredLRP.VersionDownTo(format.V2)
+			expectedDesiredLRP = desiredLRP
 		})
 
 		JustBeforeEach(func() {

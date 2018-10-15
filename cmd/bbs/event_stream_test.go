@@ -6,7 +6,6 @@ import (
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/events"
-	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
@@ -449,7 +448,7 @@ var _ = Describe("Events API", func() {
 			Expect(ok).To(BeTrue())
 			taskCreatedEvent.Task.CreatedAt = 0
 			taskCreatedEvent.Task.UpdatedAt = 0
-			Expect(taskCreatedEvent.Task).To(DeepEqual(task.VersionDownTo(format.V2)))
+			Expect(taskCreatedEvent.Task).To(DeepEqual(task))
 
 			err = client.CancelTask(logger, "completed-task")
 			Expect(err).NotTo(HaveOccurred())
@@ -483,7 +482,7 @@ var _ = Describe("Events API", func() {
 			task.Failed = true
 			task.FailureReason = "task was cancelled"
 
-			Expect(taskRemovedEvent.Task).To(DeepEqual(task.VersionDownTo(format.V2)))
+			Expect(taskRemovedEvent.Task).To(DeepEqual(task))
 		})
 	})
 
