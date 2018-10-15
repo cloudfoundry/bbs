@@ -32,30 +32,33 @@ const (
 	EventTypeTaskRemoved = "task_removed"
 )
 
-func VersionDesiredLRPsToV0(event Event) Event {
+// Downgrade the DesiredLRPEvent payload (i.e. DesiredLRP(s)) to the given
+// target version
+func VersionDesiredLRPsTo(event Event, target format.Version) Event {
 	switch event := event.(type) {
 	case *DesiredLRPCreatedEvent:
-		return NewDesiredLRPCreatedEvent(event.DesiredLrp.VersionDownTo(format.V0))
+		return NewDesiredLRPCreatedEvent(event.DesiredLrp.VersionDownTo(target))
 	case *DesiredLRPRemovedEvent:
-		return NewDesiredLRPRemovedEvent(event.DesiredLrp.VersionDownTo(format.V0))
+		return NewDesiredLRPRemovedEvent(event.DesiredLrp.VersionDownTo(target))
 	case *DesiredLRPChangedEvent:
 		return NewDesiredLRPChangedEvent(
-			event.Before.VersionDownTo(format.V0),
-			event.After.VersionDownTo(format.V0),
+			event.Before.VersionDownTo(target),
+			event.After.VersionDownTo(target),
 		)
 	default:
 		return event
 	}
 }
 
-func VersionTaskDefinitionsToV2(event Event) Event {
+// Downgrade the TaskEvent payload (i.e. Task(s)) to the given target version
+func VersionTaskDefinitionsTo(event Event, target format.Version) Event {
 	switch event := event.(type) {
 	case *TaskCreatedEvent:
-		return NewTaskCreatedEvent(event.Task.VersionDownTo(format.V2))
+		return NewTaskCreatedEvent(event.Task.VersionDownTo(target))
 	case *TaskRemovedEvent:
-		return NewTaskRemovedEvent(event.Task.VersionDownTo(format.V2))
+		return NewTaskRemovedEvent(event.Task.VersionDownTo(target))
 	case *TaskChangedEvent:
-		return NewTaskChangedEvent(event.Before.VersionDownTo(format.V2), event.After.VersionDownTo(format.V2))
+		return NewTaskChangedEvent(event.Before.VersionDownTo(target), event.After.VersionDownTo(target))
 	default:
 		return event
 	}

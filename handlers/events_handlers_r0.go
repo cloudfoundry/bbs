@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -64,7 +65,7 @@ func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, 
 		if err != nil {
 			return event, err
 		}
-		event = models.VersionDesiredLRPsToV0(event)
+		event = models.VersionDesiredLRPsTo(event, format.V0)
 		return event, err
 	}
 
@@ -129,7 +130,7 @@ func (h *LRPInstanceEventHandler) Subscribe_r0(logger lager.Logger, w http.Respo
 		if err != nil {
 			return event, err
 		}
-		event = models.VersionDesiredLRPsToV0(event)
+		event = models.VersionDesiredLRPsTo(event, format.V0)
 		return event, err
 	}
 
@@ -161,7 +162,7 @@ func (h *TaskEventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWrit
 		if err != nil {
 			return event, err
 		}
-		event = models.VersionTaskDefinitionsToV2(event)
+		event = models.VersionTaskDefinitionsTo(event, format.V2)
 		return event, err
 	}
 
