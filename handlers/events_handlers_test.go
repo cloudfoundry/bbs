@@ -166,7 +166,7 @@ var _ = Describe("Event Handlers", func() {
 		BeforeEach(func() {
 			desiredHub = events.NewHub()
 			actualHub = events.NewHub()
-			handler = handlers.NewEventHandler(desiredHub, actualHub)
+			handler = handlers.NewLRPGroupEventsHandler(desiredHub, actualHub)
 		})
 
 		AfterEach(func() {

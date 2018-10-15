@@ -12,7 +12,7 @@ type EventController interface {
 	Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request)
 }
 
-type EventHandler struct {
+type LRPGroupEventsHandler struct {
 	desiredHub events.Hub
 	actualHub  events.Hub
 }
@@ -26,8 +26,8 @@ type LRPInstanceEventHandler struct {
 	lrpInstanceHub events.Hub
 }
 
-func NewEventHandler(desiredHub, actualHub events.Hub) *EventHandler {
-	return &EventHandler{
+func NewLRPGroupEventsHandler(desiredHub, actualHub events.Hub) *LRPGroupEventsHandler {
+	return &LRPGroupEventsHandler{
 		desiredHub: desiredHub,
 		actualHub:  actualHub,
 	}

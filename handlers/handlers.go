@@ -60,7 +60,7 @@ func New(
 	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, actualLRPInstanceHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
 	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, maxTaskPlacementRetries)
 	taskHandler := NewTaskHandler(taskController, exitChan)
-	eventsHandler := NewEventHandler(desiredHub, actualHub)
+	lrpGroupEventsHandler := NewLRPGroupEventsHandler(desiredHub, actualHub)
 	taskEventsHandler := NewTaskEventHandler(taskHub)
 	lrpInstanceEventsHandler := NewLRPInstanceEventHandler(desiredHub, actualLRPInstanceHub)
 	cellsHandler := NewCellHandler(serviceClient, exitChan)
@@ -115,7 +115,7 @@ func New(
 		bbs.DeleteTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),
 
 		// Events
-		bbs.EventStreamRoute_r0:            route(middleware.LogWrap(logger, accessLogger, eventsHandler.Subscribe_r0)),
+		bbs.EventStreamRoute_r0:            route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0)),
 		bbs.TaskEventStreamRoute_r0:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
 		bbs.LrpInstanceEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0)),
 

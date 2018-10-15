@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (h *EventHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *LRPGroupEventsHandler) Subscribe_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("subscribe-r0")
 
 	request := &models.EventsByCellId{}
