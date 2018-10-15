@@ -97,8 +97,8 @@ func New(
 		// Desired LRPs
 		bbs.DesiredLRPsRoute_r3:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs), emitter)),
 		bbs.DesiredLRPByProcessGuidRoute_r3:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid), emitter)),
-		bbs.DesiredLRPsRoute_r2:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs_r2), emitter)),
-		bbs.DesiredLRPByProcessGuidRoute_r2:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid_r2), emitter)),
+		bbs.DesiredLRPsRoute_r2:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs_r2), emitter)),             // DEPRECATED
+		bbs.DesiredLRPByProcessGuidRoute_r2:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid_r2), emitter)), // DEPRECATED
 		bbs.DesiredLRPSchedulingInfosRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPSchedulingInfos), emitter)),
 		bbs.DesireDesiredLRPRoute_r2:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP), emitter)),
 		bbs.UpdateDesiredLRPRoute_r0:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.UpdateDesiredLRP), emitter)),
@@ -119,9 +119,9 @@ func New(
 		bbs.DeleteTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),
 
 		// Events
-		bbs.EventStreamRoute_r0:            route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0)),
-		bbs.TaskEventStreamRoute_r0:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),
-		bbs.LrpInstanceEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0)),
+		bbs.EventStreamRoute_r0:            route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0)),    // DEPRECATED
+		bbs.TaskEventStreamRoute_r0:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)),        // DEPRECATED
+		bbs.LrpInstanceEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0)), // DEPRECATED
 		bbs.LRPGroupEventStreamRoute_r1:    route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1)),
 		bbs.TaskEventStreamRoute_r1:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1)),
 		bbs.LRPInstanceEventStreamRoute_r1: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1)),

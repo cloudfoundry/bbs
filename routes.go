@@ -58,9 +58,9 @@ const (
 	DeleteTaskRoute_r0    = "DeleteTask"
 
 	// Event Streaming
-	EventStreamRoute_r0            = "EventStream_r0"
-	TaskEventStreamRoute_r0        = "TaskEventStream_r0"
-	LrpInstanceEventStreamRoute_r0 = "LrpInstanceEventStream_r0"
+	EventStreamRoute_r0            = "EventStream_r0"            // DEPRECATED
+	TaskEventStreamRoute_r0        = "TaskEventStream_r0"        // DEPRECATED
+	LrpInstanceEventStreamRoute_r0 = "LrpInstanceEventStream_r0" // DEPRECATED
 	LRPGroupEventStreamRoute_r1    = "EventStream"
 	TaskEventStreamRoute_r1        = "TaskEventStream"
 	LRPInstanceEventStreamRoute_r1 = "LRPInstanceEventStream"
@@ -101,8 +101,8 @@ var Routes = rata.Routes{
 	// Desired LRPs
 	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute_r0},
 
-	{Path: "/v1/desired_lrps/list.r2", Method: "POST", Name: DesiredLRPsRoute_r2},
-	{Path: "/v1/desired_lrps/get_by_process_guid.r2", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r2},
+	{Path: "/v1/desired_lrps/list.r2", Method: "POST", Name: DesiredLRPsRoute_r2},                            // DEPRECATED
+	{Path: "/v1/desired_lrps/get_by_process_guid.r2", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r2}, // DEPRECATED
 	{Path: "/v1/desired_lrps/list.r3", Method: "POST", Name: DesiredLRPsRoute_r3},
 	{Path: "/v1/desired_lrps/get_by_process_guid.r3", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r3},
 
