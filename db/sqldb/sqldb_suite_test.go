@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
@@ -91,7 +92,7 @@ var _ = BeforeSuite(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	db = helpers.NewMonitoredDB(rawDB, helpers.NewQueryMonitor())
+	db = helpers.NewMonitoredDB(rawDB, monitor.New())
 
 	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 	err = sqlDB.CreateConfigurationsTable(logger)

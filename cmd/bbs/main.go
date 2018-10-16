@@ -21,6 +21,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryptor"
 	"code.cloudfoundry.org/bbs/events"
@@ -143,7 +144,7 @@ func main() {
 		logger.Fatal("sql-failed-to-connect", err)
 	}
 
-	wrappedDB := helpers.NewMonitoredDB(sqlConn, helpers.NewQueryMonitor())
+	wrappedDB := helpers.NewMonitoredDB(sqlConn, monitor.New())
 	sqlDB := sqldb.NewSQLDB(
 		wrappedDB,
 		bbsConfig.ConvergenceWorkers,

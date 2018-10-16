@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"database/sql"
+
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 )
 
 type RowScanner interface {
@@ -30,15 +32,15 @@ type Tx interface {
 
 type monitoredTx struct {
 	tx      *sql.Tx
-	monitor QueryMonitor
+	monitor monitor.Monitor
 }
 
 type monitoredDB struct {
 	db      *sql.DB
-	monitor QueryMonitor
+	monitor monitor.Monitor
 }
 
-func NewMonitoredDB(db *sql.DB, monitor QueryMonitor) QueryableDB {
+func NewMonitoredDB(db *sql.DB, monitor monitor.Monitor) QueryableDB {
 	return &monitoredDB{
 		db:      db,
 		monitor: monitor,
@@ -51,7 +53,7 @@ func (db *monitoredDB) OpenConnections() int {
 
 func (q *monitoredDB) Begin() (Tx, error) {
 	var innerTx *sql.Tx
-	err := q.monitor.MonitorQuery(func() error {
+	err := q.monitor.Monitor(func() error {
 		var err error
 		innerTx, err = q.db.Begin()
 		return err
@@ -67,7 +69,7 @@ func (q *monitoredDB) Begin() (Tx, error) {
 
 func (q *monitoredDB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	var result sql.Result
-	err := q.monitor.MonitorQuery(func() error {
+	err := q.monitor.Monitor(func() error {
 		var err error
 		result, err = q.db.Exec(query, args...)
 		return err
@@ -81,7 +83,7 @@ func (q *monitoredDB) Prepare(query string) (*sql.Stmt, error) {
 
 func (q *monitoredDB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	var result *sql.Rows
-	err := q.monitor.MonitorQuery(func() error {
+	err := q.monitor.Monitor(func() error {
 		var err error
 		result, err = q.db.Query(query, args...)
 		return err
@@ -95,7 +97,7 @@ func (q *monitoredDB) QueryRow(query string, args ...interface{}) RowScanner {
 
 func (tx *monitoredTx) Exec(query string, args ...interface{}) (sql.Result, error) {
 	var result sql.Result
-	err := tx.monitor.MonitorQuery(func() error {
+	err := tx.monitor.Monitor(func() error {
 		var err error
 		result, err = tx.tx.Exec(query, args...)
 		return err
@@ -109,7 +111,7 @@ func (tx *monitoredTx) Prepare(query string) (*sql.Stmt, error) {
 
 func (tx *monitoredTx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	var result *sql.Rows
-	err := tx.monitor.MonitorQuery(func() error {
+	err := tx.monitor.Monitor(func() error {
 		var err error
 		result, err = tx.tx.Query(query, args...)
 		return err
@@ -122,24 +124,24 @@ func (tx *monitoredTx) QueryRow(query string, args ...interface{}) RowScanner {
 }
 
 func (tx *monitoredTx) Commit() error {
-	return tx.monitor.MonitorQuery(tx.tx.Commit)
+	return tx.monitor.Monitor(tx.tx.Commit)
 }
 
 func (tx *monitoredTx) Rollback() error {
-	return tx.monitor.MonitorQuery(tx.tx.Rollback)
+	return tx.monitor.Monitor(tx.tx.Rollback)
 }
 
 type scannableRow struct {
-	monitor QueryMonitor
+	monitor monitor.Monitor
 	scanner RowScanner
 }
 
-func NewRowScanner(monitor QueryMonitor, scanner RowScanner) RowScanner {
+func NewRowScanner(monitor monitor.Monitor, scanner RowScanner) RowScanner {
 	return &scannableRow{monitor: monitor, scanner: scanner}
 }
 
 func (r *scannableRow) Scan(dest ...interface{}) error {
-	return r.monitor.MonitorQuery(func() error {
+	return r.monitor.Monitor(func() error {
 		return r.scanner.Scan(dest...)
 	})
 }

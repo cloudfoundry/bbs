@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
@@ -106,7 +107,7 @@ var _ = Describe("Version", func() {
 			BeforeEach(func() {
 				db, err := sql.Open(dbDriverName, fmt.Sprintf("%sinvalid-db", dbBaseConnectionString))
 				Expect(err).NotTo(HaveOccurred())
-				helperDB := helpers.NewMonitoredDB(db, helpers.NewQueryMonitor())
+				helperDB := helpers.NewMonitoredDB(db, monitor.New())
 				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 			})
 

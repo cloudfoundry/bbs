@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/guidprovider"
@@ -97,7 +98,7 @@ var _ = Describe("Convergence API", func() {
 					Expect(err).NotTo(HaveOccurred())
 					keyManager, err := encryption.NewKeyManager(key, keys)
 					cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-					wrappedDB := helpers.NewMonitoredDB(sqlRunner.DB(), helpers.NewQueryMonitor())
+					wrappedDB := helpers.NewMonitoredDB(sqlRunner.DB(), monitor.New())
 					metronClient := &testhelpers.FakeIngressClient{}
 					db = sqldb.NewSQLDB(
 						wrappedDB,
