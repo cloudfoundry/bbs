@@ -1,5 +1,7 @@
 package models
 
+import strings "strings"
+
 func (l *ImageLayer) Validate() error {
 	var validationError ValidationError
 
@@ -80,7 +82,7 @@ func (layers ImageLayers) ToDownloadActions(legacyDownloadUser string, existingA
 	downloadActions := []ActionInterface{}
 
 	for _, layer := range layers.FilterByType(LayerTypeExclusive) {
-		digestAlgorithmName := layer.DigestAlgorithm.String()
+		digestAlgorithmName := strings.ToLower(layer.DigestAlgorithm.String())
 		downloadActions = append(downloadActions, &DownloadAction{
 			Artifact:          layer.Name,
 			From:              layer.Url,
@@ -120,13 +122,13 @@ func (layers ImageLayers) ToCachedDependencies() []*CachedDependency {
 		if layer.DigestAlgorithm == DigestAlgorithmInvalid {
 			c.ChecksumAlgorithm = ""
 		} else {
-			c.ChecksumAlgorithm = layer.DigestAlgorithm.String()
+			c.ChecksumAlgorithm = strings.ToLower(layer.DigestAlgorithm.String())
 		}
 
 		if layer.DigestValue == "" {
 			c.CacheKey = layer.Url
 		} else {
-			c.CacheKey = layer.DigestAlgorithm.String() + ":" + layer.DigestValue
+			c.CacheKey = c.ChecksumAlgorithm + ":" + layer.DigestValue
 		}
 
 		cachedDependencies = append(cachedDependencies, c)

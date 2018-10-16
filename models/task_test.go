@@ -91,8 +91,8 @@ var _ = Describe("Task", func() {
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
-				"media_type": "tgz",
-				"layer_type": "shared"
+				"media_type": "TGZ",
+				"layer_type": "Shared"
 			}
 		],
     "legacy_download_user": "some-user"

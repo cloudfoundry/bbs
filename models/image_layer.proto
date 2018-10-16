@@ -7,21 +7,21 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 message ImageLayer {
   enum DigestAlgorithm {
     DigestAlgorithmInvalid = 0;
-    sha256                 = 1 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha256"];
-    sha512                 = 2 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha512"];
+    SHA256                 = 1 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha256"];
+    SHA512                 = 2 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha512"];
   }
 
   enum MediaType {
     MediaTypeInvalid = 0;
-    tgz              = 1 [(gogoproto.enumvalue_customname) = "MediaTypeTgz"];
-    tar              = 2 [(gogoproto.enumvalue_customname) = "MediaTypeTar"];
-    zip              = 3 [(gogoproto.enumvalue_customname) = "MediaTypeZip"];
+    TGZ              = 1 [(gogoproto.enumvalue_customname) = "MediaTypeTgz"];
+    Tar              = 2 [(gogoproto.enumvalue_customname) = "MediaTypeTar"];
+    Zip              = 3 [(gogoproto.enumvalue_customname) = "MediaTypeZip"];
   }
 
   enum Type {
     LayerTypeInvalid = 0;
-    shared           = 1 [(gogoproto.enumvalue_customname) = "LayerTypeShared"];
-    exclusive        = 2 [(gogoproto.enumvalue_customname) = "LayerTypeExclusive"];
+    Shared           = 1 [(gogoproto.enumvalue_customname) = "LayerTypeShared"];
+    Exclusive        = 2 [(gogoproto.enumvalue_customname) = "LayerTypeExclusive"];
   }
 
   optional string name                      = 1 [(gogoproto.jsontag) = "name,omitempty"];
