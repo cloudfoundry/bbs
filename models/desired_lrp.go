@@ -150,9 +150,9 @@ func downgradeDesiredLRPV2ToV1(d *DesiredLRP) *DesiredLRP {
 }
 
 func downgradeDesiredLRPV1ToV0(d *DesiredLRP) *DesiredLRP {
-	d.Action.SetDeprecatedTimeoutNs()
-	d.Setup.SetDeprecatedTimeoutNs()
-	d.Monitor.SetDeprecatedTimeoutNs()
+	d.Action = d.Action.SetDeprecatedTimeoutNs()
+	d.Setup = d.Setup.SetDeprecatedTimeoutNs()
+	d.Monitor = d.Monitor.SetDeprecatedTimeoutNs()
 	d.DeprecatedStartTimeoutS = uint32(d.StartTimeoutMs) / 1000
 	return newDesiredLRPWithCachedDependenciesAsSetupActions(d)
 }

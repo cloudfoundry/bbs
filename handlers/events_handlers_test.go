@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
@@ -12,12 +13,12 @@ import (
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/vito/go-sse/sse"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/vito/go-sse/sse"
 )
 
 var _ = Describe("Event Handlers", func() {
@@ -565,6 +566,59 @@ var _ = Describe("Event Handlers", func() {
 
 				server.Close()
 			})
+		})
+	})
+
+	Describe("when there are r0 and r1 subscribers", func() {
+		var (
+			desiredHub events.Hub
+			actualHub  events.Hub
+		)
+
+		BeforeEach(func() {
+			desiredHub = events.NewHub()
+			actualHub = events.NewHub()
+			handler = handlers.NewLRPGroupEventsHandler(desiredHub, actualHub)
+		})
+
+		// The race occurs when r0 event stream is doing the down conversion
+		// and r1 event stream is serializing the same event.
+		It("creates a deep copy of the desired lrp to avoid race", func() {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasSuffix(r.URL.Path, "r1") {
+					handler.Subscribe_r1(logger, w, r)
+				} else {
+					handler.Subscribe_r0(logger, w, r)
+				}
+			}))
+
+			responseV0, err := http.Get(server.URL + "/v1/events")
+			Expect(err).NotTo(HaveOccurred())
+			readerV0 := sse.NewReadCloser(responseV0.Body)
+
+			responseV1, err := http.Get(server.URL + "/v1/events.r1")
+			Expect(err).NotTo(HaveOccurred())
+			readerV1 := sse.NewReadCloser(responseV1.Body)
+
+			desiredLRPV3 := model_helpers.NewValidDesiredLRP("guid")
+			eventV1 := models.NewDesiredLRPCreatedEvent(desiredLRPV3)
+
+			desiredLRPV0 := model_helpers.NewValidDesiredLRP("guid").VersionDownTo(format.V0)
+			eventV0 := models.NewDesiredLRPCreatedEvent(desiredLRPV0)
+
+			desiredHub.Emit(models.NewDesiredLRPCreatedEvent(model_helpers.NewValidDesiredLRP("guid")))
+
+			eventsV0 := events.NewEventSource(readerV0)
+			eventsV1 := events.NewEventSource(readerV1)
+
+			actualEventV0, err := eventsV0.Next()
+			Expect(err).NotTo(HaveOccurred())
+
+			actualEventV1, err := eventsV1.Next()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(actualEventV0).To(test_helpers.DeepEqual(eventV0))
+			Expect(actualEventV1).To(test_helpers.DeepEqual(eventV1))
 		})
 	})
 

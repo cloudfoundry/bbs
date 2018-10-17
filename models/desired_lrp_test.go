@@ -12,7 +12,6 @@ import (
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	"github.com/gogo/protobuf/proto"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -413,6 +412,7 @@ var _ = Describe("DesiredLRP", func() {
 		Context("V2->V0", func() {
 			var (
 				downloadAction1, downloadAction2 models.DownloadAction
+				setupAction                      *models.TimeoutAction
 			)
 
 			BeforeEach(func() {
@@ -439,6 +439,18 @@ var _ = Describe("DesiredLRP", func() {
 					User:      "some-user",
 					LogSource: "log-source-2",
 				}
+
+				setupAction = models.Timeout(
+					&models.DownloadAction{
+						Artifact:  "name-3",
+						From:      "from-3",
+						To:        "to-3",
+						CacheKey:  "cache-key-3",
+						User:      "some-user",
+						LogSource: "log-source-3",
+					},
+					20*time.Millisecond,
+				)
 
 				desiredLRP.Action = models.WrapAction(models.Timeout(
 					&models.RunAction{
@@ -488,6 +500,12 @@ var _ = Describe("DesiredLRP", func() {
 				})
 			})
 
+			It("original LRP isn't changed", func() {
+				desiredLRP.VersionDownTo(format.V0)
+				Expect(desiredLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeZero())
+				Expect(desiredLRP.GetMonitor().GetTimeoutAction().DeprecatedTimeoutNs).To(BeZero())
+			})
+
 			It("converts TimeoutMs to Timeout in Nanoseconds", func() {
 				convertedLRP := desiredLRP.VersionDownTo(format.V0)
 				Expect(convertedLRP.GetAction().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
@@ -500,6 +518,24 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			Context("when there is an existing setup action", func() {
+				BeforeEach(func() {
+					desiredLRP.Setup = models.WrapAction(setupAction)
+				})
+
+				It("leaves original LRP unchanged", func() {
+					desiredLRP.CachedDependencies = nil // avoid messing up the Setup Action
+
+					desiredLRP.VersionDownTo(format.V0)
+					Expect(desiredLRP.GetSetup().GetTimeoutAction().DeprecatedTimeoutNs).To(BeZero())
+				})
+
+				It("converts TimeoutMs to Timeout in Nanoseconds", func() {
+					desiredLRP.CachedDependencies = nil // avoid messing up the Setup Action
+
+					convertedLRP := desiredLRP.VersionDownTo(format.V0)
+					Expect(convertedLRP.GetSetup().GetTimeoutAction().DeprecatedTimeoutNs).To(BeEquivalentTo(20 * time.Millisecond))
+				})
+
 				It("appends the new converted step action to the front", func() {
 					convertedLRP := desiredLRP.VersionDownTo(format.V0)
 					Expect(convertedLRP.Setup.SerialAction.Actions).To(HaveLen(2))
@@ -511,12 +547,12 @@ var _ = Describe("DesiredLRP", func() {
 								{
 									ParallelAction: &models.ParallelAction{
 										Actions: []*models.Action{
-											&models.Action{DownloadAction: &downloadAction1},
-											&models.Action{DownloadAction: &downloadAction2},
+											models.WrapAction(&downloadAction1),
+											models.WrapAction(&downloadAction2),
 										},
 									},
 								},
-								desiredLRP.Setup,
+								desiredLRP.Setup.SetDeprecatedTimeoutNs(),
 							},
 						},
 					}))
