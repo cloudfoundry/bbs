@@ -7,11 +7,10 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/locket"
-	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
 var _ = Describe("Metrics", func() {
@@ -51,6 +50,14 @@ var _ = Describe("Metrics", func() {
 		))
 	})
 
+	It("starts emitting db metrics", func() {
+		Eventually(testMetricsChan, 70*time.Second).Should(Receive(
+			testhelpers.MatchV2Metric(
+				testhelpers.MetricAndValue{Name: "DBOpenConnections"},
+			),
+		))
+	})
+
 	Context("when the BBS instance isn't holding the lock", func() {
 		var competingBBSLockProcess ifrit.Process
 
@@ -85,6 +92,14 @@ var _ = Describe("Metrics", func() {
 			Consistently(testMetricsChan, 20*time.Second).ShouldNot(Receive(
 				testhelpers.MatchV2Metric(
 					testhelpers.MetricAndValue{Name: "ConvergenceTaskDuration"},
+				),
+			))
+		})
+
+		It("does not emit db metrics", func() {
+			Consistently(testMetricsChan, 70*time.Second).ShouldNot(Receive(
+				testhelpers.MatchV2Metric(
+					testhelpers.MetricAndValue{Name: "DBOpenConnections"},
 				),
 			))
 		})

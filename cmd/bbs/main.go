@@ -144,9 +144,10 @@ func main() {
 		logger.Fatal("sql-failed-to-connect", err)
 	}
 
-	wrappedDB := helpers.NewMonitoredDB(sqlConn, monitor.New())
+	queryMonitor := monitor.New()
+	monitoredDB := helpers.NewMonitoredDB(sqlConn, queryMonitor)
 	sqlDB := sqldb.NewSQLDB(
-		wrappedDB,
+		monitoredDB,
 		bbsConfig.ConvergenceWorkers,
 		bbsConfig.UpdateWorkers,
 		cryptor,
@@ -288,8 +289,8 @@ func main() {
 	fileDescriptorMetronNotifier := metrics.NewFileDescriptorMetronNotifier(logger, fileDescriptorTicker, metronClient, fileDescriptorPath)
 	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, requestStatsTicker, metronClient)
 	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, locksHeldTicker, metronClient)
-
 	taskStatMetronNotifier := metrics.NewTaskStatMetronNotifier(logger, clock, metronClient)
+	dbStatMetronNotifier := metrics.NewDBStatMetronNotifier(logger, clock, monitoredDB, metronClient, queryMonitor)
 
 	handler := handlers.New(
 		logger,
@@ -382,6 +383,7 @@ func main() {
 		{"converger", convergerProcess},
 		{"lrp-stat-metron-notifier", lrpStatMetronNotifier},
 		{"task-stat-metron-notifier", taskStatMetronNotifier},
+		{"db-stat-metron-notifier", dbStatMetronNotifier},
 	}
 
 	if bbsConfig.EnableConsulServiceRegistration {
