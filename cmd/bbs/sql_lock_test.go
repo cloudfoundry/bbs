@@ -14,11 +14,8 @@ import (
 	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	"code.cloudfoundry.org/locket/lock"
 	locketmodels "code.cloudfoundry.org/locket/models"
-	"github.com/cloudfoundry/sonde-go/events"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gstruct"
-	"github.com/onsi/gomega/types"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 )
@@ -318,13 +315,3 @@ var _ = Describe("SqlLock", func() {
 		})
 	})
 })
-
-func matchEvent(typ events.Envelope_EventType, name string, value float64) types.GomegaMatcher {
-	return gstruct.PointTo(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-		"EventType": gstruct.PointTo(Equal(typ)),
-		"ValueMetric": gstruct.PointTo(gstruct.MatchFields(gstruct.IgnoreExtras, gstruct.Fields{
-			"Name":  gstruct.PointTo(Equal(name)),
-			"Value": gstruct.PointTo(Equal(value)),
-		})),
-	}))
-}
