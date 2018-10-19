@@ -273,8 +273,8 @@ var _ = Describe("DesiredLRP", func() {
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
-				"media_type": "tgz",
-				"layer_type": "shared"
+				"media_type": "TGZ",
+				"layer_type": "SHARED"
 			}
 		],
 		"legacy_download_user": "some-user"

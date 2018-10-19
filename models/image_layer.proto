@@ -6,22 +6,22 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message ImageLayer {
   enum DigestAlgorithm {
-    DigestAlgorithmInvalid = 0;
-    sha256                 = 1 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha256"];
-    sha512                 = 2 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha512"];
+    DigestAlgorithmInvalid = 0; // not camel cased since it isn't supposed to be used by API users
+    SHA256                 = 1 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha256"];
+    SHA512                 = 2 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha512"];
   }
 
   enum MediaType {
-    MediaTypeInvalid = 0;
-    tgz              = 1 [(gogoproto.enumvalue_customname) = "MediaTypeTgz"];
-    tar              = 2 [(gogoproto.enumvalue_customname) = "MediaTypeTar"];
-    zip              = 3 [(gogoproto.enumvalue_customname) = "MediaTypeZip"];
+    MediaTypeInvalid = 0; // not camel cased since it isn't supposed to be used by API users
+    TGZ              = 1 [(gogoproto.enumvalue_customname) = "MediaTypeTgz"];
+    TAR              = 2 [(gogoproto.enumvalue_customname) = "MediaTypeTar"];
+    ZIP              = 3 [(gogoproto.enumvalue_customname) = "MediaTypeZip"];
   }
 
   enum Type {
-    LayerTypeInvalid = 0;
-    shared           = 1 [(gogoproto.enumvalue_customname) = "LayerTypeShared"];
-    exclusive        = 2 [(gogoproto.enumvalue_customname) = "LayerTypeExclusive"];
+    LayerTypeInvalid = 0; // not camel cased since it isn't supposed to be used by API users
+    SHARED           = 1 [(gogoproto.enumvalue_customname) = "LayerTypeShared"];
+    EXCLUSIVE        = 2 [(gogoproto.enumvalue_customname) = "LayerTypeExclusive"];
   }
 
   optional string name                      = 1 [(gogoproto.jsontag) = "name,omitempty"];
