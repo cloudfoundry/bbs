@@ -149,49 +149,56 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 }
 
 func (h *EvacuationController) EvacuateCrashedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+	eventCalculator := EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
 
 	guid := actualLRPKey.ProcessGuid
 	index := actualLRPKey.Index
-	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 
+	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-querying-actualLRPs", err, lager.Data{"guid": guid, "indec": index})
+		logger.Error("failed-fetching-actual-lrps", err)
 		return err
 	}
 
+	newLRPs := make([]*models.ActualLRP, len(actualLRPs))
+	copy(newLRPs, actualLRPs)
+
+	defer func() {
+		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+	}()
+
 	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
-	if targetActualLRP != nil && targetActualLRP.Presence == models.ActualLRP_Suspect {
-		suspect, err := h.suspectLRPDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+	if targetActualLRP == nil {
+		logger.Debug("actual-lrp-not-found", lager.Data{"guid": guid, "index": index})
+		return models.ErrResourceNotFound
+	}
+
+	switch targetActualLRP.Presence {
+	case models.ActualLRP_Evacuating:
+		err = h.db.RemoveEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey)
+		if err != nil {
+			logger.Error("failed-removing-evacuating-actual-lrp", err)
+			return err
+		}
+		newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+	case models.ActualLRP_Suspect:
+		_, err := h.suspectLRPDB.RemoveSuspectActualLRP(logger, actualLRPKey)
 		if err != nil {
 			logger.Error("failed-removing-suspect-actual-lrp", err)
 			return err
-		} else {
-			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspect.ToActualLRPGroup()))
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspect))
 		}
-		return nil
+		newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+	case models.ActualLRP_Ordinary:
+		_, _, _, err = h.actualLRPDB.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
+		if err != nil {
+			logger.Error("failed-to-crash-actual-lrp", err)
+			return err
+		}
 	}
 
-	// try removing the evacuating instance if present
-	err = h.db.RemoveEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey)
-	if err != nil {
-		logger.Error("failed-removing-evacuating-actual-lrp", err)
-		bbsErr := models.ConvertError(err)
-		if bbsErr != nil && bbsErr.Type == models.Error_Unrecoverable {
-			return bbsErr
-		}
-	} else {
-		evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
-		go h.actualHub.Emit(models.NewActualLRPRemovedEvent(evacuating.ToActualLRPGroup()))
-		go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(evacuating))
-	}
-
-	_, _, _, err = h.actualLRPDB.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
-	bbsErr := models.ConvertError(err)
-	if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
-		logger.Error("failed-crashing-actual-lrp", err)
-		return bbsErr
-	}
 	return nil
 }
 
