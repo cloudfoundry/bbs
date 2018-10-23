@@ -564,7 +564,7 @@ func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error
 	request := models.RemoveDesiredLRPRequest{
 		ProcessGuid: processGuid,
 	}
-	return c.doDesiredLRPLifecycleRequest(logger, RemoveDesiredLRPRoute, &request)
+	return c.doDesiredLRPLifecycleRequest(logger, RemoveDesiredLRPRoute_r0, &request)
 }
 
 func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error) {

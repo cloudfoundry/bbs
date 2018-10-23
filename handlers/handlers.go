@@ -102,7 +102,7 @@ func New(
 		bbs.DesiredLRPSchedulingInfosRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPSchedulingInfos), emitter)),
 		bbs.DesireDesiredLRPRoute_r2:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP), emitter)),
 		bbs.UpdateDesiredLRPRoute_r0:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.UpdateDesiredLRP), emitter)),
-		bbs.RemoveDesiredLRPRoute:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.RemoveDesiredLRP), emitter)),
+		bbs.RemoveDesiredLRPRoute_r0:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.RemoveDesiredLRP), emitter)),
 
 		// Tasks
 		bbs.TasksRoute_r2:         route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks_r2), emitter)),      // DEPRECATED

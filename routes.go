@@ -41,7 +41,7 @@ const (
 	// Desire LRP Lifecycle
 	DesireDesiredLRPRoute_r2 = "DesireDesiredLRP"
 	UpdateDesiredLRPRoute_r0 = "UpdateDesireLRP"
-	RemoveDesiredLRPRoute    = "RemoveDesiredLRP"
+	RemoveDesiredLRPRoute_r0 = "RemoveDesiredLRP"
 
 	// Tasks
 	TasksRoute_r2         = "Tasks_r2"
@@ -109,7 +109,7 @@ var Routes = rata.Routes{
 	// Desire LPR Lifecycle
 	{Path: "/v1/desired_lrp/desire.r2", Method: "POST", Name: DesireDesiredLRPRoute_r2},
 	{Path: "/v1/desired_lrp/update", Method: "POST", Name: UpdateDesiredLRPRoute_r0},
-	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute},
+	{Path: "/v1/desired_lrp/remove", Method: "POST", Name: RemoveDesiredLRPRoute_r0},
 
 	// Tasks
 	{Path: "/v1/tasks/list.r2", Method: "POST", Name: TasksRoute_r2},                  // DEPRECATED
