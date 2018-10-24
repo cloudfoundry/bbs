@@ -249,7 +249,7 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 				if err != nil {
 					logger.Error("cannot-parse-index", err, lager.Data{
 						"index":                indexStr,
-						"existing-indeces-str": existingIndicesStr,
+						"existing-indices-str": existingIndicesStr,
 					})
 					return
 				}

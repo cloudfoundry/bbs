@@ -89,7 +89,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 	index := actualLRPKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-querying-actualLRPs", err, lager.Data{"guid": guid, "indec": index})
+		logger.Error("failed-querying-actualLRPs", err, lager.Data{"guid": guid, "index": index})
 		return err, false
 	}
 
