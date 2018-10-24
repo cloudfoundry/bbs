@@ -213,7 +213,7 @@ var _ = BeforeEach(func() {
 			ActiveKeyLabel: "label",
 		},
 		ConvergeRepeatInterval: durationjson.Duration(time.Hour),
-		UUID:                   "bbs-bosh-boshy-bosh-bosh",
+		UUID: "bbs-bosh-boshy-bosh-bosh",
 
 		CaFile:   serverCaFile,
 		CertFile: path.Join(fixturesPath, "green-certs", "server.crt"),

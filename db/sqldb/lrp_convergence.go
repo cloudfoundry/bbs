@@ -366,9 +366,29 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-domains")
 
-	_, err := db.delete(logger, db.db, domainsTable, "expire_time <= ?", now.UnixNano())
+	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		domains, err := db.domains(logger, tx, time.Time{})
+		if err != nil {
+			return err
+		}
+
+		for _, d := range domains {
+			if d.expiresAt.After(now) {
+				continue
+			}
+
+			logger.Info("pruning-domain", lager.Data{"domain": d.name, "expire-at": d.expiresAt})
+			_, err := db.delete(logger, tx, domainsTable, "domain = ? ", d.name)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		logger.Error("failed-query", err)
+		logger.Error("cannot-prune-domains", err)
 	}
 }
 

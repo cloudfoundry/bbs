@@ -75,6 +75,7 @@ var (
 
 	domainColumns = helpers.ColumnList{
 		domainsTable + ".domain",
+		domainsTable + ".expire_time",
 	}
 )
 
