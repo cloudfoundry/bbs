@@ -31,7 +31,7 @@ func (h *DomainHandler) Domains(logger lager.Logger, w http.ResponseWriter, req 
 	var err error
 	logger = logger.Session("domains")
 	response := &models.DomainsResponse{}
-	response.Domains, err = h.db.Domains(logger)
+	response.Domains, err = h.db.FreshDomains(logger)
 	response.Error = models.ConvertError(err)
 	writeResponse(w, response)
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)

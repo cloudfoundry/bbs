@@ -11,16 +11,16 @@ import (
 )
 
 type FakeDB struct {
-	DomainsStub        func(logger lager.Logger) ([]string, error)
-	domainsMutex       sync.RWMutex
-	domainsArgsForCall []struct {
+	FreshDomainsStub        func(logger lager.Logger) ([]string, error)
+	freshDomainsMutex       sync.RWMutex
+	freshDomainsArgsForCall []struct {
 		logger lager.Logger
 	}
-	domainsReturns struct {
+	freshDomainsReturns struct {
 		result1 []string
 		result2 error
 	}
-	domainsReturnsOnCall map[int]struct {
+	freshDomainsReturnsOnCall map[int]struct {
 		result1 []string
 		result2 error
 	}
@@ -597,52 +597,52 @@ type FakeDB struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDB) Domains(logger lager.Logger) ([]string, error) {
-	fake.domainsMutex.Lock()
-	ret, specificReturn := fake.domainsReturnsOnCall[len(fake.domainsArgsForCall)]
-	fake.domainsArgsForCall = append(fake.domainsArgsForCall, struct {
+func (fake *FakeDB) FreshDomains(logger lager.Logger) ([]string, error) {
+	fake.freshDomainsMutex.Lock()
+	ret, specificReturn := fake.freshDomainsReturnsOnCall[len(fake.freshDomainsArgsForCall)]
+	fake.freshDomainsArgsForCall = append(fake.freshDomainsArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("Domains", []interface{}{logger})
-	fake.domainsMutex.Unlock()
-	if fake.DomainsStub != nil {
-		return fake.DomainsStub(logger)
+	fake.recordInvocation("FreshDomains", []interface{}{logger})
+	fake.freshDomainsMutex.Unlock()
+	if fake.FreshDomainsStub != nil {
+		return fake.FreshDomainsStub(logger)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.domainsReturns.result1, fake.domainsReturns.result2
+	return fake.freshDomainsReturns.result1, fake.freshDomainsReturns.result2
 }
 
-func (fake *FakeDB) DomainsCallCount() int {
-	fake.domainsMutex.RLock()
-	defer fake.domainsMutex.RUnlock()
-	return len(fake.domainsArgsForCall)
+func (fake *FakeDB) FreshDomainsCallCount() int {
+	fake.freshDomainsMutex.RLock()
+	defer fake.freshDomainsMutex.RUnlock()
+	return len(fake.freshDomainsArgsForCall)
 }
 
-func (fake *FakeDB) DomainsArgsForCall(i int) lager.Logger {
-	fake.domainsMutex.RLock()
-	defer fake.domainsMutex.RUnlock()
-	return fake.domainsArgsForCall[i].logger
+func (fake *FakeDB) FreshDomainsArgsForCall(i int) lager.Logger {
+	fake.freshDomainsMutex.RLock()
+	defer fake.freshDomainsMutex.RUnlock()
+	return fake.freshDomainsArgsForCall[i].logger
 }
 
-func (fake *FakeDB) DomainsReturns(result1 []string, result2 error) {
-	fake.DomainsStub = nil
-	fake.domainsReturns = struct {
+func (fake *FakeDB) FreshDomainsReturns(result1 []string, result2 error) {
+	fake.FreshDomainsStub = nil
+	fake.freshDomainsReturns = struct {
 		result1 []string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDB) DomainsReturnsOnCall(i int, result1 []string, result2 error) {
-	fake.DomainsStub = nil
-	if fake.domainsReturnsOnCall == nil {
-		fake.domainsReturnsOnCall = make(map[int]struct {
+func (fake *FakeDB) FreshDomainsReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.FreshDomainsStub = nil
+	if fake.freshDomainsReturnsOnCall == nil {
+		fake.freshDomainsReturnsOnCall = make(map[int]struct {
 			result1 []string
 			result2 error
 		})
 	}
-	fake.domainsReturnsOnCall[i] = struct {
+	fake.freshDomainsReturnsOnCall[i] = struct {
 		result1 []string
 		result2 error
 	}{result1, result2}
@@ -2671,8 +2671,8 @@ func (fake *FakeDB) RemoveSuspectActualLRPReturnsOnCall(i int, result1 *models.A
 func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.domainsMutex.RLock()
-	defer fake.domainsMutex.RUnlock()
+	fake.freshDomainsMutex.RLock()
+	defer fake.freshDomainsMutex.RUnlock()
 	fake.upsertDomainMutex.RLock()
 	defer fake.upsertDomainMutex.RUnlock()
 	fake.encryptionKeyLabelMutex.RLock()

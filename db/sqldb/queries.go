@@ -75,6 +75,7 @@ var (
 
 	domainColumns = helpers.ColumnList{
 		domainsTable + ".domain",
+		domainsTable + ".expire_time",
 	}
 )
 
@@ -310,7 +311,7 @@ func (db *SQLDB) all(logger lager.Logger, q helpers.Queryable, table string,
 	return db.helper.All(logger, q, table, columns, lockRow, wheres, whereBindings...)
 }
 
-func (db *SQLDB) upsert(logger lager.Logger, q helpers.Queryable, table string, attributes helpers.SQLAttributes, wheres string, whereBindings ...interface{}) (sql.Result, error) {
+func (db *SQLDB) upsert(logger lager.Logger, q helpers.Queryable, table string, attributes helpers.SQLAttributes, wheres string, whereBindings ...interface{}) (bool, error) {
 	return db.helper.Upsert(logger, q, table, attributes, wheres, whereBindings...)
 }
 

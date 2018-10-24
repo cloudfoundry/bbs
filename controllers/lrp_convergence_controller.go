@@ -130,7 +130,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	defer func() {
 		h.lrpStatMetronNotifier.RecordConvergenceDuration(h.clock.Since(start))
 
-		domains, err := h.domainDB.Domains(logger)
+		domains, err := h.domainDB.FreshDomains(logger)
 		if err != nil {
 			logger.Error("failed-getting-fresh-domains", err)
 		}

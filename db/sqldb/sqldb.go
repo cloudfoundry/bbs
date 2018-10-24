@@ -37,7 +37,7 @@ func NewSQLDB(
 ) *SQLDB {
 	helper := helpers.NewSQLHelper(flavor)
 	return &SQLDB{
-		db:                     db,
+		db: db,
 		convergenceWorkersSize: convergenceWorkersSize,
 		updateWorkersSize:      updateWorkersSize,
 		clock:                  clock,

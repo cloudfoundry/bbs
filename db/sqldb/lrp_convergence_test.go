@@ -127,6 +127,11 @@ var _ = Describe("LRPConvergence", func() {
 
 			Expect(fetchDomains()).NotTo(ContainElement(expiredDomain))
 		})
+
+		It("logs the expired domains", func() {
+			sqlDB.ConvergeLRPs(logger, cellSet)
+			Eventually(logger).Should(gbytes.Say("pruning-domain.*expired-domain"))
+		})
 	})
 
 	Context("when there are unclaimed LRPs", func() {
