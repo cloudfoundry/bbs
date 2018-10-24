@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("DomainDB", func() {
@@ -55,7 +56,6 @@ var _ = Describe("DomainDB", func() {
 		Context("when the domain is not present in the DB", func() {
 			It("inserts a new domain with the requested TTL", func() {
 				domain := "my-awesome-domain"
-
 				bbsErr := sqlDB.UpsertDomain(logger, domain, 5432)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
@@ -72,6 +72,14 @@ var _ = Describe("DomainDB", func() {
 				Expect(domainName).To(Equal(domain))
 				expectedExpireTime := fakeClock.Now().UTC().Add(time.Duration(5432) * time.Second).UnixNano()
 				Expect(expireTime).To(BeEquivalentTo(expectedExpireTime))
+			})
+
+			It("logs that a new domain was inserted", func() {
+				domain := "my-awesome-domain"
+				bbsErr := sqlDB.UpsertDomain(logger, domain, 5432)
+				Expect(bbsErr).NotTo(HaveOccurred())
+
+				Eventually(logger).Should(gbytes.Say("added-domain.*my-awesome-domain"))
 			})
 
 			It("never expires when the ttl is Zero", func() {
