@@ -54,6 +54,7 @@ type BBSConfig struct {
 	ReportInterval                  durationjson.Duration `json:"report_interval,omitempty"`
 	RequireSSL                      bool                  `json:"require_ssl,omitempty"`
 	SQLCACertFile                   string                `json:"sql_ca_cert_file,omitempty"`
+	SQLEnableIdentityVerification   bool                  `json:"sql_enable_identity_verification,omitempty"`
 	SessionName                     string                `json:"session_name,omitempty"`
 	SkipConsulLock                  bool                  `json:"skip_consul_lock,omitempty"`
 	TaskCallbackWorkers             int                   `json:"task_callback_workers,omitempty"`

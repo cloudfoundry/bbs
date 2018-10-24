@@ -2,13 +2,10 @@ package main
 
 import (
 	"crypto/rand"
-	"crypto/tls"
-	"crypto/x509"
 	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -47,9 +44,7 @@ import (
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/rep/maintain"
-	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
-	"github.com/lib/pq"
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -125,10 +120,11 @@ func main() {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
-	connectionString := appendExtraConnectionStringParam(logger,
+	connectionString := helpers.AddTLSParams(logger,
 		bbsConfig.DatabaseDriver,
 		bbsConfig.DatabaseConnectionString,
 		bbsConfig.SQLCACertFile,
+		bbsConfig.SQLEnableIdentityVerification,
 	)
 
 	sqlConn, err := sql.Open(bbsConfig.DatabaseDriver, connectionString)
@@ -419,53 +415,6 @@ func main() {
 	}
 
 	logger.Info("exited")
-}
-
-func appendExtraConnectionStringParam(logger lager.Logger, driverName, databaseConnectionString, sqlCACertFile string) string {
-	switch driverName {
-	case "mysql":
-		cfg, err := mysql.ParseDSN(databaseConnectionString)
-		if err != nil {
-			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
-		}
-
-		if sqlCACertFile != "" {
-			certBytes, err := ioutil.ReadFile(sqlCACertFile)
-			if err != nil {
-				logger.Fatal("failed-to-read-sql-ca-file", err)
-			}
-
-			caCertPool := x509.NewCertPool()
-			if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
-				logger.Fatal("failed-to-parse-sql-ca", err)
-			}
-
-			tlsConfig := &tls.Config{
-				InsecureSkipVerify: false,
-				RootCAs:            caCertPool,
-			}
-
-			mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
-			cfg.TLSConfig = "bbs-tls"
-		}
-		cfg.Timeout = 10 * time.Minute
-		cfg.ReadTimeout = 10 * time.Minute
-		cfg.WriteTimeout = 10 * time.Minute
-		databaseConnectionString = cfg.FormatDSN()
-	case "postgres":
-		var err error
-		databaseConnectionString, err = pq.ParseURL(databaseConnectionString)
-		if err != nil {
-			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
-		}
-		if sqlCACertFile == "" {
-			databaseConnectionString = databaseConnectionString + " sslmode=disable"
-		} else {
-			databaseConnectionString = fmt.Sprintf("%s sslmode=verify-ca sslrootcert=%s", databaseConnectionString, sqlCACertFile)
-		}
-	}
-
-	return databaseConnectionString
 }
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
