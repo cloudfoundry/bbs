@@ -126,7 +126,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			BeforeEach(func() {
 				domains = []string{"domain-1", "domain-2"}
-				fakeDomainDB.DomainsReturns(domains, nil)
+				fakeDomainDB.FreshDomainsReturns(domains, nil)
 			})
 
 			It("records domain freshness metric for each domain", func() {

@@ -407,7 +407,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 
 func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {
 	logger.Debug("listing-domains")
-	domains, err := db.Domains(logger)
+	domains, err := db.FreshDomains(logger)
 	if err != nil {
 		logger.Error("failed-listing-domains", err)
 		return nil, err

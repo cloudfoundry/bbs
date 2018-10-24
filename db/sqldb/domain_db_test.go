@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("DomainDB", func() {
-	Describe("Domains", func() {
+	Describe("FreshDomains", func() {
 		Context("when there are domains in the DB", func() {
 			BeforeEach(func() {
 				futureTime := fakeClock.Now().Add(5 * time.Second).UnixNano()
@@ -33,8 +33,8 @@ var _ = Describe("DomainDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("returns all the non-expired domains in the DB", func() {
-				domains, err := sqlDB.Domains(logger)
+			It("returns all the fresh domains in the DB", func() {
+				domains, err := sqlDB.FreshDomains(logger)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(domains).To(HaveLen(2))
@@ -44,7 +44,7 @@ var _ = Describe("DomainDB", func() {
 
 		Context("when there are no domains in the DB", func() {
 			It("returns no domains", func() {
-				domains, err := sqlDB.Domains(logger)
+				domains, err := sqlDB.FreshDomains(logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domains).To(HaveLen(0))
 			})

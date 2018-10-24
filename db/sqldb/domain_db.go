@@ -8,17 +8,22 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *SQLDB) Domains(logger lager.Logger) ([]string, error) {
-	logger = logger.Session("domains")
+func (db *SQLDB) FreshDomains(logger lager.Logger) ([]string, error) {
+	expireTime := db.clock.Now().Round(time.Second)
+	return db.domains(logger, expireTime)
+}
+
+func (db *SQLDB) domains(logger lager.Logger, expiresAfter time.Time) ([]string, error) {
+	logger = logger.Session("domains", lager.Data{"expires-after": expiresAfter})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	var results []string
 	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		expireTime := db.clock.Now().Round(time.Second).UnixNano()
 		rows, err := db.all(logger, tx, domainsTable,
 			domainColumns, helpers.NoLockRow,
-			"expire_time > ?", expireTime,
+			"expire_time > ?",
+			expiresAfter.UnixNano(),
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
