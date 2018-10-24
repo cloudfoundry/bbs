@@ -205,350 +205,298 @@ var _ = Describe("Evacuation Controller", func() {
 
 	Describe("EvacuateClaimedActualLRP", func() {
 		var (
-			actual, evacuating *models.ActualLRP
-			suspectActual      *models.ActualLRP
-			afterActual        *models.ActualLRP
-			desiredLRP         *models.DesiredLRP
-			instanceKey        *models.ActualLRPInstanceKey
-			key                *models.ActualLRPKey
-			keepContainer      bool
+			actualLRP      *models.ActualLRP
+			afterActualLRP *models.ActualLRP
+			desiredLRP     *models.DesiredLRP
+			lrpInstanceKey *models.ActualLRPInstanceKey
+			lrpKey         *models.ActualLRPKey
+			keepContainer  bool
 		)
 
 		BeforeEach(func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("the-guid")
 			fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 
-			actual = model_helpers.NewValidActualLRP("process-guid", 1)
-			actual.State = models.ActualLRPStateClaimed
+			actualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
+			actualLRP.State = models.ActualLRPStateClaimed
+			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 
-			evacuating = model_helpers.NewValidEvacuatingActualLRP("process-guid", 1)
-			evacuating.InstanceGuid = "evacuating-guid"
+			afterActualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
+			afterActualLRP.State = models.ActualLRPStateUnclaimed
 
-			suspectActual = model_helpers.NewValidActualLRP("process-guid", 1)
-			suspectActual.State = models.ActualLRPStateClaimed
-			suspectActual.Presence = models.ActualLRP_Suspect
+			lrpKey = &actualLRP.ActualLRPKey
+			lrpInstanceKey = &actualLRP.ActualLRPInstanceKey
 
-			afterActual = model_helpers.NewValidActualLRP("process-guid", 1)
-			afterActual.State = models.ActualLRPStateUnclaimed
-
-			key = &actual.ActualLRPKey
-			instanceKey = &actual.ActualLRPInstanceKey
-
-			fakeActualLRPDB.UnclaimActualLRPReturns(actual, afterActual, nil)
+			fakeActualLRPDB.UnclaimActualLRPReturns(actualLRP, afterActualLRP, nil)
 		})
 
 		JustBeforeEach(func() {
-			err, keepContainer = controller.EvacuateClaimedActualLRP(logger, key, instanceKey)
-			modelErr = models.ConvertError(err)
+			err, keepContainer = controller.EvacuateClaimedActualLRP(logger, lrpKey, lrpInstanceKey)
 		})
 
-		Context("when the claimed actual lrp is already evacuating", func() {
+		It("does not return an error and tells the caller not to keep the lrp container", func() {
+			Expect(err).NotTo(HaveOccurred())
+			Expect(keepContainer).To(BeFalse())
+		})
+
+		It("unclaims and reauctions the lrp", func() {
+			Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+			_, key := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
+			Expect(key).To(Equal(lrpKey))
+
+			Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+			_, guid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+			Expect(guid).To(Equal("process-guid"))
+
+			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.Index))
+			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+			_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+		})
+
+		It("emits an LRPChanged event", func() {
+			Eventually(actualHub.EmitCallCount).Should(Equal(1))
+
+			event := actualHub.EmitArgsForCall(0)
+			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+			che := event.(*models.ActualLRPChangedEvent)
+			Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+			Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActualLRP}))
+		})
+
+		It("emits and LRPInstanceRemoved event followed by LRPInstanceCreated event", func() {
+			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+
+			events := []models.Event{
+				actualLRPInstanceHub.EmitArgsForCall(0),
+				actualLRPInstanceHub.EmitArgsForCall(1),
+			}
+
+			Expect(events).To(ConsistOf(
+				models.NewActualLRPInstanceRemovedEvent(actualLRP),
+				models.NewActualLRPInstanceCreatedEvent(afterActualLRP),
+			))
+		})
+
+		Context("when looking up the lrp fails", func() {
 			BeforeEach(func() {
-				instanceKey = &evacuating.ActualLRPInstanceKey
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{evacuating}, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{}, errors.New("failed finding lrps"))
 			})
 
-			It("removes the evacuating actual lrp", func() {
+			It("returns the error and tells the caller not to keep the lrp container", func() {
+				Expect(err).To(MatchError("failed finding lrps"))
 				Expect(keepContainer).To(BeFalse())
-				Expect(modelErr).To(BeNil())
-
-				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-				_, key, instanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*key).To(Equal(evacuating.ActualLRPKey))
-				Expect(*instanceKey).To(Equal(evacuating.ActualLRPInstanceKey))
 			})
 		})
 
-		Context("when the claimed actual lrp is not already evacuating", func() {
+		Context("when the lrp does not exist", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual}, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{}, nil)
 			})
 
-			It("unclaims the actual lrp instance and requests an auction", func() {
+			It("returns an appropriate error and tells the caller not to keep the lrp container", func() {
+				Expect(err).To(MatchError(models.ErrResourceNotFound))
 				Expect(keepContainer).To(BeFalse())
-				Expect(modelErr).To(BeNil())
-
-				Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-				_, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
-				Expect(lrpKey.ProcessGuid).To(Equal("process-guid"))
-				Expect(lrpKey.Index).To(BeEquivalentTo(1))
-
-				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-				_, guid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
-				Expect(guid).To(Equal("process-guid"))
-
-				expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actual.Index))
-				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-				_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-				Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
-			})
-
-			It("emits an LRPChanged event to the hub", func() {
-				Eventually(actualHub.EmitCallCount).Should(Equal(1))
-
-				event := actualHub.EmitArgsForCall(0)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
-				che := event.(*models.ActualLRPChangedEvent)
-				Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-				Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
-			})
-
-			It("emits and LRPInstanceRemoved event followed by LRPInstanceCreated for the unclaimed lrp", func() {
-				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
-
-				events := []models.Event{
-					actualLRPInstanceHub.EmitArgsForCall(0),
-					actualLRPInstanceHub.EmitArgsForCall(1),
-				}
-
-				Expect(events).To(ConsistOf(
-					models.NewActualLRPInstanceRemovedEvent(actual),
-					models.NewActualLRPInstanceCreatedEvent(afterActual),
-				))
 			})
 		})
 
-		Context("when the evacuating actual lrp instance is suspect", func() {
+		Context("when unclaiming the lrp fails", func() {
 			BeforeEach(func() {
-				suspectCellId := "suspect-cell"
-				suspectActual.ActualLRPInstanceKey.CellId = suspectCellId
-				instanceKey.CellId = suspectCellId
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectActual, evacuating}, nil)
-				fakeActualLRPDB.UnclaimActualLRPReturns(suspectActual, afterActual, nil)
+				fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("failed unclaiming"))
 			})
 
-			It("removes the evacuating actual lrp", func() {
-				Expect(keepContainer).To(BeFalse())
-				Expect(modelErr).To(BeNil())
-
-				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-				_, key, instanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*key).To(Equal(actual.ActualLRPKey))
-				Expect(*instanceKey).To(Equal(actual.ActualLRPInstanceKey))
+			It("errors and tells the caller to keep the lrp container", func() {
+				Expect(err).To(MatchError("failed unclaiming"))
+				Expect(keepContainer).To(BeTrue())
 			})
 
-			It("should unclaim the suspect", func() {
-				Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-				_, key := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
-				Expect(key).To(Equal(&actual.ActualLRPKey))
+			It("does not try to auction the lrp", func() {
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
 			})
 
-			It("emits an LRPChanged event  as well as an LRPRemoved event to the hub", func() {
-				Eventually(actualHub.EmitCallCount).Should(Equal(2))
-
-				event := actualHub.EmitArgsForCall(0)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
-				che := event.(*models.ActualLRPChangedEvent)
-				Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: suspectActual}))
-				Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActual}))
-
-				event = actualHub.EmitArgsForCall(1)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
-				ev := event.(*models.ActualLRPRemovedEvent)
-				Expect(ev.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
-			})
-
-			It("emits an LRPInstanceRemoved for evacuating, an LRPInstanceREmoved event for the suspect and an LRPCreated event for the unclaimed", func() {
-				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
-
-				event := actualLRPInstanceHub.EmitArgsForCall(0)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
-				createdEvent := event.(*models.ActualLRPInstanceCreatedEvent)
-				Expect(createdEvent.ActualLrp).To(Equal(afterActual))
-
-				event = actualLRPInstanceHub.EmitArgsForCall(1)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
-				ev := event.(*models.ActualLRPInstanceRemovedEvent)
-				Expect(ev.ActualLrp).To(Equal(suspectActual))
-
-				event = actualLRPInstanceHub.EmitArgsForCall(2)
-				Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceRemovedEvent{}))
-				removedEvent := event.(*models.ActualLRPInstanceRemovedEvent)
-				Expect(removedEvent.ActualLrp).To(Equal(evacuating))
-			})
-		})
-
-		Context("when the evacuating instance is not the suspect one", func() {
-			BeforeEach(func() {
-				suspectCellId := "suspect-cell"
-				suspectActual.ActualLRPInstanceKey.CellId = suspectCellId
-				suspectActual.State = models.ActualLRPStateRunning
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual, suspectActual}, nil)
-			})
-
-			It("should unclaim the claimed one", func() {
-				Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-				_, key := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
-				Expect(key).To(Equal(&actual.ActualLRPKey))
-			})
-
-			It("should not emit an LRPChanged or LRPRemoved event", func() {
+			It("does not emit any events", func() {
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
-			})
-
-			It("should emit a LRPInstaceCreated & LRPInstanceRemoved events", func() {
-				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
-				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
-
-				events := []models.Event{
-					actualLRPInstanceHub.EmitArgsForCall(0),
-					actualLRPInstanceHub.EmitArgsForCall(1),
-				}
-
-				Expect(events).To(ConsistOf(
-					models.NewActualLRPInstanceRemovedEvent(actual),
-					models.NewActualLRPInstanceCreatedEvent(afterActual),
-				))
-			})
-		})
-
-		Context("when the evacuating instance is the suspect one in the presence of a claimed ordinary", func() {
-			BeforeEach(func() {
-				suspectCellId := "suspect-cell"
-				suspectActual.ActualLRPInstanceKey.CellId = suspectCellId
-				suspectActual.State = models.ActualLRPStateRunning
-				instanceKey = &suspectActual.ActualLRPInstanceKey
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual, suspectActual}, nil)
-			})
-
-			It("should remove the suspect LRP", func() {
-				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
-				_, guid, index, iKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
-				Expect(guid).To(Equal(suspectActual.ProcessGuid))
-				Expect(index).To(Equal(suspectActual.Index))
-				Expect(iKey).To(Equal(&suspectActual.ActualLRPInstanceKey))
-			})
-
-			It("should not emit an LRPChanged event", func() {
-				Consistently(actualHub.EmitCallCount).Should(Equal(0))
-			})
-
-			It("should not emit any LRP instance events", func() {
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
-		})
 
-		Context("when the claimed lrp is already evacuating", func() {
-			BeforeEach(func() {
-				instanceKey = &evacuating.ActualLRPInstanceKey
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{evacuating}, nil)
-			})
-
-			Context("when the DB returns an unrecoverable error", func() {
-				BeforeEach(func() {
-					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.NewUnrecoverableError(nil))
-				})
-
-				It("returns an unrecoverable error", func() {
-					Expect(modelErr.Type).To(Equal(models.Error_Unrecoverable))
-				})
-			})
-
-			Context("when removing the evacuating lrp fails", func() {
-				BeforeEach(func() {
-					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("i failed"))
-				})
-
-				It("logs the error and continues", func() {
-					Expect(keepContainer).To(BeFalse())
-					Expect(modelErr).To(BeNil())
-					Expect(logger).To(gbytes.Say("failed-removing-evacuating-actual-lrp"))
-				})
-			})
-		})
-
-		Context("when unclaiming the lrp instance fails", func() {
-			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual}, nil)
-			})
-
-			Context("when the DB returns an unrecoverable error", func() {
-				BeforeEach(func() {
-					fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, models.NewUnrecoverableError(nil))
-				})
-
-				It("returns the unrecoverable error", func() {
-					Expect(modelErr.Type).To(Equal(models.Error_Unrecoverable))
-				})
-			})
-
-			Context("because the instance does not exist", func() {
+			Context("because the lrp no longer exists", func() {
 				BeforeEach(func() {
 					fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, models.ErrResourceNotFound)
 				})
 
-				It("does not keep the container and does not return an error", func() {
+				It("does not error and tells the caller to not keep the lrp container", func() {
+					Expect(err).NotTo(HaveOccurred())
 					Expect(keepContainer).To(BeFalse())
-					Expect(modelErr).To(BeNil())
 				})
 
-				Context("when there is an evacuating instance", func() {
-					BeforeEach(func() {
-						fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual, evacuating}, nil)
-					})
-
-					It("only emits events for deleting evacuating", func() {
-						Eventually(actualHub.EmitCallCount).Should(Equal(1))
-						event := actualHub.EmitArgsForCall(0)
-						removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
-						Expect(ok).To(BeTrue())
-						Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
-					})
-
-					It("only emits LRPInstanceRemove event for deleting evacuating", func() {
-						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-						event := actualLRPInstanceHub.EmitArgsForCall(0)
-						removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
-						Expect(ok).To(BeTrue())
-						Expect(removeEvent.ActualLrp).To(Equal(evacuating))
-					})
-				})
-			})
-
-			Context("for another reason", func() {
-				BeforeEach(func() {
-					fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("can't unclaim this"))
+				It("does not try to auction the lrp", func() {
+					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
 				})
 
-				It("returns the error and keeps the container", func() {
-					Expect(keepContainer).To(BeTrue())
-					Expect(modelErr).NotTo(BeNil())
-					Expect(modelErr.Error()).To(Equal("can't unclaim this"))
-				})
-
-				Context("when there is an evacuating instance", func() {
-					BeforeEach(func() {
-						fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual, evacuating}, nil)
-					})
-
-					It("only emits events for deleting evacuating", func() {
-						Eventually(actualHub.EmitCallCount).Should(Equal(1))
-						event := actualHub.EmitArgsForCall(0)
-						removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
-						Expect(ok).To(BeTrue())
-						Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuating}))
-					})
-
-					It("only emits LRPInstanceRemove event for deleting evacuating", func() {
-						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-						event := actualLRPInstanceHub.EmitArgsForCall(0)
-						removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
-						Expect(ok).To(BeTrue())
-						Expect(removeEvent.ActualLrp).To(Equal(evacuating))
-					})
+				It("does not emit any events", func() {
+					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
 		})
 
-		Context("when requesting the lrp auction fails", func() {
+		Context("when looking up the desired lrp to auction fails", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actual}, nil)
-				fakeAuctioneerClient.RequestLRPAuctionsReturns(errors.New("boom!"))
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, errors.New("error fetching desired lrp"))
 			})
 
-			It("does not return the error or keep the container", func() {
+			It("does not error and tells the caller to not keep the lrp container", func() {
+				Expect(err).NotTo(HaveOccurred())
 				Expect(keepContainer).To(BeFalse())
-				Expect(modelErr).To(BeNil())
+			})
+
+			It("does not try to auction the lrp", func() {
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when auctioning the lrp fails", func() {
+			BeforeEach(func() {
+				fakeAuctioneerClient.RequestLRPAuctionsReturns(errors.New("failed auctioning lrp"))
+			})
+
+			It("does not error and tells the caller to not keep the lrp container", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keepContainer).To(BeFalse())
+			})
+		})
+
+		Context("when the lrp is already evacuating", func() {
+			BeforeEach(func() {
+				actualLRP.Presence = models.ActualLRP_Evacuating
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+			})
+
+			It("does not error and tells the caller to not keep the lrp container", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keepContainer).To(BeFalse())
+			})
+
+			It("removes the evacuating lrp", func() {
+				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
+				_, key, instanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+				Expect(key).To(Equal(lrpKey))
+				Expect(instanceKey).To(Equal(lrpInstanceKey))
+			})
+
+			It("emits an ActualLRPRemovedEvent", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actualLRP}))
+			})
+
+			It("emits an ActualLRPInstanceRemovedEvent", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+				event := actualLRPInstanceHub.EmitArgsForCall(0)
+				removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removeEvent.ActualLrp).To(Equal(actualLRP))
+			})
+
+			It("does not try to unclaim or auction the lrp", func() {
+				Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+			})
+
+			Context("when removing the evacuating lrp fails", func() {
+				BeforeEach(func() {
+					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("failed removing"))
+				})
+
+				It("errors and tells the caller to not keep the lrp container", func() {
+					Expect(err).To(MatchError("failed removing"))
+					Expect(keepContainer).To(BeFalse())
+				})
+
+				It("does not emit any events", func() {
+					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+				})
+			})
+		})
+
+		Context("when the lrp is suspect", func() {
+			BeforeEach(func() {
+				actualLRP.Presence = models.ActualLRP_Suspect
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+			})
+
+			It("does not error and tells the caller to not keep the lrp container", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(keepContainer).To(BeFalse())
+			})
+
+			It("removes the suspect lrp", func() {
+				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+				_, key := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(key).To(Equal(lrpKey))
+			})
+
+			It("emits an ActualLRPRemovedEvent", func() {
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+			})
+
+			It("emits an ActualLRPInstanceRemovedEvent", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+				event := actualLRPInstanceHub.EmitArgsForCall(0)
+				removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removeEvent.ActualLrp).To(Equal(actualLRP))
+			})
+
+			It("does not try to unclaim or auction the lrp", func() {
+				Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+			})
+
+			Context("when there is an ordinary claimed lrp on another cell", func() {
+				BeforeEach(func() {
+					ordinaryActualLRP := model_helpers.NewValidActualLRP("process-guid", 1)
+					ordinaryActualLRP.State = models.ActualLRPStateClaimed
+					ordinaryActualLRP.Presence = models.ActualLRP_Ordinary
+					ordinaryActualLRP.ActualLRPInstanceKey.InstanceGuid = "another-instance"
+					ordinaryActualLRP.ActualLRPInstanceKey.CellId = "another-cell"
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP, ordinaryActualLRP}, nil)
+				})
+
+				It("should not emit an ActualLRPRemovedEvent", func() {
+					Eventually(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("emits an ActualLRPInstanceRemovedEvent", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(removeEvent.ActualLrp).To(Equal(actualLRP))
+				})
+			})
+
+			Context("when removing the suspect lrp fails", func() {
+				BeforeEach(func() {
+					fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("failed removing"))
+				})
+
+				It("errors and tells the caller to not keep the lrp container", func() {
+					Expect(err).To(MatchError("failed removing"))
+					Expect(keepContainer).To(BeFalse())
+				})
+
+				It("does not emit any events", func() {
+					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+				})
 			})
 		})
 	})

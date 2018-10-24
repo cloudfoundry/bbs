@@ -79,7 +79,6 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(logger lager.Logger, ac
 }
 
 func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) (error, bool) {
-
 	eventCalculator := EventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
@@ -89,7 +88,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 	index := actualLRPKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-querying-actualLRPs", err, lager.Data{"guid": guid, "index": index})
+		logger.Error("failed-fetching-actual-lrps", err, lager.Data{"guid": guid, "index": index})
 		return err, false
 	}
 
@@ -106,43 +105,34 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 		return models.ErrResourceNotFound, false
 	}
 
-	evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
-	suspect := findWithPresence(actualLRPs, models.ActualLRP_Suspect)
-	ordinary := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
-
-	if evacuating != nil {
+	switch targetActualLRP.Presence {
+	case models.ActualLRP_Evacuating:
 		err = h.db.RemoveEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey)
 		if err != nil {
-			logger.Error("failed-removing-evacuating-actual-lrp", err)
-			convertedErr := models.ConvertError(err)
-			if convertedErr != nil && convertedErr.Type == models.Error_Unrecoverable {
-				return convertedErr, false
-			}
+			return err, false
 		}
 
-		newLRPs = eventCalculator.RecordChange(evacuating, nil, newLRPs)
-	}
+		newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+	case models.ActualLRP_Suspect:
+		_, err = h.suspectLRPDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+		if err != nil {
+			return err, false
+		}
 
-	if ordinary != nil && targetActualLRP.Equal(suspect) {
-		h.actualLRPDB.RemoveActualLRP(logger, guid, index, actualLRPInstanceKey)
-		return nil, false
-	}
-
-	before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, actualLRPKey)
-	if err != nil {
+		newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+	case models.ActualLRP_Ordinary:
+		before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, actualLRPKey)
 		bbsErr := models.ConvertError(err)
-		if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
+		if bbsErr != nil {
+			if bbsErr.Type == models.Error_ResourceNotFound {
+				return nil, false
+			}
 			return bbsErr, true
 		}
-		return nil, false
-	}
 
-	newLRPs = eventCalculator.RecordChange(before, after, newLRPs)
+		newLRPs = eventCalculator.RecordChange(before, after, newLRPs)
 
-	err = h.requestAuction(logger, actualLRPKey)
-	bbsErr := models.ConvertError(err)
-	if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
-		return bbsErr, true
+		h.requestAuction(logger, actualLRPKey)
 	}
 
 	return nil, false
@@ -207,7 +197,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 	index := actualLRPKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-fetching-lrp-group", err)
+		logger.Error("failed-fetching-actual-lrps", err)
 		return err, true
 	}
 
@@ -297,7 +287,7 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, act
 
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-fetching-actual-lrp-group", err)
+		logger.Error("failed-fetching-actual-lrps", err)
 		return err
 	}
 
@@ -333,11 +323,11 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, act
 	return nil
 }
 
-func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *models.ActualLRPKey) error {
+func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *models.ActualLRPKey) {
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, lrpKey.ProcessGuid)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp", err)
-		return nil
+		return
 	}
 
 	schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
@@ -346,8 +336,6 @@ func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *model
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
 	}
-
-	return nil
 }
 
 func (h *EvacuationController) evacuateRequesting(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
@@ -410,7 +398,8 @@ func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*
 	// compatible.
 	newLRPs = eventCalculator.RecordChange(nil, after, newLRPs)
 
-	return h.requestAuction(logger, &actualLRP.ActualLRPKey)
+	h.requestAuction(logger, &actualLRP.ActualLRPKey)
+	return nil
 }
 
 func (h *EvacuationController) removeEvacuating(logger lager.Logger, evacuating *models.ActualLRP) error {
