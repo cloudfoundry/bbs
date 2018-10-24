@@ -282,6 +282,11 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 }
 
 func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
+	eventCalculator := EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
 	guid := actualLRPKey.ProcessGuid
 	index := actualLRPKey.Index
 
@@ -290,6 +295,13 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, act
 		logger.Error("failed-fetching-actual-lrps", err)
 		return err
 	}
+
+	newLRPs := make([]*models.ActualLRP, len(actualLRPs))
+	copy(newLRPs, actualLRPs)
+
+	defer func() {
+		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+	}()
 
 	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	if targetActualLRP == nil {
@@ -318,8 +330,8 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, act
 		}
 	}
 
-	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(targetActualLRP.ToActualLRPGroup()))
-	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(targetActualLRP))
+	newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+
 	return nil
 }
 
