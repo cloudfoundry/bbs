@@ -39,20 +39,39 @@ func NewEvacuationController(
 }
 
 func (h *EvacuationController) RemoveEvacuatingActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
+	eventCalculator := EventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
+	guid := actualLRPKey.ProcessGuid
+	index := actualLRPKey.Index
+
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRPKey.ProcessGuid, Index: &actualLRPKey.Index})
 	if err != nil {
 		return err
 	}
 
+	newLRPs := make([]*models.ActualLRP, len(actualLRPs))
+	copy(newLRPs, actualLRPs)
+
+	defer func() {
+		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+	}()
+
+	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
+	if targetActualLRP == nil {
+		logger.Debug("actual-lrp-not-found", lager.Data{"guid": guid, "index": index})
+		return models.ErrResourceNotFound
+	}
+
 	evacuatingLRPLogData := lager.Data{
-		"process-guid": actualLRPKey.ProcessGuid,
-		"index":        actualLRPKey.Index,
+		"process-guid": guid,
+		"index":        index,
 		"instance-key": actualLRPInstanceKey,
 	}
 
 	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
-	lrpGroup := models.ResolveActualLRPGroup(actualLRPs)
-	instance = lrpGroup.Instance
 
 	if instance != nil {
 		evacuatingLRPLogData["replacement-lrp-instance-key"] = instance.ActualLRPInstanceKey
@@ -67,14 +86,8 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(logger lager.Logger, ac
 		return err
 	}
 
-	evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
-	if evacuating == nil {
-		logger.Info("evacuating-lrp-is-emtpy")
-		return models.ErrResourceNotFound
-	}
+	newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
 
-	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(evacuating.ToActualLRPGroup()))
-	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(evacuating))
 	return nil
 }
 
