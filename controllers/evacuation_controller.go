@@ -89,7 +89,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 	index := actualLRPKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-querying-actualLRPs", err, lager.Data{"guid": guid, "index": index})
+		logger.Error("failed-fetching-actual-lrps", err, lager.Data{"guid": guid, "index": index})
 		return err, false
 	}
 
@@ -198,7 +198,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 	index := actualLRPKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-fetching-lrp-group", err)
+		logger.Error("failed-fetching-actual-lrps", err)
 		return err, true
 	}
 
@@ -288,7 +288,7 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, act
 
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 	if err != nil {
-		logger.Error("failed-fetching-actual-lrp-group", err)
+		logger.Error("failed-fetching-actual-lrps", err)
 		return err
 	}
 
