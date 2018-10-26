@@ -9,7 +9,6 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 )
@@ -577,101 +576,5 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
-	})
-
-	Describe("ResolveActualLRPGroups", func() {
-		It("returns ordinary ActualLRPs in the instance slot of ActualLRPGroups", func() {
-			lrp1 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
-				Presence:             models.ActualLRP_Ordinary,
-				State:                models.ActualLRPStateRunning,
-			}
-			lrp2 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-1", 1, "domain-1"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-0"),
-				Presence:             models.ActualLRP_Ordinary,
-				State:                models.ActualLRPStateRunning,
-			}
-			groups := models.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
-			Expect(groups).To(ConsistOf(
-				&models.ActualLRPGroup{Instance: lrp1},
-				&models.ActualLRPGroup{Instance: lrp2},
-			))
-		})
-		It("returns evacuating ActualLRPs in the evacuating slot of ActualLRPGroups", func() {
-			lrp1 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
-				Presence:             models.ActualLRP_Evacuating,
-				State:                models.ActualLRPStateRunning,
-			}
-			lrp2 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1"),
-				Presence:             models.ActualLRP_Ordinary,
-				State:                models.ActualLRPStateRunning,
-			}
-			groups := models.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
-			Expect(groups).To(ConsistOf(
-				&models.ActualLRPGroup{Instance: lrp2, Evacuating: lrp1},
-			))
-
-		})
-		DescribeTable("resolution priority of the Instance slot",
-			func(
-				supLRPState string, supLRPPresence models.ActualLRP_Presence,
-				infLRPState string, infLRPPresence models.ActualLRP_Presence,
-			) {
-				supLRP := &models.ActualLRP{
-					ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-					ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
-					Presence:             supLRPPresence,
-					State:                supLRPState,
-				}
-				infLRP := &models.ActualLRP{
-					ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-					ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1"),
-					Presence:             infLRPPresence,
-					State:                infLRPState,
-				}
-				groups := models.ResolveActualLRPGroups([]*models.ActualLRP{supLRP, infLRP})
-				Expect(groups).To(ConsistOf(
-					&models.ActualLRPGroup{Instance: supLRP},
-				))
-			},
-			Entry("chooses RUNNING/Ordinary over RUNNING/Suspect",
-				models.ActualLRPStateRunning, models.ActualLRP_Ordinary,
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
-			),
-			Entry("chooses RUNNING/Ordinary over CLAIMED/Suspect",
-				models.ActualLRPStateRunning, models.ActualLRP_Ordinary,
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
-			),
-			Entry("chooses RUNNING/Suspect over CLAIMED/Ordinary",
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
-				models.ActualLRPStateClaimed, models.ActualLRP_Ordinary,
-			),
-			Entry("chooses RUNNING/Suspect over UNCLAIMED/Ordinary",
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
-				models.ActualLRPStateUnclaimed, models.ActualLRP_Ordinary,
-			),
-			Entry("chooses RUNNING/Suspect over CRASHED/Ordinary",
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
-				models.ActualLRPStateCrashed, models.ActualLRP_Ordinary,
-			),
-			Entry("chooses CLAIMED/Suspect over CLAIMED/Ordinary",
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
-				models.ActualLRPStateClaimed, models.ActualLRP_Ordinary,
-			),
-			Entry("chooses CLAIMED/Suspect over UNCLAIMED/Ordinary",
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
-				models.ActualLRPStateUnclaimed, models.ActualLRP_Ordinary,
-			),
-			Entry("chooses CLAIMED/Suspect over CRASHED/Ordinary",
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
-				models.ActualLRPStateCrashed, models.ActualLRP_Ordinary,
-			),
-		)
 	})
 })
