@@ -106,43 +106,34 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 		return models.ErrResourceNotFound, false
 	}
 
-	evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
-	suspect := findWithPresence(actualLRPs, models.ActualLRP_Suspect)
-	ordinary := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
-
-	if evacuating != nil {
+	switch targetActualLRP.Presence {
+	case models.ActualLRP_Evacuating:
 		err = h.db.RemoveEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey)
 		if err != nil {
-			logger.Error("failed-removing-evacuating-actual-lrp", err)
-			convertedErr := models.ConvertError(err)
-			if convertedErr != nil && convertedErr.Type == models.Error_Unrecoverable {
-				return convertedErr, false
-			}
+			return err, false
 		}
 
-		newLRPs = eventCalculator.RecordChange(evacuating, nil, newLRPs)
-	}
+		newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+	case models.ActualLRP_Suspect:
+		_, err = h.suspectLRPDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+		if err != nil {
+			return err, false
+		}
 
-	if ordinary != nil && targetActualLRP.Equal(suspect) {
-		h.actualLRPDB.RemoveActualLRP(logger, guid, index, actualLRPInstanceKey)
-		return nil, false
-	}
-
-	before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, actualLRPKey)
-	if err != nil {
+		newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+	case models.ActualLRP_Ordinary:
+		before, after, err := h.actualLRPDB.UnclaimActualLRP(logger, actualLRPKey)
 		bbsErr := models.ConvertError(err)
-		if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
+		if bbsErr != nil {
+			if bbsErr.Type == models.Error_ResourceNotFound {
+				return nil, false
+			}
 			return bbsErr, true
 		}
-		return nil, false
-	}
 
-	newLRPs = eventCalculator.RecordChange(before, after, newLRPs)
+		newLRPs = eventCalculator.RecordChange(before, after, newLRPs)
 
-	err = h.requestAuction(logger, actualLRPKey)
-	bbsErr := models.ConvertError(err)
-	if bbsErr != nil && bbsErr.Type != models.Error_ResourceNotFound {
-		return bbsErr, true
+		h.requestAuction(logger, actualLRPKey)
 	}
 
 	return nil, false
