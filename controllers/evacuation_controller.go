@@ -324,11 +324,11 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, act
 	return nil
 }
 
-func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *models.ActualLRPKey) error {
+func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *models.ActualLRPKey) {
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, lrpKey.ProcessGuid)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp", err)
-		return nil
+		return
 	}
 
 	schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
@@ -337,8 +337,6 @@ func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *model
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
 	}
-
-	return nil
 }
 
 func (h *EvacuationController) evacuateRequesting(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
@@ -401,7 +399,8 @@ func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*
 	// compatible.
 	newLRPs = eventCalculator.RecordChange(nil, after, newLRPs)
 
-	return h.requestAuction(logger, &actualLRP.ActualLRPKey)
+	h.requestAuction(logger, &actualLRP.ActualLRPKey)
+	return nil
 }
 
 func (h *EvacuationController) removeEvacuating(logger lager.Logger, evacuating *models.ActualLRP) error {
