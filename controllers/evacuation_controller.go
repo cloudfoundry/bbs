@@ -79,7 +79,6 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(logger lager.Logger, ac
 }
 
 func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) (error, bool) {
-
 	eventCalculator := EventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
