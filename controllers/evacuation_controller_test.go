@@ -461,8 +461,12 @@ var _ = Describe("Evacuation Controller", func() {
 			})
 
 			Context("when there is an ordinary claimed lrp on another cell", func() {
+				var (
+					ordinaryActualLRP *models.ActualLRP
+				)
+
 				BeforeEach(func() {
-					ordinaryActualLRP := model_helpers.NewValidActualLRP("process-guid", 1)
+					ordinaryActualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
 					ordinaryActualLRP.State = models.ActualLRPStateClaimed
 					ordinaryActualLRP.Presence = models.ActualLRP_Ordinary
 					ordinaryActualLRP.ActualLRPInstanceKey.InstanceGuid = "another-instance"
@@ -470,8 +474,14 @@ var _ = Describe("Evacuation Controller", func() {
 					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP, ordinaryActualLRP}, nil)
 				})
 
-				It("should not emit an ActualLRPRemovedEvent", func() {
-					Eventually(actualHub.EmitCallCount).Should(Equal(0))
+				It("should emit a ActualLRPRemoved followed by ActualLRPCreatedEvent", func() {
+					Eventually(actualHub.EmitCallCount).Should(Equal(2))
+					events := []models.Event{}
+					events = append(events, actualHub.EmitArgsForCall(0), actualHub.EmitArgsForCall(1))
+					Expect(events).To(ConsistOf(
+						models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actualLRP}),
+						models.NewActualLRPCreatedEvent(&models.ActualLRPGroup{Instance: ordinaryActualLRP}),
+					))
 				})
 
 				It("emits an ActualLRPInstanceRemovedEvent", func() {
