@@ -349,6 +349,9 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 					err = h.actualLRPDB.RemoveActualLRP(logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, nil)
 					if err != nil {
 						logger.Error("failed-removing-lrp-instance", err)
+					} else {
+						go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
+						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp))
 					}
 				default:
 					cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)

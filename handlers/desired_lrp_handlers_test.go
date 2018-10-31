@@ -1186,6 +1186,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						crashedActualLRP4,
 					}
 					fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+					fakeActualLRPDB.RemoveActualLRPReturns(nil)
 				})
 
 				It("stops all of the corresponding running actual lrps", func() {
@@ -1223,6 +1224,41 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(index).To(BeEquivalentTo(4))
 					Expect(processGuid).To(Equal("some-guid"))
 					Expect(actualLRPInstanceKey).To(BeNil())
+				})
+
+				It("emits an ActualLRPRemovedEvent per unclaimed or crashed actual lrp", func() {
+					Eventually(actualHub.EmitCallCount).Should(Equal(2))
+
+					removedGroups := []*models.ActualLRPGroup{}
+
+					event := actualHub.EmitArgsForCall(0)
+					removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
+					Expect(ok).To(BeTrue())
+					removedGroups = append(removedGroups, removedEvent.ActualLrpGroup)
+
+					event = actualHub.EmitArgsForCall(1)
+					removedEvent, ok = event.(*models.ActualLRPRemovedEvent)
+					Expect(ok).To(BeTrue())
+					removedGroups = append(removedGroups, removedEvent.ActualLrpGroup)
+
+					Expect(removedGroups).To(ConsistOf(unclaimedActualLRP3.ToActualLRPGroup(), crashedActualLRP4.ToActualLRPGroup()))
+				})
+
+				It("emits an ActualLRPInstanceRemovedEvent per unclaimed or crashed actual lrp", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+
+					removedActualLrps := []*models.ActualLRP{}
+
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					removedEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+					removedActualLrps = append(removedActualLrps, removedEvent.ActualLrp)
+
+					event = actualLRPInstanceHub.EmitArgsForCall(1)
+					removedEvent, ok = event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+					removedActualLrps = append(removedActualLrps, removedEvent.ActualLrp)
+					Expect(removedActualLrps).To(ConsistOf(unclaimedActualLRP3, crashedActualLRP4))
 				})
 
 				Context("when fetching the actual lrps fails", func() {
