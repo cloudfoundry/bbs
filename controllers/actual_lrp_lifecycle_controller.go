@@ -4,6 +4,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/events/calculator"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
@@ -183,7 +184,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return err
 	}
 
-	eventCalculator := EventCalculator{
+	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -242,7 +243,7 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 		return err
 	}
 
-	eventCalculator := EventCalculator{
+	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}

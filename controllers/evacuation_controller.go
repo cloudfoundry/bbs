@@ -4,6 +4,7 @@ import (
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/events/calculator"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -87,7 +88,7 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(logger lager.Logger, ac
 // the LRP state wouldn't make sense if the presence is Suspect or Evacuating.
 func (h *EvacuationController) removeEvacuatingOrSuspect(
 	logger lager.Logger,
-	calculator EventCalculator,
+	calculator calculator.ActualLRPEventCalculator,
 	lrps []*models.ActualLRP,
 	key *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
@@ -120,7 +121,7 @@ func (h *EvacuationController) removeEvacuatingOrSuspect(
 }
 
 func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) (error, bool) {
-	eventCalculator := EventCalculator{
+	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -167,7 +168,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(logger lager.Logger, act
 }
 
 func (h *EvacuationController) EvacuateCrashedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
-	eventCalculator := EventCalculator{
+	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -298,7 +299,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 }
 
 func (h *EvacuationController) EvacuateStoppedActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
-	eventCalculator := EventCalculator{
+	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -370,7 +371,7 @@ func (h *EvacuationController) evacuateRequesting(logger lager.Logger, actualLRP
 }
 
 func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*models.ActualLRP, actualLRP *models.ActualLRP) error {
-	eventCalculator := EventCalculator{
+	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}

@@ -1,4 +1,4 @@
-package controllers
+package calculator
 
 import (
 	"sort"
@@ -73,7 +73,7 @@ import (
 // RemoveActualLRP
 //  removed event
 
-type EventCalculator struct {
+type ActualLRPEventCalculator struct {
 	ActualLRPGroupHub    events.Hub
 	ActualLRPInstanceHub events.Hub
 }
@@ -82,7 +82,7 @@ type EventCalculator struct {
 // events are applied to the beforeSet the resulting state is equal to
 // afterSet.  The beforeSet and afterSet are assumed to have the same process
 // guid and index.
-func (e EventCalculator) EmitEvents(beforeSet, afterSet []*models.ActualLRP) {
+func (e ActualLRPEventCalculator) EmitEvents(beforeSet, afterSet []*models.ActualLRP) {
 	events := []models.Event{}
 
 	beforeGroup := models.ResolveActualLRPGroup(beforeSet)
@@ -102,7 +102,7 @@ func (e EventCalculator) EmitEvents(beforeSet, afterSet []*models.ActualLRP) {
 	}
 
 	sort.Slice(events, func(i, j int) bool {
-		return eventScore(events[i]) > eventScore(events[j])
+		return EventScore(events[i]) > EventScore(events[j])
 	})
 
 	for _, ev := range events {
@@ -113,7 +113,7 @@ func (e EventCalculator) EmitEvents(beforeSet, afterSet []*models.ActualLRP) {
 // RecordChange returns a new LRP set with the before LRP replaced with after
 // LRP.  The index of after and before is the same.  New LRPs (i.e. when before
 // is nil) are appended to the end of the lrp slice.
-func (e EventCalculator) RecordChange(before, after *models.ActualLRP, lrps []*models.ActualLRP) []*models.ActualLRP {
+func (e ActualLRPEventCalculator) RecordChange(before, after *models.ActualLRP, lrps []*models.ActualLRP) []*models.ActualLRP {
 	found := false
 	newLRPs := []*models.ActualLRP{}
 	for _, l := range lrps {
@@ -160,9 +160,8 @@ func generateUnclaimedInstanceEvents(before, after *models.ActualLRP) []models.E
 		events = append(events, models.NewActualLRPCrashedEvent(before, after))
 	}
 
+	// we can get here if auctioneer calls FailActualLRP
 	if before.State == models.ActualLRPStateUnclaimed {
-		// we can get here if auctioneer calls FailActualLRP which updates the
-		// placement error but doesn't change the LRP's state
 		return append(events, models.NewActualLRPInstanceChangedEvent(before, after))
 	}
 
@@ -190,10 +189,12 @@ func generateLRPInstanceEvents(before, after *models.ActualLRP) []models.Event {
 	switch after.State {
 	case models.ActualLRPStateUnclaimed:
 		return generateUnclaimedInstanceEvents(before, after)
-	case models.ActualLRPStateCrashed:
-		return generateCrashedInstanceEvents(before, after)
+	case models.ActualLRPStateClaimed:
+		return generateUpdateInstanceEvents(before, after)
 	case models.ActualLRPStateRunning:
 		return generateUpdateInstanceEvents(before, after)
+	case models.ActualLRPStateCrashed:
+		return generateCrashedInstanceEvents(before, after)
 	default:
 		return nil
 	}
@@ -222,7 +223,8 @@ func generateUnclaimedGroupEvents(before, after *models.ActualLRP) []models.Even
 }
 
 func generateUpdateGroupEvents(before, after *models.ActualLRP) []models.Event {
-	if !after.ActualLRPInstanceKey.Equal(before.ActualLRPInstanceKey) {
+	if !before.ActualLRPInstanceKey.Empty() &&
+		!after.ActualLRPInstanceKey.Equal(before.ActualLRPInstanceKey) {
 		// an Ordinary LRP replaced Suspect LRP
 		return wrapEvent(
 			models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()),
@@ -230,13 +232,13 @@ func generateUpdateGroupEvents(before, after *models.ActualLRP) []models.Event {
 		)
 	}
 
-	return nil
+	return wrapEvent(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 }
 
 // The main difference between this function and generateLRPInstanceEvents
 // (besides using different event types) is that the latter generates a
 // remove+create events when the LRP is unclaimed.  This function return a
-// ActualLRPChangedEvent instead to be compatible with olf subscribers.
+// ActualLRPChangedEvent instead to be compatible with old subscribers.
 func generateLRPInstanceGroupEvents(before, after *models.ActualLRP) []models.Event {
 	if before.Equal(after) {
 		// nothing changed
@@ -291,7 +293,7 @@ func getEventLRP(e models.Event) (*models.ActualLRP, bool) {
 // emitted before lower ones.  The score based ordering ensures continuous
 // routability, so events with running instances should be emitted first
 // followed by remove events.
-func eventScore(e models.Event) int {
+func EventScore(e models.Event) int {
 	lrp, crashed := getEventLRP(e)
 
 	// sort crashed events first to be backward compatible with the old
@@ -307,8 +309,9 @@ func eventScore(e models.Event) int {
 		return 1
 	}
 
-	// i is a removed event.  These should be emitted last, so i cannot less
-	// than j.
+	// The event is either a RemovedEvent or a ChangedEvent (to a non-RUNNING
+	// state).  These are prioritized last, because those events cause loss of
+	// routability.
 	return 0
 }
 
@@ -317,7 +320,7 @@ func generateLRPGroupEvents(before, after *models.ActualLRPGroup) []models.Event
 	events = append(events, generateLRPInstanceGroupEvents(before.Evacuating, after.Evacuating)...)
 
 	sort.Slice(events, func(i, j int) bool {
-		return eventScore(events[i]) > eventScore(events[j])
+		return EventScore(events[i]) > EventScore(events[j])
 	})
 
 	return events

@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
+	"code.cloudfoundry.org/bbs/events/calculator"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
@@ -288,7 +288,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 	count := len(keys)
 	createdIndicesChan := make(chan int, count)
 
-	eventCalculator := controllers.EventCalculator{
+	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
