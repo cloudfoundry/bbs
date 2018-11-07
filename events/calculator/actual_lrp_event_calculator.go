@@ -132,7 +132,7 @@ func (e ActualLRPEventCalculator) RecordChange(before, after *models.ActualLRP, 
 	}
 
 	if !found {
-		return append(lrps, after)
+		newLRPs = append(newLRPs, after)
 	}
 
 	return newLRPs
