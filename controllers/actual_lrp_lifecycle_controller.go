@@ -246,35 +246,46 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 
 	logger = logger.Session("retire-actual-lrp", lager.Data{"process_guid": key.ProcessGuid, "index": key.Index})
 
+	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
+	if err != nil {
+		return err
+	}
+
+	eventCalculator := calculator.ActualLRPEventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
+	lrp := findWithPresence(lrps, models.ActualLRP_Ordinary)
+	if lrp == nil {
+		return models.ErrResourceNotFound
+	}
+
+	newLRPs := make([]*models.ActualLRP, len(lrps))
+	copy(newLRPs, lrps)
+
+	defer func() {
+		go eventCalculator.EmitEvents(lrps, newLRPs)
+	}()
+
+	removeLRP := func() error {
+		err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+		if err == nil {
+			newLRPs = eventCalculator.RecordChange(lrp, nil, lrps)
+		}
+		return err
+	}
+
 	for retryCount := 0; retryCount < models.RetireActualLRPRetryAttempts; retryCount++ {
-		var lrps []*models.ActualLRP
-		lrps, err = h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
-		if err != nil {
-			return err
-		}
-
-		lrp := findWithPresence(lrps, models.ActualLRP_Ordinary)
-		if lrp == nil {
-			return models.ErrResourceNotFound
-		}
-
 		switch lrp.State {
 		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-			err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
-			if err == nil {
-				go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp))
-			}
+			err = removeLRP()
 		case models.ActualLRPStateClaimed, models.ActualLRPStateRunning:
 			cell, err = h.serviceClient.CellById(logger, lrp.CellId)
 			if err != nil {
 				bbsErr := models.ConvertError(err)
 				if bbsErr.Type == models.Error_ResourceNotFound {
-					err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
-					if err == nil {
-						go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
-						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp))
-					}
+					return removeLRP()
 				}
 				return err
 			}

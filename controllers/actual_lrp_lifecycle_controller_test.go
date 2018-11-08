@@ -1224,7 +1224,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					err = controller.RetireActualLRP(logger, &actualLRPKey)
 					Expect(err).To(MatchError("boom!"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(5))
-					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(5))
 				})
 
 				It("does not emit a change event to the hub", func() {
@@ -1286,7 +1285,6 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					err = controller.RetireActualLRP(logger, &actualLRPKey)
 					Expect(err).To(MatchError("boom!"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(5))
-					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(5))
 				})
 
 				It("does not emit a change event to the hub", func() {
