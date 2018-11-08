@@ -47,34 +47,34 @@ func NewTaskController(
 	}
 }
 
-func (c *TaskController) Tasks(logger lager.Logger, domain, cellId string) ([]*models.Task, error) {
+func (c *TaskController) Tasks(logger lager.Logger, domain, cellID string) ([]*models.Task, error) {
 	logger = logger.Session("tasks")
 
-	filter := models.TaskFilter{Domain: domain, CellID: cellId}
+	filter := models.TaskFilter{Domain: domain, CellID: cellID}
 	return c.db.Tasks(logger, filter)
 }
 
-func (c *TaskController) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
+func (c *TaskController) TaskByGuid(logger lager.Logger, taskGUID string) (*models.Task, error) {
 	logger = logger.Session("task-by-guid")
 
-	return c.db.TaskByGuid(logger, taskGuid)
+	return c.db.TaskByGuid(logger, taskGUID)
 }
 
-func (c *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error {
+func (c *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGUID, domain string) error {
 	var err error
 	var task *models.Task
 	logger = logger.Session("desire-task")
 
-	logger = logger.WithData(lager.Data{"task_guid": taskGuid})
+	logger = logger.WithData(lager.Data{"task_guid": taskGUID})
 
-	task, err = c.db.DesireTask(logger, taskDefinition, taskGuid, domain)
+	task, err = c.db.DesireTask(logger, taskDefinition, taskGUID, domain)
 	if err != nil {
 		return err
 	}
 	go c.taskHub.Emit(models.NewTaskCreatedEvent(task))
 
 	logger.Debug("start-task-auction-request")
-	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGuid, domain, taskDefinition)
+	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGUID, domain, taskDefinition)
 	err = c.auctioneerClient.RequestTaskAuctions(logger, []*auctioneer.TaskStartRequest{&taskStartRequest})
 	if err != nil {
 		logger.Error("failed-requesting-task-auction", err)
@@ -86,20 +86,20 @@ func (c *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.
 	return nil
 }
 
-func (c *TaskController) StartTask(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error) {
-	logger = logger.Session("start-task", lager.Data{"task_guid": taskGuid, "cell_id": cellId})
-	before, after, shouldStart, err := c.db.StartTask(logger, taskGuid, cellId)
+func (c *TaskController) StartTask(logger lager.Logger, taskGUID, cellID string) (shouldStart bool, err error) {
+	logger = logger.Session("start-task", lager.Data{"task_guid": taskGUID, "cell_id": cellID})
+	before, after, shouldStart, err := c.db.StartTask(logger, taskGUID, cellID)
 	if err == nil && shouldStart {
 		go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
-		c.taskStatMetronNotifier.RecordTaskStarted(cellId)
+		c.taskStatMetronNotifier.RecordTaskStarted(cellID)
 	}
 	return shouldStart, err
 }
 
-func (c *TaskController) CancelTask(logger lager.Logger, taskGuid string) error {
+func (c *TaskController) CancelTask(logger lager.Logger, taskGUID string) error {
 	logger = logger.Session("cancel-task")
 
-	before, after, cellID, err := c.db.CancelTask(logger, taskGuid)
+	before, after, cellID, err := c.db.CancelTask(logger, taskGUID)
 	if err != nil {
 		return err
 	}
@@ -128,21 +128,21 @@ func (c *TaskController) CancelTask(logger lager.Logger, taskGuid string) error 
 		logger.Error("create-rep-client-failed", err)
 		return err
 	}
-	logger.Info("start-rep-cancel-task", lager.Data{"task_guid": taskGuid})
-	repClient.CancelTask(logger, taskGuid)
+	logger.Info("start-rep-cancel-task", lager.Data{"task_guid": taskGUID})
+	repClient.CancelTask(logger, taskGUID)
 	if err != nil {
 		logger.Error("failed-rep-cancel-task", err)
 		// don't return an error, the rep will converge later
 		return nil
 	}
-	logger.Info("finished-rep-cancel-task", lager.Data{"task_guid": taskGuid})
+	logger.Info("finished-rep-cancel-task", lager.Data{"task_guid": taskGUID})
 	return nil
 }
 
-func (c *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason string) error {
+func (c *TaskController) FailTask(logger lager.Logger, taskGUID, failureReason string) error {
 	var err error
 
-	before, after, err := c.db.FailTask(logger, taskGuid, failureReason)
+	before, after, err := c.db.FailTask(logger, taskGUID, failureReason)
 	if err != nil {
 		return err
 	}
@@ -157,25 +157,25 @@ func (c *TaskController) FailTask(logger lager.Logger, taskGuid, failureReason s
 	return nil
 }
 
-func (c *TaskController) RejectTask(logger lager.Logger, taskGuid, rejectionReason string) error {
-	logger = logger.Session("reject-task", lager.Data{"guid": taskGuid})
+func (c *TaskController) RejectTask(logger lager.Logger, taskGUID, rejectionReason string) error {
+	logger = logger.Session("reject-task", lager.Data{"guid": taskGUID})
 	logger.Info("start")
 	defer logger.Info("complete")
 
-	task, err := c.db.TaskByGuid(logger, taskGuid)
+	task, err := c.db.TaskByGuid(logger, taskGUID)
 	if err != nil {
 		logger.Error("failed-to-fetch-task", err)
 		return err
 	}
 
 	logger.Info("reject-task", lager.Data{"rejection-reason": rejectionReason})
-	before, after, rejectTaskErr := c.db.RejectTask(logger, taskGuid, rejectionReason)
+	before, after, rejectTaskErr := c.db.RejectTask(logger, taskGUID, rejectionReason)
 	if rejectTaskErr != nil {
 		logger.Error("failed-to-reject-task", rejectTaskErr)
 	}
 
 	if int(task.RejectionCount) >= c.maxRetries {
-		return c.FailTask(logger, taskGuid, rejectionReason)
+		return c.FailTask(logger, taskGUID, rejectionReason)
 	}
 
 	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
@@ -185,8 +185,8 @@ func (c *TaskController) RejectTask(logger lager.Logger, taskGuid, rejectionReas
 
 func (c *TaskController) CompleteTask(
 	logger lager.Logger,
-	taskGuid,
-	cellId string,
+	taskGUID,
+	cellID string,
 	failed bool,
 	failureReason,
 	result string,
@@ -194,16 +194,16 @@ func (c *TaskController) CompleteTask(
 	var err error
 	logger = logger.Session("complete-task")
 
-	before, after, err := c.db.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
+	before, after, err := c.db.CompleteTask(logger, taskGUID, cellID, failed, failureReason, result)
 	if err != nil {
 		return err
 	}
 	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
 	if failed {
-		c.taskStatMetronNotifier.RecordTaskFailed(cellId)
+		c.taskStatMetronNotifier.RecordTaskFailed(cellID)
 	} else {
-		c.taskStatMetronNotifier.RecordTaskSucceeded(cellId)
+		c.taskStatMetronNotifier.RecordTaskSucceeded(cellID)
 	}
 
 	if after.CompletionCallbackUrl != "" {
@@ -214,10 +214,10 @@ func (c *TaskController) CompleteTask(
 	return nil
 }
 
-func (c *TaskController) ResolvingTask(logger lager.Logger, taskGuid string) error {
+func (c *TaskController) ResolvingTask(logger lager.Logger, taskGUID string) error {
 	logger = logger.Session("resolving-task")
 
-	before, after, err := c.db.ResolvingTask(logger, taskGuid)
+	before, after, err := c.db.ResolvingTask(logger, taskGUID)
 	if err != nil {
 		return err
 	}
@@ -226,10 +226,10 @@ func (c *TaskController) ResolvingTask(logger lager.Logger, taskGuid string) err
 	return nil
 }
 
-func (c *TaskController) DeleteTask(logger lager.Logger, taskGuid string) error {
+func (c *TaskController) DeleteTask(logger lager.Logger, taskGUID string) error {
 	logger = logger.Session("delete-task")
 
-	task, err := c.db.DeleteTask(logger, taskGuid)
+	task, err := c.db.DeleteTask(logger, taskGUID)
 	if err != nil {
 		return err
 	}

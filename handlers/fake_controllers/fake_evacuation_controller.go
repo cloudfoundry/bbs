@@ -23,7 +23,7 @@ type FakeEvacuationController struct {
 	removeEvacuatingActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	EvacuateClaimedActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (error, bool)
+	EvacuateClaimedActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	evacuateClaimedActualLRPMutex       sync.RWMutex
 	evacuateClaimedActualLRPArgsForCall []struct {
 		arg1 lager.Logger
@@ -31,12 +31,12 @@ type FakeEvacuationController struct {
 		arg3 *models.ActualLRPInstanceKey
 	}
 	evacuateClaimedActualLRPReturns struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}
 	evacuateClaimedActualLRPReturnsOnCall map[int]struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}
 	EvacuateCrashedActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
 	evacuateCrashedActualLRPMutex       sync.RWMutex
@@ -52,7 +52,7 @@ type FakeEvacuationController struct {
 	evacuateCrashedActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	EvacuateRunningActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (error, bool)
+	EvacuateRunningActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)
 	evacuateRunningActualLRPMutex       sync.RWMutex
 	evacuateRunningActualLRPArgsForCall []struct {
 		arg1 lager.Logger
@@ -61,12 +61,12 @@ type FakeEvacuationController struct {
 		arg4 *models.ActualLRPNetInfo
 	}
 	evacuateRunningActualLRPReturns struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}
 	evacuateRunningActualLRPReturnsOnCall map[int]struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}
 	EvacuateStoppedActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	evacuateStoppedActualLRPMutex       sync.RWMutex
@@ -135,7 +135,7 @@ func (fake *FakeEvacuationController) RemoveEvacuatingActualLRPReturnsOnCall(i i
 	}{result1}
 }
 
-func (fake *FakeEvacuationController) EvacuateClaimedActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) (error, bool) {
+func (fake *FakeEvacuationController) EvacuateClaimedActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) (bool, error) {
 	fake.evacuateClaimedActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateClaimedActualLRPReturnsOnCall[len(fake.evacuateClaimedActualLRPArgsForCall)]
 	fake.evacuateClaimedActualLRPArgsForCall = append(fake.evacuateClaimedActualLRPArgsForCall, struct {
@@ -166,25 +166,25 @@ func (fake *FakeEvacuationController) EvacuateClaimedActualLRPArgsForCall(i int)
 	return fake.evacuateClaimedActualLRPArgsForCall[i].arg1, fake.evacuateClaimedActualLRPArgsForCall[i].arg2, fake.evacuateClaimedActualLRPArgsForCall[i].arg3
 }
 
-func (fake *FakeEvacuationController) EvacuateClaimedActualLRPReturns(result1 error, result2 bool) {
+func (fake *FakeEvacuationController) EvacuateClaimedActualLRPReturns(result1 bool, result2 error) {
 	fake.EvacuateClaimedActualLRPStub = nil
 	fake.evacuateClaimedActualLRPReturns = struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeEvacuationController) EvacuateClaimedActualLRPReturnsOnCall(i int, result1 error, result2 bool) {
+func (fake *FakeEvacuationController) EvacuateClaimedActualLRPReturnsOnCall(i int, result1 bool, result2 error) {
 	fake.EvacuateClaimedActualLRPStub = nil
 	if fake.evacuateClaimedActualLRPReturnsOnCall == nil {
 		fake.evacuateClaimedActualLRPReturnsOnCall = make(map[int]struct {
-			result1 error
-			result2 bool
+			result1 bool
+			result2 error
 		})
 	}
 	fake.evacuateClaimedActualLRPReturnsOnCall[i] = struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}{result1, result2}
 }
 
@@ -239,7 +239,7 @@ func (fake *FakeEvacuationController) EvacuateCrashedActualLRPReturnsOnCall(i in
 	}{result1}
 }
 
-func (fake *FakeEvacuationController) EvacuateRunningActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo) (error, bool) {
+func (fake *FakeEvacuationController) EvacuateRunningActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo) (bool, error) {
 	fake.evacuateRunningActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateRunningActualLRPReturnsOnCall[len(fake.evacuateRunningActualLRPArgsForCall)]
 	fake.evacuateRunningActualLRPArgsForCall = append(fake.evacuateRunningActualLRPArgsForCall, struct {
@@ -271,25 +271,25 @@ func (fake *FakeEvacuationController) EvacuateRunningActualLRPArgsForCall(i int)
 	return fake.evacuateRunningActualLRPArgsForCall[i].arg1, fake.evacuateRunningActualLRPArgsForCall[i].arg2, fake.evacuateRunningActualLRPArgsForCall[i].arg3, fake.evacuateRunningActualLRPArgsForCall[i].arg4
 }
 
-func (fake *FakeEvacuationController) EvacuateRunningActualLRPReturns(result1 error, result2 bool) {
+func (fake *FakeEvacuationController) EvacuateRunningActualLRPReturns(result1 bool, result2 error) {
 	fake.EvacuateRunningActualLRPStub = nil
 	fake.evacuateRunningActualLRPReturns = struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeEvacuationController) EvacuateRunningActualLRPReturnsOnCall(i int, result1 error, result2 bool) {
+func (fake *FakeEvacuationController) EvacuateRunningActualLRPReturnsOnCall(i int, result1 bool, result2 error) {
 	fake.EvacuateRunningActualLRPStub = nil
 	if fake.evacuateRunningActualLRPReturnsOnCall == nil {
 		fake.evacuateRunningActualLRPReturnsOnCall = make(map[int]struct {
-			result1 error
-			result2 bool
+			result1 bool
+			result2 error
 		})
 	}
 	fake.evacuateRunningActualLRPReturnsOnCall[i] = struct {
-		result1 error
-		result2 bool
+		result1 bool
+		result2 error
 	}{result1, result2}
 }
 

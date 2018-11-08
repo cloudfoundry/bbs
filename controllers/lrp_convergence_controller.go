@@ -219,22 +219,21 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 					}()
 
 					return
-				} else {
-					before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, dereferencedKey.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-					if err != nil {
-						logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
-						return
-					}
-
-					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
-
-					unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), dereferencedKey.Key)
-					if err != nil {
-						logger.Error("cannot-unclaim-lrp", err)
-						return
-					}
-					go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed))
 				}
+				before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, dereferencedKey.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+				if err != nil {
+					logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
+					return
+				}
+
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+
+				unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), dereferencedKey.Key)
+				if err != nil {
+					logger.Error("cannot-unclaim-lrp", err)
+					return
+				}
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed))
 			} else {
 				before, after, err := h.lrpDB.UnclaimActualLRP(logger, dereferencedKey.Key)
 				if err != nil {

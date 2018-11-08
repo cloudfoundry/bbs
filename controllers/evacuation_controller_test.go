@@ -243,7 +243,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err, keepContainer = controller.EvacuateClaimedActualLRP(logger, lrpKey, lrpInstanceKey)
+			keepContainer, err = controller.EvacuateClaimedActualLRP(logger, lrpKey, lrpInstanceKey)
 		})
 
 		It("does not return an error and tells the caller not to keep the lrp container", func() {
@@ -743,7 +743,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		JustBeforeEach(func() {
 			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
-			err, keepContainer = controller.EvacuateRunningActualLRP(logger, &targetKey, &targetInstanceKey, &netInfo)
+			keepContainer, err = controller.EvacuateRunningActualLRP(logger, &targetKey, &targetInstanceKey, &netInfo)
 			modelErr = models.ConvertError(err)
 		})
 

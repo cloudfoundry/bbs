@@ -65,18 +65,18 @@ func lookupLRPInSlice(lrps []*models.ActualLRP, key *models.ActualLRPInstanceKey
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
+func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, processGUID string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
 
-	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
+	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGUID, Index: &index})
 	if err != nil {
 		return err
 	}
 
-	before, after, err := h.db.ClaimActualLRP(logger, processGuid, index, actualLRPInstanceKey)
+	before, after, err := h.db.ClaimActualLRP(logger, processGUID, index, actualLRPInstanceKey)
 	if err != nil {
 		return err
 	}
@@ -217,8 +217,8 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
-	beforeLRPs, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
+func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, processGUID string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
+	beforeLRPs, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGUID, Index: &index})
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 		return models.ErrResourceNotFound
 	}
 
-	err = h.db.RemoveActualLRP(logger, processGuid, index, instanceKey)
+	err = h.db.RemoveActualLRP(logger, processGUID, index, instanceKey)
 	if err != nil {
 		return err
 	}

@@ -163,7 +163,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			Context("when the controller succeeds in evacuating the actual lrp", func() {
 				Context("when keepContainer is false", func() {
 					BeforeEach(func() {
-						controller.EvacuateClaimedActualLRPReturns(nil, false)
+						controller.EvacuateClaimedActualLRPReturns(false, nil)
 					})
 
 					It("should return no error and keep the container", func() {
@@ -178,7 +178,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("when keepContainer is true", func() {
 					BeforeEach(func() {
-						controller.EvacuateClaimedActualLRPReturns(nil, true)
+						controller.EvacuateClaimedActualLRPReturns(true, nil)
 					})
 
 					It("should return no error and keep the container", func() {
@@ -195,7 +195,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			Context("when the controller returns an error", func() {
 				Context("if the error is recoverable and keepContainer is false", func() {
 					BeforeEach(func() {
-						controller.EvacuateClaimedActualLRPReturns(models.ErrUnknownError, false)
+						controller.EvacuateClaimedActualLRPReturns(false, models.ErrUnknownError)
 					})
 
 					It("should return the error in the response", func() {
@@ -211,7 +211,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("if the error is recoverable and keepContainer is true", func() {
 					BeforeEach(func() {
-						controller.EvacuateClaimedActualLRPReturns(models.ErrUnknownError, true)
+						controller.EvacuateClaimedActualLRPReturns(true, models.ErrUnknownError)
 					})
 
 					It("should return the error in the response", func() {
@@ -227,7 +227,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("if the error is unrecoverable", func() {
 					BeforeEach(func() {
-						controller.EvacuateClaimedActualLRPReturns(models.NewUnrecoverableError(nil), false)
+						controller.EvacuateClaimedActualLRPReturns(false, models.NewUnrecoverableError(nil))
 					})
 
 					It("logs and writes to the exit channel", func() {
@@ -361,7 +361,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			Context("when the controller succeeds in evacuating the actual lrp", func() {
 				Context("when keepContainer is false", func() {
 					BeforeEach(func() {
-						controller.EvacuateRunningActualLRPReturns(nil, false)
+						controller.EvacuateRunningActualLRPReturns(false, nil)
 					})
 
 					It("should return no error and keep the container", func() {
@@ -376,7 +376,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("when keepContainer is true", func() {
 					BeforeEach(func() {
-						controller.EvacuateRunningActualLRPReturns(nil, true)
+						controller.EvacuateRunningActualLRPReturns(true, nil)
 					})
 
 					It("should return no error and keep the container", func() {
@@ -393,7 +393,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			Context("when the controller returns an error", func() {
 				Context("if the error is recoverable and keepContainer is false", func() {
 					BeforeEach(func() {
-						controller.EvacuateRunningActualLRPReturns(models.ErrUnknownError, false)
+						controller.EvacuateRunningActualLRPReturns(false, models.ErrUnknownError)
 					})
 
 					It("should return the error in the response", func() {
@@ -409,7 +409,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("if the error is recoverable and keepContainer is true", func() {
 					BeforeEach(func() {
-						controller.EvacuateRunningActualLRPReturns(models.ErrUnknownError, true)
+						controller.EvacuateRunningActualLRPReturns(true, models.ErrUnknownError)
 					})
 
 					It("should return the error in the response", func() {
@@ -425,7 +425,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("if the error is unrecoverable", func() {
 					BeforeEach(func() {
-						controller.EvacuateRunningActualLRPReturns(models.NewUnrecoverableError(nil), false)
+						controller.EvacuateRunningActualLRPReturns(false, models.NewUnrecoverableError(nil))
 					})
 
 					It("logs and writes to the exit channel", func() {
