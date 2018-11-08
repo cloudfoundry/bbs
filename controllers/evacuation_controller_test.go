@@ -66,7 +66,7 @@ var _ = Describe("Evacuation Controller", func() {
 			index       = int32(1)
 
 			key                   models.ActualLRPKey
-			instanceKey           models.ActualLRPInstanceKey
+			evacuatingInstanceKey models.ActualLRPInstanceKey
 			actual, evacuatingLRP *models.ActualLRP
 
 			replacementInstanceKey models.ActualLRPInstanceKey
@@ -79,12 +79,13 @@ var _ = Describe("Evacuation Controller", func() {
 				index,
 				"domain-0",
 			)
-			instanceKey = models.NewActualLRPInstanceKey("instance-guid", "cell-id")
+			instanceKey := models.NewActualLRPInstanceKey("instance-guid", "cell-id")
+			evacuatingInstanceKey = models.NewActualLRPInstanceKey("evacuating-instance-guid", "evacuating-cell-id")
 			actual = &models.ActualLRP{
 				ActualLRPInstanceKey: instanceKey,
 			}
 			evacuatingLRP = &models.ActualLRP{
-				ActualLRPInstanceKey: instanceKey,
+				ActualLRPInstanceKey: evacuatingInstanceKey,
 				Presence:             models.ActualLRP_Evacuating,
 			}
 
@@ -100,20 +101,20 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.RemoveEvacuatingActualLRP(logger, &key, &instanceKey)
+			err = controller.RemoveEvacuatingActualLRP(logger, &key, &evacuatingInstanceKey)
 			modelErr = models.ConvertError(err)
 		})
 
-		Context("when removeEvacuatinging the actual lrp in the DB succeeds", func() {
+		Context("when removing the evacuating actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
 				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(nil)
 			})
 
-			It("removeEvacuatings the actual lrp by process guid and index", func() {
+			It("removes the evacuating actual lrp by process guid and index", func() {
 				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 				_, actualKey, actualInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
 				Expect(*actualKey).To(Equal(key))
-				Expect(*actualInstanceKey).To(Equal(instanceKey))
+				Expect(*actualInstanceKey).To(Equal(evacuatingInstanceKey))
 			})
 
 			It("emits events to the hub", func() {
@@ -125,7 +126,7 @@ var _ = Describe("Evacuation Controller", func() {
 			})
 
 			It("logs the stranded evacuating actual lrp", func() {
-				Eventually(logger).Should(gbytes.Say(`removing-stranded-evacuating-actual-lrp.*"index":%d,"instance-key":{"instance_guid":"%s","cell_id":"%s"},"process-guid":"%s"`, key.Index, instanceKey.InstanceGuid, instanceKey.CellId, key.ProcessGuid))
+				Eventually(logger).Should(gbytes.Say(`removing-stranded-evacuating-actual-lrp.*"index":%d,"instance-key":{"instance_guid":"%s","cell_id":"%s"},"process-guid":"%s"`, key.Index, evacuatingInstanceKey.InstanceGuid, evacuatingInstanceKey.CellId, key.ProcessGuid))
 			})
 
 			Context("when the evacuating lrp is being replaced", func() {
@@ -193,7 +194,18 @@ var _ = Describe("Evacuation Controller", func() {
 
 		Context("when we cannot find the resource", func() {
 			BeforeEach(func() {
-				fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrResourceNotFound)
+				fakeActualLRPDB.ActualLRPsReturns(nil, nil)
+			})
+
+			It("returns resource not found error", func() {
+				Expect(modelErr).NotTo(BeNil())
+				Expect(modelErr).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the target LRP is not evacuating", func() {
+			BeforeEach(func() {
+				evacuatingLRP.Presence = models.ActualLRP_Ordinary
 			})
 
 			It("returns resource not found error", func() {

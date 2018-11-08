@@ -223,6 +223,11 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 		return err
 	}
 
+	lrp := findWithPresence(beforeLRPs, models.ActualLRP_Ordinary)
+	if lrp == nil {
+		return models.ErrResourceNotFound
+	}
+
 	err = h.db.RemoveActualLRP(logger, processGuid, index, instanceKey)
 	if err != nil {
 		return err
@@ -233,7 +238,6 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
 
-	lrp := lookupLRPInSlice(beforeLRPs, instanceKey)
 	newLRPs := eventCalculator.RecordChange(lrp, nil, beforeLRPs)
 	go eventCalculator.EmitEvents(beforeLRPs, newLRPs)
 

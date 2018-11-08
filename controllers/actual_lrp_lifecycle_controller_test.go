@@ -1087,6 +1087,49 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 		})
 
+		Context("when the DB does not return any LRPs", func() {
+			JustBeforeEach(func() {
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{}, nil)
+			})
+
+			It("returns an ErrResourceNotFound", func() {
+				err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Expect(err).To(MatchError(models.ErrResourceNotFound))
+			})
+
+			It("does not emit a removed event to the hub", func() {
+				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
+
+			It("does not emit an instance removed event to the hub", func() {
+				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+			})
+		})
+
+		Context("when there is no ordinary LRP with a matching process guid and index", func() {
+			JustBeforeEach(func() {
+				actualLRP.Presence = models.ActualLRP_Evacuating
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+			})
+
+			It("returns an ErrResourceNotFound", func() {
+				err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Expect(err).To(MatchError(models.ErrResourceNotFound))
+			})
+
+			It("does not emit a removed event to the hub", func() {
+				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
+
+			It("does not emit an instance removed event to the hub", func() {
+				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+			})
+		})
+
 		Context("when the DB returns an error", func() {
 			Context("when doing the actual LRP lookup", func() {
 				JustBeforeEach(func() {
