@@ -227,8 +227,16 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 	if err != nil {
 		return err
 	}
-	go h.actualHub.Emit(models.NewActualLRPRemovedEvent(beforeLRPs[0].ToActualLRPGroup()))
-	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(beforeLRPs[0]))
+
+	eventCalculator := calculator.ActualLRPEventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
+	lrp := lookupLRPInSlice(beforeLRPs, instanceKey)
+	newLRPs := eventCalculator.RecordChange(lrp, nil, beforeLRPs)
+	go eventCalculator.EmitEvents(beforeLRPs, newLRPs)
+
 	return nil
 }
 
