@@ -288,6 +288,10 @@ func (h *EvacuationController) EvacuateCrashedActualLRP(logger lager.Logger, act
 //   5. If the instance ActualLRP in the group is in the crashed state:
 //     - Remove the evacuating ActualLRP.
 func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (bool, error) {
+	eventCalculator := calculator.ActualLRPEventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
 	guid := actualLRPKey.ProcessGuid
 	index := actualLRPKey.Index
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
@@ -300,12 +304,19 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 		return false, nil
 	}
 
+	newLRPs := make([]*models.ActualLRP, len(actualLRPs))
+	copy(newLRPs, actualLRPs)
+
+	defer func() {
+		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+	}()
+
 	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 	evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
-	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
-
+	// We want to actually resolve the priorities of LRPs returned by the
+	// database
 	lrpGroup := models.ResolveActualLRPGroup(actualLRPs)
-	instance = lrpGroup.Instance
+	instance := lrpGroup.Instance
 
 	if instance == nil {
 		if targetActualLRP != nil && targetActualLRP.Equal(evacuating) {
@@ -319,8 +330,8 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 				return true, err
 			}
 
-			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating}))
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(evacuating))
+			newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+
 			return false, nil
 		}
 	}
@@ -332,11 +343,12 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 				logger.Info("already-evacuated-by-different-cell")
 				return false, nil
 			}
-			err := h.evacuateRequesting(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
+			newEvacuating, err := h.evacuateRequesting(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
 			switch err {
 			case models.ErrActualLRPCannotBeEvacuated:
 				return false, nil
 			default:
+				newLRPs = eventCalculator.RecordChange(nil, newEvacuating, newLRPs)
 				return true, err
 			}
 		}
@@ -347,13 +359,14 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 				logger.Info("already-evacuated-by-different-cell")
 				return false, nil
 			}
-			err := h.evacuateRequesting(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
+			newEvacuating, err := h.evacuateRequesting(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
 			switch err {
 			case models.ErrActualLRPCannotBeEvacuated:
 				return false, nil
 			case models.ErrResourceExists:
 				return true, nil
 			default:
+				newLRPs = eventCalculator.RecordChange(nil, newEvacuating, newLRPs)
 				return true, err
 			}
 		}
@@ -362,14 +375,16 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 	case models.ActualLRPStateRunning:
 		var err error
 		if !instance.Equal(targetActualLRP) {
-			err = h.removeEvacuating(logger, evacuating)
+			removedEvacuating, err := h.removeEvacuating(logger, evacuating)
+			newLRPs = eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
 			keepContainer := err != nil
 			return keepContainer, err
 		}
 		err = h.evacuateInstance(logger, actualLRPs, instance)
 		return true, err
 	case models.ActualLRPStateCrashed:
-		err := h.removeEvacuating(logger, evacuating)
+		removedEvacuating, err := h.removeEvacuating(logger, evacuating)
+		newLRPs = eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
 		keepContainer := err != nil
 		return keepContainer, err
 	}
@@ -434,18 +449,16 @@ func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *model
 	}
 }
 
-func (h *EvacuationController) evacuateRequesting(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
+func (h *EvacuationController) evacuateRequesting(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
 	evacuating, err := h.db.EvacuateActualLRP(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
 	if err == models.ErrActualLRPCannotBeEvacuated || err == models.ErrResourceExists {
-		return err
+		return nil, err
 	}
 
 	if err != nil {
 		logger.Error("failed-evacuating-actual-lrp", err)
 	}
-	go h.actualHub.Emit(models.NewActualLRPCreatedEvent(evacuating.ToActualLRPGroup()))
-	go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(evacuating))
-	return err
+	return evacuating, err
 }
 
 func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*models.ActualLRP, actualLRP *models.ActualLRP) error {
@@ -498,18 +511,18 @@ func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*
 	return nil
 }
 
-func (h *EvacuationController) removeEvacuating(logger lager.Logger, evacuating *models.ActualLRP) error {
+func (h *EvacuationController) removeEvacuating(logger lager.Logger, evacuating *models.ActualLRP) (*models.ActualLRP, error) {
 	if evacuating == nil {
-		return nil
+		return nil, nil
 	}
 
 	err := h.db.RemoveEvacuatingActualLRP(logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
 	if err == nil {
-		go h.actualHub.Emit(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating}))
-		go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(evacuating))
+		return evacuating, nil
 	}
+
 	if err != nil && err != models.ErrActualLRPCannotBeRemoved {
-		return err
+		return nil, err
 	}
-	return nil
+	return nil, nil
 }
