@@ -221,6 +221,72 @@ func (h *EvacuationController) EvacuateCrashedActualLRP(logger lager.Logger, act
 	return nil
 }
 
+// EvacuateRunningActualLRP primarily handles evacuating an ordinary and running
+// ActualLRP and auctioning a new one.
+//
+// To explain the behavior, we'll use the following terminology:
+//   - "ActualLRP group" refers to the group of ActualLRPs whose ProcessGuid
+//     and Instance Index match the method parameters. Note that due to the
+//     database's primary key constraint, no two ActualLRPs in a group
+//     can have the same presence. For example, only one ActualLRP in the group
+//     can be evacuating at a time.
+//
+//   - "Target ActualLRP" refers the ActualLRP in the ActualLRP group whose
+//     InstanceGuid, and CellId match the method parameters.
+//
+//   - "Alternative ActualLRPs" refer to the ActualLRPs in the ActualLRP
+//     group excluding the target ActualLRP.
+//
+//   - "Instance ActualLRP" refers to the ordinary or suspect ActualLRP in the
+//     group, whichever has the highest priority. Generally, if the Instance
+//     ActualLRP is in a state like unclaimed, it means no other ordinary or
+//     suspect ActualLRP has progressed farther than this state.
+//
+// EvacuatingRunningActualLRP handles the following cases:
+//   1. If there is no instance ActualLRP
+//     - If the target ActualLRP is already evacuating:
+//       - The previous attempt to schedule a replacement probably failed.
+//       - It removes the evacuating LRP and does not keep the container
+//       - It's expected that convergence would eventually reschedule the
+//         ActualLRP with this ProcessGuid and Index.
+//
+//   2. If the instance ActualLRP in the group is in the unclaimed state:
+//     - The BBS may have inaccurate information about this ActualLRP. The
+//       ActualLRP is updated to reflect its actual state.
+//     - If the instance has a placement error, keep the container and do nothing.
+//     - If the instance does not have a placement error:
+//       - It creates a running evacuating ActualLRP that matches the target
+//         ActualLRP. It also leaves the old target ActualLRP around.
+//       - If there is an alternative ActualLRP that is already evacuating, then
+//         return an error (already evacuated by different cell).
+//       - If the target ActualLRP is already evacuating, then return an error
+//         (already exists).
+//
+//   3. If the instance ActualLRP in the group is in the claimed state:
+//     - If the instance ActualLRP is not the target ActualLRP:
+//       - It creates a running evacuating ActualLRP that matches the target
+//         ActualLRP. It also leaves the old target ActualLRP around.
+//       - If there is an alternative ActualLRP that is already evacuating, then
+//         return an error (already evacuated by different cell).
+//       - If the target ActualLRP is already evacuating, then return an error
+//         (already exists).
+//     - If the instance ActualLRP is the target ActualLRP:
+//       - It creates a new running evacuating ActualLRP that matches the target
+//         ActualLRP.
+//       - It replaces the old target ActualLRP with an unclaimed one and auctions a
+//         new replacement LRP for the group.
+//
+//   4. If the instance ActualLRP in the group is in the running state:
+//     - If the instance ActualLRP is not the target ActualLRP, then
+//        remove the evacuating ActualLRP.
+//     - If the instance ActualLRP is the target ActualLRP:
+//       - It creates a running evacuating ActualLRP that matches the target
+//         ActualLRP.
+//       - It replaces the old target ActualLRP with an unclaimed one and auctions a
+//         new replacement LRP for the group.
+//
+//   5. If the instance ActualLRP in the group is in the crashed state:
+//     - Remove the evacuating ActualLRP.
 func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (bool, error) {
 	guid := actualLRPKey.ProcessGuid
 	index := actualLRPKey.Index
