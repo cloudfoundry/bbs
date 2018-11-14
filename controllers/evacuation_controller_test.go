@@ -893,17 +893,6 @@ var _ = Describe("Evacuation Controller", func() {
 					})
 				})
 
-				Context("when the lrp cannot be evacuated", func() {
-					BeforeEach(func() {
-						fakeEvacuationDB.EvacuateActualLRPReturns(nil, models.ErrActualLRPCannotBeEvacuated)
-					})
-
-					It("does not error and does not keep the container", func() {
-						Expect(keepContainer).To(BeFalse())
-						Expect(err).To(BeNil())
-					})
-				})
-
 				Context("when evacuating the actual lrp fails for some other reason", func() {
 					BeforeEach(func() {
 						fakeEvacuationDB.EvacuateActualLRPReturns(nil, errors.New("didnt work"))
@@ -984,17 +973,6 @@ var _ = Describe("Evacuation Controller", func() {
 							Expect(keepContainer).To(BeTrue())
 							Expect(err).NotTo(BeNil())
 							Expect(err.Error()).To(Equal("didnt work"))
-						})
-					})
-
-					Context("when the lrp cannot be evacuated", func() {
-						BeforeEach(func() {
-							fakeEvacuationDB.EvacuateActualLRPReturns(nil, models.ErrActualLRPCannotBeEvacuated)
-						})
-
-						It("does not error and does not keep the container", func() {
-							Expect(keepContainer).To(BeFalse())
-							Expect(err).To(BeNil())
 						})
 					})
 				})
