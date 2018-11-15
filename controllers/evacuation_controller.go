@@ -221,72 +221,20 @@ func (h *EvacuationController) EvacuateCrashedActualLRP(logger lager.Logger, act
 	return nil
 }
 
-// EvacuateRunningActualLRP primarily handles evacuating an ordinary and running
-// ActualLRP and auctioning a new one.
+// EvacuateRunningActualLRP evacuates the LRP with the given lrp keys.  This
+// function has to handle the following cases:
 //
-// To explain the behavior, we'll use the following terminology:
-//   - "ActualLRP group" refers to the group of ActualLRPs whose ProcessGuid
-//     and Instance Index match the method parameters. Note that due to the
-//     database's primary key constraint, no two ActualLRPs in a group
-//     can have the same presence. For example, only one ActualLRP in the group
-//     can be evacuating at a time.
+// 1. Create a Evacuating LRP if one doesn't already exist and this isn't the
+// Ordinary LRP.
 //
-//   - "Target ActualLRP" refers the ActualLRP in the ActualLRP group whose
-//     InstanceGuid, and CellId match the method parameters.
+// 2. Do the evacuation dance if this is the Ordinary LRP
 //
-//   - "Alternative ActualLRPs" refer to the ActualLRPs in the ActualLRP
-//     group excluding the target ActualLRP.
+// 3. Remove the evacuating LRP if it is no longer needed (an Ordinary is
+// running or the desired LRP was removed)
 //
-//   - "Instance ActualLRP" refers to the ordinary or suspect ActualLRP in the
-//     group, whichever has the highest priority. Generally, if the Instance
-//     ActualLRP is in a state like unclaimed, it means no other ordinary or
-//     suspect ActualLRP has progressed farther than this state.
-//
-// EvacuatingRunningActualLRP handles the following cases:
-//   1. If there is no instance ActualLRP
-//     - If the target ActualLRP is already evacuating:
-//       - The previous attempt to schedule a replacement probably failed.
-//       - It removes the evacuating LRP and does not keep the container
-//       - It's expected that convergence would eventually reschedule the
-//         ActualLRP with this ProcessGuid and Index.
-//
-//   2. If the instance ActualLRP in the group is in the unclaimed state:
-//     - The BBS may have inaccurate information about this ActualLRP. The
-//       ActualLRP is updated to reflect its actual state.
-//     - If the instance has a placement error, keep the container and do nothing.
-//     - If the instance does not have a placement error:
-//       - It creates a running evacuating ActualLRP that matches the target
-//         ActualLRP. It also leaves the old target ActualLRP around.
-//       - If there is an alternative ActualLRP that is already evacuating, then
-//         return an error (already evacuated by different cell).
-//       - If the target ActualLRP is already evacuating, then return an error
-//         (already exists).
-//
-//   3. If the instance ActualLRP in the group is in the claimed state:
-//     - If the instance ActualLRP is not the target ActualLRP:
-//       - It creates a running evacuating ActualLRP that matches the target
-//         ActualLRP. It also leaves the old target ActualLRP around.
-//       - If there is an alternative ActualLRP that is already evacuating, then
-//         return an error (already evacuated by different cell).
-//       - If the target ActualLRP is already evacuating, then return an error
-//         (already exists).
-//     - If the instance ActualLRP is the target ActualLRP:
-//       - It creates a new running evacuating ActualLRP that matches the target
-//         ActualLRP.
-//       - It replaces the old target ActualLRP with an unclaimed one and auctions a
-//         new replacement LRP for the group.
-//
-//   4. If the instance ActualLRP in the group is in the running state:
-//     - If the instance ActualLRP is not the target ActualLRP, then
-//        remove the evacuating ActualLRP.
-//     - If the instance ActualLRP is the target ActualLRP:
-//       - It creates a running evacuating ActualLRP that matches the target
-//         ActualLRP.
-//       - It replaces the old target ActualLRP with an unclaimed one and auctions a
-//         new replacement LRP for the group.
-//
-//   5. If the instance ActualLRP in the group is in the crashed state:
-//     - Remove the evacuating ActualLRP.
+// Refer to
+// https://github.com/cloudfoundry/diego-notes/tree/2cbd7451#harmonizing-during-evacuation
+// for more details.
 func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (bool, error) {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
@@ -311,83 +259,70 @@ func (h *EvacuationController) EvacuateRunningActualLRP(logger lager.Logger, act
 		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
 	}()
 
+	// the ActualLRP whose InstanceGuid, and CellId match the method
+	// parameters.
 	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
-	evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
-	// We want to actually resolve the priorities of LRPs returned by the
-	// database
-	lrpGroup := models.ResolveActualLRPGroup(actualLRPs)
-	instance := lrpGroup.Instance
 
-	if instance == nil {
-		if targetActualLRP != nil && targetActualLRP.Equal(evacuating) {
-			err = h.db.RemoveEvacuatingActualLRP(logger, actualLRPKey, actualLRPInstanceKey)
-			if err != nil {
-				if err == models.ErrActualLRPCannotBeRemoved {
-					logger.Debug("remove-evacuating-actual-lrp-failed")
-					return false, nil
-				}
-				logger.Error("failed-removing-evacuating-actual-lrp", err)
-				return true, err
-			}
+	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
 
-			newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+	// `instance == nil' means the DesiredLRP has been removed and
+	// stopInstancesFrom deleted the Ordinary instance.
+	desiredLRPIsRemoved := instance == nil
 
-			return false, nil
-		}
+	// the replacement is already running or crashed.  Wrapped in a function so
+	// we can short circuit its evaluation if instance is nil.
+	replacementLRPIsRunning := func() bool {
+		return !instance.Equal(targetActualLRP) &&
+			(instance.State == models.ActualLRPStateRunning ||
+				instance.State == models.ActualLRPStateCrashed)
 	}
 
-	switch instance.State {
-	case models.ActualLRPStateUnclaimed:
-		if instance.PlacementError == "" {
-			if evacuating != nil && !evacuating.Equal(targetActualLRP) {
-				logger.Info("already-evacuated-by-different-cell")
-				return false, nil
-			}
-			newEvacuating, err := h.evacuateRequesting(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
-			switch err {
-			case models.ErrActualLRPCannotBeEvacuated:
-				return false, nil
-			default:
-				newLRPs = eventCalculator.RecordChange(nil, newEvacuating, newLRPs)
-				return true, err
-			}
-		}
-		return true, nil
-	case models.ActualLRPStateClaimed:
-		if !instance.Equal(targetActualLRP) {
-			if evacuating != nil && !evacuating.Equal(targetActualLRP) {
-				logger.Info("already-evacuated-by-different-cell")
-				return false, nil
-			}
-			newEvacuating, err := h.evacuateRequesting(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
-			switch err {
-			case models.ErrActualLRPCannotBeEvacuated:
-				return false, nil
-			case models.ErrResourceExists:
-				return true, nil
-			default:
-				newLRPs = eventCalculator.RecordChange(nil, newEvacuating, newLRPs)
-				return true, err
-			}
-		}
-		err = h.evacuateInstance(logger, actualLRPs, instance)
-		return true, err
-	case models.ActualLRPStateRunning:
-		var err error
-		if !instance.Equal(targetActualLRP) {
-			removedEvacuating, err := h.removeEvacuating(logger, evacuating)
-			newLRPs = eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
-			keepContainer := err != nil
-			return keepContainer, err
-		}
-		err = h.evacuateInstance(logger, actualLRPs, instance)
-		return true, err
-	case models.ActualLRPStateCrashed:
-		removedEvacuating, err := h.removeEvacuating(logger, evacuating)
+	if desiredLRPIsRemoved || replacementLRPIsRunning() {
+		removedEvacuating, err := h.removeEvacuating(logger, targetActualLRP)
 		newLRPs = eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
 		keepContainer := err != nil
 		return keepContainer, err
 	}
+
+	if targetActualLRP == nil || targetActualLRP.Presence == models.ActualLRP_Evacuating {
+		// Create a new Evacuating LRP or update an existing one
+		evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
+
+		if evacuating != nil && !evacuating.Equal(targetActualLRP) {
+			// There is already another evacuating instance.  Let the Rep know
+			// that we don't need this instance anymore.  We can't have more
+			// than one evacuating instance.
+			logger.Info("already-evacuated-by-different-cell")
+			return false, nil
+		}
+
+		// FIXME: there might be a bug when the LRP is originally in the CLAIMED
+		// state.  db.EvacuateActualLRP always create an evacuating LRP in the
+		// running state regardless.
+		newLRP, err := h.db.EvacuateActualLRP(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
+
+		if err != nil {
+			logger.Error("failed-evacuating-actual-lrp", err)
+		}
+
+		if err == models.ErrResourceExists {
+			// nothing to do, the evacuating LRP already exists in the DB
+			return true, nil
+		}
+
+		newLRPs = eventCalculator.RecordChange(nil, newLRP, newLRPs)
+		return true, err
+	}
+
+	if (targetActualLRP.State == models.ActualLRPStateRunning) ||
+		(targetActualLRP.State == models.ActualLRPStateClaimed) {
+		// do the evacuation dance.  Change the instance from Running/Ordinary
+		// -> Running/Evacuating and create a new Unclaimed/Ordinary LRP.
+		err = h.evacuateInstance(logger, actualLRPs, targetActualLRP)
+		return true, err
+	}
+
+	// for all other states, just delete the container.
 	return false, nil
 }
 
@@ -449,19 +384,8 @@ func (h *EvacuationController) requestAuction(logger lager.Logger, lrpKey *model
 	}
 }
 
-func (h *EvacuationController) evacuateRequesting(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
-	evacuating, err := h.db.EvacuateActualLRP(logger, actualLRPKey, actualLRPInstanceKey, netInfo)
-	if err == models.ErrActualLRPCannotBeEvacuated || err == models.ErrResourceExists {
-		return nil, err
-	}
-
-	if err != nil {
-		logger.Error("failed-evacuating-actual-lrp", err)
-	}
-	return evacuating, err
-}
-
 func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*models.ActualLRP, actualLRP *models.ActualLRP) error {
+
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
@@ -482,9 +406,6 @@ func (h *EvacuationController) evacuateInstance(logger lager.Logger, allLRPs []*
 	defer func() {
 		go eventCalculator.EmitEvents(allLRPs, newLRPs)
 	}()
-
-	// events = append(events, models.NewActualLRPCreatedEvent(evacuating.ToActualLRPGroup()))
-	// instanceEvents = append(instanceEvents, models.NewActualLRPInstanceCreatedEvent(evacuating))
 
 	if actualLRP.Presence == models.ActualLRP_Suspect {
 		_, err := h.suspectLRPDB.RemoveSuspectActualLRP(logger, &actualLRP.ActualLRPKey)
@@ -517,12 +438,14 @@ func (h *EvacuationController) removeEvacuating(logger lager.Logger, evacuating 
 	}
 
 	err := h.db.RemoveEvacuatingActualLRP(logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
+
 	if err == nil {
 		return evacuating, nil
 	}
 
-	if err != nil && err != models.ErrActualLRPCannotBeRemoved {
-		return nil, err
+	if err == models.ErrActualLRPCannotBeRemoved {
+		return nil, nil
 	}
-	return nil, nil
+
+	return nil, err
 }

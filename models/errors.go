@@ -116,11 +116,6 @@ var (
 		Message: "cannot unclaim actual LRP",
 	}
 
-	ErrActualLRPCannotBeEvacuated = &Error{
-		Type:    Error_ActualLRPCannotBeEvacuated,
-		Message: "cannot evacuate actual LRP",
-	}
-
 	ErrGUIDGeneration = &Error{
 		Type:    Error_GUIDGeneration,
 		Message: "cannot generate random guid",

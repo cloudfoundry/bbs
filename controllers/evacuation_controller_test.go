@@ -844,6 +844,7 @@ var _ = Describe("Evacuation Controller", func() {
 		Context("when the instance is unclaimed", func() {
 			BeforeEach(func() {
 				actual.State = models.ActualLRPStateUnclaimed
+				actual.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
 				actualLRPs = []*models.ActualLRP{actual}
 			})
 
@@ -859,9 +860,9 @@ var _ = Describe("Evacuation Controller", func() {
 
 					Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
 					_, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
-					Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-					Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-					Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
+					Expect(*actualLRPKey).To(Equal(targetKey))
+					Expect(*actualLRPInstanceKey).To(Equal(targetInstanceKey))
+					Expect(*actualLrpNetInfo).To(Equal(netInfo))
 				})
 
 				It("emits events to the hub", func() {
@@ -1097,8 +1098,19 @@ var _ = Describe("Evacuation Controller", func() {
 				})
 
 				Context("when the instance is suspect", func() {
+					var (
+						ordinary *models.ActualLRP
+					)
+
 					BeforeEach(func() {
+						ordinary = model_helpers.NewValidActualLRP("the-guid", 1)
+						ordinary.State = models.ActualLRPStateUnclaimed
+						ordinary.ActualLRPInstanceKey = models.ActualLRPInstanceKey{
+							InstanceGuid: "replacement-guid",
+							CellId:       "replacement-cell",
+						}
 						actual.Presence = models.ActualLRP_Suspect
+						actualLRPs = []*models.ActualLRP{ordinary, actual}
 						fakeSuspectDB.RemoveSuspectActualLRPReturns(actual, nil)
 					})
 
@@ -1113,7 +1125,7 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
 					})
 
-					It("emits a LRPCreated and then LRPRemoved event", func() {
+					It("emits a LRPCreated and then LRPChanged event", func() {
 						Eventually(actualHub.EmitCallCount).Should(Equal(2))
 						Consistently(actualHub.EmitCallCount).Should(Equal(2))
 
@@ -1123,9 +1135,10 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 
 						event = actualHub.EmitArgsForCall(1)
-						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
-						re := event.(*models.ActualLRPRemovedEvent)
-						Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+						Expect(event).To(Equal(models.NewActualLRPChangedEvent(
+							actual.ToActualLRPGroup(),
+							ordinary.ToActualLRPGroup(),
+						)))
 					})
 
 					It("emits a LRPInstaceChanged event", func() {
@@ -1179,21 +1192,6 @@ var _ = Describe("Evacuation Controller", func() {
 					Context("when removing the suspect lrp fails", func() {
 						BeforeEach(func() {
 							fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("didnt work"))
-						})
-
-						XIt("does not emit an LRPRemoved event", func() {
-							Eventually(actualHub.EmitCallCount).Should(Equal(1))
-							event := actualHub.EmitArgsForCall(0)
-							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
-							Consistently(actualHub.EmitCallCount).Should(Equal(1))
-						})
-
-						It("does not emit an LRPInstanceRemoved event", func() {
-							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-
-							event := actualLRPInstanceHub.EmitArgsForCall(0)
-							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceChangedEvent{}))
 						})
 
 						It("logs the failure", func() {
@@ -1344,6 +1342,8 @@ var _ = Describe("Evacuation Controller", func() {
 		Context("when the instance is crashed", func() {
 			BeforeEach(func() {
 				actual.State = models.ActualLRPStateCrashed
+				targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
+				targetKey = evacuatingActual.ActualLRPKey
 				actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 			})
 
