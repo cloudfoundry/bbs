@@ -691,9 +691,9 @@ var _ = Describe("Task", func() {
 
 					It("creates an action with exclusive layers converted to download actions", func() {
 						convertedLRP := task.VersionDownTo(format.V2)
-						Expect(convertedLRP.Action.GetValue()).To(DeepEqual(models.Serial(
+						Expect(convertedLRP.Action.GetValue()).To(DeepEqual(
 							models.Parallel(&downloadAction1, &downloadAction2),
-						)))
+						))
 					})
 				})
 			})

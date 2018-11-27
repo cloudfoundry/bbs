@@ -100,7 +100,7 @@ func (layers ImageLayers) ToDownloadActions(legacyDownloadUser string, existingA
 		if existingAction != nil {
 			action = WrapAction(Serial(parallelDownloadActions, UnwrapAction(existingAction)))
 		} else {
-			action = WrapAction(Serial(parallelDownloadActions))
+			action = WrapAction(parallelDownloadActions)
 		}
 	} else {
 		action = existingAction

@@ -376,7 +376,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.DesiredLrp.CachedDependencies).To(HaveLen(1))
-				Expect(response.DesiredLrp.Setup.SerialAction.Actions).To(HaveLen(1))
+				Expect(response.DesiredLrp.Setup.ParallelAction.Actions).To(HaveLen(1))
 				Expect(response.DesiredLrp).To(Equal(downgradedDesiredLRP))
 			})
 		})

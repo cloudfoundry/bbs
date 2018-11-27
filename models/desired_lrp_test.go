@@ -813,9 +813,9 @@ var _ = Describe("DesiredLRP", func() {
 
 					It("creates a setup action with exclusive layers converted to download actions", func() {
 						convertedLRP := desiredLRP.VersionDownTo(format.V2)
-						Expect(models.UnwrapAction(convertedLRP.Setup)).To(Equal(models.Serial(
+						Expect(models.UnwrapAction(convertedLRP.Setup)).To(Equal(
 							models.Parallel(&downloadAction1, &downloadAction2),
-						)))
+						))
 					})
 				})
 			})
