@@ -1280,3 +1280,23 @@ func insertTask(db helpers.QueryableDB, serializer format.Serializer, task *mode
 	Expect(err).NotTo(HaveOccurred())
 	Expect(result.RowsAffected()).NotTo(Equal(1))
 }
+
+func updateTaskToInvalid(db helpers.QueryableDB, serializer format.Serializer, task *models.Task) {
+	taskDefData, err := serializer.Marshal(logger, task.TaskDefinition)
+	Expect(err).NotTo(HaveOccurred())
+
+	taskDefData = []byte("{{{{{{{{{{")
+	queryStr := `UPDATE tasks
+						  SET task_definition=?
+							WHERE guid=?`
+	if test_helpers.UsePostgres() {
+		queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+	}
+	result, err := db.Exec(
+		queryStr,
+		taskDefData,
+		task.TaskGuid,
+	)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(result.RowsAffected()).NotTo(Equal(1))
+}

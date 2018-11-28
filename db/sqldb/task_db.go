@@ -549,7 +549,6 @@ func (db *SQLDB) deleteInvalidTasks(logger lager.Logger, queryable helpers.Query
 		_, err := db.delete(logger, queryable, tasksTable, "guid = ?", guid)
 		if err != nil {
 			logger.Error("failed-deleting-task", err)
-			return err
 		}
 	}
 	return nil

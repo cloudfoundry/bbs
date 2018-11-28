@@ -263,6 +263,27 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 
+			Context("when there are invalid tasks", func() {
+				BeforeEach(func() {
+					fakeClock.Increment(-expireCompletedTaskDuration)
+					_, err := sqlDB.DesireTask(logger, taskDef, "another-completed-task", domain)
+					Expect(err).NotTo(HaveOccurred())
+					_, _, _, err = sqlDB.StartTask(logger, "another-completed-task", existingCellID)
+					Expect(err).NotTo(HaveOccurred())
+					_, _, err = sqlDB.CompleteTask(logger, "another-completed-task", existingCellID, false, "", "")
+					Expect(err).NotTo(HaveOccurred())
+					fakeClock.Increment(expireCompletedTaskDuration)
+
+					updateTaskToInvalid(db, serializer, expiredCompletedTask)
+					fakeClock.IncrementBySeconds(1)
+				})
+
+				It("deletes tasks that have exceeded expireCompleteTaskDuration", func() {
+					_, err := sqlDB.TaskByGuid(logger, "another-completed-task")
+					Expect(err).To(Equal(models.ErrResourceNotFound))
+				})
+			})
+
 			It("returns tasks that should be kicked for completion", func() {
 				task, err := sqlDB.TaskByGuid(logger, "completed-kickable-task")
 				Expect(err).NotTo(HaveOccurred())

@@ -307,8 +307,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 
 	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
 	if err != nil {
-		logger.Error("failed-fetching-tasks", err)
-		return nil, int64(invalidTasksCount)
+		logger.Error("failed-fetching-tasks", err, lager.Data{"invalidTasksCound": int64(invalidTasksCount)})
 	}
 
 	if len(validTaskGuids) == 0 {
