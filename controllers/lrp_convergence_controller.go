@@ -17,6 +17,7 @@ import (
 //go:generate counterfeiter -o fakes/fake_retirer.go . Retirer
 type Retirer interface {
 	RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
+	RemoveSuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
 }
 
 type LRPConvergenceController struct {
@@ -108,6 +109,12 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			err := h.retirer.RetireActualLRP(retireLogger, &dereferencedKey)
 			if err != nil {
 				logger.Error("retiring-lrp-failed", err)
+			}
+		})
+		works = append(works, func() {
+			err := h.retirer.RemoveSuspectActualLRP(retireLogger, &dereferencedKey)
+			if err != nil {
+				logger.Error("removing-suspect-lrp-failed", err)
 			}
 		})
 	}

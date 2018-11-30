@@ -22,6 +22,18 @@ type FakeRetirer struct {
 	retireActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
+	RemoveSuspectActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) error
+	removeSuspectActualLRPMutex       sync.RWMutex
+	removeSuspectActualLRPArgsForCall []struct {
+		logger lager.Logger
+		key    *models.ActualLRPKey
+	}
+	removeSuspectActualLRPReturns struct {
+		result1 error
+	}
+	removeSuspectActualLRPReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -75,11 +87,62 @@ func (fake *FakeRetirer) RetireActualLRPReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeRetirer) RemoveSuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+	fake.removeSuspectActualLRPMutex.Lock()
+	ret, specificReturn := fake.removeSuspectActualLRPReturnsOnCall[len(fake.removeSuspectActualLRPArgsForCall)]
+	fake.removeSuspectActualLRPArgsForCall = append(fake.removeSuspectActualLRPArgsForCall, struct {
+		logger lager.Logger
+		key    *models.ActualLRPKey
+	}{logger, key})
+	fake.recordInvocation("RemoveSuspectActualLRP", []interface{}{logger, key})
+	fake.removeSuspectActualLRPMutex.Unlock()
+	if fake.RemoveSuspectActualLRPStub != nil {
+		return fake.RemoveSuspectActualLRPStub(logger, key)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.removeSuspectActualLRPReturns.result1
+}
+
+func (fake *FakeRetirer) RemoveSuspectActualLRPCallCount() int {
+	fake.removeSuspectActualLRPMutex.RLock()
+	defer fake.removeSuspectActualLRPMutex.RUnlock()
+	return len(fake.removeSuspectActualLRPArgsForCall)
+}
+
+func (fake *FakeRetirer) RemoveSuspectActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
+	fake.removeSuspectActualLRPMutex.RLock()
+	defer fake.removeSuspectActualLRPMutex.RUnlock()
+	return fake.removeSuspectActualLRPArgsForCall[i].logger, fake.removeSuspectActualLRPArgsForCall[i].key
+}
+
+func (fake *FakeRetirer) RemoveSuspectActualLRPReturns(result1 error) {
+	fake.RemoveSuspectActualLRPStub = nil
+	fake.removeSuspectActualLRPReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeRetirer) RemoveSuspectActualLRPReturnsOnCall(i int, result1 error) {
+	fake.RemoveSuspectActualLRPStub = nil
+	if fake.removeSuspectActualLRPReturnsOnCall == nil {
+		fake.removeSuspectActualLRPReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.removeSuspectActualLRPReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeRetirer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.retireActualLRPMutex.RLock()
 	defer fake.retireActualLRPMutex.RUnlock()
+	fake.removeSuspectActualLRPMutex.RLock()
+	defer fake.removeSuspectActualLRPMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

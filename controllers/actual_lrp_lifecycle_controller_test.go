@@ -1175,6 +1175,111 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 	})
 
+	Describe("RetireSuspectActualLRP", func() {
+		Context("when finding the suspect actualLRP fails", func() {
+			JustBeforeEach(func() {
+				fakeActualLRPDB.ActualLRPsReturns(nil, models.ErrUnknownError)
+			})
+
+			It("returns an error and does not retry", func() {
+				err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Expect(err).To(MatchError(models.ErrUnknownError))
+				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
+			})
+
+			It("does not emit a removed event to the hub", func() {
+				err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
+
+			It("does not emit an instance removed event to the hub", func() {
+				controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+			})
+		})
+
+		Context("when there is no matching suspect actual lrp", func() {
+			JustBeforeEach(func() {
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{}, nil)
+			})
+
+			It("returns an error and does not retry", func() {
+				err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
+			})
+
+			It("does not emit a removed event to the hub", func() {
+				err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Consistently(actualHub.EmitCallCount).Should(Equal(0))
+			})
+
+			It("does not emit an instance removed event to the hub", func() {
+				controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+			})
+		})
+
+		Context("when there is a suspect LRP", func() {
+			BeforeEach(func() {
+				presence = models.ActualLRP_Suspect
+			})
+
+			JustBeforeEach(func() {
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+			})
+
+			It("removes the LRP", func() {
+				err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+
+				_, deletedActualLRPKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				Expect(deletedActualLRPKey).To(Equal(&actualLRP.ActualLRPKey))
+			})
+
+			It("emits a removed event to the hub", func() {
+				err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Eventually(actualHub.EmitCallCount).Should(Equal(1))
+				event := actualHub.EmitArgsForCall(0)
+				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
+			})
+
+			It("emits an instance removed event to the hub", func() {
+				err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+				event := actualLRPInstanceHub.EmitArgsForCall(0)
+				removedEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+				Expect(ok).To(BeTrue())
+				Expect(removedEvent.ActualLrp).To(Equal(actualLRP))
+			})
+
+			Context("when removing the actual lrp fails", func() {
+				JustBeforeEach(func() {
+					fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("boom!"))
+				})
+
+				It("retries removing up to RetireActualLRPRetryAttempts times", func() {
+					err = controller.RemoveSuspectActualLRP(logger, &actualLRPKey)
+					Expect(err).To(MatchError("boom!"))
+					Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(5))
+				})
+
+				It("does not emit a change event to the hub", func() {
+					err = controller.RetireActualLRP(logger, &actualLRPKey)
+					Consistently(actualHub.EmitCallCount).Should(Equal(0))
+				})
+
+				It("does not emit an instance removed event to the hub", func() {
+					controller.RetireActualLRP(logger, &actualLRPKey)
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+				})
+			})
+		})
+	})
+
 	Describe("RetireActualLRP", func() {
 		Context("when finding the actualLRP fails", func() {
 			JustBeforeEach(func() {

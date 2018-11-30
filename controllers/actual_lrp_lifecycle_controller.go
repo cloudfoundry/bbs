@@ -311,3 +311,43 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 
 	return err
 }
+
+func (h *ActualLRPLifecycleController) RemoveSuspectActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+	var err error
+
+	logger = logger.Session("remove-suspect-actual-lrp", lager.Data{"process_guid": key.ProcessGuid, "index": key.Index})
+
+	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
+	if err != nil {
+		return err
+	}
+
+	eventCalculator := calculator.ActualLRPEventCalculator{
+		ActualLRPGroupHub:    h.actualHub,
+		ActualLRPInstanceHub: h.actualLRPInstanceHub,
+	}
+
+	suspectLRP := findWithPresence(lrps, models.ActualLRP_Suspect)
+	if suspectLRP == nil {
+		return models.ErrResourceNotFound
+	}
+
+	newLRPs := make([]*models.ActualLRP, len(lrps))
+	copy(newLRPs, lrps)
+
+	defer func() {
+		go eventCalculator.EmitEvents(lrps, newLRPs)
+	}()
+
+	for suspectRetryCount := 0; suspectRetryCount < models.RetireActualLRPRetryAttempts; suspectRetryCount++ {
+		_, err = h.suspectDB.RemoveSuspectActualLRP(logger, &suspectLRP.ActualLRPKey)
+		if err == nil {
+			newLRPs = eventCalculator.RecordChange(suspectLRP, nil, lrps)
+			return nil
+		}
+
+		logger.Error("retrying-failed-remove-of-suspect-actual-lrp", err, lager.Data{"attempt": suspectRetryCount + 1})
+	}
+
+	return err
+}

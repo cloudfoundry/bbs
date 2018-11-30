@@ -752,6 +752,47 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		})
 	})
 
+	Context("when there are extra suspect LRPs", func() {
+		var (
+			retiringSuspectActualLRP1, retiringSuspectActualLRP2 *models.ActualLRP
+		)
+
+		BeforeEach(func() {
+			retiringSuspectActualLRP1 = model_helpers.NewValidActualLRPWithPresence("to-retire-1", 0, models.ActualLRP_Suspect)
+			retiringSuspectActualLRP2 = model_helpers.NewValidActualLRPWithPresence("to-retire-2", 1, models.ActualLRP_Suspect)
+			keysToRetire = []*models.ActualLRPKey{&retiringSuspectActualLRP1.ActualLRPKey, &retiringSuspectActualLRP2.ActualLRPKey}
+
+			result := db.ConvergenceResult{
+				KeysToRetire: keysToRetire,
+			}
+			fakeLRPDB.ConvergeLRPsReturns(result)
+		})
+
+		Context("when an error is encountered removing the suspect LRPs", func() {
+			BeforeEach(func() {
+				retirer.RemoveSuspectActualLRPReturns(errors.New("BOOM!!!"))
+			})
+
+			It("should log the error", func() {
+				Expect(logger.Buffer()).To(gbytes.Say("BOOM!!!"))
+			})
+		})
+
+		It("removes the LRPs from the DB", func() {
+			Eventually(retirer.RemoveSuspectActualLRPCallCount()).Should(Equal(2))
+
+			removedKeys := make([]*models.ActualLRPKey, 2)
+
+			for i := 0; i < 2; i++ {
+				_, key := retirer.RemoveSuspectActualLRPArgsForCall(i)
+				removedKeys[i] = key
+			}
+
+			Expect(removedKeys).To(ContainElement(&retiringSuspectActualLRP1.ActualLRPKey))
+			Expect(removedKeys).To(ContainElement(&retiringSuspectActualLRP2.ActualLRPKey))
+		})
+	})
+
 	Context("when the db returns events", func() {
 		var (
 			expectedRemovedEvent         *models.ActualLRPRemovedEvent

@@ -28,6 +28,12 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	return actualLRP
 }
 
+func NewValidActualLRPWithPresence(guid string, index int32, presence models.ActualLRP_Presence) *models.ActualLRP {
+	newActualLRP := NewValidActualLRP(guid, index)
+	newActualLRP.Presence = presence
+	return newActualLRP
+}
+
 func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := NewValidActualLRP(guid, index)
 	actualLRP.Presence = models.ActualLRP_Evacuating
