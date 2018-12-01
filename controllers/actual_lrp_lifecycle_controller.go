@@ -109,6 +109,8 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 		return nil
 	}
 
+	// creates ordinary running actual LRP if it doesn't exist, otherwise updates
+	// the existing ordinary actual LRP to running state
 	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
 		return err

@@ -658,21 +658,20 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		)
 
 		BeforeEach(func() {
-			lrp := model_helpers.NewValidDesiredLRP("some-guid")
 			key = &models.ActualLRPKey{
-				ProcessGuid: lrp.ProcessGuid,
+				ProcessGuid: "some-guid",
 				Index:       0,
-				Domain:      lrp.Domain,
+				Domain:      "some-domain",
 			}
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				SuspectLRPKeysToRetire: []*models.ActualLRPKey{key},
 			})
 
 			runningLRP = model_helpers.NewValidActualLRP("some-guid", 1)
-			runningLRP.State = models.ActualLRPStateClaimed
+			runningLRP.State = models.ActualLRPStateRunning
 			runningLRP.Presence = models.ActualLRP_Ordinary
 			suspectLRP = model_helpers.NewValidActualLRP("some-guid", 0)
-			suspectLRP.State = models.ActualLRPStateClaimed
+			suspectLRP.State = models.ActualLRPStateRunning
 			suspectLRP.Presence = models.ActualLRP_Suspect
 		})
 

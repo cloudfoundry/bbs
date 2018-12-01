@@ -133,6 +133,18 @@ func (db *SQLDB) selectOrphanedActualLRPs(logger lager.Logger, q helpers.Queryab
 	return q.Query(query)
 }
 
+func (db *SQLDB) selectOrphanedSuspectActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+	query := fmt.Sprintf(`
+    SELECT actual_lrps.process_guid, actual_lrps.instance_index, actual_lrps.domain
+      FROM actual_lrps
+      JOIN domains ON actual_lrps.domain = domains.domain
+      LEFT JOIN desired_lrps ON actual_lrps.process_guid = desired_lrps.process_guid
+      WHERE actual_lrps.presence = %d AND desired_lrps.process_guid IS NULL
+		`, models.ActualLRP_Suspect)
+
+	return q.Query(query)
+}
+
 func (db *SQLDB) selectSuspectRunningActualLRPs(logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
 	query := db.helper.Rebind(`SELECT process_guid, instance_index, domain
 			FROM actual_lrps

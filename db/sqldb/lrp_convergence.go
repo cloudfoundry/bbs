@@ -30,6 +30,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 	converge.actualLRPsWithMissingCells(logger, cellSet)
 	converge.lrpInstanceCounts(logger, domainSet)
 	converge.orphanedActualLRPs(logger)
+	converge.orphanedSuspectActualLRPs(logger)
 	converge.extraSuspectActualLRPs(logger)
 	converge.suspectActualLRPsWithExistingCells(logger, cellSet)
 	converge.suspectRunningActualLRPs(logger)
@@ -194,7 +195,19 @@ func (c *convergence) extraSuspectActualLRPs(logger lager.Logger) {
 		return
 	}
 
-	c.suspectKeysToRetire = scanActualLRPs(logger, rows)
+	c.suspectKeysToRetire = append(c.suspectKeysToRetire, scanActualLRPs(logger, rows)...)
+}
+
+func (c *convergence) orphanedSuspectActualLRPs(logger lager.Logger) {
+	logger = logger.Session("orphaned-suspect-lrps")
+
+	rows, err := c.selectOrphanedSuspectActualLRPs(logger, c.db)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return
+	}
+
+	c.suspectKeysToRetire = append(c.suspectKeysToRetire, scanActualLRPs(logger, rows)...)
 }
 
 func (c *convergence) suspectRunningActualLRPs(logger lager.Logger) {

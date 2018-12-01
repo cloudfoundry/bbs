@@ -377,6 +377,54 @@ var _ = Describe("LRPConvergence", func() {
 		})
 	})
 
+	Context("when there are orphaned suspect LRPs", func() {
+		var (
+			lrpKey, lrpKey2, lrpKey3 models.ActualLRPKey
+		)
+
+		BeforeEach(func() {
+			cellSet = models.NewCellSetFromList([]*models.CellPresence{
+				{CellId: "suspect-cell"},
+			})
+
+			domain := "some-domain"
+			Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
+
+			var err error
+
+			// create the suspect LRP
+			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.NewPortMapping(2222, 4444))
+			processGuid := "orphaned-suspect-lrp-1"
+			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+
+			otherProcessGuid := "orphaned-suspect-lrp-2"
+			lrpKey2 = models.NewActualLRPKey(otherProcessGuid, 0, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = db.Exec(fmt.Sprintf(`UPDATE actual_lrps SET presence = %d`, models.ActualLRP_Suspect))
+			Expect(err).NotTo(HaveOccurred())
+
+			// create suspect LRP that is not orphaned
+			notOrphanedProcessGuid := "suspect-lrp-that-is-not-orphaned"
+			desiredLRP2 := model_helpers.NewValidDesiredLRP(notOrphanedProcessGuid)
+			err = sqlDB.DesireLRP(logger, desiredLRP2)
+			Expect(err).NotTo(HaveOccurred())
+			lrpKey3 = models.NewActualLRPKey(notOrphanedProcessGuid, 0, domain)
+			_, _, err = sqlDB.StartActualLRP(logger, &lrpKey3, &models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "suspect-cell"}, &actualLRPNetInfo)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ChangeActualLRPPresence(logger, &lrpKey3, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should only return the orphaned suspect lrp key in the SuspectLRPKeysToRetire", func() {
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(result.SuspectLRPKeysToRetire).To(ConsistOf(&lrpKey, &lrpKey2))
+		})
+	})
+
 	Context("when there are claimed LRPs", func() {
 		var (
 			domain string

@@ -204,7 +204,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			if h.generateSuspectActualLRPs {
 				_, existingSuspect := suspectKeyMap[*dereferencedKey.Key]
 				if existingSuspect {
-					// there is a Suspect LRP already, unclaim this one and reauction it
+					// there is a Suspect LRP already, unclaim this previously created
+					// replacement and reauction it
 					logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": dereferencedKey.Key})
 					before, after, err := h.lrpDB.UnclaimActualLRP(logger, dereferencedKey.Key)
 					if err != nil {
