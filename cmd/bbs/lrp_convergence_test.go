@@ -20,7 +20,6 @@ import (
 	"code.cloudfoundry.org/durationjson"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
@@ -147,7 +146,7 @@ var _ = Describe("Convergence API", func() {
 					BeforeEach(func() {
 						Eventually(func() bool {
 							index := int32(0)
-							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{Index: &index, ProcessGuid: "some-process-guid"})
+							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{Index: &index, ProcessGuid: processGuid})
 							Expect(err).NotTo(HaveOccurred())
 							for _, lrp := range lrps {
 								if lrp.State == models.ActualLRPStateUnclaimed {
@@ -159,7 +158,7 @@ var _ = Describe("Convergence API", func() {
 
 						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
 						_, _, err := db.StartActualLRP(logger, &models.ActualLRPKey{
-							ProcessGuid: "some-process-guid",
+							ProcessGuid: processGuid,
 							Index:       0,
 							Domain:      "some-domain",
 						}, &models.ActualLRPInstanceKey{
@@ -193,9 +192,19 @@ var _ = Describe("Convergence API", func() {
 
 				Context("when the new Ordinary LRP cells goes missing", func() {
 					BeforeEach(func() {
-						Eventually(bbsRunner).Should(gbytes.Say("done-requesting-start-auctions"))
-						var err error
+						Eventually(func() bool {
+							index := int32(0)
+							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{Index: &index, ProcessGuid: "some-process-guid"})
+							Expect(err).NotTo(HaveOccurred())
+							for _, lrp := range lrps {
+								if lrp.State == models.ActualLRPStateUnclaimed {
+									return true
+								}
+							}
+							return false
+						}).Should(BeTrue())
 
+						var err error
 						events, err = client.SubscribeToEvents(logger)
 						Expect(err).NotTo(HaveOccurred())
 
