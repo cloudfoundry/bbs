@@ -46,6 +46,12 @@ type FakeLRPStatMetronNotifier struct {
 		desired         int
 		crashingDesired int
 	}
+	RecordCellCountsStub        func(present, suspect int)
+	recordCellCountsMutex       sync.RWMutex
+	recordCellCountsArgsForCall []struct {
+		present int
+		suspect int
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -185,6 +191,31 @@ func (fake *FakeLRPStatMetronNotifier) RecordLRPCountsArgsForCall(i int) (int, i
 	return fake.recordLRPCountsArgsForCall[i].unclaimed, fake.recordLRPCountsArgsForCall[i].claimed, fake.recordLRPCountsArgsForCall[i].running, fake.recordLRPCountsArgsForCall[i].crashed, fake.recordLRPCountsArgsForCall[i].missing, fake.recordLRPCountsArgsForCall[i].extra, fake.recordLRPCountsArgsForCall[i].suspectRunning, fake.recordLRPCountsArgsForCall[i].suspectClaimed, fake.recordLRPCountsArgsForCall[i].desired, fake.recordLRPCountsArgsForCall[i].crashingDesired
 }
 
+func (fake *FakeLRPStatMetronNotifier) RecordCellCounts(present int, suspect int) {
+	fake.recordCellCountsMutex.Lock()
+	fake.recordCellCountsArgsForCall = append(fake.recordCellCountsArgsForCall, struct {
+		present int
+		suspect int
+	}{present, suspect})
+	fake.recordInvocation("RecordCellCounts", []interface{}{present, suspect})
+	fake.recordCellCountsMutex.Unlock()
+	if fake.RecordCellCountsStub != nil {
+		fake.RecordCellCountsStub(present, suspect)
+	}
+}
+
+func (fake *FakeLRPStatMetronNotifier) RecordCellCountsCallCount() int {
+	fake.recordCellCountsMutex.RLock()
+	defer fake.recordCellCountsMutex.RUnlock()
+	return len(fake.recordCellCountsArgsForCall)
+}
+
+func (fake *FakeLRPStatMetronNotifier) RecordCellCountsArgsForCall(i int) (int, int) {
+	fake.recordCellCountsMutex.RLock()
+	defer fake.recordCellCountsMutex.RUnlock()
+	return fake.recordCellCountsArgsForCall[i].present, fake.recordCellCountsArgsForCall[i].suspect
+}
+
 func (fake *FakeLRPStatMetronNotifier) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -196,6 +227,8 @@ func (fake *FakeLRPStatMetronNotifier) Invocations() map[string][][]interface{} 
 	defer fake.recordConvergenceDurationMutex.RUnlock()
 	fake.recordLRPCountsMutex.RLock()
 	defer fake.recordLRPCountsMutex.RUnlock()
+	fake.recordCellCountsMutex.RLock()
+	defer fake.recordCellCountsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

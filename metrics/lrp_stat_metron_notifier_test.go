@@ -178,7 +178,7 @@ var _ = Describe("LRPStatMetronNotifier", func() {
 		BeforeEach(func() {
 			notifier.RecordFreshDomains([]string{"domain-1", "domain-2"})
 			notifier.RecordLRPCounts(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-
+			notifier.RecordCellCounts(42, 3)
 		})
 
 		JustBeforeEach(func() {
@@ -199,6 +199,8 @@ var _ = Describe("LRPStatMetronNotifier", func() {
 				metrics.SuspectClaimedLRPsMetric,
 				metrics.LRPsDesiredMetric,
 				metrics.CrashingDesiredLRPsMetric,
+				metrics.PresentCellsMetric,
+				metrics.SuspectCellsMetric,
 			}
 
 			for _, mn := range allOtherMetrics {
@@ -279,6 +281,15 @@ var _ = Describe("LRPStatMetronNotifier", func() {
 					Name:  "CrashingDesiredLRPs",
 					Value: 10,
 				})))
+
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "PresentCells",
+					Value: 42,
+				})))
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "SuspectCells",
+					Value: 3,
+				})))
 			})
 		})
 
@@ -286,6 +297,7 @@ var _ = Describe("LRPStatMetronNotifier", func() {
 			BeforeEach(func() {
 				notifier.RecordFreshDomains([]string{"domain-11", "domain-12"})
 				notifier.RecordLRPCounts(11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+				notifier.RecordCellCounts(40, 5)
 			})
 
 			JustBeforeEach(func() {
@@ -341,6 +353,15 @@ var _ = Describe("LRPStatMetronNotifier", func() {
 				Eventually(metricsCh).Should(Receive(Equal(metric{
 					Name:  "CrashingDesiredLRPs",
 					Value: 20,
+				})))
+
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "PresentCells",
+					Value: 40,
+				})))
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "SuspectCells",
+					Value: 5,
 				})))
 			})
 		})
@@ -399,6 +420,15 @@ var _ = Describe("LRPStatMetronNotifier", func() {
 				Eventually(metricsCh).Should(Receive(Equal(metric{
 					Name:  "CrashingDesiredLRPs",
 					Value: 10,
+				})))
+
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "PresentCells",
+					Value: 42,
+				})))
+				Eventually(metricsCh).Should(Receive(Equal(metric{
+					Name:  "SuspectCells",
+					Value: 3,
 				})))
 			})
 		})

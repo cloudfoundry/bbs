@@ -671,9 +671,10 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(sqlDB.UpsertDomain(logger, domain, 5)).To(Succeed())
 			})
 
-			It("returns the start requests and actual lrp keys for actuals with missing cells", func() {
+			It("returns the start requests, actual lrp keys for actuals with missing cells and missing cell ids", func() {
 				result := sqlDB.ConvergeLRPs(logger, cellSet)
 				keysWithMissingCells := result.KeysWithMissingCells
+				missingCellIds := result.MissingCellIds
 
 				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, processGuid)
 				Expect(err).NotTo(HaveOccurred())
@@ -687,6 +688,7 @@ var _ = Describe("LRPConvergence", func() {
 					Key:            &actualLRPs[0].ActualLRPKey,
 					SchedulingInfo: &expectedSched,
 				}))
+				Expect(missingCellIds).To(Equal([]string{"other-cell"}))
 			})
 
 			It("does not touch the ActualLRPs in the database", func() {

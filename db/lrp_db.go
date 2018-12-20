@@ -16,6 +16,7 @@ type ConvergenceResult struct {
 	SuspectClaimedKeys           []*models.ActualLRPKey
 	KeysToRetire                 []*models.ActualLRPKey
 	KeysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
+	MissingCellIds               []string
 	Events                       []models.Event
 	InstanceEvents               []models.Event
 }

@@ -188,6 +188,37 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Expect(crashingDesired).To(Equal(5))
 			})
 		})
+
+		Context("when there are multiple cells", func() {
+			BeforeEach(func() {
+				presentCellPresence1 := models.NewCellPresence("cell-id-1", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+				presentCellPresence2 := models.NewCellPresence("cell-id-2", "1.1.1.2", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+				cellSet = models.CellSet{"cell-id-1": &presentCellPresence1, "cell-id-2": &presentCellPresence2}
+				fakeServiceClient.CellsReturns(cellSet, nil)
+			})
+
+			It("records present cells count", func() {
+				Expect(fakeLRPStatMetronNotifier.RecordCellCountsCallCount()).To(Equal(1))
+				presentCellsCount, suspectCellsCount := fakeLRPStatMetronNotifier.RecordCellCountsArgsForCall(0)
+				Expect(presentCellsCount).To(Equal(2))
+				Expect(suspectCellsCount).To(Equal(0))
+			})
+
+			Context("when there are missing cells", func() {
+				BeforeEach(func() {
+					fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
+						MissingCellIds: []string{"cell-id-3", "cell-id-4", "cell-id-5"},
+					})
+				})
+
+				It("records suspect cells count", func() {
+					Expect(fakeLRPStatMetronNotifier.RecordCellCountsCallCount()).To(Equal(1))
+					presentCellsCount, suspectCellsCount := fakeLRPStatMetronNotifier.RecordCellCountsArgsForCall(0)
+					Expect(presentCellsCount).To(Equal(2))
+					Expect(suspectCellsCount).To(Equal(3))
+				})
+			})
+		})
 	})
 
 	Context("when there are unstarted ActualLRPs", func() {

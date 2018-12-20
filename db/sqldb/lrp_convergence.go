@@ -43,6 +43,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 		KeysToRetire:                 converge.keysToRetire,
 		SuspectLRPKeysToRetire:       converge.suspectKeysToRetire,
 		KeysWithMissingCells:         converge.keysWithMissingCells,
+		MissingCellIds:               converge.missingCellIds,
 		Events:                       events,
 		InstanceEvents:               instanceEvents,
 		SuspectKeysWithExistingCells: converge.suspectKeysWithExistingCells,
@@ -55,6 +56,7 @@ type convergence struct {
 	*SQLDB
 
 	keysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
+	missingCellIds               []string
 	suspectKeysWithExistingCells []*models.ActualLRPKey
 
 	suspectKeysToRetire []*models.ActualLRPKey
@@ -364,13 +366,12 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	cellIDs := []string{}
 	for key, _ := range missingCellSet {
-		cellIDs = append(cellIDs, key)
+		c.missingCellIds = append(c.missingCellIds, key)
 	}
 
-	if len(cellIDs) > 0 {
-		logger.Info("detected-missing-cells", lager.Data{"cell_ids": cellIDs})
+	if len(c.missingCellIds) > 0 {
+		logger.Info("detected-missing-cells", lager.Data{"cell_ids": c.missingCellIds})
 	}
 
 	c.keysWithMissingCells = keysWithMissingCells

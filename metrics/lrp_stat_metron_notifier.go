@@ -32,6 +32,9 @@ const (
 
 	LRPsDesiredMetric         = "LRPsDesired"
 	CrashingDesiredLRPsMetric = "CrashingDesiredLRPs"
+
+	PresentCellsMetric = "PresentCells"
+	SuspectCellsMetric = "SuspectCells"
 )
 
 //go:generate counterfeiter -o fakes/fake_lrp_stat_metron_notifier.go . LRPStatMetronNotifier
@@ -44,6 +47,7 @@ type LRPStatMetronNotifier interface {
 		unclaimed, claimed, running, crashed, missing, extra,
 		suspectRunning, suspectClaimed, desired, crashingDesired int,
 	)
+	RecordCellCounts(present, suspect int)
 }
 
 type lrpStatMetronNotifier struct {
@@ -72,6 +76,9 @@ type lrpMetrics struct {
 
 	lrpsDesired         int
 	crashingDesiredLRPs int
+
+	presentCells int
+	suspectCells int
 }
 
 func NewLRPStatMetronNotifier(logger lager.Logger, clock clock.Clock, metronClient logging.IngressClient) LRPStatMetronNotifier {
@@ -133,6 +140,14 @@ func (lrp *lrpStatMetronNotifier) RecordLRPCounts(
 	lrp.metrics.crashingDesiredLRPs = crashingDesired
 }
 
+func (lrp *lrpStatMetronNotifier) RecordCellCounts(present int, suspect int) {
+	lrp.mutex.Lock()
+	defer lrp.mutex.Unlock()
+
+	lrp.metrics.presentCells = present
+	lrp.metrics.suspectCells = suspect
+}
+
 func (lrp *lrpStatMetronNotifier) emitMetrics() {
 	lrp.mutex.Lock()
 	defer lrp.mutex.Unlock()
@@ -157,6 +172,9 @@ func (lrp *lrpStatMetronNotifier) emitMetrics() {
 	lrp.metricSender.SendMetric(SuspectClaimedLRPsMetric, lrp.metrics.suspectClaimedLRPs)
 	lrp.metricSender.SendMetric(LRPsDesiredMetric, lrp.metrics.lrpsDesired)
 	lrp.metricSender.SendMetric(CrashingDesiredLRPsMetric, lrp.metrics.crashingDesiredLRPs)
+
+	lrp.metricSender.SendMetric(PresentCellsMetric, lrp.metrics.presentCells)
+	lrp.metricSender.SendMetric(SuspectCellsMetric, lrp.metrics.suspectCells)
 }
 
 type loggingMetricSender struct {

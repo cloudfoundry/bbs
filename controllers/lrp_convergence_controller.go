@@ -145,6 +145,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 			len(convergenceResult.SuspectRunningKeys), len(convergenceResult.SuspectClaimedKeys),
 			desired, crashingDesired,
 		)
+
+		h.lrpStatMetronNotifier.RecordCellCounts(len(cellSet), len(convergenceResult.MissingCellIds))
 	}()
 
 	for _, key := range convergenceResult.MissingLRPKeys {
