@@ -21,6 +21,7 @@
 		evacuation.proto
 		events.proto
 		image_layer.proto
+		metric_tags.proto
 		modification_tag.proto
 		network.proto
 		ping.proto
@@ -115,6 +116,7 @@
 		TaskChangedEvent
 		TaskRemovedEvent
 		ImageLayer
+		MetricTagValue
 		ModificationTag
 		Network
 		PingResponse

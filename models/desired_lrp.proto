@@ -13,6 +13,7 @@ import "security_group.proto";
 import "volume_mount.proto";
 import "check_definition.proto";
 import "image_layer.proto";
+import "metric_tags.proto";
 
 message DesiredLRPSchedulingInfo {
   optional DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
@@ -62,6 +63,8 @@ message DesiredLRPRunInfo {
   optional CheckDefinition check_definition = 23 [(gogoproto.jsontag) = "check_definition,omitempty"];
 
   repeated ImageLayer image_layers = 24;
+
+  map<string, MetricTagValue> metric_tags = 25;
 }
 
 // helper message for marshalling routes
@@ -130,4 +133,5 @@ message DesiredLRP {
 
   repeated ImageLayer image_layers = 34;
 
+  map<string, MetricTagValue> metric_tags = 35;
 }

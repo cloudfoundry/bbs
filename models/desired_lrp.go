@@ -75,6 +75,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		ImagePassword:                 runInfo.ImagePassword,
 		CheckDefinition:               runInfo.CheckDefinition,
 		ImageLayers:                   runInfo.ImageLayers,
+		MetricTags:                    runInfo.MetricTags,
 	}
 }
 
@@ -254,6 +255,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.ImagePassword,
 		d.CheckDefinition,
 		d.ImageLayers,
+		d.MetricTags,
 	)
 }
 
@@ -476,7 +478,8 @@ func NewDesiredLRPRunInfo(
 	certificateProperties *CertificateProperties,
 	imageUsername, imagePassword string,
 	checkDefinition *CheckDefinition,
-	ImageLayers []*ImageLayer,
+	imageLayers []*ImageLayer,
+	metricTags map[string]*MetricTagValue,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -501,7 +504,8 @@ func NewDesiredLRPRunInfo(
 		ImageUsername:                 imageUsername,
 		ImagePassword:                 imagePassword,
 		CheckDefinition:               checkDefinition,
-		ImageLayers:                   ImageLayers,
+		ImageLayers:                   imageLayers,
+		MetricTags:                    metricTags,
 	}
 }
 
@@ -554,6 +558,12 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 	err = validateImageLayers(runInfo.ImageLayers, runInfo.LegacyDownloadUser)
 	if err != nil {
+		validationError = validationError.Append(err)
+	}
+
+	err = validateMetricTags(runInfo.MetricTags)
+	if err != nil {
+		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
 		validationError = validationError.Append(err)
 	}
 
