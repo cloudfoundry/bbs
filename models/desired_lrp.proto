@@ -45,7 +45,7 @@ message DesiredLRPRunInfo {
   repeated uint32 ports = 9;
   repeated SecurityGroupRule egress_rules = 10 [(gogoproto.nullable) = false];
   optional string log_source = 11;
-  optional string metrics_guid = 12;
+  optional string metrics_guid = 12 [deprecated=true];
   optional int64 created_at = 13;
   repeated CachedDependency cached_dependencies = 14 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
   optional string legacy_download_user = 15 [(gogoproto.jsontag) = "legacy_download_user,omitempty", deprecated=true];
@@ -112,7 +112,7 @@ message DesiredLRP {
   optional ProtoRoutes routes = 15 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
   optional string log_source = 16;
   optional string log_guid = 17;
-  optional string metrics_guid = 18;
+  optional string metrics_guid = 18 [deprecated=true];
   optional string annotation = 19;
   repeated SecurityGroupRule egress_rules = 20;
   optional ModificationTag modification_tag = 21;
