@@ -7,7 +7,6 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -318,7 +317,6 @@ var _ = Describe("LRPConvergence", func() {
 		BeforeEach(func() {
 			cellSet = models.NewCellSetFromList([]*models.CellPresence{
 				{CellId: "existing-cell"},
-				{CellId: "suspect-cell"},
 			})
 
 			// add suspect and ordinary lrps that are running on different cells
@@ -357,6 +355,16 @@ var _ = Describe("LRPConvergence", func() {
 		It("should return the suspect lrp key in the SuspectLRPKeysToRetire", func() {
 			result := sqlDB.ConvergeLRPs(logger, cellSet)
 			Expect(result.SuspectLRPKeysToRetire).To(ConsistOf(&lrpKey))
+		})
+
+		It("includes the suspect lrp's cell id in the MissingCellIds", func() {
+			result := sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(result.MissingCellIds).To(ContainElement("suspect-cell"))
+		})
+
+		It("logs the missing cell", func() {
+			sqlDB.ConvergeLRPs(logger, cellSet)
+			Expect(logger).To(gbytes.Say(`detected-missing-cells.*cell_ids":\["suspect-cell"\]`))
 		})
 
 		It("returns all suspect running LRP keys in the SuspectKeys", func() {

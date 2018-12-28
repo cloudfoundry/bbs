@@ -194,7 +194,6 @@ func (db *SQLDB) selectSuspectLRPsWithExistingCells(logger lager.Logger, q helpe
 
 func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q helpers.Queryable, cellSet models.CellSet) (*sql.Rows, error) {
 	wheres := []string{
-		fmt.Sprintf("actual_lrps.presence = %d", models.ActualLRP_Ordinary),
 		"(actual_lrps.state = ? OR actual_lrps.state = ?)",
 	}
 
@@ -216,7 +215,7 @@ func (db *SQLDB) selectLRPsWithMissingCells(logger lager.Logger, q helpers.Query
 			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
 			WHERE %s
 		`,
-		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index", "actual_lrps.cell_id"), ", "),
+		strings.Join(append(schedulingInfoColumns, "actual_lrps.instance_index", "actual_lrps.cell_id", "actual_lrps.presence"), ", "),
 		strings.Join(wheres, " AND "),
 	)
 

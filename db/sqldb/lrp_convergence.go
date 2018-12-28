@@ -42,7 +42,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 		UnstartedLRPKeys:             converge.unstartedLRPKeys,
 		KeysToRetire:                 converge.keysToRetire,
 		SuspectLRPKeysToRetire:       converge.suspectKeysToRetire,
-		KeysWithMissingCells:         converge.keysWithMissingCells,
+		KeysWithMissingCells:         converge.ordinaryKeysWithMissingCells,
 		MissingCellIds:               converge.missingCellIds,
 		Events:                       events,
 		InstanceEvents:               instanceEvents,
@@ -55,7 +55,7 @@ func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db
 type convergence struct {
 	*SQLDB
 
-	keysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
+	ordinaryKeysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
 	missingCellIds               []string
 	suspectKeysWithExistingCells []*models.ActualLRPKey
 
@@ -336,7 +336,7 @@ func (c *convergence) suspectActualLRPsWithExistingCells(logger lager.Logger, ce
 func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
 	logger = logger.Session("actual-lrps-with-missing-cells")
 
-	var keysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
+	var ordinaryKeysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
 
 	rows, err := c.selectLRPsWithMissingCells(logger, c.db, cellSet)
 	if err != nil {
@@ -348,9 +348,10 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 	for rows.Next() {
 		var index int32
 		var cellID string
-		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &cellID)
-		if err == nil {
-			keysWithMissingCells = append(keysWithMissingCells, &models.ActualLRPKeyWithSchedulingInfo{
+		var presence models.ActualLRP_Presence
+		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &cellID, &presence)
+		if err == nil && presence == models.ActualLRP_Ordinary {
+			ordinaryKeysWithMissingCells = append(ordinaryKeysWithMissingCells, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
 					ProcessGuid: schedulingInfo.ProcessGuid,
 					Domain:      schedulingInfo.Domain,
@@ -374,7 +375,7 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 		logger.Info("detected-missing-cells", lager.Data{"cell_ids": c.missingCellIds})
 	}
 
-	c.keysWithMissingCells = keysWithMissingCells
+	c.ordinaryKeysWithMissingCells = ordinaryKeysWithMissingCells
 }
 
 func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
