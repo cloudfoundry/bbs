@@ -31,13 +31,19 @@ func (v MetricTagValue_DynamicValue) Valid() bool {
 	}
 }
 
-func validateMetricTags(m map[string]*MetricTagValue) ValidationError {
+func validateMetricTags(m map[string]*MetricTagValue, metricsGuid string) ValidationError {
 	var validationError ValidationError
 
 	for _, v := range m {
 		err := v.Validate()
 		if err != nil {
 			validationError = validationError.Append(err)
+		}
+	}
+
+	if m != nil && metricsGuid != "" {
+		if source_id, ok := m["source_id"]; !ok || source_id.Static != metricsGuid {
+			validationError = validationError.Append(ErrInvalidField{`source_id should match metrics_guid`})
 		}
 	}
 

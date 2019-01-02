@@ -279,6 +279,9 @@ var _ = Describe("DesiredLRP", func() {
 		],
 		"legacy_download_user": "some-user",
 		"metric_tags": {
+		  "source_id": {
+			  "static": "some-guid"
+			},
 		  "foo": {
 			  "static": "some-value"
 			},
@@ -1058,11 +1061,38 @@ var _ = Describe("DesiredLRP", func() {
 		})
 
 		Context("when metric tags are specified", func() {
-			It("requires them to be valid", func() {
+			It("is invalid when both static and dynamic values are provided", func() {
 				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
 					"some_metric": {Static: "some-value", Dynamic: models.MetricTagDynamicValueIndex},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "metric_tags")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "static")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "dynamic")
+			})
+
+			It("is valid when metric tags source_id matches metrics_guid", func() {
+				desiredLRP.MetricsGuid = "some-guid"
+				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+					"source_id": {Static: "some-guid"},
+				}
+				Expect(desiredLRP.Validate()).To(Succeed())
+			})
+
+			It("is invalid when metric tags source_id does not match metrics_guid", func() {
+				desiredLRP.MetricsGuid = "some-guid"
+				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+					"source_id": {Static: "some-another-guid"},
+				}
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "metric_tags")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "source_id should match metrics_guid")
+			})
+
+			It("is valid when metric tags source_id is provided and metrics_guid is not provided", func() {
+				desiredLRP.MetricsGuid = ""
+				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+					"source_id": {Static: "some-other-guid"},
+				}
+				Expect(desiredLRP.Validate()).To(Succeed())
 			})
 		})
 
