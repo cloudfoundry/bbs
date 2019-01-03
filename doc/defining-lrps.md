@@ -62,7 +62,6 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 	Routes:      &models.Routes{"my-router": json.RawMessage(`{"foo":"bar"}`)},
 	LogSource:   "some-log-source",
 	LogGuid:     "some-log-guid",
-	MetricsGuid: "some-metrics-guid",
 	Annotation:  "some-annotation",
 	Network: &models.Network{
 		Properties: map[string]string{
@@ -100,7 +99,15 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 			},
 		},
 		LogSource: "health-check",
-	}
+	},
+	MetricTags: map[string]*models.MetricTagValue{
+		"source_id": &models.MetricTagValue{
+			Static: "some-source-id",
+		},
+		"instance_index": &models.MetricTagValue{
+			Dynamic: "INDEX",
+		},
+	},
 })
 ```
 
@@ -382,9 +389,21 @@ One typically sets the `LogGuid` to the `ProcessGuid` though this is not strictl
 Individual `RunAction`s can override the `LogSource`.
 This allows a consumer of the log stream to distinguish between the logs of different processes.
 
-##### `MetricsGuid` [optional]
+#### `MetricTags` [optional]
 
-The `MetricsGuid` field sets the `ApplicationId` on container metris coming from the DesiredLRP.
+The `MetricTags` field provides a map of metadata values that defines the
+container metrics coming from the DesiredLRP. This is a map of string keys to
+values of one of the following type:
+* `Static` - defines a string value that would be passed through as a container
+  metric as is.
+* `Dynamic` - defines a templated value that would processed by `Rep`. It can
+  be one of:
+  * `INDEX` - instance index
+  * `INSTANCE_GUID` - instance guid
+
+The `MetricsGuid` field has been deprecated in favor of `MetricTags`. The
+`MetricTags` `source_id` field will be translated into `MetricsGuid` for older
+clients.
 
 ##### Attaching Arbitrary Metadata
 
