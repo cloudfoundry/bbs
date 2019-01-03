@@ -68,7 +68,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 		var desiredLRPs []*models.DesiredLRP
 		desiredLRPs, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
 		for i, d := range desiredLRPs {
-			desiredLRPs[i] = d.VersionDownTo(targetVersion)
+			desiredLRPs[i] = d.VersionDownTo(targetVersion).PopulateMetricsGuid()
 			if len(desiredLRPs[i].CachedDependencies) == 0 {
 				desiredLRPs[i].CachedDependencies = nil
 			}
@@ -103,7 +103,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPByProcessGuid(logger lager.Logger, t
 		var desiredLRP *models.DesiredLRP
 		desiredLRP, err = h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
 		if desiredLRP != nil {
-			desiredLRP = desiredLRP.VersionDownTo(targetVersion)
+			desiredLRP = desiredLRP.VersionDownTo(targetVersion).PopulateMetricsGuid()
 		}
 		response.DesiredLrp = desiredLRP
 	}

@@ -131,6 +131,33 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				})
 			})
 
+			Context("when the desired lrps contain metric tags source id", func() {
+				var updatedDesiredLRPs []*models.DesiredLRP
+
+				BeforeEach(func() {
+					desiredLRPsWithMetricTags := []*models.DesiredLRP{
+						&models.DesiredLRP{MetricTags: map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}}},
+						&models.DesiredLRP{MetricsGuid: "some-metrics-guid"},
+					}
+					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
+
+					for _, d := range desiredLRPsWithMetricTags {
+						desiredLRP := d.Copy()
+						updatedDesiredLRPs = append(updatedDesiredLRPs, desiredLRP.PopulateMetricsGuid())
+					}
+				})
+
+				It("returns desired lrps with populated metrics_guid", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPsResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+					Expect(response.DesiredLrps).To(ConsistOf(updatedDesiredLRPs[0], updatedDesiredLRPs[1]))
+				})
+			})
+
 			Context("and no filter is provided", func() {
 				It("call the DB with no filters to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
@@ -236,6 +263,33 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(response.Error).To(BeNil())
 
 				Expect(response.DesiredLrps).To(DeepEqual([]*models.DesiredLRP{desiredLRP1.Copy(), desiredLRP2.Copy()}))
+			})
+
+			Context("when the desired lrps contain metric tags source id", func() {
+				var updatedDesiredLRPs []*models.DesiredLRP
+
+				BeforeEach(func() {
+					desiredLRPsWithMetricTags := []*models.DesiredLRP{
+						&models.DesiredLRP{MetricTags: map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}}},
+						&models.DesiredLRP{MetricsGuid: "some-metrics-guid"},
+					}
+					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
+
+					for _, d := range desiredLRPsWithMetricTags {
+						desiredLRP := d.Copy()
+						updatedDesiredLRPs = append(updatedDesiredLRPs, desiredLRP.PopulateMetricsGuid())
+					}
+				})
+
+				It("returns desired lrps with populated metrics_guid", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPsResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(response.Error).To(BeNil())
+					Expect(response.DesiredLrps).To(ConsistOf(updatedDesiredLRPs[0], updatedDesiredLRPs[1]))
+				})
 			})
 
 			Context("and no filter is provided", func() {
@@ -363,7 +417,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					ProcessGuid: processGuid,
 					ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}},
 				}
-				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP.Copy(), nil)
 
 				downgradedDesiredLRP = desiredLRP.VersionDownTo(format.V2)
 			})
@@ -378,6 +432,29 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(response.DesiredLrp.CachedDependencies).To(HaveLen(1))
 				Expect(response.DesiredLrp.Setup.ParallelAction.Actions).To(HaveLen(1))
 				Expect(response.DesiredLrp).To(Equal(downgradedDesiredLRP))
+			})
+		})
+
+		Context("when the desired lrp contains metric tags source id", func() {
+			var updatedDesiredLRP *models.DesiredLRP
+
+			BeforeEach(func() {
+				desiredLRPWithMetricTags := &models.DesiredLRP{
+					ProcessGuid: processGuid,
+					MetricTags:  map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}},
+				}
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
+				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
+			})
+
+			It("returns desired lrps with populated metrics_guid", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrp).To(Equal(updatedDesiredLRP))
 			})
 		})
 
@@ -464,6 +541,29 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				Expect(response.DesiredLrp).To(DeepEqual(desiredLRP.Copy()))
+			})
+		})
+
+		Context("when the desired lrp contains metric tags source id", func() {
+			var updatedDesiredLRP *models.DesiredLRP
+
+			BeforeEach(func() {
+				desiredLRPWithMetricTags := &models.DesiredLRP{
+					ProcessGuid: processGuid,
+					MetricTags:  map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}},
+				}
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
+				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
+			})
+
+			It("returns desired lrps with populated metrics_guid", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrp).To(Equal(updatedDesiredLRP))
 			})
 		})
 

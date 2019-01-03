@@ -41,7 +41,7 @@ func validateMetricTags(m map[string]*MetricTagValue, metricsGuid string) Valida
 		}
 	}
 
-	if m != nil && metricsGuid != "" {
+	if len(m) > 0 && metricsGuid != "" {
 		if source_id, ok := m["source_id"]; !ok || source_id.Static != metricsGuid {
 			validationError = validationError.Append(ErrInvalidField{`source_id should match metrics_guid`})
 		}

@@ -833,6 +833,54 @@ var _ = Describe("DesiredLRP", func() {
 		})
 	})
 
+	Describe("PopulateMetricsGuid", func() {
+		Context(`when both metric_tags["source_id"] and metrics_guid are provided`, func() {
+			It("returns both of them unmodified", func() {
+				// in practice they would always be equal if both of them are set
+				// different values for test purposes only
+				desiredLRP.MetricsGuid = "some-guid-1"
+				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+					"source_id": {Static: "some-guid-2"},
+				}
+				updatedLRP := desiredLRP.PopulateMetricsGuid()
+				Expect(updatedLRP.MetricsGuid).To(Equal("some-guid-1"))
+				Expect(updatedLRP.MetricTags["source_id"].Static).To(Equal("some-guid-2"))
+			})
+		})
+
+		Context(`when both metric_tags["source_id"] and metrics_guid are missing`, func() {
+			It("returns both of them as empty", func() {
+				desiredLRP.MetricsGuid = ""
+				desiredLRP.MetricTags = nil
+				updatedLRP := desiredLRP.PopulateMetricsGuid()
+				Expect(updatedLRP.MetricsGuid).To(Equal(""))
+				Expect(updatedLRP.MetricTags).To(BeNil())
+			})
+		})
+
+		Context(`when metric_tags["source_id"] is provided and metrics_guid is missing`, func() {
+			It(`populates metrics_guid from metric_tags["source_id"]`, func() {
+				desiredLRP.MetricsGuid = ""
+				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+					"source_id": {Static: "some-guid"},
+				}
+				updatedLRP := desiredLRP.PopulateMetricsGuid()
+				Expect(updatedLRP.MetricsGuid).To(Equal("some-guid"))
+				Expect(updatedLRP.MetricTags["source_id"].Static).To(Equal("some-guid"))
+			})
+		})
+
+		Context(`when metric_tags["source_id"] is missing and metrics_guid is provided`, func() {
+			It(`populates metric_tags["source_id"] from metrics_guid`, func() {
+				desiredLRP.MetricsGuid = "some-guid"
+				desiredLRP.MetricTags = nil
+				updatedLRP := desiredLRP.PopulateMetricsGuid()
+				Expect(updatedLRP.MetricsGuid).To(Equal("some-guid"))
+				Expect(updatedLRP.MetricTags["source_id"].Static).To(Equal("some-guid"))
+			})
+		})
+	})
+
 	Describe("Validate", func() {
 		var assertDesiredLRPValidationFailsWithMessage = func(lrp models.DesiredLRP, substring string) {
 			validationErr := lrp.Validate()

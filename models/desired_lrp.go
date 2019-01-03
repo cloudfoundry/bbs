@@ -184,6 +184,25 @@ func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 	return versionedLRP
 }
 
+func (d *DesiredLRP) PopulateMetricsGuid() *DesiredLRP {
+	if sourceId, ok := d.MetricTags["source_id"]; ok {
+		if d.MetricsGuid == "" {
+			d.MetricsGuid = sourceId.Static
+		}
+	} else {
+		if d.MetricsGuid != "" {
+			if d.MetricTags == nil {
+				d.MetricTags = make(map[string]*MetricTagValue)
+			}
+
+			d.MetricTags["source_id"] = &MetricTagValue{
+				Static: d.MetricsGuid,
+			}
+		}
+	}
+	return d
+}
+
 func (d *DesiredLRP) DesiredLRPKey() DesiredLRPKey {
 	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.LogGuid)
 }
