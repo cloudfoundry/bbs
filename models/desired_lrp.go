@@ -185,19 +185,16 @@ func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 }
 
 func (d *DesiredLRP) PopulateMetricsGuid() *DesiredLRP {
-	if sourceId, ok := d.MetricTags["source_id"]; ok {
-		if d.MetricsGuid == "" {
-			d.MetricsGuid = sourceId.Static
+	sourceId, sourceIDIsSet := d.MetricTags["source_id"]
+	switch {
+	case sourceIDIsSet && d.MetricsGuid == "":
+		d.MetricsGuid = sourceId.Static
+	case !sourceIDIsSet && d.MetricsGuid != "":
+		if d.MetricTags == nil {
+			d.MetricTags = make(map[string]*MetricTagValue)
 		}
-	} else {
-		if d.MetricsGuid != "" {
-			if d.MetricTags == nil {
-				d.MetricTags = make(map[string]*MetricTagValue)
-			}
-
-			d.MetricTags["source_id"] = &MetricTagValue{
-				Static: d.MetricsGuid,
-			}
+		d.MetricTags["source_id"] = &MetricTagValue{
+			Static: d.MetricsGuid,
 		}
 	}
 	return d
