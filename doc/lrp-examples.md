@@ -82,7 +82,7 @@ err = client.DesireLRP(logger, &models.DesiredLRP{
 	Static: "some-source-id",
       },
       "instance_index": &models.MetricTagValue{
-	Dynamic: "INDEX",
+	Dynamic: models.MetricTagDynamicValueIndex,
       },
     },
 })
