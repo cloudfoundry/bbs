@@ -232,7 +232,6 @@ var _ = BeforeEach(func() {
 			KeyPath:            metronClientKeyFile,
 			CertPath:           metronClientCertFile,
 		},
-		GenerateSuspectActualLRPs: true,
 	}
 	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 })

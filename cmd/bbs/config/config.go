@@ -35,7 +35,6 @@ type BBSConfig struct {
 	EnableConsulServiceRegistration bool                  `json:"enable_consul_service_registration"`
 	ExpireCompletedTaskDuration     durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration       durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
-	GenerateSuspectActualLRPs       bool                  `json:"generate_suspect_actual_lrps,omitempty"`
 	HealthAddress                   string                `json:"health_address,omitempty"`
 	KeyFile                         string                `json:"key_file,omitempty"`
 	KickTaskDuration                durationjson.Duration `json:"kick_task_duration,omitempty"`

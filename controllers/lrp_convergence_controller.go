@@ -20,19 +20,18 @@ type Retirer interface {
 }
 
 type LRPConvergenceController struct {
-	logger                    lager.Logger
-	clock                     clock.Clock
-	lrpDB                     db.LRPDB
-	suspectDB                 db.SuspectDB
-	domainDB                  db.DomainDB
-	actualHub                 events.Hub
-	actualLRPInstanceHub      events.Hub
-	auctioneerClient          auctioneer.Client
-	serviceClient             serviceclient.ServiceClient
-	retirer                   Retirer
-	convergenceWorkersSize    int
-	generateSuspectActualLRPs bool
-	lrpStatMetronNotifier     metrics.LRPStatMetronNotifier
+	logger                 lager.Logger
+	clock                  clock.Clock
+	lrpDB                  db.LRPDB
+	suspectDB              db.SuspectDB
+	domainDB               db.DomainDB
+	actualHub              events.Hub
+	actualLRPInstanceHub   events.Hub
+	auctioneerClient       auctioneer.Client
+	serviceClient          serviceclient.ServiceClient
+	retirer                Retirer
+	convergenceWorkersSize int
+	lrpStatMetronNotifier  metrics.LRPStatMetronNotifier
 }
 
 func NewLRPConvergenceController(
@@ -47,23 +46,21 @@ func NewLRPConvergenceController(
 	serviceClient serviceclient.ServiceClient,
 	retirer Retirer,
 	convergenceWorkersSize int,
-	generateSuspectActualLRPs bool,
 	lrpStatMetronNotifier metrics.LRPStatMetronNotifier,
 ) *LRPConvergenceController {
 	return &LRPConvergenceController{
-		logger:                    logger,
-		clock:                     clock,
-		lrpDB:                     db,
-		suspectDB:                 suspectDB,
-		domainDB:                  domainDB,
-		actualHub:                 actualHub,
-		actualLRPInstanceHub:      actualLRPInstanceHub,
-		auctioneerClient:          auctioneerClient,
-		serviceClient:             serviceClient,
-		retirer:                   retirer,
-		convergenceWorkersSize:    convergenceWorkersSize,
-		generateSuspectActualLRPs: generateSuspectActualLRPs,
-		lrpStatMetronNotifier:     lrpStatMetronNotifier,
+		logger:                 logger,
+		clock:                  clock,
+		lrpDB:                  db,
+		suspectDB:              suspectDB,
+		domainDB:               domainDB,
+		actualHub:              actualHub,
+		actualLRPInstanceHub:   actualLRPInstanceHub,
+		auctioneerClient:       auctioneerClient,
+		serviceClient:          serviceClient,
+		retirer:                retirer,
+		convergenceWorkersSize: convergenceWorkersSize,
+		lrpStatMetronNotifier:  lrpStatMetronNotifier,
 	}
 }
 
@@ -203,53 +200,40 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 		dereferencedKey := *key
 		handleLRP := func() {
 			logger := logger.Session("keys-with-missing-cells")
-			if h.generateSuspectActualLRPs {
-				_, existingSuspect := suspectKeyMap[*dereferencedKey.Key]
-				if existingSuspect {
-					// there is a Suspect LRP already, unclaim this previously created
-					// replacement and reauction it
-					logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": dereferencedKey.Key})
-					before, after, err := h.lrpDB.UnclaimActualLRP(logger, dereferencedKey.Key)
-					if err != nil {
-						logger.Error("failed-unclaiming-lrp", err)
-						return
-					}
 
-					//emit instance events for removing suspect and creating unclaimed
-					go func() {
-						h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
-						h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
-					}()
-
-					return
-				}
-				before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, dereferencedKey.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
-				if err != nil {
-					logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
-					return
-				}
-
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
-
-				unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), dereferencedKey.Key)
-				if err != nil {
-					logger.Error("cannot-unclaim-lrp", err)
-					return
-				}
-				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed))
-			} else {
+			_, existingSuspect := suspectKeyMap[*dereferencedKey.Key]
+			if existingSuspect {
+				// there is a Suspect LRP already, unclaim this previously created
+				// replacement and reauction it
+				logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": dereferencedKey.Key})
 				before, after, err := h.lrpDB.UnclaimActualLRP(logger, dereferencedKey.Key)
 				if err != nil {
 					logger.Error("failed-unclaiming-lrp", err)
 					return
 				}
 
-				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
+				//emit instance events for removing suspect and creating unclaimed
 				go func() {
 					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
 					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
 				}()
+
+				return
 			}
+
+			before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, dereferencedKey.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			if err != nil {
+				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
+				return
+			}
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+
+			unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), dereferencedKey.Key)
+			if err != nil {
+				logger.Error("cannot-unclaim-lrp", err)
+				return
+			}
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed))
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
 			startRequestLock.Lock()
