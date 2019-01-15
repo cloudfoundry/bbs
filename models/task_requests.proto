@@ -27,6 +27,7 @@ message StartTaskResponse {
 }
 
 message FailTaskRequest {
+  option deprecated = true;
   optional string task_guid = 1;
   optional string failure_reason = 2;
 }

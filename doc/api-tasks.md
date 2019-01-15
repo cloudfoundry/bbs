@@ -12,8 +12,7 @@ For detailed information on the structs and types listed see [models documentati
 
 Post a [DesireTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesireTaskRequest) containing a V3 [TaskDefinition](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskDefinition) to "/v1/tasks/desire.r2"
 
-c#### Deprecated Endpoints
-
+DEPRECATED:
 * Post a [DesireTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesireTaskRequest) containing a V0 [TaskDefinition](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskDefinition) to "/v1/tasks/desire"
 
 ### Golang Client API

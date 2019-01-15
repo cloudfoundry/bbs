@@ -49,6 +49,8 @@ if shouldStart {
 
 ## FailTask
 
+**Deprecated** in favor of [CompleteTask](api-tasks-internal.md#completetask) and [CancelTask](api-tasks.md#canceltask).
+
 ### BBS API Endpoint
 
 POST a [FailTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#FailTaskRequest)
