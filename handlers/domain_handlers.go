@@ -12,7 +12,6 @@ import (
 type DomainHandler struct {
 	db       db.DomainDB
 	exitChan chan<- struct{}
-	logger   lager.Logger
 }
 
 var (

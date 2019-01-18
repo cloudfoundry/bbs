@@ -54,11 +54,3 @@ var _ = Describe("Envelope", func() {
 		})
 	})
 })
-
-func bytesForEnvelope(f format.EnvelopeFormat, v format.Version, payloads ...string) []byte {
-	env := []byte{byte(f), byte(v)}
-	for i := range payloads {
-		env = append(env, []byte(payloads[i])...)
-	}
-	return env
-}

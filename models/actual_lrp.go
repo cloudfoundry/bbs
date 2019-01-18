@@ -375,13 +375,6 @@ func (key *ActualLRPInstanceKey) Validate() error {
 	return nil
 }
 
-func getHigherPriorityActualLRP(lrp1, lrp2 *ActualLRP) *ActualLRP {
-	if hasHigherPriority(lrp1, lrp2) {
-		return lrp1
-	}
-	return lrp2
-}
-
 // hasHigherPriority returns true if lrp1 takes precendence over lrp2
 func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
 	if lrp1 == nil {
