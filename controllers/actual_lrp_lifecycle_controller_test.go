@@ -156,6 +156,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when the actual lrp did not actually change", func() {
 			JustBeforeEach(func() {
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{afterActualLRP}, nil)
 				fakeActualLRPDB.ClaimActualLRPReturns(
 					afterActualLRP,
 					afterActualLRP,
@@ -165,7 +166,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			It("does not emit a change event to the hub", func() {
 				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
-				Eventually(actualHub.EmitCallCount).Should(Equal(0))
+				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 		})
 
