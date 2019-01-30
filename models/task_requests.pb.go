@@ -25,13 +25,13 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 type TaskLifecycleResponse struct {
-	Error *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
+	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *TaskLifecycleResponse) Reset()      { *m = TaskLifecycleResponse{} }
 func (*TaskLifecycleResponse) ProtoMessage() {}
 func (*TaskLifecycleResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{0}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{0}
 }
 func (m *TaskLifecycleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -68,15 +68,15 @@ func (m *TaskLifecycleResponse) GetError() *Error {
 }
 
 type DesireTaskRequest struct {
-	TaskDefinition *TaskDefinition `protobuf:"bytes,1,opt,name=task_definition,json=taskDefinition" json:"task_definition"`
-	TaskGuid       string          `protobuf:"bytes,2,opt,name=task_guid,json=taskGuid" json:"task_guid"`
-	Domain         string          `protobuf:"bytes,3,opt,name=domain" json:"domain"`
+	TaskDefinition *TaskDefinition `protobuf:"bytes,1,opt,name=task_definition,json=taskDefinition,proto3" json:"task_definition"`
+	TaskGuid       string          `protobuf:"bytes,2,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
+	Domain         string          `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain,omitempty"`
 }
 
 func (m *DesireTaskRequest) Reset()      { *m = DesireTaskRequest{} }
 func (*DesireTaskRequest) ProtoMessage() {}
 func (*DesireTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{1}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{1}
 }
 func (m *DesireTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -127,14 +127,14 @@ func (m *DesireTaskRequest) GetDomain() string {
 }
 
 type StartTaskRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
-	CellId   string `protobuf:"bytes,2,opt,name=cell_id,json=cellId" json:"cell_id"`
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
+	CellId   string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 }
 
 func (m *StartTaskRequest) Reset()      { *m = StartTaskRequest{} }
 func (*StartTaskRequest) ProtoMessage() {}
 func (*StartTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{2}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{2}
 }
 func (m *StartTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -178,14 +178,14 @@ func (m *StartTaskRequest) GetCellId() string {
 }
 
 type StartTaskResponse struct {
-	Error       *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
-	ShouldStart bool   `protobuf:"varint,2,opt,name=should_start,json=shouldStart" json:"should_start"`
+	Error       *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	ShouldStart bool   `protobuf:"varint,2,opt,name=should_start,json=shouldStart,proto3" json:"should_start,omitempty"`
 }
 
 func (m *StartTaskResponse) Reset()      { *m = StartTaskResponse{} }
 func (*StartTaskResponse) ProtoMessage() {}
 func (*StartTaskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{3}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{3}
 }
 func (m *StartTaskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -230,14 +230,14 @@ func (m *StartTaskResponse) GetShouldStart() bool {
 
 // Deprecated: Do not use.
 type FailTaskRequest struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
-	FailureReason string `protobuf:"bytes,2,opt,name=failure_reason,json=failureReason" json:"failure_reason"`
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
+	FailureReason string `protobuf:"bytes,2,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason,omitempty"`
 }
 
 func (m *FailTaskRequest) Reset()      { *m = FailTaskRequest{} }
 func (*FailTaskRequest) ProtoMessage() {}
 func (*FailTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{4}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{4}
 }
 func (m *FailTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -281,14 +281,14 @@ func (m *FailTaskRequest) GetFailureReason() string {
 }
 
 type RejectTaskRequest struct {
-	TaskGuid        string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
-	RejectionReason string `protobuf:"bytes,2,opt,name=rejection_reason,json=rejectionReason" json:"rejection_reason"`
+	TaskGuid        string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
+	RejectionReason string `protobuf:"bytes,2,opt,name=rejection_reason,json=rejectionReason,proto3" json:"rejection_reason,omitempty"`
 }
 
 func (m *RejectTaskRequest) Reset()      { *m = RejectTaskRequest{} }
 func (*RejectTaskRequest) ProtoMessage() {}
 func (*RejectTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{5}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{5}
 }
 func (m *RejectTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -332,13 +332,13 @@ func (m *RejectTaskRequest) GetRejectionReason() string {
 }
 
 type TaskGuidRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
 }
 
 func (m *TaskGuidRequest) Reset()      { *m = TaskGuidRequest{} }
 func (*TaskGuidRequest) ProtoMessage() {}
 func (*TaskGuidRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{6}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{6}
 }
 func (m *TaskGuidRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -375,17 +375,17 @@ func (m *TaskGuidRequest) GetTaskGuid() string {
 }
 
 type CompleteTaskRequest struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
-	CellId        string `protobuf:"bytes,2,opt,name=cell_id,json=cellId" json:"cell_id"`
-	Failed        bool   `protobuf:"varint,3,opt,name=failed" json:"failed"`
-	FailureReason string `protobuf:"bytes,4,opt,name=failure_reason,json=failureReason" json:"failure_reason"`
-	Result        string `protobuf:"bytes,5,opt,name=result" json:"result"`
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
+	CellId        string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
+	Failed        bool   `protobuf:"varint,3,opt,name=failed,proto3" json:"failed,omitempty"`
+	FailureReason string `protobuf:"bytes,4,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason,omitempty"`
+	Result        string `protobuf:"bytes,5,opt,name=result,proto3" json:"result,omitempty"`
 }
 
 func (m *CompleteTaskRequest) Reset()      { *m = CompleteTaskRequest{} }
 func (*CompleteTaskRequest) ProtoMessage() {}
 func (*CompleteTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{7}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{7}
 }
 func (m *CompleteTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -450,18 +450,18 @@ func (m *CompleteTaskRequest) GetResult() string {
 }
 
 type TaskCallbackResponse struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
-	Failed        bool   `protobuf:"varint,2,opt,name=failed" json:"failed"`
-	FailureReason string `protobuf:"bytes,3,opt,name=failure_reason,json=failureReason" json:"failure_reason"`
-	Result        string `protobuf:"bytes,4,opt,name=result" json:"result"`
-	Annotation    string `protobuf:"bytes,5,opt,name=annotation" json:"annotation,omitempty"`
-	CreatedAt     int64  `protobuf:"varint,6,opt,name=created_at,json=createdAt" json:"created_at"`
+	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
+	Failed        bool   `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
+	FailureReason string `protobuf:"bytes,3,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason,omitempty"`
+	Result        string `protobuf:"bytes,4,opt,name=result,proto3" json:"result,omitempty"`
+	Annotation    string `protobuf:"bytes,5,opt,name=annotation,proto3" json:"annotation,omitempty"`
+	CreatedAt     int64  `protobuf:"varint,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 }
 
 func (m *TaskCallbackResponse) Reset()      { *m = TaskCallbackResponse{} }
 func (*TaskCallbackResponse) ProtoMessage() {}
 func (*TaskCallbackResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{8}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{8}
 }
 func (m *TaskCallbackResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -533,14 +533,14 @@ func (m *TaskCallbackResponse) GetCreatedAt() int64 {
 }
 
 type TasksRequest struct {
-	Domain string `protobuf:"bytes,1,opt,name=domain" json:"domain"`
-	CellId string `protobuf:"bytes,2,opt,name=cell_id,json=cellId" json:"cell_id"`
+	Domain string `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
+	CellId string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 }
 
 func (m *TasksRequest) Reset()      { *m = TasksRequest{} }
 func (*TasksRequest) ProtoMessage() {}
 func (*TasksRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{9}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{9}
 }
 func (m *TasksRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -584,14 +584,14 @@ func (m *TasksRequest) GetCellId() string {
 }
 
 type TasksResponse struct {
-	Error *Error  `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
-	Tasks []*Task `protobuf:"bytes,2,rep,name=tasks" json:"tasks,omitempty"`
+	Error *Error  `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Tasks []*Task `protobuf:"bytes,2,rep,name=tasks,proto3" json:"tasks,omitempty"`
 }
 
 func (m *TasksResponse) Reset()      { *m = TasksResponse{} }
 func (*TasksResponse) ProtoMessage() {}
 func (*TasksResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{10}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{10}
 }
 func (m *TasksResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -635,13 +635,13 @@ func (m *TasksResponse) GetTasks() []*Task {
 }
 
 type TaskByGuidRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid" json:"task_guid"`
+	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid,omitempty"`
 }
 
 func (m *TaskByGuidRequest) Reset()      { *m = TaskByGuidRequest{} }
 func (*TaskByGuidRequest) ProtoMessage() {}
 func (*TaskByGuidRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{11}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{11}
 }
 func (m *TaskByGuidRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -678,14 +678,14 @@ func (m *TaskByGuidRequest) GetTaskGuid() string {
 }
 
 type TaskResponse struct {
-	Error *Error `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
-	Task  *Task  `protobuf:"bytes,2,opt,name=task" json:"task,omitempty"`
+	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Task  *Task  `protobuf:"bytes,2,opt,name=task,proto3" json:"task,omitempty"`
 }
 
 func (m *TaskResponse) Reset()      { *m = TaskResponse{} }
 func (*TaskResponse) ProtoMessage() {}
 func (*TaskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_task_requests_9e1d0af4aebf213f, []int{12}
+	return fileDescriptor_task_requests_a18ea753fbdc48c2, []int{12}
 }
 func (m *TaskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1337,14 +1337,18 @@ func (m *DesireTaskRequest) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n2
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Domain)))
-	i += copy(dAtA[i:], m.Domain)
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
+	}
+	if len(m.Domain) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Domain)))
+		i += copy(dAtA[i:], m.Domain)
+	}
 	return i, nil
 }
 
@@ -1363,14 +1367,18 @@ func (m *StartTaskRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.CellId)))
-	i += copy(dAtA[i:], m.CellId)
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
+	}
+	if len(m.CellId) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.CellId)))
+		i += copy(dAtA[i:], m.CellId)
+	}
 	return i, nil
 }
 
@@ -1399,14 +1407,16 @@ func (m *StartTaskResponse) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n3
 	}
-	dAtA[i] = 0x10
-	i++
 	if m.ShouldStart {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
+		dAtA[i] = 0x10
+		i++
+		if m.ShouldStart {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
 	}
-	i++
 	return i, nil
 }
 
@@ -1425,14 +1435,18 @@ func (m *FailTaskRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.FailureReason)))
-	i += copy(dAtA[i:], m.FailureReason)
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
+	}
+	if len(m.FailureReason) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.FailureReason)))
+		i += copy(dAtA[i:], m.FailureReason)
+	}
 	return i, nil
 }
 
@@ -1451,14 +1465,18 @@ func (m *RejectTaskRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.RejectionReason)))
-	i += copy(dAtA[i:], m.RejectionReason)
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
+	}
+	if len(m.RejectionReason) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.RejectionReason)))
+		i += copy(dAtA[i:], m.RejectionReason)
+	}
 	return i, nil
 }
 
@@ -1477,10 +1495,12 @@ func (m *TaskGuidRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
+	}
 	return i, nil
 }
 
@@ -1499,30 +1519,40 @@ func (m *CompleteTaskRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.CellId)))
-	i += copy(dAtA[i:], m.CellId)
-	dAtA[i] = 0x18
-	i++
-	if m.Failed {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
 	}
-	i++
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.FailureReason)))
-	i += copy(dAtA[i:], m.FailureReason)
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Result)))
-	i += copy(dAtA[i:], m.Result)
+	if len(m.CellId) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.CellId)))
+		i += copy(dAtA[i:], m.CellId)
+	}
+	if m.Failed {
+		dAtA[i] = 0x18
+		i++
+		if m.Failed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.FailureReason) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.FailureReason)))
+		i += copy(dAtA[i:], m.FailureReason)
+	}
+	if len(m.Result) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Result)))
+		i += copy(dAtA[i:], m.Result)
+	}
 	return i, nil
 }
 
@@ -1541,33 +1571,45 @@ func (m *TaskCallbackResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
-	dAtA[i] = 0x10
-	i++
-	if m.Failed {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
 	}
-	i++
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.FailureReason)))
-	i += copy(dAtA[i:], m.FailureReason)
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Result)))
-	i += copy(dAtA[i:], m.Result)
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Annotation)))
-	i += copy(dAtA[i:], m.Annotation)
-	dAtA[i] = 0x30
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(m.CreatedAt))
+	if m.Failed {
+		dAtA[i] = 0x10
+		i++
+		if m.Failed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.FailureReason) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.FailureReason)))
+		i += copy(dAtA[i:], m.FailureReason)
+	}
+	if len(m.Result) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Result)))
+		i += copy(dAtA[i:], m.Result)
+	}
+	if len(m.Annotation) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Annotation)))
+		i += copy(dAtA[i:], m.Annotation)
+	}
+	if m.CreatedAt != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(m.CreatedAt))
+	}
 	return i, nil
 }
 
@@ -1586,14 +1628,18 @@ func (m *TasksRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Domain)))
-	i += copy(dAtA[i:], m.Domain)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.CellId)))
-	i += copy(dAtA[i:], m.CellId)
+	if len(m.Domain) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.Domain)))
+		i += copy(dAtA[i:], m.Domain)
+	}
+	if len(m.CellId) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.CellId)))
+		i += copy(dAtA[i:], m.CellId)
+	}
 	return i, nil
 }
 
@@ -1652,10 +1698,12 @@ func (m *TaskByGuidRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
-	i += copy(dAtA[i:], m.TaskGuid)
+	if len(m.TaskGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTaskRequests(dAtA, i, uint64(len(m.TaskGuid)))
+		i += copy(dAtA[i:], m.TaskGuid)
+	}
 	return i, nil
 }
 
@@ -1730,9 +1778,13 @@ func (m *DesireTaskRequest) Size() (n int) {
 		n += 1 + l + sovTaskRequests(uint64(l))
 	}
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.Domain)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1743,9 +1795,13 @@ func (m *StartTaskRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.CellId)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1759,7 +1815,9 @@ func (m *StartTaskResponse) Size() (n int) {
 		l = m.Error.Size()
 		n += 1 + l + sovTaskRequests(uint64(l))
 	}
-	n += 2
+	if m.ShouldStart {
+		n += 2
+	}
 	return n
 }
 
@@ -1770,9 +1828,13 @@ func (m *FailTaskRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.FailureReason)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1783,9 +1845,13 @@ func (m *RejectTaskRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.RejectionReason)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1796,7 +1862,9 @@ func (m *TaskGuidRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1807,14 +1875,24 @@ func (m *CompleteTaskRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.CellId)
-	n += 1 + l + sovTaskRequests(uint64(l))
-	n += 2
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
+	if m.Failed {
+		n += 2
+	}
 	l = len(m.FailureReason)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.Result)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1825,15 +1903,27 @@ func (m *TaskCallbackResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
-	n += 2
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
+	if m.Failed {
+		n += 2
+	}
 	l = len(m.FailureReason)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.Result)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.Annotation)
-	n += 1 + l + sovTaskRequests(uint64(l))
-	n += 1 + sovTaskRequests(uint64(m.CreatedAt))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
+	if m.CreatedAt != 0 {
+		n += 1 + sovTaskRequests(uint64(m.CreatedAt))
+	}
 	return n
 }
 
@@ -1844,9 +1934,13 @@ func (m *TasksRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Domain)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	l = len(m.CellId)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -1876,7 +1970,9 @@ func (m *TaskByGuidRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.TaskGuid)
-	n += 1 + l + sovTaskRequests(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovTaskRequests(uint64(l))
+	}
 	return n
 }
 
@@ -3709,48 +3805,47 @@ var (
 	ErrIntOverflowTaskRequests   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("task_requests.proto", fileDescriptor_task_requests_9e1d0af4aebf213f) }
+func init() { proto.RegisterFile("task_requests.proto", fileDescriptor_task_requests_a18ea753fbdc48c2) }
 
-var fileDescriptor_task_requests_9e1d0af4aebf213f = []byte{
-	// 630 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xbf, 0x4e, 0x1b, 0x4f,
-	0x10, 0xbe, 0xb5, 0x8d, 0x7f, 0x30, 0x06, 0x8c, 0x0f, 0x7e, 0xd1, 0x09, 0x91, 0xc5, 0x39, 0x8a,
-	0x58, 0x4a, 0x62, 0x24, 0x84, 0x52, 0x44, 0x34, 0x31, 0x24, 0x51, 0x94, 0x54, 0x17, 0x47, 0x4a,
-	0x67, 0x2d, 0x77, 0x63, 0xb3, 0xe1, 0x7c, 0xeb, 0xdc, 0xee, 0x15, 0x74, 0x69, 0xd2, 0xe7, 0x31,
-	0xa2, 0x3c, 0x45, 0x4a, 0x4a, 0x4a, 0x2a, 0x14, 0x8e, 0x26, 0xa2, 0xe2, 0x11, 0xa2, 0xdd, 0x3b,
-	0xb0, 0xf9, 0x13, 0xc5, 0x96, 0xd2, 0xdd, 0xcc, 0x37, 0xf3, 0xcd, 0x37, 0xb3, 0x33, 0x07, 0x8b,
-	0x8a, 0xc9, 0xfd, 0x4e, 0x8c, 0x9f, 0x12, 0x94, 0x4a, 0x36, 0x07, 0xb1, 0x50, 0xc2, 0x2e, 0xf7,
-	0x45, 0x80, 0xa1, 0x5c, 0x7e, 0xd2, 0xe3, 0x6a, 0x2f, 0xd9, 0x6d, 0xfa, 0xa2, 0xbf, 0xde, 0x13,
-	0x3d, 0xb1, 0x6e, 0xe0, 0xdd, 0xa4, 0x6b, 0x2c, 0x63, 0x98, 0xaf, 0x2c, 0x6d, 0x19, 0x34, 0x57,
-	0xfe, 0x5d, 0xc1, 0x38, 0x16, 0x71, 0x66, 0xb8, 0x5b, 0xf0, 0x7f, 0x9b, 0xc9, 0xfd, 0xb7, 0xbc,
-	0x8b, 0xfe, 0x81, 0x1f, 0xa2, 0x87, 0x72, 0x20, 0x22, 0x89, 0xf6, 0x1a, 0x4c, 0x99, 0x38, 0x87,
-	0xd4, 0x49, 0xa3, 0xb2, 0x31, 0xd7, 0xcc, 0x0a, 0x37, 0x5f, 0x68, 0xa7, 0x97, 0x61, 0xee, 0x77,
-	0x02, 0xb5, 0x1d, 0x94, 0x3c, 0x46, 0x4d, 0xe2, 0x65, 0x52, 0xed, 0x36, 0x54, 0x8d, 0xf4, 0x00,
-	0xbb, 0x3c, 0xe2, 0x8a, 0x8b, 0x28, 0x27, 0xb9, 0x77, 0x49, 0xa2, 0xa3, 0x77, 0xae, 0xd0, 0xd6,
-	0xe2, 0xf9, 0xc9, 0xea, 0xcd, 0x14, 0x6f, 0x5e, 0x5d, 0x0b, 0xb2, 0x1f, 0xc0, 0x8c, 0x09, 0xe9,
-	0x25, 0x3c, 0x70, 0x0a, 0x75, 0xd2, 0x98, 0x69, 0x95, 0x0e, 0x4f, 0x56, 0x2d, 0x6f, 0x5a, 0xbb,
-	0x5f, 0x25, 0x3c, 0xb0, 0x57, 0xa0, 0x1c, 0x88, 0x3e, 0xe3, 0x91, 0x53, 0x1c, 0xc1, 0x73, 0x9f,
-	0xdb, 0x86, 0x85, 0x77, 0x8a, 0xc5, 0x6a, 0x54, 0xea, 0x35, 0x52, 0x72, 0x27, 0xe9, 0x7d, 0xf8,
-	0xcf, 0xc7, 0x30, 0xec, 0xdc, 0xa8, 0x5a, 0xd6, 0xce, 0xd7, 0x81, 0xcb, 0xa0, 0x36, 0xc2, 0x3a,
-	0xc1, 0xf0, 0xec, 0x87, 0x30, 0x2b, 0xf7, 0x44, 0x12, 0x06, 0x1d, 0xa9, 0x09, 0x0c, 0xfb, 0x74,
-	0xce, 0x5e, 0xc9, 0x10, 0xc3, 0xec, 0x22, 0x54, 0x5f, 0x32, 0x1e, 0x4e, 0xa8, 0xfb, 0x11, 0xcc,
-	0x77, 0x19, 0x0f, 0x93, 0x18, 0x3b, 0x31, 0x32, 0x29, 0xa2, 0x6b, 0xf2, 0xe7, 0x72, 0xcc, 0x33,
-	0xd0, 0xb3, 0x82, 0x43, 0xdc, 0x1e, 0xd4, 0x3c, 0xfc, 0x88, 0xfe, 0xa4, 0x03, 0x5a, 0x87, 0x85,
-	0xd8, 0xe4, 0x71, 0x11, 0xdd, 0x55, 0xaa, 0x7a, 0x85, 0x66, 0xc5, 0xdc, 0x4d, 0xa8, 0xb6, 0xf3,
-	0xe4, 0xf1, 0xcb, 0xb8, 0x3f, 0x08, 0x2c, 0x6e, 0x8b, 0xfe, 0x20, 0x44, 0x85, 0xff, 0xf4, 0x09,
-	0xf5, 0xda, 0xe8, 0x69, 0x60, 0x60, 0xd6, 0xe6, 0xf2, 0x09, 0x72, 0xdf, 0x1d, 0x73, 0x2c, 0xfd,
-	0x71, 0x8e, 0x9a, 0x2a, 0x46, 0x99, 0x84, 0xca, 0x99, 0x1a, 0x2d, 0x94, 0xf9, 0xdc, 0x2f, 0x05,
-	0x58, 0xd2, 0xd2, 0xb7, 0x59, 0x18, 0xee, 0x32, 0x7f, 0xb8, 0x2f, 0x63, 0xf4, 0x30, 0x14, 0x59,
-	0x18, 0x4b, 0x64, 0x71, 0x1c, 0x91, 0xa5, 0xdb, 0x22, 0xed, 0x2d, 0x00, 0x16, 0x45, 0x42, 0x31,
-	0x73, 0xb8, 0x59, 0x1b, 0x2b, 0x3a, 0xe2, 0xfc, 0x64, 0x75, 0x69, 0x88, 0x3c, 0x16, 0x7d, 0xae,
-	0xb0, 0x3f, 0x50, 0x07, 0xde, 0x48, 0xbc, 0xbd, 0x06, 0xe0, 0xc7, 0xc8, 0x14, 0x06, 0x1d, 0xa6,
-	0x9c, 0x72, 0x9d, 0x34, 0x8a, 0x39, 0xff, 0x4c, 0xee, 0x7f, 0xae, 0xdc, 0x37, 0x30, 0xab, 0xc7,
-	0x20, 0x2f, 0x9f, 0x70, 0x78, 0xb7, 0xe4, 0xf6, 0xdd, 0xfe, 0xed, 0x00, 0x3f, 0xc0, 0x5c, 0x4e,
-	0x36, 0xc9, 0xf1, 0xb9, 0x30, 0xa5, 0x47, 0x2b, 0x9d, 0x42, 0xbd, 0xd8, 0xa8, 0x6c, 0xcc, 0x8e,
-	0xfe, 0x99, 0xbc, 0x0c, 0x72, 0x9f, 0x42, 0x4d, 0x9b, 0xad, 0x83, 0x09, 0x37, 0xf5, 0x7d, 0xd6,
-	0xde, 0x64, 0x82, 0xea, 0x50, 0xd2, 0x04, 0xa6, 0xc5, 0x9b, 0x7a, 0x0c, 0xd2, 0xda, 0x3c, 0x3a,
-	0xa5, 0xd6, 0xf1, 0x29, 0xb5, 0x2e, 0x4e, 0x29, 0xf9, 0x9c, 0x52, 0xf2, 0x2d, 0xa5, 0xe4, 0x30,
-	0xa5, 0xe4, 0x28, 0xa5, 0xe4, 0x67, 0x4a, 0xc9, 0xaf, 0x94, 0x5a, 0x17, 0x29, 0x25, 0x5f, 0xcf,
-	0xa8, 0x75, 0x74, 0x46, 0xad, 0xe3, 0x33, 0x6a, 0xfd, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x55, 0xc1,
-	0xed, 0x5f, 0x46, 0x06, 0x00, 0x00,
+var fileDescriptor_task_requests_a18ea753fbdc48c2 = []byte{
+	// 622 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4f, 0x4f, 0x13, 0x41,
+	0x14, 0xef, 0xb4, 0x50, 0xe1, 0x15, 0x28, 0x2c, 0x88, 0x1b, 0x8c, 0x43, 0x5d, 0x63, 0x52, 0x13,
+	0x2d, 0x06, 0x3d, 0x18, 0x63, 0x62, 0x2c, 0xf8, 0x2f, 0xf1, 0x34, 0x62, 0xa2, 0xf1, 0xd0, 0x4c,
+	0x77, 0xa7, 0x65, 0x64, 0xbb, 0x53, 0x67, 0x66, 0x0f, 0xdc, 0xfc, 0x08, 0x7e, 0x02, 0x0f, 0x9e,
+	0xfc, 0x28, 0x1e, 0x39, 0x72, 0x22, 0xb2, 0xbd, 0x18, 0x4e, 0x7c, 0x04, 0x33, 0xb3, 0x0b, 0x5d,
+	0x08, 0x62, 0x1b, 0x6f, 0xfb, 0xfb, 0xbd, 0xf7, 0x7e, 0xf3, 0x9b, 0xf7, 0xf6, 0x0d, 0x2c, 0x6a,
+	0xaa, 0x76, 0x5a, 0x92, 0x7d, 0x8e, 0x99, 0xd2, 0xaa, 0xd1, 0x97, 0x42, 0x0b, 0xa7, 0xdc, 0x13,
+	0x01, 0x0b, 0xd5, 0xca, 0xbd, 0x2e, 0xd7, 0xdb, 0x71, 0xbb, 0xe1, 0x8b, 0xde, 0x5a, 0x57, 0x74,
+	0xc5, 0x9a, 0x0d, 0xb7, 0xe3, 0x8e, 0x45, 0x16, 0xd8, 0xaf, 0xb4, 0x6c, 0x05, 0x8c, 0x56, 0xf6,
+	0x5d, 0x61, 0x52, 0x0a, 0x99, 0x02, 0xef, 0x09, 0x5c, 0xdd, 0xa2, 0x6a, 0xe7, 0x0d, 0xef, 0x30,
+	0x7f, 0xd7, 0x0f, 0x19, 0x61, 0xaa, 0x2f, 0x22, 0xc5, 0x9c, 0x5b, 0x30, 0x69, 0xf3, 0x5c, 0x54,
+	0x43, 0xf5, 0xca, 0xfa, 0x6c, 0x23, 0x3d, 0xb8, 0xf1, 0xdc, 0x90, 0x24, 0x8d, 0x79, 0xdf, 0x10,
+	0x2c, 0x6c, 0x32, 0xc5, 0x25, 0x33, 0x22, 0x24, 0xb5, 0xea, 0x6c, 0x41, 0xd5, 0x5a, 0x0f, 0x58,
+	0x87, 0x47, 0x5c, 0x73, 0x11, 0x65, 0x22, 0xcb, 0x27, 0x22, 0x26, 0x7b, 0xf3, 0x34, 0xda, 0x5c,
+	0x3c, 0x3a, 0x58, 0x3d, 0x5f, 0x42, 0xe6, 0xf4, 0x99, 0x24, 0xe7, 0x3a, 0x4c, 0xdb, 0x94, 0x6e,
+	0xcc, 0x03, 0xb7, 0x58, 0x43, 0xf5, 0x69, 0x32, 0x65, 0x88, 0x97, 0x31, 0x0f, 0x9c, 0x65, 0x28,
+	0x07, 0xa2, 0x47, 0x79, 0xe4, 0x96, 0x6c, 0x24, 0x43, 0xde, 0x2b, 0x98, 0x7f, 0xab, 0xa9, 0xd4,
+	0x79, 0x7b, 0x67, 0x84, 0xd0, 0x39, 0xa1, 0x6b, 0x70, 0xc5, 0x67, 0x61, 0xd8, 0x3a, 0x3d, 0xa3,
+	0x6c, 0xe0, 0xeb, 0xc0, 0xfb, 0x08, 0x0b, 0x39, 0xa5, 0x31, 0x9a, 0xe4, 0xdc, 0x84, 0x19, 0xb5,
+	0x2d, 0xe2, 0x30, 0x68, 0x29, 0x23, 0x60, 0x75, 0xa7, 0x48, 0x25, 0xe5, 0xac, 0xa6, 0xf7, 0x01,
+	0xaa, 0x2f, 0x28, 0x0f, 0x47, 0x76, 0x79, 0x1b, 0xe6, 0x3a, 0x94, 0x87, 0xb1, 0x64, 0x2d, 0xc9,
+	0xa8, 0x12, 0x51, 0x66, 0x76, 0x36, 0x63, 0x89, 0x25, 0x1f, 0x17, 0x5d, 0x64, 0x7c, 0x13, 0xf6,
+	0x89, 0xf9, 0xa3, 0xb7, 0xe0, 0x0e, 0xcc, 0x4b, 0x5b, 0xc1, 0x45, 0x74, 0x56, 0xbe, 0x7a, 0xca,
+	0xa7, 0x07, 0x78, 0x0d, 0xa8, 0x6e, 0x65, 0x65, 0xa3, 0x48, 0x7b, 0xdf, 0x11, 0x2c, 0x6e, 0x88,
+	0x5e, 0x3f, 0x64, 0x9a, 0xfd, 0xf7, 0x48, 0xcc, 0xd0, 0xcd, 0x7d, 0x59, 0x60, 0x87, 0x3e, 0x45,
+	0x32, 0x74, 0x41, 0x77, 0x26, 0x2e, 0xe8, 0x8e, 0x29, 0x97, 0x4c, 0xc5, 0xa1, 0x76, 0x27, 0x53,
+	0xd9, 0x14, 0x79, 0x03, 0x04, 0x4b, 0xc6, 0xdc, 0x06, 0x0d, 0xc3, 0x36, 0xf5, 0x87, 0xd3, 0xbe,
+	0xd4, 0xe5, 0xd0, 0x4c, 0xf1, 0x1f, 0x66, 0x4a, 0x97, 0x9b, 0x99, 0xc8, 0x9b, 0x71, 0x1e, 0x01,
+	0xd0, 0x28, 0x12, 0x9a, 0xda, 0x35, 0xb2, 0x46, 0x9b, 0xee, 0xd1, 0xc1, 0xea, 0xd2, 0x90, 0xbd,
+	0x2b, 0x7a, 0x5c, 0xb3, 0x5e, 0x5f, 0xef, 0x92, 0x5c, 0xae, 0x73, 0x03, 0xc0, 0x97, 0x8c, 0x6a,
+	0x16, 0xb4, 0xa8, 0x76, 0xcb, 0x35, 0x54, 0x2f, 0x91, 0xe9, 0x8c, 0x79, 0xa6, 0xbd, 0xa7, 0x30,
+	0x63, 0x2e, 0xa9, 0x4e, 0x46, 0x30, 0xdc, 0x20, 0x94, 0xdf, 0xa0, 0xbf, 0x2f, 0xc4, 0x7b, 0x98,
+	0xcd, 0x04, 0xc6, 0x59, 0x06, 0x0f, 0x26, 0x4d, 0xcb, 0x94, 0x5b, 0xac, 0x95, 0xea, 0x95, 0xf5,
+	0x99, 0xfc, 0x8b, 0x40, 0xd2, 0x90, 0x77, 0x1f, 0x16, 0x0c, 0x6c, 0xee, 0x8e, 0xfc, 0x5f, 0xbd,
+	0x4b, 0x2f, 0x33, 0x9e, 0x95, 0x1a, 0x4c, 0x18, 0x01, 0x7b, 0xad, 0xf3, 0x4e, 0x6c, 0xa4, 0xf9,
+	0x70, 0xef, 0x10, 0x17, 0xf6, 0x0f, 0x71, 0xe1, 0xf8, 0x10, 0xa3, 0x2f, 0x09, 0x46, 0x3f, 0x12,
+	0x8c, 0x7e, 0x26, 0x18, 0xed, 0x25, 0x18, 0xfd, 0x4a, 0x30, 0xfa, 0x9d, 0xe0, 0xc2, 0x71, 0x82,
+	0xd1, 0xd7, 0x01, 0x2e, 0xec, 0x0d, 0x70, 0x61, 0x7f, 0x80, 0x0b, 0xed, 0xb2, 0x7d, 0x59, 0x1f,
+	0xfc, 0x09, 0x00, 0x00, 0xff, 0xff, 0x8e, 0x7b, 0x99, 0x70, 0xc0, 0x05, 0x00, 0x00,
 }

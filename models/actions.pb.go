@@ -34,21 +34,21 @@ type Action struct {
 	// disadvantages of using multiple optionals without onlyone:
 	//   - writing our own GetAction/SetAction methods
 	// action oneof {
-	DownloadAction     *DownloadAction     `protobuf:"bytes,1,opt,name=download_action,json=downloadAction" json:"download,omitempty"`
-	UploadAction       *UploadAction       `protobuf:"bytes,2,opt,name=upload_action,json=uploadAction" json:"upload,omitempty"`
-	RunAction          *RunAction          `protobuf:"bytes,3,opt,name=run_action,json=runAction" json:"run,omitempty"`
-	TimeoutAction      *TimeoutAction      `protobuf:"bytes,4,opt,name=timeout_action,json=timeoutAction" json:"timeout,omitempty"`
-	EmitProgressAction *EmitProgressAction `protobuf:"bytes,5,opt,name=emit_progress_action,json=emitProgressAction" json:"emit_progress,omitempty"`
-	TryAction          *TryAction          `protobuf:"bytes,6,opt,name=try_action,json=tryAction" json:"try,omitempty"`
-	ParallelAction     *ParallelAction     `protobuf:"bytes,7,opt,name=parallel_action,json=parallelAction" json:"parallel,omitempty"`
-	SerialAction       *SerialAction       `protobuf:"bytes,8,opt,name=serial_action,json=serialAction" json:"serial,omitempty"`
-	CodependentAction  *CodependentAction  `protobuf:"bytes,9,opt,name=codependent_action,json=codependentAction" json:"codependent,omitempty"`
+	DownloadAction     *DownloadAction     `protobuf:"bytes,1,opt,name=download_action,json=downloadAction,proto3" json:"download,omitempty"`
+	UploadAction       *UploadAction       `protobuf:"bytes,2,opt,name=upload_action,json=uploadAction,proto3" json:"upload,omitempty"`
+	RunAction          *RunAction          `protobuf:"bytes,3,opt,name=run_action,json=runAction,proto3" json:"run,omitempty"`
+	TimeoutAction      *TimeoutAction      `protobuf:"bytes,4,opt,name=timeout_action,json=timeoutAction,proto3" json:"timeout,omitempty"`
+	EmitProgressAction *EmitProgressAction `protobuf:"bytes,5,opt,name=emit_progress_action,json=emitProgressAction,proto3" json:"emit_progress,omitempty"`
+	TryAction          *TryAction          `protobuf:"bytes,6,opt,name=try_action,json=tryAction,proto3" json:"try,omitempty"`
+	ParallelAction     *ParallelAction     `protobuf:"bytes,7,opt,name=parallel_action,json=parallelAction,proto3" json:"parallel,omitempty"`
+	SerialAction       *SerialAction       `protobuf:"bytes,8,opt,name=serial_action,json=serialAction,proto3" json:"serial,omitempty"`
+	CodependentAction  *CodependentAction  `protobuf:"bytes,9,opt,name=codependent_action,json=codependentAction,proto3" json:"codependent,omitempty"`
 }
 
 func (m *Action) Reset()      { *m = Action{} }
 func (*Action) ProtoMessage() {}
 func (*Action) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{0}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{0}
 }
 func (m *Action) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -141,20 +141,20 @@ func (m *Action) GetCodependentAction() *CodependentAction {
 }
 
 type DownloadAction struct {
-	Artifact          string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
-	From              string `protobuf:"bytes,2,opt,name=from" json:"from"`
-	To                string `protobuf:"bytes,3,opt,name=to" json:"to"`
-	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key,json=cacheKey" json:"cache_key"`
-	LogSource         string `protobuf:"bytes,5,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
-	User              string `protobuf:"bytes,6,opt,name=user" json:"user"`
-	ChecksumAlgorithm string `protobuf:"bytes,7,opt,name=checksum_algorithm,json=checksumAlgorithm" json:"checksum_algorithm,omitempty"`
-	ChecksumValue     string `protobuf:"bytes,8,opt,name=checksum_value,json=checksumValue" json:"checksum_value,omitempty"`
+	Artifact          string `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	From              string `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`
+	To                string `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`
+	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key,json=cacheKey,proto3" json:"cache_key,omitempty"`
+	LogSource         string `protobuf:"bytes,5,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
+	User              string `protobuf:"bytes,6,opt,name=user,proto3" json:"user,omitempty"`
+	ChecksumAlgorithm string `protobuf:"bytes,7,opt,name=checksum_algorithm,json=checksumAlgorithm,proto3" json:"checksum_algorithm,omitempty"`
+	ChecksumValue     string `protobuf:"bytes,8,opt,name=checksum_value,json=checksumValue,proto3" json:"checksum_value,omitempty"`
 }
 
 func (m *DownloadAction) Reset()      { *m = DownloadAction{} }
 func (*DownloadAction) ProtoMessage() {}
 func (*DownloadAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{1}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{1}
 }
 func (m *DownloadAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -240,17 +240,17 @@ func (m *DownloadAction) GetChecksumValue() string {
 }
 
 type UploadAction struct {
-	Artifact  string `protobuf:"bytes,1,opt,name=artifact" json:"artifact,omitempty"`
-	From      string `protobuf:"bytes,2,opt,name=from" json:"from"`
-	To        string `protobuf:"bytes,3,opt,name=to" json:"to"`
-	LogSource string `protobuf:"bytes,4,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
-	User      string `protobuf:"bytes,5,opt,name=user" json:"user"`
+	Artifact  string `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	From      string `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`
+	To        string `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`
+	LogSource string `protobuf:"bytes,4,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
+	User      string `protobuf:"bytes,5,opt,name=user,proto3" json:"user,omitempty"`
 }
 
 func (m *UploadAction) Reset()      { *m = UploadAction{} }
 func (*UploadAction) ProtoMessage() {}
 func (*UploadAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{2}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{2}
 }
 func (m *UploadAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -315,20 +315,20 @@ func (m *UploadAction) GetUser() string {
 }
 
 type RunAction struct {
-	Path              string                 `protobuf:"bytes,1,opt,name=path" json:"path"`
-	Args              []string               `protobuf:"bytes,2,rep,name=args" json:"args,omitempty"`
-	Dir               string                 `protobuf:"bytes,3,opt,name=dir" json:"dir,omitempty"`
-	Env               []*EnvironmentVariable `protobuf:"bytes,4,rep,name=env" json:"env,omitempty"`
-	ResourceLimits    *ResourceLimits        `protobuf:"bytes,5,opt,name=resource_limits,json=resourceLimits" json:"resource_limits,omitempty"`
-	User              string                 `protobuf:"bytes,6,opt,name=user" json:"user"`
-	LogSource         string                 `protobuf:"bytes,7,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
-	SuppressLogOutput bool                   `protobuf:"varint,8,opt,name=suppress_log_output,json=suppressLogOutput" json:"suppress_log_output"`
+	Path              string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Args              []string               `protobuf:"bytes,2,rep,name=args,proto3" json:"args,omitempty"`
+	Dir               string                 `protobuf:"bytes,3,opt,name=dir,proto3" json:"dir,omitempty"`
+	Env               []*EnvironmentVariable `protobuf:"bytes,4,rep,name=env,proto3" json:"env,omitempty"`
+	ResourceLimits    *ResourceLimits        `protobuf:"bytes,5,opt,name=resource_limits,json=resourceLimits,proto3" json:"resource_limits,omitempty"`
+	User              string                 `protobuf:"bytes,6,opt,name=user,proto3" json:"user,omitempty"`
+	LogSource         string                 `protobuf:"bytes,7,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
+	SuppressLogOutput bool                   `protobuf:"varint,8,opt,name=suppress_log_output,json=suppressLogOutput,proto3" json:"suppress_log_output,omitempty"`
 }
 
 func (m *RunAction) Reset()      { *m = RunAction{} }
 func (*RunAction) ProtoMessage() {}
 func (*RunAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{3}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{3}
 }
 func (m *RunAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -414,16 +414,16 @@ func (m *RunAction) GetSuppressLogOutput() bool {
 }
 
 type TimeoutAction struct {
-	Action              *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	DeprecatedTimeoutNs int64   `protobuf:"varint,2,opt,name=deprecated_timeout_ns,json=deprecatedTimeoutNs" json:"timeout,omitempty"` // Deprecated: Do not use.
-	LogSource           string  `protobuf:"bytes,3,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
-	TimeoutMs           int64   `protobuf:"varint,4,opt,name=timeout_ms,json=timeoutMs" json:"timeout_ms"`
+	Action              *Action `protobuf:"bytes,1,opt,name=action,proto3" json:"action,omitempty"`
+	DeprecatedTimeoutNs int64   `protobuf:"varint,2,opt,name=deprecated_timeout_ns,json=deprecatedTimeoutNs,proto3" json:"timeout,omitempty"` // Deprecated: Do not use.
+	LogSource           string  `protobuf:"bytes,3,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
+	TimeoutMs           int64   `protobuf:"varint,4,opt,name=timeout_ms,json=timeoutMs,proto3" json:"timeout_ms,omitempty"`
 }
 
 func (m *TimeoutAction) Reset()      { *m = TimeoutAction{} }
 func (*TimeoutAction) ProtoMessage() {}
 func (*TimeoutAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{4}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{4}
 }
 func (m *TimeoutAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -482,17 +482,17 @@ func (m *TimeoutAction) GetTimeoutMs() int64 {
 }
 
 type EmitProgressAction struct {
-	Action               *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	StartMessage         string  `protobuf:"bytes,2,opt,name=start_message,json=startMessage" json:"start_message"`
-	SuccessMessage       string  `protobuf:"bytes,3,opt,name=success_message,json=successMessage" json:"success_message"`
-	FailureMessagePrefix string  `protobuf:"bytes,4,opt,name=failure_message_prefix,json=failureMessagePrefix" json:"failure_message_prefix"`
-	LogSource            string  `protobuf:"bytes,5,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
+	Action               *Action `protobuf:"bytes,1,opt,name=action,proto3" json:"action,omitempty"`
+	StartMessage         string  `protobuf:"bytes,2,opt,name=start_message,json=startMessage,proto3" json:"start_message,omitempty"`
+	SuccessMessage       string  `protobuf:"bytes,3,opt,name=success_message,json=successMessage,proto3" json:"success_message,omitempty"`
+	FailureMessagePrefix string  `protobuf:"bytes,4,opt,name=failure_message_prefix,json=failureMessagePrefix,proto3" json:"failure_message_prefix,omitempty"`
+	LogSource            string  `protobuf:"bytes,5,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
 }
 
 func (m *EmitProgressAction) Reset()      { *m = EmitProgressAction{} }
 func (*EmitProgressAction) ProtoMessage() {}
 func (*EmitProgressAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{5}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{5}
 }
 func (m *EmitProgressAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -557,14 +557,14 @@ func (m *EmitProgressAction) GetLogSource() string {
 }
 
 type TryAction struct {
-	Action    *Action `protobuf:"bytes,1,opt,name=action" json:"action,omitempty"`
-	LogSource string  `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
+	Action    *Action `protobuf:"bytes,1,opt,name=action,proto3" json:"action,omitempty"`
+	LogSource string  `protobuf:"bytes,2,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
 }
 
 func (m *TryAction) Reset()      { *m = TryAction{} }
 func (*TryAction) ProtoMessage() {}
 func (*TryAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{6}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{6}
 }
 func (m *TryAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -608,14 +608,14 @@ func (m *TryAction) GetLogSource() string {
 }
 
 type ParallelAction struct {
-	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
+	Actions   []*Action `protobuf:"bytes,1,rep,name=actions,proto3" json:"actions,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
 }
 
 func (m *ParallelAction) Reset()      { *m = ParallelAction{} }
 func (*ParallelAction) ProtoMessage() {}
 func (*ParallelAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{7}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{7}
 }
 func (m *ParallelAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -659,14 +659,14 @@ func (m *ParallelAction) GetLogSource() string {
 }
 
 type SerialAction struct {
-	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
+	Actions   []*Action `protobuf:"bytes,1,rep,name=actions,proto3" json:"actions,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
 }
 
 func (m *SerialAction) Reset()      { *m = SerialAction{} }
 func (*SerialAction) ProtoMessage() {}
 func (*SerialAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{8}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{8}
 }
 func (m *SerialAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -710,14 +710,14 @@ func (m *SerialAction) GetLogSource() string {
 }
 
 type CodependentAction struct {
-	Actions   []*Action `protobuf:"bytes,1,rep,name=actions" json:"actions,omitempty"`
-	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource" json:"log_source,omitempty"`
+	Actions   []*Action `protobuf:"bytes,1,rep,name=actions,proto3" json:"actions,omitempty"`
+	LogSource string    `protobuf:"bytes,2,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
 }
 
 func (m *CodependentAction) Reset()      { *m = CodependentAction{} }
 func (*CodependentAction) ProtoMessage() {}
 func (*CodependentAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{9}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{9}
 }
 func (m *CodependentAction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -761,14 +761,18 @@ func (m *CodependentAction) GetLogSource() string {
 }
 
 type ResourceLimits struct {
-	Nofile *uint64 `protobuf:"varint,1,opt,name=nofile" json:"nofile,omitempty"`
-	Nproc  *uint64 `protobuf:"varint,2,opt,name=nproc" json:"nproc,omitempty"` // Deprecated: Do not use.
+	// Types that are valid to be assigned to OptionalNofile:
+	//	*ResourceLimits_Nofile
+	OptionalNofile isResourceLimits_OptionalNofile `protobuf_oneof:"optional_nofile"`
+	// Types that are valid to be assigned to OptionalNproc:
+	//	*ResourceLimits_Nproc
+	OptionalNproc isResourceLimits_OptionalNproc `protobuf_oneof:"optional_nproc"`
 }
 
 func (m *ResourceLimits) Reset()      { *m = ResourceLimits{} }
 func (*ResourceLimits) ProtoMessage() {}
 func (*ResourceLimits) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_c55f3cc68f515966, []int{10}
+	return fileDescriptor_actions_65bc65f83e2ca797, []int{10}
 }
 func (m *ResourceLimits) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -797,19 +801,130 @@ func (m *ResourceLimits) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ResourceLimits proto.InternalMessageInfo
 
+type isResourceLimits_OptionalNofile interface {
+	isResourceLimits_OptionalNofile()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+type isResourceLimits_OptionalNproc interface {
+	isResourceLimits_OptionalNproc()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type ResourceLimits_Nofile struct {
+	Nofile uint64 `protobuf:"varint,1,opt,name=nofile,proto3,oneof"`
+}
+type ResourceLimits_Nproc struct {
+	Nproc uint64 `protobuf:"varint,2,opt,name=nproc,proto3,oneof"`
+}
+
+func (*ResourceLimits_Nofile) isResourceLimits_OptionalNofile() {}
+func (*ResourceLimits_Nproc) isResourceLimits_OptionalNproc()   {}
+
+func (m *ResourceLimits) GetOptionalNofile() isResourceLimits_OptionalNofile {
+	if m != nil {
+		return m.OptionalNofile
+	}
+	return nil
+}
+func (m *ResourceLimits) GetOptionalNproc() isResourceLimits_OptionalNproc {
+	if m != nil {
+		return m.OptionalNproc
+	}
+	return nil
+}
+
 func (m *ResourceLimits) GetNofile() uint64 {
-	if m != nil && m.Nofile != nil {
-		return *m.Nofile
+	if x, ok := m.GetOptionalNofile().(*ResourceLimits_Nofile); ok {
+		return x.Nofile
 	}
 	return 0
 }
 
-// Deprecated: Do not use.
 func (m *ResourceLimits) GetNproc() uint64 {
-	if m != nil && m.Nproc != nil {
-		return *m.Nproc
+	if x, ok := m.GetOptionalNproc().(*ResourceLimits_Nproc); ok {
+		return x.Nproc
 	}
 	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*ResourceLimits) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _ResourceLimits_OneofMarshaler, _ResourceLimits_OneofUnmarshaler, _ResourceLimits_OneofSizer, []interface{}{
+		(*ResourceLimits_Nofile)(nil),
+		(*ResourceLimits_Nproc)(nil),
+	}
+}
+
+func _ResourceLimits_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*ResourceLimits)
+	// optional_nofile
+	switch x := m.OptionalNofile.(type) {
+	case *ResourceLimits_Nofile:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.Nofile))
+	case nil:
+	default:
+		return fmt.Errorf("ResourceLimits.OptionalNofile has unexpected type %T", x)
+	}
+	// optional_nproc
+	switch x := m.OptionalNproc.(type) {
+	case *ResourceLimits_Nproc:
+		_ = b.EncodeVarint(2<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.Nproc))
+	case nil:
+	default:
+		return fmt.Errorf("ResourceLimits.OptionalNproc has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _ResourceLimits_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*ResourceLimits)
+	switch tag {
+	case 1: // optional_nofile.nofile
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.OptionalNofile = &ResourceLimits_Nofile{x}
+		return true, err
+	case 2: // optional_nproc.nproc
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.OptionalNproc = &ResourceLimits_Nproc{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _ResourceLimits_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*ResourceLimits)
+	// optional_nofile
+	switch x := m.OptionalNofile.(type) {
+	case *ResourceLimits_Nofile:
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(x.Nofile))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	// optional_nproc
+	switch x := m.OptionalNproc.(type) {
+	case *ResourceLimits_Nproc:
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(x.Nproc))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
 }
 
 func init() {
@@ -1220,22 +1335,70 @@ func (this *ResourceLimits) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Nofile != nil && that1.Nofile != nil {
-		if *this.Nofile != *that1.Nofile {
+	if that1.OptionalNofile == nil {
+		if this.OptionalNofile != nil {
 			return false
 		}
-	} else if this.Nofile != nil {
+	} else if this.OptionalNofile == nil {
 		return false
-	} else if that1.Nofile != nil {
+	} else if !this.OptionalNofile.Equal(that1.OptionalNofile) {
 		return false
 	}
-	if this.Nproc != nil && that1.Nproc != nil {
-		if *this.Nproc != *that1.Nproc {
+	if that1.OptionalNproc == nil {
+		if this.OptionalNproc != nil {
 			return false
 		}
-	} else if this.Nproc != nil {
+	} else if this.OptionalNproc == nil {
 		return false
-	} else if that1.Nproc != nil {
+	} else if !this.OptionalNproc.Equal(that1.OptionalNproc) {
+		return false
+	}
+	return true
+}
+func (this *ResourceLimits_Nofile) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ResourceLimits_Nofile)
+	if !ok {
+		that2, ok := that.(ResourceLimits_Nofile)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Nofile != that1.Nofile {
+		return false
+	}
+	return true
+}
+func (this *ResourceLimits_Nproc) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ResourceLimits_Nproc)
+	if !ok {
+		that2, ok := that.(ResourceLimits_Nproc)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Nproc != that1.Nproc {
 		return false
 	}
 	return true
@@ -1314,9 +1477,7 @@ func (this *RunAction) GoString() string {
 	s := make([]string, 0, 12)
 	s = append(s, "&models.RunAction{")
 	s = append(s, "Path: "+fmt.Sprintf("%#v", this.Path)+",\n")
-	if this.Args != nil {
-		s = append(s, "Args: "+fmt.Sprintf("%#v", this.Args)+",\n")
-	}
+	s = append(s, "Args: "+fmt.Sprintf("%#v", this.Args)+",\n")
 	s = append(s, "Dir: "+fmt.Sprintf("%#v", this.Dir)+",\n")
 	if this.Env != nil {
 		s = append(s, "Env: "+fmt.Sprintf("%#v", this.Env)+",\n")
@@ -1419,14 +1580,30 @@ func (this *ResourceLimits) GoString() string {
 	}
 	s := make([]string, 0, 6)
 	s = append(s, "&models.ResourceLimits{")
-	if this.Nofile != nil {
-		s = append(s, "Nofile: "+valueToGoStringActions(this.Nofile, "uint64")+",\n")
+	if this.OptionalNofile != nil {
+		s = append(s, "OptionalNofile: "+fmt.Sprintf("%#v", this.OptionalNofile)+",\n")
 	}
-	if this.Nproc != nil {
-		s = append(s, "Nproc: "+valueToGoStringActions(this.Nproc, "uint64")+",\n")
+	if this.OptionalNproc != nil {
+		s = append(s, "OptionalNproc: "+fmt.Sprintf("%#v", this.OptionalNproc)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
+}
+func (this *ResourceLimits_Nofile) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ResourceLimits_Nofile{` +
+		`Nofile:` + fmt.Sprintf("%#v", this.Nofile) + `}`}, ", ")
+	return s
+}
+func (this *ResourceLimits_Nproc) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ResourceLimits_Nproc{` +
+		`Nproc:` + fmt.Sprintf("%#v", this.Nproc) + `}`}, ", ")
+	return s
 }
 func valueToGoStringActions(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -1559,38 +1736,54 @@ func (m *DownloadAction) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.Artifact)))
-	i += copy(dAtA[i:], m.Artifact)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.From)))
-	i += copy(dAtA[i:], m.From)
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.To)))
-	i += copy(dAtA[i:], m.To)
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.CacheKey)))
-	i += copy(dAtA[i:], m.CacheKey)
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
-	dAtA[i] = 0x32
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.User)))
-	i += copy(dAtA[i:], m.User)
-	dAtA[i] = 0x3a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.ChecksumAlgorithm)))
-	i += copy(dAtA[i:], m.ChecksumAlgorithm)
-	dAtA[i] = 0x42
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.ChecksumValue)))
-	i += copy(dAtA[i:], m.ChecksumValue)
+	if len(m.Artifact) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.Artifact)))
+		i += copy(dAtA[i:], m.Artifact)
+	}
+	if len(m.From) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.From)))
+		i += copy(dAtA[i:], m.From)
+	}
+	if len(m.To) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.To)))
+		i += copy(dAtA[i:], m.To)
+	}
+	if len(m.CacheKey) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.CacheKey)))
+		i += copy(dAtA[i:], m.CacheKey)
+	}
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
+	if len(m.User) > 0 {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.User)))
+		i += copy(dAtA[i:], m.User)
+	}
+	if len(m.ChecksumAlgorithm) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.ChecksumAlgorithm)))
+		i += copy(dAtA[i:], m.ChecksumAlgorithm)
+	}
+	if len(m.ChecksumValue) > 0 {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.ChecksumValue)))
+		i += copy(dAtA[i:], m.ChecksumValue)
+	}
 	return i, nil
 }
 
@@ -1609,26 +1802,36 @@ func (m *UploadAction) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.Artifact)))
-	i += copy(dAtA[i:], m.Artifact)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.From)))
-	i += copy(dAtA[i:], m.From)
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.To)))
-	i += copy(dAtA[i:], m.To)
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.User)))
-	i += copy(dAtA[i:], m.User)
+	if len(m.Artifact) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.Artifact)))
+		i += copy(dAtA[i:], m.Artifact)
+	}
+	if len(m.From) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.From)))
+		i += copy(dAtA[i:], m.From)
+	}
+	if len(m.To) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.To)))
+		i += copy(dAtA[i:], m.To)
+	}
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
+	if len(m.User) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.User)))
+		i += copy(dAtA[i:], m.User)
+	}
 	return i, nil
 }
 
@@ -1647,10 +1850,12 @@ func (m *RunAction) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.Path)))
-	i += copy(dAtA[i:], m.Path)
+	if len(m.Path) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.Path)))
+		i += copy(dAtA[i:], m.Path)
+	}
 	if len(m.Args) > 0 {
 		for _, s := range m.Args {
 			dAtA[i] = 0x12
@@ -1666,10 +1871,12 @@ func (m *RunAction) MarshalTo(dAtA []byte) (int, error) {
 			i += copy(dAtA[i:], s)
 		}
 	}
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.Dir)))
-	i += copy(dAtA[i:], m.Dir)
+	if len(m.Dir) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.Dir)))
+		i += copy(dAtA[i:], m.Dir)
+	}
 	if len(m.Env) > 0 {
 		for _, msg := range m.Env {
 			dAtA[i] = 0x22
@@ -1692,22 +1899,28 @@ func (m *RunAction) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n10
 	}
-	dAtA[i] = 0x32
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.User)))
-	i += copy(dAtA[i:], m.User)
-	dAtA[i] = 0x3a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
-	dAtA[i] = 0x40
-	i++
-	if m.SuppressLogOutput {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
+	if len(m.User) > 0 {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.User)))
+		i += copy(dAtA[i:], m.User)
 	}
-	i++
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
+	if m.SuppressLogOutput {
+		dAtA[i] = 0x40
+		i++
+		if m.SuppressLogOutput {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
 	return i, nil
 }
 
@@ -1736,16 +1949,22 @@ func (m *TimeoutAction) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n11
 	}
-	dAtA[i] = 0x10
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(m.DeprecatedTimeoutNs))
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
-	dAtA[i] = 0x20
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(m.TimeoutMs))
+	if m.DeprecatedTimeoutNs != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(m.DeprecatedTimeoutNs))
+	}
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
+	if m.TimeoutMs != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(m.TimeoutMs))
+	}
 	return i, nil
 }
 
@@ -1774,22 +1993,30 @@ func (m *EmitProgressAction) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n12
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.StartMessage)))
-	i += copy(dAtA[i:], m.StartMessage)
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.SuccessMessage)))
-	i += copy(dAtA[i:], m.SuccessMessage)
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.FailureMessagePrefix)))
-	i += copy(dAtA[i:], m.FailureMessagePrefix)
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
+	if len(m.StartMessage) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.StartMessage)))
+		i += copy(dAtA[i:], m.StartMessage)
+	}
+	if len(m.SuccessMessage) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.SuccessMessage)))
+		i += copy(dAtA[i:], m.SuccessMessage)
+	}
+	if len(m.FailureMessagePrefix) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.FailureMessagePrefix)))
+		i += copy(dAtA[i:], m.FailureMessagePrefix)
+	}
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
 	return i, nil
 }
 
@@ -1818,10 +2045,12 @@ func (m *TryAction) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n13
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
 	return i, nil
 }
 
@@ -1852,10 +2081,12 @@ func (m *ParallelAction) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
 	return i, nil
 }
 
@@ -1886,10 +2117,12 @@ func (m *SerialAction) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
 	return i, nil
 }
 
@@ -1920,10 +2153,12 @@ func (m *CodependentAction) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintActions(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
 	return i, nil
 }
 
@@ -1942,19 +2177,37 @@ func (m *ResourceLimits) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Nofile != nil {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintActions(dAtA, i, uint64(*m.Nofile))
+	if m.OptionalNofile != nil {
+		nn14, err := m.OptionalNofile.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn14
 	}
-	if m.Nproc != nil {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintActions(dAtA, i, uint64(*m.Nproc))
+	if m.OptionalNproc != nil {
+		nn15, err := m.OptionalNproc.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn15
 	}
 	return i, nil
 }
 
+func (m *ResourceLimits_Nofile) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintActions(dAtA, i, uint64(m.Nofile))
+	return i, nil
+}
+func (m *ResourceLimits_Nproc) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintActions(dAtA, i, uint64(m.Nproc))
+	return i, nil
+}
 func encodeVarintActions(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -2016,21 +2269,37 @@ func (m *DownloadAction) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Artifact)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.From)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.To)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.CacheKey)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.User)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.ChecksumAlgorithm)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.ChecksumValue)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2041,15 +2310,25 @@ func (m *UploadAction) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Artifact)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.From)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.To)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.User)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2060,7 +2339,9 @@ func (m *RunAction) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Path)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	if len(m.Args) > 0 {
 		for _, s := range m.Args {
 			l = len(s)
@@ -2068,7 +2349,9 @@ func (m *RunAction) Size() (n int) {
 		}
 	}
 	l = len(m.Dir)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	if len(m.Env) > 0 {
 		for _, e := range m.Env {
 			l = e.Size()
@@ -2080,10 +2363,16 @@ func (m *RunAction) Size() (n int) {
 		n += 1 + l + sovActions(uint64(l))
 	}
 	l = len(m.User)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
-	n += 2
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
+	if m.SuppressLogOutput {
+		n += 2
+	}
 	return n
 }
 
@@ -2097,10 +2386,16 @@ func (m *TimeoutAction) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovActions(uint64(l))
 	}
-	n += 1 + sovActions(uint64(m.DeprecatedTimeoutNs))
+	if m.DeprecatedTimeoutNs != 0 {
+		n += 1 + sovActions(uint64(m.DeprecatedTimeoutNs))
+	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
-	n += 1 + sovActions(uint64(m.TimeoutMs))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
+	if m.TimeoutMs != 0 {
+		n += 1 + sovActions(uint64(m.TimeoutMs))
+	}
 	return n
 }
 
@@ -2115,13 +2410,21 @@ func (m *EmitProgressAction) Size() (n int) {
 		n += 1 + l + sovActions(uint64(l))
 	}
 	l = len(m.StartMessage)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.SuccessMessage)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.FailureMessagePrefix)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2136,7 +2439,9 @@ func (m *TryAction) Size() (n int) {
 		n += 1 + l + sovActions(uint64(l))
 	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2153,7 +2458,9 @@ func (m *ParallelAction) Size() (n int) {
 		}
 	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2170,7 +2477,9 @@ func (m *SerialAction) Size() (n int) {
 		}
 	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2187,7 +2496,9 @@ func (m *CodependentAction) Size() (n int) {
 		}
 	}
 	l = len(m.LogSource)
-	n += 1 + l + sovActions(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovActions(uint64(l))
+	}
 	return n
 }
 
@@ -2197,12 +2508,31 @@ func (m *ResourceLimits) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Nofile != nil {
-		n += 1 + sovActions(uint64(*m.Nofile))
+	if m.OptionalNofile != nil {
+		n += m.OptionalNofile.Size()
 	}
-	if m.Nproc != nil {
-		n += 1 + sovActions(uint64(*m.Nproc))
+	if m.OptionalNproc != nil {
+		n += m.OptionalNproc.Size()
 	}
+	return n
+}
+
+func (m *ResourceLimits_Nofile) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovActions(uint64(m.Nofile))
+	return n
+}
+func (m *ResourceLimits_Nproc) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovActions(uint64(m.Nproc))
 	return n
 }
 
@@ -2361,8 +2691,28 @@ func (this *ResourceLimits) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&ResourceLimits{`,
-		`Nofile:` + valueToStringActions(this.Nofile) + `,`,
-		`Nproc:` + valueToStringActions(this.Nproc) + `,`,
+		`OptionalNofile:` + fmt.Sprintf("%v", this.OptionalNofile) + `,`,
+		`OptionalNproc:` + fmt.Sprintf("%v", this.OptionalNproc) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ResourceLimits_Nofile) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ResourceLimits_Nofile{`,
+		`Nofile:` + fmt.Sprintf("%v", this.Nofile) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ResourceLimits_Nproc) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ResourceLimits_Nproc{`,
+		`Nproc:` + fmt.Sprintf("%v", this.Nproc) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -4317,7 +4667,7 @@ func (m *ResourceLimits) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.Nofile = &v
+			m.OptionalNofile = &ResourceLimits_Nofile{v}
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Nproc", wireType)
@@ -4337,7 +4687,7 @@ func (m *ResourceLimits) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.Nproc = &v
+			m.OptionalNproc = &ResourceLimits_Nproc{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipActions(dAtA[iNdEx:])
@@ -4464,74 +4814,75 @@ var (
 	ErrIntOverflowActions   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("actions.proto", fileDescriptor_actions_c55f3cc68f515966) }
+func init() { proto.RegisterFile("actions.proto", fileDescriptor_actions_65bc65f83e2ca797) }
 
-var fileDescriptor_actions_c55f3cc68f515966 = []byte{
-	// 1054 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x41, 0x6f, 0x1b, 0x45,
-	0x14, 0xf6, 0xda, 0xae, 0x93, 0x7d, 0x8d, 0x1d, 0x3c, 0x75, 0x82, 0x93, 0x54, 0xeb, 0x60, 0x10,
-	0x04, 0x89, 0x24, 0xa8, 0xaa, 0x38, 0xc0, 0x01, 0xd5, 0x05, 0x71, 0xa0, 0x25, 0x91, 0x53, 0xca,
-	0x71, 0xb5, 0xd9, 0x1d, 0x6f, 0x56, 0xdd, 0xdd, 0x59, 0xcd, 0xcc, 0xa6, 0x98, 0x13, 0x77, 0x0e,
-	0xf4, 0x67, 0xf0, 0x53, 0x72, 0x41, 0xca, 0xb1, 0x27, 0x43, 0x9c, 0x0b, 0xf2, 0xa9, 0x3f, 0x01,
-	0xed, 0xec, 0x8c, 0x33, 0x13, 0x4b, 0xa8, 0xa1, 0x52, 0x6e, 0xde, 0xf7, 0x7d, 0xef, 0x7b, 0x33,
-	0xef, 0xbd, 0x79, 0xcf, 0xd0, 0xf4, 0x7c, 0x1e, 0x91, 0x94, 0xed, 0x65, 0x94, 0x70, 0x82, 0x1a,
-	0x09, 0x09, 0x70, 0xcc, 0x36, 0x77, 0xc3, 0x88, 0x9f, 0xe4, 0xc7, 0x7b, 0x3e, 0x49, 0xf6, 0x43,
-	0x12, 0x92, 0x7d, 0x01, 0x1f, 0xe7, 0x23, 0xf1, 0x25, 0x3e, 0xc4, 0xaf, 0xd2, 0x6d, 0x73, 0x0b,
-	0xa7, 0xa7, 0x11, 0x25, 0x69, 0x82, 0x53, 0xee, 0x9e, 0x7a, 0x34, 0xf2, 0x8e, 0x63, 0x2c, 0x35,
-	0xfb, 0xbf, 0x35, 0xa0, 0xf1, 0x48, 0x44, 0x41, 0x3f, 0xc1, 0x6a, 0x40, 0x5e, 0xa6, 0x31, 0xf1,
-	0x02, 0xb7, 0x0c, 0xdc, 0xb5, 0xb6, 0xad, 0x9d, 0xbb, 0x0f, 0xd6, 0xf7, 0xca, 0xc0, 0x7b, 0xdf,
-	0x48, 0xb8, 0x74, 0x18, 0xac, 0xcf, 0x26, 0x3d, 0xa4, 0x5c, 0x3e, 0x23, 0x49, 0xc4, 0x71, 0x92,
-	0xf1, 0xf1, 0xb0, 0x15, 0x18, 0x3c, 0x74, 0x00, 0xcd, 0x3c, 0xd3, 0x65, 0xab, 0x42, 0xb6, 0xa3,
-	0x64, 0x7f, 0xcc, 0x34, 0xd1, 0xce, 0x6c, 0xd2, 0x7b, 0xaf, 0xa4, 0x6b, 0x92, 0x2b, 0xb9, 0xc6,
-	0x41, 0x8f, 0x01, 0x68, 0x9e, 0x2a, 0xb5, 0x9a, 0x50, 0x6b, 0x2b, 0xb5, 0x61, 0x9e, 0x4a, 0xa9,
-	0xf6, 0x6c, 0xd2, 0x6b, 0xd2, 0x3c, 0xd5, 0x74, 0x6c, 0xaa, 0x50, 0x74, 0x04, 0x2d, 0x1e, 0x25,
-	0x98, 0xe4, 0x5c, 0x09, 0xd5, 0x85, 0xd0, 0x9a, 0x12, 0x7a, 0x56, 0xa2, 0x52, 0x6c, 0x6d, 0x36,
-	0xe9, 0xb5, 0xa5, 0x83, 0x26, 0xd8, 0xe4, 0x3a, 0x0b, 0x45, 0xd0, 0xc1, 0x49, 0xc4, 0xdd, 0x8c,
-	0x92, 0x90, 0x62, 0xc6, 0x94, 0xf4, 0x1d, 0x21, 0xbd, 0xa9, 0xa4, 0xbf, 0x4d, 0x22, 0x7e, 0x28,
-	0x29, 0x52, 0x7f, 0x6b, 0x36, 0xe9, 0xbd, 0x6f, 0xf8, 0x6a, 0x51, 0x10, 0x5e, 0x70, 0x28, 0x92,
-	0xc0, 0xe9, 0x58, 0x05, 0x68, 0x98, 0x49, 0x78, 0x46, 0xc7, 0x7a, 0x12, 0x38, 0x1d, 0xeb, 0x49,
-	0xe0, 0x0a, 0x2d, 0x6a, 0x9e, 0x79, 0xd4, 0x8b, 0x63, 0x1c, 0x2b, 0xa5, 0x25, 0xb3, 0xe6, 0x87,
-	0x12, 0xd6, 0x6b, 0xae, 0x5c, 0xf4, 0x9a, 0x67, 0x06, 0xaf, 0xa8, 0x39, 0xc3, 0x34, 0xf2, 0xe6,
-	0xb2, 0xcb, 0x66, 0xcd, 0x8f, 0x04, 0xa8, 0xd7, 0xbc, 0xa4, 0xeb, 0x35, 0x67, 0x1a, 0x07, 0xf9,
-	0x80, 0x7c, 0x12, 0xe0, 0x0c, 0xa7, 0x41, 0xd1, 0xc7, 0x52, 0xd5, 0x16, 0xaa, 0x1b, 0x4a, 0xf5,
-	0xf1, 0x15, 0x43, 0x4a, 0x6f, 0xcc, 0x26, 0xbd, 0x35, 0xcd, 0x51, 0xd3, 0x6f, 0xfb, 0xd7, 0xd9,
-	0xfd, 0x57, 0x35, 0x68, 0x99, 0x4d, 0x8e, 0xbe, 0x80, 0x65, 0x8f, 0xf2, 0x68, 0xe4, 0xf9, 0x5c,
-	0x3c, 0x07, 0x7b, 0xb0, 0x79, 0x36, 0xe9, 0x55, 0x8a, 0x34, 0x28, 0xbb, 0xa6, 0x39, 0xe7, 0xa2,
-	0x2e, 0xd4, 0x47, 0x94, 0x24, 0xa2, 0xd7, 0xed, 0x41, 0xbd, 0xf0, 0x19, 0x0a, 0x0b, 0xea, 0x40,
-	0x95, 0x13, 0xd1, 0xb5, 0xca, 0x5e, 0xe5, 0x04, 0x7d, 0x00, 0xb6, 0xef, 0xf9, 0x27, 0xd8, 0x7d,
-	0x81, 0xc7, 0xa2, 0x13, 0x15, 0xb8, 0x2c, 0xcc, 0xdf, 0xe3, 0x31, 0xfa, 0x0a, 0x20, 0x26, 0xa1,
-	0xcb, 0x48, 0x4e, 0x7d, 0x2c, 0x5a, 0xca, 0x1e, 0xdc, 0x97, 0x87, 0xe9, 0x5c, 0x21, 0x7a, 0xa5,
-	0x63, 0x12, 0x1e, 0x09, 0x63, 0x71, 0x9e, 0x9c, 0x61, 0x2a, 0x1a, 0x65, 0x7e, 0x9e, 0xc2, 0x82,
-	0x8e, 0x00, 0xf9, 0x27, 0xd8, 0x7f, 0xc1, 0xf2, 0xc4, 0xf5, 0xe2, 0x90, 0xd0, 0x88, 0x9f, 0x24,
-	0xa2, 0x0d, 0xec, 0xc1, 0x47, 0x52, 0xfe, 0xfe, 0x22, 0xc3, 0xc8, 0xa4, 0x44, 0x1f, 0x29, 0x10,
-	0x7d, 0x07, 0xad, 0xb9, 0xcb, 0xa9, 0x17, 0xe7, 0x58, 0x34, 0x80, 0x3d, 0xd8, 0x96, 0x82, 0x5d,
-	0x13, 0xd5, 0x5f, 0x94, 0x42, 0x9e, 0x17, 0x40, 0xff, 0x4f, 0x0b, 0x56, 0xf4, 0x01, 0x71, 0x6b,
-	0x05, 0x31, 0xb3, 0x5d, 0xff, 0x7f, 0xd9, 0xbe, 0x73, 0x3d, 0xdb, 0xfd, 0xbf, 0xaa, 0x60, 0xcf,
-	0x47, 0x54, 0xc1, 0xcb, 0x3c, 0x7e, 0x22, 0x2f, 0x22, 0x79, 0x85, 0x05, 0x21, 0xa8, 0x7b, 0x34,
-	0x64, 0xdd, 0xea, 0x76, 0x6d, 0xc7, 0x1e, 0x8a, 0xdf, 0xe8, 0x13, 0xa8, 0x05, 0x11, 0x95, 0x27,
-	0x5d, 0x93, 0x67, 0x69, 0x06, 0x11, 0xd5, 0x0e, 0x51, 0x30, 0xd0, 0x2e, 0xd4, 0x70, 0x7a, 0xda,
-	0xad, 0x6f, 0xd7, 0x76, 0xee, 0x3e, 0xd8, 0x9a, 0x4f, 0x9d, 0xab, 0x3d, 0xf0, 0x5c, 0xae, 0x81,
-	0x61, 0xc1, 0x43, 0x5f, 0xc3, 0x2a, 0xc5, 0xe5, 0x75, 0xdc, 0x38, 0x4a, 0x22, 0xce, 0xe4, 0xc0,
-	0x9a, 0x4f, 0x81, 0xa1, 0x84, 0x9f, 0x08, 0x74, 0xd8, 0xa2, 0xc6, 0xf7, 0x7f, 0x34, 0x97, 0x99,
-	0xc5, 0xa5, 0x9b, 0x65, 0xf1, 0x21, 0xdc, 0x63, 0x79, 0x96, 0x89, 0x41, 0x5a, 0x70, 0x49, 0xce,
-	0xb3, 0x9c, 0x8b, 0x4e, 0x5a, 0x96, 0x51, 0xda, 0x8a, 0xf0, 0x84, 0x84, 0x07, 0x02, 0xee, 0xcf,
-	0x2c, 0x68, 0x1a, 0xb3, 0x1b, 0x7d, 0x0c, 0x0d, 0x63, 0xa1, 0xb5, 0xd4, 0xb5, 0x4a, 0x7c, 0x28,
-	0x51, 0x74, 0x00, 0x6b, 0x01, 0xce, 0x28, 0xf6, 0x3d, 0x8e, 0x03, 0x57, 0x6d, 0x87, 0x94, 0x89,
-	0x9e, 0xa9, 0x0d, 0xb6, 0xe4, 0xb9, 0x17, 0xd7, 0x40, 0xd7, 0x1a, 0xde, 0xbb, 0xf2, 0x94, 0xc1,
-	0x7f, 0x60, 0xd7, 0x6e, 0x5f, 0xbb, 0xd9, 0xed, 0x3f, 0x04, 0x50, 0x47, 0x48, 0x98, 0x68, 0xc0,
-	0x9a, 0xbc, 0xb4, 0x2d, 0xed, 0x4f, 0x59, 0xff, 0xf7, 0x2a, 0xa0, 0xc5, 0x6d, 0xf2, 0xd6, 0x37,
-	0xfe, 0x14, 0x9a, 0x8c, 0x7b, 0x94, 0xbb, 0x09, 0x66, 0xcc, 0x0b, 0xb1, 0xf1, 0x3a, 0x56, 0x04,
-	0xf4, 0xb4, 0x44, 0xd0, 0x2e, 0xac, 0xb2, 0xdc, 0xf7, 0x8b, 0x5a, 0x28, 0xb2, 0xfe, 0x64, 0x5a,
-	0x12, 0x54, 0xf4, 0x2f, 0x61, 0x7d, 0xe4, 0x45, 0x71, 0x4e, 0xb1, 0xa2, 0xbb, 0x19, 0xc5, 0xa3,
-	0xe8, 0x67, 0x63, 0xb8, 0x75, 0x24, 0x47, 0x7a, 0x1d, 0x0a, 0xc6, 0x3b, 0x0d, 0xba, 0x7e, 0x06,
-	0xf6, 0x7c, 0xfb, 0xbd, 0x75, 0x1e, 0xcc, 0x88, 0xd5, 0x9b, 0x45, 0x7c, 0x09, 0x2d, 0x73, 0x4b,
-	0xa2, 0x1d, 0x58, 0x92, 0x7f, 0xdd, 0xba, 0x96, 0x78, 0x83, 0xd7, 0xe3, 0x2a, 0xf8, 0xdd, 0x02,
-	0xe7, 0xb0, 0xa2, 0xef, 0xd1, 0xdb, 0x0a, 0xfb, 0x0b, 0xb4, 0x17, 0x16, 0xed, 0x6d, 0xc5, 0x66,
-	0xd0, 0x32, 0x67, 0x11, 0xfa, 0x1c, 0x1a, 0x29, 0x19, 0x45, 0x31, 0x16, 0x25, 0xae, 0x0f, 0xba,
-	0x67, 0x93, 0x9e, 0x55, 0xfc, 0xa1, 0x28, 0xad, 0x9a, 0x8c, 0xe4, 0xa1, 0x7d, 0xb8, 0x93, 0x66,
-	0x94, 0xf8, 0x22, 0x76, 0x7d, 0xb0, 0x21, 0x1d, 0x56, 0x85, 0xd1, 0x78, 0xd4, 0x25, 0x6f, 0xf0,
-	0xf0, 0xfc, 0xc2, 0xa9, 0xbc, 0xbe, 0x70, 0x2a, 0x6f, 0x2e, 0x1c, 0xeb, 0xd7, 0xa9, 0x63, 0xfd,
-	0x31, 0x75, 0xac, 0xb3, 0xa9, 0x63, 0x9d, 0x4f, 0x1d, 0xeb, 0xef, 0xa9, 0x63, 0xfd, 0x33, 0x75,
-	0x2a, 0x6f, 0xa6, 0x8e, 0xf5, 0xea, 0xd2, 0xa9, 0x9c, 0x5f, 0x3a, 0x95, 0xd7, 0x97, 0x4e, 0xe5,
-	0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x44, 0xca, 0xc1, 0x58, 0xbe, 0x0b, 0x00, 0x00,
+var fileDescriptor_actions_65bc65f83e2ca797 = []byte{
+	// 1058 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x31, 0x6f, 0xdb, 0x46,
+	0x14, 0x16, 0x25, 0x59, 0x36, 0x5f, 0x2c, 0x3a, 0xba, 0xd8, 0x8e, 0x62, 0xa7, 0x94, 0xa1, 0x00,
+	0xad, 0x87, 0x5a, 0x01, 0xdc, 0x00, 0x1d, 0x8b, 0xc8, 0x2d, 0x10, 0x20, 0x49, 0x6d, 0xd0, 0x69,
+	0x3a, 0x12, 0x34, 0x79, 0xa2, 0x89, 0x90, 0x3c, 0xf6, 0xee, 0xe8, 0x56, 0x5b, 0xf7, 0x2e, 0x1d,
+	0xfa, 0x23, 0xba, 0xf7, 0x37, 0x14, 0xe8, 0xe8, 0x31, 0x43, 0x21, 0xd4, 0xf2, 0x12, 0x68, 0xca,
+	0xda, 0xad, 0xe0, 0xf1, 0x4e, 0x3a, 0xda, 0x19, 0xdc, 0x00, 0xc9, 0x76, 0x7c, 0xdf, 0xf7, 0xbe,
+	0x77, 0xf7, 0xde, 0xbb, 0x77, 0x84, 0xb6, 0xe7, 0xf3, 0x88, 0xa4, 0x6c, 0x90, 0x51, 0xc2, 0x09,
+	0x6a, 0x25, 0x24, 0xc0, 0x31, 0xdb, 0xda, 0x0b, 0x23, 0x7e, 0x9a, 0x9f, 0x0c, 0x7c, 0x92, 0x3c,
+	0x0c, 0x49, 0x48, 0x1e, 0x0a, 0xf8, 0x24, 0x1f, 0x89, 0x2f, 0xf1, 0x21, 0x56, 0xa5, 0xdb, 0xd6,
+	0x36, 0x4e, 0xcf, 0x22, 0x4a, 0xd2, 0x04, 0xa7, 0xdc, 0x3d, 0xf3, 0x68, 0xe4, 0x9d, 0xc4, 0x58,
+	0x6a, 0xf6, 0x7f, 0x69, 0x41, 0xeb, 0xb1, 0x88, 0x82, 0xbe, 0x87, 0xb5, 0x80, 0xfc, 0x98, 0xc6,
+	0xc4, 0x0b, 0xdc, 0x32, 0x70, 0xd7, 0xd8, 0x31, 0x76, 0x6f, 0xed, 0x6f, 0x0e, 0xca, 0xc0, 0x83,
+	0xaf, 0x25, 0x5c, 0x3a, 0x0c, 0x37, 0x67, 0x93, 0x1e, 0x52, 0x2e, 0x9f, 0x93, 0x24, 0xe2, 0x38,
+	0xc9, 0xf8, 0xd8, 0xb1, 0x82, 0x0a, 0x0f, 0x1d, 0x42, 0x3b, 0xcf, 0x74, 0xd9, 0xba, 0x90, 0x5d,
+	0x57, 0xb2, 0xdf, 0x65, 0x9a, 0xe8, 0xfa, 0x6c, 0xd2, 0xbb, 0x5d, 0xd2, 0x35, 0xc9, 0xd5, 0x5c,
+	0xe3, 0xa0, 0x03, 0x00, 0x9a, 0xa7, 0x4a, 0xad, 0x21, 0xd4, 0x3a, 0x4a, 0xcd, 0xc9, 0x53, 0x29,
+	0xd5, 0x99, 0x4d, 0x7a, 0x6d, 0x9a, 0xa7, 0x9a, 0x8e, 0x49, 0x15, 0x8a, 0x8e, 0xc1, 0xe2, 0x51,
+	0x82, 0x49, 0xce, 0x95, 0x50, 0x53, 0x08, 0x6d, 0x28, 0xa1, 0x17, 0x25, 0x2a, 0xc5, 0x36, 0x66,
+	0x93, 0x5e, 0x47, 0x3a, 0x68, 0x82, 0x6d, 0xae, 0xb3, 0x50, 0x04, 0xeb, 0x38, 0x89, 0xb8, 0x9b,
+	0x51, 0x12, 0x52, 0xcc, 0x98, 0x92, 0x5e, 0x12, 0xd2, 0x5b, 0x4a, 0xfa, 0x9b, 0x24, 0xe2, 0x47,
+	0x92, 0x22, 0xf5, 0xb7, 0x67, 0x93, 0xde, 0xdd, 0x8a, 0xaf, 0x16, 0x05, 0xe1, 0x6b, 0x0e, 0x45,
+	0x12, 0x38, 0x1d, 0xab, 0x00, 0xad, 0x6a, 0x12, 0x5e, 0xd0, 0xb1, 0x9e, 0x04, 0x4e, 0xc7, 0x7a,
+	0x12, 0xb8, 0x42, 0x8b, 0x9a, 0x67, 0x1e, 0xf5, 0xe2, 0x18, 0xc7, 0x4a, 0x69, 0xb9, 0x5a, 0xf3,
+	0x23, 0x09, 0xeb, 0x35, 0x57, 0x2e, 0x7a, 0xcd, 0xb3, 0x0a, 0xaf, 0xa8, 0x39, 0xc3, 0x34, 0xf2,
+	0xe6, 0xb2, 0x2b, 0xd5, 0x9a, 0x1f, 0x0b, 0x50, 0xaf, 0x79, 0x49, 0xd7, 0x6b, 0xce, 0x34, 0x0e,
+	0xf2, 0x01, 0xf9, 0x24, 0xc0, 0x19, 0x4e, 0x83, 0xa2, 0x8f, 0xa5, 0xaa, 0x29, 0x54, 0xef, 0x29,
+	0xd5, 0x83, 0x05, 0x43, 0x4a, 0xdf, 0x9b, 0x4d, 0x7a, 0x1b, 0x9a, 0xa3, 0xa6, 0xdf, 0xf1, 0xaf,
+	0xb2, 0xfb, 0x6f, 0xea, 0x60, 0x55, 0x9b, 0x1c, 0xed, 0xc3, 0x8a, 0x47, 0x79, 0x34, 0xf2, 0x7c,
+	0x2e, 0xae, 0x83, 0x59, 0xa6, 0x40, 0xd9, 0x34, 0xbd, 0x39, 0x0f, 0x21, 0x68, 0x8e, 0x28, 0x49,
+	0x44, 0x9f, 0x9b, 0x8e, 0x58, 0x23, 0x0b, 0xea, 0x9c, 0x88, 0x5e, 0x35, 0x9d, 0x3a, 0x27, 0x68,
+	0x1b, 0x4c, 0xdf, 0xf3, 0x4f, 0xb1, 0xfb, 0x0a, 0x8f, 0x45, 0xe7, 0x99, 0xce, 0x8a, 0x30, 0x3c,
+	0xc5, 0x63, 0xf4, 0x25, 0x40, 0x4c, 0x42, 0x97, 0x91, 0x9c, 0xfa, 0x58, 0x34, 0x8f, 0x39, 0xec,
+	0xce, 0x26, 0xbd, 0xf5, 0x85, 0x55, 0xaf, 0x67, 0x4c, 0xc2, 0x63, 0x61, 0x2c, 0x22, 0xe7, 0x0c,
+	0x53, 0xd1, 0x0e, 0xa6, 0x23, 0xd6, 0xe8, 0x10, 0x90, 0x7f, 0x8a, 0xfd, 0x57, 0x2c, 0x4f, 0x5c,
+	0x2f, 0x0e, 0x09, 0x8d, 0xf8, 0x69, 0x22, 0xca, 0x6c, 0x0e, 0x77, 0x66, 0x93, 0xde, 0xfd, 0xeb,
+	0x68, 0x25, 0x4b, 0x12, 0x7d, 0xac, 0x40, 0x74, 0x00, 0xd6, 0xdc, 0xe5, 0xcc, 0x8b, 0x73, 0x2c,
+	0x8a, 0x6b, 0x0e, 0xef, 0xcf, 0x26, 0xbd, 0x6e, 0x15, 0xd1, 0x6f, 0x8a, 0x42, 0x5e, 0x16, 0x40,
+	0xff, 0x0f, 0x03, 0x56, 0xf5, 0x8b, 0xff, 0xc1, 0x12, 0x5d, 0xcd, 0x65, 0xf3, 0xff, 0xe7, 0x72,
+	0x69, 0x91, 0xcb, 0xfe, 0x9f, 0x75, 0x30, 0xe7, 0x03, 0xa6, 0x60, 0x64, 0x1e, 0x3f, 0x2d, 0xb7,
+	0xeb, 0x88, 0x75, 0x61, 0xf3, 0x68, 0xc8, 0xba, 0xf5, 0x9d, 0x46, 0x61, 0x2b, 0xd6, 0xe8, 0x01,
+	0x34, 0x82, 0x88, 0x96, 0x7b, 0x2a, 0x2f, 0x64, 0x10, 0x51, 0x2d, 0x68, 0x81, 0xa2, 0x3d, 0x68,
+	0xe0, 0xf4, 0xac, 0xdb, 0xdc, 0x69, 0xec, 0xde, 0xda, 0xdf, 0x9e, 0x4f, 0x8a, 0xc5, 0xec, 0x7e,
+	0x29, 0x47, 0xb7, 0x53, 0xf0, 0xd0, 0x57, 0xb0, 0x46, 0x71, 0xb9, 0x7d, 0x37, 0x8e, 0x92, 0x88,
+	0x33, 0x39, 0x64, 0xe6, 0x37, 0xd7, 0x91, 0xf0, 0x33, 0x81, 0x3a, 0x16, 0xad, 0x7c, 0xbf, 0xb3,
+	0x55, 0xaa, 0xb9, 0x5a, 0xbe, 0x79, 0xae, 0x06, 0x70, 0x87, 0xe5, 0x59, 0x26, 0x46, 0x5e, 0xc1,
+	0x25, 0x39, 0xcf, 0x72, 0x2e, 0xfa, 0x62, 0xc5, 0xe9, 0x28, 0xe8, 0x19, 0x09, 0x0f, 0x05, 0xd0,
+	0xff, 0xdb, 0x80, 0x76, 0x65, 0xbe, 0xa2, 0x4f, 0xa1, 0x55, 0x79, 0x74, 0x2c, 0x75, 0x8c, 0x12,
+	0x77, 0x24, 0x8a, 0x9e, 0xc2, 0x46, 0x80, 0x33, 0x8a, 0x7d, 0x8f, 0xe3, 0xc0, 0x55, 0x13, 0x3c,
+	0x65, 0xa2, 0x07, 0x1a, 0xc3, 0xbb, 0xef, 0x1c, 0xd3, 0x5d, 0xc3, 0xb9, 0xb3, 0xf0, 0x92, 0x81,
+	0xbf, 0x65, 0x57, 0xce, 0xdb, 0xb8, 0xf9, 0x79, 0x3f, 0x01, 0x50, 0xa1, 0x13, 0x26, 0x9a, 0xaa,
+	0xe1, 0x98, 0xd2, 0xf2, 0x9c, 0xf5, 0xff, 0x35, 0x00, 0x5d, 0x9f, 0xf1, 0x37, 0x3e, 0xe3, 0x03,
+	0x68, 0x33, 0xee, 0x51, 0xee, 0x26, 0x98, 0x31, 0x2f, 0xc4, 0xb2, 0xbf, 0x57, 0x85, 0xf1, 0x79,
+	0x69, 0x43, 0x9f, 0xc1, 0x1a, 0xcb, 0x7d, 0xbf, 0xc8, 0xb8, 0xa2, 0x95, 0x4d, 0x6f, 0x49, 0xb3,
+	0x22, 0x3e, 0x82, 0xcd, 0x91, 0x17, 0xc5, 0x39, 0xc5, 0x8a, 0xe8, 0x66, 0x14, 0x8f, 0xa2, 0x9f,
+	0xe4, 0xd8, 0x59, 0x97, 0xa8, 0xe4, 0x1f, 0x09, 0xec, 0xbd, 0x47, 0x50, 0x3f, 0x06, 0x73, 0xfe,
+	0xfa, 0xdc, 0xf8, 0xc4, 0xd5, 0x68, 0xf5, 0x9b, 0x47, 0x63, 0x60, 0x55, 0x5f, 0x28, 0xb4, 0x0b,
+	0xcb, 0xf2, 0xb7, 0xa9, 0x6b, 0x88, 0xbb, 0x74, 0x35, 0xa6, 0x82, 0xdf, 0x3f, 0xe8, 0x0f, 0xb0,
+	0xaa, 0xbf, 0x5f, 0x1f, 0x23, 0xe4, 0x19, 0x74, 0xae, 0x3d, 0x6e, 0x1f, 0x23, 0xee, 0x6f, 0x06,
+	0x58, 0xd5, 0x41, 0x82, 0x06, 0xd0, 0x4a, 0xc9, 0x28, 0x8a, 0xb1, 0xa8, 0x69, 0xb3, 0x7c, 0xbd,
+	0x4b, 0xcb, 0x42, 0xe3, 0x49, 0xcd, 0x91, 0x2c, 0xb4, 0x07, 0x4b, 0x69, 0x46, 0x89, 0x2f, 0xc2,
+	0x36, 0xc5, 0x8f, 0xd4, 0x9a, 0x30, 0xe8, 0xf7, 0xf3, 0x89, 0xe1, 0x94, 0xac, 0x61, 0x07, 0xd6,
+	0x48, 0x56, 0xec, 0xda, 0x8b, 0xdd, 0x52, 0x61, 0x78, 0x1b, 0xac, 0x85, 0x49, 0x90, 0x1e, 0x9d,
+	0x5f, 0xd8, 0xb5, 0xd7, 0x17, 0x76, 0xed, 0xed, 0x85, 0x6d, 0xfc, 0x3c, 0xb5, 0x8d, 0xdf, 0xa7,
+	0xb6, 0xf1, 0xd7, 0xd4, 0x36, 0xce, 0xa7, 0xb6, 0xf1, 0xcf, 0xd4, 0x36, 0xde, 0x4c, 0xed, 0xda,
+	0xdb, 0xa9, 0x6d, 0xfc, 0x7a, 0x69, 0xd7, 0xce, 0x2f, 0xed, 0xda, 0xeb, 0x4b, 0xbb, 0x76, 0xd2,
+	0x12, 0xff, 0xbc, 0x5f, 0xfc, 0x17, 0x00, 0x00, 0xff, 0xff, 0x74, 0xd0, 0x30, 0xb9, 0x58, 0x0b,
+	0x00, 0x00,
 }

@@ -207,17 +207,17 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	if request.Update.Instances != nil {
+	if _, ok := request.Update.OptionalInstances.(*models.DesiredLRPUpdate_Instances); ok {
 		logger.Debug("updating-lrp-instances")
 		previousInstanceCount := beforeDesiredLRP.Instances
 
-		requestedInstances := *request.Update.Instances - previousInstanceCount
+		requestedInstances := request.Update.GetInstances() - previousInstanceCount
 
 		logger = logger.WithData(lager.Data{"instances_delta": requestedInstances})
 		if requestedInstances > 0 {
 			logger.Debug("increasing-the-instances")
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			h.startInstanceRange(logger, previousInstanceCount, *request.Update.Instances, &schedulingInfo)
+			h.startInstanceRange(logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
 		}
 
 		if requestedInstances < 0 {

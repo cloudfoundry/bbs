@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -22,10 +23,10 @@ var _ = Describe("DesiredLRP", func() {
 
 	jsonDesiredLRP := `{
     "setup": {
-      "serial": {
+      "serial_action": {
         "actions": [
           {
-            "download": {
+            "download_action": {
               "from": "http://file-server.service.cf.internal:8080/v1/static/buildpack_app_lifecycle/buildpack_app_lifecycle.tgz",
               "to": "/tmp/lifecycle",
               "cache_key": "buildpack-cflinuxfs2-lifecycle",
@@ -35,7 +36,7 @@ var _ = Describe("DesiredLRP", func() {
             }
           },
           {
-            "download": {
+            "download_action": {
               "from": "http://cloud-controller-ng.service.cf.internal:9022/internal/v2/droplets/some-guid/some-guid/download",
               "to": ".",
               "cache_key": "droplets-some-guid",
@@ -46,10 +47,10 @@ var _ = Describe("DesiredLRP", func() {
       }
     },
     "action": {
-      "codependent": {
+      "codependent_action": {
         "actions": [
           {
-            "run": {
+            "run_action": {
               "path": "/tmp/lifecycle/launcher",
               "args": [
                 "app",
@@ -79,15 +80,14 @@ var _ = Describe("DesiredLRP", func() {
                 }
               ],
               "resource_limits": {
-                "nofile": 16384
+                "nofile": "16384"
               },
               "user": "vcap",
-              "log_source": "APP",
-			  "suppress_log_output": false
+              "log_source": "APP"
             }
           },
           {
-            "run": {
+            "run_action": {
               "path": "/tmp/lifecycle/diego-sshd",
               "args": [
                 "-address=0.0.0.0:2222",
@@ -119,45 +119,44 @@ var _ = Describe("DesiredLRP", func() {
                 }
               ],
               "resource_limits": {
-                "nofile": 16384
+                "nofile": "16384"
               },
-              "user": "vcap",
-			  "suppress_log_output": false
+              "user": "vcap"
             }
           }
         ]
       }
     },
     "monitor": {
-      "timeout": {
+      "timeout_action": {
         "action": {
-          "run": {
+          "run_action": {
             "path": "/tmp/lifecycle/healthcheck",
             "args": [
               "-port=8080"
             ],
             "resource_limits": {
-              "nofile": 1024
+              "nofile": "1024"
             },
             "user": "vcap",
             "log_source": "HEALTH",
 			"suppress_log_output": true
           }
         },
-        "timeout_ms": 30000000
+        "timeout_ms": "30000000"
       }
     },
     "process_guid": "some-guid",
     "domain": "cf-apps",
-    "rootfs": "preloaded:cflinuxfs2",
+    "root_fs": "preloaded:cflinuxfs2",
     "instances": 2,
-    "env": [
+    "environment_variables": [
       {
         "name": "LANG",
         "value": "en_US.UTF-8"
       }
     ],
-    "start_timeout_ms": 60000,
+    "start_timeout_ms": "60000",
     "disk_mb": 1024,
     "memory_mb": 1024,
     "cpu_weight": 10,
@@ -190,36 +189,31 @@ var _ = Describe("DesiredLRP", func() {
         "protocol": "all",
         "destinations": [
           "0.0.0.0-9.255.255.255"
-        ],
-        "log": false
+        ]
       },
       {
         "protocol": "all",
         "destinations": [
           "11.0.0.0-169.253.255.255"
-        ],
-        "log": false
+        ]
       },
       {
         "protocol": "all",
         "destinations": [
           "169.255.0.0-172.15.255.255"
-        ],
-        "log": false
+        ]
       },
       {
         "protocol": "all",
         "destinations": [
           "172.32.0.0-192.167.255.255"
-        ],
-        "log": false
+        ]
       },
       {
         "protocol": "all",
         "destinations": [
           "192.169.0.0-255.255.255.255"
-        ],
-        "log": false
+        ]
       },
       {
         "protocol": "tcp",
@@ -228,8 +222,7 @@ var _ = Describe("DesiredLRP", func() {
         ],
         "ports": [
           53
-        ],
-        "log": false
+        ]
       },
       {
         "protocol": "udp",
@@ -238,15 +231,13 @@ var _ = Describe("DesiredLRP", func() {
         ],
         "ports": [
           53
-        ],
-        "log": false
+        ]
       }
     ],
     "modification_tag": {
-      "epoch": "some-guid",
-      "index": 0
+      "epoch": "some-guid"
     },
-		"placement_tags": ["red-tag", "blue-tag"],
+		"PlacementTags": ["red-tag", "blue-tag"],
     "trusted_system_certificates_path": "/etc/cf-system-certificates",
     "network": {
 			"properties": {
@@ -263,7 +254,7 @@ var _ = Describe("DesiredLRP", func() {
 				{
 					"tcp_check": {
 						"port": 12345,
-						"connect_timeout_ms": 100
+						"connect_timeout_ms": "100"
 					}
 				}
 			],
@@ -293,7 +284,7 @@ var _ = Describe("DesiredLRP", func() {
 
 	BeforeEach(func() {
 		desiredLRP = models.DesiredLRP{}
-		err := json.Unmarshal([]byte(jsonDesiredLRP), &desiredLRP)
+		err := jsonpb.UnmarshalString(jsonDesiredLRP, &desiredLRP)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -312,7 +303,10 @@ var _ = Describe("DesiredLRP", func() {
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := json.Marshal(desiredLRP)
+			marshaler := jsonpb.Marshaler{
+				OrigName: true,
+			}
+			jsonSerialization, err := marshaler.MarshalToString(&desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(jsonDesiredLRP))
 
@@ -340,7 +334,9 @@ var _ = Describe("DesiredLRP", func() {
 	Describe("ApplyUpdate", func() {
 		It("updates instances", func() {
 			instances := int32(100)
-			update := &models.DesiredLRPUpdate{Instances: &instances}
+			update := &models.DesiredLRPUpdate{
+				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: instances},
+			}
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
@@ -369,7 +365,7 @@ var _ = Describe("DesiredLRP", func() {
 		It("allows annotation to be set", func() {
 			annotation := "new-annotation"
 			update := &models.DesiredLRPUpdate{
-				Annotation: &annotation,
+				OptionalAnnotation: &models.DesiredLRPUpdate_Annotation{Annotation: annotation},
 			}
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
@@ -385,7 +381,7 @@ var _ = Describe("DesiredLRP", func() {
 		It("allows empty annotation to be set", func() {
 			emptyAnnotation := ""
 			update := &models.DesiredLRPUpdate{
-				Annotation: &emptyAnnotation,
+				OptionalAnnotation: &models.DesiredLRPUpdate_Annotation{Annotation: emptyAnnotation},
 			}
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
@@ -1178,8 +1174,8 @@ var _ = Describe("DesiredLRPUpdate", func() {
 	BeforeEach(func() {
 		two := int32(2)
 		someText := "some-text"
-		desiredLRPUpdate.Instances = &two
-		desiredLRPUpdate.Annotation = &someText
+		desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: two}
+		desiredLRPUpdate.OptionalAnnotation = &models.DesiredLRPUpdate_Annotation{Annotation: someText}
 	})
 
 	Describe("Validate", func() {
@@ -1191,23 +1187,23 @@ var _ = Describe("DesiredLRPUpdate", func() {
 
 		It("requires a positive nonzero number of instances", func() {
 			minusOne := int32(-1)
-			desiredLRPUpdate.Instances = &minusOne
+			desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: minusOne}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "instances")
 
 			zero := int32(0)
-			desiredLRPUpdate.Instances = &zero
+			desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: zero}
 			validationErr := desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 
 			one := int32(1)
-			desiredLRPUpdate.Instances = &one
+			desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: one}
 			validationErr = desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 		})
 
 		It("limits the annotation length", func() {
 			largeString := randStringBytes(50000)
-			desiredLRPUpdate.Annotation = &largeString
+			desiredLRPUpdate.OptionalAnnotation = &models.DesiredLRPUpdate_Annotation{Annotation: largeString}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "annotation")
 		})
 	})

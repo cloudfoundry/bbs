@@ -225,12 +225,12 @@ func (db *SQLDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 
 		updateAttributes := helpers.SQLAttributes{"modification_tag_index": beforeDesiredLRP.ModificationTag.Index + 1}
 
-		if update.Annotation != nil {
-			updateAttributes["annotation"] = *update.Annotation
+		if _, ok := update.OptionalAnnotation.(*models.DesiredLRPUpdate_Annotation); ok {
+			updateAttributes["annotation"] = update.GetAnnotation()
 		}
 
-		if update.Instances != nil {
-			updateAttributes["instances"] = *update.Instances
+		if _, ok := update.OptionalInstances.(*models.DesiredLRPUpdate_Instances); ok {
+			updateAttributes["instances"] = update.GetInstances()
 		}
 
 		if update.Routes != nil {

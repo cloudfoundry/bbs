@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -26,6 +27,7 @@ var ErrInvalidActionType = errors.New("invalid action type")
 type ActionInterface interface {
 	ActionType() string
 	Validate() error
+	proto.Message
 }
 
 func (a *Action) GetValue() interface{} {

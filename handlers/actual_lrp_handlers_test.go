@@ -169,8 +169,9 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by instance index", func() {
 				BeforeEach(func() {
-					index := int32(1)
-					requestBody = &models.ActualLRPsRequest{Index: &index}
+					requestBody = &models.ActualLRPsRequest{
+						OptionalIndex: &models.ActualLRPsRequest_Index{Index: 1},
+					}
 				})
 
 				It("calls the DB with the index filter to retrieve the actual lrps", func() {
@@ -183,8 +184,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by multiple fields", func() {
 				BeforeEach(func() {
-					index := int32(2)
-					requestBody = &models.ActualLRPsRequest{Domain: "potato", CellId: "cellid-1", Index: &index, ProcessGuid: "process-guid-0"}
+					requestBody = &models.ActualLRPsRequest{
+						Domain:        "potato",
+						CellId:        "cellid-1",
+						OptionalIndex: &models.ActualLRPsRequest_Index{Index: 2},
+						ProcessGuid:   "process-guid-0",
+					}
 				})
 
 				It("call the DB with all provided filters to retrieve the actual lrps", func() {

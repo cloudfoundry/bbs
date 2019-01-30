@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 
 package models;
 
@@ -24,11 +24,11 @@ message ImageLayer {
     EXCLUSIVE        = 2 [(gogoproto.enumvalue_customname) = "LayerTypeExclusive"];
   }
 
-  optional string name                      = 1 [(gogoproto.jsontag) = "name,omitempty"];
-  optional string url                       = 2;
-  optional string destination_path          = 3;
-  optional Type layer_type                  = 4 [(gogoproto.jsontag) = "layer_type", (gogoproto.nullable) = false];
-  optional MediaType media_type             = 5 [(gogoproto.jsontag) = "media_type", (gogoproto.nullable) = false];
-  optional DigestAlgorithm digest_algorithm = 6 [(gogoproto.jsontag) = "digest_algorithm,omitempty", (gogoproto.nullable) = false];
-  optional string digest_value              = 7 [(gogoproto.jsontag) = "digest_value,omitempty"];
+  string name                      = 1 [(gogoproto.jsontag) = "name,omitempty"];
+  string url                       = 2;
+  string destination_path          = 3;
+  Type layer_type                  = 4 [(gogoproto.jsontag) = "layer_type"];
+  MediaType media_type             = 5 [(gogoproto.jsontag) = "media_type"];
+  DigestAlgorithm digest_algorithm = 6 [(gogoproto.jsontag) = "digest_algorithm,omitempty"];
+  string digest_value              = 7 [(gogoproto.jsontag) = "digest_value,omitempty"];
 }
