@@ -337,23 +337,20 @@ var _ = Describe("DesiredLRPDB", func() {
 			desiredLRPGuid := "desired-lrp-guid"
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
 			Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
-			instances := int32(1)
 			update = &models.DesiredLRPUpdate{
-				Instances: &instances,
+				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 1},
 			}
 		})
 
 		It("updates the lrp", func() {
-			instances := int32(123)
 			routeContent := []byte("{}")
 			routes := models.Routes{
 				"blah": (*json.RawMessage)(&routeContent),
 			}
-			annotation := "annotated"
 			update = &models.DesiredLRPUpdate{
-				Instances:  &instances,
-				Routes:     &routes,
-				Annotation: &annotation,
+				OptionalInstances:  &models.DesiredLRPUpdate_Instances{Instances: 123},
+				Routes:             &routes,
+				OptionalAnnotation: &models.DesiredLRPUpdate_Annotation{Annotation: "annotated"},
 			}
 			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
@@ -361,8 +358,8 @@ var _ = Describe("DesiredLRPDB", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedDesiredLRP.Instances = instances
-			expectedDesiredLRP.Annotation = annotation
+			expectedDesiredLRP.Instances = 123
+			expectedDesiredLRP.Annotation = "annotated"
 			expectedDesiredLRP.Routes = &routes
 			expectedDesiredLRP.ModificationTag.Increment()
 
@@ -370,9 +367,8 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("returns the desired lrp from before the update", func() {
-			instances := int32(20)
 			update = &models.DesiredLRPUpdate{
-				Instances: &instances,
+				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 20},
 			}
 
 			beforeDesiredLRP, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
@@ -381,9 +377,8 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("updates only the fields in the update parameter", func() {
-			instances := int32(20)
 			update = &models.DesiredLRPUpdate{
-				Instances: &instances,
+				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 20},
 			}
 			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
@@ -391,7 +386,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedDesiredLRP.Instances = instances
+			expectedDesiredLRP.Instances = 20
 			expectedDesiredLRP.ModificationTag.Increment()
 
 			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))

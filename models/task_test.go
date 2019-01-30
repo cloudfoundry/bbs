@@ -53,7 +53,7 @@ var _ = Describe("Task", func() {
 		"created_at": 1393371971000000000,
 		"updated_at": 1393371971000000010,
 		"first_completed_at": 1393371971000000030,
-		"state": "Pending",
+		"state": 1,
 		"annotation": "[{\"anything\": \"you want!\"}]... dude",
 		"network": {
 			"properties": {
@@ -74,8 +74,7 @@ var _ = Describe("Task", func() {
 			{
 				"protocol": "udp",
 				"destinations": ["8.8.0.0/16"],
-				"ports": [53],
-				"log": false
+				"ports": [53]
 			}
 		],
 		"completion_callback_url":"http://user:password@a.b.c/d/e/f",
@@ -85,14 +84,12 @@ var _ = Describe("Task", func() {
 		},
 		"image_username": "jake",
 		"image_password": "thedog",
-		"rejection_count": 0,
-		"rejection_reason": "",
 		"image_layers": [
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
-				"media_type": "TGZ",
-				"layer_type": "SHARED"
+				"media_type": 1,
+				"layer_type": 1
 			}
 		],
     "legacy_download_user": "some-user"

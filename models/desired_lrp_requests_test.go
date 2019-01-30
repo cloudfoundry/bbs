@@ -3,7 +3,6 @@ package models_test
 import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -105,7 +104,7 @@ var _ = Describe("DesiredLRP Requests", func() {
 				BeforeEach(func() {
 					minusOne := int32(-1)
 					request.Update = &models.DesiredLRPUpdate{
-						Instances: &minusOne,
+						OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: minusOne},
 					}
 				})
 

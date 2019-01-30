@@ -29,7 +29,12 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId, Index: request.Index, ProcessGuid: request.ProcessGuid}
+		var index *int32
+		if _, ok := request.OptionalIndex.(*models.ActualLRPsRequest_Index); ok {
+			i := request.GetIndex()
+			index = &i
+		}
+		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId, Index: index, ProcessGuid: request.ProcessGuid}
 		response.ActualLrps, err = h.db.ActualLRPs(logger, filter)
 	}
 

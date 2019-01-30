@@ -408,14 +408,14 @@ func NewDesiredLRPSchedulingInfo(
 }
 
 func (s *DesiredLRPSchedulingInfo) ApplyUpdate(update *DesiredLRPUpdate) {
-	if update.Instances != nil {
-		s.Instances = *update.Instances
+	if _, ok := update.GetOptionalInstances().(*DesiredLRPUpdate_Instances); ok {
+		s.Instances = update.GetInstances()
 	}
 	if update.Routes != nil {
 		s.Routes = *update.Routes
 	}
-	if update.Annotation != nil {
-		s.Annotation = *update.Annotation
+	if _, ok := update.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation); ok {
+		s.Annotation = update.GetAnnotation()
 	}
 	s.ModificationTag.Increment()
 }

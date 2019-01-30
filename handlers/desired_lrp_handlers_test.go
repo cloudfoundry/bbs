@@ -920,7 +920,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			afterDesiredLRP.Annotation = someText
 
 			update = &models.DesiredLRPUpdate{
-				Annotation: &someText,
+				OptionalAnnotation: &models.DesiredLRPUpdate_Annotation{Annotation: someText},
 			}
 			requestBody = &models.UpdateDesiredLRPRequest{
 				ProcessGuid: processGuid,
@@ -964,8 +964,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			Context("when the number of instances changes", func() {
 				BeforeEach(func() {
-					instances := int32(3)
-					update.Instances = &instances
+					update.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: 3}
 
 					desiredLRP := &models.DesiredLRP{
 						ProcessGuid:   "some-guid",

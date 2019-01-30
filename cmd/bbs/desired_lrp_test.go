@@ -8,10 +8,9 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/tedsuo/ifrit/ginkgomon"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
 var _ = Describe("DesiredLRP API", func() {
@@ -293,8 +292,9 @@ var _ = Describe("DesiredLRP API", func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
 			err := client.DesireLRP(logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
-			three := int32(3)
-			updateErr = client.UpdateDesiredLRP(logger, "super-lrp", &models.DesiredLRPUpdate{Instances: &three})
+			updateErr = client.UpdateDesiredLRP(logger, "super-lrp", &models.DesiredLRPUpdate{
+				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 3},
+			})
 		})
 
 		It("creates the desired LRP in the system", func() {

@@ -28,20 +28,20 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 type DesiredLRPSchedulingInfo struct {
-	DesiredLRPKey      `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,embedded=desired_lrp_key" json:""`
-	Annotation         string `protobuf:"bytes,2,opt,name=annotation" json:"annotation"`
-	Instances          int32  `protobuf:"varint,3,opt,name=instances" json:"instances"`
-	DesiredLRPResource `protobuf:"bytes,4,opt,name=desired_lrp_resource,json=desiredLrpResource,embedded=desired_lrp_resource" json:""`
-	Routes             Routes `protobuf:"bytes,5,opt,name=routes,customtype=Routes" json:"routes"`
-	ModificationTag    `protobuf:"bytes,6,opt,name=modification_tag,json=modificationTag,embedded=modification_tag" json:""`
-	VolumePlacement    *VolumePlacement `protobuf:"bytes,7,opt,name=volume_placement,json=volumePlacement" json:"volume_placement,omitempty"`
-	PlacementTags      []string         `protobuf:"bytes,8,rep,name=PlacementTags" json:"placement_tags,omitempty"`
+	DesiredLRPKey      `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,proto3,embedded=desired_lrp_key" json:""`
+	Annotation         string `protobuf:"bytes,2,opt,name=annotation,proto3" json:"annotation,omitempty"`
+	Instances          int32  `protobuf:"varint,3,opt,name=instances,proto3" json:"instances,omitempty"`
+	DesiredLRPResource `protobuf:"bytes,4,opt,name=desired_lrp_resource,json=desiredLrpResource,proto3,embedded=desired_lrp_resource" json:""`
+	Routes             Routes `protobuf:"bytes,5,opt,name=routes,proto3,customtype=Routes" json:"routes"`
+	ModificationTag    `protobuf:"bytes,6,opt,name=modification_tag,json=modificationTag,proto3,embedded=modification_tag" json:""`
+	VolumePlacement    *VolumePlacement `protobuf:"bytes,7,opt,name=volume_placement,json=volumePlacement,proto3" json:"volume_placement,omitempty"`
+	PlacementTags      []string         `protobuf:"bytes,8,rep,name=PlacementTags,proto3" json:"placement_tags,omitempty"`
 }
 
 func (m *DesiredLRPSchedulingInfo) Reset()      { *m = DesiredLRPSchedulingInfo{} }
 func (*DesiredLRPSchedulingInfo) ProtoMessage() {}
 func (*DesiredLRPSchedulingInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_desired_lrp_b60bac8a3fd404a2, []int{0}
+	return fileDescriptor_desired_lrp_e725bc1bf708218f, []int{0}
 }
 func (m *DesiredLRPSchedulingInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -99,37 +99,37 @@ func (m *DesiredLRPSchedulingInfo) GetPlacementTags() []string {
 }
 
 type DesiredLRPRunInfo struct {
-	DesiredLRPKey                 `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,embedded=desired_lrp_key" json:""`
-	EnvironmentVariables          []EnvironmentVariable      `protobuf:"bytes,2,rep,name=environment_variables,json=environmentVariables" json:"env"`
-	Setup                         *Action                    `protobuf:"bytes,3,opt,name=setup" json:"setup,omitempty"`
-	Action                        *Action                    `protobuf:"bytes,4,opt,name=action" json:"action,omitempty"`
-	Monitor                       *Action                    `protobuf:"bytes,5,opt,name=monitor" json:"monitor,omitempty"`
-	DeprecatedStartTimeoutS       uint32                     `protobuf:"varint,6,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS" json:"start_timeout,omitempty"` // Deprecated: Do not use.
-	Privileged                    bool                       `protobuf:"varint,7,opt,name=privileged" json:"privileged"`
-	CpuWeight                     uint32                     `protobuf:"varint,8,opt,name=cpu_weight,json=cpuWeight" json:"cpu_weight"`
-	Ports                         []uint32                   `protobuf:"varint,9,rep,name=ports" json:"ports,omitempty"`
-	EgressRules                   []SecurityGroupRule        `protobuf:"bytes,10,rep,name=egress_rules,json=egressRules" json:"egress_rules"`
-	LogSource                     string                     `protobuf:"bytes,11,opt,name=log_source,json=logSource" json:"log_source"`
-	MetricsGuid                   string                     `protobuf:"bytes,12,opt,name=metrics_guid,json=metricsGuid" json:"metrics_guid"` // Deprecated: Do not use.
-	CreatedAt                     int64                      `protobuf:"varint,13,opt,name=created_at,json=createdAt" json:"created_at"`
-	CachedDependencies            []*CachedDependency        `protobuf:"bytes,14,rep,name=cached_dependencies,json=cachedDependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                     `protobuf:"bytes,15,opt,name=legacy_download_user,json=legacyDownloadUser" json:"legacy_download_user,omitempty"` // Deprecated: Do not use.
-	TrustedSystemCertificatesPath string                     `protobuf:"bytes,16,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount             `protobuf:"bytes,17,rep,name=volume_mounts,json=volumeMounts" json:"volume_mounts,omitempty"`
-	Network                       *Network                   `protobuf:"bytes,18,opt,name=network" json:"network,omitempty"`
-	StartTimeoutMs                int64                      `protobuf:"varint,19,opt,name=start_timeout_ms,json=startTimeoutMs" json:"start_timeout_ms"`
-	CertificateProperties         *CertificateProperties     `protobuf:"bytes,20,opt,name=certificate_properties,json=certificateProperties" json:"certificate_properties,omitempty"`
-	ImageUsername                 string                     `protobuf:"bytes,21,opt,name=image_username,json=imageUsername" json:"image_username,omitempty"`
-	ImagePassword                 string                     `protobuf:"bytes,22,opt,name=image_password,json=imagePassword" json:"image_password,omitempty"`
-	CheckDefinition               *CheckDefinition           `protobuf:"bytes,23,opt,name=check_definition,json=checkDefinition" json:"check_definition,omitempty"`
-	ImageLayers                   []*ImageLayer              `protobuf:"bytes,24,rep,name=image_layers,json=imageLayers" json:"image_layers,omitempty"`
-	MetricTags                    map[string]*MetricTagValue `protobuf:"bytes,25,rep,name=metric_tags,json=metricTags" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	DesiredLRPKey                 `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,proto3,embedded=desired_lrp_key" json:""`
+	EnvironmentVariables          []EnvironmentVariable      `protobuf:"bytes,2,rep,name=environment_variables,json=environmentVariables,proto3" json:"env"`
+	Setup                         *Action                    `protobuf:"bytes,3,opt,name=setup,proto3" json:"setup,omitempty"`
+	Action                        *Action                    `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`
+	Monitor                       *Action                    `protobuf:"bytes,5,opt,name=monitor,proto3" json:"monitor,omitempty"`
+	DeprecatedStartTimeoutS       uint32                     `protobuf:"varint,6,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS,proto3" json:"start_timeout,omitempty"` // Deprecated: Do not use.
+	Privileged                    bool                       `protobuf:"varint,7,opt,name=privileged,proto3" json:"privileged,omitempty"`
+	CpuWeight                     uint32                     `protobuf:"varint,8,opt,name=cpu_weight,json=cpuWeight,proto3" json:"cpu_weight,omitempty"`
+	Ports                         []uint32                   `protobuf:"varint,9,rep,packed,name=ports,proto3" json:"ports,omitempty"`
+	EgressRules                   []SecurityGroupRule        `protobuf:"bytes,10,rep,name=egress_rules,json=egressRules,proto3" json:"egress_rules"`
+	LogSource                     string                     `protobuf:"bytes,11,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
+	MetricsGuid                   string                     `protobuf:"bytes,12,opt,name=metrics_guid,json=metricsGuid,proto3" json:"metrics_guid,omitempty"` // Deprecated: Do not use.
+	CreatedAt                     int64                      `protobuf:"varint,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CachedDependencies            []*CachedDependency        `protobuf:"bytes,14,rep,name=cached_dependencies,json=cachedDependencies,proto3" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                     `protobuf:"bytes,15,opt,name=legacy_download_user,json=legacyDownloadUser,proto3" json:"legacy_download_user,omitempty"` // Deprecated: Do not use.
+	TrustedSystemCertificatesPath string                     `protobuf:"bytes,16,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath,proto3" json:"trusted_system_certificates_path,omitempty"`
+	VolumeMounts                  []*VolumeMount             `protobuf:"bytes,17,rep,name=volume_mounts,json=volumeMounts,proto3" json:"volume_mounts,omitempty"`
+	Network                       *Network                   `protobuf:"bytes,18,opt,name=network,proto3" json:"network,omitempty"`
+	StartTimeoutMs                int64                      `protobuf:"varint,19,opt,name=start_timeout_ms,json=startTimeoutMs,proto3" json:"start_timeout_ms,omitempty"`
+	CertificateProperties         *CertificateProperties     `protobuf:"bytes,20,opt,name=certificate_properties,json=certificateProperties,proto3" json:"certificate_properties,omitempty"`
+	ImageUsername                 string                     `protobuf:"bytes,21,opt,name=image_username,json=imageUsername,proto3" json:"image_username,omitempty"`
+	ImagePassword                 string                     `protobuf:"bytes,22,opt,name=image_password,json=imagePassword,proto3" json:"image_password,omitempty"`
+	CheckDefinition               *CheckDefinition           `protobuf:"bytes,23,opt,name=check_definition,json=checkDefinition,proto3" json:"check_definition,omitempty"`
+	ImageLayers                   []*ImageLayer              `protobuf:"bytes,24,rep,name=image_layers,json=imageLayers,proto3" json:"image_layers,omitempty"`
+	MetricTags                    map[string]*MetricTagValue `protobuf:"bytes,25,rep,name=metric_tags,json=metricTags,proto3" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
 func (*DesiredLRPRunInfo) ProtoMessage() {}
 func (*DesiredLRPRunInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_desired_lrp_b60bac8a3fd404a2, []int{1}
+	return fileDescriptor_desired_lrp_e725bc1bf708218f, []int{1}
 }
 func (m *DesiredLRPRunInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -331,13 +331,13 @@ func (m *DesiredLRPRunInfo) GetMetricTags() map[string]*MetricTagValue {
 
 // helper message for marshalling routes
 type ProtoRoutes struct {
-	Routes map[string][]byte `protobuf:"bytes,1,rep,name=routes" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Routes map[string][]byte `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *ProtoRoutes) Reset()      { *m = ProtoRoutes{} }
 func (*ProtoRoutes) ProtoMessage() {}
 func (*ProtoRoutes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_desired_lrp_b60bac8a3fd404a2, []int{2}
+	return fileDescriptor_desired_lrp_e725bc1bf708218f, []int{2}
 }
 func (m *ProtoRoutes) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -374,15 +374,19 @@ func (m *ProtoRoutes) GetRoutes() map[string][]byte {
 }
 
 type DesiredLRPUpdate struct {
-	Instances  *int32  `protobuf:"varint,1,opt,name=instances" json:"instances,omitempty"`
-	Routes     *Routes `protobuf:"bytes,2,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
-	Annotation *string `protobuf:"bytes,3,opt,name=annotation" json:"annotation,omitempty"`
+	// Types that are valid to be assigned to OptionalInstances:
+	//	*DesiredLRPUpdate_Instances
+	OptionalInstances isDesiredLRPUpdate_OptionalInstances `protobuf_oneof:"optional_instances"`
+	Routes            *Routes                              `protobuf:"bytes,2,opt,name=routes,proto3,customtype=Routes" json:"routes,omitempty"`
+	// Types that are valid to be assigned to OptionalAnnotation:
+	//	*DesiredLRPUpdate_Annotation
+	OptionalAnnotation isDesiredLRPUpdate_OptionalAnnotation `protobuf_oneof:"optional_annotation"`
 }
 
 func (m *DesiredLRPUpdate) Reset()      { *m = DesiredLRPUpdate{} }
 func (*DesiredLRPUpdate) ProtoMessage() {}
 func (*DesiredLRPUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_desired_lrp_b60bac8a3fd404a2, []int{3}
+	return fileDescriptor_desired_lrp_e725bc1bf708218f, []int{3}
 }
 func (m *DesiredLRPUpdate) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -411,30 +415,143 @@ func (m *DesiredLRPUpdate) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPUpdate proto.InternalMessageInfo
 
+type isDesiredLRPUpdate_OptionalInstances interface {
+	isDesiredLRPUpdate_OptionalInstances()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+type isDesiredLRPUpdate_OptionalAnnotation interface {
+	isDesiredLRPUpdate_OptionalAnnotation()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type DesiredLRPUpdate_Instances struct {
+	Instances int32 `protobuf:"varint,1,opt,name=instances,proto3,oneof"`
+}
+type DesiredLRPUpdate_Annotation struct {
+	Annotation string `protobuf:"bytes,3,opt,name=annotation,proto3,oneof"`
+}
+
+func (*DesiredLRPUpdate_Instances) isDesiredLRPUpdate_OptionalInstances()   {}
+func (*DesiredLRPUpdate_Annotation) isDesiredLRPUpdate_OptionalAnnotation() {}
+
+func (m *DesiredLRPUpdate) GetOptionalInstances() isDesiredLRPUpdate_OptionalInstances {
+	if m != nil {
+		return m.OptionalInstances
+	}
+	return nil
+}
+func (m *DesiredLRPUpdate) GetOptionalAnnotation() isDesiredLRPUpdate_OptionalAnnotation {
+	if m != nil {
+		return m.OptionalAnnotation
+	}
+	return nil
+}
+
 func (m *DesiredLRPUpdate) GetInstances() int32 {
-	if m != nil && m.Instances != nil {
-		return *m.Instances
+	if x, ok := m.GetOptionalInstances().(*DesiredLRPUpdate_Instances); ok {
+		return x.Instances
 	}
 	return 0
 }
 
 func (m *DesiredLRPUpdate) GetAnnotation() string {
-	if m != nil && m.Annotation != nil {
-		return *m.Annotation
+	if x, ok := m.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation); ok {
+		return x.Annotation
 	}
 	return ""
 }
 
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*DesiredLRPUpdate) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _DesiredLRPUpdate_OneofMarshaler, _DesiredLRPUpdate_OneofUnmarshaler, _DesiredLRPUpdate_OneofSizer, []interface{}{
+		(*DesiredLRPUpdate_Instances)(nil),
+		(*DesiredLRPUpdate_Annotation)(nil),
+	}
+}
+
+func _DesiredLRPUpdate_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*DesiredLRPUpdate)
+	// optional_instances
+	switch x := m.OptionalInstances.(type) {
+	case *DesiredLRPUpdate_Instances:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.Instances))
+	case nil:
+	default:
+		return fmt.Errorf("DesiredLRPUpdate.OptionalInstances has unexpected type %T", x)
+	}
+	// optional_annotation
+	switch x := m.OptionalAnnotation.(type) {
+	case *DesiredLRPUpdate_Annotation:
+		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
+		_ = b.EncodeStringBytes(x.Annotation)
+	case nil:
+	default:
+		return fmt.Errorf("DesiredLRPUpdate.OptionalAnnotation has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _DesiredLRPUpdate_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*DesiredLRPUpdate)
+	switch tag {
+	case 1: // optional_instances.instances
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.OptionalInstances = &DesiredLRPUpdate_Instances{int32(x)}
+		return true, err
+	case 3: // optional_annotation.annotation
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeStringBytes()
+		m.OptionalAnnotation = &DesiredLRPUpdate_Annotation{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _DesiredLRPUpdate_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*DesiredLRPUpdate)
+	// optional_instances
+	switch x := m.OptionalInstances.(type) {
+	case *DesiredLRPUpdate_Instances:
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(x.Instances))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	// optional_annotation
+	switch x := m.OptionalAnnotation.(type) {
+	case *DesiredLRPUpdate_Annotation:
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(len(x.Annotation)))
+		n += len(x.Annotation)
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
 type DesiredLRPKey struct {
-	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid,json=processGuid" json:"process_guid"`
-	Domain      string `protobuf:"bytes,2,opt,name=domain" json:"domain"`
-	LogGuid     string `protobuf:"bytes,3,opt,name=log_guid,json=logGuid" json:"log_guid"`
+	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid,omitempty"`
+	Domain      string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	LogGuid     string `protobuf:"bytes,3,opt,name=log_guid,json=logGuid,proto3" json:"log_guid,omitempty"`
 }
 
 func (m *DesiredLRPKey) Reset()      { *m = DesiredLRPKey{} }
 func (*DesiredLRPKey) ProtoMessage() {}
 func (*DesiredLRPKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_desired_lrp_b60bac8a3fd404a2, []int{4}
+	return fileDescriptor_desired_lrp_e725bc1bf708218f, []int{4}
 }
 func (m *DesiredLRPKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -485,16 +602,16 @@ func (m *DesiredLRPKey) GetLogGuid() string {
 }
 
 type DesiredLRPResource struct {
-	MemoryMb int32  `protobuf:"varint,1,opt,name=memory_mb,json=memoryMb" json:"memory_mb"`
-	DiskMb   int32  `protobuf:"varint,2,opt,name=disk_mb,json=diskMb" json:"disk_mb"`
-	RootFs   string `protobuf:"bytes,3,opt,name=root_fs,json=rootFs" json:"rootfs"`
-	MaxPids  int32  `protobuf:"varint,4,opt,name=max_pids,json=maxPids" json:"max_pids"`
+	MemoryMb int32  `protobuf:"varint,1,opt,name=memory_mb,json=memoryMb,proto3" json:"memory_mb,omitempty"`
+	DiskMb   int32  `protobuf:"varint,2,opt,name=disk_mb,json=diskMb,proto3" json:"disk_mb,omitempty"`
+	RootFs   string `protobuf:"bytes,3,opt,name=root_fs,json=rootFs,proto3" json:"rootfs"`
+	MaxPids  int32  `protobuf:"varint,4,opt,name=max_pids,json=maxPids,proto3" json:"max_pids,omitempty"`
 }
 
 func (m *DesiredLRPResource) Reset()      { *m = DesiredLRPResource{} }
 func (*DesiredLRPResource) ProtoMessage() {}
 func (*DesiredLRPResource) Descriptor() ([]byte, []int) {
-	return fileDescriptor_desired_lrp_b60bac8a3fd404a2, []int{5}
+	return fileDescriptor_desired_lrp_e725bc1bf708218f, []int{5}
 }
 func (m *DesiredLRPResource) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -552,47 +669,47 @@ func (m *DesiredLRPResource) GetMaxPids() int32 {
 }
 
 type DesiredLRP struct {
-	ProcessGuid                   string                     `protobuf:"bytes,1,opt,name=process_guid,json=processGuid" json:"process_guid"`
-	Domain                        string                     `protobuf:"bytes,2,opt,name=domain" json:"domain"`
-	RootFs                        string                     `protobuf:"bytes,3,opt,name=root_fs,json=rootFs" json:"rootfs"`
-	Instances                     int32                      `protobuf:"varint,4,opt,name=instances" json:"instances"`
-	EnvironmentVariables          []*EnvironmentVariable     `protobuf:"bytes,5,rep,name=environment_variables,json=environmentVariables" json:"env"`
-	Setup                         *Action                    `protobuf:"bytes,6,opt,name=setup" json:"setup,omitempty"`
-	Action                        *Action                    `protobuf:"bytes,7,opt,name=action" json:"action,omitempty"`
-	StartTimeoutMs                int64                      `protobuf:"varint,27,opt,name=start_timeout_ms,json=startTimeoutMs" json:"start_timeout_ms"`
-	DeprecatedStartTimeoutS       uint32                     `protobuf:"varint,8,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS" json:"deprecated_timeout_ns,omitempty"` // Deprecated: Do not use.
-	Monitor                       *Action                    `protobuf:"bytes,9,opt,name=monitor" json:"monitor,omitempty"`
-	DiskMb                        int32                      `protobuf:"varint,10,opt,name=disk_mb,json=diskMb" json:"disk_mb"`
-	MemoryMb                      int32                      `protobuf:"varint,11,opt,name=memory_mb,json=memoryMb" json:"memory_mb"`
-	CpuWeight                     uint32                     `protobuf:"varint,12,opt,name=cpu_weight,json=cpuWeight" json:"cpu_weight"`
-	Privileged                    bool                       `protobuf:"varint,13,opt,name=privileged" json:"privileged"`
-	Ports                         []uint32                   `protobuf:"varint,14,rep,name=ports" json:"ports,omitempty"`
-	Routes                        *Routes                    `protobuf:"bytes,15,opt,name=routes,customtype=Routes" json:"routes,omitempty"`
-	LogSource                     string                     `protobuf:"bytes,16,opt,name=log_source,json=logSource" json:"log_source"`
-	LogGuid                       string                     `protobuf:"bytes,17,opt,name=log_guid,json=logGuid" json:"log_guid"`
-	MetricsGuid                   string                     `protobuf:"bytes,18,opt,name=metrics_guid,json=metricsGuid" json:"metrics_guid"` // Deprecated: Do not use.
-	Annotation                    string                     `protobuf:"bytes,19,opt,name=annotation" json:"annotation"`
-	EgressRules                   []*SecurityGroupRule       `protobuf:"bytes,20,rep,name=egress_rules,json=egressRules" json:"egress_rules,omitempty"`
-	ModificationTag               *ModificationTag           `protobuf:"bytes,21,opt,name=modification_tag,json=modificationTag" json:"modification_tag,omitempty"`
-	CachedDependencies            []*CachedDependency        `protobuf:"bytes,22,rep,name=cached_dependencies,json=cachedDependencies" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                     `protobuf:"bytes,23,opt,name=legacy_download_user,json=legacyDownloadUser" json:"legacy_download_user,omitempty"` // Deprecated: Do not use.
-	TrustedSystemCertificatesPath string                     `protobuf:"bytes,24,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount             `protobuf:"bytes,25,rep,name=volume_mounts,json=volumeMounts" json:"volume_mounts,omitempty"`
-	Network                       *Network                   `protobuf:"bytes,26,opt,name=network" json:"network,omitempty"`
-	PlacementTags                 []string                   `protobuf:"bytes,28,rep,name=PlacementTags" json:"placement_tags,omitempty"`
-	MaxPids                       int32                      `protobuf:"varint,29,opt,name=max_pids,json=maxPids" json:"max_pids"`
-	CertificateProperties         *CertificateProperties     `protobuf:"bytes,30,opt,name=certificate_properties,json=certificateProperties" json:"certificate_properties,omitempty"`
-	ImageUsername                 string                     `protobuf:"bytes,31,opt,name=image_username,json=imageUsername" json:"image_username,omitempty"`
-	ImagePassword                 string                     `protobuf:"bytes,32,opt,name=image_password,json=imagePassword" json:"image_password,omitempty"`
-	CheckDefinition               *CheckDefinition           `protobuf:"bytes,33,opt,name=check_definition,json=checkDefinition" json:"check_definition,omitempty"`
-	ImageLayers                   []*ImageLayer              `protobuf:"bytes,34,rep,name=image_layers,json=imageLayers" json:"image_layers,omitempty"`
-	MetricTags                    map[string]*MetricTagValue `protobuf:"bytes,35,rep,name=metric_tags,json=metricTags" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ProcessGuid                   string                     `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid,omitempty"`
+	Domain                        string                     `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	RootFs                        string                     `protobuf:"bytes,3,opt,name=root_fs,json=rootFs,proto3" json:"rootfs"`
+	Instances                     int32                      `protobuf:"varint,4,opt,name=instances,proto3" json:"instances,omitempty"`
+	EnvironmentVariables          []*EnvironmentVariable     `protobuf:"bytes,5,rep,name=environment_variables,json=environmentVariables,proto3" json:"env"`
+	Setup                         *Action                    `protobuf:"bytes,6,opt,name=setup,proto3" json:"setup,omitempty"`
+	Action                        *Action                    `protobuf:"bytes,7,opt,name=action,proto3" json:"action,omitempty"`
+	StartTimeoutMs                int64                      `protobuf:"varint,27,opt,name=start_timeout_ms,json=startTimeoutMs,proto3" json:"start_timeout_ms,omitempty"`
+	DeprecatedStartTimeoutS       uint32                     `protobuf:"varint,8,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS,proto3" json:"deprecated_timeout_ns,omitempty"` // Deprecated: Do not use.
+	Monitor                       *Action                    `protobuf:"bytes,9,opt,name=monitor,proto3" json:"monitor,omitempty"`
+	DiskMb                        int32                      `protobuf:"varint,10,opt,name=disk_mb,json=diskMb,proto3" json:"disk_mb,omitempty"`
+	MemoryMb                      int32                      `protobuf:"varint,11,opt,name=memory_mb,json=memoryMb,proto3" json:"memory_mb,omitempty"`
+	CpuWeight                     uint32                     `protobuf:"varint,12,opt,name=cpu_weight,json=cpuWeight,proto3" json:"cpu_weight,omitempty"`
+	Privileged                    bool                       `protobuf:"varint,13,opt,name=privileged,proto3" json:"privileged,omitempty"`
+	Ports                         []uint32                   `protobuf:"varint,14,rep,packed,name=ports,proto3" json:"ports,omitempty"`
+	Routes                        *Routes                    `protobuf:"bytes,15,opt,name=routes,proto3,customtype=Routes" json:"routes,omitempty"`
+	LogSource                     string                     `protobuf:"bytes,16,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`
+	LogGuid                       string                     `protobuf:"bytes,17,opt,name=log_guid,json=logGuid,proto3" json:"log_guid,omitempty"`
+	MetricsGuid                   string                     `protobuf:"bytes,18,opt,name=metrics_guid,json=metricsGuid,proto3" json:"metrics_guid,omitempty"` // Deprecated: Do not use.
+	Annotation                    string                     `protobuf:"bytes,19,opt,name=annotation,proto3" json:"annotation,omitempty"`
+	EgressRules                   []*SecurityGroupRule       `protobuf:"bytes,20,rep,name=egress_rules,json=egressRules,proto3" json:"egress_rules,omitempty"`
+	ModificationTag               *ModificationTag           `protobuf:"bytes,21,opt,name=modification_tag,json=modificationTag,proto3" json:"modification_tag,omitempty"`
+	CachedDependencies            []*CachedDependency        `protobuf:"bytes,22,rep,name=cached_dependencies,json=cachedDependencies,proto3" json:"cached_dependencies,omitempty"`
+	LegacyDownloadUser            string                     `protobuf:"bytes,23,opt,name=legacy_download_user,json=legacyDownloadUser,proto3" json:"legacy_download_user,omitempty"` // Deprecated: Do not use.
+	TrustedSystemCertificatesPath string                     `protobuf:"bytes,24,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath,proto3" json:"trusted_system_certificates_path,omitempty"`
+	VolumeMounts                  []*VolumeMount             `protobuf:"bytes,25,rep,name=volume_mounts,json=volumeMounts,proto3" json:"volume_mounts,omitempty"`
+	Network                       *Network                   `protobuf:"bytes,26,opt,name=network,proto3" json:"network,omitempty"`
+	PlacementTags                 []string                   `protobuf:"bytes,28,rep,name=PlacementTags,proto3" json:"placement_tags,omitempty"`
+	MaxPids                       int32                      `protobuf:"varint,29,opt,name=max_pids,json=maxPids,proto3" json:"max_pids,omitempty"`
+	CertificateProperties         *CertificateProperties     `protobuf:"bytes,30,opt,name=certificate_properties,json=certificateProperties,proto3" json:"certificate_properties,omitempty"`
+	ImageUsername                 string                     `protobuf:"bytes,31,opt,name=image_username,json=imageUsername,proto3" json:"image_username,omitempty"`
+	ImagePassword                 string                     `protobuf:"bytes,32,opt,name=image_password,json=imagePassword,proto3" json:"image_password,omitempty"`
+	CheckDefinition               *CheckDefinition           `protobuf:"bytes,33,opt,name=check_definition,json=checkDefinition,proto3" json:"check_definition,omitempty"`
+	ImageLayers                   []*ImageLayer              `protobuf:"bytes,34,rep,name=image_layers,json=imageLayers,proto3" json:"image_layers,omitempty"`
+	MetricTags                    map[string]*MetricTagValue `protobuf:"bytes,35,rep,name=metric_tags,json=metricTags,proto3" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
 func (*DesiredLRP) ProtoMessage() {}
 func (*DesiredLRP) Descriptor() ([]byte, []int) {
-	return fileDescriptor_desired_lrp_b60bac8a3fd404a2, []int{6}
+	return fileDescriptor_desired_lrp_e725bc1bf708218f, []int{6}
 }
 func (m *DesiredLRP) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1103,13 +1220,13 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Instances != nil && that1.Instances != nil {
-		if *this.Instances != *that1.Instances {
+	if that1.OptionalInstances == nil {
+		if this.OptionalInstances != nil {
 			return false
 		}
-	} else if this.Instances != nil {
+	} else if this.OptionalInstances == nil {
 		return false
-	} else if that1.Instances != nil {
+	} else if !this.OptionalInstances.Equal(that1.OptionalInstances) {
 		return false
 	}
 	if that1.Routes == nil {
@@ -1119,13 +1236,61 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	} else if !this.Routes.Equal(*that1.Routes) {
 		return false
 	}
-	if this.Annotation != nil && that1.Annotation != nil {
-		if *this.Annotation != *that1.Annotation {
+	if that1.OptionalAnnotation == nil {
+		if this.OptionalAnnotation != nil {
 			return false
 		}
-	} else if this.Annotation != nil {
+	} else if this.OptionalAnnotation == nil {
 		return false
-	} else if that1.Annotation != nil {
+	} else if !this.OptionalAnnotation.Equal(that1.OptionalAnnotation) {
+		return false
+	}
+	return true
+}
+func (this *DesiredLRPUpdate_Instances) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPUpdate_Instances)
+	if !ok {
+		that2, ok := that.(DesiredLRPUpdate_Instances)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Instances != that1.Instances {
+		return false
+	}
+	return true
+}
+func (this *DesiredLRPUpdate_Annotation) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPUpdate_Annotation)
+	if !ok {
+		that2, ok := that.(DesiredLRPUpdate_Annotation)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
 		return false
 	}
 	return true
@@ -1378,9 +1543,7 @@ func (this *DesiredLRPSchedulingInfo) GoString() string {
 	if this.VolumePlacement != nil {
 		s = append(s, "VolumePlacement: "+fmt.Sprintf("%#v", this.VolumePlacement)+",\n")
 	}
-	if this.PlacementTags != nil {
-		s = append(s, "PlacementTags: "+fmt.Sprintf("%#v", this.PlacementTags)+",\n")
-	}
+	s = append(s, "PlacementTags: "+fmt.Sprintf("%#v", this.PlacementTags)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1410,9 +1573,7 @@ func (this *DesiredLRPRunInfo) GoString() string {
 	s = append(s, "DeprecatedStartTimeoutS: "+fmt.Sprintf("%#v", this.DeprecatedStartTimeoutS)+",\n")
 	s = append(s, "Privileged: "+fmt.Sprintf("%#v", this.Privileged)+",\n")
 	s = append(s, "CpuWeight: "+fmt.Sprintf("%#v", this.CpuWeight)+",\n")
-	if this.Ports != nil {
-		s = append(s, "Ports: "+fmt.Sprintf("%#v", this.Ports)+",\n")
-	}
+	s = append(s, "Ports: "+fmt.Sprintf("%#v", this.Ports)+",\n")
 	if this.EgressRules != nil {
 		vs := make([]*SecurityGroupRule, len(this.EgressRules))
 		for i := range vs {
@@ -1490,17 +1651,31 @@ func (this *DesiredLRPUpdate) GoString() string {
 	}
 	s := make([]string, 0, 7)
 	s = append(s, "&models.DesiredLRPUpdate{")
-	if this.Instances != nil {
-		s = append(s, "Instances: "+valueToGoStringDesiredLrp(this.Instances, "int32")+",\n")
+	if this.OptionalInstances != nil {
+		s = append(s, "OptionalInstances: "+fmt.Sprintf("%#v", this.OptionalInstances)+",\n")
 	}
-	if this.Routes != nil {
-		s = append(s, "Routes: "+valueToGoStringDesiredLrp(this.Routes, "Routes")+",\n")
-	}
-	if this.Annotation != nil {
-		s = append(s, "Annotation: "+valueToGoStringDesiredLrp(this.Annotation, "string")+",\n")
+	s = append(s, "Routes: "+fmt.Sprintf("%#v", this.Routes)+",\n")
+	if this.OptionalAnnotation != nil {
+		s = append(s, "OptionalAnnotation: "+fmt.Sprintf("%#v", this.OptionalAnnotation)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
+}
+func (this *DesiredLRPUpdate_Instances) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPUpdate_Instances{` +
+		`Instances:` + fmt.Sprintf("%#v", this.Instances) + `}`}, ", ")
+	return s
+}
+func (this *DesiredLRPUpdate_Annotation) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.DesiredLRPUpdate_Annotation{` +
+		`Annotation:` + fmt.Sprintf("%#v", this.Annotation) + `}`}, ", ")
+	return s
 }
 func (this *DesiredLRPKey) GoString() string {
 	if this == nil {
@@ -1555,12 +1730,8 @@ func (this *DesiredLRP) GoString() string {
 	s = append(s, "MemoryMb: "+fmt.Sprintf("%#v", this.MemoryMb)+",\n")
 	s = append(s, "CpuWeight: "+fmt.Sprintf("%#v", this.CpuWeight)+",\n")
 	s = append(s, "Privileged: "+fmt.Sprintf("%#v", this.Privileged)+",\n")
-	if this.Ports != nil {
-		s = append(s, "Ports: "+fmt.Sprintf("%#v", this.Ports)+",\n")
-	}
-	if this.Routes != nil {
-		s = append(s, "Routes: "+valueToGoStringDesiredLrp(this.Routes, "Routes")+",\n")
-	}
+	s = append(s, "Ports: "+fmt.Sprintf("%#v", this.Ports)+",\n")
+	s = append(s, "Routes: "+fmt.Sprintf("%#v", this.Routes)+",\n")
 	s = append(s, "LogSource: "+fmt.Sprintf("%#v", this.LogSource)+",\n")
 	s = append(s, "LogGuid: "+fmt.Sprintf("%#v", this.LogGuid)+",\n")
 	s = append(s, "MetricsGuid: "+fmt.Sprintf("%#v", this.MetricsGuid)+",\n")
@@ -1582,9 +1753,7 @@ func (this *DesiredLRP) GoString() string {
 	if this.Network != nil {
 		s = append(s, "Network: "+fmt.Sprintf("%#v", this.Network)+",\n")
 	}
-	if this.PlacementTags != nil {
-		s = append(s, "PlacementTags: "+fmt.Sprintf("%#v", this.PlacementTags)+",\n")
-	}
+	s = append(s, "PlacementTags: "+fmt.Sprintf("%#v", this.PlacementTags)+",\n")
 	s = append(s, "MaxPids: "+fmt.Sprintf("%#v", this.MaxPids)+",\n")
 	if this.CertificateProperties != nil {
 		s = append(s, "CertificateProperties: "+fmt.Sprintf("%#v", this.CertificateProperties)+",\n")
@@ -1644,13 +1813,17 @@ func (m *DesiredLRPSchedulingInfo) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n1
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Annotation)))
-	i += copy(dAtA[i:], m.Annotation)
-	dAtA[i] = 0x18
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Instances))
+	if len(m.Annotation) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Annotation)))
+		i += copy(dAtA[i:], m.Annotation)
+	}
+	if m.Instances != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Instances))
+	}
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DesiredLRPResource.Size()))
@@ -1768,26 +1941,42 @@ func (m *DesiredLRPRunInfo) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n9
 	}
-	dAtA[i] = 0x30
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DeprecatedStartTimeoutS))
-	dAtA[i] = 0x38
-	i++
-	if m.Privileged {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
+	if m.DeprecatedStartTimeoutS != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DeprecatedStartTimeoutS))
 	}
-	i++
-	dAtA[i] = 0x40
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CpuWeight))
-	if len(m.Ports) > 0 {
-		for _, num := range m.Ports {
-			dAtA[i] = 0x48
-			i++
-			i = encodeVarintDesiredLrp(dAtA, i, uint64(num))
+	if m.Privileged {
+		dAtA[i] = 0x38
+		i++
+		if m.Privileged {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
 		}
+		i++
+	}
+	if m.CpuWeight != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CpuWeight))
+	}
+	if len(m.Ports) > 0 {
+		dAtA11 := make([]byte, len(m.Ports)*10)
+		var j10 int
+		for _, num := range m.Ports {
+			for num >= 1<<7 {
+				dAtA11[j10] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j10++
+			}
+			dAtA11[j10] = uint8(num)
+			j10++
+		}
+		dAtA[i] = 0x4a
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(j10))
+		i += copy(dAtA[i:], dAtA11[:j10])
 	}
 	if len(m.EgressRules) > 0 {
 		for _, msg := range m.EgressRules {
@@ -1801,17 +1990,23 @@ func (m *DesiredLRPRunInfo) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	dAtA[i] = 0x5a
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
-	dAtA[i] = 0x62
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.MetricsGuid)))
-	i += copy(dAtA[i:], m.MetricsGuid)
-	dAtA[i] = 0x68
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CreatedAt))
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
+	if len(m.MetricsGuid) > 0 {
+		dAtA[i] = 0x62
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.MetricsGuid)))
+		i += copy(dAtA[i:], m.MetricsGuid)
+	}
+	if m.CreatedAt != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CreatedAt))
+	}
 	if len(m.CachedDependencies) > 0 {
 		for _, msg := range m.CachedDependencies {
 			dAtA[i] = 0x72
@@ -1824,16 +2019,20 @@ func (m *DesiredLRPRunInfo) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	dAtA[i] = 0x7a
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LegacyDownloadUser)))
-	i += copy(dAtA[i:], m.LegacyDownloadUser)
-	dAtA[i] = 0x82
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.TrustedSystemCertificatesPath)))
-	i += copy(dAtA[i:], m.TrustedSystemCertificatesPath)
+	if len(m.LegacyDownloadUser) > 0 {
+		dAtA[i] = 0x7a
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LegacyDownloadUser)))
+		i += copy(dAtA[i:], m.LegacyDownloadUser)
+	}
+	if len(m.TrustedSystemCertificatesPath) > 0 {
+		dAtA[i] = 0x82
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.TrustedSystemCertificatesPath)))
+		i += copy(dAtA[i:], m.TrustedSystemCertificatesPath)
+	}
 	if len(m.VolumeMounts) > 0 {
 		for _, msg := range m.VolumeMounts {
 			dAtA[i] = 0x8a
@@ -1854,52 +2053,58 @@ func (m *DesiredLRPRunInfo) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Network.Size()))
-		n10, err := m.Network.MarshalTo(dAtA[i:])
+		n12, err := m.Network.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n12
 	}
-	dAtA[i] = 0x98
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.StartTimeoutMs))
+	if m.StartTimeoutMs != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.StartTimeoutMs))
+	}
 	if m.CertificateProperties != nil {
 		dAtA[i] = 0xa2
 		i++
 		dAtA[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CertificateProperties.Size()))
-		n11, err := m.CertificateProperties.MarshalTo(dAtA[i:])
+		n13, err := m.CertificateProperties.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n13
 	}
-	dAtA[i] = 0xaa
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImageUsername)))
-	i += copy(dAtA[i:], m.ImageUsername)
-	dAtA[i] = 0xb2
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImagePassword)))
-	i += copy(dAtA[i:], m.ImagePassword)
+	if len(m.ImageUsername) > 0 {
+		dAtA[i] = 0xaa
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImageUsername)))
+		i += copy(dAtA[i:], m.ImageUsername)
+	}
+	if len(m.ImagePassword) > 0 {
+		dAtA[i] = 0xb2
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImagePassword)))
+		i += copy(dAtA[i:], m.ImagePassword)
+	}
 	if m.CheckDefinition != nil {
 		dAtA[i] = 0xba
 		i++
 		dAtA[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CheckDefinition.Size()))
-		n12, err := m.CheckDefinition.MarshalTo(dAtA[i:])
+		n14, err := m.CheckDefinition.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n14
 	}
 	if len(m.ImageLayers) > 0 {
 		for _, msg := range m.ImageLayers {
@@ -1937,11 +2142,11 @@ func (m *DesiredLRPRunInfo) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintDesiredLrp(dAtA, i, uint64(v.Size()))
-				n13, err := v.MarshalTo(dAtA[i:])
+				n15, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n13
+				i += n15
 			}
 		}
 	}
@@ -1969,7 +2174,7 @@ func (m *ProtoRoutes) MarshalTo(dAtA []byte) (int, error) {
 			i++
 			v := m.Routes[k]
 			byteSize := 0
-			if v != nil {
+			if len(v) > 0 {
 				byteSize = 1 + len(v) + sovDesiredLrp(uint64(len(v)))
 			}
 			mapSize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + byteSize
@@ -1978,7 +2183,7 @@ func (m *ProtoRoutes) MarshalTo(dAtA []byte) (int, error) {
 			i++
 			i = encodeVarintDesiredLrp(dAtA, i, uint64(len(k)))
 			i += copy(dAtA[i:], k)
-			if v != nil {
+			if len(v) > 0 {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintDesiredLrp(dAtA, i, uint64(len(v)))
@@ -2004,30 +2209,48 @@ func (m *DesiredLRPUpdate) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Instances != nil {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintDesiredLrp(dAtA, i, uint64(*m.Instances))
+	if m.OptionalInstances != nil {
+		nn16, err := m.OptionalInstances.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn16
 	}
 	if m.Routes != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Routes.Size()))
-		n14, err := m.Routes.MarshalTo(dAtA[i:])
+		n17, err := m.Routes.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n17
 	}
-	if m.Annotation != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(*m.Annotation)))
-		i += copy(dAtA[i:], *m.Annotation)
+	if m.OptionalAnnotation != nil {
+		nn18, err := m.OptionalAnnotation.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn18
 	}
 	return i, nil
 }
 
+func (m *DesiredLRPUpdate_Instances) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Instances))
+	return i, nil
+}
+func (m *DesiredLRPUpdate_Annotation) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Annotation)))
+	i += copy(dAtA[i:], m.Annotation)
+	return i, nil
+}
 func (m *DesiredLRPKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2043,18 +2266,24 @@ func (m *DesiredLRPKey) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ProcessGuid)))
-	i += copy(dAtA[i:], m.ProcessGuid)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Domain)))
-	i += copy(dAtA[i:], m.Domain)
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogGuid)))
-	i += copy(dAtA[i:], m.LogGuid)
+	if len(m.ProcessGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ProcessGuid)))
+		i += copy(dAtA[i:], m.ProcessGuid)
+	}
+	if len(m.Domain) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Domain)))
+		i += copy(dAtA[i:], m.Domain)
+	}
+	if len(m.LogGuid) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogGuid)))
+		i += copy(dAtA[i:], m.LogGuid)
+	}
 	return i, nil
 }
 
@@ -2073,19 +2302,27 @@ func (m *DesiredLRPResource) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0x8
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MemoryMb))
-	dAtA[i] = 0x10
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DiskMb))
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.RootFs)))
-	i += copy(dAtA[i:], m.RootFs)
-	dAtA[i] = 0x20
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MaxPids))
+	if m.MemoryMb != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MemoryMb))
+	}
+	if m.DiskMb != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DiskMb))
+	}
+	if len(m.RootFs) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.RootFs)))
+		i += copy(dAtA[i:], m.RootFs)
+	}
+	if m.MaxPids != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MaxPids))
+	}
 	return i, nil
 }
 
@@ -2104,21 +2341,29 @@ func (m *DesiredLRP) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ProcessGuid)))
-	i += copy(dAtA[i:], m.ProcessGuid)
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Domain)))
-	i += copy(dAtA[i:], m.Domain)
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.RootFs)))
-	i += copy(dAtA[i:], m.RootFs)
-	dAtA[i] = 0x20
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Instances))
+	if len(m.ProcessGuid) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ProcessGuid)))
+		i += copy(dAtA[i:], m.ProcessGuid)
+	}
+	if len(m.Domain) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Domain)))
+		i += copy(dAtA[i:], m.Domain)
+	}
+	if len(m.RootFs) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.RootFs)))
+		i += copy(dAtA[i:], m.RootFs)
+	}
+	if m.Instances != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Instances))
+	}
 	if len(m.EnvironmentVariables) > 0 {
 		for _, msg := range m.EnvironmentVariables {
 			dAtA[i] = 0x2a
@@ -2135,93 +2380,121 @@ func (m *DesiredLRP) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x32
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Setup.Size()))
-		n15, err := m.Setup.MarshalTo(dAtA[i:])
+		n19, err := m.Setup.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n15
+		i += n19
 	}
 	if m.Action != nil {
 		dAtA[i] = 0x3a
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Action.Size()))
-		n16, err := m.Action.MarshalTo(dAtA[i:])
+		n20, err := m.Action.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n16
+		i += n20
 	}
-	dAtA[i] = 0x40
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DeprecatedStartTimeoutS))
+	if m.DeprecatedStartTimeoutS != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DeprecatedStartTimeoutS))
+	}
 	if m.Monitor != nil {
 		dAtA[i] = 0x4a
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Monitor.Size()))
-		n17, err := m.Monitor.MarshalTo(dAtA[i:])
+		n21, err := m.Monitor.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n17
+		i += n21
 	}
-	dAtA[i] = 0x50
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DiskMb))
-	dAtA[i] = 0x58
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MemoryMb))
-	dAtA[i] = 0x60
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CpuWeight))
-	dAtA[i] = 0x68
-	i++
+	if m.DiskMb != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.DiskMb))
+	}
+	if m.MemoryMb != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MemoryMb))
+	}
+	if m.CpuWeight != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CpuWeight))
+	}
 	if m.Privileged {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i++
-	if len(m.Ports) > 0 {
-		for _, num := range m.Ports {
-			dAtA[i] = 0x70
-			i++
-			i = encodeVarintDesiredLrp(dAtA, i, uint64(num))
+		dAtA[i] = 0x68
+		i++
+		if m.Privileged {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
 		}
+		i++
+	}
+	if len(m.Ports) > 0 {
+		dAtA23 := make([]byte, len(m.Ports)*10)
+		var j22 int
+		for _, num := range m.Ports {
+			for num >= 1<<7 {
+				dAtA23[j22] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j22++
+			}
+			dAtA23[j22] = uint8(num)
+			j22++
+		}
+		dAtA[i] = 0x72
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(j22))
+		i += copy(dAtA[i:], dAtA23[:j22])
 	}
 	if m.Routes != nil {
 		dAtA[i] = 0x7a
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Routes.Size()))
-		n18, err := m.Routes.MarshalTo(dAtA[i:])
+		n24, err := m.Routes.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n18
+		i += n24
 	}
-	dAtA[i] = 0x82
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogSource)))
-	i += copy(dAtA[i:], m.LogSource)
-	dAtA[i] = 0x8a
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogGuid)))
-	i += copy(dAtA[i:], m.LogGuid)
-	dAtA[i] = 0x92
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.MetricsGuid)))
-	i += copy(dAtA[i:], m.MetricsGuid)
-	dAtA[i] = 0x9a
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Annotation)))
-	i += copy(dAtA[i:], m.Annotation)
+	if len(m.LogSource) > 0 {
+		dAtA[i] = 0x82
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogSource)))
+		i += copy(dAtA[i:], m.LogSource)
+	}
+	if len(m.LogGuid) > 0 {
+		dAtA[i] = 0x8a
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LogGuid)))
+		i += copy(dAtA[i:], m.LogGuid)
+	}
+	if len(m.MetricsGuid) > 0 {
+		dAtA[i] = 0x92
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.MetricsGuid)))
+		i += copy(dAtA[i:], m.MetricsGuid)
+	}
+	if len(m.Annotation) > 0 {
+		dAtA[i] = 0x9a
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Annotation)))
+		i += copy(dAtA[i:], m.Annotation)
+	}
 	if len(m.EgressRules) > 0 {
 		for _, msg := range m.EgressRules {
 			dAtA[i] = 0xa2
@@ -2242,11 +2515,11 @@ func (m *DesiredLRP) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.ModificationTag.Size()))
-		n19, err := m.ModificationTag.MarshalTo(dAtA[i:])
+		n25, err := m.ModificationTag.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n19
+		i += n25
 	}
 	if len(m.CachedDependencies) > 0 {
 		for _, msg := range m.CachedDependencies {
@@ -2262,18 +2535,22 @@ func (m *DesiredLRP) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	dAtA[i] = 0xba
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LegacyDownloadUser)))
-	i += copy(dAtA[i:], m.LegacyDownloadUser)
-	dAtA[i] = 0xc2
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.TrustedSystemCertificatesPath)))
-	i += copy(dAtA[i:], m.TrustedSystemCertificatesPath)
+	if len(m.LegacyDownloadUser) > 0 {
+		dAtA[i] = 0xba
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.LegacyDownloadUser)))
+		i += copy(dAtA[i:], m.LegacyDownloadUser)
+	}
+	if len(m.TrustedSystemCertificatesPath) > 0 {
+		dAtA[i] = 0xc2
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.TrustedSystemCertificatesPath)))
+		i += copy(dAtA[i:], m.TrustedSystemCertificatesPath)
+	}
 	if len(m.VolumeMounts) > 0 {
 		for _, msg := range m.VolumeMounts {
 			dAtA[i] = 0xca
@@ -2294,17 +2571,19 @@ func (m *DesiredLRP) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Network.Size()))
-		n20, err := m.Network.MarshalTo(dAtA[i:])
+		n26, err := m.Network.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n20
+		i += n26
 	}
-	dAtA[i] = 0xd8
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.StartTimeoutMs))
+	if m.StartTimeoutMs != 0 {
+		dAtA[i] = 0xd8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.StartTimeoutMs))
+	}
 	if len(m.PlacementTags) > 0 {
 		for _, s := range m.PlacementTags {
 			dAtA[i] = 0xe2
@@ -2322,46 +2601,52 @@ func (m *DesiredLRP) MarshalTo(dAtA []byte) (int, error) {
 			i += copy(dAtA[i:], s)
 		}
 	}
-	dAtA[i] = 0xe8
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MaxPids))
+	if m.MaxPids != 0 {
+		dAtA[i] = 0xe8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.MaxPids))
+	}
 	if m.CertificateProperties != nil {
 		dAtA[i] = 0xf2
 		i++
 		dAtA[i] = 0x1
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CertificateProperties.Size()))
-		n21, err := m.CertificateProperties.MarshalTo(dAtA[i:])
+		n27, err := m.CertificateProperties.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n21
+		i += n27
 	}
-	dAtA[i] = 0xfa
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImageUsername)))
-	i += copy(dAtA[i:], m.ImageUsername)
-	dAtA[i] = 0x82
-	i++
-	dAtA[i] = 0x2
-	i++
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImagePassword)))
-	i += copy(dAtA[i:], m.ImagePassword)
+	if len(m.ImageUsername) > 0 {
+		dAtA[i] = 0xfa
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImageUsername)))
+		i += copy(dAtA[i:], m.ImageUsername)
+	}
+	if len(m.ImagePassword) > 0 {
+		dAtA[i] = 0x82
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.ImagePassword)))
+		i += copy(dAtA[i:], m.ImagePassword)
+	}
 	if m.CheckDefinition != nil {
 		dAtA[i] = 0x8a
 		i++
 		dAtA[i] = 0x2
 		i++
 		i = encodeVarintDesiredLrp(dAtA, i, uint64(m.CheckDefinition.Size()))
-		n22, err := m.CheckDefinition.MarshalTo(dAtA[i:])
+		n28, err := m.CheckDefinition.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n22
+		i += n28
 	}
 	if len(m.ImageLayers) > 0 {
 		for _, msg := range m.ImageLayers {
@@ -2399,11 +2684,11 @@ func (m *DesiredLRP) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintDesiredLrp(dAtA, i, uint64(v.Size()))
-				n23, err := v.MarshalTo(dAtA[i:])
+				n29, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n23
+				i += n29
 			}
 		}
 	}
@@ -2428,8 +2713,12 @@ func (m *DesiredLRPSchedulingInfo) Size() (n int) {
 	l = m.DesiredLRPKey.Size()
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	l = len(m.Annotation)
-	n += 1 + l + sovDesiredLrp(uint64(l))
-	n += 1 + sovDesiredLrp(uint64(m.Instances))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.Instances != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.Instances))
+	}
 	l = m.DesiredLRPResource.Size()
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	l = m.Routes.Size()
@@ -2475,13 +2764,21 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		l = m.Monitor.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
-	n += 1 + sovDesiredLrp(uint64(m.DeprecatedStartTimeoutS))
-	n += 2
-	n += 1 + sovDesiredLrp(uint64(m.CpuWeight))
+	if m.DeprecatedStartTimeoutS != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.DeprecatedStartTimeoutS))
+	}
+	if m.Privileged {
+		n += 2
+	}
+	if m.CpuWeight != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.CpuWeight))
+	}
 	if len(m.Ports) > 0 {
+		l = 0
 		for _, e := range m.Ports {
-			n += 1 + sovDesiredLrp(uint64(e))
+			l += sovDesiredLrp(uint64(e))
 		}
+		n += 1 + sovDesiredLrp(uint64(l)) + l
 	}
 	if len(m.EgressRules) > 0 {
 		for _, e := range m.EgressRules {
@@ -2490,10 +2787,16 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		}
 	}
 	l = len(m.LogSource)
-	n += 1 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.MetricsGuid)
-	n += 1 + l + sovDesiredLrp(uint64(l))
-	n += 1 + sovDesiredLrp(uint64(m.CreatedAt))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.CreatedAt != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.CreatedAt))
+	}
 	if len(m.CachedDependencies) > 0 {
 		for _, e := range m.CachedDependencies {
 			l = e.Size()
@@ -2501,9 +2804,13 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		}
 	}
 	l = len(m.LegacyDownloadUser)
-	n += 1 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.TrustedSystemCertificatesPath)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	if len(m.VolumeMounts) > 0 {
 		for _, e := range m.VolumeMounts {
 			l = e.Size()
@@ -2514,15 +2821,21 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 		l = m.Network.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
-	n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	if m.StartTimeoutMs != 0 {
+		n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	}
 	if m.CertificateProperties != nil {
 		l = m.CertificateProperties.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
 	l = len(m.ImageUsername)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.ImagePassword)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	if m.CheckDefinition != nil {
 		l = m.CheckDefinition.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
@@ -2560,7 +2873,7 @@ func (m *ProtoRoutes) Size() (n int) {
 			_ = k
 			_ = v
 			l = 0
-			if v != nil {
+			if len(v) > 0 {
 				l = 1 + len(v) + sovDesiredLrp(uint64(len(v)))
 			}
 			mapEntrySize := 1 + len(k) + sovDesiredLrp(uint64(len(k))) + l
@@ -2576,20 +2889,38 @@ func (m *DesiredLRPUpdate) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Instances != nil {
-		n += 1 + sovDesiredLrp(uint64(*m.Instances))
+	if m.OptionalInstances != nil {
+		n += m.OptionalInstances.Size()
 	}
 	if m.Routes != nil {
 		l = m.Routes.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
-	if m.Annotation != nil {
-		l = len(*m.Annotation)
-		n += 1 + l + sovDesiredLrp(uint64(l))
+	if m.OptionalAnnotation != nil {
+		n += m.OptionalAnnotation.Size()
 	}
 	return n
 }
 
+func (m *DesiredLRPUpdate_Instances) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovDesiredLrp(uint64(m.Instances))
+	return n
+}
+func (m *DesiredLRPUpdate_Annotation) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Annotation)
+	n += 1 + l + sovDesiredLrp(uint64(l))
+	return n
+}
 func (m *DesiredLRPKey) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2597,11 +2928,17 @@ func (m *DesiredLRPKey) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.ProcessGuid)
-	n += 1 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.Domain)
-	n += 1 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.LogGuid)
-	n += 1 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
 	return n
 }
 
@@ -2611,11 +2948,19 @@ func (m *DesiredLRPResource) Size() (n int) {
 	}
 	var l int
 	_ = l
-	n += 1 + sovDesiredLrp(uint64(m.MemoryMb))
-	n += 1 + sovDesiredLrp(uint64(m.DiskMb))
+	if m.MemoryMb != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.MemoryMb))
+	}
+	if m.DiskMb != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.DiskMb))
+	}
 	l = len(m.RootFs)
-	n += 1 + l + sovDesiredLrp(uint64(l))
-	n += 1 + sovDesiredLrp(uint64(m.MaxPids))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.MaxPids != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.MaxPids))
+	}
 	return n
 }
 
@@ -2626,12 +2971,20 @@ func (m *DesiredLRP) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.ProcessGuid)
-	n += 1 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.Domain)
-	n += 1 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.RootFs)
-	n += 1 + l + sovDesiredLrp(uint64(l))
-	n += 1 + sovDesiredLrp(uint64(m.Instances))
+	if l > 0 {
+		n += 1 + l + sovDesiredLrp(uint64(l))
+	}
+	if m.Instances != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.Instances))
+	}
 	if len(m.EnvironmentVariables) > 0 {
 		for _, e := range m.EnvironmentVariables {
 			l = e.Size()
@@ -2646,32 +2999,52 @@ func (m *DesiredLRP) Size() (n int) {
 		l = m.Action.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
-	n += 1 + sovDesiredLrp(uint64(m.DeprecatedStartTimeoutS))
+	if m.DeprecatedStartTimeoutS != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.DeprecatedStartTimeoutS))
+	}
 	if m.Monitor != nil {
 		l = m.Monitor.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
-	n += 1 + sovDesiredLrp(uint64(m.DiskMb))
-	n += 1 + sovDesiredLrp(uint64(m.MemoryMb))
-	n += 1 + sovDesiredLrp(uint64(m.CpuWeight))
-	n += 2
+	if m.DiskMb != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.DiskMb))
+	}
+	if m.MemoryMb != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.MemoryMb))
+	}
+	if m.CpuWeight != 0 {
+		n += 1 + sovDesiredLrp(uint64(m.CpuWeight))
+	}
+	if m.Privileged {
+		n += 2
+	}
 	if len(m.Ports) > 0 {
+		l = 0
 		for _, e := range m.Ports {
-			n += 1 + sovDesiredLrp(uint64(e))
+			l += sovDesiredLrp(uint64(e))
 		}
+		n += 1 + sovDesiredLrp(uint64(l)) + l
 	}
 	if m.Routes != nil {
 		l = m.Routes.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
 	l = len(m.LogSource)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.LogGuid)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.MetricsGuid)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.Annotation)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	if len(m.EgressRules) > 0 {
 		for _, e := range m.EgressRules {
 			l = e.Size()
@@ -2689,9 +3062,13 @@ func (m *DesiredLRP) Size() (n int) {
 		}
 	}
 	l = len(m.LegacyDownloadUser)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.TrustedSystemCertificatesPath)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	if len(m.VolumeMounts) > 0 {
 		for _, e := range m.VolumeMounts {
 			l = e.Size()
@@ -2702,22 +3079,30 @@ func (m *DesiredLRP) Size() (n int) {
 		l = m.Network.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
-	n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	if m.StartTimeoutMs != 0 {
+		n += 2 + sovDesiredLrp(uint64(m.StartTimeoutMs))
+	}
 	if len(m.PlacementTags) > 0 {
 		for _, s := range m.PlacementTags {
 			l = len(s)
 			n += 2 + l + sovDesiredLrp(uint64(l))
 		}
 	}
-	n += 2 + sovDesiredLrp(uint64(m.MaxPids))
+	if m.MaxPids != 0 {
+		n += 2 + sovDesiredLrp(uint64(m.MaxPids))
+	}
 	if m.CertificateProperties != nil {
 		l = m.CertificateProperties.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
 	}
 	l = len(m.ImageUsername)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	l = len(m.ImagePassword)
-	n += 2 + l + sovDesiredLrp(uint64(l))
+	if l > 0 {
+		n += 2 + l + sovDesiredLrp(uint64(l))
+	}
 	if m.CheckDefinition != nil {
 		l = m.CheckDefinition.Size()
 		n += 2 + l + sovDesiredLrp(uint64(l))
@@ -2843,9 +3228,29 @@ func (this *DesiredLRPUpdate) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&DesiredLRPUpdate{`,
-		`Instances:` + valueToStringDesiredLrp(this.Instances) + `,`,
-		`Routes:` + valueToStringDesiredLrp(this.Routes) + `,`,
-		`Annotation:` + valueToStringDesiredLrp(this.Annotation) + `,`,
+		`OptionalInstances:` + fmt.Sprintf("%v", this.OptionalInstances) + `,`,
+		`Routes:` + fmt.Sprintf("%v", this.Routes) + `,`,
+		`OptionalAnnotation:` + fmt.Sprintf("%v", this.OptionalAnnotation) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPUpdate_Instances) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPUpdate_Instances{`,
+		`Instances:` + fmt.Sprintf("%v", this.Instances) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DesiredLRPUpdate_Annotation) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DesiredLRPUpdate_Annotation{`,
+		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2904,7 +3309,7 @@ func (this *DesiredLRP) String() string {
 		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
 		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
 		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
-		`Routes:` + valueToStringDesiredLrp(this.Routes) + `,`,
+		`Routes:` + fmt.Sprintf("%v", this.Routes) + `,`,
 		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
 		`LogGuid:` + fmt.Sprintf("%v", this.LogGuid) + `,`,
 		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
@@ -4333,7 +4738,7 @@ func (m *DesiredLRPUpdate) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.Instances = &v
+			m.OptionalInstances = &DesiredLRPUpdate_Instances{v}
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Routes", wireType)
@@ -4394,8 +4799,7 @@ func (m *DesiredLRPUpdate) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			s := string(dAtA[iNdEx:postIndex])
-			m.Annotation = &s
+			m.OptionalAnnotation = &DesiredLRPUpdate_Annotation{string(dAtA[iNdEx:postIndex])}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5962,114 +6366,115 @@ var (
 	ErrIntOverflowDesiredLrp   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("desired_lrp.proto", fileDescriptor_desired_lrp_b60bac8a3fd404a2) }
+func init() { proto.RegisterFile("desired_lrp.proto", fileDescriptor_desired_lrp_e725bc1bf708218f) }
 
-var fileDescriptor_desired_lrp_b60bac8a3fd404a2 = []byte{
-	// 1683 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0x4f, 0x6f, 0xdb, 0xc8,
-	0x15, 0x17, 0xad, 0x58, 0xb2, 0x47, 0x92, 0xff, 0x8c, 0xff, 0x4d, 0x94, 0x98, 0x52, 0xb4, 0x8b,
-	0xae, 0x52, 0x6c, 0xbd, 0x80, 0xd1, 0xa2, 0x45, 0xdb, 0x43, 0x57, 0x49, 0x1a, 0x6c, 0x13, 0x17,
-	0x06, 0x9d, 0xa4, 0x68, 0x8b, 0x96, 0xa0, 0xc9, 0x31, 0x4d, 0x84, 0xe4, 0x10, 0x33, 0x43, 0x79,
-	0x85, 0x02, 0x45, 0xbf, 0x40, 0x81, 0xde, 0xda, 0xde, 0x7a, 0xec, 0x07, 0xe9, 0x61, 0x8f, 0x3e,
-	0x2e, 0x7a, 0x10, 0x1a, 0xe7, 0x52, 0xf8, 0xb4, 0x1f, 0xa1, 0x98, 0xe1, 0x50, 0x1a, 0x4a, 0xb4,
-	0xe3, 0x05, 0xdc, 0xe4, 0x24, 0xcd, 0x7b, 0xbf, 0xf7, 0xe6, 0xcd, 0xcc, 0xfb, 0xf3, 0x23, 0x58,
-	0xf7, 0x30, 0x0b, 0x28, 0xf6, 0xec, 0x90, 0x26, 0x7b, 0x09, 0x25, 0x9c, 0xc0, 0x5a, 0x44, 0x3c,
-	0x1c, 0xb2, 0xf6, 0xf7, 0xfc, 0x80, 0x9f, 0xa6, 0xc7, 0x7b, 0x2e, 0x89, 0x3e, 0xf3, 0x89, 0x4f,
-	0x3e, 0x93, 0xea, 0xe3, 0xf4, 0x44, 0xae, 0xe4, 0x42, 0xfe, 0xcb, 0xcc, 0xda, 0x2d, 0xc7, 0xe5,
-	0x01, 0x89, 0x99, 0x5a, 0xee, 0xb8, 0x8e, 0x7b, 0x8a, 0x3d, 0xdb, 0xc3, 0x09, 0x8e, 0x3d, 0x1c,
-	0xbb, 0x23, 0xa5, 0xb8, 0xef, 0x62, 0xca, 0x83, 0x93, 0xc0, 0x75, 0x38, 0xb6, 0x13, 0x4a, 0x12,
-	0xb1, 0xc4, 0xb9, 0xd9, 0x3d, 0x1c, 0x0f, 0x03, 0x4a, 0xe2, 0x08, 0xc7, 0xdc, 0x1e, 0x3a, 0x34,
-	0x70, 0x8e, 0xc3, 0x89, 0x72, 0x3b, 0x22, 0x5e, 0x66, 0x19, 0x90, 0xd8, 0xe6, 0x8e, 0x9f, 0x6f,
-	0x1d, 0x63, 0x7e, 0x46, 0xe8, 0x6b, 0xb5, 0xdc, 0x64, 0xd8, 0x4d, 0x69, 0xc0, 0x47, 0xb6, 0x4f,
-	0x49, 0xaa, 0x8e, 0xd5, 0x86, 0x43, 0x12, 0xa6, 0x11, 0xb6, 0x23, 0x92, 0xc6, 0x3c, 0x77, 0xe8,
-	0x9e, 0x62, 0xf7, 0xb5, 0xed, 0xe1, 0x93, 0x20, 0x0e, 0x84, 0x53, 0x25, 0x5f, 0x0f, 0x22, 0xc7,
-	0xc7, 0x76, 0xe8, 0x8c, 0x30, 0xcd, 0x45, 0x11, 0xe6, 0x34, 0x70, 0xc5, 0xae, 0x2a, 0x9c, 0xde,
-	0xbf, 0xee, 0x00, 0xf4, 0x38, 0xbb, 0xbe, 0xe7, 0xd6, 0xe1, 0x91, 0x38, 0x6e, 0x1a, 0x06, 0xb1,
-	0xff, 0x45, 0x7c, 0x42, 0xe0, 0x33, 0xb0, 0xaa, 0x5d, 0xad, 0xfd, 0x1a, 0x8f, 0x90, 0xd1, 0x35,
-	0xfa, 0x8d, 0xfd, 0xad, 0xbd, 0xec, 0x7e, 0xf7, 0xa6, 0xa6, 0xcf, 0xf0, 0x68, 0xd0, 0xfc, 0x6a,
-	0xdc, 0xa9, 0x9c, 0x8f, 0x3b, 0xc6, 0xe5, 0xb8, 0x53, 0xb1, 0x5a, 0xca, 0xf6, 0x39, 0x4d, 0x9e,
-	0xe1, 0x11, 0xfc, 0x18, 0x00, 0x27, 0x8e, 0x09, 0x97, 0x07, 0x47, 0x0b, 0x5d, 0xa3, 0xbf, 0x3c,
-	0xb8, 0x23, 0x0c, 0x2c, 0x4d, 0x0e, 0x7b, 0x60, 0x39, 0x88, 0x19, 0x77, 0x62, 0x17, 0x33, 0x54,
-	0xed, 0x1a, 0xfd, 0x45, 0x05, 0x9a, 0x8a, 0xe1, 0x6f, 0xc0, 0xa6, 0x1e, 0x16, 0xc5, 0x8c, 0xa4,
-	0xd4, 0xc5, 0xe8, 0x8e, 0x8c, 0xad, 0x3d, 0x1f, 0x9b, 0xa5, 0x10, 0x33, 0x01, 0xc2, 0x69, 0x80,
-	0x39, 0x02, 0xfe, 0x04, 0xd4, 0x28, 0x49, 0x39, 0x66, 0x68, 0x51, 0x7a, 0xdb, 0xc8, 0xbd, 0x1d,
-	0x8a, 0xeb, 0xb2, 0xa4, 0x6a, 0xb0, 0x22, 0xdc, 0xfc, 0x7b, 0xdc, 0xa9, 0x65, 0x6b, 0x4b, 0x99,
-	0xc0, 0x43, 0xb0, 0x36, 0xfb, 0xba, 0xa8, 0x26, 0xdd, 0xec, 0xe4, 0x6e, 0x0e, 0x34, 0xfd, 0x0b,
-	0xc7, 0x9f, 0x89, 0x68, 0x35, 0x2a, 0xaa, 0xe1, 0x31, 0x58, 0x53, 0x4f, 0x9e, 0x84, 0x8e, 0x8b,
-	0x45, 0x46, 0xa1, 0x7a, 0xd1, 0xe3, 0x2b, 0xa9, 0x3f, 0xcc, 0xd5, 0x03, 0xf3, 0x72, 0xdc, 0x69,
-	0xcf, 0x1a, 0x7d, 0x4a, 0xa2, 0x80, 0xe3, 0x28, 0xe1, 0x23, 0x6b, 0x75, 0x58, 0x34, 0x80, 0x03,
-	0xd0, 0x9a, 0x2c, 0x5e, 0x38, 0x3e, 0x43, 0x4b, 0xdd, 0x6a, 0x7f, 0x79, 0x70, 0xff, 0x72, 0xdc,
-	0x41, 0x13, 0x07, 0x32, 0x67, 0x34, 0x2f, 0x45, 0x93, 0xde, 0x5f, 0x57, 0xc0, 0xba, 0x76, 0xdf,
-	0x69, 0x7c, 0xfb, 0xf9, 0xf3, 0x3b, 0xb0, 0x55, 0x5a, 0x57, 0x68, 0xa1, 0x5b, 0xed, 0x37, 0xf6,
-	0xef, 0xe5, 0x2e, 0x9f, 0x4c, 0x41, 0xaf, 0x14, 0x66, 0xd0, 0x10, 0x8e, 0x2f, 0xc7, 0x9d, 0x2a,
-	0x8e, 0x87, 0xd6, 0x26, 0x9e, 0x47, 0x30, 0xf8, 0x31, 0x58, 0x64, 0x98, 0xa7, 0x89, 0x4c, 0xba,
-	0xc6, 0xfe, 0x4a, 0xee, 0xee, 0x73, 0xd9, 0x11, 0xac, 0x4c, 0x09, 0xbf, 0x03, 0x6a, 0x59, 0x8b,
-	0x50, 0xc9, 0x36, 0x0b, 0x53, 0x5a, 0xd8, 0x07, 0xf5, 0x88, 0xc4, 0x01, 0x27, 0x54, 0xe5, 0xd1,
-	0x2c, 0x30, 0x57, 0xc3, 0xdf, 0x83, 0xb6, 0x87, 0x13, 0x8a, 0x45, 0x2b, 0xf1, 0x6c, 0xc6, 0x1d,
-	0xca, 0x6d, 0x1e, 0x44, 0x98, 0xa4, 0xdc, 0x66, 0x32, 0x7b, 0x5a, 0x83, 0x07, 0x2a, 0xfc, 0x9d,
-	0x82, 0x7a, 0xfa, 0x1a, 0xc8, 0xb0, 0x76, 0xa6, 0x4e, 0x8e, 0x04, 0xe8, 0x45, 0x86, 0x39, 0x12,
-	0x65, 0x97, 0xd0, 0x60, 0x18, 0x84, 0xd8, 0xc7, 0x9e, 0xcc, 0x9d, 0xa5, 0xbc, 0xec, 0xa6, 0x72,
-	0xf8, 0x11, 0x00, 0x6e, 0x92, 0xda, 0x67, 0x38, 0xf0, 0x4f, 0x39, 0x5a, 0x92, 0xbb, 0xaa, 0xba,
-	0x73, 0x93, 0xf4, 0x57, 0x52, 0x0c, 0x37, 0xc1, 0x62, 0x42, 0x28, 0x67, 0x68, 0xb9, 0x5b, 0xed,
-	0xb7, 0xac, 0x6c, 0x01, 0x07, 0xa0, 0x89, 0x7d, 0x8a, 0x19, 0xb3, 0x69, 0x2a, 0x9e, 0x03, 0xc8,
-	0xe7, 0xb8, 0x9b, 0x9f, 0xf7, 0x48, 0xf5, 0xb1, 0xa7, 0xa2, 0x8d, 0x59, 0x69, 0x88, 0x95, 0xdf,
-	0x46, 0x66, 0x24, 0x24, 0x4c, 0x6c, 0x1f, 0x12, 0xdf, 0x56, 0x75, 0xdc, 0xd0, 0x7a, 0xc3, 0x72,
-	0x48, 0xfc, 0xa3, 0xac, 0x34, 0x1f, 0x82, 0x66, 0xd6, 0xbf, 0x98, 0xed, 0xa7, 0x81, 0x87, 0x9a,
-	0x12, 0x56, 0x13, 0x30, 0x64, 0x58, 0x0d, 0xa5, 0x7b, 0x9a, 0x06, 0xd9, 0x71, 0x28, 0x96, 0x37,
-	0xea, 0x70, 0xd4, 0xea, 0x1a, 0xfd, 0xea, 0xe4, 0x38, 0x99, 0xfc, 0x73, 0x0e, 0x43, 0xb0, 0x31,
-	0xdb, 0xdf, 0x03, 0xcc, 0xd0, 0x8a, 0x8c, 0x1f, 0xe5, 0xf1, 0x3f, 0x92, 0x90, 0xc7, 0x93, 0x09,
-	0x30, 0x78, 0x70, 0x39, 0xee, 0xec, 0x96, 0x18, 0x6a, 0xc5, 0x01, 0xdd, 0xa2, 0x51, 0x90, 0x35,
-	0xad, 0x10, 0xfb, 0x8e, 0x3b, 0xb2, 0x3d, 0x72, 0x16, 0x87, 0xc4, 0xf1, 0xec, 0x94, 0x61, 0x8a,
-	0x56, 0xe5, 0x29, 0xfa, 0xea, 0x85, 0xcd, 0x32, 0x4c, 0xe1, 0xa1, 0x61, 0x86, 0x78, 0xac, 0x00,
-	0x2f, 0x19, 0xa6, 0xf0, 0x0f, 0xa0, 0xcb, 0x69, 0xca, 0x64, 0x02, 0x8d, 0x18, 0xc7, 0x91, 0xad,
-	0xcd, 0x27, 0x66, 0x27, 0x0e, 0x3f, 0x45, 0x6b, 0x72, 0x9f, 0x7d, 0xb5, 0xcf, 0x77, 0xdf, 0x85,
-	0xd7, 0x4e, 0xb3, 0xab, 0xb0, 0x47, 0x12, 0xfa, 0x48, 0x43, 0x1e, 0x3a, 0xfc, 0x14, 0xbe, 0x04,
-	0x2d, 0x7d, 0x2a, 0x31, 0xb4, 0x2e, 0x2f, 0x70, 0xa3, 0xd8, 0x9f, 0x0e, 0x84, 0x6e, 0x70, 0x4f,
-	0x24, 0x71, 0x01, 0xad, 0xed, 0xd3, 0x1c, 0x4e, 0x91, 0x0c, 0xfe, 0x0c, 0xd4, 0xd5, 0x44, 0x44,
-	0x50, 0x56, 0xd0, 0x6a, 0xee, 0xf0, 0x97, 0x99, 0x78, 0xb0, 0x75, 0x39, 0xee, 0xac, 0x2b, 0x8c,
-	0xe6, 0x26, 0x37, 0x83, 0x7b, 0x60, 0xad, 0x58, 0x4e, 0x11, 0x43, 0x1b, 0x5a, 0x2a, 0xac, 0x30,
-	0xad, 0x50, 0x0e, 0x18, 0xfc, 0x23, 0xd8, 0x2e, 0x1f, 0xeb, 0x68, 0x53, 0x06, 0xb0, 0x3b, 0x49,
-	0x89, 0x29, 0xea, 0x70, 0x02, 0x92, 0x4f, 0x28, 0x1a, 0x57, 0xb7, 0xdc, 0x89, 0x16, 0xe1, 0x96,
-	0x5b, 0xe6, 0x00, 0x3e, 0x05, 0x2b, 0xd9, 0xc8, 0x16, 0x6f, 0x1e, 0x3b, 0x11, 0x46, 0x5b, 0xf2,
-	0xcd, 0xba, 0xea, 0xcd, 0x50, 0x51, 0xab, 0x37, 0x63, 0xa9, 0x79, 0xa9, 0x14, 0x53, 0x47, 0x89,
-	0xc3, 0xd8, 0x19, 0xa1, 0x1e, 0xda, 0x2e, 0x73, 0x94, 0x6b, 0xe7, 0x1c, 0x1d, 0x2a, 0x85, 0x98,
-	0x3e, 0xb3, 0xe4, 0x02, 0xed, 0x14, 0xa7, 0xcf, 0x23, 0xa1, 0x7f, 0x3c, 0x51, 0x67, 0xd3, 0x67,
-	0xd6, 0x48, 0x9f, 0x3e, 0x6e, 0xd1, 0x00, 0xfe, 0x00, 0x34, 0x35, 0xa2, 0xc2, 0x10, 0x92, 0xd9,
-	0x03, 0x73, 0xff, 0x5f, 0x08, 0xdd, 0x73, 0xa1, 0xb2, 0x1a, 0xc1, 0xe4, 0x3f, 0x83, 0xbf, 0x00,
-	0x0d, 0x8d, 0xcc, 0xa0, 0xbb, 0xd2, 0xea, 0x61, 0xc9, 0xe8, 0xcf, 0x46, 0xd1, 0xde, 0x81, 0x04,
-	0x8b, 0x59, 0xf5, 0x24, 0xe6, 0x74, 0x64, 0x81, 0x68, 0x22, 0x68, 0xff, 0x16, 0xac, 0xce, 0xa8,
-	0xe1, 0x36, 0xa8, 0xe6, 0xd3, 0x2a, 0xef, 0x44, 0x42, 0x00, 0x3f, 0x05, 0x8b, 0x43, 0x27, 0x4c,
-	0xb1, 0xe4, 0x2f, 0x8d, 0xfd, 0xed, 0xc9, 0x58, 0xcf, 0xed, 0x5f, 0x09, 0xad, 0x95, 0x81, 0x7e,
-	0xbc, 0xf0, 0x23, 0xa3, 0xf7, 0x67, 0x03, 0x34, 0x34, 0xee, 0x00, 0x7f, 0x38, 0x21, 0x18, 0x86,
-	0x8c, 0xb9, 0x53, 0x42, 0x30, 0xf6, 0xb2, 0x9f, 0x2c, 0x52, 0x05, 0x6f, 0x3f, 0x01, 0x0d, 0x4d,
-	0x7c, 0x65, 0x84, 0x6d, 0x3d, 0xc2, 0xa6, 0xd2, 0x68, 0xf1, 0xfc, 0xdd, 0x00, 0x6b, 0xd3, 0xeb,
-	0x79, 0x99, 0x78, 0x0e, 0xc7, 0x45, 0xd6, 0x65, 0x4c, 0x58, 0x97, 0xa1, 0xb3, 0xae, 0x29, 0x33,
-	0x5a, 0xb8, 0x9e, 0x19, 0x19, 0x25, 0xcc, 0xa8, 0x48, 0xfe, 0xaa, 0x93, 0xa0, 0x0d, 0x9d, 0xfc,
-	0xf5, 0xce, 0x40, 0xab, 0x40, 0x08, 0xe0, 0x27, 0xa0, 0x99, 0x50, 0xe2, 0x8a, 0xe1, 0x22, 0x5b,
-	0xbe, 0x7e, 0xda, 0x86, 0xd2, 0xc8, 0x86, 0x7f, 0x1f, 0xd4, 0x3c, 0x12, 0x39, 0x41, 0x91, 0x58,
-	0x2a, 0x19, 0xec, 0x80, 0x25, 0x31, 0x5e, 0xa4, 0x8b, 0xaa, 0xa6, 0xaf, 0x87, 0xc4, 0x17, 0xe6,
-	0xbd, 0x7f, 0x18, 0x00, 0xce, 0xd3, 0x45, 0xf8, 0x00, 0x2c, 0x47, 0x38, 0x22, 0x74, 0x64, 0x47,
-	0xc7, 0xda, 0xb5, 0x54, 0xac, 0xa5, 0x4c, 0x7c, 0x70, 0x0c, 0x77, 0x41, 0xdd, 0x0b, 0xd8, 0x6b,
-	0x01, 0x58, 0xd0, 0x00, 0x35, 0x21, 0x3c, 0x38, 0x86, 0x9f, 0x80, 0x3a, 0x25, 0x84, 0xdb, 0x27,
-	0x4c, 0x6d, 0xbc, 0xa2, 0x6a, 0xb0, 0x26, 0xc4, 0x27, 0xf2, 0x82, 0x08, 0xff, 0x39, 0x13, 0x21,
-	0x46, 0xce, 0x97, 0x76, 0x12, 0x78, 0x4c, 0x52, 0x8b, 0xdc, 0x51, 0x3d, 0x72, 0xbe, 0x3c, 0x0c,
-	0x3c, 0xd6, 0xfb, 0xdb, 0x3a, 0x00, 0xd3, 0x10, 0x6f, 0xeb, 0x66, 0x6e, 0x1c, 0x5f, 0x21, 0x43,
-	0xee, 0x94, 0xf3, 0xf2, 0x5f, 0x5f, 0xc5, 0xd0, 0x16, 0xdf, 0xcd, 0xd0, 0xea, 0x37, 0x64, 0x67,
-	0xb5, 0x9b, 0xb1, 0xb3, 0xfa, 0xb5, 0xec, 0xec, 0xe4, 0x5a, 0xce, 0x95, 0xb1, 0x9f, 0x87, 0xea,
-	0x22, 0x3a, 0x1a, 0x32, 0xc7, 0xc4, 0xec, 0x66, 0xdc, 0x4b, 0x63, 0x81, 0xcb, 0xd7, 0xb3, 0x40,
-	0x2d, 0x8d, 0x40, 0x49, 0x1a, 0x15, 0x12, 0xb1, 0x51, 0x9a, 0x88, 0x45, 0x06, 0xd7, 0x2c, 0x67,
-	0x70, 0x45, 0x32, 0xd8, 0xba, 0x82, 0x0c, 0x4e, 0x78, 0xde, 0x8a, 0xce, 0xf3, 0xa6, 0xf5, 0xbf,
-	0xfa, 0xed, 0xeb, 0xbf, 0x48, 0xf0, 0xd6, 0xca, 0x09, 0x9e, 0x5e, 0xa6, 0xeb, 0x25, 0x65, 0x3a,
-	0xc7, 0x00, 0xe1, 0xd5, 0x0c, 0xb0, 0xd8, 0x70, 0x36, 0xae, 0xf8, 0xda, 0xfc, 0xe9, 0x0c, 0x77,
-	0xdd, 0x7c, 0x07, 0x77, 0x2d, 0xb2, 0xd6, 0x41, 0xc9, 0xe7, 0xde, 0xd6, 0xb5, 0x9f, 0x7b, 0xf3,
-	0x1f, 0x78, 0x57, 0x90, 0xd0, 0xed, 0xf7, 0x4b, 0x42, 0x77, 0xde, 0x13, 0x09, 0x45, 0xef, 0x8d,
-	0x84, 0xde, 0xbd, 0x6d, 0x12, 0xda, 0xbe, 0x3d, 0x12, 0x7a, 0xef, 0x1a, 0x12, 0x3a, 0xf7, 0x31,
-	0x7e, 0xff, 0x5b, 0x7f, 0x8c, 0x17, 0x66, 0xc9, 0x6e, 0xc9, 0x2c, 0xb9, 0x86, 0xe9, 0x9a, 0x1f,
-	0x88, 0xe9, 0x76, 0x6e, 0x8b, 0xe9, 0x76, 0x6f, 0x8f, 0xe9, 0x3e, 0xf8, 0x3f, 0x33, 0xdd, 0xde,
-	0xcd, 0x98, 0xee, 0xa3, 0x22, 0xd3, 0xfd, 0x48, 0x5a, 0xf5, 0xe6, 0x99, 0xee, 0x07, 0xa3, 0xb8,
-	0x83, 0xef, 0x9f, 0xbf, 0x31, 0x2b, 0x5f, 0xbf, 0x31, 0x2b, 0xdf, 0xbc, 0x31, 0x8d, 0x3f, 0x5d,
-	0x98, 0xc6, 0x3f, 0x2f, 0x4c, 0xe3, 0xab, 0x0b, 0xd3, 0x38, 0xbf, 0x30, 0x8d, 0xff, 0x5c, 0x98,
-	0xc6, 0x7f, 0x2f, 0xcc, 0xca, 0x37, 0x17, 0xa6, 0xf1, 0x97, 0xb7, 0x66, 0xe5, 0xfc, 0xad, 0x59,
-	0xf9, 0xfa, 0xad, 0x59, 0xf9, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa7, 0x42, 0xe8, 0x1a, 0xb6,
-	0x15, 0x00, 0x00,
+var fileDescriptor_desired_lrp_e725bc1bf708218f = []byte{
+	// 1703 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x98, 0xcd, 0x6f, 0xdb, 0xc8,
+	0x15, 0xc0, 0x45, 0x3b, 0x96, 0xac, 0x91, 0xe4, 0x8f, 0xb1, 0x6c, 0x4f, 0xe4, 0x98, 0x54, 0xbc,
+	0xbb, 0x85, 0x5a, 0x6c, 0xbd, 0x40, 0xda, 0xa2, 0x9f, 0x87, 0x2e, 0x9d, 0xed, 0xee, 0x36, 0x71,
+	0x61, 0xd0, 0x71, 0x8a, 0x2e, 0x50, 0x10, 0x14, 0x39, 0xa6, 0x89, 0x90, 0x1c, 0x62, 0x66, 0x28,
+	0xaf, 0x2e, 0x45, 0x7b, 0xed, 0xa9, 0x7f, 0x46, 0x4f, 0x3d, 0xf7, 0xd4, 0x73, 0x8e, 0x3e, 0x2e,
+	0x5a, 0x40, 0x68, 0x9c, 0x4b, 0xa1, 0xd3, 0xfe, 0x09, 0xc5, 0x0c, 0x49, 0x69, 0x28, 0x69, 0x1d,
+	0x2f, 0xea, 0x26, 0x27, 0x6b, 0xde, 0xd7, 0x3c, 0x0e, 0xdf, 0xbc, 0xf7, 0xa3, 0xc1, 0xa6, 0x87,
+	0x59, 0x40, 0xb1, 0x67, 0x87, 0x34, 0x39, 0x4c, 0x28, 0xe1, 0x04, 0x56, 0x23, 0xe2, 0xe1, 0x90,
+	0x75, 0xbe, 0xef, 0x07, 0xfc, 0x22, 0xed, 0x1f, 0xba, 0x24, 0xfa, 0xc8, 0x27, 0x3e, 0xf9, 0x48,
+	0xaa, 0xfb, 0xe9, 0xb9, 0x5c, 0xc9, 0x85, 0xfc, 0x95, 0xb9, 0x75, 0x5a, 0x8e, 0xcb, 0x03, 0x12,
+	0xb3, 0x7c, 0xb9, 0xeb, 0x3a, 0xee, 0x05, 0xf6, 0x6c, 0x0f, 0x27, 0x38, 0xf6, 0x70, 0xec, 0x0e,
+	0x73, 0xc5, 0x03, 0x17, 0x53, 0x1e, 0x9c, 0x07, 0xae, 0xc3, 0xb1, 0x9d, 0x50, 0x92, 0x88, 0x25,
+	0x2e, 0xdc, 0xf6, 0x70, 0x3c, 0x08, 0x28, 0x89, 0x23, 0x1c, 0x73, 0x7b, 0xe0, 0xd0, 0xc0, 0xe9,
+	0x87, 0x13, 0xe5, 0x4e, 0x44, 0xbc, 0xcc, 0x33, 0x20, 0xb1, 0xcd, 0x1d, 0xbf, 0xd8, 0x3a, 0xc6,
+	0xfc, 0x92, 0xd0, 0x17, 0xf9, 0xb2, 0xcd, 0xb0, 0x9b, 0xd2, 0x80, 0x0f, 0x6d, 0x9f, 0x92, 0x34,
+	0x7f, 0xac, 0x0e, 0x1c, 0x90, 0x30, 0x8d, 0xb0, 0x1d, 0x91, 0x34, 0xe6, 0x45, 0x40, 0xf7, 0x02,
+	0xbb, 0x2f, 0x6c, 0x0f, 0x9f, 0x07, 0x71, 0x20, 0x82, 0xe6, 0xf2, 0xcd, 0x20, 0x72, 0x7c, 0x6c,
+	0x87, 0xce, 0x10, 0xd3, 0x42, 0x14, 0x61, 0x4e, 0x03, 0x57, 0xec, 0x9a, 0xa7, 0x73, 0xf0, 0xf7,
+	0x7b, 0x00, 0x3d, 0xce, 0x8e, 0xef, 0xa9, 0x75, 0x72, 0x2a, 0x1e, 0x37, 0x0d, 0x83, 0xd8, 0xff,
+	0x3c, 0x3e, 0x27, 0xf0, 0x09, 0x58, 0x57, 0x8e, 0xd6, 0x7e, 0x81, 0x87, 0x48, 0xeb, 0x6a, 0xbd,
+	0xc6, 0xa3, 0xed, 0xc3, 0xec, 0x7c, 0x0f, 0xa7, 0xae, 0x4f, 0xf0, 0xd0, 0x6c, 0xbe, 0x1c, 0x19,
+	0x95, 0xab, 0x91, 0xa1, 0x8d, 0x47, 0x46, 0xc5, 0x6a, 0xe5, 0xbe, 0x4f, 0x69, 0xf2, 0x04, 0x0f,
+	0xa1, 0x0e, 0x80, 0x13, 0xc7, 0x84, 0xcb, 0x07, 0x47, 0x4b, 0x5d, 0xad, 0x57, 0xb7, 0x14, 0x09,
+	0x7c, 0x00, 0xea, 0x41, 0xcc, 0xb8, 0x13, 0xbb, 0x98, 0xa1, 0xe5, 0xae, 0xd6, 0x5b, 0xb1, 0xa6,
+	0x02, 0xf8, 0x05, 0x68, 0xab, 0xa9, 0x50, 0xcc, 0x48, 0x4a, 0x5d, 0x8c, 0xee, 0xc9, 0x7c, 0x3a,
+	0xf3, 0xf9, 0x58, 0xb9, 0xc5, 0x4c, 0x52, 0x70, 0x9a, 0x54, 0x61, 0x01, 0x7f, 0x0e, 0xaa, 0x94,
+	0xa4, 0x1c, 0x33, 0xb4, 0x22, 0xa3, 0x6d, 0x15, 0xd1, 0x4e, 0xc4, 0x11, 0x59, 0x52, 0x65, 0xae,
+	0x89, 0x30, 0xff, 0x1c, 0x19, 0xd5, 0x6c, 0x6d, 0xe5, 0x2e, 0xf0, 0x04, 0x6c, 0xcc, 0xbe, 0x51,
+	0x54, 0x95, 0x61, 0x76, 0x8b, 0x30, 0xc7, 0x8a, 0xfe, 0x99, 0xe3, 0xcf, 0x64, 0xb4, 0x1e, 0x95,
+	0xd5, 0xb0, 0x0f, 0x36, 0xf2, 0xd7, 0x9c, 0x84, 0x8e, 0x8b, 0x45, 0x15, 0xa1, 0x5a, 0x39, 0xe2,
+	0x73, 0xa9, 0x3f, 0x29, 0xd4, 0xa6, 0x3e, 0x1e, 0x19, 0x9d, 0x59, 0xa7, 0x0f, 0x49, 0x14, 0x70,
+	0x1c, 0x25, 0x7c, 0x68, 0xad, 0x0f, 0xca, 0x0e, 0xd0, 0x04, 0xad, 0xc9, 0xe2, 0x99, 0xe3, 0x33,
+	0xb4, 0xda, 0x5d, 0xee, 0xd5, 0xcd, 0x07, 0xe3, 0x91, 0x81, 0x26, 0x01, 0x64, 0x9d, 0x28, 0x51,
+	0xca, 0x2e, 0x07, 0xff, 0x6a, 0x81, 0x4d, 0xe5, 0xbc, 0xd3, 0xf8, 0xee, 0x6b, 0xe6, 0xf7, 0x60,
+	0x7b, 0xe1, 0x5d, 0x42, 0x4b, 0xdd, 0xe5, 0x5e, 0xe3, 0xd1, 0x5e, 0x11, 0xf2, 0x93, 0xa9, 0xd1,
+	0xf3, 0xdc, 0xc6, 0x6c, 0x88, 0xc0, 0xe3, 0x91, 0xb1, 0x8c, 0xe3, 0x81, 0xd5, 0xc6, 0xf3, 0x16,
+	0x0c, 0xbe, 0x0f, 0x56, 0x18, 0xe6, 0x69, 0x22, 0xcb, 0xad, 0xf1, 0x68, 0xad, 0x08, 0xf7, 0xb1,
+	0xec, 0x02, 0x56, 0xa6, 0x84, 0xdf, 0x01, 0xd5, 0xac, 0x2d, 0xe4, 0xc5, 0x36, 0x6b, 0x96, 0x6b,
+	0x61, 0x0f, 0xd4, 0x22, 0x12, 0x07, 0x9c, 0xd0, 0xbc, 0x8e, 0x66, 0x0d, 0x0b, 0x35, 0xfc, 0x02,
+	0x74, 0x3c, 0x9c, 0x50, 0x2c, 0xda, 0x87, 0x67, 0x33, 0xee, 0x50, 0x6e, 0xf3, 0x20, 0xc2, 0x24,
+	0xe5, 0x36, 0x93, 0xd5, 0xd3, 0x32, 0xf7, 0xc7, 0x23, 0x63, 0xb7, 0xa4, 0x9a, 0xbe, 0x09, 0xa4,
+	0x59, 0xbb, 0xd3, 0x00, 0xa7, 0xc2, 0xe8, 0x59, 0x66, 0x73, 0x2a, 0xae, 0x59, 0x42, 0x83, 0x41,
+	0x10, 0x62, 0x1f, 0x7b, 0xb2, 0x6e, 0x56, 0x2d, 0x45, 0x02, 0xf7, 0x01, 0x70, 0x93, 0xd4, 0xbe,
+	0xc4, 0x81, 0x7f, 0xc1, 0xd1, 0xaa, 0xd8, 0xcb, 0xaa, 0xbb, 0x49, 0xfa, 0x5b, 0x29, 0x80, 0x6d,
+	0xb0, 0x92, 0x10, 0xca, 0x19, 0xaa, 0x77, 0x97, 0x7b, 0x2d, 0x2b, 0x5b, 0x40, 0x13, 0x34, 0xb1,
+	0x4f, 0x31, 0x63, 0x36, 0x4d, 0xc5, 0xf1, 0x03, 0x79, 0xfc, 0xf7, 0x8b, 0xe7, 0x3b, 0xcd, 0x7b,
+	0xd5, 0xa7, 0xa2, 0x55, 0x59, 0x69, 0x88, 0xcd, 0x7b, 0xe2, 0xf0, 0xad, 0x46, 0xe6, 0x24, 0x24,
+	0x4c, 0x6c, 0x1c, 0x12, 0xdf, 0xce, 0xef, 0x6d, 0x43, 0xde, 0xff, 0x7a, 0x48, 0xfc, 0xd3, 0xec,
+	0x12, 0x7e, 0x00, 0x9a, 0x59, 0x77, 0x62, 0xb6, 0x9f, 0x06, 0x1e, 0x6a, 0x0a, 0x03, 0x73, 0x09,
+	0x69, 0x56, 0x23, 0x97, 0x7f, 0x9a, 0x06, 0x59, 0xfa, 0x14, 0xcb, 0x73, 0x73, 0x38, 0x6a, 0x75,
+	0xb5, 0xde, 0xb2, 0x55, 0xcf, 0x25, 0x1f, 0x73, 0x18, 0x82, 0xad, 0xd9, 0x9e, 0x1d, 0x60, 0x86,
+	0xd6, 0x64, 0xbe, 0xa8, 0xc8, 0xf7, 0x48, 0x9a, 0x3c, 0x9e, 0x74, 0x75, 0xf3, 0xe1, 0x78, 0x64,
+	0xec, 0x2f, 0x70, 0x54, 0x8a, 0x1f, 0xba, 0x65, 0xa7, 0x00, 0x33, 0xf8, 0x1c, 0xb4, 0x43, 0xec,
+	0x3b, 0xee, 0xd0, 0xf6, 0xc8, 0x65, 0x1c, 0x12, 0xc7, 0xb3, 0x53, 0x86, 0x29, 0x5a, 0x97, 0xb9,
+	0xbf, 0x3f, 0x1e, 0x19, 0xfa, 0x22, 0x7d, 0xe9, 0x45, 0xc2, 0xcc, 0xe2, 0x71, 0x6e, 0x70, 0xc6,
+	0x30, 0x85, 0x97, 0xa0, 0xcb, 0x69, 0xca, 0x64, 0x71, 0x0c, 0x19, 0xc7, 0x91, 0xad, 0xcc, 0x1b,
+	0x66, 0x27, 0x0e, 0xbf, 0x40, 0x1b, 0x72, 0x8f, 0xc3, 0xf1, 0xc8, 0xf8, 0xde, 0x9b, 0x6c, 0x95,
+	0xa7, 0xd8, 0xcf, 0x6d, 0x4f, 0xa5, 0xe9, 0x91, 0x62, 0x79, 0xe2, 0xf0, 0x0b, 0x78, 0x06, 0x5a,
+	0xea, 0x84, 0x61, 0x68, 0x53, 0x1e, 0xdc, 0x56, 0xb9, 0xef, 0x1c, 0x0b, 0x9d, 0xb9, 0x27, 0x0a,
+	0xb4, 0x64, 0xad, 0xec, 0xd3, 0x1c, 0x4c, 0x2d, 0x19, 0xfc, 0x25, 0xa8, 0xe5, 0xd3, 0x0d, 0x41,
+	0x79, 0x33, 0xd6, 0x8b, 0x80, 0xbf, 0xc9, 0xc4, 0xe6, 0xf6, 0x78, 0x64, 0x6c, 0xe6, 0x36, 0x4a,
+	0x98, 0xc2, 0x0d, 0xf6, 0xc0, 0x46, 0xf9, 0x9a, 0x44, 0x0c, 0x6d, 0xc9, 0x97, 0xbf, 0xc6, 0x94,
+	0xf2, 0x3f, 0x66, 0xf0, 0x0f, 0x60, 0x67, 0xf1, 0x70, 0x46, 0x6d, 0xb9, 0xf5, 0xfe, 0xa4, 0x08,
+	0xa6, 0x56, 0x27, 0x13, 0x23, 0xb3, 0xf7, 0x32, 0x6b, 0x45, 0xdd, 0xc5, 0x41, 0x94, 0xdc, 0xb6,
+	0xdd, 0x45, 0x01, 0xe0, 0x11, 0x58, 0xcb, 0x06, 0xaf, 0x78, 0xd3, 0xb1, 0x13, 0x61, 0xb4, 0x2d,
+	0xdf, 0x94, 0x6c, 0xad, 0x65, 0x8d, 0xda, 0x5a, 0xa5, 0xe6, 0x2c, 0x57, 0x4c, 0x83, 0x24, 0x0e,
+	0x63, 0x97, 0x84, 0x7a, 0x68, 0x67, 0x36, 0x48, 0xa1, 0x99, 0x0b, 0x72, 0x92, 0x2b, 0xc4, 0x1c,
+	0x99, 0x45, 0x03, 0xb4, 0x5b, 0x9e, 0x23, 0x47, 0x42, 0xff, 0x78, 0xa2, 0xce, 0xe6, 0xc8, 0xac,
+	0x93, 0x3a, 0x47, 0xdc, 0xb2, 0x03, 0xfc, 0x11, 0x68, 0x2a, 0x98, 0xc1, 0x10, 0x92, 0xf5, 0x02,
+	0x8b, 0xf8, 0x9f, 0x0b, 0xdd, 0x53, 0xa1, 0xb2, 0x1a, 0xc1, 0xe4, 0x37, 0x83, 0xbf, 0x06, 0x0d,
+	0x05, 0x45, 0xd0, 0x7d, 0xe9, 0xf5, 0xdd, 0x05, 0x43, 0x3c, 0x1b, 0x2a, 0x87, 0xc7, 0xd2, 0x58,
+	0x4c, 0x9d, 0x4f, 0x62, 0x4e, 0x87, 0x16, 0x88, 0x26, 0x82, 0xce, 0x19, 0x58, 0x9f, 0x51, 0xc3,
+	0x0d, 0xb0, 0x5c, 0xcc, 0x9d, 0xba, 0x25, 0x7e, 0xc2, 0x0f, 0xc1, 0xca, 0xc0, 0x09, 0x53, 0x2c,
+	0xb9, 0xa3, 0xf1, 0x68, 0x67, 0x32, 0x9a, 0x0b, 0xcf, 0xe7, 0x42, 0x6b, 0x65, 0x46, 0x3f, 0x5b,
+	0xfa, 0x89, 0x76, 0xf0, 0x27, 0x0d, 0x34, 0x94, 0xf9, 0x0f, 0x7f, 0x3c, 0x81, 0x04, 0x4d, 0x66,
+	0x6b, 0x2c, 0x80, 0x84, 0xc3, 0xec, 0x4f, 0x96, 0x63, 0x6e, 0xde, 0xf9, 0x29, 0x68, 0x28, 0xe2,
+	0x05, 0xb9, 0xb5, 0xd5, 0xdc, 0x9a, 0x6a, 0x0e, 0xff, 0xd0, 0xc0, 0xc6, 0xf4, 0x30, 0xce, 0x12,
+	0xcf, 0xe1, 0x18, 0xea, 0x2a, 0x27, 0x89, 0x30, 0x2b, 0x9f, 0x55, 0x54, 0x52, 0x9a, 0xd2, 0xcc,
+	0xd2, 0xcd, 0x34, 0xa3, 0x2d, 0xa0, 0x99, 0x6e, 0x09, 0xd2, 0xc4, 0x58, 0xac, 0x7f, 0xa6, 0xa9,
+	0x98, 0x66, 0xb6, 0x01, 0x24, 0x89, 0xf8, 0xe5, 0x84, 0xf6, 0x64, 0x53, 0x73, 0x1b, 0x6c, 0x4d,
+	0xa4, 0x53, 0xe3, 0x03, 0x0c, 0x5a, 0xa5, 0x69, 0x0f, 0x1f, 0x82, 0x66, 0x42, 0x89, 0x2b, 0x26,
+	0x89, 0xec, 0xf2, 0xd9, 0x31, 0x34, 0x72, 0x99, 0xec, 0xf0, 0x3b, 0xa0, 0xea, 0x91, 0xc8, 0x09,
+	0x0a, 0x46, 0xcc, 0x57, 0xf0, 0x3e, 0x58, 0x15, 0xf3, 0x43, 0xba, 0xc9, 0xc4, 0xac, 0x5a, 0x48,
+	0x7c, 0xe1, 0x72, 0xf0, 0x67, 0x0d, 0xc0, 0x79, 0xf2, 0x83, 0x7b, 0xa0, 0x1e, 0xe1, 0x88, 0xd0,
+	0xa1, 0x1d, 0xf5, 0xb3, 0x93, 0xb2, 0x56, 0x33, 0xc1, 0x71, 0x1f, 0xee, 0x82, 0x9a, 0x17, 0xb0,
+	0x17, 0x42, 0xb5, 0x24, 0x55, 0x55, 0xb1, 0x3c, 0xee, 0xc3, 0xf7, 0x40, 0x8d, 0x12, 0xc2, 0xed,
+	0xf3, 0x8c, 0x42, 0xeb, 0x26, 0x18, 0x8f, 0x8c, 0xaa, 0x10, 0x9d, 0xcb, 0x73, 0x22, 0xfc, 0x57,
+	0x4c, 0x24, 0x13, 0x39, 0x5f, 0xda, 0x49, 0xe0, 0x31, 0x49, 0x05, 0x2b, 0x56, 0x2d, 0x72, 0xbe,
+	0x3c, 0x09, 0x3c, 0x76, 0xf0, 0xb7, 0x0d, 0x00, 0xa6, 0xc9, 0xfc, 0x2f, 0x4f, 0x7c, 0xab, 0x4c,
+	0x4a, 0xd8, 0x7c, 0x6f, 0x16, 0x9b, 0x7f, 0xf7, 0x4d, 0x00, 0xb5, 0xf2, 0x66, 0x80, 0xaa, 0xdd,
+	0x12, 0x9e, 0xaa, 0xb7, 0x83, 0xa7, 0xda, 0x8d, 0xf0, 0xd4, 0xbf, 0x11, 0x89, 0x24, 0xa6, 0x98,
+	0x1f, 0x8c, 0x47, 0x86, 0xa1, 0x58, 0x15, 0xfa, 0x98, 0xdd, 0x0e, 0x8d, 0x14, 0x40, 0xab, 0xdf,
+	0x0c, 0x68, 0x4a, 0x71, 0x80, 0x52, 0x71, 0x94, 0x4a, 0xaa, 0x31, 0x53, 0x52, 0x65, 0xb4, 0x6a,
+	0xce, 0xa2, 0x55, 0x99, 0xcc, 0x5a, 0x73, 0x64, 0x36, 0x41, 0xaf, 0x35, 0x15, 0xbd, 0xa6, 0xd7,
+	0x79, 0xfd, 0xdb, 0x5f, 0xe7, 0x32, 0x73, 0x6d, 0xcc, 0x32, 0x97, 0x7a, 0xa5, 0x36, 0x4b, 0x57,
+	0x6a, 0x0e, 0xc7, 0xe0, 0x62, 0x1c, 0x2b, 0x7f, 0xd4, 0x6d, 0xcd, 0x7d, 0xd4, 0xfd, 0x62, 0x06,
+	0x1c, 0xdb, 0x6f, 0x00, 0xc7, 0x32, 0x32, 0x9a, 0x0b, 0xbe, 0xad, 0xb6, 0x6f, 0xfc, 0xb6, 0x9a,
+	0xff, 0x9a, 0xfa, 0x06, 0x22, 0xdc, 0x79, 0xbb, 0x44, 0xb8, 0xfb, 0x16, 0x88, 0x10, 0xbd, 0x15,
+	0x22, 0xbc, 0x7f, 0xd7, 0x44, 0xd8, 0xb9, 0x3b, 0x22, 0xdc, 0x5b, 0x48, 0x84, 0x73, 0xdf, 0xba,
+	0x0f, 0xbe, 0xf5, 0xb7, 0x6e, 0xa9, 0xdf, 0xef, 0x97, 0xfa, 0xfd, 0x0d, 0xc0, 0xa9, 0xbf, 0x23,
+	0xe0, 0x34, 0xee, 0x02, 0x38, 0xbb, 0x77, 0x03, 0x9c, 0x0f, 0xff, 0xcf, 0xc0, 0x79, 0x70, 0x3b,
+	0xe0, 0x3c, 0x2a, 0x03, 0xe7, 0x7b, 0xd2, 0xeb, 0x60, 0x1e, 0x38, 0xdf, 0x01, 0x69, 0x9a, 0x3f,
+	0xbc, 0x7a, 0xa5, 0x57, 0xbe, 0x7a, 0xa5, 0x57, 0xbe, 0x7e, 0xa5, 0x6b, 0x7f, 0xbc, 0xd6, 0xb5,
+	0xbf, 0x5e, 0xeb, 0xda, 0xcb, 0x6b, 0x5d, 0xbb, 0xba, 0xd6, 0xb5, 0x7f, 0x5f, 0xeb, 0xda, 0x7f,
+	0xae, 0xf5, 0xca, 0xd7, 0xd7, 0xba, 0xf6, 0x97, 0xd7, 0x7a, 0xe5, 0xea, 0xb5, 0x5e, 0xf9, 0xea,
+	0xb5, 0x5e, 0xe9, 0x57, 0xe5, 0xff, 0xef, 0x7e, 0xf0, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x0d,
+	0xa9, 0x10, 0xd4, 0xfd, 0x14, 0x00, 0x00,
 }

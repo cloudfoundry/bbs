@@ -365,7 +365,6 @@ var _ = Describe("SecurityGroupRule", func() {
         "destinations": [
           "0.0.0.0-9.255.255.255"
         ],
-        "log": false,
 				"annotations":["quack"]
       }`
 
@@ -398,8 +397,7 @@ var _ = Describe("SecurityGroupRule", func() {
 					"protocol": "all",
 					"destinations": [
 						"0.0.0.0-9.255.255.255"
-					],
-					"log": false
+					]
 				}`
 
 				securityGroup.Annotations = []string{}

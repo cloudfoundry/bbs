@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"code.cloudfoundry.org/bbs/models"
+	"github.com/gogo/protobuf/jsonpb"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"code.cloudfoundry.org/bbs/models"
 )
 
 var _ = Describe("Actions", func() {
@@ -16,7 +16,10 @@ var _ = Describe("Actions", func() {
 		action := models.UnwrapAction(a)
 		It("Action -> JSON for "+string(action.ActionType()), func() {
 			marshalledAction := action
-			json, err := json.Marshal(&marshalledAction)
+			marshaler := jsonpb.Marshaler{
+				OrigName: true,
+			}
+			json, err := marshaler.MarshalToString(marshalledAction)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(json).To(MatchJSON(actionPayload))
 		})
@@ -25,9 +28,9 @@ var _ = Describe("Actions", func() {
 	itDeserializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
 		It("JSON -> Action for "+string(action.ActionType()), func() {
-			wrappedJSON := fmt.Sprintf(`{"%s":%s}`, action.ActionType(), actionPayload)
+			wrappedJSON := fmt.Sprintf(`{"%s_action":%s}`, action.ActionType(), actionPayload)
 			marshalledAction := new(models.Action)
-			err := json.Unmarshal([]byte(wrappedJSON), marshalledAction)
+			err := jsonpb.UnmarshalString(wrappedJSON, marshalledAction)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(marshalledAction).To(BeEquivalentTo(a))
 		})
@@ -293,16 +296,17 @@ var _ = Describe("Actions", func() {
 		var nofile uint64 = 10
 		itSerializesAndDeserializes(
 			`{
-					"user": "me",
-					"path": "rm",
-					"args": ["-rf", "/"],
-					"dir": "./some-dir",
-					"env": [
-						{"name":"FOO", "value":"1"},
-						{"name":"BAR", "value":"2"}
-					],
-					"resource_limits":{"nofile": 10},
-					"suppress_log_output": false
+				"user": "me",
+				"path": "rm",
+				"args": ["-rf", "/"],
+				"dir": "./some-dir",
+				"env": [
+					{"name":"FOO", "value":"1"},
+					{"name":"BAR", "value":"2"}
+				],
+				"resource_limits": {
+					"nofile": "10"
+				}
 			}`,
 			models.WrapAction(&models.RunAction{
 				User: "me",
@@ -313,7 +317,9 @@ var _ = Describe("Actions", func() {
 					{"FOO", "1"},
 					{"BAR", "2"},
 				},
-				ResourceLimits: &models.ResourceLimits{Nofile: &nofile},
+				ResourceLimits: &models.ResourceLimits{
+					OptionalNofile: &models.ResourceLimits_Nofile{Nofile: nofile},
+				},
 			}),
 		)
 
@@ -356,23 +362,24 @@ var _ = Describe("Actions", func() {
 		itSerializesAndDeserializes(
 			`{
 				"action": {
-					"run": {
+					"run_action": {
 						"path": "echo",
 						"user": "someone",
 						"resource_limits":{
-							"nofile": 10
-						},
-						"suppress_log_output": false
+							"nofile": "10"
+						}
 					}
 				},
-				"timeout_ms": 10
+				"timeout_ms": "10"
 			}`,
 			models.WrapAction(
 				models.Timeout(
 					&models.RunAction{
-						Path:           "echo",
-						User:           "someone",
-						ResourceLimits: &models.ResourceLimits{Nofile: &nofile},
+						Path: "echo",
+						User: "someone",
+						ResourceLimits: &models.ResourceLimits{
+							OptionalNofile: &models.ResourceLimits_Nofile{Nofile: nofile},
+						},
 					},
 					10*time.Millisecond,
 				)),
@@ -440,11 +447,10 @@ var _ = Describe("Actions", func() {
 		itSerializesAndDeserializes(
 			`{
 					"action": {
-						"run": {
+						"run_action": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me",
-							"suppress_log_output": false
+							"user": "me"
 						}
 					}
 			}`,
@@ -501,7 +507,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -509,11 +515,10 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
@@ -595,7 +600,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -603,11 +608,10 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
@@ -682,11 +686,10 @@ var _ = Describe("Actions", func() {
 					"success_message": "reticulated splines",
 					"failure_message_prefix": "reticulation failed",
 					"action": {
-						"run": {
+						"run_action": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me",
-							"suppress_log_output": false
+							"user": "me"
 						}
 					}
 			}`,
@@ -744,7 +747,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -752,11 +755,10 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
