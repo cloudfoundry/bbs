@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 func (m *MetricTagValue) Validate() error {
 	var validationError ValidationError
 
@@ -52,4 +54,19 @@ func validateMetricTags(m map[string]*MetricTagValue, metricsGuid string) Valida
 	}
 
 	return nil
+}
+
+func (v *MetricTagValue_DynamicValue) UnmarshalJSON(data []byte) error {
+	var name string
+	if err := json.Unmarshal(data, &name); err != nil {
+		return err
+	}
+
+	*v = MetricTagValue_DynamicValue(MetricTagValue_DynamicValue_value[name])
+
+	return nil
+}
+
+func (v MetricTagValue_DynamicValue) MarshalJSON() ([]byte, error) {
+	return json.Marshal(MetricTagValue_DynamicValue_name[int32(v)])
 }

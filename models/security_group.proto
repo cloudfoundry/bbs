@@ -20,6 +20,6 @@ message SecurityGroupRule {
   repeated uint32 ports = 3;
   PortRange port_range = 4;
   ICMPInfo icmp_info = 5;
-  bool log = 6;
+  bool log = 6 [(gogoproto.jsontag) = "log"];
   repeated string annotations = 7 [(gogoproto.jsontag) = "annotations,omitempty"];
 }

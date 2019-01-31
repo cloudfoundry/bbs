@@ -11,7 +11,6 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
-	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -23,10 +22,10 @@ var _ = Describe("DesiredLRP", func() {
 
 	jsonDesiredLRP := `{
     "setup": {
-      "serial_action": {
+      "serial": {
         "actions": [
           {
-            "download_action": {
+            "download": {
               "from": "http://file-server.service.cf.internal:8080/v1/static/buildpack_app_lifecycle/buildpack_app_lifecycle.tgz",
               "to": "/tmp/lifecycle",
               "cache_key": "buildpack-cflinuxfs2-lifecycle",
@@ -36,7 +35,7 @@ var _ = Describe("DesiredLRP", func() {
             }
           },
           {
-            "download_action": {
+            "download": {
               "from": "http://cloud-controller-ng.service.cf.internal:9022/internal/v2/droplets/some-guid/some-guid/download",
               "to": ".",
               "cache_key": "droplets-some-guid",
@@ -47,10 +46,10 @@ var _ = Describe("DesiredLRP", func() {
       }
     },
     "action": {
-      "codependent_action": {
+      "codependent": {
         "actions": [
           {
-            "run_action": {
+            "run": {
               "path": "/tmp/lifecycle/launcher",
               "args": [
                 "app",
@@ -80,14 +79,15 @@ var _ = Describe("DesiredLRP", func() {
                 }
               ],
               "resource_limits": {
-                "nofile": "16384"
+                "nofile": 16384
               },
               "user": "vcap",
-              "log_source": "APP"
+              "log_source": "APP",
+			  "suppress_log_output": false
             }
           },
           {
-            "run_action": {
+            "run": {
               "path": "/tmp/lifecycle/diego-sshd",
               "args": [
                 "-address=0.0.0.0:2222",
@@ -119,44 +119,45 @@ var _ = Describe("DesiredLRP", func() {
                 }
               ],
               "resource_limits": {
-                "nofile": "16384"
+                "nofile": 16384
               },
-              "user": "vcap"
+              "user": "vcap",
+			  "suppress_log_output": false
             }
           }
         ]
       }
     },
     "monitor": {
-      "timeout_action": {
+      "timeout": {
         "action": {
-          "run_action": {
+          "run": {
             "path": "/tmp/lifecycle/healthcheck",
             "args": [
               "-port=8080"
             ],
             "resource_limits": {
-              "nofile": "1024"
+              "nofile": 1024
             },
             "user": "vcap",
             "log_source": "HEALTH",
 			"suppress_log_output": true
           }
         },
-        "timeout_ms": "30000000"
+        "timeout_ms": 30000000
       }
     },
     "process_guid": "some-guid",
     "domain": "cf-apps",
-    "root_fs": "preloaded:cflinuxfs2",
+    "rootfs": "preloaded:cflinuxfs2",
     "instances": 2,
-    "environment_variables": [
+    "env": [
       {
         "name": "LANG",
         "value": "en_US.UTF-8"
       }
     ],
-    "start_timeout_ms": "60000",
+    "start_timeout_ms": 60000,
     "disk_mb": 1024,
     "memory_mb": 1024,
     "cpu_weight": 10,
@@ -189,31 +190,36 @@ var _ = Describe("DesiredLRP", func() {
         "protocol": "all",
         "destinations": [
           "0.0.0.0-9.255.255.255"
-        ]
+        ],
+        "log": false
       },
       {
         "protocol": "all",
         "destinations": [
           "11.0.0.0-169.253.255.255"
-        ]
+        ],
+        "log": false
       },
       {
         "protocol": "all",
         "destinations": [
           "169.255.0.0-172.15.255.255"
-        ]
+        ],
+        "log": false
       },
       {
         "protocol": "all",
         "destinations": [
           "172.32.0.0-192.167.255.255"
-        ]
+        ],
+        "log": false
       },
       {
         "protocol": "all",
         "destinations": [
           "192.169.0.0-255.255.255.255"
-        ]
+        ],
+        "log": false
       },
       {
         "protocol": "tcp",
@@ -222,7 +228,8 @@ var _ = Describe("DesiredLRP", func() {
         ],
         "ports": [
           53
-        ]
+        ],
+        "log": false
       },
       {
         "protocol": "udp",
@@ -231,13 +238,15 @@ var _ = Describe("DesiredLRP", func() {
         ],
         "ports": [
           53
-        ]
+        ],
+        "log": false
       }
     ],
     "modification_tag": {
-      "epoch": "some-guid"
+      "epoch": "some-guid",
+      "index": 0
     },
-		"PlacementTags": ["red-tag", "blue-tag"],
+		"placement_tags": ["red-tag", "blue-tag"],
     "trusted_system_certificates_path": "/etc/cf-system-certificates",
     "network": {
 			"properties": {
@@ -254,7 +263,7 @@ var _ = Describe("DesiredLRP", func() {
 				{
 					"tcp_check": {
 						"port": 12345,
-						"connect_timeout_ms": "100"
+						"connect_timeout_ms": 100
 					}
 				}
 			],
@@ -264,6 +273,8 @@ var _ = Describe("DesiredLRP", func() {
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
+				"digest_algorithm": "SHA512",
+				"digest_value": "abc123",
 				"media_type": "TGZ",
 				"layer_type": "SHARED"
 			}
@@ -284,7 +295,7 @@ var _ = Describe("DesiredLRP", func() {
 
 	BeforeEach(func() {
 		desiredLRP = models.DesiredLRP{}
-		err := jsonpb.UnmarshalString(jsonDesiredLRP, &desiredLRP)
+		err := json.Unmarshal([]byte(jsonDesiredLRP), &desiredLRP)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -303,10 +314,7 @@ var _ = Describe("DesiredLRP", func() {
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
-			marshaler := jsonpb.Marshaler{
-				OrigName: true,
-			}
-			jsonSerialization, err := marshaler.MarshalToString(&desiredLRP)
+			jsonSerialization, err := json.Marshal(desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(jsonDesiredLRP))
 
@@ -1175,6 +1183,9 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		two := int32(2)
 		someText := "some-text"
 		desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: two}
+		desiredLRPUpdate.Routes = &models.Routes{
+			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
+		}
 		desiredLRPUpdate.OptionalAnnotation = &models.DesiredLRPUpdate_Annotation{Annotation: someText}
 	})
 
@@ -1205,6 +1216,27 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			largeString := randStringBytes(50000)
 			desiredLRPUpdate.OptionalAnnotation = &models.DesiredLRPUpdate_Annotation{Annotation: largeString}
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "annotation")
+		})
+	})
+
+	Describe("serialization", func() {
+		var expectedJSON string
+		BeforeEach(func() {
+			expectedJSON = `{
+				"instances": 2,
+				"routes": {
+					"foo": "bar"
+				},
+				"annotation": "some-text"
+			}`
+		})
+
+		It("can marshal to JSON and back", func() {
+			Expect(json.Marshal(desiredLRPUpdate)).To(MatchJSON(expectedJSON))
+
+			var testV models.DesiredLRPUpdate
+			Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+			Expect(testV).To(Equal(desiredLRPUpdate))
 		})
 	})
 })

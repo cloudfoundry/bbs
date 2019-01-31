@@ -54,7 +54,7 @@ message RunAction {
   ResourceLimits resource_limits = 5;
   string user = 6;
   string log_source = 7 [(gogoproto.jsontag) = "log_source,omitempty"];
-  bool suppress_log_output = 8;
+  bool suppress_log_output = 8 [(gogoproto.jsontag) = "suppress_log_output"];
 }
 
 message TimeoutAction {

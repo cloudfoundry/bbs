@@ -6,6 +6,6 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message ModificationTag {
   string epoch = 1;
-  uint32 index = 2;
+  uint32 index = 2 [(gogoproto.jsontag) = "index"];
 }
 
