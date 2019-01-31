@@ -1,10 +1,12 @@
 package models_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/models"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ImageLayer", func() {
@@ -132,5 +134,54 @@ var _ = Describe("ImageLayer", func() {
 		} {
 			testValidatorErrorCase(testCase)
 		}
+	})
+
+	Describe("DigestAlgorithm", func() {
+		Describe("serialization", func() {
+			DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+				func(v models.ImageLayer_DigestAlgorithm, expectedJSON string) {
+					Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
+					var testV models.ImageLayer_DigestAlgorithm
+					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+					Expect(testV).To(Equal(v))
+				},
+				Entry("invalid", models.DigestAlgorithmInvalid, `"DigestAlgorithmInvalid"`),
+				Entry("sha256", models.DigestAlgorithmSha256, `"SHA256"`),
+				Entry("sha512", models.DigestAlgorithmSha512, `"SHA512"`),
+			)
+		})
+	})
+
+	Describe("MediaType", func() {
+		Describe("serialization", func() {
+			DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+				func(v models.ImageLayer_MediaType, expectedJSON string) {
+					Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
+					var testV models.ImageLayer_MediaType
+					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+					Expect(testV).To(Equal(v))
+				},
+				Entry("invalid", models.MediaTypeInvalid, `"MediaTypeInvalid"`),
+				Entry("tgz", models.MediaTypeTgz, `"TGZ"`),
+				Entry("tar", models.MediaTypeTar, `"TAR"`),
+				Entry("zip", models.MediaTypeZip, `"ZIP"`),
+			)
+		})
+	})
+
+	Describe("Type", func() {
+		Describe("serialization", func() {
+			DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+				func(v models.ImageLayer_Type, expectedJSON string) {
+					Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
+					var testV models.ImageLayer_Type
+					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+					Expect(testV).To(Equal(v))
+				},
+				Entry("invalid", models.LayerTypeInvalid, `"LayerTypeInvalid"`),
+				Entry("shared", models.LayerTypeShared, `"SHARED"`),
+				Entry("exclusive", models.LayerTypeExclusive, `"EXCLUSIVE"`),
+			)
+		})
 	})
 })

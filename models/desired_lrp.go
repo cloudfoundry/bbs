@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"net/url"
 	"regexp"
 	"time"
@@ -362,6 +363,41 @@ func (desired *DesiredLRPUpdate) Validate() error {
 	}
 
 	return validationError.ToError()
+}
+
+type internalDesiredLRPUpdate struct {
+	Instances  *int32  `json:"instances,omitempty"`
+	Routes     *Routes `json:"routes,omitempty"`
+	Annotation *string `json:"annotation,omitempty"`
+}
+
+func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
+	var update internalDesiredLRPUpdate
+	if err := json.Unmarshal(data, &update); err != nil {
+		return err
+	}
+
+	if update.Instances != nil {
+		desired.OptionalInstances = &DesiredLRPUpdate_Instances{Instances: *update.Instances}
+	}
+	desired.Routes = update.Routes
+	if update.Annotation != nil {
+		desired.OptionalAnnotation = &DesiredLRPUpdate_Annotation{Annotation: *update.Annotation}
+	}
+
+	return nil
+}
+
+func (desired DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
+	var update internalDesiredLRPUpdate
+	if wrapper, ok := desired.GetOptionalInstances().(*DesiredLRPUpdate_Instances); ok {
+		update.Instances = &wrapper.Instances
+	}
+	update.Routes = desired.Routes
+	if wrapper, ok := desired.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation); ok {
+		update.Annotation = &wrapper.Annotation
+	}
+	return json.Marshal(update)
 }
 
 func NewDesiredLRPKey(processGuid, domain, logGuid string) DesiredLRPKey {

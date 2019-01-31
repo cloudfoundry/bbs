@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -525,4 +526,36 @@ func (action *Action) SetTimeoutMsFromDeprecatedTimeoutNs() {
 			subaction.SetDeprecatedTimeoutNs()
 		}
 	}
+}
+
+type internalResourceLimits struct {
+	Nofile *uint64 `json:"nofile,omitempty"`
+	Nproc  *uint64 `json:"nproc,omitempty"`
+}
+
+func (l *ResourceLimits) UnmarshalJSON(data []byte) error {
+	var limit internalResourceLimits
+	if err := json.Unmarshal(data, &limit); err != nil {
+		return err
+	}
+
+	if limit.Nofile != nil {
+		l.OptionalNofile = &ResourceLimits_Nofile{Nofile: *limit.Nofile}
+	}
+	if limit.Nproc != nil {
+		l.OptionalNproc = &ResourceLimits_Nproc{Nproc: *limit.Nproc}
+	}
+
+	return nil
+}
+
+func (l ResourceLimits) MarshalJSON() ([]byte, error) {
+	var limit internalResourceLimits
+	if wrapper, ok := l.GetOptionalNofile().(*ResourceLimits_Nofile); ok {
+		limit.Nofile = &wrapper.Nofile
+	}
+	if wrapper, ok := l.GetOptionalNproc().(*ResourceLimits_Nproc); ok {
+		limit.Nproc = &wrapper.Nproc
+	}
+	return json.Marshal(limit)
 }

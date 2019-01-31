@@ -10,6 +10,7 @@ import (
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -53,7 +54,7 @@ var _ = Describe("Task", func() {
 		"created_at": 1393371971000000000,
 		"updated_at": 1393371971000000010,
 		"first_completed_at": 1393371971000000030,
-		"state": 1,
+		"state": "Pending",
 		"annotation": "[{\"anything\": \"you want!\"}]... dude",
 		"network": {
 			"properties": {
@@ -74,7 +75,8 @@ var _ = Describe("Task", func() {
 			{
 				"protocol": "udp",
 				"destinations": ["8.8.0.0/16"],
-				"ports": [53]
+				"ports": [53],
+				"log": false
 			}
 		],
 		"completion_callback_url":"http://user:password@a.b.c/d/e/f",
@@ -84,12 +86,14 @@ var _ = Describe("Task", func() {
 		},
 		"image_username": "jake",
 		"image_password": "thedog",
+		"rejection_count": 0,
+		"rejection_reason": "",
 		"image_layers": [
 		  {
 				"url": "some-url",
 				"destination_path": "/tmp",
-				"media_type": 1,
-				"layer_type": 1
+				"media_type": "TGZ",
+				"layer_type": "SHARED"
 			}
 		],
     "legacy_download_user": "some-user"
@@ -694,6 +698,24 @@ var _ = Describe("Task", func() {
 					})
 				})
 			})
+		})
+	})
+
+	Describe("State", func() {
+		Describe("MarshalJSON", func() {
+			DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+				func(v models.Task_State, expectedJSON string) {
+					Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
+					var testV models.Task_State
+					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+					Expect(testV).To(Equal(v))
+				},
+				Entry("invalid", models.Task_Invalid, `"Invalid"`),
+				Entry("pending", models.Task_Pending, `"Pending"`),
+				Entry("running", models.Task_Running, `"Running"`),
+				Entry("completed", models.Task_Completed, `"Completed"`),
+				Entry("resolving", models.Task_Resolving, `"Resolving"`),
+			)
 		})
 	})
 })

@@ -1,7 +1,45 @@
 package models
 
+import "encoding/json"
+
 func (request *ActualLRPsRequest) Validate() error {
 	return nil
+}
+
+type internalActualLRPsRequest struct {
+	Domain      string `json:"domain,omitempty"`
+	CellId      string `json:"cell_id,omitempty"`
+	ProcessGuid string `json:"process_guid,omitempty"`
+	Index       *int32 `json:"index,omitempty"`
+}
+
+func (request *ActualLRPsRequest) UnmarshalJSON(data []byte) error {
+	var internalRequest internalActualLRPsRequest
+	if err := json.Unmarshal(data, &internalRequest); err != nil {
+		return err
+	}
+
+	request.Domain = internalRequest.Domain
+	request.CellId = internalRequest.CellId
+	request.ProcessGuid = internalRequest.ProcessGuid
+	if internalRequest.Index != nil {
+		request.OptionalIndex = &ActualLRPsRequest_Index{Index: *internalRequest.Index}
+	}
+
+	return nil
+}
+
+func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
+	internalRequest := internalActualLRPsRequest{
+		Domain:      request.Domain,
+		CellId:      request.CellId,
+		ProcessGuid: request.ProcessGuid,
+	}
+
+	if wrapper, ok := request.GetOptionalIndex().(*ActualLRPsRequest_Index); ok {
+		internalRequest.Index = &wrapper.Index
+	}
+	return json.Marshal(internalRequest)
 }
 
 func (request *ActualLRPGroupsRequest) Validate() error {

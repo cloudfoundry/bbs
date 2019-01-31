@@ -1,8 +1,11 @@
 package models_test
 
 import (
+	"encoding/json"
+
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -44,6 +47,22 @@ var _ = Describe("MetricTagValue", func() {
 			err := value.Validate()
 			Expect(err).To(MatchError(ContainSubstring("static")))
 			Expect(err).To(MatchError(ContainSubstring("dynamic")))
+		})
+	})
+
+	Describe("Dynamic", func() {
+		Describe("serialization", func() {
+			DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+				func(v models.MetricTagValue_DynamicValue, expectedJSON string) {
+					Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
+					var testV models.MetricTagValue_DynamicValue
+					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+					Expect(testV).To(Equal(v))
+				},
+				Entry("invalid", models.DynamicValueInvalid, `"DynamicValueInvalid"`),
+				Entry("index", models.MetricTagDynamicValueIndex, `"INDEX"`),
+				Entry("instance_guid", models.MetricTagDynamicValueInstanceGuid, `"INSTANCE_GUID"`),
+			)
 		})
 	})
 })
