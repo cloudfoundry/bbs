@@ -7,7 +7,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message CheckDefinition {
   repeated Check checks = 1;
-  string log_source = 2;
+  string log_source = 2 [(gogoproto.jsontag) = "log_source"];
 }
 
 message Check {
@@ -19,12 +19,12 @@ message Check {
 }
 
 message TCPCheck {
-  uint32 port = 1;
+  uint32 port = 1 [(gogoproto.jsontag) = "port"];
   uint64 connect_timeout_ms = 2 [(gogoproto.jsontag) = "connect_timeout_ms,omitempty"];
 }
 
 message HTTPCheck {
-  uint32 port = 1;
+  uint32 port = 1 [(gogoproto.jsontag) = "port"];
   uint64 request_timeout_ms = 2 [(gogoproto.jsontag) = "request_timeout_ms,omitempty"];
-  string path = 3;
+  string path = 3 [(gogoproto.jsontag) = "path"];
 }

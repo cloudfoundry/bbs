@@ -7,9 +7,9 @@ func (request *ActualLRPsRequest) Validate() error {
 }
 
 type internalActualLRPsRequest struct {
-	Domain      string `json:"domain,omitempty"`
-	CellId      string `json:"cell_id,omitempty"`
-	ProcessGuid string `json:"process_guid,omitempty"`
+	Domain      string `json:"domain"`
+	CellId      string `json:"cell_id"`
+	ProcessGuid string `json:"process_guid"`
 	Index       *int32 `json:"index,omitempty"`
 }
 

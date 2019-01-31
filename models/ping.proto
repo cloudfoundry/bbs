@@ -5,5 +5,5 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message PingResponse {
-  bool available = 1;
+  bool available = 1 [(gogoproto.jsontag) =  "available"];
 }

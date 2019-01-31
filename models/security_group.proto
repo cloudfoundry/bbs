@@ -5,13 +5,13 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message PortRange {
-  uint32 start = 1;
-  uint32 end = 2;
+  uint32 start = 1 [(gogoproto.jsontag) =  "start"];
+  uint32 end = 2 [(gogoproto.jsontag) =  "end"];
 }
 
 message ICMPInfo {
-  int32 type = 1;
-  int32 code = 2;
+  int32 type = 1 [(gogoproto.jsontag) =  "type"];
+  int32 code = 2 [(gogoproto.jsontag) =  "code"];
 }
 
 message SecurityGroupRule {

@@ -25,8 +25,8 @@ message ImageLayer {
   }
 
   string name                      = 1 [(gogoproto.jsontag) = "name,omitempty"];
-  string url                       = 2;
-  string destination_path          = 3;
+  string url                       = 2 [(gogoproto.jsontag) =  "url"];
+  string destination_path          = 3 [(gogoproto.jsontag) =  "destination_path"];
   Type layer_type                  = 4 [(gogoproto.jsontag) = "layer_type"];
   MediaType media_type             = 5 [(gogoproto.jsontag) = "media_type"];
   DigestAlgorithm digest_algorithm = 6 [(gogoproto.jsontag) = "digest_algorithm,omitempty"];
