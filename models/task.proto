@@ -18,14 +18,14 @@ message TaskDefinition {
   string root_fs = 1 [(gogoproto.jsontag) = "rootfs"];
   repeated EnvironmentVariable environment_variables = 2 [(gogoproto.jsontag) = "env,omitempty"];
   Action action = 3;
-  int32 disk_mb = 4;
-  int32 memory_mb = 5;
-  uint32 cpu_weight = 6;
-  bool privileged = 7;
-  string log_source = 8;
-  string log_guid = 9;
-  string metrics_guid = 10;
-  string result_file = 11;
+  int32 disk_mb = 4 [(gogoproto.jsontag) =  "disk_mb"];
+  int32 memory_mb = 5 [(gogoproto.jsontag) =  "memory_mb"];
+  uint32 cpu_weight = 6 [(gogoproto.jsontag) =  "cpu_weight"];
+  bool privileged = 7 [(gogoproto.jsontag) =  "privileged"];
+  string log_source = 8 [(gogoproto.jsontag) =  "log_source"];
+  string log_guid = 9 [(gogoproto.jsontag) =  "log_guid"];
+  string metrics_guid = 10 [(gogoproto.jsontag) =  "metrics_guid"];
+  string result_file = 11 [(gogoproto.jsontag) =  "result_file"];
   string completion_callback_url = 12 [(gogoproto.jsontag) = "completion_callback_url,omitempty"];
   string annotation = 13 [(gogoproto.jsontag) = "annotation,omitempty"];
   repeated SecurityGroupRule egress_rules = 14 [(gogoproto.jsontag) = "egress_rules,omitempty"];
@@ -35,10 +35,10 @@ message TaskDefinition {
   repeated VolumeMount volume_mounts = 18 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
   Network network = 19 [(gogoproto.jsontag) = "network,omitempty"];
   repeated string PlacementTags = 20 [(gogoproto.jsontag) ="placement_tags,omitempty"];
-  int32 max_pids = 21;
+  int32 max_pids = 21 [(gogoproto.jsontag) =  "max_pids"];
   CertificateProperties certificate_properties = 22 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
-  string image_username = 23;
-  string image_password = 24;
+  string image_username = 23 [(gogoproto.jsontag) =  "image_username"];
+  string image_password = 24 [(gogoproto.jsontag) =  "image_password"];
   repeated ImageLayer image_layers = 25;
 }
 
@@ -53,19 +53,19 @@ message Task {
 
   TaskDefinition task_definition = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true];
 
-  string task_guid = 2;
-  string domain = 3;
-  int64 created_at = 4;
-  int64 updated_at = 5;
-  int64 first_completed_at = 6;
+  string task_guid = 2 [(gogoproto.jsontag) =  "task_guid"];
+  string domain = 3 [(gogoproto.jsontag) =  "domain"];
+  int64 created_at = 4 [(gogoproto.jsontag) =  "created_at"];
+  int64 updated_at = 5 [(gogoproto.jsontag) =  "updated_at"];
+  int64 first_completed_at = 6 [(gogoproto.jsontag) =  "first_completed_at"];
 
-  State state = 7;
+  State state = 7 [(gogoproto.jsontag) =  "state"];
 
-  string cell_id = 8;
+  string cell_id = 8 [(gogoproto.jsontag) =  "cell_id"];
 
-  string result = 9;
-  bool failed = 10;
-  string failure_reason = 11;
+  string result = 9 [(gogoproto.jsontag) =  "result"];
+  bool failed = 10 [(gogoproto.jsontag) =  "failed"];
+  string failure_reason = 11 [(gogoproto.jsontag) =  "failure_reason"];
   int32 rejection_count = 12 [(gogoproto.jsontag) = "rejection_count"];
   string rejection_reason = 13 [(gogoproto.jsontag) = "rejection_reason"];
 }

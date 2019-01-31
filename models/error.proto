@@ -47,6 +47,6 @@ message Error {
     Timeout = 31;
   }
 
-  Type type = 1;
-  string message = 2;
+  Type type = 1 [(gogoproto.jsontag) = "type"];
+  string message = 2 [(gogoproto.jsontag) = "message"];
 }

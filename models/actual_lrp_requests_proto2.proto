@@ -5,9 +5,9 @@ package models;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message ActualLRPsRequestProto2 {
-  optional string domain = 1;
-  optional string cell_id = 2;
-  optional string process_guid = 3;
-  optional int32 index = 4 [(gogoproto.nullable) = true];
+  optional string domain = 1 [(gogoproto.jsontag) = "domain"];
+  optional string cell_id = 2 [(gogoproto.jsontag) = "cell_id"];
+  optional string process_guid = 3 [(gogoproto.jsontag) = "process_guid"];
+  optional int32 index = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "index"];
 }
 

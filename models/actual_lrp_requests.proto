@@ -21,22 +21,22 @@ message ActualLRPGroupResponse {
 }
 
 message ActualLRPGroupsRequest {
-  string domain = 1;
-  string cell_id = 2;
+  string domain = 1 [(gogoproto.jsontag) = "domain"];
+  string cell_id = 2 [(gogoproto.jsontag) = "cell_id"];
 }
 
 message ActualLRPGroupsByProcessGuidRequest {
-  string process_guid = 1;
+  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
 }
 
 message ActualLRPGroupByProcessGuidAndIndexRequest {
-  string process_guid = 1;
-  int32 index = 2;
+  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+  int32 index = 2 [(gogoproto.jsontag) = "index"];
 }
 
 message ClaimActualLRPRequest {
-  string process_guid = 1;
-  int32 index = 2;
+  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+  int32 index = 2 [(gogoproto.jsontag) = "index"];
   ActualLRPInstanceKey actual_lrp_instance_key = 3;
 }
 
@@ -49,12 +49,12 @@ message StartActualLRPRequest {
 message CrashActualLRPRequest {
   ActualLRPKey actual_lrp_key = 1;
   ActualLRPInstanceKey actual_lrp_instance_key = 2;
-  string error_message = 3;
+  string error_message = 3 [(gogoproto.jsontag) = "error_message"];
 }
 
 message FailActualLRPRequest {
   ActualLRPKey actual_lrp_key = 1;
-  string error_message = 2;
+  string error_message = 2 [(gogoproto.jsontag) = "error_message"];
 }
 
 message RetireActualLRPRequest {
@@ -62,8 +62,8 @@ message RetireActualLRPRequest {
 }
 
 message RemoveActualLRPRequest {
-  string process_guid = 1;
-  int32 index = 2;
+  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+  int32 index = 2 [(gogoproto.jsontag) = "index"];
   ActualLRPInstanceKey actual_lrp_instance_key = 3;
 }
 
@@ -73,11 +73,11 @@ message ActualLRPsResponse {
 }
 
 message ActualLRPsRequest {
-  string domain = 1;
-  string cell_id = 2;
-  string process_guid = 3;
+  string domain = 1 [(gogoproto.jsontag) = "domain"];
+  string cell_id = 2 [(gogoproto.jsontag) = "cell_id"];
+  string process_guid = 3 [(gogoproto.jsontag) = "process_guid"];
   oneof optional_index {
-    int32 index = 4;
+    int32 index = 4 [(gogoproto.jsontag) = "index"];
   }
 }
 

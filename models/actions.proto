@@ -29,30 +29,30 @@ message Action {
 
 message DownloadAction {
   string artifact = 1 [(gogoproto.jsontag) = "artifact,omitempty"];
-  string from = 2;
-  string to = 3;
-  string cache_key = 4;
+  string from = 2 [(gogoproto.jsontag) = "from"];
+  string to = 3 [(gogoproto.jsontag) = "to"];
+  string cache_key = 4 [(gogoproto.jsontag) = "cache_key"];
   string log_source = 5 [(gogoproto.jsontag) = "log_source,omitempty"];
-  string user = 6;
+  string user = 6 [(gogoproto.jsontag) = "user"] ;
   string checksum_algorithm = 7 [(gogoproto.jsontag) = "checksum_algorithm,omitempty"];
   string checksum_value = 8 [(gogoproto.jsontag) = "checksum_value,omitempty"];
 }
 
 message UploadAction {
   string artifact = 1 [ (gogoproto.jsontag) = "artifact,omitempty"];
-  string from = 2;
-  string to = 3;
+  string from = 2 [(gogoproto.jsontag) = "from"];
+  string to = 3 [(gogoproto.jsontag) = "to"];
   string log_source = 4 [(gogoproto.jsontag) = "log_source,omitempty"];
-  string user = 5;
+  string user = 5 [(gogoproto.jsontag) = "user"];
 }
 
 message RunAction {
-  string path = 1;
+  string path = 1 [(gogoproto.jsontag) = "path"];
   repeated string args = 2;
   string dir = 3 [(gogoproto.jsontag) = "dir,omitempty"];
   repeated EnvironmentVariable env = 4;
   ResourceLimits resource_limits = 5;
-  string user = 6;
+  string user = 6 [(gogoproto.jsontag) = "user"];
   string log_source = 7 [(gogoproto.jsontag) = "log_source,omitempty"];
   bool suppress_log_output = 8 [(gogoproto.jsontag) = "suppress_log_output"];
 }
@@ -61,14 +61,14 @@ message TimeoutAction {
   Action action = 1;
   int64 deprecated_timeout_ns = 2 [(gogoproto.jsontag) = "timeout,omitempty", deprecated=true];
   string log_source = 3 [(gogoproto.jsontag) = "log_source,omitempty"];
-  int64 timeout_ms = 4;
+  int64 timeout_ms = 4 [(gogoproto.jsontag) = "timeout_ms"];
 }
 
 message EmitProgressAction {
   Action action = 1;
-  string start_message = 2;
-  string success_message = 3;
-  string failure_message_prefix = 4;
+  string start_message = 2 [(gogoproto.jsontag) = "start_message"];
+  string success_message = 3 [(gogoproto.jsontag) = "success_message"];
+  string failure_message_prefix = 4 [(gogoproto.jsontag) = "failure_message_prefix"];
   string log_source = 5 [(gogoproto.jsontag) = "log_source,omitempty"];
 }
 
