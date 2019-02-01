@@ -365,6 +365,28 @@ func (desired *DesiredLRPUpdate) Validate() error {
 	return validationError.ToError()
 }
 
+func (desired *DesiredLRPUpdate) SetInstances(instances int32) {
+	desired.OptionalInstances = &DesiredLRPUpdate_Instances{
+		Instances: instances,
+	}
+}
+
+func (desired DesiredLRPUpdate) InstancesExists() bool {
+	_, ok := desired.GetOptionalInstances().(*DesiredLRPUpdate_Instances)
+	return ok
+}
+
+func (desired *DesiredLRPUpdate) SetAnnotation(annotation string) {
+	desired.OptionalAnnotation = &DesiredLRPUpdate_Annotation{
+		Annotation: annotation,
+	}
+}
+
+func (desired DesiredLRPUpdate) AnnotationExists() bool {
+	_, ok := desired.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation)
+	return ok
+}
+
 type internalDesiredLRPUpdate struct {
 	Instances  *int32  `json:"instances,omitempty"`
 	Routes     *Routes `json:"routes,omitempty"`
@@ -378,11 +400,11 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 	}
 
 	if update.Instances != nil {
-		desired.OptionalInstances = &DesiredLRPUpdate_Instances{Instances: *update.Instances}
+		desired.SetInstances(*update.Instances)
 	}
 	desired.Routes = update.Routes
 	if update.Annotation != nil {
-		desired.OptionalAnnotation = &DesiredLRPUpdate_Annotation{Annotation: *update.Annotation}
+		desired.SetAnnotation(*update.Annotation)
 	}
 
 	return nil
@@ -390,12 +412,14 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 
 func (desired DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
 	var update internalDesiredLRPUpdate
-	if wrapper, ok := desired.GetOptionalInstances().(*DesiredLRPUpdate_Instances); ok {
-		update.Instances = &wrapper.Instances
+	if desired.InstancesExists() {
+		i := desired.GetInstances()
+		update.Instances = &i
 	}
 	update.Routes = desired.Routes
-	if wrapper, ok := desired.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation); ok {
-		update.Annotation = &wrapper.Annotation
+	if desired.AnnotationExists() {
+		a := desired.GetAnnotation()
+		update.Annotation = &a
 	}
 	return json.Marshal(update)
 }
@@ -444,13 +468,13 @@ func NewDesiredLRPSchedulingInfo(
 }
 
 func (s *DesiredLRPSchedulingInfo) ApplyUpdate(update *DesiredLRPUpdate) {
-	if _, ok := update.GetOptionalInstances().(*DesiredLRPUpdate_Instances); ok {
+	if update.InstancesExists() {
 		s.Instances = update.GetInstances()
 	}
 	if update.Routes != nil {
 		s.Routes = *update.Routes
 	}
-	if _, ok := update.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation); ok {
+	if update.AnnotationExists() {
 		s.Annotation = update.GetAnnotation()
 	}
 	s.ModificationTag.Increment()

@@ -27,11 +27,11 @@ var _ = Describe("Proto Version Upgrade", func() {
 		}
 
 		newMessage = models.ActualLRPsRequest{
-			Domain:        "foobar",
-			CellId:        "some-cell",
-			ProcessGuid:   "some-guid",
-			OptionalIndex: &models.ActualLRPsRequest_Index{Index: 2},
+			Domain:      "foobar",
+			CellId:      "some-cell",
+			ProcessGuid: "some-guid",
 		}
+		newMessage.SetIndex(2)
 	})
 
 	It("can convert proto2 messages to proto3 messages over the wire", func() {

@@ -102,10 +102,8 @@ var _ = Describe("DesiredLRP Requests", func() {
 
 			Context("when the Update is invalid", func() {
 				BeforeEach(func() {
-					minusOne := int32(-1)
-					request.Update = &models.DesiredLRPUpdate{
-						OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: minusOne},
-					}
+					request.Update = &models.DesiredLRPUpdate{}
+					request.Update.SetInstances(-1)
 				})
 
 				It("returns a validation error", func() {

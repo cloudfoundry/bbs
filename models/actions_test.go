@@ -292,6 +292,9 @@ var _ = Describe("Actions", func() {
 			nofile uint64 = 10
 			nproc  uint64 = 20
 		)
+		resourceLimits := &models.ResourceLimits{}
+		resourceLimits.SetNofile(nofile)
+		resourceLimits.SetNproc(nproc)
 		itSerializesAndDeserializes(
 			`{
 					"user": "me",
@@ -314,10 +317,7 @@ var _ = Describe("Actions", func() {
 					{"FOO", "1"},
 					{"BAR", "2"},
 				},
-				ResourceLimits: &models.ResourceLimits{
-					OptionalNofile: &models.ResourceLimits_Nofile{Nofile: nofile},
-					OptionalNproc:  &models.ResourceLimits_Nproc{Nproc: nproc},
-				},
+				ResourceLimits: resourceLimits,
 			}),
 		)
 
@@ -357,6 +357,10 @@ var _ = Describe("Actions", func() {
 
 	Describe("Timeout", func() {
 		var nofile uint64 = 10
+
+		resourceLimits := &models.ResourceLimits{}
+		resourceLimits.SetNofile(nofile)
+
 		itSerializesAndDeserializes(
 			`{
 				"action": {
@@ -374,11 +378,9 @@ var _ = Describe("Actions", func() {
 			models.WrapAction(
 				models.Timeout(
 					&models.RunAction{
-						Path: "echo",
-						User: "someone",
-						ResourceLimits: &models.ResourceLimits{
-							OptionalNofile: &models.ResourceLimits_Nofile{Nofile: nofile},
-						},
+						Path:           "echo",
+						User:           "someone",
+						ResourceLimits: resourceLimits,
 					},
 					10*time.Millisecond,
 				)),

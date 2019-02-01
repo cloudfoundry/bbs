@@ -6,6 +6,15 @@ func (request *ActualLRPsRequest) Validate() error {
 	return nil
 }
 
+func (request *ActualLRPsRequest) SetIndex(index int32) {
+	request.OptionalIndex = &ActualLRPsRequest_Index{Index: index}
+}
+
+func (request ActualLRPsRequest) IndexExists() bool {
+	_, ok := request.GetOptionalIndex().(*ActualLRPsRequest_Index)
+	return ok
+}
+
 type internalActualLRPsRequest struct {
 	Domain      string `json:"domain"`
 	CellId      string `json:"cell_id"`
@@ -23,7 +32,7 @@ func (request *ActualLRPsRequest) UnmarshalJSON(data []byte) error {
 	request.CellId = internalRequest.CellId
 	request.ProcessGuid = internalRequest.ProcessGuid
 	if internalRequest.Index != nil {
-		request.OptionalIndex = &ActualLRPsRequest_Index{Index: *internalRequest.Index}
+		request.SetIndex(*internalRequest.Index)
 	}
 
 	return nil
@@ -36,8 +45,9 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 		ProcessGuid: request.ProcessGuid,
 	}
 
-	if wrapper, ok := request.GetOptionalIndex().(*ActualLRPsRequest_Index); ok {
-		internalRequest.Index = &wrapper.Index
+	if request.IndexExists() {
+		i := request.GetIndex()
+		internalRequest.Index = &i
 	}
 	return json.Marshal(internalRequest)
 }

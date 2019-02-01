@@ -314,9 +314,7 @@ func (c *client) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) 
 		ProcessGuid: filter.ProcessGuid,
 	}
 	if filter.Index != nil {
-		request.OptionalIndex = &models.ActualLRPsRequest_Index{
-			Index: *filter.Index,
-		}
+		request.SetIndex(*filter.Index)
 	}
 	response := models.ActualLRPsResponse{}
 	err := c.doRequest(logger, ActualLRPsRoute_r0, nil, nil, &request, &response)
