@@ -337,9 +337,8 @@ var _ = Describe("DesiredLRPDB", func() {
 			desiredLRPGuid := "desired-lrp-guid"
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
 			Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
-			update = &models.DesiredLRPUpdate{
-				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 1},
-			}
+			update = &models.DesiredLRPUpdate{}
+			update.SetInstances(1)
 		})
 
 		It("updates the lrp", func() {
@@ -347,11 +346,9 @@ var _ = Describe("DesiredLRPDB", func() {
 			routes := models.Routes{
 				"blah": (*json.RawMessage)(&routeContent),
 			}
-			update = &models.DesiredLRPUpdate{
-				OptionalInstances:  &models.DesiredLRPUpdate_Instances{Instances: 123},
-				Routes:             &routes,
-				OptionalAnnotation: &models.DesiredLRPUpdate_Annotation{Annotation: "annotated"},
-			}
+			update = &models.DesiredLRPUpdate{Routes: &routes}
+			update.SetInstances(123)
+			update.SetAnnotation("annotated")
 			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -367,9 +364,8 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("returns the desired lrp from before the update", func() {
-			update = &models.DesiredLRPUpdate{
-				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 20},
-			}
+			update = &models.DesiredLRPUpdate{}
+			update.SetInstances(20)
 
 			beforeDesiredLRP, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
@@ -377,9 +373,8 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("updates only the fields in the update parameter", func() {
-			update = &models.DesiredLRPUpdate{
-				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 20},
-			}
+			update = &models.DesiredLRPUpdate{}
+			update.SetInstances(20)
 			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 

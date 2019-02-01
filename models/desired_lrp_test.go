@@ -342,9 +342,8 @@ var _ = Describe("DesiredLRP", func() {
 	Describe("ApplyUpdate", func() {
 		It("updates instances", func() {
 			instances := int32(100)
-			update := &models.DesiredLRPUpdate{
-				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: instances},
-			}
+			update := &models.DesiredLRPUpdate{}
+			update.SetInstances(instances)
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
@@ -372,9 +371,8 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("allows annotation to be set", func() {
 			annotation := "new-annotation"
-			update := &models.DesiredLRPUpdate{
-				OptionalAnnotation: &models.DesiredLRPUpdate_Annotation{Annotation: annotation},
-			}
+			update := &models.DesiredLRPUpdate{}
+			update.SetAnnotation(annotation)
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
@@ -388,9 +386,8 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("allows empty annotation to be set", func() {
 			emptyAnnotation := ""
-			update := &models.DesiredLRPUpdate{
-				OptionalAnnotation: &models.DesiredLRPUpdate_Annotation{Annotation: emptyAnnotation},
-			}
+			update := &models.DesiredLRPUpdate{}
+			update.SetAnnotation(emptyAnnotation)
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
@@ -1180,13 +1177,11 @@ var _ = Describe("DesiredLRPUpdate", func() {
 	var desiredLRPUpdate models.DesiredLRPUpdate
 
 	BeforeEach(func() {
-		two := int32(2)
-		someText := "some-text"
-		desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: two}
+		desiredLRPUpdate.SetInstances(2)
 		desiredLRPUpdate.Routes = &models.Routes{
 			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
 		}
-		desiredLRPUpdate.OptionalAnnotation = &models.DesiredLRPUpdate_Annotation{Annotation: someText}
+		desiredLRPUpdate.SetAnnotation("some-text")
 	})
 
 	Describe("Validate", func() {
@@ -1197,24 +1192,21 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		}
 
 		It("requires a positive nonzero number of instances", func() {
-			minusOne := int32(-1)
-			desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: minusOne}
+			desiredLRPUpdate.SetInstances(-1)
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "instances")
 
-			zero := int32(0)
-			desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: zero}
+			desiredLRPUpdate.SetInstances(0)
 			validationErr := desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 
-			one := int32(1)
-			desiredLRPUpdate.OptionalInstances = &models.DesiredLRPUpdate_Instances{Instances: one}
+			desiredLRPUpdate.SetInstances(1)
 			validationErr = desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 		})
 
 		It("limits the annotation length", func() {
 			largeString := randStringBytes(50000)
-			desiredLRPUpdate.OptionalAnnotation = &models.DesiredLRPUpdate_Annotation{Annotation: largeString}
+			desiredLRPUpdate.SetAnnotation(largeString)
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "annotation")
 		})
 	})

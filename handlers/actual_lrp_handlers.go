@@ -30,7 +30,7 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		var index *int32
-		if _, ok := request.OptionalIndex.(*models.ActualLRPsRequest_Index); ok {
+		if request.IndexExists() {
 			i := request.GetIndex()
 			index = &i
 		}

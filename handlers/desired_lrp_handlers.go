@@ -207,7 +207,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	if _, ok := request.Update.OptionalInstances.(*models.DesiredLRPUpdate_Instances); ok {
+	if request.Update.InstancesExists() {
 		logger.Debug("updating-lrp-instances")
 		previousInstanceCount := beforeDesiredLRP.Instances
 

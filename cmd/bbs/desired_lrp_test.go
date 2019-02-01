@@ -292,9 +292,9 @@ var _ = Describe("DesiredLRP API", func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("super-lrp")
 			err := client.DesireLRP(logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
-			updateErr = client.UpdateDesiredLRP(logger, "super-lrp", &models.DesiredLRPUpdate{
-				OptionalInstances: &models.DesiredLRPUpdate_Instances{Instances: 3},
-			})
+			update := &models.DesiredLRPUpdate{}
+			update.SetInstances(3)
+			updateErr = client.UpdateDesiredLRP(logger, "super-lrp", update)
 		})
 
 		It("creates the desired LRP in the system", func() {
