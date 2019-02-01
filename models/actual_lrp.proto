@@ -15,8 +15,8 @@ message ActualLRPGroup {
 message PortMapping {
   uint32 container_port = 1 [(gogoproto.jsontag) = "container_port"];
   uint32 host_port = 2 [(gogoproto.jsontag) = "host_port"];
-  uint32 container_tls_proxy_port = 3 [(gogoproto.jsontag) = "container_tls_proxy_port,omitempty"];
-  uint32 host_tls_proxy_port = 4 [(gogoproto.jsontag) = "host_tls_proxy_port,omitempty"];
+  uint32 container_tls_proxy_port = 3;
+  uint32 host_tls_proxy_port = 4;
 }
 
 message ActualLRPKey {
@@ -33,7 +33,7 @@ message ActualLRPInstanceKey {
 message ActualLRPNetInfo {
   string address = 1 [(gogoproto.jsontag) = "address"];
   repeated PortMapping ports = 2 [(gogoproto.jsontag) = "ports"];
-  string instance_address = 3 [(gogoproto.jsontag) = "instance_address,omitempty"];
+  string instance_address = 3;
 }
 
 message ActualLRP {
@@ -47,9 +47,9 @@ message ActualLRP {
   ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   int32 crash_count = 4 [(gogoproto.jsontag) = "crash_count"];
-  string crash_reason = 5 [(gogoproto.jsontag) = "crash_reason,omitempty"];
+  string crash_reason = 5;
   string state = 6 [(gogoproto.jsontag) = "state"];
-  string placement_error = 7 [(gogoproto.jsontag) = "placement_error,omitempty"];
+  string placement_error = 7;
   int64 since = 8 [(gogoproto.jsontag) = "since"];
   ModificationTag modification_tag = 9 [(gogoproto.nullable) = false,(gogoproto.jsontag) = "modification_tag"];
   Presence presence = 10 [(gogoproto.jsontag) = "presence"];
