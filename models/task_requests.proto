@@ -54,7 +54,7 @@ message TaskCallbackResponse {
   bool failed = 2 [(gogoproto.jsontag) =  "failed"];
   string failure_reason = 3 [(gogoproto.jsontag) =  "failure_reason"];
   string result = 4 [(gogoproto.jsontag) =  "result"];
-  string annotation = 5 [(gogoproto.jsontag) = "annotation,omitempty"];
+  string annotation = 5;
   int64 created_at = 6 [(gogoproto.jsontag) =  "created_at"];
 }
 

@@ -17,14 +17,14 @@ message CellPresence {
   string zone = 3 [(gogoproto.jsontag) = "zone"];
   CellCapacity capacity = 4;
   repeated Provider rootfs_providers = 5 [(gogoproto.jsontag) = "rootfs_provider_list,omitempty"];
-  repeated string placement_tags = 6 [(gogoproto.jsontag) = "placement_tags,omitempty"];
-  repeated string optional_placement_tags = 7 [(gogoproto.jsontag) = "optional_placement_tags,omitempty"];
+  repeated string placement_tags = 6;
+  repeated string optional_placement_tags = 7;
   string rep_url = 8 [(gogoproto.jsontag) = "rep_url"];
 }
 
 message Provider {
   string name = 1 [(gogoproto.jsontag) = "name"];
-  repeated string properties = 2 [(gogoproto.jsontag) = "properties,omitempty"];
+  repeated string properties = 2;
 }
 
 message CellsResponse {

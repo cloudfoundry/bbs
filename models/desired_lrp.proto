@@ -25,7 +25,7 @@ message DesiredLRPSchedulingInfo {
 
   ProtoRoutes routes = 5 [(gogoproto.nullable) = false, (gogoproto.customtype) = "Routes"];
   ModificationTag modification_tag = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  VolumePlacement volume_placement = 7 [(gogoproto.jsontag) = "volume_placement,omitempty"];
+  VolumePlacement volume_placement = 7;
   repeated string PlacementTags = 8 [(gogoproto.jsontag) ="placement_tags,omitempty"];
 }
 
@@ -47,20 +47,20 @@ message DesiredLRPRunInfo {
   string log_source = 11 [(gogoproto.jsontag) = "log_source"];
   string metrics_guid = 12 [deprecated=true, (gogoproto.jsontag) = "metrics_guid"];
   int64 created_at = 13 [(gogoproto.jsontag) = "created_at"];
-  repeated CachedDependency cached_dependencies = 14 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
-  string legacy_download_user = 15 [(gogoproto.jsontag) = "legacy_download_user,omitempty", deprecated=true];
-  string trusted_system_certificates_path = 16 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
-  repeated VolumeMount volume_mounts = 17 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
-  Network network = 18 [(gogoproto.jsontag) = "network,omitempty"];
+  repeated CachedDependency cached_dependencies = 14;
+  string legacy_download_user = 15 [deprecated=true];
+  string trusted_system_certificates_path = 16;
+  repeated VolumeMount volume_mounts = 17;
+  Network network = 18;
 
   int64 start_timeout_ms = 19 [(gogoproto.jsontag) = "start_timeout_ms"];
 
-  CertificateProperties certificate_properties = 20 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
+  CertificateProperties certificate_properties = 20 [(gogoproto.nullable) = true];
 
-  string image_username = 21 [(gogoproto.jsontag) = "image_username,omitempty"];
-  string image_password = 22 [(gogoproto.jsontag) = "image_password,omitempty"];
+  string image_username = 21;
+  string image_password = 22;
 
-  CheckDefinition check_definition = 23 [(gogoproto.jsontag) = "check_definition,omitempty"];
+  CheckDefinition check_definition = 23;
 
   repeated ImageLayer image_layers = 24;
 
@@ -120,20 +120,20 @@ message DesiredLRP {
   string annotation = 19 [(gogoproto.jsontag) = "annotation"];
   repeated SecurityGroupRule egress_rules = 20;
   ModificationTag modification_tag = 21;
-  repeated CachedDependency cached_dependencies = 22 [(gogoproto.jsontag) = "cached_dependencies,omitempty"];
-  string legacy_download_user = 23 [(gogoproto.jsontag) = "legacy_download_user,omitempty", deprecated=true];
-  string trusted_system_certificates_path = 24 [(gogoproto.jsontag) = "trusted_system_certificates_path,omitempty"];
-  repeated VolumeMount volume_mounts = 25 [(gogoproto.jsontag) = "volume_mounts,omitempty"];
-  Network network = 26 [(gogoproto.jsontag) = "network,omitempty"];
+  repeated CachedDependency cached_dependencies = 22;
+  string legacy_download_user = 23 [deprecated=true];
+  string trusted_system_certificates_path = 24;
+  repeated VolumeMount volume_mounts = 25;
+  Network network = 26;
   repeated string PlacementTags = 28 [(gogoproto.jsontag) ="placement_tags,omitempty"];
   int32 max_pids = 29 [(gogoproto.jsontag) = "max_pids"];
 
-  CertificateProperties certificate_properties = 30 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "certificate_properties,omitempty"];
+  CertificateProperties certificate_properties = 30 [(gogoproto.nullable) = true];
 
-  string image_username = 31 [(gogoproto.jsontag) = "image_username,omitempty"];
-  string image_password = 32 [(gogoproto.jsontag) = "image_password,omitempty"];
+  string image_username = 31;
+  string image_password = 32;
 
-  CheckDefinition check_definition = 33 [(gogoproto.jsontag) = "check_definition,omitempty"];
+  CheckDefinition check_definition = 33;
 
   repeated ImageLayer image_layers = 34;
 
