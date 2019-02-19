@@ -16,6 +16,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/cfhttp"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/tlsconfig"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
 	"github.com/vito/go-sse/sse"
@@ -244,7 +245,15 @@ func newSecureClient(addr, caFile, certFile, keyFile string, clientSessionCacheS
 		return nil, errors.New("Expected https URL")
 	}
 
-	tlsConfig, err := cfhttp.NewTLSConfig(certFile, keyFile, caFile)
+	var clientOpts []tlsconfig.ClientOption
+	if !skipVerify {
+		clientOpts = append(clientOpts, tlsconfig.WithAuthorityFromFile(caFile))
+	}
+
+	tlsConfig, err := tlsconfig.Build(
+		tlsconfig.WithInternalServiceDefaults(),
+		tlsconfig.WithIdentityFromFile(certFile, keyFile),
+	).Client(clientOpts...)
 	if err != nil {
 		return nil, err
 	}

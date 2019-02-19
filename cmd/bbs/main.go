@@ -44,6 +44,7 @@ import (
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/rep/maintain"
+	"code.cloudfoundry.org/tlsconfig"
 	"github.com/hashicorp/consul/api"
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/tedsuo/ifrit"
@@ -207,10 +208,15 @@ func main() {
 		accessLogger.RegisterSink(lager.NewWriterSink(file, lager.INFO))
 	}
 
-	tlsConfig, err := cfhttp.NewTLSConfig(bbsConfig.CertFile, bbsConfig.KeyFile, bbsConfig.CaFile)
+	tlsConfig, err := tlsconfig.Build(
+		tlsconfig.WithInternalServiceDefaults(),
+		tlsconfig.WithIdentityFromFile(bbsConfig.CertFile, bbsConfig.KeyFile),
+	).Server(tlsconfig.WithClientAuthenticationFromFile(bbsConfig.CaFile))
 	if err != nil {
 		logger.Fatal("tls-configuration-failed", err)
 	}
+	// the BBS server performs requests as a client
+	tlsConfig.RootCAs = tlsConfig.ClientCAs
 
 	cbWorkPool := taskworkpool.New(logger, bbsConfig.TaskCallbackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
 

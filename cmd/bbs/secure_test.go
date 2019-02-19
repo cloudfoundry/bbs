@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"code.cloudfoundry.org/cfhttp"
+	"code.cloudfoundry.org/tlsconfig"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -75,7 +75,13 @@ var _ = Describe("Secure", func() {
 				tlsServer = ghttp.NewUnstartedServer()
 				insecureServer = ghttp.NewUnstartedServer()
 
-				tlsConfig, err := cfhttp.NewTLSConfig(certFile, keyFile, caFile)
+				tlsConfig, err := tlsconfig.Build(
+					tlsconfig.WithInternalServiceDefaults(),
+					tlsconfig.WithIdentityFromFile(
+						path.Join(basePath, "green-certs", "server.crt"),
+						path.Join(basePath, "green-certs", "server.key"),
+					),
+				).Server(tlsconfig.WithClientAuthenticationFromFile(caFile))
 				Expect(err).NotTo(HaveOccurred())
 
 				tlsServer.HTTPTestServer.TLS = tlsConfig
