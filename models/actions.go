@@ -568,6 +568,13 @@ func (l *ResourceLimits) SetNofile(nofile uint64) {
 	}
 }
 
+func (m *ResourceLimits) GetNofilePtr() *uint64 {
+	if x, ok := m.GetOptionalNofile().(*ResourceLimits_Nofile); ok {
+		return &x.Nofile
+	}
+	return nil
+}
+
 func (l *ResourceLimits) NofileExists() bool {
 	_, ok := l.GetOptionalNofile().(*ResourceLimits_Nofile)
 	return ok
