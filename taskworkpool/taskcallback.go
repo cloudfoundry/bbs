@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/cfhttp"
+	cfhttp "code.cloudfoundry.org/cfhttp/v2"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/workpool"
 )
@@ -34,17 +35,15 @@ type TaskCompletionWorkPool struct {
 	httpClient       *http.Client
 }
 
-func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler, tlsConfig *tls.Config) *TaskCompletionWorkPool {
+func New(logger lager.Logger, maxWorkers int, cbHandler CompletedTaskHandler, tlsConfig *tls.Config, requestTimeout time.Duration) *TaskCompletionWorkPool {
 	if cbHandler == nil {
 		panic("callbackHandler cannot be nil")
 	}
 
-	httpClient := cfhttp.NewClient()
-	if tr, ok := httpClient.Transport.(*http.Transport); ok {
-		tr.TLSClientConfig = tlsConfig
-	} else {
-		panic("invalid transport")
-	}
+	httpClient := cfhttp.NewClient(
+		cfhttp.WithTLSConfig(tlsConfig),
+		cfhttp.WithRequestTimeout(requestTimeout),
+	)
 
 	return &TaskCompletionWorkPool{
 		logger:          logger.Session("task-completion-workpool"),

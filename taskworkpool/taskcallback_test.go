@@ -12,7 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool"
-	"code.cloudfoundry.org/cfhttp"
+	cfhttp "code.cloudfoundry.org/cfhttp/v2"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/tedsuo/ifrit"
@@ -32,7 +32,6 @@ var _ = Describe("TaskWorker", func() {
 
 	BeforeEach(func() {
 		timeout = 1 * time.Second
-		cfhttp.Initialize(timeout)
 		fakeServer = ghttp.NewServer()
 
 		logger = lagertest.NewTestLogger("test")
@@ -56,7 +55,9 @@ var _ = Describe("TaskWorker", func() {
 		)
 
 		BeforeEach(func() {
-			httpClient = cfhttp.NewClient()
+			httpClient = cfhttp.NewClient(
+				cfhttp.WithRequestTimeout(timeout),
+			)
 			statusCodes = make(chan int)
 			taskHub = &eventfakes.FakeHub{}
 

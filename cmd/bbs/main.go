@@ -29,7 +29,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
-	"code.cloudfoundry.org/cfhttp"
+	cfhttp "code.cloudfoundry.org/cfhttp/v2"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/debugserver"
@@ -70,8 +70,6 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	cfhttp.Initialize(time.Duration(bbsConfig.CommunicationTimeout))
 
 	logger, reconfigurableSink := lagerflags.NewFromConfig(bbsConfig.SessionName, bbsConfig.LagerConfig)
 	logger.Info("starting")
@@ -187,7 +185,9 @@ func main() {
 		ClientCacheSize: bbsConfig.RepClientSessionCacheSize,
 	}
 
-	httpClient := cfhttp.NewClient()
+	httpClient := cfhttp.NewClient(
+		cfhttp.WithRequestTimeout(time.Duration(bbsConfig.CommunicationTimeout)),
+	)
 	repClientFactory, err := rep.NewClientFactory(httpClient, httpClient, repTLSConfig)
 	if err != nil {
 		logger.Fatal("new-rep-client-factory-failed", err)
@@ -218,7 +218,11 @@ func main() {
 	// the BBS server performs requests as a client
 	tlsConfig.RootCAs = tlsConfig.ClientCAs
 
-	cbWorkPool := taskworkpool.New(logger, bbsConfig.TaskCallbackWorkers, taskworkpool.HandleCompletedTask, tlsConfig)
+	cbWorkPool := taskworkpool.New(logger,
+		bbsConfig.TaskCallbackWorkers,
+		taskworkpool.HandleCompletedTask,
+		tlsConfig,
+		time.Duration(bbsConfig.CommunicationTimeout))
 
 	locks := []grouper.Member{}
 
