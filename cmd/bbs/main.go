@@ -510,6 +510,7 @@ func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig
 			bbsConfig.AuctioneerClientCert,
 			bbsConfig.AuctioneerClientKey,
 			bbsConfig.AuctioneerRequireTLS,
+			time.Duration(bbsConfig.CommunicationTimeout),
 		)
 		if err != nil {
 			logger.Fatal("failed-to-construct-auctioneer-client", err)
@@ -517,7 +518,7 @@ func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig
 		return client
 	}
 
-	return auctioneer.NewClient(bbsConfig.AuctioneerAddress)
+	return auctioneer.NewClient(bbsConfig.AuctioneerAddress, time.Duration(bbsConfig.CommunicationTimeout))
 }
 
 func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggingclient.IngressClient, error) {

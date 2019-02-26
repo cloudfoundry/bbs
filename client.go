@@ -14,7 +14,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/cfhttp"
+	cfhttp "code.cloudfoundry.org/cfhttp/v2"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/tlsconfig"
 	"github.com/gogo/protobuf/proto"
@@ -190,23 +190,32 @@ type ClientConfig struct {
 	MaxIdleConnsPerHost    int
 	InsecureSkipVerify     bool
 	Retries                int
-}
-
-func newClient(url string, numRetries int) *client {
-	return &client{
-		httpClient:          cfhttp.NewClient(),
-		streamingHTTPClient: cfhttp.NewStreamingClient(),
-		reqGen:              rata.NewRequestGenerator(url, Routes),
-		requestRetryCount:   numRetries,
-	}
+	RequestTimeout         time.Duration // Only affects the http client, not the streaming client
 }
 
 func NewClient(url, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
-	return newSecureClient(url, caFile, certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, false, DefaultRetryCount)
+	return NewClientWithConfig(ClientConfig{
+		URL:                    url,
+		IsTLS:                  true,
+		CAFile:                 caFile,
+		CertFile:               certFile,
+		KeyFile:                keyFile,
+		ClientSessionCacheSize: clientSessionCacheSize,
+		MaxIdleConnsPerHost:    maxIdleConnsPerHost,
+	})
 }
 
 func NewSecureSkipVerifyClient(url, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int) (InternalClient, error) {
-	return newSecureClient(url, "", certFile, keyFile, clientSessionCacheSize, maxIdleConnsPerHost, true, DefaultRetryCount)
+	return NewClientWithConfig(ClientConfig{
+		URL:                    url,
+		IsTLS:                  true,
+		CAFile:                 "",
+		CertFile:               certFile,
+		KeyFile:                keyFile,
+		ClientSessionCacheSize: clientSessionCacheSize,
+		MaxIdleConnsPerHost:    maxIdleConnsPerHost,
+		InsecureSkipVerify:     true,
+	})
 }
 
 func NewClientWithConfig(cfg ClientConfig) (InternalClient, error) {
@@ -219,25 +228,22 @@ func NewClientWithConfig(cfg ClientConfig) (InternalClient, error) {
 	}
 
 	if cfg.IsTLS {
-		return newSecureClient(
-			cfg.URL,
-			cfg.CAFile,
-			cfg.CertFile,
-			cfg.KeyFile,
-			cfg.ClientSessionCacheSize,
-			cfg.MaxIdleConnsPerHost,
-			cfg.InsecureSkipVerify,
-			cfg.Retries,
-		)
+		return newSecureClient(cfg)
 	} else {
-		return newClient(cfg.URL, cfg.Retries), nil
+		return newClient(cfg), nil
 	}
 }
 
-func newSecureClient(addr, caFile, certFile, keyFile string, clientSessionCacheSize, maxIdleConnsPerHost int, skipVerify bool, numRetries int) (InternalClient, error) {
-	client := newClient(addr, numRetries)
-
-	bbsURL, err := url.Parse(addr)
+func newClient(cfg ClientConfig) *client {
+	return &client{
+		httpClient:          cfhttp.NewClient(cfhttp.WithRequestTimeout(cfg.RequestTimeout)),
+		streamingHTTPClient: cfhttp.NewClient(cfhttp.WithStreamingDefaults()),
+		reqGen:              rata.NewRequestGenerator(cfg.URL, Routes),
+		requestRetryCount:   cfg.Retries,
+	}
+}
+func newSecureClient(cfg ClientConfig) (InternalClient, error) {
+	bbsURL, err := url.Parse(cfg.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -246,36 +252,38 @@ func newSecureClient(addr, caFile, certFile, keyFile string, clientSessionCacheS
 	}
 
 	var clientOpts []tlsconfig.ClientOption
-	if !skipVerify {
-		clientOpts = append(clientOpts, tlsconfig.WithAuthorityFromFile(caFile))
+	if !cfg.InsecureSkipVerify {
+		clientOpts = append(clientOpts, tlsconfig.WithAuthorityFromFile(cfg.CAFile))
 	}
 
 	tlsConfig, err := tlsconfig.Build(
 		tlsconfig.WithInternalServiceDefaults(),
-		tlsconfig.WithIdentityFromFile(certFile, keyFile),
+		tlsconfig.WithIdentityFromFile(cfg.CertFile, cfg.KeyFile),
 	).Client(clientOpts...)
 	if err != nil {
 		return nil, err
 	}
-	tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(clientSessionCacheSize)
+	tlsConfig.ClientSessionCache = tls.NewLRUClientSessionCache(cfg.ClientSessionCacheSize)
 
-	tlsConfig.InsecureSkipVerify = skipVerify
+	tlsConfig.InsecureSkipVerify = cfg.InsecureSkipVerify
 
-	if tr, ok := client.httpClient.Transport.(*http.Transport); ok {
-		tr.TLSClientConfig = tlsConfig
-		tr.MaxIdleConnsPerHost = maxIdleConnsPerHost
-	} else {
-		return nil, errors.New("Invalid transport")
-	}
+	httpClient := cfhttp.NewClient(
+		cfhttp.WithRequestTimeout(cfg.RequestTimeout),
+		cfhttp.WithTLSConfig(tlsConfig),
+		cfhttp.WithMaxIdleConnsPerHost(cfg.MaxIdleConnsPerHost),
+	)
+	streamingClient := cfhttp.NewClient(
+		cfhttp.WithStreamingDefaults(),
+		cfhttp.WithTLSConfig(tlsConfig),
+		cfhttp.WithMaxIdleConnsPerHost(cfg.MaxIdleConnsPerHost),
+	)
 
-	if tr, ok := client.streamingHTTPClient.Transport.(*http.Transport); ok {
-		tr.TLSClientConfig = tlsConfig
-		tr.MaxIdleConnsPerHost = maxIdleConnsPerHost
-	} else {
-		return nil, errors.New("Invalid transport")
-	}
-
-	return client, nil
+	return &client{
+		httpClient:          httpClient,
+		streamingHTTPClient: streamingClient,
+		reqGen:              rata.NewRequestGenerator(cfg.URL, Routes),
+		requestRetryCount:   cfg.Retries,
+	}, nil
 }
 
 type client struct {
