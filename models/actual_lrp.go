@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -152,6 +154,23 @@ func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *Ac
 	}
 
 	return valid
+}
+
+func (d *ActualLRP_Presence) UnmarshalJSON(data []byte) error {
+	var name string
+	if err := json.Unmarshal(data, &name); err != nil {
+		return err
+	}
+
+	if v, found := ActualLRP_Presence_value[name]; found {
+		*d = ActualLRP_Presence(v)
+		return nil
+	}
+	return fmt.Errorf("invalid presence: %s", name)
+}
+
+func (d ActualLRP_Presence) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
 }
 
 func NewRunningActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {

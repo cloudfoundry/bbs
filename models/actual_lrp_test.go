@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -770,6 +771,22 @@ var _ = Describe("ActualLRP", func() {
 				models.ActualLRPStateCrashed, models.ActualLRP_Ordinary,
 			),
 		)
+
+		Describe("ActualLRP_Presence", func() {
+			Describe("serialization", func() {
+				DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+					func(v models.ActualLRP_Presence, expectedJSON string) {
+						Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
+						var testV models.ActualLRP_Presence
+						Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+						Expect(testV).To(Equal(v))
+					},
+					Entry("Ordinary", models.ActualLRP_Ordinary, `"ORDINARY"`),
+					Entry("EVACUATING", models.ActualLRP_Evacuating, `"EVACUATING"`),
+					Entry("SUSPECT", models.ActualLRP_Suspect, `"SUSPECT"`),
+				)
+			})
+		})
 	})
 })
 

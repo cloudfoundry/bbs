@@ -1,11 +1,13 @@
 package models_test
 
 import (
+	"encoding/json"
 	"errors"
 
 	. "code.cloudfoundry.org/bbs/models"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -56,6 +58,44 @@ var _ = Describe("Errors", func() {
 			var err1 *Error = nil
 			var err2 *Error = nil
 			Expect(err1.Equal(err2)).To(BeTrue())
+		})
+	})
+
+	Describe("Type", func() {
+		Describe("serialization", func() {
+			DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+				func(v Error_Type, expectedJSON string) {
+					Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
+					var testV Error_Type
+					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+					Expect(testV).To(Equal(v))
+				},
+				Entry("UnknownError", Error_UnknownError, `"UnknownError"`),
+				Entry("InvalidRecord", Error_InvalidRecord, `"InvalidRecord"`),
+				Entry("InvalidRequest", Error_InvalidRequest, `"InvalidRequest"`),
+				Entry("InvalidResponse", Error_InvalidResponse, `"InvalidResponse"`),
+				Entry("InvalidProtobufMessage", Error_InvalidProtobufMessage, `"InvalidProtobufMessage"`),
+				Entry("InvalidJSON", Error_InvalidJSON, `"InvalidJSON"`),
+				Entry("FailedToOpenEnvelope", Error_FailedToOpenEnvelope, `"FailedToOpenEnvelope"`),
+				Entry("InvalidStateTransition", Error_InvalidStateTransition, `"InvalidStateTransition"`),
+				Entry("ResourceConflict", Error_ResourceConflict, `"ResourceConflict"`),
+				Entry("ResourceExists", Error_ResourceExists, `"ResourceExists"`),
+				Entry("ResourceNotFound", Error_ResourceNotFound, `"ResourceNotFound"`),
+				Entry("RouterError", Error_RouterError, `"RouterError"`),
+				Entry("ActualLRPCannotBeClaimed", Error_ActualLRPCannotBeClaimed, `"ActualLRPCannotBeClaimed"`),
+				Entry("ActualLRPCannotBeStarted", Error_ActualLRPCannotBeStarted, `"ActualLRPCannotBeStarted"`),
+				Entry("ActualLRPCannotBeCrashed", Error_ActualLRPCannotBeCrashed, `"ActualLRPCannotBeCrashed"`),
+				Entry("ActualLRPCannotBeFailed", Error_ActualLRPCannotBeFailed, `"ActualLRPCannotBeFailed"`),
+				Entry("ActualLRPCannotBeRemoved", Error_ActualLRPCannotBeRemoved, `"ActualLRPCannotBeRemoved"`),
+				Entry("ActualLRPCannotBeUnclaimed", Error_ActualLRPCannotBeUnclaimed, `"ActualLRPCannotBeUnclaimed"`),
+				Entry("RunningOnDifferentCell", Error_RunningOnDifferentCell, `"RunningOnDifferentCell"`),
+				Entry("GUIDGeneration", Error_GUIDGeneration, `"GUIDGeneration"`),
+				Entry("Deserialize", Error_Deserialize, `"Deserialize"`),
+				Entry("Deadlock", Error_Deadlock, `"Deadlock"`),
+				Entry("Unrecoverable", Error_Unrecoverable, `"Unrecoverable"`),
+				Entry("LockCollision", Error_LockCollision, `"LockCollision"`),
+				Entry("Timeout", Error_Timeout, `"Timeout"`),
+			)
 		})
 	})
 })
