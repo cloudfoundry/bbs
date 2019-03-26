@@ -8,7 +8,7 @@ message ImageLayer {
   enum DigestAlgorithm {
     DigestAlgorithmInvalid = 0; // not camel cased since it isn't supposed to be used by API users
     SHA256                 = 1 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha256"];
-    SHA512                 = 2 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha512"];
+    SHA512                 = 2 [(gogoproto.enumvalue_customname) = "DigestAlgorithmSha512", deprecated=true];
   }
 
   enum MediaType {
