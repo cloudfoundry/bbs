@@ -236,6 +236,9 @@ func (*ActualLRP) Version() format.Version {
 }
 
 func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstanceKey ActualLRPInstanceKey) *ActualLRP {
+	if actualLRPInfo == nil {
+		return nil
+	}
 	return &ActualLRP{
 		ActualLRPKey:         lrpKey,
 		ActualLRPInstanceKey: lrpInstanceKey,
@@ -251,6 +254,9 @@ func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstance
 }
 
 func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
+	if actual == nil {
+		return nil
+	}
 	return &ActualLRPInfo{
 		ActualLRPNetInfo: actual.ActualLRPNetInfo,
 		CrashCount:       actual.CrashCount,
