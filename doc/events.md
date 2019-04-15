@@ -6,6 +6,8 @@ to those events as well as the type of events supported by the BBS.
 
 ## Subscribing to LRP Events
 
+**Deprecated** in favor of [subscribing to LRP Instance Events](#subscribing-to-lrp-instance-events)
+
 You can use the `SubscribeToEvents(logger lager.Logger) (events.EventSource,
 error)` client method to subscribe to lrp events. For example:
 
@@ -157,6 +159,8 @@ DesiredLRP that was just removed.
 
 ### `ActualLRPCreatedEvent`
 
+**Deprecated** in favor of [ActualLRPInstanceCreatedEvent](#ActualLRPInstanceCreatedEvent)
+
 When a new ActualLRP is created, a
 [ActualLRPCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPCreatedEvent)
 is emitted. The value of the `ActualLrpGroup` field contains more information
@@ -165,6 +169,8 @@ about the ActualLRP.
 
 ### `ActualLRPChangedEvent`
 
+**Deprecated** in favor of [ActualLRPInstanceChangedEvent](#ActualLRPInstanceChangedEvent)
+
 When a ActualLRP changes, a
 [ActualLRPChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPChangedEvent)
 is emitted. The value of the `Before` and `After` fields contains information about the
@@ -172,22 +178,13 @@ ActualLRP state before and after the change.
 
 ### `ActualLRPRemovedEvent`
 
+**Deprecated** in favor of [ActualLRPInstanceRemovedEvent](#ActualLRPInstanceRemovedEvent)
+
 When a ActualLRP is removed, a
 [ActualLRPRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPRemovedEvent)
 is emitted. The value of the `ActualLrpGroup` field contains information about the
 ActualLRP that was just removed.
 
-### `ActualLRPCrashedEvent`
-
-When a ActualLRP crashes a
-[ActualLRPCrashedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPCrashedEvent)
-is emitted. The event will have the following field values:
-
-1. `ActualLRPKey`: The LRP key of the ActualLRP.
-1. `ActualLRPInstanceKey`: The instance key of the ActualLRP.
-1. `CrashCount`: The number of times the ActualLRP has crashed, including this latest crash.
-1. `CrashReason`: The last error that caused the ActualLRP to crash.
-1. `Since`: The timestamp when the ActualLRP last crashed, in nanoseconds in the Unix epoch.
 
 ## ActualLRP instance events
 

@@ -44,6 +44,7 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
+// DEPRECATED
 func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("actual-lrp-groups")
@@ -69,6 +70,7 @@ func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseW
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
+// DEPRECATED
 func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("actual-lrp-groups-by-process-guid")
@@ -94,6 +96,7 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w h
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
+// DEPRECATED
 func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("actual-lrp-group-by-process-guid-and-index")

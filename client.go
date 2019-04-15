@@ -133,12 +133,15 @@ type ExternalActualLRPClient interface {
 	// Returns all ActualLRPs matching the given ActualLRPFilter
 	ActualLRPs(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRP, error)
 
+	// DEPRECATED
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
 	ActualLRPGroups(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 
+	// DEPRECATED
 	// Returns all ActualLRPGroups that have the given process guid
 	ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error)
 
+	// DEPRECATED
 	// Returns the ActualLRPGroup with the given process guid and instance index
 	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error)
 
@@ -173,10 +176,15 @@ type ExternalDesiredLRPClient interface {
 The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
+	// DEPRECATED
 	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
+
 	SubscribeToInstanceEvents(logger lager.Logger) (events.EventSource, error)
 	SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error)
+
+	// DEPRECATED
 	SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
+
 	SubscribeToInstanceEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
 }
 
@@ -342,6 +350,7 @@ func (c *client) ActualLRPs(logger lager.Logger, filter models.ActualLRPFilter) 
 	return response.ActualLrps, response.Error.ToError()
 }
 
+// DEPRECATED
 func (c *client) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	request := models.ActualLRPGroupsRequest{
 		Domain: filter.Domain,
@@ -356,6 +365,7 @@ func (c *client) ActualLRPGroups(logger lager.Logger, filter models.ActualLRPFil
 	return response.ActualLrpGroups, response.Error.ToError()
 }
 
+// DEPRECATED
 func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid string) ([]*models.ActualLRPGroup, error) {
 	request := models.ActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: processGuid,
@@ -369,6 +379,7 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, processGuid s
 	return response.ActualLrpGroups, response.Error.ToError()
 }
 
+// DEPRECATED
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, processGuid string, index int) (*models.ActualLRPGroup, error) {
 	request := models.ActualLRPGroupByProcessGuidAndIndexRequest{
 		ProcessGuid: processGuid,
@@ -759,6 +770,7 @@ func (c *client) subscribeToEvents(route string, cellId string) (events.EventSou
 	return events.NewEventSource(eventSource), nil
 }
 
+// DEPRECATED
 func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(LRPGroupEventStreamRoute_r1, "")
 }
@@ -771,6 +783,7 @@ func (c *client) SubscribeToTaskEvents(logger lager.Logger) (events.EventSource,
 	return c.subscribeToEvents(TaskEventStreamRoute_r1, "")
 }
 
+// DEPRECATED
 func (c *client) SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
 	return c.subscribeToEvents(LRPGroupEventStreamRoute_r1, cellId)
 }

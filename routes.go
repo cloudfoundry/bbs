@@ -12,9 +12,9 @@ const (
 
 	// Actual LRPs
 	ActualLRPsRoute_r0                          = "ActualLRPs"
-	ActualLRPGroupsRoute_r0                     = "ActualLRPGroups"
-	ActualLRPGroupsByProcessGuidRoute_r0        = "ActualLRPGroupsByProcessGuid"
-	ActualLRPGroupByProcessGuidAndIndexRoute_r0 = "ActualLRPGroupsByProcessGuidAndIndex"
+	ActualLRPGroupsRoute_r0                     = "ActualLRPGroups"                      // DEPRECATED
+	ActualLRPGroupsByProcessGuidRoute_r0        = "ActualLRPGroupsByProcessGuid"         // DEPRECATED
+	ActualLRPGroupByProcessGuidAndIndexRoute_r0 = "ActualLRPGroupsByProcessGuidAndIndex" // DEPRECATED
 
 	// Actual LRP Lifecycle
 	ClaimActualLRPRoute_r0  = "ClaimActualLRP"
@@ -58,7 +58,7 @@ const (
 	TaskByGuidRoute_r2    = "TaskByGuid_r2" // DEPRECATED
 
 	// Event Streaming
-	LRPGroupEventStreamRoute_r1    = "EventStream"
+	LRPGroupEventStreamRoute_r1    = "EventStream" // DEPRECATED
 	TaskEventStreamRoute_r1        = "TaskEventStream"
 	LRPInstanceEventStreamRoute_r1 = "LRPInstanceEventStream"
 	EventStreamRoute_r0            = "EventStream_r0"            // DEPRECATED
@@ -79,9 +79,9 @@ var Routes = rata.Routes{
 
 	// Actual LRPs
 	{Path: "/v1/actual_lrps/list", Method: "POST", Name: ActualLRPsRoute_r0},
-	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute_r0},
-	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute_r0},
-	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute_r0},
+	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute_r0},                                              // DEPRECATED
+	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute_r0},                 // DEPRECATED
+	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute_r0}, // DEPRECATED
 
 	// Actual LRP Lifecycle
 	{Path: "/v1/actual_lrps/claim", Method: "POST", Name: ClaimActualLRPRoute_r0},
@@ -128,7 +128,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/tasks/delete", Method: "POST", Name: DeleteTaskRoute_r0},
 
 	// Event Streaming
-	{Path: "/v1/events.r1", Method: "GET", Name: LRPGroupEventStreamRoute_r1},
+	{Path: "/v1/events.r1", Method: "GET", Name: LRPGroupEventStreamRoute_r1}, // DEPRECATED
 	{Path: "/v1/events/tasks.r1", Method: "POST", Name: TaskEventStreamRoute_r1},
 	{Path: "/v1/events/lrp_instances.r1", Method: "POST", Name: LRPInstanceEventStreamRoute_r1},
 	{Path: "/v1/events", Method: "GET", Name: EventStreamRoute_r0},                           // DEPRECATED

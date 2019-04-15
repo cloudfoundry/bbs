@@ -52,10 +52,12 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(internalRequest)
 }
 
+// DEPRECATED
 func (request *ActualLRPGroupsRequest) Validate() error {
 	return nil
 }
 
+// DEPRECATED
 func (request *ActualLRPGroupsByProcessGuidRequest) Validate() error {
 	var validationError ValidationError
 
@@ -70,6 +72,7 @@ func (request *ActualLRPGroupsByProcessGuidRequest) Validate() error {
 	return nil
 }
 
+// DEPRECATED
 func (request *ActualLRPGroupByProcessGuidAndIndexRequest) Validate() error {
 	var validationError ValidationError
 

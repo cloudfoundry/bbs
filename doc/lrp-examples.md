@@ -92,12 +92,14 @@ err = client.DesireLRP(logger, &models.DesiredLRP{
 
 ```go
 for {
-  lrpGroups, err := client.ActualLRPGroupsByProcessGuid(logger, "some-guid")
+  lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{
+		ProcessGuid: "some-guid",
+	})
   if err != nil {
     log.Printf("failed to fetch lrps!")
     panic(err)
   }
-  log.Printf("You have %d instances of your LRP", len(lrpGroups))
+  log.Printf("You have %d instances of your LRP", len(lrps))
   time.Sleep(time.Second)
 }
 ```

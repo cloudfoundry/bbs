@@ -11,25 +11,30 @@ message ActualLRPLifecycleResponse {
 }
 
 message ActualLRPGroupsResponse {
+  option deprecated = true;
   Error error = 1;
   repeated ActualLRPGroup actual_lrp_groups = 2;
 }
 
 message ActualLRPGroupResponse {
+  option deprecated = true;
   Error error = 1;
   ActualLRPGroup actual_lrp_group = 2;
 }
 
 message ActualLRPGroupsRequest {
+  option deprecated = true;
   string domain = 1 [(gogoproto.jsontag) = "domain"];
   string cell_id = 2 [(gogoproto.jsontag) = "cell_id"];
 }
 
 message ActualLRPGroupsByProcessGuidRequest {
+  option deprecated = true;
   string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
 }
 
 message ActualLRPGroupByProcessGuidAndIndexRequest {
+  option deprecated = true;
   string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
   int32 index = 2 [(gogoproto.jsontag) = "index"];
 }

@@ -75,9 +75,9 @@ func New(
 
 		// Actual LRPs
 		bbs.ActualLRPsRoute_r0:                          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPs), emitter)),
-		bbs.ActualLRPGroupsRoute_r0:                     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroups), emitter)),
-		bbs.ActualLRPGroupsByProcessGuidRoute_r0:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupsByProcessGuid), emitter)),
-		bbs.ActualLRPGroupByProcessGuidAndIndexRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex), emitter)),
+		bbs.ActualLRPGroupsRoute_r0:                     route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroups), emitter)),                     // DEPRECATED
+		bbs.ActualLRPGroupsByProcessGuidRoute_r0:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupsByProcessGuid), emitter)),        // DEPRECATED
+		bbs.ActualLRPGroupByProcessGuidAndIndexRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex), emitter)), // DEPRECATED
 
 		// Actual LRP Lifecycle
 		bbs.ClaimActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.ClaimActualLRP), emitter)),

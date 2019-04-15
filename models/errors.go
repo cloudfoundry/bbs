@@ -161,6 +161,7 @@ func (err ErrInvalidModification) Error() string {
 	return "attempt to make invalid change to field: " + err.InvalidField
 }
 
+// DEPRECATED
 var ErrActualLRPGroupInvalid = errors.New("ActualLRPGroup invalid")
 
 func NewTaskTransitionError(from, to Task_State) *Error {

@@ -9,15 +9,18 @@ import "task.proto";
 import "modification_tag.proto";
 
 message ActualLRPCreatedEvent  {
+  option deprecated = true;
   ActualLRPGroup actual_lrp_group = 1;
 }
 
 message ActualLRPChangedEvent {
+  option deprecated = true;
   ActualLRPGroup before = 1;
   ActualLRPGroup after = 2;
 }
 
 message ActualLRPRemovedEvent {
+  option deprecated = true;
   ActualLRPGroup actual_lrp_group = 1;
 }
 

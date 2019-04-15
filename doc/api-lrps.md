@@ -57,6 +57,8 @@ if err != nil {
 
 ## ActualLRPGroups
 
+**Deprecated** in favor of [ActualLRPs](#actuallrps).
+
 Returns all [ActualLRPGroups](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroup) matching the given [ActualLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPFilter).
 
 ### BBS API Endpoint
@@ -99,6 +101,8 @@ if err != nil {
 
 ## ActualLRPsByProcessGuid
 
+**Deprecated** in favor of [ActualLRPs](#actuallrps) with an [ActualLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPFilter).
+
 Returns all [ActualLRPGroups](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroup) for the given process guid.
 
 ### BBS API Endpoint
@@ -134,6 +138,8 @@ if err != nil {
 ```
 
 ## ActualLRPGroupByProcessGuidAndIndex
+
+**Deprecated** in favor of [ActualLRPs](#actuallrps) with an [ActualLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPFilter).
 
 Returns the [ActualLRPGroup](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPGroup) with the given process guid and instance index.
 

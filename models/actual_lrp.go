@@ -27,6 +27,7 @@ var ActualLRPStates = []string{
 	ActualLRPStateCrashed,
 }
 
+// DEPRECATED
 type ActualLRPChange struct {
 	Before *ActualLRPGroup
 	After  *ActualLRPGroup
@@ -173,18 +174,21 @@ func (d ActualLRP_Presence) MarshalJSON() ([]byte, error) {
 	return json.Marshal(d.String())
 }
 
+// DEPRECATED
 func NewRunningActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
 	return &ActualLRPGroup{
 		Instance: actualLRP,
 	}
 }
 
+// DEPRECATED
 func NewEvacuatingActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
 	return &ActualLRPGroup{
 		Evacuating: actualLRP,
 	}
 }
 
+// DEPRECATED
 func (group ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
 	switch {
 	case group.Instance == nil && group.Evacuating == nil:
@@ -269,6 +273,7 @@ func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
 	}
 }
 
+// DEPRECATED
 func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
 	if actual == nil {
 		return nil
@@ -430,6 +435,7 @@ func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
 	return false
 }
 
+// DEPRECATED
 // ResolveActualLRPGroups convert the given set of lrp instances into
 // ActualLRPGroup.  This conversion is lossy.  A suspect LRP is given
 // precendence over an Ordinary instance if it is Running.  Otherwise, the
@@ -456,6 +462,7 @@ func ResolveActualLRPGroups(lrps []*ActualLRP) []*ActualLRPGroup {
 	return result
 }
 
+// DEPRECATED
 // ResolveToActualLRPGroup calls ResolveActualLRPGroups and return the first
 // LRP group.  It panics if there are more than one group.  If there no LRP
 // groups were returned by ResolveActualLRPGroups, then an empty ActualLRPGroup

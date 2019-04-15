@@ -74,7 +74,7 @@ import (
 //  removed event
 
 type ActualLRPEventCalculator struct {
-	ActualLRPGroupHub    events.Hub
+	ActualLRPGroupHub    events.Hub // DEPRECATED
 	ActualLRPInstanceHub events.Hub
 }
 
