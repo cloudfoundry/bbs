@@ -115,10 +115,10 @@ The `RootFs` field specifies the root filesystem to use inside the container. On
 RootFs: "preloaded:ROOTFS-NAME"
 ```
 
-Cloud Foundry buildpack-based apps use the `cflinuxfs2` preloaded filesystem, built to work with Cloud Foundry buildpacks:
+Cloud Foundry buildpack-based apps use the `cflinuxfs3` preloaded filesystem, built to work with Cloud Foundry buildpacks:
 
 ```go
-RootFs: "preloaded:cflinuxfs2"
+RootFs: "preloaded:cflinuxfs3"
 ```
 
 Clients may also provide a root filesystem based on a Docker image:

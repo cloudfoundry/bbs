@@ -159,9 +159,9 @@ Preloaded root filesystems look like:
 ```
 
 Diego's [BOSH release](https://github.com/cloudfoundry/diego-release) ships with the
-`cflinuxfs2` filesystem root filesystem built to work with the Cloud Foundry buildpacks, which can be specified via
+`cflinuxfs3` filesystem root filesystem built to work with the Cloud Foundry buildpacks, which can be specified via
 ```
-"rootfs": "preloaded:cflinuxfs2"
+"rootfs": "preloaded:cflinuxfs3"
 ```
 
 It is possible to provide a custom root filesystem by specifying a Docker image for `RootFs`:

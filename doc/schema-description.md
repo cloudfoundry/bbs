@@ -26,7 +26,7 @@
 |                | memory_mb              | integer                 | No        | Memory Quota in MB                                                                                                             |
 |                | disk_mb                | integer                 | No        | Disk Quota in MB                                                                                                               |
 |                | max_pids               | integer                 | No        | Process ids Quota                                                                                                              |
-|                | rootfs                 | character varying(1024) | No        | Scheme of RootFS to use for the LRP (for example "docker://some/image" or "preloaded:cflinuxfs2")                              |
+|                | rootfs                 | character varying(1024) | No        | Scheme of RootFS to use for the LRP (for example "docker://some/image" or "preloaded:cflinuxfs3")                              |
 |                | routes                 | text                    | YES       | Routes bound to the DesiredLRP                                                                                                 |
 |                | volume_placement       | text                    | YES       | Volumes to be mounted for the LRP (passed through to the persistence layer)                                                    |
 |                | modification_tag_epoch | character varying(255)  | No        | GUID generated when the record is created                                                                                      |

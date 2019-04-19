@@ -28,7 +28,7 @@ var _ = Describe("DesiredLRP", func() {
             "download": {
               "from": "http://file-server.service.cf.internal:8080/v1/static/buildpack_app_lifecycle/buildpack_app_lifecycle.tgz",
               "to": "/tmp/lifecycle",
-              "cache_key": "buildpack-cflinuxfs2-lifecycle",
+              "cache_key": "buildpack-cflinuxfs3-lifecycle",
 							"user": "someone",
 							"checksum_algorithm": "md5",
 							"checksum_value": "some random value"
@@ -71,7 +71,7 @@ var _ = Describe("DesiredLRP", func() {
                 },
                 {
                   "name": "CF_STACK",
-                  "value": "cflinuxfs2"
+                  "value": "cflinuxfs3"
                 },
                 {
                   "name": "PORT",
@@ -111,7 +111,7 @@ var _ = Describe("DesiredLRP", func() {
                 },
                 {
                   "name": "CF_STACK",
-									"value": "cflinuxfs2"
+									"value": "cflinuxfs3"
                 },
                 {
                   "name": "PORT",
@@ -149,7 +149,7 @@ var _ = Describe("DesiredLRP", func() {
     },
     "process_guid": "some-guid",
     "domain": "cf-apps",
-    "rootfs": "preloaded:cflinuxfs2",
+    "rootfs": "preloaded:cflinuxfs3",
     "instances": 2,
     "env": [
       {
