@@ -56,6 +56,10 @@ var _ = Describe("dbStatMetronNotifier", func() {
 		fakeDBStats = new(metricsfakes.FakeDBStats)
 		fakeDBStats.OpenConnectionsReturnsOnCall(0, 10)
 		fakeDBStats.OpenConnectionsReturnsOnCall(1, 100)
+		fakeDBStats.WaitCountReturnsOnCall(0, 5)
+		fakeDBStats.WaitCountReturnsOnCall(1, 10)
+		fakeDBStats.WaitDurationReturnsOnCall(0, time.Second)
+		fakeDBStats.WaitDurationReturnsOnCall(1, 10*time.Second)
 
 		fakeMonitor = new(monitorfakes.FakeMonitor)
 		fakeMonitor.TotalReturnsOnCall(0, 20)
@@ -122,5 +126,17 @@ var _ = Describe("dbStatMetronNotifier", func() {
 		Eventually(metricsChan).Should(Receive(Equal(FakeGauge{"DBQueryDurationMax", int(time.Second)})))
 		fakeClock.Increment(metrics.DefaultEmitFrequency)
 		Eventually(metricsChan).Should(Receive(Equal(FakeGauge{"DBQueryDurationMax", int(10 * time.Second)})))
+	})
+
+	It("emits a metric for the db wait duration metric", func() {
+		Eventually(metricsChan).Should(Receive(Equal(FakeGauge{"DBWaitDuration", int(time.Second)})))
+		fakeClock.Increment(metrics.DefaultEmitFrequency)
+		Eventually(metricsChan).Should(Receive(Equal(FakeGauge{"DBWaitDuration", int(10 * time.Second)})))
+	})
+
+	It("emits a metric for the db wait count metric", func() {
+		Eventually(metricsChan).Should(Receive(Equal(FakeGauge{"DBWaitCount", 5})))
+		fakeClock.Increment(metrics.DefaultEmitFrequency)
+		Eventually(metricsChan).Should(Receive(Equal(FakeGauge{"DBWaitCount", 10})))
 	})
 })

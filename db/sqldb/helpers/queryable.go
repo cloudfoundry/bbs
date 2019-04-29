@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"database/sql"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 )
@@ -22,6 +23,8 @@ type QueryableDB interface {
 	Queryable
 	Begin() (Tx, error)
 	OpenConnections() int
+	WaitDuration() time.Duration
+	WaitCount() int64
 }
 
 type Tx interface {
@@ -49,6 +52,14 @@ func NewMonitoredDB(db *sql.DB, monitor monitor.Monitor) QueryableDB {
 
 func (db *monitoredDB) OpenConnections() int {
 	return db.db.Stats().OpenConnections
+}
+
+func (db *monitoredDB) WaitDuration() time.Duration {
+	return db.db.Stats().WaitDuration
+}
+
+func (db *monitoredDB) WaitCount() int64 {
+	return db.db.Stats().WaitCount
 }
 
 func (q *monitoredDB) Begin() (Tx, error) {

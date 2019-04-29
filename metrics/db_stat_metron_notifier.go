@@ -15,6 +15,8 @@ const (
 	DefaultEmitFrequency = 60 * time.Second
 
 	dbOpenConnectionsMetric  = "DBOpenConnections"
+	dbWaitDurationMetric     = "DBWaitDuration"
+	dbWaitCountMetric        = "DBWaitCount"
 	dbQueriesTotalMetric     = "DBQueriesTotal"
 	dbQueriesSucceededMetric = "DBQueriesSucceeded"
 	dbQueriesFailedMetric    = "DBQueriesFailed"
@@ -25,6 +27,8 @@ const (
 //go:generate counterfeiter . DBStats
 type DBStats interface {
 	OpenConnections() int
+	WaitDuration() time.Duration
+	WaitCount() int64
 }
 
 type dbStatMetronNotifier struct {
@@ -64,6 +68,18 @@ func (notifier *dbStatMetronNotifier) Run(signals <-chan os.Signal, ready chan<-
 			err := notifier.metronClient.SendMetric(dbOpenConnectionsMetric, openConnections)
 			if err != nil {
 				logger.Error("failed-sending-db-open-connections-count", err)
+			}
+
+			waitDuration := notifier.dbStats.WaitDuration()
+			err = notifier.metronClient.SendDuration(dbWaitDurationMetric, waitDuration)
+			if err != nil {
+				logger.Error("failed-sending-db-wait-duration", err)
+			}
+
+			waitCount := notifier.dbStats.WaitCount()
+			err = notifier.metronClient.SendMetric(dbWaitCountMetric, int(waitCount))
+			if err != nil {
+				logger.Error("failed-sending-db-wait-count", err)
 			}
 
 			total := notifier.monitor.Total()
