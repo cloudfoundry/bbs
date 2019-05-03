@@ -781,7 +781,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 
 			It("creates and emits a ActualLRPCreatedEvent per index", func() {
-				Eventually(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount).Should(Equal(5))
+				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(5))
 				Eventually(actualHub.EmitCallCount).Should(Equal(5))
 
 				expectedLRPKeys := []*models.ActualLRPKey{}
@@ -808,7 +808,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 
 			It("creates and emits a ActualLRPInstanceCreatedEvent per index", func() {
-				Eventually(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount).Should(Equal(5))
+				Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(5))
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(5))
 
 				expectedLRPKeys := []*models.ActualLRPKey{}
@@ -836,7 +836,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			Context("when an auctioneer is present", func() {
 				It("emits start auction requests", func() {
-					Eventually(fakeAuctioneerClient.RequestLRPAuctionsCallCount).Should(Equal(1))
+					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
 					volumeDrivers := []string{}
 					for _, volumeMount := range desiredLRP.VolumeMounts {
