@@ -215,7 +215,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		)
 
 		BeforeEach(func() {
-			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.NewPortMapping(10, 20))
+			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", false, models.NewPortMapping(10, 20))
 
 			actualLRPState = models.ActualLRPStateUnclaimed
 			afterActualLRPState = models.ActualLRPStateRunning
