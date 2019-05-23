@@ -10,8 +10,9 @@ import (
 type FakeTx struct {
 	CommitStub        func() error
 	commitMutex       sync.RWMutex
-	commitArgsForCall []struct{}
-	commitReturns     struct {
+	commitArgsForCall []struct {
+	}
+	commitReturns struct {
 		result1 error
 	}
 	commitReturnsOnCall map[int]struct {
@@ -19,8 +20,9 @@ type FakeTx struct {
 	}
 	RollbackStub        func() error
 	rollbackMutex       sync.RWMutex
-	rollbackArgsForCall []struct{}
-	rollbackReturns     struct {
+	rollbackArgsForCall []struct {
+	}
+	rollbackReturns struct {
 		result1 error
 	}
 	rollbackReturnsOnCall map[int]struct {
@@ -33,7 +35,8 @@ type FakeTx struct {
 func (fake *FakeTx) Commit() error {
 	fake.commitMutex.Lock()
 	ret, specificReturn := fake.commitReturnsOnCall[len(fake.commitArgsForCall)]
-	fake.commitArgsForCall = append(fake.commitArgsForCall, struct{}{})
+	fake.commitArgsForCall = append(fake.commitArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Commit", []interface{}{})
 	fake.commitMutex.Unlock()
 	if fake.CommitStub != nil {
@@ -42,7 +45,8 @@ func (fake *FakeTx) Commit() error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.commitReturns.result1
+	fakeReturns := fake.commitReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeTx) CommitCallCount() int {
@@ -51,7 +55,15 @@ func (fake *FakeTx) CommitCallCount() int {
 	return len(fake.commitArgsForCall)
 }
 
+func (fake *FakeTx) CommitCalls(stub func() error) {
+	fake.commitMutex.Lock()
+	defer fake.commitMutex.Unlock()
+	fake.CommitStub = stub
+}
+
 func (fake *FakeTx) CommitReturns(result1 error) {
+	fake.commitMutex.Lock()
+	defer fake.commitMutex.Unlock()
 	fake.CommitStub = nil
 	fake.commitReturns = struct {
 		result1 error
@@ -59,6 +71,8 @@ func (fake *FakeTx) CommitReturns(result1 error) {
 }
 
 func (fake *FakeTx) CommitReturnsOnCall(i int, result1 error) {
+	fake.commitMutex.Lock()
+	defer fake.commitMutex.Unlock()
 	fake.CommitStub = nil
 	if fake.commitReturnsOnCall == nil {
 		fake.commitReturnsOnCall = make(map[int]struct {
@@ -73,7 +87,8 @@ func (fake *FakeTx) CommitReturnsOnCall(i int, result1 error) {
 func (fake *FakeTx) Rollback() error {
 	fake.rollbackMutex.Lock()
 	ret, specificReturn := fake.rollbackReturnsOnCall[len(fake.rollbackArgsForCall)]
-	fake.rollbackArgsForCall = append(fake.rollbackArgsForCall, struct{}{})
+	fake.rollbackArgsForCall = append(fake.rollbackArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Rollback", []interface{}{})
 	fake.rollbackMutex.Unlock()
 	if fake.RollbackStub != nil {
@@ -82,7 +97,8 @@ func (fake *FakeTx) Rollback() error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.rollbackReturns.result1
+	fakeReturns := fake.rollbackReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeTx) RollbackCallCount() int {
@@ -91,7 +107,15 @@ func (fake *FakeTx) RollbackCallCount() int {
 	return len(fake.rollbackArgsForCall)
 }
 
+func (fake *FakeTx) RollbackCalls(stub func() error) {
+	fake.rollbackMutex.Lock()
+	defer fake.rollbackMutex.Unlock()
+	fake.RollbackStub = stub
+}
+
 func (fake *FakeTx) RollbackReturns(result1 error) {
+	fake.rollbackMutex.Lock()
+	defer fake.rollbackMutex.Unlock()
 	fake.RollbackStub = nil
 	fake.rollbackReturns = struct {
 		result1 error
@@ -99,6 +123,8 @@ func (fake *FakeTx) RollbackReturns(result1 error) {
 }
 
 func (fake *FakeTx) RollbackReturnsOnCall(i int, result1 error) {
+	fake.rollbackMutex.Lock()
+	defer fake.rollbackMutex.Unlock()
 	fake.RollbackStub = nil
 	if fake.rollbackReturnsOnCall == nil {
 		fake.rollbackReturnsOnCall = make(map[int]struct {

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -9,12 +10,12 @@ import (
 
 //go:generate counterfeiter -o fake_controllers/fake_actual_lrp_lifecycle_controller.go . ActualLRPLifecycleController
 type ActualLRPLifecycleController interface {
-	ClaimActualLRP(logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error
-	StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error
-	CrashActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error
-	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
-	RemoveActualLRP(logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error
-	RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
+	ClaimActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error
+	StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error
+	CrashActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error
+	FailActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
+	RemoveActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error
+	RetireActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) error
 }
 
 type ActualLRPLifecycleHandler struct {
@@ -47,7 +48,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.R
 		return
 	}
 
-	err = h.controller.ClaimActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
+	err = h.controller.ClaimActualLRP(req.Context(), logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
 	response.Error = models.ConvertError(err)
 }
 
@@ -68,7 +69,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 		return
 	}
 
-	err = h.controller.StartActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
+	err = h.controller.StartActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
 	response.Error = models.ConvertError(err)
 }
 
@@ -89,7 +90,7 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(logger lager.Logger, w http.R
 	actualLRPKey := request.ActualLrpKey
 	actualLRPInstanceKey := request.ActualLrpInstanceKey
 
-	err = h.controller.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, request.ErrorMessage)
+	err = h.controller.CrashActualLRP(req.Context(), logger, actualLRPKey, actualLRPInstanceKey, request.ErrorMessage)
 	response.Error = models.ConvertError(err)
 }
 
@@ -109,7 +110,7 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(logger lager.Logger, w http.Re
 		return
 	}
 
-	err = h.controller.FailActualLRP(logger, request.ActualLrpKey, request.ErrorMessage)
+	err = h.controller.FailActualLRP(req.Context(), logger, request.ActualLrpKey, request.ErrorMessage)
 	response.Error = models.ConvertError(err)
 }
 
@@ -129,7 +130,7 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(logger lager.Logger, w http.
 		return
 	}
 
-	err = h.controller.RemoveActualLRP(logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
+	err = h.controller.RemoveActualLRP(req.Context(), logger, request.ProcessGuid, request.Index, request.ActualLrpInstanceKey)
 	response.Error = models.ConvertError(err)
 }
 
@@ -148,6 +149,6 @@ func (h *ActualLRPLifecycleHandler) RetireActualLRP(logger lager.Logger, w http.
 		return
 	}
 
-	err = h.controller.RetireActualLRP(logger, request.ActualLrpKey)
+	err = h.controller.RetireActualLRP(req.Context(), logger, request.ActualLrpKey)
 	response.Error = models.ConvertError(err)
 }

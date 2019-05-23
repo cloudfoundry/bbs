@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"context"
 	"reflect"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -9,6 +10,7 @@ import (
 )
 
 func (db *SQLDB) EvacuateActualLRP(
+	ctx context.Context,
 	logger lager.Logger,
 	lrpKey *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
@@ -20,15 +22,15 @@ func (db *SQLDB) EvacuateActualLRP(
 
 	var actualLRP *models.ActualLRP
 
-	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		actualLRP, err = db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Evacuating, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
-			actualLRP, err = db.createEvacuatingActualLRP(logger, lrpKey, instanceKey, netInfo, tx)
+			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, tx)
 			return err
 		}
 
@@ -58,7 +60,7 @@ func (db *SQLDB) EvacuateActualLRP(
 			return err
 		}
 
-		_, err = db.update(logger, tx, "actual_lrps",
+		_, err = db.update(ctx, logger, tx, "actual_lrps",
 			helpers.SQLAttributes{
 				"domain":                 actualLRP.Domain,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -82,16 +84,16 @@ func (db *SQLDB) EvacuateActualLRP(
 	return actualLRP, err
 }
 
-func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+func (db *SQLDB) RemoveEvacuatingActualLRP(ctx context.Context, logger lager.Logger, lrpKey *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
 	logger = logger.Session("remove-evacuating-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		lrp, err := db.fetchActualLRPForUpdate(logger, processGuid, index, models.ActualLRP_Evacuating, tx)
+		lrp, err := db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("evacuating-lrp-does-not-exist")
 			return nil
@@ -107,7 +109,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
-		_, err = db.delete(logger, tx, "actual_lrps",
+		_, err = db.delete(ctx, logger, tx, "actual_lrps",
 			"process_guid = ? AND instance_index = ? AND presence = ?",
 			processGuid, index, models.ActualLRP_Evacuating,
 		)
@@ -120,7 +122,9 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(logger lager.Logger, lrpKey *models.A
 	})
 }
 
-func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
+func (db *SQLDB) createEvacuatingActualLRP(
+	ctx context.Context,
+	logger lager.Logger,
 	lrpKey *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
@@ -162,7 +166,7 @@ func (db *SQLDB) createEvacuatingActualLRP(logger lager.Logger,
 		"modification_tag_index": actualLRP.ModificationTag.Index,
 	}
 
-	_, err = db.upsert(logger, tx, "actual_lrps",
+	_, err = db.upsert(ctx, logger, tx, "actual_lrps",
 		sqlAttributes,
 		"process_guid = ? AND instance_index = ? AND presence = ?",
 		actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Evacuating,

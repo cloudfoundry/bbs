@@ -2,6 +2,7 @@ package taskworkpool
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"net/http"
@@ -87,7 +88,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 	logger = logger.Session("handle-completed-task", lager.Data{"task_guid": task.TaskGuid})
 
 	if task.CompletionCallbackUrl != "" {
-		before, after, modelErr := taskDB.ResolvingTask(logger, task.TaskGuid)
+		before, after, modelErr := taskDB.ResolvingTask(context.Background(), logger, task.TaskGuid)
 		if modelErr != nil {
 			logger.Error("marking-task-as-resolving-failed", modelErr)
 			return
@@ -132,7 +133,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 
 			statusCode = response.StatusCode
 			if shouldResolve(statusCode) {
-				deletedTask, modelErr := taskDB.DeleteTask(logger, task.TaskGuid)
+				deletedTask, modelErr := taskDB.DeleteTask(context.Background(), logger, task.TaskGuid)
 				if modelErr != nil {
 					logger.Error("delete-task-failed", modelErr)
 				}

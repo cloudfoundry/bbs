@@ -9,10 +9,32 @@ import (
 )
 
 type FakeConn struct {
-	PrepareStub        func(query string) (driver.Stmt, error)
+	BeginStub        func() (driver.Tx, error)
+	beginMutex       sync.RWMutex
+	beginArgsForCall []struct {
+	}
+	beginReturns struct {
+		result1 driver.Tx
+		result2 error
+	}
+	beginReturnsOnCall map[int]struct {
+		result1 driver.Tx
+		result2 error
+	}
+	CloseStub        func() error
+	closeMutex       sync.RWMutex
+	closeArgsForCall []struct {
+	}
+	closeReturns struct {
+		result1 error
+	}
+	closeReturnsOnCall map[int]struct {
+		result1 error
+	}
+	PrepareStub        func(string) (driver.Stmt, error)
 	prepareMutex       sync.RWMutex
 	prepareArgsForCall []struct {
-		query string
+		arg1 string
 	}
 	prepareReturns struct {
 		result1 driver.Stmt
@@ -22,125 +44,15 @@ type FakeConn struct {
 		result1 driver.Stmt
 		result2 error
 	}
-	CloseStub        func() error
-	closeMutex       sync.RWMutex
-	closeArgsForCall []struct{}
-	closeReturns     struct {
-		result1 error
-	}
-	closeReturnsOnCall map[int]struct {
-		result1 error
-	}
-	BeginStub        func() (driver.Tx, error)
-	beginMutex       sync.RWMutex
-	beginArgsForCall []struct{}
-	beginReturns     struct {
-		result1 driver.Tx
-		result2 error
-	}
-	beginReturnsOnCall map[int]struct {
-		result1 driver.Tx
-		result2 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
-}
-
-func (fake *FakeConn) Prepare(query string) (driver.Stmt, error) {
-	fake.prepareMutex.Lock()
-	ret, specificReturn := fake.prepareReturnsOnCall[len(fake.prepareArgsForCall)]
-	fake.prepareArgsForCall = append(fake.prepareArgsForCall, struct {
-		query string
-	}{query})
-	fake.recordInvocation("Prepare", []interface{}{query})
-	fake.prepareMutex.Unlock()
-	if fake.PrepareStub != nil {
-		return fake.PrepareStub(query)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.prepareReturns.result1, fake.prepareReturns.result2
-}
-
-func (fake *FakeConn) PrepareCallCount() int {
-	fake.prepareMutex.RLock()
-	defer fake.prepareMutex.RUnlock()
-	return len(fake.prepareArgsForCall)
-}
-
-func (fake *FakeConn) PrepareArgsForCall(i int) string {
-	fake.prepareMutex.RLock()
-	defer fake.prepareMutex.RUnlock()
-	return fake.prepareArgsForCall[i].query
-}
-
-func (fake *FakeConn) PrepareReturns(result1 driver.Stmt, result2 error) {
-	fake.PrepareStub = nil
-	fake.prepareReturns = struct {
-		result1 driver.Stmt
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeConn) PrepareReturnsOnCall(i int, result1 driver.Stmt, result2 error) {
-	fake.PrepareStub = nil
-	if fake.prepareReturnsOnCall == nil {
-		fake.prepareReturnsOnCall = make(map[int]struct {
-			result1 driver.Stmt
-			result2 error
-		})
-	}
-	fake.prepareReturnsOnCall[i] = struct {
-		result1 driver.Stmt
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeConn) Close() error {
-	fake.closeMutex.Lock()
-	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
-	fake.closeArgsForCall = append(fake.closeArgsForCall, struct{}{})
-	fake.recordInvocation("Close", []interface{}{})
-	fake.closeMutex.Unlock()
-	if fake.CloseStub != nil {
-		return fake.CloseStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.closeReturns.result1
-}
-
-func (fake *FakeConn) CloseCallCount() int {
-	fake.closeMutex.RLock()
-	defer fake.closeMutex.RUnlock()
-	return len(fake.closeArgsForCall)
-}
-
-func (fake *FakeConn) CloseReturns(result1 error) {
-	fake.CloseStub = nil
-	fake.closeReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeConn) CloseReturnsOnCall(i int, result1 error) {
-	fake.CloseStub = nil
-	if fake.closeReturnsOnCall == nil {
-		fake.closeReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.closeReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *FakeConn) Begin() (driver.Tx, error) {
 	fake.beginMutex.Lock()
 	ret, specificReturn := fake.beginReturnsOnCall[len(fake.beginArgsForCall)]
-	fake.beginArgsForCall = append(fake.beginArgsForCall, struct{}{})
+	fake.beginArgsForCall = append(fake.beginArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Begin", []interface{}{})
 	fake.beginMutex.Unlock()
 	if fake.BeginStub != nil {
@@ -149,7 +61,8 @@ func (fake *FakeConn) Begin() (driver.Tx, error) {
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.beginReturns.result1, fake.beginReturns.result2
+	fakeReturns := fake.beginReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeConn) BeginCallCount() int {
@@ -158,7 +71,15 @@ func (fake *FakeConn) BeginCallCount() int {
 	return len(fake.beginArgsForCall)
 }
 
+func (fake *FakeConn) BeginCalls(stub func() (driver.Tx, error)) {
+	fake.beginMutex.Lock()
+	defer fake.beginMutex.Unlock()
+	fake.BeginStub = stub
+}
+
 func (fake *FakeConn) BeginReturns(result1 driver.Tx, result2 error) {
+	fake.beginMutex.Lock()
+	defer fake.beginMutex.Unlock()
 	fake.BeginStub = nil
 	fake.beginReturns = struct {
 		result1 driver.Tx
@@ -167,6 +88,8 @@ func (fake *FakeConn) BeginReturns(result1 driver.Tx, result2 error) {
 }
 
 func (fake *FakeConn) BeginReturnsOnCall(i int, result1 driver.Tx, result2 error) {
+	fake.beginMutex.Lock()
+	defer fake.beginMutex.Unlock()
 	fake.BeginStub = nil
 	if fake.beginReturnsOnCall == nil {
 		fake.beginReturnsOnCall = make(map[int]struct {
@@ -180,15 +103,130 @@ func (fake *FakeConn) BeginReturnsOnCall(i int, result1 driver.Tx, result2 error
 	}{result1, result2}
 }
 
+func (fake *FakeConn) Close() error {
+	fake.closeMutex.Lock()
+	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
+	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Close", []interface{}{})
+	fake.closeMutex.Unlock()
+	if fake.CloseStub != nil {
+		return fake.CloseStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.closeReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeConn) CloseCallCount() int {
+	fake.closeMutex.RLock()
+	defer fake.closeMutex.RUnlock()
+	return len(fake.closeArgsForCall)
+}
+
+func (fake *FakeConn) CloseCalls(stub func() error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
+	fake.CloseStub = stub
+}
+
+func (fake *FakeConn) CloseReturns(result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
+	fake.CloseStub = nil
+	fake.closeReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeConn) CloseReturnsOnCall(i int, result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
+	fake.CloseStub = nil
+	if fake.closeReturnsOnCall == nil {
+		fake.closeReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.closeReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeConn) Prepare(arg1 string) (driver.Stmt, error) {
+	fake.prepareMutex.Lock()
+	ret, specificReturn := fake.prepareReturnsOnCall[len(fake.prepareArgsForCall)]
+	fake.prepareArgsForCall = append(fake.prepareArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Prepare", []interface{}{arg1})
+	fake.prepareMutex.Unlock()
+	if fake.PrepareStub != nil {
+		return fake.PrepareStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.prepareReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeConn) PrepareCallCount() int {
+	fake.prepareMutex.RLock()
+	defer fake.prepareMutex.RUnlock()
+	return len(fake.prepareArgsForCall)
+}
+
+func (fake *FakeConn) PrepareCalls(stub func(string) (driver.Stmt, error)) {
+	fake.prepareMutex.Lock()
+	defer fake.prepareMutex.Unlock()
+	fake.PrepareStub = stub
+}
+
+func (fake *FakeConn) PrepareArgsForCall(i int) string {
+	fake.prepareMutex.RLock()
+	defer fake.prepareMutex.RUnlock()
+	argsForCall := fake.prepareArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeConn) PrepareReturns(result1 driver.Stmt, result2 error) {
+	fake.prepareMutex.Lock()
+	defer fake.prepareMutex.Unlock()
+	fake.PrepareStub = nil
+	fake.prepareReturns = struct {
+		result1 driver.Stmt
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeConn) PrepareReturnsOnCall(i int, result1 driver.Stmt, result2 error) {
+	fake.prepareMutex.Lock()
+	defer fake.prepareMutex.Unlock()
+	fake.PrepareStub = nil
+	if fake.prepareReturnsOnCall == nil {
+		fake.prepareReturnsOnCall = make(map[int]struct {
+			result1 driver.Stmt
+			result2 error
+		})
+	}
+	fake.prepareReturnsOnCall[i] = struct {
+		result1 driver.Stmt
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeConn) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.prepareMutex.RLock()
-	defer fake.prepareMutex.RUnlock()
-	fake.closeMutex.RLock()
-	defer fake.closeMutex.RUnlock()
 	fake.beginMutex.RLock()
 	defer fake.beginMutex.RUnlock()
+	fake.closeMutex.RLock()
+	defer fake.closeMutex.RUnlock()
+	fake.prepareMutex.RLock()
+	defer fake.prepareMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

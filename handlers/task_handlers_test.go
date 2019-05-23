@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 
@@ -89,7 +90,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("calls the controller with no filter", func() {
 				Expect(controller.TasksCallCount()).To(Equal(1))
-				_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+				_, _, actualDomain, actualCellId := controller.TasksArgsForCall(0)
 				Expect(actualDomain).To(Equal(domain))
 				Expect(actualCellId).To(Equal(cellId))
 			})
@@ -128,7 +129,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("calls the controller with a domain filter", func() {
 					Expect(controller.TasksCallCount()).To(Equal(1))
-					_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+					_, _, actualDomain, actualCellId := controller.TasksArgsForCall(0)
 					Expect(actualDomain).To(Equal(domain))
 					Expect(actualCellId).To(Equal(cellId))
 				})
@@ -141,7 +142,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("calls the controller with a cell filter", func() {
 					Expect(controller.TasksCallCount()).To(Equal(1))
-					_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+					_, _, actualDomain, actualCellId := controller.TasksArgsForCall(0)
 					Expect(actualDomain).To(Equal(domain))
 					Expect(actualCellId).To(Equal(cellId))
 				})
@@ -220,7 +221,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("calls the controller with no filter", func() {
 				Expect(controller.TasksCallCount()).To(Equal(1))
-				_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+				_, _, actualDomain, actualCellId := controller.TasksArgsForCall(0)
 				Expect(actualDomain).To(Equal(domain))
 				Expect(actualCellId).To(Equal(cellId))
 			})
@@ -232,7 +233,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("calls the controller with a domain filter", func() {
 					Expect(controller.TasksCallCount()).To(Equal(1))
-					_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+					_, _, actualDomain, actualCellId := controller.TasksArgsForCall(0)
 					Expect(actualDomain).To(Equal(domain))
 					Expect(actualCellId).To(Equal(cellId))
 				})
@@ -245,7 +246,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("calls the controller with a cell filter", func() {
 					Expect(controller.TasksCallCount()).To(Equal(1))
-					_, actualDomain, actualCellId := controller.TasksArgsForCall(0)
+					_, _, actualDomain, actualCellId := controller.TasksArgsForCall(0)
 					Expect(actualDomain).To(Equal(domain))
 					Expect(actualCellId).To(Equal(cellId))
 				})
@@ -306,7 +307,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("fetches task by guid", func() {
 				Expect(controller.TaskByGuidCallCount()).To(Equal(1))
-				_, actualGuid := controller.TaskByGuidArgsForCall(0)
+				_, _, actualGuid := controller.TaskByGuidArgsForCall(0)
 				Expect(actualGuid).To(Equal(taskGuid))
 			})
 
@@ -425,7 +426,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("fetches task by guid", func() {
 				Expect(controller.TaskByGuidCallCount()).To(Equal(1))
-				_, actualGuid := controller.TaskByGuidArgsForCall(0)
+				_, _, actualGuid := controller.TaskByGuidArgsForCall(0)
 				Expect(actualGuid).To(Equal(taskGuid))
 			})
 
@@ -506,7 +507,7 @@ var _ = Describe("Task Handlers", func() {
 		Context("when the desire is successful", func() {
 			It("desires the task with the requested definitions", func() {
 				Expect(controller.DesireTaskCallCount()).To(Equal(1))
-				_, actualTaskDef, actualTaskGuid, actualDomain := controller.DesireTaskArgsForCall(0)
+				_, _, actualTaskDef, actualTaskGuid, actualDomain := controller.DesireTaskArgsForCall(0)
 				Expect(actualTaskDef).To(Equal(taskDef))
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualDomain).To(Equal(domain))
@@ -549,6 +550,8 @@ var _ = Describe("Task Handlers", func() {
 
 	Describe("StartTask", func() {
 		Context("when the start is successful", func() {
+			var ctx context.Context
+
 			BeforeEach(func() {
 				requestBody = &models.StartTaskRequest{
 					TaskGuid: "task-guid",
@@ -558,12 +561,14 @@ var _ = Describe("Task Handlers", func() {
 
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
+				ctx = request.Context()
 				handler.StartTask(logger, responseRecorder, request)
 			})
 
 			It("calls StartTask", func() {
 				Expect(controller.StartTaskCallCount()).To(Equal(1))
-				taskLogger, taskGuid, cellId := controller.StartTaskArgsForCall(0)
+				taskContext, taskLogger, taskGuid, cellId := controller.StartTaskArgsForCall(0)
+				Expect(taskContext).To(Equal(ctx))
 				Expect(taskLogger.SessionName()).To(ContainSubstring("start-task"))
 				Expect(taskGuid).To(Equal("task-guid"))
 				Expect(cellId).To(Equal("cell-id"))
@@ -658,7 +663,8 @@ var _ = Describe("Task Handlers", func() {
 
 				It("returns no error", func() {
 					Expect(controller.CancelTaskCallCount()).To(Equal(1))
-					taskLogger, taskGuid := controller.CancelTaskArgsForCall(0)
+					taskContext, taskLogger, taskGuid := controller.CancelTaskArgsForCall(0)
+					Expect(taskContext).To(Equal(request.Context()))
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 
@@ -735,7 +741,7 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when failing the task succeeds", func() {
 			It("returns no error", func() {
-				_, actualTaskGuid, actualFailureReason := controller.FailTaskArgsForCall(0)
+				_, _, actualTaskGuid, actualFailureReason := controller.FailTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualFailureReason).To(Equal(failureReason))
 
@@ -794,7 +800,7 @@ var _ = Describe("Task Handlers", func() {
 
 		Context("when reject task succeeds", func() {
 			It("returns no error", func() {
-				_, actualTaskGuid, actualFailureReason := controller.RejectTaskArgsForCall(0)
+				_, _, actualTaskGuid, actualFailureReason := controller.RejectTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualFailureReason).To(Equal(rejectionReason))
 
@@ -867,7 +873,7 @@ var _ = Describe("Task Handlers", func() {
 		Context("when completing the task succeeds", func() {
 			It("returns no error", func() {
 				Expect(controller.CompleteTaskCallCount()).To(Equal(1))
-				_, actualTaskGuid, actualCellId, actualFailed, actualFailureReason, actualResult := controller.CompleteTaskArgsForCall(0)
+				_, _, actualTaskGuid, actualCellId, actualFailed, actualFailureReason, actualResult := controller.CompleteTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualCellId).To(Equal(cellId))
 				Expect(actualFailed).To(Equal(failed))
@@ -926,7 +932,7 @@ var _ = Describe("Task Handlers", func() {
 			Context("when resolvinging the task succeeds", func() {
 				It("returns no error", func() {
 					Expect(controller.ResolvingTaskCallCount()).To(Equal(1))
-					_, taskGuid := controller.ResolvingTaskArgsForCall(0)
+					_, _, taskGuid := controller.ResolvingTaskArgsForCall(0)
 					Expect(taskGuid).To(Equal("task-guid"))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -981,7 +987,7 @@ var _ = Describe("Task Handlers", func() {
 			Context("when deleting the task succeeds", func() {
 				It("returns no error", func() {
 					Expect(controller.DeleteTaskCallCount()).To(Equal(1))
-					_, taskGuid := controller.DeleteTaskArgsForCall(0)
+					_, _, taskGuid := controller.DeleteTaskArgsForCall(0)
 					Expect(taskGuid).To(Equal("task-guid"))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))

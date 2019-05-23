@@ -2,6 +2,7 @@
 package fake_controllers
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -10,13 +11,14 @@ import (
 )
 
 type FakeTaskController struct {
-	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+	ConvergeTasksStub        func(context.Context, lager.Logger, time.Duration, time.Duration, time.Duration) error
 	convergeTasksMutex       sync.RWMutex
 	convergeTasksArgsForCall []struct {
-		logger                      lager.Logger
-		kickTaskDuration            time.Duration
-		expirePendingTaskDuration   time.Duration
-		expireCompletedTaskDuration time.Duration
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 time.Duration
+		arg4 time.Duration
+		arg5 time.Duration
 	}
 	convergeTasksReturns struct {
 		result1 error
@@ -28,24 +30,26 @@ type FakeTaskController struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeTaskController) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) error {
+func (fake *FakeTaskController) ConvergeTasks(arg1 context.Context, arg2 lager.Logger, arg3 time.Duration, arg4 time.Duration, arg5 time.Duration) error {
 	fake.convergeTasksMutex.Lock()
 	ret, specificReturn := fake.convergeTasksReturnsOnCall[len(fake.convergeTasksArgsForCall)]
 	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
-		logger                      lager.Logger
-		kickTaskDuration            time.Duration
-		expirePendingTaskDuration   time.Duration
-		expireCompletedTaskDuration time.Duration
-	}{logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
-	fake.recordInvocation("ConvergeTasks", []interface{}{logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 time.Duration
+		arg4 time.Duration
+		arg5 time.Duration
+	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("ConvergeTasks", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.convergeTasksMutex.Unlock()
 	if fake.ConvergeTasksStub != nil {
-		return fake.ConvergeTasksStub(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+		return fake.ConvergeTasksStub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.convergeTasksReturns.result1
+	fakeReturns := fake.convergeTasksReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeTaskController) ConvergeTasksCallCount() int {
@@ -54,13 +58,22 @@ func (fake *FakeTaskController) ConvergeTasksCallCount() int {
 	return len(fake.convergeTasksArgsForCall)
 }
 
-func (fake *FakeTaskController) ConvergeTasksArgsForCall(i int) (lager.Logger, time.Duration, time.Duration, time.Duration) {
+func (fake *FakeTaskController) ConvergeTasksCalls(stub func(context.Context, lager.Logger, time.Duration, time.Duration, time.Duration) error) {
+	fake.convergeTasksMutex.Lock()
+	defer fake.convergeTasksMutex.Unlock()
+	fake.ConvergeTasksStub = stub
+}
+
+func (fake *FakeTaskController) ConvergeTasksArgsForCall(i int) (context.Context, lager.Logger, time.Duration, time.Duration, time.Duration) {
 	fake.convergeTasksMutex.RLock()
 	defer fake.convergeTasksMutex.RUnlock()
-	return fake.convergeTasksArgsForCall[i].logger, fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
+	argsForCall := fake.convergeTasksArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeTaskController) ConvergeTasksReturns(result1 error) {
+	fake.convergeTasksMutex.Lock()
+	defer fake.convergeTasksMutex.Unlock()
 	fake.ConvergeTasksStub = nil
 	fake.convergeTasksReturns = struct {
 		result1 error
@@ -68,6 +81,8 @@ func (fake *FakeTaskController) ConvergeTasksReturns(result1 error) {
 }
 
 func (fake *FakeTaskController) ConvergeTasksReturnsOnCall(i int, result1 error) {
+	fake.convergeTasksMutex.Lock()
+	defer fake.convergeTasksMutex.Unlock()
 	fake.ConvergeTasksStub = nil
 	if fake.convergeTasksReturnsOnCall == nil {
 		fake.convergeTasksReturnsOnCall = make(map[int]struct {

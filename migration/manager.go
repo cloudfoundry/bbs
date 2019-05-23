@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -170,7 +171,7 @@ func (m *Manager) finish(logger lager.Logger, ready chan<- struct{}) {
 }
 
 func (m *Manager) resolveStoredVersion(logger lager.Logger) (int64, error) {
-	version, err := m.sqlDB.Version(logger)
+	version, err := m.sqlDB.Version(context.Background(), logger)
 	if err != nil {
 		return -1, err
 	}
@@ -178,7 +179,7 @@ func (m *Manager) resolveStoredVersion(logger lager.Logger) (int64, error) {
 }
 
 func (m *Manager) writeVersion(currentVersion int64) error {
-	return m.sqlDB.SetVersion(m.logger, &models.Version{
+	return m.sqlDB.SetVersion(context.Background(), m.logger, &models.Version{
 		CurrentVersion: currentVersion,
 	})
 }

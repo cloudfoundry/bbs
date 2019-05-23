@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -47,27 +48,27 @@ func NewTaskController(
 	}
 }
 
-func (c *TaskController) Tasks(logger lager.Logger, domain, cellID string) ([]*models.Task, error) {
+func (c *TaskController) Tasks(ctx context.Context, logger lager.Logger, domain, cellID string) ([]*models.Task, error) {
 	logger = logger.Session("tasks")
 
 	filter := models.TaskFilter{Domain: domain, CellID: cellID}
-	return c.db.Tasks(logger, filter)
+	return c.db.Tasks(ctx, logger, filter)
 }
 
-func (c *TaskController) TaskByGuid(logger lager.Logger, taskGUID string) (*models.Task, error) {
+func (c *TaskController) TaskByGuid(ctx context.Context, logger lager.Logger, taskGUID string) (*models.Task, error) {
 	logger = logger.Session("task-by-guid")
 
-	return c.db.TaskByGuid(logger, taskGUID)
+	return c.db.TaskByGuid(ctx, logger, taskGUID)
 }
 
-func (c *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGUID, domain string) error {
+func (c *TaskController) DesireTask(ctx context.Context, logger lager.Logger, taskDefinition *models.TaskDefinition, taskGUID, domain string) error {
 	var err error
 	var task *models.Task
 	logger = logger.Session("desire-task")
 
 	logger = logger.WithData(lager.Data{"task_guid": taskGUID})
 
-	task, err = c.db.DesireTask(logger, taskDefinition, taskGUID, domain)
+	task, err = c.db.DesireTask(ctx, logger, taskDefinition, taskGUID, domain)
 	if err != nil {
 		return err
 	}
@@ -86,9 +87,9 @@ func (c *TaskController) DesireTask(logger lager.Logger, taskDefinition *models.
 	return nil
 }
 
-func (c *TaskController) StartTask(logger lager.Logger, taskGUID, cellID string) (shouldStart bool, err error) {
+func (c *TaskController) StartTask(ctx context.Context, logger lager.Logger, taskGUID, cellID string) (shouldStart bool, err error) {
 	logger = logger.Session("start-task", lager.Data{"task_guid": taskGUID, "cell_id": cellID})
-	before, after, shouldStart, err := c.db.StartTask(logger, taskGUID, cellID)
+	before, after, shouldStart, err := c.db.StartTask(ctx, logger, taskGUID, cellID)
 	if err == nil && shouldStart {
 		go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 		c.taskStatMetronNotifier.RecordTaskStarted(cellID)
@@ -96,10 +97,10 @@ func (c *TaskController) StartTask(logger lager.Logger, taskGUID, cellID string)
 	return shouldStart, err
 }
 
-func (c *TaskController) CancelTask(logger lager.Logger, taskGUID string) error {
+func (c *TaskController) CancelTask(ctx context.Context, logger lager.Logger, taskGUID string) error {
 	logger = logger.Session("cancel-task")
 
-	before, after, cellID, err := c.db.CancelTask(logger, taskGUID)
+	before, after, cellID, err := c.db.CancelTask(ctx, logger, taskGUID)
 	if err != nil {
 		return err
 	}
@@ -139,10 +140,10 @@ func (c *TaskController) CancelTask(logger lager.Logger, taskGUID string) error 
 	return nil
 }
 
-func (c *TaskController) FailTask(logger lager.Logger, taskGUID, failureReason string) error {
+func (c *TaskController) FailTask(ctx context.Context, logger lager.Logger, taskGUID, failureReason string) error {
 	var err error
 
-	before, after, err := c.db.FailTask(logger, taskGUID, failureReason)
+	before, after, err := c.db.FailTask(ctx, logger, taskGUID, failureReason)
 	if err != nil {
 		return err
 	}
@@ -157,25 +158,25 @@ func (c *TaskController) FailTask(logger lager.Logger, taskGUID, failureReason s
 	return nil
 }
 
-func (c *TaskController) RejectTask(logger lager.Logger, taskGUID, rejectionReason string) error {
+func (c *TaskController) RejectTask(ctx context.Context, logger lager.Logger, taskGUID, rejectionReason string) error {
 	logger = logger.Session("reject-task", lager.Data{"guid": taskGUID})
 	logger.Info("start")
 	defer logger.Info("complete")
 
-	task, err := c.db.TaskByGuid(logger, taskGUID)
+	task, err := c.db.TaskByGuid(ctx, logger, taskGUID)
 	if err != nil {
 		logger.Error("failed-to-fetch-task", err)
 		return err
 	}
 
 	logger.Info("reject-task", lager.Data{"rejection-reason": rejectionReason})
-	before, after, rejectTaskErr := c.db.RejectTask(logger, taskGUID, rejectionReason)
+	before, after, rejectTaskErr := c.db.RejectTask(ctx, logger, taskGUID, rejectionReason)
 	if rejectTaskErr != nil {
 		logger.Error("failed-to-reject-task", rejectTaskErr)
 	}
 
 	if int(task.RejectionCount) >= c.maxRetries {
-		return c.FailTask(logger, taskGUID, rejectionReason)
+		return c.FailTask(ctx, logger, taskGUID, rejectionReason)
 	}
 
 	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
@@ -184,6 +185,7 @@ func (c *TaskController) RejectTask(logger lager.Logger, taskGUID, rejectionReas
 }
 
 func (c *TaskController) CompleteTask(
+	ctx context.Context,
 	logger lager.Logger,
 	taskGUID,
 	cellID string,
@@ -194,7 +196,7 @@ func (c *TaskController) CompleteTask(
 	var err error
 	logger = logger.Session("complete-task")
 
-	before, after, err := c.db.CompleteTask(logger, taskGUID, cellID, failed, failureReason, result)
+	before, after, err := c.db.CompleteTask(ctx, logger, taskGUID, cellID, failed, failureReason, result)
 	if err != nil {
 		return err
 	}
@@ -214,10 +216,10 @@ func (c *TaskController) CompleteTask(
 	return nil
 }
 
-func (c *TaskController) ResolvingTask(logger lager.Logger, taskGUID string) error {
+func (c *TaskController) ResolvingTask(ctx context.Context, logger lager.Logger, taskGUID string) error {
 	logger = logger.Session("resolving-task")
 
-	before, after, err := c.db.ResolvingTask(logger, taskGUID)
+	before, after, err := c.db.ResolvingTask(ctx, logger, taskGUID)
 	if err != nil {
 		return err
 	}
@@ -226,10 +228,10 @@ func (c *TaskController) ResolvingTask(logger lager.Logger, taskGUID string) err
 	return nil
 }
 
-func (c *TaskController) DeleteTask(logger lager.Logger, taskGUID string) error {
+func (c *TaskController) DeleteTask(ctx context.Context, logger lager.Logger, taskGUID string) error {
 	logger = logger.Session("delete-task")
 
-	task, err := c.db.DeleteTask(logger, taskGUID)
+	task, err := c.db.DeleteTask(ctx, logger, taskGUID)
 	if err != nil {
 		return err
 	}
@@ -239,6 +241,7 @@ func (c *TaskController) DeleteTask(logger lager.Logger, taskGUID string) error 
 }
 
 func (c *TaskController) ConvergeTasks(
+	ctx context.Context,
 	logger lager.Logger,
 	kickTaskDuration,
 	expirePendingTaskDuration,
@@ -260,6 +263,7 @@ func (c *TaskController) ConvergeTasks(
 
 	convergenceStartTime := time.Now()
 	taskConvergenceResult := c.db.ConvergeTasks(
+		ctx,
 		logger,
 		cellSet,
 		kickTaskDuration,

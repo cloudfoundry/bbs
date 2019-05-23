@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"fmt"
 
 	"code.cloudfoundry.org/lager"
@@ -8,6 +9,7 @@ import (
 
 // SELECT COUNT(*) FROM <table> WHERE ...
 func (h *sqlHelper) Count(
+	ctx context.Context,
 	logger lager.Logger,
 	q Queryable,
 	table string,
@@ -21,6 +23,6 @@ func (h *sqlHelper) Count(
 	}
 
 	var count int
-	err := q.QueryRow(h.Rebind(query), whereBindings...).Scan(&count)
+	err := q.QueryRowContext(ctx, h.Rebind(query), whereBindings...).Scan(&count)
 	return count, err
 }

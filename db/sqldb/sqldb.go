@@ -1,6 +1,8 @@
 package sqldb
 
 import (
+	"context"
+
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
@@ -51,8 +53,8 @@ func NewSQLDB(
 	}
 }
 
-func (db *SQLDB) transact(logger lager.Logger, f func(logger lager.Logger, tx helpers.Tx) error) error {
-	err := db.helper.Transact(logger, db.db, f)
+func (db *SQLDB) transact(ctx context.Context, logger lager.Logger, f func(logger lager.Logger, tx helpers.Tx) error) error {
+	err := db.helper.Transact(ctx, logger, db.db, f)
 	if err != nil {
 		return db.convertSQLError(err)
 	}

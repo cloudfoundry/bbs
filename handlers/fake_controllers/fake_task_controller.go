@@ -2,6 +2,7 @@
 package fake_controllers
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -11,42 +12,72 @@ import (
 )
 
 type FakeTaskController struct {
-	TasksStub        func(logger lager.Logger, domain, cellId string) ([]*models.Task, error)
-	tasksMutex       sync.RWMutex
-	tasksArgsForCall []struct {
-		logger lager.Logger
-		domain string
-		cellId string
+	CancelTaskStub        func(context.Context, lager.Logger, string) error
+	cancelTaskMutex       sync.RWMutex
+	cancelTaskArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
 	}
-	tasksReturns struct {
-		result1 []*models.Task
-		result2 error
+	cancelTaskReturns struct {
+		result1 error
 	}
-	tasksReturnsOnCall map[int]struct {
-		result1 []*models.Task
-		result2 error
+	cancelTaskReturnsOnCall map[int]struct {
+		result1 error
 	}
-	TaskByGuidStub        func(logger lager.Logger, taskGuid string) (*models.Task, error)
-	taskByGuidMutex       sync.RWMutex
-	taskByGuidArgsForCall []struct {
-		logger   lager.Logger
-		taskGuid string
+	CompleteTaskStub        func(context.Context, lager.Logger, string, string, bool, string, string) error
+	completeTaskMutex       sync.RWMutex
+	completeTaskArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+		arg5 bool
+		arg6 string
+		arg7 string
 	}
-	taskByGuidReturns struct {
-		result1 *models.Task
-		result2 error
+	completeTaskReturns struct {
+		result1 error
 	}
-	taskByGuidReturnsOnCall map[int]struct {
-		result1 *models.Task
-		result2 error
+	completeTaskReturnsOnCall map[int]struct {
+		result1 error
 	}
-	DesireTaskStub        func(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid, domain string) error
+	ConvergeTasksStub        func(context.Context, lager.Logger, time.Duration, time.Duration, time.Duration) error
+	convergeTasksMutex       sync.RWMutex
+	convergeTasksArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 time.Duration
+		arg4 time.Duration
+		arg5 time.Duration
+	}
+	convergeTasksReturns struct {
+		result1 error
+	}
+	convergeTasksReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeleteTaskStub        func(context.Context, lager.Logger, string) error
+	deleteTaskMutex       sync.RWMutex
+	deleteTaskArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}
+	deleteTaskReturns struct {
+		result1 error
+	}
+	deleteTaskReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DesireTaskStub        func(context.Context, lager.Logger, *models.TaskDefinition, string, string) error
 	desireTaskMutex       sync.RWMutex
 	desireTaskArgsForCall []struct {
-		logger         lager.Logger
-		taskDefinition *models.TaskDefinition
-		taskGuid       string
-		domain         string
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.TaskDefinition
+		arg4 string
+		arg5 string
 	}
 	desireTaskReturns struct {
 		result1 error
@@ -54,12 +85,54 @@ type FakeTaskController struct {
 	desireTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	StartTaskStub        func(logger lager.Logger, taskGuid, cellId string) (shouldStart bool, err error)
+	FailTaskStub        func(context.Context, lager.Logger, string, string) error
+	failTaskMutex       sync.RWMutex
+	failTaskArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+	}
+	failTaskReturns struct {
+		result1 error
+	}
+	failTaskReturnsOnCall map[int]struct {
+		result1 error
+	}
+	RejectTaskStub        func(context.Context, lager.Logger, string, string) error
+	rejectTaskMutex       sync.RWMutex
+	rejectTaskArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+	}
+	rejectTaskReturns struct {
+		result1 error
+	}
+	rejectTaskReturnsOnCall map[int]struct {
+		result1 error
+	}
+	ResolvingTaskStub        func(context.Context, lager.Logger, string) error
+	resolvingTaskMutex       sync.RWMutex
+	resolvingTaskArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}
+	resolvingTaskReturns struct {
+		result1 error
+	}
+	resolvingTaskReturnsOnCall map[int]struct {
+		result1 error
+	}
+	StartTaskStub        func(context.Context, lager.Logger, string, string) (bool, error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
-		logger   lager.Logger
-		taskGuid string
-		cellId   string
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
 	}
 	startTaskReturns struct {
 		result1 bool
@@ -69,225 +142,315 @@ type FakeTaskController struct {
 		result1 bool
 		result2 error
 	}
-	CancelTaskStub        func(logger lager.Logger, taskGuid string) error
-	cancelTaskMutex       sync.RWMutex
-	cancelTaskArgsForCall []struct {
-		logger   lager.Logger
-		taskGuid string
+	TaskByGuidStub        func(context.Context, lager.Logger, string) (*models.Task, error)
+	taskByGuidMutex       sync.RWMutex
+	taskByGuidArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
 	}
-	cancelTaskReturns struct {
-		result1 error
+	taskByGuidReturns struct {
+		result1 *models.Task
+		result2 error
 	}
-	cancelTaskReturnsOnCall map[int]struct {
-		result1 error
+	taskByGuidReturnsOnCall map[int]struct {
+		result1 *models.Task
+		result2 error
 	}
-	FailTaskStub        func(logger lager.Logger, taskGuid, failureReason string) error
-	failTaskMutex       sync.RWMutex
-	failTaskArgsForCall []struct {
-		logger        lager.Logger
-		taskGuid      string
-		failureReason string
+	TasksStub        func(context.Context, lager.Logger, string, string) ([]*models.Task, error)
+	tasksMutex       sync.RWMutex
+	tasksArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
 	}
-	failTaskReturns struct {
-		result1 error
+	tasksReturns struct {
+		result1 []*models.Task
+		result2 error
 	}
-	failTaskReturnsOnCall map[int]struct {
-		result1 error
-	}
-	RejectTaskStub        func(logger lager.Logger, taskGuid, failureReason string) error
-	rejectTaskMutex       sync.RWMutex
-	rejectTaskArgsForCall []struct {
-		logger        lager.Logger
-		taskGuid      string
-		failureReason string
-	}
-	rejectTaskReturns struct {
-		result1 error
-	}
-	rejectTaskReturnsOnCall map[int]struct {
-		result1 error
-	}
-	CompleteTaskStub        func(logger lager.Logger, taskGuid, cellId string, failed bool, failureReason, result string) error
-	completeTaskMutex       sync.RWMutex
-	completeTaskArgsForCall []struct {
-		logger        lager.Logger
-		taskGuid      string
-		cellId        string
-		failed        bool
-		failureReason string
-		result        string
-	}
-	completeTaskReturns struct {
-		result1 error
-	}
-	completeTaskReturnsOnCall map[int]struct {
-		result1 error
-	}
-	ResolvingTaskStub        func(logger lager.Logger, taskGuid string) error
-	resolvingTaskMutex       sync.RWMutex
-	resolvingTaskArgsForCall []struct {
-		logger   lager.Logger
-		taskGuid string
-	}
-	resolvingTaskReturns struct {
-		result1 error
-	}
-	resolvingTaskReturnsOnCall map[int]struct {
-		result1 error
-	}
-	DeleteTaskStub        func(logger lager.Logger, taskGuid string) error
-	deleteTaskMutex       sync.RWMutex
-	deleteTaskArgsForCall []struct {
-		logger   lager.Logger
-		taskGuid string
-	}
-	deleteTaskReturns struct {
-		result1 error
-	}
-	deleteTaskReturnsOnCall map[int]struct {
-		result1 error
-	}
-	ConvergeTasksStub        func(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
-	convergeTasksMutex       sync.RWMutex
-	convergeTasksArgsForCall []struct {
-		logger                      lager.Logger
-		kickTaskDuration            time.Duration
-		expirePendingTaskDuration   time.Duration
-		expireCompletedTaskDuration time.Duration
-	}
-	convergeTasksReturns struct {
-		result1 error
-	}
-	convergeTasksReturnsOnCall map[int]struct {
-		result1 error
+	tasksReturnsOnCall map[int]struct {
+		result1 []*models.Task
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeTaskController) Tasks(logger lager.Logger, domain string, cellId string) ([]*models.Task, error) {
-	fake.tasksMutex.Lock()
-	ret, specificReturn := fake.tasksReturnsOnCall[len(fake.tasksArgsForCall)]
-	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct {
-		logger lager.Logger
-		domain string
-		cellId string
-	}{logger, domain, cellId})
-	fake.recordInvocation("Tasks", []interface{}{logger, domain, cellId})
-	fake.tasksMutex.Unlock()
-	if fake.TasksStub != nil {
-		return fake.TasksStub(logger, domain, cellId)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.tasksReturns.result1, fake.tasksReturns.result2
-}
-
-func (fake *FakeTaskController) TasksCallCount() int {
-	fake.tasksMutex.RLock()
-	defer fake.tasksMutex.RUnlock()
-	return len(fake.tasksArgsForCall)
-}
-
-func (fake *FakeTaskController) TasksArgsForCall(i int) (lager.Logger, string, string) {
-	fake.tasksMutex.RLock()
-	defer fake.tasksMutex.RUnlock()
-	return fake.tasksArgsForCall[i].logger, fake.tasksArgsForCall[i].domain, fake.tasksArgsForCall[i].cellId
-}
-
-func (fake *FakeTaskController) TasksReturns(result1 []*models.Task, result2 error) {
-	fake.TasksStub = nil
-	fake.tasksReturns = struct {
-		result1 []*models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeTaskController) TasksReturnsOnCall(i int, result1 []*models.Task, result2 error) {
-	fake.TasksStub = nil
-	if fake.tasksReturnsOnCall == nil {
-		fake.tasksReturnsOnCall = make(map[int]struct {
-			result1 []*models.Task
-			result2 error
-		})
-	}
-	fake.tasksReturnsOnCall[i] = struct {
-		result1 []*models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeTaskController) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task, error) {
-	fake.taskByGuidMutex.Lock()
-	ret, specificReturn := fake.taskByGuidReturnsOnCall[len(fake.taskByGuidArgsForCall)]
-	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
-		logger   lager.Logger
-		taskGuid string
-	}{logger, taskGuid})
-	fake.recordInvocation("TaskByGuid", []interface{}{logger, taskGuid})
-	fake.taskByGuidMutex.Unlock()
-	if fake.TaskByGuidStub != nil {
-		return fake.TaskByGuidStub(logger, taskGuid)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.taskByGuidReturns.result1, fake.taskByGuidReturns.result2
-}
-
-func (fake *FakeTaskController) TaskByGuidCallCount() int {
-	fake.taskByGuidMutex.RLock()
-	defer fake.taskByGuidMutex.RUnlock()
-	return len(fake.taskByGuidArgsForCall)
-}
-
-func (fake *FakeTaskController) TaskByGuidArgsForCall(i int) (lager.Logger, string) {
-	fake.taskByGuidMutex.RLock()
-	defer fake.taskByGuidMutex.RUnlock()
-	return fake.taskByGuidArgsForCall[i].logger, fake.taskByGuidArgsForCall[i].taskGuid
-}
-
-func (fake *FakeTaskController) TaskByGuidReturns(result1 *models.Task, result2 error) {
-	fake.TaskByGuidStub = nil
-	fake.taskByGuidReturns = struct {
-		result1 *models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeTaskController) TaskByGuidReturnsOnCall(i int, result1 *models.Task, result2 error) {
-	fake.TaskByGuidStub = nil
-	if fake.taskByGuidReturnsOnCall == nil {
-		fake.taskByGuidReturnsOnCall = make(map[int]struct {
-			result1 *models.Task
-			result2 error
-		})
-	}
-	fake.taskByGuidReturnsOnCall[i] = struct {
-		result1 *models.Task
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeTaskController) DesireTask(logger lager.Logger, taskDefinition *models.TaskDefinition, taskGuid string, domain string) error {
-	fake.desireTaskMutex.Lock()
-	ret, specificReturn := fake.desireTaskReturnsOnCall[len(fake.desireTaskArgsForCall)]
-	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
-		logger         lager.Logger
-		taskDefinition *models.TaskDefinition
-		taskGuid       string
-		domain         string
-	}{logger, taskDefinition, taskGuid, domain})
-	fake.recordInvocation("DesireTask", []interface{}{logger, taskDefinition, taskGuid, domain})
-	fake.desireTaskMutex.Unlock()
-	if fake.DesireTaskStub != nil {
-		return fake.DesireTaskStub(logger, taskDefinition, taskGuid, domain)
+func (fake *FakeTaskController) CancelTask(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+	fake.cancelTaskMutex.Lock()
+	ret, specificReturn := fake.cancelTaskReturnsOnCall[len(fake.cancelTaskArgsForCall)]
+	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("CancelTask", []interface{}{arg1, arg2, arg3})
+	fake.cancelTaskMutex.Unlock()
+	if fake.CancelTaskStub != nil {
+		return fake.CancelTaskStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.desireTaskReturns.result1
+	fakeReturns := fake.cancelTaskReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTaskController) CancelTaskCallCount() int {
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	return len(fake.cancelTaskArgsForCall)
+}
+
+func (fake *FakeTaskController) CancelTaskCalls(stub func(context.Context, lager.Logger, string) error) {
+	fake.cancelTaskMutex.Lock()
+	defer fake.cancelTaskMutex.Unlock()
+	fake.CancelTaskStub = stub
+}
+
+func (fake *FakeTaskController) CancelTaskArgsForCall(i int) (context.Context, lager.Logger, string) {
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	argsForCall := fake.cancelTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeTaskController) CancelTaskReturns(result1 error) {
+	fake.cancelTaskMutex.Lock()
+	defer fake.cancelTaskMutex.Unlock()
+	fake.CancelTaskStub = nil
+	fake.cancelTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) CancelTaskReturnsOnCall(i int, result1 error) {
+	fake.cancelTaskMutex.Lock()
+	defer fake.cancelTaskMutex.Unlock()
+	fake.CancelTaskStub = nil
+	if fake.cancelTaskReturnsOnCall == nil {
+		fake.cancelTaskReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.cancelTaskReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) CompleteTask(arg1 context.Context, arg2 lager.Logger, arg3 string, arg4 string, arg5 bool, arg6 string, arg7 string) error {
+	fake.completeTaskMutex.Lock()
+	ret, specificReturn := fake.completeTaskReturnsOnCall[len(fake.completeTaskArgsForCall)]
+	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+		arg5 bool
+		arg6 string
+		arg7 string
+	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	fake.recordInvocation("CompleteTask", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	fake.completeTaskMutex.Unlock()
+	if fake.CompleteTaskStub != nil {
+		return fake.CompleteTaskStub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.completeTaskReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTaskController) CompleteTaskCallCount() int {
+	fake.completeTaskMutex.RLock()
+	defer fake.completeTaskMutex.RUnlock()
+	return len(fake.completeTaskArgsForCall)
+}
+
+func (fake *FakeTaskController) CompleteTaskCalls(stub func(context.Context, lager.Logger, string, string, bool, string, string) error) {
+	fake.completeTaskMutex.Lock()
+	defer fake.completeTaskMutex.Unlock()
+	fake.CompleteTaskStub = stub
+}
+
+func (fake *FakeTaskController) CompleteTaskArgsForCall(i int) (context.Context, lager.Logger, string, string, bool, string, string) {
+	fake.completeTaskMutex.RLock()
+	defer fake.completeTaskMutex.RUnlock()
+	argsForCall := fake.completeTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7
+}
+
+func (fake *FakeTaskController) CompleteTaskReturns(result1 error) {
+	fake.completeTaskMutex.Lock()
+	defer fake.completeTaskMutex.Unlock()
+	fake.CompleteTaskStub = nil
+	fake.completeTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) CompleteTaskReturnsOnCall(i int, result1 error) {
+	fake.completeTaskMutex.Lock()
+	defer fake.completeTaskMutex.Unlock()
+	fake.CompleteTaskStub = nil
+	if fake.completeTaskReturnsOnCall == nil {
+		fake.completeTaskReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.completeTaskReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) ConvergeTasks(arg1 context.Context, arg2 lager.Logger, arg3 time.Duration, arg4 time.Duration, arg5 time.Duration) error {
+	fake.convergeTasksMutex.Lock()
+	ret, specificReturn := fake.convergeTasksReturnsOnCall[len(fake.convergeTasksArgsForCall)]
+	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 time.Duration
+		arg4 time.Duration
+		arg5 time.Duration
+	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("ConvergeTasks", []interface{}{arg1, arg2, arg3, arg4, arg5})
+	fake.convergeTasksMutex.Unlock()
+	if fake.ConvergeTasksStub != nil {
+		return fake.ConvergeTasksStub(arg1, arg2, arg3, arg4, arg5)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.convergeTasksReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTaskController) ConvergeTasksCallCount() int {
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	return len(fake.convergeTasksArgsForCall)
+}
+
+func (fake *FakeTaskController) ConvergeTasksCalls(stub func(context.Context, lager.Logger, time.Duration, time.Duration, time.Duration) error) {
+	fake.convergeTasksMutex.Lock()
+	defer fake.convergeTasksMutex.Unlock()
+	fake.ConvergeTasksStub = stub
+}
+
+func (fake *FakeTaskController) ConvergeTasksArgsForCall(i int) (context.Context, lager.Logger, time.Duration, time.Duration, time.Duration) {
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	argsForCall := fake.convergeTasksArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
+}
+
+func (fake *FakeTaskController) ConvergeTasksReturns(result1 error) {
+	fake.convergeTasksMutex.Lock()
+	defer fake.convergeTasksMutex.Unlock()
+	fake.ConvergeTasksStub = nil
+	fake.convergeTasksReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) ConvergeTasksReturnsOnCall(i int, result1 error) {
+	fake.convergeTasksMutex.Lock()
+	defer fake.convergeTasksMutex.Unlock()
+	fake.ConvergeTasksStub = nil
+	if fake.convergeTasksReturnsOnCall == nil {
+		fake.convergeTasksReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.convergeTasksReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) DeleteTask(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+	fake.deleteTaskMutex.Lock()
+	ret, specificReturn := fake.deleteTaskReturnsOnCall[len(fake.deleteTaskArgsForCall)]
+	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("DeleteTask", []interface{}{arg1, arg2, arg3})
+	fake.deleteTaskMutex.Unlock()
+	if fake.DeleteTaskStub != nil {
+		return fake.DeleteTaskStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.deleteTaskReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTaskController) DeleteTaskCallCount() int {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	return len(fake.deleteTaskArgsForCall)
+}
+
+func (fake *FakeTaskController) DeleteTaskCalls(stub func(context.Context, lager.Logger, string) error) {
+	fake.deleteTaskMutex.Lock()
+	defer fake.deleteTaskMutex.Unlock()
+	fake.DeleteTaskStub = stub
+}
+
+func (fake *FakeTaskController) DeleteTaskArgsForCall(i int) (context.Context, lager.Logger, string) {
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	argsForCall := fake.deleteTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeTaskController) DeleteTaskReturns(result1 error) {
+	fake.deleteTaskMutex.Lock()
+	defer fake.deleteTaskMutex.Unlock()
+	fake.DeleteTaskStub = nil
+	fake.deleteTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) DeleteTaskReturnsOnCall(i int, result1 error) {
+	fake.deleteTaskMutex.Lock()
+	defer fake.deleteTaskMutex.Unlock()
+	fake.DeleteTaskStub = nil
+	if fake.deleteTaskReturnsOnCall == nil {
+		fake.deleteTaskReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteTaskReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) DesireTask(arg1 context.Context, arg2 lager.Logger, arg3 *models.TaskDefinition, arg4 string, arg5 string) error {
+	fake.desireTaskMutex.Lock()
+	ret, specificReturn := fake.desireTaskReturnsOnCall[len(fake.desireTaskArgsForCall)]
+	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.TaskDefinition
+		arg4 string
+		arg5 string
+	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("DesireTask", []interface{}{arg1, arg2, arg3, arg4, arg5})
+	fake.desireTaskMutex.Unlock()
+	if fake.DesireTaskStub != nil {
+		return fake.DesireTaskStub(arg1, arg2, arg3, arg4, arg5)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.desireTaskReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeTaskController) DesireTaskCallCount() int {
@@ -296,13 +459,22 @@ func (fake *FakeTaskController) DesireTaskCallCount() int {
 	return len(fake.desireTaskArgsForCall)
 }
 
-func (fake *FakeTaskController) DesireTaskArgsForCall(i int) (lager.Logger, *models.TaskDefinition, string, string) {
+func (fake *FakeTaskController) DesireTaskCalls(stub func(context.Context, lager.Logger, *models.TaskDefinition, string, string) error) {
+	fake.desireTaskMutex.Lock()
+	defer fake.desireTaskMutex.Unlock()
+	fake.DesireTaskStub = stub
+}
+
+func (fake *FakeTaskController) DesireTaskArgsForCall(i int) (context.Context, lager.Logger, *models.TaskDefinition, string, string) {
 	fake.desireTaskMutex.RLock()
 	defer fake.desireTaskMutex.RUnlock()
-	return fake.desireTaskArgsForCall[i].logger, fake.desireTaskArgsForCall[i].taskDefinition, fake.desireTaskArgsForCall[i].taskGuid, fake.desireTaskArgsForCall[i].domain
+	argsForCall := fake.desireTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeTaskController) DesireTaskReturns(result1 error) {
+	fake.desireTaskMutex.Lock()
+	defer fake.desireTaskMutex.Unlock()
 	fake.DesireTaskStub = nil
 	fake.desireTaskReturns = struct {
 		result1 error
@@ -310,6 +482,8 @@ func (fake *FakeTaskController) DesireTaskReturns(result1 error) {
 }
 
 func (fake *FakeTaskController) DesireTaskReturnsOnCall(i int, result1 error) {
+	fake.desireTaskMutex.Lock()
+	defer fake.desireTaskMutex.Unlock()
 	fake.DesireTaskStub = nil
 	if fake.desireTaskReturnsOnCall == nil {
 		fake.desireTaskReturnsOnCall = make(map[int]struct {
@@ -321,23 +495,213 @@ func (fake *FakeTaskController) DesireTaskReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeTaskController) StartTask(logger lager.Logger, taskGuid string, cellId string) (shouldStart bool, err error) {
+func (fake *FakeTaskController) FailTask(arg1 context.Context, arg2 lager.Logger, arg3 string, arg4 string) error {
+	fake.failTaskMutex.Lock()
+	ret, specificReturn := fake.failTaskReturnsOnCall[len(fake.failTaskArgsForCall)]
+	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("FailTask", []interface{}{arg1, arg2, arg3, arg4})
+	fake.failTaskMutex.Unlock()
+	if fake.FailTaskStub != nil {
+		return fake.FailTaskStub(arg1, arg2, arg3, arg4)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.failTaskReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTaskController) FailTaskCallCount() int {
+	fake.failTaskMutex.RLock()
+	defer fake.failTaskMutex.RUnlock()
+	return len(fake.failTaskArgsForCall)
+}
+
+func (fake *FakeTaskController) FailTaskCalls(stub func(context.Context, lager.Logger, string, string) error) {
+	fake.failTaskMutex.Lock()
+	defer fake.failTaskMutex.Unlock()
+	fake.FailTaskStub = stub
+}
+
+func (fake *FakeTaskController) FailTaskArgsForCall(i int) (context.Context, lager.Logger, string, string) {
+	fake.failTaskMutex.RLock()
+	defer fake.failTaskMutex.RUnlock()
+	argsForCall := fake.failTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+}
+
+func (fake *FakeTaskController) FailTaskReturns(result1 error) {
+	fake.failTaskMutex.Lock()
+	defer fake.failTaskMutex.Unlock()
+	fake.FailTaskStub = nil
+	fake.failTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) FailTaskReturnsOnCall(i int, result1 error) {
+	fake.failTaskMutex.Lock()
+	defer fake.failTaskMutex.Unlock()
+	fake.FailTaskStub = nil
+	if fake.failTaskReturnsOnCall == nil {
+		fake.failTaskReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.failTaskReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) RejectTask(arg1 context.Context, arg2 lager.Logger, arg3 string, arg4 string) error {
+	fake.rejectTaskMutex.Lock()
+	ret, specificReturn := fake.rejectTaskReturnsOnCall[len(fake.rejectTaskArgsForCall)]
+	fake.rejectTaskArgsForCall = append(fake.rejectTaskArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("RejectTask", []interface{}{arg1, arg2, arg3, arg4})
+	fake.rejectTaskMutex.Unlock()
+	if fake.RejectTaskStub != nil {
+		return fake.RejectTaskStub(arg1, arg2, arg3, arg4)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.rejectTaskReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTaskController) RejectTaskCallCount() int {
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
+	return len(fake.rejectTaskArgsForCall)
+}
+
+func (fake *FakeTaskController) RejectTaskCalls(stub func(context.Context, lager.Logger, string, string) error) {
+	fake.rejectTaskMutex.Lock()
+	defer fake.rejectTaskMutex.Unlock()
+	fake.RejectTaskStub = stub
+}
+
+func (fake *FakeTaskController) RejectTaskArgsForCall(i int) (context.Context, lager.Logger, string, string) {
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
+	argsForCall := fake.rejectTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+}
+
+func (fake *FakeTaskController) RejectTaskReturns(result1 error) {
+	fake.rejectTaskMutex.Lock()
+	defer fake.rejectTaskMutex.Unlock()
+	fake.RejectTaskStub = nil
+	fake.rejectTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) RejectTaskReturnsOnCall(i int, result1 error) {
+	fake.rejectTaskMutex.Lock()
+	defer fake.rejectTaskMutex.Unlock()
+	fake.RejectTaskStub = nil
+	if fake.rejectTaskReturnsOnCall == nil {
+		fake.rejectTaskReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.rejectTaskReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) ResolvingTask(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+	fake.resolvingTaskMutex.Lock()
+	ret, specificReturn := fake.resolvingTaskReturnsOnCall[len(fake.resolvingTaskArgsForCall)]
+	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("ResolvingTask", []interface{}{arg1, arg2, arg3})
+	fake.resolvingTaskMutex.Unlock()
+	if fake.ResolvingTaskStub != nil {
+		return fake.ResolvingTaskStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.resolvingTaskReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTaskController) ResolvingTaskCallCount() int {
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	return len(fake.resolvingTaskArgsForCall)
+}
+
+func (fake *FakeTaskController) ResolvingTaskCalls(stub func(context.Context, lager.Logger, string) error) {
+	fake.resolvingTaskMutex.Lock()
+	defer fake.resolvingTaskMutex.Unlock()
+	fake.ResolvingTaskStub = stub
+}
+
+func (fake *FakeTaskController) ResolvingTaskArgsForCall(i int) (context.Context, lager.Logger, string) {
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	argsForCall := fake.resolvingTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeTaskController) ResolvingTaskReturns(result1 error) {
+	fake.resolvingTaskMutex.Lock()
+	defer fake.resolvingTaskMutex.Unlock()
+	fake.ResolvingTaskStub = nil
+	fake.resolvingTaskReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) ResolvingTaskReturnsOnCall(i int, result1 error) {
+	fake.resolvingTaskMutex.Lock()
+	defer fake.resolvingTaskMutex.Unlock()
+	fake.ResolvingTaskStub = nil
+	if fake.resolvingTaskReturnsOnCall == nil {
+		fake.resolvingTaskReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.resolvingTaskReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeTaskController) StartTask(arg1 context.Context, arg2 lager.Logger, arg3 string, arg4 string) (bool, error) {
 	fake.startTaskMutex.Lock()
 	ret, specificReturn := fake.startTaskReturnsOnCall[len(fake.startTaskArgsForCall)]
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
-		logger   lager.Logger
-		taskGuid string
-		cellId   string
-	}{logger, taskGuid, cellId})
-	fake.recordInvocation("StartTask", []interface{}{logger, taskGuid, cellId})
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("StartTask", []interface{}{arg1, arg2, arg3, arg4})
 	fake.startTaskMutex.Unlock()
 	if fake.StartTaskStub != nil {
-		return fake.StartTaskStub(logger, taskGuid, cellId)
+		return fake.StartTaskStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.startTaskReturns.result1, fake.startTaskReturns.result2
+	fakeReturns := fake.startTaskReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeTaskController) StartTaskCallCount() int {
@@ -346,13 +710,22 @@ func (fake *FakeTaskController) StartTaskCallCount() int {
 	return len(fake.startTaskArgsForCall)
 }
 
-func (fake *FakeTaskController) StartTaskArgsForCall(i int) (lager.Logger, string, string) {
+func (fake *FakeTaskController) StartTaskCalls(stub func(context.Context, lager.Logger, string, string) (bool, error)) {
+	fake.startTaskMutex.Lock()
+	defer fake.startTaskMutex.Unlock()
+	fake.StartTaskStub = stub
+}
+
+func (fake *FakeTaskController) StartTaskArgsForCall(i int) (context.Context, lager.Logger, string, string) {
 	fake.startTaskMutex.RLock()
 	defer fake.startTaskMutex.RUnlock()
-	return fake.startTaskArgsForCall[i].logger, fake.startTaskArgsForCall[i].taskGuid, fake.startTaskArgsForCall[i].cellId
+	argsForCall := fake.startTaskArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeTaskController) StartTaskReturns(result1 bool, result2 error) {
+	fake.startTaskMutex.Lock()
+	defer fake.startTaskMutex.Unlock()
 	fake.StartTaskStub = nil
 	fake.startTaskReturns = struct {
 		result1 bool
@@ -361,6 +734,8 @@ func (fake *FakeTaskController) StartTaskReturns(result1 bool, result2 error) {
 }
 
 func (fake *FakeTaskController) StartTaskReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.startTaskMutex.Lock()
+	defer fake.startTaskMutex.Unlock()
 	fake.StartTaskStub = nil
 	if fake.startTaskReturnsOnCall == nil {
 		fake.startTaskReturnsOnCall = make(map[int]struct {
@@ -374,382 +749,162 @@ func (fake *FakeTaskController) StartTaskReturnsOnCall(i int, result1 bool, resu
 	}{result1, result2}
 }
 
-func (fake *FakeTaskController) CancelTask(logger lager.Logger, taskGuid string) error {
-	fake.cancelTaskMutex.Lock()
-	ret, specificReturn := fake.cancelTaskReturnsOnCall[len(fake.cancelTaskArgsForCall)]
-	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
-		logger   lager.Logger
-		taskGuid string
-	}{logger, taskGuid})
-	fake.recordInvocation("CancelTask", []interface{}{logger, taskGuid})
-	fake.cancelTaskMutex.Unlock()
-	if fake.CancelTaskStub != nil {
-		return fake.CancelTaskStub(logger, taskGuid)
+func (fake *FakeTaskController) TaskByGuid(arg1 context.Context, arg2 lager.Logger, arg3 string) (*models.Task, error) {
+	fake.taskByGuidMutex.Lock()
+	ret, specificReturn := fake.taskByGuidReturnsOnCall[len(fake.taskByGuidArgsForCall)]
+	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("TaskByGuid", []interface{}{arg1, arg2, arg3})
+	fake.taskByGuidMutex.Unlock()
+	if fake.TaskByGuidStub != nil {
+		return fake.TaskByGuidStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.cancelTaskReturns.result1
+	fakeReturns := fake.taskByGuidReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeTaskController) CancelTaskCallCount() int {
-	fake.cancelTaskMutex.RLock()
-	defer fake.cancelTaskMutex.RUnlock()
-	return len(fake.cancelTaskArgsForCall)
+func (fake *FakeTaskController) TaskByGuidCallCount() int {
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	return len(fake.taskByGuidArgsForCall)
 }
 
-func (fake *FakeTaskController) CancelTaskArgsForCall(i int) (lager.Logger, string) {
-	fake.cancelTaskMutex.RLock()
-	defer fake.cancelTaskMutex.RUnlock()
-	return fake.cancelTaskArgsForCall[i].logger, fake.cancelTaskArgsForCall[i].taskGuid
+func (fake *FakeTaskController) TaskByGuidCalls(stub func(context.Context, lager.Logger, string) (*models.Task, error)) {
+	fake.taskByGuidMutex.Lock()
+	defer fake.taskByGuidMutex.Unlock()
+	fake.TaskByGuidStub = stub
 }
 
-func (fake *FakeTaskController) CancelTaskReturns(result1 error) {
-	fake.CancelTaskStub = nil
-	fake.cancelTaskReturns = struct {
-		result1 error
-	}{result1}
+func (fake *FakeTaskController) TaskByGuidArgsForCall(i int) (context.Context, lager.Logger, string) {
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	argsForCall := fake.taskByGuidArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeTaskController) CancelTaskReturnsOnCall(i int, result1 error) {
-	fake.CancelTaskStub = nil
-	if fake.cancelTaskReturnsOnCall == nil {
-		fake.cancelTaskReturnsOnCall = make(map[int]struct {
-			result1 error
+func (fake *FakeTaskController) TaskByGuidReturns(result1 *models.Task, result2 error) {
+	fake.taskByGuidMutex.Lock()
+	defer fake.taskByGuidMutex.Unlock()
+	fake.TaskByGuidStub = nil
+	fake.taskByGuidReturns = struct {
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeTaskController) TaskByGuidReturnsOnCall(i int, result1 *models.Task, result2 error) {
+	fake.taskByGuidMutex.Lock()
+	defer fake.taskByGuidMutex.Unlock()
+	fake.TaskByGuidStub = nil
+	if fake.taskByGuidReturnsOnCall == nil {
+		fake.taskByGuidReturnsOnCall = make(map[int]struct {
+			result1 *models.Task
+			result2 error
 		})
 	}
-	fake.cancelTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+	fake.taskByGuidReturnsOnCall[i] = struct {
+		result1 *models.Task
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeTaskController) FailTask(logger lager.Logger, taskGuid string, failureReason string) error {
-	fake.failTaskMutex.Lock()
-	ret, specificReturn := fake.failTaskReturnsOnCall[len(fake.failTaskArgsForCall)]
-	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
-		logger        lager.Logger
-		taskGuid      string
-		failureReason string
-	}{logger, taskGuid, failureReason})
-	fake.recordInvocation("FailTask", []interface{}{logger, taskGuid, failureReason})
-	fake.failTaskMutex.Unlock()
-	if fake.FailTaskStub != nil {
-		return fake.FailTaskStub(logger, taskGuid, failureReason)
+func (fake *FakeTaskController) Tasks(arg1 context.Context, arg2 lager.Logger, arg3 string, arg4 string) ([]*models.Task, error) {
+	fake.tasksMutex.Lock()
+	ret, specificReturn := fake.tasksReturnsOnCall[len(fake.tasksArgsForCall)]
+	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("Tasks", []interface{}{arg1, arg2, arg3, arg4})
+	fake.tasksMutex.Unlock()
+	if fake.TasksStub != nil {
+		return fake.TasksStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.failTaskReturns.result1
+	fakeReturns := fake.tasksReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeTaskController) FailTaskCallCount() int {
-	fake.failTaskMutex.RLock()
-	defer fake.failTaskMutex.RUnlock()
-	return len(fake.failTaskArgsForCall)
+func (fake *FakeTaskController) TasksCallCount() int {
+	fake.tasksMutex.RLock()
+	defer fake.tasksMutex.RUnlock()
+	return len(fake.tasksArgsForCall)
 }
 
-func (fake *FakeTaskController) FailTaskArgsForCall(i int) (lager.Logger, string, string) {
-	fake.failTaskMutex.RLock()
-	defer fake.failTaskMutex.RUnlock()
-	return fake.failTaskArgsForCall[i].logger, fake.failTaskArgsForCall[i].taskGuid, fake.failTaskArgsForCall[i].failureReason
+func (fake *FakeTaskController) TasksCalls(stub func(context.Context, lager.Logger, string, string) ([]*models.Task, error)) {
+	fake.tasksMutex.Lock()
+	defer fake.tasksMutex.Unlock()
+	fake.TasksStub = stub
 }
 
-func (fake *FakeTaskController) FailTaskReturns(result1 error) {
-	fake.FailTaskStub = nil
-	fake.failTaskReturns = struct {
-		result1 error
-	}{result1}
+func (fake *FakeTaskController) TasksArgsForCall(i int) (context.Context, lager.Logger, string, string) {
+	fake.tasksMutex.RLock()
+	defer fake.tasksMutex.RUnlock()
+	argsForCall := fake.tasksArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
-func (fake *FakeTaskController) FailTaskReturnsOnCall(i int, result1 error) {
-	fake.FailTaskStub = nil
-	if fake.failTaskReturnsOnCall == nil {
-		fake.failTaskReturnsOnCall = make(map[int]struct {
-			result1 error
+func (fake *FakeTaskController) TasksReturns(result1 []*models.Task, result2 error) {
+	fake.tasksMutex.Lock()
+	defer fake.tasksMutex.Unlock()
+	fake.TasksStub = nil
+	fake.tasksReturns = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeTaskController) TasksReturnsOnCall(i int, result1 []*models.Task, result2 error) {
+	fake.tasksMutex.Lock()
+	defer fake.tasksMutex.Unlock()
+	fake.TasksStub = nil
+	if fake.tasksReturnsOnCall == nil {
+		fake.tasksReturnsOnCall = make(map[int]struct {
+			result1 []*models.Task
+			result2 error
 		})
 	}
-	fake.failTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) RejectTask(logger lager.Logger, taskGuid string, failureReason string) error {
-	fake.rejectTaskMutex.Lock()
-	ret, specificReturn := fake.rejectTaskReturnsOnCall[len(fake.rejectTaskArgsForCall)]
-	fake.rejectTaskArgsForCall = append(fake.rejectTaskArgsForCall, struct {
-		logger        lager.Logger
-		taskGuid      string
-		failureReason string
-	}{logger, taskGuid, failureReason})
-	fake.recordInvocation("RejectTask", []interface{}{logger, taskGuid, failureReason})
-	fake.rejectTaskMutex.Unlock()
-	if fake.RejectTaskStub != nil {
-		return fake.RejectTaskStub(logger, taskGuid, failureReason)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.rejectTaskReturns.result1
-}
-
-func (fake *FakeTaskController) RejectTaskCallCount() int {
-	fake.rejectTaskMutex.RLock()
-	defer fake.rejectTaskMutex.RUnlock()
-	return len(fake.rejectTaskArgsForCall)
-}
-
-func (fake *FakeTaskController) RejectTaskArgsForCall(i int) (lager.Logger, string, string) {
-	fake.rejectTaskMutex.RLock()
-	defer fake.rejectTaskMutex.RUnlock()
-	return fake.rejectTaskArgsForCall[i].logger, fake.rejectTaskArgsForCall[i].taskGuid, fake.rejectTaskArgsForCall[i].failureReason
-}
-
-func (fake *FakeTaskController) RejectTaskReturns(result1 error) {
-	fake.RejectTaskStub = nil
-	fake.rejectTaskReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) RejectTaskReturnsOnCall(i int, result1 error) {
-	fake.RejectTaskStub = nil
-	if fake.rejectTaskReturnsOnCall == nil {
-		fake.rejectTaskReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.rejectTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) CompleteTask(logger lager.Logger, taskGuid string, cellId string, failed bool, failureReason string, result string) error {
-	fake.completeTaskMutex.Lock()
-	ret, specificReturn := fake.completeTaskReturnsOnCall[len(fake.completeTaskArgsForCall)]
-	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
-		logger        lager.Logger
-		taskGuid      string
-		cellId        string
-		failed        bool
-		failureReason string
-		result        string
-	}{logger, taskGuid, cellId, failed, failureReason, result})
-	fake.recordInvocation("CompleteTask", []interface{}{logger, taskGuid, cellId, failed, failureReason, result})
-	fake.completeTaskMutex.Unlock()
-	if fake.CompleteTaskStub != nil {
-		return fake.CompleteTaskStub(logger, taskGuid, cellId, failed, failureReason, result)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.completeTaskReturns.result1
-}
-
-func (fake *FakeTaskController) CompleteTaskCallCount() int {
-	fake.completeTaskMutex.RLock()
-	defer fake.completeTaskMutex.RUnlock()
-	return len(fake.completeTaskArgsForCall)
-}
-
-func (fake *FakeTaskController) CompleteTaskArgsForCall(i int) (lager.Logger, string, string, bool, string, string) {
-	fake.completeTaskMutex.RLock()
-	defer fake.completeTaskMutex.RUnlock()
-	return fake.completeTaskArgsForCall[i].logger, fake.completeTaskArgsForCall[i].taskGuid, fake.completeTaskArgsForCall[i].cellId, fake.completeTaskArgsForCall[i].failed, fake.completeTaskArgsForCall[i].failureReason, fake.completeTaskArgsForCall[i].result
-}
-
-func (fake *FakeTaskController) CompleteTaskReturns(result1 error) {
-	fake.CompleteTaskStub = nil
-	fake.completeTaskReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) CompleteTaskReturnsOnCall(i int, result1 error) {
-	fake.CompleteTaskStub = nil
-	if fake.completeTaskReturnsOnCall == nil {
-		fake.completeTaskReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.completeTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) ResolvingTask(logger lager.Logger, taskGuid string) error {
-	fake.resolvingTaskMutex.Lock()
-	ret, specificReturn := fake.resolvingTaskReturnsOnCall[len(fake.resolvingTaskArgsForCall)]
-	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
-		logger   lager.Logger
-		taskGuid string
-	}{logger, taskGuid})
-	fake.recordInvocation("ResolvingTask", []interface{}{logger, taskGuid})
-	fake.resolvingTaskMutex.Unlock()
-	if fake.ResolvingTaskStub != nil {
-		return fake.ResolvingTaskStub(logger, taskGuid)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.resolvingTaskReturns.result1
-}
-
-func (fake *FakeTaskController) ResolvingTaskCallCount() int {
-	fake.resolvingTaskMutex.RLock()
-	defer fake.resolvingTaskMutex.RUnlock()
-	return len(fake.resolvingTaskArgsForCall)
-}
-
-func (fake *FakeTaskController) ResolvingTaskArgsForCall(i int) (lager.Logger, string) {
-	fake.resolvingTaskMutex.RLock()
-	defer fake.resolvingTaskMutex.RUnlock()
-	return fake.resolvingTaskArgsForCall[i].logger, fake.resolvingTaskArgsForCall[i].taskGuid
-}
-
-func (fake *FakeTaskController) ResolvingTaskReturns(result1 error) {
-	fake.ResolvingTaskStub = nil
-	fake.resolvingTaskReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) ResolvingTaskReturnsOnCall(i int, result1 error) {
-	fake.ResolvingTaskStub = nil
-	if fake.resolvingTaskReturnsOnCall == nil {
-		fake.resolvingTaskReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.resolvingTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) DeleteTask(logger lager.Logger, taskGuid string) error {
-	fake.deleteTaskMutex.Lock()
-	ret, specificReturn := fake.deleteTaskReturnsOnCall[len(fake.deleteTaskArgsForCall)]
-	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
-		logger   lager.Logger
-		taskGuid string
-	}{logger, taskGuid})
-	fake.recordInvocation("DeleteTask", []interface{}{logger, taskGuid})
-	fake.deleteTaskMutex.Unlock()
-	if fake.DeleteTaskStub != nil {
-		return fake.DeleteTaskStub(logger, taskGuid)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deleteTaskReturns.result1
-}
-
-func (fake *FakeTaskController) DeleteTaskCallCount() int {
-	fake.deleteTaskMutex.RLock()
-	defer fake.deleteTaskMutex.RUnlock()
-	return len(fake.deleteTaskArgsForCall)
-}
-
-func (fake *FakeTaskController) DeleteTaskArgsForCall(i int) (lager.Logger, string) {
-	fake.deleteTaskMutex.RLock()
-	defer fake.deleteTaskMutex.RUnlock()
-	return fake.deleteTaskArgsForCall[i].logger, fake.deleteTaskArgsForCall[i].taskGuid
-}
-
-func (fake *FakeTaskController) DeleteTaskReturns(result1 error) {
-	fake.DeleteTaskStub = nil
-	fake.deleteTaskReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) DeleteTaskReturnsOnCall(i int, result1 error) {
-	fake.DeleteTaskStub = nil
-	if fake.deleteTaskReturnsOnCall == nil {
-		fake.deleteTaskReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deleteTaskReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) ConvergeTasks(logger lager.Logger, kickTaskDuration time.Duration, expirePendingTaskDuration time.Duration, expireCompletedTaskDuration time.Duration) error {
-	fake.convergeTasksMutex.Lock()
-	ret, specificReturn := fake.convergeTasksReturnsOnCall[len(fake.convergeTasksArgsForCall)]
-	fake.convergeTasksArgsForCall = append(fake.convergeTasksArgsForCall, struct {
-		logger                      lager.Logger
-		kickTaskDuration            time.Duration
-		expirePendingTaskDuration   time.Duration
-		expireCompletedTaskDuration time.Duration
-	}{logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
-	fake.recordInvocation("ConvergeTasks", []interface{}{logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration})
-	fake.convergeTasksMutex.Unlock()
-	if fake.ConvergeTasksStub != nil {
-		return fake.ConvergeTasksStub(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.convergeTasksReturns.result1
-}
-
-func (fake *FakeTaskController) ConvergeTasksCallCount() int {
-	fake.convergeTasksMutex.RLock()
-	defer fake.convergeTasksMutex.RUnlock()
-	return len(fake.convergeTasksArgsForCall)
-}
-
-func (fake *FakeTaskController) ConvergeTasksArgsForCall(i int) (lager.Logger, time.Duration, time.Duration, time.Duration) {
-	fake.convergeTasksMutex.RLock()
-	defer fake.convergeTasksMutex.RUnlock()
-	return fake.convergeTasksArgsForCall[i].logger, fake.convergeTasksArgsForCall[i].kickTaskDuration, fake.convergeTasksArgsForCall[i].expirePendingTaskDuration, fake.convergeTasksArgsForCall[i].expireCompletedTaskDuration
-}
-
-func (fake *FakeTaskController) ConvergeTasksReturns(result1 error) {
-	fake.ConvergeTasksStub = nil
-	fake.convergeTasksReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeTaskController) ConvergeTasksReturnsOnCall(i int, result1 error) {
-	fake.ConvergeTasksStub = nil
-	if fake.convergeTasksReturnsOnCall == nil {
-		fake.convergeTasksReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.convergeTasksReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+	fake.tasksReturnsOnCall[i] = struct {
+		result1 []*models.Task
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeTaskController) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.tasksMutex.RLock()
-	defer fake.tasksMutex.RUnlock()
-	fake.taskByGuidMutex.RLock()
-	defer fake.taskByGuidMutex.RUnlock()
-	fake.desireTaskMutex.RLock()
-	defer fake.desireTaskMutex.RUnlock()
-	fake.startTaskMutex.RLock()
-	defer fake.startTaskMutex.RUnlock()
 	fake.cancelTaskMutex.RLock()
 	defer fake.cancelTaskMutex.RUnlock()
+	fake.completeTaskMutex.RLock()
+	defer fake.completeTaskMutex.RUnlock()
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
 	fake.rejectTaskMutex.RLock()
 	defer fake.rejectTaskMutex.RUnlock()
-	fake.completeTaskMutex.RLock()
-	defer fake.completeTaskMutex.RUnlock()
 	fake.resolvingTaskMutex.RLock()
 	defer fake.resolvingTaskMutex.RUnlock()
-	fake.deleteTaskMutex.RLock()
-	defer fake.deleteTaskMutex.RUnlock()
-	fake.convergeTasksMutex.RLock()
-	defer fake.convergeTasksMutex.RUnlock()
+	fake.startTaskMutex.RLock()
+	defer fake.startTaskMutex.RUnlock()
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	fake.tasksMutex.RLock()
+	defer fake.tasksMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

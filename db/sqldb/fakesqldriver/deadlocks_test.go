@@ -24,7 +24,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("Domains", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.FreshDomains(logger)
+			_, err := sqlDB.FreshDomains(ctx, logger)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -32,7 +32,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("UpsertDomain", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.UpsertDomain(logger, "", 0)
+			err := sqlDB.UpsertDomain(ctx, logger, "", 0)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -40,7 +40,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("EncryptionKeyLabel", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.EncryptionKeyLabel(logger)
+			_, err := sqlDB.EncryptionKeyLabel(ctx, logger)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -48,7 +48,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("SetEncryptionKeyLabel", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.SetEncryptionKeyLabel(logger, "")
+			err := sqlDB.SetEncryptionKeyLabel(ctx, logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -56,7 +56,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("RemoveEvacuatingActualLRP", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.RemoveEvacuatingActualLRP(logger, &models.ActualLRPKey{}, nil)
+			err := sqlDB.RemoveEvacuatingActualLRP(ctx, logger, &models.ActualLRPKey{}, nil)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -64,7 +64,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DesireTask", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.DesireTask(logger, &models.TaskDefinition{}, "", "")
+			_, err := sqlDB.DesireTask(ctx, logger, &models.TaskDefinition{}, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -72,7 +72,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("ActualLRPs", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.ActualLRPs(logger, models.ActualLRPFilter{})
+			_, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -80,7 +80,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("CancelTask", func() {
 		It("retries on deadlocks", func() {
-			_, _, _, err := sqlDB.CancelTask(logger, "")
+			_, _, _, err := sqlDB.CancelTask(ctx, logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -88,7 +88,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("ClaimActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.ClaimActualLRP(logger, "", 0, &models.ActualLRPInstanceKey{})
+			_, _, err := sqlDB.ClaimActualLRP(ctx, logger, "", 0, &models.ActualLRPInstanceKey{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -96,7 +96,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("CompleteTask", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.CompleteTask(logger, "", "", true, "", "")
+			_, _, err := sqlDB.CompleteTask(ctx, logger, "", "", true, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -104,7 +104,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("CrashActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, _, _, err := sqlDB.CrashActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, "")
+			_, _, _, err := sqlDB.CrashActualLRP(ctx, logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -112,7 +112,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("CreateUnclaimedActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.CreateUnclaimedActualLRP(logger, &models.ActualLRPKey{})
+			_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &models.ActualLRPKey{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -120,7 +120,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DeleteTask", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.DeleteTask(logger, "")
+			_, err := sqlDB.DeleteTask(ctx, logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -128,7 +128,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DesireLRP", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.DesireLRP(logger, &models.DesiredLRP{})
+			err := sqlDB.DesireLRP(ctx, logger, &models.DesiredLRP{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -136,7 +136,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DesiredLRPByProcessGuid", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.DesiredLRPByProcessGuid(logger, "")
+			_, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -144,7 +144,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DesiredLRPSchedulingInfos", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{})
+			_, err := sqlDB.DesiredLRPSchedulingInfos(ctx, logger, models.DesiredLRPFilter{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -152,7 +152,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("DesiredLRPs", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+			_, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -160,7 +160,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("EvacuateActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.EvacuateActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{})
+			_, err := sqlDB.EvacuateActualLRP(ctx, logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -168,7 +168,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("FailActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.FailActualLRP(logger, &models.ActualLRPKey{}, "")
+			_, _, err := sqlDB.FailActualLRP(ctx, logger, &models.ActualLRPKey{}, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -176,7 +176,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("FailTask", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.FailTask(logger, "", "")
+			_, _, err := sqlDB.FailTask(ctx, logger, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -184,7 +184,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("RemoveActualLRP", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.RemoveActualLRP(logger, "", 0, &models.ActualLRPInstanceKey{})
+			err := sqlDB.RemoveActualLRP(ctx, logger, "", 0, &models.ActualLRPInstanceKey{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -192,7 +192,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("RemoveDesiredLRP", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.RemoveDesiredLRP(logger, "")
+			err := sqlDB.RemoveDesiredLRP(ctx, logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -200,7 +200,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("ResolvingTask", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.ResolvingTask(logger, "")
+			_, _, err := sqlDB.ResolvingTask(ctx, logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -208,7 +208,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("SetVersion", func() {
 		It("retries on deadlocks", func() {
-			err := sqlDB.SetVersion(logger, &models.Version{})
+			err := sqlDB.SetVersion(ctx, logger, &models.Version{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -216,7 +216,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("StartActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{})
+			_, _, err := sqlDB.StartActualLRP(ctx, logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -224,7 +224,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("StartTask", func() {
 		It("retries on deadlocks", func() {
-			_, _, _, err := sqlDB.StartTask(logger, "", "")
+			_, _, _, err := sqlDB.StartTask(ctx, logger, "", "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -232,7 +232,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("TaskByGuid", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.TaskByGuid(logger, "")
+			_, err := sqlDB.TaskByGuid(ctx, logger, "")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -240,7 +240,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("Tasks", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.Tasks(logger, models.TaskFilter{})
+			_, err := sqlDB.Tasks(ctx, logger, models.TaskFilter{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -248,7 +248,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("UnclaimActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.UnclaimActualLRP(logger, &models.ActualLRPKey{})
+			_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, &models.ActualLRPKey{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -256,7 +256,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("UpdateDesiredLRP", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.UpdateDesiredLRP(logger, "", &models.DesiredLRPUpdate{})
+			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, "", &models.DesiredLRPUpdate{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -264,7 +264,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("Version", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.Version(logger)
+			_, err := sqlDB.Version(ctx, logger)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})

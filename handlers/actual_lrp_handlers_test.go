@@ -126,7 +126,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 			Context("and no filter is provided", func() {
 				It("calls the DB with no filters to retrieve the actual lrp groups", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.ActualLRPFilter{}))
 				})
 			})
@@ -138,7 +138,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("calls the DB with the domain filter to retrieve the actual lrps", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.ActualLRPFilter{Domain: "domain-1"}))
 				})
 			})
@@ -150,7 +150,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("calls the DB with the cell id filter to retrieve the actual lrps ", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.ActualLRPFilter{CellID: "cellid-1"}))
 				})
 			})
@@ -162,7 +162,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("calls the DB with the process guid filter to retrieve the actual lrps", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.ActualLRPFilter{ProcessGuid: "process-guid-1"}))
 				})
 			})
@@ -176,7 +176,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("calls the DB with the index filter to retrieve the actual lrps", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter.Index).NotTo(BeNil())
 					Expect(*filter.Index).To(Equal(int32(1)))
 				})
@@ -195,7 +195,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("call the DB with all provided filters to retrieve the actual lrps", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter.Domain).To(Equal("potato"))
 					Expect(filter.CellID).To(Equal("cellid-1"))
 					Expect(filter.ProcessGuid).To(Equal("process-guid-0"))
@@ -291,7 +291,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 			Context("and no filter is provided", func() {
 				It("call the DB with no filters to retrieve the actual lrp groups", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.ActualLRPFilter{}))
 				})
 			})
@@ -303,7 +303,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("call the DB with the domain filter to retrieve the actual lrp groups", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
@@ -315,7 +315,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("call the DB with the cell id filter to retrieve the actual lrp groups", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter.CellID).To(Equal("cellid-1"))
 				})
 			})
@@ -327,7 +327,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				It("call the DB with the both filters to retrieve the actual lrp groups", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter.CellID).To(Equal("cellid-1"))
 					Expect(filter.Domain).To(Equal("potato"))
 				})
@@ -416,7 +416,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("fetches actual lrp groups by process guid", func() {
 				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-				_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+				_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 				Expect(filter.ProcessGuid).To(Equal(processGuid))
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -508,7 +508,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("fetches actual lrp group by process guid and index", func() {
 				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
-				_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+				_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 				Expect(filter.ProcessGuid).To(Equal(processGuid))
 				Expect(*filter.Index).To(BeEquivalentTo(index))
 			})

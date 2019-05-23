@@ -157,7 +157,7 @@ var _ = Describe("Convergence API", func() {
 						}).Should(BeTrue())
 
 						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.NewPortMapping(8080, 80))
-						_, _, err := db.StartActualLRP(logger, &models.ActualLRPKey{
+						_, _, err := db.StartActualLRP(ctx, logger, &models.ActualLRPKey{
 							ProcessGuid: processGuid,
 							Index:       0,
 							Domain:      "some-domain",

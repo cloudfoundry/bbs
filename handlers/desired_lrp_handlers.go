@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -66,7 +67,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 		filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids}
 
 		var desiredLRPs []*models.DesiredLRP
-		desiredLRPs, err = h.desiredLRPDB.DesiredLRPs(logger, filter)
+		desiredLRPs, err = h.desiredLRPDB.DesiredLRPs(req.Context(), logger, filter)
 		for i, d := range desiredLRPs {
 			desiredLRPs[i] = d.VersionDownTo(targetVersion).PopulateMetricsGuid()
 			if len(desiredLRPs[i].CachedDependencies) == 0 {
@@ -101,7 +102,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPByProcessGuid(logger lager.Logger, t
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		var desiredLRP *models.DesiredLRP
-		desiredLRP, err = h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+		desiredLRP, err = h.desiredLRPDB.DesiredLRPByProcessGuid(req.Context(), logger, request.ProcessGuid)
 		if desiredLRP != nil {
 			desiredLRP = desiredLRP.VersionDownTo(targetVersion).PopulateMetricsGuid()
 		}
@@ -135,7 +136,7 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 			Domain:       request.Domain,
 			ProcessGuids: request.ProcessGuids,
 		}
-		response.DesiredLrpSchedulingInfos, err = h.desiredLRPDB.DesiredLRPSchedulingInfos(logger, filter)
+		response.DesiredLrpSchedulingInfos, err = h.desiredLRPDB.DesiredLRPSchedulingInfos(req.Context(), logger, filter)
 	}
 
 	response.Error = models.ConvertError(err)
@@ -157,13 +158,13 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	err = h.desiredLRPDB.DesireLRP(logger, request.DesiredLrp)
+	err = h.desiredLRPDB.DesireLRP(req.Context(), logger, request.DesiredLrp)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.DesiredLrp.ProcessGuid)
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(req.Context(), logger, request.DesiredLrp.ProcessGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -172,7 +173,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
-	h.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
+	h.startInstanceRange(req.Context(), logger, 0, schedulingInfo.Instances, &schedulingInfo)
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -193,7 +194,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 	logger = logger.WithData(lager.Data{"guid": request.ProcessGuid})
 
 	logger.Debug("updating-desired-lrp")
-	beforeDesiredLRP, err := h.desiredLRPDB.UpdateDesiredLRP(logger, request.ProcessGuid, request.Update)
+	beforeDesiredLRP, err := h.desiredLRPDB.UpdateDesiredLRP(req.Context(), logger, request.ProcessGuid, request.Update)
 	if err != nil {
 		logger.Debug("failed-updating-desired-lrp")
 		response.Error = models.ConvertError(err)
@@ -201,7 +202,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 	}
 	logger.Debug("completed-updating-desired-lrp")
 
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, request.ProcessGuid)
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(req.Context(), logger, request.ProcessGuid)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp", err)
 		return
@@ -217,13 +218,13 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		if requestedInstances > 0 {
 			logger.Debug("increasing-the-instances")
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			h.startInstanceRange(logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
+			h.startInstanceRange(req.Context(), logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
 		}
 
 		if requestedInstances < 0 {
 			logger.Debug("decreasing-the-instances")
 			numExtraActualLRP := previousInstanceCount + requestedInstances
-			h.stopInstancesFrom(logger, request.ProcessGuid, int(numExtraActualLRP))
+			h.stopInstancesFrom(req.Context(), logger, request.ProcessGuid, int(numExtraActualLRP))
 		}
 	}
 
@@ -245,13 +246,13 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 	}
 	logger = logger.WithData(lager.Data{"process_guid": request.ProcessGuid})
 
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger.Session("fetch-desired"), request.ProcessGuid)
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(req.Context(), logger.Session("fetch-desired"), request.ProcessGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
 	}
 
-	err = h.desiredLRPDB.RemoveDesiredLRP(logger.Session("remove-desired"), request.ProcessGuid)
+	err = h.desiredLRPDB.RemoveDesiredLRP(req.Context(), logger.Session("remove-desired"), request.ProcessGuid)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -259,10 +260,10 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 
 	go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP))
 
-	h.stopInstancesFrom(logger, request.ProcessGuid, 0)
+	h.stopInstancesFrom(req.Context(), logger, request.ProcessGuid, 0)
 }
 
-func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
+func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
 	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -273,7 +274,7 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 		keys = append(keys, &key)
 	}
 
-	createdIndices := h.createUnclaimedActualLRPs(logger, keys)
+	createdIndices := h.createUnclaimedActualLRPs(ctx, logger, keys)
 	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
 
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
@@ -284,7 +285,7 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 	}
 }
 
-func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {
+func (h *DesiredLRPHandler) createUnclaimedActualLRPs(ctx context.Context, logger lager.Logger, keys []*models.ActualLRPKey) []int {
 	count := len(keys)
 	createdIndicesChan := make(chan int, count)
 
@@ -299,7 +300,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 		key := key
 		works[i] = func() {
 			logger.Info("starting", lager.Data{"actual_lrp_key": key})
-			actualLRP, err := h.actualLRPDB.CreateUnclaimedActualLRP(logger, key)
+			actualLRP, err := h.actualLRPDB.CreateUnclaimedActualLRP(ctx, logger, key)
 			if err != nil {
 				logger.Info("failed", lager.Data{"actual_lrp_key": key, "err_message": err.Error()})
 				return
@@ -331,9 +332,9 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys 
 	return createdIndices
 }
 
-func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid string, index int) {
+func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.Logger, processGuid string, index int) {
 	logger = logger.Session("stop-instances-from", lager.Data{"process_guid": processGuid, "index": index})
-	actualLRPs, err := h.actualLRPDB.ActualLRPs(logger.Session("fetch-actuals"), models.ActualLRPFilter{ProcessGuid: processGuid})
+	actualLRPs, err := h.actualLRPDB.ActualLRPs(ctx, logger.Session("fetch-actuals"), models.ActualLRPFilter{ProcessGuid: processGuid})
 	if err != nil {
 		logger.Error("failed-fetching-actual-lrps", err)
 		return
@@ -346,7 +347,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(logger lager.Logger, processGuid s
 			if lrp.Index >= int32(index) {
 				switch lrp.State {
 				case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-					err = h.actualLRPDB.RemoveActualLRP(logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, nil)
+					err = h.actualLRPDB.RemoveActualLRP(ctx, logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, nil)
 					if err != nil {
 						logger.Error("failed-removing-lrp-instance", err)
 					} else {

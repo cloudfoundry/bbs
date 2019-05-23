@@ -47,7 +47,7 @@ var _ = Describe("Convergence of Tasks", func() {
 		})
 
 		JustBeforeEach(func() {
-			convergenceResult = sqlDB.ConvergeTasks(logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+			convergenceResult = sqlDB.ConvergeTasks(ctx, logger, cellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 		})
 
 		Context("pending tasks", func() {
@@ -56,27 +56,27 @@ var _ = Describe("Convergence of Tasks", func() {
 			BeforeEach(func() {
 				var err error
 				fakeClock.IncrementBySeconds(-expirePendingTaskDurationInSeconds)
-				pendingTask, err = sqlDB.DesireTask(logger, taskDef, "pending-expired-task", domain)
+				pendingTask, err = sqlDB.DesireTask(ctx, logger, taskDef, "pending-expired-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				anotherPendingTask, err = sqlDB.DesireTask(logger, taskDef, "another-pending-expired-task", domain)
+				anotherPendingTask, err = sqlDB.DesireTask(ctx, logger, taskDef, "another-pending-expired-task", domain)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.DesireTask(logger, taskDef, "pending-invalid-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "pending-invalid-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'pending-invalid-task'")
+				_, err = db.ExecContext(ctx, "UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'pending-invalid-task'")
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.IncrementBySeconds(expirePendingTaskDurationInSeconds)
 
 				fakeClock.IncrementBySeconds(-kickTasksDurationInSeconds)
-				_, err = sqlDB.DesireTask(logger, taskDef, "pending-kickable-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "pending-kickable-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = sqlDB.DesireTask(logger, taskDef, "pending-kickable-invalid-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "pending-kickable-invalid-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'pending-kickable-invalid-task'")
+				_, err = db.ExecContext(ctx, "UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'pending-kickable-invalid-task'")
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.IncrementBySeconds(kickTasksDurationInSeconds)
 
-				_, err = sqlDB.DesireTask(logger, taskDef, "pending-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "pending-task", domain)
 				Expect(err).NotTo(HaveOccurred())
 
 				fakeClock.IncrementBySeconds(1)
@@ -92,7 +92,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("fails expired tasks that have exceeded the expirePendingTaskDuration", func() {
-				task, err := sqlDB.TaskByGuid(logger, "pending-expired-task")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "pending-expired-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.FailureReason).To(Equal("not started within time limit"))
 				Expect(task.Failed).To(BeTrue())
@@ -108,9 +108,9 @@ var _ = Describe("Convergence of Tasks", func() {
 			It("returns TaskChangedEvents for all expired pending tasks", func() {
 				Expect(convergenceResult.Events).To(HaveLen(2))
 
-				afterPending, err := sqlDB.TaskByGuid(logger, "pending-expired-task")
+				afterPending, err := sqlDB.TaskByGuid(ctx, logger, "pending-expired-task")
 				Expect(err).NotTo(HaveOccurred())
-				afterAnotherPending, err := sqlDB.TaskByGuid(logger, "another-pending-expired-task")
+				afterAnotherPending, err := sqlDB.TaskByGuid(ctx, logger, "another-pending-expired-task")
 				Expect(err).NotTo(HaveOccurred())
 
 				event1 := models.NewTaskChangedEvent(pendingTask, afterPending)
@@ -121,7 +121,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("returns tasks that have not expired and should be kicked for auctioning", func() {
-				pendingTask, err := sqlDB.TaskByGuid(logger, "pending-kickable-task")
+				pendingTask, err := sqlDB.TaskByGuid(ctx, logger, "pending-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pendingTask.FailureReason).NotTo(Equal("not started within time limit"))
 				Expect(pendingTask.Failed).NotTo(BeTrue())
@@ -132,9 +132,9 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("delete tasks that are invalid", func() {
-				_, err := sqlDB.TaskByGuid(logger, "pending-invalid-task")
+				_, err := sqlDB.TaskByGuid(ctx, logger, "pending-invalid-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
-				_, err = sqlDB.TaskByGuid(logger, "pending-kickable-invalid-task")
+				_, err = sqlDB.TaskByGuid(ctx, logger, "pending-kickable-invalid-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
@@ -144,21 +144,21 @@ var _ = Describe("Convergence of Tasks", func() {
 
 			BeforeEach(func() {
 				var err error
-				_, err = sqlDB.DesireTask(logger, taskDef, "running-task-no-cell", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "running-task-no-cell", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, runningTaskNoCell, _, err = sqlDB.StartTask(logger, "running-task-no-cell", "non-existant-cell")
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = sqlDB.DesireTask(logger, taskDef, "invalid-running-task-no-cell", domain)
-				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "invalid-running-task-no-cell", "non-existant-cell")
-				Expect(err).NotTo(HaveOccurred())
-				_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-running-task-no-cell'")
+				_, runningTaskNoCell, _, err = sqlDB.StartTask(ctx, logger, "running-task-no-cell", "non-existant-cell")
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.DesireTask(logger, taskDef, "running-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "invalid-running-task-no-cell", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "running-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "invalid-running-task-no-cell", "non-existant-cell")
+				Expect(err).NotTo(HaveOccurred())
+				_, err = db.ExecContext(ctx, "UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-running-task-no-cell'")
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "running-task", domain)
+				Expect(err).NotTo(HaveOccurred())
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "running-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
 
 				fakeClock.IncrementBySeconds(1)
@@ -174,7 +174,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("fails them when their cells are not present", func() {
-				task, err := sqlDB.TaskByGuid(logger, "running-task-no-cell")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "running-task-no-cell")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.FailureReason).To(Equal("cell disappeared before completion"))
 				Expect(task.Failed).To(BeTrue())
@@ -188,7 +188,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				taskRequest := auctioneer.NewTaskStartRequestFromModel("running-task", domain, taskDef)
 				Expect(convergenceResult.TasksToAuction).NotTo(ContainElement(taskRequest))
 
-				task, err := sqlDB.TaskByGuid(logger, "running-task")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "running-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.FailureReason).NotTo(Equal("cell disappeared before completion"))
 				Expect(task.Failed).NotTo(BeTrue())
@@ -198,7 +198,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			It("returns TaskChangedEvents for all running tasks with dissappeared cells", func() {
 				Expect(convergenceResult.Events).To(HaveLen(1))
 
-				afterRunning, err := sqlDB.TaskByGuid(logger, "running-task-no-cell")
+				afterRunning, err := sqlDB.TaskByGuid(ctx, logger, "running-task-no-cell")
 				Expect(err).NotTo(HaveOccurred())
 
 				event := models.NewTaskChangedEvent(runningTaskNoCell, afterRunning)
@@ -213,37 +213,37 @@ var _ = Describe("Convergence of Tasks", func() {
 			BeforeEach(func() {
 				var err error
 				fakeClock.Increment(-expireCompletedTaskDuration)
-				_, err = sqlDB.DesireTask(logger, taskDef, "completed-expired-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "completed-expired-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "completed-expired-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "completed-expired-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, expiredCompletedTask, err = sqlDB.CompleteTask(logger, "completed-expired-task", existingCellID, false, "", "")
+				_, expiredCompletedTask, err = sqlDB.CompleteTask(ctx, logger, "completed-expired-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.Increment(expireCompletedTaskDuration)
 
 				fakeClock.IncrementBySeconds(-kickTasksDurationInSeconds)
-				_, err = sqlDB.DesireTask(logger, taskDef, "completed-kickable-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "completed-kickable-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "completed-kickable-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "completed-kickable-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "completed-kickable-task", existingCellID, false, "", "")
+				_, _, err = sqlDB.CompleteTask(ctx, logger, "completed-kickable-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.DesireTask(logger, taskDef, "completed-kickable-invalid-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "completed-kickable-invalid-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "completed-kickable-invalid-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "completed-kickable-invalid-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "completed-kickable-invalid-task", existingCellID, false, "", "")
+				_, _, err = sqlDB.CompleteTask(ctx, logger, "completed-kickable-invalid-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
-				_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'completed-kickable-invalid-task'")
+				_, err = db.ExecContext(ctx, "UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'completed-kickable-invalid-task'")
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.IncrementBySeconds(kickTasksDurationInSeconds)
 
-				_, err = sqlDB.DesireTask(logger, taskDef, "completed-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "completed-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "completed-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "completed-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "completed-task", existingCellID, false, "", "")
+				_, _, err = sqlDB.CompleteTask(ctx, logger, "completed-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
 
 				fakeClock.IncrementBySeconds(1)
@@ -259,47 +259,47 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("deletes tasks that have exceeded expireCompleteTaskDuration", func() {
-				_, err := sqlDB.TaskByGuid(logger, "completed-expired-task")
+				_, err := sqlDB.TaskByGuid(ctx, logger, "completed-expired-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 
 			Context("when there are invalid tasks", func() {
 				BeforeEach(func() {
 					fakeClock.Increment(-expireCompletedTaskDuration)
-					_, err := sqlDB.DesireTask(logger, taskDef, "another-completed-task", domain)
+					_, err := sqlDB.DesireTask(ctx, logger, taskDef, "another-completed-task", domain)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, _, err = sqlDB.StartTask(logger, "another-completed-task", existingCellID)
+					_, _, _, err = sqlDB.StartTask(ctx, logger, "another-completed-task", existingCellID)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.CompleteTask(logger, "another-completed-task", existingCellID, false, "", "")
+					_, _, err = sqlDB.CompleteTask(ctx, logger, "another-completed-task", existingCellID, false, "", "")
 					Expect(err).NotTo(HaveOccurred())
 					fakeClock.Increment(expireCompletedTaskDuration)
 
-					updateTaskToInvalid(db, serializer, expiredCompletedTask)
+					updateTaskToInvalid(ctx, db, serializer, expiredCompletedTask)
 					fakeClock.IncrementBySeconds(1)
 				})
 
 				It("deletes tasks that have exceeded expireCompleteTaskDuration", func() {
-					_, err := sqlDB.TaskByGuid(logger, "another-completed-task")
+					_, err := sqlDB.TaskByGuid(ctx, logger, "another-completed-task")
 					Expect(err).To(Equal(models.ErrResourceNotFound))
 				})
 			})
 
 			It("returns tasks that should be kicked for completion", func() {
-				task, err := sqlDB.TaskByGuid(logger, "completed-kickable-task")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "completed-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(convergenceResult.TasksToComplete).To(ContainElement(task))
 			})
 
 			It("doesn't do anything with unexpired tasks that should not be kicked", func() {
-				task, err := sqlDB.TaskByGuid(logger, "completed-task")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "completed-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(convergenceResult.TasksToComplete).NotTo(ContainElement(task))
 			})
 
 			It("delete tasks that are invalid", func() {
-				_, err := sqlDB.TaskByGuid(logger, "invalid-completed-expired-task")
+				_, err := sqlDB.TaskByGuid(ctx, logger, "invalid-completed-expired-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
-				_, err = sqlDB.TaskByGuid(logger, "completed-kickable-invalid-task")
+				_, err = sqlDB.TaskByGuid(ctx, logger, "completed-kickable-invalid-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 
@@ -317,45 +317,45 @@ var _ = Describe("Convergence of Tasks", func() {
 				var err error
 				fakeClock.Increment(-expireCompletedTaskDuration)
 				// resolving-expired-task will first get demoted to the completed state and then be deleted for exceeding the expiredCompletedTaskDuration
-				_, err = sqlDB.DesireTask(logger, taskDef, "resolving-expired-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "resolving-expired-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "resolving-expired-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "resolving-expired-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "resolving-expired-task", existingCellID, false, "", "")
+				_, _, err = sqlDB.CompleteTask(ctx, logger, "resolving-expired-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
-				_, resolvingExpiredTask, err = sqlDB.ResolvingTask(logger, "resolving-expired-task")
+				_, resolvingExpiredTask, err = sqlDB.ResolvingTask(ctx, logger, "resolving-expired-task")
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.Increment(expireCompletedTaskDuration)
 
 				fakeClock.IncrementBySeconds(-kickTasksDurationInSeconds)
-				_, err = sqlDB.DesireTask(logger, taskDef, "resolving-kickable-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "resolving-kickable-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "resolving-kickable-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "resolving-kickable-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "resolving-kickable-task", existingCellID, false, "", "")
+				_, _, err = sqlDB.CompleteTask(ctx, logger, "resolving-kickable-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
-				_, resolvingKickableTask, err = sqlDB.ResolvingTask(logger, "resolving-kickable-task")
+				_, resolvingKickableTask, err = sqlDB.ResolvingTask(ctx, logger, "resolving-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.DesireTask(logger, taskDef, "invalid-resolving-kickable-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "invalid-resolving-kickable-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "invalid-resolving-kickable-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "invalid-resolving-kickable-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "invalid-resolving-kickable-task", existingCellID, false, "", "")
+				_, _, err = sqlDB.CompleteTask(ctx, logger, "invalid-resolving-kickable-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.ResolvingTask(logger, "invalid-resolving-kickable-task")
+				_, _, err = sqlDB.ResolvingTask(ctx, logger, "invalid-resolving-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
-				_, err = db.Exec("UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-resolving-kickable-task'")
+				_, err = db.ExecContext(ctx, "UPDATE tasks SET task_definition = 'garbage' WHERE guid = 'invalid-resolving-kickable-task'")
 				Expect(err).NotTo(HaveOccurred())
 				fakeClock.IncrementBySeconds(kickTasksDurationInSeconds)
 
-				_, err = sqlDB.DesireTask(logger, taskDef, "resolving-task", domain)
+				_, err = sqlDB.DesireTask(ctx, logger, taskDef, "resolving-task", domain)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, _, err = sqlDB.StartTask(logger, "resolving-task", existingCellID)
+				_, _, _, err = sqlDB.StartTask(ctx, logger, "resolving-task", existingCellID)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.CompleteTask(logger, "resolving-task", existingCellID, false, "", "")
+				_, _, err = sqlDB.CompleteTask(ctx, logger, "resolving-task", existingCellID, false, "", "")
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.ResolvingTask(logger, "resolving-task")
+				_, _, err = sqlDB.ResolvingTask(ctx, logger, "resolving-task")
 				Expect(err).NotTo(HaveOccurred())
 
 				fakeClock.IncrementBySeconds(1)
@@ -371,37 +371,37 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("deletes expired resolving tasks bc they were demoted and also exceeded the expireCompletedTaskDuration", func() {
-				_, err := sqlDB.TaskByGuid(logger, "resolving-expired-task")
+				_, err := sqlDB.TaskByGuid(ctx, logger, "resolving-expired-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 
 			It("transitions the task back to the completed state if it exceed kickTasksDuration and then it is kicked", func() {
-				task, err := sqlDB.TaskByGuid(logger, "resolving-kickable-task")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "resolving-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.State).To(Equal(models.Task_Completed))
 			})
 
 			It("returns tasks that should be kicked for completion", func() {
 				Expect(convergenceResult.TasksToComplete).To(HaveLen(1))
-				task, err := sqlDB.TaskByGuid(logger, "resolving-kickable-task")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "resolving-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(convergenceResult.TasksToComplete).To(ContainElement(task))
 			})
 
 			It("doesn't do anything with unexpired tasks that should not be kicked", func() {
-				task, err := sqlDB.TaskByGuid(logger, "resolving-task")
+				task, err := sqlDB.TaskByGuid(ctx, logger, "resolving-task")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(task.State).To(Equal(models.Task_Resolving))
 				Expect(convergenceResult.TasksToComplete).NotTo(ContainElement(task))
 			})
 
 			It("delete tasks that are invalid", func() {
-				_, err := sqlDB.TaskByGuid(logger, "invalid-resolving-kickable-task")
+				_, err := sqlDB.TaskByGuid(ctx, logger, "invalid-resolving-kickable-task")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 
 			It("returns TaskChangedEvents for all kicked resolved tasks", func() {
-				afterResolvingKickedTask, err := sqlDB.TaskByGuid(logger, "resolving-kickable-task")
+				afterResolvingKickedTask, err := sqlDB.TaskByGuid(ctx, logger, "resolving-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
 
 				afterResolvingExpiredTask := &models.Task{}

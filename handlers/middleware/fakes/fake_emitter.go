@@ -9,29 +9,29 @@ import (
 )
 
 type FakeEmitter struct {
-	IncrementRequestCounterStub        func(delta int)
+	IncrementRequestCounterStub        func(int)
 	incrementRequestCounterMutex       sync.RWMutex
 	incrementRequestCounterArgsForCall []struct {
-		delta int
+		arg1 int
 	}
-	UpdateLatencyStub        func(latency time.Duration)
+	UpdateLatencyStub        func(time.Duration)
 	updateLatencyMutex       sync.RWMutex
 	updateLatencyArgsForCall []struct {
-		latency time.Duration
+		arg1 time.Duration
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeEmitter) IncrementRequestCounter(delta int) {
+func (fake *FakeEmitter) IncrementRequestCounter(arg1 int) {
 	fake.incrementRequestCounterMutex.Lock()
 	fake.incrementRequestCounterArgsForCall = append(fake.incrementRequestCounterArgsForCall, struct {
-		delta int
-	}{delta})
-	fake.recordInvocation("IncrementRequestCounter", []interface{}{delta})
+		arg1 int
+	}{arg1})
+	fake.recordInvocation("IncrementRequestCounter", []interface{}{arg1})
 	fake.incrementRequestCounterMutex.Unlock()
 	if fake.IncrementRequestCounterStub != nil {
-		fake.IncrementRequestCounterStub(delta)
+		fake.IncrementRequestCounterStub(arg1)
 	}
 }
 
@@ -41,21 +41,28 @@ func (fake *FakeEmitter) IncrementRequestCounterCallCount() int {
 	return len(fake.incrementRequestCounterArgsForCall)
 }
 
+func (fake *FakeEmitter) IncrementRequestCounterCalls(stub func(int)) {
+	fake.incrementRequestCounterMutex.Lock()
+	defer fake.incrementRequestCounterMutex.Unlock()
+	fake.IncrementRequestCounterStub = stub
+}
+
 func (fake *FakeEmitter) IncrementRequestCounterArgsForCall(i int) int {
 	fake.incrementRequestCounterMutex.RLock()
 	defer fake.incrementRequestCounterMutex.RUnlock()
-	return fake.incrementRequestCounterArgsForCall[i].delta
+	argsForCall := fake.incrementRequestCounterArgsForCall[i]
+	return argsForCall.arg1
 }
 
-func (fake *FakeEmitter) UpdateLatency(latency time.Duration) {
+func (fake *FakeEmitter) UpdateLatency(arg1 time.Duration) {
 	fake.updateLatencyMutex.Lock()
 	fake.updateLatencyArgsForCall = append(fake.updateLatencyArgsForCall, struct {
-		latency time.Duration
-	}{latency})
-	fake.recordInvocation("UpdateLatency", []interface{}{latency})
+		arg1 time.Duration
+	}{arg1})
+	fake.recordInvocation("UpdateLatency", []interface{}{arg1})
 	fake.updateLatencyMutex.Unlock()
 	if fake.UpdateLatencyStub != nil {
-		fake.UpdateLatencyStub(latency)
+		fake.UpdateLatencyStub(arg1)
 	}
 }
 
@@ -65,10 +72,17 @@ func (fake *FakeEmitter) UpdateLatencyCallCount() int {
 	return len(fake.updateLatencyArgsForCall)
 }
 
+func (fake *FakeEmitter) UpdateLatencyCalls(stub func(time.Duration)) {
+	fake.updateLatencyMutex.Lock()
+	defer fake.updateLatencyMutex.Unlock()
+	fake.UpdateLatencyStub = stub
+}
+
 func (fake *FakeEmitter) UpdateLatencyArgsForCall(i int) time.Duration {
 	fake.updateLatencyMutex.RLock()
 	defer fake.updateLatencyMutex.RUnlock()
-	return fake.updateLatencyArgsForCall[i].latency
+	argsForCall := fake.updateLatencyArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeEmitter) Invocations() map[string][][]interface{} {

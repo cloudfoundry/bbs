@@ -39,8 +39,8 @@ var _ = Describe("SQL Helpers", func() {
 	Describe("Transactions", func() {
 		It("returns a transaction and increments metrics", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			err := helper.Transact(logger, q, func(l lager.Logger, tx helpers.Tx) error {
-				_, err := helper.Insert(l, tx, tableName, helpers.SQLAttributes{"existingcol": 3})
+			err := helper.Transact(ctx, logger, q, func(l lager.Logger, tx helpers.Tx) error {
+				_, err := helper.Insert(ctx, l, tx, tableName, helpers.SQLAttributes{"existingcol": 3})
 				return err
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -51,8 +51,8 @@ var _ = Describe("SQL Helpers", func() {
 
 		It("rolls back a transaction and increments metrics", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			err := helper.Transact(logger, q, func(l lager.Logger, tx helpers.Tx) error {
-				_, err := helper.Insert(l, tx, tableName, helpers.SQLAttributes{"wrongcolumn": 3})
+			err := helper.Transact(ctx, logger, q, func(l lager.Logger, tx helpers.Tx) error {
+				_, err := helper.Insert(ctx, l, tx, tableName, helpers.SQLAttributes{"wrongcolumn": 3})
 				return err
 			})
 			Expect(err).To(HaveOccurred())
@@ -65,7 +65,7 @@ var _ = Describe("SQL Helpers", func() {
 		It("returns a transaction and increments", func() {
 			q := helpers.NewMonitoredDB(db, mon)
 
-			tx, err := q.Begin()
+			tx, err := q.BeginTx(ctx, nil)
 			defer tx.Commit()
 			Expect(err).NotTo(HaveOccurred())
 
@@ -77,7 +77,7 @@ var _ = Describe("SQL Helpers", func() {
 		It("executes queries", func() {
 			q := helpers.NewMonitoredDB(db, mon)
 
-			_, err := helper.Insert(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
+			_, err := helper.Insert(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(mon.Succeeded()).To(BeEquivalentTo(1))
 		})
@@ -85,7 +85,7 @@ var _ = Describe("SQL Helpers", func() {
 		It("returns an error on a bad query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
 
-			_, err := helper.Insert(logger, q, tableName, helpers.SQLAttributes{"wrongcolumn": 3})
+			_, err := helper.Insert(ctx, logger, q, tableName, helpers.SQLAttributes{"wrongcolumn": 3})
 			Expect(err).To(HaveOccurred())
 			Expect(mon.Failed()).To(BeEquivalentTo(1))
 		})
@@ -95,20 +95,20 @@ var _ = Describe("SQL Helpers", func() {
 		BeforeEach(func() {
 			m := monitor.New()
 			q := helpers.NewMonitoredDB(db, m)
-			_, err := helper.Insert(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
+			_, err := helper.Insert(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("executes queries", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			_, err := helper.Update(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3}, "")
+			_, err := helper.Update(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3}, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(mon.Succeeded()).To(BeEquivalentTo(1))
 		})
 
 		It("returns an error on a bad query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			_, err := helper.Update(logger, q, tableName, helpers.SQLAttributes{"wrongcolumn": 3}, "")
+			_, err := helper.Update(ctx, logger, q, tableName, helpers.SQLAttributes{"wrongcolumn": 3}, "")
 
 			Expect(err).To(HaveOccurred())
 			Expect(mon.Failed()).To(BeEquivalentTo(1))
@@ -119,13 +119,13 @@ var _ = Describe("SQL Helpers", func() {
 		BeforeEach(func() {
 			m := monitor.New()
 			q := helpers.NewMonitoredDB(db, m)
-			_, err := helper.Insert(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
+			_, err := helper.Insert(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("executes queries", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			row := helper.One(logger, q, tableName, []string{"existingcol"}, false, "")
+			row := helper.One(ctx, logger, q, tableName, []string{"existingcol"}, false, "")
 			var value int
 			err := row.Scan(&value)
 			Expect(err).NotTo(HaveOccurred())
@@ -134,7 +134,7 @@ var _ = Describe("SQL Helpers", func() {
 
 		It("does not return an error if the row does not exist", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			row := helper.One(logger, q, tableName, []string{"existingcol"}, false, "existingcol = ?", 12345)
+			row := helper.One(ctx, logger, q, tableName, []string{"existingcol"}, false, "existingcol = ?", 12345)
 			var value int
 			err := row.Scan(&value)
 			Expect(err).To(MatchError(sql.ErrNoRows))
@@ -143,7 +143,7 @@ var _ = Describe("SQL Helpers", func() {
 
 		It("returns an error on a bad query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			row := helper.One(logger, q, tableName, []string{"field2"}, false, "")
+			row := helper.One(ctx, logger, q, tableName, []string{"field2"}, false, "")
 
 			var value int
 			err := row.Scan(&value)
@@ -156,13 +156,13 @@ var _ = Describe("SQL Helpers", func() {
 		BeforeEach(func() {
 			m := monitor.New()
 			q := helpers.NewMonitoredDB(db, m)
-			_, err := helper.Insert(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
+			_, err := helper.Insert(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("executes queries", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			rows, err := helper.All(logger, q, tableName, []string{"existingcol"}, false, "")
+			rows, err := helper.All(ctx, logger, q, tableName, []string{"existingcol"}, false, "")
 			defer rows.Close()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(mon.Succeeded()).To(BeEquivalentTo(1))
@@ -170,7 +170,7 @@ var _ = Describe("SQL Helpers", func() {
 
 		It("returns an error on a bad query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			_, err := helper.All(logger, q, tableName, []string{"wrongcolumn"}, false, "")
+			_, err := helper.All(ctx, logger, q, tableName, []string{"wrongcolumn"}, false, "")
 			Expect(err).To(HaveOccurred())
 			Expect(mon.Failed()).To(BeEquivalentTo(1))
 		})
@@ -179,14 +179,14 @@ var _ = Describe("SQL Helpers", func() {
 	Describe("Upsert", func() {
 		It("executes queries", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			_, err := helper.Upsert(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3}, "")
+			_, err := helper.Upsert(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3}, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(mon.Succeeded()).To(BeEquivalentTo(2))
 		})
 
 		It("returns an error on a bad query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			_, err := helper.Upsert(logger, q, tableName, helpers.SQLAttributes{"wrongcolumn": 3}, "")
+			_, err := helper.Upsert(ctx, logger, q, tableName, helpers.SQLAttributes{"wrongcolumn": 3}, "")
 
 			Expect(err).To(HaveOccurred())
 			Expect(mon.Failed()).To(BeEquivalentTo(1))
@@ -197,20 +197,20 @@ var _ = Describe("SQL Helpers", func() {
 		BeforeEach(func() {
 			m := monitor.New()
 			q := helpers.NewMonitoredDB(db, m)
-			_, err := helper.Insert(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
+			_, err := helper.Insert(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("executes queries", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			_, err := helper.Delete(logger, q, tableName, "")
+			_, err := helper.Delete(ctx, logger, q, tableName, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(mon.Succeeded()).To(BeEquivalentTo(1))
 		})
 
 		It("returns an error on a bad query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
-			_, err := helper.Delete(logger, q, "wrongtable", "")
+			_, err := helper.Delete(ctx, logger, q, "wrongtable", "")
 			Expect(err).To(HaveOccurred())
 			Expect(mon.Failed()).To(BeEquivalentTo(1))
 		})
@@ -220,14 +220,14 @@ var _ = Describe("SQL Helpers", func() {
 		BeforeEach(func() {
 			m := monitor.New()
 			q := helpers.NewMonitoredDB(db, m)
-			_, err := helper.Insert(logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
+			_, err := helper.Insert(ctx, logger, q, tableName, helpers.SQLAttributes{"existingcol": 3})
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("executes a query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
 
-			_, err := helper.Count(logger, q, tableName, "")
+			_, err := helper.Count(ctx, logger, q, tableName, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(mon.Succeeded()).To(BeEquivalentTo(1))
 		})
@@ -235,7 +235,7 @@ var _ = Describe("SQL Helpers", func() {
 		It("returns an error on a bad query", func() {
 			q := helpers.NewMonitoredDB(db, mon)
 
-			_, err := helper.Count(logger, q, "wrongtable", "")
+			_, err := helper.Count(ctx, logger, q, "wrongtable", "")
 			Expect(err).To(HaveOccurred())
 			Expect(mon.Failed()).To(BeEquivalentTo(1))
 		})

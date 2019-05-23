@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -10,11 +11,11 @@ import (
 
 //go:generate counterfeiter -o fake_controllers/fake_evacuation_controller.go . EvacuationController
 type EvacuationController interface {
-	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
-	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateCrashedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
-	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)
-	EvacuateStoppedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	RemoveEvacuatingActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	EvacuateClaimedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateCrashedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
+	EvacuateRunningActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)
+	EvacuateStoppedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 }
 
 type EvacuationHandler struct {
@@ -56,7 +57,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 		return
 	}
 
-	err = h.controller.RemoveEvacuatingActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+	err = h.controller.RemoveEvacuatingActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	response.Error = models.ConvertError(err)
 }
 
@@ -78,7 +79,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	keepContainer, err := h.controller.EvacuateClaimedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+	keepContainer, err := h.controller.EvacuateClaimedActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	response.Error = models.ConvertError(err)
 	response.KeepContainer = keepContainer
 }
@@ -100,7 +101,7 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	err = h.controller.EvacuateCrashedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
+	err = h.controller.EvacuateCrashedActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ErrorMessage)
 	response.Error = models.ConvertError(err)
 }
 
@@ -121,7 +122,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	keepContainer, err := h.controller.EvacuateRunningActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
+	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
 	response.Error = models.ConvertError(err)
 	response.KeepContainer = keepContainer
 }
@@ -142,6 +143,6 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	err = h.controller.EvacuateStoppedActualLRP(logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
+	err = h.controller.EvacuateStoppedActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey)
 	response.Error = models.ConvertError(err)
 }

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"sync"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -16,7 +17,7 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_retirer.go . Retirer
 type Retirer interface {
-	RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error
+	RetireActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) error
 }
 
 type LRPConvergenceController struct {
@@ -64,7 +65,7 @@ func NewLRPConvergenceController(
 	}
 }
 
-func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
+func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lager.Logger) {
 	logger = h.logger.Session("converge-lrps")
 
 	start := h.clock.Now()
@@ -84,7 +85,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	}
 	logger.Debug("succeeded-listing-cells")
 
-	convergenceResult := h.lrpDB.ConvergeLRPs(logger, cellSet)
+	convergenceResult := h.lrpDB.ConvergeLRPs(ctx, logger, cellSet)
 
 	events := convergenceResult.Events
 	for _, e := range events {
@@ -102,7 +103,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	for _, key := range keysToRetire {
 		dereferencedKey := *key
 		works = append(works, func() {
-			err := h.retirer.RetireActualLRP(retireLogger, &dereferencedKey)
+			err := h.retirer.RetireActualLRP(ctx, retireLogger, &dereferencedKey)
 			if err != nil {
 				logger.Error("retiring-lrp-failed", err)
 			}
@@ -127,14 +128,14 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	defer func() {
 		h.lrpStatMetronNotifier.RecordConvergenceDuration(h.clock.Since(start))
 
-		domains, err := h.domainDB.FreshDomains(logger)
+		domains, err := h.domainDB.FreshDomains(ctx, logger)
 		if err != nil {
 			logger.Error("failed-getting-fresh-domains", err)
 		}
 		h.lrpStatMetronNotifier.RecordFreshDomains(domains)
 
-		claimed, unclaimed, running, crashed, crashingDesired := h.lrpDB.CountActualLRPsByState(logger)
-		desired := h.lrpDB.CountDesiredInstances(logger)
+		claimed, unclaimed, running, crashed, crashingDesired := h.lrpDB.CountActualLRPsByState(ctx, logger)
+		desired := h.lrpDB.CountDesiredInstances(ctx, logger)
 
 		h.lrpStatMetronNotifier.RecordLRPCounts(
 			unclaimed, claimed, running, crashed,
@@ -149,7 +150,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	for _, key := range convergenceResult.MissingLRPKeys {
 		dereferencedKey := *key
 		works = append(works, func() {
-			lrp, err := h.lrpDB.CreateUnclaimedActualLRP(logger, dereferencedKey.Key)
+			lrp, err := h.lrpDB.CreateUnclaimedActualLRP(ctx, logger, dereferencedKey.Key)
 			if err != nil {
 				logger.Error("failed-to-create-unclaimed-lrp", err, lager.Data{"key": dereferencedKey.Key})
 				return
@@ -168,7 +169,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 	for _, lrpKey := range convergenceResult.UnstartedLRPKeys {
 		dereferencedKey := *lrpKey
 		works = append(works, func() {
-			before, after, err := h.lrpDB.UnclaimActualLRP(logger, dereferencedKey.Key)
+			before, after, err := h.lrpDB.UnclaimActualLRP(ctx, logger, dereferencedKey.Key)
 			if err != nil && err != models.ErrActualLRPCannotBeUnclaimed {
 				logger.Error("cannot-unclaim-lrp", err, lager.Data{"key": dereferencedKey})
 				return
@@ -206,7 +207,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 				// there is a Suspect LRP already, unclaim this previously created
 				// replacement and reauction it
 				logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": dereferencedKey.Key})
-				before, after, err := h.lrpDB.UnclaimActualLRP(logger, dereferencedKey.Key)
+				before, after, err := h.lrpDB.UnclaimActualLRP(ctx, logger, dereferencedKey.Key)
 				if err != nil {
 					logger.Error("failed-unclaiming-lrp", err)
 					return
@@ -221,14 +222,14 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 				return
 			}
 
-			before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, dereferencedKey.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			before, after, err := h.lrpDB.ChangeActualLRPPresence(ctx, logger, dereferencedKey.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 			if err != nil {
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
 				return
 			}
 			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
 
-			unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(logger.Session("create-unclaimed-actual"), dereferencedKey.Key)
+			unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(ctx, logger.Session("create-unclaimed-actual"), dereferencedKey.Key)
 			if err != nil {
 				logger.Error("cannot-unclaim-lrp", err)
 				return
@@ -250,12 +251,12 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 		dereferencedKey := *key
 		works = append(works, func() {
 			logger := logger.Session("suspect-keys-with-existing-cells")
-			err := h.lrpDB.RemoveActualLRP(logger, dereferencedKey.ProcessGuid, dereferencedKey.Index, nil)
+			err := h.lrpDB.RemoveActualLRP(ctx, logger, dereferencedKey.ProcessGuid, dereferencedKey.Index, nil)
 			if err != nil {
 				logger.Error("cannot-remove-lrp", err, lager.Data{"key": dereferencedKey})
 				return
 			}
-			before, after, err := h.lrpDB.ChangeActualLRPPresence(logger, &dereferencedKey, models.ActualLRP_Suspect, models.ActualLRP_Ordinary)
+			before, after, err := h.lrpDB.ChangeActualLRPPresence(ctx, logger, &dereferencedKey, models.ActualLRP_Suspect, models.ActualLRP_Ordinary)
 			if err != nil {
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
 				return
@@ -269,7 +270,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(logger lager.Logger) {
 		dereferencedKey := *key
 		works = append(works, func() {
 			logger := logger.Session("suspect-keys-to-retire")
-			suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(logger, &dereferencedKey)
+			suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(ctx, logger, &dereferencedKey)
 			if err != nil {
 				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": dereferencedKey})
 				return

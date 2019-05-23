@@ -1,6 +1,7 @@
 package encryptor
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -48,7 +49,7 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	logger.Info("starting")
 	defer logger.Info("exited")
 
-	currentEncryptionKey, err := m.db.EncryptionKeyLabel(logger)
+	currentEncryptionKey, err := m.db.EncryptionKeyLabel(context.Background(), logger)
 	if err != nil {
 		if models.ConvertError(err) != models.ErrResourceNotFound {
 			logger.Error("failed-to-fetch-encryption-key-label", err)
@@ -72,11 +73,11 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 		encryptionStart := m.clock.Now()
 		logger.Info("encryption-started")
-		err := m.db.PerformEncryption(logger)
+		err := m.db.PerformEncryption(context.Background(), logger)
 		if err != nil {
 			logger.Error("encryption-failed", err)
 		} else {
-			m.db.SetEncryptionKeyLabel(logger, m.keyManager.EncryptionKey().Label())
+			m.db.SetEncryptionKeyLabel(context.Background(), logger, m.keyManager.EncryptionKey().Label())
 		}
 
 		totalTime := m.clock.Since(encryptionStart)

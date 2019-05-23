@@ -100,13 +100,13 @@ var _ = Describe("Migration Manager", func() {
 			It("runs all the migrations in the correct order and sets the version to the latest migration version", func() {
 				Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(3))
 
-				_, version := fakeSQLDB.SetVersionArgsForCall(0)
+				_, _, version := fakeSQLDB.SetVersionArgsForCall(0)
 				Expect(version.CurrentVersion).To(BeEquivalentTo(0))
 
-				_, version = fakeSQLDB.SetVersionArgsForCall(1)
+				_, _, version = fakeSQLDB.SetVersionArgsForCall(1)
 				Expect(version.CurrentVersion).To(BeEquivalentTo(100))
 
-				_, version = fakeSQLDB.SetVersionArgsForCall(2)
+				_, _, version = fakeSQLDB.SetVersionArgsForCall(2)
 				Expect(version.CurrentVersion).To(BeEquivalentTo(101))
 
 				Expect(fakeMigrationToSQL.UpCallCount()).To(Equal(1))
@@ -186,10 +186,10 @@ var _ = Describe("Migration Manager", func() {
 				Expect(migrationsDone).To(BeClosed())
 				Consistently(fakeSQLDB.SetVersionCallCount).Should(Equal(2))
 
-				_, version := fakeSQLDB.SetVersionArgsForCall(0)
+				_, _, version := fakeSQLDB.SetVersionArgsForCall(0)
 				Expect(version).To(Equal(&models.Version{CurrentVersion: 100}))
 
-				_, version = fakeSQLDB.SetVersionArgsForCall(1)
+				_, _, version = fakeSQLDB.SetVersionArgsForCall(1)
 				Expect(version).To(Equal(&models.Version{CurrentVersion: 102}))
 
 				Expect(fakeMigration.UpCallCount()).To(Equal(1))
@@ -284,7 +284,7 @@ var _ = Describe("Migration Manager", func() {
 				It("writes a zero version into the db", func() {
 					Eventually(fakeSQLDB.SetVersionCallCount).Should(Equal(1))
 
-					_, version := fakeSQLDB.SetVersionArgsForCall(0)
+					_, _, version := fakeSQLDB.SetVersionArgsForCall(0)
 					Expect(version.CurrentVersion).To(BeEquivalentTo(0))
 					Expect(version.CurrentVersion).To(BeEquivalentTo(0))
 				})

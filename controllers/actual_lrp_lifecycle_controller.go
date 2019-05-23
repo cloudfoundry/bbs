@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"context"
+
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
@@ -65,18 +67,18 @@ func lookupLRPInSlice(lrps []*models.ActualLRP, key *models.ActualLRPInstanceKey
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, processGUID string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
+func (h *ActualLRPLifecycleController) ClaimActualLRP(ctx context.Context, logger lager.Logger, processGUID string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
 
-	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGUID, Index: &index})
+	lrps, err := h.db.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: processGUID, Index: &index})
 	if err != nil {
 		return err
 	}
 
-	before, after, err := h.db.ClaimActualLRP(logger, processGUID, index, actualLRPInstanceKey)
+	before, after, err := h.db.ClaimActualLRP(ctx, logger, processGUID, index, actualLRPInstanceKey)
 	if err != nil {
 		return err
 	}
@@ -87,13 +89,13 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(logger lager.Logger, proce
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
+func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
 
-	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRPKey.ProcessGuid, Index: &actualLRPKey.Index})
+	lrps, err := h.db.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRPKey.ProcessGuid, Index: &actualLRPKey.Index})
 	if err != nil && err != models.ErrResourceNotFound {
 		return err
 	}
@@ -111,7 +113,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 
 	// creates ordinary running actual LRP if it doesn't exist, otherwise updates
 	// the existing ordinary actual LRP to running state
-	before, after, err := h.db.StartActualLRP(logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
+	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo)
 	if err != nil {
 		return err
 	}
@@ -126,13 +128,13 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 
 	var suspectLRP *models.ActualLRP
 	if evacuating != nil {
-		h.evacuationDB.RemoveEvacuatingActualLRP(logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
+		h.evacuationDB.RemoveEvacuatingActualLRP(ctx, logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
 		newLRPs = eventCalculator.RecordChange(evacuating, nil, newLRPs)
 	}
 
 	// prior to starting this ActualLRP there was a suspect LRP that we need to remove
 	if suspect != nil {
-		suspectLRP, err = h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+		suspectLRP, err = h.suspectDB.RemoveSuspectActualLRP(ctx, logger, actualLRPKey)
 		if err != nil {
 			logger.Error("failed-to-remove-suspect-lrp", err)
 		} else {
@@ -143,8 +145,8 @@ func (h *ActualLRPLifecycleController) StartActualLRP(logger lager.Logger, actua
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
-	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: actualLRPKey.ProcessGuid, Index: &actualLRPKey.Index})
+func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
+	lrps, err := h.db.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRPKey.ProcessGuid, Index: &actualLRPKey.Index})
 	if err != nil {
 		return err
 	}
@@ -156,7 +158,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 
 	lrp := lookupLRPInSlice(lrps, actualLRPInstanceKey)
 	if lrp != nil && lrp.Presence == models.ActualLRP_Suspect {
-		suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(logger, actualLRPKey)
+		suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(ctx, logger, actualLRPKey)
 		if err != nil {
 			return err
 		}
@@ -168,7 +170,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return nil
 	}
 
-	before, after, shouldRestart, err := h.db.CrashActualLRP(logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
+	before, after, shouldRestart, err := h.db.CrashActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, errorMessage)
 	if err != nil {
 		return err
 	}
@@ -180,7 +182,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 		return nil
 	}
 
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(logger, actualLRPKey.ProcessGuid)
+	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(ctx, logger, actualLRPKey.ProcessGuid)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp", err)
 		return err
@@ -197,13 +199,13 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(logger lager.Logger, actua
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {
-	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
+func (h *ActualLRPLifecycleController) FailActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error {
+	lrps, err := h.db.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
 	if err != nil {
 		return err
 	}
 
-	before, after, err := h.db.FailActualLRP(logger, key, errorMessage)
+	before, after, err := h.db.FailActualLRP(ctx, logger, key, errorMessage)
 	if err != nil && err != models.ErrResourceNotFound {
 		return err
 	}
@@ -219,8 +221,8 @@ func (h *ActualLRPLifecycleController) FailActualLRP(logger lager.Logger, key *m
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, processGUID string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
-	beforeLRPs, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGUID, Index: &index})
+func (h *ActualLRPLifecycleController) RemoveActualLRP(ctx context.Context, logger lager.Logger, processGUID string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
+	beforeLRPs, err := h.db.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: processGUID, Index: &index})
 	if err != nil {
 		return err
 	}
@@ -230,7 +232,7 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 		return models.ErrResourceNotFound
 	}
 
-	err = h.db.RemoveActualLRP(logger, processGUID, index, instanceKey)
+	err = h.db.RemoveActualLRP(ctx, logger, processGUID, index, instanceKey)
 	if err != nil {
 		return err
 	}
@@ -246,13 +248,13 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(logger lager.Logger, proc
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) error {
 	var err error
 	var cell *models.CellPresence
 
 	logger = logger.Session("retire-actual-lrp", lager.Data{"process_guid": key.ProcessGuid, "index": key.Index})
 
-	lrps, err := h.db.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
+	lrps, err := h.db.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
 	if err != nil {
 		return err
 	}
@@ -275,7 +277,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(logger lager.Logger, key 
 	}()
 
 	removeLRP := func() error {
-		err = h.db.RemoveActualLRP(logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+		err = h.db.RemoveActualLRP(ctx, logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
 		if err == nil {
 			newLRPs = eventCalculator.RecordChange(lrp, nil, lrps)
 		}

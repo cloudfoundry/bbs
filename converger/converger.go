@@ -1,6 +1,7 @@
 package converger
 
 import (
+	"context"
 	"os"
 	"sync"
 	"time"
@@ -15,12 +16,12 @@ import (
 
 //go:generate counterfeiter -o fake_controllers/fake_lrp_convergence_controller.go . LrpConvergenceController
 type LrpConvergenceController interface {
-	ConvergeLRPs(logger lager.Logger)
+	ConvergeLRPs(ctx context.Context, logger lager.Logger)
 }
 
 //go:generate counterfeiter -o fake_controllers/fake_task_controller.go . TaskController
 type TaskController interface {
-	ConvergeTasks(logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
+	ConvergeTasks(ctx context.Context, logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
 }
 
 type Converger struct {
@@ -128,6 +129,7 @@ func (c *Converger) converge(convergeChan chan struct{}) {
 		defer logger.Info("converge-tasks-done")
 
 		err := c.taskController.ConvergeTasks(
+			context.Background(),
 			c.logger,
 			c.kickTaskDuration,
 			c.expirePendingTaskDuration,
@@ -144,7 +146,7 @@ func (c *Converger) converge(convergeChan chan struct{}) {
 		logger.Info("converge-lrps-started")
 		defer logger.Info("converge-lrps-done")
 
-		c.lrpConvergenceController.ConvergeLRPs(c.logger)
+		c.lrpConvergenceController.ConvergeLRPs(context.Background(), c.logger)
 
 		convergeChan <- struct{}{}
 	}()

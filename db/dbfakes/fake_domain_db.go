@@ -2,6 +2,7 @@
 package dbfakes
 
 import (
+	"context"
 	"sync"
 
 	"code.cloudfoundry.org/bbs/db"
@@ -9,10 +10,11 @@ import (
 )
 
 type FakeDomainDB struct {
-	FreshDomainsStub        func(logger lager.Logger) ([]string, error)
+	FreshDomainsStub        func(context.Context, lager.Logger) ([]string, error)
 	freshDomainsMutex       sync.RWMutex
 	freshDomainsArgsForCall []struct {
-		logger lager.Logger
+		arg1 context.Context
+		arg2 lager.Logger
 	}
 	freshDomainsReturns struct {
 		result1 []string
@@ -22,12 +24,13 @@ type FakeDomainDB struct {
 		result1 []string
 		result2 error
 	}
-	UpsertDomainStub        func(lgger lager.Logger, domain string, ttl uint32) error
+	UpsertDomainStub        func(context.Context, lager.Logger, string, uint32) error
 	upsertDomainMutex       sync.RWMutex
 	upsertDomainArgsForCall []struct {
-		lgger  lager.Logger
-		domain string
-		ttl    uint32
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 uint32
 	}
 	upsertDomainReturns struct {
 		result1 error
@@ -39,21 +42,23 @@ type FakeDomainDB struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDomainDB) FreshDomains(logger lager.Logger) ([]string, error) {
+func (fake *FakeDomainDB) FreshDomains(arg1 context.Context, arg2 lager.Logger) ([]string, error) {
 	fake.freshDomainsMutex.Lock()
 	ret, specificReturn := fake.freshDomainsReturnsOnCall[len(fake.freshDomainsArgsForCall)]
 	fake.freshDomainsArgsForCall = append(fake.freshDomainsArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("FreshDomains", []interface{}{logger})
+		arg1 context.Context
+		arg2 lager.Logger
+	}{arg1, arg2})
+	fake.recordInvocation("FreshDomains", []interface{}{arg1, arg2})
 	fake.freshDomainsMutex.Unlock()
 	if fake.FreshDomainsStub != nil {
-		return fake.FreshDomainsStub(logger)
+		return fake.FreshDomainsStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.freshDomainsReturns.result1, fake.freshDomainsReturns.result2
+	fakeReturns := fake.freshDomainsReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeDomainDB) FreshDomainsCallCount() int {
@@ -62,13 +67,22 @@ func (fake *FakeDomainDB) FreshDomainsCallCount() int {
 	return len(fake.freshDomainsArgsForCall)
 }
 
-func (fake *FakeDomainDB) FreshDomainsArgsForCall(i int) lager.Logger {
+func (fake *FakeDomainDB) FreshDomainsCalls(stub func(context.Context, lager.Logger) ([]string, error)) {
+	fake.freshDomainsMutex.Lock()
+	defer fake.freshDomainsMutex.Unlock()
+	fake.FreshDomainsStub = stub
+}
+
+func (fake *FakeDomainDB) FreshDomainsArgsForCall(i int) (context.Context, lager.Logger) {
 	fake.freshDomainsMutex.RLock()
 	defer fake.freshDomainsMutex.RUnlock()
-	return fake.freshDomainsArgsForCall[i].logger
+	argsForCall := fake.freshDomainsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeDomainDB) FreshDomainsReturns(result1 []string, result2 error) {
+	fake.freshDomainsMutex.Lock()
+	defer fake.freshDomainsMutex.Unlock()
 	fake.FreshDomainsStub = nil
 	fake.freshDomainsReturns = struct {
 		result1 []string
@@ -77,6 +91,8 @@ func (fake *FakeDomainDB) FreshDomainsReturns(result1 []string, result2 error) {
 }
 
 func (fake *FakeDomainDB) FreshDomainsReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.freshDomainsMutex.Lock()
+	defer fake.freshDomainsMutex.Unlock()
 	fake.FreshDomainsStub = nil
 	if fake.freshDomainsReturnsOnCall == nil {
 		fake.freshDomainsReturnsOnCall = make(map[int]struct {
@@ -90,23 +106,25 @@ func (fake *FakeDomainDB) FreshDomainsReturnsOnCall(i int, result1 []string, res
 	}{result1, result2}
 }
 
-func (fake *FakeDomainDB) UpsertDomain(lgger lager.Logger, domain string, ttl uint32) error {
+func (fake *FakeDomainDB) UpsertDomain(arg1 context.Context, arg2 lager.Logger, arg3 string, arg4 uint32) error {
 	fake.upsertDomainMutex.Lock()
 	ret, specificReturn := fake.upsertDomainReturnsOnCall[len(fake.upsertDomainArgsForCall)]
 	fake.upsertDomainArgsForCall = append(fake.upsertDomainArgsForCall, struct {
-		lgger  lager.Logger
-		domain string
-		ttl    uint32
-	}{lgger, domain, ttl})
-	fake.recordInvocation("UpsertDomain", []interface{}{lgger, domain, ttl})
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 uint32
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("UpsertDomain", []interface{}{arg1, arg2, arg3, arg4})
 	fake.upsertDomainMutex.Unlock()
 	if fake.UpsertDomainStub != nil {
-		return fake.UpsertDomainStub(lgger, domain, ttl)
+		return fake.UpsertDomainStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.upsertDomainReturns.result1
+	fakeReturns := fake.upsertDomainReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeDomainDB) UpsertDomainCallCount() int {
@@ -115,13 +133,22 @@ func (fake *FakeDomainDB) UpsertDomainCallCount() int {
 	return len(fake.upsertDomainArgsForCall)
 }
 
-func (fake *FakeDomainDB) UpsertDomainArgsForCall(i int) (lager.Logger, string, uint32) {
+func (fake *FakeDomainDB) UpsertDomainCalls(stub func(context.Context, lager.Logger, string, uint32) error) {
+	fake.upsertDomainMutex.Lock()
+	defer fake.upsertDomainMutex.Unlock()
+	fake.UpsertDomainStub = stub
+}
+
+func (fake *FakeDomainDB) UpsertDomainArgsForCall(i int) (context.Context, lager.Logger, string, uint32) {
 	fake.upsertDomainMutex.RLock()
 	defer fake.upsertDomainMutex.RUnlock()
-	return fake.upsertDomainArgsForCall[i].lgger, fake.upsertDomainArgsForCall[i].domain, fake.upsertDomainArgsForCall[i].ttl
+	argsForCall := fake.upsertDomainArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeDomainDB) UpsertDomainReturns(result1 error) {
+	fake.upsertDomainMutex.Lock()
+	defer fake.upsertDomainMutex.Unlock()
 	fake.UpsertDomainStub = nil
 	fake.upsertDomainReturns = struct {
 		result1 error
@@ -129,6 +156,8 @@ func (fake *FakeDomainDB) UpsertDomainReturns(result1 error) {
 }
 
 func (fake *FakeDomainDB) UpsertDomainReturnsOnCall(i int, result1 error) {
+	fake.upsertDomainMutex.Lock()
+	defer fake.upsertDomainMutex.Unlock()
 	fake.UpsertDomainStub = nil
 	if fake.upsertDomainReturnsOnCall == nil {
 		fake.upsertDomainReturnsOnCall = make(map[int]struct {

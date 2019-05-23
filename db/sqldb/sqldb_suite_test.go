@@ -1,6 +1,7 @@
 package sqldb_test
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"fmt"
@@ -33,6 +34,7 @@ var (
 	rawDB                                *sql.DB
 	db                                   helpers.QueryableDB
 	sqlDB                                *sqldb.SQLDB
+	ctx                                  context.Context
 	fakeClock                            *fakeclock.FakeClock
 	fakeGUIDProvider                     *guidproviderfakes.FakeGUIDProvider
 	logger                               *lagertest.TestLogger
@@ -93,9 +95,10 @@ var _ = BeforeSuite(func() {
 	serializer = format.NewSerializer(cryptor)
 
 	db = helpers.NewMonitoredDB(rawDB, monitor.New())
+	ctx = context.Background()
 
 	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
-	err = sqlDB.CreateConfigurationsTable(logger)
+	err = sqlDB.CreateConfigurationsTable(ctx, logger)
 	if err != nil {
 		logger.Fatal("sql-failed-create-configurations-table", err)
 	}

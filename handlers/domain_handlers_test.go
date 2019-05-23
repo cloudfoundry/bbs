@@ -59,7 +59,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("call the DB to upsert the domain", func() {
 				Expect(fakeDomainDB.UpsertDomainCallCount()).To(Equal(1))
-				_, domainUpserted, ttlUpserted := fakeDomainDB.UpsertDomainArgsForCall(0)
+				_, _, domainUpserted, ttlUpserted := fakeDomainDB.UpsertDomainArgsForCall(0)
 				Expect(domainUpserted).To(Equal(domain))
 				Expect(ttlUpserted).To(Equal(ttl))
 			})

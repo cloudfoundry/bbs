@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 // INSERT INTO <table> (...) VALUES ...
 func (h *sqlHelper) Insert(
+	ctx context.Context,
 	logger lager.Logger,
 	q Queryable,
 	table string,
@@ -33,5 +35,5 @@ func (h *sqlHelper) Insert(
 	query += fmt.Sprintf("(%s)", strings.Join(attributeNames, ", "))
 	query += fmt.Sprintf("VALUES (%s)", strings.Join(attributeBindings, ", "))
 
-	return q.Exec(h.Rebind(query), bindings...)
+	return q.ExecContext(ctx, h.Rebind(query), bindings...)
 }

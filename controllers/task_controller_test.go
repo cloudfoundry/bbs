@@ -77,7 +77,7 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			actualTasks, err = controller.Tasks(logger, domain, cellId)
+			actualTasks, err = controller.Tasks(ctx, logger, domain, cellId)
 		})
 
 		Context("when reading tasks from DB succeeds", func() {
@@ -95,7 +95,7 @@ var _ = Describe("Task Controller", func() {
 
 			It("calls the DB with no filter", func() {
 				Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
-				_, filter := fakeTaskDB.TasksArgsForCall(0)
+				_, _, filter := fakeTaskDB.TasksArgsForCall(0)
 				Expect(filter).To(Equal(models.TaskFilter{}))
 			})
 
@@ -106,7 +106,7 @@ var _ = Describe("Task Controller", func() {
 
 				It("calls the DB with a domain filter", func() {
 					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
-					_, filter := fakeTaskDB.TasksArgsForCall(0)
+					_, _, filter := fakeTaskDB.TasksArgsForCall(0)
 					Expect(filter.Domain).To(Equal(domain))
 				})
 			})
@@ -118,7 +118,7 @@ var _ = Describe("Task Controller", func() {
 
 				It("calls the DB with a cell filter", func() {
 					Expect(fakeTaskDB.TasksCallCount()).To(Equal(1))
-					_, filter := fakeTaskDB.TasksArgsForCall(0)
+					_, _, filter := fakeTaskDB.TasksArgsForCall(0)
 					Expect(filter.CellID).To(Equal(cellId))
 				})
 			})
@@ -142,7 +142,7 @@ var _ = Describe("Task Controller", func() {
 		)
 
 		JustBeforeEach(func() {
-			actualTask, err = controller.TaskByGuid(logger, taskGuid)
+			actualTask, err = controller.TaskByGuid(ctx, logger, taskGuid)
 		})
 
 		Context("when reading a task from the DB succeeds", func() {
@@ -155,7 +155,7 @@ var _ = Describe("Task Controller", func() {
 
 			It("fetches task by guid", func() {
 				Expect(fakeTaskDB.TaskByGuidCallCount()).To(Equal(1))
-				_, actualGuid := fakeTaskDB.TaskByGuidArgsForCall(0)
+				_, _, actualGuid := fakeTaskDB.TaskByGuidArgsForCall(0)
 				Expect(actualGuid).To(Equal(taskGuid))
 			})
 
@@ -188,7 +188,7 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.DesireTask(logger, taskDef, taskGuid, domain)
+			err = controller.DesireTask(ctx, logger, taskDef, taskGuid, domain)
 		})
 
 		Context("when the desire is successful", func() {
@@ -200,7 +200,7 @@ var _ = Describe("Task Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeTaskDB.DesireTaskCallCount()).To(Equal(1))
-				_, actualTaskDef, actualTaskGuid, actualDomain := fakeTaskDB.DesireTaskArgsForCall(0)
+				_, _, actualTaskDef, actualTaskGuid, actualDomain := fakeTaskDB.DesireTaskArgsForCall(0)
 				Expect(actualTaskDef).To(Equal(taskDef))
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualDomain).To(Equal(domain))
@@ -307,12 +307,13 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			JustBeforeEach(func() {
-				shouldStart, err = controller.StartTask(logger, taskGuid, cellId)
+				shouldStart, err = controller.StartTask(ctx, logger, taskGuid, cellId)
 			})
 
 			It("calls StartTask", func() {
 				Expect(fakeTaskDB.StartTaskCallCount()).To(Equal(1))
-				taskLogger, taskGuid, cellId := fakeTaskDB.StartTaskArgsForCall(0)
+				taskContext, taskLogger, taskGuid, cellId := fakeTaskDB.StartTaskArgsForCall(0)
+				Expect(taskContext).To(Equal(ctx))
 				Expect(taskLogger.SessionName()).To(ContainSubstring("start-task"))
 				Expect(taskGuid).To(Equal(taskGuid))
 				Expect(cellId).To(Equal(cellId))
@@ -401,7 +402,7 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.CancelTask(logger, taskGuid)
+			err = controller.CancelTask(ctx, logger, taskGuid)
 		})
 
 		Context("when the cancel request is normal", func() {
@@ -413,7 +414,8 @@ var _ = Describe("Task Controller", func() {
 
 				It("returns no error", func() {
 					Expect(fakeTaskDB.CancelTaskCallCount()).To(Equal(1))
-					taskLogger, taskGuid := fakeTaskDB.CancelTaskArgsForCall(0)
+					taskContext, taskLogger, taskGuid := fakeTaskDB.CancelTaskArgsForCall(0)
+					Expect(taskContext).To(Equal(ctx))
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 					Expect(err).NotTo(HaveOccurred())
@@ -553,7 +555,7 @@ var _ = Describe("Task Controller", func() {
 	AssertTaskFailing := func(taskGuid, failureReason string) {
 		Context("when failing the task succeeds", func() {
 			It("returns no error", func() {
-				_, actualTaskGuid, actualFailureReason := fakeTaskDB.FailTaskArgsForCall(0)
+				_, _, actualTaskGuid, actualFailureReason := fakeTaskDB.FailTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualFailureReason).To(Equal(failureReason))
 				Expect(err).NotTo(HaveOccurred())
@@ -620,7 +622,7 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.FailTask(logger, taskGuid, failureReason)
+			err = controller.FailTask(ctx, logger, taskGuid, failureReason)
 		})
 
 		AssertTaskFailing(taskGuid, failureReason)
@@ -642,7 +644,7 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.RejectTask(logger, taskGuid, rejectionReason)
+			err = controller.RejectTask(ctx, logger, taskGuid, rejectionReason)
 		})
 
 		Context("when fetching the task returns an error", func() {
@@ -665,7 +667,7 @@ var _ = Describe("Task Controller", func() {
 
 			It("rejects the task", func() {
 				Expect(fakeTaskDB.RejectTaskCallCount()).To(Equal(1))
-				_, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
+				_, _, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualRejectionReason).To(Equal(rejectionReason))
 			})
@@ -683,7 +685,7 @@ var _ = Describe("Task Controller", func() {
 			Context("when the task has a rejection count of 0", func() {
 				It("rejects the task", func() {
 					Expect(fakeTaskDB.RejectTaskCallCount()).To(Equal(1))
-					_, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
+					_, _, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
 					Expect(actualTaskGuid).To(Equal(taskGuid))
 					Expect(actualRejectionReason).To(Equal(rejectionReason))
 				})
@@ -712,7 +714,7 @@ var _ = Describe("Task Controller", func() {
 
 				It("rejects the task", func() {
 					Expect(fakeTaskDB.RejectTaskCallCount()).To(Equal(1))
-					_, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
+					_, _, actualTaskGuid, actualRejectionReason := fakeTaskDB.RejectTaskArgsForCall(0)
 					Expect(actualTaskGuid).To(Equal(taskGuid))
 					Expect(actualRejectionReason).To(Equal(rejectionReason))
 				})
@@ -756,7 +758,7 @@ var _ = Describe("Task Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.CompleteTask(logger, taskGuid, cellId, failed, failureReason, result)
+			err = controller.CompleteTask(ctx, logger, taskGuid, cellId, failed, failureReason, result)
 		})
 
 		Context("when the task is not marked failed", func() {
@@ -774,7 +776,7 @@ var _ = Describe("Task Controller", func() {
 		Context("when completing the task succeeds", func() {
 			It("returns no error", func() {
 				Expect(fakeTaskDB.CompleteTaskCallCount()).To(Equal(1))
-				_, actualTaskGuid, actualCellId, actualFailed, actualFailureReason, actualResult := fakeTaskDB.CompleteTaskArgsForCall(0)
+				_, _, actualTaskGuid, actualCellId, actualFailed, actualFailureReason, actualResult := fakeTaskDB.CompleteTaskArgsForCall(0)
 				Expect(actualTaskGuid).To(Equal(taskGuid))
 				Expect(actualCellId).To(Equal(cellId))
 				Expect(actualFailed).To(Equal(failed))
@@ -858,13 +860,13 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			JustBeforeEach(func() {
-				err = controller.ResolvingTask(logger, taskGuid)
+				err = controller.ResolvingTask(ctx, logger, taskGuid)
 			})
 
 			Context("when resolvinging the task succeeds", func() {
 				It("returns no error", func() {
 					Expect(fakeTaskDB.ResolvingTaskCallCount()).To(Equal(1))
-					_, taskGuid := fakeTaskDB.ResolvingTaskArgsForCall(0)
+					_, _, taskGuid := fakeTaskDB.ResolvingTaskArgsForCall(0)
 					Expect(taskGuid).To(Equal("task-guid"))
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -909,13 +911,13 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			JustBeforeEach(func() {
-				err = controller.DeleteTask(logger, taskGuid)
+				err = controller.DeleteTask(ctx, logger, taskGuid)
 			})
 
 			Context("when deleting the task succeeds", func() {
 				It("returns no error", func() {
 					Expect(fakeTaskDB.DeleteTaskCallCount()).To(Equal(1))
-					_, taskGuid := fakeTaskDB.DeleteTaskArgsForCall(0)
+					_, _, taskGuid := fakeTaskDB.DeleteTaskArgsForCall(0)
 					Expect(taskGuid).To(Equal("task-guid"))
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -975,13 +977,14 @@ var _ = Describe("Task Controller", func() {
 			})
 
 			JustBeforeEach(func() {
-				err = controller.ConvergeTasks(logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
+				err = controller.ConvergeTasks(ctx, logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration)
 			})
 
 			It("calls ConvergeTasks", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
-				taskLogger, actualCellSet, actualKickDuration, actualPendingDuration, actualCompletedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
+				taskContext, taskLogger, actualCellSet, actualKickDuration, actualPendingDuration, actualCompletedDuration := fakeTaskDB.ConvergeTasksArgsForCall(0)
+				Expect(taskContext).To(Equal(ctx))
 				Expect(taskLogger.SessionName()).To(ContainSubstring("converge-tasks"))
 				Expect(actualCellSet).To(BeEquivalentTo(cellSet))
 				Expect(actualKickDuration).To(BeEquivalentTo(kickTaskDuration))
@@ -1025,7 +1028,7 @@ var _ = Describe("Task Controller", func() {
 				It("calls ConvergeTasks with an empty CellSet", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(fakeTaskDB.ConvergeTasksCallCount()).To(Equal(1))
-					_, actualCellSet, _, _, _ := fakeTaskDB.ConvergeTasksArgsForCall(0)
+					_, _, actualCellSet, _, _, _ := fakeTaskDB.ConvergeTasksArgsForCall(0)
 					Expect(actualCellSet).To(BeEquivalentTo(models.CellSet{}))
 				})
 			})

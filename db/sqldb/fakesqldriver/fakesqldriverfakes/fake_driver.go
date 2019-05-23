@@ -9,10 +9,10 @@ import (
 )
 
 type FakeDriver struct {
-	OpenStub        func(name string) (driver.Conn, error)
+	OpenStub        func(string) (driver.Conn, error)
 	openMutex       sync.RWMutex
 	openArgsForCall []struct {
-		name string
+		arg1 string
 	}
 	openReturns struct {
 		result1 driver.Conn
@@ -26,21 +26,22 @@ type FakeDriver struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDriver) Open(name string) (driver.Conn, error) {
+func (fake *FakeDriver) Open(arg1 string) (driver.Conn, error) {
 	fake.openMutex.Lock()
 	ret, specificReturn := fake.openReturnsOnCall[len(fake.openArgsForCall)]
 	fake.openArgsForCall = append(fake.openArgsForCall, struct {
-		name string
-	}{name})
-	fake.recordInvocation("Open", []interface{}{name})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Open", []interface{}{arg1})
 	fake.openMutex.Unlock()
 	if fake.OpenStub != nil {
-		return fake.OpenStub(name)
+		return fake.OpenStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.openReturns.result1, fake.openReturns.result2
+	fakeReturns := fake.openReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeDriver) OpenCallCount() int {
@@ -49,13 +50,22 @@ func (fake *FakeDriver) OpenCallCount() int {
 	return len(fake.openArgsForCall)
 }
 
+func (fake *FakeDriver) OpenCalls(stub func(string) (driver.Conn, error)) {
+	fake.openMutex.Lock()
+	defer fake.openMutex.Unlock()
+	fake.OpenStub = stub
+}
+
 func (fake *FakeDriver) OpenArgsForCall(i int) string {
 	fake.openMutex.RLock()
 	defer fake.openMutex.RUnlock()
-	return fake.openArgsForCall[i].name
+	argsForCall := fake.openArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeDriver) OpenReturns(result1 driver.Conn, result2 error) {
+	fake.openMutex.Lock()
+	defer fake.openMutex.Unlock()
 	fake.OpenStub = nil
 	fake.openReturns = struct {
 		result1 driver.Conn
@@ -64,6 +74,8 @@ func (fake *FakeDriver) OpenReturns(result1 driver.Conn, result2 error) {
 }
 
 func (fake *FakeDriver) OpenReturnsOnCall(i int, result1 driver.Conn, result2 error) {
+	fake.openMutex.Lock()
+	defer fake.openMutex.Unlock()
 	fake.OpenStub = nil
 	if fake.openReturnsOnCall == nil {
 		fake.openReturnsOnCall = make(map[int]struct {

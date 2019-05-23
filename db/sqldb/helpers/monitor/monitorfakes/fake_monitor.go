@@ -9,6 +9,16 @@ import (
 )
 
 type FakeMonitor struct {
+	FailedStub        func() int64
+	failedMutex       sync.RWMutex
+	failedArgsForCall []struct {
+	}
+	failedReturns struct {
+		result1 int64
+	}
+	failedReturnsOnCall map[int]struct {
+		result1 int64
+	}
 	MonitorStub        func(func() error) error
 	monitorMutex       sync.RWMutex
 	monitorArgsForCall []struct {
@@ -20,37 +30,11 @@ type FakeMonitor struct {
 	monitorReturnsOnCall map[int]struct {
 		result1 error
 	}
-	TotalStub        func() int64
-	totalMutex       sync.RWMutex
-	totalArgsForCall []struct{}
-	totalReturns     struct {
-		result1 int64
-	}
-	totalReturnsOnCall map[int]struct {
-		result1 int64
-	}
-	SucceededStub        func() int64
-	succeededMutex       sync.RWMutex
-	succeededArgsForCall []struct{}
-	succeededReturns     struct {
-		result1 int64
-	}
-	succeededReturnsOnCall map[int]struct {
-		result1 int64
-	}
-	FailedStub        func() int64
-	failedMutex       sync.RWMutex
-	failedArgsForCall []struct{}
-	failedReturns     struct {
-		result1 int64
-	}
-	failedReturnsOnCall map[int]struct {
-		result1 int64
-	}
 	ReadAndResetDurationMaxStub        func() time.Duration
 	readAndResetDurationMaxMutex       sync.RWMutex
-	readAndResetDurationMaxArgsForCall []struct{}
-	readAndResetDurationMaxReturns     struct {
+	readAndResetDurationMaxArgsForCall []struct {
+	}
+	readAndResetDurationMaxReturns struct {
 		result1 time.Duration
 	}
 	readAndResetDurationMaxReturnsOnCall map[int]struct {
@@ -58,15 +42,88 @@ type FakeMonitor struct {
 	}
 	ReadAndResetInFlightMaxStub        func() int64
 	readAndResetInFlightMaxMutex       sync.RWMutex
-	readAndResetInFlightMaxArgsForCall []struct{}
-	readAndResetInFlightMaxReturns     struct {
+	readAndResetInFlightMaxArgsForCall []struct {
+	}
+	readAndResetInFlightMaxReturns struct {
 		result1 int64
 	}
 	readAndResetInFlightMaxReturnsOnCall map[int]struct {
 		result1 int64
 	}
+	SucceededStub        func() int64
+	succeededMutex       sync.RWMutex
+	succeededArgsForCall []struct {
+	}
+	succeededReturns struct {
+		result1 int64
+	}
+	succeededReturnsOnCall map[int]struct {
+		result1 int64
+	}
+	TotalStub        func() int64
+	totalMutex       sync.RWMutex
+	totalArgsForCall []struct {
+	}
+	totalReturns struct {
+		result1 int64
+	}
+	totalReturnsOnCall map[int]struct {
+		result1 int64
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeMonitor) Failed() int64 {
+	fake.failedMutex.Lock()
+	ret, specificReturn := fake.failedReturnsOnCall[len(fake.failedArgsForCall)]
+	fake.failedArgsForCall = append(fake.failedArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Failed", []interface{}{})
+	fake.failedMutex.Unlock()
+	if fake.FailedStub != nil {
+		return fake.FailedStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.failedReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeMonitor) FailedCallCount() int {
+	fake.failedMutex.RLock()
+	defer fake.failedMutex.RUnlock()
+	return len(fake.failedArgsForCall)
+}
+
+func (fake *FakeMonitor) FailedCalls(stub func() int64) {
+	fake.failedMutex.Lock()
+	defer fake.failedMutex.Unlock()
+	fake.FailedStub = stub
+}
+
+func (fake *FakeMonitor) FailedReturns(result1 int64) {
+	fake.failedMutex.Lock()
+	defer fake.failedMutex.Unlock()
+	fake.FailedStub = nil
+	fake.failedReturns = struct {
+		result1 int64
+	}{result1}
+}
+
+func (fake *FakeMonitor) FailedReturnsOnCall(i int, result1 int64) {
+	fake.failedMutex.Lock()
+	defer fake.failedMutex.Unlock()
+	fake.FailedStub = nil
+	if fake.failedReturnsOnCall == nil {
+		fake.failedReturnsOnCall = make(map[int]struct {
+			result1 int64
+		})
+	}
+	fake.failedReturnsOnCall[i] = struct {
+		result1 int64
+	}{result1}
 }
 
 func (fake *FakeMonitor) Monitor(arg1 func() error) error {
@@ -83,7 +140,8 @@ func (fake *FakeMonitor) Monitor(arg1 func() error) error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.monitorReturns.result1
+	fakeReturns := fake.monitorReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeMonitor) MonitorCallCount() int {
@@ -92,13 +150,22 @@ func (fake *FakeMonitor) MonitorCallCount() int {
 	return len(fake.monitorArgsForCall)
 }
 
+func (fake *FakeMonitor) MonitorCalls(stub func(func() error) error) {
+	fake.monitorMutex.Lock()
+	defer fake.monitorMutex.Unlock()
+	fake.MonitorStub = stub
+}
+
 func (fake *FakeMonitor) MonitorArgsForCall(i int) func() error {
 	fake.monitorMutex.RLock()
 	defer fake.monitorMutex.RUnlock()
-	return fake.monitorArgsForCall[i].arg1
+	argsForCall := fake.monitorArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeMonitor) MonitorReturns(result1 error) {
+	fake.monitorMutex.Lock()
+	defer fake.monitorMutex.Unlock()
 	fake.MonitorStub = nil
 	fake.monitorReturns = struct {
 		result1 error
@@ -106,6 +173,8 @@ func (fake *FakeMonitor) MonitorReturns(result1 error) {
 }
 
 func (fake *FakeMonitor) MonitorReturnsOnCall(i int, result1 error) {
+	fake.monitorMutex.Lock()
+	defer fake.monitorMutex.Unlock()
 	fake.MonitorStub = nil
 	if fake.monitorReturnsOnCall == nil {
 		fake.monitorReturnsOnCall = make(map[int]struct {
@@ -117,130 +186,11 @@ func (fake *FakeMonitor) MonitorReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeMonitor) Total() int64 {
-	fake.totalMutex.Lock()
-	ret, specificReturn := fake.totalReturnsOnCall[len(fake.totalArgsForCall)]
-	fake.totalArgsForCall = append(fake.totalArgsForCall, struct{}{})
-	fake.recordInvocation("Total", []interface{}{})
-	fake.totalMutex.Unlock()
-	if fake.TotalStub != nil {
-		return fake.TotalStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.totalReturns.result1
-}
-
-func (fake *FakeMonitor) TotalCallCount() int {
-	fake.totalMutex.RLock()
-	defer fake.totalMutex.RUnlock()
-	return len(fake.totalArgsForCall)
-}
-
-func (fake *FakeMonitor) TotalReturns(result1 int64) {
-	fake.TotalStub = nil
-	fake.totalReturns = struct {
-		result1 int64
-	}{result1}
-}
-
-func (fake *FakeMonitor) TotalReturnsOnCall(i int, result1 int64) {
-	fake.TotalStub = nil
-	if fake.totalReturnsOnCall == nil {
-		fake.totalReturnsOnCall = make(map[int]struct {
-			result1 int64
-		})
-	}
-	fake.totalReturnsOnCall[i] = struct {
-		result1 int64
-	}{result1}
-}
-
-func (fake *FakeMonitor) Succeeded() int64 {
-	fake.succeededMutex.Lock()
-	ret, specificReturn := fake.succeededReturnsOnCall[len(fake.succeededArgsForCall)]
-	fake.succeededArgsForCall = append(fake.succeededArgsForCall, struct{}{})
-	fake.recordInvocation("Succeeded", []interface{}{})
-	fake.succeededMutex.Unlock()
-	if fake.SucceededStub != nil {
-		return fake.SucceededStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.succeededReturns.result1
-}
-
-func (fake *FakeMonitor) SucceededCallCount() int {
-	fake.succeededMutex.RLock()
-	defer fake.succeededMutex.RUnlock()
-	return len(fake.succeededArgsForCall)
-}
-
-func (fake *FakeMonitor) SucceededReturns(result1 int64) {
-	fake.SucceededStub = nil
-	fake.succeededReturns = struct {
-		result1 int64
-	}{result1}
-}
-
-func (fake *FakeMonitor) SucceededReturnsOnCall(i int, result1 int64) {
-	fake.SucceededStub = nil
-	if fake.succeededReturnsOnCall == nil {
-		fake.succeededReturnsOnCall = make(map[int]struct {
-			result1 int64
-		})
-	}
-	fake.succeededReturnsOnCall[i] = struct {
-		result1 int64
-	}{result1}
-}
-
-func (fake *FakeMonitor) Failed() int64 {
-	fake.failedMutex.Lock()
-	ret, specificReturn := fake.failedReturnsOnCall[len(fake.failedArgsForCall)]
-	fake.failedArgsForCall = append(fake.failedArgsForCall, struct{}{})
-	fake.recordInvocation("Failed", []interface{}{})
-	fake.failedMutex.Unlock()
-	if fake.FailedStub != nil {
-		return fake.FailedStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.failedReturns.result1
-}
-
-func (fake *FakeMonitor) FailedCallCount() int {
-	fake.failedMutex.RLock()
-	defer fake.failedMutex.RUnlock()
-	return len(fake.failedArgsForCall)
-}
-
-func (fake *FakeMonitor) FailedReturns(result1 int64) {
-	fake.FailedStub = nil
-	fake.failedReturns = struct {
-		result1 int64
-	}{result1}
-}
-
-func (fake *FakeMonitor) FailedReturnsOnCall(i int, result1 int64) {
-	fake.FailedStub = nil
-	if fake.failedReturnsOnCall == nil {
-		fake.failedReturnsOnCall = make(map[int]struct {
-			result1 int64
-		})
-	}
-	fake.failedReturnsOnCall[i] = struct {
-		result1 int64
-	}{result1}
-}
-
 func (fake *FakeMonitor) ReadAndResetDurationMax() time.Duration {
 	fake.readAndResetDurationMaxMutex.Lock()
 	ret, specificReturn := fake.readAndResetDurationMaxReturnsOnCall[len(fake.readAndResetDurationMaxArgsForCall)]
-	fake.readAndResetDurationMaxArgsForCall = append(fake.readAndResetDurationMaxArgsForCall, struct{}{})
+	fake.readAndResetDurationMaxArgsForCall = append(fake.readAndResetDurationMaxArgsForCall, struct {
+	}{})
 	fake.recordInvocation("ReadAndResetDurationMax", []interface{}{})
 	fake.readAndResetDurationMaxMutex.Unlock()
 	if fake.ReadAndResetDurationMaxStub != nil {
@@ -249,7 +199,8 @@ func (fake *FakeMonitor) ReadAndResetDurationMax() time.Duration {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.readAndResetDurationMaxReturns.result1
+	fakeReturns := fake.readAndResetDurationMaxReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeMonitor) ReadAndResetDurationMaxCallCount() int {
@@ -258,7 +209,15 @@ func (fake *FakeMonitor) ReadAndResetDurationMaxCallCount() int {
 	return len(fake.readAndResetDurationMaxArgsForCall)
 }
 
+func (fake *FakeMonitor) ReadAndResetDurationMaxCalls(stub func() time.Duration) {
+	fake.readAndResetDurationMaxMutex.Lock()
+	defer fake.readAndResetDurationMaxMutex.Unlock()
+	fake.ReadAndResetDurationMaxStub = stub
+}
+
 func (fake *FakeMonitor) ReadAndResetDurationMaxReturns(result1 time.Duration) {
+	fake.readAndResetDurationMaxMutex.Lock()
+	defer fake.readAndResetDurationMaxMutex.Unlock()
 	fake.ReadAndResetDurationMaxStub = nil
 	fake.readAndResetDurationMaxReturns = struct {
 		result1 time.Duration
@@ -266,6 +225,8 @@ func (fake *FakeMonitor) ReadAndResetDurationMaxReturns(result1 time.Duration) {
 }
 
 func (fake *FakeMonitor) ReadAndResetDurationMaxReturnsOnCall(i int, result1 time.Duration) {
+	fake.readAndResetDurationMaxMutex.Lock()
+	defer fake.readAndResetDurationMaxMutex.Unlock()
 	fake.ReadAndResetDurationMaxStub = nil
 	if fake.readAndResetDurationMaxReturnsOnCall == nil {
 		fake.readAndResetDurationMaxReturnsOnCall = make(map[int]struct {
@@ -280,7 +241,8 @@ func (fake *FakeMonitor) ReadAndResetDurationMaxReturnsOnCall(i int, result1 tim
 func (fake *FakeMonitor) ReadAndResetInFlightMax() int64 {
 	fake.readAndResetInFlightMaxMutex.Lock()
 	ret, specificReturn := fake.readAndResetInFlightMaxReturnsOnCall[len(fake.readAndResetInFlightMaxArgsForCall)]
-	fake.readAndResetInFlightMaxArgsForCall = append(fake.readAndResetInFlightMaxArgsForCall, struct{}{})
+	fake.readAndResetInFlightMaxArgsForCall = append(fake.readAndResetInFlightMaxArgsForCall, struct {
+	}{})
 	fake.recordInvocation("ReadAndResetInFlightMax", []interface{}{})
 	fake.readAndResetInFlightMaxMutex.Unlock()
 	if fake.ReadAndResetInFlightMaxStub != nil {
@@ -289,7 +251,8 @@ func (fake *FakeMonitor) ReadAndResetInFlightMax() int64 {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.readAndResetInFlightMaxReturns.result1
+	fakeReturns := fake.readAndResetInFlightMaxReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeMonitor) ReadAndResetInFlightMaxCallCount() int {
@@ -298,7 +261,15 @@ func (fake *FakeMonitor) ReadAndResetInFlightMaxCallCount() int {
 	return len(fake.readAndResetInFlightMaxArgsForCall)
 }
 
+func (fake *FakeMonitor) ReadAndResetInFlightMaxCalls(stub func() int64) {
+	fake.readAndResetInFlightMaxMutex.Lock()
+	defer fake.readAndResetInFlightMaxMutex.Unlock()
+	fake.ReadAndResetInFlightMaxStub = stub
+}
+
 func (fake *FakeMonitor) ReadAndResetInFlightMaxReturns(result1 int64) {
+	fake.readAndResetInFlightMaxMutex.Lock()
+	defer fake.readAndResetInFlightMaxMutex.Unlock()
 	fake.ReadAndResetInFlightMaxStub = nil
 	fake.readAndResetInFlightMaxReturns = struct {
 		result1 int64
@@ -306,6 +277,8 @@ func (fake *FakeMonitor) ReadAndResetInFlightMaxReturns(result1 int64) {
 }
 
 func (fake *FakeMonitor) ReadAndResetInFlightMaxReturnsOnCall(i int, result1 int64) {
+	fake.readAndResetInFlightMaxMutex.Lock()
+	defer fake.readAndResetInFlightMaxMutex.Unlock()
 	fake.ReadAndResetInFlightMaxStub = nil
 	if fake.readAndResetInFlightMaxReturnsOnCall == nil {
 		fake.readAndResetInFlightMaxReturnsOnCall = make(map[int]struct {
@@ -317,21 +290,125 @@ func (fake *FakeMonitor) ReadAndResetInFlightMaxReturnsOnCall(i int, result1 int
 	}{result1}
 }
 
+func (fake *FakeMonitor) Succeeded() int64 {
+	fake.succeededMutex.Lock()
+	ret, specificReturn := fake.succeededReturnsOnCall[len(fake.succeededArgsForCall)]
+	fake.succeededArgsForCall = append(fake.succeededArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Succeeded", []interface{}{})
+	fake.succeededMutex.Unlock()
+	if fake.SucceededStub != nil {
+		return fake.SucceededStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.succeededReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeMonitor) SucceededCallCount() int {
+	fake.succeededMutex.RLock()
+	defer fake.succeededMutex.RUnlock()
+	return len(fake.succeededArgsForCall)
+}
+
+func (fake *FakeMonitor) SucceededCalls(stub func() int64) {
+	fake.succeededMutex.Lock()
+	defer fake.succeededMutex.Unlock()
+	fake.SucceededStub = stub
+}
+
+func (fake *FakeMonitor) SucceededReturns(result1 int64) {
+	fake.succeededMutex.Lock()
+	defer fake.succeededMutex.Unlock()
+	fake.SucceededStub = nil
+	fake.succeededReturns = struct {
+		result1 int64
+	}{result1}
+}
+
+func (fake *FakeMonitor) SucceededReturnsOnCall(i int, result1 int64) {
+	fake.succeededMutex.Lock()
+	defer fake.succeededMutex.Unlock()
+	fake.SucceededStub = nil
+	if fake.succeededReturnsOnCall == nil {
+		fake.succeededReturnsOnCall = make(map[int]struct {
+			result1 int64
+		})
+	}
+	fake.succeededReturnsOnCall[i] = struct {
+		result1 int64
+	}{result1}
+}
+
+func (fake *FakeMonitor) Total() int64 {
+	fake.totalMutex.Lock()
+	ret, specificReturn := fake.totalReturnsOnCall[len(fake.totalArgsForCall)]
+	fake.totalArgsForCall = append(fake.totalArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Total", []interface{}{})
+	fake.totalMutex.Unlock()
+	if fake.TotalStub != nil {
+		return fake.TotalStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.totalReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeMonitor) TotalCallCount() int {
+	fake.totalMutex.RLock()
+	defer fake.totalMutex.RUnlock()
+	return len(fake.totalArgsForCall)
+}
+
+func (fake *FakeMonitor) TotalCalls(stub func() int64) {
+	fake.totalMutex.Lock()
+	defer fake.totalMutex.Unlock()
+	fake.TotalStub = stub
+}
+
+func (fake *FakeMonitor) TotalReturns(result1 int64) {
+	fake.totalMutex.Lock()
+	defer fake.totalMutex.Unlock()
+	fake.TotalStub = nil
+	fake.totalReturns = struct {
+		result1 int64
+	}{result1}
+}
+
+func (fake *FakeMonitor) TotalReturnsOnCall(i int, result1 int64) {
+	fake.totalMutex.Lock()
+	defer fake.totalMutex.Unlock()
+	fake.TotalStub = nil
+	if fake.totalReturnsOnCall == nil {
+		fake.totalReturnsOnCall = make(map[int]struct {
+			result1 int64
+		})
+	}
+	fake.totalReturnsOnCall[i] = struct {
+		result1 int64
+	}{result1}
+}
+
 func (fake *FakeMonitor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.monitorMutex.RLock()
-	defer fake.monitorMutex.RUnlock()
-	fake.totalMutex.RLock()
-	defer fake.totalMutex.RUnlock()
-	fake.succeededMutex.RLock()
-	defer fake.succeededMutex.RUnlock()
 	fake.failedMutex.RLock()
 	defer fake.failedMutex.RUnlock()
+	fake.monitorMutex.RLock()
+	defer fake.monitorMutex.RUnlock()
 	fake.readAndResetDurationMaxMutex.RLock()
 	defer fake.readAndResetDurationMaxMutex.RUnlock()
 	fake.readAndResetInFlightMaxMutex.RLock()
 	defer fake.readAndResetInFlightMaxMutex.RUnlock()
+	fake.succeededMutex.RLock()
+	defer fake.succeededMutex.RUnlock()
+	fake.totalMutex.RLock()
+	defer fake.totalMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

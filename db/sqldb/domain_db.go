@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"context"
 	"math"
 	"time"
 
@@ -8,16 +9,16 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (db *SQLDB) FreshDomains(logger lager.Logger) ([]string, error) {
+func (db *SQLDB) FreshDomains(ctx context.Context, logger lager.Logger) ([]string, error) {
 	logger = logger.Session("domains")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	var domainNames []string
 
-	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		expireTime := db.clock.Now().Round(time.Second)
-		domains, err := db.domains(logger, tx, expireTime)
+		domains, err := db.domains(ctx, logger, tx, expireTime)
 		if err != nil {
 			return err
 		}
@@ -37,8 +38,8 @@ type domain struct {
 	expiresAt time.Time
 }
 
-func (db *SQLDB) domains(logger lager.Logger, tx helpers.Queryable, expiresAfter time.Time) ([]domain, error) {
-	rows, err := db.all(logger, tx, domainsTable,
+func (db *SQLDB) domains(ctx context.Context, logger lager.Logger, tx helpers.Queryable, expiresAfter time.Time) ([]domain, error) {
+	rows, err := db.all(ctx, logger, tx, domainsTable,
 		domainColumns, helpers.NoLockRow,
 		"expire_time > ?",
 		expiresAfter.UnixNano(),
@@ -72,18 +73,18 @@ func (db *SQLDB) domains(logger lager.Logger, tx helpers.Queryable, expiresAfter
 	return results, nil
 }
 
-func (db *SQLDB) UpsertDomain(logger lager.Logger, domain string, ttl uint32) error {
+func (db *SQLDB) UpsertDomain(ctx context.Context, logger lager.Logger, domain string, ttl uint32) error {
 	logger = logger.Session("upsert-domain", lager.Data{"domain": domain, "ttl": ttl})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
 		if ttl == 0 {
 			expireTime = math.MaxInt64
 		}
 
-		ok, err := db.upsert(logger, tx, domainsTable,
+		ok, err := db.upsert(ctx, logger, tx, domainsTable,
 			helpers.SQLAttributes{"domain": domain, "expire_time": expireTime},
 			"domain = ?", domain,
 		)

@@ -1,6 +1,7 @@
 package taskworkpool_test
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -67,14 +68,14 @@ var _ = Describe("TaskWorker", func() {
 
 			callbackURL = fakeServer.URL() + "/the-callback/url"
 			taskDB = new(dbfakes.FakeTaskDB)
-			taskDB.ResolvingTaskStub = func(_ lager.Logger, taskGuidTaskGuid string) (*models.Task, *models.Task, error) {
+			taskDB.ResolvingTaskStub = func(_ context.Context, _ lager.Logger, taskGuidTaskGuid string) (*models.Task, *models.Task, error) {
 				before = *task
 				after = *task
 				after.State = models.Task_Resolving
 				return &before, &after, nil
 			}
 
-			taskDB.DeleteTaskStub = func(_ lager.Logger, taskGuid string) (*models.Task, error) {
+			taskDB.DeleteTaskStub = func(_ context.Context, _ lager.Logger, taskGuid string) (*models.Task, error) {
 				return task, nil
 			}
 		})
@@ -105,7 +106,7 @@ var _ = Describe("TaskWorker", func() {
 				statusCodes <- 200
 
 				Eventually(taskDB.ResolvingTaskCallCount).Should(Equal(1))
-				_, actualGuid := taskDB.ResolvingTaskArgsForCall(0)
+				_, _, actualGuid := taskDB.ResolvingTaskArgsForCall(0)
 				Expect(actualGuid).To(Equal("the-task-guid"))
 			})
 
@@ -160,7 +161,7 @@ var _ = Describe("TaskWorker", func() {
 						statusCodes <- 200
 
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
-						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
+						_, _, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 
@@ -180,7 +181,7 @@ var _ = Describe("TaskWorker", func() {
 						statusCodes <- 403
 
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
-						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
+						_, _, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 
@@ -200,7 +201,7 @@ var _ = Describe("TaskWorker", func() {
 						statusCodes <- 500
 
 						Eventually(taskDB.DeleteTaskCallCount).Should(Equal(1))
-						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
+						_, _, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 
@@ -232,7 +233,7 @@ var _ = Describe("TaskWorker", func() {
 						statusCodes <- 200
 
 						Eventually(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(1))
-						_, actualGuid := taskDB.DeleteTaskArgsForCall(0)
+						_, _, actualGuid := taskDB.DeleteTaskArgsForCall(0)
 						Expect(actualGuid).To(Equal("the-task-guid"))
 					})
 
@@ -309,7 +310,7 @@ var _ = Describe("TaskWorker", func() {
 							Eventually(fakeServer.ReceivedRequests).Should(HaveLen(2))
 							Eventually(taskDB.DeleteTaskCallCount, 0.25).Should(Equal(1))
 
-							_, resolvedTaskGuid := taskDB.DeleteTaskArgsForCall(0)
+							_, _, resolvedTaskGuid := taskDB.DeleteTaskArgsForCall(0)
 							Expect(resolvedTaskGuid).To(Equal("the-task-guid"))
 						})
 					})

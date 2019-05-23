@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"context"
 	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -10,34 +11,34 @@ import (
 
 const EncryptionKeyID = "encryption_key_label"
 
-func (db *SQLDB) SetEncryptionKeyLabel(logger lager.Logger, label string) error {
+func (db *SQLDB) SetEncryptionKeyLabel(ctx context.Context, logger lager.Logger, label string) error {
 	logger = logger.Session("set-encrption-key-label", lager.Data{"label": label})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.setConfigurationValue(logger, EncryptionKeyID, label)
+	return db.setConfigurationValue(ctx, logger, EncryptionKeyID, label)
 }
 
-func (db *SQLDB) EncryptionKeyLabel(logger lager.Logger) (string, error) {
+func (db *SQLDB) EncryptionKeyLabel(ctx context.Context, logger lager.Logger) (string, error) {
 	logger = logger.Session("encrption-key-label")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.getConfigurationValue(logger, EncryptionKeyID)
+	return db.getConfigurationValue(ctx, logger, EncryptionKeyID)
 }
 
-func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
+func (db *SQLDB) PerformEncryption(ctx context.Context, logger lager.Logger) error {
 	errCh := make(chan error)
 
 	funcs := []func(){
 		func() {
-			errCh <- db.reEncrypt(logger, tasksTable, "guid", true, "task_definition")
+			errCh <- db.reEncrypt(ctx, logger, tasksTable, "guid", true, "task_definition")
 		},
 		func() {
-			errCh <- db.reEncrypt(logger, desiredLRPsTable, "process_guid", true, "run_info", "volume_placement", "routes")
+			errCh <- db.reEncrypt(ctx, logger, desiredLRPsTable, "process_guid", true, "run_info", "volume_placement", "routes")
 		},
 		func() {
-			errCh <- db.reEncrypt(logger, actualLRPsTable, "process_guid", false, "net_info")
+			errCh <- db.reEncrypt(ctx, logger, actualLRPsTable, "process_guid", false, "net_info")
 		},
 	}
 
@@ -54,11 +55,11 @@ func (db *SQLDB) PerformEncryption(logger lager.Logger) error {
 	return nil
 }
 
-func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, encryptIfEmpty bool, blobColumns ...string) error {
+func (db *SQLDB) reEncrypt(ctx context.Context, logger lager.Logger, tableName, primaryKey string, encryptIfEmpty bool, blobColumns ...string) error {
 	logger = logger.WithData(
 		lager.Data{"table_name": tableName, "primary_key": primaryKey, "blob_columns": blobColumns},
 	)
-	rows, err := db.db.Query(fmt.Sprintf("SELECT %s FROM %s", primaryKey, tableName))
+	rows, err := db.db.QueryContext(ctx, fmt.Sprintf("SELECT %s FROM %s", primaryKey, tableName))
 	if err != nil {
 		return err
 	}
@@ -77,10 +78,10 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 
 	where := fmt.Sprintf("%s = ?", primaryKey)
 	for _, guid := range guids {
-		err = db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+		err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 			blobs := make([]interface{}, len(blobColumns))
 
-			row := db.one(logger, tx, tableName, blobColumns, helpers.LockRow, where, guid)
+			row := db.one(ctx, logger, tx, tableName, blobColumns, helpers.LockRow, where, guid)
 			for i := range blobColumns {
 				var blob []byte
 				blobs[i] = &blob
@@ -119,7 +120,7 @@ func (db *SQLDB) reEncrypt(logger lager.Logger, tableName, primaryKey string, en
 				columnName := blobColumns[columnIdx]
 				updatedColumnValues[columnName] = encryptedPayload
 			}
-			_, err = db.update(logger, tx, tableName,
+			_, err = db.update(ctx, logger, tx, tableName,
 				updatedColumnValues,
 				where, guid,
 			)

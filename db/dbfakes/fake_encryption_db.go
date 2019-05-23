@@ -2,6 +2,7 @@
 package dbfakes
 
 import (
+	"context"
 	"sync"
 
 	"code.cloudfoundry.org/bbs/db"
@@ -9,10 +10,11 @@ import (
 )
 
 type FakeEncryptionDB struct {
-	EncryptionKeyLabelStub        func(logger lager.Logger) (string, error)
+	EncryptionKeyLabelStub        func(context.Context, lager.Logger) (string, error)
 	encryptionKeyLabelMutex       sync.RWMutex
 	encryptionKeyLabelArgsForCall []struct {
-		logger lager.Logger
+		arg1 context.Context
+		arg2 lager.Logger
 	}
 	encryptionKeyLabelReturns struct {
 		result1 string
@@ -22,22 +24,11 @@ type FakeEncryptionDB struct {
 		result1 string
 		result2 error
 	}
-	SetEncryptionKeyLabelStub        func(logger lager.Logger, encryptionKeyLabel string) error
-	setEncryptionKeyLabelMutex       sync.RWMutex
-	setEncryptionKeyLabelArgsForCall []struct {
-		logger             lager.Logger
-		encryptionKeyLabel string
-	}
-	setEncryptionKeyLabelReturns struct {
-		result1 error
-	}
-	setEncryptionKeyLabelReturnsOnCall map[int]struct {
-		result1 error
-	}
-	PerformEncryptionStub        func(logger lager.Logger) error
+	PerformEncryptionStub        func(context.Context, lager.Logger) error
 	performEncryptionMutex       sync.RWMutex
 	performEncryptionArgsForCall []struct {
-		logger lager.Logger
+		arg1 context.Context
+		arg2 lager.Logger
 	}
 	performEncryptionReturns struct {
 		result1 error
@@ -45,25 +36,40 @@ type FakeEncryptionDB struct {
 	performEncryptionReturnsOnCall map[int]struct {
 		result1 error
 	}
+	SetEncryptionKeyLabelStub        func(context.Context, lager.Logger, string) error
+	setEncryptionKeyLabelMutex       sync.RWMutex
+	setEncryptionKeyLabelArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}
+	setEncryptionKeyLabelReturns struct {
+		result1 error
+	}
+	setEncryptionKeyLabelReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeEncryptionDB) EncryptionKeyLabel(logger lager.Logger) (string, error) {
+func (fake *FakeEncryptionDB) EncryptionKeyLabel(arg1 context.Context, arg2 lager.Logger) (string, error) {
 	fake.encryptionKeyLabelMutex.Lock()
 	ret, specificReturn := fake.encryptionKeyLabelReturnsOnCall[len(fake.encryptionKeyLabelArgsForCall)]
 	fake.encryptionKeyLabelArgsForCall = append(fake.encryptionKeyLabelArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("EncryptionKeyLabel", []interface{}{logger})
+		arg1 context.Context
+		arg2 lager.Logger
+	}{arg1, arg2})
+	fake.recordInvocation("EncryptionKeyLabel", []interface{}{arg1, arg2})
 	fake.encryptionKeyLabelMutex.Unlock()
 	if fake.EncryptionKeyLabelStub != nil {
-		return fake.EncryptionKeyLabelStub(logger)
+		return fake.EncryptionKeyLabelStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.encryptionKeyLabelReturns.result1, fake.encryptionKeyLabelReturns.result2
+	fakeReturns := fake.encryptionKeyLabelReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeEncryptionDB) EncryptionKeyLabelCallCount() int {
@@ -72,13 +78,22 @@ func (fake *FakeEncryptionDB) EncryptionKeyLabelCallCount() int {
 	return len(fake.encryptionKeyLabelArgsForCall)
 }
 
-func (fake *FakeEncryptionDB) EncryptionKeyLabelArgsForCall(i int) lager.Logger {
+func (fake *FakeEncryptionDB) EncryptionKeyLabelCalls(stub func(context.Context, lager.Logger) (string, error)) {
+	fake.encryptionKeyLabelMutex.Lock()
+	defer fake.encryptionKeyLabelMutex.Unlock()
+	fake.EncryptionKeyLabelStub = stub
+}
+
+func (fake *FakeEncryptionDB) EncryptionKeyLabelArgsForCall(i int) (context.Context, lager.Logger) {
 	fake.encryptionKeyLabelMutex.RLock()
 	defer fake.encryptionKeyLabelMutex.RUnlock()
-	return fake.encryptionKeyLabelArgsForCall[i].logger
+	argsForCall := fake.encryptionKeyLabelArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeEncryptionDB) EncryptionKeyLabelReturns(result1 string, result2 error) {
+	fake.encryptionKeyLabelMutex.Lock()
+	defer fake.encryptionKeyLabelMutex.Unlock()
 	fake.EncryptionKeyLabelStub = nil
 	fake.encryptionKeyLabelReturns = struct {
 		result1 string
@@ -87,6 +102,8 @@ func (fake *FakeEncryptionDB) EncryptionKeyLabelReturns(result1 string, result2 
 }
 
 func (fake *FakeEncryptionDB) EncryptionKeyLabelReturnsOnCall(i int, result1 string, result2 error) {
+	fake.encryptionKeyLabelMutex.Lock()
+	defer fake.encryptionKeyLabelMutex.Unlock()
 	fake.EncryptionKeyLabelStub = nil
 	if fake.encryptionKeyLabelReturnsOnCall == nil {
 		fake.encryptionKeyLabelReturnsOnCall = make(map[int]struct {
@@ -100,70 +117,23 @@ func (fake *FakeEncryptionDB) EncryptionKeyLabelReturnsOnCall(i int, result1 str
 	}{result1, result2}
 }
 
-func (fake *FakeEncryptionDB) SetEncryptionKeyLabel(logger lager.Logger, encryptionKeyLabel string) error {
-	fake.setEncryptionKeyLabelMutex.Lock()
-	ret, specificReturn := fake.setEncryptionKeyLabelReturnsOnCall[len(fake.setEncryptionKeyLabelArgsForCall)]
-	fake.setEncryptionKeyLabelArgsForCall = append(fake.setEncryptionKeyLabelArgsForCall, struct {
-		logger             lager.Logger
-		encryptionKeyLabel string
-	}{logger, encryptionKeyLabel})
-	fake.recordInvocation("SetEncryptionKeyLabel", []interface{}{logger, encryptionKeyLabel})
-	fake.setEncryptionKeyLabelMutex.Unlock()
-	if fake.SetEncryptionKeyLabelStub != nil {
-		return fake.SetEncryptionKeyLabelStub(logger, encryptionKeyLabel)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.setEncryptionKeyLabelReturns.result1
-}
-
-func (fake *FakeEncryptionDB) SetEncryptionKeyLabelCallCount() int {
-	fake.setEncryptionKeyLabelMutex.RLock()
-	defer fake.setEncryptionKeyLabelMutex.RUnlock()
-	return len(fake.setEncryptionKeyLabelArgsForCall)
-}
-
-func (fake *FakeEncryptionDB) SetEncryptionKeyLabelArgsForCall(i int) (lager.Logger, string) {
-	fake.setEncryptionKeyLabelMutex.RLock()
-	defer fake.setEncryptionKeyLabelMutex.RUnlock()
-	return fake.setEncryptionKeyLabelArgsForCall[i].logger, fake.setEncryptionKeyLabelArgsForCall[i].encryptionKeyLabel
-}
-
-func (fake *FakeEncryptionDB) SetEncryptionKeyLabelReturns(result1 error) {
-	fake.SetEncryptionKeyLabelStub = nil
-	fake.setEncryptionKeyLabelReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeEncryptionDB) SetEncryptionKeyLabelReturnsOnCall(i int, result1 error) {
-	fake.SetEncryptionKeyLabelStub = nil
-	if fake.setEncryptionKeyLabelReturnsOnCall == nil {
-		fake.setEncryptionKeyLabelReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.setEncryptionKeyLabelReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeEncryptionDB) PerformEncryption(logger lager.Logger) error {
+func (fake *FakeEncryptionDB) PerformEncryption(arg1 context.Context, arg2 lager.Logger) error {
 	fake.performEncryptionMutex.Lock()
 	ret, specificReturn := fake.performEncryptionReturnsOnCall[len(fake.performEncryptionArgsForCall)]
 	fake.performEncryptionArgsForCall = append(fake.performEncryptionArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("PerformEncryption", []interface{}{logger})
+		arg1 context.Context
+		arg2 lager.Logger
+	}{arg1, arg2})
+	fake.recordInvocation("PerformEncryption", []interface{}{arg1, arg2})
 	fake.performEncryptionMutex.Unlock()
 	if fake.PerformEncryptionStub != nil {
-		return fake.PerformEncryptionStub(logger)
+		return fake.PerformEncryptionStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.performEncryptionReturns.result1
+	fakeReturns := fake.performEncryptionReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeEncryptionDB) PerformEncryptionCallCount() int {
@@ -172,13 +142,22 @@ func (fake *FakeEncryptionDB) PerformEncryptionCallCount() int {
 	return len(fake.performEncryptionArgsForCall)
 }
 
-func (fake *FakeEncryptionDB) PerformEncryptionArgsForCall(i int) lager.Logger {
+func (fake *FakeEncryptionDB) PerformEncryptionCalls(stub func(context.Context, lager.Logger) error) {
+	fake.performEncryptionMutex.Lock()
+	defer fake.performEncryptionMutex.Unlock()
+	fake.PerformEncryptionStub = stub
+}
+
+func (fake *FakeEncryptionDB) PerformEncryptionArgsForCall(i int) (context.Context, lager.Logger) {
 	fake.performEncryptionMutex.RLock()
 	defer fake.performEncryptionMutex.RUnlock()
-	return fake.performEncryptionArgsForCall[i].logger
+	argsForCall := fake.performEncryptionArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeEncryptionDB) PerformEncryptionReturns(result1 error) {
+	fake.performEncryptionMutex.Lock()
+	defer fake.performEncryptionMutex.Unlock()
 	fake.PerformEncryptionStub = nil
 	fake.performEncryptionReturns = struct {
 		result1 error
@@ -186,6 +165,8 @@ func (fake *FakeEncryptionDB) PerformEncryptionReturns(result1 error) {
 }
 
 func (fake *FakeEncryptionDB) PerformEncryptionReturnsOnCall(i int, result1 error) {
+	fake.performEncryptionMutex.Lock()
+	defer fake.performEncryptionMutex.Unlock()
 	fake.PerformEncryptionStub = nil
 	if fake.performEncryptionReturnsOnCall == nil {
 		fake.performEncryptionReturnsOnCall = make(map[int]struct {
@@ -197,15 +178,77 @@ func (fake *FakeEncryptionDB) PerformEncryptionReturnsOnCall(i int, result1 erro
 	}{result1}
 }
 
+func (fake *FakeEncryptionDB) SetEncryptionKeyLabel(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+	fake.setEncryptionKeyLabelMutex.Lock()
+	ret, specificReturn := fake.setEncryptionKeyLabelReturnsOnCall[len(fake.setEncryptionKeyLabelArgsForCall)]
+	fake.setEncryptionKeyLabelArgsForCall = append(fake.setEncryptionKeyLabelArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("SetEncryptionKeyLabel", []interface{}{arg1, arg2, arg3})
+	fake.setEncryptionKeyLabelMutex.Unlock()
+	if fake.SetEncryptionKeyLabelStub != nil {
+		return fake.SetEncryptionKeyLabelStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.setEncryptionKeyLabelReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeEncryptionDB) SetEncryptionKeyLabelCallCount() int {
+	fake.setEncryptionKeyLabelMutex.RLock()
+	defer fake.setEncryptionKeyLabelMutex.RUnlock()
+	return len(fake.setEncryptionKeyLabelArgsForCall)
+}
+
+func (fake *FakeEncryptionDB) SetEncryptionKeyLabelCalls(stub func(context.Context, lager.Logger, string) error) {
+	fake.setEncryptionKeyLabelMutex.Lock()
+	defer fake.setEncryptionKeyLabelMutex.Unlock()
+	fake.SetEncryptionKeyLabelStub = stub
+}
+
+func (fake *FakeEncryptionDB) SetEncryptionKeyLabelArgsForCall(i int) (context.Context, lager.Logger, string) {
+	fake.setEncryptionKeyLabelMutex.RLock()
+	defer fake.setEncryptionKeyLabelMutex.RUnlock()
+	argsForCall := fake.setEncryptionKeyLabelArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeEncryptionDB) SetEncryptionKeyLabelReturns(result1 error) {
+	fake.setEncryptionKeyLabelMutex.Lock()
+	defer fake.setEncryptionKeyLabelMutex.Unlock()
+	fake.SetEncryptionKeyLabelStub = nil
+	fake.setEncryptionKeyLabelReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeEncryptionDB) SetEncryptionKeyLabelReturnsOnCall(i int, result1 error) {
+	fake.setEncryptionKeyLabelMutex.Lock()
+	defer fake.setEncryptionKeyLabelMutex.Unlock()
+	fake.SetEncryptionKeyLabelStub = nil
+	if fake.setEncryptionKeyLabelReturnsOnCall == nil {
+		fake.setEncryptionKeyLabelReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.setEncryptionKeyLabelReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeEncryptionDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.encryptionKeyLabelMutex.RLock()
 	defer fake.encryptionKeyLabelMutex.RUnlock()
-	fake.setEncryptionKeyLabelMutex.RLock()
-	defer fake.setEncryptionKeyLabelMutex.RUnlock()
 	fake.performEncryptionMutex.RLock()
 	defer fake.performEncryptionMutex.RUnlock()
+	fake.setEncryptionKeyLabelMutex.RLock()
+	defer fake.setEncryptionKeyLabelMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

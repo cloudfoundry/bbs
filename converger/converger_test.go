@@ -1,6 +1,7 @@
 package converger_test
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -89,7 +90,7 @@ var _ = Describe("ConvergerProcess", func() {
 			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(1))
 			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(1))
 
-			_, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration := fakeTaskController.ConvergeTasksArgsForCall(0)
+			_, _, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration := fakeTaskController.ConvergeTasksArgsForCall(0)
 			Expect(actualKickTaskDuration).To(Equal(kickTaskDuration))
 			Expect(actualExpirePendingTaskDuration).To(Equal(expirePendingTaskDuration))
 			Expect(actualExpireCompletedTaskDuration).To(Equal(expireCompletedTaskDuration))
@@ -99,7 +100,7 @@ var _ = Describe("ConvergerProcess", func() {
 			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(2))
 			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(2))
 
-			_, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration = fakeTaskController.ConvergeTasksArgsForCall(1)
+			_, _, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration = fakeTaskController.ConvergeTasksArgsForCall(1)
 			Expect(actualKickTaskDuration).To(Equal(kickTaskDuration))
 			Expect(actualExpirePendingTaskDuration).To(Equal(expirePendingTaskDuration))
 			Expect(actualExpireCompletedTaskDuration).To(Equal(expireCompletedTaskDuration))
@@ -118,7 +119,7 @@ var _ = Describe("ConvergerProcess", func() {
 			Eventually(fakeTaskController.ConvergeTasksCallCount).Should(Equal(1))
 			Eventually(fakeLrpConvergenceController.ConvergeLRPsCallCount).Should(Equal(1))
 
-			_, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration := fakeTaskController.ConvergeTasksArgsForCall(0)
+			_, _, actualKickTaskDuration, actualExpirePendingTaskDuration, actualExpireCompletedTaskDuration := fakeTaskController.ConvergeTasksArgsForCall(0)
 			Expect(actualKickTaskDuration).To(Equal(kickTaskDuration))
 			Expect(actualExpirePendingTaskDuration).To(Equal(expirePendingTaskDuration))
 			Expect(actualExpireCompletedTaskDuration).To(Equal(expireCompletedTaskDuration))
@@ -161,7 +162,7 @@ var _ = Describe("ConvergerProcess", func() {
 
 		BeforeEach(func() {
 			finishChan = make(chan struct{})
-			fakeLrpConvergenceController.ConvergeLRPsStub = func(lager.Logger) {
+			fakeLrpConvergenceController.ConvergeLRPsStub = func(context.Context, lager.Logger) {
 				<-finishChan
 			}
 		})

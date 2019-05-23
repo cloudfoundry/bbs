@@ -50,7 +50,6 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 			defer requestLog.Debug("done", lagerDataFromReq(r))
 
 			loggableHandlerFunc(requestLog, w, r)
-
 		}
 	}
 }
@@ -67,21 +66,5 @@ func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc 
 	return func(w http.ResponseWriter, r *http.Request) {
 		emitter.IncrementRequestCounter(1)
 		handler.ServeHTTP(w, r)
-	}
-}
-
-func ContextCancellableRequest(f http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		reqChan := make(chan struct{})
-		go func(doneChan chan struct{}) {
-			f(w, r)
-			close(doneChan)
-		}(reqChan)
-
-		select {
-		case <-ctx.Done():
-		case <-reqChan:
-		}
 	}
 }

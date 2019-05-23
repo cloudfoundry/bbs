@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -161,7 +162,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			Context("and no filter is provided", func() {
 				It("call the DB with no filters to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.DesiredLRPFilter{}))
 				})
 			})
@@ -173,7 +174,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("call the DB with the domain filter to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
@@ -185,7 +186,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("call the DB with the process guid filter to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter.ProcessGuids).To(Equal([]string{"g1", "g2"}))
 				})
 			})
@@ -295,7 +296,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			Context("and no filter is provided", func() {
 				It("call the DB with no filters to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter).To(Equal(models.DesiredLRPFilter{}))
 				})
 			})
@@ -307,7 +308,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("call the DB with the domain filter to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
@@ -319,7 +320,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("call the DB with the process guid filter to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
 					Expect(filter.ProcessGuids).To(Equal([]string{"g1", "g2"}))
 				})
 			})
@@ -396,7 +397,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("fetches desired lrp by process guid", func() {
 				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-				_, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+				_, _, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -531,7 +532,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("fetches desired lrp by process guid", func() {
 				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-				_, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+				_, _, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -648,7 +649,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			Context("and no filter is provided", func() {
 				It("call the DB with no filters to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
 					Expect(filter).To(Equal(models.DesiredLRPFilter{}))
 				})
 			})
@@ -660,7 +661,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("call the DB with the domain filter to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
 					Expect(filter.Domain).To(Equal("domain-1"))
 				})
 			})
@@ -672,7 +673,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("call the DB with the process guids filter to retrieve the desired lrps", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
-					_, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
 					Expect(filter.ProcessGuids).To(Equal([]string{"guid-1", "guid-2"}))
 				})
 			})
@@ -750,7 +751,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					createdActualLRPs = append(createdActualLRPs, model_helpers.NewValidActualLRP("some-guid", int32(i)))
 				}
 				fakeDesiredLRPDB.DesireLRPReturns(nil)
-				fakeActualLRPDB.CreateUnclaimedActualLRPStub = func(_ lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, error) {
+				fakeActualLRPDB.CreateUnclaimedActualLRPStub = func(_ context.Context, _ lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, error) {
 					if int(key.Index) > len(createdActualLRPs)-1 {
 						return nil, errors.New("boom")
 					}
@@ -761,7 +762,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("creates desired lrp", func() {
 				Expect(fakeDesiredLRPDB.DesireLRPCallCount()).To(Equal(1))
-				_, actualDesiredLRP := fakeDesiredLRPDB.DesireLRPArgsForCall(0)
+				_, _, actualDesiredLRP := fakeDesiredLRPDB.DesireLRPArgsForCall(0)
 				Expect(actualDesiredLRP).To(Equal(desiredLRP))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -796,7 +797,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				}
 
 				for i := 0; i < 5; i++ {
-					_, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
+					_, _, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
 					Expect(expectedLRPKeys).To(ContainElement(actualLRPKey))
 					event := actualHub.EmitArgsForCall(i)
 					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
@@ -823,7 +824,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				}
 
 				for i := 0; i < 5; i++ {
-					_, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
+					_, _, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
 					Expect(expectedLRPKeys).To(ContainElement(actualLRPKey))
 					event := actualLRPInstanceHub.EmitArgsForCall(i)
 					createdEvent, ok := event.(*models.ActualLRPInstanceCreatedEvent)
@@ -941,7 +942,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("updates the desired lrp", func() {
 				Expect(fakeDesiredLRPDB.UpdateDesiredLRPCallCount()).To(Equal(1))
-				_, actualProcessGuid, actualUpdate := fakeDesiredLRPDB.UpdateDesiredLRPArgsForCall(0)
+				_, _, actualProcessGuid, actualUpdate := fakeDesiredLRPDB.UpdateDesiredLRPArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 				Expect(actualUpdate).To(Equal(update))
 
@@ -997,7 +998,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					It("stops extra actual lrps", func() {
 						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+						_, _, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 						Expect(processGuid).To(Equal("some-guid"))
 
 						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
@@ -1096,14 +1097,14 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					It("creates missing actual lrps", func() {
 						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-						_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+						_, _, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 						Expect(processGuid).To(Equal("some-guid"))
 
 						keys := make([]*models.ActualLRPKey, 2)
 
 						Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(2))
-						_, keys[0] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
-						_, keys[1] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(1)
+						_, _, keys[0] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
+						_, _, keys[1] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(1)
 
 						Expect(keys).To(ContainElement(&models.ActualLRPKey{
 							ProcessGuid: "some-guid",
@@ -1228,7 +1229,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("removes the desired lrp", func() {
 				Expect(fakeDesiredLRPDB.RemoveDesiredLRPCallCount()).To(Equal(1))
-				_, actualProcessGuid := fakeDesiredLRPDB.RemoveDesiredLRPArgsForCall(0)
+				_, _, actualProcessGuid := fakeDesiredLRPDB.RemoveDesiredLRPArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -1241,7 +1242,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("emits a delete event to the hub", func(done Done) {
 				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-				_, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+				_, _, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 
 				Eventually(desiredHub.EmitCallCount).Should(Equal(1))
@@ -1291,7 +1292,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				It("stops all of the corresponding running actual lrps", func() {
 					Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 
-					_, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
+					_, _, filter := fakeActualLRPDB.ActualLRPsArgsForCall(0)
 					Expect(filter.ProcessGuid).To(Equal("some-guid"))
 
 					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
@@ -1314,12 +1315,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					// Expect(processGuidStr).To(Equal("some-guid"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(2))
 
-					_, processGuid, index, actualLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+					_, _, processGuid, index, actualLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 					Expect(index).To(BeEquivalentTo(3))
 					Expect(processGuid).To(Equal("some-guid"))
 					Expect(actualLRPInstanceKey).To(BeNil())
 
-					_, processGuid, index, actualLRPInstanceKey = fakeActualLRPDB.RemoveActualLRPArgsForCall(1)
+					_, _, processGuid, index, actualLRPInstanceKey = fakeActualLRPDB.RemoveActualLRPArgsForCall(1)
 					Expect(index).To(BeEquivalentTo(4))
 					Expect(processGuid).To(Equal("some-guid"))
 					Expect(actualLRPInstanceKey).To(BeNil())

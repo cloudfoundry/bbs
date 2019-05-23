@@ -20,22 +20,22 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("saves the lrp in the database", func() {
-			err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
+			err := sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, "the-guid")
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, "the-guid")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRP).To(Equal(expectedDesiredLRP))
 		})
 
 		Context("when the process_guid is already taken", func() {
 			BeforeEach(func() {
-				err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
+				err := sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns a resource exists error", func() {
-				err := sqlDB.DesireLRP(logger, expectedDesiredLRP)
+				err := sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)
 				Expect(err).To(Equal(models.ErrResourceExists))
 			})
 		})
@@ -47,11 +47,11 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			desiredLRPGuid := "desired-lrp-guid"
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
-			Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+			Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 		})
 
 		It("returns the desired lrp", func() {
-			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
 		})
@@ -61,12 +61,12 @@ var _ = Describe("DesiredLRPDB", func() {
 				desiredLRPGuid := "desired-lrp-guid-with-duplicate-ports"
 				expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
 				expectedDesiredLRP.Ports = []uint32{8080, 8080}
-				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+				Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 			})
 
 			It("de-dups the ports", func() {
 				expectedDesiredLRP.Ports = []uint32{8080}
-				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRP).To(Equal(expectedDesiredLRP))
 			})
@@ -74,12 +74,12 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the desired lrp does not exist", func() {
 			It("does not log an error", func() {
-				sqlDB.DesiredLRPByProcessGuid(logger, "Sup dawg")
+				sqlDB.DesiredLRPByProcessGuid(ctx, logger, "Sup dawg")
 				Expect(logger.Errors).To(BeEmpty())
 			})
 
 			It("returns a ResourceNotFound error", func() {
-				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, "Sup dawg")
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, "Sup dawg")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 				Expect(desiredLRP).To(BeNil())
 			})
@@ -92,7 +92,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				result, err := db.Exec(queryStr, "{{", expectedDesiredLRP.ProcessGuid)
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -100,7 +100,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns an invalid record error", func() {
-				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 				Expect(err).To(HaveOccurred())
 				Expect(desiredLRP).To(BeNil())
 			})
@@ -112,7 +112,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				result, err := db.Exec(queryStr, "{{", expectedDesiredLRP.ProcessGuid)
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -120,7 +120,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns an invalid record error", func() {
-				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 				Expect(err).To(HaveOccurred())
 				Expect(desiredLRP).To(BeNil())
 			})
@@ -137,7 +137,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-3"))
 			for i, expectedDesiredLRP := range expectedDesiredLRPs {
 				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
-				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+				Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 			}
 		})
 
@@ -150,19 +150,19 @@ var _ = Describe("DesiredLRPDB", func() {
 				desiredLRPGuid := "desired-lrp-guid-with-duplicate-ports"
 				expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
 				expectedDesiredLRP.Ports = []uint32{8080, 8080}
-				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+				Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 			})
 
 			It("de-dups the ports", func() {
 				expectedDesiredLRP.Ports = []uint32{8080}
-				desiredLRP, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+				desiredLRP, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRP).To(ContainElement(expectedDesiredLRP))
 			})
 		})
 
 		It("returns all desired lrps", func() {
-			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+			desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPs).To(HaveLen(3))
 			Expect(desiredLRPs).To(ConsistOf(expectedDesiredLRPs))
@@ -170,20 +170,20 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		It("prunes all desired lrps with invalid run infos", func() {
 			desiredLRPWithInvalidRunInfo := model_helpers.NewValidDesiredLRP("invalid")
-			Expect(sqlDB.DesireLRP(logger, desiredLRPWithInvalidRunInfo)).To(Succeed())
+			Expect(sqlDB.DesireLRP(ctx, logger, desiredLRPWithInvalidRunInfo)).To(Succeed())
 
 			queryStr := `UPDATE desired_lrps SET run_info = 'garbage' WHERE process_guid = 'invalid'`
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
-			_, err := db.Exec(queryStr)
+			_, err := db.ExecContext(ctx, queryStr)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+			desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPs).To(HaveLen(3))
 
-			rows, err := db.Query(`SELECT process_guid FROM desired_lrps`)
+			rows, err := db.QueryContext(ctx, `SELECT process_guid FROM desired_lrps`)
 			Expect(err).NotTo(HaveOccurred())
 			defer rows.Close()
 
@@ -199,7 +199,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by domain", func() {
 			It("returns the filtered desired lrps", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{Domain: "domain-1"})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{Domain: "domain-1"})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(1))
@@ -209,7 +209,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by process guids", func() {
 			It("returns the filtered desired lrps", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(2))
@@ -224,7 +224,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				result, err := db.Exec(queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -232,7 +232,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("excludes the invalid desired LRP from the response", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPs).To(HaveLen(2))
 			})
@@ -244,7 +244,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				result, err := db.Exec(queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -252,7 +252,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("excludes the invalid desired LRP from the response", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(logger, models.DesiredLRPFilter{})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPs).To(HaveLen(2))
 			})
@@ -275,14 +275,14 @@ var _ = Describe("DesiredLRPDB", func() {
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP3)
 			for i, expectedDesiredLRP := range expectedDesiredLRPs {
 				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
-				Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+				Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 				schedulingInfo := expectedDesiredLRP.DesiredLRPSchedulingInfo()
 				expectedDesiredLRPSchedulingInfos = append(expectedDesiredLRPSchedulingInfos, &schedulingInfo)
 			}
 		})
 
 		It("returns all desired lrps scheduling infos", func() {
-			desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{})
+			desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(ctx, logger, models.DesiredLRPFilter{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPSchedulingInfos).To(HaveLen(3))
 			Expect(desiredLRPSchedulingInfos).To(ConsistOf(expectedDesiredLRPSchedulingInfos))
@@ -290,7 +290,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by domain", func() {
 			It("returns the filtered schedulig infos", func() {
-				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{Domain: "domain-1"})
+				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(ctx, logger, models.DesiredLRPFilter{Domain: "domain-1"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPSchedulingInfos).To(HaveLen(1))
 				Expect(desiredLRPSchedulingInfos[0]).To(BeEquivalentTo(expectedDesiredLRPSchedulingInfos[0]))
@@ -300,7 +300,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		Context("when filtering by process guids", func() {
 			It("returns the filtered schedulig infos", func() {
 				filter := models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}}
-				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, filter)
+				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(ctx, logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPSchedulingInfos).To(HaveLen(2))
 				Expect(desiredLRPSchedulingInfos).To(ContainElement(expectedDesiredLRPSchedulingInfos[0]))
@@ -314,7 +314,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				result, err := db.Exec(queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -322,7 +322,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("excludes the invalid desired LRP from the response", func() {
-				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(logger, models.DesiredLRPFilter{})
+				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(ctx, logger, models.DesiredLRPFilter{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPSchedulingInfos).To(HaveLen(2))
 			})
@@ -336,7 +336,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			desiredLRPGuid := "desired-lrp-guid"
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
-			Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+			Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 			update = &models.DesiredLRPUpdate{}
 			update.SetInstances(1)
 		})
@@ -349,10 +349,10 @@ var _ = Describe("DesiredLRPDB", func() {
 			update = &models.DesiredLRPUpdate{Routes: &routes}
 			update.SetInstances(123)
 			update.SetAnnotation("annotated")
-			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			expectedDesiredLRP.Instances = 123
@@ -367,7 +367,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			update = &models.DesiredLRPUpdate{}
 			update.SetInstances(20)
 
-			beforeDesiredLRP, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			beforeDesiredLRP, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(beforeDesiredLRP).To(Equal(expectedDesiredLRP))
 		})
@@ -375,10 +375,10 @@ var _ = Describe("DesiredLRPDB", func() {
 		It("updates only the fields in the update parameter", func() {
 			update = &models.DesiredLRPUpdate{}
 			update.SetInstances(20)
-			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			expectedDesiredLRP.Instances = 20
@@ -389,10 +389,10 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		It("updates only the modification tag if update is empty", func() {
 			update = &models.DesiredLRPUpdate{}
-			_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+			desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
 
 			expectedDesiredLRP.ModificationTag.Increment()
@@ -408,7 +408,7 @@ var _ = Describe("DesiredLRPDB", func() {
 				update = &models.DesiredLRPUpdate{
 					Routes: &routes,
 				}
-				_, err := sqlDB.UpdateDesiredLRP(logger, expectedDesiredLRP.ProcessGuid, update)
+				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrBadRequest))
 			})
@@ -416,7 +416,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when the desired lrp does not exist", func() {
 			It("returns a ResourceNotFound error", func() {
-				_, err := sqlDB.UpdateDesiredLRP(logger, "does-not-exist", update)
+				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, "does-not-exist", update)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})
@@ -428,21 +428,21 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			desiredLRPGuid := "desired-lrp-guid"
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
-			Expect(sqlDB.DesireLRP(logger, expectedDesiredLRP)).To(Succeed())
+			Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 		})
 
 		It("removes the lrp", func() {
-			err := sqlDB.RemoveDesiredLRP(logger, expectedDesiredLRP.ProcessGuid)
+			err := sqlDB.RemoveDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = sqlDB.DesiredLRPByProcessGuid(logger, expectedDesiredLRP.ProcessGuid)
+			_, err = sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(models.ErrResourceNotFound))
 		})
 
 		Context("when the desired lrp does not exist", func() {
 			It("returns a ResourceNotFound error", func() {
-				err := sqlDB.RemoveDesiredLRP(logger, "does-not-exist")
+				err := sqlDB.RemoveDesiredLRP(ctx, logger, "does-not-exist")
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
 		})

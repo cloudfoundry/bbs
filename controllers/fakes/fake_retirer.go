@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"context"
 	"sync"
 
 	"code.cloudfoundry.org/bbs/controllers"
@@ -10,11 +11,12 @@ import (
 )
 
 type FakeRetirer struct {
-	RetireActualLRPStub        func(logger lager.Logger, key *models.ActualLRPKey) error
+	RetireActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey) error
 	retireActualLRPMutex       sync.RWMutex
 	retireActualLRPArgsForCall []struct {
-		logger lager.Logger
-		key    *models.ActualLRPKey
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.ActualLRPKey
 	}
 	retireActualLRPReturns struct {
 		result1 error
@@ -26,22 +28,24 @@ type FakeRetirer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeRetirer) RetireActualLRP(logger lager.Logger, key *models.ActualLRPKey) error {
+func (fake *FakeRetirer) RetireActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey) error {
 	fake.retireActualLRPMutex.Lock()
 	ret, specificReturn := fake.retireActualLRPReturnsOnCall[len(fake.retireActualLRPArgsForCall)]
 	fake.retireActualLRPArgsForCall = append(fake.retireActualLRPArgsForCall, struct {
-		logger lager.Logger
-		key    *models.ActualLRPKey
-	}{logger, key})
-	fake.recordInvocation("RetireActualLRP", []interface{}{logger, key})
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.ActualLRPKey
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("RetireActualLRP", []interface{}{arg1, arg2, arg3})
 	fake.retireActualLRPMutex.Unlock()
 	if fake.RetireActualLRPStub != nil {
-		return fake.RetireActualLRPStub(logger, key)
+		return fake.RetireActualLRPStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.retireActualLRPReturns.result1
+	fakeReturns := fake.retireActualLRPReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeRetirer) RetireActualLRPCallCount() int {
@@ -50,13 +54,22 @@ func (fake *FakeRetirer) RetireActualLRPCallCount() int {
 	return len(fake.retireActualLRPArgsForCall)
 }
 
-func (fake *FakeRetirer) RetireActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
+func (fake *FakeRetirer) RetireActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey) error) {
+	fake.retireActualLRPMutex.Lock()
+	defer fake.retireActualLRPMutex.Unlock()
+	fake.RetireActualLRPStub = stub
+}
+
+func (fake *FakeRetirer) RetireActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey) {
 	fake.retireActualLRPMutex.RLock()
 	defer fake.retireActualLRPMutex.RUnlock()
-	return fake.retireActualLRPArgsForCall[i].logger, fake.retireActualLRPArgsForCall[i].key
+	argsForCall := fake.retireActualLRPArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeRetirer) RetireActualLRPReturns(result1 error) {
+	fake.retireActualLRPMutex.Lock()
+	defer fake.retireActualLRPMutex.Unlock()
 	fake.RetireActualLRPStub = nil
 	fake.retireActualLRPReturns = struct {
 		result1 error
@@ -64,6 +77,8 @@ func (fake *FakeRetirer) RetireActualLRPReturns(result1 error) {
 }
 
 func (fake *FakeRetirer) RetireActualLRPReturnsOnCall(i int, result1 error) {
+	fake.retireActualLRPMutex.Lock()
+	defer fake.retireActualLRPMutex.Unlock()
 	fake.RetireActualLRPStub = nil
 	if fake.retireActualLRPReturnsOnCall == nil {
 		fake.retireActualLRPReturnsOnCall = make(map[int]struct {

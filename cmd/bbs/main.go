@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"errors"
@@ -151,7 +152,7 @@ func main() {
 		bbsConfig.DatabaseDriver,
 		metronClient,
 	)
-	err = sqlDB.CreateConfigurationsTable(logger)
+	err = sqlDB.CreateConfigurationsTable(context.Background(), logger)
 	if err != nil {
 		logger.Fatal("sql-failed-create-configurations-table", err)
 	}

@@ -1,11 +1,15 @@
 package db
 
-import "code.cloudfoundry.org/lager"
+import (
+	"context"
+
+	"code.cloudfoundry.org/lager"
+)
 
 //go:generate counterfeiter . EncryptionDB
 
 type EncryptionDB interface {
-	EncryptionKeyLabel(logger lager.Logger) (string, error)
-	SetEncryptionKeyLabel(logger lager.Logger, encryptionKeyLabel string) error
-	PerformEncryption(logger lager.Logger) error
+	EncryptionKeyLabel(ctx context.Context, logger lager.Logger) (string, error)
+	SetEncryptionKeyLabel(ctx context.Context, logger lager.Logger, encryptionKeyLabel string) error
+	PerformEncryption(ctx context.Context, logger lager.Logger) error
 }

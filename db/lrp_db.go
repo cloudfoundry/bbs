@@ -1,6 +1,8 @@
 package db
 
 import (
+	"context"
+
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -25,5 +27,5 @@ type LRPDB interface {
 	ActualLRPDB
 	DesiredLRPDB
 
-	ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) ConvergenceResult
+	ConvergeLRPs(ctx context.Context, logger lager.Logger, cellSet models.CellSet) ConvergenceResult
 }

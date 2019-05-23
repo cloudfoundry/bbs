@@ -20,22 +20,22 @@ var _ = Describe("DomainDB", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.Exec(queryStr, "jims-domain", futureTime)
+				_, err := db.ExecContext(ctx, queryStr, "jims-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec(queryStr, "amelias-domain", futureTime)
+				_, err = db.ExecContext(ctx, queryStr, "amelias-domain", futureTime)
 				Expect(err).NotTo(HaveOccurred())
 
 				pastTime := fakeClock.Now().Add(-5 * time.Second).UnixNano()
-				_, err = db.Exec(queryStr, "past-domain", pastTime)
+				_, err = db.ExecContext(ctx, queryStr, "past-domain", pastTime)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = db.Exec(queryStr, "current-domain", fakeClock.Now().Round(time.Second).UnixNano())
+				_, err = db.ExecContext(ctx, queryStr, "current-domain", fakeClock.Now().Round(time.Second).UnixNano())
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns all the fresh domains in the DB", func() {
-				domains, err := sqlDB.FreshDomains(logger)
+				domains, err := sqlDB.FreshDomains(ctx, logger)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(domains).To(HaveLen(2))
@@ -45,7 +45,7 @@ var _ = Describe("DomainDB", func() {
 
 		Context("when there are no domains in the DB", func() {
 			It("returns no domains", func() {
-				domains, err := sqlDB.FreshDomains(logger)
+				domains, err := sqlDB.FreshDomains(ctx, logger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(domains).To(HaveLen(0))
 			})
@@ -56,10 +56,10 @@ var _ = Describe("DomainDB", func() {
 		Context("when the domain is not present in the DB", func() {
 			It("inserts a new domain with the requested TTL", func() {
 				domain := "my-awesome-domain"
-				bbsErr := sqlDB.UpsertDomain(logger, domain, 5432)
+				bbsErr := sqlDB.UpsertDomain(ctx, logger, domain, 5432)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT * FROM domains;")
+				rows, err := db.QueryContext(ctx, "SELECT * FROM domains;")
 				Expect(err).NotTo(HaveOccurred())
 				defer rows.Close()
 
@@ -76,7 +76,7 @@ var _ = Describe("DomainDB", func() {
 
 			It("logs that a new domain was inserted", func() {
 				domain := "my-awesome-domain"
-				bbsErr := sqlDB.UpsertDomain(logger, domain, 5432)
+				bbsErr := sqlDB.UpsertDomain(ctx, logger, domain, 5432)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
 				Eventually(logger).Should(gbytes.Say("added-domain.*my-awesome-domain"))
@@ -85,10 +85,10 @@ var _ = Describe("DomainDB", func() {
 			It("never expires when the ttl is Zero", func() {
 				domain := "my-awesome-domain"
 
-				bbsErr := sqlDB.UpsertDomain(logger, domain, 0)
+				bbsErr := sqlDB.UpsertDomain(ctx, logger, domain, 0)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
-				rows, err := db.Query("SELECT * FROM domains")
+				rows, err := db.QueryContext(ctx, "SELECT * FROM domains")
 				Expect(err).NotTo(HaveOccurred())
 				defer rows.Close()
 
@@ -105,7 +105,7 @@ var _ = Describe("DomainDB", func() {
 			Context("when the domain is too long", func() {
 				It("returns an error", func() {
 					domain := randStr(256)
-					bbsErr := sqlDB.UpsertDomain(logger, domain, 5432)
+					bbsErr := sqlDB.UpsertDomain(ctx, logger, domain, 5432)
 					Expect(bbsErr).To(HaveOccurred())
 				})
 			})
@@ -115,17 +115,17 @@ var _ = Describe("DomainDB", func() {
 			var existingDomain = "the-domain-that-was-already-there"
 
 			BeforeEach(func() {
-				bbsErr := sqlDB.UpsertDomain(logger, existingDomain, 1)
+				bbsErr := sqlDB.UpsertDomain(ctx, logger, existingDomain, 1)
 				Expect(bbsErr).NotTo(HaveOccurred())
 			})
 
 			It("updates the TTL on the existing record", func() {
 				fakeClock.Increment(10 * time.Second)
 
-				bbsErr := sqlDB.UpsertDomain(logger, existingDomain, 1)
+				bbsErr := sqlDB.UpsertDomain(ctx, logger, existingDomain, 1)
 				Expect(bbsErr).NotTo(HaveOccurred())
 
-				rowsCount, err := db.Query("SELECT COUNT(*) FROM domains;")
+				rowsCount, err := db.QueryContext(ctx, "SELECT COUNT(*) FROM domains;")
 				Expect(err).NotTo(HaveOccurred())
 				defer rowsCount.Close()
 
@@ -136,7 +136,7 @@ var _ = Describe("DomainDB", func() {
 				Expect(domainCount).To(Equal(1))
 				Expect(rowsCount.Close()).To(Succeed())
 
-				rows, err := db.Query("SELECT * FROM domains;")
+				rows, err := db.QueryContext(ctx, "SELECT * FROM domains;")
 				Expect(err).NotTo(HaveOccurred())
 				defer rows.Close()
 

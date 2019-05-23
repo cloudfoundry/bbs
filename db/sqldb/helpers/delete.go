@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -9,6 +10,7 @@ import (
 
 // DELETE FROM <table> WHERE ...
 func (h *sqlHelper) Delete(
+	ctx context.Context,
 	logger lager.Logger,
 	q Queryable,
 	table string,
@@ -21,5 +23,5 @@ func (h *sqlHelper) Delete(
 		query += "WHERE " + wheres
 	}
 
-	return q.Exec(h.Rebind(query), whereBindings...)
+	return q.ExecContext(ctx, h.Rebind(query), whereBindings...)
 }

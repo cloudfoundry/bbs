@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -92,19 +93,19 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			2,
 			fakeLRPStatMetronNotifier,
 		)
-		controller.ConvergeLRPs(logger)
+		controller.ConvergeLRPs(ctx, logger)
 	})
 
 	It("calls ConvergeLRPs", func() {
 		Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(1))
-		_, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
+		_, _, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
 		Expect(actualCellSet).To(BeEquivalentTo(cellSet))
 	})
 
 	Describe("metrics", func() {
 		Context("when convergence occurs", func() {
 			BeforeEach(func() {
-				fakeLRPDB.ConvergeLRPsStub = func(lager.Logger, models.CellSet) db.ConvergenceResult {
+				fakeLRPDB.ConvergeLRPsStub = func(context.Context, lager.Logger, models.CellSet) db.ConvergenceResult {
 					fakeClock.Increment(50 * time.Second)
 					return db.ConvergenceResult{}
 				}
@@ -258,7 +259,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		It("transition the LRP to UNCLAIMED state", func() {
 			Eventually(fakeLRPDB.UnclaimActualLRPCallCount).Should(Equal(1))
-			_, actualKey := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
+			_, _, actualKey := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(key))
 		})
 
@@ -355,7 +356,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		It("creates the LPR record in the database", func() {
 			Eventually(fakeLRPDB.CreateUnclaimedActualLRPCallCount).Should(Equal(1))
-			_, actualKey := fakeLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
+			_, _, actualKey := fakeLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(key))
 		})
 
@@ -393,7 +394,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		It("calls ConvergeLRPs with an empty CellSet", func() {
 			Expect(fakeLRPDB.ConvergeLRPsCallCount()).To(Equal(1))
-			_, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
+			_, _, actualCellSet := fakeLRPDB.ConvergeLRPsArgsForCall(0)
 			Expect(actualCellSet).To(BeEquivalentTo(models.CellSet{}))
 		})
 	})
@@ -439,7 +440,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			It("changes the LRP presence to 'Suspect'", func() {
 				Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
 
-				_, key, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
+				_, _, key, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
 				Expect(from).To(Equal(models.ActualLRP_Ordinary))
 				Expect(to).To(Equal(models.ActualLRP_Suspect))
 				Expect(key).To(Equal(&suspectActualLRP.ActualLRPKey))
@@ -447,7 +448,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			It("creates a new unclaimed LRP", func() {
 				Expect(fakeLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(1))
-				_, lrpKey := fakeLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
+				_, _, lrpKey := fakeLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
 
 				Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
 			})
@@ -571,7 +572,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("remove the Ordinary LRP", func() {
 			Eventually(fakeLRPDB.RemoveActualLRPCallCount).Should(Equal(1))
 
-			_, guid, index, key := fakeLRPDB.RemoveActualLRPArgsForCall(0)
+			_, _, guid, index, key := fakeLRPDB.RemoveActualLRPArgsForCall(0)
 
 			Expect(guid).To(Equal(ordinaryActualLRP.ProcessGuid))
 			Expect(index).To(Equal(ordinaryActualLRP.Index))
@@ -580,7 +581,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		It("changes the suspect LRP presence to Ordinary", func() {
 			Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
-			_, lrpKey, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
+			_, _, lrpKey, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
 
 			Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
 			Expect(from).To(Equal(models.ActualLRP_Suspect))
@@ -642,7 +643,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			It("removes the suspect LRP", func() {
 				Eventually(fakeSuspectDB.RemoveSuspectActualLRPCallCount).Should(Equal(1))
-				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
 				Expect(lrpKey).To(Equal(key))
 			})
 
@@ -702,7 +703,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			stoppedKeys := make([]*models.ActualLRPKey, 2)
 
 			for i := 0; i < 2; i++ {
-				_, key := retirer.RetireActualLRPArgsForCall(i)
+				_, _, key := retirer.RetireActualLRPArgsForCall(i)
 				stoppedKeys[i] = key
 			}
 

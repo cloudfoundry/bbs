@@ -1,15 +1,18 @@
 package sqldb
 
 import (
+	"context"
+
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager"
 )
 
 const configurationsTable = "configurations"
 
-func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) error {
-	return db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
+func (db *SQLDB) setConfigurationValue(ctx context.Context, logger lager.Logger, key, value string) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		_, err := db.upsert(
+			ctx,
 			logger,
 			tx,
 			configurationsTable,
@@ -25,10 +28,10 @@ func (db *SQLDB) setConfigurationValue(logger lager.Logger, key, value string) e
 	})
 }
 
-func (db *SQLDB) getConfigurationValue(logger lager.Logger, key string) (string, error) {
+func (db *SQLDB) getConfigurationValue(ctx context.Context, logger lager.Logger, key string) (string, error) {
 	var value string
-	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		return db.one(logger, tx, "configurations",
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		return db.one(ctx, logger, tx, "configurations",
 			helpers.ColumnList{"value"}, helpers.NoLockRow,
 			"id = ?", key,
 		).Scan(&value)

@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 // SELECT <columns> FROM <table> WHERE ... [FOR UPDATE]
 func (h *sqlHelper) All(
+	ctx context.Context,
 	logger lager.Logger,
 	q Queryable,
 	table string,
@@ -28,5 +30,5 @@ func (h *sqlHelper) All(
 		query += "\nFOR UPDATE"
 	}
 
-	return q.Query(h.Rebind(query), whereBindings...)
+	return q.QueryContext(ctx, h.Rebind(query), whereBindings...)
 }

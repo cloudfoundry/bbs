@@ -11,26 +11,18 @@ import (
 type FakeStmt struct {
 	CloseStub        func() error
 	closeMutex       sync.RWMutex
-	closeArgsForCall []struct{}
-	closeReturns     struct {
+	closeArgsForCall []struct {
+	}
+	closeReturns struct {
 		result1 error
 	}
 	closeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	NumInputStub        func() int
-	numInputMutex       sync.RWMutex
-	numInputArgsForCall []struct{}
-	numInputReturns     struct {
-		result1 int
-	}
-	numInputReturnsOnCall map[int]struct {
-		result1 int
-	}
-	ExecStub        func(args []driver.Value) (driver.Result, error)
+	ExecStub        func([]driver.Value) (driver.Result, error)
 	execMutex       sync.RWMutex
 	execArgsForCall []struct {
-		args []driver.Value
+		arg1 []driver.Value
 	}
 	execReturns struct {
 		result1 driver.Result
@@ -40,10 +32,20 @@ type FakeStmt struct {
 		result1 driver.Result
 		result2 error
 	}
-	QueryStub        func(args []driver.Value) (driver.Rows, error)
+	NumInputStub        func() int
+	numInputMutex       sync.RWMutex
+	numInputArgsForCall []struct {
+	}
+	numInputReturns struct {
+		result1 int
+	}
+	numInputReturnsOnCall map[int]struct {
+		result1 int
+	}
+	QueryStub        func([]driver.Value) (driver.Rows, error)
 	queryMutex       sync.RWMutex
 	queryArgsForCall []struct {
-		args []driver.Value
+		arg1 []driver.Value
 	}
 	queryReturns struct {
 		result1 driver.Rows
@@ -60,7 +62,8 @@ type FakeStmt struct {
 func (fake *FakeStmt) Close() error {
 	fake.closeMutex.Lock()
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
-	fake.closeArgsForCall = append(fake.closeArgsForCall, struct{}{})
+	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
 	if fake.CloseStub != nil {
@@ -69,7 +72,8 @@ func (fake *FakeStmt) Close() error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.closeReturns.result1
+	fakeReturns := fake.closeReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeStmt) CloseCallCount() int {
@@ -78,7 +82,15 @@ func (fake *FakeStmt) CloseCallCount() int {
 	return len(fake.closeArgsForCall)
 }
 
+func (fake *FakeStmt) CloseCalls(stub func() error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
+	fake.CloseStub = stub
+}
+
 func (fake *FakeStmt) CloseReturns(result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
 	fake.CloseStub = nil
 	fake.closeReturns = struct {
 		result1 error
@@ -86,6 +98,8 @@ func (fake *FakeStmt) CloseReturns(result1 error) {
 }
 
 func (fake *FakeStmt) CloseReturnsOnCall(i int, result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
 	fake.CloseStub = nil
 	if fake.closeReturnsOnCall == nil {
 		fake.closeReturnsOnCall = make(map[int]struct {
@@ -97,66 +111,27 @@ func (fake *FakeStmt) CloseReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStmt) NumInput() int {
-	fake.numInputMutex.Lock()
-	ret, specificReturn := fake.numInputReturnsOnCall[len(fake.numInputArgsForCall)]
-	fake.numInputArgsForCall = append(fake.numInputArgsForCall, struct{}{})
-	fake.recordInvocation("NumInput", []interface{}{})
-	fake.numInputMutex.Unlock()
-	if fake.NumInputStub != nil {
-		return fake.NumInputStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.numInputReturns.result1
-}
-
-func (fake *FakeStmt) NumInputCallCount() int {
-	fake.numInputMutex.RLock()
-	defer fake.numInputMutex.RUnlock()
-	return len(fake.numInputArgsForCall)
-}
-
-func (fake *FakeStmt) NumInputReturns(result1 int) {
-	fake.NumInputStub = nil
-	fake.numInputReturns = struct {
-		result1 int
-	}{result1}
-}
-
-func (fake *FakeStmt) NumInputReturnsOnCall(i int, result1 int) {
-	fake.NumInputStub = nil
-	if fake.numInputReturnsOnCall == nil {
-		fake.numInputReturnsOnCall = make(map[int]struct {
-			result1 int
-		})
-	}
-	fake.numInputReturnsOnCall[i] = struct {
-		result1 int
-	}{result1}
-}
-
-func (fake *FakeStmt) Exec(args []driver.Value) (driver.Result, error) {
-	var argsCopy []driver.Value
-	if args != nil {
-		argsCopy = make([]driver.Value, len(args))
-		copy(argsCopy, args)
+func (fake *FakeStmt) Exec(arg1 []driver.Value) (driver.Result, error) {
+	var arg1Copy []driver.Value
+	if arg1 != nil {
+		arg1Copy = make([]driver.Value, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.execMutex.Lock()
 	ret, specificReturn := fake.execReturnsOnCall[len(fake.execArgsForCall)]
 	fake.execArgsForCall = append(fake.execArgsForCall, struct {
-		args []driver.Value
-	}{argsCopy})
-	fake.recordInvocation("Exec", []interface{}{argsCopy})
+		arg1 []driver.Value
+	}{arg1Copy})
+	fake.recordInvocation("Exec", []interface{}{arg1Copy})
 	fake.execMutex.Unlock()
 	if fake.ExecStub != nil {
-		return fake.ExecStub(args)
+		return fake.ExecStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.execReturns.result1, fake.execReturns.result2
+	fakeReturns := fake.execReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeStmt) ExecCallCount() int {
@@ -165,13 +140,22 @@ func (fake *FakeStmt) ExecCallCount() int {
 	return len(fake.execArgsForCall)
 }
 
+func (fake *FakeStmt) ExecCalls(stub func([]driver.Value) (driver.Result, error)) {
+	fake.execMutex.Lock()
+	defer fake.execMutex.Unlock()
+	fake.ExecStub = stub
+}
+
 func (fake *FakeStmt) ExecArgsForCall(i int) []driver.Value {
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
-	return fake.execArgsForCall[i].args
+	argsForCall := fake.execArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeStmt) ExecReturns(result1 driver.Result, result2 error) {
+	fake.execMutex.Lock()
+	defer fake.execMutex.Unlock()
 	fake.ExecStub = nil
 	fake.execReturns = struct {
 		result1 driver.Result
@@ -180,6 +164,8 @@ func (fake *FakeStmt) ExecReturns(result1 driver.Result, result2 error) {
 }
 
 func (fake *FakeStmt) ExecReturnsOnCall(i int, result1 driver.Result, result2 error) {
+	fake.execMutex.Lock()
+	defer fake.execMutex.Unlock()
 	fake.ExecStub = nil
 	if fake.execReturnsOnCall == nil {
 		fake.execReturnsOnCall = make(map[int]struct {
@@ -193,26 +179,79 @@ func (fake *FakeStmt) ExecReturnsOnCall(i int, result1 driver.Result, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakeStmt) Query(args []driver.Value) (driver.Rows, error) {
-	var argsCopy []driver.Value
-	if args != nil {
-		argsCopy = make([]driver.Value, len(args))
-		copy(argsCopy, args)
+func (fake *FakeStmt) NumInput() int {
+	fake.numInputMutex.Lock()
+	ret, specificReturn := fake.numInputReturnsOnCall[len(fake.numInputArgsForCall)]
+	fake.numInputArgsForCall = append(fake.numInputArgsForCall, struct {
+	}{})
+	fake.recordInvocation("NumInput", []interface{}{})
+	fake.numInputMutex.Unlock()
+	if fake.NumInputStub != nil {
+		return fake.NumInputStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.numInputReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeStmt) NumInputCallCount() int {
+	fake.numInputMutex.RLock()
+	defer fake.numInputMutex.RUnlock()
+	return len(fake.numInputArgsForCall)
+}
+
+func (fake *FakeStmt) NumInputCalls(stub func() int) {
+	fake.numInputMutex.Lock()
+	defer fake.numInputMutex.Unlock()
+	fake.NumInputStub = stub
+}
+
+func (fake *FakeStmt) NumInputReturns(result1 int) {
+	fake.numInputMutex.Lock()
+	defer fake.numInputMutex.Unlock()
+	fake.NumInputStub = nil
+	fake.numInputReturns = struct {
+		result1 int
+	}{result1}
+}
+
+func (fake *FakeStmt) NumInputReturnsOnCall(i int, result1 int) {
+	fake.numInputMutex.Lock()
+	defer fake.numInputMutex.Unlock()
+	fake.NumInputStub = nil
+	if fake.numInputReturnsOnCall == nil {
+		fake.numInputReturnsOnCall = make(map[int]struct {
+			result1 int
+		})
+	}
+	fake.numInputReturnsOnCall[i] = struct {
+		result1 int
+	}{result1}
+}
+
+func (fake *FakeStmt) Query(arg1 []driver.Value) (driver.Rows, error) {
+	var arg1Copy []driver.Value
+	if arg1 != nil {
+		arg1Copy = make([]driver.Value, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.queryMutex.Lock()
 	ret, specificReturn := fake.queryReturnsOnCall[len(fake.queryArgsForCall)]
 	fake.queryArgsForCall = append(fake.queryArgsForCall, struct {
-		args []driver.Value
-	}{argsCopy})
-	fake.recordInvocation("Query", []interface{}{argsCopy})
+		arg1 []driver.Value
+	}{arg1Copy})
+	fake.recordInvocation("Query", []interface{}{arg1Copy})
 	fake.queryMutex.Unlock()
 	if fake.QueryStub != nil {
-		return fake.QueryStub(args)
+		return fake.QueryStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.queryReturns.result1, fake.queryReturns.result2
+	fakeReturns := fake.queryReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeStmt) QueryCallCount() int {
@@ -221,13 +260,22 @@ func (fake *FakeStmt) QueryCallCount() int {
 	return len(fake.queryArgsForCall)
 }
 
+func (fake *FakeStmt) QueryCalls(stub func([]driver.Value) (driver.Rows, error)) {
+	fake.queryMutex.Lock()
+	defer fake.queryMutex.Unlock()
+	fake.QueryStub = stub
+}
+
 func (fake *FakeStmt) QueryArgsForCall(i int) []driver.Value {
 	fake.queryMutex.RLock()
 	defer fake.queryMutex.RUnlock()
-	return fake.queryArgsForCall[i].args
+	argsForCall := fake.queryArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeStmt) QueryReturns(result1 driver.Rows, result2 error) {
+	fake.queryMutex.Lock()
+	defer fake.queryMutex.Unlock()
 	fake.QueryStub = nil
 	fake.queryReturns = struct {
 		result1 driver.Rows
@@ -236,6 +284,8 @@ func (fake *FakeStmt) QueryReturns(result1 driver.Rows, result2 error) {
 }
 
 func (fake *FakeStmt) QueryReturnsOnCall(i int, result1 driver.Rows, result2 error) {
+	fake.queryMutex.Lock()
+	defer fake.queryMutex.Unlock()
 	fake.QueryStub = nil
 	if fake.queryReturnsOnCall == nil {
 		fake.queryReturnsOnCall = make(map[int]struct {
@@ -254,10 +304,10 @@ func (fake *FakeStmt) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.closeMutex.RLock()
 	defer fake.closeMutex.RUnlock()
-	fake.numInputMutex.RLock()
-	defer fake.numInputMutex.RUnlock()
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
+	fake.numInputMutex.RLock()
+	defer fake.numInputMutex.RUnlock()
 	fake.queryMutex.RLock()
 	defer fake.queryMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

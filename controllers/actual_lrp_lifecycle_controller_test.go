@@ -132,13 +132,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 
 		It("calls the DB successfully", func() {
-			err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+			err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeActualLRPDB.ClaimActualLRPCallCount()).To(Equal(1))
 		})
 
 		It("emits a LRP group change to the hub", func() {
-			err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+			err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 			event := actualHub.EmitArgsForCall(0)
 			changedEvent, ok := event.(*models.ActualLRPChangedEvent)
@@ -148,7 +148,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 
 		It("emits a LRP instance change to the hub", func() {
-			err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+			err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 			event := actualLRPInstanceHub.EmitArgsForCall(0)
 			Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actualLRP, afterActualLRP)))
@@ -165,7 +165,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("does not emit a change event to the hub", func() {
-				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+				err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 		})
@@ -185,7 +185,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("does not emit ActualLRPChangedEvent", func() {
-				err = controller.ClaimActualLRP(logger, processGuid, index, &afterInstanceKey)
+				err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Expect(err).NotTo(HaveOccurred())
 				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
@@ -250,9 +250,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("removes the suspect lrp", func() {
-				err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 				Eventually(fakeSuspectDB.RemoveSuspectActualLRPCallCount).Should(Equal(1))
-				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
 				Expect(lrpKey).To(Equal(&models.ActualLRPKey{
 					ProcessGuid: processGuid,
 					Index:       index,
@@ -261,7 +261,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits ActualLRPCreatedEvent and an ActualLRPRemovedEvent", func() {
-				err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 				Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 				Expect(actualHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPCreatedEvent(
@@ -273,7 +273,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits ActualLRPInstanceChangedEvent and an ActualLRPInstanceRemovedEvent", func() {
-				err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
@@ -289,12 +289,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("logs the error", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Expect(logger.Buffer()).Should(gbytes.Say("boooom!"))
 				})
 
 				It("emits ActualLRPCreatedEvent and an ActualLRPRemovedEvent", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 					Expect(actualHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPCreatedEvent(
@@ -323,7 +323,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("returns ErrActualLRPCannotBeStarted", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Expect(err).To(MatchError(models.ErrActualLRPCannotBeStarted))
 				})
 			})
@@ -339,7 +339,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("don't do anything", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(BeZero())
 				})
 			})
@@ -352,7 +352,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("calls DB successfully", func() {
-				err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
 				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
@@ -364,7 +364,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should return the error", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Expect(err).To(MatchError("BOOM!!!"))
 				})
 			})
@@ -375,7 +375,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should continue to start the LRP", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
 				})
@@ -395,15 +395,15 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("removes the evacuating lrp", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-					_, lrpKey, lrpInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+					_, _, lrpKey, lrpInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
 					Expect(*lrpKey).To(Equal(evacuating.ActualLRPKey))
 					Expect(*lrpInstanceKey).To(Equal(evacuating.ActualLRPInstanceKey))
 				})
 
 				It("should emit an ActualLRPChanged event and an ActualLRPRemoved event", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
@@ -418,7 +418,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should emit LRP instance changed event and LRP instance removed event", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
@@ -434,7 +434,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits a created event to the hub", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
@@ -444,7 +444,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits LRP instance create event", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 					event := actualLRPInstanceHub.EmitArgsForCall(0)
@@ -457,7 +457,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			Context("when the actual lrp was updated", func() {
 				It("emits a change event to the hub", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
 					changedEvent, ok := event.(*models.ActualLRPChangedEvent)
@@ -473,7 +473,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("does not emit a change event to the hub", func() {
-					err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
@@ -487,13 +487,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("responds with an error", func() {
-				err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrUnknownError))
 			})
 
 			It("does not emit a change event to the hub", func() {
-				err = controller.StartActualLRP(logger, &actualLRPKey, &afterInstanceKey, &netInfo)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 		})
@@ -542,21 +542,21 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 
 		It("responds with no error", func() {
-			err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+			err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("crashes the actual lrp by process guid and index", func() {
-			err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+			err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 			Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
-			_, actualKey, actualInstanceKey, actualErrorMessage := fakeActualLRPDB.CrashActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualErrorMessage := fakeActualLRPDB.CrashActualLRPArgsForCall(0)
 			Expect(*actualKey).To(Equal(actualLRPKey))
 			Expect(*actualInstanceKey).To(Equal(beforeInstanceKey))
 			Expect(actualErrorMessage).To(Equal(errorMessage))
 		})
 
 		It("emits both crashed and change events to the hub", func() {
-			err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+			err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(actualHub.EmitCallCount).Should(Equal(2))
 			Consistently(actualHub.EmitCallCount).Should(Equal(2))
@@ -582,11 +582,11 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		Describe("restarting the instance", func() {
 			Context("when the actual LRP should be restarted", func() {
 				It("request an auction", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-					_, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+					_, _, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
 					Expect(processGuid).To(Equal("process-guid"))
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
@@ -598,7 +598,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits crashed, created & removed events to the actual instance hub", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
@@ -628,13 +628,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("does not request an auction", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
 				})
 
 				It("emits crashed and changed event to the actual instance hub", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
@@ -657,7 +657,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("fails and does not request an auction", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).To(MatchError("error occured"))
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
 				})
@@ -669,7 +669,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should not return an error", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -699,14 +699,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("should not emit any events because the ActualLRPGroup remains unchanged", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Expect(err).NotTo(HaveOccurred())
 
 				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 
 			It("should emit ActualLRPInstanceCrashedEvent, ActualLRPInstnceRemovedEvent & ActualLRPInstanceCreatedEvent", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
@@ -740,16 +740,16 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("removes the Suspect LRP", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
 
-				_, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+				_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
 				Expect(lrpKey.ProcessGuid).To(Equal(processGuid))
 				Expect(lrpKey.Index).To(BeEquivalentTo(index))
 			})
 
 			It("emits an ActualLRPRemovedEvent", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				Consistently(actualHub.EmitCallCount).Should(Equal(1))
 
@@ -760,7 +760,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits an ActualLRPInstanceRemovedEvent", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
@@ -776,17 +776,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("returns the error to the caller", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).To(MatchError("boooom!"))
 				})
 
 				It("does not emit any events", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Consistently(actualHub.EmitCallCount).Should(BeZero())
 				})
 
 				It("does not emit any events", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
 				})
 			})
@@ -808,7 +808,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits an ActualLRPChangedEvent because the replacement instance is unclaimed and is indistinguishable from changing the suspect LRP", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 
 					event := actualHub.EmitArgsForCall(0)
@@ -820,7 +820,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits an ActualLRPInstanceRemovedEvent", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
@@ -850,7 +850,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits an ActualLRPCreatedEvent and an ActualLRPRemovedEvent because the replacement instance has taken over the ActualLRPGroup", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 					event := actualHub.EmitArgsForCall(0)
@@ -867,7 +867,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits an ActualLRPInstanceRemovedEvent", func() {
-					err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
@@ -886,17 +886,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("responds with an error", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Expect(err).To(MatchError(models.ErrUnknownError))
 			})
 
 			It("does not emit a change event to the hub", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
 			It("does not emit an instance change event to the hub", func() {
-				err = controller.CrashActualLRP(logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
@@ -927,9 +927,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("fails the actual lrp by process guid and index", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Expect(fakeActualLRPDB.FailActualLRPCallCount()).To(Equal(1))
-				_, actualKey, actualErrorMessage := fakeActualLRPDB.FailActualLRPArgsForCall(0)
+				_, _, actualKey, actualErrorMessage := fakeActualLRPDB.FailActualLRPArgsForCall(0)
 				Expect(*actualKey).To(Equal(actualLRPKey))
 				Expect(actualErrorMessage).To(Equal(errorMessage))
 
@@ -937,7 +937,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits a change event to the hub", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
 				Expect(event).To(Equal(models.NewActualLRPChangedEvent(
@@ -947,7 +947,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits an instance change event to the hub", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
 					models.NewActualLRPInstanceChangedEvent(actualLRP, afterActualLRP),
@@ -965,12 +965,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("does not emit a ActualLRPChangedEvent", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Consistently(actualHub.EmitCallCount).Should(BeZero())
 			})
 
 			It("emits an ActualLRPInstanceChangedEvent", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
@@ -984,17 +984,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("does not error", func() {
-					err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+					err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 					Expect(err).To(BeNil())
 				})
 
 				It("does not emit a ActualLRPChangedEvent", func() {
-					err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+					err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 					Consistently(actualHub.EmitCallCount).Should(BeZero())
 				})
 
 				It("does not emit an ActualLRPInstanceChangedEvent", func() {
-					err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+					err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 					Consistently(actualHub.EmitCallCount).Should(BeZero())
 				})
 			})
@@ -1006,17 +1006,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("responds with an error", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Expect(err).To(MatchError(models.ErrUnknownError))
 			})
 
 			It("does not emit a change event to the hub", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
 			It("does not emit a ActualLRPInstanceChangedEvent", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
 			})
 		})
@@ -1028,17 +1028,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("responds with a ResourceNotFound error", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Expect(err).To(MatchError(models.ErrResourceNotFound))
 			})
 
 			It("does not emit a change event to the hub", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
 			It("does not emit a ActualLRPInstanceChangedEvent", func() {
-				err = controller.FailActualLRP(logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
 			})
 		})
@@ -1055,22 +1055,22 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("removes the actual lrp by process guid and index", func() {
-				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
-				_, actualProcessGuid, idx, actualInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+				_, _, actualProcessGuid, idx, actualInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(actualProcessGuid).To(Equal(processGuid))
 				Expect(idx).To(BeEquivalentTo(index))
 				Expect(actualInstanceKey).To(Equal(&afterInstanceKey))
 			})
 
 			It("response with no error", func() {
-				err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				err = controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("emits a removed event to the hub", func() {
-				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
@@ -1079,7 +1079,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits an instance removed event to the hub", func() {
-				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
@@ -1094,17 +1094,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("returns an ErrResourceNotFound", func() {
-				err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				err = controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Expect(err).To(MatchError(models.ErrResourceNotFound))
 			})
 
 			It("does not emit a removed event to the hub", func() {
-				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
 			It("does not emit an instance removed event to the hub", func() {
-				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
@@ -1116,17 +1116,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("returns an ErrResourceNotFound", func() {
-				err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				err = controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Expect(err).To(MatchError(models.ErrResourceNotFound))
 			})
 
 			It("does not emit a removed event to the hub", func() {
-				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
 			It("does not emit an instance removed event to the hub", func() {
-				controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
@@ -1138,17 +1138,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("returns the error", func() {
-					err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+					err = controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 					Expect(err).To(MatchError(models.ErrUnknownError))
 				})
 
 				It("does not emit a removed event to the hub", func() {
-					controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+					controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
 
 				It("does not emit an instance removed event to the hub", func() {
-					controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+					controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
@@ -1159,17 +1159,17 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("returns the error", func() {
-					err = controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+					err = controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 					Expect(err).To(MatchError(models.ErrUnknownError))
 				})
 
 				It("does not emit a removed event to the hub", func() {
-					controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+					controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
 
 				It("does not emit an instance removed event to the hub", func() {
-					controller.RemoveActualLRP(logger, processGuid, index, &afterInstanceKey)
+					controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
@@ -1183,18 +1183,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("returns an error and does not retry", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Expect(err).To(MatchError(models.ErrUnknownError))
 				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 			})
 
 			It("does not emit a removed event to the hub", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
 			It("does not emit an instance removed event to the hub", func() {
-				controller.RetireActualLRP(logger, &actualLRPKey)
+				controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
@@ -1205,18 +1205,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("returns an error and does not retry", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 			})
 
 			It("does not emit a removed event to the hub", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 
 			It("does not emit an instance removed event to the hub", func() {
-				controller.RetireActualLRP(logger, &actualLRPKey)
+				controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
@@ -1231,18 +1231,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("removes the LRP", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
-				_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+				_, _, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
 				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLRPInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
@@ -1251,7 +1251,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits an instance removed event to the hub", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
@@ -1265,18 +1265,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("retries removing up to RetireActualLRPRetryAttempts times", func() {
-					err = controller.RetireActualLRP(logger, &actualLRPKey)
+					err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 					Expect(err).To(MatchError("boom!"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(5))
 				})
 
 				It("does not emit a change event to the hub", func() {
-					err = controller.RetireActualLRP(logger, &actualLRPKey)
+					err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
 
 				It("does not emit an instance removed event to the hub", func() {
-					controller.RetireActualLRP(logger, &actualLRPKey)
+					controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
@@ -1292,18 +1292,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("removes the LRP", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
-				_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+				_, _, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
 				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLRPInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
@@ -1312,7 +1312,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits an instance removed event to the hub", func() {
-				err = controller.RetireActualLRP(logger, &actualLRPKey)
+				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
 				removedEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
@@ -1326,18 +1326,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("retries removing up to RetireActualLRPRetryAttempts times", func() {
-					err = controller.RetireActualLRP(logger, &actualLRPKey)
+					err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 					Expect(err).To(MatchError("boom!"))
 					Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(5))
 				})
 
 				It("does not emit a change event to the hub", func() {
-					err = controller.RetireActualLRP(logger, &actualLRPKey)
+					err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
 
 				It("does not emit an instance removed event to the hub", func() {
-					controller.RetireActualLRP(logger, &actualLRPKey)
+					controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 				})
 			})
@@ -1375,7 +1375,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					})
 
 					It("stops the LRPs", func() {
-						err = controller.RetireActualLRP(logger, &actualLRPKey)
+						err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
 						Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal(cellPresence.RepAddress))
 
@@ -1407,7 +1407,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						})
 
 						It("passes the url when creating a rep client", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
 							repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
 							Expect(repAddr).To(Equal(cellPresence.RepAddress))
@@ -1422,7 +1422,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						})
 
 						It("should return the error", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Expect(err).To(MatchError("BOOM!!!"))
 						})
 					})
@@ -1433,7 +1433,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						})
 
 						It("retries to stop the app", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Expect(err).To(MatchError("Failed to stop app"))
 							Expect(fakeRepClient.StopLRPInstanceCallCount()).Should(Equal(5))
 						})
@@ -1451,18 +1451,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 					Context("removing the actualLRP succeeds", func() {
 						It("removes the LRPs", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Expect(err).NotTo(HaveOccurred())
 							Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 
-							_, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
+							_, _, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 							Expect(deletedLRPGuid).To(Equal(processGuid))
 							Expect(deletedLRPIndex).To(Equal(index))
 							Expect(deletedLRPInstanceKey).To(Equal(&afterInstanceKey))
 						})
 
 						It("emits a removed event to the hub", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Eventually(actualHub.EmitCallCount).Should(Equal(1))
 							event := actualHub.EmitArgsForCall(0)
 							removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
@@ -1471,7 +1471,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						})
 
 						It("emits an instance removed event to the hub", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 							event := actualLRPInstanceHub.EmitArgsForCall(0)
 							removedEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
@@ -1486,18 +1486,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						})
 
 						It("returns an error and does not retry", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Expect(err).To(MatchError("failed to delete actual LRP"))
 							Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(1))
 						})
 
 						It("does not emit a change event to the hub", func() {
-							err = controller.RetireActualLRP(logger, &actualLRPKey)
+							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Consistently(actualHub.EmitCallCount).Should(Equal(0))
 						})
 
 						It("does not emit an instance removed event to the hub", func() {
-							controller.RetireActualLRP(logger, &actualLRPKey)
+							controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 						})
 					})
@@ -1509,19 +1509,19 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					})
 
 					It("returns an error and retries", func() {
-						err = controller.RetireActualLRP(logger, &actualLRPKey)
+						err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 						Expect(err).To(MatchError("cell error"))
 						Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(0))
 						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(1))
 					})
 
 					It("does not emit a change event to the hub", func() {
-						err = controller.RetireActualLRP(logger, &actualLRPKey)
+						err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 						Consistently(actualHub.EmitCallCount).Should(Equal(0))
 					})
 
 					It("does not emit an instance removed event to the hub", func() {
-						controller.RetireActualLRP(logger, &actualLRPKey)
+						controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 					})
 				})

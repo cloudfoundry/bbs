@@ -2,6 +2,7 @@
 package dbfakes
 
 import (
+	"context"
 	"sync"
 
 	"code.cloudfoundry.org/bbs/db"
@@ -10,11 +11,12 @@ import (
 )
 
 type FakeSuspectDB struct {
-	RemoveSuspectActualLRPStub        func(lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, error)
+	RemoveSuspectActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, error)
 	removeSuspectActualLRPMutex       sync.RWMutex
 	removeSuspectActualLRPArgsForCall []struct {
-		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.ActualLRPKey
 	}
 	removeSuspectActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -28,22 +30,24 @@ type FakeSuspectDB struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSuspectDB) RemoveSuspectActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey) (*models.ActualLRP, error) {
+func (fake *FakeSuspectDB) RemoveSuspectActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey) (*models.ActualLRP, error) {
 	fake.removeSuspectActualLRPMutex.Lock()
 	ret, specificReturn := fake.removeSuspectActualLRPReturnsOnCall[len(fake.removeSuspectActualLRPArgsForCall)]
 	fake.removeSuspectActualLRPArgsForCall = append(fake.removeSuspectActualLRPArgsForCall, struct {
-		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-	}{arg1, arg2})
-	fake.recordInvocation("RemoveSuspectActualLRP", []interface{}{arg1, arg2})
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.ActualLRPKey
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("RemoveSuspectActualLRP", []interface{}{arg1, arg2, arg3})
 	fake.removeSuspectActualLRPMutex.Unlock()
 	if fake.RemoveSuspectActualLRPStub != nil {
-		return fake.RemoveSuspectActualLRPStub(arg1, arg2)
+		return fake.RemoveSuspectActualLRPStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.removeSuspectActualLRPReturns.result1, fake.removeSuspectActualLRPReturns.result2
+	fakeReturns := fake.removeSuspectActualLRPReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeSuspectDB) RemoveSuspectActualLRPCallCount() int {
@@ -52,13 +56,22 @@ func (fake *FakeSuspectDB) RemoveSuspectActualLRPCallCount() int {
 	return len(fake.removeSuspectActualLRPArgsForCall)
 }
 
-func (fake *FakeSuspectDB) RemoveSuspectActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
+func (fake *FakeSuspectDB) RemoveSuspectActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, error)) {
+	fake.removeSuspectActualLRPMutex.Lock()
+	defer fake.removeSuspectActualLRPMutex.Unlock()
+	fake.RemoveSuspectActualLRPStub = stub
+}
+
+func (fake *FakeSuspectDB) RemoveSuspectActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey) {
 	fake.removeSuspectActualLRPMutex.RLock()
 	defer fake.removeSuspectActualLRPMutex.RUnlock()
-	return fake.removeSuspectActualLRPArgsForCall[i].arg1, fake.removeSuspectActualLRPArgsForCall[i].arg2
+	argsForCall := fake.removeSuspectActualLRPArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturns(result1 *models.ActualLRP, result2 error) {
+	fake.removeSuspectActualLRPMutex.Lock()
+	defer fake.removeSuspectActualLRPMutex.Unlock()
 	fake.RemoveSuspectActualLRPStub = nil
 	fake.removeSuspectActualLRPReturns = struct {
 		result1 *models.ActualLRP
@@ -67,6 +80,8 @@ func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturns(result1 *models.ActualL
 }
 
 func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturnsOnCall(i int, result1 *models.ActualLRP, result2 error) {
+	fake.removeSuspectActualLRPMutex.Lock()
+	defer fake.removeSuspectActualLRPMutex.Unlock()
 	fake.RemoveSuspectActualLRPStub = nil
 	if fake.removeSuspectActualLRPReturnsOnCall == nil {
 		fake.removeSuspectActualLRPReturnsOnCall = make(map[int]struct {

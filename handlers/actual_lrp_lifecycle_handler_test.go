@@ -67,7 +67,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.ClaimActualLRPCallCount()).To(Equal(1))
-			_, actualProcessGuid, actualIndex, actualInstanceKey := fakeController.ClaimActualLRPArgsForCall(0)
+			_, _, actualProcessGuid, actualIndex, actualInstanceKey := fakeController.ClaimActualLRPArgsForCall(0)
 			Expect(actualProcessGuid).To(Equal(processGuid))
 			Expect(actualIndex).To(Equal(index))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
@@ -152,7 +152,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-			_, actualKey, actualInstanceKey, actualNetInfo := fakeController.StartActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualNetInfo := fakeController.StartActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
 			Expect(actualNetInfo).To(Equal(&netInfo))
@@ -236,7 +236,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.CrashActualLRPCallCount()).To(Equal(1))
-			_, actualKey, actualInstanceKey, actualErrorMessage := fakeController.CrashActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualErrorMessage := fakeController.CrashActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
 			Expect(actualErrorMessage).To(Equal(errorMessage))
@@ -319,7 +319,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.RetireActualLRPCallCount()).To(Equal(1))
-			_, actualKey := fakeController.RetireActualLRPArgsForCall(0)
+			_, _, actualKey := fakeController.RetireActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 		})
 
@@ -377,7 +377,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.FailActualLRPCallCount()).To(Equal(1))
-			_, actualKey, actualErrorMessage := fakeController.FailActualLRPArgsForCall(0)
+			_, _, actualKey, actualErrorMessage := fakeController.FailActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualErrorMessage).To(Equal(errorMessage))
 		})
@@ -455,7 +455,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.RemoveActualLRPCallCount()).To(Equal(1))
-			_, actualProcessGuid, actualIndex, actualInstanceKey := fakeController.RemoveActualLRPArgsForCall(0)
+			_, _, actualProcessGuid, actualIndex, actualInstanceKey := fakeController.RemoveActualLRPArgsForCall(0)
 			Expect(actualProcessGuid).To(Equal(processGuid))
 			Expect(actualIndex).To(Equal(index))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))

@@ -135,13 +135,11 @@ func New(
 		panic("unable to create router: " + err.Error())
 	}
 
-	return middleware.ContextCancellableRequest(
-		middleware.RecordRequestCount(
-			UnavailableWrap(handler,
-				migrationsDone,
-			),
-			emitter,
+	return middleware.RecordRequestCount(
+		UnavailableWrap(handler,
+			migrationsDone,
 		),
+		emitter,
 	)
 }
 

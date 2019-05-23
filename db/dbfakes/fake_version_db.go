@@ -2,6 +2,7 @@
 package dbfakes
 
 import (
+	"context"
 	"sync"
 
 	"code.cloudfoundry.org/bbs/db"
@@ -10,10 +11,24 @@ import (
 )
 
 type FakeVersionDB struct {
-	VersionStub        func(logger lager.Logger) (*models.Version, error)
+	SetVersionStub        func(context.Context, lager.Logger, *models.Version) error
+	setVersionMutex       sync.RWMutex
+	setVersionArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.Version
+	}
+	setVersionReturns struct {
+		result1 error
+	}
+	setVersionReturnsOnCall map[int]struct {
+		result1 error
+	}
+	VersionStub        func(context.Context, lager.Logger) (*models.Version, error)
 	versionMutex       sync.RWMutex
 	versionArgsForCall []struct {
-		logger lager.Logger
+		arg1 context.Context
+		arg2 lager.Logger
 	}
 	versionReturns struct {
 		result1 *models.Version
@@ -23,37 +38,89 @@ type FakeVersionDB struct {
 		result1 *models.Version
 		result2 error
 	}
-	SetVersionStub        func(logger lager.Logger, version *models.Version) error
-	setVersionMutex       sync.RWMutex
-	setVersionArgsForCall []struct {
-		logger  lager.Logger
-		version *models.Version
-	}
-	setVersionReturns struct {
-		result1 error
-	}
-	setVersionReturnsOnCall map[int]struct {
-		result1 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeVersionDB) Version(logger lager.Logger) (*models.Version, error) {
+func (fake *FakeVersionDB) SetVersion(arg1 context.Context, arg2 lager.Logger, arg3 *models.Version) error {
+	fake.setVersionMutex.Lock()
+	ret, specificReturn := fake.setVersionReturnsOnCall[len(fake.setVersionArgsForCall)]
+	fake.setVersionArgsForCall = append(fake.setVersionArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 *models.Version
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("SetVersion", []interface{}{arg1, arg2, arg3})
+	fake.setVersionMutex.Unlock()
+	if fake.SetVersionStub != nil {
+		return fake.SetVersionStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.setVersionReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeVersionDB) SetVersionCallCount() int {
+	fake.setVersionMutex.RLock()
+	defer fake.setVersionMutex.RUnlock()
+	return len(fake.setVersionArgsForCall)
+}
+
+func (fake *FakeVersionDB) SetVersionCalls(stub func(context.Context, lager.Logger, *models.Version) error) {
+	fake.setVersionMutex.Lock()
+	defer fake.setVersionMutex.Unlock()
+	fake.SetVersionStub = stub
+}
+
+func (fake *FakeVersionDB) SetVersionArgsForCall(i int) (context.Context, lager.Logger, *models.Version) {
+	fake.setVersionMutex.RLock()
+	defer fake.setVersionMutex.RUnlock()
+	argsForCall := fake.setVersionArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeVersionDB) SetVersionReturns(result1 error) {
+	fake.setVersionMutex.Lock()
+	defer fake.setVersionMutex.Unlock()
+	fake.SetVersionStub = nil
+	fake.setVersionReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeVersionDB) SetVersionReturnsOnCall(i int, result1 error) {
+	fake.setVersionMutex.Lock()
+	defer fake.setVersionMutex.Unlock()
+	fake.SetVersionStub = nil
+	if fake.setVersionReturnsOnCall == nil {
+		fake.setVersionReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.setVersionReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeVersionDB) Version(arg1 context.Context, arg2 lager.Logger) (*models.Version, error) {
 	fake.versionMutex.Lock()
 	ret, specificReturn := fake.versionReturnsOnCall[len(fake.versionArgsForCall)]
 	fake.versionArgsForCall = append(fake.versionArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("Version", []interface{}{logger})
+		arg1 context.Context
+		arg2 lager.Logger
+	}{arg1, arg2})
+	fake.recordInvocation("Version", []interface{}{arg1, arg2})
 	fake.versionMutex.Unlock()
 	if fake.VersionStub != nil {
-		return fake.VersionStub(logger)
+		return fake.VersionStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.versionReturns.result1, fake.versionReturns.result2
+	fakeReturns := fake.versionReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeVersionDB) VersionCallCount() int {
@@ -62,13 +129,22 @@ func (fake *FakeVersionDB) VersionCallCount() int {
 	return len(fake.versionArgsForCall)
 }
 
-func (fake *FakeVersionDB) VersionArgsForCall(i int) lager.Logger {
+func (fake *FakeVersionDB) VersionCalls(stub func(context.Context, lager.Logger) (*models.Version, error)) {
+	fake.versionMutex.Lock()
+	defer fake.versionMutex.Unlock()
+	fake.VersionStub = stub
+}
+
+func (fake *FakeVersionDB) VersionArgsForCall(i int) (context.Context, lager.Logger) {
 	fake.versionMutex.RLock()
 	defer fake.versionMutex.RUnlock()
-	return fake.versionArgsForCall[i].logger
+	argsForCall := fake.versionArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeVersionDB) VersionReturns(result1 *models.Version, result2 error) {
+	fake.versionMutex.Lock()
+	defer fake.versionMutex.Unlock()
 	fake.VersionStub = nil
 	fake.versionReturns = struct {
 		result1 *models.Version
@@ -77,6 +153,8 @@ func (fake *FakeVersionDB) VersionReturns(result1 *models.Version, result2 error
 }
 
 func (fake *FakeVersionDB) VersionReturnsOnCall(i int, result1 *models.Version, result2 error) {
+	fake.versionMutex.Lock()
+	defer fake.versionMutex.Unlock()
 	fake.VersionStub = nil
 	if fake.versionReturnsOnCall == nil {
 		fake.versionReturnsOnCall = make(map[int]struct {
@@ -90,62 +168,13 @@ func (fake *FakeVersionDB) VersionReturnsOnCall(i int, result1 *models.Version, 
 	}{result1, result2}
 }
 
-func (fake *FakeVersionDB) SetVersion(logger lager.Logger, version *models.Version) error {
-	fake.setVersionMutex.Lock()
-	ret, specificReturn := fake.setVersionReturnsOnCall[len(fake.setVersionArgsForCall)]
-	fake.setVersionArgsForCall = append(fake.setVersionArgsForCall, struct {
-		logger  lager.Logger
-		version *models.Version
-	}{logger, version})
-	fake.recordInvocation("SetVersion", []interface{}{logger, version})
-	fake.setVersionMutex.Unlock()
-	if fake.SetVersionStub != nil {
-		return fake.SetVersionStub(logger, version)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.setVersionReturns.result1
-}
-
-func (fake *FakeVersionDB) SetVersionCallCount() int {
-	fake.setVersionMutex.RLock()
-	defer fake.setVersionMutex.RUnlock()
-	return len(fake.setVersionArgsForCall)
-}
-
-func (fake *FakeVersionDB) SetVersionArgsForCall(i int) (lager.Logger, *models.Version) {
-	fake.setVersionMutex.RLock()
-	defer fake.setVersionMutex.RUnlock()
-	return fake.setVersionArgsForCall[i].logger, fake.setVersionArgsForCall[i].version
-}
-
-func (fake *FakeVersionDB) SetVersionReturns(result1 error) {
-	fake.SetVersionStub = nil
-	fake.setVersionReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeVersionDB) SetVersionReturnsOnCall(i int, result1 error) {
-	fake.SetVersionStub = nil
-	if fake.setVersionReturnsOnCall == nil {
-		fake.setVersionReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.setVersionReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeVersionDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.versionMutex.RLock()
-	defer fake.versionMutex.RUnlock()
 	fake.setVersionMutex.RLock()
 	defer fake.setVersionMutex.RUnlock()
+	fake.versionMutex.RLock()
+	defer fake.versionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -2,6 +2,7 @@
 package fake_controllers
 
 import (
+	"context"
 	"sync"
 
 	"code.cloudfoundry.org/bbs/converger"
@@ -9,24 +10,26 @@ import (
 )
 
 type FakeLrpConvergenceController struct {
-	ConvergeLRPsStub        func(logger lager.Logger)
+	ConvergeLRPsStub        func(context.Context, lager.Logger)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
-		logger lager.Logger
+		arg1 context.Context
+		arg2 lager.Logger
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeLrpConvergenceController) ConvergeLRPs(logger lager.Logger) {
+func (fake *FakeLrpConvergenceController) ConvergeLRPs(arg1 context.Context, arg2 lager.Logger) {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
-		logger lager.Logger
-	}{logger})
-	fake.recordInvocation("ConvergeLRPs", []interface{}{logger})
+		arg1 context.Context
+		arg2 lager.Logger
+	}{arg1, arg2})
+	fake.recordInvocation("ConvergeLRPs", []interface{}{arg1, arg2})
 	fake.convergeLRPsMutex.Unlock()
 	if fake.ConvergeLRPsStub != nil {
-		fake.ConvergeLRPsStub(logger)
+		fake.ConvergeLRPsStub(arg1, arg2)
 	}
 }
 
@@ -36,10 +39,17 @@ func (fake *FakeLrpConvergenceController) ConvergeLRPsCallCount() int {
 	return len(fake.convergeLRPsArgsForCall)
 }
 
-func (fake *FakeLrpConvergenceController) ConvergeLRPsArgsForCall(i int) lager.Logger {
+func (fake *FakeLrpConvergenceController) ConvergeLRPsCalls(stub func(context.Context, lager.Logger)) {
+	fake.convergeLRPsMutex.Lock()
+	defer fake.convergeLRPsMutex.Unlock()
+	fake.ConvergeLRPsStub = stub
+}
+
+func (fake *FakeLrpConvergenceController) ConvergeLRPsArgsForCall(i int) (context.Context, lager.Logger) {
 	fake.convergeLRPsMutex.RLock()
 	defer fake.convergeLRPsMutex.RUnlock()
-	return fake.convergeLRPsArgsForCall[i].logger
+	argsForCall := fake.convergeLRPsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeLrpConvergenceController) Invocations() map[string][][]interface{} {

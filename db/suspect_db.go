@@ -1,6 +1,8 @@
 package db
 
 import (
+	"context"
+
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 )
@@ -8,5 +10,5 @@ import (
 //go:generate counterfeiter . SuspectDB
 
 type SuspectDB interface {
-	RemoveSuspectActualLRP(lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, error)
+	RemoveSuspectActualLRP(context.Context, lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, error)
 }

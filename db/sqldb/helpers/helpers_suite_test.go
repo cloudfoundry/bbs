@@ -1,6 +1,7 @@
 package helpers_test
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -19,6 +20,7 @@ func TestHelpers(t *testing.T) {
 
 var (
 	db                     *sql.DB
+	ctx                    context.Context
 	dbName                 string
 	dbDriverName           string
 	dbBaseConnectionString string
@@ -48,10 +50,12 @@ var _ = BeforeEach(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
-	// Ensure that if another test failed to clean up we can still proceed
-	db.Exec(fmt.Sprintf("DROP DATABASE %s", dbName))
+	ctx = context.Background()
 
-	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName))
+	// Ensure that if another test failed to clean up we can still proceed
+	db.ExecContext(ctx, fmt.Sprintf("DROP DATABASE %s", dbName))
+
+	_, err = db.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE %s", dbName))
 	Expect(err).NotTo(HaveOccurred())
 
 	db, err = sql.Open(dbDriverName, fmt.Sprintf("%s%s", dbBaseConnectionString, dbName))

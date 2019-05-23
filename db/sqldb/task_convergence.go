@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -18,7 +19,7 @@ const (
 	cellDisappearedFailureReason = "cell disappeared before completion"
 )
 
-func (sqldb *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) db.TaskConvergenceResult {
+func (sqldb *SQLDB) ConvergeTasks(ctx context.Context, logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) db.TaskConvergenceResult {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
@@ -27,20 +28,20 @@ func (sqldb *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, k
 	// failedEvents is a list of tasks that have transitioned from the pending to the completed state (but expired and failed)
 	// failedFetches are tasks that failed to deserialize (invalid task def)
 	// rowsAffected are the number of pending tasks that have expired
-	failedEvents, failedFetches, rowsAffected := sqldb.failExpiredPendingTasks(logger, expirePendingTaskDuration)
+	failedEvents, failedFetches, rowsAffected := sqldb.failExpiredPendingTasks(ctx, logger, expirePendingTaskDuration)
 	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
 	convergenceResult.Metrics.TasksPruned += failedFetches
 	convergenceResult.Metrics.TasksKicked += uint64(rowsAffected)
 
 	// tasksToAuction is a list of tasks in the pending state that have not expired and are being auctioned
-	tasksToAuction, failedFetches := sqldb.getTaskStartRequestsForKickablePendingTasks(logger, expirePendingTaskDuration)
+	tasksToAuction, failedFetches := sqldb.getTaskStartRequestsForKickablePendingTasks(ctx, logger, expirePendingTaskDuration)
 	convergenceResult.TasksToAuction = tasksToAuction
 	convergenceResult.Metrics.TasksPruned += failedFetches
 	convergenceResult.Metrics.TasksKicked += uint64(len(tasksToAuction))
 
 	// failedEvents is a list of tasks that have transitioned from the running to completed state (but cell dissappeared and failed)
 	// rowsAffected is the number of running tasks that have lost their cells
-	failedEvents, failedFetches, rowsAffected = sqldb.failTasksWithDisappearedCells(logger, cellSet)
+	failedEvents, failedFetches, rowsAffected = sqldb.failTasksWithDisappearedCells(ctx, logger, cellSet)
 	convergenceResult.Events = append(convergenceResult.Events, failedEvents...)
 	convergenceResult.Metrics.TasksPruned += failedFetches
 	convergenceResult.Metrics.TasksKicked += uint64(rowsAffected)
@@ -48,32 +49,32 @@ func (sqldb *SQLDB) ConvergeTasks(logger lager.Logger, cellSet models.CellSet, k
 	// do this first so that we now have "Completed" tasks before cleaning up
 	// or re-sending the completion callback
 	// demotedEvents is a list of tasks transitioning from resolving back to completed state (bc they exceeded kickTasksDuration)
-	demotedEvents, failedFetches := sqldb.demoteKickableResolvingTasks(logger, kickTasksDuration)
+	demotedEvents, failedFetches := sqldb.demoteKickableResolvingTasks(ctx, logger, kickTasksDuration)
 	convergenceResult.Events = append(convergenceResult.Events, demotedEvents...)
 	convergenceResult.Metrics.TasksPruned += failedFetches
 
 	// removedEvents is a list of tasks in the completed stated that have been deleted bc the time since they initially changed to completed exceeded expireCompleteTaskDuration
-	removedEvents, rowsAffected := sqldb.deleteExpiredCompletedTasks(logger, expireCompletedTaskDuration)
+	removedEvents, rowsAffected := sqldb.deleteExpiredCompletedTasks(ctx, logger, expireCompletedTaskDuration)
 	convergenceResult.Events = append(convergenceResult.Events, removedEvents...)
 	convergenceResult.Metrics.TasksPruned += uint64(rowsAffected)
 
 	// tasksToComplete is a list of tasks in the complete state that have exceeded kickTasksDuration
-	tasksToComplete, failedFetches := sqldb.getKickableCompleteTasksForCompletion(logger, kickTasksDuration)
+	tasksToComplete, failedFetches := sqldb.getKickableCompleteTasksForCompletion(ctx, logger, kickTasksDuration)
 	convergenceResult.TasksToComplete = tasksToComplete
 	convergenceResult.Metrics.TasksPruned += failedFetches
 	convergenceResult.Metrics.TasksKicked += uint64(len(tasksToComplete))
 
-	convergenceResult.Metrics.TasksPending, convergenceResult.Metrics.TasksRunning, convergenceResult.Metrics.TasksCompleted, convergenceResult.Metrics.TasksResolving = sqldb.getTaskCountByState(logger)
+	convergenceResult.Metrics.TasksPending, convergenceResult.Metrics.TasksRunning, convergenceResult.Metrics.TasksCompleted, convergenceResult.Metrics.TasksResolving = sqldb.getTaskCountByState(ctx, logger)
 
 	return convergenceResult
 }
 
-func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) ([]models.Event, uint64, int64) {
+func (db *SQLDB) failExpiredPendingTasks(ctx context.Context, logger lager.Logger, expirePendingTaskDuration time.Duration) ([]models.Event, uint64, int64) {
 	logger = logger.Session("fail-expired-pending-tasks")
 
 	now := db.clock.Now()
 
-	rows, err := db.all(logger, db.db, tasksTable,
+	rows, err := db.all(ctx, logger, db.db, tasksTable,
 		taskColumns, helpers.NoLockRow,
 		"state = ? AND created_at < ?", models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
@@ -82,7 +83,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(ctx, logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)
 	}
@@ -99,7 +100,7 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 		bindings = append(bindings, guid)
 	}
 
-	result, err := db.update(logger, db.db, tasksTable,
+	result, err := db.update(ctx, logger, db.db, tasksTable,
 		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     expiredFailureReason,
@@ -135,10 +136,10 @@ func (db *SQLDB) failExpiredPendingTasks(logger lager.Logger, expirePendingTaskD
 	return events, uint64(invalidTasksCount), rowsAffected
 }
 
-func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
+func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(ctx context.Context, logger lager.Logger, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
-	rows, err := db.all(logger, db.db, tasksTable,
+	rows, err := db.all(ctx, logger, db.db, tasksTable,
 		taskColumns, helpers.NoLockRow,
 		"state = ? AND created_at > ?",
 		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
@@ -152,7 +153,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 	defer rows.Close()
 
 	tasksToAuction := []*auctioneer.TaskStartRequest{}
-	tasks, _, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, _, invalidTasksCount, err := db.fetchTasks(ctx, logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)
 	}
@@ -165,7 +166,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(logger lager.Logger
 	return tasksToAuction, uint64(invalidTasksCount)
 }
 
-func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet models.CellSet) ([]models.Event, uint64, int64) {
+func (db *SQLDB) failTasksWithDisappearedCells(ctx context.Context, logger lager.Logger, cellSet models.CellSet) ([]models.Event, uint64, int64) {
 	logger = logger.Session("fail-tasks-with-disappeared-cells")
 
 	values := make([]interface{}, 0, 1+len(cellSet))
@@ -181,14 +182,14 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 	}
 	now := db.clock.Now().UnixNano()
 
-	rows, err := db.all(logger, db.db, tasksTable, taskColumns, helpers.NoLockRow, wheres, values...)
+	rows, err := db.all(ctx, logger, db.db, tasksTable, taskColumns, helpers.NoLockRow, wheres, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, 0, 0
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(ctx, logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 	}
@@ -203,7 +204,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 		values = append(values, guid)
 	}
 
-	result, err := db.update(logger, db.db, tasksTable,
+	result, err := db.update(ctx, logger, db.db, tasksTable,
 		helpers.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     cellDisappearedFailureReason,
@@ -241,10 +242,10 @@ func (db *SQLDB) failTasksWithDisappearedCells(logger lager.Logger, cellSet mode
 	return events, uint64(invalidTasksCount), rowsAffected
 }
 
-func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDuration time.Duration) ([]models.Event, uint64) {
+func (db *SQLDB) demoteKickableResolvingTasks(ctx context.Context, logger lager.Logger, kickTasksDuration time.Duration) ([]models.Event, uint64) {
 	logger = logger.Session("demote-kickable-resolving-tasks")
 
-	rows, err := db.all(logger, db.db, tasksTable,
+	rows, err := db.all(ctx, logger, db.db, tasksTable,
 		taskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ?", models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
@@ -254,7 +255,7 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(ctx, logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err)
 	}
@@ -272,7 +273,7 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 		bindings = append(bindings, guid)
 	}
 
-	_, err = db.update(logger, db.db, tasksTable,
+	_, err = db.update(ctx, logger, db.db, tasksTable,
 		helpers.SQLAttributes{"state": models.Task_Completed},
 		strings.Join(wheres, " AND "), bindings...,
 	)
@@ -290,12 +291,12 @@ func (db *SQLDB) demoteKickableResolvingTasks(logger lager.Logger, kickTasksDura
 	return events, uint64(invalidTasksCount)
 }
 
-func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireCompletedTaskDuration time.Duration) ([]models.Event, int64) {
+func (db *SQLDB) deleteExpiredCompletedTasks(ctx context.Context, logger lager.Logger, expireCompletedTaskDuration time.Duration) ([]models.Event, int64) {
 	logger = logger.Session("delete-expired-completed-tasks")
 	wheres := "state = ? AND first_completed_at < ?"
 	values := []interface{}{models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano()}
 
-	rows, err := db.all(logger, db.db, tasksTable,
+	rows, err := db.all(ctx, logger, db.db, tasksTable,
 		taskColumns, helpers.NoLockRow,
 		wheres, values...,
 	)
@@ -305,7 +306,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 	}
 	defer rows.Close()
 
-	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(logger, rows, db.db, false)
+	tasks, validTaskGuids, invalidTasksCount, err := db.fetchTasks(ctx, logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-tasks", err, lager.Data{"invalidTasksCound": int64(invalidTasksCount)})
 	}
@@ -320,7 +321,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 		values = append(values, guid)
 	}
 
-	result, err := db.delete(logger, db.db, tasksTable, wheres, values...)
+	result, err := db.delete(ctx, logger, db.db, tasksTable, wheres, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, int64(invalidTasksCount)
@@ -341,10 +342,10 @@ func (db *SQLDB) deleteExpiredCompletedTasks(logger lager.Logger, expireComplete
 	return events, rowsAffected
 }
 
-func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
+func (db *SQLDB) getKickableCompleteTasksForCompletion(ctx context.Context, logger lager.Logger, kickTasksDuration time.Duration) ([]*models.Task, uint64) {
 	logger = logger.Session("get-kickable-complete-tasks-for-completion")
 
-	rows, err := db.all(logger, db.db, tasksTable,
+	rows, err := db.all(ctx, logger, db.db, tasksTable,
 		taskColumns, helpers.NoLockRow,
 		"state = ? AND updated_at < ?",
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
@@ -357,7 +358,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 
 	defer rows.Close()
 
-	tasksToComplete, _, failedFetches, err := db.fetchTasks(logger, rows, db.db, false)
+	tasksToComplete, _, failedFetches, err := db.fetchTasks(ctx, logger, rows, db.db, false)
 
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)
@@ -366,7 +367,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(logger lager.Logger, kick
 	return tasksToComplete, uint64(failedFetches)
 }
 
-func (db *SQLDB) getTaskCountByState(logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
+func (db *SQLDB) getTaskCountByState(ctx context.Context, logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
 	var query string
 	switch db.flavor {
 	case helpers.Postgres:
@@ -392,7 +393,7 @@ func (db *SQLDB) getTaskCountByState(logger lager.Logger) (pendingCount, running
 		panic("database flavor not implemented: " + db.flavor)
 	}
 
-	row := db.db.QueryRow(query, models.Task_Pending, models.Task_Running, models.Task_Completed, models.Task_Resolving)
+	row := db.db.QueryRowContext(ctx, query, models.Task_Pending, models.Task_Running, models.Task_Completed, models.Task_Resolving)
 	err := row.Scan(&pendingCount, &runningCount, &completedCount, &resolvingCount)
 	if err != nil {
 		logger.Error("failed-counting-tasks", err)

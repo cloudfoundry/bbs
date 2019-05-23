@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 // UPDATE <table> SET ... WHERE ...
 func (h *sqlHelper) Update(
+	ctx context.Context,
 	logger lager.Logger,
 	q Queryable,
 	table string,
@@ -36,5 +38,5 @@ func (h *sqlHelper) Update(
 		bindings = append(bindings, whereBindings...)
 	}
 
-	return q.Exec(h.Rebind(query), bindings...)
+	return q.ExecContext(ctx, h.Rebind(query), bindings...)
 }

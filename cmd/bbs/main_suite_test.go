@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -43,6 +44,7 @@ import (
 
 var (
 	logger        lager.Logger
+	ctx           context.Context
 	portAllocator portauthority.PortAllocator
 
 	client            bbs.InternalClient
@@ -129,6 +131,7 @@ var _ = SynchronizedAfterSuite(func() {
 var _ = BeforeEach(func() {
 	var err error
 	logger = lagertest.NewTestLogger("test")
+	ctx = context.Background()
 	fixturesPath := path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
 
 	consulRunner.Reset()

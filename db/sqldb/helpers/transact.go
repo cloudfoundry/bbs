@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"database/sql/driver"
 	"time"
 
@@ -11,12 +12,12 @@ import (
 
 // BEGIN TRANSACTION; f ... ; COMMIT; or
 // BEGIN TRANSACTION; f ... ; ROLLBACK; if f returns an error.
-func (h *sqlHelper) Transact(logger lager.Logger, db QueryableDB, f func(logger lager.Logger, tx Tx) error) error {
+func (h *sqlHelper) Transact(ctx context.Context, logger lager.Logger, db QueryableDB, f func(logger lager.Logger, tx Tx) error) error {
 	var err error
 
 	for attempts := 0; attempts < 3; attempts++ {
 		err = func() error {
-			tx, err := db.Begin()
+			tx, err := db.BeginTx(ctx, nil)
 			if err != nil {
 				logger.Error("failed-starting-transaction", err)
 				return err

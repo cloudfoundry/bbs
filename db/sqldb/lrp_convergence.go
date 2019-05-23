@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strconv"
@@ -13,29 +14,29 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-func (sqldb *SQLDB) ConvergeLRPs(logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult {
+func (sqldb *SQLDB) ConvergeLRPs(ctx context.Context, logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
 	now := sqldb.clock.Now()
-	sqldb.pruneDomains(logger, now)
-	events, instanceEvents := sqldb.pruneEvacuatingActualLRPs(logger, cellSet)
-	domainSet, err := sqldb.domainSet(logger)
+	sqldb.pruneDomains(ctx, logger, now)
+	events, instanceEvents := sqldb.pruneEvacuatingActualLRPs(ctx, logger, cellSet)
+	domainSet, err := sqldb.domainSet(ctx, logger)
 	if err != nil {
 		return db.ConvergenceResult{}
 	}
 
 	converge := newConvergence(sqldb)
-	converge.staleUnclaimedActualLRPs(logger, now)
-	converge.actualLRPsWithMissingCells(logger, cellSet)
-	converge.lrpInstanceCounts(logger, domainSet)
-	converge.orphanedActualLRPs(logger)
-	converge.orphanedSuspectActualLRPs(logger)
-	converge.extraSuspectActualLRPs(logger)
-	converge.suspectActualLRPsWithExistingCells(logger, cellSet)
-	converge.suspectRunningActualLRPs(logger)
-	converge.suspectClaimedActualLRPs(logger)
-	converge.crashedActualLRPs(logger, now)
+	converge.staleUnclaimedActualLRPs(ctx, logger, now)
+	converge.actualLRPsWithMissingCells(ctx, logger, cellSet)
+	converge.lrpInstanceCounts(ctx, logger, domainSet)
+	converge.orphanedActualLRPs(ctx, logger)
+	converge.orphanedSuspectActualLRPs(ctx, logger)
+	converge.extraSuspectActualLRPs(ctx, logger)
+	converge.suspectActualLRPsWithExistingCells(ctx, logger, cellSet)
+	converge.suspectRunningActualLRPs(ctx, logger)
+	converge.suspectClaimedActualLRPs(ctx, logger)
+	converge.crashedActualLRPs(ctx, logger, now)
 
 	return db.ConvergenceResult{
 		MissingLRPKeys:               converge.missingLRPKeys,
@@ -78,10 +79,10 @@ func newConvergence(db *SQLDB) *convergence {
 }
 
 // Adds stale UNCLAIMED Actual LRPs to the list of start requests.
-func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Time) {
+func (c *convergence) staleUnclaimedActualLRPs(ctx context.Context, logger lager.Logger, now time.Time) {
 	logger = logger.Session("stale-unclaimed-actual-lrps")
 
-	rows, err := c.selectStaleUnclaimedLRPs(logger, c.db, now)
+	rows, err := c.selectStaleUnclaimedLRPs(ctx, logger, c.db, now)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -111,11 +112,11 @@ func (c *convergence) staleUnclaimedActualLRPs(logger lager.Logger, now time.Tim
 
 // Adds CRASHED Actual LRPs that can be restarted to the list of start requests
 // and transitions them to UNCLAIMED.
-func (c *convergence) crashedActualLRPs(logger lager.Logger, now time.Time) {
+func (c *convergence) crashedActualLRPs(ctx context.Context, logger lager.Logger, now time.Time) {
 	logger = logger.Session("crashed-actual-lrps")
 	restartCalculator := models.NewDefaultRestartCalculator()
 
-	rows, err := c.selectCrashedLRPs(logger, c.db)
+	rows, err := c.selectCrashedLRPs(ctx, logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -176,10 +177,10 @@ func scanActualLRPs(logger lager.Logger, rows *sql.Rows) []*models.ActualLRPKey 
 
 // Adds orphaned Actual LRPs (ones with no corresponding Desired LRP) to the
 // list of keys to retire.
-func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
+func (c *convergence) orphanedActualLRPs(ctx context.Context, logger lager.Logger) {
 	logger = logger.Session("orphaned-actual-lrps")
 
-	rows, err := c.selectOrphanedActualLRPs(logger, c.db)
+	rows, err := c.selectOrphanedActualLRPs(ctx, logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -188,10 +189,10 @@ func (c *convergence) orphanedActualLRPs(logger lager.Logger) {
 	c.keysToRetire = append(c.keysToRetire, scanActualLRPs(logger, rows)...)
 }
 
-func (c *convergence) extraSuspectActualLRPs(logger lager.Logger) {
+func (c *convergence) extraSuspectActualLRPs(ctx context.Context, logger lager.Logger) {
 	logger = logger.Session("extra-suspect-lrps")
 
-	rows, err := c.selectExtraSuspectActualLRPs(logger, c.db)
+	rows, err := c.selectExtraSuspectActualLRPs(ctx, logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -200,10 +201,10 @@ func (c *convergence) extraSuspectActualLRPs(logger lager.Logger) {
 	c.suspectKeysToRetire = append(c.suspectKeysToRetire, scanActualLRPs(logger, rows)...)
 }
 
-func (c *convergence) orphanedSuspectActualLRPs(logger lager.Logger) {
+func (c *convergence) orphanedSuspectActualLRPs(ctx context.Context, logger lager.Logger) {
 	logger = logger.Session("orphaned-suspect-lrps")
 
-	rows, err := c.selectOrphanedSuspectActualLRPs(logger, c.db)
+	rows, err := c.selectOrphanedSuspectActualLRPs(ctx, logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -212,10 +213,10 @@ func (c *convergence) orphanedSuspectActualLRPs(logger lager.Logger) {
 	c.suspectKeysToRetire = append(c.suspectKeysToRetire, scanActualLRPs(logger, rows)...)
 }
 
-func (c *convergence) suspectRunningActualLRPs(logger lager.Logger) {
+func (c *convergence) suspectRunningActualLRPs(ctx context.Context, logger lager.Logger) {
 	logger = logger.Session("suspect-running-lrps")
 
-	rows, err := c.selectSuspectRunningActualLRPs(logger, c.db)
+	rows, err := c.selectSuspectRunningActualLRPs(ctx, logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -224,10 +225,10 @@ func (c *convergence) suspectRunningActualLRPs(logger lager.Logger) {
 	c.suspectRunningKeys = scanActualLRPs(logger, rows)
 }
 
-func (c *convergence) suspectClaimedActualLRPs(logger lager.Logger) {
+func (c *convergence) suspectClaimedActualLRPs(ctx context.Context, logger lager.Logger) {
 	logger = logger.Session("suspect-running-lrps")
 
-	rows, err := c.selectSuspectClaimedActualLRPs(logger, c.db)
+	rows, err := c.selectSuspectClaimedActualLRPs(ctx, logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -238,10 +239,10 @@ func (c *convergence) suspectClaimedActualLRPs(logger lager.Logger) {
 
 // Creates and adds missing Actual LRPs to the list of start requests.
 // Adds extra Actual LRPs  to the list of keys to retire.
-func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[string]struct{}) {
+func (c *convergence) lrpInstanceCounts(ctx context.Context, logger lager.Logger, domainSet map[string]struct{}) {
 	logger = logger.Session("lrp-instance-counts")
 
-	rows, err := c.selectLRPInstanceCounts(logger, c.db)
+	rows, err := c.selectLRPInstanceCounts(ctx, logger, c.db)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -315,14 +316,14 @@ func (c *convergence) lrpInstanceCounts(logger lager.Logger, domainSet map[strin
 
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
 // convergence) and add them to the list of start requests.
-func (c *convergence) suspectActualLRPsWithExistingCells(logger lager.Logger, cellSet models.CellSet) {
+func (c *convergence) suspectActualLRPsWithExistingCells(ctx context.Context, logger lager.Logger, cellSet models.CellSet) {
 	logger = logger.Session("suspect-lrps-with-existing-cells")
 
 	if len(cellSet) == 0 {
 		return
 	}
 
-	rows, err := c.selectSuspectLRPsWithExistingCells(logger, c.db, cellSet)
+	rows, err := c.selectSuspectLRPsWithExistingCells(ctx, logger, c.db, cellSet)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -333,12 +334,12 @@ func (c *convergence) suspectActualLRPsWithExistingCells(logger lager.Logger, ce
 
 // Unclaim Actual LRPs that have missing cells (not in the cell set passed to
 // convergence) and add them to the list of start requests.
-func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet models.CellSet) {
+func (c *convergence) actualLRPsWithMissingCells(ctx context.Context, logger lager.Logger, cellSet models.CellSet) {
 	logger = logger.Session("actual-lrps-with-missing-cells")
 
 	var ordinaryKeysWithMissingCells []*models.ActualLRPKeyWithSchedulingInfo
 
-	rows, err := c.selectLRPsWithMissingCells(logger, c.db, cellSet)
+	rows, err := c.selectLRPsWithMissingCells(ctx, logger, c.db, cellSet)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return
@@ -378,11 +379,11 @@ func (c *convergence) actualLRPsWithMissingCells(logger lager.Logger, cellSet mo
 	c.ordinaryKeysWithMissingCells = ordinaryKeysWithMissingCells
 }
 
-func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
+func (db *SQLDB) pruneDomains(ctx context.Context, logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-domains")
 
-	err := db.transact(logger, func(logger lager.Logger, tx helpers.Tx) error {
-		domains, err := db.domains(logger, tx, time.Time{})
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		domains, err := db.domains(ctx, logger, tx, time.Time{})
 		if err != nil {
 			return err
 		}
@@ -393,7 +394,7 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 			}
 
 			logger.Info("pruning-domain", lager.Data{"domain": d.name, "expire-at": d.expiresAt})
-			_, err := db.delete(logger, tx, domainsTable, "domain = ? ", d.name)
+			_, err := db.delete(ctx, logger, tx, domainsTable, "domain = ? ", d.name)
 			if err != nil {
 				return err
 			}
@@ -407,7 +408,7 @@ func (db *SQLDB) pruneDomains(logger lager.Logger, now time.Time) {
 	}
 }
 
-func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.CellSet) ([]models.Event, []models.Event) {
+func (db *SQLDB) pruneEvacuatingActualLRPs(ctx context.Context, logger lager.Logger, cellSet models.CellSet) ([]models.Event, []models.Event) {
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
 	wheres := []string{"presence = ?"}
@@ -421,12 +422,12 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 		}
 	}
 
-	lrpsToDelete, err := db.getActualLRPs(logger, strings.Join(wheres, " AND "), bindings...)
+	lrpsToDelete, err := db.getActualLRPs(ctx, logger, strings.Join(wheres, " AND "), bindings...)
 	if err != nil {
 		logger.Error("failed-fetching-evacuating-lrps-with-missing-cells", err)
 	}
 
-	_, err = db.delete(logger, db.db, actualLRPsTable, strings.Join(wheres, " AND "), bindings...)
+	_, err = db.delete(ctx, logger, db.db, actualLRPsTable, strings.Join(wheres, " AND "), bindings...)
 	if err != nil {
 		logger.Error("failed-query", err)
 	}
@@ -440,9 +441,9 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(logger lager.Logger, cellSet models.C
 	return events, instanceEvents
 }
 
-func (db *SQLDB) domainSet(logger lager.Logger) (map[string]struct{}, error) {
+func (db *SQLDB) domainSet(ctx context.Context, logger lager.Logger) (map[string]struct{}, error) {
 	logger.Debug("listing-domains")
-	domains, err := db.FreshDomains(logger)
+	domains, err := db.FreshDomains(ctx, logger)
 	if err != nil {
 		logger.Error("failed-listing-domains", err)
 		return nil, err

@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 
 // SELECT <columns> FROM <table> WHERE ... LIMIT 1 [FOR UPDATE]
 func (h *sqlHelper) One(
+	ctx context.Context,
 	logger lager.Logger,
 	q Queryable,
 	table string,
@@ -29,5 +31,5 @@ func (h *sqlHelper) One(
 		query += "\nFOR UPDATE"
 	}
 
-	return q.QueryRow(h.Rebind(query), whereBindings...)
+	return q.QueryRowContext(ctx, h.Rebind(query), whereBindings...)
 }
