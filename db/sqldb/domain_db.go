@@ -10,7 +10,7 @@ import (
 )
 
 func (db *SQLDB) FreshDomains(ctx context.Context, logger lager.Logger) ([]string, error) {
-	logger = logger.Session("domains")
+	logger = logger.Session("db-fresh-domains")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -74,7 +74,7 @@ func (db *SQLDB) domains(ctx context.Context, logger lager.Logger, tx helpers.Qu
 }
 
 func (db *SQLDB) UpsertDomain(ctx context.Context, logger lager.Logger, domain string, ttl uint32) error {
-	logger = logger.Session("upsert-domain", lager.Data{"domain": domain, "ttl": ttl})
+	logger = logger.Session("db-upsert-domain", lager.Data{"domain": domain, "ttl": ttl})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 

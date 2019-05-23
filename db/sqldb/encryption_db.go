@@ -12,7 +12,7 @@ import (
 const EncryptionKeyID = "encryption_key_label"
 
 func (db *SQLDB) SetEncryptionKeyLabel(ctx context.Context, logger lager.Logger, label string) error {
-	logger = logger.Session("set-encrption-key-label", lager.Data{"label": label})
+	logger = logger.Session("db-set-encrption-key-label", lager.Data{"label": label})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -20,7 +20,7 @@ func (db *SQLDB) SetEncryptionKeyLabel(ctx context.Context, logger lager.Logger,
 }
 
 func (db *SQLDB) EncryptionKeyLabel(ctx context.Context, logger lager.Logger) (string, error) {
-	logger = logger.Session("encrption-key-label")
+	logger = logger.Session("db-encrption-key-label")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 

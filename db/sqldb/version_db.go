@@ -11,7 +11,7 @@ import (
 const VersionID = "version"
 
 func (db *SQLDB) SetVersion(ctx context.Context, logger lager.Logger, version *models.Version) error {
-	logger = logger.Session("set-version", lager.Data{"version": version})
+	logger = logger.Session("db-set-version", lager.Data{"version": version})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -25,7 +25,7 @@ func (db *SQLDB) SetVersion(ctx context.Context, logger lager.Logger, version *m
 }
 
 func (db *SQLDB) Version(ctx context.Context, logger lager.Logger) (*models.Version, error) {
-	logger = logger.Session("version")
+	logger = logger.Session("db-version")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 

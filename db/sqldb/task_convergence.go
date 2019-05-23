@@ -20,8 +20,9 @@ const (
 )
 
 func (sqldb *SQLDB) ConvergeTasks(ctx context.Context, logger lager.Logger, cellSet models.CellSet, kickTasksDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) db.TaskConvergenceResult {
+	logger = logger.Session("db-converge-tasks")
 	logger.Info("starting")
-	defer logger.Info("completed")
+	defer logger.Info("complete")
 
 	convergenceResult := db.TaskConvergenceResult{}
 

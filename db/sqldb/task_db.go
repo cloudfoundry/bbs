@@ -11,7 +11,7 @@ import (
 )
 
 func (db *SQLDB) DesireTask(ctx context.Context, logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) (*models.Task, error) {
-	logger = logger.Session("desire-task", lager.Data{"task_guid": taskGuid})
+	logger = logger.Session("db-desire-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -55,7 +55,7 @@ func (db *SQLDB) DesireTask(ctx context.Context, logger lager.Logger, taskDef *m
 }
 
 func (db *SQLDB) Tasks(ctx context.Context, logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error) {
-	logger = logger.Session("tasks", lager.Data{"filter": filter})
+	logger = logger.Session("db-tasks", lager.Data{"filter": filter})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -98,7 +98,7 @@ func (db *SQLDB) Tasks(ctx context.Context, logger lager.Logger, filter models.T
 }
 
 func (db *SQLDB) TaskByGuid(ctx context.Context, logger lager.Logger, taskGuid string) (*models.Task, error) {
-	logger = logger.Session("task-by-guid", lager.Data{"task_guid": taskGuid})
+	logger = logger.Session("db-task-by-guid", lager.Data{"task_guid": taskGuid})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -119,7 +119,9 @@ func (db *SQLDB) TaskByGuid(ctx context.Context, logger lager.Logger, taskGuid s
 }
 
 func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, cellId string) (*models.Task, *models.Task, bool, error) {
-	logger = logger.Session("start-task", lager.Data{"task_guid": taskGuid, "cell_id": cellId})
+	logger = logger.Session("db-start-task", lager.Data{"task_guid": taskGuid, "cell_id": cellId})
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var started bool
 	var beforeTask models.Task
@@ -144,8 +146,6 @@ func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, c
 			return err
 		}
 
-		logger.Info("starting")
-		defer logger.Info("complete")
 		now := db.clock.Now().UnixNano()
 		_, err = db.update(ctx, logger, tx, tasksTable,
 			helpers.SQLAttributes{
@@ -171,7 +171,7 @@ func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, c
 }
 
 func (db *SQLDB) CancelTask(ctx context.Context, logger lager.Logger, taskGuid string) (*models.Task, *models.Task, string, error) {
-	logger = logger.Session("cancel-task", lager.Data{"task_guid": taskGuid})
+	logger = logger.Session("db-cancel-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -208,7 +208,7 @@ func (db *SQLDB) CancelTask(ctx context.Context, logger lager.Logger, taskGuid s
 }
 
 func (db *SQLDB) CompleteTask(ctx context.Context, logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) (*models.Task, *models.Task, error) {
-	logger = logger.Session("complete-task", lager.Data{"task_guid": taskGuid, "cell_id": cellID})
+	logger = logger.Session("db-complete-task", lager.Data{"task_guid": taskGuid, "cell_id": cellID})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -246,7 +246,7 @@ func (db *SQLDB) CompleteTask(ctx context.Context, logger lager.Logger, taskGuid
 }
 
 func (db *SQLDB) FailTask(ctx context.Context, logger lager.Logger, taskGuid, failureReason string) (*models.Task, *models.Task, error) {
-	logger = logger.Session("fail-task", lager.Data{"task_guid": taskGuid})
+	logger = logger.Session("db-fail-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -282,6 +282,9 @@ func (db *SQLDB) FailTask(ctx context.Context, logger lager.Logger, taskGuid, fa
 }
 
 func (db *SQLDB) RejectTask(ctx context.Context, logger lager.Logger, taskGuid, rejectionReason string) (*models.Task, *models.Task, error) {
+	logger = logger.Session("db-reject-task", lager.Data{"task_guid": taskGuid})
+	logger.Info("starting")
+	defer logger.Info("complete")
 	var beforeTask models.Task
 	var afterTask *models.Task
 
@@ -330,7 +333,7 @@ func (db *SQLDB) RejectTask(ctx context.Context, logger lager.Logger, taskGuid, 
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
 // stager ever attempts to handle a completed task
 func (db *SQLDB) ResolvingTask(ctx context.Context, logger lager.Logger, taskGuid string) (*models.Task, *models.Task, error) {
-	logger = logger.Session("resolving-task", lager.Data{"task_guid": taskGuid})
+	logger = logger.Session("db-resolving-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -375,7 +378,7 @@ func (db *SQLDB) ResolvingTask(ctx context.Context, logger lager.Logger, taskGui
 }
 
 func (db *SQLDB) DeleteTask(ctx context.Context, logger lager.Logger, taskGuid string) (*models.Task, error) {
-	logger = logger.Session("delete-task", lager.Data{"task_guid": taskGuid})
+	logger = logger.Session("db-delete-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
 

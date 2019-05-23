@@ -15,8 +15,9 @@ import (
 )
 
 func (sqldb *SQLDB) ConvergeLRPs(ctx context.Context, logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult {
+	logger = logger.Session("db-converge-lrps")
 	logger.Info("starting")
-	defer logger.Info("completed")
+	defer logger.Info("complete")
 
 	now := sqldb.clock.Now()
 	sqldb.pruneDomains(ctx, logger, now)

@@ -36,6 +36,8 @@ func NewActualLRPLifecycleHandler(
 func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("claim-actual-lrp")
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 
 	request := &models.ClaimActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -53,9 +55,9 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.R
 }
 
 func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	var err error
-
 	logger = logger.Session("start-actual-lrp")
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 
 	request := &models.StartActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -63,7 +65,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err = parseRequest(logger, req, request)
+	err := parseRequest(logger, req, request)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -75,6 +77,8 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 
 func (h *ActualLRPLifecycleHandler) CrashActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("crash-actual-lrp")
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 
 	request := &models.CrashActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -97,6 +101,8 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(logger lager.Logger, w http.R
 func (h *ActualLRPLifecycleHandler) FailActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("fail-actual-lrp")
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 
 	request := &models.FailActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -117,6 +123,8 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(logger lager.Logger, w http.Re
 func (h *ActualLRPLifecycleHandler) RemoveActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("remove-actual-lrp")
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 
 	request := &models.RemoveActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
@@ -136,6 +144,8 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(logger lager.Logger, w http.
 
 func (h *ActualLRPLifecycleHandler) RetireActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("retire-actual-lrp")
+	logger.Debug("starting")
+	defer logger.Debug("complete")
 	request := &models.RetireActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 

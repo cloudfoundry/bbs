@@ -35,7 +35,7 @@ func (db *SQLDB) getActualLRPs(ctx context.Context, logger lager.Logger, wheres 
 }
 
 func (db *SQLDB) ChangeActualLRPPresence(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, from, to models.ActualLRP_Presence) (before *models.ActualLRP, after *models.ActualLRP, err error) {
-	logger = logger.Session("change-actual-lrp-presence", lager.Data{"key": key, "from": from, "to": to})
+	logger = logger.Session("db-change-actual-lrp-presence", lager.Data{"key": key, "from": from, "to": to})
 	logger.Info("starting")
 	defer logger.Info("finished")
 
@@ -65,7 +65,7 @@ func (db *SQLDB) ChangeActualLRPPresence(ctx context.Context, logger lager.Logge
 }
 
 func (db *SQLDB) ActualLRPs(ctx context.Context, logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRP, error) {
-	logger = logger.WithData(lager.Data{"filter": filter})
+	logger = logger.Session("db-actual-lrps", lager.Data{"filter": filter})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -101,7 +101,7 @@ func (db *SQLDB) ActualLRPs(ctx context.Context, logger lager.Logger, filter mod
 }
 
 func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, error) {
-	logger = logger.WithData(lager.Data{"key": key})
+	logger = logger.Session("db-create-unclaimed-actual-lrps", lager.Data{"key": key})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -147,7 +147,9 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 }
 
 func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
-	logger = logger.WithData(lager.Data{"key": key})
+	logger = logger.Session("db-unclaim-actual-lrp", lager.Data{"key": key})
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
@@ -167,8 +169,6 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 			logger.Debug("already-unclaimed")
 			return models.ErrActualLRPCannotBeUnclaimed
 		}
-		logger.Info("starting")
-		defer logger.Info("complete")
 
 		now := db.clock.Now().UnixNano()
 		actualLRP.ModificationTag.Increment()
@@ -207,7 +207,7 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 }
 
 func (db *SQLDB) ClaimActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, *models.ActualLRP, error) {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
+	logger = logger.Session("db-claim-actual-lrp", lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -268,7 +268,9 @@ func (db *SQLDB) ClaimActualLRP(ctx context.Context, logger lager.Logger, proces
 }
 
 func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, *models.ActualLRP, error) {
-	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
+	logger = logger.Session("db-start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
@@ -300,9 +302,6 @@ func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *m
 			logger.Error("failed-to-transition-actual-lrp-to-started", nil)
 			return models.ErrActualLRPCannotBeStarted
 		}
-
-		logger.Info("starting")
-		defer logger.Info("completed")
 
 		now := db.clock.Now().UnixNano()
 
@@ -352,7 +351,7 @@ func truncateString(s string, maxLen int) string {
 }
 
 func (db *SQLDB) CrashActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (*models.ActualLRP, *models.ActualLRP, bool, error) {
-	logger = logger.WithData(lager.Data{"key": key, "instance_key": instanceKey, "crash_reason": crashReason})
+	logger = logger.Session("db-crash-actual-lrp", lager.Data{"key": key, "instance_key": instanceKey, "crash_reason": crashReason})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -431,7 +430,7 @@ func (db *SQLDB) CrashActualLRP(ctx context.Context, logger lager.Logger, key *m
 }
 
 func (db *SQLDB) FailActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, placementError string) (*models.ActualLRP, *models.ActualLRP, error) {
-	logger = logger.WithData(lager.Data{"actual_lrp_key": key, "placement_error": placementError})
+	logger = logger.Session("db-fail-actual-lrp", lager.Data{"actual_lrp_key": key, "placement_error": placementError})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -478,7 +477,7 @@ func (db *SQLDB) FailActualLRP(ctx context.Context, logger lager.Logger, key *mo
 }
 
 func (db *SQLDB) RemoveActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error {
-	logger = logger.WithData(lager.Data{"process_guid": processGuid, "index": index})
+	logger = logger.Session("db-remove-actual-lrp", lager.Data{"process_guid": processGuid, "index": index})
 	logger.Info("starting")
 	defer logger.Info("complete")
 

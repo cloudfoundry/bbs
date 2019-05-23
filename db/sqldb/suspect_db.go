@@ -9,7 +9,7 @@ import (
 )
 
 func (db *SQLDB) RemoveSuspectActualLRP(ctx context.Context, logger lager.Logger, lrpKey *models.ActualLRPKey) (*models.ActualLRP, error) {
-	logger = logger.Session("remove-suspect-lrp", lager.Data{"lrp_key": lrpKey})
+	logger = logger.Session("db-remove-suspect-actual-lrp", lager.Data{"lrp_key": lrpKey})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
