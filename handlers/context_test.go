@@ -90,7 +90,7 @@ var _ = Describe("Context", func() {
 	})
 
 	AfterEach(func() {
-		sqlConn.Close()
+		Expect(sqlConn.Close()).To(Succeed())
 		ginkgomon.Kill(sqlProcess)
 		ginkgomon.Kill(migrationProcess)
 	})
@@ -100,9 +100,29 @@ var _ = Describe("Context", func() {
 			sqlConn.SetMaxOpenConns(1)
 			go func() {
 				defer GinkgoRecover()
-				_, err := sqlConn.Exec("select sleep(60);")
-				Expect(err).NotTo(HaveOccurred())
+				var sleepQuery string
+				if test_helpers.UseMySQL() {
+					sleepQuery = "select sleep(60);"
+				} else if test_helpers.UsePostgres() {
+					sleepQuery = `--pg_sleep_query_context_test
+            select pg_sleep(60);`
+				} else {
+					Fail("unknown db driver")
+				}
+				sqlConn.Exec(sleepQuery)
 			}()
+		})
+
+		AfterEach(func() {
+			sqlConn.SetMaxOpenConns(0)
+			if test_helpers.UsePostgres() {
+				// cancel the sleep query in postgres, since it does not allow to drop the database
+				_, err := sqlConn.Exec(`SELECT pg_cancel_backend(pid)
+				FROM pg_stat_activity
+				WHERE state = 'active'
+				AND query LIKE '--pg_sleep_query_context_test%'`)
+				Expect(err).NotTo(HaveOccurred())
+			}
 		})
 
 		It("cancels the database request", func() {
