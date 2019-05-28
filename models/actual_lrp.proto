@@ -35,6 +35,7 @@ message ActualLRPNetInfo {
   string address = 1 [(gogoproto.jsontag) = "address"];
   repeated PortMapping ports = 2 [(gogoproto.jsontag) = "ports"];
   string instance_address = 3;
+  bool advertise_preference_for_instance_address = 4 [(gogoproto.jsontag) = "advertise_preference_for_instance_address"];
 }
 
 message ActualLRP {
