@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"os"
 	"time"
 
@@ -621,6 +622,48 @@ var _ = Describe("Convergence API", func() {
 				}).Should(HaveLen(1))
 
 				Expect(getTasksByState(client, models.Task_Completed)[0].Failed).To(BeTrue())
+			})
+		})
+
+		Context("when there are 300 actual lrps", func() {
+			var manyInstanceProcessGuid string
+
+			BeforeEach(func() {
+				manyInstanceProcessGuid = "some-process-guid-with-many-instances"
+				desiredLRP := model_helpers.NewValidDesiredLRP(manyInstanceProcessGuid)
+				desiredLRP.Instances = 300
+				err := client.DesireLRP(logger, desiredLRP)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when the lrp is scaled down", func() {
+				var (
+					sqlConn *sql.DB
+					err     error
+				)
+
+				BeforeEach(func() {
+					Expect(client.UpsertDomain(logger, "some-domain", 0)).To(Succeed())
+					sqlConn, err = sql.Open(sqlRunner.DriverName(), sqlRunner.ConnectionString())
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err := sqlConn.Exec(
+						`UPDATE desired_lrps SET instances=290 WHERE process_guid='some-process-guid-with-many-instances'`,
+					)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				AfterEach(func() {
+					sqlConn.Close()
+				})
+
+				It("removes extra lrps", func() {
+					Eventually(func() int {
+						lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: manyInstanceProcessGuid})
+						Expect(err).NotTo(HaveOccurred())
+						return len(lrps)
+					}).Should(Equal(290))
+				})
 			})
 		})
 	})

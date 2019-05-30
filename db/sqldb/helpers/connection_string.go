@@ -5,12 +5,19 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"time"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 )
+
+// MYSQL group_concat_max_len system variable
+// defines the length of the result returned by GROUP_CONCAT() function
+// default value 1024 only allows 282 instance indexes to be concatenated
+// this will allow 10_000_000 instance indexes
+const MYSQL_GROUP_CONCAT_MAX_LEN = 78888889
 
 // AddTLSParams appends necessary extra parameters to the
 // connection string if tls verifications is enabled.  If
@@ -52,6 +59,9 @@ func AddTLSParams(
 		cfg.Timeout = 10 * time.Minute
 		cfg.ReadTimeout = 10 * time.Minute
 		cfg.WriteTimeout = 10 * time.Minute
+		cfg.Params = map[string]string{
+			"group_concat_max_len": strconv.Itoa(MYSQL_GROUP_CONCAT_MAX_LEN),
+		}
 		databaseConnectionString = cfg.FormatDSN()
 	case "postgres":
 		var err error
