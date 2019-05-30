@@ -96,19 +96,23 @@ var _ = Describe("Context", func() {
 	})
 
 	Context("when request is cancelled", func() {
+		var sleepStarting chan struct{}
+
 		BeforeEach(func() {
 			sqlConn.SetMaxOpenConns(1)
+			sleepStarting = make(chan struct{})
 			go func() {
 				defer GinkgoRecover()
 				var sleepQuery string
 				if test_helpers.UseMySQL() {
-					sleepQuery = "select sleep(60);"
+					sleepQuery = "select sleep(600);"
 				} else if test_helpers.UsePostgres() {
 					sleepQuery = `--pg_sleep_query_context_test
-            select pg_sleep(60);`
+            select pg_sleep(600);`
 				} else {
 					Fail("unknown db driver")
 				}
+				close(sleepStarting)
 				sqlConn.Exec(sleepQuery)
 			}()
 		})
@@ -126,6 +130,7 @@ var _ = Describe("Context", func() {
 		})
 
 		It("cancels the database request", func() {
+			<-sleepStarting
 			ctxWithCancel, cancelFn := context.WithCancel(context.Background())
 
 			requestBody := &models.ActualLRPsRequest{}
