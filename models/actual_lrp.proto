@@ -35,7 +35,14 @@ message ActualLRPNetInfo {
   string address = 1 [(gogoproto.jsontag) = "address"];
   repeated PortMapping ports = 2 [(gogoproto.jsontag) = "ports"];
   string instance_address = 3;
-  bool advertise_preference_for_instance_address = 4 [(gogoproto.jsontag) = "advertise_preference_for_instance_address"];
+
+  enum PreferredAddress {
+    UNKNOWN = 0 [(gogoproto.enumvalue_customname) = "PreferredAddressUnknown"];
+    INSTANCE = 1 [(gogoproto.enumvalue_customname) = "PreferredAddressInstance"];
+    HOST = 2 [(gogoproto.enumvalue_customname) = "PreferredAddressHost"];
+  }
+
+  PreferredAddress preferred_address = 4 [(gogoproto.jsontag) = "preferred_address"];
 }
 
 message ActualLRP {

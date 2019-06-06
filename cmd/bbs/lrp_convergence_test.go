@@ -59,7 +59,7 @@ var _ = Describe("Convergence API", func() {
 			)
 
 			BeforeEach(func() {
-				netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", false, models.NewPortMapping(8080, 80))
+				netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
 
 				lrpKey = &models.ActualLRPKey{
 					ProcessGuid: processGuid,
@@ -157,7 +157,7 @@ var _ = Describe("Convergence API", func() {
 							return false
 						}).Should(BeTrue())
 
-						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", false, models.NewPortMapping(8080, 80))
+						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
 						_, _, err := db.StartActualLRP(ctx, logger, &models.ActualLRPKey{
 							ProcessGuid: processGuid,
 							Index:       0,
@@ -322,7 +322,7 @@ var _ = Describe("Convergence API", func() {
 
 					Context("when the replacement LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
-							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", false, models.NewPortMapping(8080, 80))
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
@@ -361,7 +361,7 @@ var _ = Describe("Convergence API", func() {
 						})
 
 						It("returns ErrActualLRPCannotBeStarted when the Suspect LRP is started", func() {
-							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", false, models.NewPortMapping(8080, 80))
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
@@ -376,7 +376,7 @@ var _ = Describe("Convergence API", func() {
 
 					Context("when the suspect LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
-							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", false, models.NewPortMapping(8080, 80))
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
@@ -462,7 +462,7 @@ var _ = Describe("Convergence API", func() {
 
 						Context("when the suspect LRP is evacuated", func() {
 							BeforeEach(func() {
-								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", false, models.NewPortMapping(8080, 80))
+								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
 								_, err := client.EvacuateRunningActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo)
 								Expect(err).NotTo(HaveOccurred())
 							})

@@ -11,28 +11,28 @@ import (
 )
 
 type FakeTaskCompletionClient struct {
-	SubmitStub        func(taskDB db.TaskDB, taskHub events.Hub, task *models.Task)
+	SubmitStub        func(db.TaskDB, events.Hub, *models.Task)
 	submitMutex       sync.RWMutex
 	submitArgsForCall []struct {
-		taskDB  db.TaskDB
-		taskHub events.Hub
-		task    *models.Task
+		arg1 db.TaskDB
+		arg2 events.Hub
+		arg3 *models.Task
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeTaskCompletionClient) Submit(taskDB db.TaskDB, taskHub events.Hub, task *models.Task) {
+func (fake *FakeTaskCompletionClient) Submit(arg1 db.TaskDB, arg2 events.Hub, arg3 *models.Task) {
 	fake.submitMutex.Lock()
 	fake.submitArgsForCall = append(fake.submitArgsForCall, struct {
-		taskDB  db.TaskDB
-		taskHub events.Hub
-		task    *models.Task
-	}{taskDB, taskHub, task})
-	fake.recordInvocation("Submit", []interface{}{taskDB, taskHub, task})
+		arg1 db.TaskDB
+		arg2 events.Hub
+		arg3 *models.Task
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Submit", []interface{}{arg1, arg2, arg3})
 	fake.submitMutex.Unlock()
 	if fake.SubmitStub != nil {
-		fake.SubmitStub(taskDB, taskHub, task)
+		fake.SubmitStub(arg1, arg2, arg3)
 	}
 }
 
@@ -42,10 +42,17 @@ func (fake *FakeTaskCompletionClient) SubmitCallCount() int {
 	return len(fake.submitArgsForCall)
 }
 
+func (fake *FakeTaskCompletionClient) SubmitCalls(stub func(db.TaskDB, events.Hub, *models.Task)) {
+	fake.submitMutex.Lock()
+	defer fake.submitMutex.Unlock()
+	fake.SubmitStub = stub
+}
+
 func (fake *FakeTaskCompletionClient) SubmitArgsForCall(i int) (db.TaskDB, events.Hub, *models.Task) {
 	fake.submitMutex.RLock()
 	defer fake.submitMutex.RUnlock()
-	return fake.submitArgsForCall[i].taskDB, fake.submitArgsForCall[i].taskHub, fake.submitArgsForCall[i].task
+	argsForCall := fake.submitArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeTaskCompletionClient) Invocations() map[string][][]interface{} {

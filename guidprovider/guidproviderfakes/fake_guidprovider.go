@@ -10,8 +10,9 @@ import (
 type FakeGUIDProvider struct {
 	NextGUIDStub        func() (string, error)
 	nextGUIDMutex       sync.RWMutex
-	nextGUIDArgsForCall []struct{}
-	nextGUIDReturns     struct {
+	nextGUIDArgsForCall []struct {
+	}
+	nextGUIDReturns struct {
 		result1 string
 		result2 error
 	}
@@ -26,7 +27,8 @@ type FakeGUIDProvider struct {
 func (fake *FakeGUIDProvider) NextGUID() (string, error) {
 	fake.nextGUIDMutex.Lock()
 	ret, specificReturn := fake.nextGUIDReturnsOnCall[len(fake.nextGUIDArgsForCall)]
-	fake.nextGUIDArgsForCall = append(fake.nextGUIDArgsForCall, struct{}{})
+	fake.nextGUIDArgsForCall = append(fake.nextGUIDArgsForCall, struct {
+	}{})
 	fake.recordInvocation("NextGUID", []interface{}{})
 	fake.nextGUIDMutex.Unlock()
 	if fake.NextGUIDStub != nil {
@@ -35,7 +37,8 @@ func (fake *FakeGUIDProvider) NextGUID() (string, error) {
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.nextGUIDReturns.result1, fake.nextGUIDReturns.result2
+	fakeReturns := fake.nextGUIDReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeGUIDProvider) NextGUIDCallCount() int {
@@ -44,7 +47,15 @@ func (fake *FakeGUIDProvider) NextGUIDCallCount() int {
 	return len(fake.nextGUIDArgsForCall)
 }
 
+func (fake *FakeGUIDProvider) NextGUIDCalls(stub func() (string, error)) {
+	fake.nextGUIDMutex.Lock()
+	defer fake.nextGUIDMutex.Unlock()
+	fake.NextGUIDStub = stub
+}
+
 func (fake *FakeGUIDProvider) NextGUIDReturns(result1 string, result2 error) {
+	fake.nextGUIDMutex.Lock()
+	defer fake.nextGUIDMutex.Unlock()
 	fake.NextGUIDStub = nil
 	fake.nextGUIDReturns = struct {
 		result1 string
@@ -53,6 +64,8 @@ func (fake *FakeGUIDProvider) NextGUIDReturns(result1 string, result2 error) {
 }
 
 func (fake *FakeGUIDProvider) NextGUIDReturnsOnCall(i int, result1 string, result2 error) {
+	fake.nextGUIDMutex.Lock()
+	defer fake.nextGUIDMutex.Unlock()
 	fake.NextGUIDStub = nil
 	if fake.nextGUIDReturnsOnCall == nil {
 		fake.nextGUIDReturnsOnCall = make(map[int]struct {

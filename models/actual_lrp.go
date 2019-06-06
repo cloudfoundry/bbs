@@ -48,20 +48,37 @@ func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstan
 	return ActualLRPInstanceKey{instanceGuid, cellId}
 }
 
-func NewActualLRPNetInfo(address string, instanceAddress string, advertisePreferenceForInstanceAddress bool, ports ...*PortMapping) ActualLRPNetInfo {
-	return ActualLRPNetInfo{address, ports, instanceAddress, advertisePreferenceForInstanceAddress}
+func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddress ActualLRPNetInfo_PreferredAddress, ports ...*PortMapping) ActualLRPNetInfo {
+	return ActualLRPNetInfo{address, ports, instanceAddress, preferredAddress}
 }
 
 func EmptyActualLRPNetInfo() ActualLRPNetInfo {
-	return NewActualLRPNetInfo("", "", false)
+	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_PreferredAddressUnknown)
 }
 
 func (info ActualLRPNetInfo) Empty() bool {
-	return info.Address == "" && len(info.Ports) == 0
+	return info.Address == "" && len(info.Ports) == 0 && info.PreferredAddress == ActualLRPNetInfo_PreferredAddressUnknown
 }
 
 func (*ActualLRPNetInfo) Version() format.Version {
 	return format.V0
+}
+
+func (d *ActualLRPNetInfo_PreferredAddress) UnmarshalJSON(data []byte) error {
+	var name string
+	if err := json.Unmarshal(data, &name); err != nil {
+		return err
+	}
+
+	if v, found := ActualLRPNetInfo_PreferredAddress_value[name]; found {
+		*d = ActualLRPNetInfo_PreferredAddress(v)
+		return nil
+	}
+	return fmt.Errorf("invalid preferred address: %s", name)
+}
+
+func (d ActualLRPNetInfo_PreferredAddress) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
 }
 
 func NewPortMapping(hostPort, containerPort uint32) *PortMapping {

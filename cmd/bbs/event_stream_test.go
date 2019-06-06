@@ -137,7 +137,7 @@ var _ = Describe("Events API", func() {
 				key = models.NewActualLRPKey(processGuid, 0, domain)
 				instanceKey = models.NewActualLRPInstanceKey("instance-guid", "cell-id")
 				newInstanceKey = models.NewActualLRPInstanceKey("other-instance-guid", "other-cell-id")
-				netInfo = models.NewActualLRPNetInfo("1.1.1.1", "3.3.3.3", false)
+				netInfo = models.NewActualLRPNetInfo("1.1.1.1", "3.3.3.3", models.ActualLRPNetInfo_PreferredAddressUnknown)
 
 				desiredLRP = &models.DesiredLRP{
 					ProcessGuid: processGuid,
