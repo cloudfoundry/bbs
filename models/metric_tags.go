@@ -1,6 +1,10 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+)
 
 func (m *MetricTagValue) Validate() error {
 	var validationError ValidationError
@@ -31,6 +35,31 @@ func (v MetricTagValue_DynamicValue) Valid() bool {
 	default:
 		return false
 	}
+}
+
+func ConvertMetricTags(metricTags map[string]*MetricTagValue, info map[MetricTagValue_DynamicValue]interface{}) (map[string]string, error) {
+	tags := make(map[string]string)
+	for k, v := range metricTags {
+		if v.Dynamic > 0 {
+			switch v.Dynamic {
+			case MetricTagDynamicValueIndex:
+				val, ok := info[MetricTagDynamicValueIndex].(int32)
+				if !ok {
+					return nil, fmt.Errorf("could not convert value %+v of type %T to int32", info[MetricTagDynamicValueIndex], info[MetricTagDynamicValueIndex])
+				}
+				tags[k] = strconv.FormatInt(int64(val), 10)
+			case MetricTagDynamicValueInstanceGuid:
+				val, ok := info[MetricTagDynamicValueInstanceGuid].(string)
+				if !ok {
+					return nil, fmt.Errorf("could not convert value %+v of type %T to string", info[MetricTagDynamicValueInstanceGuid], info[MetricTagDynamicValueInstanceGuid])
+				}
+				tags[k] = val
+			}
+		} else {
+			tags[k] = v.Static
+		}
+	}
+	return tags, nil
 }
 
 func validateMetricTags(m map[string]*MetricTagValue, metricsGuid string) ValidationError {
