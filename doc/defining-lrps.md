@@ -288,11 +288,9 @@ After completing any `Setup` action, Diego will launch the `Action` action.
 This `Action` is intended to launch any long-running processes.
 For more details on the available actions see [actions](actions.md).
 
-##### `CheckDefinition` [optional] [experiemental]
+##### `CheckDefinition` [optional]
 
 `CheckDefinition` provides a more structured way to declare healthchecks. It is up to the `Rep` whether to use the `Monitor` action or the `CheckDefinition`. See `enable_declarative_healthcheck` property in the [Rep job spec](https://github.com/cloudfoundry/diego-release/blob/develop/jobs/rep/spec)
-
-**NOTE**: The `CheckDefinition` is still an experimental feature.
 
 ###### `Checks` [repeated]
 
