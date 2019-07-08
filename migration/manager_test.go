@@ -63,6 +63,7 @@ var _ = Describe("Migration Manager", func() {
 
 	AfterEach(func() {
 		ginkgomon.Kill(migrationProcess)
+		Eventually(migrationProcess.Wait()).Should(Receive())
 	})
 
 	Context("when configured with a SQL database", func() {
