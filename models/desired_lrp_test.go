@@ -290,7 +290,35 @@ var _ = Describe("DesiredLRP", func() {
 			"bar": {
 			  "dynamic": "INDEX"
 			}
-		}
+		},
+		"sidecars": [
+		  {
+				"action": {
+					"codependent": {
+						"actions": [
+							{
+								"run": {
+									"path": "/tmp/lifecycle/launcher",
+									"args": [
+										"app",
+										"",
+										"{\"start_command\":\"/usr/local/bin/nginx\"}"
+									],
+									"resource_limits": {
+										"nofile": 16384
+									},
+									"user": "vcap",
+									"log_source": "SIDECAR",
+									"suppress_log_output": false
+								}
+							}
+						]
+					}
+				},
+				"disk_mb": 512,
+				"memory_mb": 512
+			}
+		]
   }`
 
 	BeforeEach(func() {
@@ -1370,23 +1398,23 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), ""),
-		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), "process_guid"),
-		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), "name"),
-		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), "inner-action"),
-		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), "inner-action"),
-		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), "inner-action"),
-		Entry("invalid http check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 65536}}}, "healthcheck_log_source"}, nil, nil), "port"),
-		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil, nil), "port"),
-		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil, nil), "check"),
-		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), "cpu_weight"),
-		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}}, nil), "legacy_download_user"),
-		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil), "cached_dependency"),
-		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef, nil, nil), "volume_mount"),
-		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef, nil, nil), "image_username"),
-		Entry("invalid image password", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "username", "", httpCheckDef, nil, nil), "image_password"),
-		Entry("invalid layers", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "some-url"}}, nil), "image_layer"),
-		Entry("invalid metric tags", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}), "metric_tags"),
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), ""),
+		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "process_guid"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "name"),
+		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "inner-action"),
+		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "inner-action"),
+		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "inner-action"),
+		Entry("invalid http check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 65536}}}, "healthcheck_log_source"}, nil, nil, []*models.Sidecar{}), "port"),
+		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil, nil, []*models.Sidecar{}), "port"),
+		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source"}, nil, nil, []*models.Sidecar{}), "check"),
+		Entry("invalid cpu weight", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, 150, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "cpu_weight"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}}, nil, []*models.Sidecar{}), "legacy_download_user"),
+		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "cached_dependency"),
+		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "volume_mount"),
+		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef, nil, nil, []*models.Sidecar{}), "image_username"),
+		Entry("invalid image password", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "username", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "image_password"),
+		Entry("invalid layers", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "some-url"}}, nil, []*models.Sidecar{}), "image_layer"),
+		Entry("invalid metric tags", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}, []*models.Sidecar{}), "metric_tags"),
 	)
 })
 

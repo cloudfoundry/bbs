@@ -77,6 +77,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		CheckDefinition:               runInfo.CheckDefinition,
 		ImageLayers:                   runInfo.ImageLayers,
 		MetricTags:                    runInfo.MetricTags,
+		Sidecars:                      runInfo.Sidecars,
 	}
 }
 
@@ -273,6 +274,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.CheckDefinition,
 		d.ImageLayers,
 		d.MetricTags,
+		d.Sidecars,
 	)
 }
 
@@ -556,6 +558,7 @@ func NewDesiredLRPRunInfo(
 	checkDefinition *CheckDefinition,
 	imageLayers []*ImageLayer,
 	metricTags map[string]*MetricTagValue,
+	sidecars []*Sidecar,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -582,6 +585,7 @@ func NewDesiredLRPRunInfo(
 		CheckDefinition:               checkDefinition,
 		ImageLayers:                   imageLayers,
 		MetricTags:                    metricTags,
+		Sidecars:                      sidecars,
 	}
 }
 
