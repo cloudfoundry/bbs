@@ -1063,6 +1063,17 @@ var _ = Describe("DesiredLRP", func() {
 			})
 		})
 
+		Context("when sidecars are specified", func() {
+			It("requires them to be valid", func() {
+				desiredLRP.Sidecars = []*models.Sidecar{
+					{
+						Action: nil,
+					},
+				}
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "sidecars")
+			})
+		})
+
 		Context("when cached dependencies are specified", func() {
 			It("requires requires them to be valid", func() {
 				desiredLRP.CachedDependencies = []*models.CachedDependency{
@@ -1398,7 +1409,7 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), ""),
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{{Action: action}}), ""),
 		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "process_guid"),
 		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "name"),
 		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "inner-action"),
@@ -1415,6 +1426,7 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 		Entry("invalid image password", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "username", "", httpCheckDef, nil, nil, []*models.Sidecar{}), "image_password"),
 		Entry("invalid layers", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "some-url"}}, nil, []*models.Sidecar{}), "image_layer"),
 		Entry("invalid metric tags", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}, []*models.Sidecar{}), "metric_tags"),
+		Entry("invalid sidecars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{{DiskMb: -1}}), "sidecars"),
 	)
 })
 

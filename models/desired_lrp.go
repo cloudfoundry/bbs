@@ -647,6 +647,12 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
+	err = validateSidecars(runInfo.Sidecars)
+	if err != nil {
+		validationError = validationError.Append(ErrInvalidField{"sidecars"})
+		validationError = validationError.Append(err)
+	}
+
 	for _, mount := range runInfo.VolumeMounts {
 		validationError = validationError.Check(mount)
 	}
