@@ -3,7 +3,7 @@ Thank you for submitting a pull request to the bbs repository. We appreciate the
 ## Please make sure to complete the following required steps
 
 1. Check the [Contributing document](https://github.com/cloudfoundry/diego-release/blob/develop/CONTRIBUTING.md) on how to sign the CLA and run tests.
-1. Fill out and submit this PR template to the best of your ability.
+1. Submit this PR.
 1. After submitting this PR, [open a PR Review Request in Diego-Release](https://github.com/cloudfoundry/diego-release/issues/new?assignees=&labels=&template=pr-review-request.md&title=%5BPR+REVIEW%5D%3A) to signal the Diego Team to take action. 
 **(*Note: this PR will not be reviewed unless you submit the [PR Review Request](https://github.com/cloudfoundry/diego-release/issues/new?assignees=&labels=&template=pr-review-request.md&title=%5BPR+REVIEW%5D%3A))**.
 
