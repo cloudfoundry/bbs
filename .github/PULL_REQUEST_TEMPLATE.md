@@ -1,13 +1,17 @@
-Thank you for submitting a pull request to the bbs repository. We appreciate the contribution. To help us with getting better context for the pull request please follow these guidelines:
+Thank you for submitting a pull request to the bbs repository!
 
-## Please make sure to complete the following required steps
+We appreciate the contribution. To help us understand the context for your pull request, please fill out this template to the best of your ability.
+
+## Please make sure to complete all of the following steps
 
 1. Check the [Contributing document](https://github.com/cloudfoundry/diego-release/blob/develop/CONTRIBUTING.md) on how to sign the CLA and run tests.
-1. Submit this PR.
-1. After submitting this PR, [open a PR Review Request in Diego-Release](https://github.com/cloudfoundry/diego-release/issues/new?assignees=&labels=&template=pr-review-request.md&title=%5BPR+REVIEW%5D%3A) to signal the Diego Team to take action. 
-**(*Note: this PR will not be reviewed unless you submit the [PR Review Request](https://github.com/cloudfoundry/diego-release/issues/new?assignees=&labels=&template=pr-review-request.md&title=%5BPR+REVIEW%5D%3A))**.
+1. Submit your PR to this repo.
+1. [**Submit an accompanying PR Review Request**](https://github.com/cloudfoundry/diego-release/issues/new?assignees=&labels=&template=pr-review-request.md&title=%5BPR+REVIEW%5D%3A) referencing this PR so the Diego Team knows to review your pull request. 
+* **Note: this PR will not be reviewed unless you submit the [PR Review Request](https://github.com/cloudfoundry/diego-release/issues/new?assignees=&labels=&template=pr-review-request.md&title=%5BPR+REVIEW%5D%3A)**.
 
-## Please provide the following information when submitting pull request:
+***************************
+
+## Please provide the following information:
 
 ### What is this change about?
 
