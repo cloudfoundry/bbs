@@ -366,7 +366,7 @@ This host-side port is made available on the `ActualLRP`.
 
 `Routes` is a map where the keys identify route providers and the values hold information for the providers to consume.
 The information in the map must be valid JSON but is not proessed by Diego.
-The total length of the routing information must not exceed 131072 bytes (12kb).
+The total length of the routing information must not exceed 131072 bytes (128kb).
 
 ##### `EgressRules` [optional]
 
