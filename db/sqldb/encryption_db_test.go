@@ -169,7 +169,7 @@ var _ = Describe("Encryption", func() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err = db.ExecContext(ctx, queryStr, processGuid, "fake-domain", "some-log-guid", 1, encodedRunInfo, 10, 10,
-				"some-root-fs", encodedRoutes, encodedVolumePlacement, 10)
+				"some-root-fs", encodedRoutes, encodedVolumePlacement, "10")
 			Expect(err).NotTo(HaveOccurred())
 			cryptor = makeCryptor("new", "old")
 
@@ -236,7 +236,7 @@ var _ = Describe("Encryption", func() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
 				_, err := db.ExecContext(ctx, queryStr,
-					processGuid, "fake-domain", netInfo, 0, 10, "yo")
+					processGuid, "fake-domain", netInfo, 0, "10", "yo")
 				Expect(err).NotTo(HaveOccurred())
 
 				cryptor = makeCryptor("new", "old")

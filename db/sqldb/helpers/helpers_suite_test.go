@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -43,10 +44,12 @@ var _ = BeforeEach(func() {
 		panic("Unsupported driver")
 	}
 
+	logger := lager.NewLogger("helper-suite-test")
+
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
 	var err error
-	db, err = sql.Open(dbDriverName, dbBaseConnectionString)
+	db, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
@@ -60,14 +63,17 @@ var _ = BeforeEach(func() {
 
 	Expect(db.Close()).To(Succeed())
 
-	db, err = sql.Open(dbDriverName, fmt.Sprintf("%s%s", dbBaseConnectionString, dbName))
+	connStringWithDB := fmt.Sprintf("%s%s", dbBaseConnectionString, dbName)
+	db, err = helpers.Connect(logger, dbDriverName, connStringWithDB, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 })
 
 var _ = AfterEach(func() {
+	logger := lager.NewLogger("helper-suite-test")
+
 	Expect(db.Close()).NotTo(HaveOccurred())
-	db, err := sql.Open(dbDriverName, dbBaseConnectionString)
+	db, err := helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 	_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))

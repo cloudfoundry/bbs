@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/go-sql-driver/mysql"
@@ -35,8 +36,10 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	logger.Info("starting")
 	defer logger.Info("completed")
 
+	baseConnString := "diego:diego_password@/"
+
 	var err error
-	m.db, err = sql.Open("mysql", "diego:diego_password@/")
+	m.db, err = helpers.Connect(logger, "mysql", baseConnString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).To(Succeed())
 
@@ -48,7 +51,8 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 
 	Expect(m.db.Close()).To(Succeed())
 
-	m.db, err = sql.Open("mysql", fmt.Sprintf("diego:diego_password@/%s", m.sqlDBName))
+	connStringWithDB := fmt.Sprintf("%s%s", baseConnString, m.sqlDBName)
+	m.db, err = helpers.Connect(logger, "mysql", connStringWithDB, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).NotTo(HaveOccurred())
 

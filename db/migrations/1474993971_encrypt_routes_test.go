@@ -80,7 +80,7 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 					flavor,
 				),
 				"guid", "domain", "",
-				"log guid", 2, 1, 1, "rootfs", routes, "volumes yo", 1, "run info",
+				"log guid", 2, 1, 1, "rootfs", routes, "volumes yo", "1", "run info",
 			)
 			Expect(err).NotTo(HaveOccurred())
 		})

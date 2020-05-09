@@ -75,7 +75,7 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 				),
 				"guid", "domain",
 				jsonData,
-				"log guid", 2, 1, 1, "rootfs", "routes", "volumes yo", 1, "run info",
+				"log guid", 2, 1, 1, "rootfs", "routes", "volumes yo", "1", "run info",
 			)
 			Expect(err).NotTo(HaveOccurred())
 

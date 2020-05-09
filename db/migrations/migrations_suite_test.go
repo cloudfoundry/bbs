@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
@@ -51,7 +52,7 @@ var _ = BeforeSuite(func() {
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
 	var err error
-	rawSQLDB, err = sql.Open(sqlRunner.DriverName(), sqlRunner.ConnectionString())
+	rawSQLDB, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 

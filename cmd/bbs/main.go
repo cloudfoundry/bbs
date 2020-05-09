@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/rand"
-	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
@@ -120,18 +119,18 @@ func main() {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
-	connectionString := helpers.AddTLSParams(logger,
+	sqlConn, err := helpers.Connect(
+		logger,
 		bbsConfig.DatabaseDriver,
 		bbsConfig.DatabaseConnectionString,
 		bbsConfig.SQLCACertFile,
 		bbsConfig.SQLEnableIdentityVerification,
 	)
-
-	sqlConn, err := sql.Open(bbsConfig.DatabaseDriver, connectionString)
 	if err != nil {
 		logger.Fatal("failed-to-open-sql", err)
 	}
 	defer sqlConn.Close()
+
 	sqlConn.SetMaxOpenConns(bbsConfig.MaxOpenDatabaseConnections)
 	sqlConn.SetMaxIdleConns(bbsConfig.MaxIdleDatabaseConnections)
 

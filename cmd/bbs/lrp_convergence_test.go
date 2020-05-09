@@ -644,7 +644,7 @@ var _ = Describe("Convergence API", func() {
 
 				BeforeEach(func() {
 					Expect(client.UpsertDomain(logger, "some-domain", 0)).To(Succeed())
-					sqlConn, err = sql.Open(sqlRunner.DriverName(), sqlRunner.ConnectionString())
+					sqlConn, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err := sqlConn.Exec(

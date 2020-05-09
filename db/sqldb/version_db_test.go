@@ -3,7 +3,6 @@ package sqldb_test
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -107,7 +106,7 @@ var _ = Describe("Version", func() {
 
 			BeforeEach(func() {
 				var err error
-				db, err = sql.Open(dbDriverName, fmt.Sprintf("%sinvalid-db", dbBaseConnectionString))
+				db, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString+"invalid-db", "", false)
 				Expect(err).NotTo(HaveOccurred())
 				helperDB := helpers.NewMonitoredDB(db, monitor.New())
 				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)

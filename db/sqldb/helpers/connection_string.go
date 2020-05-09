@@ -3,14 +3,16 @@ package helpers
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
+	"database/sql"
 	"io/ioutil"
 	"strconv"
 	"time"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/go-sql-driver/mysql"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/stdlib"
 )
 
 // MYSQL group_concat_max_len system variable
@@ -19,18 +21,35 @@ import (
 // this will allow 10_000_000 instance indexes
 const MYSQL_GROUP_CONCAT_MAX_LEN = 78888889
 
-// AddTLSParams appends necessary extra parameters to the
+func Connect(
+	logger lager.Logger,
+	driverName,
+	databaseConnectionString,
+	sqlCACertFile string,
+	sqlEnableIdentityVerification bool,
+) (*sql.DB, error) {
+	connString := addTLSParams(logger, driverName, databaseConnectionString, sqlCACertFile, sqlEnableIdentityVerification)
+
+	if driverName == "postgres" {
+		driverName = "pgx"
+	}
+
+	return sql.Open(driverName, connString)
+}
+
+// addTLSParams appends necessary extra parameters to the
 // connection string if tls verifications is enabled.  If
 // sqlEnableIdentityVerification is true, turn on hostname/identity
 // verification, otherwise only ensure that the server certificate is signed by
 // one of the CAs in sqlCACertFile.
-func AddTLSParams(
+func addTLSParams(
 	logger lager.Logger,
 	driverName,
 	databaseConnectionString,
 	sqlCACertFile string,
 	sqlEnableIdentityVerification bool,
 ) string {
+
 	switch driverName {
 	case "mysql":
 		cfg, err := mysql.ParseDSN(databaseConnectionString)
@@ -38,24 +57,15 @@ func AddTLSParams(
 			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
 		}
 
-		if sqlCACertFile != "" {
-			certBytes, err := ioutil.ReadFile(sqlCACertFile)
-			if err != nil {
-				logger.Fatal("failed-to-read-sql-ca-file", err)
-			}
-
-			caCertPool := x509.NewCertPool()
-			if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
-				logger.Fatal("failed-to-parse-sql-ca", err)
-			}
-
-			tlsConfig := generateTLSConfig(logger, caCertPool, sqlEnableIdentityVerification)
+		tlsConfig := generateTLSConfig(logger, sqlCACertFile, sqlEnableIdentityVerification)
+		if tlsConfig != nil {
 			err = mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
 			if err != nil {
 				logger.Fatal("cannot-register-tls-config", err)
 			}
 			cfg.TLSConfig = "bbs-tls"
 		}
+
 		cfg.Timeout = 10 * time.Minute
 		cfg.ReadTimeout = 10 * time.Minute
 		cfg.WriteTimeout = 10 * time.Minute
@@ -64,23 +74,41 @@ func AddTLSParams(
 		}
 		databaseConnectionString = cfg.FormatDSN()
 	case "postgres":
-		var err error
-		databaseConnectionString, err = pq.ParseURL(databaseConnectionString)
+		config, err := pgx.ParseConnectionString(databaseConnectionString)
 		if err != nil {
 			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
 		}
-		if sqlCACertFile == "" {
-			databaseConnectionString = databaseConnectionString + " sslmode=disable"
-		} else {
-			databaseConnectionString = fmt.Sprintf("%s sslmode=verify-ca sslrootcert=%s", databaseConnectionString, sqlCACertFile)
-		}
+
+		tlsConfig := generateTLSConfig(logger, sqlCACertFile, sqlEnableIdentityVerification)
+		config.TLSConfig = tlsConfig
+
+		driverConfig := &stdlib.DriverConfig{ConnConfig: config}
+		stdlib.RegisterDriverConfig(driverConfig)
+		return driverConfig.ConnectionString(databaseConnectionString)
+
+	default:
+		logger.Fatal("invalid-driver-name", nil, lager.Data{"driver-name": driverName})
 	}
 
 	return databaseConnectionString
 }
 
-func generateTLSConfig(logger lager.Logger, caCertPool *x509.CertPool, sqlEnableIdentityVerification bool) *tls.Config {
+func generateTLSConfig(logger lager.Logger, sqlCACertPath string, sqlEnableIdentityVerification bool) *tls.Config {
 	var tlsConfig *tls.Config
+
+	if sqlCACertPath == "" {
+		return tlsConfig
+	}
+
+	certBytes, err := ioutil.ReadFile(sqlCACertPath)
+	if err != nil {
+		logger.Fatal("failed-to-read-sql-ca-file", err)
+	}
+
+	caCertPool := x509.NewCertPool()
+	if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
+		logger.Fatal("failed-to-parse-sql-ca", err)
+	}
 
 	if sqlEnableIdentityVerification {
 		tlsConfig = &tls.Config{

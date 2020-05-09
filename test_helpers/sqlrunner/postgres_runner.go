@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/stdlib"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -35,8 +37,10 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	logger.Info("starting")
 	defer logger.Info("completed")
 
+	baseConnString := "postgres://diego:diego_pw@localhost"
+
 	var err error
-	p.db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
+	p.db, err = helpers.Connect(logger, "postgres", baseConnString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(p.db.Ping()).To(Succeed())
 
@@ -48,7 +52,8 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 
 	Expect(p.db.Close()).To(Succeed())
 
-	p.db, err = sql.Open("postgres", fmt.Sprintf("postgres://diego:diego_pw@localhost/%s", p.sqlDBName))
+	connStringWithDB := fmt.Sprintf("%s/%s", baseConnString, p.sqlDBName)
+	p.db, err = helpers.Connect(logger, "postgres", connStringWithDB, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(p.db.Ping()).To(Succeed())
 
@@ -62,7 +67,7 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	Expect(p.db.Close()).To(Succeed())
 
 	logger.Info("openning-connection-to-database")
-	p.db, err = sql.Open("postgres", "postgres://diego:diego_pw@localhost")
+	p.db, err = helpers.Connect(logger, "postgres", baseConnString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 
 	logger.Info("dropping-database")
@@ -76,7 +81,7 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 }
 
 func (p *PostgresRunner) ConnectionString() string {
-	return fmt.Sprintf("postgres://diego:diego_pw@localhost/%s", p.sqlDBName)
+	return "user=diego password=diego_pw host=localhost dbname=" + p.sqlDBName
 }
 
 func (p *PostgresRunner) Port() int {
@@ -113,7 +118,7 @@ func (p *PostgresRunner) ResetTables(tables []string) {
 		result, err := p.db.Exec(query)
 
 		switch err := err.(type) {
-		case *pq.Error:
+		case pgx.PgError:
 			if err.Code == "42P01" {
 				// missing table error, it's fine because we're trying to truncate it
 				continue
