@@ -181,7 +181,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						CellId:       "suspect-cell-id",
 					},
 				}
-				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspect}, nil)
+				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspect, afterActualLRP}, nil)
 			})
 
 			It("does not emit ActualLRPChangedEvent", func() {
@@ -193,17 +193,55 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when there is a claimed Suspect LRP", func() {
 			var suspectLRP *models.ActualLRP
-			JustBeforeEach(func() {
+			afterInstanceKey = models.ActualLRPInstanceKey{
+				InstanceGuid: "suspect-ig",
+				CellId:       "suspect-cell-id",
+			}
+
+			BeforeEach(func() {
 				suspectLRP = &models.ActualLRP{
-					State:        models.ActualLRPStateClaimed,
-					Presence:     models.ActualLRP_Suspect,
-					ActualLRPKey: actualLRPKey,
-					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
-						InstanceGuid: "suspect-ig",
-						CellId:       "suspect-cell-id",
-					},
+					State:                models.ActualLRPStateClaimed,
+					Presence:             models.ActualLRP_Suspect,
+					ActualLRPKey:         actualLRPKey,
+					ActualLRPInstanceKey: afterInstanceKey,
 				}
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectLRP}, nil)
+			})
+
+			Context("when there is another unclaimed ordinary LRP", func() {
+				var unclaimedActualLRP *models.ActualLRP
+
+				BeforeEach(func() {
+					unclaimedActualLRP = &models.ActualLRP{
+						State:        models.ActualLRPStateUnclaimed,
+						Presence:     models.ActualLRP_Ordinary,
+						ActualLRPKey: actualLRPKey,
+					}
+				})
+
+				JustBeforeEach(func() {
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectLRP, unclaimedActualLRP}, nil)
+				})
+
+				It("does not emit ActualLRPChangedEvent when the suspect cell tries to claim the suspect LRP", func() {
+					err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
+					Consistently(actualHub.EmitCallCount).Should(BeZero())
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
+					Expect(fakeActualLRPDB.ClaimActualLRPCallCount()).To(Equal(0))
+				})
+
+				It("does emits ActualLRPChangedEvent when another cell tries to claim the ordinary UNCLAIMED LRP", func() {
+					newInstanceKey := models.ActualLRPInstanceKey{
+						InstanceGuid: "new-instance-guid",
+						CellId:       "new-cell-id",
+					}
+					err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &newInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(actualHub.EmitCallCount).Should(Equal(1))
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+					Expect(fakeActualLRPDB.ClaimActualLRPCallCount()).To(Equal(1))
+				})
 			})
 		})
 	})

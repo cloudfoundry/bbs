@@ -78,6 +78,17 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(ctx context.Context, logge
 		return err
 	}
 
+	lrp := lookupLRPInSlice(lrps, actualLRPInstanceKey)
+	if lrp != nil && lrp.Presence == models.ActualLRP_Suspect {
+		logger.Info("ignored-claim-request-from-suspect", lager.Data{
+			"process_guid":  processGUID,
+			"index":         index,
+			"instance_guid": actualLRPInstanceKey,
+			"state":         lrp.State,
+		})
+		return nil
+	}
+
 	before, after, err := h.db.ClaimActualLRP(ctx, logger, processGUID, index, actualLRPInstanceKey)
 	if err != nil {
 		return err
