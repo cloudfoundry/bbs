@@ -1,6 +1,7 @@
 package bbs_test
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"path"
@@ -64,7 +65,7 @@ var _ = Describe("Client", func() {
 
 			It("respects the request timeout", func() {
 				_, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
-				Expect(err.Error()).To(ContainSubstring("request canceled"))
+				Expect(err.Error()).To(ContainSubstring(context.DeadlineExceeded.Error()))
 			})
 		})
 
@@ -114,7 +115,7 @@ var _ = Describe("Client", func() {
 
 			It("respects the request timeout", func() {
 				_, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
-				Expect(err.Error()).To(ContainSubstring("request canceled"))
+				Expect(err.Error()).To(ContainSubstring(context.DeadlineExceeded.Error()))
 			})
 		})
 	})
