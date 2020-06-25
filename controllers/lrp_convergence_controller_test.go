@@ -704,6 +704,20 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
 			})
 		})
+
+		Context("when RemoveSuspectActualLRP returns an no results and no error", func() {
+			BeforeEach(func() {
+				fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, nil)
+			})
+
+			It("does not emit an ActualLRPRemovedEvent", func() {
+				Consistently(actualHub.EmitCallCount).Should(BeZero())
+			})
+
+			It("does not emit an ActualLRPInstanceRemovedEvent because the handler expects it to contain an actualLRP", func() {
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
+			})
+		})
 	})
 
 	Context("when there are extra ordinary LRPs", func() {

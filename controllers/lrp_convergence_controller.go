@@ -275,9 +275,10 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": dereferencedKey})
 				return
 			}
-
-			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
+			if suspectLRP != nil {
+			      go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
+			      go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
+			}
 		})
 	}
 
