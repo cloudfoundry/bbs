@@ -276,8 +276,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 				return
 			}
 			if suspectLRP != nil {
-			      go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
-			      go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
+				go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
 			}
 		})
 	}
