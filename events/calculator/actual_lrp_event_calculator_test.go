@@ -70,6 +70,26 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 		})
 
+		Context("when before is missing and after is nil", func() {
+
+			BeforeEach(func() {
+				beforeSet = []*models.ActualLRP{}
+				afterSet = []*models.ActualLRP{nil}
+			})
+
+			It("does not emit any LRPGroup events", func() {
+				eventCalculator.EmitEvents(beforeSet, afterSet)
+
+				Expect(actualHub.EmitCallCount()).To(Equal(0))
+			})
+
+			It("emits an LRPInstance events", func() {
+				eventCalculator.EmitEvents(beforeSet, afterSet)
+
+				Expect(actualInstanceHub.EmitCallCount()).To(Equal(0))
+			})
+		})
+
 		Context("when an LRP is being deleted (i.e., the 'after' set has a nil value)", func() {
 			var deletedLRP *models.ActualLRP
 
@@ -548,6 +568,13 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				afterActualLRP,
 				actualLRPList[1],
 			}))
+		})
+
+		Context("when before and after are nil", func() {
+			It("appends nil to the set of ActualLRPs", func() {
+				updatedActualLRPSet := eventCalculator.RecordChange(nil, nil, nil)
+				Expect(updatedActualLRPSet).To(Equal([]*models.ActualLRP{nil}))
+			})
 		})
 
 		Context("when an ActualLRP is being created (i.e. the 'before' ActualLRP is nil)", func() {
