@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"fmt"
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/events"
@@ -53,7 +55,6 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 	w.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
 	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Add("Connection", "keep-alive")
-	w.Header().Set("Transfer-Encoding", "identity")
 
 	w.WriteHeader(http.StatusOK)
 
@@ -63,6 +64,7 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 	}
 
 	defer func() {
+		fmt.Fprintf(conn, "0\r\n\r\n")
 		err := conn.Close()
 		if err != nil {
 			logger.Error("failed-to-close-connection", err)
@@ -95,11 +97,16 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 			return
 		}
 
-		err = sseEvent.Write(conn)
+		buf := new(bytes.Buffer)
+
+		err = sseEvent.Write(buf)
 		if err != nil {
 			logger.Error("failed-to-write-event", err)
 			return
 		}
+
+		fmt.Fprintf(conn, "%x;\r\n", buf.Len())
+		fmt.Fprintf(conn, "%s\r\n", buf.String())
 
 		eventID++
 	}
