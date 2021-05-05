@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"path"
 	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
@@ -37,10 +38,17 @@ var _ = Describe("SqlLock", func() {
 			cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 			cfg.DatabaseDriver = sqlRunner.DriverName()
 			cfg.ListenAddress = locketAddress
+			cfg.CaFile = path.Join(fixturesPath, "locket", "CA.crt")
+			cfg.CertFile = path.Join(fixturesPath, "locket", "locket.crt")
+			cfg.KeyFile = path.Join(fixturesPath, "locket", "locket.key")
 		})
 		locketProcess = ginkgomon.Invoke(locketRunner)
 
-		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
+		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig(
+			path.Join(fixturesPath, "locket", "CA.crt"),
+			path.Join(fixturesPath, "locket", "client.crt"),
+			path.Join(fixturesPath, "locket", "client.key"),
+		)
 		bbsConfig.LocketAddress = locketAddress
 		bbsConfig.LocksLocketEnabled = true
 	})
@@ -251,6 +259,7 @@ var _ = Describe("SqlLock", func() {
 			var competingProcess ifrit.Process
 
 			BeforeEach(func() {
+				fmt.Printf("%+v\n", bbsConfig.ClientLocketConfig)
 				locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 				Expect(err).NotTo(HaveOccurred())
 

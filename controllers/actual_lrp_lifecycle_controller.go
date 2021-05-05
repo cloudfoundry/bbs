@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/bbs/clients/rep"
 )
 
 type ActualLRPLifecycleController struct {

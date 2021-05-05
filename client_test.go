@@ -73,7 +73,9 @@ var _ = Describe("Client", func() {
 			var tlsServer *ghttp.Server
 
 			BeforeEach(func() {
-				basePath := path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+				wd, err := os.Getwd()
+				Expect(err).To(Succeed())
+				basePath := path.Join(wd, "cmd/bbs/fixtures")
 				caFile := path.Join(basePath, "green-certs", "server-ca.crt")
 
 				cfg.IsTLS = true

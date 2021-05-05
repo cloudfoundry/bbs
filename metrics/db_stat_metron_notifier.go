@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
+	"code.cloudfoundry.org/diegosqldb/monitor"
 	"code.cloudfoundry.org/clock"
 	logging "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"

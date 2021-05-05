@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/diegosqldb"
+	"code.cloudfoundry.org/diegosqldb/monitor"
+	"code.cloudfoundry.org/diegosqldb/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -51,7 +51,7 @@ var _ = Describe("Version", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				queryStr := "UPDATE configurations SET value = ? WHERE id = ?"
-				_, err = db.ExecContext(ctx, helpers.RebindForFlavor(queryStr, dbDriverName), versionJSON, sqldb.VersionID)
+				_, err = db.ExecContext(ctx, diegosqldb.RebindForFlavor(queryStr, dbDriverName), versionJSON, sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -106,9 +106,9 @@ var _ = Describe("Version", func() {
 
 			BeforeEach(func() {
 				var err error
-				db, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString+"invalid-db", "", false)
+				db, err = diegosqldb.Connect(logger, dbDriverName, dbBaseConnectionString+"invalid-db", "", false)
 				Expect(err).NotTo(HaveOccurred())
-				helperDB := helpers.NewMonitoredDB(db, monitor.New())
+				helperDB := diegosqldb.NewMonitoredDB(db, monitor.New())
 				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 			})
 
@@ -142,7 +142,7 @@ var _ = Describe("Version", func() {
 		Context("when the version key is not valid json", func() {
 			It("returns a ErrDeserialize", func() {
 				queryStr := "UPDATE configurations SET value = '{{' WHERE id = ?"
-				_, err := db.ExecContext(ctx, helpers.RebindForFlavor(queryStr, dbDriverName), sqldb.VersionID)
+				_, err := db.ExecContext(ctx, diegosqldb.RebindForFlavor(queryStr, dbDriverName), sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = sqlDB.Version(ctx, logger)

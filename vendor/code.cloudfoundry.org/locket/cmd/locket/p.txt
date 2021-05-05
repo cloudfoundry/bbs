@@ -1,0 +1,55 @@
+diff --git a/cmd/locket/testrunner/runner.go b/cmd/locket/testrunner/runner.go
+index b211dc9..334483a 100644
+--- a/cmd/locket/testrunner/runner.go
++++ b/cmd/locket/testrunner/runner.go
+@@ -6,7 +6,6 @@ import (
+ 	"io/ioutil"
+ 	"os"
+ 	"os/exec"
+-	"path/filepath"
+ 	"time"
+ 
+ 	"code.cloudfoundry.org/durationjson"
+@@ -18,14 +17,6 @@ import (
+ 	"github.com/tedsuo/ifrit/ginkgomon"
+ )
+ 
+-var (
+-	fixturesPath = filepath.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/locket/cmd/locket/fixtures")
+-
+-	caCertFile = filepath.Join(fixturesPath, "ca.crt")
+-	certFile   = filepath.Join(fixturesPath, "cert.crt")
+-	keyFile    = filepath.Join(fixturesPath, "cert.key")
+-)
+-
+ func NewLocketRunner(locketBinPath string, fs ...func(cfg *config.LocketConfig)) *ginkgomon.Runner {
+ 	cfg := &config.LocketConfig{
+ 		LagerConfig: lagerflags.LagerConfig{
+@@ -34,9 +25,6 @@ func NewLocketRunner(locketBinPath string, fs ...func(cfg *config.LocketConfig))
+ 		},
+ 		DatabaseDriver: "mysql",
+ 		ReportInterval: durationjson.Duration(1 * time.Minute),
+-		CaFile:         caCertFile,
+-		CertFile:       certFile,
+-		KeyFile:        keyFile,
+ 	}
+ 
+ 	for _, f := range fs {
+@@ -64,7 +52,7 @@ func NewLocketRunner(locketBinPath string, fs ...func(cfg *config.LocketConfig))
+ 	})
+ }
+ 
+-func LocketClientTLSConfig() *tls.Config {
++func LocketClientTLSConfig(caCertFile, certFile, keyFile string) *tls.Config {
+ 	tlsConfig, err := tlsconfig.Build(
+ 		tlsconfig.WithInternalServiceDefaults(),
+ 		tlsconfig.WithIdentityFromFile(certFile, keyFile),
+@@ -73,7 +61,7 @@ func LocketClientTLSConfig() *tls.Config {
+ 	return tlsConfig
+ }
+ 
+-func ClientLocketConfig() locket.ClientLocketConfig {
++func ClientLocketConfig(caCertFile, certFile, keyFile string) locket.ClientLocketConfig {
+ 	return locket.ClientLocketConfig{
+ 		LocketCACertFile:     caCertFile,
+ 		LocketClientCertFile: certFile,

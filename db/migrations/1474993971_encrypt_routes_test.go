@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/clock/fakeclock"
+	"code.cloudfoundry.org/diegosqldb"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -72,7 +72,7 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 			routes = `{"cf-router":[{"hostnames":["dora.bosh-lite.com"],"port":8080}],"diego-ssh":{"container_port":2222,"host_fingerprint":"95:9d:7f:d7:cd:bc:d0:01:fa:8a:3a:a1:c6:ef:58:d7","private_key":"-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQDR/LGweyezjduoCGqmp2AR+5ggWxAT8ofEGt+PFQYY4Un/+xJ7\naeiAkk7GhHhJdL7UjuFU45XROiiZxKZhHGD1jKyG7CvaV47NVLvgqvPiY5jNjR2M\nCfnjpQ98QJ2Bv7usVfBiQP0cWK1bScchwZ1Y5At9ipyIztMqlOshKLRJPQIDAQAB\nAoGAdVtHp3081AG9OGzzxg4XCBXXkIW0N6G9NOFb/ihezvriE5krXCP1mB2svw/7\n9fm0STFNR9clvNhHJqEb53wnxzCpHMV+oH5Zg+5suQ5UsX3nof/c5PI5PK0jvIRI\nFe83ty3cu9UzYEJFVDSqJjx6SFoKBLXnxCzbVSskpkTZvlUCQQDxRcIlGLOE1lEZ\nORZuTd3TI/lg8NssEDL801PGdOIxchkiAzZz1RZW3M3SjY/PswuwiV1s4qkeHIPh\nlVeg4kS3AkEA3s4OAEl+gUtYGtLw2lSmEhgxNjK1x5EHzhuIulEla9iftbSy9Jpa\nPtzfHZ5ZxFdCnCvyukVW3KGVww40w921qwJBAN7DFo6jsNP8AKK2J7SuJhoUw+Iy\nX1nelwUBpP692j3m57eUmcj2vAp1EX/OfjI5UJitK1omKBkKIOW9uktrvh8CQBlq\ngAZgW+H76k0FCxyc02T1BYgdOMdPMAi+81Xts8sdpvpfZpqokOri30DNs4fGPH78\nNHAzQLliZWce074UKIkCQDbumNywkGzajAu+fTk+/Hts/o0g+btFS1oBDF5ztpJE\nGr9v4KGkJ//Nam2GucW1OY/JpgvZ3ITqj340wSqyyu4=\n-----END RSA PRIVATE KEY-----\n"},"tcp-router":[]`
 
 			_, err = rawSQLDB.Exec(
-				helpers.RebindForFlavor(
+				diegosqldb.RebindForFlavor(
 					`INSERT INTO desired_lrps
 						  (process_guid, domain, placement_tags, log_guid, instances, memory_mb,
 							  disk_mb, rootfs, routes, volume_placement, modification_tag_epoch, run_info)
@@ -88,7 +88,7 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 		It("should encrypt route column in desired lrps", func() {
 			Expect(mig.Up(logger)).To(Succeed())
 			var fetchedJSONData string
-			query := helpers.RebindForFlavor("select routes from desired_lrps limit 1", flavor)
+			query := diegosqldb.RebindForFlavor("select routes from desired_lrps limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&fetchedJSONData)).NotTo(HaveOccurred())
 			Expect(fetchedJSONData).ToNot(BeEquivalentTo(routes))

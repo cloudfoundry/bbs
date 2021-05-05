@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -17,9 +17,9 @@ const (
 
 func (db *SQLDB) getActualLRPs(ctx context.Context, logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRP, error) {
 	var actualLRPs []*models.ActualLRP
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		rows, err := db.all(ctx, logger, tx, actualLRPsTable,
-			actualLRPColumns, helpers.NoLockRow,
+			actualLRPColumns, diegosqldb.NoLockRow,
 			wheres, whereBindinngs...,
 		)
 		if err != nil {
@@ -41,7 +41,7 @@ func (db *SQLDB) ChangeActualLRPPresence(ctx context.Context, logger lager.Logge
 
 	var beforeLRP *models.ActualLRP
 	var afterLRP models.ActualLRP
-	err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err = db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		beforeLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, from, tx)
 		if err != nil {
@@ -52,7 +52,7 @@ func (db *SQLDB) ChangeActualLRPPresence(ctx context.Context, logger lager.Logge
 		afterLRP = *beforeLRP
 		afterLRP.Presence = to
 		wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
-		_, err = db.update(ctx, logger, tx, actualLRPsTable, helpers.SQLAttributes{
+		_, err = db.update(ctx, logger, tx, actualLRPsTable, diegosqldb.SQLAttributes{
 			"presence": afterLRP.Presence,
 		}, wheres, key.ProcessGuid, key.Index, beforeLRP.Presence)
 		if err != nil {
@@ -117,9 +117,9 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 		return nil, err
 	}
 	now := db.clock.Now().UnixNano()
-	err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err = db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		_, err := db.insert(ctx, logger, tx, actualLRPsTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"process_guid":           key.ProcessGuid,
 				"instance_index":         key.Index,
 				"domain":                 key.Domain,
@@ -156,7 +156,7 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 	processGuid := key.ProcessGuid
 	index := key.Index
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
@@ -184,7 +184,7 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 		}
 
 		_, err = db.update(ctx, logger, tx, actualLRPsTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -213,7 +213,7 @@ func (db *SQLDB) ClaimActualLRP(ctx context.Context, logger lager.Logger, proces
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
@@ -244,7 +244,7 @@ func (db *SQLDB) ClaimActualLRP(ctx context.Context, logger lager.Logger, proces
 		}
 
 		_, err = db.update(ctx, logger, tx, actualLRPsTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -275,7 +275,7 @@ func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *m
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err == models.ErrResourceNotFound {
@@ -319,7 +319,7 @@ func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *m
 		}
 
 		_, err = db.update(ctx, logger, tx, actualLRPsTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -359,7 +359,7 @@ func (db *SQLDB) CrashActualLRP(ctx context.Context, logger lager.Logger, key *m
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
@@ -405,7 +405,7 @@ func (db *SQLDB) CrashActualLRP(ctx context.Context, logger lager.Logger, key *m
 		actualLRP.Since = now
 
 		_, err = db.update(ctx, logger, tx, actualLRPsTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"state":                  actualLRP.State,
 				"cell_id":                actualLRP.CellId,
 				"instance_guid":          actualLRP.InstanceGuid,
@@ -437,7 +437,7 @@ func (db *SQLDB) FailActualLRP(ctx context.Context, logger lager.Logger, key *mo
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err != nil {
@@ -457,7 +457,7 @@ func (db *SQLDB) FailActualLRP(ctx context.Context, logger lager.Logger, key *mo
 		actualLRP.Since = now
 
 		_, err = db.update(ctx, logger, tx, actualLRPsTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"modification_tag_index": actualLRP.ModificationTag.Index,
 				"placement_error":        truncateString(actualLRP.PlacementError, 1024),
 				"since":                  actualLRP.Since,
@@ -481,7 +481,7 @@ func (db *SQLDB) RemoveActualLRP(ctx context.Context, logger lager.Logger, proce
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		var result sql.Result
 		if instanceKey == nil {
@@ -514,7 +514,7 @@ func (db *SQLDB) RemoveActualLRP(ctx context.Context, logger lager.Logger, proce
 	})
 }
 
-func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, tx helpers.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, tx diegosqldb.Tx) (*models.ActualLRP, error) {
 	now := db.clock.Now().UnixNano()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -535,7 +535,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 	}
 
 	_, err = db.insert(ctx, logger, tx, actualLRPsTable,
-		helpers.SQLAttributes{
+		diegosqldb.SQLAttributes{
 			"process_guid":           actualLRP.ActualLRPKey.ProcessGuid,
 			"instance_index":         actualLRP.ActualLRPKey.Index,
 			"domain":                 actualLRP.ActualLRPKey.Domain,
@@ -555,7 +555,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 	return actualLRP, nil
 }
 
-func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, error) {
+func (db *SQLDB) scanToActualLRP(logger lager.Logger, row diegosqldb.RowScanner) (*models.ActualLRP, error) {
 	var netInfoData []byte
 	var actualLRP models.ActualLRP
 
@@ -591,12 +591,12 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	return &actualLRP, nil
 }
 
-func (db *SQLDB) fetchActualLRPForUpdate(ctx context.Context, logger lager.Logger, processGuid string, index int32, presence models.ActualLRP_Presence, tx helpers.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) fetchActualLRPForUpdate(ctx context.Context, logger lager.Logger, processGuid string, index int32, presence models.ActualLRP_Presence, tx diegosqldb.Tx) (*models.ActualLRP, error) {
 	wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
 	bindings := []interface{}{processGuid, index, presence}
 
 	rows, err := db.all(ctx, logger, tx, actualLRPsTable,
-		actualLRPColumns, helpers.LockRow, wheres, bindings...)
+		actualLRPColumns, diegosqldb.LockRow, wheres, bindings...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, err
@@ -617,7 +617,7 @@ func (db *SQLDB) fetchActualLRPForUpdate(ctx context.Context, logger lager.Logge
 	return actualLRPs[0], nil
 }
 
-func (db *SQLDB) scanAndCleanupActualLRPs(ctx context.Context, logger lager.Logger, q helpers.Queryable, rows *sql.Rows) ([]*models.ActualLRP, error) {
+func (db *SQLDB) scanAndCleanupActualLRPs(ctx context.Context, logger lager.Logger, q diegosqldb.Queryable, rows *sql.Rows) ([]*models.ActualLRP, error) {
 	result := []*models.ActualLRP{}
 	actualsToDelete := []*models.ActualLRP{}
 

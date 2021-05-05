@@ -37,4 +37,17 @@ certstrap sign metron --CA "CA"
 mv -f out/* ./metron/
 rm -rf out
 
+certstrap init --common-name "CA" --passphrase ""
+certstrap request-cert --common-name "client" --ip "127.0.0.1" --domain "client" --passphrase ""
+certstrap sign client --CA "CA"
+
+certstrap request-cert --common-name "locket" --ip "127.0.0.1" --domain "localhost" --passphrase ""
+certstrap sign locket --CA "CA"
+
+rm -rf ./locket
+mkdir -p ./locket
+mv -f out/* ./locket/
+
+rm -rf out
+
 popd

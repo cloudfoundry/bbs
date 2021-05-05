@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -16,7 +16,7 @@ func (db *SQLDB) FreshDomains(ctx context.Context, logger lager.Logger) ([]strin
 
 	var domainNames []string
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		expireTime := db.clock.Now().Round(time.Second)
 		domains, err := db.domains(ctx, logger, tx, expireTime)
 		if err != nil {
@@ -38,9 +38,9 @@ type domain struct {
 	expiresAt time.Time
 }
 
-func (db *SQLDB) domains(ctx context.Context, logger lager.Logger, tx helpers.Queryable, expiresAfter time.Time) ([]domain, error) {
+func (db *SQLDB) domains(ctx context.Context, logger lager.Logger, tx diegosqldb.Queryable, expiresAfter time.Time) ([]domain, error) {
 	rows, err := db.all(ctx, logger, tx, domainsTable,
-		domainColumns, helpers.NoLockRow,
+		domainColumns, diegosqldb.NoLockRow,
 		"expire_time > ?",
 		expiresAfter.UnixNano(),
 	)
@@ -78,14 +78,14 @@ func (db *SQLDB) UpsertDomain(ctx context.Context, logger lager.Logger, domain s
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		expireTime := db.clock.Now().Add(time.Duration(ttl) * time.Second).UnixNano()
 		if ttl == 0 {
 			expireTime = math.MaxInt64
 		}
 
 		ok, err := db.upsert(ctx, logger, tx, domainsTable,
-			helpers.SQLAttributes{"domain": domain, "expire_time": expireTime},
+			diegosqldb.SQLAttributes{"domain": domain, "expire_time": expireTime},
 			"domain = ?", domain,
 		)
 

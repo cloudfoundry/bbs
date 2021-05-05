@@ -9,8 +9,8 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -76,7 +76,7 @@ func (db *SQLDB) failExpiredPendingTasks(ctx context.Context, logger lager.Logge
 	now := db.clock.Now()
 
 	rows, err := db.all(ctx, logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+		taskColumns, diegosqldb.NoLockRow,
 		"state = ? AND created_at < ?", models.Task_Pending, now.Add(-expirePendingTaskDuration).UnixNano())
 	if err != nil {
 		logger.Error("failed-query", err)
@@ -96,13 +96,13 @@ func (db *SQLDB) failExpiredPendingTasks(ctx context.Context, logger lager.Logge
 		return nil, uint64(invalidTasksCount), 0
 	}
 
-	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", diegosqldb.QuestionMarks(len(validTaskGuids))))
 	for _, guid := range validTaskGuids {
 		bindings = append(bindings, guid)
 	}
 
 	result, err := db.update(ctx, logger, db.db, tasksTable,
-		helpers.SQLAttributes{
+		diegosqldb.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     expiredFailureReason,
 			"result":             "",
@@ -141,7 +141,7 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(ctx context.Context
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
 	rows, err := db.all(ctx, logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+		taskColumns, diegosqldb.NoLockRow,
 		"state = ? AND created_at > ?",
 		models.Task_Pending, db.clock.Now().Add(-expirePendingTaskDuration).UnixNano(),
 	)
@@ -179,11 +179,11 @@ func (db *SQLDB) failTasksWithDisappearedCells(ctx context.Context, logger lager
 
 	wheres := "state = ?"
 	if len(cellSet) != 0 {
-		wheres += fmt.Sprintf(" AND cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet)))
+		wheres += fmt.Sprintf(" AND cell_id NOT IN (%s)", diegosqldb.QuestionMarks(len(cellSet)))
 	}
 	now := db.clock.Now().UnixNano()
 
-	rows, err := db.all(ctx, logger, db.db, tasksTable, taskColumns, helpers.NoLockRow, wheres, values...)
+	rows, err := db.all(ctx, logger, db.db, tasksTable, taskColumns, diegosqldb.NoLockRow, wheres, values...)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return nil, 0, 0
@@ -199,14 +199,14 @@ func (db *SQLDB) failTasksWithDisappearedCells(ctx context.Context, logger lager
 		return nil, uint64(invalidTasksCount), 0
 	}
 
-	wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+	wheres += fmt.Sprintf(" AND guid IN (%s)", diegosqldb.QuestionMarks(len(validTaskGuids)))
 
 	for _, guid := range validTaskGuids {
 		values = append(values, guid)
 	}
 
 	result, err := db.update(ctx, logger, db.db, tasksTable,
-		helpers.SQLAttributes{
+		diegosqldb.SQLAttributes{
 			"failed":             true,
 			"failure_reason":     cellDisappearedFailureReason,
 			"result":             "",
@@ -247,7 +247,7 @@ func (db *SQLDB) demoteKickableResolvingTasks(ctx context.Context, logger lager.
 	logger = logger.Session("demote-kickable-resolving-tasks")
 
 	rows, err := db.all(ctx, logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+		taskColumns, diegosqldb.NoLockRow,
 		"state = ? AND updated_at < ?", models.Task_Resolving, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
 	if err != nil {
@@ -268,14 +268,14 @@ func (db *SQLDB) demoteKickableResolvingTasks(ctx context.Context, logger lager.
 		return nil, uint64(invalidTasksCount)
 	}
 
-	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids))))
+	wheres = append(wheres, fmt.Sprintf("guid IN (%s)", diegosqldb.QuestionMarks(len(validTaskGuids))))
 
 	for _, guid := range validTaskGuids {
 		bindings = append(bindings, guid)
 	}
 
 	_, err = db.update(ctx, logger, db.db, tasksTable,
-		helpers.SQLAttributes{"state": models.Task_Completed},
+		diegosqldb.SQLAttributes{"state": models.Task_Completed},
 		strings.Join(wheres, " AND "), bindings...,
 	)
 	if err != nil {
@@ -298,7 +298,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(ctx context.Context, logger lager.L
 	values := []interface{}{models.Task_Completed, db.clock.Now().Add(-expireCompletedTaskDuration).UnixNano()}
 
 	rows, err := db.all(ctx, logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+		taskColumns, diegosqldb.NoLockRow,
 		wheres, values...,
 	)
 	if err != nil {
@@ -316,7 +316,7 @@ func (db *SQLDB) deleteExpiredCompletedTasks(ctx context.Context, logger lager.L
 		return nil, int64(invalidTasksCount)
 	}
 
-	wheres += fmt.Sprintf(" AND guid IN (%s)", helpers.QuestionMarks(len(validTaskGuids)))
+	wheres += fmt.Sprintf(" AND guid IN (%s)", diegosqldb.QuestionMarks(len(validTaskGuids)))
 
 	for _, guid := range validTaskGuids {
 		values = append(values, guid)
@@ -347,7 +347,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(ctx context.Context, logg
 	logger = logger.Session("get-kickable-complete-tasks-for-completion")
 
 	rows, err := db.all(ctx, logger, db.db, tasksTable,
-		taskColumns, helpers.NoLockRow,
+		taskColumns, diegosqldb.NoLockRow,
 		"state = ? AND updated_at < ?",
 		models.Task_Completed, db.clock.Now().Add(-kickTasksDuration).UnixNano(),
 	)
@@ -371,7 +371,7 @@ func (db *SQLDB) getKickableCompleteTasksForCompletion(ctx context.Context, logg
 func (db *SQLDB) getTaskCountByState(ctx context.Context, logger lager.Logger) (pendingCount, runningCount, completedCount, resolvingCount int) {
 	var query string
 	switch db.flavor {
-	case helpers.Postgres:
+	case diegosqldb.Postgres:
 		query = `
 			SELECT
 				COUNT(*) FILTER (WHERE state = $1) AS pending_tasks,
@@ -380,7 +380,7 @@ func (db *SQLDB) getTaskCountByState(ctx context.Context, logger lager.Logger) (
 				COUNT(*) FILTER (WHERE state = $4) AS resolving_tasks
 			FROM tasks
 		`
-	case helpers.MySQL:
+	case diegosqldb.MySQL:
 		query = `
 			SELECT
 				COUNT(IF(state = ?, 1, NULL)) AS pending_tasks,

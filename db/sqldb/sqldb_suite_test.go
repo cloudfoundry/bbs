@@ -10,17 +10,17 @@ import (
 
 	thepackagedb "code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
+	sqldb "code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"
 	"code.cloudfoundry.org/bbs/migration"
-	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/clock/fakeclock"
 	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/diegosqldb"
+	"code.cloudfoundry.org/diegosqldb/monitor"
+	"code.cloudfoundry.org/diegosqldb/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -32,7 +32,7 @@ import (
 
 var (
 	rawDB                                *sql.DB
-	db                                   helpers.QueryableDB
+	db                                   diegosqldb.QueryableDB
 	sqlDB                                *sqldb.SQLDB
 	ctx                                  context.Context
 	fakeClock                            *fakeclock.FakeClock
@@ -61,18 +61,18 @@ var _ = BeforeSuite(func() {
 	if test_helpers.UsePostgres() {
 		dbDriverName = "postgres"
 		dbBaseConnectionString = "postgres://diego:diego_pw@localhost/"
-		dbFlavor = helpers.Postgres
+		dbFlavor = diegosqldb.Postgres
 	} else if test_helpers.UseMySQL() {
 		dbDriverName = "mysql"
 		dbBaseConnectionString = "diego:diego_password@/"
-		dbFlavor = helpers.MySQL
+		dbFlavor = diegosqldb.MySQL
 	} else {
 		panic("Unsupported driver")
 	}
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release .
-	rawDB, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	rawDB, err = diegosqldb.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
@@ -86,7 +86,7 @@ var _ = BeforeSuite(func() {
 	Expect(rawDB.Close()).To(Succeed())
 
 	connStringWithDB := fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelNode())
-	rawDB, err = helpers.Connect(logger, dbDriverName, connStringWithDB, "", false)
+	rawDB, err = diegosqldb.Connect(logger, dbDriverName, connStringWithDB, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 
@@ -97,7 +97,7 @@ var _ = BeforeSuite(func() {
 	cryptor = encryption.NewCryptor(keyManager, rand.Reader)
 	serializer = format.NewSerializer(cryptor)
 
-	db = helpers.NewMonitoredDB(rawDB, monitor.New())
+	db = diegosqldb.NewMonitoredDB(rawDB, monitor.New())
 	ctx = context.Background()
 
 	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
@@ -152,7 +152,7 @@ var _ = AfterSuite(func() {
 	}
 
 	Expect(rawDB.Close()).NotTo(HaveOccurred())
-	rawDB, err := helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	rawDB, err := diegosqldb.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 	_, err = rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))

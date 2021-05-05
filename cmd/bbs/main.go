@@ -12,13 +12,12 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/clients/rep"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/converger"
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryptor"
 	"code.cloudfoundry.org/bbs/events"
@@ -34,6 +33,8 @@ import (
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/debugserver"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
+	"code.cloudfoundry.org/diegosqldb"
+	"code.cloudfoundry.org/diegosqldb/monitor"
 	"code.cloudfoundry.org/go-loggregator/runtimeemitter"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
@@ -42,8 +43,6 @@ import (
 	"code.cloudfoundry.org/locket/lock"
 	"code.cloudfoundry.org/locket/lockheldmetrics"
 	locketmodels "code.cloudfoundry.org/locket/models"
-	"code.cloudfoundry.org/rep"
-	"code.cloudfoundry.org/rep/maintain"
 	"code.cloudfoundry.org/tlsconfig"
 	"github.com/hashicorp/consul/api"
 	uuid "github.com/nu7hatch/gouuid"
@@ -119,7 +118,7 @@ func main() {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
-	sqlConn, err := helpers.Connect(
+	sqlConn, err := diegosqldb.Connect(
 		logger,
 		bbsConfig.DatabaseDriver,
 		bbsConfig.DatabaseConnectionString,
@@ -140,7 +139,7 @@ func main() {
 	}
 
 	queryMonitor := monitor.New()
-	monitoredDB := helpers.NewMonitoredDB(sqlConn, queryMonitor)
+	monitoredDB := diegosqldb.NewMonitoredDB(sqlConn, queryMonitor)
 	sqlDB := sqldb.NewSQLDB(
 		monitoredDB,
 		bbsConfig.ConvergenceWorkers,
@@ -269,9 +268,9 @@ func main() {
 		lock = jointlock.NewJointLock(clock, locket.DefaultSessionTTL, locks...)
 	}
 
-	var cellPresenceClient maintain.CellPresenceClient
+	var cellPresenceClient rep.CellPresenceClient
 	if bbsConfig.DetectConsulCellRegistrations {
-		cellPresenceClient = maintain.NewCellPresenceClient(consulClient, clock)
+		cellPresenceClient = rep.NewCellPresenceClient(consulClient, clock)
 	}
 	var locketCellPresenceClient locketmodels.LocketClient
 	locketCellPresenceClient = serviceclient.NewNoopLocketClient()

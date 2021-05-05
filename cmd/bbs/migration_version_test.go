@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -60,7 +60,7 @@ var _ = Describe("Migration Version", func() {
 		)
 
 		BeforeEach(func() {
-			sqlConn, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
+			sqlConn, err = diegosqldb.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

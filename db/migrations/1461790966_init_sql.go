@@ -3,11 +3,11 @@ package migrations
 import (
 	"database/sql"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -83,10 +83,10 @@ func dropTables(db *sql.DB) error {
 
 func createTables(logger lager.Logger, db *sql.DB, flavor string) error {
 	var createTablesSQL = []string{
-		helpers.RebindForFlavor(createDomainSQL, flavor),
-		helpers.RebindForFlavor(createDesiredLRPsSQL, flavor),
-		helpers.RebindForFlavor(createActualLRPsSQL, flavor),
-		helpers.RebindForFlavor(createTasksSQL, flavor),
+		diegosqldb.RebindForFlavor(createDomainSQL, flavor),
+		diegosqldb.RebindForFlavor(createDesiredLRPsSQL, flavor),
+		diegosqldb.RebindForFlavor(createActualLRPsSQL, flavor),
+		diegosqldb.RebindForFlavor(createTasksSQL, flavor),
 	}
 
 	logger.Info("creating-tables")

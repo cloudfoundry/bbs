@@ -9,16 +9,16 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
 	"code.cloudfoundry.org/bbs/guidprovider"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
+	"code.cloudfoundry.org/diegosqldb"
+	"code.cloudfoundry.org/diegosqldb/monitor"
+	"code.cloudfoundry.org/diegosqldb/test_helpers"
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -45,7 +45,7 @@ var _ = Describe("Context", func() {
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
 		var err error
-		sqlConn, err = helpers.Connect(
+		sqlConn, err = diegosqldb.Connect(
 			logger,
 			sqlRunner.DriverName(),
 			sqlRunner.ConnectionString(),
@@ -55,7 +55,7 @@ var _ = Describe("Context", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		dbMonitor := monitor.New()
-		monitoredDB := helpers.NewMonitoredDB(sqlConn, dbMonitor)
+		monitoredDB := diegosqldb.NewMonitoredDB(sqlConn, dbMonitor)
 
 		convergenceWorkers := 20
 		updateWorkers := 1000

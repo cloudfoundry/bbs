@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/rep/repfakes"
+	"code.cloudfoundry.org/bbs/clients/rep/repfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 

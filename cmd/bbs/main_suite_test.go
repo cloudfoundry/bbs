@@ -19,11 +19,12 @@ import (
 	bbsconfig "code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/consuladapter/consulrunner"
-	"code.cloudfoundry.org/diego-logging-client"
+	diego_logging_client "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
+	sql_test_helpers "code.cloudfoundry.org/diegosqldb/test_helpers"
+	"code.cloudfoundry.org/diegosqldb/test_helpers/sqlrunner"
 	"code.cloudfoundry.org/durationjson"
 	"code.cloudfoundry.org/go-loggregator/rpc/loggregator_v2"
 	"code.cloudfoundry.org/inigo/helpers/portauthority"
@@ -67,6 +68,7 @@ var (
 	signalMetricsChan chan struct{}
 	sqlProcess        ifrit.Process
 	sqlRunner         sqlrunner.SQLRunner
+	fixturesPath      string
 )
 
 func TestBBS(t *testing.T) {
@@ -79,7 +81,7 @@ var _ = SynchronizedBeforeSuite(
 		bbsPath, err := gexec.Build("code.cloudfoundry.org/bbs/cmd/bbs", "-race")
 		Expect(err).NotTo(HaveOccurred())
 
-		locketPath, err := gexec.Build("code.cloudfoundry.org/locket/cmd/locket", "-race")
+		locketPath, err := gexec.Build("code.cloudfoundry.org/locket/cmd/locket", "-race", "-mod=vendor")
 		Expect(err).NotTo(HaveOccurred())
 
 		return []byte(strings.Join([]string{bbsPath, locketPath}, ","))
@@ -99,7 +101,7 @@ var _ = SynchronizedBeforeSuite(
 		SetDefaultEventuallyTimeout(15 * time.Second)
 
 		dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
-		sqlRunner = test_helpers.NewSQLRunner(dbName)
+		sqlRunner = sql_test_helpers.NewSQLRunner(dbName)
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
 		consulStartingPort, err := portAllocator.ClaimPorts(consulrunner.PortOffsetLength)
@@ -132,7 +134,10 @@ var _ = BeforeEach(func() {
 	var err error
 	logger = lagertest.NewTestLogger("test")
 	ctx = context.Background()
-	fixturesPath := path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+
+	wd, err := os.Getwd()
+	Expect(err).To(Succeed())
+	fixturesPath = path.Join(wd, "fixtures")
 
 	consulRunner.Reset()
 	consulClient = consulRunner.NewClient()

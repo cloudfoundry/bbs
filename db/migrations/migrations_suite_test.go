@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/migration"
-	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
 	"code.cloudfoundry.org/clock/fakeclock"
+	"code.cloudfoundry.org/diegosqldb"
+	"code.cloudfoundry.org/diegosqldb/test_helpers"
+	"code.cloudfoundry.org/diegosqldb/test_helpers/sqlrunner"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -52,7 +52,7 @@ var _ = BeforeSuite(func() {
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
 	var err error
-	rawSQLDB, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
+	rawSQLDB, err = diegosqldb.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 

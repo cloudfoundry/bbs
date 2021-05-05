@@ -16,7 +16,7 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/bbs/clients/rep"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
 )

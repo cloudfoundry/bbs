@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -80,7 +80,7 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 		updateQuery := fmt.Sprintf("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?")
 		bindings = append(bindings, encodedData)
 		bindings = append(bindings, processGuid)
-		_, err = e.rawSQLDB.Exec(helpers.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
+		_, err = e.rawSQLDB.Exec(diegosqldb.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
 		if err != nil {
 			logger.Error("failed-updating-desired-lrp-record", err)
 			return models.ErrBadRequest

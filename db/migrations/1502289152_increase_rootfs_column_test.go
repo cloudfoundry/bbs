@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/bbs/migration"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -55,7 +55,7 @@ var _ = Describe("Increase rootfs Column Migration", func() {
 		It("changes the size of the rootfs column", func() {
 			Expect(migration.Up(logger)).To(Succeed())
 			value := strings.Repeat("x", 1024)
-			query := helpers.RebindForFlavor("insert into desired_lrps(rootfs) values(?)", flavor)
+			query := diegosqldb.RebindForFlavor("insert into desired_lrps(rootfs) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, value)
 			Expect(err).NotTo(HaveOccurred())
 		})

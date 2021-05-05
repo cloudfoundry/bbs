@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/diegosqldb"
+	"code.cloudfoundry.org/diegosqldb/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -1249,7 +1249,7 @@ var _ = Describe("TaskDB", func() {
 	})
 })
 
-func insertTask(ctx context.Context, db helpers.QueryableDB, serializer format.Serializer, task *models.Task, malformedTaskDefinition bool) {
+func insertTask(ctx context.Context, db diegosqldb.QueryableDB, serializer format.Serializer, task *models.Task, malformedTaskDefinition bool) {
 	taskDefData, err := serializer.Marshal(logger, task.TaskDefinition)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -1283,7 +1283,7 @@ func insertTask(ctx context.Context, db helpers.QueryableDB, serializer format.S
 	Expect(result.RowsAffected()).NotTo(Equal(1))
 }
 
-func updateTaskToInvalid(ctx context.Context, db helpers.QueryableDB, serializer format.Serializer, task *models.Task) {
+func updateTaskToInvalid(ctx context.Context, db diegosqldb.QueryableDB, serializer format.Serializer, task *models.Task) {
 	taskDefData, err := serializer.Marshal(logger, task.TaskDefinition)
 	Expect(err).NotTo(HaveOccurred())
 

@@ -3,7 +3,6 @@ package sqldb
 import (
 	"context"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider"
@@ -11,10 +10,11 @@ import (
 	"code.cloudfoundry.org/clock"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/diegosqldb"
 )
 
 type SQLDB struct {
-	db                     helpers.QueryableDB
+	db                     diegosqldb.QueryableDB
 	convergenceWorkersSize int
 	updateWorkersSize      int
 	clock                  clock.Clock
@@ -23,12 +23,12 @@ type SQLDB struct {
 	cryptor                encryption.Cryptor
 	encoder                format.Encoder
 	flavor                 string
-	helper                 helpers.SQLHelper
+	helper                 diegosqldb.SQLHelper
 	metronClient           loggingclient.IngressClient
 }
 
 func NewSQLDB(
-	db helpers.QueryableDB,
+	db diegosqldb.QueryableDB,
 	convergenceWorkersSize int,
 	updateWorkersSize int,
 	cryptor encryption.Cryptor,
@@ -37,7 +37,7 @@ func NewSQLDB(
 	flavor string,
 	metronClient loggingclient.IngressClient,
 ) *SQLDB {
-	helper := helpers.NewSQLHelper(flavor)
+	helper := diegosqldb.NewSQLHelper(flavor)
 	return &SQLDB{
 		db:                     db,
 		convergenceWorkersSize: convergenceWorkersSize,
@@ -53,7 +53,7 @@ func NewSQLDB(
 	}
 }
 
-func (db *SQLDB) transact(ctx context.Context, logger lager.Logger, f func(logger lager.Logger, tx helpers.Tx) error) error {
+func (db *SQLDB) transact(ctx context.Context, logger lager.Logger, f func(logger lager.Logger, tx diegosqldb.Tx) error) error {
 	err := db.helper.Transact(ctx, logger, db.db, f)
 	if err != nil {
 		return db.convertSQLError(err)
@@ -82,15 +82,15 @@ func (db *SQLDB) deserializeModel(logger lager.Logger, data []byte, model format
 func (db *SQLDB) convertSQLError(err error) *models.Error {
 	converted := db.helper.ConvertSQLError(err)
 	switch converted {
-	case helpers.ErrResourceExists:
+	case diegosqldb.ErrResourceExists:
 		return models.ErrResourceExists
-	case helpers.ErrDeadlock:
+	case diegosqldb.ErrDeadlock:
 		return models.ErrDeadlock
-	case helpers.ErrBadRequest:
+	case diegosqldb.ErrBadRequest:
 		return models.ErrBadRequest
-	case helpers.ErrUnrecoverableError:
+	case diegosqldb.ErrUnrecoverableError:
 		return models.NewUnrecoverableError(err)
-	case helpers.ErrResourceNotFound:
+	case diegosqldb.ErrResourceNotFound:
 		return models.ErrResourceNotFound
 	default:
 		return models.ConvertError(err)

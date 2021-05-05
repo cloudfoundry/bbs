@@ -9,8 +9,6 @@ import (
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/guidprovider"
@@ -18,6 +16,8 @@ import (
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
+	"code.cloudfoundry.org/diegosqldb"
+	"code.cloudfoundry.org/diegosqldb/monitor"
 	"code.cloudfoundry.org/durationjson"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -98,7 +98,7 @@ var _ = Describe("Convergence API", func() {
 					Expect(err).NotTo(HaveOccurred())
 					keyManager, err := encryption.NewKeyManager(key, keys)
 					cryptor := encryption.NewCryptor(keyManager, rand.Reader)
-					wrappedDB := helpers.NewMonitoredDB(sqlRunner.DB(), monitor.New())
+					wrappedDB := diegosqldb.NewMonitoredDB(sqlRunner.DB(), monitor.New())
 					metronClient := &testhelpers.FakeIngressClient{}
 					db = sqldb.NewSQLDB(
 						wrappedDB,
@@ -644,7 +644,7 @@ var _ = Describe("Convergence API", func() {
 
 				BeforeEach(func() {
 					Expect(client.UpsertDomain(logger, "some-domain", 0)).To(Succeed())
-					sqlConn, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
+					sqlConn, err = diegosqldb.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err := sqlConn.Exec(

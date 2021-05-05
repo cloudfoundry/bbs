@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 
+	"code.cloudfoundry.org/bbs/clients/rep/repfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager/lagertest"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/locket/models/modelsfakes"
-	"code.cloudfoundry.org/rep/maintain/maintainfakes"
 	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,7 +17,7 @@ import (
 
 var _ = Describe("ServiceClient", func() {
 	var (
-		cellPresenceClient                    *maintainfakes.FakeCellPresenceClient
+		cellPresenceClient                    *repfakes.FakeCellPresenceClient
 		locketClient                          *modelsfakes.FakeLocketClient
 		serviceClient                         serviceclient.ServiceClient
 		logger                                *lagertest.TestLogger
@@ -42,7 +42,7 @@ var _ = Describe("ServiceClient", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("service-client")
 
-		cellPresenceClient = &maintainfakes.FakeCellPresenceClient{}
+		cellPresenceClient = &repfakes.FakeCellPresenceClient{}
 		locketClient = &modelsfakes.FakeLocketClient{}
 
 		cellPresence1 = &models.CellPresence{

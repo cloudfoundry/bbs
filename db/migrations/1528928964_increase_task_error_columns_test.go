@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/bbs/migration"
 
 	. "github.com/onsi/ginkgo"
@@ -55,7 +55,7 @@ var _ = Describe("IncreaseTaskErrorColumns", func() {
 				Expect(migration.Up(logger)).To(Succeed())
 				value := strings.Repeat("x", 1024)
 				insertQuery := fmt.Sprintf("insert into %s(%s) values(?)", table, column)
-				query := helpers.RebindForFlavor(insertQuery, flavor)
+				query := diegosqldb.RebindForFlavor(insertQuery, flavor)
 				_, err := rawSQLDB.Exec(query, value)
 				Expect(err).NotTo(HaveOccurred())
 				selectQuery := fmt.Sprintf("select %s from %s", column, table)
@@ -72,7 +72,7 @@ var _ = Describe("IncreaseTaskErrorColumns", func() {
 
 		It("does not remove non null constraint", func() {
 			Expect(migration.Up(logger)).To(Succeed())
-			query := helpers.RebindForFlavor("insert into tasks(failure_reason) values(?)", flavor)
+			query := diegosqldb.RebindForFlavor("insert into tasks(failure_reason) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, nil)
 			Expect(err).To(MatchError(ContainSubstring("null")))
 		})

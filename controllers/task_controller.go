@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
+	"code.cloudfoundry.org/bbs/clients/rep"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/metrics"
@@ -12,7 +13,6 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/rep"
 )
 
 type TaskController struct {

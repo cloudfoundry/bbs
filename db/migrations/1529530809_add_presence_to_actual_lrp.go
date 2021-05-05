@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -72,7 +72,7 @@ func (e *AddPresenceToActualLrp) alterTable(logger lager.Logger) error {
 	logger.Info("altering-table")
 	for _, query := range alterTablesSQL {
 		logger.Info("altering the table", lager.Data{"query": query})
-		_, err := e.rawSQLDB.Exec(helpers.RebindForFlavor(query, e.dbFlavor))
+		_, err := e.rawSQLDB.Exec(diegosqldb.RebindForFlavor(query, e.dbFlavor))
 		if err != nil {
 			logger.Error("failed-altering-table", err)
 			return err

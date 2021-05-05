@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/diegosqldb"
 )
 
 const EncryptionKeyID = "encryption_key_label"
@@ -78,10 +78,10 @@ func (db *SQLDB) reEncrypt(ctx context.Context, logger lager.Logger, tableName, 
 
 	where := fmt.Sprintf("%s = ?", primaryKey)
 	for _, guid := range guids {
-		err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		err = db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 			blobs := make([]interface{}, len(blobColumns))
 
-			row := db.one(ctx, logger, tx, tableName, blobColumns, helpers.LockRow, where, guid)
+			row := db.one(ctx, logger, tx, tableName, blobColumns, diegosqldb.LockRow, where, guid)
 			for i := range blobColumns {
 				var blob []byte
 				blobs[i] = &blob

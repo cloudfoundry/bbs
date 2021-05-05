@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -16,7 +16,7 @@ func (db *SQLDB) DesireLRP(ctx context.Context, logger lager.Logger, desiredLRP 
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		routesData, err := db.encodeRouteData(logger, desiredLRP.Routes)
 		if err != nil {
 			logger.Error("failed-encoding-route-data", err)
@@ -58,7 +58,7 @@ func (db *SQLDB) DesireLRP(ctx context.Context, logger lager.Logger, desiredLRP 
 		desiredLRP.ModificationTag = &models.ModificationTag{Epoch: guid, Index: 0}
 
 		_, err = db.insert(ctx, logger, tx, desiredLRPsTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"process_guid":           desiredLRP.ProcessGuid,
 				"domain":                 desiredLRP.Domain,
 				"log_guid":               desiredLRP.LogGuid,
@@ -91,10 +91,10 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 
 	var desiredLRP *models.DesiredLRP
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		row := db.one(ctx, logger, tx, desiredLRPsTable,
-			desiredLRPColumns, helpers.NoLockRow,
+			desiredLRPColumns, diegosqldb.NoLockRow,
 			"process_guid = ?", processGuid,
 		)
 
@@ -128,9 +128,9 @@ func (db *SQLDB) DesiredLRPs(ctx context.Context, logger lager.Logger, filter mo
 
 	results := []*models.DesiredLRP{}
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		rows, err := db.all(ctx, logger, tx, desiredLRPsTable,
-			desiredLRPColumns, helpers.NoLockRow,
+			desiredLRPColumns, diegosqldb.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
 		if err != nil {
@@ -174,9 +174,9 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(ctx context.Context, logger lager.Log
 
 	results := []*models.DesiredLRPSchedulingInfo{}
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		rows, err := db.all(ctx, logger, tx, desiredLRPsTable,
-			schedulingInfoColumns, helpers.NoLockRow,
+			schedulingInfoColumns, diegosqldb.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
 		if err != nil {
@@ -211,10 +211,10 @@ func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, proc
 	defer logger.Info("complete")
 
 	var beforeDesiredLRP *models.DesiredLRP
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		row := db.one(ctx, logger, tx, desiredLRPsTable,
-			desiredLRPColumns, helpers.LockRow,
+			desiredLRPColumns, diegosqldb.LockRow,
 			"process_guid = ?", processGuid,
 		)
 		beforeDesiredLRP, err = db.fetchDesiredLRP(ctx, logger, row, tx)
@@ -224,7 +224,7 @@ func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, proc
 			return err
 		}
 
-		updateAttributes := helpers.SQLAttributes{"modification_tag_index": beforeDesiredLRP.ModificationTag.Index + 1}
+		updateAttributes := diegosqldb.SQLAttributes{"modification_tag_index": beforeDesiredLRP.ModificationTag.Index + 1}
 
 		if update.AnnotationExists() {
 			updateAttributes["annotation"] = update.GetAnnotation()
@@ -273,7 +273,7 @@ func (db *SQLDB) RemoveDesiredLRP(ctx context.Context, logger lager.Logger, proc
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		err := db.lockDesiredLRPByGuidForUpdate(ctx, logger, processGuid, tx)
 		if err != nil {
 			logger.Error("failed-lock-desired", err)
@@ -291,7 +291,7 @@ func (db *SQLDB) RemoveDesiredLRP(ctx context.Context, logger lager.Logger, proc
 }
 
 // "rows" needs to have the columns defined in the schedulingInfoColumns constant
-func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scanner helpers.RowScanner, dest ...interface{}) (*models.DesiredLRPSchedulingInfo, error) {
+func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scanner diegosqldb.RowScanner, dest ...interface{}) (*models.DesiredLRPSchedulingInfo, error) {
 	schedulingInfo := &models.DesiredLRPSchedulingInfo{}
 	var routeData, volumePlacementData, placementTagData []byte
 	values := []interface{}{
@@ -353,9 +353,9 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	return schedulingInfo, nil
 }
 
-func (db *SQLDB) lockDesiredLRPByGuidForUpdate(ctx context.Context, logger lager.Logger, processGuid string, tx helpers.Tx) error {
+func (db *SQLDB) lockDesiredLRPByGuidForUpdate(ctx context.Context, logger lager.Logger, processGuid string, tx diegosqldb.Tx) error {
 	row := db.one(ctx, logger, tx, desiredLRPsTable,
-		helpers.ColumnList{"1"}, helpers.LockRow,
+		diegosqldb.ColumnList{"1"}, diegosqldb.LockRow,
 		"process_guid = ?", processGuid,
 	)
 	var count int
@@ -366,7 +366,7 @@ func (db *SQLDB) lockDesiredLRPByGuidForUpdate(ctx context.Context, logger lager
 	return nil
 }
 
-func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows *sql.Rows, queryable helpers.Queryable) ([]*models.DesiredLRP, error) {
+func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows *sql.Rows, queryable diegosqldb.Queryable) ([]*models.DesiredLRP, error) {
 	guids := []string{}
 	lrps := []*models.DesiredLRP{}
 	for rows.Next() {
@@ -392,7 +392,7 @@ func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows
 	return lrps, nil
 }
 
-func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.DesiredLRP, error) {
+func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scanner diegosqldb.RowScanner, queryable diegosqldb.Queryable) (*models.DesiredLRP, error) {
 	lrp, guid, err := db.fetchDesiredLRPInternal(logger, scanner)
 	if err == models.ErrDeserialize {
 		db.deleteInvalidLRPs(ctx, logger, queryable, guid)
@@ -400,7 +400,7 @@ func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scann
 	return lrp, err
 }
 
-func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.RowScanner) (*models.DesiredLRP, string, error) {
+func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner diegosqldb.RowScanner) (*models.DesiredLRP, string, error) {
 	var runInfoData []byte
 	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData)
 	if err != nil {
@@ -418,7 +418,7 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	return &desiredLRP, "", nil
 }
 
-func (db *SQLDB) deleteInvalidLRPs(ctx context.Context, logger lager.Logger, queryable helpers.Queryable, guids ...string) error {
+func (db *SQLDB) deleteInvalidLRPs(ctx context.Context, logger lager.Logger, queryable diegosqldb.Queryable, guids ...string) error {
 	for _, guid := range guids {
 		logger.Info("deleting-invalid-desired-lrp-from-db", lager.Data{"guid": guid})
 		_, err := db.delete(ctx, logger, queryable, desiredLRPsTable, "process_guid = ?", guid)
@@ -430,7 +430,7 @@ func (db *SQLDB) deleteInvalidLRPs(ctx context.Context, logger lager.Logger, que
 	return nil
 }
 
-func (db *SQLDB) fetchDesiredLRPSchedulingInfo(logger lager.Logger, scanner helpers.RowScanner) (*models.DesiredLRPSchedulingInfo, error) {
+func (db *SQLDB) fetchDesiredLRPSchedulingInfo(logger lager.Logger, scanner diegosqldb.RowScanner) (*models.DesiredLRPSchedulingInfo, error) {
 	return db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner)
 }
 

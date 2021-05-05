@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/clock/fakeclock"
+	"code.cloudfoundry.org/diegosqldb"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -50,7 +50,7 @@ var _ = Describe("AddRejectionReasonToTask", func() {
 			Expect(migration.Up(logger)).To(Succeed())
 
 			_, err := rawSQLDB.Exec(
-				helpers.RebindForFlavor(
+				diegosqldb.RebindForFlavor(
 					`INSERT INTO tasks
 						  (guid, domain, task_definition)
 						  VALUES (?, ?, ?)`,
@@ -61,7 +61,7 @@ var _ = Describe("AddRejectionReasonToTask", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var rejectionReason string
-			query := helpers.RebindForFlavor("select rejection_reason from tasks limit 1", flavor)
+			query := diegosqldb.RebindForFlavor("select rejection_reason from tasks limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&rejectionReason)).To(Succeed())
 			Expect(rejectionReason).To(Equal(""))

@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/diegosqldb/test_helpers"
 )
 
 var _ = Describe("Encryption", func() {

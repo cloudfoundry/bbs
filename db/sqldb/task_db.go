@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"strings"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -22,9 +22,9 @@ func (db *SQLDB) DesireTask(ctx context.Context, logger lager.Logger, taskDef *m
 	}
 
 	now := db.clock.Now().UnixNano()
-	err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err = db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		_, err = db.insert(ctx, logger, tx, tasksTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"guid":               taskGuid,
 				"domain":             domain,
 				"created_at":         now,
@@ -74,9 +74,9 @@ func (db *SQLDB) Tasks(ctx context.Context, logger lager.Logger, filter models.T
 
 	results := []*models.Task{}
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		rows, err := db.all(ctx, logger, tx, tasksTable,
-			taskColumns, helpers.NoLockRow,
+			taskColumns, diegosqldb.NoLockRow,
 			strings.Join(wheres, " AND "), values...,
 		)
 		if err != nil {
@@ -104,10 +104,10 @@ func (db *SQLDB) TaskByGuid(ctx context.Context, logger lager.Logger, taskGuid s
 
 	var task *models.Task
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		row := db.one(ctx, logger, tx, tasksTable,
-			taskColumns, helpers.NoLockRow,
+			taskColumns, diegosqldb.NoLockRow,
 			"guid = ?", taskGuid,
 		)
 
@@ -127,7 +127,7 @@ func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, c
 	var beforeTask models.Task
 	var afterTask *models.Task
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(ctx, logger, taskGuid, tx)
 		if err != nil {
@@ -148,7 +148,7 @@ func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, c
 
 		now := db.clock.Now().UnixNano()
 		_, err = db.update(ctx, logger, tx, tasksTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"state":      models.Task_Running,
 				"updated_at": now,
 				"cell_id":    cellId,
@@ -179,7 +179,7 @@ func (db *SQLDB) CancelTask(ctx context.Context, logger lager.Logger, taskGuid s
 	var afterTask *models.Task
 	var cellID string
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(ctx, logger, taskGuid, tx)
 		if err != nil {
@@ -215,7 +215,7 @@ func (db *SQLDB) CompleteTask(ctx context.Context, logger lager.Logger, taskGuid
 	var beforeTask models.Task
 	var afterTask *models.Task
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(ctx, logger, taskGuid, tx)
 		if err != nil {
@@ -253,7 +253,7 @@ func (db *SQLDB) FailTask(ctx context.Context, logger lager.Logger, taskGuid, fa
 	var beforeTask models.Task
 	var afterTask *models.Task
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(ctx, logger, taskGuid, tx)
 		if err != nil {
@@ -288,7 +288,7 @@ func (db *SQLDB) RejectTask(ctx context.Context, logger lager.Logger, taskGuid, 
 	var beforeTask models.Task
 	var afterTask *models.Task
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(ctx, logger, taskGuid, tx)
 		if err != nil {
@@ -311,7 +311,7 @@ func (db *SQLDB) RejectTask(ctx context.Context, logger lager.Logger, taskGuid, 
 		afterTask.UpdatedAt = now
 
 		_, err = db.update(ctx, logger, tx, tasksTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"rejection_count":  afterTask.RejectionCount,
 				"rejection_reason": afterTask.RejectionReason,
 				"updated_at":       afterTask.UpdatedAt,
@@ -340,7 +340,7 @@ func (db *SQLDB) ResolvingTask(ctx context.Context, logger lager.Logger, taskGui
 	var beforeTask models.Task
 	var afterTask *models.Task
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		afterTask, err = db.fetchTaskForUpdate(ctx, logger, taskGuid, tx)
 		if err != nil {
@@ -357,7 +357,7 @@ func (db *SQLDB) ResolvingTask(ctx context.Context, logger lager.Logger, taskGui
 
 		now := db.clock.Now().UnixNano()
 		_, err = db.update(ctx, logger, tx, tasksTable,
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"state":      models.Task_Resolving,
 				"updated_at": now,
 			},
@@ -384,7 +384,7 @@ func (db *SQLDB) DeleteTask(ctx context.Context, logger lager.Logger, taskGuid s
 
 	var task *models.Task
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		task, err = db.fetchTaskForUpdate(ctx, logger, taskGuid, tx)
 		if err != nil {
@@ -409,7 +409,7 @@ func (db *SQLDB) DeleteTask(ctx context.Context, logger lager.Logger, taskGuid s
 	return task, err
 }
 
-func (db *SQLDB) completeTask(ctx context.Context, logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx helpers.Tx) error {
+func (db *SQLDB) completeTask(ctx context.Context, logger lager.Logger, task *models.Task, failed bool, failureReason, result string, tx diegosqldb.Tx) error {
 	now := db.clock.Now().UnixNano()
 
 	task.State = models.Task_Completed
@@ -421,7 +421,7 @@ func (db *SQLDB) completeTask(ctx context.Context, logger lager.Logger, task *mo
 	task.CellId = ""
 
 	_, err := db.update(ctx, logger, tx, tasksTable,
-		helpers.SQLAttributes{
+		diegosqldb.SQLAttributes{
 			"failed":             task.Failed,
 			"failure_reason":     task.FailureReason,
 			"result":             task.Result,
@@ -440,15 +440,15 @@ func (db *SQLDB) completeTask(ctx context.Context, logger lager.Logger, task *mo
 	return nil
 }
 
-func (db *SQLDB) fetchTaskForUpdate(ctx context.Context, logger lager.Logger, taskGuid string, queryable helpers.Queryable) (*models.Task, error) {
+func (db *SQLDB) fetchTaskForUpdate(ctx context.Context, logger lager.Logger, taskGuid string, queryable diegosqldb.Queryable) (*models.Task, error) {
 	row := db.one(ctx, logger, queryable, tasksTable,
-		taskColumns, helpers.LockRow,
+		taskColumns, diegosqldb.LockRow,
 		"guid = ?", taskGuid,
 	)
 	return db.fetchTask(ctx, logger, row, queryable)
 }
 
-func (db *SQLDB) fetchTasks(ctx context.Context, logger lager.Logger, rows *sql.Rows, queryable helpers.Queryable, abortOnError bool) ([]*models.Task, []string, int, error) {
+func (db *SQLDB) fetchTasks(ctx context.Context, logger lager.Logger, rows *sql.Rows, queryable diegosqldb.Queryable, abortOnError bool) ([]*models.Task, []string, int, error) {
 	tasks := []*models.Task{}
 	invalidGuids := []string{}
 	validGuids := []string{}
@@ -482,7 +482,7 @@ func (db *SQLDB) fetchTasks(ctx context.Context, logger lager.Logger, rows *sql.
 	return tasks, validGuids, len(invalidGuids), err
 }
 
-func (db *SQLDB) fetchTask(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.Task, error) {
+func (db *SQLDB) fetchTask(ctx context.Context, logger lager.Logger, scanner diegosqldb.RowScanner, queryable diegosqldb.Queryable) (*models.Task, error) {
 	task, guid, err := db.fetchTaskInternal(logger, scanner)
 	if err == models.ErrDeserialize {
 		db.deleteInvalidTasks(ctx, logger, queryable, guid)
@@ -490,7 +490,7 @@ func (db *SQLDB) fetchTask(ctx context.Context, logger lager.Logger, scanner hel
 	return task, err
 }
 
-func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScanner) (*models.Task, string, error) {
+func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner diegosqldb.RowScanner) (*models.Task, string, error) {
 	var guid, domain, cellID, failureReason, rejectionReason string
 	var result sql.NullString
 	var createdAt, updatedAt, firstCompletedAt int64
@@ -547,7 +547,7 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 	return task, guid, nil
 }
 
-func (db *SQLDB) deleteInvalidTasks(ctx context.Context, logger lager.Logger, queryable helpers.Queryable, guids ...string) error {
+func (db *SQLDB) deleteInvalidTasks(ctx context.Context, logger lager.Logger, queryable diegosqldb.Queryable, guids ...string) error {
 	for _, guid := range guids {
 		logger.Info("deleting-invalid-task-from-db", lager.Data{"guid": guid})
 		_, err := db.delete(ctx, logger, queryable, tasksTable, "guid = ?", guid)

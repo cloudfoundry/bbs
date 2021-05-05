@@ -4,8 +4,8 @@ import (
 	"context"
 	"reflect"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -22,7 +22,7 @@ func (db *SQLDB) EvacuateActualLRP(
 
 	var actualLRP *models.ActualLRP
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		var err error
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
@@ -61,7 +61,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		}
 
 		_, err = db.update(ctx, logger, tx, "actual_lrps",
-			helpers.SQLAttributes{
+			diegosqldb.SQLAttributes{
 				"domain":                 actualLRP.Domain,
 				"instance_guid":          actualLRP.InstanceGuid,
 				"cell_id":                actualLRP.CellId,
@@ -89,7 +89,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(ctx context.Context, logger lager.Log
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	return db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
@@ -128,7 +128,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 	lrpKey *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
-	tx helpers.Tx,
+	tx diegosqldb.Tx,
 ) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
@@ -152,7 +152,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		Presence:             models.ActualLRP_Evacuating,
 	}
 
-	sqlAttributes := helpers.SQLAttributes{
+	sqlAttributes := diegosqldb.SQLAttributes{
 		"process_guid":           actualLRP.ProcessGuid,
 		"instance_index":         actualLRP.Index,
 		"presence":               models.ActualLRP_Evacuating,

@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"path"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
@@ -645,10 +646,17 @@ var _ = Describe("ActualLRP API", func() {
 					cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 					cfg.DatabaseDriver = sqlRunner.DriverName()
 					cfg.ListenAddress = locketAddress
+					cfg.CaFile = path.Join(fixturesPath, "locket", "CA.crt")
+					cfg.CertFile = path.Join(fixturesPath, "locket", "locket.crt")
+					cfg.KeyFile = path.Join(fixturesPath, "locket", "locket.key")
 				})
 
 				locketProcess = ginkgomon.Invoke(locketRunner)
-				bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
+				bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig(
+					path.Join(fixturesPath, "locket", "CA.crt"),
+					path.Join(fixturesPath, "locket", "client.crt"),
+					path.Join(fixturesPath, "locket", "client.key"),
+				)
 				bbsConfig.LocketAddress = locketAddress
 
 				cellPresence := models.NewCellPresence(

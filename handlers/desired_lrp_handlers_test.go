@@ -17,7 +17,7 @@ import (
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/bbs/clients/rep"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"

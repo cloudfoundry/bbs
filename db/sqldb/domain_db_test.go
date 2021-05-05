@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/diegosqldb/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"

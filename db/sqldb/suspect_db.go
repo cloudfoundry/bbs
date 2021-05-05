@@ -3,9 +3,9 @@ package sqldb
 import (
 	"context"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/diegosqldb"
 )
 
 func (db *SQLDB) RemoveSuspectActualLRP(ctx context.Context, logger lager.Logger, lrpKey *models.ActualLRPKey) (*models.ActualLRP, error) {
@@ -18,7 +18,7 @@ func (db *SQLDB) RemoveSuspectActualLRP(ctx context.Context, logger lager.Logger
 		err error
 	)
 
-	err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err = db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 

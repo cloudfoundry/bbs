@@ -26,7 +26,9 @@ var _ = Describe("Secure", func() {
 	)
 
 	BeforeEach(func() {
-		basePath = path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+		wd, err := os.Getwd()
+		Expect(err).To(Succeed())
+		basePath = path.Join(wd, "fixtures")
 		bbsURL.Scheme = "https"
 	})
 

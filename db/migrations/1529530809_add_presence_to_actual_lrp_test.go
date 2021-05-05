@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diegosqldb"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -50,7 +50,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 			Expect(migration.Up(logger)).To(Succeed())
 
 			_, err := rawSQLDB.Exec(
-				helpers.RebindForFlavor(
+				diegosqldb.RebindForFlavor(
 					`INSERT INTO actual_lrps
 						(process_guid, instance_index, domain, state, net_info,
 						modification_tag_epoch, modification_tag_index)
@@ -62,7 +62,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var presence string
-			query := helpers.RebindForFlavor("SELECT presence FROM actual_lrps LIMIT 1", flavor)
+			query := diegosqldb.RebindForFlavor("SELECT presence FROM actual_lrps LIMIT 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&presence)).To(Succeed())
 			Expect(presence).To(Equal(fmt.Sprintf("%d", models.ActualLRP_Ordinary)))
@@ -72,7 +72,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 			Expect(migration.Up(logger)).To(Succeed())
 
 			_, err := rawSQLDB.Exec(
-				helpers.RebindForFlavor(
+				diegosqldb.RebindForFlavor(
 					`INSERT INTO actual_lrps
 						(process_guid, instance_index, domain, state, net_info,
 						modification_tag_epoch, modification_tag_index)
@@ -84,7 +84,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = rawSQLDB.Exec(
-				helpers.RebindForFlavor(
+				diegosqldb.RebindForFlavor(
 					`INSERT INTO actual_lrps
 						(process_guid, instance_index, domain, state, net_info,
 						modification_tag_epoch, modification_tag_index, presence)
@@ -100,7 +100,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 		Context("with preexisting data with evacuating set to true", func() {
 			BeforeEach(func() {
 				_, err := rawSQLDB.Exec(
-					helpers.RebindForFlavor(
+					diegosqldb.RebindForFlavor(
 						`INSERT INTO actual_lrps
 						(process_guid, instance_index, domain, state, net_info,
 						modification_tag_epoch, modification_tag_index, evacuating)
@@ -115,7 +115,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 
 			It("does not error on LRPs with the same process_guid + index when changing the primary key", func() {
 				_, err := rawSQLDB.Exec(
-					helpers.RebindForFlavor(
+					diegosqldb.RebindForFlavor(
 						`INSERT INTO actual_lrps
 						(process_guid, instance_index, domain, state, net_info,
 						modification_tag_epoch, modification_tag_index, evacuating)
@@ -132,7 +132,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 				Expect(migration.Up(logger)).To(Succeed())
 
 				var presence string
-				query := helpers.RebindForFlavor("SELECT presence FROM actual_lrps WHERE evacuating = true LIMIT 1", flavor)
+				query := diegosqldb.RebindForFlavor("SELECT presence FROM actual_lrps WHERE evacuating = true LIMIT 1", flavor)
 				row := rawSQLDB.QueryRow(query)
 				Expect(row.Scan(&presence)).To(Succeed())
 				Expect(presence).To(Equal(fmt.Sprintf("%d", models.ActualLRP_Evacuating)))

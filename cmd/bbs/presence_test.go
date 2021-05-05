@@ -3,8 +3,10 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"time"
 
+	"code.cloudfoundry.org/bbs/clients/rep"
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
@@ -13,7 +15,6 @@ import (
 	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	"code.cloudfoundry.org/locket/lock"
 	locketmodels "code.cloudfoundry.org/locket/models"
-	"code.cloudfoundry.org/rep/maintain"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -38,11 +39,18 @@ var _ = Describe("CellPresence", func() {
 			cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 			cfg.DatabaseDriver = sqlRunner.DriverName()
 			cfg.ListenAddress = locketAddress
+			cfg.CaFile = path.Join(fixturesPath, "locket", "CA.crt")
+			cfg.CertFile = path.Join(fixturesPath, "locket", "locket.crt")
+			cfg.KeyFile = path.Join(fixturesPath, "locket", "locket.key")
 		})
 
 		locketProcess = ginkgomon.Invoke(locketRunner)
 
-		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
+		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig(
+			path.Join(fixturesPath, "locket", "CA.crt"),
+			path.Join(fixturesPath, "locket", "client.crt"),
+			path.Join(fixturesPath, "locket", "client.key"),
+		)
 		bbsConfig.LocketAddress = locketAddress
 		bbsConfig.CellRegistrationsLocketEnabled = true
 	})
@@ -75,7 +83,7 @@ var _ = Describe("CellPresence", func() {
 				Capacity:   &models.CellCapacity{1, 2, 3},
 			}
 
-			cellPresenceClient := maintain.NewCellPresenceClient(consulClient, clock)
+			cellPresenceClient := rep.NewCellPresenceClient(consulClient, clock)
 			cellPresenceConsul = ifrit.Invoke(cellPresenceClient.NewCellPresenceRunner(
 				logger,
 				presenceConsul,

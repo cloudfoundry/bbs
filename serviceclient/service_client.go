@@ -6,10 +6,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
+	"code.cloudfoundry.org/bbs/clients/rep"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 	locketmodels "code.cloudfoundry.org/locket/models"
-	"code.cloudfoundry.org/rep/maintain"
 	"golang.org/x/net/context"
 )
 
@@ -24,11 +24,11 @@ type ServiceClient interface {
 }
 
 type serviceClient struct {
-	cellPresenceClient maintain.CellPresenceClient
+	cellPresenceClient rep.CellPresenceClient
 	locketClient       locketmodels.LocketClient
 }
 
-func NewServiceClient(cellPresenceClient maintain.CellPresenceClient, locketClient locketmodels.LocketClient) *serviceClient {
+func NewServiceClient(cellPresenceClient rep.CellPresenceClient, locketClient locketmodels.LocketClient) *serviceClient {
 	return &serviceClient{
 		cellPresenceClient: cellPresenceClient,
 		locketClient:       locketClient,

@@ -3,7 +3,7 @@ package metrics_test
 import (
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/monitorfakes"
+	"code.cloudfoundry.org/diegosqldb/monitor/monitorfakes"
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/metrics/metricsfakes"
 	"code.cloudfoundry.org/clock/fakeclock"

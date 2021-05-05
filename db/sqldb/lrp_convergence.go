@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diegosqldb"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -383,7 +383,7 @@ func (c *convergence) actualLRPsWithMissingCells(ctx context.Context, logger lag
 func (db *SQLDB) pruneDomains(ctx context.Context, logger lager.Logger, now time.Time) {
 	logger = logger.Session("prune-domains")
 
-	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx diegosqldb.Tx) error {
 		domains, err := db.domains(ctx, logger, tx, time.Time{})
 		if err != nil {
 			return err
@@ -416,7 +416,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(ctx context.Context, logger lager.Log
 	bindings := []interface{}{models.ActualLRP_Evacuating}
 
 	if len(cellSet) > 0 {
-		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet))))
+		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", diegosqldb.QuestionMarks(len(cellSet))))
 
 		for cellID := range cellSet {
 			bindings = append(bindings, cellID)
