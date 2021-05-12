@@ -100,16 +100,16 @@ func (fake *FakeEvacuationController) EvacuateClaimedActualLRP(arg1 context.Cont
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.EvacuateClaimedActualLRPStub
+	fakeReturns := fake.evacuateClaimedActualLRPReturns
 	fake.recordInvocation("EvacuateClaimedActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	evacuateClaimedActualLRPStubCopy := fake.EvacuateClaimedActualLRPStub
 	fake.evacuateClaimedActualLRPMutex.Unlock()
-	if evacuateClaimedActualLRPStubCopy != nil {
-		return evacuateClaimedActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.evacuateClaimedActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -168,16 +168,16 @@ func (fake *FakeEvacuationController) EvacuateCrashedActualLRP(arg1 context.Cont
 		arg4 *models.ActualLRPInstanceKey
 		arg5 string
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.EvacuateCrashedActualLRPStub
+	fakeReturns := fake.evacuateCrashedActualLRPReturns
 	fake.recordInvocation("EvacuateCrashedActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	evacuateCrashedActualLRPStubCopy := fake.EvacuateCrashedActualLRPStub
 	fake.evacuateCrashedActualLRPMutex.Unlock()
-	if evacuateCrashedActualLRPStubCopy != nil {
-		return evacuateCrashedActualLRPStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.evacuateCrashedActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -233,16 +233,16 @@ func (fake *FakeEvacuationController) EvacuateRunningActualLRP(arg1 context.Cont
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.EvacuateRunningActualLRPStub
+	fakeReturns := fake.evacuateRunningActualLRPReturns
 	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	evacuateRunningActualLRPStubCopy := fake.EvacuateRunningActualLRPStub
 	fake.evacuateRunningActualLRPMutex.Unlock()
-	if evacuateRunningActualLRPStubCopy != nil {
-		return evacuateRunningActualLRPStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.evacuateRunningActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -300,16 +300,16 @@ func (fake *FakeEvacuationController) EvacuateStoppedActualLRP(arg1 context.Cont
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.EvacuateStoppedActualLRPStub
+	fakeReturns := fake.evacuateStoppedActualLRPReturns
 	fake.recordInvocation("EvacuateStoppedActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	evacuateStoppedActualLRPStubCopy := fake.EvacuateStoppedActualLRPStub
 	fake.evacuateStoppedActualLRPMutex.Unlock()
-	if evacuateStoppedActualLRPStubCopy != nil {
-		return evacuateStoppedActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.evacuateStoppedActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -364,16 +364,16 @@ func (fake *FakeEvacuationController) RemoveEvacuatingActualLRP(arg1 context.Con
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.RemoveEvacuatingActualLRPStub
+	fakeReturns := fake.removeEvacuatingActualLRPReturns
 	fake.recordInvocation("RemoveEvacuatingActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	removeEvacuatingActualLRPStubCopy := fake.RemoveEvacuatingActualLRPStub
 	fake.removeEvacuatingActualLRPMutex.Unlock()
-	if removeEvacuatingActualLRPStubCopy != nil {
-		return removeEvacuatingActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeEvacuatingActualLRPReturns
 	return fakeReturns.result1
 }
 

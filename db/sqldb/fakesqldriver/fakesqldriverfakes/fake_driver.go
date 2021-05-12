@@ -32,16 +32,16 @@ func (fake *FakeDriver) Open(arg1 string) (driver.Conn, error) {
 	fake.openArgsForCall = append(fake.openArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.OpenStub
+	fakeReturns := fake.openReturns
 	fake.recordInvocation("Open", []interface{}{arg1})
-	openStubCopy := fake.OpenStub
 	fake.openMutex.Unlock()
-	if openStubCopy != nil {
-		return openStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.openReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

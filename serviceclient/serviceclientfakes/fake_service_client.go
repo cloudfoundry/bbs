@@ -59,16 +59,16 @@ func (fake *FakeServiceClient) CellById(arg1 lager.Logger, arg2 string) (*models
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.CellByIdStub
+	fakeReturns := fake.cellByIdReturns
 	fake.recordInvocation("CellById", []interface{}{arg1, arg2})
-	cellByIdStubCopy := fake.CellByIdStub
 	fake.cellByIdMutex.Unlock()
-	if cellByIdStubCopy != nil {
-		return cellByIdStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.cellByIdReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -123,16 +123,16 @@ func (fake *FakeServiceClient) CellEvents(arg1 lager.Logger) <-chan models.CellE
 	fake.cellEventsArgsForCall = append(fake.cellEventsArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.CellEventsStub
+	fakeReturns := fake.cellEventsReturns
 	fake.recordInvocation("CellEvents", []interface{}{arg1})
-	cellEventsStubCopy := fake.CellEventsStub
 	fake.cellEventsMutex.Unlock()
-	if cellEventsStubCopy != nil {
-		return cellEventsStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.cellEventsReturns
 	return fakeReturns.result1
 }
 
@@ -184,16 +184,16 @@ func (fake *FakeServiceClient) Cells(arg1 lager.Logger) (models.CellSet, error) 
 	fake.cellsArgsForCall = append(fake.cellsArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.CellsStub
+	fakeReturns := fake.cellsReturns
 	fake.recordInvocation("Cells", []interface{}{arg1})
-	cellsStubCopy := fake.CellsStub
 	fake.cellsMutex.Unlock()
-	if cellsStubCopy != nil {
-		return cellsStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.cellsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

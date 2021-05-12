@@ -112,16 +112,16 @@ func (fake *FakeActualLRPLifecycleController) ClaimActualLRP(arg1 context.Contex
 		arg4 int32
 		arg5 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.ClaimActualLRPStub
+	fakeReturns := fake.claimActualLRPReturns
 	fake.recordInvocation("ClaimActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	claimActualLRPStubCopy := fake.ClaimActualLRPStub
 	fake.claimActualLRPMutex.Unlock()
-	if claimActualLRPStubCopy != nil {
-		return claimActualLRPStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.claimActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -177,16 +177,16 @@ func (fake *FakeActualLRPLifecycleController) CrashActualLRP(arg1 context.Contex
 		arg4 *models.ActualLRPInstanceKey
 		arg5 string
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.CrashActualLRPStub
+	fakeReturns := fake.crashActualLRPReturns
 	fake.recordInvocation("CrashActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	crashActualLRPStubCopy := fake.CrashActualLRPStub
 	fake.crashActualLRPMutex.Unlock()
-	if crashActualLRPStubCopy != nil {
-		return crashActualLRPStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.crashActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -241,16 +241,16 @@ func (fake *FakeActualLRPLifecycleController) FailActualLRP(arg1 context.Context
 		arg3 *models.ActualLRPKey
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.FailActualLRPStub
+	fakeReturns := fake.failActualLRPReturns
 	fake.recordInvocation("FailActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	failActualLRPStubCopy := fake.FailActualLRPStub
 	fake.failActualLRPMutex.Unlock()
-	if failActualLRPStubCopy != nil {
-		return failActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.failActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -306,16 +306,16 @@ func (fake *FakeActualLRPLifecycleController) RemoveActualLRP(arg1 context.Conte
 		arg4 int32
 		arg5 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.RemoveActualLRPStub
+	fakeReturns := fake.removeActualLRPReturns
 	fake.recordInvocation("RemoveActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	removeActualLRPStubCopy := fake.RemoveActualLRPStub
 	fake.removeActualLRPMutex.Unlock()
-	if removeActualLRPStubCopy != nil {
-		return removeActualLRPStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -369,16 +369,16 @@ func (fake *FakeActualLRPLifecycleController) RetireActualLRP(arg1 context.Conte
 		arg2 lager.Logger
 		arg3 *models.ActualLRPKey
 	}{arg1, arg2, arg3})
+	stub := fake.RetireActualLRPStub
+	fakeReturns := fake.retireActualLRPReturns
 	fake.recordInvocation("RetireActualLRP", []interface{}{arg1, arg2, arg3})
-	retireActualLRPStubCopy := fake.RetireActualLRPStub
 	fake.retireActualLRPMutex.Unlock()
-	if retireActualLRPStubCopy != nil {
-		return retireActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.retireActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -434,16 +434,16 @@ func (fake *FakeActualLRPLifecycleController) StartActualLRP(arg1 context.Contex
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.StartActualLRPStub
+	fakeReturns := fake.startActualLRPReturns
 	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	startActualLRPStubCopy := fake.StartActualLRPStub
 	fake.startActualLRPMutex.Unlock()
-	if startActualLRPStubCopy != nil {
-		return startActualLRPStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.startActualLRPReturns
 	return fakeReturns.result1
 }
 

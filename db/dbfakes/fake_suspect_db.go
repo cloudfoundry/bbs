@@ -38,16 +38,16 @@ func (fake *FakeSuspectDB) RemoveSuspectActualLRP(arg1 context.Context, arg2 lag
 		arg2 lager.Logger
 		arg3 *models.ActualLRPKey
 	}{arg1, arg2, arg3})
+	stub := fake.RemoveSuspectActualLRPStub
+	fakeReturns := fake.removeSuspectActualLRPReturns
 	fake.recordInvocation("RemoveSuspectActualLRP", []interface{}{arg1, arg2, arg3})
-	removeSuspectActualLRPStubCopy := fake.RemoveSuspectActualLRPStub
 	fake.removeSuspectActualLRPMutex.Unlock()
-	if removeSuspectActualLRPStubCopy != nil {
-		return removeSuspectActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.removeSuspectActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

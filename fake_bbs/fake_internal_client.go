@@ -607,16 +607,16 @@ func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndex(arg1 lager.L
 		arg2 string
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.ActualLRPGroupByProcessGuidAndIndexStub
+	fakeReturns := fake.actualLRPGroupByProcessGuidAndIndexReturns
 	fake.recordInvocation("ActualLRPGroupByProcessGuidAndIndex", []interface{}{arg1, arg2, arg3})
-	actualLRPGroupByProcessGuidAndIndexStubCopy := fake.ActualLRPGroupByProcessGuidAndIndexStub
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.Unlock()
-	if actualLRPGroupByProcessGuidAndIndexStubCopy != nil {
-		return actualLRPGroupByProcessGuidAndIndexStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.actualLRPGroupByProcessGuidAndIndexReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -672,16 +672,16 @@ func (fake *FakeInternalClient) ActualLRPGroups(arg1 lager.Logger, arg2 models.A
 		arg1 lager.Logger
 		arg2 models.ActualLRPFilter
 	}{arg1, arg2})
+	stub := fake.ActualLRPGroupsStub
+	fakeReturns := fake.actualLRPGroupsReturns
 	fake.recordInvocation("ActualLRPGroups", []interface{}{arg1, arg2})
-	actualLRPGroupsStubCopy := fake.ActualLRPGroupsStub
 	fake.actualLRPGroupsMutex.Unlock()
-	if actualLRPGroupsStubCopy != nil {
-		return actualLRPGroupsStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.actualLRPGroupsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -737,16 +737,16 @@ func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuid(arg1 lager.Logger, 
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.ActualLRPGroupsByProcessGuidStub
+	fakeReturns := fake.actualLRPGroupsByProcessGuidReturns
 	fake.recordInvocation("ActualLRPGroupsByProcessGuid", []interface{}{arg1, arg2})
-	actualLRPGroupsByProcessGuidStubCopy := fake.ActualLRPGroupsByProcessGuidStub
 	fake.actualLRPGroupsByProcessGuidMutex.Unlock()
-	if actualLRPGroupsByProcessGuidStubCopy != nil {
-		return actualLRPGroupsByProcessGuidStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.actualLRPGroupsByProcessGuidReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -802,16 +802,16 @@ func (fake *FakeInternalClient) ActualLRPs(arg1 lager.Logger, arg2 models.Actual
 		arg1 lager.Logger
 		arg2 models.ActualLRPFilter
 	}{arg1, arg2})
+	stub := fake.ActualLRPsStub
+	fakeReturns := fake.actualLRPsReturns
 	fake.recordInvocation("ActualLRPs", []interface{}{arg1, arg2})
-	actualLRPsStubCopy := fake.ActualLRPsStub
 	fake.actualLRPsMutex.Unlock()
-	if actualLRPsStubCopy != nil {
-		return actualLRPsStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.actualLRPsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -867,16 +867,16 @@ func (fake *FakeInternalClient) CancelTask(arg1 lager.Logger, arg2 string) error
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.CancelTaskStub
+	fakeReturns := fake.cancelTaskReturns
 	fake.recordInvocation("CancelTask", []interface{}{arg1, arg2})
-	cancelTaskStubCopy := fake.CancelTaskStub
 	fake.cancelTaskMutex.Unlock()
-	if cancelTaskStubCopy != nil {
-		return cancelTaskStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.cancelTaskReturns
 	return fakeReturns.result1
 }
 
@@ -928,16 +928,16 @@ func (fake *FakeInternalClient) Cells(arg1 lager.Logger) ([]*models.CellPresence
 	fake.cellsArgsForCall = append(fake.cellsArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.CellsStub
+	fakeReturns := fake.cellsReturns
 	fake.recordInvocation("Cells", []interface{}{arg1})
-	cellsStubCopy := fake.CellsStub
 	fake.cellsMutex.Unlock()
-	if cellsStubCopy != nil {
-		return cellsStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.cellsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -994,16 +994,16 @@ func (fake *FakeInternalClient) ClaimActualLRP(arg1 lager.Logger, arg2 *models.A
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3})
+	stub := fake.ClaimActualLRPStub
+	fakeReturns := fake.claimActualLRPReturns
 	fake.recordInvocation("ClaimActualLRP", []interface{}{arg1, arg2, arg3})
-	claimActualLRPStubCopy := fake.ClaimActualLRPStub
 	fake.claimActualLRPMutex.Unlock()
-	if claimActualLRPStubCopy != nil {
-		return claimActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.claimActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -1060,16 +1060,16 @@ func (fake *FakeInternalClient) CompleteTask(arg1 lager.Logger, arg2 string, arg
 		arg5 string
 		arg6 string
 	}{arg1, arg2, arg3, arg4, arg5, arg6})
+	stub := fake.CompleteTaskStub
+	fakeReturns := fake.completeTaskReturns
 	fake.recordInvocation("CompleteTask", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6})
-	completeTaskStubCopy := fake.CompleteTaskStub
 	fake.completeTaskMutex.Unlock()
-	if completeTaskStubCopy != nil {
-		return completeTaskStubCopy(arg1, arg2, arg3, arg4, arg5, arg6)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.completeTaskReturns
 	return fakeReturns.result1
 }
 
@@ -1124,16 +1124,16 @@ func (fake *FakeInternalClient) CrashActualLRP(arg1 lager.Logger, arg2 *models.A
 		arg3 *models.ActualLRPInstanceKey
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.CrashActualLRPStub
+	fakeReturns := fake.crashActualLRPReturns
 	fake.recordInvocation("CrashActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	crashActualLRPStubCopy := fake.CrashActualLRPStub
 	fake.crashActualLRPMutex.Unlock()
-	if crashActualLRPStubCopy != nil {
-		return crashActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.crashActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -1186,16 +1186,16 @@ func (fake *FakeInternalClient) DeleteTask(arg1 lager.Logger, arg2 string) error
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.DeleteTaskStub
+	fakeReturns := fake.deleteTaskReturns
 	fake.recordInvocation("DeleteTask", []interface{}{arg1, arg2})
-	deleteTaskStubCopy := fake.DeleteTaskStub
 	fake.deleteTaskMutex.Unlock()
-	if deleteTaskStubCopy != nil {
-		return deleteTaskStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.deleteTaskReturns
 	return fakeReturns.result1
 }
 
@@ -1248,16 +1248,16 @@ func (fake *FakeInternalClient) DesireLRP(arg1 lager.Logger, arg2 *models.Desire
 		arg1 lager.Logger
 		arg2 *models.DesiredLRP
 	}{arg1, arg2})
+	stub := fake.DesireLRPStub
+	fakeReturns := fake.desireLRPReturns
 	fake.recordInvocation("DesireLRP", []interface{}{arg1, arg2})
-	desireLRPStubCopy := fake.DesireLRPStub
 	fake.desireLRPMutex.Unlock()
-	if desireLRPStubCopy != nil {
-		return desireLRPStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.desireLRPReturns
 	return fakeReturns.result1
 }
 
@@ -1312,16 +1312,16 @@ func (fake *FakeInternalClient) DesireTask(arg1 lager.Logger, arg2 string, arg3 
 		arg3 string
 		arg4 *models.TaskDefinition
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.DesireTaskStub
+	fakeReturns := fake.desireTaskReturns
 	fake.recordInvocation("DesireTask", []interface{}{arg1, arg2, arg3, arg4})
-	desireTaskStubCopy := fake.DesireTaskStub
 	fake.desireTaskMutex.Unlock()
-	if desireTaskStubCopy != nil {
-		return desireTaskStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.desireTaskReturns
 	return fakeReturns.result1
 }
 
@@ -1374,16 +1374,16 @@ func (fake *FakeInternalClient) DesiredLRPByProcessGuid(arg1 lager.Logger, arg2 
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.DesiredLRPByProcessGuidStub
+	fakeReturns := fake.desiredLRPByProcessGuidReturns
 	fake.recordInvocation("DesiredLRPByProcessGuid", []interface{}{arg1, arg2})
-	desiredLRPByProcessGuidStubCopy := fake.DesiredLRPByProcessGuidStub
 	fake.desiredLRPByProcessGuidMutex.Unlock()
-	if desiredLRPByProcessGuidStubCopy != nil {
-		return desiredLRPByProcessGuidStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.desiredLRPByProcessGuidReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1439,16 +1439,16 @@ func (fake *FakeInternalClient) DesiredLRPSchedulingInfos(arg1 lager.Logger, arg
 		arg1 lager.Logger
 		arg2 models.DesiredLRPFilter
 	}{arg1, arg2})
+	stub := fake.DesiredLRPSchedulingInfosStub
+	fakeReturns := fake.desiredLRPSchedulingInfosReturns
 	fake.recordInvocation("DesiredLRPSchedulingInfos", []interface{}{arg1, arg2})
-	desiredLRPSchedulingInfosStubCopy := fake.DesiredLRPSchedulingInfosStub
 	fake.desiredLRPSchedulingInfosMutex.Unlock()
-	if desiredLRPSchedulingInfosStubCopy != nil {
-		return desiredLRPSchedulingInfosStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.desiredLRPSchedulingInfosReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1504,16 +1504,16 @@ func (fake *FakeInternalClient) DesiredLRPs(arg1 lager.Logger, arg2 models.Desir
 		arg1 lager.Logger
 		arg2 models.DesiredLRPFilter
 	}{arg1, arg2})
+	stub := fake.DesiredLRPsStub
+	fakeReturns := fake.desiredLRPsReturns
 	fake.recordInvocation("DesiredLRPs", []interface{}{arg1, arg2})
-	desiredLRPsStubCopy := fake.DesiredLRPsStub
 	fake.desiredLRPsMutex.Unlock()
-	if desiredLRPsStubCopy != nil {
-		return desiredLRPsStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.desiredLRPsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1568,16 +1568,16 @@ func (fake *FakeInternalClient) Domains(arg1 lager.Logger) ([]string, error) {
 	fake.domainsArgsForCall = append(fake.domainsArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.DomainsStub
+	fakeReturns := fake.domainsReturns
 	fake.recordInvocation("Domains", []interface{}{arg1})
-	domainsStubCopy := fake.DomainsStub
 	fake.domainsMutex.Unlock()
-	if domainsStubCopy != nil {
-		return domainsStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.domainsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1634,16 +1634,16 @@ func (fake *FakeInternalClient) EvacuateClaimedActualLRP(arg1 lager.Logger, arg2
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3})
+	stub := fake.EvacuateClaimedActualLRPStub
+	fakeReturns := fake.evacuateClaimedActualLRPReturns
 	fake.recordInvocation("EvacuateClaimedActualLRP", []interface{}{arg1, arg2, arg3})
-	evacuateClaimedActualLRPStubCopy := fake.EvacuateClaimedActualLRPStub
 	fake.evacuateClaimedActualLRPMutex.Unlock()
-	if evacuateClaimedActualLRPStubCopy != nil {
-		return evacuateClaimedActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.evacuateClaimedActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1701,16 +1701,16 @@ func (fake *FakeInternalClient) EvacuateCrashedActualLRP(arg1 lager.Logger, arg2
 		arg3 *models.ActualLRPInstanceKey
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.EvacuateCrashedActualLRPStub
+	fakeReturns := fake.evacuateCrashedActualLRPReturns
 	fake.recordInvocation("EvacuateCrashedActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	evacuateCrashedActualLRPStubCopy := fake.EvacuateCrashedActualLRPStub
 	fake.evacuateCrashedActualLRPMutex.Unlock()
-	if evacuateCrashedActualLRPStubCopy != nil {
-		return evacuateCrashedActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.evacuateCrashedActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1768,16 +1768,16 @@ func (fake *FakeInternalClient) EvacuateRunningActualLRP(arg1 lager.Logger, arg2
 		arg3 *models.ActualLRPInstanceKey
 		arg4 *models.ActualLRPNetInfo
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.EvacuateRunningActualLRPStub
+	fakeReturns := fake.evacuateRunningActualLRPReturns
 	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	evacuateRunningActualLRPStubCopy := fake.EvacuateRunningActualLRPStub
 	fake.evacuateRunningActualLRPMutex.Unlock()
-	if evacuateRunningActualLRPStubCopy != nil {
-		return evacuateRunningActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.evacuateRunningActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1834,16 +1834,16 @@ func (fake *FakeInternalClient) EvacuateStoppedActualLRP(arg1 lager.Logger, arg2
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3})
+	stub := fake.EvacuateStoppedActualLRPStub
+	fakeReturns := fake.evacuateStoppedActualLRPReturns
 	fake.recordInvocation("EvacuateStoppedActualLRP", []interface{}{arg1, arg2, arg3})
-	evacuateStoppedActualLRPStubCopy := fake.EvacuateStoppedActualLRPStub
 	fake.evacuateStoppedActualLRPMutex.Unlock()
-	if evacuateStoppedActualLRPStubCopy != nil {
-		return evacuateStoppedActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.evacuateStoppedActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -1900,16 +1900,16 @@ func (fake *FakeInternalClient) FailActualLRP(arg1 lager.Logger, arg2 *models.Ac
 		arg2 *models.ActualLRPKey
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.FailActualLRPStub
+	fakeReturns := fake.failActualLRPReturns
 	fake.recordInvocation("FailActualLRP", []interface{}{arg1, arg2, arg3})
-	failActualLRPStubCopy := fake.FailActualLRPStub
 	fake.failActualLRPMutex.Unlock()
-	if failActualLRPStubCopy != nil {
-		return failActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.failActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -1963,16 +1963,16 @@ func (fake *FakeInternalClient) FailTask(arg1 lager.Logger, arg2 string, arg3 st
 		arg2 string
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.FailTaskStub
+	fakeReturns := fake.failTaskReturns
 	fake.recordInvocation("FailTask", []interface{}{arg1, arg2, arg3})
-	failTaskStubCopy := fake.FailTaskStub
 	fake.failTaskMutex.Unlock()
-	if failTaskStubCopy != nil {
-		return failTaskStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.failTaskReturns
 	return fakeReturns.result1
 }
 
@@ -2024,16 +2024,16 @@ func (fake *FakeInternalClient) Ping(arg1 lager.Logger) bool {
 	fake.pingArgsForCall = append(fake.pingArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.PingStub
+	fakeReturns := fake.pingReturns
 	fake.recordInvocation("Ping", []interface{}{arg1})
-	pingStubCopy := fake.PingStub
 	fake.pingMutex.Unlock()
-	if pingStubCopy != nil {
-		return pingStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.pingReturns
 	return fakeReturns.result1
 }
 
@@ -2087,16 +2087,16 @@ func (fake *FakeInternalClient) RejectTask(arg1 lager.Logger, arg2 string, arg3 
 		arg2 string
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.RejectTaskStub
+	fakeReturns := fake.rejectTaskReturns
 	fake.recordInvocation("RejectTask", []interface{}{arg1, arg2, arg3})
-	rejectTaskStubCopy := fake.RejectTaskStub
 	fake.rejectTaskMutex.Unlock()
-	if rejectTaskStubCopy != nil {
-		return rejectTaskStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.rejectTaskReturns
 	return fakeReturns.result1
 }
 
@@ -2150,16 +2150,16 @@ func (fake *FakeInternalClient) RemoveActualLRP(arg1 lager.Logger, arg2 *models.
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3})
+	stub := fake.RemoveActualLRPStub
+	fakeReturns := fake.removeActualLRPReturns
 	fake.recordInvocation("RemoveActualLRP", []interface{}{arg1, arg2, arg3})
-	removeActualLRPStubCopy := fake.RemoveActualLRPStub
 	fake.removeActualLRPMutex.Unlock()
-	if removeActualLRPStubCopy != nil {
-		return removeActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -2212,16 +2212,16 @@ func (fake *FakeInternalClient) RemoveDesiredLRP(arg1 lager.Logger, arg2 string)
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.RemoveDesiredLRPStub
+	fakeReturns := fake.removeDesiredLRPReturns
 	fake.recordInvocation("RemoveDesiredLRP", []interface{}{arg1, arg2})
-	removeDesiredLRPStubCopy := fake.RemoveDesiredLRPStub
 	fake.removeDesiredLRPMutex.Unlock()
-	if removeDesiredLRPStubCopy != nil {
-		return removeDesiredLRPStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeDesiredLRPReturns
 	return fakeReturns.result1
 }
 
@@ -2275,16 +2275,16 @@ func (fake *FakeInternalClient) RemoveEvacuatingActualLRP(arg1 lager.Logger, arg
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3})
+	stub := fake.RemoveEvacuatingActualLRPStub
+	fakeReturns := fake.removeEvacuatingActualLRPReturns
 	fake.recordInvocation("RemoveEvacuatingActualLRP", []interface{}{arg1, arg2, arg3})
-	removeEvacuatingActualLRPStubCopy := fake.RemoveEvacuatingActualLRPStub
 	fake.removeEvacuatingActualLRPMutex.Unlock()
-	if removeEvacuatingActualLRPStubCopy != nil {
-		return removeEvacuatingActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeEvacuatingActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -2337,16 +2337,16 @@ func (fake *FakeInternalClient) ResolvingTask(arg1 lager.Logger, arg2 string) er
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.ResolvingTaskStub
+	fakeReturns := fake.resolvingTaskReturns
 	fake.recordInvocation("ResolvingTask", []interface{}{arg1, arg2})
-	resolvingTaskStubCopy := fake.ResolvingTaskStub
 	fake.resolvingTaskMutex.Unlock()
-	if resolvingTaskStubCopy != nil {
-		return resolvingTaskStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.resolvingTaskReturns
 	return fakeReturns.result1
 }
 
@@ -2399,16 +2399,16 @@ func (fake *FakeInternalClient) RetireActualLRP(arg1 lager.Logger, arg2 *models.
 		arg1 lager.Logger
 		arg2 *models.ActualLRPKey
 	}{arg1, arg2})
+	stub := fake.RetireActualLRPStub
+	fakeReturns := fake.retireActualLRPReturns
 	fake.recordInvocation("RetireActualLRP", []interface{}{arg1, arg2})
-	retireActualLRPStubCopy := fake.RetireActualLRPStub
 	fake.retireActualLRPMutex.Unlock()
-	if retireActualLRPStubCopy != nil {
-		return retireActualLRPStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.retireActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -2463,16 +2463,16 @@ func (fake *FakeInternalClient) StartActualLRP(arg1 lager.Logger, arg2 *models.A
 		arg3 *models.ActualLRPInstanceKey
 		arg4 *models.ActualLRPNetInfo
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.StartActualLRPStub
+	fakeReturns := fake.startActualLRPReturns
 	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	startActualLRPStubCopy := fake.StartActualLRPStub
 	fake.startActualLRPMutex.Unlock()
-	if startActualLRPStubCopy != nil {
-		return startActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.startActualLRPReturns
 	return fakeReturns.result1
 }
 
@@ -2526,16 +2526,16 @@ func (fake *FakeInternalClient) StartTask(arg1 lager.Logger, arg2 string, arg3 s
 		arg2 string
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.StartTaskStub
+	fakeReturns := fake.startTaskReturns
 	fake.recordInvocation("StartTask", []interface{}{arg1, arg2, arg3})
-	startTaskStubCopy := fake.StartTaskStub
 	fake.startTaskMutex.Unlock()
-	if startTaskStubCopy != nil {
-		return startTaskStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.startTaskReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -2590,16 +2590,16 @@ func (fake *FakeInternalClient) SubscribeToEvents(arg1 lager.Logger) (events.Eve
 	fake.subscribeToEventsArgsForCall = append(fake.subscribeToEventsArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.SubscribeToEventsStub
+	fakeReturns := fake.subscribeToEventsReturns
 	fake.recordInvocation("SubscribeToEvents", []interface{}{arg1})
-	subscribeToEventsStubCopy := fake.SubscribeToEventsStub
 	fake.subscribeToEventsMutex.Unlock()
-	if subscribeToEventsStubCopy != nil {
-		return subscribeToEventsStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.subscribeToEventsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -2655,16 +2655,16 @@ func (fake *FakeInternalClient) SubscribeToEventsByCellID(arg1 lager.Logger, arg
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.SubscribeToEventsByCellIDStub
+	fakeReturns := fake.subscribeToEventsByCellIDReturns
 	fake.recordInvocation("SubscribeToEventsByCellID", []interface{}{arg1, arg2})
-	subscribeToEventsByCellIDStubCopy := fake.SubscribeToEventsByCellIDStub
 	fake.subscribeToEventsByCellIDMutex.Unlock()
-	if subscribeToEventsByCellIDStubCopy != nil {
-		return subscribeToEventsByCellIDStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.subscribeToEventsByCellIDReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -2719,16 +2719,16 @@ func (fake *FakeInternalClient) SubscribeToInstanceEvents(arg1 lager.Logger) (ev
 	fake.subscribeToInstanceEventsArgsForCall = append(fake.subscribeToInstanceEventsArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.SubscribeToInstanceEventsStub
+	fakeReturns := fake.subscribeToInstanceEventsReturns
 	fake.recordInvocation("SubscribeToInstanceEvents", []interface{}{arg1})
-	subscribeToInstanceEventsStubCopy := fake.SubscribeToInstanceEventsStub
 	fake.subscribeToInstanceEventsMutex.Unlock()
-	if subscribeToInstanceEventsStubCopy != nil {
-		return subscribeToInstanceEventsStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.subscribeToInstanceEventsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -2784,16 +2784,16 @@ func (fake *FakeInternalClient) SubscribeToInstanceEventsByCellID(arg1 lager.Log
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.SubscribeToInstanceEventsByCellIDStub
+	fakeReturns := fake.subscribeToInstanceEventsByCellIDReturns
 	fake.recordInvocation("SubscribeToInstanceEventsByCellID", []interface{}{arg1, arg2})
-	subscribeToInstanceEventsByCellIDStubCopy := fake.SubscribeToInstanceEventsByCellIDStub
 	fake.subscribeToInstanceEventsByCellIDMutex.Unlock()
-	if subscribeToInstanceEventsByCellIDStubCopy != nil {
-		return subscribeToInstanceEventsByCellIDStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.subscribeToInstanceEventsByCellIDReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -2848,16 +2848,16 @@ func (fake *FakeInternalClient) SubscribeToTaskEvents(arg1 lager.Logger) (events
 	fake.subscribeToTaskEventsArgsForCall = append(fake.subscribeToTaskEventsArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.SubscribeToTaskEventsStub
+	fakeReturns := fake.subscribeToTaskEventsReturns
 	fake.recordInvocation("SubscribeToTaskEvents", []interface{}{arg1})
-	subscribeToTaskEventsStubCopy := fake.SubscribeToTaskEventsStub
 	fake.subscribeToTaskEventsMutex.Unlock()
-	if subscribeToTaskEventsStubCopy != nil {
-		return subscribeToTaskEventsStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.subscribeToTaskEventsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -2913,16 +2913,16 @@ func (fake *FakeInternalClient) TaskByGuid(arg1 lager.Logger, arg2 string) (*mod
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.TaskByGuidStub
+	fakeReturns := fake.taskByGuidReturns
 	fake.recordInvocation("TaskByGuid", []interface{}{arg1, arg2})
-	taskByGuidStubCopy := fake.TaskByGuidStub
 	fake.taskByGuidMutex.Unlock()
-	if taskByGuidStubCopy != nil {
-		return taskByGuidStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.taskByGuidReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -2977,16 +2977,16 @@ func (fake *FakeInternalClient) Tasks(arg1 lager.Logger) ([]*models.Task, error)
 	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.TasksStub
+	fakeReturns := fake.tasksReturns
 	fake.recordInvocation("Tasks", []interface{}{arg1})
-	tasksStubCopy := fake.TasksStub
 	fake.tasksMutex.Unlock()
-	if tasksStubCopy != nil {
-		return tasksStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.tasksReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -3042,16 +3042,16 @@ func (fake *FakeInternalClient) TasksByCellID(arg1 lager.Logger, arg2 string) ([
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.TasksByCellIDStub
+	fakeReturns := fake.tasksByCellIDReturns
 	fake.recordInvocation("TasksByCellID", []interface{}{arg1, arg2})
-	tasksByCellIDStubCopy := fake.TasksByCellIDStub
 	fake.tasksByCellIDMutex.Unlock()
-	if tasksByCellIDStubCopy != nil {
-		return tasksByCellIDStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.tasksByCellIDReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -3107,16 +3107,16 @@ func (fake *FakeInternalClient) TasksByDomain(arg1 lager.Logger, arg2 string) ([
 		arg1 lager.Logger
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.TasksByDomainStub
+	fakeReturns := fake.tasksByDomainReturns
 	fake.recordInvocation("TasksByDomain", []interface{}{arg1, arg2})
-	tasksByDomainStubCopy := fake.TasksByDomainStub
 	fake.tasksByDomainMutex.Unlock()
-	if tasksByDomainStubCopy != nil {
-		return tasksByDomainStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.tasksByDomainReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -3172,16 +3172,16 @@ func (fake *FakeInternalClient) TasksWithFilter(arg1 lager.Logger, arg2 models.T
 		arg1 lager.Logger
 		arg2 models.TaskFilter
 	}{arg1, arg2})
+	stub := fake.TasksWithFilterStub
+	fakeReturns := fake.tasksWithFilterReturns
 	fake.recordInvocation("TasksWithFilter", []interface{}{arg1, arg2})
-	tasksWithFilterStubCopy := fake.TasksWithFilterStub
 	fake.tasksWithFilterMutex.Unlock()
-	if tasksWithFilterStubCopy != nil {
-		return tasksWithFilterStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.tasksWithFilterReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -3238,16 +3238,16 @@ func (fake *FakeInternalClient) UpdateDesiredLRP(arg1 lager.Logger, arg2 string,
 		arg2 string
 		arg3 *models.DesiredLRPUpdate
 	}{arg1, arg2, arg3})
+	stub := fake.UpdateDesiredLRPStub
+	fakeReturns := fake.updateDesiredLRPReturns
 	fake.recordInvocation("UpdateDesiredLRP", []interface{}{arg1, arg2, arg3})
-	updateDesiredLRPStubCopy := fake.UpdateDesiredLRPStub
 	fake.updateDesiredLRPMutex.Unlock()
-	if updateDesiredLRPStubCopy != nil {
-		return updateDesiredLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.updateDesiredLRPReturns
 	return fakeReturns.result1
 }
 
@@ -3301,16 +3301,16 @@ func (fake *FakeInternalClient) UpsertDomain(arg1 lager.Logger, arg2 string, arg
 		arg2 string
 		arg3 time.Duration
 	}{arg1, arg2, arg3})
+	stub := fake.UpsertDomainStub
+	fakeReturns := fake.upsertDomainReturns
 	fake.recordInvocation("UpsertDomain", []interface{}{arg1, arg2, arg3})
-	upsertDomainStubCopy := fake.UpsertDomainStub
 	fake.upsertDomainMutex.Unlock()
-	if upsertDomainStubCopy != nil {
-		return upsertDomainStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.upsertDomainReturns
 	return fakeReturns.result1
 }
 

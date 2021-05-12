@@ -64,16 +64,16 @@ func (fake *FakeStmt) Close() error {
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
 	}{})
+	stub := fake.CloseStub
+	fakeReturns := fake.closeReturns
 	fake.recordInvocation("Close", []interface{}{})
-	closeStubCopy := fake.CloseStub
 	fake.closeMutex.Unlock()
-	if closeStubCopy != nil {
-		return closeStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.closeReturns
 	return fakeReturns.result1
 }
 
@@ -123,16 +123,16 @@ func (fake *FakeStmt) Exec(arg1 []driver.Value) (driver.Result, error) {
 	fake.execArgsForCall = append(fake.execArgsForCall, struct {
 		arg1 []driver.Value
 	}{arg1Copy})
+	stub := fake.ExecStub
+	fakeReturns := fake.execReturns
 	fake.recordInvocation("Exec", []interface{}{arg1Copy})
-	execStubCopy := fake.ExecStub
 	fake.execMutex.Unlock()
-	if execStubCopy != nil {
-		return execStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.execReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -186,16 +186,16 @@ func (fake *FakeStmt) NumInput() int {
 	ret, specificReturn := fake.numInputReturnsOnCall[len(fake.numInputArgsForCall)]
 	fake.numInputArgsForCall = append(fake.numInputArgsForCall, struct {
 	}{})
+	stub := fake.NumInputStub
+	fakeReturns := fake.numInputReturns
 	fake.recordInvocation("NumInput", []interface{}{})
-	numInputStubCopy := fake.NumInputStub
 	fake.numInputMutex.Unlock()
-	if numInputStubCopy != nil {
-		return numInputStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.numInputReturns
 	return fakeReturns.result1
 }
 
@@ -245,16 +245,16 @@ func (fake *FakeStmt) Query(arg1 []driver.Value) (driver.Rows, error) {
 	fake.queryArgsForCall = append(fake.queryArgsForCall, struct {
 		arg1 []driver.Value
 	}{arg1Copy})
+	stub := fake.QueryStub
+	fakeReturns := fake.queryReturns
 	fake.recordInvocation("Query", []interface{}{arg1Copy})
-	queryStubCopy := fake.QueryStub
 	fake.queryMutex.Unlock()
-	if queryStubCopy != nil {
-		return queryStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.queryReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

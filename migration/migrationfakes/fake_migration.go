@@ -72,11 +72,11 @@ func (fake *FakeMigration) SetClock(arg1 clock.Clock) {
 	fake.setClockArgsForCall = append(fake.setClockArgsForCall, struct {
 		arg1 clock.Clock
 	}{arg1})
+	stub := fake.SetClockStub
 	fake.recordInvocation("SetClock", []interface{}{arg1})
-	setClockStubCopy := fake.SetClockStub
 	fake.setClockMutex.Unlock()
-	if setClockStubCopy != nil {
-		setClockStubCopy(arg1)
+	if stub != nil {
+		fake.SetClockStub(arg1)
 	}
 }
 
@@ -104,11 +104,11 @@ func (fake *FakeMigration) SetCryptor(arg1 encryption.Cryptor) {
 	fake.setCryptorArgsForCall = append(fake.setCryptorArgsForCall, struct {
 		arg1 encryption.Cryptor
 	}{arg1})
+	stub := fake.SetCryptorStub
 	fake.recordInvocation("SetCryptor", []interface{}{arg1})
-	setCryptorStubCopy := fake.SetCryptorStub
 	fake.setCryptorMutex.Unlock()
-	if setCryptorStubCopy != nil {
-		setCryptorStubCopy(arg1)
+	if stub != nil {
+		fake.SetCryptorStub(arg1)
 	}
 }
 
@@ -136,11 +136,11 @@ func (fake *FakeMigration) SetDBFlavor(arg1 string) {
 	fake.setDBFlavorArgsForCall = append(fake.setDBFlavorArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.SetDBFlavorStub
 	fake.recordInvocation("SetDBFlavor", []interface{}{arg1})
-	setDBFlavorStubCopy := fake.SetDBFlavorStub
 	fake.setDBFlavorMutex.Unlock()
-	if setDBFlavorStubCopy != nil {
-		setDBFlavorStubCopy(arg1)
+	if stub != nil {
+		fake.SetDBFlavorStub(arg1)
 	}
 }
 
@@ -168,11 +168,11 @@ func (fake *FakeMigration) SetRawSQLDB(arg1 *sql.DB) {
 	fake.setRawSQLDBArgsForCall = append(fake.setRawSQLDBArgsForCall, struct {
 		arg1 *sql.DB
 	}{arg1})
+	stub := fake.SetRawSQLDBStub
 	fake.recordInvocation("SetRawSQLDB", []interface{}{arg1})
-	setRawSQLDBStubCopy := fake.SetRawSQLDBStub
 	fake.setRawSQLDBMutex.Unlock()
-	if setRawSQLDBStubCopy != nil {
-		setRawSQLDBStubCopy(arg1)
+	if stub != nil {
+		fake.SetRawSQLDBStub(arg1)
 	}
 }
 
@@ -200,16 +200,16 @@ func (fake *FakeMigration) String() string {
 	ret, specificReturn := fake.stringReturnsOnCall[len(fake.stringArgsForCall)]
 	fake.stringArgsForCall = append(fake.stringArgsForCall, struct {
 	}{})
+	stub := fake.StringStub
+	fakeReturns := fake.stringReturns
 	fake.recordInvocation("String", []interface{}{})
-	stringStubCopy := fake.StringStub
 	fake.stringMutex.Unlock()
-	if stringStubCopy != nil {
-		return stringStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.stringReturns
 	return fakeReturns.result1
 }
 
@@ -254,16 +254,16 @@ func (fake *FakeMigration) Up(arg1 lager.Logger) error {
 	fake.upArgsForCall = append(fake.upArgsForCall, struct {
 		arg1 lager.Logger
 	}{arg1})
+	stub := fake.UpStub
+	fakeReturns := fake.upReturns
 	fake.recordInvocation("Up", []interface{}{arg1})
-	upStubCopy := fake.UpStub
 	fake.upMutex.Unlock()
-	if upStubCopy != nil {
-		return upStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.upReturns
 	return fakeReturns.result1
 }
 
@@ -314,16 +314,16 @@ func (fake *FakeMigration) Version() int64 {
 	ret, specificReturn := fake.versionReturnsOnCall[len(fake.versionArgsForCall)]
 	fake.versionArgsForCall = append(fake.versionArgsForCall, struct {
 	}{})
+	stub := fake.VersionStub
+	fakeReturns := fake.versionReturns
 	fake.recordInvocation("Version", []interface{}{})
-	versionStubCopy := fake.VersionStub
 	fake.versionMutex.Unlock()
-	if versionStubCopy != nil {
-		return versionStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.versionReturns
 	return fakeReturns.result1
 }
 

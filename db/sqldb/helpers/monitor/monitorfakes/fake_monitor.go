@@ -79,16 +79,16 @@ func (fake *FakeMonitor) Failed() int64 {
 	ret, specificReturn := fake.failedReturnsOnCall[len(fake.failedArgsForCall)]
 	fake.failedArgsForCall = append(fake.failedArgsForCall, struct {
 	}{})
+	stub := fake.FailedStub
+	fakeReturns := fake.failedReturns
 	fake.recordInvocation("Failed", []interface{}{})
-	failedStubCopy := fake.FailedStub
 	fake.failedMutex.Unlock()
-	if failedStubCopy != nil {
-		return failedStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.failedReturns
 	return fakeReturns.result1
 }
 
@@ -133,16 +133,16 @@ func (fake *FakeMonitor) Monitor(arg1 func() error) error {
 	fake.monitorArgsForCall = append(fake.monitorArgsForCall, struct {
 		arg1 func() error
 	}{arg1})
+	stub := fake.MonitorStub
+	fakeReturns := fake.monitorReturns
 	fake.recordInvocation("Monitor", []interface{}{arg1})
-	monitorStubCopy := fake.MonitorStub
 	fake.monitorMutex.Unlock()
-	if monitorStubCopy != nil {
-		return monitorStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.monitorReturns
 	return fakeReturns.result1
 }
 
@@ -193,16 +193,16 @@ func (fake *FakeMonitor) ReadAndResetDurationMax() time.Duration {
 	ret, specificReturn := fake.readAndResetDurationMaxReturnsOnCall[len(fake.readAndResetDurationMaxArgsForCall)]
 	fake.readAndResetDurationMaxArgsForCall = append(fake.readAndResetDurationMaxArgsForCall, struct {
 	}{})
+	stub := fake.ReadAndResetDurationMaxStub
+	fakeReturns := fake.readAndResetDurationMaxReturns
 	fake.recordInvocation("ReadAndResetDurationMax", []interface{}{})
-	readAndResetDurationMaxStubCopy := fake.ReadAndResetDurationMaxStub
 	fake.readAndResetDurationMaxMutex.Unlock()
-	if readAndResetDurationMaxStubCopy != nil {
-		return readAndResetDurationMaxStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.readAndResetDurationMaxReturns
 	return fakeReturns.result1
 }
 
@@ -246,16 +246,16 @@ func (fake *FakeMonitor) ReadAndResetInFlightMax() int64 {
 	ret, specificReturn := fake.readAndResetInFlightMaxReturnsOnCall[len(fake.readAndResetInFlightMaxArgsForCall)]
 	fake.readAndResetInFlightMaxArgsForCall = append(fake.readAndResetInFlightMaxArgsForCall, struct {
 	}{})
+	stub := fake.ReadAndResetInFlightMaxStub
+	fakeReturns := fake.readAndResetInFlightMaxReturns
 	fake.recordInvocation("ReadAndResetInFlightMax", []interface{}{})
-	readAndResetInFlightMaxStubCopy := fake.ReadAndResetInFlightMaxStub
 	fake.readAndResetInFlightMaxMutex.Unlock()
-	if readAndResetInFlightMaxStubCopy != nil {
-		return readAndResetInFlightMaxStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.readAndResetInFlightMaxReturns
 	return fakeReturns.result1
 }
 
@@ -299,16 +299,16 @@ func (fake *FakeMonitor) Succeeded() int64 {
 	ret, specificReturn := fake.succeededReturnsOnCall[len(fake.succeededArgsForCall)]
 	fake.succeededArgsForCall = append(fake.succeededArgsForCall, struct {
 	}{})
+	stub := fake.SucceededStub
+	fakeReturns := fake.succeededReturns
 	fake.recordInvocation("Succeeded", []interface{}{})
-	succeededStubCopy := fake.SucceededStub
 	fake.succeededMutex.Unlock()
-	if succeededStubCopy != nil {
-		return succeededStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.succeededReturns
 	return fakeReturns.result1
 }
 
@@ -352,16 +352,16 @@ func (fake *FakeMonitor) Total() int64 {
 	ret, specificReturn := fake.totalReturnsOnCall[len(fake.totalArgsForCall)]
 	fake.totalArgsForCall = append(fake.totalArgsForCall, struct {
 	}{})
+	stub := fake.TotalStub
+	fakeReturns := fake.totalReturns
 	fake.recordInvocation("Total", []interface{}{})
-	totalStubCopy := fake.TotalStub
 	fake.totalMutex.Unlock()
-	if totalStubCopy != nil {
-		return totalStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.totalReturns
 	return fakeReturns.result1
 }
 

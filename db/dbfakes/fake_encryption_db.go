@@ -60,16 +60,16 @@ func (fake *FakeEncryptionDB) EncryptionKeyLabel(arg1 context.Context, arg2 lage
 		arg1 context.Context
 		arg2 lager.Logger
 	}{arg1, arg2})
+	stub := fake.EncryptionKeyLabelStub
+	fakeReturns := fake.encryptionKeyLabelReturns
 	fake.recordInvocation("EncryptionKeyLabel", []interface{}{arg1, arg2})
-	encryptionKeyLabelStubCopy := fake.EncryptionKeyLabelStub
 	fake.encryptionKeyLabelMutex.Unlock()
-	if encryptionKeyLabelStubCopy != nil {
-		return encryptionKeyLabelStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.encryptionKeyLabelReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -125,16 +125,16 @@ func (fake *FakeEncryptionDB) PerformEncryption(arg1 context.Context, arg2 lager
 		arg1 context.Context
 		arg2 lager.Logger
 	}{arg1, arg2})
+	stub := fake.PerformEncryptionStub
+	fakeReturns := fake.performEncryptionReturns
 	fake.recordInvocation("PerformEncryption", []interface{}{arg1, arg2})
-	performEncryptionStubCopy := fake.PerformEncryptionStub
 	fake.performEncryptionMutex.Unlock()
-	if performEncryptionStubCopy != nil {
-		return performEncryptionStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.performEncryptionReturns
 	return fakeReturns.result1
 }
 
@@ -188,16 +188,16 @@ func (fake *FakeEncryptionDB) SetEncryptionKeyLabel(arg1 context.Context, arg2 l
 		arg2 lager.Logger
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.SetEncryptionKeyLabelStub
+	fakeReturns := fake.setEncryptionKeyLabelReturns
 	fake.recordInvocation("SetEncryptionKeyLabel", []interface{}{arg1, arg2, arg3})
-	setEncryptionKeyLabelStubCopy := fake.SetEncryptionKeyLabelStub
 	fake.setEncryptionKeyLabelMutex.Unlock()
-	if setEncryptionKeyLabelStubCopy != nil {
-		return setEncryptionKeyLabelStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.setEncryptionKeyLabelReturns
 	return fakeReturns.result1
 }
 

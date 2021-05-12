@@ -123,16 +123,16 @@ func (fake *FakeQueryableDB) BeginTx(arg1 context.Context, arg2 *sql.TxOptions) 
 		arg1 context.Context
 		arg2 *sql.TxOptions
 	}{arg1, arg2})
+	stub := fake.BeginTxStub
+	fakeReturns := fake.beginTxReturns
 	fake.recordInvocation("BeginTx", []interface{}{arg1, arg2})
-	beginTxStubCopy := fake.BeginTxStub
 	fake.beginTxMutex.Unlock()
-	if beginTxStubCopy != nil {
-		return beginTxStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.beginTxReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -189,16 +189,16 @@ func (fake *FakeQueryableDB) ExecContext(arg1 context.Context, arg2 string, arg3
 		arg2 string
 		arg3 []interface{}
 	}{arg1, arg2, arg3})
+	stub := fake.ExecContextStub
+	fakeReturns := fake.execContextReturns
 	fake.recordInvocation("ExecContext", []interface{}{arg1, arg2, arg3})
-	execContextStubCopy := fake.ExecContextStub
 	fake.execContextMutex.Unlock()
-	if execContextStubCopy != nil {
-		return execContextStubCopy(arg1, arg2, arg3...)
+	if stub != nil {
+		return stub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.execContextReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -252,16 +252,16 @@ func (fake *FakeQueryableDB) OpenConnections() int {
 	ret, specificReturn := fake.openConnectionsReturnsOnCall[len(fake.openConnectionsArgsForCall)]
 	fake.openConnectionsArgsForCall = append(fake.openConnectionsArgsForCall, struct {
 	}{})
+	stub := fake.OpenConnectionsStub
+	fakeReturns := fake.openConnectionsReturns
 	fake.recordInvocation("OpenConnections", []interface{}{})
-	openConnectionsStubCopy := fake.OpenConnectionsStub
 	fake.openConnectionsMutex.Unlock()
-	if openConnectionsStubCopy != nil {
-		return openConnectionsStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.openConnectionsReturns
 	return fakeReturns.result1
 }
 
@@ -307,16 +307,16 @@ func (fake *FakeQueryableDB) PrepareContext(arg1 context.Context, arg2 string) (
 		arg1 context.Context
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.PrepareContextStub
+	fakeReturns := fake.prepareContextReturns
 	fake.recordInvocation("PrepareContext", []interface{}{arg1, arg2})
-	prepareContextStubCopy := fake.PrepareContextStub
 	fake.prepareContextMutex.Unlock()
-	if prepareContextStubCopy != nil {
-		return prepareContextStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.prepareContextReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -373,16 +373,16 @@ func (fake *FakeQueryableDB) QueryContext(arg1 context.Context, arg2 string, arg
 		arg2 string
 		arg3 []interface{}
 	}{arg1, arg2, arg3})
+	stub := fake.QueryContextStub
+	fakeReturns := fake.queryContextReturns
 	fake.recordInvocation("QueryContext", []interface{}{arg1, arg2, arg3})
-	queryContextStubCopy := fake.QueryContextStub
 	fake.queryContextMutex.Unlock()
-	if queryContextStubCopy != nil {
-		return queryContextStubCopy(arg1, arg2, arg3...)
+	if stub != nil {
+		return stub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.queryContextReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -439,16 +439,16 @@ func (fake *FakeQueryableDB) QueryRowContext(arg1 context.Context, arg2 string, 
 		arg2 string
 		arg3 []interface{}
 	}{arg1, arg2, arg3})
+	stub := fake.QueryRowContextStub
+	fakeReturns := fake.queryRowContextReturns
 	fake.recordInvocation("QueryRowContext", []interface{}{arg1, arg2, arg3})
-	queryRowContextStubCopy := fake.QueryRowContextStub
 	fake.queryRowContextMutex.Unlock()
-	if queryRowContextStubCopy != nil {
-		return queryRowContextStubCopy(arg1, arg2, arg3...)
+	if stub != nil {
+		return stub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.queryRowContextReturns
 	return fakeReturns.result1
 }
 
@@ -499,16 +499,16 @@ func (fake *FakeQueryableDB) WaitCount() int64 {
 	ret, specificReturn := fake.waitCountReturnsOnCall[len(fake.waitCountArgsForCall)]
 	fake.waitCountArgsForCall = append(fake.waitCountArgsForCall, struct {
 	}{})
+	stub := fake.WaitCountStub
+	fakeReturns := fake.waitCountReturns
 	fake.recordInvocation("WaitCount", []interface{}{})
-	waitCountStubCopy := fake.WaitCountStub
 	fake.waitCountMutex.Unlock()
-	if waitCountStubCopy != nil {
-		return waitCountStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.waitCountReturns
 	return fakeReturns.result1
 }
 
@@ -552,16 +552,16 @@ func (fake *FakeQueryableDB) WaitDuration() time.Duration {
 	ret, specificReturn := fake.waitDurationReturnsOnCall[len(fake.waitDurationArgsForCall)]
 	fake.waitDurationArgsForCall = append(fake.waitDurationArgsForCall, struct {
 	}{})
+	stub := fake.WaitDurationStub
+	fakeReturns := fake.waitDurationReturns
 	fake.recordInvocation("WaitDuration", []interface{}{})
-	waitDurationStubCopy := fake.WaitDurationStub
 	fake.waitDurationMutex.Unlock()
-	if waitDurationStubCopy != nil {
-		return waitDurationStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.waitDurationReturns
 	return fakeReturns.result1
 }
 

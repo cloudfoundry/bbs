@@ -31,6 +31,7 @@ var _ = Describe("Convergence API", func() {
 		BeforeEach(func() {
 			// make the converger more aggressive by running every second
 			bbsConfig.ConvergeRepeatInterval = durationjson.Duration(time.Second)
+			bbsConfig.MaxOpenDatabaseConnections = 100
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 

@@ -36,16 +36,16 @@ func (fake *FakeRetirer) RetireActualLRP(arg1 context.Context, arg2 lager.Logger
 		arg2 lager.Logger
 		arg3 *models.ActualLRPKey
 	}{arg1, arg2, arg3})
+	stub := fake.RetireActualLRPStub
+	fakeReturns := fake.retireActualLRPReturns
 	fake.recordInvocation("RetireActualLRP", []interface{}{arg1, arg2, arg3})
-	retireActualLRPStubCopy := fake.RetireActualLRPStub
 	fake.retireActualLRPMutex.Unlock()
-	if retireActualLRPStubCopy != nil {
-		return retireActualLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.retireActualLRPReturns
 	return fakeReturns.result1
 }
 

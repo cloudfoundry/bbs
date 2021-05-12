@@ -28,11 +28,11 @@ func (fake *FakeEmitter) IncrementRequestCounter(arg1 int) {
 	fake.incrementRequestCounterArgsForCall = append(fake.incrementRequestCounterArgsForCall, struct {
 		arg1 int
 	}{arg1})
+	stub := fake.IncrementRequestCounterStub
 	fake.recordInvocation("IncrementRequestCounter", []interface{}{arg1})
-	incrementRequestCounterStubCopy := fake.IncrementRequestCounterStub
 	fake.incrementRequestCounterMutex.Unlock()
-	if incrementRequestCounterStubCopy != nil {
-		incrementRequestCounterStubCopy(arg1)
+	if stub != nil {
+		fake.IncrementRequestCounterStub(arg1)
 	}
 }
 
@@ -60,11 +60,11 @@ func (fake *FakeEmitter) UpdateLatency(arg1 time.Duration) {
 	fake.updateLatencyArgsForCall = append(fake.updateLatencyArgsForCall, struct {
 		arg1 time.Duration
 	}{arg1})
+	stub := fake.UpdateLatencyStub
 	fake.recordInvocation("UpdateLatency", []interface{}{arg1})
-	updateLatencyStubCopy := fake.UpdateLatencyStub
 	fake.updateLatencyMutex.Unlock()
-	if updateLatencyStubCopy != nil {
-		updateLatencyStubCopy(arg1)
+	if stub != nil {
+		fake.UpdateLatencyStub(arg1)
 	}
 }
 

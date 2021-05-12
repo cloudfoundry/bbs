@@ -49,16 +49,16 @@ func (fake *FakeDomainDB) FreshDomains(arg1 context.Context, arg2 lager.Logger) 
 		arg1 context.Context
 		arg2 lager.Logger
 	}{arg1, arg2})
+	stub := fake.FreshDomainsStub
+	fakeReturns := fake.freshDomainsReturns
 	fake.recordInvocation("FreshDomains", []interface{}{arg1, arg2})
-	freshDomainsStubCopy := fake.FreshDomainsStub
 	fake.freshDomainsMutex.Unlock()
-	if freshDomainsStubCopy != nil {
-		return freshDomainsStubCopy(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.freshDomainsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -116,16 +116,16 @@ func (fake *FakeDomainDB) UpsertDomain(arg1 context.Context, arg2 lager.Logger, 
 		arg3 string
 		arg4 uint32
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.UpsertDomainStub
+	fakeReturns := fake.upsertDomainReturns
 	fake.recordInvocation("UpsertDomain", []interface{}{arg1, arg2, arg3, arg4})
-	upsertDomainStubCopy := fake.UpsertDomainStub
 	fake.upsertDomainMutex.Unlock()
-	if upsertDomainStubCopy != nil {
-		return upsertDomainStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.upsertDomainReturns
 	return fakeReturns.result1
 }
 

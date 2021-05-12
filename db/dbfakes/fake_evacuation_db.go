@@ -56,16 +56,16 @@ func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 context.Context, arg2 lager
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.EvacuateActualLRPStub
+	fakeReturns := fake.evacuateActualLRPReturns
 	fake.recordInvocation("EvacuateActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	evacuateActualLRPStubCopy := fake.EvacuateActualLRPStub
 	fake.evacuateActualLRPMutex.Unlock()
-	if evacuateActualLRPStubCopy != nil {
-		return evacuateActualLRPStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.evacuateActualLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -123,16 +123,16 @@ func (fake *FakeEvacuationDB) RemoveEvacuatingActualLRP(arg1 context.Context, ar
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.RemoveEvacuatingActualLRPStub
+	fakeReturns := fake.removeEvacuatingActualLRPReturns
 	fake.recordInvocation("RemoveEvacuatingActualLRP", []interface{}{arg1, arg2, arg3, arg4})
-	removeEvacuatingActualLRPStubCopy := fake.RemoveEvacuatingActualLRPStub
 	fake.removeEvacuatingActualLRPMutex.Unlock()
-	if removeEvacuatingActualLRPStubCopy != nil {
-		return removeEvacuatingActualLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeEvacuatingActualLRPReturns
 	return fakeReturns.result1
 }
 

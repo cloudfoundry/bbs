@@ -54,16 +54,16 @@ func (fake *FakeHub) Close() error {
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
 	}{})
+	stub := fake.CloseStub
+	fakeReturns := fake.closeReturns
 	fake.recordInvocation("Close", []interface{}{})
-	closeStubCopy := fake.CloseStub
 	fake.closeMutex.Unlock()
-	if closeStubCopy != nil {
-		return closeStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.closeReturns
 	return fakeReturns.result1
 }
 
@@ -107,11 +107,11 @@ func (fake *FakeHub) Emit(arg1 models.Event) {
 	fake.emitArgsForCall = append(fake.emitArgsForCall, struct {
 		arg1 models.Event
 	}{arg1})
+	stub := fake.EmitStub
 	fake.recordInvocation("Emit", []interface{}{arg1})
-	emitStubCopy := fake.EmitStub
 	fake.emitMutex.Unlock()
-	if emitStubCopy != nil {
-		emitStubCopy(arg1)
+	if stub != nil {
+		fake.EmitStub(arg1)
 	}
 }
 
@@ -139,11 +139,11 @@ func (fake *FakeHub) RegisterCallback(arg1 func(count int)) {
 	fake.registerCallbackArgsForCall = append(fake.registerCallbackArgsForCall, struct {
 		arg1 func(count int)
 	}{arg1})
+	stub := fake.RegisterCallbackStub
 	fake.recordInvocation("RegisterCallback", []interface{}{arg1})
-	registerCallbackStubCopy := fake.RegisterCallbackStub
 	fake.registerCallbackMutex.Unlock()
-	if registerCallbackStubCopy != nil {
-		registerCallbackStubCopy(arg1)
+	if stub != nil {
+		fake.RegisterCallbackStub(arg1)
 	}
 }
 
@@ -171,16 +171,16 @@ func (fake *FakeHub) Subscribe() (events.EventSource, error) {
 	ret, specificReturn := fake.subscribeReturnsOnCall[len(fake.subscribeArgsForCall)]
 	fake.subscribeArgsForCall = append(fake.subscribeArgsForCall, struct {
 	}{})
+	stub := fake.SubscribeStub
+	fakeReturns := fake.subscribeReturns
 	fake.recordInvocation("Subscribe", []interface{}{})
-	subscribeStubCopy := fake.SubscribeStub
 	fake.subscribeMutex.Unlock()
-	if subscribeStubCopy != nil {
-		return subscribeStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.subscribeReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -226,11 +226,11 @@ func (fake *FakeHub) UnregisterCallback() {
 	fake.unregisterCallbackMutex.Lock()
 	fake.unregisterCallbackArgsForCall = append(fake.unregisterCallbackArgsForCall, struct {
 	}{})
+	stub := fake.UnregisterCallbackStub
 	fake.recordInvocation("UnregisterCallback", []interface{}{})
-	unregisterCallbackStubCopy := fake.UnregisterCallbackStub
 	fake.unregisterCallbackMutex.Unlock()
-	if unregisterCallbackStubCopy != nil {
-		unregisterCallbackStubCopy()
+	if stub != nil {
+		fake.UnregisterCallbackStub()
 	}
 }
 

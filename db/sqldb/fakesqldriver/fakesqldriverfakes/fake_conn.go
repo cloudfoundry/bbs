@@ -53,16 +53,16 @@ func (fake *FakeConn) Begin() (driver.Tx, error) {
 	ret, specificReturn := fake.beginReturnsOnCall[len(fake.beginArgsForCall)]
 	fake.beginArgsForCall = append(fake.beginArgsForCall, struct {
 	}{})
+	stub := fake.BeginStub
+	fakeReturns := fake.beginReturns
 	fake.recordInvocation("Begin", []interface{}{})
-	beginStubCopy := fake.BeginStub
 	fake.beginMutex.Unlock()
-	if beginStubCopy != nil {
-		return beginStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.beginReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -109,16 +109,16 @@ func (fake *FakeConn) Close() error {
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
 	}{})
+	stub := fake.CloseStub
+	fakeReturns := fake.closeReturns
 	fake.recordInvocation("Close", []interface{}{})
-	closeStubCopy := fake.CloseStub
 	fake.closeMutex.Unlock()
-	if closeStubCopy != nil {
-		return closeStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.closeReturns
 	return fakeReturns.result1
 }
 
@@ -163,16 +163,16 @@ func (fake *FakeConn) Prepare(arg1 string) (driver.Stmt, error) {
 	fake.prepareArgsForCall = append(fake.prepareArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.PrepareStub
+	fakeReturns := fake.prepareReturns
 	fake.recordInvocation("Prepare", []interface{}{arg1})
-	prepareStubCopy := fake.PrepareStub
 	fake.prepareMutex.Unlock()
-	if prepareStubCopy != nil {
-		return prepareStubCopy(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.prepareReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

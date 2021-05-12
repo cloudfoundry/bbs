@@ -215,16 +215,16 @@ func (fake *FakeTaskDB) CancelTask(arg1 context.Context, arg2 lager.Logger, arg3
 		arg2 lager.Logger
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.CancelTaskStub
+	fakeReturns := fake.cancelTaskReturns
 	fake.recordInvocation("CancelTask", []interface{}{arg1, arg2, arg3})
-	cancelTaskStubCopy := fake.CancelTaskStub
 	fake.cancelTaskMutex.Unlock()
-	if cancelTaskStubCopy != nil {
-		return cancelTaskStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3, ret.result4
 	}
-	fakeReturns := fake.cancelTaskReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3, fakeReturns.result4
 }
 
@@ -291,16 +291,16 @@ func (fake *FakeTaskDB) CompleteTask(arg1 context.Context, arg2 lager.Logger, ar
 		arg6 string
 		arg7 string
 	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	stub := fake.CompleteTaskStub
+	fakeReturns := fake.completeTaskReturns
 	fake.recordInvocation("CompleteTask", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
-	completeTaskStubCopy := fake.CompleteTaskStub
 	fake.completeTaskMutex.Unlock()
-	if completeTaskStubCopy != nil {
-		return completeTaskStubCopy(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	fakeReturns := fake.completeTaskReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
@@ -363,16 +363,16 @@ func (fake *FakeTaskDB) ConvergeTasks(arg1 context.Context, arg2 lager.Logger, a
 		arg5 time.Duration
 		arg6 time.Duration
 	}{arg1, arg2, arg3, arg4, arg5, arg6})
+	stub := fake.ConvergeTasksStub
+	fakeReturns := fake.convergeTasksReturns
 	fake.recordInvocation("ConvergeTasks", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6})
-	convergeTasksStubCopy := fake.ConvergeTasksStub
 	fake.convergeTasksMutex.Unlock()
-	if convergeTasksStubCopy != nil {
-		return convergeTasksStubCopy(arg1, arg2, arg3, arg4, arg5, arg6)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.convergeTasksReturns
 	return fakeReturns.result1
 }
 
@@ -426,16 +426,16 @@ func (fake *FakeTaskDB) DeleteTask(arg1 context.Context, arg2 lager.Logger, arg3
 		arg2 lager.Logger
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.DeleteTaskStub
+	fakeReturns := fake.deleteTaskReturns
 	fake.recordInvocation("DeleteTask", []interface{}{arg1, arg2, arg3})
-	deleteTaskStubCopy := fake.DeleteTaskStub
 	fake.deleteTaskMutex.Unlock()
-	if deleteTaskStubCopy != nil {
-		return deleteTaskStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.deleteTaskReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -494,16 +494,16 @@ func (fake *FakeTaskDB) DesireTask(arg1 context.Context, arg2 lager.Logger, arg3
 		arg4 string
 		arg5 string
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.DesireTaskStub
+	fakeReturns := fake.desireTaskReturns
 	fake.recordInvocation("DesireTask", []interface{}{arg1, arg2, arg3, arg4, arg5})
-	desireTaskStubCopy := fake.DesireTaskStub
 	fake.desireTaskMutex.Unlock()
-	if desireTaskStubCopy != nil {
-		return desireTaskStubCopy(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.desireTaskReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -561,16 +561,16 @@ func (fake *FakeTaskDB) FailTask(arg1 context.Context, arg2 lager.Logger, arg3 s
 		arg3 string
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.FailTaskStub
+	fakeReturns := fake.failTaskReturns
 	fake.recordInvocation("FailTask", []interface{}{arg1, arg2, arg3, arg4})
-	failTaskStubCopy := fake.FailTaskStub
 	fake.failTaskMutex.Unlock()
-	if failTaskStubCopy != nil {
-		return failTaskStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	fakeReturns := fake.failTaskReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
@@ -631,16 +631,16 @@ func (fake *FakeTaskDB) RejectTask(arg1 context.Context, arg2 lager.Logger, arg3
 		arg3 string
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.RejectTaskStub
+	fakeReturns := fake.rejectTaskReturns
 	fake.recordInvocation("RejectTask", []interface{}{arg1, arg2, arg3, arg4})
-	rejectTaskStubCopy := fake.RejectTaskStub
 	fake.rejectTaskMutex.Unlock()
-	if rejectTaskStubCopy != nil {
-		return rejectTaskStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	fakeReturns := fake.rejectTaskReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
@@ -700,16 +700,16 @@ func (fake *FakeTaskDB) ResolvingTask(arg1 context.Context, arg2 lager.Logger, a
 		arg2 lager.Logger
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.ResolvingTaskStub
+	fakeReturns := fake.resolvingTaskReturns
 	fake.recordInvocation("ResolvingTask", []interface{}{arg1, arg2, arg3})
-	resolvingTaskStubCopy := fake.ResolvingTaskStub
 	fake.resolvingTaskMutex.Unlock()
-	if resolvingTaskStubCopy != nil {
-		return resolvingTaskStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	fakeReturns := fake.resolvingTaskReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
@@ -770,16 +770,16 @@ func (fake *FakeTaskDB) StartTask(arg1 context.Context, arg2 lager.Logger, arg3 
 		arg3 string
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.StartTaskStub
+	fakeReturns := fake.startTaskReturns
 	fake.recordInvocation("StartTask", []interface{}{arg1, arg2, arg3, arg4})
-	startTaskStubCopy := fake.StartTaskStub
 	fake.startTaskMutex.Unlock()
-	if startTaskStubCopy != nil {
-		return startTaskStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3, ret.result4
 	}
-	fakeReturns := fake.startTaskReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3, fakeReturns.result4
 }
 
@@ -842,16 +842,16 @@ func (fake *FakeTaskDB) TaskByGuid(arg1 context.Context, arg2 lager.Logger, arg3
 		arg2 lager.Logger
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.TaskByGuidStub
+	fakeReturns := fake.taskByGuidReturns
 	fake.recordInvocation("TaskByGuid", []interface{}{arg1, arg2, arg3})
-	taskByGuidStubCopy := fake.TaskByGuidStub
 	fake.taskByGuidMutex.Unlock()
-	if taskByGuidStubCopy != nil {
-		return taskByGuidStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.taskByGuidReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -908,16 +908,16 @@ func (fake *FakeTaskDB) Tasks(arg1 context.Context, arg2 lager.Logger, arg3 mode
 		arg2 lager.Logger
 		arg3 models.TaskFilter
 	}{arg1, arg2, arg3})
+	stub := fake.TasksStub
+	fakeReturns := fake.tasksReturns
 	fake.recordInvocation("Tasks", []interface{}{arg1, arg2, arg3})
-	tasksStubCopy := fake.TasksStub
 	fake.tasksMutex.Unlock()
-	if tasksStubCopy != nil {
-		return tasksStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.tasksReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

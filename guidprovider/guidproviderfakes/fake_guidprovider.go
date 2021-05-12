@@ -29,16 +29,16 @@ func (fake *FakeGUIDProvider) NextGUID() (string, error) {
 	ret, specificReturn := fake.nextGUIDReturnsOnCall[len(fake.nextGUIDArgsForCall)]
 	fake.nextGUIDArgsForCall = append(fake.nextGUIDArgsForCall, struct {
 	}{})
+	stub := fake.NextGUIDStub
+	fakeReturns := fake.nextGUIDReturns
 	fake.recordInvocation("NextGUID", []interface{}{})
-	nextGUIDStubCopy := fake.NextGUIDStub
 	fake.nextGUIDMutex.Unlock()
-	if nextGUIDStubCopy != nil {
-		return nextGUIDStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.nextGUIDReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

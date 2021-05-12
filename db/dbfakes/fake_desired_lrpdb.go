@@ -110,16 +110,16 @@ func (fake *FakeDesiredLRPDB) DesireLRP(arg1 context.Context, arg2 lager.Logger,
 		arg2 lager.Logger
 		arg3 *models.DesiredLRP
 	}{arg1, arg2, arg3})
+	stub := fake.DesireLRPStub
+	fakeReturns := fake.desireLRPReturns
 	fake.recordInvocation("DesireLRP", []interface{}{arg1, arg2, arg3})
-	desireLRPStubCopy := fake.DesireLRPStub
 	fake.desireLRPMutex.Unlock()
-	if desireLRPStubCopy != nil {
-		return desireLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.desireLRPReturns
 	return fakeReturns.result1
 }
 
@@ -173,16 +173,16 @@ func (fake *FakeDesiredLRPDB) DesiredLRPByProcessGuid(arg1 context.Context, arg2
 		arg2 lager.Logger
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.DesiredLRPByProcessGuidStub
+	fakeReturns := fake.desiredLRPByProcessGuidReturns
 	fake.recordInvocation("DesiredLRPByProcessGuid", []interface{}{arg1, arg2, arg3})
-	desiredLRPByProcessGuidStubCopy := fake.DesiredLRPByProcessGuidStub
 	fake.desiredLRPByProcessGuidMutex.Unlock()
-	if desiredLRPByProcessGuidStubCopy != nil {
-		return desiredLRPByProcessGuidStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.desiredLRPByProcessGuidReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -239,16 +239,16 @@ func (fake *FakeDesiredLRPDB) DesiredLRPSchedulingInfos(arg1 context.Context, ar
 		arg2 lager.Logger
 		arg3 models.DesiredLRPFilter
 	}{arg1, arg2, arg3})
+	stub := fake.DesiredLRPSchedulingInfosStub
+	fakeReturns := fake.desiredLRPSchedulingInfosReturns
 	fake.recordInvocation("DesiredLRPSchedulingInfos", []interface{}{arg1, arg2, arg3})
-	desiredLRPSchedulingInfosStubCopy := fake.DesiredLRPSchedulingInfosStub
 	fake.desiredLRPSchedulingInfosMutex.Unlock()
-	if desiredLRPSchedulingInfosStubCopy != nil {
-		return desiredLRPSchedulingInfosStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.desiredLRPSchedulingInfosReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -305,16 +305,16 @@ func (fake *FakeDesiredLRPDB) DesiredLRPs(arg1 context.Context, arg2 lager.Logge
 		arg2 lager.Logger
 		arg3 models.DesiredLRPFilter
 	}{arg1, arg2, arg3})
+	stub := fake.DesiredLRPsStub
+	fakeReturns := fake.desiredLRPsReturns
 	fake.recordInvocation("DesiredLRPs", []interface{}{arg1, arg2, arg3})
-	desiredLRPsStubCopy := fake.DesiredLRPsStub
 	fake.desiredLRPsMutex.Unlock()
-	if desiredLRPsStubCopy != nil {
-		return desiredLRPsStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.desiredLRPsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -371,16 +371,16 @@ func (fake *FakeDesiredLRPDB) RemoveDesiredLRP(arg1 context.Context, arg2 lager.
 		arg2 lager.Logger
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.RemoveDesiredLRPStub
+	fakeReturns := fake.removeDesiredLRPReturns
 	fake.recordInvocation("RemoveDesiredLRP", []interface{}{arg1, arg2, arg3})
-	removeDesiredLRPStubCopy := fake.RemoveDesiredLRPStub
 	fake.removeDesiredLRPMutex.Unlock()
-	if removeDesiredLRPStubCopy != nil {
-		return removeDesiredLRPStubCopy(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeDesiredLRPReturns
 	return fakeReturns.result1
 }
 
@@ -435,16 +435,16 @@ func (fake *FakeDesiredLRPDB) UpdateDesiredLRP(arg1 context.Context, arg2 lager.
 		arg3 string
 		arg4 *models.DesiredLRPUpdate
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.UpdateDesiredLRPStub
+	fakeReturns := fake.updateDesiredLRPReturns
 	fake.recordInvocation("UpdateDesiredLRP", []interface{}{arg1, arg2, arg3, arg4})
-	updateDesiredLRPStubCopy := fake.UpdateDesiredLRPStub
 	fake.updateDesiredLRPMutex.Unlock()
-	if updateDesiredLRPStubCopy != nil {
-		return updateDesiredLRPStubCopy(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.updateDesiredLRPReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

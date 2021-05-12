@@ -48,16 +48,16 @@ func (fake *FakeDBStats) OpenConnections() int {
 	ret, specificReturn := fake.openConnectionsReturnsOnCall[len(fake.openConnectionsArgsForCall)]
 	fake.openConnectionsArgsForCall = append(fake.openConnectionsArgsForCall, struct {
 	}{})
+	stub := fake.OpenConnectionsStub
+	fakeReturns := fake.openConnectionsReturns
 	fake.recordInvocation("OpenConnections", []interface{}{})
-	openConnectionsStubCopy := fake.OpenConnectionsStub
 	fake.openConnectionsMutex.Unlock()
-	if openConnectionsStubCopy != nil {
-		return openConnectionsStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.openConnectionsReturns
 	return fakeReturns.result1
 }
 
@@ -101,16 +101,16 @@ func (fake *FakeDBStats) WaitCount() int64 {
 	ret, specificReturn := fake.waitCountReturnsOnCall[len(fake.waitCountArgsForCall)]
 	fake.waitCountArgsForCall = append(fake.waitCountArgsForCall, struct {
 	}{})
+	stub := fake.WaitCountStub
+	fakeReturns := fake.waitCountReturns
 	fake.recordInvocation("WaitCount", []interface{}{})
-	waitCountStubCopy := fake.WaitCountStub
 	fake.waitCountMutex.Unlock()
-	if waitCountStubCopy != nil {
-		return waitCountStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.waitCountReturns
 	return fakeReturns.result1
 }
 
@@ -154,16 +154,16 @@ func (fake *FakeDBStats) WaitDuration() time.Duration {
 	ret, specificReturn := fake.waitDurationReturnsOnCall[len(fake.waitDurationArgsForCall)]
 	fake.waitDurationArgsForCall = append(fake.waitDurationArgsForCall, struct {
 	}{})
+	stub := fake.WaitDurationStub
+	fakeReturns := fake.waitDurationReturns
 	fake.recordInvocation("WaitDuration", []interface{}{})
-	waitDurationStubCopy := fake.WaitDurationStub
 	fake.waitDurationMutex.Unlock()
-	if waitDurationStubCopy != nil {
-		return waitDurationStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.waitDurationReturns
 	return fakeReturns.result1
 }
 

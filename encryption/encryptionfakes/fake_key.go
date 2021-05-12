@@ -38,16 +38,16 @@ func (fake *FakeKey) Block() cipher.Block {
 	ret, specificReturn := fake.blockReturnsOnCall[len(fake.blockArgsForCall)]
 	fake.blockArgsForCall = append(fake.blockArgsForCall, struct {
 	}{})
+	stub := fake.BlockStub
+	fakeReturns := fake.blockReturns
 	fake.recordInvocation("Block", []interface{}{})
-	blockStubCopy := fake.BlockStub
 	fake.blockMutex.Unlock()
-	if blockStubCopy != nil {
-		return blockStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.blockReturns
 	return fakeReturns.result1
 }
 
@@ -91,16 +91,16 @@ func (fake *FakeKey) Label() string {
 	ret, specificReturn := fake.labelReturnsOnCall[len(fake.labelArgsForCall)]
 	fake.labelArgsForCall = append(fake.labelArgsForCall, struct {
 	}{})
+	stub := fake.LabelStub
+	fakeReturns := fake.labelReturns
 	fake.recordInvocation("Label", []interface{}{})
-	labelStubCopy := fake.LabelStub
 	fake.labelMutex.Unlock()
-	if labelStubCopy != nil {
-		return labelStubCopy()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.labelReturns
 	return fakeReturns.result1
 }
 
