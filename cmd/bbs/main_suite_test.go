@@ -22,7 +22,7 @@ import (
 	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
 	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/consuladapter/consulrunner"
-	"code.cloudfoundry.org/diego-logging-client"
+	diego_logging_client "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/durationjson"
 	"code.cloudfoundry.org/go-loggregator/rpc/loggregator_v2"
@@ -132,7 +132,7 @@ var _ = BeforeEach(func() {
 	var err error
 	logger = lagertest.NewTestLogger("test")
 	ctx = context.Background()
-	fixturesPath := path.Join(os.Getenv("GOPATH"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+	fixturesPath := path.Join(os.Getenv("DIEGO_RELEASE_DIR"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
 
 	consulRunner.Reset()
 	consulClient = consulRunner.NewClient()
