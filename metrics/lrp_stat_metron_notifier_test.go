@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
-	"code.cloudfoundry.org/go-loggregator"
+	"code.cloudfoundry.org/go-loggregator/v8"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
