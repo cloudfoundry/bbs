@@ -18,6 +18,7 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/vito/go-sse/sse"
 )
 
@@ -131,6 +132,23 @@ var _ = Describe("Event Handlers", func() {
 				It("returns Content-Type as text/event-stream", func() {
 					Expect(response.Header.Get("Content-Type")).To(Equal("text/event-stream; charset=utf-8"))
 					Expect(response.Header.Get("Cache-Control")).To(Equal("no-cache, no-store, must-revalidate"))
+				})
+
+				It("detects closed clients on the server", func() {
+					reader := sse.NewReadCloser(response.Body)
+
+					hub.Emit(&eventfakes.FakeEvent{Token: "A"})
+					encodedPayload := base64.StdEncoding.EncodeToString([]byte("A"))
+
+					Expect(reader.Next()).To(Equal(sse.Event{
+						ID:   "0",
+						Name: "fake",
+						Data: []byte(encodedPayload),
+					}))
+
+					reader.Close()
+
+					Eventually(logger).Should(gbytes.Say("received-close-notify"))
 				})
 
 				Context("when the source provides an unmarshalable event", func() {

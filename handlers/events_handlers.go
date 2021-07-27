@@ -78,7 +78,11 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 
 	var event models.Event
 	eventID := 0
-	closeNotifier := w.(http.CloseNotifier).CloseNotify()
+	done := make(chan bool, 1)
+	go func() {
+		rw.ReadFrom(conn)
+		done <- true
+	}()
 
 	for {
 		select {
@@ -86,7 +90,7 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 		case err := <-errorChan:
 			logger.Error("failed-to-get-next-event", err)
 			return
-		case <-closeNotifier:
+		case <-done:
 			logger.Debug("received-close-notify")
 			return
 		}
