@@ -3,6 +3,7 @@ package sqldb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
@@ -12,7 +13,7 @@ import (
 const EncryptionKeyID = "encryption_key_label"
 
 func (db *SQLDB) SetEncryptionKeyLabel(ctx context.Context, logger lager.Logger, label string) error {
-	logger = logger.Session("db-set-encrption-key-label", lager.Data{"label": label})
+	logger = logger.Session("db-set-encryption-key-label", lager.Data{"label": label})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -20,7 +21,7 @@ func (db *SQLDB) SetEncryptionKeyLabel(ctx context.Context, logger lager.Logger,
 }
 
 func (db *SQLDB) EncryptionKeyLabel(ctx context.Context, logger lager.Logger) (string, error) {
-	logger = logger.Session("db-encrption-key-label")
+	logger = logger.Session("db-encryption-key-label")
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -32,13 +33,31 @@ func (db *SQLDB) PerformEncryption(ctx context.Context, logger lager.Logger) err
 
 	funcs := []func(){
 		func() {
-			errCh <- db.reEncrypt(ctx, logger, tasksTable, "guid", true, "task_definition")
+			errCh <- db.reEncrypt(ctx, logger, encryptable{
+				TableName:       tasksTable,
+				PrimaryKeyNames: []string{"guid"},
+				Columns:         []string{"task_definition"},
+				EncryptIfEmpty:  true,
+				PrimaryKeyFunc:  func() primaryKey { return &taskPrimaryKey{} },
+			})
 		},
 		func() {
-			errCh <- db.reEncrypt(ctx, logger, desiredLRPsTable, "process_guid", true, "run_info", "volume_placement", "routes")
+			errCh <- db.reEncrypt(ctx, logger, encryptable{
+				TableName:       desiredLRPsTable,
+				PrimaryKeyNames: []string{"process_guid"},
+				Columns:         []string{"run_info", "volume_placement", "routes"},
+				EncryptIfEmpty:  true,
+				PrimaryKeyFunc:  func() primaryKey { return &desiredLRPPrimaryKey{} },
+			})
 		},
 		func() {
-			errCh <- db.reEncrypt(ctx, logger, actualLRPsTable, "process_guid", false, "net_info")
+			errCh <- db.reEncrypt(ctx, logger, encryptable{
+				TableName:       actualLRPsTable,
+				PrimaryKeyNames: []string{"process_guid", "instance_index", "presence"},
+				Columns:         []string{"net_info"},
+				EncryptIfEmpty:  false,
+				PrimaryKeyFunc:  func() primaryKey { return &actualLRPPrimaryKey{} },
+			})
 		},
 	}
 
@@ -55,34 +74,40 @@ func (db *SQLDB) PerformEncryption(ctx context.Context, logger lager.Logger) err
 	return nil
 }
 
-func (db *SQLDB) reEncrypt(ctx context.Context, logger lager.Logger, tableName, primaryKey string, encryptIfEmpty bool, blobColumns ...string) error {
+func (db *SQLDB) reEncrypt(ctx context.Context, logger lager.Logger, toEncrypt encryptable) error {
 	logger = logger.WithData(
-		lager.Data{"table_name": tableName, "primary_key": primaryKey, "blob_columns": blobColumns},
+		lager.Data{"table_name": toEncrypt.TableName, "primary_key": toEncrypt.PrimaryKeyNames, "blob_columns": toEncrypt.Columns},
 	)
-	rows, err := db.db.QueryContext(ctx, fmt.Sprintf("SELECT %s FROM %s", primaryKey, tableName))
+	rows, err := db.db.QueryContext(ctx, fmt.Sprintf("SELECT %s FROM %s", strings.Join(toEncrypt.PrimaryKeyNames, ", "), toEncrypt.TableName))
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
-	guids := []string{}
+	pks := []primaryKey{}
 	for rows.Next() {
-		var guid string
-		err := rows.Scan(&guid)
+		pk := toEncrypt.PrimaryKeyFunc()
+		err := pk.Scan(rows)
 		if err != nil {
 			logger.Error("failed-to-scan-primary-key", err)
 			continue
 		}
-		guids = append(guids, guid)
+		pks = append(pks, pk)
 	}
 
-	where := fmt.Sprintf("%s = ?", primaryKey)
-	for _, guid := range guids {
-		err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
-			blobs := make([]interface{}, len(blobColumns))
+	whereClauses := []string{}
+	for _, name := range toEncrypt.PrimaryKeyNames {
+		whereClauses = append(whereClauses, name+" = ?")
 
-			row := db.one(ctx, logger, tx, tableName, blobColumns, helpers.LockRow, where, guid)
-			for i := range blobColumns {
+	}
+	where := strings.Join(whereClauses, " AND ")
+
+	for _, pk := range pks {
+		err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+			blobs := make([]interface{}, len(toEncrypt.Columns))
+
+			row := db.one(ctx, logger, tx, toEncrypt.TableName, toEncrypt.Columns, helpers.LockRow, where, pk.WhereBindings()...)
+			for i := range toEncrypt.Columns {
 				var blob []byte
 				blobs[i] = &blob
 			}
@@ -101,7 +126,7 @@ func (db *SQLDB) reEncrypt(ctx context.Context, logger lager.Logger, tableName, 
 				blob := *blobPtr
 
 				// don't encrypt column if it doesn't contain any data, see #132626553 for more info
-				if !encryptIfEmpty && len(blob) == 0 {
+				if !toEncrypt.EncryptIfEmpty && len(blob) == 0 {
 					return nil
 				}
 
@@ -117,12 +142,12 @@ func (db *SQLDB) reEncrypt(ctx context.Context, logger lager.Logger, tableName, 
 					return err
 				}
 
-				columnName := blobColumns[columnIdx]
+				columnName := toEncrypt.Columns[columnIdx]
 				updatedColumnValues[columnName] = encryptedPayload
 			}
-			_, err = db.update(ctx, logger, tx, tableName,
+			_, err = db.update(ctx, logger, tx, toEncrypt.TableName,
 				updatedColumnValues,
-				where, guid,
+				where, pk.WhereBindings()...,
 			)
 			if err != nil {
 				logger.Error("failed-to-update-blob", err)
@@ -135,5 +160,57 @@ func (db *SQLDB) reEncrypt(ctx context.Context, logger lager.Logger, tableName, 
 			return err
 		}
 	}
+
 	return nil
+}
+
+type encryptable struct {
+	TableName       string
+	PrimaryKeyNames []string
+	Columns         []string
+	EncryptIfEmpty  bool
+	PrimaryKeyFunc  func() primaryKey
+}
+
+type primaryKey interface {
+	Scan(row helpers.RowScanner) error
+	WhereBindings() []interface{}
+}
+
+type actualLRPPrimaryKey struct {
+	ProcessGuid   string
+	InstanceIndex int32
+	Presence      string
+}
+
+func (pk *actualLRPPrimaryKey) Scan(row helpers.RowScanner) error {
+	return row.Scan(&pk.ProcessGuid, &pk.InstanceIndex, &pk.Presence)
+}
+
+func (pk *actualLRPPrimaryKey) WhereBindings() []interface{} {
+	return []interface{}{pk.ProcessGuid, pk.InstanceIndex, pk.Presence}
+}
+
+type desiredLRPPrimaryKey struct {
+	ProcessGuid string
+}
+
+func (pk *desiredLRPPrimaryKey) Scan(row helpers.RowScanner) error {
+	return row.Scan(&pk.ProcessGuid)
+}
+
+func (pk *desiredLRPPrimaryKey) WhereBindings() []interface{} {
+	return []interface{}{pk.ProcessGuid}
+}
+
+type taskPrimaryKey struct {
+	Guid string
+}
+
+func (pk *taskPrimaryKey) Scan(row helpers.RowScanner) error {
+	return row.Scan(&pk.Guid)
+}
+
+func (pk *taskPrimaryKey) WhereBindings() []interface{} {
+	return []interface{}{pk.Guid}
 }
