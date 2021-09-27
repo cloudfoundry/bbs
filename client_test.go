@@ -29,8 +29,9 @@ var _ = Describe("Client", func() {
 	BeforeEach(func() {
 		bbsServer = ghttp.NewServer()
 		cfg = bbs.ClientConfig{
-			URL:     bbsServer.URL(),
-			Retries: 1,
+			URL:           bbsServer.URL(),
+			Retries:       1,
+			RetryInterval: time.Millisecond,
 		}
 
 		logger = lagertest.NewTestLogger("bbs-client")
@@ -204,8 +205,26 @@ var _ = Describe("Client", func() {
 			responseError := err.(*models.Error)
 			Expect(responseError.Type).To(Equal(models.Error_InvalidResponse))
 		})
+
 	})
 
+	Context("when subscribing to an event stream that fails", func() {
+		JustBeforeEach(func() {
+			bbsServer.HTTPTestServer.Listener.Close()
+		})
+
+		It("an error is returned", func() {
+			errCh := make(chan error)
+			go func(errCh chan error) {
+				_, err := client.SubscribeToInstanceEventsByCellID(logger, "cell-uuid")
+				if err != nil {
+					errCh <- err
+				}
+			}(errCh)
+			Eventually(errCh).Should(Receive())
+		})
+
+	})
 	Context("when an http URL is provided to the secure client", func() {
 		It("creating the client returns an error", func() {
 			_, err := bbs.NewClient(bbsServer.URL(), "", "", "", 1, 1)
