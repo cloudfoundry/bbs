@@ -198,6 +198,7 @@ type ClientConfig struct {
 	MaxIdleConnsPerHost    int
 	InsecureSkipVerify     bool
 	Retries                int
+	RetryInterval          time.Duration // Only affects streaming client, not the http client
 	RequestTimeout         time.Duration // Only affects the http client, not the streaming client
 }
 
@@ -231,6 +232,10 @@ func NewClientWithConfig(cfg ClientConfig) (InternalClient, error) {
 		cfg.Retries = DefaultRetryCount
 	}
 
+	if cfg.RetryInterval == 0 {
+		cfg.RetryInterval = time.Second
+	}
+
 	if cfg.InsecureSkipVerify {
 		cfg.CAFile = ""
 	}
@@ -248,6 +253,7 @@ func newClient(cfg ClientConfig) *client {
 		streamingHTTPClient: cfhttp.NewClient(cfhttp.WithStreamingDefaults()),
 		reqGen:              rata.NewRequestGenerator(cfg.URL, Routes),
 		requestRetryCount:   cfg.Retries,
+		retryInterval:       cfg.RetryInterval,
 	}
 }
 func newSecureClient(cfg ClientConfig) (InternalClient, error) {
@@ -291,6 +297,7 @@ func newSecureClient(cfg ClientConfig) (InternalClient, error) {
 		streamingHTTPClient: streamingClient,
 		reqGen:              rata.NewRequestGenerator(cfg.URL, Routes),
 		requestRetryCount:   cfg.Retries,
+		retryInterval:       cfg.RetryInterval,
 	}, nil
 }
 
@@ -299,6 +306,7 @@ type client struct {
 	streamingHTTPClient *http.Client
 	reqGen              *rata.RequestGenerator
 	requestRetryCount   int
+	retryInterval       time.Duration
 }
 
 func (c *client) Ping(logger lager.Logger) bool {
@@ -754,15 +762,24 @@ func (c *client) subscribeToEvents(route string, cellId string) (events.EventSou
 	if err != nil {
 		return nil, err
 	}
-	eventSource, err := sse.Connect(c.streamingHTTPClient, time.Second, func() *http.Request {
-		request, err := c.reqGen.CreateRequest(route, nil, bytes.NewReader(messageBody))
-		if err != nil {
-			panic(err) // totally shouldn't happen
-		}
 
-		return request
-	})
+	sseConfig := sse.Config{
+		Client: c.streamingHTTPClient,
+		RetryParams: sse.RetryParams{
+			RetryInterval: c.retryInterval,
+			MaxRetries:    uint16(c.requestRetryCount),
+		},
+		RequestCreator: func() *http.Request {
+			request, err := c.reqGen.CreateRequest(route, nil, bytes.NewReader(messageBody))
+			if err != nil {
+				panic(err) // totally shouldn't happen
+			}
 
+			return request
+		},
+	}
+
+	eventSource, err := sseConfig.Connect()
 	if err != nil {
 		return nil, err
 	}
