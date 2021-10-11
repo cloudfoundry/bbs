@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
@@ -34,11 +35,27 @@ var _ = BeforeEach(func() {
 
 	if test_helpers.UsePostgres() {
 		dbDriverName = "postgres"
-		dbBaseConnectionString = "postgres://diego:diego_pw@localhost/"
+		user, ok := os.LookupEnv("POSTGRES_USER")
+		if !ok {
+			user = "diego"
+		}
+		password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+		if !ok {
+			password = "diego_pw"
+		}
+		dbBaseConnectionString = fmt.Sprintf("postgres://%s:%s@localhost/", user, password)
 		dbFlavor = helpers.Postgres
 	} else if test_helpers.UseMySQL() {
 		dbDriverName = "mysql"
-		dbBaseConnectionString = "diego:diego_password@/"
+		user, ok := os.LookupEnv("MYSQL_USER")
+		if !ok {
+			user = "diego"
+		}
+		password, ok := os.LookupEnv("MYSQL_PASSWORD")
+		if !ok {
+			password = "diego_password"
+		}
+		dbBaseConnectionString = fmt.Sprintf("%s:%s@/", user, password)
 		dbFlavor = helpers.MySQL
 	} else {
 		panic("Unsupported driver")

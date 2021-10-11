@@ -36,7 +36,15 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	baseConnString := "diego:diego_password@/"
+	user, ok := os.LookupEnv("MYSQL_USER")
+	if !ok {
+		user = "diego"
+	}
+	password, ok := os.LookupEnv("MYSQL_PASSWORD")
+	if !ok {
+		password = "diego_password"
+	}
+	baseConnString := fmt.Sprintf("%s:%s@/", user, password)
 
 	var err error
 	m.db, err = helpers.Connect(logger, "mysql", baseConnString, "", false)
@@ -73,7 +81,15 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 }
 
 func (m *MySQLRunner) ConnectionString() string {
-	return fmt.Sprintf("diego:diego_password@/%s", m.sqlDBName)
+	user, ok := os.LookupEnv("MYSQL_USER")
+	if !ok {
+		user = "diego"
+	}
+	password, ok := os.LookupEnv("MYSQL_PASSWORD")
+	if !ok {
+		password = "diego_password"
+	}
+	return fmt.Sprintf("%s:%s@/%s", user, password, m.sqlDBName)
 }
 
 func (p *MySQLRunner) Port() int {
@@ -85,11 +101,19 @@ func (p *MySQLRunner) DBName() string {
 }
 
 func (p *MySQLRunner) Password() string {
-	return "diego_password"
+	password, ok := os.LookupEnv("MYSQL_PASSWORD")
+	if !ok {
+		password = "diego_password"
+	}
+	return password
 }
 
 func (p *MySQLRunner) Username() string {
-	return "diego"
+	user, ok := os.LookupEnv("MYSQL_USER")
+	if !ok {
+		user = "diego"
+	}
+	return user
 }
 
 func (m *MySQLRunner) DriverName() string {

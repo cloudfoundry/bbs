@@ -37,7 +37,15 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	baseConnString := "postgres://diego:diego_pw@localhost"
+	user, ok := os.LookupEnv("POSTGRES_USER")
+	if !ok {
+		user = "diego"
+	}
+	password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+	if !ok {
+		password = "diego_pw"
+	}
+	baseConnString := fmt.Sprintf("postgres://%s:%s@localhost/", user, password)
 
 	var err error
 	p.db, err = helpers.Connect(logger, "postgres", baseConnString, "", false)
@@ -81,7 +89,15 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 }
 
 func (p *PostgresRunner) ConnectionString() string {
-	return "user=diego password=diego_pw host=localhost dbname=" + p.sqlDBName
+	user, ok := os.LookupEnv("POSTGRES_USER")
+	if !ok {
+		user = "diego"
+	}
+	password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+	if !ok {
+		password = "diego_pw"
+	}
+	return fmt.Sprintf("user=%s password=%s host=localhost dbname=%s", user, password, p.sqlDBName)
 }
 
 func (p *PostgresRunner) Port() int {
@@ -97,11 +113,19 @@ func (p *PostgresRunner) DriverName() string {
 }
 
 func (p *PostgresRunner) Password() string {
-	return "diego_pw"
+	password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+	if !ok {
+		password = "diego_pw"
+	}
+	return password
 }
 
 func (p *PostgresRunner) Username() string {
-	return "diego"
+	user, ok := os.LookupEnv("POSTGRES_USER")
+	if !ok {
+		user = "diego"
+	}
+	return user
 }
 
 func (p *PostgresRunner) DB() *sql.DB {
