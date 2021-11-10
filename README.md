@@ -59,7 +59,7 @@ files for the BBS models:
 
 1. `gem install protobuf`
 2. `cp $(which protoc-gen-ruby){,2}`
-3. `protoc -I$GOPATH/src --proto_path=. --ruby2_out=/path/to/ruby/files *.proto`
+3. `protoc -I../../vendor --proto_path=. --ruby2_out=/path/to/ruby/files *.proto`
 
 **Note** Replace `/path/to/ruby/files` with the desired destination of the
 `.pb.rb` files. That directory must exist before running this command.
